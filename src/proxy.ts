@@ -21,13 +21,18 @@ export function proxy(request: NextRequest) {
   const segment = pathname.split('/')[1] ?? ''
   if (isLocale(segment)) return NextResponse.next()
 
+  // Solo la raíz sin idioma se negocia y redirige. Cualquier otro segmento
+  // (p. ej. /fr) se deja pasar: el layout de [locale] decide y responde 404
+  // real para idiomas no soportados, en vez de un redirect a ciegas.
+  if (pathname !== '/') return NextResponse.next()
+
   const locale = negotiateLocale({
     cookie: request.cookies.get(LOCALE_COOKIE)?.value ?? null,
     acceptLanguage: request.headers.get('accept-language'),
   })
 
   const url = request.nextUrl.clone()
-  url.pathname = `/${locale}${pathname === '/' ? '' : pathname}`
+  url.pathname = `/${locale}`
   const response = NextResponse.redirect(url, 307)
   response.cookies.set(LOCALE_COOKIE, locale, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
   return response
