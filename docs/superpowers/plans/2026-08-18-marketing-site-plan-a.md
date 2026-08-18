@@ -39,7 +39,7 @@ src/
     [locale]/page.tsx               landing
     [locale]/colecciones/page.tsx   catálogo
     sitemap.ts robots.ts
-  middleware.ts                     negociación y redirección de idioma
+  proxy.ts                          negociación y redirección de idioma
   shared/
     result/index.ts                 Result, ok, err
     config/env.ts brand.ts
@@ -377,7 +377,7 @@ git commit -m "feat: configuración de entorno validada con Zod y constantes de 
 ### Task 3: Negociación de idioma y diccionarios
 
 **Files:**
-- Create: `src/shared/i18n/locales.ts`, `src/shared/i18n/negotiate.ts`, `src/shared/i18n/dictionaries.ts`, `src/shared/i18n/format.ts`, `src/shared/i18n/messages/es.ts`, `src/shared/i18n/messages/en.ts`, `src/middleware.ts`
+- Create: `src/shared/i18n/locales.ts`, `src/shared/i18n/negotiate.ts`, `src/shared/i18n/dictionaries.ts`, `src/shared/i18n/format.ts`, `src/shared/i18n/messages/es.ts`, `src/shared/i18n/messages/en.ts`, `src/shared/i18n/dictionary.ts`, `src/proxy.ts`
 - Test: `src/shared/i18n/negotiate.test.ts`, `src/shared/i18n/format.test.ts`
 
 **Interfaces:**
@@ -632,9 +632,9 @@ export const getDictionary = (locale: Locale): Dictionary => DICTIONARIES[locale
 export type { Dictionary }
 ```
 
-- [ ] **Step 10: Implementar el middleware**
+- [ ] **Step 10: Implementar el proxy (negociación de idioma)**
 
-Crear `src/middleware.ts`:
+Crear `src/proxy.ts` (Next 16 sustituye la convención `middleware.ts` por `proxy.ts`):
 
 ```ts
 import { NextResponse, type NextRequest } from 'next/server'
@@ -1972,7 +1972,7 @@ git commit -m "feat(catalog): casos de uso, repositorios Drizzle y raíz de comp
 
 **Files:**
 - Create: `src/app/[locale]/layout.tsx`, `src/app/[locale]/page.tsx`, `src/sections/SiteHeader.tsx`, `src/sections/SiteFooter.tsx`, `src/shared/i18n/server.ts`
-- Delete: `src/app/page.tsx` (la raíz la resuelve el middleware)
+- Delete: `src/app/page.tsx` (la raíz la resuelve el proxy)
 - Test: `src/shared/i18n/server.test.ts`
 
 **Interfaces:**

@@ -172,7 +172,7 @@ Decisiones:
 
 Idiomas: `en` (fallback) y `es`. Sin botón visible.
 
-- `middleware.ts` negocia `Accept-Language`, respeta la cookie `NEXT_LOCALE`, y
+- `src/proxy.ts` (convención de Next 16, antes `middleware.ts`) negocia `Accept-Language`, respeta la cookie `NEXT_LOCALE`, y
   redirige `/` a `/en` o `/es` con 307.
 - Sin coincidencia → `en`.
 - `hreflang` para `en`, `es` y `x-default` → `en`.
