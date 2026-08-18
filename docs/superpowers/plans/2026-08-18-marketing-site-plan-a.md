@@ -16,10 +16,14 @@
 - TypeScript `strict: true`, `noUncheckedIndexedAccess: true`. Prohibido `any` y `@ts-ignore`.
 - Idiomas: `en` (fallback) y `es`. Sin selector visible de idioma en la UI.
 - Moneda: BOB, almacenada en centavos enteros. Formato visible: `Bs 690`.
-- Tokens de color obligatorios (ningún literal hexadecimal en componentes):
+- Tokens de color obligatorios (ningún literal hexadecimal fuera de `tokens.css`):
   `--iv-bg #f6f1e9`, `--iv-bg-raised #fdfaf4`, `--iv-bg-sunken #efe7dc`,
   `--iv-ink #2b2723`, `--iv-ink-soft #58514a`, `--iv-ink-mute #9a917f`,
-  `--iv-gold #c19b4a`, `--iv-gold-deep #a8823a`, `--iv-gold-light #e2c584`.
+  `--iv-gold #c19b4a`, `--iv-gold-deep #a8823a`, `--iv-gold-light #e2c584`,
+  `--color-bg-top #fffdf9` (cima del degradado radial) y `--color-ink-selection #26221e`
+  (texto seleccionado), ambos del diseño Ivory. Las variantes con alfa se componen
+  desde `--color-gold-rgb: 193 155 74` y `--color-shadow-rgb: 90 66 26`, nunca
+  descomponiendo canales a mano en cada regla.
 - Tipografías: Cormorant Garamond (display) y Jost (UI), servidas localmente con `next/font/local`. Prohibido cargar fuentes desde Google en producción.
 - Presupuesto de rendimiento: LCP < 2.0 s, CLS < 0.05, INP < 200 ms.
 - Toda animación respeta `prefers-reduced-motion: reduce`.
