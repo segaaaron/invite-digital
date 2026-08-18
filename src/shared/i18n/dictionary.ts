@@ -103,9 +103,25 @@ export interface ModelsDictionary {
 export interface ContactFieldsDictionary {
   name: string
   contact: string
+  email: string
+  phone: string
   category: string
+  categoryAny: string
   date: string
   message: string
+  optional: string
+}
+
+/** One message per `LeadErrorKind` the Server Action can return, plus the rate limit. */
+export interface ContactErrorsDictionary {
+  invalid_name: string
+  missing_contact: string
+  invalid_email: string
+  past_event_date: string
+  invalid_payload: string
+  rate_limited: string
+  storage_failure: string
+  too_many_requests: string
 }
 
 export interface ContactDictionary {
@@ -116,7 +132,11 @@ export interface ContactDictionary {
   successTitle: string
   successBody: string
   again: string
+  sending: string
+  whatsappLabel: string
+  emailLabel: string
   fields: ContactFieldsDictionary
+  errors: ContactErrorsDictionary
 }
 
 export interface FooterDictionary {

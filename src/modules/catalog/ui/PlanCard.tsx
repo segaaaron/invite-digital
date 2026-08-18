@@ -4,9 +4,9 @@ import type { Locale } from '@/shared/i18n/locales'
 import { formatMoney } from '../domain/money'
 import type { Plan } from '../domain/plan'
 
-type Props = { plan: Plan; locale: Locale; dictionary: Dictionary; ctaHref: string }
+type Props = { plan: Plan; locale: Locale; dictionary: Dictionary; ctaHref: string; ctaExternal?: boolean }
 
-export function PlanCard({ plan, locale, dictionary, ctaHref }: Props) {
+export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false }: Props) {
   const frame = plan.highlighted
     ? 'border-gold bg-bg-raised shadow-[var(--shadow-lift)] md:-translate-y-4'
     : 'border-[var(--color-line)] bg-bg-raised/70'
@@ -36,7 +36,7 @@ export function PlanCard({ plan, locale, dictionary, ctaHref }: Props) {
         ))}
       </ul>
 
-      <Button className="mt-8 w-full" href={ctaHref} variant={plan.highlighted ? 'gold' : 'ghost'}>
+      <Button className="mt-8 w-full" external={ctaExternal} href={ctaHref} variant={plan.highlighted ? 'gold' : 'ghost'}>
         {plan.name}
       </Button>
     </article>

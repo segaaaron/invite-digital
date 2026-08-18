@@ -1,0 +1,5 @@
+export type { Consultation, ConsultationInput } from './domain/consultation'
+export type { LeadError, LeadErrorKind } from './domain/errors'
+export type { ConsultationRepository } from './application/ports'
+export { buildWhatsAppLink, whatsAppPlanMessage } from './domain/whatsapp-link'
+export { ContactSection } from './ui/ContactSection'

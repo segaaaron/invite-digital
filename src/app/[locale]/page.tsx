@@ -14,6 +14,7 @@ import { HeroSection } from '@/sections/HeroSection'
 import { MobileSection } from '@/sections/MobileSection'
 import { StatsStrip } from '@/sections/StatsStrip'
 import { TestimonialsSection } from '@/sections/TestimonialsSection'
+import { ContactSection } from '@/modules/leads'
 import { HeroCanvas } from '@/three/HeroCanvas'
 
 export const revalidate = 300
@@ -25,7 +26,11 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
   const dictionary = getDictionary(locale)
 
-  const [plansResult, templatesResult] = await Promise.all([catalog.listPlans(locale), catalog.listTemplates(locale)])
+  const [plansResult, templatesResult, categoriesResult] = await Promise.all([
+    catalog.listPlans(locale),
+    catalog.listTemplates(locale),
+    catalog.listCategories(locale),
+  ])
 
   if (!isOk(plansResult)) {
     console.error('No se pudieron cargar los planes de precios:', plansResult.error.detail)
@@ -33,9 +38,13 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
   if (!isOk(templatesResult)) {
     console.error('No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
   }
+  if (!isOk(categoriesResult)) {
+    console.error('No se pudieron cargar las categorías de evento:', categoriesResult.error.detail)
+  }
 
   const plans = isOk(plansResult) ? plansResult.value : []
   const templates = isOk(templatesResult) ? templatesResult.value : []
+  const categories = isOk(categoriesResult) ? categoriesResult.value : []
 
   return (
     <>
@@ -72,6 +81,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
       <TestimonialsSection dictionary={dictionary} />
       <FaqSection dictionary={dictionary} />
+      <ContactSection categories={categories} dictionary={dictionary} locale={locale} />
     </>
   )
 }
