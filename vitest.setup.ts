@@ -36,7 +36,9 @@ try {
     if (trimmed && !trimmed.startsWith('#')) {
       const [key, ...valueParts] = trimmed.split('=')
       const value = valueParts.join('=')
-      if (key && value) {
+      // Never clobber a variable the runner already set: tests that need a
+      // different SITE_URL or DATABASE_URL pass it on the command line.
+      if (key && value && process.env[key] === undefined) {
         process.env[key] = value
       }
     }

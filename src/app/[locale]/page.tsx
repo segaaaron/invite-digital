@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { catalog } from '@/app/composition/container'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
@@ -7,6 +8,8 @@ import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isOk } from '@/shared/result'
+import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd } from '@/shared/seo/json-ld'
+import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { ComparisonSection } from '@/sections/ComparisonSection'
 import { ExperienceSection } from '@/sections/ExperienceSection'
 import { FaqSection } from '@/sections/FaqSection'
@@ -18,6 +21,21 @@ import { ContactSection } from '@/modules/leads'
 import { HeroCanvas } from '@/three/HeroCanvas'
 
 export const revalidate = 300
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale: raw } = await params
+  const locale = parseLocaleParam(raw)
+  if (!locale) return {}
+
+  const dictionary = getDictionary(locale)
+
+  return buildPageMetadata({
+    locale,
+    path: `/${locale}`,
+    title: dictionary.seo.homeTitle,
+    description: truncateDescription(dictionary.hero.body),
+  })
+}
 
 export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params
@@ -48,6 +66,16 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
   return (
     <>
+      <script
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationJsonLd()) }}
+        type="application/ld+json"
+      />
+      <script
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(plans, locale)) }}
+        type="application/ld+json"
+      />
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(dictionary)) }} type="application/ld+json" />
+
       <HeroSection
         dictionary={dictionary}
         slot={<HeroCanvas alt={dictionary.hero.posterAlt} posterSrc="/hero/envelope-poster.avif" />}

@@ -118,5 +118,12 @@ export const es = {
       too_many_requests: 'Recibimos varias consultas tuyas. Espera un minuto antes de reintentar.',
     },
   },
+  seo: {
+    homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | InvitePremium',
+    collectionsTitle: 'Colecciones de invitaciones digitales 3D | InvitePremium',
+    collectionsDescription:
+      'Ocho modelos de invitación digital para bodas, XV años, graduaciones y eventos corporativos en Bolivia. Escena 3D, RSVP y entrega en 72 horas.',
+    breadcrumbHome: 'Inicio',
+  },
   footer: { rights: 'Todos los derechos reservados', coverage: 'Cochabamba, Bolivia · Entregas a todo el país' },
 } satisfies Dictionary

@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { catalog } from '@/app/composition/container'
@@ -7,8 +8,25 @@ import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isOk } from '@/shared/result'
+import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
+import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
 
 export const revalidate = 300
+
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const { locale: raw } = await params
+  const locale = parseLocaleParam(raw)
+  if (!locale) return {}
+
+  const dictionary = getDictionary(locale)
+
+  return buildPageMetadata({
+    locale,
+    path: `/${locale}/colecciones`,
+    title: dictionary.seo.collectionsTitle,
+    description: dictionary.seo.collectionsDescription,
+  })
+}
 
 export default async function CollectionsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: raw } = await params
@@ -42,9 +60,14 @@ export default async function CollectionsPage({ params }: { params: Promise<{ lo
   }
 
   const templates = templatesResult.value
+  const breadcrumb = breadcrumbJsonLd([
+    { name: dictionary.seo.breadcrumbHome, url: buildAlternates(`/${locale}`).canonical },
+    { name: dictionary.collections.title, url: buildAlternates(`/${locale}/colecciones`).canonical },
+  ])
 
   return (
     <section className="px-6 py-24">
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumb) }} type="application/ld+json" />
       <div className="mx-auto max-w-[1240px]">
         <div className="flex flex-col items-center gap-4 text-center">
           <SectionHeading eyebrow={dictionary.collections.eyebrow} title={dictionary.collections.title} />

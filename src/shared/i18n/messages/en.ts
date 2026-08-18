@@ -118,5 +118,12 @@ export const en = {
       too_many_requests: 'We received several requests from you. Please wait a minute and retry.',
     },
   },
+  seo: {
+    homeTitle: 'Luxury 3D digital wedding invitations | InvitePremium',
+    collectionsTitle: '3D digital invitation collections | InvitePremium',
+    collectionsDescription:
+      'Eight digital invitation models for weddings, quinceañeras, graduations and corporate events in Bolivia. A 3D scene, RSVP, and delivery within 72 hours.',
+    breadcrumbHome: 'Home',
+  },
   footer: { rights: 'All rights reserved', coverage: 'Cochabamba, Bolivia · Delivering nationwide' },
 } satisfies Dictionary

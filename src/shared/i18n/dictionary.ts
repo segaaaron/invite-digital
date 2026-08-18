@@ -139,6 +139,14 @@ export interface ContactDictionary {
   errors: ContactErrorsDictionary
 }
 
+/** Search-result copy: it never appears on the page, only in <title> and <meta>. */
+export interface SeoDictionary {
+  homeTitle: string
+  collectionsTitle: string
+  collectionsDescription: string
+  breadcrumbHome: string
+}
+
 export interface FooterDictionary {
   rights: string
   coverage: string
@@ -157,5 +165,6 @@ export interface Dictionary {
   testimonials: TestimonialsDictionary
   faq: FaqDictionary
   contact: ContactDictionary
+  seo: SeoDictionary
   footer: FooterDictionary
 }
