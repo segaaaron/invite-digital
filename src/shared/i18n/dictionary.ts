@@ -52,8 +52,32 @@ export interface ComparisonDictionary {
   eyebrow: string
   title: string
   hint: string
+  traditionalLabel: string
   luxe: readonly [string, string, string, string, string]
   traditional: readonly [string, string, string, string, string]
+}
+
+export interface FaqItem {
+  question: string
+  answer: string
+}
+
+export interface FaqDictionary {
+  eyebrow: string
+  title: string
+  items: readonly [FaqItem, FaqItem, FaqItem, FaqItem, FaqItem]
+}
+
+export interface TestimonialItem {
+  quote: string
+  author: string
+  role: string
+}
+
+export interface TestimonialsDictionary {
+  eyebrow: string
+  title: string
+  items: readonly [TestimonialItem, TestimonialItem, TestimonialItem]
 }
 
 export interface PricingDictionary {
@@ -105,6 +129,8 @@ export interface Dictionary {
   comparison: ComparisonDictionary
   pricing: PricingDictionary
   models: ModelsDictionary
+  testimonials: TestimonialsDictionary
+  faq: FaqDictionary
   contact: ContactDictionary
   footer: FooterDictionary
 }

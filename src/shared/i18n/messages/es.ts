@@ -38,11 +38,44 @@ export const es = {
     eyebrow: 'Comparativa',
     title: 'La diferencia LUXE',
     hint: 'Arrastra el sello para comparar',
+    traditionalLabel: 'Tradicional',
     luxe: ['Sobre 3D con apertura animada y sello de cera', 'Dominio propio, sin marcas de terceros', 'RSVP con panel en vivo y recordatorios', 'Música, galería inmersiva y cuenta regresiva', 'Diseño compuesto a mano por el atelier'],
     traditional: ['Imagen estática enviada por chat', 'Plantilla con logo de la plataforma', 'Confirmaciones contadas a mano', 'Sin galería, sin música, sin mapa', 'Mismo diseño que otros mil eventos'],
   },
   pricing: { eyebrow: 'Inversión', title: 'Planes & precios', mostChosen: 'Más elegido' },
   models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Ocho diseños base · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir', seeAll: 'Ver todos los modelos' },
+  testimonials: {
+    eyebrow: 'Testimonios',
+    title: 'Lo que dicen quienes ya lo vivieron',
+    items: [
+      {
+        quote: 'Mandamos el enlace un martes y el viernes ya teníamos el 90% de las confirmaciones. Ninguna novia había visto algo así en Bolivia.',
+        author: 'Daniela Ortiz',
+        role: 'Wedding planner · Cochabamba',
+      },
+      {
+        quote: 'El sello de cera abriéndose en la pantalla del celular fue el momento más comentado de toda la fiesta de XV años de mi hija.',
+        author: 'Rodrigo Ibáñez',
+        role: 'Padre de quinceañera · Santa Cruz',
+      },
+      {
+        quote: 'Actualizamos la hora de la ceremonia dos días antes y el enlace que ya habíamos enviado mostró el cambio al instante. Cero llamadas de última hora.',
+        author: 'Camila Vargas',
+        role: 'Organizadora de eventos corporativos · La Paz',
+      },
+    ],
+  },
+  faq: {
+    eyebrow: 'Preguntas frecuentes',
+    title: 'Todo lo que suelen preguntarnos',
+    items: [
+      { question: '¿Cuánto tarda la entrega?', answer: 'Entre 72 horas y 7 días según el plan. Alta Costura incluye una fase de concepto previa.' },
+      { question: '¿El invitado necesita instalar algo?', answer: 'No. La invitación se abre en el navegador desde un enlace de WhatsApp, sin apps ni descargas.' },
+      { question: '¿Puedo enviar un enlace distinto a cada invitado?', answer: 'Sí. Cada invitado recibe su enlace con su nombre y su confirmación individual.' },
+      { question: '¿Funciona sin conexión estable?', answer: 'La invitación pesa menos de 2 MB y carga por partes, así que funciona en redes lentas.' },
+      { question: '¿Qué pasa si necesito cambiar la fecha o el lugar?', answer: 'Los datos se actualizan en vivo: el enlace ya enviado muestra la información nueva.' },
+    ],
+  },
   contact: {
     eyebrow: 'Atelier de lujo sereno',
     title: 'Comienza tu viaje',
