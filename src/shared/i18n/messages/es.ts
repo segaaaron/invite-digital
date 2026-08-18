@@ -1,3 +1,5 @@
+import type { Dictionary } from '../dictionary'
+
 export const es = {
   nav: { collections: 'Colecciones', experience: 'Experiencia 3D', pricing: 'Inversión', contact: 'Hablemos' },
   hero: {
@@ -52,14 +54,4 @@ export const es = {
     fields: { name: 'Nombre', contact: 'WhatsApp o email', category: 'Tipo de evento', date: 'Fecha del evento', message: 'Cuéntanos sobre tu evento' },
   },
   footer: { rights: 'Todos los derechos reservados', coverage: 'Cochabamba, Bolivia · Entregas a todo el país' },
-} as const
-
-type Widen<T> = T extends string
-  ? string
-  : T extends readonly (infer U)[]
-    ? readonly Widen<U>[]
-    : T extends object
-      ? { [K in keyof T]: Widen<T[K]> }
-      : T
-
-export type Dictionary = Widen<typeof es>
+} satisfies Dictionary

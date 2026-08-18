@@ -1,12 +1,12 @@
-import type { Dictionary } from './es'
+import type { Dictionary } from '../dictionary'
 
-export const en: Dictionary = {
+export const en = {
   nav: { collections: 'Collections', experience: '3D Experience', pricing: 'Investment', contact: "Let's talk" },
   hero: {
     eyebrow: 'Quiet luxury · Digital atelier',
-    titleLine1: 'COUTURE',
-    titleLine2: 'DIGITAL',
-    titleAccent: 'invitations',
+    titleLine1: 'DIGITAL',
+    titleLine2: 'INVITATIONS',
+    titleAccent: 'haute couture',
     body: 'Envelopes that open in 3D, wax seals that break at your touch, and an immersive scene for every celebration. We design the piece, build it, and deliver it on its own domain within 72 hours.',
     ctaPrimary: 'Create your invitation',
     ctaSecondary: 'See the live demo',
@@ -23,7 +23,7 @@ export const en: Dictionary = {
     title: 'Three acts, one single piece',
     acts: [
       { label: 'Act I', title: 'Virtual unboxing', body: 'The envelope arrives sealed. Your guest slides it open, the wax seal gives way, and the card emerges with the physics of real paper.' },
-      { label: 'Act II', title: 'Immersive detail', body: 'Gold foil that catches the light as the cursor moves, cotton-paper textures, and hand-composed typography for every name.' },
+      { label: 'Act II', title: 'Immersive details', body: 'Gold foil that catches the light as the cursor moves, cotton-paper textures, and hand-composed typography for every name.' },
       { label: 'Act III', title: 'A live interactive demo', body: 'A gallery in motion, a map, a countdown, and RSVP with instant confirmation straight to the couple’s WhatsApp.' },
     ],
   },
@@ -54,4 +54,4 @@ export const en: Dictionary = {
     fields: { name: 'Name', contact: 'WhatsApp or email', category: 'Event type', date: 'Event date', message: 'Tell us about your event' },
   },
   footer: { rights: 'All rights reserved', coverage: 'Cochabamba, Bolivia · Delivering nationwide' },
-}
+} satisfies Dictionary

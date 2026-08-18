@@ -1,5 +1,6 @@
 import { en } from './messages/en'
-import { es, type Dictionary } from './messages/es'
+import { es } from './messages/es'
+import type { Dictionary } from './dictionary'
 import type { Locale } from './locales'
 
 const DICTIONARIES: Record<Locale, Dictionary> = { en, es }

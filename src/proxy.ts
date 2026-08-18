@@ -4,7 +4,7 @@ import { negotiateLocale } from '@/shared/i18n/negotiate'
 
 const PUBLIC_FILE = /\.[^/]+$/
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   if (
