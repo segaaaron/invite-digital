@@ -1,0 +1,91 @@
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+        SITE_URL: ${SITE_URL}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SITE_URL: ${SITE_URL}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - '3000'
+
+  # Migrations and seed run from the build stage, which still carries drizzle-kit and
+  # tsx. Mounting the host repository does not work: its node_modules are built for a
+  # different platform and the container user cannot write to them.
+  # Run with: docker compose --profile tools run --rm migrator
+  migrator:
+    profiles: ['tools']
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: build
+      args:
+        DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+        SITE_URL: ${SITE_URL}
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      SITE_URL: ${SITE_URL}
+    command: sh -c 'pnpm db:migrate && pnpm db:seed'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    entrypoint: ['/bin/sh', '/backup.sh']
+    environment:
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PGHOST: db
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  backups:
+  caddy_data:
+  caddy_config:

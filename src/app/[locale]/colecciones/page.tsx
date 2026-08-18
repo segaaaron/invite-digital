@@ -11,7 +11,10 @@ import { isOk } from '@/shared/result'
 import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
 import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
 
-export const revalidate = 300
+// Rendered per request, not prerendered: the pages read Postgres and the image is
+// built in CI/Docker where the database is unreachable. The queries are indexed and
+// hit a database in the same compose network, so the cost is a couple of milliseconds.
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: raw } = await params

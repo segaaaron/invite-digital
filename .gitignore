@@ -49,3 +49,10 @@ storage/
 
 # process scaffolding, not part of the shipped project
 .superpowers/
+
+# Playwright
+/test-results
+/playwright-report
+
+# pnpm store local
+/.pnpm-store

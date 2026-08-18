@@ -4,6 +4,10 @@ import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
 import { isOk } from '@/shared/result'
 
+// Same reason as the pages: it queries the catalog, so it cannot be built without a
+// reachable database.
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = []
 
