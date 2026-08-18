@@ -4,9 +4,9 @@
 
 **Goal:** Publicar la landing de lujo de InvitePremium en español e inglés, con catálogo servido desde Postgres, hero 3D y captura de leads hacia WhatsApp, desplegable en el VPS.
 
-**Architecture:** Monolito modular en Next.js 15 App Router. Cada módulo (`catalog`, `leads`) es una rebanada vertical con capas `domain` → `application` → `infrastructure` → `ui`, con fronteras verificadas por ESLint. El dominio es puro y devuelve `Result<T, E>`; los repositorios Drizzle implementan puertos declarados en `application`. La UI consume casos de uso a través de una raíz de composición única.
+**Architecture:** Monolito modular en Next.js 16 App Router. Cada módulo (`catalog`, `leads`) es una rebanada vertical con capas `domain` → `application` → `infrastructure` → `ui`, con fronteras verificadas por ESLint. El dominio es puro y devuelve `Result<T, E>`; los repositorios Drizzle implementan puertos declarados en `application`. La UI consume casos de uso a través de una raíz de composición única.
 
-**Tech Stack:** Next.js 15, React 19, TypeScript strict, Tailwind CSS v4, Drizzle ORM + postgres.js, Postgres 17, Zod, Framer Motion, React Three Fiber, Vitest, Playwright, Docker Compose, Caddy.
+**Tech Stack:** Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, Drizzle ORM + postgres.js, Postgres 17, Zod, Framer Motion, React Three Fiber, Vitest, Playwright, Docker Compose, Caddy.
 
 **Spec:** `docs/superpowers/specs/2026-08-17-marketing-site-design.md`
 

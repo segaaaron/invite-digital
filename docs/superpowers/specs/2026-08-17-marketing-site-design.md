@@ -42,7 +42,7 @@ Fuera (ciclos siguientes):
 
 ## 3. Arquitectura
 
-Monolito modular en una sola app Next.js 15 (App Router, TypeScript strict).
+Monolito modular en una sola app Next.js 16 (App Router, TypeScript strict).
 Cada módulo es una rebanada vertical con capas y frontera pública única.
 
 ```
@@ -321,7 +321,7 @@ backup     cron pg_dump diario, retención 14 días
 
 ## 13. Orden de construcción
 
-1. Andamiaje: Next 15, TS strict, Tailwind v4, ESLint con fronteras, Vitest.
+1. Andamiaje: Next 16, TS strict, Tailwind v4, ESLint con fronteras, Vitest.
 2. `shared`: tokens, config validada, `Result`, i18n con middleware.
 3. `shared/db`: Drizzle, esquema, migraciones, seed de categorías/planes/plantillas.
 4. `catalog`: dominio → casos de uso → repositorios → UI.
@@ -340,7 +340,7 @@ backup     cron pg_dump diario, retención 14 días
 | Tema | Decisión |
 |---|---|
 | Diseño canónico | Ivory |
-| Framework | Next.js 15 App Router, TypeScript strict |
+| Framework | Next.js 16 App Router, TypeScript strict |
 | ORM | Drizzle + postgres.js |
 | Estilos | Tailwind v4 con tokens del Ivory |
 | 3D | Solo hero; resto CSS + Framer Motion |
