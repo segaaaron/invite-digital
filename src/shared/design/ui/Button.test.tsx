@@ -20,4 +20,16 @@ describe('Button', () => {
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
     expect(link.getAttribute('target')).toBe('_blank')
   })
+
+  it('aplica la variante ghost y conserva el className propio', () => {
+    render(
+      <Button variant="ghost" className="mi-clase-propia">
+        Reservar
+      </Button>,
+    )
+    const button = screen.getByRole('button', { name: 'Reservar' })
+    expect(button.className).toContain('mi-clase-propia')
+    expect(button.className).toContain('border')
+    expect(button.className).toContain('bg-bg-raised/70')
+  })
 })

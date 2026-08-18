@@ -12,7 +12,7 @@ body {
   overflow-x: hidden;
 }
 
-::selection { background: rgb(193 155 74 / 0.24); color: #26221e; }
+::selection { background: rgb(var(--color-gold-rgb) / 0.24); color: var(--color-ink-selection); }
 :focus-visible { outline: 1px solid var(--color-gold); outline-offset: 3px; }
 
 @media (prefers-reduced-motion: reduce) {

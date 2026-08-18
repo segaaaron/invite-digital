@@ -1,7 +1,7 @@
 import localFont from 'next/font/local'
 
 export const display = localFont({
-  variable: '--font-display',
+  variable: '--font-display-raw',
   display: 'swap',
   src: [
     { path: '../../../public/fonts/cormorant-garamond-300.woff2', weight: '300', style: 'normal' },
@@ -12,7 +12,7 @@ export const display = localFont({
 })
 
 export const sans = localFont({
-  variable: '--font-sans',
+  variable: '--font-sans-raw',
   display: 'swap',
   src: [
     { path: '../../../public/fonts/jost-200.woff2', weight: '200', style: 'normal' },
