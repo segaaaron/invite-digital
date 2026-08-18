@@ -2,21 +2,18 @@
 
 import { ContactShadows, PresentationControls, useCursor } from '@react-three/drei'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { DoubleSide, Shape, type Group } from 'three'
+import { PALETTE } from '@/shared/design/palette'
 
-/**
- * Brand material colors for the 3D envelope scene. These are Three.js material
- * properties, not CSS — the "no literal hex outside tokens.css" rule exempts
- * scene materials, but the values still mirror the tokens: --color-bg-raised
- * (paper), --color-bg (flap), --color-gold (seal).
- */
-const PAPER_COLOR = '#fdfaf4'
-const PAPER_SHEEN_COLOR = '#e2c584'
-const FLAP_COLOR = '#f6f1e9'
-const SEAL_GOLD_COLOR = '#c19b4a'
-const SEAL_GOLD_LIGHT = '#e2c584'
-const AMBIENT_WARM = '#fff6e8'
+// Three.js material properties, not CSS: they take the values from the shared palette
+// so a change in tokens.css cannot leave the scene behind.
+const PAPER_COLOR = PALETTE.bgRaised
+const PAPER_SHEEN_COLOR = PALETTE.goldLight
+const FLAP_COLOR = PALETTE.bg
+const SEAL_GOLD_COLOR = PALETTE.gold
+const SEAL_GOLD_LIGHT = PALETTE.goldLight
+const AMBIENT_WARM = PALETTE.bgTop
 
 const WIDTH = 3
 const HEIGHT = 2
@@ -35,9 +32,8 @@ function useFlapShape(): Shape {
   }, [])
 }
 
-function Envelope() {
+function Envelope({ open, onToggle }: { open: boolean; onToggle: () => void }) {
   const flap = useRef<Group>(null)
-  const [open, setOpen] = useState(false)
   const [hovered, setHovered] = useState(false)
   const invalidate = useThree((state) => state.invalidate)
   const flapShape = useFlapShape()
@@ -45,6 +41,12 @@ function Envelope() {
   // frameloop="demand" only paints when something asks for it, so the easing
   // keeps requesting frames until it settles and then lets the loop go quiet.
   useCursor(hovered)
+
+  // frameloop="demand": a change coming from the button, not from a pointer event,
+  // also has to wake the render loop.
+  useEffect(() => {
+    invalidate()
+  }, [invalidate, open])
 
   useFrame((_, delta) => {
     const group = flap.current
@@ -65,8 +67,7 @@ function Envelope() {
       // R3F fires the handler once per intersection and the toggle cancels itself.
       onClick={(event) => {
         event.stopPropagation()
-        setOpen((value) => !value)
-        invalidate()
+        onToggle()
       }}
       onPointerOut={() => setHovered(false)}
       onPointerOver={(event) => {
@@ -111,21 +112,41 @@ function Envelope() {
   )
 }
 
-export default function EnvelopeScene() {
+/**
+ * A lost context leaves a permanently blank hero unless the caller can fall back to
+ * the poster. Lives inside the Canvas so it can reach the renderer through the store.
+ */
+function ContextLossWatch({ onContextLost }: { onContextLost: () => void }) {
+  const gl = useThree((state) => state.gl)
+
+  useEffect(() => {
+    const canvas = gl.domElement
+    canvas.addEventListener('webglcontextlost', onContextLost)
+    return () => canvas.removeEventListener('webglcontextlost', onContextLost)
+  }, [gl, onContextLost])
+
+  return null
+}
+
+type Props = { open: boolean; onToggle: () => void; onContextLost: () => void }
+
+export default function EnvelopeScene({ open, onToggle, onContextLost }: Props) {
   return (
     <Canvas
+
       camera={{ position: [0, 0.25, 5.1], fov: 36 }}
       dpr={[1, 1.75]}
       frameloop="demand"
       gl={{ antialias: true, powerPreference: 'high-performance' }}
       shadows
     >
+      <ContextLossWatch onContextLost={onContextLost} />
       <ambientLight color={AMBIENT_WARM} intensity={1.05} />
       <directionalLight castShadow intensity={1.1} position={[2.6, 3.4, 3.2]} />
       {/* Warm rim light that keeps the gold seal from reading as flat paint. */}
       <pointLight color={SEAL_GOLD_LIGHT} intensity={9} position={[-2.2, 1.4, 2.6]} />
       <PresentationControls azimuth={[-0.45, 0.45]} polar={[-0.18, 0.28]} snap>
-        <Envelope />
+        <Envelope onToggle={onToggle} open={open} />
       </PresentationControls>
       <ContactShadows blur={3} far={2.4} opacity={0.22} position={[0, -1.24, 0]} scale={6} />
     </Canvas>

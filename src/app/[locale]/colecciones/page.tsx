@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { catalog } from '@/app/composition/container'
@@ -7,7 +8,7 @@ import { BRAND } from '@/shared/config/brand'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
-import { isOk } from '@/shared/result'
+import { attempt, isOk } from '@/shared/result'
 import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
 import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
 
@@ -37,7 +38,13 @@ export default async function CollectionsPage({ params }: { params: Promise<{ lo
   if (!locale) notFound()
 
   const dictionary = getDictionary(locale)
-  const templatesResult = await catalog.listTemplates(locale)
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+  // Same reason as the landing: a connection failure throws, and this page already has
+  // a designed fallback for "no catalog" — it should be what the visitor sees.
+  const templatesResult = await attempt(
+    () => catalog.listTemplates(locale),
+    (cause) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' }),
+  )
 
   if (!isOk(templatesResult)) {
     console.error('No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
@@ -70,7 +77,7 @@ export default async function CollectionsPage({ params }: { params: Promise<{ lo
 
   return (
     <section className="px-6 py-24">
-      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumb) }} type="application/ld+json" />
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumb) }} nonce={nonce} type="application/ld+json" />
       <div className="mx-auto max-w-[1240px]">
         <div className="flex flex-col items-center gap-4 text-center">
           <SectionHeading eyebrow={dictionary.collections.eyebrow} title={dictionary.collections.title} />

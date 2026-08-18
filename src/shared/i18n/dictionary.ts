@@ -15,6 +15,8 @@ export interface HeroDictionary {
   ctaSecondary: string
   trustLabel: string
   posterAlt: string
+  envelopeOpen: string
+  envelopeClose: string
 }
 
 export interface StatsDictionary {
@@ -102,7 +104,6 @@ export interface ModelsDictionary {
 
 export interface ContactFieldsDictionary {
   name: string
-  contact: string
   email: string
   phone: string
   category: string
@@ -118,8 +119,8 @@ export interface ContactErrorsDictionary {
   missing_contact: string
   invalid_email: string
   past_event_date: string
+  invalid_event_date: string
   invalid_payload: string
-  rate_limited: string
   storage_failure: string
   too_many_requests: string
 }
@@ -134,6 +135,7 @@ export interface ContactDictionary {
   again: string
   sending: string
   whatsappLabel: string
+  whatsappMessage: string
   emailLabel: string
   fields: ContactFieldsDictionary
   errors: ContactErrorsDictionary
@@ -142,6 +144,7 @@ export interface ContactDictionary {
 /** Search-result copy: it never appears on the page, only in <title> and <meta>. */
 export interface SeoDictionary {
   homeTitle: string
+  homeDescription: string
   collectionsTitle: string
   collectionsDescription: string
   breadcrumbHome: string

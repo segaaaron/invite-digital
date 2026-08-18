@@ -23,4 +23,13 @@ describe('createRateLimiter', () => {
     expect(limiter.isLimited('1.1.1.1', 500)).toBe(true)
     expect(limiter.isLimited('1.1.1.1', 1_600)).toBe(false)
   })
+
+  it('no alarga la ventana al rechazar: el bloqueo caduca desde el último intento aceptado', () => {
+    const limiter = createRateLimiter({ windowMs: 1_000, max: 1 })
+    expect(limiter.isLimited('1.1.1.1', 0)).toBe(false)
+    for (let now = 100; now < 1_000; now += 100) {
+      expect(limiter.isLimited('1.1.1.1', now)).toBe(true)
+    }
+    expect(limiter.isLimited('1.1.1.1', 1_001)).toBe(false)
+  })
 })

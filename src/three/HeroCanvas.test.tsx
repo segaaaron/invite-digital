@@ -1,10 +1,11 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { HeroCanvas } from './HeroCanvas'
+import { resetSceneCapability } from './useSceneCapability'
 
 const POSTER_ALT = 'Sobre de algodón con sello de cera dorado'
 
-function stubMatchMedia(reducedMotion: boolean): void {
+function stubEnvironment({ reducedMotion, webgl2 }: { reducedMotion: boolean; webgl2: boolean }): void {
   vi.stubGlobal(
     'matchMedia',
     vi.fn().mockReturnValue({
@@ -13,27 +14,54 @@ function stubMatchMedia(reducedMotion: boolean): void {
       removeEventListener: vi.fn(),
     }),
   )
+  // jsdom has no WebGL at all, so the capable case has to be faked explicitly —
+  // otherwise every case exercises the same branch and the suite proves nothing.
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(((kind: string) =>
+    kind === 'webgl2' && webgl2 ? ({ getExtension: () => null } as unknown as RenderingContext) : null) as never)
 }
 
 describe('HeroCanvas', () => {
   beforeEach(() => {
+    vi.restoreAllMocks()
     vi.unstubAllGlobals()
+    resetSceneCapability()
   })
 
   it('entrega el póster cuando el equipo no puede con la escena', () => {
-    stubMatchMedia(false)
-    render(<HeroCanvas alt={POSTER_ALT} posterSrc="/hero/envelope-poster.avif" />)
+    stubEnvironment({ reducedMotion: false, webgl2: false })
+    render(<HeroCanvas alt={POSTER_ALT} closeLabel="Cerrar el sobre" openLabel="Abrir el sobre" posterSrc="/hero/envelope-poster.avif" />)
 
     const poster = screen.getByAltText(POSTER_ALT)
     expect(poster).toBeInTheDocument()
     expect(poster.getAttribute('src')).toContain('envelope-poster')
   })
 
-  it('entrega el póster cuando el usuario pide movimiento reducido', () => {
-    stubMatchMedia(true)
-    render(<HeroCanvas alt={POSTER_ALT} posterSrc="/hero/envelope-poster.avif" />)
+  it('entrega el póster cuando el usuario pide movimiento reducido, aunque haya WebGL2', () => {
+    stubEnvironment({ reducedMotion: true, webgl2: true })
+    render(<HeroCanvas alt={POSTER_ALT} closeLabel="Cerrar el sobre" openLabel="Abrir el sobre" posterSrc="/hero/envelope-poster.avif" />)
 
     expect(screen.getByAltText(POSTER_ALT)).toBeInTheDocument()
     expect(document.querySelector('canvas')).toBeNull()
+  })
+
+  it('sustituye el póster por la escena en un equipo capaz, conservando el nombre accesible', () => {
+    stubEnvironment({ reducedMotion: false, webgl2: true })
+    render(<HeroCanvas alt={POSTER_ALT} closeLabel="Cerrar el sobre" openLabel="Abrir el sobre" posterSrc="/hero/envelope-poster.avif" />)
+
+    expect(screen.getByRole('img', { name: POSTER_ALT })).toBeInTheDocument()
+    expect(screen.queryByAltText(POSTER_ALT)).toBeNull()
+  })
+
+  it('expone un control de teclado para abrir el sobre', () => {
+    stubEnvironment({ reducedMotion: false, webgl2: true })
+    render(
+      <HeroCanvas alt={POSTER_ALT} closeLabel="Cerrar el sobre" openLabel="Abrir el sobre" posterSrc="/hero/envelope-poster.avif" />,
+    )
+
+    const toggle = screen.getByRole('button', { name: 'Abrir el sobre' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+
+    fireEvent.click(toggle)
+    expect(screen.getByRole('button', { name: 'Cerrar el sobre' })).toHaveAttribute('aria-pressed', 'true')
   })
 })

@@ -24,6 +24,7 @@ export type Consultation = {
 
 const MIN_NAME_LENGTH = 2
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
 /** Keeps digits and a leading plus so `+591 700 11223` stores as `+59170011223`. */
 const normalizePhone = (raw: string): string => raw.replace(/[^\d+]/g, '')
@@ -46,8 +47,18 @@ export function createConsultation(input: ConsultationInput, now: Date): Result<
 
   const eventDate = input.eventDate.trim()
   if (eventDate.length > 0) {
+    if (!ISO_DATE_PATTERN.test(eventDate)) {
+      return err(leadError('invalid_event_date', `Fecha con formato inválido: ${eventDate}`))
+    }
+
     const parsed = Date.parse(`${eventDate}T00:00:00Z`)
-    if (Number.isNaN(parsed)) return err(leadError('past_event_date', `Fecha inválida: ${eventDate}`))
+    // Date.parse rolls over: '2026-02-31' silently becomes March 3rd and then Postgres
+    // rejects the insert, losing the lead behind a misleading "could not save" message.
+    // Round-tripping the date is what catches a day that does not exist.
+    if (Number.isNaN(parsed) || new Date(parsed).toISOString().slice(0, 10) !== eventDate) {
+      return err(leadError('invalid_event_date', `Fecha inexistente: ${eventDate}`))
+    }
+
     // Compared by day, not by instant: an event later today is still in the future.
     if (parsed < startOfUtcDay(now)) return err(leadError('past_event_date', 'La fecha del evento ya pasó'))
   }

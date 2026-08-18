@@ -31,7 +31,9 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
 
   if (state.status === 'success' && acknowledged !== state) {
     return (
-      <div className="flex flex-col items-start gap-4 p-8">
+      // role="status" so a screen reader announces the receipt: the submit button that
+      // held focus disappears with the form, and nothing else would speak.
+      <div aria-live="polite" className="flex flex-col items-start gap-4 p-8" role="status">
         <p className="font-display text-[26px] font-light text-ink">{contact.successTitle}</p>
         <p className="text-[14px] leading-[1.7] text-ink-soft">{contact.successBody}</p>
         <button
@@ -45,7 +47,22 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
     )
   }
 
-  const errorText = state.status === 'error' && state.message !== '' ? contact.errors[state.message] : null
+  const errorKind = state.status === 'error' && state.message !== '' ? state.message : null
+  const errorText = errorKind ? contact.errors[errorKind] : null
+
+  // The message belongs to the field that caused it: pointing every input at the same
+  // error makes a screen reader read "the date is in the past" while focusing the name.
+  const FIELD_ERRORS: Record<string, ReadonlyArray<'name' | 'email' | 'phone' | 'eventDate'>> = {
+    invalid_name: ['name'],
+    invalid_email: ['email'],
+    missing_contact: ['email', 'phone'],
+    past_event_date: ['eventDate'],
+    invalid_event_date: ['eventDate'],
+  }
+  const blamed = errorKind ? (FIELD_ERRORS[errorKind] ?? []) : []
+  const describedBy = (field: 'name' | 'email' | 'phone' | 'eventDate') =>
+    blamed.includes(field) ? errorId : undefined
+  const invalid = (field: 'name' | 'email' | 'phone' | 'eventDate') => blamed.includes(field) || undefined
 
   return (
     <form action={formAction} className="flex flex-col gap-5 p-8">
@@ -54,7 +71,8 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
       <label className={LABEL_CLASS} htmlFor={nameId}>
         {contact.fields.name}
         <input
-          aria-describedby={errorText ? errorId : undefined}
+          aria-describedby={describedBy('name')}
+          aria-invalid={invalid('name')}
           className={FIELD_CLASS}
           id={nameId}
           maxLength={160}
@@ -68,7 +86,8 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
         <label className={LABEL_CLASS} htmlFor={emailId}>
           {contact.fields.email}
           <input
-            aria-describedby={errorText ? errorId : undefined}
+            aria-describedby={describedBy('email')}
+            aria-invalid={invalid('email')}
             className={FIELD_CLASS}
             id={emailId}
             maxLength={200}
@@ -80,7 +99,8 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
         <label className={LABEL_CLASS} htmlFor={phoneId}>
           {contact.fields.phone}
           <input
-            aria-describedby={errorText ? errorId : undefined}
+            aria-describedby={describedBy('phone')}
+            aria-invalid={invalid('phone')}
             className={FIELD_CLASS}
             id={phoneId}
             maxLength={32}
@@ -105,7 +125,14 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
 
         <label className={LABEL_CLASS} htmlFor={dateId}>
           {`${contact.fields.date} (${contact.fields.optional})`}
-          <input className={FIELD_CLASS} id={dateId} name="eventDate" type="date" />
+          <input
+            aria-describedby={describedBy('eventDate')}
+            aria-invalid={invalid('eventDate')}
+            className={FIELD_CLASS}
+            id={dateId}
+            name="eventDate"
+            type="date"
+          />
         </label>
       </div>
 

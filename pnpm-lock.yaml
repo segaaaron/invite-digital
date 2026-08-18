@@ -35,6 +35,9 @@ importers:
       react-dom:
         specifier: 19.2.8
         version: 19.2.8(react@19.2.8)
+      sharp:
+        specifier: ^0.35.3
+        version: 0.35.3(@types/node@20.19.43)
       three:
         specifier: ^0.185.1
         version: 0.185.1
@@ -84,9 +87,6 @@ importers:
       jsdom:
         specifier: ^30.0.1
         version: 30.0.1
-      sharp:
-        specifier: ^0.35.3
-        version: 0.35.3(@types/node@20.19.43)
       tailwindcss:
         specifier: ^4
         version: 4.3.3

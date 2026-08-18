@@ -25,7 +25,11 @@ SITE_DOMAIN=invitepremium.bo
 `SITE_URL` con esquema y sin barra final: de ahí salen el canonical, los hreflang y el sitemap.
 `SITE_DOMAIN` sin esquema: es el nombre que Caddy pide a Let's Encrypt.
 
-Generar la contraseña con `openssl rand -base64 32`.
+Generar la contraseña con `openssl rand -hex 32`. **No usar `base64`**: la contraseña viaja dentro de
+`DATABASE_URL`, y los caracteres `/`, `+` y `=` que produce base64 rompen la URL de conexión.
+
+Compose exige las cinco variables: si falta alguna, `docker compose` falla al arrancar en vez de
+levantar la pila a medias.
 
 ## 3. Levantar la pila
 
@@ -69,6 +73,37 @@ Verificado en local con `SITE_DOMAIN=localhost`: los cuatro servicios arriba, `/
 `/en`, `/es` responde 200 con los precios leídos de Postgres, y las cabeceras `Strict-Transport-Security`,
 `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy` y `Permissions-Policy` llegan al cliente.
 
+## 5.b Endurecer el servidor
+
+La pila no protege el sistema operativo que la aloja. En un VPS recién creado:
+
+```bash
+ufw default deny incoming && ufw allow 22 && ufw allow 80 && ufw allow 443 && ufw enable
+apt install -y unattended-upgrades && dpkg-reconfigure -plow unattended-upgrades
+```
+
+Docker publica puertos saltándose `ufw`, así que ningún servicio debe declarar `ports:` salvo Caddy.
+Postgres queda accesible solo dentro de la red de compose.
+
+Los registros de los contenedores están limitados a 10 MB × 3 por servicio en `compose.yml`; sin ese
+límite, `json-file` llena el disco y Postgres deja de escribir.
+
+Actualizar las imágenes base con cierta regularidad — `--build` no las refresca:
+
+```bash
+docker compose -f compose.yml pull && docker compose -f compose.yml up -d
+```
+
+Conviene además una comprobación externa de disponibilidad (cualquier servicio gratuito de uptime),
+porque `restart: unless-stopped` reinicia procesos muertos pero no avisa de nada.
+
+## 5.c HSTS
+
+`Caddyfile` envía `Strict-Transport-Security: max-age=86400`, un día. Es deliberado: subir a un año
+solo cuando el dominio definitivo lleve semanas estable, y añadir `includeSubDomains; preload` solo si
+se decide enviar el dominio a hstspreload.org — salir de esa lista tarda meses y obliga a servir HTTPS
+válido en todos los subdominios.
+
 ## 6. Respaldos
 
 El servicio `backup` vuelca la base cada 24 h en el volumen `backups` y borra los volcados de más
@@ -88,11 +123,21 @@ docker compose -f compose.yml exec backup \
   /backups/invite-20260818-0300.dump
 ```
 
-Copiar los volcados fuera del VPS periódicamente: un respaldo que vive en la misma máquina no
-protege de la pérdida de la máquina.
+**Sacar los volcados del VPS.** Un respaldo que vive en la misma máquina no protege de la pérdida de
+la máquina, y un `cp` manual no lo hace nadie. Programarlo desde una máquina de confianza:
 
 ```bash
-docker compose -f compose.yml cp backup:/backups ./backups-locales
+# En el cron de la máquina local o de otro servidor:
+rsync -az --delete usuario@invitepremium.bo:/var/lib/docker/volumes/invitepremium_backups/_data/ ./respaldos-invite/
+```
+
+**Verificar que un respaldo restaura.** Un respaldo sin probar no es un respaldo. Una vez al trimestre:
+
+```bash
+docker compose -f compose.yml exec db createdb -U "$POSTGRES_USER" prueba_restauracion
+docker compose -f compose.yml exec backup pg_restore -d "postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@db:5432/prueba_restauracion" /backups/<volcado>.dump
+docker compose -f compose.yml exec db psql -U "$POSTGRES_USER" -d prueba_restauracion -c 'select count(*) from consultation_requests;'
+docker compose -f compose.yml exec db dropdb -U "$POSTGRES_USER" prueba_restauracion
 ```
 
 ## 7. Actualizar

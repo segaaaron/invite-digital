@@ -3,8 +3,8 @@ export type LeadErrorKind =
   | 'missing_contact'
   | 'invalid_email'
   | 'past_event_date'
+  | 'invalid_event_date'
   | 'invalid_payload'
-  | 'rate_limited'
   | 'storage_failure'
 
 export type LeadError = { readonly kind: LeadErrorKind; readonly detail: string }

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { catalog } from '@/app/composition/container'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
@@ -7,7 +8,7 @@ import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
-import { isOk } from '@/shared/result'
+import { attempt, isOk } from '@/shared/result'
 import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd } from '@/shared/seo/json-ld'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { ComparisonSection } from '@/sections/ComparisonSection'
@@ -36,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
     locale,
     path: `/${locale}`,
     title: dictionary.seo.homeTitle,
-    description: truncateDescription(dictionary.hero.body),
+    description: truncateDescription(dictionary.seo.homeDescription),
   })
 }
 
@@ -47,10 +48,21 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
   const dictionary = getDictionary(locale)
 
+  // The proxy puts the CSP nonce on the request; without it these inline blocks would
+  // be refused by the policy.
+  const nonce = (await headers()).get('x-nonce') ?? undefined
+
+  // The repositories throw when Postgres is unreachable, so each read is wrapped:
+  // a database outage degrades the page section by section instead of returning a 500.
+  const asOutage = (cause: unknown) => ({
+    kind: 'not_found' as const,
+    detail: cause instanceof Error ? cause.message : 'error desconocido',
+  })
+
   const [plansResult, templatesResult, categoriesResult] = await Promise.all([
-    catalog.listPlans(locale),
-    catalog.listTemplates(locale),
-    catalog.listCategories(locale),
+    attempt(() => catalog.listPlans(locale), asOutage),
+    attempt(() => catalog.listTemplates(locale), asOutage),
+    attempt(() => catalog.listCategories(locale), asOutage),
   ])
 
   if (!isOk(plansResult)) {
@@ -71,17 +83,30 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
     <>
       <script
         dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationJsonLd()) }}
+        nonce={nonce}
         type="application/ld+json"
       />
       <script
         dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(plans, locale)) }}
+        nonce={nonce}
         type="application/ld+json"
       />
-      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(dictionary)) }} type="application/ld+json" />
+      <script
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(faqJsonLd(dictionary)) }}
+        nonce={nonce}
+        type="application/ld+json"
+      />
 
       <HeroSection
         dictionary={dictionary}
-        slot={<HeroCanvas alt={dictionary.hero.posterAlt} posterSrc="/hero/envelope-poster.avif" />}
+        slot={
+          <HeroCanvas
+            alt={dictionary.hero.posterAlt}
+            closeLabel={dictionary.hero.envelopeClose}
+            openLabel={dictionary.hero.envelopeOpen}
+            posterSrc="/hero/envelope-poster.avif"
+          />
+        }
       />
       <StatsStrip dictionary={dictionary} />
       <ExperienceSection dictionary={dictionary} />

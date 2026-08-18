@@ -13,3 +13,16 @@ export const unwrapOr = <T, E>(result: Result<T, E>, fallback: T): T =>
 
 export const mapResult = <T, U, E>(result: Result<T, E>, fn: (value: T) => U): Result<U, E> =>
   result.ok ? ok(fn(result.value)) : result
+
+/**
+ * Wraps a promise that may reject into a `Result`. The Drizzle repositories throw on a
+ * connection failure instead of returning `err`, so an `isOk` guard alone would let a
+ * database outage turn a page into a 500.
+ */
+export const attempt = async <T, E>(run: () => Promise<Result<T, E>>, onThrow: (cause: unknown) => E): Promise<Result<T, E>> => {
+  try {
+    return await run()
+  } catch (cause) {
+    return err(onThrow(cause))
+  }
+}

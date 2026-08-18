@@ -1,7 +1,7 @@
 /**
- * Editorial CSS-only stand-in for the hero's 3D slot. Task 11 will replace this
- * with a WebGL canvas passed through the `slot` prop; until then this renders a
- * dignified envelope-and-seal composition instead of an empty rectangle.
+ * CSS-only fallback for the hero's 3D slot, used whenever `HeroSection` is rendered
+ * without one — today only in tests and in any future page that reuses the section.
+ * The landing passes the WebGL canvas through `slot`.
  */
 export function HeroEnvelope() {
   return (

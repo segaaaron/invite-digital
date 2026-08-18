@@ -12,6 +12,8 @@ export const en = {
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
     posterAlt: 'Cotton envelope with a golden wax seal, closed on an ivory background',
+    envelopeOpen: 'Open the envelope',
+    envelopeClose: 'Close the envelope',
   },
   stats: {
     events: 'Events delivered',
@@ -95,10 +97,10 @@ export const en = {
     again: 'Send another',
     sending: 'Sending…',
     whatsappLabel: 'Direct WhatsApp',
+    whatsappMessage: 'Hello, I am interested in a digital invitation. How do we get started?',
     emailLabel: 'Atelier email',
     fields: {
       name: 'Name',
-      contact: 'WhatsApp or email',
       email: 'Email',
       phone: 'WhatsApp',
       category: 'Event type',
@@ -112,14 +114,16 @@ export const en = {
       missing_contact: 'Leave a WhatsApp number or an email so we can reach you.',
       invalid_email: 'That email does not look valid. Please check it.',
       past_event_date: 'That event date is in the past. Pick a future one.',
+      invalid_event_date: 'That date does not exist. Check the day and month.',
       invalid_payload: 'Some fields are missing. Please review and send again.',
-      rate_limited: 'Please wait a moment before sending another request.',
       storage_failure: 'We could not save your request. Message us on WhatsApp.',
       too_many_requests: 'We received several requests from you. Please wait a minute and retry.',
     },
   },
   seo: {
     homeTitle: 'Luxury 3D digital wedding invitations | InvitePremium',
+    homeDescription:
+      'Luxury 3D digital invitations for weddings, quinceañeras and events in Bolivia. Animated envelope, RSVP and your own domain, delivered in 72 hours.',
     collectionsTitle: '3D digital invitation collections | InvitePremium',
     collectionsDescription:
       'Eight digital invitation models for weddings, quinceañeras, graduations and corporate events in Bolivia. A 3D scene, RSVP, and delivery within 72 hours.',

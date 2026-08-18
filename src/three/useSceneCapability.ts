@@ -20,7 +20,11 @@ export function canRenderScene({ reducedMotion, deviceMemory, hasWebGL2 }: Scene
 function detectWebGL2(): boolean {
   try {
     const canvas = document.createElement('canvas')
-    return canvas.getContext('webgl2') !== null
+    const context = canvas.getContext('webgl2')
+    // The probe context counts against the browser's handful of live WebGL contexts,
+    // so it is released as soon as the answer is known.
+    context?.getExtension('WEBGL_lose_context')?.loseContext()
+    return context !== null
   } catch {
     return false
   }
@@ -68,4 +72,9 @@ function getServerSnapshot(): boolean {
 
 export function useSceneCapability(): boolean {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot)
+}
+
+/** Test seam: the cached snapshot is module state and would leak between test cases. */
+export function resetSceneCapability(): void {
+  snapshot = null
 }

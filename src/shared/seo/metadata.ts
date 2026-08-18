@@ -21,16 +21,20 @@ export type Alternates = { canonical: string; languages: Record<string, string> 
 // `baseUrl` is a parameter rather than a read of `env.SITE_URL` inside the body so the
 // tests can pin the production domain without depending on the runner's environment.
 export function buildAlternates(path: string, baseUrl: string = env.SITE_URL): Alternates {
+  // SITE_URL is only validated as a URL, so a trailing slash would produce `//es`.
+  const base = trimTrailingSlash(baseUrl)
   const rest = trimTrailingSlash(stripLocale(path))
-  const urlFor = (locale: Locale): string => `${baseUrl}/${locale}${rest}`
-  const absolute = path.startsWith('/') ? `${baseUrl}${path}` : `${baseUrl}/${path}`
+  const urlFor = (locale: Locale): string => `${base}/${locale}${rest}`
+  const absolute = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`
 
   return {
     canonical: trimTrailingSlash(absolute),
     languages: {
       es: urlFor('es'),
       en: urlFor('en'),
-      'x-default': urlFor(DEFAULT_LOCALE),
+      // x-default points at the URL that negotiates the language, which is the root —
+      // not at one of the translations. Only meaningful for the landing pages.
+      'x-default': rest.length === 0 ? `${base}/` : urlFor(DEFAULT_LOCALE),
     },
   }
 }
@@ -54,7 +58,7 @@ export function buildPageMetadata({
     title,
     description,
     alternates,
-    metadataBase: new URL(baseUrl),
+    metadataBase: new URL(trimTrailingSlash(baseUrl)),
     openGraph: {
       type: 'website',
       siteName: BRAND.siteName,

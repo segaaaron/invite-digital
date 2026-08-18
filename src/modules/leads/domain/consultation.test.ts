@@ -43,6 +43,18 @@ describe('createConsultation', () => {
     if (isErr(result)) expect(result.error.kind).toBe('invalid_email')
   })
 
+  it('rechaza una fecha que no existe en el calendario', () => {
+    const result = createConsultation({ ...base, eventDate: '2026-02-31' }, now)
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) expect(result.error.kind).toBe('invalid_event_date')
+  })
+
+  it('rechaza una fecha con formato inválido', () => {
+    const result = createConsultation({ ...base, eventDate: '2026' }, now)
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) expect(result.error.kind).toBe('invalid_event_date')
+  })
+
   it('rechaza una fecha de evento en el pasado', () => {
     const result = createConsultation({ ...base, eventDate: '2026-08-17' }, now)
     expect(isErr(result)).toBe(true)

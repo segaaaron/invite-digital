@@ -12,6 +12,8 @@ export const es = {
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
     posterAlt: 'Sobre de algodón con sello de cera dorado, cerrado sobre fondo marfil',
+    envelopeOpen: 'Abrir el sobre',
+    envelopeClose: 'Cerrar el sobre',
   },
   stats: {
     events: 'Eventos entregados',
@@ -95,10 +97,10 @@ export const es = {
     again: 'Enviar otra',
     sending: 'Enviando…',
     whatsappLabel: 'WhatsApp directo',
+    whatsappMessage: 'Hola, me interesa una invitación digital. ¿Me cuentan cómo empezamos?',
     emailLabel: 'Correo del atelier',
     fields: {
       name: 'Nombre',
-      contact: 'WhatsApp o email',
       email: 'Email',
       phone: 'WhatsApp',
       category: 'Tipo de evento',
@@ -112,14 +114,16 @@ export const es = {
       missing_contact: 'Déjanos un WhatsApp o un email para escribirte.',
       invalid_email: 'Ese email no parece válido. Revísalo, por favor.',
       past_event_date: 'La fecha del evento ya pasó. Elige una futura.',
+      invalid_event_date: 'Esa fecha no existe. Revisa el día y el mes.',
       invalid_payload: 'Faltan datos en el formulario. Revísalo y vuelve a enviarlo.',
-      rate_limited: 'Espera un momento antes de enviar otra consulta.',
       storage_failure: 'No pudimos guardar tu consulta. Escríbenos por WhatsApp.',
       too_many_requests: 'Recibimos varias consultas tuyas. Espera un minuto antes de reintentar.',
     },
   },
   seo: {
     homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | InvitePremium',
+    homeDescription:
+      'Invitaciones digitales 3D para bodas, XV años y eventos en Bolivia. Sobre animado, RSVP y dominio propio, entregado en 72 horas.',
     collectionsTitle: 'Colecciones de invitaciones digitales 3D | InvitePremium',
     collectionsDescription:
       'Ocho modelos de invitación digital para bodas, XV años, graduaciones y eventos corporativos en Bolivia. Escena 3D, RSVP y entrega en 72 horas.',

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildAlternates, buildPageMetadata } from './metadata'
+import { buildAlternates, buildPageMetadata, truncateDescription } from './metadata'
 
 const SITE = 'https://invitepremium.bo'
 
@@ -16,6 +16,30 @@ describe('buildAlternates', () => {
     const alternates = buildAlternates('/en', SITE)
     expect(alternates.canonical).toBe('https://invitepremium.bo/en')
     expect(alternates.languages['es']).toBe('https://invitepremium.bo/es')
+  })
+
+  it('en la portada, x-default apunta a la raíz que negocia el idioma', () => {
+    expect(buildAlternates('/es', SITE).languages['x-default']).toBe('https://invitepremium.bo/')
+  })
+
+  it('no duplica la barra cuando SITE_URL termina en barra', () => {
+    const alternates = buildAlternates('/es', 'https://invitepremium.bo/')
+    expect(alternates.canonical).toBe('https://invitepremium.bo/es')
+    expect(alternates.languages['en']).toBe('https://invitepremium.bo/en')
+  })
+})
+
+describe('truncateDescription', () => {
+  it('deja intacto un texto que cabe', () => {
+    expect(truncateDescription('Invitaciones digitales', 155)).toBe('Invitaciones digitales')
+  })
+
+  it('corta en el último espacio y añade puntos suspensivos', () => {
+    expect(truncateDescription('uno dos tres cuatro', 14)).toBe('uno dos tres…')
+  })
+
+  it('corta en seco un texto sin espacios', () => {
+    expect(truncateDescription('a'.repeat(20), 10)).toBe(`${'a'.repeat(10)}…`)
   })
 })
 

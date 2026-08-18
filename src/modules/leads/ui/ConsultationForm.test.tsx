@@ -50,6 +50,23 @@ describe('ConsultationForm', () => {
     expect(alert).toHaveTextContent(dictionary.contact.errors.missing_contact)
   })
 
+  it('asocia el error al campo culpable y no a los demás', () => {
+    state.current = { status: 'error', message: 'past_event_date' }
+    render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)
+
+    expect(screen.getByLabelText(/Fecha del evento/)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/Nombre/)).not.toHaveAttribute('aria-invalid')
+    expect(screen.getByLabelText(/Nombre/)).not.toHaveAttribute('aria-describedby')
+  })
+
+  it('culpa a los dos campos de contacto cuando falta cualquiera de ellos', () => {
+    state.current = { status: 'error', message: 'missing_contact' }
+    render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)
+
+    expect(screen.getByLabelText(/Email/)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/WhatsApp/)).toHaveAttribute('aria-invalid', 'true')
+  })
+
   it('reemplaza el formulario por el acuse cuando la consulta se guarda', () => {
     state.current = { status: 'success', message: '' }
     render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)

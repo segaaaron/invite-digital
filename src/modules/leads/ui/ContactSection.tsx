@@ -12,7 +12,7 @@ type Props = { categories: readonly Category[]; dictionary: Dictionary; locale: 
 
 export function ContactSection({ categories, dictionary, locale }: Props) {
   const { contact } = dictionary
-  const whatsappHref = buildWhatsAppLink({ message: contact.title })
+  const whatsappHref = buildWhatsAppLink({ message: contact.whatsappMessage })
 
   return (
     <section aria-labelledby="contact-title" className="px-6 py-24" id="contacto">

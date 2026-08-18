@@ -10,7 +10,9 @@ export const consultationSchema = z.object({
   email: z.string().max(200).default(''),
   phone: z.string().max(32).default(''),
   categorySlug: z.string().max(64).default(''),
-  eventDate: z.string().max(10).default(''),
+  eventDate: z
+    .union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha debe ser AAAA-MM-DD')])
+    .default(''),
   message: z.string().max(2000).default(''),
   locale: z.enum(LOCALES),
 })
