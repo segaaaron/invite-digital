@@ -33,7 +33,15 @@ export const es = {
     body: 'Un solo enlace por WhatsApp. Se abre a pantalla completa, sin apps ni descargas, y funciona igual en iPhone, Android y tablet.',
     bullets: ['Carga en menos de dos segundos', 'Código QR para la mesa de recepción', 'Botón de confirmación directo al chat'],
   },
-  collections: { eyebrow: 'Colecciones', title: 'Una escena para cada celebración', hint: 'Arrástralo o usa las flechas' },
+  collections: {
+    eyebrow: 'Colecciones',
+    title: 'Una escena para cada celebración',
+    hint: 'Arrástralo o usa las flechas',
+    previous: 'Anterior',
+    next: 'Siguiente',
+    backToHome: 'Volver al inicio',
+    errorMessage: 'No pudimos cargar las colecciones en este momento. Escríbenos y te mostramos los modelos disponibles.',
+  },
   comparison: {
     eyebrow: 'Comparativa',
     title: 'La diferencia LUXE',

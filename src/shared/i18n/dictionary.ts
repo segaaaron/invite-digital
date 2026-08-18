@@ -46,6 +46,10 @@ export interface CollectionsDictionary {
   eyebrow: string
   title: string
   hint: string
+  previous: string
+  next: string
+  backToHome: string
+  errorMessage: string
 }
 
 export interface ComparisonDictionary {

@@ -33,7 +33,15 @@ export const en = {
     body: 'A single link, sent over WhatsApp. It opens full screen, with no app to download, and behaves the same way on iPhone, Android, or tablet.',
     bullets: ['Loads in under two seconds', 'A QR code for the welcome table', 'A confirmation button straight to the chat'],
   },
-  collections: { eyebrow: 'Collections', title: 'A scene for every celebration', hint: 'Drag it, or use the arrows' },
+  collections: {
+    eyebrow: 'Collections',
+    title: 'A scene for every celebration',
+    hint: 'Drag it, or use the arrows',
+    previous: 'Previous',
+    next: 'Next',
+    backToHome: 'Back to home',
+    errorMessage: "We couldn't load the collections right now. Message us and we'll show you the available designs.",
+  },
   comparison: {
     eyebrow: 'Comparison',
     title: 'The LUXE difference',
