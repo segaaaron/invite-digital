@@ -291,7 +291,7 @@ import { describe, expect, it } from 'vitest'
 import { parseEnv } from './env'
 
 const valid = {
-  DATABASE_URL: 'postgres://user:pass@localhost:5432/invite',
+  DATABASE_URL: 'postgres://user:pass@localhost:5434/invite',
   SITE_URL: 'https://invitepremium.bo',
   NODE_ENV: 'production',
 }
@@ -359,7 +359,7 @@ export const BRAND = {
 Crear `.env.example`:
 
 ```
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite
 SITE_URL=http://localhost:3000
 NODE_ENV=development
 ```
@@ -1196,7 +1196,7 @@ Añadir a `scripts` de `package.json`:
 ```bash
 cp .env.example .env.local
 pnpm db:generate
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm db:migrate
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm db:migrate
 ```
 
 Expected: aparece `db/migrations/0000_*.sql` y las tablas se crean.
@@ -1231,7 +1231,7 @@ describe('esquema', () => {
 
 - [ ] **Step 6: Ejecutar y verificar**
 
-Run: `DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm test src/shared/db/schema.test.ts`
+Run: `DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm test src/shared/db/schema.test.ts`
 Expected: PASS. Si falla por tablas faltantes, la migración del paso 4 no se aplicó.
 
 - [ ] **Step 7: Escribir el seed**
@@ -1345,7 +1345,7 @@ process.exit(0)
 - [ ] **Step 8: Ejecutar el seed y verificar**
 
 ```bash
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm db:seed
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm db:seed
 docker exec -i $(docker compose -f docker/compose.dev.yml ps -q db) psql -U invite -d invite -c "select slug, price_cents from plans order by sort_order;"
 ```
 
@@ -1921,7 +1921,7 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
 Run:
 
 ```bash
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 \
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 \
   pnpm test src/modules/catalog/infrastructure/drizzle-repositories.test.ts
 ```
 
@@ -2181,7 +2181,7 @@ Las secciones reales llegan en la Task 9; este paso solo verifica que el enrutad
 
 ```bash
 docker compose -f docker/compose.dev.yml up -d
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm dev
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm dev
 ```
 
 Comprobar manualmente:
@@ -3495,7 +3495,7 @@ Modificar `src/app/[locale]/page.tsx` para renderizar `ContactSection` al final,
 - [ ] **Step 15: Verificar de punta a punta**
 
 ```bash
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm dev
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm dev
 ```
 
 Enviar el formulario desde el navegador y comprobar la fila:
@@ -3731,7 +3731,7 @@ Crear `src/app/[locale]/opengraph-image.tsx` con el runtime de imagen de Next: f
 - [ ] **Step 10: Verificar la salida real**
 
 ```bash
-pnpm build && SITE_URL=https://invitepremium.bo DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm start &
+pnpm build && SITE_URL=https://invitepremium.bo DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm start &
 curl -s http://localhost:3000/es | grep -o 'hreflang="[^"]*"' | sort -u
 curl -s http://localhost:3000/es | grep -o 'application/ld+json' | wc -l
 curl -s http://localhost:3000/sitemap.xml | head -20
@@ -3998,8 +3998,8 @@ Run:
 
 ```bash
 docker compose -f docker/compose.dev.yml up -d
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm build
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm test:e2e
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm build
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm test:e2e
 ```
 
 Expected: 5 pruebas en verde.
