@@ -1,0 +1,27 @@
+@theme {
+  --color-bg: #f6f1e9;
+  --color-bg-raised: #fdfaf4;
+  --color-bg-sunken: #efe7dc;
+  --color-ink: #2b2723;
+  --color-ink-soft: #58514a;
+  --color-ink-mute: #9a917f;
+  --color-gold: #c19b4a;
+  --color-gold-deep: #a8823a;
+  --color-gold-light: #e2c584;
+  --color-line: rgb(193 155 74 / 0.22);
+
+  --font-display: var(--font-display), 'Cormorant Garamond', serif;
+  --font-sans: var(--font-sans), system-ui, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 22px;
+
+  --shadow-float: 0 22px 60px -28px rgb(90 66 26 / 0.45);
+  --shadow-lift: 0 34px 90px -40px rgb(90 66 26 / 0.55);
+
+  --tracking-luxe: 0.18em;
+}
+
+:root {
+  --page-gradient: radial-gradient(1200px 700px at 78% -8%, #fffdf9 0%, #f6f1e9 46%, #efe7dc 100%);
+}
