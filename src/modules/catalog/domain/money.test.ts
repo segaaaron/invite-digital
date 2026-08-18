@@ -43,4 +43,16 @@ describe('Money', () => {
     if (!isOk(result)) throw new Error('esperaba un monto válido')
     expect(formatMoney(result.value, 'es')).toBe('Bs 2.900')
   })
+
+  it('formatea un importe no redondo en español con exactamente dos decimales', () => {
+    const result = createMoney(69050)
+    if (!isOk(result)) throw new Error('esperaba un monto válido')
+    expect(formatMoney(result.value, 'es')).toBe('Bs 690,50')
+  })
+
+  it('formatea un importe no redondo en inglés con exactamente dos decimales', () => {
+    const result = createMoney(69050)
+    if (!isOk(result)) throw new Error('esperaba un monto válido')
+    expect(formatMoney(result.value, 'en')).toBe('Bs 690.50')
+  })
 })

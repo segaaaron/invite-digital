@@ -22,9 +22,10 @@ const GROUPING_LOCALE: Record<Locale, string> = { es: 'es-BO', en: 'en-US' }
 
 export function formatMoney(money: Money, locale: Locale): string {
   const units = money.cents / CENTS_PER_UNIT
+  const isRound = units % 1 === 0
   const amount = new Intl.NumberFormat(GROUPING_LOCALE[locale], {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: units % 1 === 0 ? 0 : 2,
+    minimumFractionDigits: isRound ? 0 : 2,
+    maximumFractionDigits: isRound ? 0 : 2,
   }).format(units)
   return `Bs ${amount}`
 }
