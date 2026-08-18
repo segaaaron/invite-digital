@@ -1380,6 +1380,8 @@ git commit -m "feat: esquema Postgres con traducciones, migraciones Drizzle y se
   - `type Plan = { id: string; slug: string; price: Money; highlighted: boolean; sortOrder: number; name: string; tagline: string; description: string; features: readonly string[] }`
   - `createPlan(input: PlanInput): Result<Plan, CatalogError>`
   - `type Template = { id: string; slug: string; categorySlug: string; categoryName: string; coverImagePath: string; palette: { base: string; accent: string }; sortOrder: number; name: string; description: string }`
+  - `type TemplateInput` con la misma forma, como entrada cruda
+  - `createTemplate(input: TemplateInput): Result<Template, CatalogError>` valida slug, categoría, nombre, ruta de imagen, paleta hexadecimal y orden; los repositorios de la Task 7 mapean cada fila de Postgres a través de él
   - `type CatalogError = { kind: 'invalid_price' | 'invalid_slug' | 'empty_features' | 'not_found'; detail: string }`
 
 Todos los tipos son datos planos y serializables: pasan del Server Component al Client Component sin conversión.
@@ -1857,6 +1859,8 @@ const selectTemplate = {
 
 export const drizzleTemplateRepository: TemplateRepository = {
   async listPublished(locale: Locale): Promise<Template[]> {
+    // Toda fila de la base pasa por `createTemplate`: es el único punto donde se
+    // valida que el dato persistido siga cumpliendo las invariantes del dominio.
     return db
       .select(selectTemplate)
       .from(templates)
