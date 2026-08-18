@@ -1351,7 +1351,10 @@ docker exec -i $(docker compose -f docker/compose.dev.yml ps -q db) psql -U invi
 
 Expected: `atelier 69000`, `firma-3d 145000`, `alta-costura 290000`.
 
-El seed es idempotente: ejecutarlo dos veces no duplica filas.
+El seed es idempotente y además propaga ediciones: las traducciones usan
+`onConflictDoUpdate` sobre `(entidad_id, locale)`, de modo que corregir un texto en
+`seed.ts` y volver a sembrar actualiza la base. `onConflictDoNothing` en traducciones
+quedaría con el texto viejo en silencio.
 
 - [ ] **Step 9: Commit**
 

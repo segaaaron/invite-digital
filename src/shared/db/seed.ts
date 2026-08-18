@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm'
 import { db } from './client'
 import { eventCategories, eventCategoryTranslations, planTranslations, plans, templateTranslations, templates } from './schema'
 
@@ -120,7 +121,10 @@ async function seed() {
         { categoryId: row.id, locale: 'es', name: c.es },
         { categoryId: row.id, locale: 'en', name: c.en },
       ])
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: [eventCategoryTranslations.categoryId, eventCategoryTranslations.locale],
+        set: { name: sql`excluded.name` },
+      })
   }
 
   for (const p of PLANS) {
@@ -136,7 +140,15 @@ async function seed() {
         { planId: row.id, locale: 'es', ...p.es, features: [...p.es.features] },
         { planId: row.id, locale: 'en', ...p.en, features: [...p.en.features] },
       ])
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: [planTranslations.planId, planTranslations.locale],
+        set: {
+          name: sql`excluded.name`,
+          tagline: sql`excluded.tagline`,
+          description: sql`excluded.description`,
+          features: sql`excluded.features`,
+        },
+      })
   }
 
   for (const t of TEMPLATES) {
@@ -154,7 +166,10 @@ async function seed() {
         { templateId: row.id, locale: 'es', name: t.es, description: `Modelo ${t.es} del atelier InvitePremium.` },
         { templateId: row.id, locale: 'en', name: t.en, description: `The ${t.en} model from the InvitePremium atelier.` },
       ])
-      .onConflictDoNothing()
+      .onConflictDoUpdate({
+        target: [templateTranslations.templateId, templateTranslations.locale],
+        set: { name: sql`excluded.name`, description: sql`excluded.description` },
+      })
   }
 
   console.log('Seed completo: %d categorías, %d planes, %d plantillas', CATEGORIES.length, PLANS.length, TEMPLATES.length)
