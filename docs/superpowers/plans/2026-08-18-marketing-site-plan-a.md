@@ -38,6 +38,7 @@
 ```
 src/
   app/
+    composition/container.ts        raíz de composición: única capa que ve infraestructura
     layout.tsx                      html raíz, fuentes, tokens
     [locale]/layout.tsx             provee locale + diccionario
     [locale]/page.tsx               landing
@@ -50,7 +51,6 @@ src/
     i18n/locales.ts negotiate.ts dictionaries.ts format.ts
     design/tokens.css fonts.ts ui/*.tsx motion/*.ts
     db/client.ts schema.ts seed.ts
-    composition/container.ts        raíz de composición
   modules/
     catalog/
       domain/money.ts plan.ts template.ts errors.ts
@@ -1647,7 +1647,7 @@ git commit -m "feat(catalog): dominio de planes, plantillas y dinero con Result 
 ### Task 7: Casos de uso y repositorios del catálogo
 
 **Files:**
-- Create: `src/modules/catalog/application/ports.ts`, `src/modules/catalog/application/list-plans.ts`, `src/modules/catalog/application/list-templates.ts`, `src/modules/catalog/application/get-template.ts`, `src/modules/catalog/infrastructure/mappers.ts`, `src/modules/catalog/infrastructure/drizzle-plan-repository.ts`, `src/modules/catalog/infrastructure/drizzle-template-repository.ts`, `src/modules/catalog/index.ts`, `src/shared/composition/container.ts`
+- Create: `src/modules/catalog/application/ports.ts`, `src/modules/catalog/application/list-plans.ts`, `src/modules/catalog/application/list-templates.ts`, `src/modules/catalog/application/get-template.ts`, `src/modules/catalog/infrastructure/mappers.ts`, `src/modules/catalog/infrastructure/drizzle-plan-repository.ts`, `src/modules/catalog/infrastructure/drizzle-template-repository.ts`, `src/modules/catalog/index.ts`, `src/app/composition/container.ts`
 - Test: `src/modules/catalog/application/list-plans.test.ts`, `src/modules/catalog/infrastructure/drizzle-repositories.test.ts`
 
 **Interfaces:**
@@ -1936,7 +1936,7 @@ Expected: PASS, 4 pruebas.
 
 - [ ] **Step 8: Escribir la raíz de composición y la superficie pública**
 
-Crear `src/shared/composition/container.ts`:
+Crear `src/app/composition/container.ts`:
 
 ```ts
 import { getTemplate } from '@/modules/catalog/application/get-template'
@@ -1968,7 +1968,7 @@ Esta es la única superficie que otros módulos y la UI pueden importar del cat�
 - [ ] **Step 9: Verificar la suite completa**
 
 Run: `pnpm test && pnpm typecheck && pnpm lint`
-Expected: verde. Si ESLint marca que `app` importa `infrastructure`, revisar que la importación pase por `src/shared/composition/container.ts`.
+Expected: verde. Si ESLint marca que `app` importa `infrastructure`, revisar que la importación pase por `src/app/composition/container.ts`.
 
 - [ ] **Step 10: Commit**
 
@@ -2748,7 +2748,7 @@ Expected: PASS, 3 pruebas.
 Modificar `src/app/[locale]/page.tsx` para cargar catálogo en el servidor y degradar sin romper:
 
 ```tsx
-import { catalog } from '@/shared/composition/container'
+import { catalog } from '@/app/composition/container'
 import { isOk } from '@/shared/result'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
@@ -3053,7 +3053,7 @@ git commit -m "feat(3d): hero con sobre interactivo, póster de respaldo y degra
 
 **Files:**
 - Create: `src/modules/leads/domain/consultation.ts`, `src/modules/leads/domain/errors.ts`, `src/modules/leads/application/ports.ts`, `src/modules/leads/application/submit-consultation.ts`, `src/modules/leads/infrastructure/drizzle-consultation-repository.ts`, `src/modules/leads/infrastructure/whatsapp-link.ts`, `src/modules/leads/ui/ConsultationForm.tsx`, `src/modules/leads/ui/ContactSection.tsx`, `src/modules/leads/actions.ts`, `src/modules/leads/index.ts`
-- Modify: `src/shared/composition/container.ts`, `src/app/[locale]/page.tsx`, `src/modules/catalog/ui/PlanCard.tsx`
+- Modify: `src/app/composition/container.ts`, `src/app/[locale]/page.tsx`, `src/modules/catalog/ui/PlanCard.tsx`
 - Test: `src/modules/leads/domain/consultation.test.ts`, `src/modules/leads/application/submit-consultation.test.ts`, `src/modules/leads/infrastructure/whatsapp-link.test.ts`
 
 **Interfaces:**
@@ -3432,7 +3432,7 @@ Crear `src/modules/leads/actions.ts`:
 'use server'
 
 import { headers } from 'next/headers'
-import { leads } from '@/shared/composition/container'
+import { leads } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
 
 type ActionState = { status: 'idle' | 'success' | 'error'; message: string }
@@ -3468,7 +3468,7 @@ export async function submitConsultationAction(_prev: ActionState, formData: For
 
 El limitador en memoria basta para un solo contenedor; el Plan B lo mueve a Postgres cuando haya más de una réplica. La acción nunca devuelve `detail` al cliente: solo el `kind`, que la UI traduce.
 
-Extender `src/shared/composition/container.ts`:
+Extender `src/app/composition/container.ts`:
 
 ```ts
 import { submitConsultation } from '@/modules/leads/application/submit-consultation'
@@ -3698,7 +3698,7 @@ Crear `src/app/sitemap.ts`:
 
 ```ts
 import type { MetadataRoute } from 'next'
-import { catalog } from '@/shared/composition/container'
+import { catalog } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
 import { isOk } from '@/shared/result'
