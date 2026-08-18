@@ -11,6 +11,7 @@ export const es = {
     ctaPrimary: 'Crear invitación',
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
+    posterAlt: 'Sobre de algodón con sello de cera dorado, cerrado sobre fondo marfil',
   },
   stats: {
     events: 'Eventos entregados',

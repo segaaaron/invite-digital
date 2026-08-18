@@ -11,6 +11,7 @@ export const en = {
     ctaPrimary: 'Create your invitation',
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
+    posterAlt: 'Cotton envelope with a golden wax seal, closed on an ivory background',
   },
   stats: {
     events: 'Events delivered',

@@ -14,6 +14,7 @@ import { HeroSection } from '@/sections/HeroSection'
 import { MobileSection } from '@/sections/MobileSection'
 import { StatsStrip } from '@/sections/StatsStrip'
 import { TestimonialsSection } from '@/sections/TestimonialsSection'
+import { HeroCanvas } from '@/three/HeroCanvas'
 
 export const revalidate = 300
 
@@ -38,7 +39,10 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
   return (
     <>
-      <HeroSection dictionary={dictionary} />
+      <HeroSection
+        dictionary={dictionary}
+        slot={<HeroCanvas alt={dictionary.hero.posterAlt} posterSrc="/hero/envelope-poster.avif" />}
+      />
       <StatsStrip dictionary={dictionary} />
       <ExperienceSection dictionary={dictionary} />
       <MobileSection dictionary={dictionary} />

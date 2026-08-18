@@ -14,6 +14,7 @@ export interface HeroDictionary {
   ctaPrimary: string
   ctaSecondary: string
   trustLabel: string
+  posterAlt: string
 }
 
 export interface StatsDictionary {
