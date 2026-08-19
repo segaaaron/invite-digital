@@ -6,7 +6,7 @@ import { LOCALES } from '@/shared/i18n/locales'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { SiteFooter } from '@/sections/SiteFooter'
 import { SiteHeader } from '@/sections/SiteHeader'
-import '../globals.css'
+import '../../globals.css'
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))

@@ -25,7 +25,6 @@ export function proxy(request: NextRequest) {
 
   if (
     pathname.startsWith('/api') ||
-    pathname.startsWith('/admin') ||
     pathname.startsWith('/_next') ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||

@@ -74,8 +74,16 @@ test('el sitemap incluye ambas ramas de idioma', async ({ request }) => {
   expect(body).toContain('/en')
 })
 
-test('la imagen Open Graph solo existe para idiomas reales', async ({ request }) => {
-  expect((await request.get('/es/opengraph-image')).status()).toBe(200)
+test('la imagen Open Graph solo existe para idiomas reales', async ({ page, request }) => {
+  // La URL la elige Next (le añade un hash propio), así que se lee de la propia
+  // metadata en vez de fijarla aquí: si se fijara, un cambio de ruta interno
+  // rompería la prueba sin que nada del contrato se hubiera roto.
+  await page.goto('/es')
+  const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content')
+  expect(ogImage).not.toBeNull()
+  expect((await request.get(ogImage!)).status()).toBe(200)
+
+  expect((await request.get('/fr')).status()).toBe(404)
   expect((await request.get('/fr/opengraph-image')).status()).toBe(404)
 })
 
