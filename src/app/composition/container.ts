@@ -13,6 +13,7 @@ import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
 import { revokeInvitation } from '@/modules/guests/application/revoke-invitation'
 import { drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
+import { getInvitation } from '@/modules/rsvp/application/get-invitation'
 import { getTally } from '@/modules/rsvp/application/get-tally'
 import { respondToInvitation } from '@/modules/rsvp/application/respond-to-invitation'
 import { drizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
@@ -79,5 +80,10 @@ export const rsvp = {
     clock,
   }),
   tally: getTally({ rsvp: drizzleRsvpRepository }),
+  getInvitation: getInvitation({
+    resolveGroup: (token) => guests.resolveByToken(token),
+    findEventById: (id) => events.getById(id),
+    rsvp: drizzleRsvpRepository,
+  }),
   latestFor: (guestGroupId: string) => drizzleRsvpRepository.latestFor(guestGroupId),
 } as const

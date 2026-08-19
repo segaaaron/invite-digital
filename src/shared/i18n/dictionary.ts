@@ -148,6 +148,29 @@ export interface FooterDictionary {
   coverage: string
 }
 
+export type RsvpMessageKey =
+  | 'invitation_not_found'
+  | 'invitation_revoked'
+  | 'rsvp_closed'
+  | 'too_many_seats'
+  | 'invalid_payload'
+  | 'storage_failure'
+  | 'rate_limited'
+
+export interface InvitationDictionary {
+  title: string
+  seatsLabel: string
+  attendingLabel: string
+  messageLabel: string
+  submit: string
+  sending: string
+  successTitle: string
+  successBody: string
+  change: string
+  closed: string
+  errors: Record<RsvpMessageKey, string>
+}
+
 export interface Dictionary {
   nav: NavDictionary
   hero: HeroDictionary
@@ -157,6 +180,7 @@ export interface Dictionary {
   comparison: ComparisonDictionary
   pricing: PricingDictionary
   models: ModelsDictionary
+  invitation: InvitationDictionary
   testimonials: TestimonialsDictionary
   faq: FaqDictionary
   contact: ContactDictionary
