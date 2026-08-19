@@ -1,0 +1,18 @@
+{$SITE_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		# One day to start. Raise to a year — and only then consider adding
+		# `includeSubDomains; preload` — once the real domain has been stable for
+		# weeks: preload is a months-long commitment to remove.
+		Strict-Transport-Security "max-age=86400"
+		-Server
+	}
+
+	# Overwrite, never append: the rate limiter in the Server Action reads this header,
+	# and a client-supplied X-Forwarded-For would let anyone rotate their identity.
+	reverse_proxy web:3000 {
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Real-IP {remote_host}
+	}
+}

@@ -1,0 +1,114 @@
+name: invitepremium
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER es obligatorio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:?POSTGRES_USER es obligatorio} -d ${POSTGRES_DB:?POSTGRES_DB es obligatorio}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER es obligatorio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@db:5432/${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+      SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - '3000'
+    # Caddy waits for this, so the first minute after a deploy no longer serves 502.
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/es').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # Migrations and seed run from the build stage, which still carries drizzle-kit and
+  # tsx. Mounting the host repository does not work: its node_modules are built for a
+  # different platform and the container user cannot write to them.
+  # Run with: docker compose --profile tools run --rm migrator
+  migrator:
+    profiles: ['tools']
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: build
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER es obligatorio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@db:5432/${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+      SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
+    command: sh -c 'pnpm db:migrate && pnpm db:seed'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+    environment:
+      SITE_DOMAIN: ${SITE_DOMAIN:?SITE_DOMAIN es obligatorio}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      web:
+        condition: service_healthy
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+    entrypoint: ['/bin/sh', '/backup.sh']
+    environment:
+      PGUSER: ${POSTGRES_USER:?POSTGRES_USER es obligatorio}
+      PGPASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}
+      PGDATABASE: ${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+      PGHOST: db
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  backups:
+  caddy_data:
+  caddy_config:

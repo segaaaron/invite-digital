@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@import '../shared/design/tokens.css';
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  background: var(--page-gradient);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  overflow-x: hidden;
+}
+
+::selection { background: rgb(var(--color-gold-rgb) / 0.24); color: var(--color-ink-selection); }
+:focus-visible { outline: 1px solid var(--color-gold); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

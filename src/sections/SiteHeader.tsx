@@ -1,0 +1,48 @@
+import Link from 'next/link'
+import type { Dictionary } from '@/shared/i18n/dictionaries'
+import type { Locale } from '@/shared/i18n/locales'
+import { Button } from '@/shared/design/ui/Button'
+
+type Props = { locale: Locale; dictionary: Dictionary }
+
+export function SiteHeader({ locale, dictionary }: Props) {
+  const links = [
+    { href: '#colecciones', label: dictionary.nav.collections },
+    { href: '#experiencia', label: dictionary.nav.experience },
+    { href: '#precios', label: dictionary.nav.pricing },
+  ]
+
+  return (
+    <header className="fixed inset-x-0 top-[18px] z-[70] flex justify-center px-4">
+      <div className="flex w-full max-w-[1180px] items-center gap-8 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/72 px-6 py-3 shadow-[var(--shadow-float)] backdrop-blur-[18px]">
+        <nav className="hidden flex-1 items-center justify-end gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
+          {links.slice(0, 2).map((link) => (
+            <a key={link.href} className="text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <Link className="flex flex-col items-center px-2 leading-none" href={`/${locale}`}>
+          <span className="bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text font-display text-[27px] font-medium tracking-[0.13em] text-transparent">
+            LUXE
+          </span>
+          <span className="mt-1 text-[9px] uppercase tracking-[0.3em] text-ink-mute">InvitePremium</span>
+        </Link>
+
+        <nav className="hidden flex-1 items-center gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
+          <a className="text-ink-soft transition-colors hover:text-gold-deep" href="#precios">
+            {dictionary.nav.pricing}
+          </a>
+          <Button href="#contacto" className="ml-auto">
+            {dictionary.nav.contact}
+          </Button>
+        </nav>
+
+        <Button href="#contacto" className="ml-auto md:hidden">
+          {dictionary.nav.contact}
+        </Button>
+      </div>
+    </header>
+  )
+}

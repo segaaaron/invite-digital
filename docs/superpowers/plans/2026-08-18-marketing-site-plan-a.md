@@ -4,9 +4,9 @@
 
 **Goal:** Publicar la landing de lujo de InvitePremium en español e inglés, con catálogo servido desde Postgres, hero 3D y captura de leads hacia WhatsApp, desplegable en el VPS.
 
-**Architecture:** Monolito modular en Next.js 15 App Router. Cada módulo (`catalog`, `leads`) es una rebanada vertical con capas `domain` → `application` → `infrastructure` → `ui`, con fronteras verificadas por ESLint. El dominio es puro y devuelve `Result<T, E>`; los repositorios Drizzle implementan puertos declarados en `application`. La UI consume casos de uso a través de una raíz de composición única.
+**Architecture:** Monolito modular en Next.js 16 App Router. Cada módulo (`catalog`, `leads`) es una rebanada vertical con capas `domain` → `application` → `infrastructure` → `ui`, con fronteras verificadas por ESLint. El dominio es puro y devuelve `Result<T, E>`; los repositorios Drizzle implementan puertos declarados en `application`. La UI consume casos de uso a través de una raíz de composición única.
 
-**Tech Stack:** Next.js 15, React 19, TypeScript strict, Tailwind CSS v4, Drizzle ORM + postgres.js, Postgres 17, Zod, Framer Motion, React Three Fiber, Vitest, Playwright, Docker Compose, Caddy.
+**Tech Stack:** Next.js 16, React 19, TypeScript strict, Tailwind CSS v4, Drizzle ORM + postgres.js, Postgres 17, Zod, Framer Motion, React Three Fiber, Vitest, Playwright, Docker Compose, Caddy.
 
 **Spec:** `docs/superpowers/specs/2026-08-17-marketing-site-design.md`
 
@@ -16,10 +16,14 @@
 - TypeScript `strict: true`, `noUncheckedIndexedAccess: true`. Prohibido `any` y `@ts-ignore`.
 - Idiomas: `en` (fallback) y `es`. Sin selector visible de idioma en la UI.
 - Moneda: BOB, almacenada en centavos enteros. Formato visible: `Bs 690`.
-- Tokens de color obligatorios (ningún literal hexadecimal en componentes):
+- Tokens de color obligatorios (ningún literal hexadecimal fuera de `tokens.css`):
   `--iv-bg #f6f1e9`, `--iv-bg-raised #fdfaf4`, `--iv-bg-sunken #efe7dc`,
   `--iv-ink #2b2723`, `--iv-ink-soft #58514a`, `--iv-ink-mute #9a917f`,
-  `--iv-gold #c19b4a`, `--iv-gold-deep #a8823a`, `--iv-gold-light #e2c584`.
+  `--iv-gold #c19b4a`, `--iv-gold-deep #a8823a`, `--iv-gold-light #e2c584`,
+  `--color-bg-top #fffdf9` (cima del degradado radial) y `--color-ink-selection #26221e`
+  (texto seleccionado), ambos del diseño Ivory. Las variantes con alfa se componen
+  desde `--color-gold-rgb: 193 155 74` y `--color-shadow-rgb: 90 66 26`, nunca
+  descomponiendo canales a mano en cada regla.
 - Tipografías: Cormorant Garamond (display) y Jost (UI), servidas localmente con `next/font/local`. Prohibido cargar fuentes desde Google en producción.
 - Presupuesto de rendimiento: LCP < 2.0 s, CLS < 0.05, INP < 200 ms.
 - Toda animación respeta `prefers-reduced-motion: reduce`.
@@ -34,19 +38,19 @@
 ```
 src/
   app/
+    composition/container.ts        raíz de composición: única capa que ve infraestructura
     layout.tsx                      html raíz, fuentes, tokens
     [locale]/layout.tsx             provee locale + diccionario
     [locale]/page.tsx               landing
     [locale]/colecciones/page.tsx   catálogo
     sitemap.ts robots.ts
-  middleware.ts                     negociación y redirección de idioma
+  proxy.ts                          negociación y redirección de idioma
   shared/
     result/index.ts                 Result, ok, err
     config/env.ts brand.ts
     i18n/locales.ts negotiate.ts dictionaries.ts format.ts
     design/tokens.css fonts.ts ui/*.tsx motion/*.ts
     db/client.ts schema.ts seed.ts
-    composition/container.ts        raíz de composición
   modules/
     catalog/
       domain/money.ts plan.ts template.ts errors.ts
@@ -287,7 +291,7 @@ import { describe, expect, it } from 'vitest'
 import { parseEnv } from './env'
 
 const valid = {
-  DATABASE_URL: 'postgres://user:pass@localhost:5432/invite',
+  DATABASE_URL: 'postgres://user:pass@localhost:5434/invite',
   SITE_URL: 'https://invitepremium.bo',
   NODE_ENV: 'production',
 }
@@ -355,7 +359,7 @@ export const BRAND = {
 Crear `.env.example`:
 
 ```
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite
 SITE_URL=http://localhost:3000
 NODE_ENV=development
 ```
@@ -377,7 +381,7 @@ git commit -m "feat: configuración de entorno validada con Zod y constantes de 
 ### Task 3: Negociación de idioma y diccionarios
 
 **Files:**
-- Create: `src/shared/i18n/locales.ts`, `src/shared/i18n/negotiate.ts`, `src/shared/i18n/dictionaries.ts`, `src/shared/i18n/format.ts`, `src/shared/i18n/messages/es.ts`, `src/shared/i18n/messages/en.ts`, `src/middleware.ts`
+- Create: `src/shared/i18n/locales.ts`, `src/shared/i18n/negotiate.ts`, `src/shared/i18n/dictionaries.ts`, `src/shared/i18n/format.ts`, `src/shared/i18n/messages/es.ts`, `src/shared/i18n/messages/en.ts`, `src/shared/i18n/dictionary.ts`, `src/proxy.ts`
 - Test: `src/shared/i18n/negotiate.test.ts`, `src/shared/i18n/format.test.ts`
 
 **Interfaces:**
@@ -632,9 +636,9 @@ export const getDictionary = (locale: Locale): Dictionary => DICTIONARIES[locale
 export type { Dictionary }
 ```
 
-- [ ] **Step 10: Implementar el middleware**
+- [ ] **Step 10: Implementar el proxy (negociación de idioma)**
 
-Crear `src/middleware.ts`:
+Crear `src/proxy.ts` (Next 16 sustituye la convención `middleware.ts` por `proxy.ts`):
 
 ```ts
 import { NextResponse, type NextRequest } from 'next/server'
@@ -1192,7 +1196,7 @@ Añadir a `scripts` de `package.json`:
 ```bash
 cp .env.example .env.local
 pnpm db:generate
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm db:migrate
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm db:migrate
 ```
 
 Expected: aparece `db/migrations/0000_*.sql` y las tablas se crean.
@@ -1227,7 +1231,7 @@ describe('esquema', () => {
 
 - [ ] **Step 6: Ejecutar y verificar**
 
-Run: `DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm test src/shared/db/schema.test.ts`
+Run: `DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm test src/shared/db/schema.test.ts`
 Expected: PASS. Si falla por tablas faltantes, la migración del paso 4 no se aplicó.
 
 - [ ] **Step 7: Escribir el seed**
@@ -1341,13 +1345,16 @@ process.exit(0)
 - [ ] **Step 8: Ejecutar el seed y verificar**
 
 ```bash
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm db:seed
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm db:seed
 docker exec -i $(docker compose -f docker/compose.dev.yml ps -q db) psql -U invite -d invite -c "select slug, price_cents from plans order by sort_order;"
 ```
 
 Expected: `atelier 69000`, `firma-3d 145000`, `alta-costura 290000`.
 
-El seed es idempotente: ejecutarlo dos veces no duplica filas.
+El seed es idempotente y además propaga ediciones: las traducciones usan
+`onConflictDoUpdate` sobre `(entidad_id, locale)`, de modo que corregir un texto en
+`seed.ts` y volver a sembrar actualiza la base. `onConflictDoNothing` en traducciones
+quedaría con el texto viejo en silencio.
 
 - [ ] **Step 9: Commit**
 
@@ -1373,6 +1380,8 @@ git commit -m "feat: esquema Postgres con traducciones, migraciones Drizzle y se
   - `type Plan = { id: string; slug: string; price: Money; highlighted: boolean; sortOrder: number; name: string; tagline: string; description: string; features: readonly string[] }`
   - `createPlan(input: PlanInput): Result<Plan, CatalogError>`
   - `type Template = { id: string; slug: string; categorySlug: string; categoryName: string; coverImagePath: string; palette: { base: string; accent: string }; sortOrder: number; name: string; description: string }`
+  - `type TemplateInput` con la misma forma, como entrada cruda
+  - `createTemplate(input: TemplateInput): Result<Template, CatalogError>` valida slug, categoría, nombre, ruta de imagen, paleta hexadecimal y orden; los repositorios de la Task 7 mapean cada fila de Postgres a través de él
   - `type CatalogError = { kind: 'invalid_price' | 'invalid_slug' | 'empty_features' | 'not_found'; detail: string }`
 
 Todos los tipos son datos planos y serializables: pasan del Server Component al Client Component sin conversión.
@@ -1638,7 +1647,7 @@ git commit -m "feat(catalog): dominio de planes, plantillas y dinero con Result 
 ### Task 7: Casos de uso y repositorios del catálogo
 
 **Files:**
-- Create: `src/modules/catalog/application/ports.ts`, `src/modules/catalog/application/list-plans.ts`, `src/modules/catalog/application/list-templates.ts`, `src/modules/catalog/application/get-template.ts`, `src/modules/catalog/infrastructure/mappers.ts`, `src/modules/catalog/infrastructure/drizzle-plan-repository.ts`, `src/modules/catalog/infrastructure/drizzle-template-repository.ts`, `src/modules/catalog/index.ts`, `src/shared/composition/container.ts`
+- Create: `src/modules/catalog/application/ports.ts`, `src/modules/catalog/application/list-plans.ts`, `src/modules/catalog/application/list-templates.ts`, `src/modules/catalog/application/get-template.ts`, `src/modules/catalog/infrastructure/mappers.ts`, `src/modules/catalog/infrastructure/drizzle-plan-repository.ts`, `src/modules/catalog/infrastructure/drizzle-template-repository.ts`, `src/modules/catalog/index.ts`, `src/app/composition/container.ts`
 - Test: `src/modules/catalog/application/list-plans.test.ts`, `src/modules/catalog/infrastructure/drizzle-repositories.test.ts`
 
 **Interfaces:**
@@ -1850,6 +1859,8 @@ const selectTemplate = {
 
 export const drizzleTemplateRepository: TemplateRepository = {
   async listPublished(locale: Locale): Promise<Template[]> {
+    // Toda fila de la base pasa por `createTemplate`: es el único punto donde se
+    // valida que el dato persistido siga cumpliendo las invariantes del dominio.
     return db
       .select(selectTemplate)
       .from(templates)
@@ -1917,7 +1928,7 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
 Run:
 
 ```bash
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 \
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 \
   pnpm test src/modules/catalog/infrastructure/drizzle-repositories.test.ts
 ```
 
@@ -1925,7 +1936,7 @@ Expected: PASS, 4 pruebas.
 
 - [ ] **Step 8: Escribir la raíz de composición y la superficie pública**
 
-Crear `src/shared/composition/container.ts`:
+Crear `src/app/composition/container.ts`:
 
 ```ts
 import { getTemplate } from '@/modules/catalog/application/get-template'
@@ -1957,7 +1968,7 @@ Esta es la única superficie que otros módulos y la UI pueden importar del cat�
 - [ ] **Step 9: Verificar la suite completa**
 
 Run: `pnpm test && pnpm typecheck && pnpm lint`
-Expected: verde. Si ESLint marca que `app` importa `infrastructure`, revisar que la importación pase por `src/shared/composition/container.ts`.
+Expected: verde. Si ESLint marca que `app` importa `infrastructure`, revisar que la importación pase por `src/app/composition/container.ts`.
 
 - [ ] **Step 10: Commit**
 
@@ -1972,7 +1983,7 @@ git commit -m "feat(catalog): casos de uso, repositorios Drizzle y raíz de comp
 
 **Files:**
 - Create: `src/app/[locale]/layout.tsx`, `src/app/[locale]/page.tsx`, `src/sections/SiteHeader.tsx`, `src/sections/SiteFooter.tsx`, `src/shared/i18n/server.ts`
-- Delete: `src/app/page.tsx` (la raíz la resuelve el middleware)
+- Delete: `src/app/page.tsx` (la raíz la resuelve el proxy)
 - Test: `src/shared/i18n/server.test.ts`
 
 **Interfaces:**
@@ -2177,7 +2188,7 @@ Las secciones reales llegan en la Task 9; este paso solo verifica que el enrutad
 
 ```bash
 docker compose -f docker/compose.dev.yml up -d
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm dev
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm dev
 ```
 
 Comprobar manualmente:
@@ -2737,7 +2748,7 @@ Expected: PASS, 3 pruebas.
 Modificar `src/app/[locale]/page.tsx` para cargar catálogo en el servidor y degradar sin romper:
 
 ```tsx
-import { catalog } from '@/shared/composition/container'
+import { catalog } from '@/app/composition/container'
 import { isOk } from '@/shared/result'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
@@ -3042,7 +3053,7 @@ git commit -m "feat(3d): hero con sobre interactivo, póster de respaldo y degra
 
 **Files:**
 - Create: `src/modules/leads/domain/consultation.ts`, `src/modules/leads/domain/errors.ts`, `src/modules/leads/application/ports.ts`, `src/modules/leads/application/submit-consultation.ts`, `src/modules/leads/infrastructure/drizzle-consultation-repository.ts`, `src/modules/leads/infrastructure/whatsapp-link.ts`, `src/modules/leads/ui/ConsultationForm.tsx`, `src/modules/leads/ui/ContactSection.tsx`, `src/modules/leads/actions.ts`, `src/modules/leads/index.ts`
-- Modify: `src/shared/composition/container.ts`, `src/app/[locale]/page.tsx`, `src/modules/catalog/ui/PlanCard.tsx`
+- Modify: `src/app/composition/container.ts`, `src/app/[locale]/page.tsx`, `src/modules/catalog/ui/PlanCard.tsx`
 - Test: `src/modules/leads/domain/consultation.test.ts`, `src/modules/leads/application/submit-consultation.test.ts`, `src/modules/leads/infrastructure/whatsapp-link.test.ts`
 
 **Interfaces:**
@@ -3421,7 +3432,7 @@ Crear `src/modules/leads/actions.ts`:
 'use server'
 
 import { headers } from 'next/headers'
-import { leads } from '@/shared/composition/container'
+import { leads } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
 
 type ActionState = { status: 'idle' | 'success' | 'error'; message: string }
@@ -3457,7 +3468,7 @@ export async function submitConsultationAction(_prev: ActionState, formData: For
 
 El limitador en memoria basta para un solo contenedor; el Plan B lo mueve a Postgres cuando haya más de una réplica. La acción nunca devuelve `detail` al cliente: solo el `kind`, que la UI traduce.
 
-Extender `src/shared/composition/container.ts`:
+Extender `src/app/composition/container.ts`:
 
 ```ts
 import { submitConsultation } from '@/modules/leads/application/submit-consultation'
@@ -3491,7 +3502,7 @@ Modificar `src/app/[locale]/page.tsx` para renderizar `ContactSection` al final,
 - [ ] **Step 15: Verificar de punta a punta**
 
 ```bash
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm dev
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm dev
 ```
 
 Enviar el formulario desde el navegador y comprobar la fila:
@@ -3687,7 +3698,7 @@ Crear `src/app/sitemap.ts`:
 
 ```ts
 import type { MetadataRoute } from 'next'
-import { catalog } from '@/shared/composition/container'
+import { catalog } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
 import { isOk } from '@/shared/result'
@@ -3727,7 +3738,7 @@ Crear `src/app/[locale]/opengraph-image.tsx` con el runtime de imagen de Next: f
 - [ ] **Step 10: Verificar la salida real**
 
 ```bash
-pnpm build && SITE_URL=https://invitepremium.bo DATABASE_URL=postgres://invite:invite@localhost:5432/invite pnpm start &
+pnpm build && SITE_URL=https://invitepremium.bo DATABASE_URL=postgres://invite:invite@localhost:5434/invite pnpm start &
 curl -s http://localhost:3000/es | grep -o 'hreflang="[^"]*"' | sort -u
 curl -s http://localhost:3000/es | grep -o 'application/ld+json' | wc -l
 curl -s http://localhost:3000/sitemap.xml | head -20
@@ -3994,8 +4005,8 @@ Run:
 
 ```bash
 docker compose -f docker/compose.dev.yml up -d
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm build
-DATABASE_URL=postgres://invite:invite@localhost:5432/invite SITE_URL=http://localhost:3000 pnpm test:e2e
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm build
+DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000 pnpm test:e2e
 ```
 
 Expected: 5 pruebas en verde.

@@ -1,0 +1,31 @@
+@theme {
+  --color-bg: #f6f1e9;
+  --color-bg-raised: #fdfaf4;
+  --color-bg-sunken: #efe7dc;
+  --color-bg-top: #fffdf9;
+  --color-ink: #2b2723;
+  --color-ink-soft: #58514a;
+  --color-ink-mute: #9a917f;
+  --color-ink-selection: #26221e;
+  --color-gold: #c19b4a;
+  --color-gold-deep: #a8823a;
+  --color-gold-light: #e2c584;
+  --color-gold-rgb: 193 155 74;
+  --color-shadow-rgb: 90 66 26;
+  --color-line: rgb(var(--color-gold-rgb) / 0.22);
+
+  --font-display: var(--font-display-raw), 'Cormorant Garamond', serif;
+  --font-sans: var(--font-sans-raw), system-ui, sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 22px;
+
+  --shadow-float: 0 22px 60px -28px rgb(var(--color-shadow-rgb) / 0.45);
+  --shadow-lift: 0 34px 90px -40px rgb(var(--color-shadow-rgb) / 0.55);
+
+  --tracking-luxe: 0.18em;
+}
+
+:root {
+  --page-gradient: radial-gradient(1200px 700px at 78% -8%, var(--color-bg-top) 0%, var(--color-bg) 46%, var(--color-bg-sunken) 100%);
+}
