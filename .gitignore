@@ -56,3 +56,6 @@ storage/
 
 # pnpm store local
 /.pnpm-store
+
+# Cookie de sesión que genera el setup de Playwright
+tests/e2e/.auth

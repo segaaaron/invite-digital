@@ -3,6 +3,11 @@
 // porque la configuración de fronteras de ESLint (`eslint.config.mjs`) solo permite que
 // el tipo `app` importe de `infrastructure`; `shared` solo puede importar de `shared`.
 // Ver el informe de la Task 7 para el detalle de esta decisión.
+import { createEventUseCase } from '@/modules/events/application/create-event'
+import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
+import { listEvents } from '@/modules/events/application/list-events'
+import { updateEventUseCase } from '@/modules/events/application/update-event'
+import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
 import { signIn } from '@/modules/identity/application/sign-in'
 import { signOut } from '@/modules/identity/application/sign-out'
@@ -40,4 +45,12 @@ export const identity = {
   signIn: signIn({ users: drizzleUserRepository, sessions: drizzleSessionRepository, hasher: argon2Hasher, minter, clock }),
   signOut: signOut({ sessions: drizzleSessionRepository, minter }),
   authenticateSession: authenticateSession({ sessions: drizzleSessionRepository, minter, clock }),
+} as const
+
+export const events = {
+  create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
+  update: updateEventUseCase({ events: drizzleEventRepository }),
+  list: listEvents({ events: drizzleEventRepository }),
+  getBySlug: getEventBySlug({ events: drizzleEventRepository }),
+  getById: getEventById({ events: drizzleEventRepository }),
 } as const
