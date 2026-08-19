@@ -68,6 +68,34 @@ proyecto `setup` de Playwright que abre la sesión una sola vez.
 | Plantillas | Registro tipado con `clasico` de respaldo | `events/ui/themes/registry.ts` |
 | Enlace del cliente | Se crea y revoca desde el panel del evento, 60 días | `ClientSharePanel` |
 
+## Cómo retomar en frío
+
+```bash
+open -a Docker                                     # puede estar parado
+docker compose -f docker/compose.dev.yml up -d     # Postgres en el 5434
+export DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000
+pnpm db:migrate && pnpm db:seed
+pnpm test && pnpm typecheck && pnpm lint           # 311 unitarias
+pnpm build && pnpm test:e2e                        # 28 e2e, servidor propio en el 3100
+pnpm dev                                           # panel en /panel/entrar
+```
+
+Usuario del atelier ya dado de alta en la base de desarrollo:
+`atelier@invitepremium.bo` / `contrasena-de-prueba-1`. Son también las credenciales que
+usa `tests/e2e/fixtures/atelier.ts`. Si la base se recrea, vuelve a darlo de alta con
+`pnpm user:create atelier@invitepremium.bo`, o las e2e del panel fallan en el proyecto
+`setup`.
+
+Para ver el motor entero funcionando: entra al panel, crea un evento con estado
+**En marcha** y fecha límite futura, añade un grupo, copia el enlace que se muestra una
+sola vez y ábrelo en una ventana privada.
+
+## Decisión abierta
+
+**Sin resolver, es del usuario**: fusionar `feat/motor-invitaciones` a `main` antes de
+seguir, o apilar la rebanada 2 encima de la rama. Se le preguntó al cerrar la sesión y no
+llegó a contestar.
+
 ## Qué hacer a continuación
 
 1. Decidir con el usuario si fusionar `feat/motor-invitaciones` a `main`.
