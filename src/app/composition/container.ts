@@ -13,6 +13,9 @@ import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
 import { revokeInvitation } from '@/modules/guests/application/revoke-invitation'
 import { drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
+import { getTally } from '@/modules/rsvp/application/get-tally'
+import { respondToInvitation } from '@/modules/rsvp/application/respond-to-invitation'
+import { drizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
 import { signIn } from '@/modules/identity/application/sign-in'
 import { signOut } from '@/modules/identity/application/sign-out'
@@ -65,4 +68,16 @@ export const guests = {
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
+} as const
+
+export const rsvp = {
+  respond: respondToInvitation({
+    resolveGroup: (token) => guests.resolveByToken(token),
+    findEventById: (id) => events.getById(id),
+    rsvp: drizzleRsvpRepository,
+    ids: () => crypto.randomUUID(),
+    clock,
+  }),
+  tally: getTally({ rsvp: drizzleRsvpRepository }),
+  latestFor: (guestGroupId: string) => drizzleRsvpRepository.latestFor(guestGroupId),
 } as const

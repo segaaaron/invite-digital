@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, guests } from '@/app/composition/container'
+import { events, guests, rsvp } from '@/app/composition/container'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { TallyStrip } from '@/modules/rsvp/ui/TallyStrip'
 import { isErr } from '@/shared/result'
 
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -18,9 +19,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   }
 
   const groups = await guests.list(event.value.id)
+  // La última respuesta de cada grupo, una consulta por grupo. Con listas de invitados
+  // de decenas de filas no compensa una consulta agregada; si un evento crece a
+  // centenares, `tallyRowsFor` ya trae la forma que haría falta.
   const filas: GuestGroupRowView[] = isErr(groups)
     ? []
-    : groups.value.map((group) => ({ ...group, confirmed: null }))
+    : await Promise.all(
+        groups.value.map(async (group) => ({
+          ...group,
+          confirmed: (await rsvp.latestFor(group.id))?.attending ?? null,
+        })),
+      )
+
+  const tally = await rsvp.tally(event.value.id)
 
   return (
     <div className="mx-auto flex max-w-[860px] flex-col gap-10 p-10">
@@ -30,6 +41,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           Volver
         </Link>
       </header>
+
+      {isErr(tally) ? null : <TallyStrip tally={tally.value} />}
 
       <section className="flex flex-col gap-5">
         <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Invitados</h2>
