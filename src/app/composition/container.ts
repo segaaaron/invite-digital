@@ -8,6 +8,11 @@ import { getEventById, getEventBySlug } from '@/modules/events/application/get-e
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
+import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
+import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
+import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
+import { revokeInvitation } from '@/modules/guests/application/revoke-invitation'
+import { drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
 import { signIn } from '@/modules/identity/application/sign-in'
 import { signOut } from '@/modules/identity/application/sign-out'
@@ -53,4 +58,11 @@ export const events = {
   list: listEvents({ events: drizzleEventRepository }),
   getBySlug: getEventBySlug({ events: drizzleEventRepository }),
   getById: getEventById({ events: drizzleEventRepository }),
+} as const
+
+export const guests = {
+  add: addGuestGroup({ groups: drizzleGuestGroupRepository, minter, ids: () => crypto.randomUUID() }),
+  list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
+  revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
+  resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
 } as const
