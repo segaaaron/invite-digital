@@ -19,13 +19,6 @@ export interface HeroDictionary {
   envelopeClose: string
 }
 
-export interface StatsDictionary {
-  events: string
-  delivery: string
-  rsvp: string
-  countries: string
-}
-
 export interface ExperienceAct {
   label: string
   title: string
@@ -84,7 +77,7 @@ export interface TestimonialItem {
 export interface TestimonialsDictionary {
   eyebrow: string
   title: string
-  items: readonly [TestimonialItem, TestimonialItem, TestimonialItem]
+  items: readonly [TestimonialItem]
 }
 
 export interface PricingDictionary {
@@ -158,7 +151,6 @@ export interface FooterDictionary {
 export interface Dictionary {
   nav: NavDictionary
   hero: HeroDictionary
-  stats: StatsDictionary
   experience: ExperienceDictionary
   mobile: MobileDictionary
   collections: CollectionsDictionary

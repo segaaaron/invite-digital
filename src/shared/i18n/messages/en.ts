@@ -15,12 +15,6 @@ export const en = {
     envelopeOpen: 'Open the envelope',
     envelopeClose: 'Close the envelope',
   },
-  stats: {
-    events: 'Events delivered',
-    delivery: 'Average delivery time',
-    rsvp: 'RSVP confirmation rate',
-    countries: 'Countries reached',
-  },
   experience: {
     eyebrow: 'The experience',
     title: 'Three acts, one single piece',
@@ -63,16 +57,6 @@ export const en = {
         quote: 'We sent the link on a Tuesday and by Friday we already had ninety percent of the confirmations. No bride in Bolivia had seen anything like it.',
         author: 'Daniela Ortiz',
         role: 'Wedding planner · Cochabamba',
-      },
-      {
-        quote: 'The wax seal breaking open on a phone screen was the most talked-about moment of my daughter’s entire quinceañera.',
-        author: 'Rodrigo Ibáñez',
-        role: 'Father of the quinceañera · Santa Cruz',
-      },
-      {
-        quote: 'We moved the ceremony time two days out and the link we’d already sent updated instantly. Not a single last-minute call.',
-        author: 'Camila Vargas',
-        role: 'Corporate events organizer · La Paz',
       },
     ],
   },

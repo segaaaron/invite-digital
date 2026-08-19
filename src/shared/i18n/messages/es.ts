@@ -15,12 +15,6 @@ export const es = {
     envelopeOpen: 'Abrir el sobre',
     envelopeClose: 'Cerrar el sobre',
   },
-  stats: {
-    events: 'Eventos entregados',
-    delivery: 'Entrega promedio',
-    rsvp: 'Confirmación RSVP',
-    countries: 'Países alcanzados',
-  },
   experience: {
     eyebrow: 'La experiencia',
     title: 'Tres actos de una misma pieza',
@@ -63,16 +57,6 @@ export const es = {
         quote: 'Mandamos el enlace un martes y el viernes ya teníamos el 90% de las confirmaciones. Ninguna novia había visto algo así en Bolivia.',
         author: 'Daniela Ortiz',
         role: 'Wedding planner · Cochabamba',
-      },
-      {
-        quote: 'El sello de cera abriéndose en la pantalla del celular fue el momento más comentado de toda la fiesta de XV años de mi hija.',
-        author: 'Rodrigo Ibáñez',
-        role: 'Padre de quinceañera · Santa Cruz',
-      },
-      {
-        quote: 'Actualizamos la hora de la ceremonia dos días antes y el enlace que ya habíamos enviado mostró el cambio al instante. Cero llamadas de última hora.',
-        author: 'Camila Vargas',
-        role: 'Organizadora de eventos corporativos · La Paz',
       },
     ],
   },

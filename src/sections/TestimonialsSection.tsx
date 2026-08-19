@@ -11,7 +11,7 @@ export function TestimonialsSection({ dictionary }: { dictionary: Dictionary }) 
       <div className="mx-auto max-w-[1180px]">
         <SectionHeading eyebrow={testimonials.eyebrow} title={testimonials.title} />
 
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
+        <div className="mx-auto mt-14 grid max-w-[560px] gap-6">
           {testimonials.items.map((item, index) => (
             <Reveal delay={index * 0.1} key={item.author}>
               <GlassPanel className="flex h-full flex-col gap-6 p-8">

@@ -16,7 +16,6 @@ import { ExperienceSection } from '@/sections/ExperienceSection'
 import { FaqSection } from '@/sections/FaqSection'
 import { HeroSection } from '@/sections/HeroSection'
 import { MobileSection } from '@/sections/MobileSection'
-import { StatsStrip } from '@/sections/StatsStrip'
 import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { ContactSection } from '@/modules/leads'
 import { HeroCanvas } from '@/three/HeroCanvas'
@@ -108,7 +107,6 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
           />
         }
       />
-      <StatsStrip dictionary={dictionary} />
       <ExperienceSection dictionary={dictionary} />
       <MobileSection dictionary={dictionary} />
 
