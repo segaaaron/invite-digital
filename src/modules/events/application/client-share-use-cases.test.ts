@@ -41,6 +41,8 @@ const shares = (row: ClientShareRow | null) => {
 }
 
 const events: EventRepository = {
+  listPendingAnonymization: async () => [],
+  anonymize: async () => {},
   insert: async () => {},
   update: async () => {},
   listAll: async () => [],

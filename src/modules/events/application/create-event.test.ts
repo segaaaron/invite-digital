@@ -19,6 +19,8 @@ const fila = (slug: string): EventInput => ({
 const repo = (existing: string[] = []) => {
   const inserted: unknown[] = []
   const events: EventRepository = {
+    listPendingAnonymization: async () => [],
+    anonymize: async () => {},
     insert: async (event) => void inserted.push(event),
     update: async () => {},
     listAll: async () => [],
@@ -63,6 +65,8 @@ describe('createEventUseCase', () => {
 
   it('convierte una caída de la base en storage_failure', async () => {
     const events: EventRepository = {
+      listPendingAnonymization: async () => [],
+      anonymize: async () => {},
       insert: async () => {
         throw new Error('conexión rechazada')
       },

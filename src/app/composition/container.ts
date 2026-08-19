@@ -9,6 +9,7 @@ import {
   resolveClientShare,
   revokeClientShare,
 } from '@/modules/events/application/client-share-use-cases'
+import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
 import { listEvents } from '@/modules/events/application/list-events'
@@ -73,6 +74,11 @@ export const events = {
   revokeShare: revokeClientShare({ shares: drizzleClientShareRepository, clock }),
   liveShare: getLiveClientShare({ shares: drizzleClientShareRepository, clock }),
   resolveShare: resolveClientShare({ shares: drizzleClientShareRepository, events: drizzleEventRepository, minter, clock }),
+  runMaintenance: anonymizeExpiredEvents({
+    events: drizzleEventRepository,
+    deleteExpiredSessions: (now) => drizzleSessionRepository.deleteExpired(now),
+    clock,
+  }),
 } as const
 
 export const guests = {
