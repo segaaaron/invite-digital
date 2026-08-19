@@ -131,6 +131,33 @@ test.describe('invitados del evento', () => {
     await expect(page.getByText('Revocada')).toBeVisible()
   })
 
+  test('crea el enlace del cliente, se abre en solo lectura y se revoca', async ({ page, context }) => {
+    await page.goto(`/panel/eventos/${SLUG}`)
+
+    await page.getByLabel('Grupo invitado').fill('Familia Rojas Peña')
+    await page.getByLabel('Cupos').fill('4')
+    await page.getByRole('button', { name: 'Crear invitación' }).click()
+    await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()
+
+    await page.getByRole('button', { name: 'Crear enlace para el cliente' }).click()
+    const url = await page.getByLabel('Enlace para el cliente').inputValue()
+    expect(url).toMatch(/\/compartir\/[A-Za-z0-9_-]{22}$/)
+
+    // Sin sesión: el cliente no es del atelier.
+    const anonima = await context.browser()!.newContext()
+    const vista = await anonima.newPage()
+    await vista.goto(url)
+    await expect(vista.getByText('Familia Rojas Peña')).toBeVisible()
+    await expect(vista.getByRole('button', { name: 'Revocar' })).toHaveCount(0)
+
+    await page.reload()
+    await page.getByRole('button', { name: 'Revocar enlace' }).click()
+    await expect(page.getByRole('button', { name: 'Crear enlace para el cliente' })).toBeVisible()
+
+    expect((await vista.goto(url))?.status()).toBe(404)
+    await anonima.close()
+  })
+
   test('el navegador no deja enviar un grupo de cero cupos', async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}`)
     await page.getByLabel('Grupo invitado').fill('Grupo vacío')

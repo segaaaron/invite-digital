@@ -3,10 +3,17 @@
 // porque la configuración de fronteras de ESLint (`eslint.config.mjs`) solo permite que
 // el tipo `app` importe de `infrastructure`; `shared` solo puede importar de `shared`.
 // Ver el informe de la Task 7 para el detalle de esta decisión.
+import {
+  createClientShare,
+  getLiveClientShare,
+  resolveClientShare,
+  revokeClientShare,
+} from '@/modules/events/application/client-share-use-cases'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
+import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
@@ -62,6 +69,10 @@ export const events = {
   list: listEvents({ events: drizzleEventRepository }),
   getBySlug: getEventBySlug({ events: drizzleEventRepository }),
   getById: getEventById({ events: drizzleEventRepository }),
+  createShare: createClientShare({ shares: drizzleClientShareRepository, minter, ids: () => crypto.randomUUID(), clock }),
+  revokeShare: revokeClientShare({ shares: drizzleClientShareRepository, clock }),
+  liveShare: getLiveClientShare({ shares: drizzleClientShareRepository, clock }),
+  resolveShare: resolveClientShare({ shares: drizzleClientShareRepository, events: drizzleEventRepository, minter, clock }),
 } as const
 
 export const guests = {

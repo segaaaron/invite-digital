@@ -3,7 +3,9 @@
 import { revalidatePath } from 'next/cache'
 import { events as eventUseCases } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
+import { shareUrl } from './domain/client-share'
 import type { EventErrorKind } from './domain/errors'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
@@ -46,4 +48,39 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   revalidatePath('/panel')
   revalidatePath(`/panel/eventos/${result.value.slug}`)
   return { status: 'success', message: '' }
+}
+
+export type ClientShareState =
+  | { status: 'idle' }
+  // Igual que el enlace del invitado: viaja al cliente una sola vez, porque en la base
+  // solo queda el hash.
+  | { status: 'success'; url: string; expiresAt: string }
+  | { status: 'error' }
+
+export async function createClientShareAction(_previous: ClientShareState, formData: FormData): Promise<ClientShareState> {
+  await requireSession()
+
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  const result = await eventUseCases.createShare({ eventId: String(formData.get('eventId') ?? '') })
+
+  if (isErr(result)) {
+    console.error('alta de enlace de cliente rechazada', result.error.kind, result.error.detail)
+    return { status: 'error' }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}`)
+  return {
+    status: 'success',
+    url: shareUrl(result.value.token, env.SITE_URL),
+    expiresAt: result.value.expiresAt.toISOString().slice(0, 10),
+  }
+}
+
+export async function revokeClientShareAction(formData: FormData): Promise<void> {
+  await requireSession()
+
+  const result = await eventUseCases.revokeShare(String(formData.get('shareId') ?? ''))
+  if (isErr(result)) console.error('revocación de enlace rechazada', result.error.kind, result.error.detail)
+
+  revalidatePath(`/panel/eventos/${String(formData.get('eventSlug') ?? '')}`)
 }

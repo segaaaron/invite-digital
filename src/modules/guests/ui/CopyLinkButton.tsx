@@ -7,7 +7,7 @@ import { useState } from 'react'
  * disponible —contexto no seguro, permiso denegado— el enlace queda visible y
  * seleccionable, que es el respaldo que siempre funciona.
  */
-export function CopyLinkButton({ url }: { url: string }) {
+export function CopyLinkButton({ url, label = 'Enlace de la invitación' }: { url: string; label?: string }) {
   const [copied, setCopied] = useState(false)
   const [failed, setFailed] = useState(false)
 
@@ -23,7 +23,7 @@ export function CopyLinkButton({ url }: { url: string }) {
   return (
     <div className="flex flex-col gap-2">
       <input
-        aria-label="Enlace de la invitación"
+        aria-label={label}
         className="w-full rounded-[14px] border border-[var(--color-line)] bg-bg-top/80 px-4 py-3 text-[13px] text-ink"
         onFocus={(event) => event.currentTarget.select()}
         readOnly

@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events, guests, rsvp } from '@/app/composition/container'
+import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
@@ -32,6 +33,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       )
 
   const tally = await rsvp.tally(event.value.id)
+  const share = await events.liveShare(event.value.id)
 
   return (
     <div className="mx-auto flex max-w-[860px] flex-col gap-10 p-10">
@@ -54,6 +56,19 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         ) : (
           <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
         )}
+      </section>
+
+      <section className="flex flex-col gap-5">
+        <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Enlace para el cliente</h2>
+        <ClientSharePanel
+          eventId={event.value.id}
+          eventSlug={event.value.slug}
+          live={
+            isErr(share) || share.value === null
+              ? null
+              : { id: share.value.id, expiresAt: share.value.expiresAt.toISOString().slice(0, 10) }
+          }
+        />
       </section>
 
       <section className="flex flex-col gap-5">
