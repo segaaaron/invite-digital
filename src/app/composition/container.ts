@@ -3,6 +3,13 @@
 // porque la configuración de fronteras de ESLint (`eslint.config.mjs`) solo permite que
 // el tipo `app` importe de `infrastructure`; `shared` solo puede importar de `shared`.
 // Ver el informe de la Task 7 para el detalle de esta decisión.
+import { authenticateSession } from '@/modules/identity/application/authenticate-session'
+import { signIn } from '@/modules/identity/application/sign-in'
+import { signOut } from '@/modules/identity/application/sign-out'
+import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
+import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
+import { drizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
+import { createTokenMinter } from '@/shared/security/tokens'
 import { getTemplate } from '@/modules/catalog/application/get-template'
 import { listCategories } from '@/modules/catalog/application/list-categories'
 import { listPlans } from '@/modules/catalog/application/list-plans'
@@ -22,4 +29,15 @@ export const catalog = {
 
 export const leads = {
   submitConsultation: submitConsultation({ requests: drizzleConsultationRepository, clock: () => new Date() }),
+} as const
+
+// Un solo acuñador para todo el proceso: no guarda estado, solo aleatoriedad del
+// sistema y SHA-256.
+const minter = createTokenMinter()
+const clock = () => new Date()
+
+export const identity = {
+  signIn: signIn({ users: drizzleUserRepository, sessions: drizzleSessionRepository, hasher: argon2Hasher, minter, clock }),
+  signOut: signOut({ sessions: drizzleSessionRepository, minter }),
+  authenticateSession: authenticateSession({ sessions: drizzleSessionRepository, minter, clock }),
 } as const
