@@ -5,7 +5,7 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-18-handoff.md`** — estado completo, decisiones tomadas y qué sigue.
+**`docs/superpowers/2026-08-19-handoff.md`** — estado completo, decisiones tomadas y qué sigue.
 No empieces a trabajar sin leerlo.
 
 Después, según lo que vayas a hacer:
@@ -13,17 +13,22 @@ Después, según lo que vayas a hacer:
 | Documento | Cuándo |
 |---|---|
 | `docs/superpowers/specs/2026-08-17-marketing-site-design.md` | Entender arquitectura, dominio, esquema, SEO, seguridad, despliegue |
-| `docs/superpowers/plans/2026-08-18-marketing-site-plan-a.md` | Retomar la implementación: 14 tareas con pasos TDD |
+| `docs/superpowers/plans/2026-08-18-marketing-site-plan-a.md` | Consultar cómo se construyó el ciclo 1: 14 tareas con pasos TDD |
+| `docs/superpowers/specs/2026-08-19-invitation-engine-design.md` | Construir el motor de invitaciones y RSVP (ciclo 3) |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
-**10 de 14 tareas cerradas.** Task 11 (hero 3D) a medias, parcial en verde en `f96a181`.
-Faltan: 11 (terminar), 12 leads y WhatsApp, 13 SEO, 14 Docker y despliegue.
-Rama de trabajo: `feat/sitio-publico`.
+**Plan A cerrado: las 14 tareas y la revisión completa de rama.** 164 pruebas unitarias
+y 11 e2e en verde; pila Docker probada de punta a punta.
+Rama de trabajo: `feat/sitio-publico`, **sin fusionar a `main`**.
 
-La revisión de código está **aplazada a propósito** hasta cerrar la Task 14, por decisión del usuario.
-Las pruebas no: cada tarea se hace con TDD real.
+Lo siguiente es el **ciclo 3**: motor de invitaciones y RSVP. El spec está escrito y
+espera revisión del usuario; después toca `superpowers:writing-plans`.
+
+Ojo: el spec del ciclo 1 dejó fuera pedidos, comprobantes y panel de administración,
+que él mismo metía dentro de su alcance. Siguen sin construirse, igual que la
+autenticación.
 
 ## Comandos
 
