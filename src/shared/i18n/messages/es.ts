@@ -27,7 +27,7 @@ export const es = {
     acts: [
       { label: 'Acto I', title: 'Unboxing virtual', body: 'El sobre llega cerrado. El invitado desliza, el sello de cera cede y la tarjeta emerge con física real de papel.' },
       { label: 'Acto II', title: 'Detalles inmersivos', body: 'Foil dorado que reacciona a la luz del cursor, texturas de algodón, tipografía compuesta a mano para cada nombre.' },
-      { label: 'Acto III', title: 'Demo interactiva en vivo', body: 'Galería en movimiento, mapa, cuenta regresiva y RSVP con confirmación instantánea al WhatsApp de los novios.' },
+      { label: 'Acto III', title: 'Demo interactiva en vivo', body: 'Galería en movimiento, mapa, cuenta regresiva y botón de RSVP que abre el WhatsApp de los novios.' },
     ],
   },
   mobile: {
@@ -50,7 +50,7 @@ export const es = {
     title: 'La diferencia LUXE',
     hint: 'Arrastra el sello para comparar',
     traditionalLabel: 'Tradicional',
-    luxe: ['Sobre 3D con apertura animada y sello de cera', 'Dominio propio, sin marcas de terceros', 'RSVP con panel en vivo y recordatorios', 'Música, galería inmersiva y cuenta regresiva', 'Diseño compuesto a mano por el atelier'],
+    luxe: ['Sobre 3D con apertura animada y sello de cera', 'Dominio propio, sin marcas de terceros', 'RSVP con seguimiento de confirmaciones', 'Música, galería inmersiva y cuenta regresiva', 'Diseño compuesto a mano por el atelier'],
     traditional: ['Imagen estática enviada por chat', 'Plantilla con logo de la plataforma', 'Confirmaciones contadas a mano', 'Sin galería, sin música, sin mapa', 'Mismo diseño que otros mil eventos'],
   },
   pricing: { eyebrow: 'Inversión', title: 'Planes & precios', mostChosen: 'Más elegido' },

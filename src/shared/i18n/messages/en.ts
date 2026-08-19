@@ -27,7 +27,7 @@ export const en = {
     acts: [
       { label: 'Act I', title: 'Virtual unboxing', body: 'The envelope arrives sealed. Your guest slides it open, the wax seal gives way, and the card emerges with the physics of real paper.' },
       { label: 'Act II', title: 'Immersive details', body: 'Gold foil that catches the light as the cursor moves, cotton-paper textures, and hand-composed typography for every name.' },
-      { label: 'Act III', title: 'A live interactive demo', body: 'A gallery in motion, a map, a countdown, and RSVP with instant confirmation straight to the couple’s WhatsApp.' },
+      { label: 'Act III', title: 'A live interactive demo', body: 'A gallery in motion, a map, a countdown, and an RSVP button that opens the couple’s WhatsApp.' },
     ],
   },
   mobile: {
@@ -50,7 +50,7 @@ export const en = {
     title: 'The LUXE difference',
     hint: 'Drag the seal to compare',
     traditionalLabel: 'Traditional',
-    luxe: ['A 3D envelope with animated opening and wax seal', 'Your own domain, free of third-party branding', 'RSVP with a live dashboard and reminders', 'Music, an immersive gallery, and a countdown', 'A design composed by hand at the atelier'],
+    luxe: ['A 3D envelope with animated opening and wax seal', 'Your own domain, free of third-party branding', 'RSVP with confirmation tracking', 'Music, an immersive gallery, and a countdown', 'A design composed by hand at the atelier'],
     traditional: ['A static image sent over chat', 'A template carrying the platform’s logo', 'Confirmations tallied by hand', 'No gallery, no music, no map', 'The same design shared with a thousand other events'],
   },
   pricing: { eyebrow: 'Investment', title: 'Plans & pricing', mostChosen: 'Most chosen' },
