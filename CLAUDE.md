@@ -49,6 +49,12 @@ Las e2e usan el **puerto 3100**, no el 3000: en esta máquina hay servidores de 
 proyectos que toman el 3000 y `reuseExistingServer` acabaría probando la aplicación
 equivocada. Ha pasado.
 
+Todo lo que dependa de `SITE_URL` debe resolverse **por petición**, no al compilar. El
+Dockerfile pasa un `SITE_URL` de relleno como `ARG` para que `env.ts` valide durante la
+compilación; cualquier ruta prerrenderizada se queda con ese valor horneado en la imagen
+para siempre. Le pasó a `robots.txt`, que anunciaba un sitemap en `localhost`. Por eso
+`robots.ts` y `sitemap.ts` llevan `export const dynamic = 'force-dynamic'`.
+
 Al desplegar, **reconstruye la imagen del migrador** antes de correrlo
 (`docker compose --profile tools build migrator`): `run --rm migrator` reutiliza la
 imagen cacheada y aplicaría un juego de migraciones viejo sin quejarse.
