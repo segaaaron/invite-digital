@@ -15,6 +15,7 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-17-marketing-site-design.md` | Entender arquitectura, dominio, esquema, SEO, seguridad, despliegue |
 | `docs/superpowers/plans/2026-08-18-marketing-site-plan-a.md` | Consultar cómo se construyó el ciclo 1: 14 tareas con pasos TDD |
 | `docs/superpowers/specs/2026-08-19-invitation-engine-design.md` | Construir el motor de invitaciones y RSVP (ciclo 3) |
+| `docs/superpowers/2026-08-20-runbook-despliegue.md` | Desplegar a producción, respaldar, restaurar y volver atrás |
 | `docs/superpowers/plans/2026-08-19-invitation-engine-slice-1.md` | Consultar cómo se construyó la rebanada 1 del ciclo 3: 16 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
@@ -43,6 +44,7 @@ pnpm dev · pnpm test · pnpm typecheck · pnpm lint · pnpm build
 pnpm test:e2e                                      # arranca su propio servidor en el 3100
 pnpm user:create <correo>                          # única alta de usuario del atelier
 pnpm maintenance                                   # anonimiza vencidos y barre sesiones
+pnpm preflight                                     # puerta previa al despliegue
 ```
 
 Las e2e usan el **puerto 3100**, no el 3000: en esta máquina hay servidores de otros
@@ -94,15 +96,18 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
 
 ## Pendiente del usuario — reemplazar antes de desplegar
 
-Los tres primeros están centralizados en `src/shared/config/brand.ts`:
+Los tres primeros están centralizados en `src/shared/config/brand.ts`. **`pnpm preflight`
+los comprueba y sale con código 1 si alguno sigue puesto**: un marcador no rompe nada
+visible, y esa es justo la razón de que exista la puerta.
 
 - [ ] **WhatsApp real** — ahora `+59170012345`, es un marcador falso
 - [ ] **Dominio real** — ahora `invitepremium.bo`; define canonical, sitemap y el TLS de Caddy
 - [ ] **Email real** — ahora `atelier@invitepremium.bo`
+- [ ] **Contraseña de Postgres de producción** — `.env.production`, generada con `openssl rand -base64 24`
 - [ ] **Datos de transferencia y QR de pago** — los necesita el Plan B
-- [ ] **Testimonios**: el diseño solo trae UNO real (Daniela Ortiz). Hay dos redactados de relleno.
-      **No publicarlos como reales**: o el usuario aporta auténticos, o la sección se queda con el real.
 - [ ] **Fotos de las plantillas `zafiro` y `onix`** — hoy usan marcadores generados
+- [x] **Testimonios** — hecho: quedó solo el real (Daniela Ortiz). Si algún día se añaden
+      más, que sean auténticos; no se publican redactados de relleno.
 
 ## Ciclos siguientes (aún sin planificar)
 

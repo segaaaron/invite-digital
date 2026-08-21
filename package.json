@@ -15,7 +15,8 @@
     "db:seed": "tsx --tsconfig tsconfig.json src/shared/db/seed.ts",
     "test:e2e": "playwright test",
     "user:create": "tsx --tsconfig tsconfig.json scripts/create-atelier-user.ts",
-    "maintenance": "tsx --tsconfig tsconfig.json scripts/maintenance.ts"
+    "maintenance": "tsx --tsconfig tsconfig.json scripts/maintenance.ts",
+    "preflight": "tsx --tsconfig tsconfig.json scripts/preflight.ts"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.1.0",
