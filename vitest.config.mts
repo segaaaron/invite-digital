@@ -1,9 +1,14 @@
 import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
-import tsconfigPaths from 'vite-tsconfig-paths'
 
+// Extensión .mts: el fichero usa sintaxis ESM y, como .ts, Vite lo cargaba como
+// CommonJS y avisaba en cada corrida. Poner "type": "module" en package.json lo
+// arreglaría igual, pero alcanzaría a Next, PostCSS y drizzle-kit a la vez.
 export default defineConfig({
-  plugins: [tsconfigPaths(), react()],
+  // Los alias de tsconfig los resuelve Vite de forma nativa; `vite-tsconfig-paths`
+  // sobraba.
+  resolve: { tsconfigPaths: true },
+  plugins: [react()],
   test: {
     setupFiles: ['./vitest.setup.ts'],
     projects: [

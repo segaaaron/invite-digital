@@ -3,6 +3,20 @@ import nextVitals from 'eslint-config-next/core-web-vitals'
 import nextTs from 'eslint-config-next/typescript'
 import boundaries from 'eslint-plugin-boundaries'
 
+/**
+ * Política de fronteras entre módulos. `boundaries/dependencies` es la regla real de la
+ * versión 7; `boundaries/element-types` sobrevive como alias heredado y emitía cuatro
+ * avisos de deprecación en cada `pnpm lint`.
+ *
+ * Que la política exista no prueba que corte nada. Se comprobó a mano, con la regla
+ * antigua y con esta: un `import` de `infrastructure` desde `domain` da error, y los
+ * caminos permitidos siguen pasando. Si alguien toca esto, que repita la prueba.
+ */
+const permitido = (desde, hacia) => ({
+  from: { element: { type: desde } },
+  allow: { to: { element: { types: { anyOf: hacia } } } },
+})
+
 export default defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -21,19 +35,26 @@ export default defineConfig([
       ],
     },
     rules: {
-      'boundaries/element-types': [2, {
-        default: 'disallow',
-        rules: [
-          { from: 'domain', allow: ['domain', 'shared'] },
-          { from: 'application', allow: ['domain', 'application', 'shared'] },
-          { from: 'infrastructure', allow: ['domain', 'application', 'infrastructure', 'shared'] },
-          { from: 'ui', allow: ['domain', 'application', 'ui', 'shared', 'three'] },
-          { from: 'sections', allow: ['ui', 'application', 'domain', 'shared', 'three'] },
-          { from: 'app', allow: ['ui', 'application', 'domain', 'shared', 'sections', 'three', 'infrastructure'] },
-          { from: 'three', allow: ['shared', 'three'] },
-          { from: 'shared', allow: ['shared'] },
-        ],
-      }],
+      'boundaries/dependencies': [
+        2,
+        {
+          default: 'disallow',
+          policies: [
+            // `domain` es puro: ni base de datos, ni red, ni framework.
+            permitido('domain', ['domain', 'shared']),
+            // `application` orquesta el dominio, pero nunca conoce `infrastructure`.
+            permitido('application', ['domain', 'application', 'shared']),
+            permitido('infrastructure', ['domain', 'application', 'infrastructure', 'shared']),
+            permitido('ui', ['domain', 'application', 'ui', 'shared', 'three']),
+            permitido('sections', ['ui', 'application', 'domain', 'shared', 'three']),
+            // Solo la capa de composición ve `infrastructure`: es donde se inyectan las
+            // dependencias reales.
+            permitido('app', ['ui', 'application', 'domain', 'shared', 'sections', 'three', 'infrastructure']),
+            permitido('three', ['shared', 'three']),
+            permitido('shared', ['shared']),
+          ],
+        },
+      ],
     },
   },
   // Override default ignores of eslint-config-next.

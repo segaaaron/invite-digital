@@ -45,6 +45,7 @@ pnpm test:e2e                                      # arranca su propio servidor 
 pnpm user:create <correo>                          # única alta de usuario del atelier
 pnpm maintenance                                   # anonimiza vencidos y barre sesiones
 pnpm preflight                                     # puerta previa al despliegue
+pnpm verify:boundaries                             # prueba que las fronteras cortan de verdad
 ```
 
 Las e2e usan el **puerto 3100**, no el 3000: en esta máquina hay servidores de otros
@@ -75,7 +76,9 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
   acento que viene de los datos de una plantilla, y los materiales dentro de la escena 3D.
 - **Fronteras de módulo impuestas por ESLint y verificadas como efectivas.** `domain` es puro;
   `application` nunca importa `infrastructure`; cada módulo se importa solo por su `index.ts`.
-  No relajes la política para acomodar código mal ubicado.
+  No relajes la política para acomodar código mal ubicado. `pnpm verify:boundaries` escribe
+  importaciones prohibidas a propósito y exige que ESLint las señale: una configuración puede
+  quedarse sin efecto —una regla renombrada, un patrón que ya no casa— con el lint en verde.
 - **Toda clave de diccionario nueva** se declara en `src/shared/i18n/dictionary.ts` Y en `es.ts`
   Y en `en.ts`, en el mismo commit. El typecheck falla si falta alguna.
 - **Nunca un selector de idioma visible.** El idioma se negocia solo y se redirige a `/es` o `/en`.
