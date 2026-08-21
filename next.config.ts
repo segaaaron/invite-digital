@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
   // handful of files it sees imported, and misses the copy nested under next's own
   // pnpm directory — the standalone server then dies with MODULE_NOT_FOUND at boot.
   outputFileTracingIncludes: {
-    '/**/*': ['./node_modules/.pnpm/**/@swc/helpers/**'],
+    '/**/*': ['./node_modules/.pnpm/**/@swc/helpers/**', './node_modules/.pnpm/**/@node-rs/argon2*/**'],
   },
   images: { formats: ['image/avif', 'image/webp'] },
   async headers() {

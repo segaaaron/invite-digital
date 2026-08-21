@@ -13,9 +13,13 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx --tsconfig tsconfig.json src/shared/db/seed.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "user:create": "tsx --tsconfig tsconfig.json scripts/create-atelier-user.ts",
+    "maintenance": "tsx --tsconfig tsconfig.json scripts/maintenance.ts",
+    "preflight": "tsx --tsconfig tsconfig.json scripts/preflight.ts"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.1.0",
     "@react-three/drei": "^10.7.8",
     "@react-three/fiber": "^9.7.0",
     "@swc/helpers": "^0.5.23",

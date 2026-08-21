@@ -1,0 +1,29 @@
+import type { Event, EventInput } from '../domain/event'
+
+export type AnonymizationCandidate = { id: string; slug: string; retentionDays: number; eventDate: string }
+
+export interface EventRepository {
+  /** Eventos cuya retención venció y que aún no se anonimizaron. */
+  listPendingAnonymization(now: Date): Promise<AnonymizationCandidate[]>
+  /** Renumera etiquetas, borra mensajes y marca la fecha. Conserva los agregados. */
+  anonymize(eventId: string, at: Date): Promise<void>
+  insert(event: Event): Promise<void>
+  update(event: Event): Promise<void>
+  listAll(): Promise<EventInput[]>
+  findBySlug(slug: string): Promise<EventInput | null>
+  findById(id: string): Promise<EventInput | null>
+}
+
+export type ClientShareRow = {
+  id: string
+  eventId: string
+  expiresAt: Date
+  revokedAt: Date | null
+}
+
+export interface ClientShareRepository {
+  insert(share: { id: string; eventId: string; tokenHash: Buffer; expiresAt: Date }): Promise<void>
+  findByTokenHash(tokenHash: Buffer): Promise<ClientShareRow | null>
+  findLiveByEvent(eventId: string, now: Date): Promise<ClientShareRow | null>
+  revoke(id: string, at: Date): Promise<void>
+}

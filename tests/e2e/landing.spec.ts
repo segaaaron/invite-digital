@@ -74,8 +74,25 @@ test('el sitemap incluye ambas ramas de idioma', async ({ request }) => {
   expect(body).toContain('/en')
 })
 
-test('la imagen Open Graph solo existe para idiomas reales', async ({ request }) => {
-  expect((await request.get('/es/opengraph-image')).status()).toBe(200)
+test('robots.txt anuncia el sitemap del dominio en ejecución, no el del build', async ({ request, baseURL }) => {
+  // `robots.txt` se prerrenderizaba en tiempo de compilación, así que se quedaba con el
+  // SITE_URL falso del Dockerfile y en producción anunciaba un sitemap en localhost.
+  // Un fallo silencioso: el sitio sirve, pero Google nunca encuentra el sitemap.
+  const response = await request.get('/robots.txt')
+  expect(response.status()).toBe(200)
+  expect(await response.text()).toContain(`Sitemap: ${baseURL}/sitemap.xml`)
+})
+
+test('la imagen Open Graph solo existe para idiomas reales', async ({ page, request }) => {
+  // La URL la elige Next (le añade un hash propio), así que se lee de la propia
+  // metadata en vez de fijarla aquí: si se fijara, un cambio de ruta interno
+  // rompería la prueba sin que nada del contrato se hubiera roto.
+  await page.goto('/es')
+  const ogImage = await page.locator('meta[property="og:image"]').getAttribute('content')
+  expect(ogImage).not.toBeNull()
+  expect((await request.get(ogImage!)).status()).toBe(200)
+
+  expect((await request.get('/fr')).status()).toBe(404)
   expect((await request.get('/fr/opengraph-image')).status()).toBe(404)
 })
 

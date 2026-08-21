@@ -1,0 +1,61 @@
+'use client'
+
+import { useActionState } from 'react'
+import { CopyLinkButton } from '@/modules/guests/ui/CopyLinkButton'
+import { createClientShareAction, revokeClientShareAction, type ClientShareState } from '../actions'
+
+const INITIAL: ClientShareState = { status: 'idle' }
+
+type Props = {
+  eventId: string
+  eventSlug: string
+  live: { id: string; expiresAt: string } | null
+}
+
+export function ClientSharePanel({ eventId, eventSlug, live }: Props) {
+  const [state, formAction, isPending] = useActionState(createClientShareAction, INITIAL)
+
+  return (
+    <div className="flex flex-col gap-4 rounded-[18px] border border-[var(--color-line)] p-6">
+      <p className="text-[13px] leading-[1.7] text-ink-soft">
+        El cliente ve los contadores y los nombres, sin poder tocar nada ni ver los enlaces de los invitados.
+      </p>
+
+      {live === null ? (
+        <form action={formAction}>
+          <input name="eventId" type="hidden" value={eventId} readOnly />
+          <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
+          <button
+            className="rounded-[var(--radius-pill)] bg-gold px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised disabled:opacity-60"
+            disabled={isPending}
+            type="submit"
+          >
+            {isPending ? 'Creando…' : 'Crear enlace para el cliente'}
+          </button>
+        </form>
+      ) : (
+        <form action={revokeClientShareAction} className="flex items-center justify-between gap-4">
+          <input name="shareId" type="hidden" value={live.id} readOnly />
+          <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
+          <p className="text-[13px] text-ink">{`Hay un enlace activo hasta el ${live.expiresAt}.`}</p>
+          <button className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep" type="submit">
+            Revocar enlace
+          </button>
+        </form>
+      )}
+
+      {state.status === 'success' ? (
+        <div aria-live="polite" className="flex flex-col gap-3 border-t border-[var(--color-line)] pt-4" role="status">
+          <p className="text-[13px] text-ink">{`Enlace válido hasta el ${state.expiresAt}. Cópialo ahora: no podremos volver a mostrarlo.`}</p>
+          <CopyLinkButton label="Enlace para el cliente" url={state.url} />
+        </div>
+      ) : null}
+
+      {state.status === 'error' ? (
+        <p className="text-[13px] text-gold-deep" role="alert">
+          No pudimos crear el enlace. Inténtalo en un momento.
+        </p>
+      ) : null}
+    </div>
+  )
+}

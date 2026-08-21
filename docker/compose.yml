@@ -68,6 +68,29 @@ services:
       db:
         condition: service_healthy
 
+  # Anonimización por retención y barrido de sesiones caducadas, un pase al día. Corre
+  # sobre la etapa `build`, que es la que conserva tsx; el contenedor `backup` solo trae
+  # psql y no puede ejecutar el guion.
+  maintenance:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      target: build
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '3' }
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER es obligatorio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@db:5432/${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+      SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
+    # Un fallo no debe matar el bucle: con `restart: unless-stopped` eso sería un ciclo
+    # de reinicios que nadie mira. Registra y reintenta al día siguiente, igual que
+    # backup.sh.
+    command: sh -c 'while true; do pnpm maintenance || echo "FALLO DE MANTENIMIENTO — se reintenta en 24 h" >&2; sleep 86400; done'
+    depends_on:
+      db:
+        condition: service_healthy
+
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped

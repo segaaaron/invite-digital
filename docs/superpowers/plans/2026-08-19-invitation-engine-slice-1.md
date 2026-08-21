@@ -1,5 +1,10 @@
 # Motor de invitaciones y RSVP — Rebanada 1 (núcleo) · Plan de implementación
 
+> **EJECUTADO Y CERRADO** el 19 de agosto de 2026, las 16 tareas, en la rama
+> `feat/motor-invitaciones` (`fe13eb9` … `f41ecd9`). Este documento queda como registro
+> de cómo se construyó, no como trabajo pendiente. Lo que se hizo distinto del plan está
+> anotado en `docs/superpowers/2026-08-19-handoff-ciclo3.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** que el atelier cree un evento, cargue grupos de invitados con cupos y obtenga un enlace por grupo; que el invitado confirme desde ese enlace sin cuenta; y que el atelier y el cliente vean los contadores en vivo.
