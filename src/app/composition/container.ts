@@ -17,6 +17,7 @@ import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
+import { checkInByGroup } from '@/modules/checkin/application/check-in-by-group'
 import { checkInByScan } from '@/modules/checkin/application/check-in-by-scan'
 import { getDoorManifest } from '@/modules/checkin/application/get-door-manifest'
 import { getDoorState } from '@/modules/checkin/application/get-door-state'
@@ -116,6 +117,7 @@ export const rsvp = {
 
 export const checkin = {
   record: checkInByScan({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository, minter }),
+  recordGroup: checkInByGroup({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   adjust: adjustArrival({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader }),
   void: voidArrival({ arrivals: drizzleArrivalRepository, clock }),
   manifest: getDoorManifest({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),

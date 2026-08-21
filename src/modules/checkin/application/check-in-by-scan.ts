@@ -1,15 +1,15 @@
 import type { Minter } from '@/shared/security/tokens'
 import { attempt, isErr, ok, type Result } from '@/shared/result'
-import { createArrival } from '../domain/arrival'
-import { resolveArrival } from '../domain/conflict'
 import { checkinError, type CheckinError } from '../domain/errors'
 import { parsePass } from '../domain/parse-pass'
-import type { ArrivalRepository, DoorGroupReader, DoorGroupRow } from './ports'
+import type { ArrivalRepository, DoorGroupReader } from './ports'
+import { registerArrival } from './register-arrival'
 
 export type ScanRequest = {
   readonly scanId: string
   readonly scanned: string
-  readonly arrivedCount: number
+  /** `null` deja la cantidad en manos del servidor: la fija lo confirmado por el grupo. */
+  readonly arrivedCount: number | null
   readonly scannedAt: Date
 }
 
@@ -27,8 +27,6 @@ export type ScanOutcome =
   | { readonly scanId: string; readonly kind: 'unknown' }
 
 type Deps = { groups: DoorGroupReader; arrivals: ArrivalRepository; minter: Minter }
-
-const view = (group: DoorGroupRow): ScanGroupView => ({ id: group.id, label: group.label, seats: group.seats })
 
 /**
  * Recibe un lote desde el principio. Un escaneo en línea es un lote de uno; la bandeja
@@ -58,46 +56,7 @@ export const checkInByScan =
             continue
           }
 
-          const arrival = createArrival(
-            {
-              scanId: scan.scanId,
-              guestGroupId: group.id,
-              arrivedCount: scan.arrivedCount,
-              scannedAt: scan.scannedAt,
-              voidedAt: null,
-            },
-            group.seats,
-          )
-          if (isErr(arrival)) {
-            outcomes.push({ scanId: scan.scanId, kind: 'unknown' })
-            continue
-          }
-
-          const previous = (await deps.arrivals.listByEvent(input.eventId)).filter((a) => a.guestGroupId === group.id)
-          const inserted = await deps.arrivals.insertIfAbsent(arrival.value)
-          const resolved = resolveArrival(inserted ? [...previous, arrival.value] : previous)
-
-          if (!inserted || previous.some((a) => a.voidedAt === null)) {
-            outcomes.push(
-              resolved
-                ? {
-                    scanId: scan.scanId,
-                    kind: 'already',
-                    group: view(group),
-                    arrivedAt: resolved.arrivedAt,
-                    arrivedCount: resolved.arrivedCount,
-                  }
-                : { scanId: scan.scanId, kind: 'unknown' },
-            )
-            continue
-          }
-
-          outcomes.push({
-            scanId: scan.scanId,
-            kind: 'welcome',
-            group: view(group),
-            arrivedCount: arrival.value.arrivedCount,
-          })
+          outcomes.push(await registerArrival(deps.arrivals, input.eventId, group, scan))
         }
 
         return ok(outcomes)

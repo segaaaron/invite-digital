@@ -10,7 +10,8 @@ import type { DoorManifest } from './application/get-door-manifest'
 export type ScanInput = {
   scanId: string
   scanned: string
-  arrivedCount: number
+  /** `null` deja que el servidor fije la cantidad con lo confirmado por el grupo. */
+  arrivedCount: number | null
   /** Milisegundos desde época: el reloj del dispositivo cruza como número. */
   scannedAtMs: number
 }
@@ -38,6 +39,39 @@ export async function recordScansAction(input: {
 
   if (isErr(result)) {
     console.error('registro de escaneos rechazado', result.error.kind, result.error.detail)
+    throw new Error(result.error.kind)
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  return result.value
+}
+
+/**
+ * El camino del buscador por nombre. No manda un pase: manda el id del grupo, porque el
+ * dispositivo solo tiene el hash del token y un hash no es un pase.
+ */
+export async function checkInByGroupAction(input: {
+  eventId: string
+  eventSlug: string
+  groupId: string
+  scanId: string
+  arrivedCount: number | null
+  scannedAtMs: number
+}): Promise<ScanOutcome> {
+  await requireSession()
+
+  const result = await checkin.recordGroup({
+    eventId: input.eventId,
+    scan: {
+      scanId: input.scanId,
+      groupId: input.groupId,
+      arrivedCount: input.arrivedCount,
+      scannedAt: new Date(input.scannedAtMs),
+    },
+  })
+
+  if (isErr(result)) {
+    console.error('registro por grupo rechazado', result.error.kind, result.error.detail)
     throw new Error(result.error.kind)
   }
 

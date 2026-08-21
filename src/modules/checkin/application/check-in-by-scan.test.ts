@@ -118,6 +118,15 @@ describe('checkInByScan', () => {
     expect(rows).toHaveLength(0)
   })
 
+  it('sin cantidad, la decide el servidor con lo confirmado por el grupo', async () => {
+    const { groups, arrivals } = fakes()
+    const r = await checkInByScan({ groups, arrivals, minter })({
+      eventId: 'e1',
+      scans: [{ ...scan('s1'), arrivedCount: null }],
+    })
+    expect(isOk(r) && r.value[0]?.kind === 'welcome' && r.value[0].arrivedCount).toBe(4)
+  })
+
   it('un lote mixto procesa cada escaneo por separado', async () => {
     const { groups, arrivals } = fakes()
     const r = await checkInByScan({ groups, arrivals, minter })({

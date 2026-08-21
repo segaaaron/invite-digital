@@ -39,9 +39,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     <div className="mx-auto flex max-w-[860px] flex-col gap-10 p-10">
       <header className="flex items-center justify-between gap-6">
         <h1 className="font-display text-[26px] font-light text-ink">{event.value.title}</h1>
-        <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href="/panel">
-          Volver
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
+            href={`/panel/eventos/${event.value.slug}/puerta`}
+          >
+            Modo puerta
+          </Link>
+          <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href="/panel">
+            Volver
+          </Link>
+        </div>
       </header>
 
       {isErr(tally) ? null : <TallyStrip tally={tally.value} />}

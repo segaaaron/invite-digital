@@ -33,6 +33,15 @@ const nextConfig: NextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
         ],
       },
+      {
+        // La puerta de verdad, ya no la maqueta. Sin esta excepción la política
+        // global deja `getUserMedia` en un fallo de permiso que ninguna prueba
+        // unitaria ve, porque la cabecera solo existe en el servidor.
+        source: '/panel/eventos/:slug/puerta',
+        headers: [
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+        ],
+      },
     ]
   },
 }
