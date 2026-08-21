@@ -26,6 +26,9 @@ const fakes = () => {
       if (hash.equals(Buffer.from(`h:${OTRO}`))) return { ...groupRow, id: 'g9', eventId: 'OTRO-EVENTO' }
       return null
     },
+    async findGroupById(id) {
+      return id === groupRow.id ? groupRow : null
+    },
     async listByEvent() {
       return [groupRow]
     },

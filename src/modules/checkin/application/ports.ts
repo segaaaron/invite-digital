@@ -18,6 +18,8 @@ export type ArrivalRow = {
 
 export interface DoorGroupReader {
   findByTokenHash(tokenHash: Buffer): Promise<DoorGroupRow | null>
+  /** Por id, para los casos de uso que parten de una llegada y no del evento. */
+  findGroupById(id: string): Promise<DoorGroupRow | null>
   listByEvent(eventId: string): Promise<DoorGroupRow[]>
 }
 
