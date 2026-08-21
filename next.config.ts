@@ -23,6 +23,16 @@ const nextConfig: NextConfig = {
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
         ],
       },
+      {
+        // El check-in del día del evento lee el QR del pase con la cámara del
+        // dispositivo de la puerta. La política global la niega, así que se
+        // reabre solo para esta ruta y solo para el propio origen: esta regla
+        // va después a propósito, porque la última coincidencia es la que manda.
+        source: '/dashboard/:path*',
+        headers: [
+          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
+        ],
+      },
     ]
   },
 }

@@ -58,5 +58,9 @@ export default defineConfig([
     },
   },
   // Override default ignores of eslint-config-next.
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
+  // `public/` son recursos estáticos que el servidor sirve tal cual, no código
+  // fuente del proyecto: no pasan por el compilador ni por las fronteras, y el
+  // dashboard vendido ahí viene con su propio estilo. Lintarlo solo ensuciaba la
+  // puerta con avisos de un archivo que no se escribe aquí.
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'public/**']),
 ])

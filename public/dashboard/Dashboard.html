@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard · Organizador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; min-height: 100%; color: #1a1a1a; font-family: "Space Grotesk", sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: #f8f6f1; background-image: radial-gradient(ellipse 900px 600px at 8% -10%, rgba(196,165,114,0.16), transparent 60%), radial-gradient(ellipse 800px 700px at 105% 10%, rgba(90,112,92,0.14), transparent 55%), radial-gradient(ellipse 900px 800px at 50% 120%, rgba(90,112,92,0.08), transparent 60%); background-attachment: fixed; }
+  a { color: #5a705c; }
+  a:hover { color: #3a4f3c; }
+  :root { --gold: #c4a572; --gold-dark: #a4854e; --ink: #1a1a1a; --shadow-sm: 0 1px 2px rgba(26,26,26,0.04), 0 4px 10px rgba(26,26,26,0.03); --shadow-md: 0 2px 6px rgba(26,26,26,0.05), 0 14px 32px -8px rgba(26,26,26,0.10); --shadow-lg: 0 8px 20px rgba(26,26,26,0.07), 0 28px 56px -16px rgba(26,26,26,0.18); }
+  .tilt-card { transform-style: preserve-3d; will-change: transform; transition: transform 420ms cubic-bezier(.22,1,.36,1), box-shadow 420ms; }
+  .tilt-card[data-tilting] { transition: box-shadow 200ms; }
+  .tilt-shine { position: absolute; inset: 0; border-radius: inherit; background: radial-gradient(600px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,0.55), transparent 42%); opacity: 0; transition: opacity 300ms; pointer-events: none; mix-blend-mode: overlay; }
+  .tilt-card:hover .tilt-shine { opacity: 1; }
+
+  .layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { flex-direction: row; flex-wrap: wrap; align-items: center; padding: 14px 16px; gap: 10px 18px; position: sticky; top: 0; z-index: 50; }
+    .sidebar .brand, .sidebar .sub { display: none; }
+    .nav-section { display: flex; gap: 4px; margin-bottom: 0; }
+    .nav-label { display: none; }
+    .nav-item { padding: 8px 10px; font-size: 12px; white-space: nowrap; }
+    .nav-item span.count { display: none; }
+    .sidebar .user { margin-top: 0; margin-left: auto; padding: 6px 10px; }
+    .sidebar .user > div:last-child > div:last-child { display: none; }
+    .main { padding: 18px; }
+  }
+  @media (max-width: 560px) {
+    .page-head .title, .section-head .title { font-size: 26px; }
+    .stats { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat { padding: 16px; }
+    .stat .value { font-size: 32px; }
+    .quick-actions { grid-template-columns: 1fr; }
+    .plans-grid { grid-template-columns: 1fr; }
+    .page-head .actions, .section-head .actions { width: 100%; }
+    .page-head .actions .btn, .section-head .actions .btn { flex: 1; }
+  }
+
+  /* Sidebar */
+  .sidebar { background: linear-gradient(180deg, #1f1f1d, #141412); color: #f8f6f1; padding: 26px 20px; display: flex; flex-direction: column; box-shadow: 1px 0 0 rgba(255,255,255,0.04) inset, 12px 0 40px rgba(0,0,0,0.18); position: relative; z-index: 1; }
+  .sidebar .brand { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 22px; margin-bottom: 4px; }
+  .sidebar .brand b { font-style: normal; font-weight: 500; }
+  .sidebar .sub { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.3em; opacity: 0.55; margin-bottom: 28px; }
+  .nav-section { margin-bottom: 22px; }
+  .nav-label { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.3em; opacity: 0.45; margin-bottom: 8px; text-transform: uppercase; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; transition: background 180ms, transform 180ms; color: #f8f6f1; position: relative; }
+  .nav-item:hover { background: rgba(255,255,255,0.07); transform: translateX(2px); }
+  .nav-item.active { background: linear-gradient(90deg, rgba(196,165,114,0.18), rgba(255,255,255,0.05)); box-shadow: inset 2px 0 0 var(--gold); }
+  .nav-item .ic { font-size: 16px; opacity: 0.85; width: 18px; }
+  .nav-item .count { margin-left: auto; padding: 2px 6px; background: #5a705c; color: #fff; border-radius: 999px; font-size: 9px; font-family: "JetBrains Mono", monospace; }
+  .nav-item-link { display: block; text-decoration: none; color: inherit; }
+  .sidebar .user { margin-top: auto; padding: 14px; background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03)); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: border-color 180ms; }
+  .sidebar .user:hover { border-color: rgba(196,165,114,0.5); }
+  .sidebar .user .avatar { width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #5a705c, #a89880); box-shadow: 0 4px 12px rgba(90,112,92,0.4), inset 0 1px 0 rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 18px; color: #fff; flex-shrink: 0; }
+  .sidebar .user #user-plan-label { font-size: 10px; opacity: 0.6; font-family: "JetBrains Mono", monospace; letter-spacing: 0.2em; }
+
+  /* Main */
+  .main { padding: 28px 32px; overflow-y: auto; position: relative; z-index: 1; }
+  .view[hidden] { display: none; }
+
+  .page-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 26px; }
+  .page-head .crumb { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.35em; opacity: 0.55; text-transform: uppercase; }
+  .page-head .title { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 38px; line-height: 1; margin-top: 6px; }
+  .page-head .title b { font-style: italic; font-weight: 400; color: #5a705c; }
+  .page-head .meta { font-size: 12px; opacity: 0.6; margin-top: 8px; }
+  .page-head .actions { display: flex; gap: 10px; align-items: center; }
+
+  .section-head { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 22px; }
+  .section-head .crumb { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.35em; opacity: 0.5; text-transform: uppercase; }
+  .section-head .title { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 32px; margin-top: 4px; }
+  .section-head .sub { font-size: 12px; opacity: 0.6; margin-top: 6px; }
+  .section-head .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+  .btn { padding: 10px 18px; border-radius: 999px; border: 1px solid rgba(26,26,26,0.2); background: #fff; cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.25em; color: #1a1a1a; transition: all 200ms; text-transform: uppercase; box-shadow: var(--shadow-sm); }
+  .btn:hover { border-color: #1a1a1a; transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .btn.primary { background: linear-gradient(180deg, #262624, #141412); color: #fff; border-color: #141412; box-shadow: 0 2px 8px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.12); }
+  .btn.primary:hover { background: #000; box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.14); }
+  .btn.danger { color: #7a2c1a; border-color: rgba(163,85,58,0.4); }
+  .btn.danger:hover { background: #7a2c1a; color: #fff; border-color: #7a2c1a; }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Stat cards */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 26px; }
+  @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+  .stat { background: linear-gradient(180deg, #fffdf9, #fff); padding: 22px; border-radius: 18px; border: 1px solid rgba(26,26,26,0.06); position: relative; overflow: hidden; box-shadow: var(--shadow-md); }
+  .stat::before { content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent); }
+  .stat:hover { box-shadow: var(--shadow-lg); }
+  .stat .ic-bg { position: absolute; right: -8px; bottom: -8px; font-size: 80px; opacity: 0.06; }
+  .stat .label { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.35em; text-transform: uppercase; opacity: 0.6; }
+  .stat .value { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 44px; line-height: 1; margin-top: 8px; }
+  .stat .value .small { font-size: 18px; opacity: 0.55; margin-left: 2px; }
+  .stat .change { margin-top: 8px; font-size: 11px; display: flex; align-items: center; gap: 4px; }
+  .stat .change.up { color: #5a705c; }
+  .stat .change.dn { color: #a3553a; }
+  .stat .progress { margin-top: 12px; height: 4px; background: #f0ebe0; border-radius: 2px; overflow: hidden; }
+  .stat .progress .bar { height: 100%; background: #5a705c; border-radius: 2px; }
+
+  /* Section blocks */
+  .panels { display: grid; grid-template-columns: 1.6fr 1fr; gap: 18px; margin-bottom: 22px; }
+  @media (max-width: 900px) { .panels { grid-template-columns: 1fr !important; } }
+  .panel { background: linear-gradient(180deg, #fffdf9, #fff); padding: 22px; border-radius: 18px; border: 1px solid rgba(26,26,26,0.06); box-shadow: var(--shadow-md); position: relative; }
+  .panel-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+  .panel-head .title { font-family: "Cormorant Garamond", serif; font-weight: 400; font-size: 22px; font-style: italic; }
+  .panel-head .link { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.25em; cursor: pointer; opacity: 0.7; text-transform: uppercase; background: none; border: none; color: inherit; }
+  .panel-head .link:hover { opacity: 1; }
+
+  /* Donut + chart */
+  .donut-row { display: flex; align-items: center; gap: 22px; }
+  .donut { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
+  .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .donut-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .donut-label .big { font-family: "Cormorant Garamond", serif; font-weight: 300; font-size: 38px; line-height: 1; }
+  .donut-label .lbl { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.3em; opacity: 0.6; margin-top: 2px; }
+  .legend { flex: 1; }
+  .legend-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px dotted rgba(26,26,26,0.1); }
+  .legend-item .swatch { width: 12px; height: 12px; border-radius: 3px; }
+  .legend-item .name { flex: 1; font-size: 13px; }
+  .legend-item .val { font-family: "JetBrains Mono", monospace; font-size: 11px; }
+
+  /* Activity feed */
+  .feed-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid rgba(26,26,26,0.05); }
+  .feed-item .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--c1, #5a705c), var(--c2, #a89880)); color: #fff; display: flex; align-items: center; justify-content: center; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 16px; flex-shrink: 0; }
+  .feed-item .info { flex: 1; }
+  .feed-item .info .name { font-weight: 500; font-size: 13px; }
+  .feed-item .info .action { font-size: 12px; opacity: 0.7; }
+  .feed-item .time { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; opacity: 0.5; white-space: nowrap; }
+
+  /* RSVP table */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid rgba(26,26,26,0.06); font-size: 13px; }
+  th { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.55; font-weight: 500; }
+  tr:hover td { background: #fafaf6; }
+  .pill { display: inline-block; padding: 3px 10px; border-radius: 999px; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; border: none; cursor: pointer; }
+  .pill.ok { background: #e1ecd6; color: #3a5a42; }
+  .pill.no { background: #f4d8d0; color: #7a2c1a; }
+  .pill.pending { background: #f0ebe0; color: #8a7848; }
+  .pill.maybe { background: #d6e6ec; color: #1a4a5a; }
+  .table-tools { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; align-items: center; }
+  .search { flex: 1; min-width: 200px; padding: 10px 14px; border: 1px solid rgba(26,26,26,0.15); border-radius: 999px; font-size: 13px; background: #fafaf6; font-family: inherit; }
+  .filter-chip { padding: 8px 14px; border: 1px solid rgba(26,26,26,0.15); background: #fff; border-radius: 999px; cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; }
+  .filter-chip.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .row-actions { display: flex; gap: 6px; }
+  .icon-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid rgba(26,26,26,0.12); background: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 150ms; }
+  .icon-btn:hover { border-color: #1a1a1a; }
+  .vip-star { color: #c4a572; margin-left: 4px; }
+  .empty-row td { text-align: center; opacity: 0.5; padding: 30px; font-size: 12px; }
+  .pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 18px; }
+  .pagination button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(26,26,26,0.12); background: #fff; cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 11px; }
+  .pagination button.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .pagination .pg-arrow { width: auto; padding: 0 10px; }
+  .send-channels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+  .send-channel { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 12px; border: 1px solid rgba(26,26,26,0.12); background: #fff; cursor: pointer; font-size: 11px; font-family: "JetBrains Mono", monospace; letter-spacing: 0.05em; }
+  .send-channel .sc-ic { font-size: 18px; }
+  .send-channel.active { border-color: #5a705c; background: #f3f6f1; box-shadow: inset 0 0 0 1px #5a705c; }
+  .send-recipients { max-height: 260px; overflow-y: auto; border: 1px solid rgba(26,26,26,0.08); border-radius: 12px; }
+  .send-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid rgba(26,26,26,0.06); font-size: 12px; }
+  .send-row:last-child { border-bottom: none; }
+  .send-row .sr-name { flex: 1; }
+  .send-row .sr-contact { opacity: 0.5; font-size: 11px; }
+  .send-row .sr-sent { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.15em; color: #5a705c; }
+  .pill.sent { background: #e1ecd6; color: #3a5a42; }
+  .pill.notsent { background: #f0ebe0; color: #8a7848; }
+
+  /* Timeline chart */
+  .timeline-chart { margin-top: 12px; height: 120px; display: flex; align-items: flex-end; gap: 4px; padding-bottom: 18px; border-bottom: 1px solid rgba(26,26,26,0.1); position: relative; }
+  .bar { flex: 1; background: linear-gradient(180deg, #7a8c64, #5a705c); border-radius: 4px 4px 0 0; min-height: 4px; position: relative; transition: transform 200ms; }
+  .bar:hover { transform: scaleY(1.05); }
+  .bar .tip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 4px 8px; border-radius: 6px; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; margin-bottom: 6px; opacity: 0; pointer-events: none; white-space: nowrap; }
+  .bar:hover .tip { opacity: 1; }
+  .timeline-axis { display: flex; gap: 4px; margin-top: 6px; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.15em; opacity: 0.55; }
+  .timeline-axis div { flex: 1; text-align: center; }
+
+  /* Plate map (preview) */
+  .plates { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .plate { aspect-ratio: 1/1; border-radius: 8px; background: #fafaf6; border: 1px solid rgba(26,26,26,0.08); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 11px; gap: 2px; cursor: pointer; transition: all 180ms; position: relative; }
+  .plate.full { background: #5a705c; color: #fff; border-color: #5a705c; }
+  .plate.partial { background: #e1ecd6; }
+  .plate .num { font-family: "Cormorant Garamond", serif; font-size: 16px; font-weight: 500; }
+  .plate .lbl { font-family: "JetBrains Mono", monospace; font-size: 8px; letter-spacing: 0.2em; opacity: 0.7; }
+
+  /* Quick action row */
+  .quick-actions { display: flex; flex-direction: column; gap: 8px; }
+  .qa { padding: 14px 16px; background: linear-gradient(180deg, #fffdf9, #fff); border: 1px solid rgba(26,26,26,0.06); border-radius: 14px; cursor: pointer; transition: all 220ms cubic-bezier(.22,1,.36,1); box-shadow: var(--shadow-sm); position: relative; overflow: hidden; display: flex; align-items: center; gap: 14px; }
+  .qa:hover { transform: translateX(3px); box-shadow: var(--shadow-md); border-color: rgba(196,165,114,0.4); }
+  .qa .ic { font-size: 17px; width: 40px; height: 40px; flex-shrink: 0; border-radius: 50%; background: #f3f0e6; display: flex; align-items: center; justify-content: center; color: #5a705c; }
+  .qa .qa-text { min-width: 0; }
+  .qa .t { font-size: 13px; font-weight: 500; }
+  .qa .d { font-size: 11px; opacity: 0.6; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1a1a1a; color: #fff; padding: 14px 22px; border-radius: 999px; font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.25em; z-index: 200; animation: tin 240ms ease; white-space: nowrap; }
+  @keyframes tin { from { opacity: 0; transform: translate(-50%, 20px); } to { opacity: 1; transform: translate(-50%, 0); } }
+
+  /* Modal */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(26,26,26,0.5); display: flex; align-items: center; justify-content: center; z-index: 300; opacity: 0; pointer-events: none; transition: opacity 200ms; }
+  .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal { background: #fff; border-radius: 16px; padding: 28px; width: 480px; max-width: 92vw; max-height: 88vh; overflow-y: auto; transform: translateY(12px); transition: transform 200ms; }
+  .modal-overlay.show .modal { transform: translateY(0); }
+  .modal h3 { font-family: "Cormorant Garamond", serif; font-weight: 400; font-style: italic; font-size: 24px; margin: 0 0 18px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.25em; text-transform: uppercase; opacity: 0.6; margin-bottom: 6px; }
+  .field input[type=text], .field input[type=number], .field input[type=date], .field input[type=email], .field select, .field textarea { width: 100%; padding: 10px 12px; border: 1px solid rgba(26,26,26,0.15); border-radius: 8px; font-family: inherit; font-size: 13px; background: #fafaf6; }
+  .field textarea { resize: vertical; min-height: 70px; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .radio-row { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+  /* Mesas */
+  .tables-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .table-card { background: linear-gradient(180deg, #fffdf9, #fff); border: 1px solid rgba(26,26,26,0.06); border-radius: 16px; padding: 18px; box-shadow: var(--shadow-md); transition: box-shadow 300ms; }
+  .table-card:hover { box-shadow: var(--shadow-lg); }
+  .table-card .th-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+  .table-card .th-actions { display: flex; gap: 6px; align-items: center; }
+  .table-card .tname { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 20px; }
+  .table-card .occ { font-family: "JetBrains Mono", monospace; font-size: 10px; opacity: 0.6; }
+  .table-card .progress { margin-bottom: 12px; }
+  .table-visual { position: relative; width: 100%; height: 148px; margin: 4px 0 14px; display: flex; align-items: center; justify-content: center; }
+  .table-disc { width: 78px; height: 78px; border-radius: 50%; background: linear-gradient(155deg, #efe6d3, #e2d5b8); box-shadow: inset 0 2px 4px rgba(255,255,255,0.6), inset 0 -3px 6px rgba(140,110,60,0.25), 0 3px 8px rgba(26,26,26,0.12); display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.1em; color: #6b5a35; border: 1px solid rgba(140,110,60,0.25); }
+  .table-visual.rect .table-disc { border-radius: 12px; width: 118px; height: 52px; }
+  .seat { position: absolute; width: 22px; height: 22px; border-radius: 50%; background: #f0ebe0; border: 1px solid rgba(26,26,26,0.12); display: flex; align-items: center; justify-content: center; font-size: 9px; font-family: "JetBrains Mono", monospace; color: rgba(26,26,26,0.4); transition: all 200ms; }
+  .seat.filled { background: linear-gradient(155deg, #7a8c64, #5a705c); border-color: #5a705c; color: #fff; box-shadow: 0 2px 6px rgba(90,112,92,0.4); }
+  .seat.vip { background: linear-gradient(155deg, #d8bd8a, var(--gold-dark)); border-color: var(--gold-dark); color: #fff; }
+  .guest-chip { display: inline-flex; align-items: center; gap: 6px; background: #f0ebe0; padding: 4px 10px; border-radius: 999px; font-size: 11px; margin: 0 6px 6px 0; }
+  .guest-chip button { border: none; background: none; cursor: pointer; opacity: 0.5; font-size: 12px; padding: 0; }
+  .guest-chip button:hover { opacity: 1; }
+  .table-card select { width: 100%; margin-top: 8px; padding: 8px; border-radius: 8px; border: 1px solid rgba(26,26,26,0.15); font-size: 12px; background: #fafaf6; font-family: inherit; }
+  .no-guests { font-size: 11px; opacity: 0.45; font-style: italic; }
+  .tnotes { font-size: 11px; opacity: 0.6; margin-bottom: 10px; background: #fafaf6; border-radius: 8px; padding: 6px 10px; }
+
+  .seating-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+  .seat-finder { position: relative; flex: 1; min-width: 240px; }
+  .seat-finder input { width: 100%; box-sizing: border-box; }
+  #seat-finder-result { position: absolute; top: 100%; left: 0; right: 0; margin-top: 6px; font-size: 12px; z-index: 5; }
+  #seat-finder-result .hit { background: #1a1a1a; color: #fff; padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow-md); }
+  #seat-finder-result .miss { background: #fff; border: 1px solid rgba(163,85,58,0.3); color: #7a2c1a; padding: 10px 14px; border-radius: 10px; }
+  .view-toggle { display: flex; gap: 8px; }
+
+  .floor-map { position: relative; width: 100%; height: 760px; background: repeating-linear-gradient(0deg, #f3efe4 0 1px, transparent 1px 32px), repeating-linear-gradient(90deg, #f3efe4 0 1px, transparent 1px 32px), linear-gradient(160deg, #fbf8f1, #f4f0e6); border: 1px solid rgba(26,26,26,0.08); border-radius: 14px; overflow: hidden; }
+  .zone { position: absolute; display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; color: rgba(26,26,26,0.45); border: 1px dashed rgba(26,26,26,0.18); border-radius: 12px; background: rgba(255,255,255,0.45); cursor: grab; touch-action: none; text-align: center; padding: 4px; }
+  .zone:active { cursor: grabbing; }
+  .zone .zone-controls { position: absolute; top: -10px; right: -10px; display: none; gap: 4px; }
+  .zone:hover .zone-controls { display: flex; }
+  .zone .zone-controls button { width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(26,26,26,0.15); background: #fff; cursor: pointer; font-size: 10px; line-height: 1; padding: 0; }
+  .zone .zone-resize { position: absolute; right: 2px; bottom: 2px; width: 12px; height: 12px; cursor: nwse-resize; opacity: 0.4; border-right: 2px solid rgba(26,26,26,0.5); border-bottom: 2px solid rgba(26,26,26,0.5); }
+  .zone-dance { background: rgba(196,165,114,0.1); }
+  .zone-stage { background: rgba(90,112,92,0.1); }
+  .zone-music { background: rgba(124,92,255,0.08); }
+  .table-marker { position: absolute; width: 74px; transform: translate(-50%,-50%); cursor: grab; user-select: none; text-align: center; touch-action: none; }
+  .table-marker:active { cursor: grabbing; z-index: 20; }
+  .table-marker.highlight .table-disc { box-shadow: 0 0 0 4px rgba(196,165,114,0.5), inset 0 2px 4px rgba(255,255,255,0.6); }
+  .table-marker .tm-label { font-size: 9px; margin-top: 2px; font-weight: 500; }
+  .table-marker .tm-occ { font-family: "JetBrains Mono", monospace; font-size: 8px; opacity: 0.55; }
+  .table-marker .table-visual { height: 74px; margin: 0; pointer-events: none; }
+  .table-marker .seat { width: 16px; height: 16px; font-size: 7px; }
+  .table-marker .table-disc { width: 34px !important; height: 34px !important; font-size: 8px; }
+  .table-visual.sweetheart .table-disc { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(155deg, #f3dede, #e8c6c6); }
+  .table-visual.imperial .table-disc { width: 130px; height: 34px; border-radius: 8px; }
+  .print-only { display: none; }
+  @media print {
+    body > *:not(#print-plan):not(#modal-pass) { display: none !important; }
+    #print-plan { display: block !important; padding: 40px; font-family: "Space Grotesk", sans-serif; }
+    #print-plan h1 { font-family: "Cormorant Garamond", serif; font-style: italic; font-weight: 400; }
+    #print-plan table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    #print-plan th, #print-plan td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #ccc; font-size: 13px; }
+    #modal-pass { position: static !important; background: none !important; display: flex !important; }
+    #modal-pass .modal { box-shadow: none !important; width: 100% !important; }
+    #modal-pass .modal-actions, #modal-pass h3 { display: none !important; }
+  }
+
+  /* Gifts */
+  .registry-tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+  .funds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px; margin-bottom: 26px; }
+  .fund-card { background: linear-gradient(155deg, #1f1f1d, #141412); color: #f8f6f1; border-radius: 18px; padding: 24px; position: relative; overflow: hidden; box-shadow: var(--shadow-lg); }
+  .fund-card::after { content: ''; position: absolute; inset: -40% -20% auto auto; width: 220px; height: 220px; border-radius: 50%; background: radial-gradient(circle, rgba(196,165,114,0.35), transparent 70%); }
+  .fund-card .ftag { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.25em; color: var(--gold); text-transform: uppercase; }
+  .fund-card .fname { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 24px; margin-top: 6px; }
+  .fund-card .fdesc { font-size: 12px; opacity: 0.65; margin-top: 4px; }
+  .fund-card .famounts { display: flex; align-items: baseline; gap: 8px; margin-top: 18px; }
+  .fund-card .fcollected { font-family: "Cormorant Garamond", serif; font-size: 34px; }
+  .fund-card .fgoal { font-size: 12px; opacity: 0.55; font-family: "JetBrains Mono", monospace; }
+  .fund-card .ftrack2 { height: 8px; background: rgba(255,255,255,0.12); border-radius: 999px; margin-top: 10px; overflow: hidden; }
+  .fund-card .ffill2 { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold)); border-radius: 999px; }
+  .fund-card .fcontribs { margin-top: 16px; max-height: 130px; overflow-y: auto; }
+  .fund-card .fcontrib-row { display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.08); gap: 10px; }
+  .fund-card .fcontrib-row .cname { opacity: 0.85; }
+  .fund-card .fcontrib-row .camt { font-family: "JetBrains Mono", monospace; color: var(--gold); white-space: nowrap; }
+  .fund-card .fcta { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .fund-card .fcta .btn { border-color: rgba(255,255,255,0.3); color: #fff; background: rgba(255,255,255,0.06); }
+  .fund-card .fcta .btn:hover { border-color: var(--gold); }
+  .fund-card .fcta .btn.primary { background: linear-gradient(180deg, var(--gold), var(--gold-dark)); border-color: var(--gold-dark); color: #1a1a1a; }
+  .gift-card .gstore { font-size: 11px; opacity: 0.6; display: flex; align-items: center; gap: 4px; }
+  .gift-card .gstore a { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .gifts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .gift-card { background: linear-gradient(180deg, #fffdf9, #fff); border: 1px solid rgba(26,26,26,0.06); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 8px; box-shadow: var(--shadow-md); transition: transform 260ms cubic-bezier(.22,1,.36,1), box-shadow 260ms; }
+  .gift-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .gift-card .gift-ic { width: 100%; aspect-ratio: 16/10; border-radius: 10px; background: repeating-linear-gradient(45deg,#f0ebe0,#f0ebe0 10px,#e8e1d2 10px,#e8e1d2 20px); display: flex; align-items: center; justify-content: center; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.1em; opacity: 0.55; text-align: center; padding: 8px; }
+  .gift-card .gname { font-weight: 500; font-size: 14px; }
+  .gift-card .gprice { font-family: "JetBrains Mono", monospace; font-size: 12px; opacity: 0.7; }
+  .gift-card .gby { font-size: 11px; opacity: 0.55; }
+  .gift-card .gift-actions { display: flex; gap: 8px; margin-top: auto; flex-wrap: wrap; }
+  .gift-progress-wrap { margin-top: 4px; }
+
+  /* Messages */
+  .msg-card { background: linear-gradient(180deg, #fffdf9, #fff); border: 1px solid rgba(26,26,26,0.06); border-radius: 16px; padding: 22px 24px; margin-bottom: 16px; box-shadow: var(--shadow-sm); position: relative; transition: box-shadow 220ms; }
+  .msg-card:hover { box-shadow: var(--shadow-md); }
+  .msg-card.unread { border-color: rgba(196,165,114,0.5); box-shadow: 0 0 0 1px rgba(196,165,114,0.15), var(--shadow-sm); }
+  .msg-card .quote-mark { position: absolute; top: 14px; right: 20px; font-family: "Cormorant Garamond", serif; font-size: 46px; color: rgba(196,165,114,0.18); line-height: 1; font-style: italic; pointer-events: none; }
+  .msg-head { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .msg-head .avatar { width: 42px; height: 42px; font-size: 17px; border-radius: 50%; background: linear-gradient(135deg, var(--c1, #5a705c), var(--c2, #a89880)); color: #fff; display: flex; align-items: center; justify-content: center; font-family: "Cormorant Garamond", serif; font-style: italic; flex-shrink: 0; box-shadow: 0 3px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.3); }
+  .msg-head .who { flex: 1; }
+  .msg-head .name { font-weight: 500; font-size: 14px; }
+  .msg-text { font-size: 14px; line-height: 1.6; margin-bottom: 4px; max-width: 90%; }
+  .msg-reply { background: #fafaf6; border-radius: 10px; padding: 10px 12px; font-size: 12px; margin-top: 8px; }
+  .msg-reply b { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.6; font-family: "JetBrains Mono", monospace; }
+  .reply-box { display: flex; gap: 8px; margin-top: 10px; }
+  .reply-box input { flex: 1; padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(26,26,26,0.15); font-size: 12px; font-family: inherit; }
+  .msg-foot { display: flex; justify-content: flex-start; align-items: center; gap: 8px; margin-top: 16px; }
+  .msg-pill { padding: 7px 14px; border-radius: 999px; border: 1px solid rgba(26,26,26,0.15); background: #fff; cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #1a1a1a; transition: all 180ms; }
+  .msg-pill:hover { border-color: #1a1a1a; }
+  .msg-pill.on { background: #5a705c; border-color: #5a705c; color: #fff; }
+  .msg-pill.gold.on { background: var(--gold-dark); border-color: var(--gold-dark); color: #fff; }
+
+  /* Plan */
+  .plans-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .plans-grid { grid-template-columns: 1fr; } }
+  .plan-card { background: linear-gradient(180deg, #fffdf9, #fff); border: 1px solid rgba(26,26,26,0.08); border-radius: 18px; padding: 24px; display: flex; flex-direction: column; box-shadow: var(--shadow-md); transition: transform 260ms cubic-bezier(.22,1,.36,1), box-shadow 260ms; }
+  .plan-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+  .plan-card.current { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(196,165,114,0.25), var(--shadow-lg); background: linear-gradient(180deg, #fffaf0, #fff); }
+  .plan-card .ptag { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; color: #5a705c; margin-bottom: 8px; }
+  .plan-card .pname { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 22px; }
+  .plan-card .pprice { font-family: "Cormorant Garamond", serif; font-size: 36px; margin: 8px 0; }
+  .plan-card .pprice span { font-size: 13px; opacity: 0.6; font-family: "JetBrains Mono", monospace; }
+  .plan-card ul { list-style: none; padding: 0; margin: 14px 0; flex: 1; }
+  .plan-card li { font-size: 12px; padding: 6px 0; border-bottom: 1px dotted rgba(26,26,26,0.1); }
+  .billing-toggle { display: inline-flex; background: #f0ebe0; border-radius: 999px; padding: 4px; margin-bottom: 20px; }
+  .billing-toggle button { border: none; background: none; padding: 8px 16px; border-radius: 999px; cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.2em; }
+  .billing-toggle button.active { background: #1a1a1a; color: #fff; }
+
+  /* Help */
+  .faq-item { border-bottom: 1px solid rgba(26,26,26,0.08); }
+  .faq-q { padding: 16px 4px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 14px; font-weight: 500; gap: 12px; }
+  .faq-a { max-height: 0; overflow: hidden; transition: max-height 250ms ease; font-size: 13px; opacity: 0.75; line-height: 1.5; padding: 0 4px; }
+  .faq-item.open .faq-a { max-height: 220px; padding-bottom: 16px; }
+  .faq-item .chev { transition: transform 200ms; opacity: 0.5; flex-shrink: 0; }
+  .faq-item.open .chev { transform: rotate(45deg); }
+
+  /* Estadísticas */
+  .funnel-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .funnel-row .flabel { width: 150px; font-size: 12px; }
+  .funnel-row .ftrack { flex: 1; height: 20px; background: #f0ebe0; border-radius: 6px; overflow: hidden; }
+  .funnel-row .ffill { height: 100%; background: #5a705c; border-radius: 6px; }
+  .funnel-row .fval { width: 55px; text-align: right; font-family: "JetBrains Mono", monospace; font-size: 11px; }
+
+  /* Config */
+  .danger-zone { margin-top: 26px; padding: 18px; border: 1px solid rgba(163,85,58,0.3); border-radius: 12px; background: rgba(163,85,58,0.04); }
+  .danger-zone .dtitle { font-weight: 500; color: #7a2c1a; font-size: 13px; margin-bottom: 4px; }
+  .danger-zone .ddesc { font-size: 12px; opacity: 0.65; margin-bottom: 12px; }
+  .link-btn { background: none; border: none; text-decoration: underline; cursor: pointer; font-size: 12px; color: #7a2c1a; padding: 0; font-family: inherit; }
+
+  /* Guest pass */
+  .pass-card { background: linear-gradient(165deg, #fffdf9, #f8f4ea); border: 1px solid rgba(196,165,114,0.4); border-radius: 18px; padding: 28px 26px; text-align: center; box-shadow: var(--shadow-lg); }
+  .pass-kicker { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.35em; color: var(--gold-dark); margin-bottom: 10px; }
+  .pass-brand { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; opacity: 0.55; text-transform: uppercase; margin-bottom: 16px; }
+  .pass-qr { display: flex; justify-content: center; margin-bottom: 16px; padding: 10px; background: #fff; border-radius: 12px; border: 1px solid rgba(26,26,26,0.06); width: fit-content; margin-left: auto; margin-right: auto; }
+  .pass-qr canvas, .pass-qr img { border-radius: 4px; }
+  .pass-name { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 23px; line-height: 1.3; }
+  .pass-meta { font-size: 12px; opacity: 0.65; margin-top: 8px; }
+  .pass-divider { height: 1px; background: repeating-linear-gradient(90deg, rgba(26,26,26,0.15) 0 6px, transparent 6px 12px); margin: 16px 0 10px; }
+  .pass-code { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.15em; opacity: 0.45; }
+  /* ---- Check-in · panel de control ---- */
+  .arrival-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(26,26,26,0.06); font-size: 13px; }
+  .arrival-row:last-child { border-bottom: none; }
+  .arrival-row .ar-tick { width: 24px; height: 24px; border-radius: 50%; background: #e1ecd6; color: #3a5a42; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .arrival-row .ar-who { min-width: 0; }
+  .arrival-row .ar-sub { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.15em; opacity: 0.5; text-transform: uppercase; margin-top: 2px; }
+  .arrival-row .ar-time { font-family: "JetBrains Mono", monospace; font-size: 10px; opacity: 0.5; margin-left: auto; white-space: nowrap; }
+  .arrival-row .ar-undo { border: none; background: none; cursor: pointer; font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.2em; text-transform: uppercase; color: #7a2c1a; opacity: 0; transition: opacity 160ms; padding: 4px 6px; }
+  .arrival-row:hover .ar-undo { opacity: 0.75; }
+  .arrival-row .ar-undo:hover { opacity: 1; }
+  /* En pantalla táctil no hay hover que revele el botón. */
+  @media (hover: none) { .arrival-row .ar-undo { opacity: 0.75; } }
+
+  .door-cta { display: flex; align-items: center; gap: 20px; padding: 24px 26px; border-radius: 18px; background: linear-gradient(155deg, #1f1f1d, #141412); color: #f8f6f1; box-shadow: var(--shadow-lg); position: relative; overflow: hidden; margin-bottom: 18px; flex-wrap: wrap; }
+  .door-cta::after { content: ''; position: absolute; inset: -50% -10% auto auto; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(196,165,114,0.30), transparent 70%); pointer-events: none; }
+  .door-cta .dc-ic { width: 56px; height: 56px; border-radius: 16px; background: rgba(196,165,114,0.16); border: 1px solid rgba(196,165,114,0.4); display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+  .door-cta .dc-text { flex: 1; min-width: 200px; position: relative; z-index: 1; }
+  .door-cta .dc-kicker { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.3em; color: var(--gold); text-transform: uppercase; }
+  .door-cta .dc-title { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 26px; margin-top: 4px; }
+  .door-cta .dc-desc { font-size: 12px; opacity: 0.62; margin-top: 4px; }
+  .door-cta .btn { position: relative; z-index: 1; padding: 14px 26px; }
+  .door-cta .btn.primary { background: linear-gradient(180deg, var(--gold), var(--gold-dark)); border-color: var(--gold-dark); color: #1a1a1a; }
+  .door-cta .btn.ghost { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.28); color: #f8f6f1; }
+  .door-cta .btn.ghost:hover { border-color: var(--gold); }
+
+  .scan-hw { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .scan-hw input { flex: 1; min-width: 200px; font-family: "JetBrains Mono", monospace; font-size: 14px; letter-spacing: 0.1em; padding: 14px 18px; }
+  .lookup-list { margin-top: 12px; }
+  .lookup-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid rgba(26,26,26,0.06); font-size: 13px; }
+  .lookup-row:last-child { border-bottom: none; }
+  .lookup-row .lr-who { flex: 1; min-width: 0; }
+  .lookup-row .lr-sub { font-size: 11px; opacity: 0.55; margin-top: 2px; }
+
+  /* ---- Check-in · modo puerta (pantalla completa) ---- */
+  .door { position: fixed; inset: 0; z-index: 400; background: #000; display: none; flex-direction: column; overscroll-behavior: contain; }
+  .door.show { display: flex; }
+  /* Los elementos del modo puerta llevan display propio (flex, grid), y eso
+     le gana al display:none que el navegador aplica por el atributo hidden:
+     ocultarlos con .hidden = true no surtía efecto. */
+  .door [hidden] { display: none !important; }
+  .door-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .door-scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(180deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.15) 24%, rgba(0,0,0,0.15) 58%, rgba(0,0,0,0.86) 100%); }
+
+  .door-top { position: relative; z-index: 4; display: flex; align-items: center; gap: 10px; color: #fff; padding: 16px 18px; padding-top: max(16px, env(safe-area-inset-top, 16px)); }
+  .door-count { font-family: "JetBrains Mono", monospace; font-size: 11px; letter-spacing: 0.2em; }
+  /* El contador va en monoespaciada a propósito: en Cormorant el 0 se lee como
+     un paréntesis y el 1 como una I mayúscula, y este número se mira de reojo. */
+  .door-count b { font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 19px; letter-spacing: 0; }
+  .door-count .dc-of { opacity: 0.55; }
+  .door-tools { margin-left: auto; display: flex; gap: 8px; }
+  .door-btn { width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.28); background: rgba(0,0,0,0.35); backdrop-filter: blur(6px); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; transition: background 160ms, border-color 160ms; }
+  .door-btn:hover { border-color: var(--gold); }
+  .door-btn.on { background: var(--gold); border-color: var(--gold); color: #1a1a1a; }
+
+  .door-stage { position: relative; z-index: 3; flex: 1; display: flex; align-items: center; justify-content: center; }
+  .door-frame { position: relative; width: min(74vw, 62vh, 420px); aspect-ratio: 1/1; }
+  .door-frame i { position: absolute; width: 34px; height: 34px; border: 3px solid rgba(196,165,114,0.95); border-radius: 4px; }
+  .door-frame i:nth-child(1) { top: 0; left: 0; border-right: none; border-bottom: none; border-top-left-radius: 14px; }
+  .door-frame i:nth-child(2) { top: 0; right: 0; border-left: none; border-bottom: none; border-top-right-radius: 14px; }
+  .door-frame i:nth-child(3) { bottom: 0; left: 0; border-right: none; border-top: none; border-bottom-left-radius: 14px; }
+  .door-frame i:nth-child(4) { bottom: 0; right: 0; border-left: none; border-top: none; border-bottom-right-radius: 14px; }
+  .door-laser { position: absolute; left: 6%; right: 6%; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); box-shadow: 0 0 12px rgba(196,165,114,0.8); animation: sweep 2.4s cubic-bezier(.45,0,.55,1) infinite; }
+  @keyframes sweep { 0%, 100% { top: 8%; } 50% { top: 92%; } }
+  .door-hint { position: absolute; top: calc(100% + 18px); left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.82); font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; white-space: nowrap; text-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+
+  .door-boot { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; color: #fff; padding: 32px; }
+  .door-boot .db-ic { font-size: 40px; opacity: 0.5; }
+  .door-boot .db-title { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 24px; }
+  .door-boot .db-desc { font-size: 13px; opacity: 0.62; max-width: 320px; line-height: 1.5; }
+  .door-boot .btn { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.3); color: #fff; }
+  .door-boot .btn.primary { background: linear-gradient(180deg, var(--gold), var(--gold-dark)); border-color: var(--gold-dark); color: #1a1a1a; }
+
+  .door-bottom { position: relative; z-index: 4; padding: 16px 18px; padding-bottom: max(18px, env(safe-area-inset-bottom, 18px)); display: flex; align-items: center; gap: 10px; }
+  .door-bottom .btn { flex: 1; padding: 15px 18px; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); border-color: rgba(255,255,255,0.28); color: #fff; }
+  .door-bottom .btn:hover { border-color: var(--gold); }
+  /* Mientras hay tarjeta de resultado, la barra de abajo queda justo debajo
+     de sus botones: un segundo toque en el mismo punto abriría el buscador
+     sin querer. Se apaga hasta que la tarjeta se va. */
+  .door.result-open .door-bottom { opacity: 0; pointer-events: none; transition: opacity 160ms; }
+
+  .door-flash { position: absolute; inset: 0; z-index: 5; pointer-events: none; opacity: 0; }
+  .door-flash.fire { animation: flash 460ms ease-out; }
+  @keyframes flash { 0% { opacity: 0.62; } 100% { opacity: 0; } }
+
+  .door-result { position: absolute; left: 0; right: 0; bottom: 0; z-index: 6; color: #fff; padding: 26px 24px; padding-bottom: max(26px, env(safe-area-inset-bottom, 26px)); border-radius: 24px 24px 0 0; transform: translateY(101%); transition: transform 340ms cubic-bezier(.22,1,.36,1); box-shadow: 0 -20px 60px rgba(0,0,0,0.5); max-height: 88%; overflow-y: auto; }
+  .door-result.show { transform: translateY(0); }
+  .door-result.ok { background: linear-gradient(170deg, #647d63, #3f5340); }
+  .door-result.dup { background: linear-gradient(170deg, #b48c44, #7d5f22); }
+  .door-result.err { background: linear-gradient(170deg, #a3553a, #6d2716); }
+  .door-result .dr-kicker { font-family: "JetBrains Mono", monospace; font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase; opacity: 0.85; display: flex; align-items: center; gap: 8px; }
+  .door-result .dr-name { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 30px; line-height: 1.15; margin-top: 8px; }
+  .door-result .dr-meta { font-size: 13px; opacity: 0.8; margin-top: 6px; }
+  .door-result .dr-table { display: flex; align-items: baseline; gap: 10px; margin-top: 18px; padding: 14px 18px; border-radius: 14px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.14); }
+  .door-result .dr-table .drt-lbl { font-family: "JetBrains Mono", monospace; font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase; opacity: 0.7; }
+  .door-result .dr-table .drt-val { font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 38px; line-height: 1; margin-left: auto; letter-spacing: 0.02em; }
+  .door-result .dr-party { display: flex; align-items: center; gap: 12px; margin-top: 14px; font-size: 13px; }
+  .door-result .dr-party .drp-lbl { opacity: 0.8; }
+  .door-result .dr-step { margin-left: auto; display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.14); border-radius: 999px; padding: 4px; }
+  .door-result .dr-step button { width: 34px; height: 34px; border-radius: 50%; border: none; background: rgba(255,255,255,0.14); color: #fff; cursor: pointer; font-size: 17px; line-height: 1; }
+  .door-result .dr-step button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .door-result .dr-step .drs-n { font-family: "JetBrains Mono", monospace; font-weight: 600; font-size: 18px; min-width: 24px; text-align: center; }
+  .door-result .dr-code { font-family: "JetBrains Mono", monospace; font-size: 12px; letter-spacing: 0.15em; margin-top: 14px; padding: 12px 16px; border-radius: 12px; background: rgba(0,0,0,0.25); word-break: break-all; }
+  .door-result .dr-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .door-result .dr-actions .btn { flex: 1; background: rgba(0,0,0,0.22); border-color: rgba(255,255,255,0.32); color: #fff; padding: 14px 16px; }
+  .door-result .dr-actions .btn:hover { border-color: #fff; }
+  .door-result .dr-actions .btn.solid { background: #fff; color: #1a1a1a; border-color: #fff; }
+  .door-result .dr-timer { position: absolute; left: 0; top: 0; height: 3px; background: rgba(255,255,255,0.75); border-radius: 24px 0 0 0; width: 100%; transform-origin: left; }
+  .door-result .dr-timer.run { animation: drain linear forwards; }
+  @keyframes drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+  @media (min-width: 760px) {
+    .door-result { left: 50%; transform: translate(-50%, 101%); width: min(560px, 92vw); border-radius: 24px; bottom: 20px; }
+    .door-result.show { transform: translate(-50%, 0); }
+    .door-result .dr-timer { border-radius: 24px 0 0 0; }
+  }
+
+  .door-sheet { position: absolute; inset: 0; z-index: 8; background: #f8f6f1; color: #1a1a1a; transform: translateY(101%); transition: transform 320ms cubic-bezier(.22,1,.36,1); display: flex; flex-direction: column; }
+  .door-sheet.show { transform: translateY(0); }
+  .door-sheet .ds-head { display: flex; align-items: center; gap: 12px; padding: 18px; padding-top: max(18px, env(safe-area-inset-top, 18px)); border-bottom: 1px solid rgba(26,26,26,0.08); }
+  .door-sheet .ds-title { font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 22px; }
+  .door-sheet .ds-close { margin-left: auto; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(26,26,26,0.15); background: #fff; cursor: pointer; font-size: 16px; }
+  .door-sheet .ds-search { padding: 16px 18px 8px; }
+  .door-sheet .ds-body { flex: 1; overflow-y: auto; padding: 0 18px 24px; }
+  .ds-row { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; padding: 14px 12px; margin-bottom: 8px; border-radius: 14px; border: 1px solid rgba(26,26,26,0.08); background: #fff; cursor: pointer; font-family: inherit; font-size: 14px; box-shadow: var(--shadow-sm); }
+  .ds-row:hover { border-color: #1a1a1a; }
+  .ds-row .dsr-av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #5a705c, #a89880); color: #fff; display: flex; align-items: center; justify-content: center; font-family: "Cormorant Garamond", serif; font-style: italic; font-size: 17px; flex-shrink: 0; }
+  .ds-row .dsr-who { flex: 1; min-width: 0; }
+  .ds-row .dsr-sub { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+  .ds-empty { text-align: center; opacity: 0.5; font-size: 12px; padding: 40px 20px; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .door-laser { animation: none; top: 50%; }
+    .door-flash.fire { animation: none; }
+    .door-result, .door-result.show { transition: none; }
+    .door-sheet { transition: none; }
+    .door-result .dr-timer.run { animation: none; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSQX0FslNhTDadL4O5SAGapGt4FodqL8My0mA==" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">Invitaciones <b>Online</b></div>
+    <div class="sub">DASHBOARD · v2.5</div>
+
+    <div class="nav-section">
+      <div class="nav-label">EVENTO ACTIVO</div>
+      <div class="nav-item active" data-view="resumen"><span class="ic">●</span> Resumen</div>
+      <div class="nav-item" data-view="invitados"><span class="ic">✉</span> Invitados <span class="count" id="nav-count-guests">0</span></div>
+      <div class="nav-item" data-view="mesas"><span class="ic">🪑</span> Mesas</div>
+      <div class="nav-item" data-view="regalos"><span class="ic">🎁</span> Mesa de regalos</div>
+      <div class="nav-item" data-view="mensajes"><span class="ic">💬</span> Mensajes <span class="count" id="nav-count-msgs">0</span></div>
+      <div class="nav-item" data-view="checkin"><span class="ic">✓</span> Check-in <span class="count" id="nav-count-checkin">0</span></div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">DISEÑO</div>
+      <a class="nav-item-link" href="Editor.html"><div class="nav-item"><span class="ic">✎</span> Editar invitación</div></a>
+      <a class="nav-item-link" href="Invitaciones.html" target="_blank"><div class="nav-item"><span class="ic">↗</span> Vista previa</div></a>
+      <div class="nav-item" data-view="estadisticas"><span class="ic">📊</span> Estadísticas</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">CUENTA</div>
+      <div class="nav-item" data-view="configuracion"><span class="ic">⚙</span> Configuración</div>
+      <div class="nav-item" data-view="plan"><span class="ic">💳</span> Plan</div>
+      <div class="nav-item" data-view="ayuda"><span class="ic">?</span> Ayuda</div>
+    </div>
+
+    <div class="user" data-view="configuracion">
+      <div class="avatar">M</div>
+      <div>
+        <div style="font-size: 13px; font-weight: 500;">Marcia &amp; Ricardo</div>
+        <div id="user-plan-label">PLAN PREMIUM</div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ================= RESUMEN ================= -->
+    <section class="view" id="view-resumen">
+      <div class="page-head">
+        <div>
+          <div class="crumb">DASHBOARD / BODA</div>
+          <div class="title">Bienvenida, <b>Marcia</b></div>
+          <div class="meta" id="event-meta">—</div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btn-share-link">Compartir enlace</button>
+          <button class="btn" id="btn-export-summary">Exportar lista</button>
+          <button class="btn primary" data-open-modal="guest">+ Invitar persona</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat tilt-card">
+          <span class="tilt-shine"></span><div class="ic-bg">✉</div>
+          <div class="label">INVITADOS</div>
+          <div class="value" id="s-total">—</div>
+          <div class="change up" id="s-total-change"></div>
+          <div class="progress"><div class="bar" id="s-total-bar" style="width:0%"></div></div>
+        </div>
+        <div class="stat tilt-card">
+          <span class="tilt-shine"></span><div class="ic-bg">✓</div>
+          <div class="label">CONFIRMADOS</div>
+          <div class="value" id="s-ok">—</div>
+          <div class="change up" id="s-ok-change"></div>
+          <div class="progress"><div class="bar" id="s-ok-bar" style="width:0%; background:#5a705c"></div></div>
+        </div>
+        <div class="stat tilt-card">
+          <span class="tilt-shine"></span><div class="ic-bg">⏱</div>
+          <div class="label">PENDIENTES</div>
+          <div class="value" id="s-pending">—</div>
+          <div class="change dn" id="s-pending-change"></div>
+          <div class="progress"><div class="bar" id="s-pending-bar" style="width:0%; background:#c4a572"></div></div>
+        </div>
+        <div class="stat tilt-card">
+          <span class="tilt-shine"></span><div class="ic-bg">👁</div>
+          <div class="label">VISITAS A LA INVITACIÓN</div>
+          <div class="value" id="s-visits">847</div>
+          <div class="change up">↑ 124 hoy</div>
+          <div class="progress"><div class="bar" style="width:84%; background:#7c5cff"></div></div>
+        </div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="title">Estado de RSVPs</div>
+            <button class="link" data-goto="estadisticas">VER DETALLE →</button>
+          </div>
+          <div class="donut-row">
+            <div class="donut">
+              <svg viewBox="0 0 42 42" id="donut-svg">
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f0ebe0" stroke-width="6" />
+                <circle id="donut-ok" cx="21" cy="21" r="15.9" fill="none" stroke="#5a705c" stroke-width="6" stroke-dasharray="0 100" />
+                <circle id="donut-pending" cx="21" cy="21" r="15.9" fill="none" stroke="#c4a572" stroke-width="6" stroke-dasharray="0 100" />
+                <circle id="donut-no" cx="21" cy="21" r="15.9" fill="none" stroke="#a3553a" stroke-width="6" stroke-dasharray="0 100" />
+              </svg>
+              <div class="donut-label"><div class="big" id="donut-big">—</div><div class="lbl">CONFIRMADOS</div></div>
+            </div>
+            <div class="legend" id="rsvp-legend"></div>
+          </div>
+
+          <div class="timeline-chart">
+            <div class="bar" style="height:14%"><div class="tip">L · 2</div></div>
+            <div class="bar" style="height:28%"><div class="tip">M · 5</div></div>
+            <div class="bar" style="height:42%"><div class="tip">M · 9</div></div>
+            <div class="bar" style="height:22%"><div class="tip">J · 4</div></div>
+            <div class="bar" style="height:50%"><div class="tip">V · 12</div></div>
+            <div class="bar" style="height:88%; background: linear-gradient(180deg, #a8c4a0, #5a705c)"><div class="tip">S · 21</div></div>
+            <div class="bar" style="height:64%"><div class="tip">D · 14</div></div>
+            <div class="bar" style="height:30%"><div class="tip">L · 7</div></div>
+            <div class="bar" style="height:46%"><div class="tip">M · 11</div></div>
+            <div class="bar" style="height:56%"><div class="tip">M · 13</div></div>
+            <div class="bar" style="height:38%"><div class="tip">J · 9</div></div>
+            <div class="bar" style="height:72%"><div class="tip">V · 17</div></div>
+            <div class="bar" style="height:78%"><div class="tip">S · 19</div></div>
+            <div class="bar" style="height:30%"><div class="tip">D · 7</div></div>
+          </div>
+          <div class="timeline-axis"><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div><div>D</div></div>
+          <div style="margin-top:10px; font-size:11px; opacity:0.55;">RSVPs por día · últimas 2 semanas</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <div class="title">Actividad reciente</div>
+            <button class="link" data-goto="mensajes">EN VIVO ●</button>
+          </div>
+          <div id="feed-list"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom: 22px;">
+        <div class="panel-head">
+          <div class="title">Invitados recientes</div>
+          <button class="link" data-goto="invitados">VER TODOS →</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Grupo</th><th>RSVP</th><th>Acompañantes</th><th>Mesa</th></tr></thead>
+            <tbody id="recent-guests-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="title">Distribución de mesas</div>
+            <button class="link" data-goto="mesas">EDITAR ASIGNACIONES →</button>
+          </div>
+          <div class="plates" id="plates-preview"></div>
+          <div style="margin-top:16px; display:flex; justify-content:space-between; font-size:11px; opacity:0.6;">
+            <div id="tables-summary-a">—</div><div id="tables-summary-b">—</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><div class="title">Acciones rápidas</div></div>
+          <div class="quick-actions">
+            <div class="qa" id="qa-remind"><div class="ic">✉</div><div class="qa-text"><div class="t">Recordar pendientes</div><div class="d" id="qa-remind-d">—</div></div></div>
+            <div class="qa" id="qa-link"><div class="ic">⛓</div><div class="qa-text"><div class="t">Copiar enlace</div><div class="d" id="qa-link-d">—</div></div></div>
+            <div class="qa" id="qa-qr"><div class="ic">▣</div><div class="qa-text"><div class="t">QR descargable</div><div class="d">Para imprimir + redes</div></div></div>
+            <div class="qa" id="qa-edit"><div class="ic">✎</div><div class="qa-text"><div class="t">Editar invitación</div><div class="d">Cambios en tiempo real</div></div></div>
+          </div>
+          <div style="margin-top:22px; padding:16px; background: linear-gradient(135deg, #5a705c, #7a8c64); border-radius:12px; color:#fff;">
+            <div style="font-family:'JetBrains Mono', monospace; font-size:9px; letter-spacing:0.3em; opacity:0.85;">RECORDATORIO</div>
+            <div id="rsvp-deadline-title" style="font-family:'Cormorant Garamond', serif; font-style:italic; font-size:20px; margin-top:6px; line-height:1.2;">—</div>
+            <div style="font-size:12px; opacity:0.85; margin-top:6px;" id="rsvp-deadline-desc">—</div>
+            <button class="btn" id="btn-activate-reminder" style="background:#fff; color:#1a1a1a; margin-top:12px; border-color:#fff;">ACTIVAR</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= INVITADOS ================= -->
+    <section class="view" id="view-invitados" hidden>
+      <div class="section-head">
+        <div>
+          <div class="crumb">GESTIÓN</div>
+          <div class="title">Invitados</div>
+          <div class="sub" id="guests-sub">—</div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btn-export-csv">Exportar CSV ↓</button>
+          <button class="btn" id="btn-open-send">✉ Enviar invitaciones</button>
+          <button class="btn primary" data-open-modal="guest">+ Añadir invitado</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="table-tools">
+          <input class="search" id="guest-search" placeholder="Buscar invitado o grupo..." />
+          <button class="filter-chip active" data-filter="all">Todos</button>
+          <button class="filter-chip" data-filter="ok">Confirmados</button>
+          <button class="filter-chip" data-filter="pending">Pendientes</button>
+          <button class="filter-chip" data-filter="no">No vienen</button>
+          <button class="filter-chip" data-filter="maybe">Tal vez</button>
+          <button class="filter-chip" data-filter="vip">VIP</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nombre</th><th>Grupo</th><th>RSVP</th><th>Acomp.</th><th>Restricciones</th><th>Mesa</th><th>Enviado</th><th>Confirmado</th><th></th></tr></thead>
+            <tbody id="guests-body"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="guests-pagination"></div>
+      </div>
+    </section>
+
+    <!-- ================= MESAS ================= -->
+    <section class="view" id="view-mesas" hidden>
+      <div class="section-head">
+        <div>
+          <div class="crumb">DISTRIBUCIÓN</div>
+          <div class="title">Mesas</div>
+          <div class="sub" id="tables-sub">—</div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btn-autofill">✦ Auto-asignar</button>
+          <button class="btn" id="btn-print-plan">Imprimir plan ↓</button>
+          <button class="btn primary" id="btn-add-table">+ Añadir mesa</button>
+        </div>
+      </div>
+
+      <div class="seating-toolbar">
+        <div class="seat-finder">
+          <input class="search" id="seat-finder-input" placeholder="Buscar invitado para ver su mesa..." />
+          <div id="seat-finder-result"></div>
+        </div>
+        <div class="view-toggle">
+          <button class="filter-chip active" data-seatview="map">Vista de mapa</button>
+          <button class="filter-chip" data-seatview="cards">Vista de tarjetas</button>
+        </div>
+      </div>
+
+      <div class="panels" style="grid-template-columns: 1fr;">
+        <div class="panel">
+          <div class="panel-head"><div class="title">Invitados sin mesa</div></div>
+          <div id="unassigned-list" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-bottom: 22px;">
+        <div class="panel-head"><div class="title">Reporte de menús para el catering</div></div>
+        <div id="catering-report"></div>
+      </div>
+
+      <div id="seat-view-map" class="panel">
+        <div class="panel-head"><div class="title">Plano del salón</div><div class="actions"><button class="btn" id="btn-add-zone">+ Elemento del salón</button></div></div>
+        <div style="font-size:11px; opacity:0.55; margin-bottom:10px;">Arrastra las mesas y los elementos para acomodar el salón · usa la esquina inferior derecha para redimensionar</div>
+        <div class="floor-map" id="floor-map"></div>
+      </div>
+      <div id="seat-view-cards" class="tables-grid" hidden></div>
+    </section>
+
+    <!-- ================= REGALOS ================= -->
+    <section class="view" id="view-regalos" hidden>
+      <div class="section-head">
+        <div>
+          <div class="crumb">MESA DE REGALOS</div>
+          <div class="title">Regalos</div>
+          <div class="sub" id="gifts-sub">—</div>
+        </div>
+        <div class="actions">
+          <select class="filter-chip" id="gifts-currency" style="cursor:pointer;"><option value="BOB">BOB Bs</option><option value="USD">USD $</option><option value="CAD">CAD $</option></select>
+          <button class="btn" data-open-modal="fund">+ Añadir fondo</button>
+          <button class="btn primary" data-open-modal="gift">+ Añadir regalo</button>
+        </div>
+      </div>
+
+      <div class="registry-tabs">
+        <button class="filter-chip active" data-regtab="funds">Fondos en efectivo</button>
+        <button class="filter-chip" data-regtab="items">Lista de regalos</button>
+      </div>
+
+      <div id="reg-panel-funds">
+        <div class="funds-grid" id="funds-grid"></div>
+      </div>
+      <div id="reg-panel-items" hidden>
+        <div class="gifts-grid" id="gifts-grid"></div>
+      </div>
+    </section>
+
+    <!-- ================= MENSAJES ================= -->
+    <section class="view" id="view-mensajes" hidden>
+      <div class="section-head">
+        <div>
+          <div class="crumb">LIBRO DE FIRMAS</div>
+          <div class="title">Mensajes</div>
+          <div class="sub" id="msgs-sub">—</div>
+        </div>
+      </div>
+      <div id="messages-list"></div>
+    </section>
+
+    <!-- ================= CHECK-IN ================= -->
+    <section class="view" id="view-checkin" hidden>
+      <div class="section-head">
+        <div>
+          <div class="crumb">DÍA DEL EVENTO</div>
+          <div class="title">Check-in de invitados</div>
+          <div class="sub" id="checkin-sub">—</div>
+        </div>
+      </div>
+
+      <div class="door-cta">
+        <div class="dc-ic">⛩</div>
+        <div class="dc-text">
+          <div class="dc-kicker">RECEPCIÓN</div>
+          <div class="dc-title">Modo puerta</div>
+          <div class="dc-desc">Pantalla completa, cámara siempre encendida. Cada pase se registra solo al escanearlo — sin confirmar nada.</div>
+        </div>
+        <button class="btn ghost" id="btn-door-help">CÓMO FUNCIONA</button>
+        <button class="btn primary" id="btn-open-door">ABRIR MODO PUERTA</button>
+      </div>
+
+      <div class="panels" style="grid-template-columns: 1.3fr 1fr;">
+        <div class="panel">
+          <div class="panel-head"><div class="title">Buscar a mano</div></div>
+          <div style="font-size:12px; opacity:0.6; margin-bottom:14px;">Para quien llegue sin el pase, con el celular sin batería o con la pantalla rota. Busca por nombre o grupo.</div>
+          <div class="scan-hw">
+            <input class="search" id="checkin-lookup" placeholder="Nombre, grupo o código del pase..." autocomplete="off" />
+          </div>
+          <div style="font-size:11px; opacity:0.45; margin-top:8px;">Un lector de códigos por USB o Bluetooth también escribe aquí: termina con Enter y registra el ingreso directo.</div>
+          <div class="lookup-list" id="checkin-lookup-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="title">Progreso de llegada</div></div>
+          <div class="donut-row">
+            <div class="donut">
+              <svg viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f0ebe0" stroke-width="6" />
+                <circle id="checkin-donut" cx="21" cy="21" r="15.9" fill="none" stroke="#5a705c" stroke-width="6" stroke-dasharray="0 100" />
+              </svg>
+              <div class="donut-label"><div class="big" id="checkin-donut-big">0%</div><div class="lbl">LLEGARON</div></div>
+            </div>
+            <div class="legend" id="checkin-legend"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <div class="title">Últimas llegadas</div>
+          <button class="link" id="btn-manual-checkin">VER TODOS LOS INVITADOS →</button>
+        </div>
+        <div id="checkin-arrivals-list"></div>
+      </div>
+    </section>
+
+    <!-- ================= ESTADÍSTICAS ================= -->
+    <section class="view" id="view-estadisticas" hidden>
+      <div class="section-head">
+        <div><div class="crumb">ANALÍTICA</div><div class="title">Estadísticas</div></div>
+      </div>
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-head"><div class="title">Estado de RSVPs</div></div>
+          <div class="donut-row">
+            <div class="donut">
+              <svg viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#f0ebe0" stroke-width="6" />
+                <circle id="donut2-ok" cx="21" cy="21" r="15.9" fill="none" stroke="#5a705c" stroke-width="6" stroke-dasharray="0 100" style="transform:rotate(-90deg); transform-origin:center" />
+                <circle id="donut2-pending" cx="21" cy="21" r="15.9" fill="none" stroke="#c4a572" stroke-width="6" stroke-dasharray="0 100" style="transform:rotate(-90deg); transform-origin:center" />
+                <circle id="donut2-no" cx="21" cy="21" r="15.9" fill="none" stroke="#a3553a" stroke-width="6" stroke-dasharray="0 100" style="transform:rotate(-90deg); transform-origin:center" />
+              </svg>
+              <div class="donut-label"><div class="big" id="donut2-big">—</div><div class="lbl">CONFIRMADOS</div></div>
+            </div>
+            <div class="legend" id="rsvp-legend2"></div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="title">Embudo de conversión</div></div>
+          <div id="funnel"></div>
+        </div>
+      </div>
+      <div class="panels">
+        <div class="panel">
+          <div class="panel-head"><div class="title">Dispositivos</div></div>
+          <div id="devices"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="title">Fuentes de tráfico</div></div>
+          <div id="sources"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= CONFIGURACIÓN ================= -->
+    <section class="view" id="view-configuracion" hidden>
+      <div class="section-head">
+        <div><div class="crumb">CUENTA</div><div class="title">Configuración del evento</div></div>
+      </div>
+      <div class="panels" style="align-items: start;">
+      <div class="panel">
+        <div class="panel-head"><div class="title">Detalles del evento</div></div>
+        <form id="settings-form">
+          <div class="field"><label>Nombre del evento</label><input type="text" id="cfg-name" /></div>
+          <div class="field-row">
+            <div class="field"><label>Fecha</label><input type="date" id="cfg-date" /></div>
+            <div class="field"><label>Idioma</label>
+              <select id="cfg-lang"><option>Español</option><option>English</option><option>Português</option></select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Moneda</label>
+              <select id="cfg-currency"><option value="BOB">BOB — Boliviano</option><option value="USD">USD — Dólar (EE.UU.)</option><option value="CAD">CAD — Dólar canadiense</option></select>
+            </div>
+            <div class="field"><label>Lugar / Venue</label><input type="text" id="cfg-venue" /></div>
+          </div>
+          <div class="field"><label>URL personalizada</label>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:12px; opacity:0.55; font-family:'JetBrains Mono',monospace;">invita.online/</span>
+              <input type="text" id="cfg-slug" style="flex:1;" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Privacidad</label>
+            <div class="radio-row"><input type="radio" name="privacy" id="cfg-priv-public" value="public" /><label for="cfg-priv-public" style="margin:0; text-transform:none; font-family:inherit; letter-spacing:normal; font-size:13px; opacity:1;">Pública — cualquiera con el enlace</label></div>
+            <div class="radio-row"><input type="radio" name="privacy" id="cfg-priv-password" value="password" /><label for="cfg-priv-password" style="margin:0; text-transform:none; font-family:inherit; letter-spacing:normal; font-size:13px; opacity:1;">Protegida con contraseña</label></div>
+            <div class="field" id="cfg-password-field" style="display:none; margin-top:8px;"><input type="text" id="cfg-password" placeholder="Contraseña de acceso" /></div>
+          </div>
+          <button class="btn primary" type="submit" style="margin-top: 4px;">Guardar cambios</button>
+        </form>
+        <div class="danger-zone">
+          <div class="dtitle">Zona de riesgo</div>
+          <div class="ddesc">Eliminar el evento borrará permanentemente invitados, mesas, regalos y mensajes.</div>
+          <button class="link-btn" id="btn-delete-event">Eliminar evento</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><div class="title">Vista previa del enlace</div></div>
+        <div style="font-size:12px; opacity:0.6; margin-bottom:10px;">Así verán tus invitados la información básica del evento.</div>
+        <div style="background:#fafaf6; border:1px solid rgba(26,26,26,0.08); border-radius:14px; padding:18px;">
+          <div style="font-family:'Cormorant Garamond',serif; font-style:italic; font-size:22px;" id="cfg-preview-name">—</div>
+          <div style="font-size:12px; opacity:0.65; margin-top:6px;" id="cfg-preview-date">—</div>
+          <div style="font-size:12px; opacity:0.65; margin-top:2px;" id="cfg-preview-venue">—</div>
+          <div style="font-family:'JetBrains Mono',monospace; font-size:10px; opacity:0.55; margin-top:12px; word-break:break-all;" id="cfg-preview-url">—</div>
+          <div class="pill" id="cfg-preview-privacy" style="margin-top:12px; background:#e1ecd6; color:#3a5a42;">Pública</div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ================= PLAN ================= -->
+    <section class="view" id="view-plan" hidden>
+      <div class="section-head">
+        <div><div class="crumb">CUENTA</div><div class="title">Tu plan</div></div>
+      </div>
+      <div class="billing-toggle" id="billing-toggle">
+        <button class="active" data-cycle="monthly">MENSUAL</button>
+        <button data-cycle="annual">ANUAL · AHORRA 17%</button>
+      </div>
+      <div class="plans-grid" id="plans-grid"></div>
+    </section>
+
+    <!-- ================= AYUDA ================= -->
+    <section class="view" id="view-ayuda" hidden>
+      <div class="section-head">
+        <div><div class="crumb">SOPORTE</div><div class="title">Centro de ayuda</div></div>
+      </div>
+      <div class="panels">
+        <div class="panel">
+          <input class="search" id="faq-search" placeholder="Buscar en preguntas frecuentes..." style="margin-bottom:16px; width:100%;" />
+          <div id="faq-list"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><div class="title">Contactar soporte</div></div>
+          <form id="help-form">
+            <div class="field"><label>Nombre</label><input type="text" id="help-name" required /></div>
+            <div class="field"><label>Email</label><input type="email" id="help-email" required /></div>
+            <div class="field"><label>Mensaje</label><textarea id="help-msg" required></textarea></div>
+            <button class="btn primary" type="submit">Enviar mensaje</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Modals -->
+<div class="modal-overlay" id="modal-guest">
+  <div class="modal">
+    <h3 id="guest-modal-title">Añadir invitado</h3>
+    <form id="guest-form">
+      <input type="hidden" id="g-id" />
+      <div class="field"><label>Nombre completo</label><input type="text" id="g-name" required /></div>
+      <div class="field-row">
+        <div class="field"><label>Grupo</label><input type="text" id="g-group" placeholder="Familia, amigos..." /></div>
+        <div class="field"><label>Acompañantes</label><input type="number" id="g-companions" min="0" value="0" /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>RSVP</label>
+          <select id="g-rsvp"><option value="pending">Pendiente</option><option value="ok">Asistirá</option><option value="no">No podrá</option><option value="maybe">Tal vez</option></select>
+        </div>
+        <div class="field"><label>Restricciones</label><input type="text" id="g-diet" placeholder="Vegano, sin gluten..." /></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>WhatsApp / Teléfono</label><input type="text" id="g-phone" placeholder="+591 700 00000" /></div>
+        <div class="field"><label>Email</label><input type="email" id="g-email" placeholder="correo@ejemplo.com" /></div>
+      </div>
+      <div class="field"><label>Nombre en el pase (opcional)</label><input type="text" id="g-partylabel" placeholder="Ej. Carlos Herrera y señora, Ana García de Herrera" /></div>
+      <div class="checkbox-row"><input type="checkbox" id="g-vip" /><label for="g-vip" style="margin:0;">Invitado VIP</label></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close-modal="guest">Cancelar</button>
+        <button type="submit" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-gift">
+  <div class="modal">
+    <h3>Añadir regalo</h3>
+    <form id="gift-form">
+      <div class="field"><label>Nombre del regalo</label><input type="text" id="gi-name" required /></div>
+      <div class="field-row">
+        <div class="field"><label>Precio</label><input type="number" id="gi-price" min="0" required /></div>
+        <div class="field"><label>Tienda</label><input type="text" id="gi-store" placeholder="Amazon, Liverpool, Crate & Barrel..." /></div>
+      </div>
+      <div class="field"><label>Enlace a la tienda (opcional)</label><input type="text" id="gi-link" placeholder="https://..." /></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close-modal="gift">Cancelar</button>
+        <button type="submit" class="btn primary">Añadir</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-fund">
+  <div class="modal">
+    <h3>Añadir fondo en efectivo</h3>
+    <form id="fund-form">
+      <div class="field"><label>Nombre del fondo</label><input type="text" id="fu-name" placeholder="Luna de miel, enganche de casa..." required /></div>
+      <div class="field"><label>Meta</label><input type="number" id="fu-goal" min="1" required /></div>
+      <div class="field"><label>Descripción breve</label><input type="text" id="fu-desc" placeholder="Para qué se usará este fondo" /></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close-modal="fund">Cancelar</button>
+        <button type="submit" class="btn primary">Crear fondo</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-contribution">
+  <div class="modal">
+    <h3>Registrar contribución</h3>
+    <div style="font-size:12px; opacity:0.6; margin-bottom:14px;">Úsalo para anotar sobres o transferencias recibidas en persona.</div>
+    <form id="contribution-form">
+      <input type="hidden" id="co-fund-id" />
+      <div class="field"><label>Nombre del invitado</label><input type="text" id="co-name" required /></div>
+      <div class="field-row">
+        <div class="field"><label>Monto</label><input type="number" id="co-amount" min="1" required /></div>
+        <div class="field"><label>Método</label><select id="co-method"><option>Sobre en el evento</option><option>Transferencia</option><option>Tarjeta</option></select></div>
+      </div>
+      <div class="field"><label>Mensaje (opcional)</label><input type="text" id="co-msg" placeholder="¡Felicidades!" /></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close-modal="contribution">Cancelar</button>
+        <button type="submit" class="btn primary">Registrar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-table">
+  <div class="modal">
+    <h3 id="table-modal-title">Añadir mesa</h3>
+    <form id="table-form">
+      <input type="hidden" id="tb-id" />
+      <div class="field"><label>Nombre de la mesa</label><input type="text" id="tb-label" placeholder="Mesa 09, Mesa de honor..." required /></div>
+      <div class="field-row">
+        <div class="field"><label>Capacidad (asientos)</label><input type="number" id="tb-capacity" min="2" max="20" value="8" required /></div>
+        <div class="field"><label>Forma</label>
+          <select id="tb-shape"><option value="round">Redonda</option><option value="rect">Rectangular</option><option value="imperial">Imperial (banquete)</option><option value="sweetheart">Mesa de honor</option></select>
+        </div>
+      </div>
+      <div class="field"><label>Notas (opcional)</label><input type="text" id="tb-notes" placeholder="Ej. cerca del baño, acceso silla de ruedas..." />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close-modal="table">Cancelar</button>
+        <button type="submit" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-send">
+  <div class="modal" style="width: 640px;">
+    <h3>Enviar invitaciones</h3>
+    <div style="font-size:12px; opacity:0.6; margin-bottom:16px;">Elige un canal y envía el enlace de tu invitación a cada invitado. Cada envío abre el mensaje ya redactado, listo para confirmar y enviar.</div>
+    <div class="send-channels" id="send-channels">
+      <button class="send-channel active" data-channel="whatsapp"><span class="sc-ic">🟢</span>WhatsApp</button>
+      <button class="send-channel" data-channel="email"><span class="sc-ic">✉️</span>Email</button>
+      <button class="send-channel" data-channel="sms"><span class="sc-ic">💬</span>SMS</button>
+      <button class="send-channel" data-channel="link"><span class="sc-ic">🔗</span>Enlace / QR</button>
+    </div>
+    <div class="field">
+      <label>Mensaje</label>
+      <textarea id="send-message" rows="3"></textarea>
+      <div style="font-size:10px; opacity:0.5; margin-top:4px;">Usa {nombre} para personalizar el saludo de cada invitado.</div>
+    </div>
+    <div class="field-row" style="margin-bottom:6px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:0.2em; opacity:0.6;">DESTINATARIOS</div>
+      <div style="text-align:right;"><button type="button" class="link-btn" id="btn-mark-all-sent" style="color:#5a705c;">Marcar todos como enviados</button></div>
+    </div>
+    <div id="send-recipients" class="send-recipients"></div>
+    <div class="modal-actions"><button type="button" class="btn" data-close-modal="send">Cerrar</button></div>
+  </div>
+</div>
+
+<div class="door" id="door" role="dialog" aria-modal="true" aria-label="Modo puerta">
+  <video class="door-video" id="door-video" playsinline muted autoplay></video>
+  <div class="door-scrim"></div>
+
+  <div class="door-top">
+    <button class="door-btn" id="door-close" title="Salir del modo puerta" aria-label="Salir del modo puerta">✕</button>
+    <div class="door-count"><b id="door-arrived">0</b><span class="dc-of" id="door-total"> / 0</span> <span class="dc-of">LLEGARON</span></div>
+    <div class="door-tools">
+      <button class="door-btn" id="door-sound" title="Silenciar sonido" aria-label="Silenciar sonido">🔊</button>
+      <button class="door-btn" id="door-torch" title="Linterna" aria-label="Linterna" hidden>🔦</button>
+      <button class="door-btn" id="door-flip" title="Cambiar de cámara" aria-label="Cambiar de cámara" hidden>⟲</button>
+    </div>
+  </div>
+
+  <div class="door-stage">
+    <div class="door-frame" id="door-frame" hidden>
+      <i></i><i></i><i></i><i></i>
+      <div class="door-laser"></div>
+      <div class="door-hint">APUNTA AL CÓDIGO DEL PASE</div>
+    </div>
+    <div class="door-boot" id="door-boot">
+      <div class="db-ic">📷</div>
+      <div class="db-title" id="door-boot-title">Encendiendo la cámara…</div>
+      <div class="db-desc" id="door-boot-desc">Acepta el permiso de cámara para empezar a escanear.</div>
+      <div id="door-boot-actions"></div>
+    </div>
+  </div>
+
+  <div class="door-bottom">
+    <button class="btn" id="door-find">⌕ BUSCAR POR NOMBRE</button>
+  </div>
+
+  <div class="door-flash" id="door-flash"></div>
+  <div class="door-result" id="door-result"></div>
+
+  <div class="door-sheet" id="door-sheet">
+    <div class="ds-head">
+      <div class="ds-title">Buscar invitado</div>
+      <button class="ds-close" id="door-sheet-close" aria-label="Cerrar">✕</button>
+    </div>
+    <div class="ds-search"><input class="search" id="door-search" placeholder="Nombre, grupo o código..." autocomplete="off" style="width:100%;" /></div>
+    <div class="ds-body" id="door-sheet-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-doorhelp">
+  <div class="modal" style="width: 460px;">
+    <h3>Cómo funciona el modo puerta</h3>
+    <ol style="font-size:13px; line-height:1.65; padding-left:18px; margin:0 0 4px;">
+      <li><b>Un dispositivo por fila.</b> Un celular o tablet en cada punto de entrada, cargador o batería a mano.</li>
+      <li><b>Se abre una vez y no se cierra.</b> La cámara queda encendida toda la recepción y la pantalla no se apaga sola.</li>
+      <li><b>El invitado muestra el QR de su pase.</b> Se registra solo, sin tocar la pantalla. Un tono agudo y una vibración corta confirman.</li>
+      <li><b>Verde</b> — pase válido: aparece el nombre y el número de mesa para decírselo en voz alta.</li>
+      <li><b>Ámbar</b> — ese pase ya había ingresado: dice a qué hora. Decide si lo dejas pasar de nuevo.</li>
+      <li><b>Rojo</b> — el código no es de este evento. Usa «Buscar por nombre».</li>
+      <li><b>Todo tiene salida a mano.</b> Sin pase, sin batería o con la pantalla rota: busca por nombre y regístralo.</li>
+    </ol>
+    <div style="font-size:11px; opacity:0.6; margin-top:14px; line-height:1.5;">La cámara solo funciona sobre HTTPS o en localhost — es una regla del navegador, no del sitio. Si abres el panel desde otro equipo por una dirección IP, usa el buscador por nombre o un lector de códigos por USB.</div>
+    <div class="modal-actions"><button type="button" class="btn primary" data-close-modal="doorhelp">Entendido</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-pass">
+  <div class="modal" style="width: 380px;">
+    <h3>Pase de entrada</h3>
+    <div class="pass-card" id="pass-card">
+      <div class="pass-kicker">PASE DE ENTRADA</div>
+      <div class="pass-brand" id="pass-brand">—</div>
+      <div class="pass-qr" id="pass-qr"></div>
+      <div class="pass-name" id="pass-name">—</div>
+      <div class="pass-meta" id="pass-meta">—</div>
+      <div class="pass-divider"></div>
+      <div class="pass-code" id="pass-code-label">—</div>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn" data-close-modal="pass">Cerrar</button>
+      <button type="button" class="btn primary" id="btn-print-pass">Imprimir pase</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-zone">
+  <div class="modal">
+    <h3 id="zone-modal-title">Añadir elemento del salón</h3>
+    <form id="zone-form">
+      <input type="hidden" id="zn-id" />
+      <div class="field"><label>Tipo</label>
+        <select id="zn-type">
+          <option value="dance">Pista de baile</option>
+          <option value="bar">Barra</option>
+          <option value="stage">Mesa de honor</option>
+          <option value="music">Banda / DJ</option>
+          <option value="entrance">Entrada</option>
+          <option value="kitchen">Cocina / servicio</option>
+          <option value="photo">Photobooth</option>
+          <option value="custom">Otro (personalizado)</option>
+        </select>
+      </div>
+      <div class="field" id="zn-label-field" style="display:none;"><label>Nombre</label><input type="text" id="zn-label" placeholder="Ej. Carpa de cigarros" /></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close-modal="zone">Cancelar</button>
+        <button type="submit" class="btn primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+<div id="print-plan" class="print-only"></div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
