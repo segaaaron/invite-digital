@@ -194,6 +194,29 @@ export const rsvpResponses = pgTable(
   (t) => [index('rsvp_responses_group_recent_idx').on(t.guestGroupId, t.respondedAt.desc())],
 )
 
+/**
+ * Registro append-only de escaneos, no una fila por grupo. `scan_id` es la clave de
+ * idempotencia que genera el dispositivo: reenviar el mismo lote veinte veces desde la
+ * bandeja de salida inserta una vez. Dos puertas sin red producen dos filas en vez de
+ * una carrera de escrituras perdidas, y deshacer deja lápida en vez de borrar.
+ */
+export const arrivals = pgTable(
+  'arrivals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    scanId: uuid('scan_id').notNull().unique(),
+    guestGroupId: uuid('guest_group_id')
+      .notNull()
+      .references(() => guestGroups.id, { onDelete: 'cascade' }),
+    arrivedCount: integer('arrived_count').notNull(),
+    // Reloj del dispositivo. Puede estar mal; por eso existe `received_at`.
+    scannedAt: timestamp('scanned_at', { withTimezone: true }).notNull(),
+    receivedAt: timestamp('received_at', { withTimezone: true }).defaultNow().notNull(),
+    voidedAt: timestamp('voided_at', { withTimezone: true }),
+  },
+  (t) => [index('arrivals_group_idx').on(t.guestGroupId, t.scannedAt.desc())],
+)
+
 export const clientShares = pgTable('client_shares', {
   id: uuid('id').defaultRandom().primaryKey(),
   eventId: uuid('event_id')
@@ -208,5 +231,6 @@ export const clientShares = pgTable('client_shares', {
 export const eventsRelations = relations(events, ({ many }) => ({ guestGroups: many(guestGroups) }))
 export const guestGroupsRelations = relations(guestGroups, ({ many, one }) => ({
   responses: many(rsvpResponses),
+  arrivals: many(arrivals),
   event: one(events, { fields: [guestGroups.eventId], references: [events.id] }),
 }))
