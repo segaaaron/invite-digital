@@ -16,6 +16,15 @@ import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
+import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
+import { checkInByScan } from '@/modules/checkin/application/check-in-by-scan'
+import { getDoorManifest } from '@/modules/checkin/application/get-door-manifest'
+import { getDoorState } from '@/modules/checkin/application/get-door-state'
+import { voidArrival } from '@/modules/checkin/application/void-arrival'
+import {
+  drizzleArrivalRepository,
+  drizzleDoorGroupReader,
+} from '@/modules/checkin/infrastructure/drizzle-arrival-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -103,4 +112,12 @@ export const rsvp = {
     rsvp: drizzleRsvpRepository,
   }),
   latestFor: (guestGroupId: string) => drizzleRsvpRepository.latestFor(guestGroupId),
+} as const
+
+export const checkin = {
+  record: checkInByScan({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository, minter }),
+  adjust: adjustArrival({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader }),
+  void: voidArrival({ arrivals: drizzleArrivalRepository, clock }),
+  manifest: getDoorManifest({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
+  state: getDoorState({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
 } as const

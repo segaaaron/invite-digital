@@ -1,0 +1,79 @@
+'use server'
+
+import { revalidatePath } from 'next/cache'
+import { checkin } from '@/app/composition/container'
+import { requireSession } from '@/modules/identity/session-cookie'
+import { isErr } from '@/shared/result'
+import type { ScanOutcome } from './application/check-in-by-scan'
+import type { DoorManifest } from './application/get-door-manifest'
+
+export type ScanInput = {
+  scanId: string
+  scanned: string
+  arrivedCount: number
+  /** Milisegundos desde época: el reloj del dispositivo cruza como número. */
+  scannedAtMs: number
+}
+
+/**
+ * Recibe el lote acumulado en la bandeja de salida del dispositivo. Devuelve un
+ * resultado por `scanId` para que el cliente pueda vaciar solo lo aceptado.
+ */
+export async function recordScansAction(input: {
+  eventId: string
+  eventSlug: string
+  scans: ScanInput[]
+}): Promise<ScanOutcome[]> {
+  await requireSession()
+
+  const result = await checkin.record({
+    eventId: input.eventId,
+    scans: input.scans.map((s) => ({
+      scanId: s.scanId,
+      scanned: s.scanned,
+      arrivedCount: s.arrivedCount,
+      scannedAt: new Date(s.scannedAtMs),
+    })),
+  })
+
+  if (isErr(result)) {
+    console.error('registro de escaneos rechazado', result.error.kind, result.error.detail)
+    throw new Error(result.error.kind)
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  return result.value
+}
+
+export async function adjustArrivalAction(input: {
+  scanId: string
+  arrivedCount: number
+  eventSlug: string
+}): Promise<void> {
+  await requireSession()
+
+  const result = await checkin.adjust({ scanId: input.scanId, arrivedCount: input.arrivedCount })
+  if (isErr(result)) console.error('corrección rechazada', result.error.kind, result.error.detail)
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+}
+
+export async function voidArrivalAction(input: { scanId: string; eventSlug: string }): Promise<void> {
+  await requireSession()
+
+  const result = await checkin.void({ scanId: input.scanId })
+  if (isErr(result)) console.error('deshacer rechazado', result.error.kind, result.error.detail)
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+}
+
+export async function refreshManifestAction(eventId: string): Promise<DoorManifest | null> {
+  await requireSession()
+
+  const result = await checkin.manifest(eventId)
+  if (isErr(result)) {
+    console.error('manifiesto rechazado', result.error.kind, result.error.detail)
+    return null
+  }
+  return result.value
+}
