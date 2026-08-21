@@ -21,19 +21,25 @@ Después, según lo que vayas a hacer:
 
 ## Estado
 
-**Ciclo 1 cerrado y fusionado a `main`.** **Ciclo 3, rebanada 1 (núcleo) cerrada**: las
-16 tareas del plan. 311 pruebas unitarias y 28 e2e en verde; pila Docker probada de
-punta a punta, incluido el binario nativo de Argon2 dentro de la imagen.
+**Ciclo 1 y ciclo 3 rebanada 1 (núcleo) cerrados y fusionados a `main`.** 341 pruebas
+unitarias y 29 e2e en verde. Las e2e se ejecutaron además **contra la imagen de
+producción**, no solo contra el servidor de desarrollo: migrador, seed, Argon2 nativo en
+la capa de runtime, mantenimiento, y el ciclo de respaldo y restauración comparado tabla
+por tabla.
 
 El atelier ya crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
 invitado confirma desde su enlace sin cuenta.
 
-Rama de trabajo: `feat/motor-invitaciones`, **sin fusionar**.
+Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
+
+Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
 
 Lo siguiente son las rebanadas 2 (canales de envío), 3 (puerta con QR) y 4
-(refinamientos). Ojo: pedidos, comprobantes y panel de administración —el Plan B— siguen
-sin construirse.
+(refinamientos). La rebanada 2 tiene diseño hablado y **no** escrito: rotar el enlace al
+reenviar, importación masiva con CSV y tabla de resultado, plantilla de mensaje por
+evento y teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de
+administración —el Plan B— siguen sin construirse.
 
 ## Comandos
 
