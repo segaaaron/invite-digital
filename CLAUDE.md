@@ -18,37 +18,49 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-19-invitation-engine-design.md` | Construir el motor de invitaciones y RSVP (ciclo 3) |
 | `docs/superpowers/2026-08-20-runbook-despliegue.md` | Desplegar a producción, respaldar, restaurar y volver atrás |
 | `docs/superpowers/plans/2026-08-19-invitation-engine-slice-1.md` | Consultar cómo se construyó la rebanada 1 del ciclo 3: 16 tareas |
+| `docs/superpowers/specs/2026-08-21-mesas-design.md` | Entender la distribución de mesas y el plano del salón |
+| `docs/superpowers/plans/2026-08-21-mesas.md` | Consultar cómo se construyó el ciclo 4 rebanada 1: 16 tareas |
 | `docs/superpowers/specs/2026-08-21-checkin-qr-design.md` | Entender el check-in por QR y la puerta sin conexión (ciclo 3, rebanada 3) |
 | `docs/superpowers/plans/2026-08-21-checkin-qr.md` | Consultar cómo se construyó la rebanada 3 del ciclo 3: 20 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
-**Ciclo 1 y ciclo 3 rebanadas 1 y 3 cerrados.** 439 pruebas unitarias y 33 e2e en
-verde. Las e2e del ciclo 1 se ejecutaron además **contra la imagen de producción**, no
-solo contra el servidor de desarrollo: migrador, seed, Argon2 nativo en la capa de
-runtime, mantenimiento, y el ciclo de respaldo y restauración comparado tabla por tabla.
+**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y ciclo 4 rebanada 1 —mesas y plano del
+salón— cerrados y fusionados a `main`.** 604 pruebas unitarias y 35 e2e en verde.
 
-El atelier ya crea eventos, carga grupos de invitados con cupos, reparte un enlace por
+El atelier crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
-invitado confirma desde su enlace sin cuenta.
+invitado confirma desde su enlace sin cuenta. La puerta escanea pases con o sin red.
 
-La puerta ya funciona el día del evento: el invitado enseña el QR de su propia
-invitación, quien recibe escanea desde `/panel/eventos/[slug]/puerta` y el grupo queda
-registrado. **Funciona con el salón sin wifi**: el dispositivo precarga los hashes de
-token, resuelve verde, ámbar o rojo en local con el mismo dominio que usa el servidor, y
-acumula los escaneos en IndexedDB hasta que vuelve la red. Se instala en la pantalla de
-inicio como aplicación.
+Y ya reparte el salón: crea mesas con su cupo, sienta grupos, auto-asigna lo que falta
+sin deshacer lo colocado a mano, coloca mesas y zonas sobre un plano e imprime el plan
+del banquete. **El número de mesa ya no es un hueco pendiente en la puerta**: la tarjeta
+verde lo canta al escanear, y viaja en el manifiesto, así que funciona sin red.
 
-La rebanada 3 vive en la rama `ciclo3-rebanada3-checkin`, sin fusionar todavía. No hay
-remoto configurado: el repositorio es local.
+Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
 
 Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
 
-Lo siguiente son las rebanadas 2 (canales de envío) y 4 (refinamientos). La rebanada 2
-tiene diseño hablado y **no** escrito: rotar el enlace al reenviar, importación masiva con CSV y tabla de resultado, plantilla de mensaje por
-evento y teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de
-administración —el Plan B— siguen sin construirse.
+Lo siguiente son las rebanadas 2 (canales de envío) y 4 (refinamientos) del ciclo 3. La
+rebanada 2 tiene diseño hablado y **no** escrito: rotar el enlace al reenviar,
+importación masiva con CSV y tabla de resultado, plantilla de mensaje por evento y
+teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
+Plan B— siguen sin construirse.
+
+### Notas del salón (`src/modules/venue/`)
+
+- **El plano no guarda al arrastrar ni al soltar.** Acumula en local y manda el lote
+  entero al pulsar «Guardar»; «Descartar» vuelve a lo último guardado. Salir con cambios
+  abre un modal propio (Guardar / Descartar / Cancelar) y `beforeunload` cubre el cierre
+  de pestaña. Guardar por fotograma serían miles de escrituras por mesa movida.
+- **`guest_groups.table_id` es `ON DELETE SET NULL`.** Borrar una mesa deja a sus grupos
+  sin mesa; jamás los borra. Hay una prueba contra Postgres real que lo fija, y es la que
+  no se puede romper.
+- **Un grupo nunca se parte entre dos mesas** y `autoAssign` es determinista: sin
+  `Math.random`, sin `Date.now`, y no toca lo que un humano colocó.
+- La posición es porcentaje `numeric(5,2)`, no píxeles, y el driver la entrega como
+  cadena: el adaptador la convierte a número.
 
 ## Comandos
 
@@ -144,11 +156,14 @@ visible, y esa es justo la razón de que exista la puerta.
   contrario de lo que decía esta lista: los escaneos suben por Server Actions, que es lo
   que ya usa el panel, y el reenvío lo dispara la propia página al recuperar la red. El
   Service Worker solo sirve recursos. La sección 6 del spec del check-in lo razona.)
-- **Ciclo 3, rebanada 4**: recordatorios automáticos, asignación de mesas, menú por invitado.
+- **Ciclo 3, rebanada 4**: recordatorios automáticos y menú por invitado. La asignación de
+  mesas ya está construida (ciclo 4, rebanada 1); el menú necesita invitados por persona,
+  que todavía no existe.
 - **Plan B**: pedidos, subida de comprobante de pago, panel de administración mínimo.
   La sección 9 del spec del ciclo 1 ya lo describe. La deuda del layout raíz que lo bloqueaba ya
   está saldada: cuelga del grupo `(panel)`.
-- **Ciclo 4**: dashboard completo.
+- **Ciclo 4, rebanada 2 en adelante**: mesas de regalos, mensajes, sitio concreto dentro de
+  la mesa, y el dashboard completo.
 
 ## Estilo de trabajo con este usuario
 

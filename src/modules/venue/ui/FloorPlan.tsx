@@ -229,7 +229,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-3">
-        <p role="status" className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
+        <p aria-label="Estado del plano" role="status" className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
           {hayPendientes
             ? `${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar`
             : 'Plano guardado'}
