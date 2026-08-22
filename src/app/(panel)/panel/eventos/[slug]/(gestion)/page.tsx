@@ -1,16 +1,14 @@
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, guests, plans, rsvp } from '@/app/composition/container'
+import { checkin, events, guests, plans, rsvp } from '@/app/composition/container'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { EventForm } from '@/modules/events/ui/EventForm'
-import { unreadCount } from '@/modules/guestbook'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { canAddGroup } from '@/modules/plans'
-import { eventNav } from '@/modules/shell/ui/nav'
-import { PanelShell } from '@/modules/shell/ui/PanelShell'
+import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { DonutChart, PanelCard, StatCard } from '@/modules/shell/ui/cards'
 import { isErr } from '@/shared/result'
 
@@ -37,11 +35,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         })),
       )
 
-  // El contador de sin leer va en el propio enlace: si hubiera que entrar para
-  // descubrir que hay mensajes esperando, no entraría nadie.
-  const libro = await guestbook.list(event.value.id)
-  const sinLeer = isErr(libro) ? 0 : unreadCount(libro.value)
-
   // Cuánto margen queda antes del límite del plan. Se resuelve aquí, en la página, y se
   // le pasa al aviso: `guests` no sabe nada de planes.
   const capacidad = await plans.allowanceFor(event.value.id)
@@ -65,14 +58,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const noAsisten = filas.filter((f) => f.confirmed === 0).length
 
   return (
-    <PanelShell
-      sections={eventNav(event.value.slug, { sinLeer, llegadas: llegadas?.arrivedGroups ?? null })}
-      active={`/panel/eventos/${event.value.slug}`}
-      brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
-      kicker="Resumen"
-      title={event.value.title}
-      meta={`${new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' })}`}
-    >
+    <>
+      <PanelHeader
+        kicker="Resumen"
+        meta={new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })}
+        title={event.value.title}
+      />
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         <StatCard label="Grupos invitados" value={filas.length} icon="✉" />
         <StatCard
@@ -134,6 +129,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <EventForm event={event.value} />
         </PanelCard>
       </div>
-    </PanelShell>
+    </>
   )
 }

@@ -1,4 +1,17 @@
-import type { NavSection } from './PanelShell'
+export type NavItem = {
+  readonly href: string
+  readonly label: string
+  readonly icon: string
+  /** Insignia con el número pendiente. `null` o cero no pintan nada. */
+  readonly count?: number | null
+  /** Qué cuenta la insignia. Un número suelto no dice nada a quien no ve el color. */
+  readonly countLabel?: string
+}
+
+export type NavSection = {
+  readonly label: string
+  readonly items: readonly NavItem[]
+}
 
 /**
  * La navegación del evento, en un solo sitio. Repetir esta lista en cada página fue lo
@@ -13,8 +26,8 @@ export function eventNav(slug: string, counts: { sinLeer?: number | null; llegad
         { href: base, label: 'Resumen', icon: '●' },
         { href: `${base}/mesas`, label: 'Mesas', icon: '⌗' },
         { href: `${base}/regalos`, label: 'Regalos', icon: '❖' },
-        { href: `${base}/mensajes`, label: 'Mensajes', icon: '❝', count: counts.sinLeer ?? null },
-        { href: `${base}/puerta`, label: 'Modo puerta', icon: '⛩', count: counts.llegadas ?? null },
+        { href: `${base}/mensajes`, label: 'Mensajes', icon: '❝', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
+        { href: `${base}/puerta`, label: 'Modo puerta', icon: '⛩', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
       ],
     },
     {
@@ -33,7 +46,7 @@ export function eventNav(slug: string, counts: { sinLeer?: number | null; llegad
 export function rootNav(): NavSection[] {
   return [
     {
-      label: 'Atelier',
+      label: 'Panel',
       items: [
         { href: '/panel', label: 'Eventos', icon: '⌂' },
         { href: '/panel/ayuda', label: 'Ayuda', icon: '?' },

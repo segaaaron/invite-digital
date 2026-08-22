@@ -253,6 +253,15 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
   `(guest)/i/[token]` · `(guest)/compartir/[token]`. No existe `src/app/layout.tsx`, y el grupo
   `(guest)` no lleva layout propio a propósito: uno que emitiera `<html>` quedaría por fuera y el
   idioma del evento no llegaría al atributo `lang`.
+- **La carcasa del panel la monta un `layout.tsx`, nunca una página.** Vive en dos:
+  `panel/(atelier)/layout.tsx` para la bandeja, el evento nuevo y la ayuda, y
+  `panel/eventos/[slug]/(gestion)/layout.tsx` para todo lo de un evento. Cada página pone
+  solo `PanelHeader` y su contenido. Cuando la ponía cada página, ocho se quedaron sin
+  ella y el panel cambiaba de forma al pasar de sección: barra lateral en el resumen y
+  columna centrada en las demás. Fuera de los grupos quedan a propósito el modo puerta
+  —pantalla completa— y el plan del banquete —papel—; ahí no hay carcasa.
+- **La sección activa la deduce `PanelSidebar` con `usePathname`**, no un prop `active`.
+  Un prop es otro sitio donde olvidarse.
 - **Ningún token en claro toca la base.** Invitados, sesiones y enlaces de cliente guardan solo
   SHA-256. Un token desconocido responde **404, nunca 403**.
 - **Toda Server Action del panel empieza por `requireSession()`.** Es un extremo HTTP público;

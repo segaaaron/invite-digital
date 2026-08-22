@@ -24,7 +24,7 @@ test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la r
 
   // 2. El evento anuncia el mensaje sin leer desde su propia página, sin entrar.
   await page.goto(`/panel/eventos/${SLUG}`)
-  await expect(page.getByRole('link', { name: /Mensajes · 1 sin leer/ })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Mensajes\s*1 sin leer/ })).toBeVisible()
 
   // 3. La bandeja lo muestra sin leer. Recién escrito no tiene nota todavía: si la
   //    consulta uniera con `innerJoin`, aquí no habría nada que ver.

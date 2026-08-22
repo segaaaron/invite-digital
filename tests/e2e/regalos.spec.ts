@@ -57,7 +57,7 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   await page.goto(`/panel/eventos/${SLUG}/regalos`)
   await expect(page.getByText('Reservado', { exact: true })).toBeVisible()
   await expect(page.getByText('Reservado por Familia Rojas Peña')).toBeVisible()
-  await expect(page.getByLabel('Resumen de la mesa')).toContainText('1 reservados')
+  await expect(page.getByLabel('Resumen de la mesa')).toContainText(/Reservados\s*1/)
 
   // 5. El invitado lo suelta y vuelve a estar disponible.
   await page.goto(`/i/${token}`)
