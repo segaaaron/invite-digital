@@ -16,6 +16,17 @@ describe('buildContentSecurityPolicy', () => {
     expect(policy).toContain("base-uri 'self'")
     expect(policy).toContain("form-action 'self'")
   })
+
+  it('en desarrollo abre unsafe-eval, y solo ahí', () => {
+    // El runtime de react-refresh evalúa una cadena al arrancar. Sin este permiso el
+    // arranque del cliente muere en `pnpm dev`, nada hidrata, y las secciones que
+    // aparecen con animación se quedan invisibles: la portada sale sin titular.
+    const dev = buildContentSecurityPolicy('abc123', { dev: true })
+    expect(dev).toContain("script-src 'self' 'nonce-abc123' 'strict-dynamic' 'unsafe-eval'")
+
+    expect(buildContentSecurityPolicy('abc123')).not.toMatch(/script-src[^;]*unsafe-eval/)
+    expect(buildContentSecurityPolicy('abc123', { dev: false })).not.toMatch(/script-src[^;]*unsafe-eval/)
+  })
 })
 
 describe('createNonce', () => {

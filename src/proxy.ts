@@ -16,7 +16,10 @@ function withCsp(request: NextRequest): NextResponse {
   requestHeaders.set(NONCE_HEADER, nonce)
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
-  response.headers.set('Content-Security-Policy', buildContentSecurityPolicy(nonce))
+  response.headers.set(
+    'Content-Security-Policy',
+    buildContentSecurityPolicy(nonce, { dev: process.env.NODE_ENV !== 'production' }),
+  )
   return response
 }
 
