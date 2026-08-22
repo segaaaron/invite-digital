@@ -28,13 +28,14 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/plans/2026-08-21-mensajes.md` | Consultar cómo se construyó el ciclo 4 rebanada 3: 8 tareas |
 | `docs/superpowers/specs/2026-08-21-planes-design.md` | Entender los límites por plan y las solicitudes de cambio (ciclo 4, rebanada 4) |
 | `docs/superpowers/plans/2026-08-21-planes.md` | Consultar cómo se construyó el ciclo 4 rebanada 4: 9 tareas |
+| `docs/superpowers/plans/2026-08-21-cabos-sueltos.md` | Consultar cómo se cerraron los cabos sueltos del ciclo 4: 7 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
 **Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y el ciclo 4 entero —mesas y plano del
 salón, mesa de regalos y fondos, libro de firmas, y los límites por plan— cerrados y
-fusionados a `main`.** 992 pruebas unitarias y 42 e2e en verde.
+fusionados a `main`, **sin cabos sueltos**. 1101 pruebas unitarias y 42 e2e en verde.
 
 El atelier crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
@@ -59,6 +60,13 @@ Y los tres planes que el sitio vende desde el ciclo 1 por fin significan algo: c
 tiene su plan, el límite de grupos se aplica **en el servidor**, las funciones que el plan
 no trae quedan cerradas, el panel avisa al 80 % antes de chocar con el tope y un cambio de
 plan queda registrado como solicitud que el atelier aplica a mano. No hay cobro en línea.
+
+El ciclo 4 se cerró del todo el 21 de agosto: editar un regalo, un fondo y una mesa sin
+perder lo que ya tenían; la tira de llegadas en la página del evento; la mesa de regalos
+que **se congela en vez de desaparecer** cuando el plan deja de traerla; la vista de
+estadísticas; el centro de ayuda; las zonas del salón, que el plano sabía dibujar y nadie
+podía crear; y las Server Actions que fallaban en silencio, que ahora cuentan el fallo en
+la pantalla.
 
 Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
 
@@ -87,6 +95,21 @@ Plan B— siguen sin construirse.
 - **El corte está en el servidor.** Deshabilitar un botón u ocultar una sección es
   cortesía; una Server Action es un extremo HTTP público. `tests/e2e/planes.spec.ts`
   reactiva el botón desde el navegador y comprueba que el servidor rechaza igual.
+- **La puerta del invitado también se cierra.** Sin `registry` en el plan, la mesa de
+  regalos se **congela**: lo ya reservado se sigue viendo, no se puede reservar ni
+  liberar, y un aviso lo explica. Ocultarla haría que quien apartó la cafetera creyera que
+  no la apartó y la comprase dos veces.
+
+### Dos reglas que salieron del cierre del ciclo 4
+
+- **Ninguna Server Action devuelve `Promise<void>` con el fallo solo en `console.error`.**
+  El usuario se queda creyendo que funcionó. El patrón es `{ status, message }` por
+  `useActionState`, con el detalle —que puede llevar identificadores— en el registro del
+  servidor y la clase del error en el estado. Y la pantalla tiene que **enseñarlo**: una
+  acción que devuelve el error y una vista que no lo pinta no arregla nada.
+- **Nada se construye sin la pantalla que lo alcanza.** Un caso de uso probado que ninguna
+  vista llama es código muerto con coartada. Antes de cerrar una rebanada, repasa los
+  exportados de cada `actions.ts` y de cada `application/` y comprueba que algo los llama.
 
 ### Notas de la mesa de regalos (`src/modules/registry/`)
 
