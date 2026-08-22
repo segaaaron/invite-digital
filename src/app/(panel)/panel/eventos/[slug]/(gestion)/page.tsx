@@ -99,7 +99,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       <div className="flex flex-col gap-4.5">
-        <PanelCard title="Invitados">
+        <PanelCard id="invitados" title="Invitados">
           <div className="flex flex-col gap-4">
             <AllowanceNotice currentGroups={grupos} eventSlug={event.value.slug} maxGuestGroups={limite} />
             <GuestGroupForm atLimit={!canAddGroup(limite, grupos)} eventId={event.value.id} eventSlug={event.value.slug} />
@@ -113,7 +113,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </div>
         </PanelCard>
 
-        <PanelCard title="Enlace para el cliente">
+        <PanelCard id="enlace-cliente" title="Enlace para el cliente">
           <ClientSharePanel
             eventId={event.value.id}
             eventSlug={event.value.slug}
@@ -125,7 +125,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           />
         </PanelCard>
 
-        <PanelCard title="Datos del evento">
+        <PanelCard id="datos-evento" title="Datos del evento">
           <EventForm event={event.value} />
         </PanelCard>
       </div>

@@ -262,6 +262,12 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
   —pantalla completa— y el plan del banquete —papel—; ahí no hay carcasa.
 - **La sección activa la deduce `PanelSidebar` con `usePathname`**, no un prop `active`.
   Un prop es otro sitio donde olvidarse.
+- **La barra es la de la maqueta y es siempre la misma**: EVENTO ACTIVO · DISEÑO ·
+  CUENTA, con la tarjeta de usuario abajo. `Dashboard.html` no tiene una versión
+  reducida, así que aquí tampoco: la bandeja, el evento nuevo y la ayuda enseñan la barra
+  entera apuntando al **evento activo** —el de fecha más próxima, que es como los ordena
+  el repositorio—. Sin ningún evento, esos enlaces se pintan apagados; no desaparecen.
+  Una barra que encoge al cambiar de página es lo que había que quitar.
 - **Ningún token en claro toca la base.** Invitados, sesiones y enlaces de cliente guardan solo
   SHA-256. Un token desconocido responde **404, nunca 403**.
 - **Toda Server Action del panel empieza por `requireSession()`.** Es un extremo HTTP público;

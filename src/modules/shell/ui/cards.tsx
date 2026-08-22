@@ -49,16 +49,19 @@ export function StatCard({
 }
 
 export function PanelCard({
+  id,
   title,
   action,
   children,
 }: {
+  /** Ancla, para los enlaces de la barra que llevan a una tarjeta del resumen. */
+  id?: string
   title?: string
   action?: ReactNode
   children: ReactNode
 }) {
   return (
-    <section className="rounded-[18px] border border-line bg-linear-to-b from-bg-top to-white p-5.5 shadow-card">
+    <section id={id} className="scroll-mt-6 rounded-[18px] border border-line bg-linear-to-b from-bg-top to-white p-5.5 shadow-card">
       {title || action ? (
         <div className="mb-4.5 flex items-baseline justify-between gap-4">
           {title ? <h2 className="font-display text-[22px] italic text-ink">{title}</h2> : <span />}

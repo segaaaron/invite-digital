@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, plans } from '@/app/composition/container'
+import { checkin, events, guestbook, guests, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { requireSession } from '@/modules/identity/session-cookie'
-import { eventNav } from '@/modules/shell/ui/nav'
+import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { isErr } from '@/shared/result'
 
@@ -33,15 +33,26 @@ export default async function EventoLayout({
 
   // Las insignias de la barra. Si una falla, la barra se pinta sin ella: un contador no
   // es motivo para tumbar la página que lo rodea.
+  const grupos = await guests.list(event.value.id)
   const libro = await guestbook.list(event.value.id)
-  const sinLeer = isErr(libro) ? null : unreadCount(libro.value)
+  const capacidad = await plans.allowanceFor(event.value.id)
 
   const conPuerta = await plans.requireFeature(event.value.id, 'checkin')
   const puerta = isErr(conPuerta) ? null : await checkin.state(event.value.id)
-  const llegadas = puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups
 
   return (
-    <PanelFrame brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`} sections={eventNav(event.value.slug, { sinLeer, llegadas })}>
+    <PanelFrame
+      brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
+      sections={panelNav(event.value.slug, {
+        invitados: isErr(grupos) ? null : grupos.value.length,
+        sinLeer: isErr(libro) ? null : unreadCount(libro.value),
+        llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
+      })}
+      user={{
+        title: event.value.title,
+        planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,
+      }}
+    >
       {children}
     </PanelFrame>
   )

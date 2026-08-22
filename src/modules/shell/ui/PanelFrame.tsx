@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { PanelSidebar } from './PanelSidebar'
+import { PanelSidebar, type PanelUser } from './PanelSidebar'
 import type { NavSection } from './nav'
 
 /**
@@ -13,10 +13,12 @@ import type { NavSection } from './nav'
 export function PanelFrame({
   sections,
   brandSub,
+  user,
   children,
 }: {
   sections: readonly NavSection[]
   brandSub: string
+  user: PanelUser
   children: ReactNode
 }) {
   return (
@@ -24,7 +26,7 @@ export function PanelFrame({
       {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
           la ventana y en una página larga dejaba una franja blanca por debajo. */}
       <div className="bg-shell-deep">
-        <PanelSidebar brandSub={brandSub} sections={sections} />
+        <PanelSidebar brandSub={brandSub} sections={sections} user={user} />
       </div>
       <main className="relative z-1 min-w-0 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(90_112_92/0.14),transparent_55%)] p-4.5 md:p-7">
         {children}
