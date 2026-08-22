@@ -43,6 +43,13 @@ import {
 } from '@/modules/registry/application/gift-use-cases'
 import { listRegistry } from '@/modules/registry/application/list-registry'
 import { drizzleRegistryRepository } from '@/modules/registry/infrastructure/drizzle-registry-repository'
+import {
+  listGuestbook,
+  markRead,
+  replyToMessage,
+  toggleFeatured,
+} from '@/modules/guestbook/application/guestbook-use-cases'
+import { drizzleGuestbookRepository } from '@/modules/guestbook/infrastructure/drizzle-guestbook-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -176,4 +183,15 @@ export const registry = {
   // RSVP: la regla de qué enlace vale vive en un solo sitio.
   claim: claimGift({ registry: drizzleRegistryRepository, resolveGroup: (token) => guests.resolveByToken(token) }),
   release: releaseGift({ registry: drizzleRegistryRepository, resolveGroup: (token) => guests.resolveByToken(token) }),
+} as const
+
+/**
+ * El libro de firmas. Todo lo de aquí es del atelier: el invitado ya escribió su mensaje
+ * al confirmar y en esta rebanada solo lee la respuesta, sin ninguna escritura nueva.
+ */
+export const guestbook = {
+  list: listGuestbook({ guestbook: drizzleGuestbookRepository }),
+  markRead: markRead({ guestbook: drizzleGuestbookRepository, clock }),
+  toggleFeatured: toggleFeatured({ guestbook: drizzleGuestbookRepository, clock }),
+  reply: replyToMessage({ guestbook: drizzleGuestbookRepository, clock }),
 } as const
