@@ -8,6 +8,8 @@ import type { DoorManifest } from '../application/get-door-manifest'
 import type { ResolvedArrival } from '../domain/conflict'
 import { doorTally } from '../domain/door-tally'
 import { DoorSearchSheet } from './DoorSearchSheet'
+import { resolveLocally } from './local-resolve'
+import { openOutbox, type Outbox } from './outbox'
 import { ScanResultCard } from './ScanResultCard'
 
 // El bucle va sobre setTimeout, jamás sobre requestAnimationFrame: con la pestaña de
@@ -25,6 +27,8 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [arrivals, setArrivals] = useState<readonly ResolvedArrival[]>(manifest.arrivals)
   const [cameraMessage, setCameraMessage] = useState('Encendiendo la cámara…')
+  const [pending, setPending] = useState(0)
+  const outboxRef = useRef<Promise<Outbox | null> | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const lastRef = useRef<{ code: string; at: number }>({ code: '', at: 0 })
@@ -61,19 +65,97 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
     ])
   }, [])
 
-  const submit = useCallback(
-    async (scanned: string) => {
-      const scanId = crypto.randomUUID()
-      // La cantidad la decide el servidor con lo que confirmó el grupo: el cliente no
-      // sabe todavía de qué grupo se trata, y adivinarlo aquí registraba a ciegas.
-      const [result] = await recordScansAction({
+  /**
+   * Se guarda la promesa, no la bandeja ya abierta: abrir IndexedDB tarda, y el primer
+   * escaneo puede llegar antes de que termine. Con una referencia a la bandeja abierta
+   * ese escaneo se caía por el hueco y no llegaba a la cola.
+   *
+   * Sin IndexedDB —navegación privada, almacenamiento bloqueado— devuelve `null` y la
+   * puerta sigue registrando contra el servidor: pierde el aguante sin red, no la
+   * función.
+   */
+  const getOutbox = useCallback((): Promise<Outbox | null> => {
+    outboxRef.current ??= openOutbox().catch(() => null)
+    return outboxRef.current
+  }, [])
+
+  useEffect(() => {
+    void getOutbox().then(async (box) => {
+      if (box) setPending(await box.count())
+    })
+  }, [getOutbox])
+
+  /**
+   * Sube lo acumulado. Se llama al registrar, al volver la red, al volver a primer
+   * plano y cada treinta segundos mientras quede algo. Un fallo deja el lote donde
+   * está: nada se pierde y nada se descarta.
+   */
+  const flush = useCallback(async () => {
+    const box = await getOutbox()
+    if (!box) return
+    const batch = await box.all()
+    if (batch.length === 0) return
+
+    try {
+      const outcomes = await recordScansAction({
         eventId,
         eventSlug,
-        scans: [{ scanId, scanned, arrivedCount: null, scannedAtMs: Date.now() }],
+        scans: batch.map((scan) => ({
+          scanId: scan.scanId,
+          scanned: scan.scanned,
+          arrivedCount: scan.arrivedCount,
+          scannedAtMs: scan.scannedAtMs,
+        })),
       })
-      if (result) apply(result)
+      await box.drop(outcomes.map((o) => o.scanId))
+    } catch {
+      await box.bumpTries(batch.map((s) => s.scanId))
+    }
+    setPending(await box.count())
+  }, [eventId, eventSlug, getOutbox])
+
+  useEffect(() => {
+    const onOnline = () => void flush()
+    const timer = setInterval(() => void flush(), 30_000)
+    window.addEventListener('online', onOnline)
+    document.addEventListener('visibilitychange', onOnline)
+    return () => {
+      clearInterval(timer)
+      window.removeEventListener('online', onOnline)
+      document.removeEventListener('visibilitychange', onOnline)
+    }
+  }, [flush])
+
+  const submit = useCallback(
+    async (scanned: string) => {
+      // La pantalla responde con lo que decide el dispositivo, no con lo que diga la
+      // red: en un salón sin wifi la puerta no puede quedarse esperando a un servidor.
+      const local = await resolveLocally(scanned, manifest.groups, arrivedIds)
+      const scanId = crypto.randomUUID()
+
+      if (local.kind === 'unknown' || !local.group) {
+        setOutcome({ scanId, kind: 'unknown' })
+        return
+      }
+
+      const group = { id: local.group.id, label: local.group.label, seats: local.group.seats }
+      const arrivedCount = local.arrivedCount ?? 1
+
+      if (local.kind === 'already') {
+        setOutcome({ scanId, kind: 'already', group, arrivedAt: new Date(), arrivedCount })
+        return
+      }
+
+      apply({ scanId, kind: 'welcome', group, arrivedCount })
+
+      const box = await getOutbox()
+      if (box) {
+        await box.push({ scanId, scanned, arrivedCount, scannedAtMs: Date.now(), tries: 0 })
+        setPending(await box.count())
+      }
+      void flush()
     },
-    [eventId, eventSlug, apply],
+    [manifest.groups, arrivedIds, apply, flush, getOutbox],
   )
 
   const onCode = useCallback(
@@ -190,6 +272,20 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
             de {tally.expectedGroups} · {tally.headsInside} dentro
           </span>
         </span>
+        {pending > 0 ? (
+          <span
+            aria-label="Escaneos por subir"
+            className="ml-auto rounded-full bg-warn px-3 py-1 font-mono text-[10px]"
+          >
+            {pending} por subir
+          </span>
+        ) : (
+          // Cero pendientes es la señal de que se puede cerrar la puerta y guardar el
+          // teléfono. Se anuncia siempre, aunque no ocupe sitio en pantalla.
+          <span aria-label="Escaneos por subir" className="sr-only">
+            0
+          </span>
+        )}
       </header>
 
       <div className="relative z-10 flex flex-1 items-center justify-center">

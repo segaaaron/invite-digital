@@ -1,3 +1,4 @@
+import 'fake-indexeddb/auto'
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { DoorMode } from './DoorMode'
@@ -22,9 +23,13 @@ vi.mock('../actions', () => ({
   refreshManifestAction: vi.fn(async () => null),
 }))
 
+// El mismo SHA-256 que produce el servidor sobre 'AbCdEfGhIjKlMnOpQrStUv': desde que la
+// puerta resuelve en local, un hash de relleno haría que el pase saliera desconocido.
+const HASH = '8bfb4a7f6c1cb4073b47072626084118324bcbb904ec7f27e62a39270926b999'
+
 const manifest = {
   eventId: 'e1',
-  groups: [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tokenHashHex: 'aa' }],
+  groups: [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tokenHashHex: HASH }],
   arrivals: [],
 }
 
