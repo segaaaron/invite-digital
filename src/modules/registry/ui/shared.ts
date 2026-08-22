@@ -25,3 +25,14 @@ export const centsOrMessage = (text: string): { cents: number } | { error: strin
   const parsed = parseAmount(text)
   return isErr(parsed) ? { error: parsed.error.detail } : { cents: parsed.value }
 }
+
+/**
+ * El importe de la base, de vuelta al campo de texto para poder corregirlo. Se escribe
+ * con punto y dos decimales —`450.00`— porque es una de las formas que `parseAmount`
+ * acepta: así el valor que llega al formulario vuelve a salir idéntico si nadie lo toca.
+ * Nada de dividir en coma flotante: entero y resto, como en `formatAmount`.
+ */
+export const centsToInput = (cents: number): string => {
+  const absoluto = Math.abs(Math.trunc(cents))
+  return `${Math.trunc(absoluto / 100)}.${String(absoluto % 100).padStart(2, '0')}`
+}

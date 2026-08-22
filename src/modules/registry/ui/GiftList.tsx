@@ -5,6 +5,7 @@ import { formatAmount } from '../domain/money'
 import type { GiftStatus } from '../domain/gift'
 import type { GiftRow } from '../application/ports'
 import { markPurchasedAction, releaseGiftAsAtelierAction, removeGiftAction } from '../actions'
+import { GiftForm } from './GiftForm'
 import { PILL_CLASS } from './shared'
 
 type Props = {
@@ -28,6 +29,7 @@ const ESTADO: Record<GiftStatus, { clase: string; texto: string }> = {
 function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> & { gift: GiftRow }) {
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
+  const [editando, setEditando] = useState(false)
   const [pendiente, empezar] = useTransition()
 
   const correr = (accion: () => Promise<{ ok: boolean; message?: string }>) => {
@@ -52,59 +54,83 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
         <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)]">{texto}</span>
       </header>
 
-      <p className="font-mono text-[13px] text-ink">{formatAmount(gift.priceCents, currency)}</p>
+      {editando ? null : (
+        <>
+          <p className="font-mono text-[13px] text-ink">{formatAmount(gift.priceCents, currency)}</p>
 
-      {gift.url === null ? (
-        gift.store === null ? null : <p className="text-[12px] text-ink-mute">{gift.store}</p>
-      ) : (
-        <a
-          className="text-[12px] text-gold-deep underline underline-offset-4"
-          href={gift.url}
-          // `noopener noreferrer` y pestaña nueva: el destino es una tienda cualquiera y
-          // no tiene por qué recibir de dónde viene el invitado ni tocar esta ventana.
-          rel="noopener noreferrer"
-          target="_blank"
-        >
-          {gift.store ?? 'Ver en la tienda'}
-        </a>
+          {gift.url === null ? (
+            gift.store === null ? null : <p className="text-[12px] text-ink-mute">{gift.store}</p>
+          ) : (
+            <a
+              className="text-[12px] text-gold-deep underline underline-offset-4"
+              href={gift.url}
+              // `noopener noreferrer` y pestaña nueva: el destino es una tienda cualquiera y
+              // no tiene por qué recibir de dónde viene el invitado ni tocar esta ventana.
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              {gift.store ?? 'Ver en la tienda'}
+            </a>
+          )}
+        </>
       )}
 
+      {/*
+        Quién lo reservó se sigue leyendo mientras se corrige la ficha. No es adorno:
+        es la garantía visible de que cambiar el precio no suelta la reserva.
+      */}
       {gift.claimedByLabel === null ? null : (
         <p className="text-[12px] text-ink-soft">Reservado por {gift.claimedByLabel}</p>
       )}
 
-      <footer className="mt-auto flex flex-wrap items-center gap-2 pt-2">
-        {definitivo ? null : (
-          <>
-            <button
-              className={PILL_CLASS}
-              disabled={pendiente}
-              onClick={() => correr(() => markPurchasedAction({ id: gift.id, eventId, eventSlug }))}
-              type="button"
-            >
-              Marcar comprado
-            </button>
-            {gift.status === 'reserved' ? (
+      {editando ? (
+        <GiftForm eventId={eventId} eventSlug={eventSlug} gift={gift} onDone={() => setEditando(false)} />
+      ) : (
+        <footer className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+          {definitivo ? null : (
+            <>
               <button
                 className={PILL_CLASS}
                 disabled={pendiente}
-                onClick={() => correr(() => releaseGiftAsAtelierAction({ id: gift.id, eventId, eventSlug }))}
+                onClick={() => correr(() => markPurchasedAction({ id: gift.id, eventId, eventSlug }))}
                 type="button"
               >
-                Liberar reserva
+                Marcar comprado
               </button>
-            ) : null}
-          </>
-        )}
-        <button
-          className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-          disabled={pendiente}
-          onClick={() => correr(() => removeGiftAction({ id: gift.id, eventId, eventSlug }))}
-          type="button"
-        >
-          Eliminar
-        </button>
-      </footer>
+              {gift.status === 'reserved' ? (
+                <button
+                  className={PILL_CLASS}
+                  disabled={pendiente}
+                  onClick={() => correr(() => releaseGiftAsAtelierAction({ id: gift.id, eventId, eventSlug }))}
+                  type="button"
+                >
+                  Liberar reserva
+                </button>
+              ) : null}
+            </>
+          )}
+          {/*
+            Corregir la ficha se ofrece también en el comprado: lo definitivo es su
+            estado, no que el precio se haya escrito mal.
+          */}
+          <button
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            disabled={pendiente}
+            onClick={() => setEditando(true)}
+            type="button"
+          >
+            Editar
+          </button>
+          <button
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            disabled={pendiente}
+            onClick={() => correr(() => removeGiftAction({ id: gift.id, eventId, eventSlug }))}
+            type="button"
+          >
+            Eliminar
+          </button>
+        </footer>
+      )}
 
       {error === null ? null : (
         <p className="text-[12px] text-danger" role="alert">

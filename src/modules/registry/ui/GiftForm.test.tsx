@@ -1,13 +1,16 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { GiftRow } from '../application/ports'
 import { GiftForm } from './GiftForm'
 
 type ActionResult = { ok: true; message?: string } | { ok: false; kind: string; message: string }
 
 const addGiftAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
+const updateGiftAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 
 vi.mock('../actions', () => ({
   addGiftAction: (...args: unknown[]) => addGiftAction(...(args as [Record<string, unknown>])),
+  updateGiftAction: (...args: unknown[]) => updateGiftAction(...(args as [Record<string, unknown>])),
 }))
 
 const props = { eventId: 'e1', eventSlug: 'boda' }
@@ -21,7 +24,21 @@ const rellena = (campos: { nombre?: string; precio?: string; tienda?: string; ur
 
 beforeEach(() => {
   addGiftAction.mockClear()
+  updateGiftAction.mockClear()
 })
+
+const reservado: GiftRow = {
+  id: 'g2',
+  eventId: 'e1',
+  name: 'Juego de sábanas',
+  priceCents: 45_000,
+  store: 'Casa Ideal',
+  url: 'https://casaideal.bo/sabanas',
+  status: 'reserved',
+  claimedByGroupId: 'grupo-ana',
+  claimedAt: new Date('2026-08-21T12:00:00.000Z'),
+  claimedByLabel: 'Familia Rojas',
+}
 
 describe('GiftForm', () => {
   it('manda el importe ya convertido a centavos enteros', () => {
@@ -76,5 +93,88 @@ describe('GiftForm', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Añadir regalo' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Solo http o https')
+  })
+})
+
+describe('GiftForm en modo edición', () => {
+  it('llega relleno con los valores actuales del regalo', () => {
+    render(<GiftForm {...props} gift={reservado} />)
+
+    expect(screen.getByLabelText('Regalo')).toHaveValue('Juego de sábanas')
+    expect(screen.getByLabelText('Precio')).toHaveValue('450.00')
+    expect(screen.getByLabelText('Tienda')).toHaveValue('Casa Ideal')
+    expect(screen.getByLabelText('Enlace a la tienda')).toHaveValue('https://casaideal.bo/sabanas')
+  })
+
+  it('un regalo sin tienda ni enlace llega con esos campos vacíos, no con «null» escrito', () => {
+    render(<GiftForm {...props} gift={{ ...reservado, store: null, url: null }} />)
+    expect(screen.getByLabelText('Tienda')).toHaveValue('')
+    expect(screen.getByLabelText('Enlace a la tienda')).toHaveValue('')
+  })
+
+  it('guardar llama a updateGiftAction con el id y los campos cambiados', () => {
+    render(<GiftForm {...props} gift={reservado} />)
+    rellena({ precio: '520,00' })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateGiftAction).toHaveBeenCalledWith({
+      id: 'g2',
+      eventId: 'e1',
+      eventSlug: 'boda',
+      name: 'Juego de sábanas',
+      priceCents: 52_000,
+      store: 'Casa Ideal',
+      url: 'https://casaideal.bo/sabanas',
+    })
+    expect(addGiftAction).not.toHaveBeenCalled()
+  })
+
+  it('editar un regalo reservado no manda nada sobre la reserva: corregir el precio no la suelta', () => {
+    render(<GiftForm {...props} gift={reservado} />)
+    rellena({ precio: '520,00' })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    const enviado = updateGiftAction.mock.calls[0]?.[0] ?? {}
+    expect(enviado).not.toHaveProperty('status')
+    expect(enviado).not.toHaveProperty('claimedByGroupId')
+    expect(enviado).not.toHaveProperty('claimedAt')
+  })
+
+  it('un importe inválido no llama a la acción', () => {
+    render(<GiftForm {...props} gift={reservado} />)
+    rellena({ precio: 'lo que sea' })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateGiftAction).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+
+  it('cancelar no llama a nada y avisa de que se terminó', () => {
+    const alTerminar = vi.fn()
+    render(<GiftForm {...props} gift={reservado} onDone={alTerminar} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(updateGiftAction).not.toHaveBeenCalled()
+    expect(addGiftAction).not.toHaveBeenCalled()
+    expect(alTerminar).toHaveBeenCalledTimes(1)
+  })
+
+  it('guardar bien cierra la edición; un error del servidor la deja abierta con el aviso', async () => {
+    const alTerminar = vi.fn()
+    updateGiftAction.mockResolvedValueOnce({ ok: false, kind: 'invalid_url', message: 'Solo http o https' })
+    render(<GiftForm {...props} gift={reservado} onDone={alTerminar} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Solo http o https')
+    expect(alTerminar).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    await screen.findByRole('button', { name: 'Guardar cambios' })
+    expect(alTerminar).toHaveBeenCalledTimes(1)
+  })
+
+  it('el modo alta no ofrece cancelar: no hay nada de lo que volver', () => {
+    render(<GiftForm {...props} />)
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
   })
 })

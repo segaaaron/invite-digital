@@ -1,14 +1,39 @@
 'use client'
 
 import { useId, useState, useTransition } from 'react'
-import { addGiftAction } from '../actions'
-import { centsOrMessage, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
+import type { GiftRow } from '../application/ports'
+import { addGiftAction, updateGiftAction } from '../actions'
+import { centsOrMessage, centsToInput, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
 
-export function GiftForm({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
-  const [name, setName] = useState('')
-  const [price, setPrice] = useState('')
-  const [store, setStore] = useState('')
-  const [url, setUrl] = useState('')
+/**
+ * El mismo formulario da de alta y corrige. Con `gift` está en modo edición: llega
+ * relleno y guarda contra `updateGiftAction`.
+ *
+ * Duplicarlo habría sido más rápido de escribir y peor de mantener: las reglas del
+ * importe, el `null` del campo vacío y los mensajes de error son los mismos en los dos
+ * casos, y dos copias se separan en cuanto una de las dos cambia.
+ *
+ * Lo que este formulario NO manda nunca es el estado ni la reserva: corregir un precio
+ * mal escrito no puede soltarle el regalo a quien ya lo había apartado. El caso de uso
+ * `updateGift` los conserva, y aquí sencillamente no viajan.
+ */
+export function GiftForm({
+  eventId,
+  eventSlug,
+  gift,
+  onDone,
+}: {
+  eventId: string
+  eventSlug: string
+  gift?: GiftRow
+  onDone?: () => void
+}) {
+  const editando = gift !== undefined
+
+  const [name, setName] = useState(gift?.name ?? '')
+  const [price, setPrice] = useState(gift === undefined ? '' : centsToInput(gift.priceCents))
+  const [store, setStore] = useState(gift?.store ?? '')
+  const [url, setUrl] = useState(gift?.url ?? '')
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
 
@@ -25,18 +50,27 @@ export function GiftForm({ eventId, eventSlug }: { eventId: string; eventSlug: s
     }
 
     setError(null)
+    const campos = {
+      eventId,
+      eventSlug,
+      name: name.trim(),
+      priceCents: importe.cents,
+      store: nullIfBlank(store),
+      url: nullIfBlank(url),
+    }
+
     empezar(async () => {
-      const r = await addGiftAction({
-        eventId,
-        eventSlug,
-        name: name.trim(),
-        priceCents: importe.cents,
-        store: nullIfBlank(store),
-        url: nullIfBlank(url),
-      })
+      const r = gift === undefined ? await addGiftAction(campos) : await updateGiftAction({ id: gift.id, ...campos })
 
       if (!r.ok) {
         setError(r.message)
+        return
+      }
+
+      // Al corregir, los campos se quedan como están y la edición se cierra: vaciarlos
+      // haría parpadear el formulario justo antes de desaparecer.
+      if (gift !== undefined) {
+        onDone?.()
         return
       }
 
@@ -110,9 +144,28 @@ export function GiftForm({ eventId, eventSlug }: { eventId: string; eventSlug: s
         </p>
       )}
 
-      <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
-        {pendiente ? 'Añadiendo…' : 'Añadir regalo'}
-      </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
+          {editando
+            ? pendiente
+              ? 'Guardando…'
+              : 'Guardar cambios'
+            : pendiente
+              ? 'Añadiendo…'
+              : 'Añadir regalo'}
+        </button>
+
+        {editando ? (
+          <button
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            disabled={pendiente}
+            onClick={() => onDone?.()}
+            type="button"
+          >
+            Cancelar
+          </button>
+        ) : null}
+      </div>
     </div>
   )
 }

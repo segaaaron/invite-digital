@@ -6,11 +6,15 @@ import { GiftList } from './GiftList'
 const markPurchasedAction = vi.fn(async () => ({ ok: true as const }))
 const releaseGiftAsAtelierAction = vi.fn(async () => ({ ok: true as const }))
 const removeGiftAction = vi.fn(async () => ({ ok: true as const }))
+const addGiftAction = vi.fn(async () => ({ ok: true as const }))
+const updateGiftAction = vi.fn(async () => ({ ok: true as const }))
 
 vi.mock('../actions', () => ({
   markPurchasedAction: (...args: unknown[]) => markPurchasedAction(...(args as [])),
   releaseGiftAsAtelierAction: (...args: unknown[]) => releaseGiftAsAtelierAction(...(args as [])),
   removeGiftAction: (...args: unknown[]) => removeGiftAction(...(args as [])),
+  addGiftAction: (...args: unknown[]) => addGiftAction(...(args as [])),
+  updateGiftAction: (...args: unknown[]) => updateGiftAction(...(args as [])),
 }))
 
 const AHORA = new Date('2026-08-21T12:00:00.000Z')
@@ -46,6 +50,8 @@ beforeEach(() => {
   markPurchasedAction.mockClear()
   releaseGiftAsAtelierAction.mockClear()
   removeGiftAction.mockClear()
+  addGiftAction.mockClear()
+  updateGiftAction.mockClear()
 })
 
 describe('GiftList', () => {
@@ -113,5 +119,49 @@ describe('GiftList', () => {
   it('con la lista vacía lo dice en vez de enseñar un hueco', () => {
     render(<GiftList {...props} gifts={[]} />)
     expect(screen.getByText(/todavía no hay regalos/i)).toBeInTheDocument()
+  })
+})
+
+describe('GiftList · editar un regalo', () => {
+  it('abre el formulario relleno con los datos del regalo', () => {
+    render(<GiftList {...props} gifts={[disponible]} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar$/i }))
+
+    expect(screen.getByLabelText('Regalo')).toHaveValue('Cafetera italiana')
+    expect(screen.getByLabelText('Precio')).toHaveValue('450.00')
+  })
+
+  it('editar un reservado sigue diciendo quién lo reservó: corregir el precio no borra la reserva', () => {
+    render(<GiftList {...props} gifts={[reservado]} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar$/i }))
+
+    expect(screen.getByText(/Familia Rojas/)).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Precio'), { target: { value: '520,00' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateGiftAction).toHaveBeenCalledWith({
+      id: 'g2',
+      eventId: 'e1',
+      eventSlug: 'boda',
+      name: 'Juego de sábanas',
+      priceCents: 52_000,
+      store: 'Casa Ideal',
+      url: 'https://casaideal.bo/cafetera',
+    })
+  })
+
+  it('cancelar cierra el formulario sin llamar a nada', () => {
+    render(<GiftList {...props} gifts={[disponible]} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar$/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(updateGiftAction).not.toHaveBeenCalled()
+    expect(screen.queryByLabelText('Precio')).not.toBeInTheDocument()
+  })
+
+  it('el comprado también se puede corregir: es definitivo su estado, no su ficha', () => {
+    render(<GiftList {...props} gifts={[comprado]} />)
+    expect(screen.getByRole('button', { name: /^editar$/i })).toBeInTheDocument()
   })
 })
