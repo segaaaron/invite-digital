@@ -40,8 +40,12 @@ Fuera:
 no es `0.3`, y una mesa de regalos que descuadra por céntimos es una discusión con la
 pareja que no tiene solución técnica después.
 
-La moneda sale de `events.currency`, que ya existe y por defecto es `BOB`. El dominio no
-la convierte: no hay tipos de cambio ni conversión, solo formato al mostrar.
+La moneda es `BOB`. **Corrección sobre la primera versión de este spec:** decía que salía
+de `events.currency`, y esa columna **no existe** — `currency` solo está en `plans`. Hasta
+que exista, el valor vive en una sola constante, `DEFAULT_CURRENCY` en
+`domain/money.ts`, que es el único punto a tocar el día que se añada al evento.
+
+El dominio no convierte: no hay tipos de cambio ni conversión, solo formato al mostrar.
 
 `src/modules/registry/domain/money.ts`:
 
@@ -170,7 +174,7 @@ ese campo sería un agujero abierto por el propio panel.
 | Tema | Decisión | Coste si es errónea |
 |---|---|---|
 | Importes | Centavos enteros | Ninguno; es el lado correcto |
-| Moneda | La del evento, sin conversión | Añadir conversión es aditivo |
+| Moneda | BOB en una constante; el evento no la guarda todavía | Ninguno; un solo sitio que tocar |
 | Cobro en línea | Fuera: no hay pasarela | Plan B, spec propio |
 | Quién reserva | El invitado, desde su enlace | Ninguno |
 | Carrera | `UPDATE` condicional, no `SELECT` + `UPDATE` | Ninguno; el lado correcto |
