@@ -3,6 +3,7 @@ import { events, guestbook, guests, rsvp } from '@/app/composition/container'
 import { FeaturedMessages } from '@/modules/guestbook'
 import { TallyStrip } from '@/modules/rsvp/ui/TallyStrip'
 import { isErr } from '@/shared/result'
+import { ViewBeacon } from '@/modules/analytics/ui/ViewBeacon'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,8 @@ export default async function ClientSharePage({ params }: { params: Promise<{ to
 
   return (
     <div className="mx-auto flex max-w-[720px] flex-col gap-8 px-6 py-16">
+      {/* Cuenta la visita del cliente. La vista de solo lectura no es de ningún grupo. */}
+      <ViewBeacon kind="client" token={token} />
       <header className="flex flex-col gap-2">
         <p className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{event.value.eventDate}</p>
         <h1 className="font-display text-[30px] font-light text-ink">{event.value.title}</h1>

@@ -79,6 +79,20 @@ importación masiva con CSV y tabla de resultado, plantilla de mensaje por event
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
 
+### Notas de la analítica (`src/modules/analytics/`)
+
+- **Se guardan categorías, no rastros.** Ni IP, ni agente de usuario, ni identificador de
+  navegador: `device` y `source` se resuelven en el servidor y se escriben ya
+  clasificados. Lo que no se escribe no se filtra.
+- **La visita se cuenta una vez por pestaña**, con un guardo en `sessionStorage`. Sin él
+  cada navegación interna sumaría una y el contador diría cinco donde hubo una.
+- **`recordInvitationViewAction` es el único fallo silencioso del proyecto**, y está
+  razonado en el spec: quien está al otro lado mira una invitación, no un panel.
+- **Un iPad es tableta aunque su agente diga «Macintosh»**, y un Android sin «Mobile» es
+  tableta. El orden de las comprobaciones en `classifyDevice` es lo único que lo decide.
+- **Las visitas de un evento vencido se borran** en el mismo pase de `maintenance` que lo
+  anonimiza; no se anonimizan, porque sin el evento no sirven de nada.
+
 ### Notas de los límites por plan (`src/modules/plans/`)
 
 - **Los límites viven en la base, no en el código.** Cambiar lo que incluye un plan es una

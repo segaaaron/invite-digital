@@ -23,6 +23,9 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   await page.getByLabel('Etiqueta').fill('Mesa 01')
   await page.getByLabel('Cupo').fill('8')
   await page.getByRole('button', { name: 'Añadir mesa' }).click()
+  // Las tarjetas de mesa viven tras el conmutador de la maqueta; el plano es la vista
+  // por defecto, igual que en el diseño.
+  await page.getByRole('button', { name: 'Vista de tarjetas' }).click()
   await expect(page.getByRole('heading', { name: 'Mesa 01' })).toBeVisible()
 
   await page.getByLabel('Etiqueta').fill('Mesa 02')

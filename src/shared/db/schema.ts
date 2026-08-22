@@ -443,3 +443,27 @@ export const messageNotes = pgTable(
   // vista del cliente solo pide esos.
   (t) => [index('message_notes_featured_idx').on(t.featuredAt).where(sql`${t.featuredAt} is not null`)],
 )
+
+/**
+ * Una fila por visita a una invitación. Guarda **categorías**, no rastros: ni dirección
+ * IP, ni agente de usuario, ni identificador de navegador. Lo que no se escribe no se
+ * filtra, y el atelier solo necesita saber cuántos abrieron, desde qué clase de aparato
+ * y por qué camino.
+ *
+ * `guest_group_id` admite nulo: la vista de solo lectura del cliente no es de ningún
+ * grupo. La fila se borra con el evento, y la retención la barre por fecha.
+ */
+export const invitationViews = pgTable(
+  'invitation_views',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    guestGroupId: uuid('guest_group_id').references(() => guestGroups.id, { onDelete: 'cascade' }),
+    device: varchar('device', { length: 16 }).notNull(),
+    source: varchar('source', { length: 16 }).notNull(),
+    viewedAt: timestamp('viewed_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('invitation_views_event_time_idx').on(t.eventId, t.viewedAt.desc())],
+)

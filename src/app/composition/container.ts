@@ -28,6 +28,9 @@ import {
 } from '@/modules/checkin/infrastructure/drizzle-arrival-repository'
 import { assignGroup, autoAssignGroups, unassignGroup } from '@/modules/venue/application/assign-use-cases'
 import { listSeating } from '@/modules/venue/application/list-seating'
+import { recordView } from '@/modules/analytics/application/record-view'
+import { getViewTally } from '@/modules/analytics/application/get-view-tally'
+import { drizzleViewRepository } from '@/modules/analytics/infrastructure/drizzle-view-repository'
 import { moveElements } from '@/modules/venue/application/move-element'
 import { addTable, removeTable, updateTable } from '@/modules/venue/application/table-use-cases'
 import { addZone, removeZone, updateZone } from '@/modules/venue/application/zone-use-cases'
@@ -120,6 +123,7 @@ export const events = {
   runMaintenance: anonymizeExpiredEvents({
     events: drizzleEventRepository,
     deleteExpiredSessions: (now) => drizzleSessionRepository.deleteExpired(now),
+    deleteViewsForEvent: (eventId) => drizzleViewRepository.deleteForEvent(eventId),
     clock,
   }),
 } as const
@@ -171,6 +175,11 @@ export const checkin = {
   void: voidArrival({ arrivals: drizzleArrivalRepository, clock }),
   manifest: getDoorManifest({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   state: getDoorState({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
+} as const
+
+export const analytics = {
+  record: recordView({ views: drizzleViewRepository }),
+  tally: getViewTally({ views: drizzleViewRepository, clock }),
 } as const
 
 export const venue = {

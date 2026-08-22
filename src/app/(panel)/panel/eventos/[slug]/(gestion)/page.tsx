@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, guests, plans, rsvp, venue } from '@/app/composition/container'
+import { analytics, checkin, events, guestbook, guests, plans, rsvp, venue } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
@@ -53,6 +53,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const libroResumen = await guestbook.list(event.value.id)
   const sinLeerResumen = isErr(libroResumen) ? 0 : unreadCount(libroResumen.value)
 
+  // Las visitas a la invitación, que es la cuarta cifra de la maqueta.
+  const visitas = await analytics.tally(event.value.id)
+  const vistas = isErr(visitas) ? null : visitas.value
+
   const conSalon = await plans.requireFeature(event.value.id, 'seating')
   const salon = isErr(conSalon) ? null : await venue.seating(event.value.id)
   const mesas = salon === null || isErr(salon) ? null : salon.value
@@ -96,7 +100,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
         />
         <StatCard label="Pendientes" value={t ? t.groupsPending : pendientes} icon="◔" />
-        <StatCard label="Personas dentro" value={llegadas ? llegadas.headsInside : '—'} icon="⛩" />
+        <StatCard
+          label="Visitas a la invitación"
+          value={vistas ? vistas.total : '—'}
+          detail={vistas && vistas.today > 0 ? `↑ ${vistas.today} hoy` : 'Nadie la ha abierto hoy'}
+          icon="👁"
+        />
       </div>
 
       <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1.6fr_1fr]">

@@ -12,6 +12,7 @@ import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
+import { ViewBeacon } from '@/modules/analytics/ui/ViewBeacon'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -48,6 +49,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   return (
     <Theme event={event}>
+      {/* Cuenta la visita. No pinta nada y no estorba a quien vino a ver la invitación. */}
+      <ViewBeacon kind="guest" token={token} />
       <p className="text-[13px] text-ink-soft">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
 
       {abierto ? (
