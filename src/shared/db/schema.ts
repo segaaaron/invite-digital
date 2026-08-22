@@ -1,16 +1,19 @@
-import { relations } from 'drizzle-orm'
+import { relations, sql } from 'drizzle-orm'
 import {
   boolean,
   char,
+  check,
   customType,
   date,
   index,
   integer,
   jsonb,
+  numeric,
   pgTable,
   primaryKey,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from 'drizzle-orm/pg-core'
@@ -162,6 +165,54 @@ export const events = pgTable('events', {
   ...timestamps,
 })
 
+/**
+ * Una mesa del salón. La posición es porcentaje del plano con dos decimales, no píxeles:
+ * el plano se dibuja en un portátil y en una tablet, y los píxeles de uno no significan
+ * nada en el otro.
+ */
+export const venueTables = pgTable(
+  'venue_tables',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    label: varchar('label', { length: 80 }).notNull(),
+    capacity: integer('capacity').notNull(),
+    // 'round' | 'rect' | 'sweetheart' | 'imperial'
+    shape: varchar('shape', { length: 16 }).notNull().default('round'),
+    x: numeric('x', { precision: 5, scale: 2 }).notNull().default('50'),
+    y: numeric('y', { precision: 5, scale: 2 }).notNull().default('50'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('venue_tables_event_idx').on(t.eventId),
+    // Única por evento, no en toda la base: dos «Mesa 03» en el mismo salón son un error
+    // de captura, y la puerta canta ese número en voz alta.
+    uniqueIndex('venue_tables_label_unique').on(t.eventId, t.label),
+    check('venue_tables_capacity_positive', sql`${t.capacity} >= 1`),
+  ],
+)
+
+/** Pista, barra, tarima, música y entrada: lo que no es mesa pero ocupa sitio en el plano. */
+export const venueZones = pgTable(
+  'venue_zones',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    // 'dance' | 'bar' | 'stage' | 'music' | 'entrance'
+    kind: varchar('kind', { length: 16 }).notNull(),
+    label: varchar('label', { length: 80 }).notNull(),
+    x: numeric('x', { precision: 5, scale: 2 }).notNull(),
+    y: numeric('y', { precision: 5, scale: 2 }).notNull(),
+    w: numeric('w', { precision: 5, scale: 2 }).notNull(),
+    h: numeric('h', { precision: 5, scale: 2 }).notNull(),
+  },
+  (t) => [index('venue_zones_event_idx').on(t.eventId)],
+)
+
 export const guestGroups = pgTable(
   'guest_groups',
   {
@@ -175,9 +226,12 @@ export const guestGroups = pgTable(
     tokenHash: bytea('token_hash').notNull().unique(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     openedAt: timestamp('opened_at', { withTimezone: true }),
+    // `set null`, no `cascade`: borrar una mesa deja a sus grupos sin mesa, no los borra.
+    // Perder invitados por eliminar una mesa sería catastrófico y silencioso.
+    tableId: uuid('table_id').references(() => venueTables.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('guest_groups_event_idx').on(t.eventId)],
+  (t) => [index('guest_groups_event_idx').on(t.eventId), index('guest_groups_table_idx').on(t.tableId)],
 )
 
 export const rsvpResponses = pgTable(

@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { db } from './client'
-import { arrivals, eventCategories, plans, templates } from './schema'
+import { arrivals, eventCategories, guestGroups, plans, templates, venueTables, venueZones } from './schema'
 
 describe('esquema', () => {
   beforeAll(() => {
@@ -165,5 +165,39 @@ describe('arrivals', () => {
   it('separa la hora del dispositivo de la del servidor', () => {
     expect(arrivals.scannedAt.notNull).toBe(true)
     expect(arrivals.receivedAt.notNull).toBe(true)
+  })
+})
+
+describe('venue', () => {
+  it('la mesa exige cupo y etiqueta', () => {
+    expect(venueTables.capacity.notNull).toBe(true)
+    expect(venueTables.label.notNull).toBe(true)
+  })
+
+  it('borrar la mesa deja al grupo sin mesa, no lo borra', () => {
+    // table_id es anulable: ON DELETE SET NULL
+    expect(guestGroups.tableId.notNull).toBe(false)
+  })
+
+  it('la zona guarda posición y tamaño', () => {
+    for (const c of [venueZones.x, venueZones.y, venueZones.w, venueZones.h]) {
+      expect(c.notNull).toBe(true)
+    }
+  })
+
+  it('la etiqueta de la mesa es única dentro del evento, no en toda la base', async () => {
+    const rows = await db.execute<{ indexdef: string }>(
+      sql`select indexdef from pg_indexes where tablename = 'venue_tables' and indexname = 'venue_tables_label_unique'`,
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.indexdef).toContain('UNIQUE')
+    expect(rows[0]?.indexdef).toMatch(/event_id.*label/)
+  })
+
+  it('el cupo de la mesa no puede ser cero: lo impide la base', async () => {
+    const rows = await db.execute<{ conname: string }>(
+      sql`select conname from pg_constraint where conrelid = 'venue_tables'::regclass and contype = 'c'`,
+    )
+    expect(rows.map((r) => r.conname)).toContain('venue_tables_capacity_positive')
   })
 })
