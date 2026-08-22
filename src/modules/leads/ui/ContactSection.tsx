@@ -2,6 +2,7 @@ import Image from 'next/image'
 import type { Category } from '@/modules/catalog'
 import { BRAND } from '@/shared/config/brand'
 import { GlassPanel } from '@/shared/design/ui/GlassPanel'
+import { MailIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -28,7 +29,8 @@ export function ContactSection({ categories, dictionary, locale }: Props) {
 
           <dl className="mt-2 flex flex-col gap-5">
             <div className="flex flex-col gap-1">
-              <dt className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+              <dt className="flex items-center gap-2 text-[11px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+                <WhatsAppIcon className="text-gold-deep" />
                 {contact.whatsappLabel}
               </dt>
               <dd>
@@ -44,7 +46,8 @@ export function ContactSection({ categories, dictionary, locale }: Props) {
             </div>
 
             <div className="flex flex-col gap-1">
-              <dt className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+              <dt className="flex items-center gap-2 text-[11px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+                <MailIcon className="text-gold-deep" />
                 {contact.emailLabel}
               </dt>
               <dd>

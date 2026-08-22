@@ -28,7 +28,8 @@ export interface HeroDictionary {
 export interface HeroMetric {
   value: string
   label: string
-  icon: string
+  /** Nombre del icono; el dibujo vive en `shared/design/ui/icons`. */
+  icon: 'mail' | 'clock' | 'check' | 'globe'
 }
 
 export interface ExperienceAct {

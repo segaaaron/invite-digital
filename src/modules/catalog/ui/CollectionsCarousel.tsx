@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
 import Image from 'next/image'
+import { ArrowLeftIcon, ArrowRightIcon } from '@/shared/design/ui/icons'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 
 export type CarouselSlide = {
@@ -58,23 +59,25 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
 
       <div className="mt-8 flex items-center justify-center gap-4">
         <button
-          className="rounded-[var(--radius-pill)] border border-[var(--color-line)] px-5 py-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] disabled:opacity-40"
+          className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line)] px-5 py-2 text-[11px] tracking-[var(--tracking-luxe)] uppercase disabled:opacity-40"
           disabled={index === 0}
           onClick={() => go(-1)}
           type="button"
         >
+          <ArrowLeftIcon />
           {dictionary.collections.previous}
         </button>
         <span aria-live="polite" className="text-[11px] text-ink-mute">
           {active ? active.name : dictionary.collections.hint}
         </span>
         <button
-          className="rounded-[var(--radius-pill)] border border-[var(--color-line)] px-5 py-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] disabled:opacity-40"
+          className="flex items-center gap-2 rounded-[var(--radius-pill)] border border-[var(--color-line)] px-5 py-2 text-[11px] tracking-[var(--tracking-luxe)] uppercase disabled:opacity-40"
           disabled={index === last}
           onClick={() => go(1)}
           type="button"
         >
           {dictionary.collections.next}
+          <ArrowRightIcon />
         </button>
       </div>
     </div>

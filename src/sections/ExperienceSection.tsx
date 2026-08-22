@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { PlayIcon } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -39,9 +40,9 @@ export function ExperienceSection({ dictionary }: { dictionary: Dictionary }) {
                     {featured ? (
                       <span
                         aria-hidden
-                        className="absolute inset-0 m-auto flex size-14 items-center justify-center rounded-full bg-white/90 text-[18px] text-ink shadow-[var(--shadow-lift)]"
+                        className="absolute inset-0 m-auto flex size-14 items-center justify-center rounded-full bg-white/90 text-ink shadow-[var(--shadow-lift)]"
                       >
-                        ▶
+                        <PlayIcon />
                       </span>
                     ) : null}
                   </div>

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Button } from '@/shared/design/ui/Button'
+import { ArrowRightIcon, METRIC_ICONS } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { HeroEnvelope } from './HeroEnvelope'
@@ -34,9 +35,7 @@ export function HeroSection({ dictionary, slot }: Props) {
           <div className="flex flex-wrap gap-4">
             <Button href="#precios">
               {hero.ctaPrimary}
-              <span aria-hidden className="ml-1">
-                →
-              </span>
+              <ArrowRightIcon className="ml-1" />
             </Button>
             <Button href="#experiencia" variant="ghost">
               {hero.ctaSecondary}
@@ -63,15 +62,18 @@ export function HeroSection({ dictionary, slot }: Props) {
 
       {/* La franja de cifras que cierra el hero en la maqueta. */}
       <Reveal className="mx-auto mt-20 grid max-w-[1180px] grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-px bg-gold/25">
-        {hero.metrics.map((metric) => (
-          <div key={metric.label} className="bg-bg-raised/75 px-6.5 py-7.5">
-            <p className="font-display text-[44px] leading-none text-gold-deep">{metric.value}</p>
-            <p className="mt-3 flex items-center gap-2.5 text-[10.5px] tracking-[0.26em] text-ink-mute uppercase">
-              <span aria-hidden>{metric.icon}</span>
-              {metric.label}
-            </p>
-          </div>
-        ))}
+        {hero.metrics.map((metric) => {
+          const Icono = METRIC_ICONS[metric.icon]
+          return (
+            <div key={metric.label} className="bg-bg-raised/75 px-6.5 py-7.5">
+              <p className="font-display text-[44px] leading-none text-gold-deep">{metric.value}</p>
+              <p className="mt-3 flex items-center gap-2.5 text-[10.5px] tracking-[0.26em] text-ink-mute uppercase">
+                <Icono className="text-gold-deep" />
+                {metric.label}
+              </p>
+            </div>
+          )
+        })}
       </Reveal>
     </section>
   )
