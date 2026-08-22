@@ -47,7 +47,7 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
             className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
             href={`/panel/eventos/${event.value.slug}/mesas/imprimir`}
           >
-            Plan para el banquete
+            Imprimir plan ↓
           </Link>
         }
         kicker="Distribución"
@@ -57,17 +57,18 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
 
       <div className="flex flex-col gap-4.5">
         <PanelCard title="Reparto">
-          <div className="flex flex-col gap-4.5">
-            <SeatingToolbar
-              eventId={event.value.id}
-              eventSlug={event.value.slug}
-              tables={tables}
-              unseated={unseated}
-              totalSeats={totalSeats}
-              totalConfirmed={totalConfirmed}
-            />
-            <UnseatedStrip groups={unseated} />
-          </div>
+          <SeatingToolbar
+            eventId={event.value.id}
+            eventSlug={event.value.slug}
+            tables={tables}
+            unseated={unseated}
+            totalSeats={totalSeats}
+            totalConfirmed={totalConfirmed}
+          />
+        </PanelCard>
+
+        <PanelCard title="Invitados sin mesa">
+          <UnseatedStrip groups={unseated} />
         </PanelCard>
 
         <PanelCard title="Plano del salón">

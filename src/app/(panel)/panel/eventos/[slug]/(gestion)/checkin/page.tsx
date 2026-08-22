@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, plans } from '@/app/composition/container'
 import { ManualCheckin } from '@/modules/checkin/ui/ManualCheckin'
@@ -93,7 +94,17 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
         </PanelCard>
       </div>
 
-      <PanelCard title="Últimas llegadas">
+      <PanelCard
+        action={
+          <Link
+            className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase"
+            href={`/panel/eventos/${event.value.slug}/invitados`}
+          >
+            Ver todos los invitados →
+          </Link>
+        }
+        title="Últimas llegadas"
+      >
         {ultimas.length === 0 ? (
           <p className="text-[13px] text-ink-mute">Todavía no ha llegado nadie. La puerta está lista.</p>
         ) : (
