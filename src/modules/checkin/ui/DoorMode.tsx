@@ -319,7 +319,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
                 outcome.kind !== 'unknown' && a.guestGroupId === outcome.group.id ? { ...a, arrivedCount } : a,
               ),
             )
-            void adjustArrivalAction({ scanId, arrivedCount, eventSlug })
+            void adjustArrivalAction({ eventId, scanId, arrivedCount, eventSlug })
           }}
           onUndo={(scanId) => {
             // Deshacer retira al grupo del contador, no reinicia la lista entera: en la
@@ -329,7 +329,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
               setArrivals((prev) => prev.filter((a) => a.guestGroupId !== groupId))
             }
             setOutcome(null)
-            void voidArrivalAction({ scanId, eventSlug })
+            void voidArrivalAction({ eventId, scanId, eventSlug })
           }}
           onDismiss={() => {
             lastRef.current = { code: lastRef.current.code, at: Date.now() }

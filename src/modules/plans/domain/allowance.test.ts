@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type Allowance, canAddGroup, hasFeature, remainingGroups, usageRatio } from './allowance'
+import { type Allowance, canAddGroup, hasFeature, planThatIncludes, remainingGroups, usageRatio } from './allowance'
 
 const atelier: Allowance = {
   planSlug: 'atelier',
@@ -59,4 +59,20 @@ describe('usageRatio', () => {
   // Sin este caso, un límite de cero haría una división por cero y saldría `Infinity` o
   // `NaN`, que compararía como falso contra cualquier umbral y no avisaría nunca.
   it('con límite cero está lleno, no partido por cero', () => expect(usageRatio(0, 0)).toBe(1))
+})
+
+describe('planThatIncludes', () => {
+  const catalogo = [atelier, altaCostura]
+
+  it('nombra el plan más barato que sí la trae', () => {
+    expect(planThatIncludes('registry', catalogo)).toBe('alta-costura')
+  })
+
+  it('el plan en el que ya se está también cuenta si la trae', () => {
+    expect(planThatIncludes('seating', catalogo)).toBe('atelier')
+  })
+
+  it('si no la trae ninguno devuelve null, no un plan inventado', () => {
+    expect(planThatIncludes('registry', [atelier])).toBeNull()
+  })
 })

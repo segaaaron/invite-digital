@@ -1,11 +1,27 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { checkin } from '@/app/composition/container'
+import { checkin, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { ScanOutcome } from './application/check-in-by-scan'
 import type { DoorManifest } from './application/get-door-manifest'
+
+/**
+ * El modo puerta solo lo traen algunos planes. Lanza en vez de devolver un resultado
+ * porque estas acciones ya tratan así todo lo que no debería pasar: el dispositivo de
+ * la puerta guarda el escaneo en su bandeja de salida y lo reintenta.
+ *
+ * Va en el servidor. Esconder el enlace «Modo puerta» del panel no protege de nada: una
+ * Server Action es un extremo HTTP público.
+ */
+const exigirModoPuerta = async (eventId: string): Promise<void> => {
+  const permitido = await plans.requireFeature(eventId, 'checkin')
+  if (isErr(permitido)) {
+    console.error('modo puerta no incluido en el plan', permitido.error.detail)
+    throw new Error(permitido.error.kind)
+  }
+}
 
 export type ScanInput = {
   scanId: string
@@ -26,6 +42,7 @@ export async function recordScansAction(input: {
   scans: ScanInput[]
 }): Promise<ScanOutcome[]> {
   await requireSession()
+  await exigirModoPuerta(input.eventId)
 
   const result = await checkin.record({
     eventId: input.eventId,
@@ -59,6 +76,7 @@ export async function checkInByGroupAction(input: {
   scannedAtMs: number
 }): Promise<ScanOutcome> {
   await requireSession()
+  await exigirModoPuerta(input.eventId)
 
   const result = await checkin.recordGroup({
     eventId: input.eventId,
@@ -80,11 +98,13 @@ export async function checkInByGroupAction(input: {
 }
 
 export async function adjustArrivalAction(input: {
+  eventId: string
   scanId: string
   arrivedCount: number
   eventSlug: string
 }): Promise<void> {
   await requireSession()
+  await exigirModoPuerta(input.eventId)
 
   const result = await checkin.adjust({ scanId: input.scanId, arrivedCount: input.arrivedCount })
   if (isErr(result)) console.error('corrección rechazada', result.error.kind, result.error.detail)
@@ -92,8 +112,9 @@ export async function adjustArrivalAction(input: {
   revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
 }
 
-export async function voidArrivalAction(input: { scanId: string; eventSlug: string }): Promise<void> {
+export async function voidArrivalAction(input: { eventId: string; scanId: string; eventSlug: string }): Promise<void> {
   await requireSession()
+  await exigirModoPuerta(input.eventId)
 
   const result = await checkin.void({ scanId: input.scanId })
   if (isErr(result)) console.error('deshacer rechazado', result.error.kind, result.error.detail)
@@ -103,6 +124,7 @@ export async function voidArrivalAction(input: { scanId: string; eventSlug: stri
 
 export async function refreshManifestAction(eventId: string): Promise<DoorManifest | null> {
   await requireSession()
+  await exigirModoPuerta(eventId)
 
   const result = await checkin.manifest(eventId)
   if (isErr(result)) {

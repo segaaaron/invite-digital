@@ -52,6 +52,7 @@ import {
 } from '@/modules/guestbook/application/guestbook-use-cases'
 import { drizzleGuestbookRepository } from '@/modules/guestbook/infrastructure/drizzle-guestbook-repository'
 import { getEventAllowance } from '@/modules/plans/application/get-event-allowance'
+import { requireFeature } from '@/modules/plans/application/require-feature'
 import { drizzlePlanReader } from '@/modules/plans/infrastructure/drizzle-plan-reader'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
@@ -125,6 +126,7 @@ export const events = {
  */
 export const plans = {
   allowanceFor: getEventAllowance({ plans: drizzlePlanReader }),
+  requireFeature: requireFeature({ plans: drizzlePlanReader }),
   listActive: () => drizzlePlanReader.listActivePlans(),
 } as const
 

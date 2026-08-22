@@ -44,3 +44,13 @@ export const usageRatio = (limit: number | null, current: number): number | null
 }
 
 export const hasFeature = (allowance: Allowance, feature: PlanFeature): boolean => allowance[feature]
+
+/**
+ * El plan más barato del catálogo que sí trae la función. `null` si no la trae ninguno.
+ *
+ * Hace falta para que el rechazo sirva de algo: «no incluido» a secas deja al atelier
+ * sin salida, y tiene que poder decirle al cliente a qué plan subir. El catálogo llega
+ * ordenado, así que el primero que la traiga es el más barato que la trae.
+ */
+export const planThatIncludes = (feature: PlanFeature, catalog: readonly Allowance[]): string | null =>
+  catalog.find((plan) => hasFeature(plan, feature))?.planSlug ?? null

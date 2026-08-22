@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
-import { checkin, events } from '@/app/composition/container'
+import { checkin, events, plans } from '@/app/composition/container'
 import { DoorMode } from '@/modules/checkin/ui/DoorMode'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { isErr } from '@/shared/result'
 
 // El modo puerta se instala en la pantalla de inicio: es como lo va a usar el personal.
@@ -21,6 +22,11 @@ export default async function DoorPage({ params }: { params: Promise<{ slug: str
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
+  }
+
+  const permitido = await plans.requireFeature(event.value.id, 'checkin')
+  if (isErr(permitido)) {
+    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Modo puerta" />
   }
 
   const manifest = await checkin.manifest(event.value.id)

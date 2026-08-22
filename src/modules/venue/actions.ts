@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { venue } from '@/app/composition/container'
+import { plans, venue } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { TableShape } from './domain/venue-table'
@@ -17,6 +17,20 @@ export type VenueActionResult = { ok: true; message?: string } | { ok: false; ki
 
 const refresh = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mesas`)
 
+/**
+ * El plano del salón solo lo traen algunos planes. La comprobación va **aquí**, en la
+ * acción, y no en el dominio del salón: que las mesas vengan con un plan y no con otro
+ * es una decisión comercial y no tiene nada que ver con las reglas de una mesa.
+ *
+ * Y va en el servidor, no en la pantalla. Ocultar la sección del panel no protege de
+ * nada: una Server Action es un extremo HTTP público y quien conozca su nombre puede
+ * llamarla sin pasar por ninguna página.
+ */
+const sinSalon = async (eventId: string): Promise<VenueActionResult | null> => {
+  const permitido = await plans.requireFeature(eventId, 'seating')
+  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: permitido.error.detail } : null
+}
+
 export async function addTableAction(input: {
   eventId: string
   eventSlug: string
@@ -25,6 +39,9 @@ export async function addTableAction(input: {
   shape: TableShape
 }): Promise<VenueActionResult> {
   await requireSession()
+
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await venue.addTable({
     eventId: input.eventId,
@@ -48,6 +65,9 @@ export async function updateTableAction(input: {
 }): Promise<VenueActionResult> {
   await requireSession()
 
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await venue.updateTable(input)
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
 
@@ -61,6 +81,9 @@ export async function removeTableAction(input: {
   eventSlug: string
 }): Promise<VenueActionResult> {
   await requireSession()
+
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await venue.removeTable({ id: input.id, eventId: input.eventId })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
@@ -83,6 +106,9 @@ export async function assignGroupAction(input: {
 }): Promise<VenueActionResult> {
   await requireSession()
 
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await venue.assign({ eventId: input.eventId, groupId: input.groupId, tableId: input.tableId })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
 
@@ -97,6 +123,9 @@ export async function unassignGroupAction(input: {
 }): Promise<VenueActionResult> {
   await requireSession()
 
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await venue.unassign({ eventId: input.eventId, groupId: input.groupId })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
 
@@ -106,6 +135,9 @@ export async function unassignGroupAction(input: {
 
 export async function autoAssignAction(input: { eventId: string; eventSlug: string }): Promise<VenueActionResult> {
   await requireSession()
+
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await venue.autoAssign({ eventId: input.eventId })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
@@ -129,6 +161,9 @@ export async function addZoneAction(input: {
 }): Promise<VenueActionResult> {
   await requireSession()
 
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await venue.addZone({
     eventId: input.eventId,
     kind: input.kind,
@@ -151,6 +186,9 @@ export async function removeZoneAction(input: {
 }): Promise<VenueActionResult> {
   await requireSession()
 
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await venue.removeZone({ id: input.id, eventId: input.eventId })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
 
@@ -169,6 +207,9 @@ export async function moveElementsAction(input: {
   moves: ElementMove[]
 }): Promise<VenueActionResult> {
   await requireSession()
+
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await venue.moveElements({ eventId: input.eventId, moves: input.moves })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }

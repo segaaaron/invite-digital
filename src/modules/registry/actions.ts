@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { registry } from '@/app/composition/container'
+import { plans, registry } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -24,6 +24,19 @@ const fallo = (error: { kind: string; detail: string }): RegistryActionResult =>
 
 const refreshPanel = (slug: string) => revalidatePath(`/panel/eventos/${slug}/regalos`)
 
+/**
+ * La mesa de regalos solo la traen algunos planes. La comprobación va aquí, en la
+ * acción, y no en el dominio de los regalos: qué plan la incluye es una decisión
+ * comercial y cambiará sin que las reglas de un regalo cambien.
+ *
+ * Ocultar la sección del panel no protege de nada: una Server Action es un extremo HTTP
+ * público. Por eso el corte está en el servidor.
+ */
+const sinMesaDeRegalos = async (eventId: string): Promise<RegistryActionResult | null> => {
+  const permitido = await plans.requireFeature(eventId, 'registry')
+  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: permitido.error.detail } : null
+}
+
 // ============================================================================
 // ACCIONES DEL PANEL — todas empiezan por `await requireSession()`.
 //
@@ -43,6 +56,9 @@ export async function addGiftAction(input: {
 }): Promise<RegistryActionResult> {
   await requireSession()
 
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await registry.addGift(input)
   if (isErr(result)) return fallo(result.error)
 
@@ -61,6 +77,9 @@ export async function updateGiftAction(input: {
 }): Promise<RegistryActionResult> {
   await requireSession()
 
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await registry.updateGift(input)
   if (isErr(result)) return fallo(result.error)
 
@@ -74,6 +93,9 @@ export async function removeGiftAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   await requireSession()
+
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await registry.removeGift({ id: input.id, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -89,6 +111,9 @@ export async function markPurchasedAction(input: {
 }): Promise<RegistryActionResult> {
   await requireSession()
 
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await registry.markPurchased({ id: input.id, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
 
@@ -102,6 +127,9 @@ export async function releaseGiftAsAtelierAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   await requireSession()
+
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await registry.releaseAsAtelier({ id: input.id, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -118,6 +146,9 @@ export async function addFundAction(input: {
   goalCents: number
 }): Promise<RegistryActionResult> {
   await requireSession()
+
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await registry.addFund(input)
   if (isErr(result)) return fallo(result.error)
@@ -136,6 +167,9 @@ export async function updateFundAction(input: {
 }): Promise<RegistryActionResult> {
   await requireSession()
 
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
+
   const result = await registry.updateFund(input)
   if (isErr(result)) return fallo(result.error)
 
@@ -149,6 +183,9 @@ export async function removeFundAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   await requireSession()
+
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await registry.removeFund({ id: input.id, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -175,6 +212,9 @@ export async function recordContributionAction(input: {
   message: string | null
 }): Promise<RegistryActionResult> {
   await requireSession()
+
+  const cerrado = await sinMesaDeRegalos(input.eventId)
+  if (cerrado) return cerrado
 
   const result = await registry.recordContribution(input)
   if (isErr(result)) return fallo(result.error)

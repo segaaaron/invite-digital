@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, registry } from '@/app/composition/container'
+import { events, plans, registry } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { DEFAULT_CURRENCY } from '@/modules/registry'
 import { FundCard } from '@/modules/registry/ui/FundCard'
 import { FundForm } from '@/modules/registry/ui/FundForm'
@@ -22,6 +23,11 @@ export default async function RegalosPage({ params }: { params: Promise<{ slug: 
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
+  }
+
+  const permitido = await plans.requireFeature(event.value.id, 'registry')
+  if (isErr(permitido)) {
+    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Regalos" />
   }
 
   const mesa = await registry.list(event.value.id)

@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, venue } from '@/app/composition/container'
+import { events, plans, venue } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
 import { SeatingToolbar } from '@/modules/venue/ui/SeatingToolbar'
 import { TableCard } from '@/modules/venue/ui/TableCard'
@@ -21,6 +22,13 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
+  }
+
+  // La misma puerta que corta las acciones, aquí solo para no enseñar un salón que el
+  // plan no permite tocar. Lo que protege es la del servidor, no esta.
+  const permitido = await plans.requireFeature(event.value.id, 'seating')
+  if (isErr(permitido)) {
+    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Mesas" />
   }
 
   const seating = await venue.seating(event.value.id)
