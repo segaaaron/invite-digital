@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { guests } from '@/app/composition/container'
+import { guests, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
@@ -19,10 +19,33 @@ export async function addGuestGroupAction(_previous: AddGuestGroupState, formDat
   await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
+  const eventId = String(formData.get('eventId') ?? '')
+
+  // La acción vive en la frontera y puede hablar con el contenedor, así que es ella
+  // quien resuelve la capacidad y se la pasa al caso de uso. `guests` no importa
+  // `plans`: el límite es una regla comercial que va a cambiar y no puede quedar atada
+  // al alta de un grupo.
+  //
+  // Y se comprueba **aquí, en el servidor**. El formulario deshabilitado que verá el
+  // atelier no protege de nada: una Server Action es un extremo HTTP público.
+  const allowance = await plans.allowanceFor(eventId)
+  if (isErr(allowance)) {
+    console.error('no se pudo resolver el plan del evento', allowance.error.kind, allowance.error.detail)
+    return { status: 'error', message: 'storage_failure' }
+  }
+
+  const existentes = await guests.list(eventId)
+  if (isErr(existentes)) {
+    console.error('no se pudieron contar los grupos', existentes.error.kind, existentes.error.detail)
+    return { status: 'error', message: 'storage_failure' }
+  }
+
   const result = await guests.add({
-    eventId: String(formData.get('eventId') ?? ''),
+    eventId,
     label: String(formData.get('label') ?? ''),
     seats: Number(formData.get('seats') ?? 0),
+    allowance: { maxGuestGroups: allowance.value.maxGuestGroups },
+    currentGroups: existentes.value.length,
   })
 
   if (isErr(result)) {

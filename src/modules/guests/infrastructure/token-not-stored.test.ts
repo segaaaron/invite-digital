@@ -44,7 +44,15 @@ describe('el token no se guarda en claro', () => {
         groups: createDrizzleGuestGroupRepository(tx),
         minter: createTokenMinter(),
         ids: () => crypto.randomUUID(),
-      })({ eventId: event!.id, label: 'Familia Rojas Peña', seats: 4 })
+      })({
+        eventId: event!.id,
+        label: 'Familia Rojas Peña',
+        seats: 4,
+        // Esta prueba vigila que el token en claro no toque la base; el plan no le
+        // incumbe. Sin límite para que llegue a insertar, que es lo que quiere mirar.
+        allowance: { maxGuestGroups: null },
+        currentGroups: 0,
+      })
 
       if (!isOk(result)) throw new Error(`el alta falló: ${result.error.detail}`)
       const { token } = result.value

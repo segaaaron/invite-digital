@@ -32,10 +32,16 @@ const repo = (row: GuestGroupRow | null) => {
   return { groups, inserted, opened }
 }
 
+// La capacidad entra como argumento. `guests` no importa el módulo de planes: la regla
+// de cuántos grupos caben es comercial y va a cambiar, y atarla aquí volvería
+// dependientes para siempre a dos modulos que hoy son independientes.
+const SIN_LIMITE = { allowance: { maxGuestGroups: null }, currentGroups: 0 } as const
+const input = { eventId: 'e1', label: 'Familia Rojas', seats: 4 }
+
 describe('addGuestGroup', () => {
   it('guarda el hash y devuelve el token en claro', async () => {
     const { groups, inserted } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({ eventId: 'e1', label: 'Familia Rojas', seats: 4 })
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({ ...input, ...SIN_LIMITE })
 
     expect(isOk(result) && result.value.token).toBe('token-visible')
     expect(inserted[0]?.hash.equals(HASH)).toBe(true)
@@ -43,10 +49,46 @@ describe('addGuestGroup', () => {
 
   it('no guarda nada cuando el dominio rechaza los cupos', async () => {
     const { groups, inserted } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({ eventId: 'e1', label: 'Familia Rojas', seats: 0 })
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({ ...input, seats: 0, ...SIN_LIMITE })
 
     expect(isErr(result) && result.error.kind).toBe('invalid_seats')
     expect(inserted).toHaveLength(0)
+  })
+
+  it('rechaza el grupo que pasa del límite del plan', async () => {
+    const { groups, inserted } = repo(null)
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({
+      ...input,
+      allowance: { maxGuestGroups: 2 },
+      currentGroups: 2,
+    })
+
+    expect(isErr(result) && result.error.kind).toBe('plan_limit_reached')
+    // Y no llega a la base: acuñar un token y guardarlo para luego rechazarlo dejaría
+    // un enlace válido de un grupo que no existe.
+    expect(inserted).toHaveLength(0)
+  })
+
+  it('el que hace tope justo sí entra', async () => {
+    const { groups } = repo(null)
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({
+      ...input,
+      allowance: { maxGuestGroups: 2 },
+      currentGroups: 1,
+    })
+
+    expect(isOk(result)).toBe(true)
+  })
+
+  it('sin límite no rechaza nunca', async () => {
+    const { groups } = repo(null)
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({
+      ...input,
+      allowance: { maxGuestGroups: null },
+      currentGroups: 9999,
+    })
+
+    expect(isOk(result)).toBe(true)
   })
 })
 

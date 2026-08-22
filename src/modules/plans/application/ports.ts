@@ -20,13 +20,21 @@ export type PlanChangeRequestRow = {
   readonly resolvedAt: Date | null
 }
 
-export interface PlansRepository {
+/**
+ * La parte de solo lectura del catálogo. Va separada porque resolver la capacidad de un
+ * evento —lo que hace falta en cada página del panel— no necesita saber nada de
+ * solicitudes de cambio.
+ */
+export interface PlanReader {
   /** El plan del evento, o `null` si el evento no tiene plan o no existe. */
   findEventPlan(eventId: string): Promise<PlanRow | null>
   /** El plan activo más barato. Es el que se aplica a un evento sin plan. */
   findCheapestActivePlan(): Promise<PlanRow | null>
   listActivePlans(): Promise<PlanRow[]>
   findPlanById(planId: string): Promise<PlanRow | null>
+}
+
+export interface PlanChangeRequests {
   findPendingRequest(eventId: string): Promise<PlanChangeRequestRow | null>
   insertRequest(row: {
     id: string
@@ -47,3 +55,5 @@ export interface PlansRepository {
   /** Marca la solicitud rechazada. Devuelve `false` si ya no estaba pendiente. */
   rejectRequest(requestId: string, at: Date): Promise<boolean>
 }
+
+export interface PlansRepository extends PlanReader, PlanChangeRequests {}

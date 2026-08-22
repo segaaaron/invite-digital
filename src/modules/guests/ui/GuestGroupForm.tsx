@@ -12,6 +12,7 @@ const MESSAGES: Record<GuestErrorKind, string> = {
   invalid_seats: 'Los cupos son un número entero de 1 en adelante.',
   not_found: 'Ese grupo ya no existe.',
   revoked: 'Esa invitación está revocada.',
+  plan_limit_reached: 'El plan del evento no admite más grupos. Solicita un cambio de plan para seguir.',
   storage_failure: 'No pudimos guardar el grupo. Inténtalo en un momento.',
 }
 

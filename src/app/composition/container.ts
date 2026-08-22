@@ -51,6 +51,8 @@ import {
   toggleFeatured,
 } from '@/modules/guestbook/application/guestbook-use-cases'
 import { drizzleGuestbookRepository } from '@/modules/guestbook/infrastructure/drizzle-guestbook-repository'
+import { getEventAllowance } from '@/modules/plans/application/get-event-allowance'
+import { drizzlePlanReader } from '@/modules/plans/infrastructure/drizzle-plan-reader'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -114,6 +116,16 @@ export const events = {
     deleteExpiredSessions: (now) => drizzleSessionRepository.deleteExpired(now),
     clock,
   }),
+} as const
+
+/**
+ * El plan del evento y lo que permite. Nadie más lo importa: `guests`, `venue`,
+ * `registry` y `checkin` reciben la capacidad ya resuelta como argumento desde sus
+ * acciones, que es donde vive la frontera.
+ */
+export const plans = {
+  allowanceFor: getEventAllowance({ plans: drizzlePlanReader }),
+  listActive: () => drizzlePlanReader.listActivePlans(),
 } as const
 
 export const guests = {

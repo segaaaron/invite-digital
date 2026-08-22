@@ -1,7 +1,7 @@
 import { attempt, ok, type Result } from '@/shared/result'
 import type { Allowance } from '../domain/allowance'
 import { plansError, type PlansError } from '../domain/errors'
-import type { PlanRow, PlansRepository } from './ports'
+import type { PlanReader, PlanRow } from './ports'
 
 /**
  * Lo que se aplica cuando el catálogo no tiene ni un plan activo. Es permisiva a
@@ -30,7 +30,7 @@ const desdeFila = (row: PlanRow): Allowance => ({
  * una regla comercial que va a cambiar.
  */
 export const getEventAllowance =
-  (deps: { plans: PlansRepository }) =>
+  (deps: { plans: PlanReader }) =>
   async (eventId: string): Promise<Result<Allowance, PlansError>> =>
     attempt<Allowance, PlansError>(
       async () => {
