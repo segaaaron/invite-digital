@@ -174,6 +174,39 @@ export interface InvitationDictionary {
   errors: Record<RsvpMessageKey, string>
 }
 
+/** Lo que la reserva de un regalo puede responderle al invitado. */
+export type RegistryMessageKey =
+  | 'already_claimed'
+  | 'not_yours'
+  | 'already_purchased'
+  | 'not_found'
+  | 'wrong_event'
+  | 'storage_failure'
+  | 'rate_limited'
+
+/**
+ * La mesa de regalos que ve el invitado. Va aparte de `InvitationDictionary` porque es
+ * un bloque completo con vida propia, no cuatro etiquetas sueltas del formulario de RSVP.
+ */
+export interface RegistryDictionary {
+  title: string
+  intro: string
+  empty: string
+  reserve: string
+  reserving: string
+  release: string
+  releasing: string
+  reservedByYou: string
+  reservedByOther: string
+  purchased: string
+  viewInStore: string
+  fundsTitle: string
+  fundRaised: string
+  fundGoal: string
+  fundExceeded: string
+  errors: Record<RegistryMessageKey, string>
+}
+
 export interface Dictionary {
   nav: NavDictionary
   hero: HeroDictionary
@@ -184,6 +217,7 @@ export interface Dictionary {
   pricing: PricingDictionary
   models: ModelsDictionary
   invitation: InvitationDictionary
+  registry: RegistryDictionary
   testimonials: TestimonialsDictionary
   faq: FaqDictionary
   contact: ContactDictionary

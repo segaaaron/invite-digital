@@ -1,8 +1,11 @@
 import { notFound } from 'next/navigation'
+import { registry } from '@/app/composition/container'
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { invitationUrl } from '@/modules/guests'
+import { DEFAULT_CURRENCY } from '@/modules/registry'
+import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
 import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -23,6 +26,11 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   const { group, event, latest } = invitation.value
   const dictionary = getDictionary(event.locale).invitation
+  const registryDictionary = getDictionary(event.locale).registry
+
+  // La mesa de regalos es opcional: si la lectura falla, la invitación sigue en pie sin
+  // ella. Que la base de regalos no responda no puede impedir confirmar la asistencia.
+  const mesa = await registry.list(event.id)
   const { Component: Theme } = themeFor(event.themeKey)
   const abierto = acceptsResponses(event, new Date().toISOString().slice(0, 10))
 
@@ -37,6 +45,17 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
         </>
       ) : (
         <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.closed}</p>
+      )}
+
+      {isErr(mesa) ? null : (
+        <GuestRegistry
+          currency={DEFAULT_CURRENCY}
+          dictionary={registryDictionary}
+          funds={mesa.value.funds}
+          gifts={mesa.value.gifts}
+          groupId={group.id}
+          token={token}
+        />
       )}
 
       <PassQr
