@@ -33,3 +33,56 @@ export function canSeat(
   const others = groups.filter((g) => g.id !== group.id)
   return occupancyOf(table, others).free >= group.seats
 }
+
+export type Assignment = { readonly groupId: string; readonly tableId: string }
+
+export type AutoAssignResult = {
+  readonly assignments: readonly Assignment[]
+  readonly unplaced: readonly SeatedGroup[]
+}
+
+/** Orden total y estable: cupos descendente, luego etiqueta, luego id. Sin azar ni reloj. */
+const byBiggestFirst = (a: SeatedGroup, b: SeatedGroup): number =>
+  b.seats - a.seats || a.label.localeCompare(b.label) || a.id.localeCompare(b.id)
+
+/**
+ * Reparte los grupos que aún no tienen mesa. Determinista: dos ejecuciones con los
+ * mismos datos dan exactamente el mismo resultado.
+ *
+ * Los grupos grandes van primero porque son los que se quedan sin sitio si el salón se
+ * llena antes con parejas sueltas. A cada uno le toca la mesa donde quepa entero
+ * dejando el menor hueco, desempatando por etiqueta.
+ *
+ * Nunca mueve lo que un humano colocó: eso ya es una decisión tomada.
+ */
+export function autoAssign(tables: readonly VenueTable[], groups: readonly SeatedGroup[]): AutoAssignResult {
+  const free = new Map<string, number>()
+  for (const t of tables) free.set(t.id, occupancyOf(t, groups).free)
+
+  const assignments: Assignment[] = []
+  const unplaced: SeatedGroup[] = []
+
+  for (const group of [...groups].filter((g) => g.tableId === null).sort(byBiggestFirst)) {
+    let best: VenueTable | null = null
+    let bestGap = Number.POSITIVE_INFINITY
+
+    for (const table of tables) {
+      const gap = (free.get(table.id) ?? 0) - group.seats
+      if (gap < 0) continue
+      if (gap < bestGap || (gap === bestGap && best !== null && table.label.localeCompare(best.label) < 0)) {
+        best = table
+        bestGap = gap
+      }
+    }
+
+    if (best === null) {
+      unplaced.push(group)
+      continue
+    }
+
+    free.set(best.id, bestGap)
+    assignments.push({ groupId: group.id, tableId: best.id })
+  }
+
+  return { assignments, unplaced }
+}

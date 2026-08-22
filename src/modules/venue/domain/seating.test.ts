@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canSeat, occupancyOf, type SeatedGroup } from './seating'
+import { autoAssign, canSeat, occupancyOf, type SeatedGroup } from './seating'
 import type { VenueTable } from './venue-table'
 
 const table: VenueTable = { id: 't1', eventId: 'e1', label: 'Mesa 01', capacity: 8, shape: 'round', x: 0, y: 0 }
@@ -40,4 +40,77 @@ describe('canSeat', () => {
 
   it('un grupo más grande que la mesa entera nunca cabe', () =>
     expect(canSeat(table, g('x', 9), [])).toBe(false))
+})
+
+describe('autoAssign', () => {
+  const t = (id: string, label: string, capacity: number): VenueTable => ({
+    id,
+    eventId: 'e1',
+    label,
+    capacity,
+    shape: 'round',
+    x: 0,
+    y: 0,
+  })
+
+  it('es determinista: dos ejecuciones dan el mismo resultado', () => {
+    const tables = [t('A', 'Mesa A', 6), t('B', 'Mesa B', 4), t('C', 'Mesa C', 10)]
+    const groups = [g('p', 2), g('q', 5), g('r', 4), g('s', 3), g('u', 6)]
+    expect(autoAssign(tables, groups)).toEqual(autoAssign(tables, groups))
+  })
+
+  it('nunca mueve lo que un humano colocó', () => {
+    const r = autoAssign([table], [g('a', 4, 't1'), g('b', 2)])
+    expect(r.assignments.map((x) => x.groupId)).not.toContain('a')
+    expect(r.assignments).toEqual([{ groupId: 'b', tableId: 't1' }])
+  })
+
+  it('cuenta lo ya sentado al medir el sitio que queda', () => {
+    // La mesa tiene 8 y un humano ya sentó a 6: solo caben grupos de 2 o menos.
+    const r = autoAssign([table], [g('a', 6, 't1'), g('b', 3)])
+    expect(r.assignments).toHaveLength(0)
+    expect(r.unplaced.map((u) => u.id)).toEqual(['b'])
+  })
+
+  it('coloca primero los grupos grandes', () => {
+    // Dos mesas de 4. Grupos de 4, 2 y 2. El de 4 tiene que entrar entero.
+    const r = autoAssign([t('A', 'Mesa A', 4), t('B', 'Mesa B', 4)], [g('p', 2), g('q', 2), g('grande', 4)])
+    expect(r.unplaced).toHaveLength(0)
+  })
+
+  it('elige la mesa que deja el menor hueco', () => {
+    const r = autoAssign([t('A', 'Mesa A', 6), t('B', 'Mesa B', 4)], [g('x', 4)])
+    expect(r.assignments[0]?.tableId).toBe('B')
+  })
+
+  it('a igualdad de hueco, elige la mesa de etiqueta menor', () => {
+    const r = autoAssign([t('Z', 'Mesa Z', 4), t('A', 'Mesa A', 4)], [g('x', 4)])
+    expect(r.assignments[0]?.tableId).toBe('A')
+  })
+
+  it('a igualdad de cupos, reparte los grupos por etiqueta alfabética', () => {
+    const r = autoAssign([t('A', 'Mesa A', 2)], [{ ...g('b', 2), label: 'Zurita' }, { ...g('a', 2), label: 'Alba' }])
+    expect(r.assignments).toEqual([{ groupId: 'a', tableId: 'A' }])
+    expect(r.unplaced.map((u) => u.id)).toEqual(['b'])
+  })
+
+  it('informa de quien no cabe en ninguna, sin partirlo', () => {
+    const r = autoAssign([{ ...table, capacity: 2 }], [g('x', 5)])
+    expect(r.assignments).toHaveLength(0)
+    expect(r.unplaced.map((u) => u.id)).toEqual(['x'])
+  })
+
+  it('sin mesas, todos quedan sin colocar', () => {
+    expect(autoAssign([], [g('x', 2)]).unplaced).toHaveLength(1)
+  })
+
+  it('sin grupos sueltos no propone nada', () => {
+    expect(autoAssign([table], [g('a', 4, 't1')])).toEqual({ assignments: [], unplaced: [] })
+  })
+
+  it('no sobrecarga una mesa al colocar varios grupos en la misma pasada', () => {
+    const r = autoAssign([t('A', 'Mesa A', 5)], [g('p', 3), g('q', 3)])
+    expect(r.assignments).toEqual([{ groupId: 'p', tableId: 'A' }])
+    expect(r.unplaced.map((u) => u.id)).toEqual(['q'])
+  })
 })
