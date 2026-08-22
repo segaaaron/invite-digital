@@ -22,7 +22,7 @@ export function ArrivalStrip({ tally }: { tally: DoorTally | null }) {
       <div className="grid grid-cols-2 gap-6">
         {cifras.map((cifra) => (
           <div key={cifra.label}>
-            <p className="font-display text-[28px] font-light text-gold-deep">{cifra.value}</p>
+            <p className="font-mono text-[28px] font-light text-gold-deep">{cifra.value}</p>
             <p className="mt-1 text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{cifra.label}</p>
           </div>
         ))}

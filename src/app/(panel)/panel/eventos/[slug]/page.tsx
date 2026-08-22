@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, guestbook, guests, plans, rsvp } from '@/app/composition/container'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
@@ -10,7 +9,9 @@ import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/Gue
 import { requireSession } from '@/modules/identity/session-cookie'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { canAddGroup } from '@/modules/plans'
-import { TallyStrip } from '@/modules/rsvp/ui/TallyStrip'
+import { eventNav } from '@/modules/shell/ui/nav'
+import { PanelShell } from '@/modules/shell/ui/PanelShell'
+import { DonutChart, PanelCard, StatCard } from '@/modules/shell/ui/cards'
 import { isErr } from '@/shared/result'
 
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -57,87 +58,82 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const puerta = isErr(conPuerta) ? null : await checkin.state(event.value.id)
   const llegadas = puerta === null || isErr(puerta) ? null : puerta.value.tally
 
+  // Los cupos ya salen en las tarjetas de arriba: repetirlos aquí era ruido.
+  const t = isErr(tally) ? null : tally.value
+  const respondieron = filas.filter((f) => f.confirmed !== null).length
+  const pendientes = filas.length - respondieron
+  const noAsisten = filas.filter((f) => f.confirmed === 0).length
+
   return (
-    <div className="mx-auto flex max-w-[860px] flex-col gap-10 p-10">
-      <header className="flex items-center justify-between gap-6">
-        <h1 className="font-display text-[26px] font-light text-ink">{event.value.title}</h1>
-        <div className="flex items-center gap-4">
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
-            href={`/panel/eventos/${event.value.slug}/mesas`}
-          >
-            Mesas
-          </Link>
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
-            href={`/panel/eventos/${event.value.slug}/regalos`}
-          >
-            Regalos
-          </Link>
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
-            href={`/panel/eventos/${event.value.slug}/mensajes`}
-          >
-            {sinLeer === 0 ? 'Mensajes' : `Mensajes · ${sinLeer} sin leer`}
-          </Link>
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
-            href={`/panel/eventos/${event.value.slug}/puerta`}
-          >
-            Modo puerta
-          </Link>
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
-            href={`/panel/eventos/${event.value.slug}/estadisticas`}
-          >
-            Estadísticas
-          </Link>
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
-            href={`/panel/eventos/${event.value.slug}/plan`}
-          >
-            Plan
-          </Link>
-          <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href="/panel">
-            Volver
-          </Link>
-        </div>
-      </header>
-
-      {isErr(tally) ? null : <TallyStrip tally={tally.value} />}
-
-      <ArrivalStrip tally={llegadas} />
-
-      <section className="flex flex-col gap-5">
-        <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Invitados</h2>
-        <AllowanceNotice currentGroups={grupos} eventSlug={event.value.slug} maxGuestGroups={limite} />
-        <GuestGroupForm atLimit={!canAddGroup(limite, grupos)} eventId={event.value.id} eventSlug={event.value.slug} />
-        {isErr(groups) ? (
-          <p className="text-[13px] text-gold-deep" role="alert">
-            No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
-          </p>
-        ) : (
-          <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
-        )}
-      </section>
-
-      <section className="flex flex-col gap-5">
-        <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Enlace para el cliente</h2>
-        <ClientSharePanel
-          eventId={event.value.id}
-          eventSlug={event.value.slug}
-          live={
-            isErr(share) || share.value === null
-              ? null
-              : { id: share.value.id, expiresAt: share.value.expiresAt.toISOString().slice(0, 10) }
-          }
+    <PanelShell
+      sections={eventNav(event.value.slug, { sinLeer, llegadas: llegadas?.arrivedGroups ?? null })}
+      active={`/panel/eventos/${event.value.slug}`}
+      brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
+      kicker="Resumen"
+      title={event.value.title}
+      meta={`${new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+    >
+      <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+        <StatCard label="Grupos invitados" value={filas.length} icon="✉" />
+        <StatCard
+          label="Cupos confirmados"
+          value={t ? t.seatsConfirmed : 0}
+          suffix={`/ ${t ? t.seatsInvited : 0}`}
+          icon="✓"
+          progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
         />
-      </section>
+        <StatCard label="Grupos pendientes" value={t ? t.groupsPending : pendientes} icon="◔" />
+        <StatCard label="Personas dentro" value={llegadas ? llegadas.headsInside : '—'} icon="⛩" />
+      </div>
 
-      <section className="flex flex-col gap-5">
-        <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Datos del evento</h2>
-        <EventForm event={event.value} />
-      </section>
-    </div>
+      <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1.6fr_1fr]">
+        <PanelCard title="Estado de los RSVP">
+          <DonutChart
+            big={filas.length === 0 ? '—' : `${Math.round((respondieron / filas.length) * 100)}%`}
+            caption="RESPONDIERON"
+            slices={[
+              { label: 'Asistirán', value: respondieron - noAsisten, color: 'var(--color-sage)' },
+              { label: 'No podrán', value: noAsisten, color: 'var(--color-danger)' },
+              { label: 'Sin responder', value: pendientes, color: 'var(--color-gold-light)' },
+            ]}
+          />
+        </PanelCard>
+        <PanelCard title="Llegada">
+          <ArrivalStrip tally={llegadas} />
+        </PanelCard>
+      </div>
+
+      <div className="flex flex-col gap-4.5">
+        <PanelCard title="Invitados">
+          <div className="flex flex-col gap-4">
+            <AllowanceNotice currentGroups={grupos} eventSlug={event.value.slug} maxGuestGroups={limite} />
+            <GuestGroupForm atLimit={!canAddGroup(limite, grupos)} eventId={event.value.id} eventSlug={event.value.slug} />
+            {isErr(groups) ? (
+              <p className="text-[13px] text-gold-deep" role="alert">
+                No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
+              </p>
+            ) : (
+              <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
+            )}
+          </div>
+        </PanelCard>
+
+        <PanelCard title="Enlace para el cliente">
+          <ClientSharePanel
+            eventId={event.value.id}
+            eventSlug={event.value.slug}
+            live={
+              isErr(share) || share.value === null
+                ? null
+                : { id: share.value.id, expiresAt: share.value.expiresAt.toISOString().slice(0, 10) }
+            }
+          />
+        </PanelCard>
+
+        <PanelCard title="Datos del evento">
+          <EventForm event={event.value} />
+        </PanelCard>
+      </div>
+    </PanelShell>
   )
 }

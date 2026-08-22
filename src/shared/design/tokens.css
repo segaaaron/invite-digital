@@ -22,12 +22,26 @@
   --color-danger: #a3553a;
   --color-danger-deep: #6d2716;
 
+  /* Carcasa del panel, portada del diseño entregado: barra lateral oscura sobre cuerpo
+     marfil. Los valores son los de `docs/design-reference/dashboard/Dashboard.html`,
+     ajustados a la tinta de marca. */
+  --color-shell: #1f1f1d;
+  --color-shell-deep: #141412;
+  --color-shell-ink: #f8f6f1;
+  --color-sage: #5a705c;
+  --color-sage-deep: #3f5340;
+
   --font-display: var(--font-display-raw), 'Cormorant Garamond', serif;
   --font-sans: var(--font-sans-raw), system-ui, sans-serif;
+  /* Las cifras van aquí, no en Cormorant: sus números de estilo antiguo hacen que el 1
+     se lea como I y el 0 como paréntesis. Se detectó en la puerta y volvía a pasar en
+     «1 grupos pendientes». Pila del sistema: ni una descarga más. */
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   --radius-pill: 999px;
   --radius-card: 22px;
 
+  --shadow-card: 0 2px 6px rgb(var(--color-shadow-rgb) / 0.06), 0 14px 32px -8px rgb(var(--color-shadow-rgb) / 0.12);
   --shadow-float: 0 22px 60px -28px rgb(var(--color-shadow-rgb) / 0.45);
   --shadow-lift: 0 34px 90px -40px rgb(var(--color-shadow-rgb) / 0.55);
 
