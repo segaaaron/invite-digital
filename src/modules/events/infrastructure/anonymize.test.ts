@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, guestGroups, rsvpResponses } from '@/shared/db/schema'
+import { events, fundContributions, giftFunds, guestGroups, rsvpResponses } from '@/shared/db/schema'
 import { createDrizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { createDrizzleEventRepository } from './drizzle-event-repository'
 
@@ -86,6 +86,74 @@ describe('anonimización', () => {
 
       const [fila] = await tx.select({ anonymizedAt: events.anonymizedAt }).from(events).where(eq(events.id, evento.id))
       expect(fila?.anonymizedAt).not.toBeNull()
+    })
+  })
+
+  it('anonimiza quién contribuyó pero conserva los importes', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+
+      const [fondo] = await tx
+        .insert(giftFunds)
+        .values({ eventId: evento.id, name: 'Luna de miel', goalCents: 500_000 })
+        .returning({ id: giftFunds.id })
+
+      await tx.insert(fundContributions).values([
+        {
+          fundId: fondo!.id,
+          displayName: 'Abuela Rosa Quiroga',
+          amountCents: 15_000,
+          method: 'envelope',
+          message: 'Que sean muy felices, con todo mi cariño.',
+        },
+        {
+          fundId: fondo!.id,
+          displayName: 'Familia Vargas',
+          amountCents: 25_000,
+          method: 'transfer',
+          message: null,
+        },
+      ])
+
+      await repo.anonymize(evento.id, NOW)
+
+      const filas = await tx.select().from(fundContributions).where(eq(fundContributions.fundId, fondo!.id))
+
+      // El nombre y el mensaje son datos personales de terceros: gente que ni siquiera
+      // está invitada, como la abuela del sobre.
+      expect(filas.map((f) => f.displayName)).toEqual(['Anónimo', 'Anónimo'])
+      expect(filas.map((f) => f.message)).toEqual([null, null])
+
+      // Los importes se conservan: la contabilidad de la pareja no es un dato personal,
+      // y borrarla dejaría el fondo descuadrado para siempre.
+      expect(filas.map((f) => f.amountCents).sort((a, b) => a - b)).toEqual([15_000, 25_000])
+    })
+  })
+
+  it('no toca las contribuciones de un evento que no se está anonimizando', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const vencido = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+      const vigente = await seedEvent(tx, { eventDate: '2026-08-15', retentionDays: 90 })
+
+      const [fondoAjeno] = await tx
+        .insert(giftFunds)
+        .values({ eventId: vigente.id, name: 'Fondo de la otra boda', goalCents: 100_000 })
+        .returning({ id: giftFunds.id })
+      await tx.insert(fundContributions).values({
+        fundId: fondoAjeno!.id,
+        displayName: 'Abuela Rosa Quiroga',
+        amountCents: 15_000,
+        method: 'envelope',
+        message: 'Enhorabuena.',
+      })
+
+      await repo.anonymize(vencido.id, NOW)
+
+      const [ajena] = await tx.select().from(fundContributions).where(eq(fundContributions.fundId, fondoAjeno!.id))
+      expect(ajena?.displayName).toBe('Abuela Rosa Quiroga')
+      expect(ajena?.message).toBe('Enhorabuena.')
     })
   })
 })

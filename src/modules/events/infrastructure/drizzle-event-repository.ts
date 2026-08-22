@@ -56,6 +56,16 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where guest_group_id in (select id from guest_groups where event_id = ${eventId})
       `)
 
+      // `display_name` y `message` de las aportaciones son datos personales de terceros:
+      // gente que ni siquiera está invitada, como la abuela que trae un sobre. Los
+      // **importes se conservan**: la contabilidad de la pareja no es un dato personal, y
+      // borrarla dejaría el fondo descuadrado para siempre sin forma de reconstruirlo.
+      await tx.execute(sql`
+        update fund_contributions
+        set display_name = 'Anónimo', message = null
+        where fund_id in (select id from gift_funds where event_id = ${eventId})
+      `)
+
       await tx.update(events).set({ anonymizedAt: at }).where(eq(events.id, eventId))
     })
   },
