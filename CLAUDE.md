@@ -26,13 +26,15 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/plans/2026-08-21-regalos.md` | Consultar cómo se construyó el ciclo 4 rebanada 2: 12 tareas |
 | `docs/superpowers/specs/2026-08-21-mensajes-design.md` | Entender el libro de firmas: leído, destacado y respuesta (ciclo 4, rebanada 3) |
 | `docs/superpowers/plans/2026-08-21-mensajes.md` | Consultar cómo se construyó el ciclo 4 rebanada 3: 8 tareas |
+| `docs/superpowers/specs/2026-08-21-planes-design.md` | Entender los límites por plan y las solicitudes de cambio (ciclo 4, rebanada 4) |
+| `docs/superpowers/plans/2026-08-21-planes.md` | Consultar cómo se construyó el ciclo 4 rebanada 4: 9 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
-**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y ciclo 4 rebanadas 1, 2 y 3 —mesas y
-plano del salón, mesa de regalos y fondos, libro de firmas— cerrados y fusionados a
-`main`.** 913 pruebas unitarias y 39 e2e en verde.
+**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y el ciclo 4 entero —mesas y plano del
+salón, mesa de regalos y fondos, libro de firmas, y los límites por plan— cerrados y
+fusionados a `main`.** 992 pruebas unitarias y 42 e2e en verde.
 
 El atelier crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
@@ -53,15 +55,38 @@ al confirmar, y nadie los veía. El atelier los lee en una bandeja con filtros, 
 leídos, destaca los que la pareja querrá releer y responde; el invitado ve la respuesta al
 volver a su enlace, y la pareja ve los destacados desde su vista de solo lectura.
 
+Y los tres planes que el sitio vende desde el ciclo 1 por fin significan algo: cada evento
+tiene su plan, el límite de grupos se aplica **en el servidor**, las funciones que el plan
+no trae quedan cerradas, el panel avisa al 80 % antes de chocar con el tope y un cambio de
+plan queda registrado como solicitud que el atelier aplica a mano. No hay cobro en línea.
+
 Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
 
 Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
 
-Lo siguiente son las rebanadas 2 (canales de envío) y 4 (refinamientos) del ciclo 3. La
+Lo siguiente son las rebanadas 2 (canales de envío) y 4 (refinamientos) del ciclo 3, y el
+Plan B. La
 rebanada 2 tiene diseño hablado y **no** escrito: rotar el enlace al reenviar,
 importación masiva con CSV y tabla de resultado, plantilla de mensaje por evento y
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
+
+### Notas de los límites por plan (`src/modules/plans/`)
+
+- **Los límites viven en la base, no en el código.** Cambiar lo que incluye un plan es una
+  decisión comercial y no debería exigir un despliegue: son columnas de `plans`.
+- **`max_guest_groups` nulo es *sin límite*, no cero.** Un `NOT NULL DEFAULT 0` dejaría al
+  plan más caro sin admitir ni un grupo.
+- **`guests`, `venue`, `registry` y `checkin` NO importan `plans`.** Reciben la capacidad
+  ya resuelta como argumento; quien la resuelve es la acción, que vive en la frontera y
+  habla con el contenedor. Si sientes que necesitas ese `import`, la firma está mal.
+- **Un evento sin plan usa el plan más barato activo** (`atelier`), que no incluye mesa de
+  regalos ni modo puerta. Es intencionado, y es la trampa al sembrar datos de prueba: un
+  evento sin `plan_id` se choca con la pantalla de función no incluida. Las fixtures e2e
+  de mesas, regalos y puerta siembran con `alta-costura` por eso.
+- **El corte está en el servidor.** Deshabilitar un botón u ocultar una sección es
+  cortesía; una Server Action es un extremo HTTP público. `tests/e2e/planes.spec.ts`
+  reactiva el botón desde el navegador y comprueba que el servidor rechaza igual.
 
 ### Notas de la mesa de regalos (`src/modules/registry/`)
 
@@ -237,8 +262,8 @@ visible, y esa es justo la razón de que exista la puerta.
 - **Plan B**: pedidos, subida de comprobante de pago, panel de administración mínimo.
   La sección 9 del spec del ciclo 1 ya lo describe. La deuda del layout raíz que lo bloqueaba ya
   está saldada: cuelga del grupo `(panel)`.
-- **Ciclo 4, rebanada 2 en adelante**: mesas de regalos, mensajes, sitio concreto dentro de
-  la mesa, y el dashboard completo.
+- **Ciclo 4**: cerrado. Quedan fuera el sitio concreto dentro de la mesa y el dashboard
+  completo.
 
 ## Estilo de trabajo con este usuario
 
