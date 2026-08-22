@@ -12,6 +12,7 @@ const group: DoorGroupRow = {
   attending: 3,
   revoked: false,
   tokenHash: Buffer.from([0xde, 0xad, 0xbe, 0xef]),
+  tableLabel: 'Mesa 03',
 }
 
 const arrival: ArrivalRow = {
@@ -50,6 +51,31 @@ const fakes = (rows: ArrivalRow[] = []) => ({
 })
 
 describe('getDoorManifest', () => {
+  it('el manifiesto trae la etiqueta de la mesa del grupo', async () => {
+    const { groups, arrivals } = fakes()
+    const r = await getDoorManifest({ groups, arrivals })('e1')
+    expect(isOk(r) && r.value.groups[0]?.tableLabel).toBe('Mesa 03')
+  })
+
+  it('un grupo sin mesa sigue apareciendo, con la mesa en nulo', async () => {
+    const sinMesa = { ...group, tableLabel: null }
+    const groups: DoorGroupReader = {
+      async findByTokenHash() {
+        return sinMesa
+      },
+      async findGroupById() {
+        return sinMesa
+      },
+      async listByEvent() {
+        return [sinMesa]
+      },
+    }
+    const { arrivals } = fakes()
+    const r = await getDoorManifest({ groups, arrivals })('e1')
+    expect(isOk(r) && r.value.groups).toHaveLength(1)
+    expect(isOk(r) && r.value.groups[0]?.tableLabel).toBeNull()
+  })
+
   it('entrega el hash en hexadecimal, nunca un token en claro', async () => {
     const { groups, arrivals } = fakes()
     const r = await getDoorManifest({ groups, arrivals })('e1')

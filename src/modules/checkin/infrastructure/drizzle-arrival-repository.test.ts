@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, guestGroups } from '@/shared/db/schema'
+import { events, guestGroups, venueTables } from '@/shared/db/schema'
 import { eq } from 'drizzle-orm'
 import { drizzleArrivalRepository, drizzleDoorGroupReader } from './drizzle-arrival-repository'
 
@@ -104,5 +104,34 @@ describe('drizzleArrivalRepository', () => {
     })
     await db.delete(events).where(eq(events.id, otro))
     expect(await drizzleArrivalRepository.listByEvent(otro)).toHaveLength(0)
+  })
+
+  it('el lector trae la etiqueta de la mesa del grupo', async () => {
+    const tableId = crypto.randomUUID()
+    await db.insert(venueTables).values({ id: tableId, eventId, label: 'Mesa 07', capacity: 8 })
+    await db.update(guestGroups).set({ tableId }).where(eq(guestGroups.id, groupId))
+
+    expect((await drizzleDoorGroupReader.findGroupById(groupId))?.tableLabel).toBe('Mesa 07')
+    expect((await drizzleDoorGroupReader.findByTokenHash(hash))?.tableLabel).toBe('Mesa 07')
+
+    await db.update(guestGroups).set({ tableId: null }).where(eq(guestGroups.id, groupId))
+  })
+
+  it('UN GRUPO SIN MESA SIGUE APARECIENDO, con la etiqueta en nulo', async () => {
+    // Left join, no inner: con un inner join, todo grupo sin mesa desaparecería de la
+    // puerta y su pase dejaría de abrirla.
+    const sinMesa = crypto.randomUUID()
+    await db.insert(guestGroups).values({
+      id: sinMesa,
+      eventId,
+      label: 'Familia Sin Mesa',
+      seats: 2,
+      tokenHash: Buffer.from('2'.repeat(64), 'hex'),
+    })
+
+    const row = await drizzleDoorGroupReader.findGroupById(sinMesa)
+    expect(row?.label).toBe('Familia Sin Mesa')
+    expect(row?.tableLabel).toBeNull()
+    expect((await drizzleDoorGroupReader.listByEvent(eventId)).some((g) => g.id === sinMesa)).toBe(true)
   })
 })

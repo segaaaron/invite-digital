@@ -15,6 +15,7 @@ const groupRow = {
   seats: 4,
   attending: 4,
   revoked: false,
+  tableLabel: 'Mesa 03',
   tokenHash: Buffer.from(`h:${TOKEN}`),
 }
 

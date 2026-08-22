@@ -6,6 +6,8 @@ export type DoorGroupRow = {
   readonly attending: number | null
   readonly revoked: boolean
   readonly tokenHash: Buffer
+  /** Etiqueta de la mesa asignada, o `null` si el grupo aún no tiene. */
+  readonly tableLabel: string | null
 }
 
 export type ArrivalRow = {

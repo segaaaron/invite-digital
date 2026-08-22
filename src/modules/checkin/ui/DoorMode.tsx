@@ -138,7 +138,12 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
         return
       }
 
-      const group = { id: local.group.id, label: local.group.label, seats: local.group.seats }
+      const group = {
+        id: local.group.id,
+        label: local.group.label,
+        seats: local.group.seats,
+        tableLabel: local.group.tableLabel,
+      }
       const arrivedCount = local.arrivedCount ?? 1
 
       if (local.kind === 'already') {

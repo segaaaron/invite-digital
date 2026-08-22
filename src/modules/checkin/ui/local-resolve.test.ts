@@ -5,7 +5,9 @@ import { resolveLocally, sha256Hex } from './local-resolve'
 const TOKEN = 'AbCdEfGhIjKlMnOpQrStUv'
 const HASH = createHash('sha256').update(TOKEN).digest('hex')
 
-const groups = [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tokenHashHex: HASH }]
+const groups = [
+  { id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tableLabel: 'Mesa 03', tokenHashHex: HASH },
+]
 
 describe('sha256Hex', () => {
   it('produce el mismo hash que el servidor', async () => {

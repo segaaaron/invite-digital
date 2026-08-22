@@ -10,6 +10,7 @@ const groupRow = {
   seats: 4,
   attending: 3,
   revoked: false,
+  tableLabel: 'Mesa 03',
   tokenHash: Buffer.alloc(0),
 }
 

@@ -13,7 +13,13 @@ export type ScanRequest = {
   readonly scannedAt: Date
 }
 
-export type ScanGroupView = { readonly id: string; readonly label: string; readonly seats: number }
+export type ScanGroupView = {
+  readonly id: string
+  readonly label: string
+  readonly seats: number
+  /** La puerta canta este número en voz alta; `null` es «mesa por asignar». */
+  readonly tableLabel: string | null
+}
 
 export type ScanOutcome =
   | { readonly scanId: string; readonly kind: 'welcome'; readonly group: ScanGroupView; readonly arrivedCount: number }

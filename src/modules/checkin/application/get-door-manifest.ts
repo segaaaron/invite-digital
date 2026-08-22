@@ -9,6 +9,8 @@ export type DoorManifestGroup = {
   readonly seats: number
   readonly attending: number | null
   readonly revoked: boolean
+  /** La mesa viaja en el manifiesto para que la puerta la cante también sin red. */
+  readonly tableLabel: string | null
   /** SHA-256 en hexadecimal. Nunca el token en claro. */
   readonly tokenHashHex: string
 }
@@ -52,6 +54,7 @@ export const getDoorManifest =
             seats: g.seats,
             attending: g.attending,
             revoked: g.revoked,
+            tableLabel: g.tableLabel,
             tokenHashHex: g.tokenHash.toString('hex'),
           })),
           arrivals: resolved,

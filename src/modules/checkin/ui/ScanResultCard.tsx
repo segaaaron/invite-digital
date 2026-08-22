@@ -48,6 +48,15 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
             {outcome.kind === 'already' ? ` · registrado a las ${hora(outcome.arrivedAt)}` : ''}
           </p>
 
+          {/* El dato que el invitado pregunta nada más entrar. Va grande y solo: el
+              personal lo lee de reojo y lo dice en voz alta. */}
+          <p
+            aria-label="Mesa asignada"
+            className="mt-3 rounded-2xl bg-black/20 px-4 py-2.5 text-center font-display text-[24px] italic leading-tight"
+          >
+            {outcome.group.tableLabel ?? 'Mesa por asignar'}
+          </p>
+
           {outcome.kind === 'welcome' ? (
             <div className="mt-4 flex items-center gap-3 text-[13px]">
               <span className="opacity-80">¿Cuántos entraron?</span>

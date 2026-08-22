@@ -1,6 +1,6 @@
 import { desc, eq } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { arrivals, guestGroups, rsvpResponses } from '@/shared/db/schema'
+import { arrivals, guestGroups, rsvpResponses, venueTables } from '@/shared/db/schema'
 import type { ArrivalRepository, DoorGroupReader, DoorGroupRow } from '../application/ports'
 
 export const createDrizzleArrivalRepository = (database: DbExecutor): ArrivalRepository => ({
@@ -79,6 +79,7 @@ const toRow = (r: {
   attending: number | null
   revokedAt: Date | null
   tokenHash: Buffer
+  tableLabel: string | null
 }): DoorGroupRow => ({
   id: r.id,
   eventId: r.eventId,
@@ -87,6 +88,7 @@ const toRow = (r: {
   attending: r.attending,
   revoked: r.revokedAt !== null,
   tokenHash: r.tokenHash,
+  tableLabel: r.tableLabel,
 })
 
 const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
@@ -97,6 +99,7 @@ const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
   attending: latest.attending,
   revokedAt: guestGroups.revokedAt,
   tokenHash: guestGroups.tokenHash,
+  tableLabel: venueTables.label,
 })
 
 export const createDrizzleDoorGroupReader = (database: DbExecutor): DoorGroupReader => ({
@@ -106,6 +109,8 @@ export const createDrizzleDoorGroupReader = (database: DbExecutor): DoorGroupRea
       .select(groupColumns(latest))
       .from(guestGroups)
       .leftJoin(latest, eq(latest.guestGroupId, guestGroups.id))
+      // Left join, no inner: un grupo sin mesa tiene que seguir apareciendo en la puerta.
+      .leftJoin(venueTables, eq(venueTables.id, guestGroups.tableId))
       .where(eq(guestGroups.tokenHash, tokenHash))
       .limit(1)
     return row ? toRow(row) : null
@@ -117,6 +122,8 @@ export const createDrizzleDoorGroupReader = (database: DbExecutor): DoorGroupRea
       .select(groupColumns(latest))
       .from(guestGroups)
       .leftJoin(latest, eq(latest.guestGroupId, guestGroups.id))
+      // Left join, no inner: un grupo sin mesa tiene que seguir apareciendo en la puerta.
+      .leftJoin(venueTables, eq(venueTables.id, guestGroups.tableId))
       .where(eq(guestGroups.id, id))
       .limit(1)
     return row ? toRow(row) : null
@@ -128,6 +135,8 @@ export const createDrizzleDoorGroupReader = (database: DbExecutor): DoorGroupRea
       .select(groupColumns(latest))
       .from(guestGroups)
       .leftJoin(latest, eq(latest.guestGroupId, guestGroups.id))
+      // Left join, no inner: un grupo sin mesa tiene que seguir apareciendo en la puerta.
+      .leftJoin(venueTables, eq(venueTables.id, guestGroups.tableId))
       .where(eq(guestGroups.eventId, eventId))
       .orderBy(guestGroups.label)
     return rows.map(toRow)

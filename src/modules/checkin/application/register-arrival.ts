@@ -8,6 +8,7 @@ export const groupView = (group: DoorGroupRow): ScanGroupView => ({
   id: group.id,
   label: group.label,
   seats: group.seats,
+  tableLabel: group.tableLabel,
 })
 
 /**
