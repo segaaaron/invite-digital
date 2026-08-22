@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, guests, rsvp } from '@/app/composition/container'
+import { events, guestbook, guests, rsvp } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { EventForm } from '@/modules/events/ui/EventForm'
+import { unreadCount } from '@/modules/guestbook'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -32,6 +33,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         })),
       )
 
+  // El contador de sin leer va en el propio enlace: si hubiera que entrar para
+  // descubrir que hay mensajes esperando, no entraría nadie.
+  const libro = await guestbook.list(event.value.id)
+  const sinLeer = isErr(libro) ? 0 : unreadCount(libro.value)
+
   const tally = await rsvp.tally(event.value.id)
   const share = await events.liveShare(event.value.id)
 
@@ -51,6 +57,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             href={`/panel/eventos/${event.value.slug}/regalos`}
           >
             Regalos
+          </Link>
+          <Link
+            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
+            href={`/panel/eventos/${event.value.slug}/mensajes`}
+          >
+            {sinLeer === 0 ? 'Mensajes' : `Mensajes · ${sinLeer} sin leer`}
           </Link>
           <Link
             className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"

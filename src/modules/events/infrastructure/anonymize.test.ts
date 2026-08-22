@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, fundContributions, giftFunds, guestGroups, rsvpResponses } from '@/shared/db/schema'
+import { events, fundContributions, giftFunds, guestGroups, messageNotes, rsvpResponses } from '@/shared/db/schema'
 import { createDrizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { createDrizzleEventRepository } from './drizzle-event-repository'
 
@@ -128,6 +128,64 @@ describe('anonimización', () => {
       // Los importes se conservan: la contabilidad de la pareja no es un dato personal,
       // y borrarla dejaría el fondo descuadrado para siempre.
       expect(filas.map((f) => f.amountCents).sort((a, b) => a - b)).toEqual([15_000, 25_000])
+    })
+  })
+
+  it('al vencer, la respuesta del atelier al mensaje también se borra', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+
+      const [grupo] = await tx
+        .insert(guestGroups)
+        .values({ eventId: evento.id, label: 'Familia Rojas Peña', seats: 4, tokenHash: Buffer.alloc(32, 21) })
+        .returning({ id: guestGroups.id })
+      const [respuesta] = await tx
+        .insert(rsvpResponses)
+        .values({ guestGroupId: grupo!.id, attending: 3, message: 'Vamos tres, gracias' })
+        .returning({ id: rsvpResponses.id })
+      await tx.insert(messageNotes).values({
+        rsvpResponseId: respuesta!.id,
+        readAt: NOW,
+        featuredAt: NOW,
+        reply: 'Gracias, Rojas Peña, los esperamos',
+        repliedAt: NOW,
+      })
+
+      await repo.anonymize(evento.id, NOW)
+
+      const [nota] = await tx.select().from(messageNotes).where(eq(messageNotes.rsvpResponseId, respuesta!.id))
+      // La respuesta es texto escrito SOBRE un dato personal: borrar el mensaje y dejar
+      // la respuesta —que suele llevar el nombre del invitado— sería anonimizar a medias.
+      expect(nota?.reply).toBeNull()
+      expect(nota?.repliedAt).toBeNull()
+      // Leído y destacado se conservan: no identifican a nadie.
+      expect(nota?.featuredAt).not.toBeNull()
+    })
+  })
+
+  it('no toca las respuestas del libro de otro evento que sigue vigente', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const vencido = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+      const vigente = await seedEvent(tx, { eventDate: '2026-08-15', retentionDays: 90 })
+
+      const [grupoAjeno] = await tx
+        .insert(guestGroups)
+        .values({ eventId: vigente.id, label: 'Familia Ajena', seats: 2, tokenHash: Buffer.alloc(32, 22) })
+        .returning({ id: guestGroups.id })
+      const [respuestaAjena] = await tx
+        .insert(rsvpResponses)
+        .values({ guestGroupId: grupoAjeno!.id, attending: 2, message: 'Ahí estaremos' })
+        .returning({ id: rsvpResponses.id })
+      await tx
+        .insert(messageNotes)
+        .values({ rsvpResponseId: respuestaAjena!.id, reply: 'Gracias, Ajena', repliedAt: NOW })
+
+      await repo.anonymize(vencido.id, NOW)
+
+      const [nota] = await tx.select().from(messageNotes).where(eq(messageNotes.rsvpResponseId, respuestaAjena!.id))
+      expect(nota?.reply).toBe('Gracias, Ajena')
     })
   })
 

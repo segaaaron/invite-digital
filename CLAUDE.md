@@ -24,13 +24,15 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/plans/2026-08-21-checkin-qr.md` | Consultar cómo se construyó la rebanada 3 del ciclo 3: 20 tareas |
 | `docs/superpowers/specs/2026-08-21-regalos-design.md` | Entender la mesa de regalos y los fondos en efectivo (ciclo 4, rebanada 2) |
 | `docs/superpowers/plans/2026-08-21-regalos.md` | Consultar cómo se construyó el ciclo 4 rebanada 2: 12 tareas |
+| `docs/superpowers/specs/2026-08-21-mensajes-design.md` | Entender el libro de firmas: leído, destacado y respuesta (ciclo 4, rebanada 3) |
+| `docs/superpowers/plans/2026-08-21-mensajes.md` | Consultar cómo se construyó el ciclo 4 rebanada 3: 8 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
-**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y ciclo 4 rebanadas 1 y 2 —mesas y
-plano del salón, mesa de regalos y fondos— cerrados y fusionados a `main`.** 814 pruebas
-unitarias y 37 e2e en verde.
+**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y ciclo 4 rebanadas 1, 2 y 3 —mesas y
+plano del salón, mesa de regalos y fondos, libro de firmas— cerrados y fusionados a
+`main`.** 913 pruebas unitarias y 39 e2e en verde.
 
 El atelier crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
@@ -45,6 +47,11 @@ Y ya tiene mesa de regalos: el atelier carga regalos con precio y tienda, abre f
 efectivo con su meta y registra lo que llega; el invitado ve la lista en su propia
 invitación y **reserva** un regalo, que deja de estar disponible para los demás en ese
 mismo instante.
+
+Y ya desentierra los mensajes: los invitados llevaban escribiéndolos desde la rebanada 1
+al confirmar, y nadie los veía. El atelier los lee en una bandeja con filtros, los marca
+leídos, destaca los que la pareja querrá releer y responde; el invitado ve la respuesta al
+volver a su enlace, y la pareja ve los destacados desde su vista de solo lectura.
 
 Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
 
@@ -87,6 +94,34 @@ Plan B— siguen sin construirse.
 - **La retención anonimiza `fund_contributions.display_name` y `message`, y conserva los
   importes.** La contabilidad de la pareja no es un dato personal y borrarla dejaría los
   fondos descuadrados.
+
+### Notas del libro de firmas (`src/modules/guestbook/`)
+
+- **El texto del mensaje NO se copia a ninguna tabla nueva.** Vive en
+  `rsvp_responses.message` desde la rebanada 1 y ahí se queda. `message_notes` guarda solo
+  el estado editable —leído, destacado, respuesta— referido al `rsvp_response_id`. Un
+  `INSERT` que guardase el cuerpo crearía dos versiones del mismo texto que se
+  desincronizan en cuanto alguien edite una. Y `read_at` no cabe dentro de
+  `rsvp_responses`: ese histórico se escribe una vez y no se toca.
+- **`listMessages` une con `leftJoin`, nunca `innerJoin`.** Es el fallo silencioso de esta
+  rebanada, y cabe en una letra: la nota nace cuando alguien marca leído, destaca o
+  responde, así que con `innerJoin` solo saldrían los mensajes que ya tienen nota —ninguno
+  nuevo, jamás—. Todo compilaría, las demás pruebas pasarían y la bandeja estaría vacía
+  para siempre sin un solo error. Hay prueba explícita contra Postgres real, y se comprobó
+  que falla al cambiar la letra.
+- **Esta rebanada no abre ninguna puerta pública de escritura.** Las tres acciones son del
+  panel y empiezan por `requireSession()`; el invitado solo lee la respuesta.
+- **Un invitado que cambia su respuesta produce dos firmas**, no una editada. Dijo dos
+  cosas distintas en dos momentos, y las dos aparecen en el libro.
+- **El orden es fijo**: por fecha de escritura descendente, y no es configurable.
+- **`upsertNote` escribe con `ON CONFLICT DO UPDATE`** contra el `UNIQUE` de
+  `rsvp_response_id`, y el parche solo lleva las claves definidas: marcar leído no puede
+  borrar la respuesta ya escrita.
+- **La retención borra `message_notes.reply` y `replied_at`**, no solo el mensaje: la
+  respuesta es texto escrito sobre un dato personal y suele llevar el nombre del invitado
+  dentro. `read_at` y `featured_at` se conservan: no identifican a nadie.
+- **Lo «sin leer» se distingue por texto además de por color**, y el contador del filtro se
+  calcula sobre todos los mensajes, no sobre los visibles.
 
 ### Notas del salón (`src/modules/venue/`)
 

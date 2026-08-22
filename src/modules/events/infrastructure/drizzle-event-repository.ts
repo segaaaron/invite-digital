@@ -56,6 +56,20 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where guest_group_id in (select id from guest_groups where event_id = ${eventId})
       `)
 
+      // La respuesta del atelier es texto escrito SOBRE un dato personal, y suele llevar
+      // el nombre del invitado dentro. Borrar el mensaje y dejar la respuesta sería
+      // anonimizar a medias. `read_at` y `featured_at` se quedan: no identifican a nadie,
+      // y perderlos dejaría el libro sin saber qué se había atendido.
+      await tx.execute(sql`
+        update message_notes
+        set reply = null, replied_at = null
+        where rsvp_response_id in (
+          select r.id from rsvp_responses r
+          join guest_groups g on g.id = r.guest_group_id
+          where g.event_id = ${eventId}
+        )
+      `)
+
       // `display_name` y `message` de las aportaciones son datos personales de terceros:
       // gente que ni siquiera está invitada, como la abuela que trae un sobre. Los
       // **importes se conservan**: la contabilidad de la pareja no es un dato personal, y
