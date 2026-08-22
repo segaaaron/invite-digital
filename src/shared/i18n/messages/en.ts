@@ -51,6 +51,10 @@ export const en = {
     title: 'This is how it arrives on their phone',
     body: 'A single link, sent over WhatsApp. It opens full screen, with no app to download, and behaves the same way on iPhone, Android, or tablet.',
     bullets: ['Loads in under two seconds', 'A QR code for the welcome table', 'A confirmation button straight to the chat'],
+    shots: [
+      { tag: 'Wedding', caption: 'Foil monogram', alt: 'A wedding invitation open on a phone' },
+      { tag: 'Christening', caption: 'Watercolour & QR', alt: 'A christening invitation open on a phone during the party' },
+    ],
   },
   collections: {
     eyebrow: 'Collections',
@@ -64,12 +68,20 @@ export const en = {
   comparison: {
     eyebrow: 'Comparison',
     title: 'The LUXE difference',
+    sliderLabel: 'Compare LUXE with a traditional invitation',
+    imageAlt: 'A botanical invitation suite by the atelier',
     hint: 'Drag the seal to compare',
     traditionalLabel: 'Traditional',
     luxe: ['A 3D envelope with animated opening and wax seal', 'Your own domain, free of third-party branding', 'RSVP with confirmation tracking', 'Music, an immersive gallery, and a countdown', 'A design composed by hand at the atelier'],
     traditional: ['A static image sent over chat', 'A template carrying the platform’s logo', 'Confirmations tallied by hand', 'No gallery, no music, no map', 'The same design shared with a thousand other events'],
   },
-  pricing: { eyebrow: 'Investment', title: 'Plans & pricing', mostChosen: 'Most chosen' },
+  pricing: {
+    eyebrow: 'Investment',
+    title: 'Plans & pricing',
+    mostChosen: 'Most chosen',
+    choose: 'Choose {plan}',
+    bookCall: 'Book a call',
+  },
   models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Eight signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open', seeAll: 'See every model' },
   invitation: {
     title: 'Confirm your attendance',
@@ -158,6 +170,7 @@ export const en = {
     again: 'Send another',
     sending: 'Sending…',
     whatsappLabel: 'Direct WhatsApp',
+    atelierAlt: 'The atelier desk with paper, brushes and tools',
     whatsappMessage: 'Hello, I am interested in a digital invitation. How do we get started?',
     emailLabel: 'Atelier email',
     fields: {

@@ -1,6 +1,9 @@
+import Image from 'next/image'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
-import { MobilePhoneMockup } from './MobilePhoneMockup'
+
+/** Las dos capturas de la maqueta, en el mismo orden. */
+const FOTOS = ['/site/movil/pantalla.avif', '/site/movil/ambiente.avif'] as const
 
 export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
   const { mobile } = dictionary
@@ -35,8 +38,31 @@ export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
           </ul>
         </Reveal>
 
-        <Reveal delay={0.1}>
-          <MobilePhoneMockup />
+        <Reveal className="grid grid-cols-2 gap-5" delay={0.1}>
+          {mobile.shots.map((shot, index) => (
+            <figure
+              key={shot.tag}
+              className={`overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-bg-raised shadow-[var(--shadow-lift)] ${
+                index === 1 ? 'mt-10' : ''
+              }`}
+            >
+              <div className="relative aspect-3/4">
+                <Image
+                  alt={shot.alt}
+                  className="object-cover"
+                  fill
+                  sizes="(min-width: 1024px) 280px, 45vw"
+                  src={FOTOS[index] ?? FOTOS[0]}
+                />
+              </div>
+              <figcaption className="flex flex-col gap-1 px-5 py-4">
+                <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">
+                  {shot.tag}
+                </span>
+                <span className="text-[13px] text-ink">{shot.caption}</span>
+              </figcaption>
+            </figure>
+          ))}
         </Reveal>
       </div>
     </section>

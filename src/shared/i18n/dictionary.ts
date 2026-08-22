@@ -45,11 +45,19 @@ export interface ExperienceDictionary {
   acts: readonly [ExperienceAct, ExperienceAct, ExperienceAct]
 }
 
+export interface MobileShot {
+  tag: string
+  caption: string
+  alt: string
+}
+
 export interface MobileDictionary {
   eyebrow: string
   title: string
   body: string
   bullets: readonly [string, string, string]
+  /** Las dos fotografías de la maqueta, con su pie. */
+  shots: readonly [MobileShot, MobileShot]
 }
 
 export interface CollectionsDictionary {
@@ -66,6 +74,9 @@ export interface ComparisonDictionary {
   eyebrow: string
   title: string
   hint: string
+  /** Nombre accesible del control que descubre un lado u otro. */
+  sliderLabel: string
+  imageAlt: string
   traditionalLabel: string
   luxe: readonly [string, string, string, string, string]
   traditional: readonly [string, string, string, string, string]
@@ -98,6 +109,10 @@ export interface PricingDictionary {
   eyebrow: string
   title: string
   mostChosen: string
+  /** «Elegir Atelier →». El nombre del plan entra donde dice {plan}. */
+  choose: string
+  /** El plan más caro no se elige de un clic: se agenda una llamada. */
+  bookCall: string
 }
 
 export interface ModelsDictionary {
@@ -142,6 +157,8 @@ export interface ContactDictionary {
   again: string
   sending: string
   whatsappLabel: string
+  /** Texto alternativo de la fotografía del taller que la maqueta pone junto al formulario. */
+  atelierAlt: string
   whatsappMessage: string
   emailLabel: string
   fields: ContactFieldsDictionary

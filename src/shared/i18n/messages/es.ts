@@ -51,6 +51,10 @@ export const es = {
     title: 'Así llega a su teléfono',
     body: 'Un solo enlace por WhatsApp. Se abre a pantalla completa, sin apps ni descargas, y funciona igual en iPhone, Android y tablet.',
     bullets: ['Carga en menos de dos segundos', 'Código QR para la mesa de recepción', 'Botón de confirmación directo al chat'],
+    shots: [
+      { tag: 'Boda', caption: 'Monograma en foil', alt: 'Invitación de boda abierta en un teléfono' },
+      { tag: 'Bautizo', caption: 'Acuarela & QR', alt: 'Invitación de bautizo abierta en un teléfono durante la fiesta' },
+    ],
   },
   collections: {
     eyebrow: 'Colecciones',
@@ -65,11 +69,19 @@ export const es = {
     eyebrow: 'Comparativa',
     title: 'La diferencia LUXE',
     hint: 'Arrastra el sello para comparar',
+    sliderLabel: 'Comparar LUXE con una invitación tradicional',
+    imageAlt: 'Suite de invitación botánica del atelier',
     traditionalLabel: 'Tradicional',
     luxe: ['Sobre 3D con apertura animada y sello de cera', 'Dominio propio, sin marcas de terceros', 'RSVP con seguimiento de confirmaciones', 'Música, galería inmersiva y cuenta regresiva', 'Diseño compuesto a mano por el atelier'],
     traditional: ['Imagen estática enviada por chat', 'Plantilla con logo de la plataforma', 'Confirmaciones contadas a mano', 'Sin galería, sin música, sin mapa', 'Mismo diseño que otros mil eventos'],
   },
-  pricing: { eyebrow: 'Inversión', title: 'Planes & precios', mostChosen: 'Más elegido' },
+  pricing: {
+    eyebrow: 'Inversión',
+    title: 'Planes & precios',
+    mostChosen: 'Más elegido',
+    choose: 'Elegir {plan}',
+    bookCall: 'Agendar llamada',
+  },
   models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Ocho diseños base · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir', seeAll: 'Ver todos los modelos' },
   invitation: {
     title: 'Confirma tu asistencia',
@@ -158,6 +170,7 @@ export const es = {
     again: 'Enviar otra',
     sending: 'Enviando…',
     whatsappLabel: 'WhatsApp directo',
+    atelierAlt: 'Escritorio del atelier con papel, pinceles y herramientas',
     whatsappMessage: 'Hola, me interesa una invitación digital. ¿Me cuentan cómo empezamos?',
     emailLabel: 'Correo del atelier',
     fields: {

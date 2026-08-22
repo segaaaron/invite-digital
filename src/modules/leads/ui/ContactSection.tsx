@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import type { Category } from '@/modules/catalog'
 import { BRAND } from '@/shared/config/brand'
 import { GlassPanel } from '@/shared/design/ui/GlassPanel'
@@ -56,6 +57,17 @@ export function ContactSection({ categories, dictionary, locale }: Props) {
               </dd>
             </div>
           </dl>
+
+          {/* La fotografía del taller que la maqueta pone bajo los datos de contacto. */}
+          <div className="relative mt-4 aspect-16/11 overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] shadow-[var(--shadow-lift)]">
+            <Image
+              alt={contact.atelierAlt}
+              className="object-cover"
+              fill
+              sizes="(min-width: 1024px) 480px, 100vw"
+              src="/site/contacto/atelier.avif"
+            />
+          </div>
         </Reveal>
 
         <Reveal delay={0.1}>
