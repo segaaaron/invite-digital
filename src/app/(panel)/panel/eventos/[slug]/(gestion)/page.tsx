@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { checkin, events, guests, plans, rsvp } from '@/app/composition/container'
+import { checkin, events, guestbook, guests, plans, rsvp, venue } from '@/app/composition/container'
+import { unreadCount } from '@/modules/guestbook'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -46,27 +47,55 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const pendientes = filas.length - respondieron
   const noAsisten = filas.filter((f) => f.confirmed === 0).length
 
+  // El salón, para el panel de distribución de mesas del resumen. Si el plan no lo trae,
+  // no se pinta: enseñar mesas vacías haría creer que el salón está sin repartir.
+  // Los mensajes sin leer, para la acción rápida.
+  const libroResumen = await guestbook.list(event.value.id)
+  const sinLeerResumen = isErr(libroResumen) ? 0 : unreadCount(libroResumen.value)
+
+  const conSalon = await plans.requireFeature(event.value.id, 'seating')
+  const salon = isErr(conSalon) ? null : await venue.seating(event.value.id)
+  const mesas = salon === null || isErr(salon) ? null : salon.value
+
+  const fecha = new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+
   return (
     <>
       <PanelHeader
-        kicker="Resumen"
-        meta={new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', {
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        })}
-        title={event.value.title}
+        actions={
+          <>
+            <Link
+              className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
+              href={`/panel/eventos/${event.value.slug}/configuracion`}
+            >
+              Compartir enlace
+            </Link>
+            <Link
+              className="rounded-full bg-gold px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
+              href={`/panel/eventos/${event.value.slug}/invitados`}
+            >
+              + Invitar
+            </Link>
+          </>
+        }
+        kicker={`Panel · ${event.value.title}`}
+        meta={fecha}
+        title={`Bienvenida, ${event.value.title}`}
       />
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-        <StatCard label="Grupos invitados" value={filas.length} icon="✉" />
+        <StatCard label="Invitados" value={filas.length} icon="✉" detail={`${t ? t.seatsInvited : 0} cupos repartidos`} />
         <StatCard
-          label="Cupos confirmados"
+          label="Confirmados"
           value={t ? t.seatsConfirmed : 0}
           suffix={`/ ${t ? t.seatsInvited : 0}`}
           icon="✓"
           progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
         />
-        <StatCard label="Grupos pendientes" value={t ? t.groupsPending : pendientes} icon="◔" />
+        <StatCard label="Pendientes" value={t ? t.groupsPending : pendientes} icon="◔" />
         <StatCard label="Personas dentro" value={llegadas ? llegadas.headsInside : '—'} icon="⛩" />
       </div>
 
@@ -125,6 +154,81 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           )}
         </PanelCard>
 
+
+        <div className="grid gap-4.5 lg:grid-cols-2">
+          <PanelCard
+            action={
+              <Link
+                className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase"
+                href={`/panel/eventos/${event.value.slug}/mesas`}
+              >
+                Editar asignaciones →
+              </Link>
+            }
+            title="Distribución de mesas"
+          >
+            {mesas === null ? (
+              <p className="text-[13px] text-ink-mute">El plan de este evento no incluye el plano del salón.</p>
+            ) : mesas.tables.length === 0 ? (
+              <p className="text-[13px] text-ink-mute">Todavía no hay mesas. Se crean en la sección Mesas.</p>
+            ) : (
+              <>
+                <ul className="flex flex-wrap gap-2.5">
+                  {mesas.tables.map((mesa) => {
+                    const sentados = mesa.taken
+                    return (
+                      <li
+                        key={mesa.id}
+                        className="flex size-20 flex-col items-center justify-center rounded-full border border-line bg-bg-top text-center"
+                      >
+                        <span className="font-mono text-[10px] text-ink-mute uppercase">{mesa.label}</span>
+                        <span className="font-mono text-[13px] text-ink">
+                          {sentados}/{sentados + mesa.free}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <p className="mt-4 flex justify-between font-mono text-[11px] text-ink-mute">
+                  <span>{mesas.tables.length} mesas</span>
+                  <span>{mesas.unseated.length} grupos sin mesa</span>
+                </p>
+              </>
+            )}
+          </PanelCard>
+
+          <PanelCard title="Acciones rápidas">
+            <div className="flex flex-col gap-2.5">
+              {[
+                { href: `/panel/eventos/${event.value.slug}/invitados`, t: 'Invitar a un grupo', d: 'Genera su enlace propio' },
+                { href: `/panel/eventos/${event.value.slug}/configuracion`, t: 'Editar la invitación', d: 'Fecha, plantilla e idioma' },
+                { href: `/panel/eventos/${event.value.slug}/mensajes`, t: 'Leer los mensajes', d: `${sinLeerResumen} sin leer` },
+                { href: `/panel/eventos/${event.value.slug}/checkin`, t: 'Preparar la puerta', d: 'Escáner y lista de llegada' },
+              ].map((accion) => (
+                <Link
+                  key={accion.href}
+                  className="flex flex-col gap-0.5 rounded-2xl border border-line bg-bg-top/60 px-4 py-3 transition-colors hover:border-gold/50"
+                  href={accion.href}
+                >
+                  <span className="text-[14px] text-ink">{accion.t}</span>
+                  <span className="text-[11px] text-ink-mute">{accion.d}</span>
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-4 text-white">
+              <p className="font-mono text-[9px] tracking-[0.3em] opacity-85 uppercase">Recordatorio</p>
+              <p className="mt-1.5 font-display text-[20px] italic">Fecha límite de confirmación</p>
+              <p className="mt-1.5 text-[12px] opacity-85">
+                {new Date(`${event.value.rsvpDeadline}T00:00:00`).toLocaleDateString('es-BO', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+            </div>
+          </PanelCard>
+        </div>
       </div>
     </>
   )
