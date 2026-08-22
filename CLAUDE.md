@@ -22,12 +22,15 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/plans/2026-08-21-mesas.md` | Consultar cómo se construyó el ciclo 4 rebanada 1: 16 tareas |
 | `docs/superpowers/specs/2026-08-21-checkin-qr-design.md` | Entender el check-in por QR y la puerta sin conexión (ciclo 3, rebanada 3) |
 | `docs/superpowers/plans/2026-08-21-checkin-qr.md` | Consultar cómo se construyó la rebanada 3 del ciclo 3: 20 tareas |
+| `docs/superpowers/specs/2026-08-21-regalos-design.md` | Entender la mesa de regalos y los fondos en efectivo (ciclo 4, rebanada 2) |
+| `docs/superpowers/plans/2026-08-21-regalos.md` | Consultar cómo se construyó el ciclo 4 rebanada 2: 12 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
-**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y ciclo 4 rebanada 1 —mesas y plano del
-salón— cerrados y fusionados a `main`.** 604 pruebas unitarias y 35 e2e en verde.
+**Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y ciclo 4 rebanadas 1 y 2 —mesas y
+plano del salón, mesa de regalos y fondos— cerrados y fusionados a `main`.** 814 pruebas
+unitarias y 37 e2e en verde.
 
 El atelier crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
@@ -38,6 +41,11 @@ sin deshacer lo colocado a mano, coloca mesas y zonas sobre un plano e imprime e
 del banquete. **El número de mesa ya no es un hueco pendiente en la puerta**: la tarjeta
 verde lo canta al escanear, y viaja en el manifiesto, así que funciona sin red.
 
+Y ya tiene mesa de regalos: el atelier carga regalos con precio y tienda, abre fondos en
+efectivo con su meta y registra lo que llega; el invitado ve la lista en su propia
+invitación y **reserva** un regalo, que deja de estar disponible para los demás en ese
+mismo instante.
+
 Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
 
 Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
@@ -47,6 +55,38 @@ rebanada 2 tiene diseño hablado y **no** escrito: rotar el enlace al reenviar,
 importación masiva con CSV y tabla de resultado, plantilla de mensaje por evento y
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
+
+### Notas de la mesa de regalos (`src/modules/registry/`)
+
+- **Todo importe es un entero en centavos.** `parseAmount` separa la parte entera de la
+  decimal como cadenas y las concatena; **nunca** hay un `parseFloat` sobre el importe
+  completo, porque `parseFloat('1234.50') * 100` da `123449.99999999999`. Un descuadre de
+  céntimos no tiene arreglo después: los datos ya quedaron mal escritos. `formatAmount`
+  pasa el importe a `Intl` como cadena decimal por el mismo motivo.
+- **La reserva la decide la base, no la aplicación.** `claimIfAvailable` es un solo
+  `UPDATE ... WHERE id = $1 AND status = 'available' RETURNING id` y devuelve un
+  **booleano**, no el regalo. Un `SELECT` seguido de un `UPDATE` deja una ventana por la
+  que caben dos reservas del mismo regalo, y eso no aparece jamás en desarrollo. Hay una
+  prueba con `Promise.all` contra Postgres real —dos y diez reservas simultáneas— que es
+  la única que lo demuestra; se verificó que falla con la versión ingenua.
+- **`actions.ts` tiene dos bloques separados y comentados.** Arriba las del panel, que
+  empiezan por `requireSession()`. Abajo las del invitado, que **no** tienen sesión: se
+  autorizan por token con el mismo `resolveByToken` que el RSVP. Añadir una acción del
+  atelier en el bloque de abajo la dejaría sin sesión.
+- **La URL de tienda solo admite `http` y `https`**, validada con el constructor de `URL`.
+  Ese enlace acaba siendo un `<a href>` que el invitado pulsa: un `javascript:` ahí sería
+  un agujero abierto por el propio panel.
+- **Comprado es definitivo.** No vuelve a ningún estado, ni para el atelier, y la tarjeta
+  no ofrece ni un botón deshabilitado para intentarlo.
+- **La página del invitado dice que un regalo está reservado, pero no por quién.** El
+  panel sí muestra la etiqueta del grupo; la invitación no, porque es un dato de otro
+  invitado.
+- **La moneda es `DEFAULT_CURRENCY` en `domain/money.ts`, no `events.currency`.** El spec
+  daba esa columna por existente y **no existe**. Cuando se añada, ese es el único sitio
+  que hay que tocar.
+- **La retención anonimiza `fund_contributions.display_name` y `message`, y conserva los
+  importes.** La contabilidad de la pareja no es un dato personal y borrarla dejaría los
+  fondos descuadrados.
 
 ### Notas del salón (`src/modules/venue/`)
 
