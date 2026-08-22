@@ -208,6 +208,11 @@ el aviso con `turbopack: {}` deja de generar el Service Worker sin decir nada. E
 de ficheros del `output: standalone` se queda sin memoria bajo webpack con el heap por
 defecto, de ahí el `NODE_OPTIONS` del script.
 
+**Si las e2e fallan en masa con «This page couldn't load», mata el 3100 antes de mirar el
+código**: `lsof -ti :3100 | xargs kill -9`. `reuseExistingServer` reaprovecha un
+`next start` de una sesión anterior, que sirve un `.next` que ya no coincide con el disco.
+Son fallos falsos, y en esta sesión costaron 23 de golpe.
+
 Las e2e usan el **puerto 3100**, no el 3000: en esta máquina hay servidores de otros
 proyectos que toman el 3000 y `reuseExistingServer` acabaría probando la aplicación
 equivocada. Ha pasado.
