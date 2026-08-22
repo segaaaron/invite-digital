@@ -60,6 +60,12 @@ export interface MobileDictionary {
   shots: readonly [MobileShot, MobileShot]
 }
 
+export interface CollectionScene {
+  tag: string
+  name: string
+  alt: string
+}
+
 export interface CollectionsDictionary {
   eyebrow: string
   title: string
@@ -68,6 +74,8 @@ export interface CollectionsDictionary {
   next: string
   backToHome: string
   errorMessage: string
+  /** Las nueve escenas de la maqueta, en su orden. */
+  scenes: readonly CollectionScene[]
 }
 
 export interface ComparisonDictionary {

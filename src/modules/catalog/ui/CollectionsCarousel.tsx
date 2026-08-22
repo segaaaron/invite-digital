@@ -2,16 +2,28 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import { useState } from 'react'
+import Image from 'next/image'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
-import type { Template } from '../domain/template'
-import { TemplateCard } from './TemplateCard'
 
-type Props = { templates: readonly Template[]; dictionary: Dictionary }
+export type CarouselSlide = {
+  readonly key: string
+  readonly tag: string
+  readonly name: string
+  readonly alt: string
+  readonly src: string
+}
 
-export function CollectionsCarousel({ templates, dictionary }: Props) {
+type Props = { slides: readonly CarouselSlide[]; dictionary: Dictionary }
+
+/**
+ * El carrusel de escenas de la maqueta: fotografía a sangre y, debajo, la celebración y
+ * el nombre de la escena. Antes enseñaba las plantillas del catálogo, que es lo que la
+ * maqueta pone en «Modelos», no aquí.
+ */
+export function CollectionsCarousel({ slides, dictionary }: Props) {
   const [index, setIndex] = useState(0)
-  const last = Math.max(templates.length - 1, 0)
-  const active = templates[index]
+  const last = Math.max(slides.length - 1, 0)
+  const active = slides[index]
   const reduceMotion = useReducedMotion()
 
   const go = (delta: number) => setIndex((current) => Math.min(Math.max(current + delta, 0), last))
@@ -27,9 +39,19 @@ export function CollectionsCarousel({ templates, dictionary }: Props) {
         onDragEnd={(_, info) => go(info.offset.x < -60 ? 1 : info.offset.x > 60 ? -1 : 0)}
         transition={reduceMotion ? { duration: 0 } : { type: 'spring', stiffness: 90, damping: 20 }}
       >
-        {templates.map((template, i) => (
-          <li aria-current={i === index ? 'true' : undefined} className="shrink-0" key={template.slug} role="group">
-            <TemplateCard dictionary={dictionary} template={template} />
+        {slides.map((slide, i) => (
+          <li aria-current={i === index ? 'true' : undefined} className="w-[280px] shrink-0" key={slide.key} role="group">
+            <figure className="overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-bg-raised shadow-[var(--shadow-lift)]">
+              <div className="relative aspect-3/4">
+                <Image alt={slide.alt} className="object-cover" fill sizes="280px" src={slide.src} />
+              </div>
+              <figcaption className="flex flex-col gap-1 px-5 py-4">
+                <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">
+                  {slide.tag}
+                </span>
+                <span className="font-display text-[19px] text-ink">{slide.name}</span>
+              </figcaption>
+            </figure>
           </li>
         ))}
       </motion.ul>

@@ -64,6 +64,17 @@ export const es = {
     next: 'Siguiente',
     backToHome: 'Volver al inicio',
     errorMessage: 'No pudimos cargar las colecciones en este momento. Escríbenos y te mostramos los modelos disponibles.',
+    scenes: [
+      { tag: 'Boda', name: 'Ceremonia Clásica', alt: 'Novios saliendo del arco floral' },
+      { tag: 'Boda', name: 'Primer Baile', alt: 'Primer baile de los novios en la recepción' },
+      { tag: 'XV Años', name: 'Jardín de Rosas', alt: 'Quinceañera en jardín de rosas' },
+      { tag: 'XV Años', name: 'Nocturno Nacarado', alt: 'Quinceañera en limusina con luces' },
+      { tag: 'Despedida de soltera', name: 'Champán Rosé', alt: 'Despedida de soltera con confeti' },
+      { tag: 'Despedida de soltera', name: 'Terraza al Atardecer', alt: 'Amigas brindando en terraza al atardecer' },
+      { tag: 'Despedida de soltero', name: 'Última Ronda', alt: 'Despedida de soltero en bar' },
+      { tag: 'Despedida de soltero', name: 'Terraza Nocturna', alt: 'Amigos brindando en rooftop de noche' },
+      { tag: 'Graduación', name: 'Laurel Azul', alt: 'Entrega de diploma en la ceremonia de graduación' },
+    ],
   },
   comparison: {
     eyebrow: 'Comparativa',

@@ -26,6 +26,19 @@ import { HeroCanvas } from '@/three/HeroCanvas'
 // hit a database in the same compose network, so the cost is a couple of milliseconds.
 export const dynamic = 'force-dynamic'
 
+/** Las nueve escenas de la maqueta, en el mismo orden que el diccionario. */
+const ESCENAS = [
+  '/site/colecciones/bodas-1.avif',
+  '/site/colecciones/bodas-2.avif',
+  '/site/colecciones/xv-1.avif',
+  '/site/colecciones/xv-2.avif',
+  '/site/colecciones/despedida-ella-1.avif',
+  '/site/colecciones/despedida-ella-2.avif',
+  '/site/colecciones/despedida-el-1.avif',
+  '/site/colecciones/despedida-el-2.avif',
+  '/site/colecciones/graduacion-1.avif',
+] as const
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale: raw } = await params
   const locale = parseLocaleParam(raw)
@@ -123,7 +136,16 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
               <p className="text-[13px] text-ink-mute">{dictionary.collections.hint}</p>
             </div>
             <div className="mt-14 flex justify-center">
-              <CollectionsCarousel dictionary={dictionary} templates={templates} />
+              <CollectionsCarousel
+                dictionary={dictionary}
+                slides={dictionary.collections.scenes.map((scene, i) => ({
+                  key: `${scene.tag}-${scene.name}`,
+                  tag: scene.tag,
+                  name: scene.name,
+                  alt: scene.alt,
+                  src: ESCENAS[i] ?? ESCENAS[0]!,
+                }))}
+              />
             </div>
           </div>
         </section>

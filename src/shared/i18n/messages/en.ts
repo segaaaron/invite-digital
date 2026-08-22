@@ -64,6 +64,17 @@ export const en = {
     next: 'Next',
     backToHome: 'Back to home',
     errorMessage: "We couldn't load the collections right now. Message us and we'll show you the available designs.",
+    scenes: [
+      { tag: 'Wedding', name: 'Classic Ceremony', alt: 'The couple leaving the floral arch' },
+      { tag: 'Wedding', name: 'First Dance', alt: 'The couple’s first dance at the reception' },
+      { tag: 'Quinceañera', name: 'Rose Garden', alt: 'A quinceañera in a rose garden' },
+      { tag: 'Quinceañera', name: 'Pearl Nocturne', alt: 'A quinceañera in a limousine at night' },
+      { tag: 'Hen party', name: 'Rosé Champagne', alt: 'A hen party with confetti' },
+      { tag: 'Hen party', name: 'Terrace at Dusk', alt: 'Friends toasting on a terrace at dusk' },
+      { tag: 'Stag party', name: 'Last Round', alt: 'A stag party at a bar' },
+      { tag: 'Stag party', name: 'Night Rooftop', alt: 'Friends toasting on a rooftop at night' },
+      { tag: 'Graduation', name: 'Blue Laurel', alt: 'A diploma handed over at the graduation ceremony' },
+    ],
   },
   comparison: {
     eyebrow: 'Comparison',
