@@ -1,5 +1,6 @@
 'use client'
 
+import jsQR from 'jsqr'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction } from '../actions'
 import type { ScanOutcome } from '../application/check-in-by-scan'
@@ -25,6 +26,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
   const [arrivals, setArrivals] = useState<readonly ResolvedArrival[]>(manifest.arrivals)
   const [cameraMessage, setCameraMessage] = useState('Encendiendo la cámara…')
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const lastRef = useRef<{ code: string; at: number }>({ code: '', at: 0 })
   const typedRef = useRef<{ buffer: string; at: number }>({ buffer: '', at: 0 })
   // La cámara no puede reiniciarse cada vez que aparece una tarjeta: el bucle lee estas
@@ -128,21 +130,40 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
       video.srcObject = stream
       await video.play().catch(() => {})
 
-      const Detector = window.BarcodeDetector
-      if (!Detector) {
-        setCameraMessage('Este navegador no lee códigos con la cámara. Busca al invitado por su nombre.')
-        return
-      }
       setCameraMessage('')
-      const detector = new Detector({ formats: ['qr_code'] })
+
+      // `BarcodeDetector` es nativo y mucho más rápido donde existe —Android y
+      // ChromeOS—, pero no está en Safari ni en el Chromium de Playwright. jsQR sobre
+      // un canvas es el respaldo: más lento, pero el mismo QR y en todas partes.
+      const Detector = window.BarcodeDetector
+      const detector = Detector ? new Detector({ formats: ['qr_code'] }) : null
+
+      const readWithJsQr = (): string | null => {
+        const canvas = (canvasRef.current ??= document.createElement('canvas'))
+        const context = canvas.getContext('2d', { willReadFrequently: true })
+        if (!context || video.videoWidth === 0) return null
+        // Se reduce el lado largo: jsQR recorre cada píxel y a resolución de cámara
+        // completa no cabe en la ventana de 110 ms.
+        const scale = Math.min(1, 640 / video.videoWidth)
+        canvas.width = Math.round(video.videoWidth * scale)
+        canvas.height = Math.round(video.videoHeight * scale)
+        context.drawImage(video, 0, 0, canvas.width, canvas.height)
+        const frame = context.getImageData(0, 0, canvas.width, canvas.height)
+        return jsQR(frame.data, frame.width, frame.height, { inversionAttempts: 'dontInvert' })?.data ?? null
+      }
 
       const tick = async () => {
         if (stopped) return
         timer = setTimeout(() => void tick(), SCAN_MS)
         if (busyRef.current || video.readyState !== video.HAVE_ENOUGH_DATA) return
-        const codes = await detector.detect(video).catch(() => [])
-        const first = codes[0]
-        if (first?.rawValue) onCode(first.rawValue)
+        if (detector) {
+          const codes = await detector.detect(video).catch(() => [])
+          const first = codes[0]
+          if (first?.rawValue) onCode(first.rawValue)
+          return
+        }
+        const found = readWithJsQr()
+        if (found) onCode(found)
       }
       void tick()
     }
