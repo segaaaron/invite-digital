@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // El Service Worker no vive en el DOM: sus tipos son los de WebWorker. Mezclarlos
+    // con `dom` en el tsconfig principal hace que `self` signifique dos cosas a la vez,
+    // así que el trabajador se comprueba aparte.
+    "lib": ["webworker", "esnext"],
+    "types": ["@serwist/next/typings"]
+  },
+  "include": ["src/app/sw.ts"],
+  "exclude": []
+}

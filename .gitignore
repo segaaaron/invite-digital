@@ -62,3 +62,8 @@ storage/
 
 # Cookie de sesión que genera el setup de Playwright
 tests/e2e/.auth
+
+# Service Worker generado por Serwist en cada build. Versionarlo dejaría a la puerta
+# sirviendo el JS del último commit en vez del de la imagen desplegada.
+/public/sw.js
+/public/sw.js.map

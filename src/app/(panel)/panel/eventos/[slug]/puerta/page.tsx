@@ -4,6 +4,12 @@ import { DoorMode } from '@/modules/checkin/ui/DoorMode'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 
+// El modo puerta se instala en la pantalla de inicio: es como lo va a usar el personal.
+export const metadata = {
+  title: 'Modo puerta',
+  manifest: '/manifest.webmanifest',
+}
+
 // El manifiesto cambia con cada llegada y con cada grupo nuevo: esta página no se cachea.
 export const dynamic = 'force-dynamic'
 
