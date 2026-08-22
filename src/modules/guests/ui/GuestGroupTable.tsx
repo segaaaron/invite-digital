@@ -1,4 +1,4 @@
-import { revokeInvitationAction } from '../actions'
+import { RevokeInvitationForm } from './RevokeInvitationForm'
 
 export type GuestGroupRowView = {
   readonly id: string
@@ -41,13 +41,7 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
             </td>
             <td className="border-b border-[var(--color-line)] py-4 text-right">
               {row.revokedAt === null ? (
-                <form action={revokeInvitationAction}>
-                  <input name="groupId" type="hidden" value={row.id} readOnly />
-                  <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
-                  <button className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep" type="submit">
-                    Revocar
-                  </button>
-                </form>
+                <RevokeInvitationForm eventSlug={eventSlug} groupId={row.id} />
               ) : null}
             </td>
           </tr>

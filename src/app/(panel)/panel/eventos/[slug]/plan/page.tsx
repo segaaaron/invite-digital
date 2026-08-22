@@ -3,9 +3,9 @@ import { notFound } from 'next/navigation'
 import { events, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import type { Allowance } from '@/modules/plans'
-import { applyPlanChangeAction, rejectPlanChangeAction } from '@/modules/plans/actions'
 import { PlanCard } from '@/modules/plans/ui/PlanCard'
 import { PlanChangeForm } from '@/modules/plans/ui/PlanChangeForm'
+import { PlanDecisionForms } from '@/modules/plans/ui/PlanDecisionForms'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Plan' }
@@ -13,7 +13,6 @@ export const metadata = { title: 'Plan' }
 // El plan cambia en cuanto el atelier aplica una solicitud: esta página no se cachea.
 export const dynamic = 'force-dynamic'
 
-const BOTON = 'rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink'
 
 export default async function PlanPage({ params }: { params: Promise<{ slug: string }> }) {
   await requireSession()
@@ -81,22 +80,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
             <p className="text-[12px] text-ink-mute">
               El cobro se acuerda fuera del sistema. Aplícala cuando esté pagada; el plan del evento cambia en ese momento.
             </p>
-            <div className="flex items-center gap-3">
-              <form action={applyPlanChangeAction}>
-                <input name="requestId" type="hidden" value={pendiente.value.id} readOnly />
-                <input name="eventSlug" type="hidden" value={event.value.slug} readOnly />
-                <button className={BOTON} type="submit">
-                  Aplicar el cambio
-                </button>
-              </form>
-              <form action={rejectPlanChangeAction}>
-                <input name="requestId" type="hidden" value={pendiente.value.id} readOnly />
-                <input name="eventSlug" type="hidden" value={event.value.slug} readOnly />
-                <button className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" type="submit">
-                  Descartar
-                </button>
-              </form>
-            </div>
+            <PlanDecisionForms eventSlug={event.value.slug} requestId={pendiente.value.id} />
           </div>
         )}
       </section>

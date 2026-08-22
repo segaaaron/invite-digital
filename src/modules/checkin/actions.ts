@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { checkin, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
+import type { CheckinErrorKind } from './domain/errors'
 import type { ScanOutcome } from './application/check-in-by-scan'
 
 /**
@@ -96,27 +97,49 @@ export async function checkInByGroupAction(input: {
   return result.value
 }
 
+/**
+ * Corregir y deshacer devuelven estado, no `void`.
+ *
+ * La pantalla de la puerta se corrige antes de que el servidor conteste —a la puerta no
+ * se la hace esperar—, así que un fallo silencioso deja el contador diciendo una cosa y
+ * la base otra durante el resto de la noche. Quien está en la puerta tiene que enterarse
+ * en ese momento.
+ */
+export type DoorActionState = { status: 'success' } | { status: 'error'; kind: CheckinErrorKind }
+
 export async function adjustArrivalAction(input: {
   eventId: string
   scanId: string
   arrivedCount: number
   eventSlug: string
-}): Promise<void> {
+}): Promise<DoorActionState> {
   await requireSession()
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.adjust({ scanId: input.scanId, arrivedCount: input.arrivedCount })
-  if (isErr(result)) console.error('corrección rechazada', result.error.kind, result.error.detail)
+  if (isErr(result)) {
+    console.error('corrección rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', kind: result.error.kind }
+  }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  return { status: 'success' }
 }
 
-export async function voidArrivalAction(input: { eventId: string; scanId: string; eventSlug: string }): Promise<void> {
+export async function voidArrivalAction(input: {
+  eventId: string
+  scanId: string
+  eventSlug: string
+}): Promise<DoorActionState> {
   await requireSession()
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.void({ scanId: input.scanId })
-  if (isErr(result)) console.error('deshacer rechazado', result.error.kind, result.error.detail)
+  if (isErr(result)) {
+    console.error('deshacer rechazado', result.error.kind, result.error.detail)
+    return { status: 'error', kind: result.error.kind }
+  }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
+  return { status: 'success' }
 }

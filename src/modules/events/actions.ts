@@ -76,11 +76,24 @@ export async function createClientShareAction(_previous: ClientShareState, formD
   }
 }
 
-export async function revokeClientShareAction(formData: FormData): Promise<void> {
+export type RevokeShareState = { status: 'idle' } | { status: 'success' } | { status: 'error' }
+
+/**
+ * Devuelve estado, no `void`. Antes, si la revocación fallaba, el panel volvía a
+ * pintarse igual y el enlace del cliente seguía vivo sin que nadie lo supiera.
+ */
+export async function revokeClientShareAction(
+  _previous: RevokeShareState,
+  formData: FormData,
+): Promise<RevokeShareState> {
   await requireSession()
 
   const result = await eventUseCases.revokeShare(String(formData.get('shareId') ?? ''))
-  if (isErr(result)) console.error('revocación de enlace rechazada', result.error.kind, result.error.detail)
+  if (isErr(result)) {
+    console.error('revocación de enlace rechazada', result.error.kind, result.error.detail)
+    return { status: 'error' }
+  }
 
   revalidatePath(`/panel/eventos/${String(formData.get('eventSlug') ?? '')}`)
+  return { status: 'success' }
 }

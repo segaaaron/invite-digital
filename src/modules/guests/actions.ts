@@ -57,11 +57,31 @@ export async function addGuestGroupAction(_previous: AddGuestGroupState, formDat
   return { status: 'success', label: result.value.group.label, url: invitationUrl(result.value.token, env.SITE_URL) }
 }
 
-export async function revokeInvitationAction(formData: FormData): Promise<void> {
+export type RevokeInvitationState =
+  | { status: 'idle' }
+  | { status: 'success' }
+  | { status: 'error'; message: GuestErrorKind }
+
+/**
+ * Devuelve estado, no `void`. Antes registraba el fallo en la consola del servidor y
+ * respondía lo mismo tanto si había revocado como si no: el atelier se quedaba creyendo
+ * que había cortado el acceso a alguien cuando no lo había cortado.
+ *
+ * El detalle no cruza —puede llevar identificadores—; cruza la clase, y la pantalla la
+ * traduce.
+ */
+export async function revokeInvitationAction(
+  _previous: RevokeInvitationState,
+  formData: FormData,
+): Promise<RevokeInvitationState> {
   await requireSession()
 
   const result = await guests.revoke(String(formData.get('groupId') ?? ''))
-  if (isErr(result)) console.error('revocación rechazada', result.error.kind, result.error.detail)
+  if (isErr(result)) {
+    console.error('revocación rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.kind }
+  }
 
   revalidatePath(`/panel/eventos/${String(formData.get('eventSlug') ?? '')}`)
+  return { status: 'success' }
 }

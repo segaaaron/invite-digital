@@ -37,23 +37,43 @@ export async function requestPlanChangeAction(_previous: PlanChangeState, formDa
  * Aplica la solicitud, ya cobrada fuera del sistema. Revalida también la página del
  * evento: los límites que se enseñan allí acaban de cambiar.
  */
-export async function applyPlanChangeAction(formData: FormData): Promise<void> {
+/**
+ * Resolver una solicitud devuelve estado, no `void`. Un cambio de plan que se cree
+ * aplicado y no lo está es dinero cobrado por un cupo que el evento no tiene.
+ */
+export type PlanDecisionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; kind: PlansErrorKind }
+
+export async function applyPlanChangeAction(
+  _previous: PlanDecisionState,
+  formData: FormData,
+): Promise<PlanDecisionState> {
   await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
   const result = await plans.applyChange(String(formData.get('requestId') ?? ''))
-  if (isErr(result)) console.error('cambio de plan no aplicado', result.error.kind, result.error.detail)
+  if (isErr(result)) {
+    console.error('cambio de plan no aplicado', result.error.kind, result.error.detail)
+    return { status: 'error', kind: result.error.kind }
+  }
 
   revalidatePath(`/panel/eventos/${eventSlug}/plan`)
   revalidatePath(`/panel/eventos/${eventSlug}`)
+  return { status: 'success' }
 }
 
-export async function rejectPlanChangeAction(formData: FormData): Promise<void> {
+export async function rejectPlanChangeAction(
+  _previous: PlanDecisionState,
+  formData: FormData,
+): Promise<PlanDecisionState> {
   await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
   const result = await plans.rejectChange(String(formData.get('requestId') ?? ''))
-  if (isErr(result)) console.error('solicitud no rechazada', result.error.kind, result.error.detail)
+  if (isErr(result)) {
+    console.error('solicitud no rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', kind: result.error.kind }
+  }
 
   revalidatePath(`/panel/eventos/${eventSlug}/plan`)
+  return { status: 'success' }
 }

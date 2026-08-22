@@ -26,6 +26,12 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [arrivals, setArrivals] = useState<readonly ResolvedArrival[]>(manifest.arrivals)
+  /**
+   * Lo que el servidor rechazó después de que la pantalla ya se hubiera corregido. A la
+   * puerta no se la hace esperar, así que el contador de arriba puede quedarse diciendo
+   * una cosa y la base otra: eso hay que cantarlo en el momento, no al cerrar el salón.
+   */
+  const [desajuste, setDesajuste] = useState<string | null>(null)
   const [cameraMessage, setCameraMessage] = useState('Encendiendo la cámara…')
   const [pending, setPending] = useState(0)
   const outboxRef = useRef<Promise<Outbox | null> | null>(null)
@@ -293,6 +299,17 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
         )}
       </header>
 
+      {desajuste === null ? null : (
+        <div className="relative z-10 px-4">
+          <p className="rounded-[14px] bg-danger px-4 py-3 font-mono text-[11px] text-white" role="alert">
+            {desajuste}{' '}
+            <button className="underline" onClick={() => setDesajuste(null)} type="button">
+              Entendido
+            </button>
+          </p>
+        </div>
+      )}
+
       <div className="relative z-10 flex flex-1 items-center justify-center">
         {cameraMessage ? <p className="max-w-80 text-center text-[13px] text-white/70">{cameraMessage}</p> : null}
       </div>
@@ -319,7 +336,9 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
                 outcome.kind !== 'unknown' && a.guestGroupId === outcome.group.id ? { ...a, arrivedCount } : a,
               ),
             )
-            void adjustArrivalAction({ eventId, scanId, arrivedCount, eventSlug })
+            void adjustArrivalAction({ eventId, scanId, arrivedCount, eventSlug }).then((r) => {
+              if (r.status === 'error') setDesajuste('No se pudo corregir la cantidad. El contador de arriba no es el del servidor.')
+            })
           }}
           onUndo={(scanId) => {
             // Deshacer retira al grupo del contador, no reinicia la lista entera: en la
@@ -329,7 +348,9 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
               setArrivals((prev) => prev.filter((a) => a.guestGroupId !== groupId))
             }
             setOutcome(null)
-            void voidArrivalAction({ eventId, scanId, eventSlug })
+            void voidArrivalAction({ eventId, scanId, eventSlug }).then((r) => {
+              if (r.status === 'error') setDesajuste('No se pudo deshacer la llegada. Sigue registrada en el servidor.')
+            })
           }}
           onDismiss={() => {
             lastRef.current = { code: lastRef.current.code, at: Date.now() }

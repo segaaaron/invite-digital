@@ -2,9 +2,15 @@
 
 import { useActionState } from 'react'
 import { CopyLinkButton } from '@/modules/guests/ui/CopyLinkButton'
-import { createClientShareAction, revokeClientShareAction, type ClientShareState } from '../actions'
+import {
+  createClientShareAction,
+  revokeClientShareAction,
+  type ClientShareState,
+  type RevokeShareState,
+} from '../actions'
 
 const INITIAL: ClientShareState = { status: 'idle' }
+const INITIAL_REVOKE: RevokeShareState = { status: 'idle' }
 
 type Props = {
   eventId: string
@@ -14,6 +20,7 @@ type Props = {
 
 export function ClientSharePanel({ eventId, eventSlug, live }: Props) {
   const [state, formAction, isPending] = useActionState(createClientShareAction, INITIAL)
+  const [revokeState, revokeAction, isRevoking] = useActionState(revokeClientShareAction, INITIAL_REVOKE)
 
   return (
     <div className="flex flex-col gap-4 rounded-[18px] border border-[var(--color-line)] p-6">
@@ -34,14 +41,30 @@ export function ClientSharePanel({ eventId, eventSlug, live }: Props) {
           </button>
         </form>
       ) : (
-        <form action={revokeClientShareAction} className="flex items-center justify-between gap-4">
-          <input name="shareId" type="hidden" value={live.id} readOnly />
-          <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
-          <p className="text-[13px] text-ink">{`Hay un enlace activo hasta el ${live.expiresAt}.`}</p>
-          <button className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep" type="submit">
-            Revocar enlace
-          </button>
-        </form>
+        <>
+          <form action={revokeAction} className="flex items-center justify-between gap-4">
+            <input name="shareId" type="hidden" value={live.id} readOnly />
+            <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
+            <p className="text-[13px] text-ink">{`Hay un enlace activo hasta el ${live.expiresAt}.`}</p>
+            <button
+              className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
+              disabled={isRevoking}
+              type="submit"
+            >
+              {isRevoking ? 'Revocando…' : 'Revocar enlace'}
+            </button>
+          </form>
+
+          {/*
+            Que el enlace sigue vivo es lo importante del aviso: sin él, el atelier da
+            por hecho que lo cortó y el cliente conserva el acceso.
+          */}
+          {revokeState.status === 'error' ? (
+            <p className="text-[13px] text-danger" role="alert">
+              No pudimos revocar el enlace. Sigue activo; inténtalo en un momento.
+            </p>
+          ) : null}
+        </>
       )}
 
       {state.status === 'success' ? (
