@@ -21,7 +21,12 @@ const FIELD_CLASS =
 
 const LABEL_CLASS = 'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
 
-export function GuestGroupForm({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
+/**
+ * `atLimit` deshabilita el formulario cuando el plan ya no admite más grupos. Es
+ * cortesía, no protección: el corte de verdad está en la acción, que es un extremo HTTP
+ * público y comprueba el límite en el servidor con o sin este atributo.
+ */
+export function GuestGroupForm({ eventId, eventSlug, atLimit = false }: { eventId: string; eventSlug: string; atLimit?: boolean }) {
   const [state, formAction, isPending] = useActionState(addGuestGroupAction, INITIAL)
   const labelId = useId()
   const seatsId = useId()
@@ -52,7 +57,7 @@ export function GuestGroupForm({ eventId, eventSlug }: { eventId: string; eventS
 
         <button
           className="self-start rounded-[var(--radius-pill)] bg-gold px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised disabled:cursor-not-allowed disabled:opacity-60"
-          disabled={isPending}
+          disabled={isPending || atLimit}
           type="submit"
         >
           {isPending ? 'Creando…' : 'Crear invitación'}

@@ -1,12 +1,14 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, guestbook, guests, rsvp } from '@/app/composition/container'
+import { events, guestbook, guests, plans, rsvp } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { unreadCount } from '@/modules/guestbook'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
+import { canAddGroup } from '@/modules/plans'
 import { TallyStrip } from '@/modules/rsvp/ui/TallyStrip'
 import { isErr } from '@/shared/result'
 
@@ -37,6 +39,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // descubrir que hay mensajes esperando, no entraría nadie.
   const libro = await guestbook.list(event.value.id)
   const sinLeer = isErr(libro) ? 0 : unreadCount(libro.value)
+
+  // Cuánto margen queda antes del límite del plan. Se resuelve aquí, en la página, y se
+  // le pasa al aviso: `guests` no sabe nada de planes.
+  const capacidad = await plans.allowanceFor(event.value.id)
+  const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
+  const grupos = isErr(groups) ? 0 : groups.value.length
 
   const tally = await rsvp.tally(event.value.id)
   const share = await events.liveShare(event.value.id)
@@ -70,6 +78,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           >
             Modo puerta
           </Link>
+          <Link
+            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
+            href={`/panel/eventos/${event.value.slug}/plan`}
+          >
+            Plan
+          </Link>
           <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href="/panel">
             Volver
           </Link>
@@ -80,7 +94,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       <section className="flex flex-col gap-5">
         <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Invitados</h2>
-        <GuestGroupForm eventId={event.value.id} eventSlug={event.value.slug} />
+        <AllowanceNotice currentGroups={grupos} eventSlug={event.value.slug} maxGuestGroups={limite} />
+        <GuestGroupForm atLimit={!canAddGroup(limite, grupos)} eventId={event.value.id} eventSlug={event.value.slug} />
         {isErr(groups) ? (
           <p className="text-[13px] text-gold-deep" role="alert">
             No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
