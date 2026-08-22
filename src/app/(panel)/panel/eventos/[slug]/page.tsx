@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, guestbook, guests, plans, rsvp } from '@/app/composition/container'
+import { checkin, events, guestbook, guests, plans, rsvp } from '@/app/composition/container'
+import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { unreadCount } from '@/modules/guestbook'
@@ -49,6 +50,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const tally = await rsvp.tally(event.value.id)
   const share = await events.liveShare(event.value.id)
 
+  // Cuánta gente ha llegado. Solo se lee si el plan trae la puerta: sin ella no hay
+  // llegadas que contar, y una tira de ceros haría creer que la recepción ya empezó.
+  // La comprobación vive aquí, en la página: `checkin` no sabe nada de planes.
+  const conPuerta = await plans.requireFeature(event.value.id, 'checkin')
+  const puerta = isErr(conPuerta) ? null : await checkin.state(event.value.id)
+  const llegadas = puerta === null || isErr(puerta) ? null : puerta.value.tally
+
   return (
     <div className="mx-auto flex max-w-[860px] flex-col gap-10 p-10">
       <header className="flex items-center justify-between gap-6">
@@ -91,6 +99,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </header>
 
       {isErr(tally) ? null : <TallyStrip tally={tally.value} />}
+
+      <ArrivalStrip tally={llegadas} />
 
       <section className="flex flex-col gap-5">
         <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Invitados</h2>
