@@ -17,6 +17,9 @@ export default async function PanelHomePage() {
           <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep" href="/panel/eventos/nuevo">
             Nuevo evento
           </Link>
+          <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href="/panel/ayuda">
+            Ayuda
+          </Link>
           <form action={signOutAction}>
             <button className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" type="submit">
               Cerrar sesión
