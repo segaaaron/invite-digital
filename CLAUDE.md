@@ -268,6 +268,11 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
   entera apuntando al **evento activo** —el de fecha más próxima, que es como los ordena
   el repositorio—. Sin ningún evento, esos enlaces se pintan apagados; no desaparecen.
   Una barra que encoge al cambiar de página es lo que había que quitar.
+- **La cámara vive solo en el modo puerta.** La sección Check-in del panel
+  (`/panel/eventos/[slug]/checkin`) es la de la maqueta: tarjeta con el icono ⛩ y el
+  botón que abre el modo puerta, buscador a mano, donut de progreso y últimas llegadas.
+  El escáner es para el celular o la tablet de la recepción; un vídeo encendido dentro
+  del panel de escritorio no sirve a nadie y falla donde no hay cámara.
 - **Ningún token en claro toca la base.** Invitados, sesiones y enlaces de cliente guardan solo
   SHA-256. Un token desconocido responde **404, nunca 403**.
 - **Toda Server Action del panel empieza por `requireSession()`.** Es un extremo HTTP público;

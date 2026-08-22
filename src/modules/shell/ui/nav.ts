@@ -44,7 +44,7 @@ export function panelNav(slug: string | null, counts: NavCounts = {}): NavSectio
         { href: en('/mesas'), label: 'Mesas', icon: '🪑' },
         { href: en('/regalos'), label: 'Mesa de regalos', icon: '🎁' },
         { href: en('/mensajes'), label: 'Mensajes', icon: '💬', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-        { href: en('/puerta'), label: 'Check-in', icon: '✓', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
+        { href: en('/checkin'), label: 'Check-in', icon: '✓', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
       ],
     },
     {
