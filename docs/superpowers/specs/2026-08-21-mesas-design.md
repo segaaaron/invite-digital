@@ -130,9 +130,29 @@ portátil y en una tablet, y los píxeles de uno no significan nada en el otro.
 
 Server Actions en `src/modules/venue/actions.ts`, todas abriendo con `requireSession()`.
 
-Arrastrar una mesa por el plano **no** dispara una acción por fotograma: el movimiento es
-local y se guarda al soltar. Un salón de sesenta mesas con guardado continuo son miles de
-escrituras que nadie necesita.
+### 5.1 Guardado del plano
+
+El plano **no guarda solo**. Arrastrar mueve la marca en local y nada más; los cambios se
+persisten con un botón **«Guardar cambios»**, acompañado de **«Descartar»** y de un
+contador de cuántos elementos están movidos sin guardar.
+
+Un plano se toquetea mucho antes de quedar bien. Guardar cada gesto convierte cada duda
+en una escritura y deja al atelier sin forma de volver atrás; y guardar por fotograma de
+arrastre son miles de escrituras por cada mesa que alguien mueve.
+
+Salir con cambios pendientes avisa, en dos niveles:
+
+- **Dentro de la aplicación** —otra sección del panel, cambiar de vista, «Volver»— un
+  modal propio con tres salidas: guardar, descartar o cancelar. Modal propio y no
+  `window.confirm`: los diálogos nativos no se pueden estilar, bloquean el hilo y quedan
+  fuera del idioma visual del panel.
+- **Cerrar la pestaña o recargar** — `beforeunload`, que es lo único que el navegador
+  permite ahí. El texto lo pone el navegador. Se registra solo mientras haya cambios
+  pendientes y se quita al guardar: si no, el aviso salta en cada recarga aunque no se
+  deba nada, y el atelier aprende a ignorarlo justo antes del día que sí importaba.
+
+Guardar manda **un solo lote** con todas las posiciones cambiadas, no una llamada por
+mesa.
 
 ## 6. Integración con la puerta
 
@@ -188,5 +208,6 @@ las mesas se cierran antes de que llegue el primer invitado.
 | Auto-asignación | Determinista, solo sobre lo no asignado | Cambiar una función pura |
 | Posiciones | Porcentaje, no píxeles | Ninguno; es lo que hace el plano responsivo |
 | Borrar mesa | Deja los grupos sin mesa | Ninguno; el lado conservador |
-| Guardado del arrastre | Al soltar, no en continuo | Ninguno |
+| Guardado del plano | Explícito, con botón y aviso al salir | Ninguno; volver al guardado automático es aditivo |
+| Escritura durante el arrastre | Nunca | Ninguno |
 | Menú por invitado | Fuera: necesita invitados por persona | Rebanada aparte cuando exista ese modelo |
