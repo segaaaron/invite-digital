@@ -44,6 +44,34 @@ export const createDrizzleGuestbookRepository = (database: DbExecutor): Guestboo
       .orderBy(desc(rsvpResponses.respondedAt))
   },
 
+  /**
+   * El último mensaje de un grupo. Mismo `leftJoin` por el mismo motivo: el invitado que
+   * acaba de escribir todavía no tiene nota, y la consulta tiene que devolverlo igual
+   * —con la respuesta a nulo— en vez de no devolver nada.
+   */
+  async findLatestMessageForGroup(guestGroupId): Promise<MessageRow | null> {
+    const [row] = await database
+      .select({
+        responseId: rsvpResponses.id,
+        guestGroupId: rsvpResponses.guestGroupId,
+        groupLabel: guestGroups.label,
+        body: rsvpResponses.message,
+        writtenAt: rsvpResponses.respondedAt,
+        readAt: messageNotes.readAt,
+        featuredAt: messageNotes.featuredAt,
+        reply: messageNotes.reply,
+        repliedAt: messageNotes.repliedAt,
+      })
+      .from(rsvpResponses)
+      .innerJoin(guestGroups, eq(guestGroups.id, rsvpResponses.guestGroupId))
+      .leftJoin(messageNotes, eq(messageNotes.rsvpResponseId, rsvpResponses.id))
+      .where(and(eq(rsvpResponses.guestGroupId, guestGroupId), isNotNull(rsvpResponses.message)))
+      .orderBy(desc(rsvpResponses.respondedAt))
+      .limit(1)
+
+    return row ?? null
+  },
+
   async findResponseEvent(responseId): Promise<ResponseContext | null> {
     const [row] = await database
       .select({

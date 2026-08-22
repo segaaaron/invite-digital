@@ -99,6 +99,9 @@ export const en = {
       rate_limited: 'Too many attempts. Wait a minute.',
     },
   },
+  guestbook: {
+    replyTitle: 'A note back from the hosts',
+  },
   testimonials: {
     eyebrow: 'Testimonials',
     title: 'What the people who lived it are saying',

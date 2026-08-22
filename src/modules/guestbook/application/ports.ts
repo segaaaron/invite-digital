@@ -40,6 +40,11 @@ export interface GuestbookRepository {
    * izquierda: un mensaje recién escrito todavía no tiene nota, y tiene que salir igual.
    */
   listMessages(eventId: string): Promise<MessageRow[]>
+  /**
+   * El último mensaje de un grupo, con su nota. Lo pide la página del invitado para
+   * enseñarle la respuesta a lo que él escribió, sin leer el libro entero del evento.
+   */
+  findLatestMessageForGroup(guestGroupId: string): Promise<MessageRow | null>
   findResponseEvent(responseId: string): Promise<ResponseContext | null>
   /** `INSERT ... ON CONFLICT DO UPDATE`: marcar leído dos veces actualiza, no revienta. */
   upsertNote(responseId: string, patch: NotePatch): Promise<void>

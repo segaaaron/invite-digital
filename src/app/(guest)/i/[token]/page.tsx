@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
-import { registry } from '@/app/composition/container'
+import { guestbook, registry } from '@/app/composition/container'
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
 import { DEFAULT_CURRENCY } from '@/modules/registry'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
@@ -27,10 +28,15 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   const { group, event, latest } = invitation.value
   const dictionary = getDictionary(event.locale).invitation
   const registryDictionary = getDictionary(event.locale).registry
+  const guestbookDictionary = getDictionary(event.locale).guestbook
 
   // La mesa de regalos es opcional: si la lectura falla, la invitación sigue en pie sin
   // ella. Que la base de regalos no responda no puede impedir confirmar la asistencia.
   const mesa = await registry.list(event.id)
+  // La respuesta de los anfitriones a lo que este grupo escribió. Nunca falla hacia
+  // arriba: sin respuesta y con la base caída se ven igual —sin nada—, y la invitación
+  // se abre en los dos casos.
+  const respuestaDelAtelier = await guestbook.replyForGroup(group.id)
   const { Component: Theme } = themeFor(event.themeKey)
   const abierto = acceptsResponses(event, new Date().toISOString().slice(0, 10))
 
@@ -57,6 +63,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           token={token}
         />
       )}
+
+      <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
 
       <PassQr
         url={invitationUrl(token, env.SITE_URL)}

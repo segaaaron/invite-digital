@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import { fakeGuestbookRepository, type FakeResponse } from './fake-guestbook-repository'
-import { listGuestbook, markRead, replyToMessage, toggleFeatured } from './guestbook-use-cases'
+import { getGuestReply, listGuestbook, markRead, replyToMessage, toggleFeatured } from './guestbook-use-cases'
 
 const EVENTO = 'evento-1'
 const OTRO_EVENTO = 'evento-2'
@@ -221,5 +221,60 @@ describe('replyToMessage', () => {
       text: 'Gracias',
     })
     expect(isErr(r) && r.error.kind).toBe('not_found')
+  })
+})
+
+describe('getGuestReply', () => {
+  it('devuelve la respuesta al último mensaje del grupo', async () => {
+    const fake = fakeGuestbookRepository({
+      responses: [respuesta()],
+      notes: [{ responseId: 'r1', readAt: null, featuredAt: null, reply: 'Gracias', repliedAt: AHORA }],
+    })
+
+    expect(await getGuestReply({ guestbook: fake.repo })('g1')).toBe('Gracias')
+  })
+
+  it('devuelve null si su mensaje no tiene respuesta', async () => {
+    const fake = fakeGuestbookRepository({ responses: [respuesta()] })
+    expect(await getGuestReply({ guestbook: fake.repo })('g1')).toBeNull()
+  })
+
+  it('devuelve null si el grupo no escribió nada', async () => {
+    const fake = fakeGuestbookRepository({ responses: [] })
+    expect(await getGuestReply({ guestbook: fake.repo })('g1')).toBeNull()
+  })
+
+  it('con dos mensajes del mismo grupo gana el más reciente', async () => {
+    const fake = fakeGuestbookRepository({
+      responses: [
+        respuesta({ responseId: 'r1' }),
+        respuesta({ responseId: 'r2', writtenAt: new Date('2026-08-21T10:00:00.000Z') }),
+      ],
+      notes: [
+        { responseId: 'r1', readAt: null, featuredAt: null, reply: 'Vieja', repliedAt: AHORA },
+        { responseId: 'r2', readAt: null, featuredAt: null, reply: 'Nueva', repliedAt: AHORA },
+      ],
+    })
+
+    expect(await getGuestReply({ guestbook: fake.repo })('g1')).toBe('Nueva')
+  })
+
+  it('si la base falla devuelve null: la invitación se abre igual', async () => {
+    const roto = {
+      async listMessages() {
+        throw new Error('sin conexión')
+      },
+      async findLatestMessageForGroup(): Promise<never> {
+        throw new Error('sin conexión')
+      },
+      async findResponseEvent() {
+        throw new Error('sin conexión')
+      },
+      async upsertNote() {
+        throw new Error('sin conexión')
+      },
+    }
+
+    expect(await getGuestReply({ guestbook: roto })('g1')).toBeNull()
   })
 })

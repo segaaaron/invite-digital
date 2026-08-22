@@ -44,6 +44,7 @@ import {
 import { listRegistry } from '@/modules/registry/application/list-registry'
 import { drizzleRegistryRepository } from '@/modules/registry/infrastructure/drizzle-registry-repository'
 import {
+  getGuestReply,
   listGuestbook,
   markRead,
   replyToMessage,
@@ -194,4 +195,7 @@ export const guestbook = {
   markRead: markRead({ guestbook: drizzleGuestbookRepository, clock }),
   toggleFeatured: toggleFeatured({ guestbook: drizzleGuestbookRepository, clock }),
   reply: replyToMessage({ guestbook: drizzleGuestbookRepository, clock }),
+
+  // Lo único que el invitado usa, y es de solo lectura.
+  replyForGroup: getGuestReply({ guestbook: drizzleGuestbookRepository }),
 } as const

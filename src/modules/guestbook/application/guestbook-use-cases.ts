@@ -108,3 +108,24 @@ export const replyToMessage =
       },
       (cause) => guestbookError('storage_failure', `No se pudo guardar la respuesta: ${String(cause)}`),
     )
+
+/**
+ * La respuesta de los anfitriones al último mensaje de este grupo, para su propia página.
+ *
+ * Devuelve solo el texto: la página del invitado no tiene por qué saber si su mensaje
+ * está leído o destacado, y esas dos cosas son decisiones internas del atelier.
+ *
+ * Un fallo de lectura no se propaga como error: la invitación tiene que abrirse aunque el
+ * libro de firmas no responda. Sin respuesta y con la base caída se ven igual —sin nada—,
+ * y esa es la degradación correcta para un adorno.
+ */
+export const getGuestReply =
+  (deps: Deps) =>
+  async (guestGroupId: string): Promise<string | null> => {
+    try {
+      const row = await deps.guestbook.findLatestMessageForGroup(guestGroupId)
+      return row?.reply ?? null
+    } catch {
+      return null
+    }
+  }

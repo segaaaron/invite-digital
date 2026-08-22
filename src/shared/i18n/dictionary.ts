@@ -207,6 +207,15 @@ export interface RegistryDictionary {
   errors: Record<RegistryMessageKey, string>
 }
 
+/**
+ * Lo único que el invitado ve del libro de firmas: la respuesta de los anfitriones a su
+ * mensaje. Va por diccionario porque esa página habla el idioma del **evento**, no el
+ * del navegador ni el del panel.
+ */
+export interface GuestbookDictionary {
+  replyTitle: string
+}
+
 export interface Dictionary {
   nav: NavDictionary
   hero: HeroDictionary
@@ -218,6 +227,7 @@ export interface Dictionary {
   models: ModelsDictionary
   invitation: InvitationDictionary
   registry: RegistryDictionary
+  guestbook: GuestbookDictionary
   testimonials: TestimonialsDictionary
   faq: FaqDictionary
   contact: ContactDictionary

@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { events, guests, rsvp } from '@/app/composition/container'
+import { events, guestbook, guests, rsvp } from '@/app/composition/container'
+import { FeaturedMessages } from '@/modules/guestbook'
 import { TallyStrip } from '@/modules/rsvp/ui/TallyStrip'
 import { isErr } from '@/shared/result'
 
@@ -23,6 +24,10 @@ export default async function ClientSharePage({ params }: { params: Promise<{ to
   const [groups, tally] = await Promise.all([guests.list(event.value.id), rsvp.tally(event.value.id)])
   if (isErr(groups) || isErr(tally)) throw new Error('No se pudieron leer los datos del evento')
 
+  // Los destacados del libro de firmas. El bloque filtra por su cuenta y no pinta nada si
+  // no hay ninguno: si la lectura falla, el cliente sigue viendo sus confirmaciones.
+  const libro = await guestbook.list(event.value.id)
+
   const filas = await Promise.all(
     groups.value.map(async (group) => ({
       id: group.id,
@@ -41,6 +46,8 @@ export default async function ClientSharePage({ params }: { params: Promise<{ to
       </header>
 
       <TallyStrip tally={tally.value} />
+
+      {isErr(libro) ? null : <FeaturedMessages messages={libro.value} />}
 
       <table className="w-full border-collapse text-left">
         <thead>

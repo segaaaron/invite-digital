@@ -187,3 +187,43 @@ describe('cascada', () => {
     expect(filas[0]?.total).toBe(0)
   })
 })
+
+describe('findLatestMessageForGroup', () => {
+  it('devuelve el mensaje del grupo aunque todavía no tenga nota', async () => {
+    const id = await nuevaRespuesta({ message: 'Sin nota ninguna.' })
+
+    const fila = await drizzleGuestbookRepository.findLatestMessageForGroup(grupo)
+    expect(fila?.responseId).toBe(id)
+    expect(fila?.reply).toBeNull()
+
+    await db.delete(rsvpResponses).where(eq(rsvpResponses.id, id))
+  })
+
+  it('devuelve el más reciente cuando hay dos, con su respuesta', async () => {
+    const vieja = await nuevaRespuesta({ message: 'Vamos los cuatro.' })
+    const nueva = await nuevaRespuesta({
+      message: 'Al final solo dos.',
+      respondedAt: new Date('2026-08-21T10:00:00.000Z'),
+    })
+    await drizzleGuestbookRepository.upsertNote(nueva, { reply: 'Sin problema', repliedAt: new Date() })
+
+    const fila = await drizzleGuestbookRepository.findLatestMessageForGroup(grupo)
+    expect(fila?.responseId).toBe(nueva)
+    expect(fila?.reply).toBe('Sin problema')
+
+    await db.delete(rsvpResponses).where(eq(rsvpResponses.id, vieja))
+    await db.delete(rsvpResponses).where(eq(rsvpResponses.id, nueva))
+  })
+
+  it('no devuelve una confirmación sin mensaje', async () => {
+    const id = await nuevaRespuesta({ message: null })
+
+    expect(await drizzleGuestbookRepository.findLatestMessageForGroup(grupo)).toBeNull()
+
+    await db.delete(rsvpResponses).where(eq(rsvpResponses.id, id))
+  })
+
+  it('devuelve null para un grupo que no escribió nada', async () => {
+    expect(await drizzleGuestbookRepository.findLatestMessageForGroup(crypto.randomUUID())).toBeNull()
+  })
+})

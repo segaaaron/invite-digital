@@ -67,6 +67,16 @@ export const fakeGuestbookRepository = (initial: {
         })
     },
 
+    async findLatestMessageForGroup(guestGroupId): Promise<MessageRow | null> {
+      const suyas = await repo.listMessages(
+        responses.find((r) => r.guestGroupId === guestGroupId)?.eventId ?? '',
+      )
+      const propias = suyas
+        .filter((m) => m.guestGroupId === guestGroupId)
+        .sort((a, b) => b.writtenAt.getTime() - a.writtenAt.getTime())
+      return propias[0] ?? null
+    },
+
     async findResponseEvent(responseId): Promise<ResponseContext | null> {
       const response = responses.find((r) => r.responseId === responseId)
       if (!response) return null
