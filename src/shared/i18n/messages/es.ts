@@ -77,6 +77,7 @@ export const es = {
     title: 'Mesa de regalos',
     intro: 'Si quieres hacerles un regalo, aquí está lo que necesitan. Al reservar uno deja de estar disponible para los demás.',
     empty: 'Todavía no hay nada en la mesa de regalos.',
+    closed: 'La mesa de regalos está cerrada. Lo que ya reservaste sigue apuntado a tu nombre.',
     reserve: 'Reservar',
     reserving: 'Reservando…',
     release: 'Soltar mi reserva',
@@ -97,6 +98,7 @@ export const es = {
       wrong_event: 'Ese regalo no es de este evento.',
       storage_failure: 'No pudimos guardar tu reserva. Inténtalo en un momento.',
       rate_limited: 'Demasiados intentos. Espera un minuto.',
+      feature_not_included: 'La mesa de regalos está cerrada.',
     },
   },
   guestbook: {

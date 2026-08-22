@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { guestbook, registry } from '@/app/composition/container'
+import { guestbook, plans, registry } from '@/app/composition/container'
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
@@ -33,6 +33,12 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   // La mesa de regalos es opcional: si la lectura falla, la invitación sigue en pie sin
   // ella. Que la base de regalos no responda no puede impedir confirmar la asistencia.
   const mesa = await registry.list(event.id)
+  // Si la mesa de regalos sigue incluida en el plan. Se resuelve aquí y entra en el
+  // componente como argumento: `registry` no importa `plans`.
+  //
+  // Cerrada, la lista se congela pero se sigue viendo: ocultarla haría que quien ya
+  // reservó la cafetera creyera que no reservó nada y la comprase dos veces.
+  const mesaAbierta = !isErr(await plans.requireFeature(event.id, 'registry'))
   // La respuesta de los anfitriones a lo que este grupo escribió. Nunca falla hacia
   // arriba: sin respuesta y con la base caída se ven igual —sin nada—, y la invitación
   // se abre en los dos casos.
@@ -60,6 +66,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           funds={mesa.value.funds}
           gifts={mesa.value.gifts}
           groupId={group.id}
+          open={mesaAbierta}
           token={token}
         />
       )}

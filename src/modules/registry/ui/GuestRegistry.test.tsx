@@ -63,6 +63,8 @@ const props = {
   token: 'tok',
   groupId: MI_GRUPO,
   currency: 'BOB',
+  // La mesa abierta es lo normal; los casos de mesa congelada pasan `open={false}`.
+  open: true,
   dictionary: es.registry,
   gifts: [regalo()],
   funds: [] as FundView[],
@@ -158,5 +160,60 @@ describe('GuestRegistry', () => {
   it('sin regalos ni fondos no pinta el bloque entero en blanco', () => {
     const { container } = render(<GuestRegistry {...props} gifts={[]} funds={[]} />)
     expect(container).toBeEmptyDOMElement()
+  })
+})
+
+/**
+ * Sin la mesa de regalos en el plan, la lista **se congela, no desaparece**. Ocultarla
+ * entera haría que quien ya reservó la cafetera creyera que no reservó nada y la
+ * comprase dos veces.
+ */
+describe('GuestRegistry con la mesa cerrada', () => {
+  const cerrada = { ...props, open: false }
+
+  it('el invitado que reservó sigue viendo su reserva', () => {
+    render(<GuestRegistry {...cerrada} gifts={[mio]} />)
+    expect(screen.getByText('Juego de sábanas')).toBeInTheDocument()
+    expect(screen.getByText(es.registry.reservedByYou)).toBeInTheDocument()
+  })
+
+  it('no hay botón de reservar en ningún regalo', () => {
+    render(<GuestRegistry {...cerrada} gifts={[regalo(), mio, deOtro, comprado]} />)
+    expect(screen.queryByRole('button', { name: es.registry.reserve })).not.toBeInTheDocument()
+  })
+
+  it('tampoco se puede soltar: liberar devolvería el regalo a un catálogo cerrado', () => {
+    render(<GuestRegistry {...cerrada} gifts={[mio]} />)
+    expect(screen.queryByRole('button', { name: es.registry.release })).not.toBeInTheDocument()
+  })
+
+  it('un aviso explica que la lista está cerrada', () => {
+    render(<GuestRegistry {...cerrada} gifts={[mio]} />)
+    expect(screen.getByText(es.registry.closed)).toBeInTheDocument()
+  })
+
+  it('el aviso habla el idioma del evento, no el del navegador', () => {
+    render(<GuestRegistry {...cerrada} dictionary={en.registry} gifts={[mio]} />)
+    expect(screen.getByText(en.registry.closed)).toBeInTheDocument()
+  })
+
+  it('los regalos disponibles se siguen viendo, solo que sin poder reservarlos', () => {
+    render(<GuestRegistry {...cerrada} gifts={[regalo()]} />)
+    expect(screen.getByText('Cafetera italiana')).toBeInTheDocument()
+  })
+
+  it('los fondos siguen la misma regla: se ven con su progreso y no admiten nada nuevo', () => {
+    render(<GuestRegistry {...cerrada} funds={[fondo]} gifts={[]} />)
+    expect(screen.getByText('Luna de miel')).toBeInTheDocument()
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '50')
+    expect(screen.queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('con la mesa abierta todo sigue funcionando como hasta ahora', () => {
+    render(<GuestRegistry {...props} gifts={[regalo(), mio]} />)
+    fireEvent.click(screen.getByRole('button', { name: es.registry.reserve }))
+    expect(claimGiftAction).toHaveBeenCalledWith({ token: 'tok', giftId: 'g1' })
+    expect(screen.getByRole('button', { name: es.registry.release })).toBeInTheDocument()
+    expect(screen.queryByText(es.registry.closed)).not.toBeInTheDocument()
   })
 })

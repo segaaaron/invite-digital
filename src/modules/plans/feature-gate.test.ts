@@ -24,6 +24,11 @@ const venue = {
 const registry = {
   addGift: vi.fn().mockResolvedValue(ok({ id: 'r1' })),
   addFund: vi.fn().mockResolvedValue(ok({ id: 'f1' })),
+  claim: vi.fn().mockResolvedValue(ok(undefined)),
+  release: vi.fn().mockResolvedValue(ok(undefined)),
+}
+const guests = {
+  resolveByToken: vi.fn().mockResolvedValue(ok({ id: 'g1', eventId: 'e1', label: 'Familia Rojas', seats: 2 })),
 }
 const checkin = {
   recordGroup: vi.fn().mockResolvedValue(ok({ kind: 'accepted' })),
@@ -31,17 +36,20 @@ const checkin = {
 const requireSession = vi.fn().mockResolvedValue({ userId: 'u1' })
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-real-ip': '203.0.113.7' }) }))
 vi.mock('@/modules/identity/session-cookie', () => ({ requireSession: () => requireSession() }))
 vi.mock('@/app/composition/container', () => ({
   plans: { requireFeature: (...args: unknown[]) => requireFeature(...args), allowanceFor: vi.fn(), listActive: vi.fn() },
   venue,
   registry,
   checkin,
+  guests,
 }))
 
 beforeEach(() => {
   vi.clearAllMocks()
   requireSession.mockResolvedValue({ userId: 'u1' })
+  guests.resolveByToken.mockResolvedValue(ok({ id: 'g1', eventId: 'e1', label: 'Familia Rojas', seats: 2 }))
 })
 
 describe('mesas (venue)', () => {
@@ -128,5 +136,64 @@ describe('modo puerta (checkin)', () => {
     ).rejects.toThrow('feature_not_included')
 
     expect(checkin.recordGroup).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * El lado del invitado. Estas dos acciones no llevan sesión —el invitado no tiene
+ * cuenta— pero el plan las corta igual: la puerta del invitado tiene que cerrarse
+ * cuando la mesa de regalos deja de estar incluida, o cualquiera con el enlace sigue
+ * reservando en un catálogo que ya no existe.
+ */
+describe('mesa de regalos · lado del invitado', () => {
+  it('con la mesa incluida el invitado reserva como siempre', async () => {
+    permitida()
+    const { claimGiftAction } = await import('@/modules/registry/actions')
+
+    const r = await claimGiftAction({ token: 'tok', giftId: 'r1' })
+
+    expect(r.ok).toBe(true)
+    expect(registry.claim).toHaveBeenCalledWith({ token: 'tok', giftId: 'r1' })
+  })
+
+  it('sin la mesa incluida la reserva se rechaza aunque se llame a la acción directamente', async () => {
+    noIncluida()
+    const { claimGiftAction } = await import('@/modules/registry/actions')
+
+    const r = await claimGiftAction({ token: 'tok', giftId: 'r1' })
+
+    expect(r).toMatchObject({ ok: false, kind: 'feature_not_included' })
+    expect(registry.claim).not.toHaveBeenCalled()
+  })
+
+  it('liberar también se rechaza: devolvería el regalo a un catálogo cerrado', async () => {
+    noIncluida()
+    const { releaseGiftAction } = await import('@/modules/registry/actions')
+
+    const r = await releaseGiftAction({ token: 'tok', giftId: 'r1' })
+
+    expect(r).toMatchObject({ ok: false, kind: 'feature_not_included' })
+    expect(registry.release).not.toHaveBeenCalled()
+  })
+
+  it('el mensaje que cruza al invitado es la clase del error, no el detalle con el plan dentro', async () => {
+    noIncluida()
+    const { claimGiftAction } = await import('@/modules/registry/actions')
+
+    const r = await claimGiftAction({ token: 'tok', giftId: 'r1' })
+
+    expect(r).toEqual({ ok: false, kind: 'feature_not_included', message: 'feature_not_included' })
+  })
+
+  it('un token desconocido sigue respondiendo not_found, no que el plan no la incluye', async () => {
+    // 404 y nunca 403: distinguirlos confirmaría que el token existe.
+    noIncluida()
+    guests.resolveByToken.mockResolvedValue(err(plansError('not_found', 'Ese enlace no existe.')))
+    registry.claim.mockResolvedValue(err(plansError('not_found', 'Ese enlace no existe.')))
+    const { claimGiftAction } = await import('@/modules/registry/actions')
+
+    const r = await claimGiftAction({ token: 'desconocido', giftId: 'r1' })
+
+    expect(r).toMatchObject({ ok: false, kind: 'not_found' })
   })
 })

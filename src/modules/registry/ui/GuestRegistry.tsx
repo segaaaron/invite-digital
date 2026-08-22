@@ -11,6 +11,16 @@ type Props = {
   token: string
   /** El grupo de este invitado: es lo que distingue «lo reservaste tú» de «lo reservó otro». */
   groupId: string
+  /**
+   * Si la mesa de regalos sigue incluida en el plan del evento. La resuelve la página y
+   * entra aquí como argumento: `registry` no importa `plans`.
+   *
+   * En `false` la lista **se congela, no desaparece**: lo ya reservado se sigue viendo
+   * —quien apartó la cafetera tiene que saber que la apartó, o la compra dos veces— pero
+   * no se puede reservar nada nuevo ni soltar lo reservado, porque devolvería el regalo a
+   * un catálogo cerrado.
+   */
+  open: boolean
   currency: string
   dictionary: RegistryDictionary
   gifts: readonly GiftRow[]
@@ -31,6 +41,7 @@ function GuestGift({
   groupId,
   currency,
   dictionary,
+  open,
   gift,
 }: Omit<Props, 'gifts' | 'funds'> & { gift: GiftRow }) {
   const [error, setError] = useState<string | null>(null)
@@ -79,7 +90,7 @@ function GuestGift({
         <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{texto}</p>
       )}
 
-      {gift.status === 'available' ? (
+      {open && gift.status === 'available' ? (
         <button
           className="self-start rounded-[var(--radius-pill)] border border-line px-5 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
           disabled={pendiente}
@@ -90,7 +101,7 @@ function GuestGift({
         </button>
       ) : null}
 
-      {esMio ? (
+      {open && esMio ? (
         <button
           className="self-start rounded-[var(--radius-pill)] border border-line px-5 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
           disabled={pendiente}
@@ -145,7 +156,7 @@ function GuestFund({ currency, dictionary, view }: { currency: string; dictionar
   )
 }
 
-export function GuestRegistry({ token, groupId, currency, dictionary, gifts, funds }: Props) {
+export function GuestRegistry({ token, groupId, currency, dictionary, open, gifts, funds }: Props) {
   // Sin nada que enseñar, el bloque no existe: una sección con un título y un hueco
   // debajo hace que la invitación parezca rota.
   if (gifts.length === 0 && funds.length === 0) return null
@@ -153,7 +164,7 @@ export function GuestRegistry({ token, groupId, currency, dictionary, gifts, fun
   return (
     <section className="flex flex-col gap-5">
       <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{dictionary.title}</h2>
-      <p className="text-[13px] leading-[1.7] text-ink-soft">{dictionary.intro}</p>
+      <p className="text-[13px] leading-[1.7] text-ink-soft">{open ? dictionary.intro : dictionary.closed}</p>
 
       {gifts.length === 0 ? null : (
         <ul className="flex flex-col gap-3">
@@ -164,6 +175,7 @@ export function GuestRegistry({ token, groupId, currency, dictionary, gifts, fun
               dictionary={dictionary}
               gift={gift}
               groupId={groupId}
+              open={open}
               token={token}
             />
           ))}

@@ -183,6 +183,8 @@ export type RegistryMessageKey =
   | 'wrong_event'
   | 'storage_failure'
   | 'rate_limited'
+  /** El plan del evento dejó de incluir la mesa de regalos: la lista está congelada. */
+  | 'feature_not_included'
 
 /**
  * La mesa de regalos que ve el invitado. Va aparte de `InvitationDictionary` porque es
@@ -192,6 +194,11 @@ export interface RegistryDictionary {
   title: string
   intro: string
   empty: string
+  /**
+   * El aviso de mesa congelada. Cuando el plan del evento deja de incluir la mesa de
+   * regalos, la lista se sigue viendo pero no admite nada nuevo, y esto lo explica.
+   */
+  closed: string
   reserve: string
   reserving: string
   release: string

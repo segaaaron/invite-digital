@@ -77,6 +77,7 @@ export const en = {
     title: 'Gift registry',
     intro: 'If you would like to give them something, here is what they need. Reserving a gift takes it off the list for everyone else.',
     empty: 'There is nothing on the gift registry yet.',
+    closed: 'The gift registry is closed. Whatever you already reserved is still yours.',
     reserve: 'Reserve',
     reserving: 'Reserving…',
     release: 'Release my reservation',
@@ -97,6 +98,7 @@ export const en = {
       wrong_event: 'That gift is not from this event.',
       storage_failure: 'We could not save your reservation. Try again in a moment.',
       rate_limited: 'Too many attempts. Wait a minute.',
+      feature_not_included: 'The gift registry is closed.',
     },
   },
   guestbook: {

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { plans, registry } from '@/app/composition/container'
+import { guests, plans, registry } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -237,6 +237,26 @@ export async function recordContributionAction(input: {
 // Si lo que vas a añadir es una acción del atelier, va ARRIBA, no aquí.
 // ============================================================================
 
+/**
+ * La misma puerta, para el invitado. El plan del evento se resuelve desde su token, no
+ * desde un `eventId` que la petición podría inventarse.
+ *
+ * Que el mensaje sea la clase del error y no el detalle es a propósito: el detalle dice
+ * qué plan tiene contratado el evento y a cuál habría que subir, y eso es una
+ * conversación entre el atelier y su cliente. Al invitado le llega la clase, y la página
+ * la traduce al idioma del evento.
+ *
+ * Un token desconocido no se corta aquí: cae al caso de uso, que responde `not_found`
+ * —404, nunca 403— igual que siempre. Distinguirlos confirmaría que el token existe.
+ */
+const cerradaParaElInvitado = async (token: string): Promise<RegistryActionResult | null> => {
+  const group = await guests.resolveByToken(token)
+  if (isErr(group)) return null
+
+  const permitido = await plans.requireFeature(group.value.eventId, 'registry')
+  return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: permitido.error.kind } : null
+}
+
 // Veinte pulsaciones por minuto y por IP: un invitado indeciso cabe de sobra; recorrer
 // tokens ajenos a fuerza bruta, no.
 const limiter = createRateLimiter({ windowMs: 60_000, max: 20 })
@@ -250,6 +270,9 @@ export async function claimGiftAction(input: { token: string; giftId: string }):
   if (limiter.isLimited(await ipDeLaPeticion(), Date.now())) {
     return { ok: false, kind: 'rate_limited', message: 'Demasiados intentos. Espera un minuto.' }
   }
+
+  const cerrado = await cerradaParaElInvitado(input.token)
+  if (cerrado) return cerrado
 
   const result = await registry.claim(input)
   if (isErr(result)) {
@@ -266,6 +289,9 @@ export async function releaseGiftAction(input: { token: string; giftId: string }
   if (limiter.isLimited(await ipDeLaPeticion(), Date.now())) {
     return { ok: false, kind: 'rate_limited', message: 'Demasiados intentos. Espera un minuto.' }
   }
+
+  const cerrado = await cerradaParaElInvitado(input.token)
+  if (cerrado) return cerrado
 
   const result = await registry.release(input)
   if (isErr(result)) {
