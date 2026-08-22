@@ -103,7 +103,7 @@ test.describe('invitados del evento', () => {
   })
 
   test('crea un grupo, enseña el enlace una sola vez y lo revoca', async ({ page }) => {
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
     await page.getByLabel('Grupo invitado').fill('Familia Rojas Peña')
     await page.getByLabel('Cupos').fill('4')
@@ -123,12 +123,15 @@ test.describe('invitados del evento', () => {
   })
 
   test('crea el enlace del cliente, se abre en solo lectura y se revoca', async ({ page, context }) => {
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
     await page.getByLabel('Grupo invitado').fill('Familia Rojas Peña')
     await page.getByLabel('Cupos').fill('4')
     await page.getByRole('button', { name: 'Crear invitación' }).click()
     await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()
+
+    // El enlace del cliente vive en el resumen del evento.
+    await page.goto(`/panel/eventos/${SLUG}`)
 
     await page.getByRole('button', { name: 'Crear enlace para el cliente' }).click()
     const url = await page.getByLabel('Enlace para el cliente').inputValue()
@@ -150,7 +153,7 @@ test.describe('invitados del evento', () => {
   })
 
   test('el navegador no deja enviar un grupo de cero cupos', async ({ page }) => {
-    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
     await page.getByLabel('Grupo invitado').fill('Grupo vacío')
     await page.getByLabel('Cupos').fill('0')
     await page.getByRole('button', { name: 'Crear invitación' }).click()

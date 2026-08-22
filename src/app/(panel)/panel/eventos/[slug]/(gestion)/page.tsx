@@ -1,13 +1,11 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, guests, plans, rsvp } from '@/app/composition/container'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { EventForm } from '@/modules/events/ui/EventForm'
-import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
-import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
+import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
-import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
-import { canAddGroup } from '@/modules/plans'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { DonutChart, PanelCard, StatCard } from '@/modules/shell/ui/cards'
 import { isErr } from '@/shared/result'
@@ -34,12 +32,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           confirmed: (await rsvp.latestFor(group.id))?.attending ?? null,
         })),
       )
-
-  // Cuánto margen queda antes del límite del plan. Se resuelve aquí, en la página, y se
-  // le pasa al aviso: `guests` no sabe nada de planes.
-  const capacidad = await plans.allowanceFor(event.value.id)
-  const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
-  const grupos = isErr(groups) ? 0 : groups.value.length
 
   const tally = await rsvp.tally(event.value.id)
   const share = await events.liveShare(event.value.id)
@@ -99,18 +91,41 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       <div className="flex flex-col gap-4.5">
-        <PanelCard id="invitados" title="Invitados">
-          <div className="flex flex-col gap-4">
-            <AllowanceNotice currentGroups={grupos} eventSlug={event.value.slug} maxGuestGroups={limite} />
-            <GuestGroupForm atLimit={!canAddGroup(limite, grupos)} eventId={event.value.id} eventSlug={event.value.slug} />
-            {isErr(groups) ? (
-              <p className="text-[13px] text-gold-deep" role="alert">
-                No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
-              </p>
-            ) : (
-              <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
-            )}
-          </div>
+        <PanelCard
+          action={
+            <Link
+              className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase"
+              href={`/panel/eventos/${event.value.slug}/invitados`}
+            >
+              Ver todos →
+            </Link>
+          }
+          title="Invitados recientes"
+        >
+          {isErr(groups) ? (
+            <p className="text-[13px] text-gold-deep" role="alert">
+              No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
+            </p>
+          ) : filas.length === 0 ? (
+            <p className="text-[14px] text-ink-soft">
+              Todavía no hay invitados. Se cargan en la sección Invitados de la barra.
+            </p>
+          ) : (
+            <ul className="flex flex-col">
+              {filas.slice(0, 5).map((fila) => (
+                <li
+                  key={fila.id}
+                  className="flex flex-wrap items-center gap-3 border-b border-dotted border-line py-2.5 last:border-none"
+                >
+                  <span className="flex-1 text-[14px] text-ink">{fila.label}</span>
+                  <span className="font-mono text-[12px] text-ink-soft">{`${fila.confirmed ?? '—'} / ${fila.seats}`}</span>
+                  <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+                    {fila.revokedAt !== null ? 'Revocada' : fila.confirmed === null ? 'Pendiente' : 'Confirmada'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </PanelCard>
 
         <PanelCard id="enlace-cliente" title="Enlace para el cliente">

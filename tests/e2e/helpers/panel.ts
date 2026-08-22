@@ -39,7 +39,7 @@ export async function createGuestGroup(
   label: string,
   seats: number,
 ): Promise<string> {
-  await page.goto(`/panel/eventos/${eventSlug}`)
+  await page.goto(`/panel/eventos/${eventSlug}/invitados`)
   await page.getByLabel('Grupo invitado').fill(label)
   await page.getByLabel('Cupos').fill(String(seats))
   await page.getByRole('button', { name: 'Crear invitación' }).click()

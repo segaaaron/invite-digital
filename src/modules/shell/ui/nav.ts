@@ -40,7 +40,7 @@ export function panelNav(slug: string | null, counts: NavCounts = {}): NavSectio
       label: 'Evento activo',
       items: [
         { href: base, label: 'Resumen', icon: '●' },
-        { href: en('#invitados'), label: 'Invitados', icon: '✉', count: counts.invitados ?? null, countLabel: 'grupos' },
+        { href: en('/invitados'), label: 'Invitados', icon: '✉', count: counts.invitados ?? null, countLabel: 'grupos' },
         { href: en('/mesas'), label: 'Mesas', icon: '🪑' },
         { href: en('/regalos'), label: 'Mesa de regalos', icon: '🎁' },
         { href: en('/mensajes'), label: 'Mensajes', icon: '💬', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
