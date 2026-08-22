@@ -1,7 +1,7 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, plans } from '@/app/composition/container'
 import { ManualCheckin } from '@/modules/checkin/ui/ManualCheckin'
+import { ScanButton } from '@/modules/checkin/ui/ScanButton'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -48,30 +48,11 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <PanelHeader
+        actions={<ScanButton href={`/panel/eventos/${event.value.slug}/puerta`} />}
         kicker="Día del evento"
         meta={`${tally.arrivedGroups} de ${tally.expectedGroups} grupos · ${tally.headsInside} personas dentro`}
         title="Check-in de invitados"
       />
-
-      <div className="mb-5.5 flex flex-wrap items-center gap-4.5 rounded-[18px] border border-line bg-linear-to-b from-bg-top to-white p-5.5 shadow-card">
-        <span aria-hidden className="text-[38px] leading-none">
-          ⛩
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="font-mono text-[9px] tracking-[0.35em] text-ink-mute uppercase">Recepción</p>
-          <p className="mt-1 font-display text-[22px] italic text-ink">Modo puerta</p>
-          <p className="mt-1 max-w-[62ch] text-[12px] leading-[1.7] text-ink-soft">
-            Pantalla completa con la cámara encendida, para el celular o la tablet de la puerta. Cada pase se registra
-            al escanearlo, y sigue funcionando sin señal.
-          </p>
-        </div>
-        <Link
-          className="rounded-full bg-gold px-5 py-2.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
-          href={`/panel/eventos/${event.value.slug}/puerta`}
-        >
-          Abrir modo puerta
-        </Link>
-      </div>
 
       <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1.3fr_1fr]">
         <PanelCard title="Buscar a mano">
