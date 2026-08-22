@@ -88,6 +88,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </Link>
           <Link
             className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
+            href={`/panel/eventos/${event.value.slug}/estadisticas`}
+          >
+            Estadísticas
+          </Link>
+          <Link
+            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink"
             href={`/panel/eventos/${event.value.slug}/plan`}
           >
             Plan
