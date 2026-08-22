@@ -26,6 +26,12 @@ import {
   drizzleArrivalRepository,
   drizzleDoorGroupReader,
 } from '@/modules/checkin/infrastructure/drizzle-arrival-repository'
+import { assignGroup, autoAssignGroups, unassignGroup } from '@/modules/venue/application/assign-use-cases'
+import { listSeating } from '@/modules/venue/application/list-seating'
+import { moveElements } from '@/modules/venue/application/move-element'
+import { addTable, removeTable, updateTable } from '@/modules/venue/application/table-use-cases'
+import { addZone, removeZone, updateZone } from '@/modules/venue/application/zone-use-cases'
+import { drizzleVenueRepository } from '@/modules/venue/infrastructure/drizzle-venue-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -122,4 +128,18 @@ export const checkin = {
   void: voidArrival({ arrivals: drizzleArrivalRepository, clock }),
   manifest: getDoorManifest({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   state: getDoorState({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
+} as const
+
+export const venue = {
+  addTable: addTable({ venue: drizzleVenueRepository, ids: () => crypto.randomUUID() }),
+  updateTable: updateTable({ venue: drizzleVenueRepository }),
+  removeTable: removeTable({ venue: drizzleVenueRepository }),
+  assign: assignGroup({ venue: drizzleVenueRepository }),
+  unassign: unassignGroup({ venue: drizzleVenueRepository }),
+  autoAssign: autoAssignGroups({ venue: drizzleVenueRepository }),
+  addZone: addZone({ venue: drizzleVenueRepository, ids: () => crypto.randomUUID() }),
+  updateZone: updateZone({ venue: drizzleVenueRepository }),
+  removeZone: removeZone({ venue: drizzleVenueRepository }),
+  moveElements: moveElements({ venue: drizzleVenueRepository }),
+  seating: listSeating({ venue: drizzleVenueRepository }),
 } as const
