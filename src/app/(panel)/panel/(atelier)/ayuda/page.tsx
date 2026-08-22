@@ -1,4 +1,5 @@
 import { requireSession } from '@/modules/identity/session-cookie'
+import { BRAND } from '@/shared/config/brand'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
 import { HelpCenter } from '@/shared/help/HelpCenter'
@@ -10,11 +11,30 @@ export default async function HelpPage() {
 
   return (
     <>
-      <PanelHeader kicker="Atelier" title="Ayuda" />
+      <PanelHeader kicker="Soporte" title="Centro de ayuda" />
 
-      <PanelCard>
-        <HelpCenter />
-      </PanelCard>
+      <div className="grid gap-4.5 lg:grid-cols-[1.4fr_1fr]">
+        <PanelCard>
+          <HelpCenter />
+        </PanelCard>
+
+        <PanelCard title="Contactar soporte">
+          <div className="flex flex-col gap-4 text-[13px] leading-[1.7] text-ink-soft">
+            <p>¿La respuesta no está arriba? Escríbenos y lo vemos contigo.</p>
+            <a
+              className="w-fit rounded-full bg-gold px-5 py-2.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
+              href={`https://wa.me/${BRAND.whatsapp.replace('+', '')}`}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              Escribir por WhatsApp
+            </a>
+            <a className="w-fit text-[13px] text-gold-deep underline-offset-4 hover:underline" href={`mailto:${BRAND.email}`}>
+              {BRAND.email}
+            </a>
+          </div>
+        </PanelCard>
+      </div>
     </>
   )
 }

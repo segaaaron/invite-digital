@@ -130,8 +130,8 @@ test.describe('invitados del evento', () => {
     await page.getByRole('button', { name: 'Crear invitación' }).click()
     await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()
 
-    // El enlace del cliente vive en el resumen del evento.
-    await page.goto(`/panel/eventos/${SLUG}`)
+    // El enlace del cliente vive en Configuración, que es una vista propia como en la maqueta.
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
 
     await page.getByRole('button', { name: 'Crear enlace para el cliente' }).click()
     const url = await page.getByLabel('Enlace para el cliente').inputValue()

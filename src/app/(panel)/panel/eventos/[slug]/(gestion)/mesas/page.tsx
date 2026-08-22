@@ -50,7 +50,7 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
             Plan para el banquete
           </Link>
         }
-        kicker="Salón"
+        kicker="Distribución"
         meta={event.value.title}
         title="Mesas"
       />

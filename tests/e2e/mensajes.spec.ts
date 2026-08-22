@@ -70,7 +70,8 @@ test('lo destacado en el panel es lo que ve la pareja en su enlace de solo lectu
   await expect(page.getByRole('button', { name: 'Quitar destacado' })).toBeVisible()
 
   // El enlace del cliente se crea desde la página del evento y se muestra una sola vez.
-  await page.goto(`/panel/eventos/${slug}`)
+  // El enlace del cliente vive en Configuración, que es una vista propia como en la maqueta.
+  await page.goto(`/panel/eventos/${slug}/configuracion`)
   await page.getByRole('button', { name: 'Crear enlace para el cliente' }).click()
   const enlace = await page.getByLabel('Enlace para el cliente').inputValue()
 

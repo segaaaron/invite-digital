@@ -2,8 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, guests, plans, rsvp } from '@/app/composition/container'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
-import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
-import { EventForm } from '@/modules/events/ui/EventForm'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -34,7 +32,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       )
 
   const tally = await rsvp.tally(event.value.id)
-  const share = await events.liveShare(event.value.id)
 
   // Cuánta gente ha llegado. Solo se lee si el plan trae la puerta: sin ella no hay
   // llegadas que contar, y una tira de ceros haría creer que la recepción ya empezó.
@@ -128,21 +125,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           )}
         </PanelCard>
 
-        <PanelCard id="enlace-cliente" title="Enlace para el cliente">
-          <ClientSharePanel
-            eventId={event.value.id}
-            eventSlug={event.value.slug}
-            live={
-              isErr(share) || share.value === null
-                ? null
-                : { id: share.value.id, expiresAt: share.value.expiresAt.toISOString().slice(0, 10) }
-            }
-          />
-        </PanelCard>
-
-        <PanelCard id="datos-evento" title="Datos del evento">
-          <EventForm event={event.value} />
-        </PanelCard>
       </div>
     </>
   )

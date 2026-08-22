@@ -208,6 +208,10 @@ el aviso con `turbopack: {}` deja de generar el Service Worker sin decir nada. E
 de ficheros del `output: standalone` se queda sin memoria bajo webpack con el heap por
 defecto, de ahí el `NODE_OPTIONS` del script.
 
+**Si `pnpm build` muere con «Reached heap limit», borra `.next` antes de tocar nada.**
+Con el caché de una sesión larga el rastreo de ficheros se come los 8 GB del script; con
+`.next` limpio compila. Pasó dos veces en la sesión del 22 de agosto.
+
 **Si las e2e fallan en masa con «This page couldn't load», mata el 3100 antes de mirar el
 código**: `lsof -ti :3100 | xargs kill -9`. `reuseExistingServer` reaprovecha un
 `next start` de una sesión anterior, que sirve un `.next` que ya no coincide con el disco.
@@ -268,6 +272,9 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
   entera apuntando al **evento activo** —el de fecha más próxima, que es como los ordena
   el repositorio—. Sin ningún evento, esos enlaces se pintan apagados; no desaparecen.
   Una barra que encoge al cambiar de página es lo que había que quitar.
+- **Configuración es una vista propia** (`/panel/eventos/[slug]/configuracion`), como en
+  la maqueta: los detalles del evento y la vista previa del enlace del cliente. Estaba
+  dentro del resumen y se alcanzaba por un ancla, que fue invención mía.
 - **La cámara vive solo en el modo puerta.** La sección Check-in del panel
   (`/panel/eventos/[slug]/checkin`) es la de la maqueta: tarjeta con el icono ⛩ y el
   botón que abre el modo puerta, buscador a mano, donut de progreso y últimas llegadas.

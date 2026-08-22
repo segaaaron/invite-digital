@@ -50,16 +50,17 @@ export function panelNav(slug: string | null, counts: NavCounts = {}): NavSectio
     {
       label: 'Diseño',
       items: [
-        { href: en('#datos-evento'), label: 'Editar invitación', icon: '✎' },
-        { href: en('#enlace-cliente'), label: 'Vista previa', icon: '↗' },
+        { href: en('/configuracion'), label: 'Editar invitación', icon: '✎' },
+        { href: en('/configuracion#vista-previa'), label: 'Vista previa', icon: '↗' },
         { href: en('/estadisticas'), label: 'Estadísticas', icon: '📊' },
       ],
     },
     {
       label: 'Cuenta',
       items: [
-        { href: '/panel', label: 'Todos los eventos', icon: '⌂' },
+        { href: en('/configuracion'), label: 'Configuración', icon: '⚙' },
         { href: en('/plan'), label: 'Plan', icon: '💳' },
+        { href: '/panel', label: 'Todos los eventos', icon: '⌂' },
         { href: '/panel/ayuda', label: 'Ayuda', icon: '?' },
       ],
     },

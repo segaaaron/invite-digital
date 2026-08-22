@@ -23,7 +23,7 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      <PanelHeader kicker="Cuenta" meta={event.value.title} title="Estadísticas" />
+      <PanelHeader kicker="Analítica" meta={event.value.title} title="Estadísticas" />
 
       <PanelCard>
         {isErr(stats) ? (

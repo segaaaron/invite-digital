@@ -46,7 +46,7 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
-      <PanelHeader kicker="Cuenta" meta={event.value.title} title="Plan" />
+      <PanelHeader kicker="Cuenta" meta={event.value.title} title="Tu plan" />
 
       <div className="flex flex-col gap-4.5">
         <PanelCard title="Planes">
