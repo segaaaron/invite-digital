@@ -77,7 +77,6 @@ import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
 import { drizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { createTokenMinter } from '@/shared/security/tokens'
-import { getTemplate } from '@/modules/catalog/application/get-template'
 import { listCategories } from '@/modules/catalog/application/list-categories'
 import { listPlans } from '@/modules/catalog/application/list-plans'
 import { listTemplates } from '@/modules/catalog/application/list-templates'
@@ -90,7 +89,6 @@ import { drizzleConsultationRepository } from '@/modules/leads/infrastructure/dr
 export const catalog = {
   listPlans: listPlans({ plans: drizzlePlanRepository }),
   listTemplates: listTemplates({ templates: drizzleTemplateRepository }),
-  getTemplate: getTemplate({ templates: drizzleTemplateRepository }),
   listCategories: listCategories({ categories: drizzleCategoryRepository }),
 } as const
 

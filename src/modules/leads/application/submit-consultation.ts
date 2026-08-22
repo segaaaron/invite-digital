@@ -5,7 +5,7 @@ import { createConsultation } from '../domain/consultation'
 import { leadError, type LeadError } from '../domain/errors'
 import type { ConsultationRepository } from './ports'
 
-export const consultationSchema = z.object({
+const consultationSchema = z.object({
   name: z.string().min(1).max(160),
   email: z.string().max(200).default(''),
   phone: z.string().max(32).default(''),

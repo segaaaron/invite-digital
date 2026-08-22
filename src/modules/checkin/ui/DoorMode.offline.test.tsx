@@ -10,7 +10,6 @@ vi.mock('../actions', () => ({
   checkInByGroupAction: vi.fn(async () => ({ scanId: 'x', kind: 'unknown' })),
   adjustArrivalAction: vi.fn(async () => {}),
   voidArrivalAction: vi.fn(async () => {}),
-  refreshManifestAction: vi.fn(async () => null),
 }))
 
 const TOKEN = 'AbCdEfGhIjKlMnOpQrStUv'

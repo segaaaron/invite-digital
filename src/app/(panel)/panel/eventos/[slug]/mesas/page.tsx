@@ -7,6 +7,7 @@ import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
 import { SeatingToolbar } from '@/modules/venue/ui/SeatingToolbar'
 import { TableCard } from '@/modules/venue/ui/TableCard'
 import { UnseatedStrip } from '@/modules/venue/ui/UnseatedStrip'
+import { ZoneControls } from '@/modules/venue/ui/ZoneControls'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Mesas' }
@@ -66,6 +67,8 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
         zones={zones}
         exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
       />
+
+      <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
 
       <section className="flex flex-col gap-5">
         <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Mesas del salón</h2>

@@ -55,32 +55,6 @@ export const createDrizzleTemplateRepository = (database: DbExecutor): TemplateR
     logMissingTranslations(locale, missingSlugs)
     return complete.map(toTemplateInput)
   },
-
-  // Mismo tratamiento que `listPublished`: si la plantilla existe pero no tiene
-  // traducción en el idioma pedido, se devuelve `null` (no una entidad a medio
-  // construir) y se registra el aviso.
-  async findBySlug(slug: string, locale: Locale): Promise<TemplateInput | null> {
-    const rows = await database
-      .select(selectTemplate)
-      .from(templates)
-      .leftJoin(
-        templateTranslations,
-        and(eq(templateTranslations.templateId, templates.id), eq(templateTranslations.locale, locale)),
-      )
-      .innerJoin(eventCategories, eq(eventCategories.id, templates.categoryId))
-      .leftJoin(
-        eventCategoryTranslations,
-        and(eq(eventCategoryTranslations.categoryId, eventCategories.id), eq(eventCategoryTranslations.locale, locale)),
-      )
-      .where(and(eq(templates.slug, slug), eq(templates.isPublished, true)))
-      .limit(1)
-
-    const { complete, missingSlugs } = partitionTemplateRows(rows)
-    logMissingTranslations(locale, missingSlugs)
-
-    const row = complete[0]
-    return row ? toTemplateInput(row) : null
-  },
 })
 
 export const drizzleTemplateRepository = createDrizzleTemplateRepository(db)

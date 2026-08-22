@@ -42,11 +42,6 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
     expect(rows[0]?.categoryName).toBe('Boda')
   })
 
-  it('encuentra una plantilla por slug y devuelve null si no existe', async () => {
-    expect(await drizzleTemplateRepository.findBySlug('zafiro', 'es')).not.toBeNull()
-    expect(await drizzleTemplateRepository.findBySlug('inexistente', 'es')).toBeNull()
-  })
-
   describe('traducción faltante', () => {
     let errorSpy: ReturnType<typeof vi.spyOn>
 
@@ -98,40 +93,6 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
         expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('prueba-solo-es'))
       })
 
-      // Fuera de la transacción (ya revertida): la plantilla de prueba no existe.
-      expect(await drizzleTemplateRepository.findBySlug('prueba-solo-es', 'es')).toBeNull()
-    })
-
-    it('findBySlug devuelve null (no una entidad a medio construir) si falta la traducción', async () => {
-      await runInRolledBackTransaction(async (tx) => {
-        const repo = createDrizzleTemplateRepository(tx)
-
-        const [category] = await tx.select({ id: eventCategories.id }).from(eventCategories).where(eq(eventCategories.slug, 'boda'))
-        if (!category) throw new Error('No existe la categoría "boda" — ¿corriste `pnpm db:seed`?')
-
-        const [inserted] = await tx
-          .insert(templates)
-          .values({
-            slug: 'prueba-solo-es-bis',
-            categoryId: category.id,
-            coverImagePath: '/templates/prueba.jpg',
-            palette: { base: '#FFFFFF', accent: '#000000' },
-            sortOrder: 998,
-            isPublished: true,
-          })
-          .returning({ id: templates.id })
-        if (!inserted) throw new Error('No se pudo insertar la plantilla de prueba')
-
-        await tx.insert(templateTranslations).values({
-          templateId: inserted.id,
-          locale: 'es',
-          name: 'Plantilla de prueba bis',
-          description: 'Solo existe en español.',
-        })
-
-        expect(await repo.findBySlug('prueba-solo-es-bis', 'es')).not.toBeNull()
-        expect(await repo.findBySlug('prueba-solo-es-bis', 'en')).toBeNull()
-      })
     })
 
     it('un plan con solo traducción en español aparece en es, no en en, y no deja residuo', async () => {

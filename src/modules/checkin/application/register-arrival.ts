@@ -4,7 +4,7 @@ import { resolveArrival } from '../domain/conflict'
 import type { ScanGroupView, ScanOutcome } from './check-in-by-scan'
 import type { ArrivalRepository, DoorGroupRow } from './ports'
 
-export const groupView = (group: DoorGroupRow): ScanGroupView => ({
+const groupView = (group: DoorGroupRow): ScanGroupView => ({
   id: group.id,
   label: group.label,
   seats: group.seats,

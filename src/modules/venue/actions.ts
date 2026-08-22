@@ -179,6 +179,34 @@ export async function addZoneAction(input: {
   return { ok: true }
 }
 
+/**
+ * Renombrar o recolocar una zona. El sitio y el tamaño viajan tal cual desde el plano:
+ * el caso de uso rehace la zona entera, y no mandarlos la devolvería al centro. Cada
+ * corrección de un nombre descolocaría el salón.
+ */
+export async function updateZoneAction(input: {
+  id: string
+  eventId: string
+  eventSlug: string
+  kind: ZoneKind
+  label: string
+  x: number
+  y: number
+  w: number
+  h: number
+}): Promise<VenueActionResult> {
+  await requireSession()
+
+  const cerrado = await sinSalon(input.eventId)
+  if (cerrado) return cerrado
+
+  const result = await venue.updateZone(input)
+  if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
+
+  refresh(input.eventSlug)
+  return { ok: true }
+}
+
 export async function removeZoneAction(input: {
   id: string
   eventId: string

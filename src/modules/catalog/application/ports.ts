@@ -9,7 +9,6 @@ export interface PlanRepository {
 
 export interface TemplateRepository {
   listPublished(locale: Locale): Promise<TemplateInput[]>
-  findBySlug(slug: string, locale: Locale): Promise<TemplateInput | null>
 }
 
 export interface CategoryRepository {

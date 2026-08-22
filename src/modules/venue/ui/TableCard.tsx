@@ -1,9 +1,17 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { assignGroupAction, removeTableAction, unassignGroupAction } from '../actions'
+import { assignGroupAction, removeTableAction, unassignGroupAction, updateTableAction } from '../actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
+import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
+
+const NOMBRE_FORMA: Record<TableShape, string> = {
+  round: 'Redonda',
+  rect: 'Rectangular',
+  sweetheart: 'De los novios',
+  imperial: 'Imperial',
+}
 
 type Props = {
   eventId: string
@@ -26,6 +34,10 @@ const estado = (table: SeatedTable): { clase: string; texto: string } => {
 
 export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   const [elegido, setElegido] = useState('')
+  const [editando, setEditando] = useState(false)
+  const [label, setLabel] = useState(table.label)
+  const [capacity, setCapacity] = useState(String(table.capacity))
+  const [shape, setShape] = useState<TableShape>(table.shape)
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
@@ -34,14 +46,34 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   const caben = unseated.filter((g) => g.seats <= table.free)
   const { clase, texto } = estado(table)
 
-  const correr = (accion: () => Promise<{ ok: boolean; message?: string; kind?: string }>) => {
+  const correr = (accion: () => Promise<{ ok: boolean; message?: string; kind?: string }>, alAcabar?: () => void) => {
     setError(null)
     setAviso(null)
     empezar(async () => {
       const r = await accion()
-      if (r.ok) setAviso(r.message ?? null)
-      else setError(r.message ?? 'No se pudo completar la operación.')
+      if (r.ok) {
+        setAviso(r.message ?? null)
+        alAcabar?.()
+      } else setError(r.message ?? 'No se pudo completar la operación.')
     })
+  }
+
+  /**
+   * Corregir el nombre o la capacidad **no toca el reparto**: quien ya está sentado
+   * sigue sentado. Antes había que borrar la mesa para renombrarla, y al borrarla se
+   * iban con ella todos los grupos que tenía asignados.
+   */
+  const guardar = () => {
+    const sitios = Number(capacity)
+    if (!Number.isInteger(sitios) || capacity.trim() === '') {
+      setError('Los sitios de la mesa son un número entero.')
+      return
+    }
+
+    correr(
+      () => updateTableAction({ id: table.id, eventId, eventSlug, label: label.trim(), capacity: sitios, shape }),
+      () => setEditando(false),
+    )
   }
 
   return (
@@ -113,16 +145,86 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
         </div>
       )}
 
-      <footer className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          disabled={pendiente}
-          onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
-          className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-        >
-          Eliminar mesa
-        </button>
-      </footer>
+      {editando ? (
+        <div className="flex flex-col gap-3 border-t border-line pt-4">
+          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+            Nombre de la mesa
+            <input
+              className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+              maxLength={60}
+              onChange={(e) => setLabel(e.target.value)}
+              type="text"
+              value={label}
+            />
+          </label>
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+              Sitios
+              <input
+                className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+                min={1}
+                onChange={(e) => setCapacity(e.target.value)}
+                type="number"
+                value={capacity}
+              />
+            </label>
+
+            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+              Forma
+              <select
+                className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+                onChange={(e) => setShape(e.target.value as TableShape)}
+                value={shape}
+              >
+                {TABLE_SHAPES.map((s) => (
+                  <option key={s} value={s}>
+                    {NOMBRE_FORMA[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              className="rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
+              disabled={pendiente}
+              onClick={guardar}
+              type="button"
+            >
+              Guardar cambios
+            </button>
+            <button
+              className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+              disabled={pendiente}
+              onClick={() => setEditando(false)}
+              type="button"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <footer className="flex items-center gap-4">
+          <button
+            type="button"
+            disabled={pendiente}
+            onClick={() => setEditando(true)}
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+          >
+            Editar mesa
+          </button>
+          <button
+            type="button"
+            disabled={pendiente}
+            onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+          >
+            Eliminar mesa
+          </button>
+        </footer>
+      )}
 
       {error === null ? null : (
         <p role="alert" className="text-[12px] text-danger">

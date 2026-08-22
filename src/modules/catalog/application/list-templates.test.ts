@@ -18,7 +18,6 @@ const row: TemplateInput = {
 
 const repositoryOf = (rows: TemplateInput[]): TemplateRepository => ({
   listPublished: async () => rows,
-  findBySlug: async (slug) => rows.find((r) => r.slug === slug) ?? null,
 })
 
 describe('listTemplates', () => {

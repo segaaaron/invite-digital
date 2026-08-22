@@ -5,7 +5,6 @@ import { checkin, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { ScanOutcome } from './application/check-in-by-scan'
-import type { DoorManifest } from './application/get-door-manifest'
 
 /**
  * El modo puerta solo lo traen algunos planes. Lanza en vez de devolver un resultado
@@ -120,16 +119,4 @@ export async function voidArrivalAction(input: { eventId: string; scanId: string
   if (isErr(result)) console.error('deshacer rechazado', result.error.kind, result.error.detail)
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
-}
-
-export async function refreshManifestAction(eventId: string): Promise<DoorManifest | null> {
-  await requireSession()
-  await exigirModoPuerta(eventId)
-
-  const result = await checkin.manifest(eventId)
-  if (isErr(result)) {
-    console.error('manifiesto rechazado', result.error.kind, result.error.detail)
-    return null
-  }
-  return result.value
 }

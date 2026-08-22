@@ -20,7 +20,6 @@ vi.mock('../actions', () => ({
   })),
   adjustArrivalAction: vi.fn(async () => {}),
   voidArrivalAction: vi.fn(async () => {}),
-  refreshManifestAction: vi.fn(async () => null),
 }))
 
 // El mismo SHA-256 que produce el servidor sobre 'AbCdEfGhIjKlMnOpQrStUv': desde que la
