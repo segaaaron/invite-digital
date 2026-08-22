@@ -1,7 +1,17 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { db } from './client'
-import { arrivals, eventCategories, guestGroups, plans, templates, venueTables, venueZones } from './schema'
+import {
+  arrivals,
+  eventCategories,
+  fundContributions,
+  gifts,
+  guestGroups,
+  plans,
+  templates,
+  venueTables,
+  venueZones,
+} from './schema'
 
 describe('esquema', () => {
   beforeAll(() => {
@@ -199,5 +209,73 @@ describe('venue', () => {
       sql`select conname from pg_constraint where conrelid = 'venue_tables'::regclass and contype = 'c'`,
     )
     expect(rows.map((r) => r.conname)).toContain('venue_tables_capacity_positive')
+  })
+})
+
+describe('mesa de regalos', () => {
+  it('el precio del regalo es un entero en centavos y no puede faltar', () => {
+    expect(gifts.priceCents.notNull).toBe(true)
+    expect(gifts.priceCents.dataType).toBe('number')
+  })
+
+  it('un regalo puede no estar reservado por nadie', () => {
+    expect(gifts.claimedByGroupId.notNull).toBe(false)
+    expect(gifts.claimedAt.notNull).toBe(false)
+  })
+
+  it('el importe de la contribución es un entero en centavos', () => {
+    expect(fundContributions.amountCents.notNull).toBe(true)
+    expect(fundContributions.amountCents.dataType).toBe('number')
+  })
+
+  it('la abuela del sobre no tiene grupo: guest_group_id es anulable', () => {
+    expect(fundContributions.guestGroupId.notNull).toBe(false)
+    // Su nombre, en cambio, sí hace falta: un importe sin remitente no se agradece.
+    expect(fundContributions.displayName.notNull).toBe(true)
+  })
+
+  it('los importes en la base son integer, no numeric ni float', async () => {
+    const rows = await db.execute<{ table_name: string; column_name: string; data_type: string }>(sql`
+      select table_name, column_name, data_type
+      from information_schema.columns
+      where table_schema = 'public'
+        and (table_name, column_name) in (
+          ('gifts', 'price_cents'), ('gift_funds', 'goal_cents'), ('fund_contributions', 'amount_cents')
+        )
+      order by table_name, column_name
+    `)
+    expect(rows.map((r) => r.data_type)).toEqual(['integer', 'integer', 'integer'])
+  })
+
+  it('la base impide importes de cero o negativos', async () => {
+    const rows = await db.execute<{ conname: string }>(sql`
+      select conname from pg_constraint
+      where contype = 'c'
+        and conrelid in ('gifts'::regclass, 'gift_funds'::regclass, 'fund_contributions'::regclass)
+    `)
+    const names = rows.map((r) => r.conname)
+    expect(names).toContain('gifts_price_positive')
+    expect(names).toContain('gift_funds_goal_positive')
+    expect(names).toContain('fund_contributions_amount_positive')
+  })
+
+  it('borrar un grupo no borra el regalo de la lista: SET NULL, no CASCADE', async () => {
+    const rows = await db.execute<{ delete_rule: string }>(sql`
+      select rc.delete_rule
+      from information_schema.referential_constraints rc
+      join information_schema.key_column_usage kcu on kcu.constraint_name = rc.constraint_name
+      where kcu.table_name = 'gifts' and kcu.column_name = 'claimed_by_group_id'
+    `)
+    expect(rows.map((r) => r.delete_rule)).toEqual(['SET NULL'])
+  })
+
+  it('borrar el fondo arrastra sus contribuciones', async () => {
+    const rows = await db.execute<{ delete_rule: string }>(sql`
+      select rc.delete_rule
+      from information_schema.referential_constraints rc
+      join information_schema.key_column_usage kcu on kcu.constraint_name = rc.constraint_name
+      where kcu.table_name = 'fund_contributions' and kcu.column_name = 'fund_id'
+    `)
+    expect(rows.map((r) => r.delete_rule)).toEqual(['CASCADE'])
   })
 })
