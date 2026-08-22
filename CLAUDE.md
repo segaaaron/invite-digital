@@ -5,7 +5,7 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-21-handoff.md`** — estado completo, decisiones tomadas y qué sigue.
+**`docs/superpowers/2026-08-22-handoff.md`** — estado completo, decisiones tomadas y qué sigue.
 No empieces a trabajar sin leerlo. El anterior, `2026-08-19-handoff-ciclo3.md`, sigue
 sirviendo para el detalle de cómo se construyó la rebanada 1.
 
