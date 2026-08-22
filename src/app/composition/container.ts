@@ -51,9 +51,15 @@ import {
   toggleFeatured,
 } from '@/modules/guestbook/application/guestbook-use-cases'
 import { drizzleGuestbookRepository } from '@/modules/guestbook/infrastructure/drizzle-guestbook-repository'
+import {
+  applyPlanChange,
+  getPendingRequest,
+  rejectPlanChange,
+  requestPlanChange,
+} from '@/modules/plans/application/change-request-use-cases'
 import { getEventAllowance } from '@/modules/plans/application/get-event-allowance'
 import { requireFeature } from '@/modules/plans/application/require-feature'
-import { drizzlePlanReader } from '@/modules/plans/infrastructure/drizzle-plan-reader'
+import { drizzlePlansRepository } from '@/modules/plans/infrastructure/drizzle-plans-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -125,9 +131,13 @@ export const events = {
  * acciones, que es donde vive la frontera.
  */
 export const plans = {
-  allowanceFor: getEventAllowance({ plans: drizzlePlanReader }),
-  requireFeature: requireFeature({ plans: drizzlePlanReader }),
-  listActive: () => drizzlePlanReader.listActivePlans(),
+  allowanceFor: getEventAllowance({ plans: drizzlePlansRepository }),
+  requireFeature: requireFeature({ plans: drizzlePlansRepository }),
+  listActive: () => drizzlePlansRepository.listActivePlans(),
+  requestChange: requestPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
+  applyChange: applyPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
+  rejectChange: rejectPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
+  pendingChange: getPendingRequest({ plans: drizzlePlansRepository }),
 } as const
 
 export const guests = {
