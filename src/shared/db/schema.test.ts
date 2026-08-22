@@ -7,6 +7,7 @@ import {
   fundContributions,
   gifts,
   guestGroups,
+  messageNotes,
   plans,
   templates,
   venueTables,
@@ -277,5 +278,60 @@ describe('mesa de regalos', () => {
       where kcu.table_name = 'fund_contributions' and kcu.column_name = 'fund_id'
     `)
     expect(rows.map((r) => r.delete_rule)).toEqual(['CASCADE'])
+  })
+})
+
+describe('libro de firmas', () => {
+  it('una nota por mensaje: rsvp_response_id es obligatorio y único', () => {
+    expect(messageNotes.rsvpResponseId.notNull).toBe(true)
+    expect(messageNotes.rsvpResponseId.isUnique).toBe(true)
+  })
+
+  it('leído, destacado y respuesta nacen vacíos: los cuatro son anulables', () => {
+    expect(messageNotes.readAt.notNull).toBe(false)
+    expect(messageNotes.featuredAt.notNull).toBe(false)
+    expect(messageNotes.reply.notNull).toBe(false)
+    expect(messageNotes.repliedAt.notNull).toBe(false)
+  })
+
+  it('la nota NO guarda el cuerpo del mensaje: ese texto vive en rsvp_responses', () => {
+    // Dos columnas con el mismo texto son dos versiones que se desincronizan en cuanto
+    // alguien edita una. Aquí solo vive el estado editable.
+    const columnas = Object.keys(messageNotes)
+    expect(columnas).not.toContain('body')
+    expect(columnas).not.toContain('message')
+    expect(columnas).not.toContain('text')
+  })
+
+  it('en la base tampoco hay ninguna columna con el cuerpo del mensaje', async () => {
+    const rows = await db.execute<{ column_name: string }>(
+      sql`select column_name from information_schema.columns where table_schema = 'public' and table_name = 'message_notes'`,
+    )
+    expect(rows.map((r) => r.column_name).sort()).toEqual([
+      'featured_at',
+      'id',
+      'read_at',
+      'replied_at',
+      'reply',
+      'rsvp_response_id',
+    ])
+  })
+
+  it('borrar la respuesta de RSVP se lleva su nota por cascada', async () => {
+    const rows = await db.execute<{ delete_rule: string }>(sql`
+      select rc.delete_rule
+      from information_schema.referential_constraints rc
+      join information_schema.key_column_usage kcu on kcu.constraint_name = rc.constraint_name
+      where kcu.table_name = 'message_notes' and kcu.column_name = 'rsvp_response_id'
+    `)
+    expect(rows.map((r) => r.delete_rule)).toEqual(['CASCADE'])
+  })
+
+  it('el índice de destacados es parcial: solo indexa lo destacado', async () => {
+    const rows = await db.execute<{ indexdef: string }>(
+      sql`select indexdef from pg_indexes where tablename = 'message_notes' and indexname = 'message_notes_featured_idx'`,
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.indexdef).toContain('WHERE')
   })
 })

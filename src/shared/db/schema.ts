@@ -363,3 +363,36 @@ export const fundContributions = pgTable(
     check('fund_contributions_amount_positive', sql`${t.amountCents} > 0`),
   ],
 )
+
+/**
+ * El estado editable de un mensaje del libro de firmas: leído, destacado y la respuesta
+ * del atelier.
+ *
+ * **No guarda el cuerpo del mensaje.** El texto que escribió el invitado vive en
+ * `rsvp_responses.message` desde la rebanada 1 y ahí se queda: copiarlo aquí daría dos
+ * versiones del mismo texto que se desincronizan en cuanto alguien edite una. Y meter
+ * `read_at` dentro de `rsvp_responses` ensuciaría un histórico que hasta hoy es
+ * inmutable —una respuesta se escribe una vez y no se toca—, y esa propiedad vale más
+ * que ahorrarse una tabla.
+ *
+ * `UNIQUE` sobre `rsvp_response_id`: una nota por mensaje. Las escrituras son
+ * `INSERT ... ON CONFLICT DO UPDATE`, así que marcar leído dos veces no crea dos filas
+ * ni revienta.
+ */
+export const messageNotes = pgTable(
+  'message_notes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    rsvpResponseId: uuid('rsvp_response_id')
+      .notNull()
+      .unique()
+      .references(() => rsvpResponses.id, { onDelete: 'cascade' }),
+    readAt: timestamp('read_at', { withTimezone: true }),
+    featuredAt: timestamp('featured_at', { withTimezone: true }),
+    reply: text('reply'),
+    repliedAt: timestamp('replied_at', { withTimezone: true }),
+  },
+  // Índice parcial: los destacados son un puñado dentro de todos los mensajes, y la
+  // vista del cliente solo pide esos.
+  (t) => [index('message_notes_featured_idx').on(t.featuredAt).where(sql`${t.featuredAt} is not null`)],
+)

@@ -43,6 +43,13 @@
       "when": 1787362161035,
       "tag": "0005_registry",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1787364439173,
+      "tag": "0006_guestbook",
+      "breakpoints": true
     }
   ]
 }
