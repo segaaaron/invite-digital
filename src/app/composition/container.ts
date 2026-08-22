@@ -32,6 +32,17 @@ import { moveElements } from '@/modules/venue/application/move-element'
 import { addTable, removeTable, updateTable } from '@/modules/venue/application/table-use-cases'
 import { addZone, removeZone, updateZone } from '@/modules/venue/application/zone-use-cases'
 import { drizzleVenueRepository } from '@/modules/venue/infrastructure/drizzle-venue-repository'
+import { claimGift, releaseGift } from '@/modules/registry/application/claim-gift'
+import { addFund, recordContribution, removeFund, updateFund } from '@/modules/registry/application/fund-use-cases'
+import {
+  addGift,
+  markPurchased,
+  releaseGiftAsAtelier,
+  removeGift,
+  updateGift,
+} from '@/modules/registry/application/gift-use-cases'
+import { listRegistry } from '@/modules/registry/application/list-registry'
+import { drizzleRegistryRepository } from '@/modules/registry/infrastructure/drizzle-registry-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -142,4 +153,27 @@ export const venue = {
   removeZone: removeZone({ venue: drizzleVenueRepository }),
   moveElements: moveElements({ venue: drizzleVenueRepository }),
   seating: listSeating({ venue: drizzleVenueRepository }),
+} as const
+
+export const registry = {
+  // Del atelier, con sesión.
+  addGift: addGift({ registry: drizzleRegistryRepository, ids: () => crypto.randomUUID() }),
+  updateGift: updateGift({ registry: drizzleRegistryRepository }),
+  removeGift: removeGift({ registry: drizzleRegistryRepository }),
+  markPurchased: markPurchased({ registry: drizzleRegistryRepository, clock }),
+  releaseAsAtelier: releaseGiftAsAtelier({ registry: drizzleRegistryRepository, clock }),
+  addFund: addFund({ registry: drizzleRegistryRepository, ids: () => crypto.randomUUID() }),
+  updateFund: updateFund({ registry: drizzleRegistryRepository }),
+  removeFund: removeFund({ registry: drizzleRegistryRepository }),
+  recordContribution: recordContribution({
+    registry: drizzleRegistryRepository,
+    ids: () => crypto.randomUUID(),
+    clock,
+  }),
+  list: listRegistry({ registry: drizzleRegistryRepository }),
+
+  // Del invitado, autorizadas por su token. Comparten el mismo `resolveByToken` que el
+  // RSVP: la regla de qué enlace vale vive en un solo sitio.
+  claim: claimGift({ registry: drizzleRegistryRepository, resolveGroup: (token) => guests.resolveByToken(token) }),
+  release: releaseGift({ registry: drizzleRegistryRepository, resolveGroup: (token) => guests.resolveByToken(token) }),
 } as const
