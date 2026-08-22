@@ -1,7 +1,7 @@
 import type { Dictionary } from '../dictionary'
 
 export const es = {
-  nav: { collections: 'Colecciones', experience: 'Experiencia 3D', pricing: 'Inversión', contact: 'Hablemos' },
+  nav: { collections: 'Colecciones', experience: 'Experiencia 3D', cases: 'Casos', pricing: 'Precios', contact: 'Crear invitación' },
   hero: {
     eyebrow: 'Lujo sereno · Atelier digital',
     titleLine1: 'INVITACIONES',
@@ -11,6 +11,13 @@ export const es = {
     ctaPrimary: 'Crear invitación',
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
+    trustBrands: ['Marca aliada 1', 'Marca aliada 2', 'Marca aliada 3'],
+    metrics: [
+      { value: '480', label: 'Eventos entregados', icon: '✉' },
+      { value: '72h', label: 'Entrega promedio', icon: '◷' },
+      { value: '94%', label: 'Confirmación RSVP', icon: '✓' },
+      { value: '16', label: 'Países alcanzados', icon: '⊕' },
+    ],
     posterAlt: 'Sobre de algodón con sello de cera dorado, cerrado sobre fondo marfil',
     envelopeOpen: 'Abrir el sobre',
     envelopeClose: 'Cerrar el sobre',
@@ -19,9 +26,24 @@ export const es = {
     eyebrow: 'La experiencia',
     title: 'Tres actos de una misma pieza',
     acts: [
-      { label: 'Acto I', title: 'Unboxing virtual', body: 'El sobre llega cerrado. El invitado desliza, el sello de cera cede y la tarjeta emerge con física real de papel.' },
-      { label: 'Acto II', title: 'Detalles inmersivos', body: 'Foil dorado que reacciona a la luz del cursor, texturas de algodón, tipografía compuesta a mano para cada nombre.' },
-      { label: 'Acto III', title: 'Demo interactiva en vivo', body: 'Galería en movimiento, mapa, cuenta regresiva y botón de RSVP que abre el WhatsApp de los novios.' },
+      {
+        label: 'Acto I',
+        title: 'Unboxing virtual',
+        body: 'El sobre llega cerrado. El invitado desliza, el sello de cera cede y la tarjeta emerge con física real de papel.',
+        imageAlt: 'Sobre abierto con sello de cera dorado',
+      },
+      {
+        label: 'Acto II',
+        title: 'Detalles inmersivos',
+        body: 'Foil dorado que reacciona a la luz del cursor, texturas de algodón, tipografía compuesta a mano para cada nombre.',
+        imageAlt: 'Mesa del taller con sellos, lacre y tarjetas doradas',
+      },
+      {
+        label: 'Acto III',
+        title: 'Demo interactiva en vivo',
+        body: 'Galería en movimiento, mapa, cuenta regresiva y botón de RSVP que abre el WhatsApp de los novios.',
+        imageAlt: 'Novia frente al arco floral',
+      },
     ],
   },
   mobile: {

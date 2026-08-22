@@ -15,6 +15,7 @@ import { ComparisonSection } from '@/sections/ComparisonSection'
 import { ExperienceSection } from '@/sections/ExperienceSection'
 import { FaqSection } from '@/sections/FaqSection'
 import { HeroSection } from '@/sections/HeroSection'
+import { HeroStack } from '@/sections/HeroStack'
 import { MobileSection } from '@/sections/MobileSection'
 import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { ContactSection } from '@/modules/leads'
@@ -103,6 +104,7 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
             alt={dictionary.hero.posterAlt}
             closeLabel={dictionary.hero.envelopeClose}
             openLabel={dictionary.hero.envelopeOpen}
+            posterSlot={<HeroStack alt={dictionary.hero.posterAlt} />}
             posterSrc="/hero/envelope-poster.avif"
           />
         }

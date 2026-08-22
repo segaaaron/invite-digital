@@ -44,9 +44,15 @@ describe('HeroCanvas', () => {
     expect(document.querySelector('canvas')).toBeNull()
   })
 
-  it('sustituye el póster por la escena en un equipo capaz, conservando el nombre accesible', () => {
+  it('en un equipo capaz sigue enseñando el póster: la escena entra al abrir el sobre', () => {
+    // El hero de la maqueta es la composición de sobres. La escena es lo que aparece
+    // cuando alguien la pide; antes se comía la portada en cuanto había WebGL2.
     stubEnvironment({ reducedMotion: false, webgl2: true })
     render(<HeroCanvas alt={POSTER_ALT} closeLabel="Cerrar el sobre" openLabel="Abrir el sobre" posterSrc="/hero/envelope-poster.avif" />)
+
+    expect(screen.getByAltText(POSTER_ALT)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir el sobre' }))
 
     expect(screen.getByRole('img', { name: POSTER_ALT })).toBeInTheDocument()
     expect(screen.queryByAltText(POSTER_ALT)).toBeNull()
@@ -58,10 +64,12 @@ describe('HeroCanvas', () => {
       <HeroCanvas alt={POSTER_ALT} closeLabel="Cerrar el sobre" openLabel="Abrir el sobre" posterSrc="/hero/envelope-poster.avif" />,
     )
 
-    const toggle = screen.getByRole('button', { name: 'Abrir el sobre' })
-    expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir el sobre' }))
+
+    const toggle = screen.getByRole('button', { name: 'Cerrar el sobre' })
+    expect(toggle).toHaveAttribute('aria-pressed', 'true')
 
     fireEvent.click(toggle)
-    expect(screen.getByRole('button', { name: 'Cerrar el sobre' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByRole('button', { name: 'Abrir el sobre' })).toBeInTheDocument()
   })
 })

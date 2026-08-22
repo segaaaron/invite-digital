@@ -1,7 +1,7 @@
 import type { Dictionary } from '../dictionary'
 
 export const en = {
-  nav: { collections: 'Collections', experience: '3D Experience', pricing: 'Investment', contact: "Let's talk" },
+  nav: { collections: 'Collections', experience: '3D experience', cases: 'Case studies', pricing: 'Pricing', contact: 'Create invitation' },
   hero: {
     eyebrow: 'Quiet luxury · Digital atelier',
     titleLine1: 'DIGITAL',
@@ -11,6 +11,13 @@ export const en = {
     ctaPrimary: 'Create your invitation',
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
+    trustBrands: ['Partner brand 1', 'Partner brand 2', 'Partner brand 3'],
+    metrics: [
+      { value: '480', label: 'Events delivered', icon: '✉' },
+      { value: '72h', label: 'Average delivery', icon: '◷' },
+      { value: '94%', label: 'RSVP completion', icon: '✓' },
+      { value: '16', label: 'Countries reached', icon: '⊕' },
+    ],
     posterAlt: 'Cotton envelope with a golden wax seal, closed on an ivory background',
     envelopeOpen: 'Open the envelope',
     envelopeClose: 'Close the envelope',
@@ -19,9 +26,24 @@ export const en = {
     eyebrow: 'The experience',
     title: 'Three acts, one single piece',
     acts: [
-      { label: 'Act I', title: 'Virtual unboxing', body: 'The envelope arrives sealed. Your guest slides it open, the wax seal gives way, and the card emerges with the physics of real paper.' },
-      { label: 'Act II', title: 'Immersive details', body: 'Gold foil that catches the light as the cursor moves, cotton-paper textures, and hand-composed typography for every name.' },
-      { label: 'Act III', title: 'A live interactive demo', body: 'A gallery in motion, a map, a countdown, and an RSVP button that opens the couple’s WhatsApp.' },
+      {
+        label: 'Act I',
+        title: 'Virtual unboxing',
+        body: 'The envelope arrives sealed. Your guest slides it open, the wax seal gives way, and the card emerges with the physics of real paper.',
+        imageAlt: 'An open envelope with a gold wax seal',
+      },
+      {
+        label: 'Act II',
+        title: 'Immersive details',
+        body: 'Gold foil that catches the light as the cursor moves, cotton-paper textures, and hand-composed typography for every name.',
+        imageAlt: 'A studio table with seals, sealing wax and gilded cards',
+      },
+      {
+        label: 'Act III',
+        title: 'A live interactive demo',
+        body: 'A gallery in motion, a map, a countdown, and an RSVP button that opens the couple’s WhatsApp.',
+        imageAlt: 'A bride in front of the floral arch',
+      },
     ],
   },
   mobile: {

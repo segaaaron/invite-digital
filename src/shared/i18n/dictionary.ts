@@ -1,6 +1,8 @@
 export interface NavDictionary {
   collections: string
   experience: string
+  /** «Casos» en la maqueta; ancla a la sección de la diferencia. */
+  cases: string
   pricing: string
   contact: string
 }
@@ -14,15 +16,27 @@ export interface HeroDictionary {
   ctaPrimary: string
   ctaSecondary: string
   trustLabel: string
+  /** Los tres sellos de confianza de la banda. Marcadores hasta que el usuario dé los suyos. */
+  trustBrands: readonly [string, string, string]
+  /** La franja de cifras bajo el sobre. */
+  metrics: readonly [HeroMetric, HeroMetric, HeroMetric, HeroMetric]
   posterAlt: string
   envelopeOpen: string
   envelopeClose: string
+}
+
+export interface HeroMetric {
+  value: string
+  label: string
+  icon: string
 }
 
 export interface ExperienceAct {
   label: string
   title: string
   body: string
+  /** Texto alternativo de la fotografía del acto. La imagen sale de la maqueta. */
+  imageAlt: string
 }
 
 export interface ExperienceDictionary {

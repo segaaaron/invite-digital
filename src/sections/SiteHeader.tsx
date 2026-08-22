@@ -6,9 +6,14 @@ import { Button } from '@/shared/design/ui/Button'
 type Props = { locale: Locale; dictionary: Dictionary }
 
 export function SiteHeader({ locale, dictionary }: Props) {
-  const links = [
+  // Las cinco entradas de la maqueta: dos a la izquierda del logotipo y dos a la derecha,
+  // con el botón al final.
+  const izquierda = [
     { href: '#colecciones', label: dictionary.nav.collections },
     { href: '#experiencia', label: dictionary.nav.experience },
+  ]
+  const derecha = [
+    { href: '#diferencia', label: dictionary.nav.cases },
     { href: '#precios', label: dictionary.nav.pricing },
   ]
 
@@ -16,7 +21,7 @@ export function SiteHeader({ locale, dictionary }: Props) {
     <header className="fixed inset-x-0 top-[18px] z-[70] flex justify-center px-4">
       <div className="flex w-full max-w-[1180px] items-center gap-8 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/72 px-6 py-3 shadow-[var(--shadow-float)] backdrop-blur-[18px]">
         <nav className="hidden flex-1 items-center justify-end gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
-          {links.slice(0, 2).map((link) => (
+          {izquierda.map((link) => (
             <a key={link.href} className="text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
               {link.label}
             </a>
@@ -31,9 +36,11 @@ export function SiteHeader({ locale, dictionary }: Props) {
         </Link>
 
         <nav className="hidden flex-1 items-center gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
-          <a className="text-ink-soft transition-colors hover:text-gold-deep" href="#precios">
-            {dictionary.nav.pricing}
-          </a>
+          {derecha.map((link) => (
+            <a key={link.href} className="text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
+              {link.label}
+            </a>
+          ))}
           <Button href="#contacto" className="ml-auto">
             {dictionary.nav.contact}
           </Button>

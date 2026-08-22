@@ -2,7 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
-import { Suspense, useState } from 'react'
+import { Suspense, useState, type ReactNode } from 'react'
 import { SceneBoundary } from './SceneBoundary'
 import { useSceneCapability } from './useSceneCapability'
 
@@ -14,14 +14,21 @@ const EnvelopeScene = dynamic(() => import('./EnvelopeScene'), { ssr: false })
 // height instead of `h-full`, which would collapse inside an auto-height grid cell.
 const SLOT_CLASS = 'h-[440px] w-full lg:h-[540px]'
 
-type Props = { posterSrc: string; alt: string; openLabel: string; closeLabel: string }
+type Props = {
+  posterSrc: string
+  alt: string
+  openLabel: string
+  closeLabel: string
+  /** Composición que sustituye al póster plano. La portada la pasa; las pruebas no. */
+  posterSlot?: ReactNode
+}
 
-export function HeroCanvas({ posterSrc, alt, openLabel, closeLabel }: Props) {
+export function HeroCanvas({ posterSrc, alt, openLabel, closeLabel, posterSlot }: Props) {
   const capable = useSceneCapability()
   const [contextLost, setContextLost] = useState(false)
   const [open, setOpen] = useState(false)
 
-  const poster = (
+  const poster = posterSlot ?? (
     <Image
       alt={alt}
       className="h-full w-full rounded-[var(--radius-card)] object-cover"
@@ -36,7 +43,26 @@ export function HeroCanvas({ posterSrc, alt, openLabel, closeLabel }: Props) {
   // The poster is the LCP candidate, so it is what the server and the first paint
   // deliver; the scene only replaces it after the capability check, and it goes back
   // to the poster if the GPU context is lost.
-  if (!capable || contextLost) return <div className={SLOT_CLASS}>{poster}</div>
+  //
+  // La escena tampoco entra sola: el hero de la maqueta es la composición de sobres, y
+  // el 3D es lo que aparece cuando alguien pulsa «Abrir el sobre». Antes se comía la
+  // portada en cuanto el dispositivo daba la talla.
+  if (!capable || contextLost || !open) {
+    return (
+      <div className={`relative ${SLOT_CLASS}`}>
+        {poster}
+        {capable && !contextLost ? (
+          <button
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/80 px-5 py-2 text-[11px] tracking-[var(--tracking-luxe)] text-ink uppercase backdrop-blur-md transition-colors hover:border-gold"
+            onClick={() => setOpen(true)}
+            type="button"
+          >
+            {openLabel}
+          </button>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <div className={`relative ${SLOT_CLASS}`}>
