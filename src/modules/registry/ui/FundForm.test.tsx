@@ -1,13 +1,16 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import type { Fund } from '../domain/fund'
 import { FundForm } from './FundForm'
 
 type ActionResult = { ok: true; message?: string } | { ok: false; kind: string; message: string }
 
 const addFundAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
+const updateFundAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 
 vi.mock('../actions', () => ({
   addFundAction: (...args: unknown[]) => addFundAction(...(args as [Record<string, unknown>])),
+  updateFundAction: (...args: unknown[]) => updateFundAction(...(args as [Record<string, unknown>])),
 }))
 
 const props = { eventId: 'e1', eventSlug: 'boda' }
@@ -21,7 +24,16 @@ const rellena = (campos: { nombre?: string; meta?: string; descripcion?: string 
 
 beforeEach(() => {
   addFundAction.mockClear()
+  updateFundAction.mockClear()
 })
+
+const fondo: Fund = {
+  id: 'f1',
+  eventId: 'e1',
+  name: 'Luna de miel',
+  description: 'Pasajes y hotel.',
+  goalCents: 500_000,
+}
 
 describe('FundForm', () => {
   it('manda la meta ya convertida a centavos enteros', () => {
@@ -67,5 +79,59 @@ describe('FundForm', () => {
     rellena({ nombre: '', meta: '100' })
     fireEvent.click(screen.getByRole('button', { name: 'Abrir fondo' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('El nombre va de 1 a 160')
+  })
+})
+
+describe('FundForm en modo edición', () => {
+  it('llega relleno con los valores actuales del fondo', () => {
+    render(<FundForm {...props} fund={fondo} />)
+    expect(screen.getByLabelText('Fondo')).toHaveValue('Luna de miel')
+    expect(screen.getByLabelText('Meta')).toHaveValue('5000.00')
+    expect(screen.getByLabelText('Descripción')).toHaveValue('Pasajes y hotel.')
+  })
+
+  it('un fondo sin descripción llega con el campo vacío, no con «null» escrito', () => {
+    render(<FundForm {...props} fund={{ ...fondo, description: null }} />)
+    expect(screen.getByLabelText('Descripción')).toHaveValue('')
+  })
+
+  it('guardar llama a updateFundAction con el id y la meta nueva', () => {
+    render(<FundForm {...props} fund={fondo} />)
+    rellena({ meta: '6.000,00' })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateFundAction).toHaveBeenCalledWith({
+      id: 'f1',
+      eventId: 'e1',
+      eventSlug: 'boda',
+      name: 'Luna de miel',
+      description: 'Pasajes y hotel.',
+      goalCents: 600_000,
+    })
+    expect(addFundAction).not.toHaveBeenCalled()
+  })
+
+  it('una meta inválida no llama a la acción', () => {
+    render(<FundForm {...props} fund={fondo} />)
+    rellena({ meta: 'lo que se pueda' })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateFundAction).not.toHaveBeenCalled()
+    expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+
+  it('cancelar no llama a nada y avisa de que se terminó', () => {
+    const alTerminar = vi.fn()
+    render(<FundForm {...props} fund={fondo} onDone={alTerminar} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(updateFundAction).not.toHaveBeenCalled()
+    expect(addFundAction).not.toHaveBeenCalled()
+    expect(alTerminar).toHaveBeenCalledTimes(1)
+  })
+
+  it('el modo alta no ofrece cancelar', () => {
+    render(<FundForm {...props} />)
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
   })
 })

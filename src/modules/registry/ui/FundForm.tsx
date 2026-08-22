@@ -1,13 +1,35 @@
 'use client'
 
 import { useId, useState, useTransition } from 'react'
-import { addFundAction } from '../actions'
-import { centsOrMessage, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
+import type { Fund } from '../domain/fund'
+import { addFundAction, updateFundAction } from '../actions'
+import { centsOrMessage, centsToInput, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
 
-export function FundForm({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
-  const [name, setName] = useState('')
-  const [goal, setGoal] = useState('')
-  const [description, setDescription] = useState('')
+/**
+ * El mismo formulario abre un fondo y corrige uno abierto. Con `fund` está en modo
+ * edición.
+ *
+ * Bajar la meta por debajo de lo ya recaudado es legítimo —la pareja ajusta su
+ * objetivo— y no hace falta ninguna comprobación aquí para que la pantalla aguante:
+ * `progressOf` recorta el porcentaje al 100 y dice el exceso con palabras, así que la
+ * barra no se sale de su contenedor por mucho que la meta baje.
+ */
+export function FundForm({
+  eventId,
+  eventSlug,
+  fund,
+  onDone,
+}: {
+  eventId: string
+  eventSlug: string
+  fund?: Fund
+  onDone?: () => void
+}) {
+  const editando = fund !== undefined
+
+  const [name, setName] = useState(fund?.name ?? '')
+  const [goal, setGoal] = useState(fund === undefined ? '' : centsToInput(fund.goalCents))
+  const [description, setDescription] = useState(fund?.description ?? '')
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
 
@@ -23,17 +45,24 @@ export function FundForm({ eventId, eventSlug }: { eventId: string; eventSlug: s
     }
 
     setError(null)
+    const campos = {
+      eventId,
+      eventSlug,
+      name: name.trim(),
+      description: nullIfBlank(description),
+      goalCents: meta.cents,
+    }
+
     empezar(async () => {
-      const r = await addFundAction({
-        eventId,
-        eventSlug,
-        name: name.trim(),
-        description: nullIfBlank(description),
-        goalCents: meta.cents,
-      })
+      const r = fund === undefined ? await addFundAction(campos) : await updateFundAction({ id: fund.id, ...campos })
 
       if (!r.ok) {
         setError(r.message)
+        return
+      }
+
+      if (fund !== undefined) {
+        onDone?.()
         return
       }
 
@@ -91,9 +120,22 @@ export function FundForm({ eventId, eventSlug }: { eventId: string; eventSlug: s
         </p>
       )}
 
-      <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
-        {pendiente ? 'Abriendo…' : 'Abrir fondo'}
-      </button>
+      <div className="flex flex-wrap items-center gap-4">
+        <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
+          {editando ? (pendiente ? 'Guardando…' : 'Guardar cambios') : pendiente ? 'Abriendo…' : 'Abrir fondo'}
+        </button>
+
+        {editando ? (
+          <button
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            disabled={pendiente}
+            onClick={() => onDone?.()}
+            type="button"
+          >
+            Cancelar
+          </button>
+        ) : null}
+      </div>
     </div>
   )
 }

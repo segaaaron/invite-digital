@@ -6,9 +6,14 @@ import { FundCard } from './FundCard'
 const removeFundAction = vi.fn(async () => ({ ok: true as const }))
 const recordContributionAction = vi.fn(async () => ({ ok: true as const }))
 
+const addFundAction = vi.fn(async () => ({ ok: true as const }))
+const updateFundAction = vi.fn(async () => ({ ok: true as const }))
+
 vi.mock('../actions', () => ({
   removeFundAction: (...args: unknown[]) => removeFundAction(...(args as [])),
   recordContributionAction: (...args: unknown[]) => recordContributionAction(...(args as [])),
+  addFundAction: (...args: unknown[]) => addFundAction(...(args as [])),
+  updateFundAction: (...args: unknown[]) => updateFundAction(...(args as [])),
 }))
 
 const AHORA = new Date('2026-08-21T12:00:00.000Z')
@@ -48,6 +53,8 @@ const anchoDeLaBarra = (): number => {
 beforeEach(() => {
   removeFundAction.mockClear()
   recordContributionAction.mockClear()
+  addFundAction.mockClear()
+  updateFundAction.mockClear()
 })
 
 describe('FundCard', () => {
@@ -101,5 +108,51 @@ describe('FundCard', () => {
 
     expect(removeFundAction).toHaveBeenCalledWith({ id: 'f1', eventId: 'e1', eventSlug: 'boda' })
     expect(await screen.findByRole('status')).toHaveTextContent('3 aportaciones')
+  })
+})
+
+describe('FundCard · editar un fondo', () => {
+  it('abre el formulario relleno con los datos del fondo', () => {
+    render(<FundCard {...props} view={vista(50_000)} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar fondo$/i }))
+
+    expect(screen.getByLabelText('Fondo')).toHaveValue('Luna de miel')
+    expect(screen.getByLabelText('Meta')).toHaveValue('1000.00')
+  })
+
+  it('bajar la meta por debajo de lo recaudado se permite: la pareja ajusta su objetivo', () => {
+    render(<FundCard {...props} view={vista(140_000)} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar fondo$/i }))
+    fireEvent.change(screen.getByLabelText('Meta'), { target: { value: '600' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+
+    expect(updateFundAction).toHaveBeenCalledWith({
+      id: 'f1',
+      eventId: 'e1',
+      eventSlug: 'boda',
+      name: 'Luna de miel',
+      description: 'Pasajes y hotel.',
+      goalCents: 60_000,
+    })
+  })
+
+  it('con la meta por debajo de lo recaudado la barra sigue recortada al 100 % y avisa', () => {
+    // Mientras se corrige, el progreso tiene que seguir a la vista: es lo que explica
+    // por qué la meta se está bajando.
+    render(<FundCard {...props} view={vista(140_000)} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar fondo$/i }))
+
+    expect(anchoDeLaBarra()).toBe(100)
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '100')
+    expect(screen.getByText(/meta superada/i)).toBeInTheDocument()
+  })
+
+  it('cancelar cierra el formulario sin llamar a nada', () => {
+    render(<FundCard {...props} view={vista(50_000)} />)
+    fireEvent.click(screen.getByRole('button', { name: /^editar fondo$/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(updateFundAction).not.toHaveBeenCalled()
+    expect(screen.queryByLabelText('Meta')).not.toBeInTheDocument()
   })
 })

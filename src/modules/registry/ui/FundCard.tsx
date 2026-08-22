@@ -5,12 +5,14 @@ import { formatAmount } from '../domain/money'
 import type { FundView } from '../application/list-registry'
 import { removeFundAction } from '../actions'
 import { ContributionForm } from './ContributionForm'
+import { FundForm } from './FundForm'
 
 type Props = { eventId: string; eventSlug: string; currency: string; view: FundView }
 
 export function FundCard({ eventId, eventSlug, currency, view }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
+  const [editando, setEditando] = useState(false)
   const [pendiente, empezar] = useTransition()
 
   const { fund, progress, contributions } = view
@@ -74,20 +76,38 @@ export function FundCard({ eventId, eventSlug, currency, view }: Props) {
         </ul>
       )}
 
+      {/*
+        Lo recaudado, la barra y el aviso de meta superada siguen a la vista mientras se
+        corrige: son justo lo que explica por qué se está bajando la meta.
+      */}
       <div className="border-t border-line pt-4">
-        <ContributionForm eventId={eventId} eventSlug={eventSlug} fundId={fund.id} />
+        {editando ? (
+          <FundForm eventId={eventId} eventSlug={eventSlug} fund={fund} onDone={() => setEditando(false)} />
+        ) : (
+          <ContributionForm eventId={eventId} eventSlug={eventSlug} fundId={fund.id} />
+        )}
       </div>
 
-      <footer>
-        <button
-          className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-          disabled={pendiente}
-          onClick={borrar}
-          type="button"
-        >
-          Eliminar fondo
-        </button>
-      </footer>
+      {editando ? null : (
+        <footer className="flex flex-wrap items-center gap-4">
+          <button
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            disabled={pendiente}
+            onClick={() => setEditando(true)}
+            type="button"
+          >
+            Editar fondo
+          </button>
+          <button
+            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            disabled={pendiente}
+            onClick={borrar}
+            type="button"
+          >
+            Eliminar fondo
+          </button>
+        </footer>
+      )}
 
       {error === null ? null : (
         <p className="text-[12px] text-danger" role="alert">
