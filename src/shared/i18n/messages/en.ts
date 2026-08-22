@@ -60,6 +60,9 @@ export const en = {
     successBody: 'Thank you. You can change your answer until the deadline.',
     change: 'Change my answer',
     closed: 'The confirmation window has closed. Message us on WhatsApp if you need to tell us anything.',
+    passTitle: 'Entry pass',
+    passHint: 'Show it at the door.',
+    passAlt: 'Entry pass for',
     errors: {
       invitation_not_found: 'This invitation does not exist.',
       invitation_revoked: 'This invitation is no longer active.',

@@ -168,6 +168,9 @@ export interface InvitationDictionary {
   successBody: string
   change: string
   closed: string
+  passTitle: string
+  passHint: string
+  passAlt: string
   errors: Record<RsvpMessageKey, string>
 }
 
