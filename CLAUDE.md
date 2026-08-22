@@ -230,6 +230,12 @@ Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
 - **Toda Server Action del panel empieza por `requireSession()`.** Es un extremo HTTP público;
   vivir tras el formulario no la protege.
 - Toda animación respeta `prefers-reduced-motion: reduce`.
+- **La maqueta del panel vive en `docs/design-reference/dashboard/`, no en `public/`.**
+  Se movió con `git mv` —el historial se conserva— porque en `public/` la servía Next
+  **sin sesión**: cualquiera con la dirección `/dashboard/Dashboard.html` entraba, y
+  parece un panel que funciona aunque solo guarde en `localStorage`. Abrir esa vista de
+  check-in el día de una boda en vez de la de verdad habría dejado la recepción entera
+  sin registrar, sin un solo error. Se consulta con doble clic; ya no la sirve nadie.
 - Fuente visual de la verdad:
   `/Users/miguelangelsaraviabelmonte/Documents/vallhalla web images/Sitio Web Invitaciones Digitales/InvitePremium Ivory.dc.html`
   (ruta con espacios, entrecomíllala). Ivory es la variante canónica.

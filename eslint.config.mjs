@@ -59,8 +59,12 @@ export default defineConfig([
   },
   // Override default ignores of eslint-config-next.
   // `public/` son recursos estáticos que el servidor sirve tal cual, no código
-  // fuente del proyecto: no pasan por el compilador ni por las fronteras, y el
-  // dashboard vendido ahí viene con su propio estilo. Lintarlo solo ensuciaba la
-  // puerta con avisos de un archivo que no se escribe aquí.
-  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'public/**']),
+  // fuente del proyecto: no pasan por el compilador ni por las fronteras.
+  //
+  // `docs/` es documentación, y desde que la maqueta del panel se mudó a
+  // `docs/design-reference/dashboard/` incluye un `.js` que no se escribe aquí:
+  // trae su propio estilo y ensuciaba la puerta con once avisos de un archivo que
+  // nadie va a tocar. Esto NO relaja ninguna frontera: `docs/` no se compila ni se
+  // sirve, y `src/**` sigue lintándose entero.
+  globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts', 'public/**', 'docs/**']),
 ])

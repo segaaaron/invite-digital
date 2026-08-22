@@ -26,16 +26,13 @@ const nextConfig: NextConfig = {
       },
       {
         // El check-in del día del evento lee el QR del pase con la cámara del
-        // dispositivo de la puerta. La política global la niega, así que se
-        // reabre solo para esta ruta y solo para el propio origen: esta regla
-        // va después a propósito, porque la última coincidencia es la que manda.
-        source: '/dashboard/:path*',
-        headers: [
-          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
-        ],
-      },
-      {
-        // La puerta de verdad, ya no la maqueta. Sin esta excepción la política
+        // dispositivo de la puerta. La política global la niega, así que se reabre
+        // solo para esta ruta y solo para el propio origen: esta regla va después a
+        // propósito, porque la última coincidencia es la que manda.
+        //
+        // La excepción gemela para `/dashboard/:path*` se retiró: la maqueta pasó a
+        // `docs/design-reference/dashboard/` y ya no se sirve, así que apuntaba a una
+        // ruta que hoy responde 404. Sin esta excepción la política
         // global deja `getUserMedia` en un fallo de permiso que ninguna prueba
         // unitaria ve, porque la cabecera solo existe en el servidor.
         source: '/panel/eventos/:slug/puerta',
