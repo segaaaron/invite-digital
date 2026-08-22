@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { db } from './client'
-import { eventCategories, plans, templates } from './schema'
+import { arrivals, eventCategories, plans, templates } from './schema'
 
 describe('esquema', () => {
   beforeAll(() => {
@@ -149,5 +149,21 @@ describe('esquema', () => {
 
     if (!before || !after) throw new Error('No se pudieron leer los timestamps del plan "atelier"')
     expect(after.getTime()).toBeGreaterThan(before.getTime())
+  })
+})
+
+describe('arrivals', () => {
+  it('guarda la clave de idempotencia del escaneo', () => {
+    expect(arrivals.scanId.notNull).toBe(true)
+    expect(arrivals.scanId.isUnique).toBe(true)
+  })
+
+  it('deshacer es una lápida, no un borrado', () => {
+    expect(arrivals.voidedAt.notNull).toBe(false)
+  })
+
+  it('separa la hora del dispositivo de la del servidor', () => {
+    expect(arrivals.scannedAt.notNull).toBe(true)
+    expect(arrivals.receivedAt.notNull).toBe(true)
   })
 })

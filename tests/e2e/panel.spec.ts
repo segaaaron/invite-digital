@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
+import { createEvent, signIn } from './helpers/panel'
 
 test.describe('sin sesión', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
@@ -74,11 +75,7 @@ test.describe('cierre de sesión', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 
   test('cierra la sesión y el panel vuelve a exigirla', async ({ page }) => {
-    await page.goto('/panel/entrar')
-    await page.getByLabel('Correo').fill(ATELIER.email)
-    await page.getByLabel('Contraseña').fill(ATELIER.password)
-    await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel$/)
+    await signIn(page)
 
     await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page).toHaveURL(/\/panel\/entrar$/)
@@ -95,13 +92,7 @@ test.describe('invitados del evento', () => {
 
   test.beforeEach(async ({ page }) => {
     await deleteEvent(SLUG)
-    await page.goto('/panel/eventos/nuevo')
-    await page.getByLabel('Título').fill('Boda invitados e2e')
-    await page.getByLabel('Identificador').fill(SLUG)
-    await page.getByLabel('Fecha del evento').fill('2027-05-15')
-    await page.getByLabel('Fecha límite de confirmación').fill('2027-05-01')
-    await page.getByRole('button', { name: 'Crear evento' }).click()
-    await expect(page.getByRole('status')).toContainText('Evento guardado')
+    await createEvent(page, { slug: SLUG, title: 'Boda invitados e2e' })
   })
 
   // La conexión de las fixtures es única para todo el archivo: se cierra en el último

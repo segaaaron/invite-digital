@@ -1,7 +1,10 @@
 import { notFound } from 'next/navigation'
+import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { invitationUrl } from '@/modules/guests'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
+import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
@@ -35,6 +38,12 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
       ) : (
         <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.closed}</p>
       )}
+
+      <PassQr
+        url={invitationUrl(token, env.SITE_URL)}
+        label={group.label}
+        labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
+      />
     </Theme>
   )
 }

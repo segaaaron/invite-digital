@@ -14,6 +14,14 @@
   --color-shadow-rgb: 90 66 26;
   --color-line: rgb(var(--color-gold-rgb) / 0.22);
 
+  /* Semáforo de la puerta. Es el único sitio donde pueden vivir estos colores. */
+  --color-ok: #5a705c;
+  --color-ok-deep: #3f5340;
+  --color-warn: #b48c44;
+  --color-warn-deep: #7d5f22;
+  --color-danger: #a3553a;
+  --color-danger-deep: #6d2716;
+
   --font-display: var(--font-display-raw), 'Cormorant Garamond', serif;
   --font-sans: var(--font-sans-raw), system-ui, sans-serif;
 
@@ -24,6 +32,21 @@
   --shadow-lift: 0 34px 90px -40px rgb(var(--color-shadow-rgb) / 0.55);
 
   --tracking-luxe: 0.18em;
+
+  /* La tarjeta de la puerta entra deslizándose. `motion-safe` la apaga sola cuando el
+     sistema pide menos movimiento; el bloque de globals.css la remata. */
+  --animate-slide-up: slide-up 320ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(18px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
 }
 
 :root {
