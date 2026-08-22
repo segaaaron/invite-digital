@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events, guests, plans, rsvp } from '@/app/composition/container'
+import { ExportCsvButton } from '@/modules/guests/ui/ExportCsvButton'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -42,6 +43,7 @@ export default async function InvitadosPage({ params }: { params: Promise<{ slug
   return (
     <>
       <PanelHeader
+        actions={<ExportCsvButton eventSlug={event.value.slug} rows={filas} />}
         kicker="Gestión"
         meta={`${filas.length} grupos · ${cupos} cupos repartidos`}
         title="Invitados"

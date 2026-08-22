@@ -7,6 +7,7 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
 import { SeatingToolbar } from '@/modules/venue/ui/SeatingToolbar'
+import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
 import { UnseatedStrip } from '@/modules/venue/ui/UnseatedStrip'
 import { ZoneControls } from '@/modules/venue/ui/ZoneControls'
@@ -71,38 +72,43 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
           <UnseatedStrip groups={unseated} />
         </PanelCard>
 
-        <PanelCard title="Plano del salón">
-          <div className="flex flex-col gap-4.5">
-            <FloorPlan
-              eventId={event.value.id}
-              eventSlug={event.value.slug}
-              tables={tables}
-              zones={zones}
-              exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
-            />
-            <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
-          </div>
-        </PanelCard>
-
-        <PanelCard title="Mesas del salón">
-          {tables.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">
-              Todavía no hay mesas. Crea la primera arriba y empieza a repartir a los invitados.
-            </p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {tables.map((table) => (
-                <TableCard
-                  key={table.id}
+        <SeatViewToggle
+          cards={
+            <PanelCard title="Mesas del salón">
+              {tables.length === 0 ? (
+                <p className="text-[13px] text-ink-mute">
+                  Todavía no hay mesas. Crea la primera arriba y empieza a repartir a los invitados.
+                </p>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {tables.map((table) => (
+                    <TableCard
+                      key={table.id}
+                      eventId={event.value.id}
+                      eventSlug={event.value.slug}
+                      table={table}
+                      unseated={unseated}
+                    />
+                  ))}
+                </div>
+              )}
+            </PanelCard>
+          }
+          map={
+            <PanelCard title="Plano del salón">
+              <div className="flex flex-col gap-4.5">
+                <FloorPlan
                   eventId={event.value.id}
                   eventSlug={event.value.slug}
-                  table={table}
-                  unseated={unseated}
+                  tables={tables}
+                  zones={zones}
+                  exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
                 />
-              ))}
-            </div>
-          )}
-        </PanelCard>
+                <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
+              </div>
+            </PanelCard>
+          }
+        />
       </div>
     </>
   )
