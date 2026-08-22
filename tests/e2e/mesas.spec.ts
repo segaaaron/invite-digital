@@ -50,6 +50,10 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
 
   // Y la puerta canta el número al escanear el pase.
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  // Esperar a que la puerta esté montada antes de teclear: el escucha de teclado que
+  // atiende al lector de códigos lo engancha React al hidratar, y teclear antes se
+  // pierde en el vacío. Sin esta espera la prueba falla de forma reproducible.
+  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('0')
   await page.keyboard.type(token)
   await page.keyboard.press('Enter')
 
