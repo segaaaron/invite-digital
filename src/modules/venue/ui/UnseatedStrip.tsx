@@ -1,0 +1,33 @@
+import type { SeatedGroupRow } from '../application/ports'
+
+/**
+ * La tira desaparece sola cuando no queda nadie. Una tira vacía con un «0 pendientes»
+ * es ruido permanente en una pantalla que el atelier mira muchas veces.
+ */
+export function UnseatedStrip({ groups }: { groups: readonly SeatedGroupRow[] }) {
+  if (groups.length === 0) return null
+
+  return (
+    <section
+      aria-label="Invitados sin mesa"
+      className="flex flex-col gap-3 rounded-card border border-warn bg-bg-raised p-5"
+    >
+      <h2 className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
+        {groups.length} sin mesa
+      </h2>
+      <ul className="flex flex-wrap gap-2">
+        {groups.map((group) => (
+          <li
+            key={group.id}
+            className="flex items-baseline gap-2 rounded-pill border border-line bg-bg-top px-3 py-1.5 text-[13px] text-ink-soft"
+          >
+            <span>{group.label}</span>
+            <span className="font-mono text-[10px] text-ink-mute">
+              {group.seats} cupo{group.seats === 1 ? '' : 's'}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}

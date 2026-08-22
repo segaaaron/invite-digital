@@ -50,7 +50,11 @@ describe('esquema del motor de invitaciones', () => {
 
       await tx.delete(events).where(sql`${events.id} = ${row!.id}`)
 
-      expect(await tx.select().from(rsvpResponses)).toHaveLength(0)
+      // Acotado a la respuesta de este grupo, no a la tabla entera: otros ficheros de
+      // prueba corren en paralelo contra la misma base y pueden tener filas vivas.
+      // Contar todas las filas hacía que esta prueba fallara según quién estuviera
+      // escribiendo a la vez, y eso no es lo que comprueba.
+      expect(await tx.select().from(rsvpResponses).where(sql`${rsvpResponses.guestGroupId} = ${group!.id}`)).toHaveLength(0)
     })
   })
 
