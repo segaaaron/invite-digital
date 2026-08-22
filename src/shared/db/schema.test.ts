@@ -4,6 +4,7 @@ import { db } from './client'
 import {
   arrivals,
   eventCategories,
+  events,
   fundContributions,
   gifts,
   guestGroups,
@@ -333,5 +334,80 @@ describe('libro de firmas', () => {
     )
     expect(rows).toHaveLength(1)
     expect(rows[0]?.indexdef).toContain('WHERE')
+  })
+})
+
+describe('límites del plan', () => {
+  it('max_guest_groups es anulable: nulo significa sin límite, no cero', () => {
+    // Un `NOT NULL DEFAULT 0` sería el error caro: el plan más caro, que no limita nada,
+    // quedaría con límite cero y no admitiría ni un grupo.
+    expect(plans.maxGuestGroups.notNull).toBe(false)
+  })
+
+  it('las tres banderas de funciones incluidas son obligatorias', () => {
+    // Anulables obligarían a decidir en cada lectura qué significa el nulo, y esa
+    // decisión acabaría escrita de forma distinta en cada módulo que la consulta.
+    expect(plans.includesSeating.notNull).toBe(true)
+    expect(plans.includesRegistry.notNull).toBe(true)
+    expect(plans.includesCheckin.notNull).toBe(true)
+  })
+
+  it('events.plan_id es anulable: los eventos anteriores a esta rebanada no tienen plan', () => {
+    expect(events.planId.notNull).toBe(false)
+  })
+
+  it('la migración entra sin quitarle nada a lo que ya existía: los tres includes_* por defecto en true', async () => {
+    const rows = await db.execute<{ column_name: string; column_default: string | null }>(sql`
+      select column_name, column_default from information_schema.columns
+      where table_schema = 'public' and table_name = 'plans'
+        and column_name in ('includes_seating', 'includes_registry', 'includes_checkin')
+    `)
+    expect(rows).toHaveLength(3)
+    for (const row of rows) expect(row.column_default).toBe('true')
+  })
+
+  it('borrar un plan no borra los eventos que lo usaban: SET NULL, no CASCADE', async () => {
+    const rows = await db.execute<{ delete_rule: string }>(sql`
+      select rc.delete_rule
+      from information_schema.referential_constraints rc
+      join information_schema.key_column_usage kcu on kcu.constraint_name = rc.constraint_name
+      where kcu.table_name = 'events' and kcu.column_name = 'plan_id'
+    `)
+    expect(rows.map((r) => r.delete_rule)).toEqual(['SET NULL'])
+  })
+
+  it('el seed asigna los límites reales de cada plan', async () => {
+    const rows = await db
+      .select({
+        slug: plans.slug,
+        maxGuestGroups: plans.maxGuestGroups,
+        seating: plans.includesSeating,
+        registry: plans.includesRegistry,
+        checkin: plans.includesCheckin,
+      })
+      .from(plans)
+      .orderBy(plans.sortOrder)
+
+    expect(rows).toEqual([
+      { slug: 'atelier', maxGuestGroups: 30, seating: true, registry: false, checkin: false },
+      { slug: 'firma-3d', maxGuestGroups: 80, seating: true, registry: true, checkin: true },
+      { slug: 'alta-costura', maxGuestGroups: null, seating: true, registry: true, checkin: true },
+    ])
+  })
+
+  it('la tabla de solicitudes de cambio existe', async () => {
+    const rows = await db.execute<{ table_name: string }>(
+      sql`select table_name from information_schema.tables where table_schema = 'public'`,
+    )
+    expect(rows.map((r) => r.table_name)).toContain('plan_change_requests')
+  })
+
+  it('solo puede haber una solicitud pendiente por evento: el índice es parcial', async () => {
+    const rows = await db.execute<{ indexdef: string }>(
+      sql`select indexdef from pg_indexes where tablename = 'plan_change_requests' and indexname = 'plan_change_pending_idx'`,
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]?.indexdef).toContain('WHERE')
+    expect(rows[0]?.indexdef).toContain('UNIQUE')
   })
 })

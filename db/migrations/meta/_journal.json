@@ -50,6 +50,13 @@
       "when": 1787364439173,
       "tag": "0006_guestbook",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1787365867032,
+      "tag": "0007_plan_limits",
+      "breakpoints": true
     }
   ]
 }

@@ -49,6 +49,16 @@ export const plans = pgTable('plans', {
   highlighted: boolean('highlighted').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),
   isActive: boolean('is_active').notNull().default(true),
+  /**
+   * Cuántos grupos de invitados admite el plan. `NULL` es *sin límite*, no cero: el plan
+   * más caro no limita nada, y un `NOT NULL DEFAULT 0` lo dejaría sin admitir ni un
+   * grupo. Los límites viven en la base y no en el código porque cambiar lo que incluye
+   * un plan es una decisión comercial y no debería exigir un despliegue.
+   */
+  maxGuestGroups: integer('max_guest_groups'),
+  includesSeating: boolean('includes_seating').notNull().default(true),
+  includesRegistry: boolean('includes_registry').notNull().default(true),
+  includesCheckin: boolean('includes_checkin').notNull().default(true),
   ...timestamps,
 })
 
@@ -162,8 +172,45 @@ export const events = pgTable('events', {
   status: varchar('status', { length: 16 }).notNull().default('draft'),
   retentionDays: integer('retention_days').notNull().default(90),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
+  /**
+   * Anulable a propósito: los eventos creados antes de esta rebanada no tienen plan, y
+   * quien los lea los trata como el plan más barato activo. `SET NULL` al borrar el
+   * plan, nunca `CASCADE`: retirar un plan del catálogo no puede llevarse por delante
+   * las bodas que lo contrataron.
+   */
+  planId: uuid('plan_id').references(() => plans.id, { onDelete: 'set null' }),
   ...timestamps,
 })
+
+/**
+ * Una petición de cambio de plan que el atelier resuelve fuera del sistema. No hay cobro
+ * en línea en esta rebanada: la solicitud queda registrada y se aplica a mano.
+ */
+export const planChangeRequests = pgTable(
+  'plan_change_requests',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    requestedPlanId: uuid('requested_plan_id')
+      .notNull()
+      .references(() => plans.id),
+    note: text('note'),
+    // 'pending' | 'applied' | 'rejected'
+    status: varchar('status', { length: 16 }).notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    resolvedAt: timestamp('resolved_at', { withTimezone: true }),
+  },
+  (t) => [
+    // Parcial y único: una sola solicitud **pendiente** por evento. Sin él, pulsar dos
+    // veces genera dos solicitudes y el atelier no sabe a cuál hacer caso. Las ya
+    // resueltas no estorban: quedan fuera del índice.
+    uniqueIndex('plan_change_pending_idx')
+      .on(t.eventId)
+      .where(sql`${t.status} = 'pending'`),
+  ],
+)
 
 /**
  * Una mesa del salón. La posición es porcentaje del plano con dos decimales, no píxeles:

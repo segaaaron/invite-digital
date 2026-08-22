@@ -18,6 +18,9 @@ const PLANS = [
     priceCents: 69000,
     highlighted: false,
     order: 1,
+    // El plan de entrada: la lista de invitados va limitada y el salón es lo único
+    // avanzado que trae. Mesa de regalos y modo puerta son de los planes de arriba.
+    limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false },
     es: {
       name: 'Atelier',
       tagline: 'Esencia elegante',
@@ -36,6 +39,7 @@ const PLANS = [
     priceCents: 145000,
     highlighted: true,
     order: 2,
+    limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true },
     es: {
       name: 'Firma 3D',
       tagline: 'La experiencia completa',
@@ -66,6 +70,8 @@ const PLANS = [
     priceCents: 290000,
     highlighted: false,
     order: 3,
+    // `null` es sin límite. No es cero.
+    limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true },
     es: {
       name: 'Alta Costura',
       tagline: 'Hecho a medida',
@@ -130,8 +136,29 @@ async function seed() {
   for (const p of PLANS) {
     const [row] = await db
       .insert(plans)
-      .values({ slug: p.slug, priceCents: p.priceCents, currency: 'BOB', highlighted: p.highlighted, sortOrder: p.order })
-      .onConflictDoUpdate({ target: plans.slug, set: { priceCents: p.priceCents, highlighted: p.highlighted, sortOrder: p.order } })
+      .values({
+        slug: p.slug,
+        priceCents: p.priceCents,
+        currency: 'BOB',
+        highlighted: p.highlighted,
+        sortOrder: p.order,
+        maxGuestGroups: p.limits.maxGuestGroups,
+        includesSeating: p.limits.seating,
+        includesRegistry: p.limits.registry,
+        includesCheckin: p.limits.checkin,
+      })
+      .onConflictDoUpdate({
+        target: plans.slug,
+        set: {
+          priceCents: p.priceCents,
+          highlighted: p.highlighted,
+          sortOrder: p.order,
+          maxGuestGroups: p.limits.maxGuestGroups,
+          includesSeating: p.limits.seating,
+          includesRegistry: p.limits.registry,
+          includesCheckin: p.limits.checkin,
+        },
+      })
       .returning({ id: plans.id })
     if (!row) throw new Error(`No se pudo insertar el plan ${p.slug}`)
     await db
