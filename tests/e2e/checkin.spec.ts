@@ -28,7 +28,9 @@ test('el lector por teclado registra la llegada sin cámara', async ({ page }) =
   await expect(page.getByLabel('Personas que entraron')).toHaveText('3')
   await expect(page.getByLabel('Grupos que han llegado')).toHaveText('1')
 
-  // Y está en la base, no solo en la pantalla.
+  // Y está en la base, no solo en la pantalla. Se espera a que la bandeja de salida se
+  // vacíe: desde que la puerta responde en local, la escritura va por detrás.
+  await expect(page.getByLabel('Escaneos por subir')).toHaveText(/^0/)
   expect(await liveArrivals(groupId)).toEqual([{ arrivedCount: 3 }])
 })
 
@@ -76,6 +78,7 @@ test('un pase escaneado con la cámara registra la llegada del grupo', async ({ 
 
   await expect(page.getByText(/Bienvenidos/i)).toBeVisible({ timeout: 30_000 })
   await expect(page.getByLabel('Grupos que han llegado')).toHaveText('1')
+  await expect(page.getByLabel('Escaneos por subir')).toHaveText(/^0/)
   expect(await liveArrivals(groupId)).toEqual([{ arrivedCount: 3 }])
 })
 
@@ -92,4 +95,28 @@ test('el pase de otra boda no abre esta puerta', async ({ page }) => {
   expect(await liveArrivals(ajeno.groupId)).toEqual([])
 
   await deleteEvent('boda-ajena-e2e')
+})
+
+test('sin red la puerta sigue registrando, y sube al volver', async ({ page, context }) => {
+  const { token, groupId } = await seedDoorEvent(SLUG)
+
+  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await expect(page.getByLabel('Escaneos por subir')).toHaveText('0')
+
+  await context.setOffline(true)
+  await page.keyboard.type(token)
+  await page.keyboard.press('Enter')
+
+  // La bienvenida sale igual: la decide el dispositivo, no la red.
+  await expect(page.getByText(/Bienvenidos/i)).toBeVisible()
+  await expect(page.getByLabel('Escaneos por subir')).toHaveText(/1/)
+  expect(await liveArrivals(groupId)).toEqual([])
+
+  await context.setOffline(false)
+  await expect(page.getByLabel('Escaneos por subir')).toHaveText(/^0/, { timeout: 40_000 })
+
+  // Y la llegada está de verdad en la base, no solo en la pantalla.
+  expect(await liveArrivals(groupId)).toEqual([{ arrivedCount: 3 }])
+  await page.goto(`/panel/eventos/${SLUG}/puerta`)
+  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('1')
 })

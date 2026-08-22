@@ -18,27 +18,35 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-19-invitation-engine-design.md` | Construir el motor de invitaciones y RSVP (ciclo 3) |
 | `docs/superpowers/2026-08-20-runbook-despliegue.md` | Desplegar a producción, respaldar, restaurar y volver atrás |
 | `docs/superpowers/plans/2026-08-19-invitation-engine-slice-1.md` | Consultar cómo se construyó la rebanada 1 del ciclo 3: 16 tareas |
+| `docs/superpowers/specs/2026-08-21-checkin-qr-design.md` | Entender el check-in por QR y la puerta sin conexión (ciclo 3, rebanada 3) |
+| `docs/superpowers/plans/2026-08-21-checkin-qr.md` | Consultar cómo se construyó la rebanada 3 del ciclo 3: 20 tareas |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
-**Ciclo 1 y ciclo 3 rebanada 1 (núcleo) cerrados y fusionados a `main`.** 341 pruebas
-unitarias y 29 e2e en verde. Las e2e se ejecutaron además **contra la imagen de
-producción**, no solo contra el servidor de desarrollo: migrador, seed, Argon2 nativo en
-la capa de runtime, mantenimiento, y el ciclo de respaldo y restauración comparado tabla
-por tabla.
+**Ciclo 1 y ciclo 3 rebanadas 1 y 3 cerrados.** 439 pruebas unitarias y 33 e2e en
+verde. Las e2e del ciclo 1 se ejecutaron además **contra la imagen de producción**, no
+solo contra el servidor de desarrollo: migrador, seed, Argon2 nativo en la capa de
+runtime, mantenimiento, y el ciclo de respaldo y restauración comparado tabla por tabla.
 
 El atelier ya crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
 invitado confirma desde su enlace sin cuenta.
 
-Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
+La puerta ya funciona el día del evento: el invitado enseña el QR de su propia
+invitación, quien recibe escanea desde `/panel/eventos/[slug]/puerta` y el grupo queda
+registrado. **Funciona con el salón sin wifi**: el dispositivo precarga los hashes de
+token, resuelve verde, ámbar o rojo en local con el mismo dominio que usa el servidor, y
+acumula los escaneos en IndexedDB hasta que vuelve la red. Se instala en la pantalla de
+inicio como aplicación.
+
+La rebanada 3 vive en la rama `ciclo3-rebanada3-checkin`, sin fusionar todavía. No hay
+remoto configurado: el repositorio es local.
 
 Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
 
-Lo siguiente son las rebanadas 2 (canales de envío), 3 (puerta con QR) y 4
-(refinamientos). La rebanada 2 tiene diseño hablado y **no** escrito: rotar el enlace al
-reenviar, importación masiva con CSV y tabla de resultado, plantilla de mensaje por
+Lo siguiente son las rebanadas 2 (canales de envío) y 4 (refinamientos). La rebanada 2
+tiene diseño hablado y **no** escrito: rotar el enlace al reenviar, importación masiva con CSV y tabla de resultado, plantilla de mensaje por
 evento y teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de
 administración —el Plan B— siguen sin construirse.
 
@@ -54,6 +62,16 @@ pnpm maintenance                                   # anonimiza vencidos y barre 
 pnpm preflight                                     # puerta previa al despliegue
 pnpm verify:boundaries                             # prueba que las fronteras cortan de verdad
 ```
+
+**El modo puerta se prueba contra la imagen, no contra `pnpm dev`.** Serwist va apagado
+en desarrollo (`disable` en `next.config.ts`), así que el Service Worker y la instalación
+como aplicación no existen ahí. Es la misma lección que dejó `robots.txt`.
+
+`pnpm build` usa **webpack**, no Turbopack, y pide 8 GB de heap. Serwist inyecta
+configuración de webpack y Next 16 aborta el build al verla junto a Turbopack; silenciar
+el aviso con `turbopack: {}` deja de generar el Service Worker sin decir nada. El rastreo
+de ficheros del `output: standalone` se queda sin memoria bajo webpack con el heap por
+defecto, de ahí el `NODE_OPTIONS` del script.
 
 Las e2e usan el **puerto 3100**, no el 3000: en esta máquina hay servidores de otros
 proyectos que toman el 3000 y `reuseExistingServer` acabaría probando la aplicación
@@ -122,7 +140,10 @@ visible, y esa es justo la razón de que exista la puerta.
 ## Ciclos siguientes (aún sin planificar)
 
 - **Ciclo 3, rebanada 2**: canales de envío — WhatsApp asistido, email, copiar/CSV y QR de reparto.
-- **Ciclo 3, rebanada 3**: check-in por QR el día del evento. Aquí sí hacen falta route handlers.
+  (La rebanada 3, check-in por QR, ya está construida. **No usa route handlers**, al
+  contrario de lo que decía esta lista: los escaneos suben por Server Actions, que es lo
+  que ya usa el panel, y el reenvío lo dispara la propia página al recuperar la red. El
+  Service Worker solo sirve recursos. La sección 6 del spec del check-in lo razona.)
 - **Ciclo 3, rebanada 4**: recordatorios automáticos, asignación de mesas, menú por invitado.
 - **Plan B**: pedidos, subida de comprobante de pago, panel de administración mínimo.
   La sección 9 del spec del ciclo 1 ya lo describe. La deuda del layout raíz que lo bloqueaba ya
