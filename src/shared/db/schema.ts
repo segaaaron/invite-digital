@@ -467,3 +467,28 @@ export const invitationViews = pgTable(
   },
   (t) => [index('invitation_views_event_time_idx').on(t.eventId, t.viewedAt.desc())],
 )
+
+/**
+ * Personas dentro de un grupo. **Aditivo**: el grupo sigue siendo el dueño del enlace,
+ * del RSVP agregado, de la mesa y del pase de la puerta. Un grupo sin personas es el
+ * estado de todos los eventos anteriores a esta tabla, y sigue siendo válido.
+ *
+ * `attending` nulo es pendiente; `maybe` es el «tal vez» que la maqueta pinta y que en
+ * una boda existe de verdad.
+ */
+export const guestPeople = pgTable(
+  'guest_people',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    guestGroupId: uuid('guest_group_id')
+      .notNull()
+      .references(() => guestGroups.id, { onDelete: 'cascade' }),
+    fullName: varchar('full_name', { length: 160 }).notNull(),
+    isCompanion: boolean('is_companion').notNull().default(false),
+    dietaryNote: text('dietary_note'),
+    vip: boolean('vip').notNull().default(false),
+    attending: varchar('attending', { length: 8 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('guest_people_group_idx').on(t.guestGroupId)],
+)

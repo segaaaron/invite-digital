@@ -7,6 +7,17 @@ export type CsvRow = {
   readonly revokedAt: Date | null
 }
 
+/** Una persona, con lo que el catering y el protocolo necesitan. */
+export type CsvPerson = {
+  readonly fullName: string
+  readonly groupLabel: string
+  readonly attending: 'yes' | 'no' | 'maybe' | null
+  readonly isCompanion: boolean
+  readonly dietaryNote: string | null
+  readonly vip: boolean
+  readonly tableLabel: string | null
+}
+
 const estado = (fila: CsvRow): string => {
   if (fila.revokedAt !== null) return 'Revocada'
   return fila.confirmed === null ? 'Pendiente' : 'Confirmada'
@@ -29,12 +40,43 @@ export function filasToCsv(rows: readonly CsvRow[]): string {
   return `﻿${[cabecera, ...cuerpo].join('\n')}\n`
 }
 
-export function ExportCsvButton({ rows, eventSlug }: { rows: readonly CsvRow[]; eventSlug: string }) {
+const ESTADO_PERSONA: Record<string, string> = { yes: 'Confirmado', no: 'No viene', maybe: 'Tal vez' }
+
+/**
+ * El CSV por persona, que es lo que pide el catering y el protocolo. Cuando el evento no
+ * tiene personas cargadas se exporta el de grupos, que es lo único que hay.
+ */
+export function personasToCsv(people: readonly CsvPerson[]): string {
+  const cabecera = ['Nombre', 'Grupo', 'RSVP', 'Acompañante', 'Restricciones', 'Mesa', 'VIP'].map(celda).join(';')
+  const cuerpo = people.map((p) =>
+    [
+      celda(p.fullName),
+      celda(p.groupLabel),
+      celda(p.attending === null ? 'Pendiente' : (ESTADO_PERSONA[p.attending] ?? '')),
+      celda(p.isCompanion ? 'Sí' : 'No'),
+      celda(p.dietaryNote ?? ''),
+      celda(p.tableLabel ?? 'Sin mesa'),
+      celda(p.vip ? 'Sí' : 'No'),
+    ].join(';'),
+  )
+  return `\ufeff${[cabecera, ...cuerpo].join('\n')}\n`
+}
+
+export function ExportCsvButton({
+  rows,
+  people,
+  eventSlug,
+}: {
+  rows: readonly CsvRow[]
+  people?: readonly CsvPerson[]
+  eventSlug: string
+}) {
   return (
     <button
       className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase transition-colors hover:border-gold/60"
       onClick={() => {
-        const blob = new Blob([filasToCsv(rows)], { type: 'text/csv;charset=utf-8' })
+        const contenido = people && people.length > 0 ? personasToCsv(people) : filasToCsv(rows)
+        const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8' })
         const url = URL.createObjectURL(blob)
         const enlace = document.createElement('a')
         enlace.href = url

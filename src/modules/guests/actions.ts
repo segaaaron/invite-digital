@@ -85,3 +85,74 @@ export async function revokeInvitationAction(
   revalidatePath(`/panel/eventos/${String(formData.get('eventSlug') ?? '')}`)
   return { status: 'success' }
 }
+
+// ============================================================================
+// PERSONAS DEL GRUPO — todas del panel, todas con sesión.
+//
+// El invitado no toca estas: su enlace confirma cupos, no edita la lista de nombres.
+// ============================================================================
+
+export type PersonActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+
+/**
+ * Devuelven estado, no `void`. El tope del cupo se rechaza en el servidor y quien lo
+ * intenta tiene que enterarse: si el fallo solo fuera a `console.error`, el atelier
+ * creería que cargó a un invitado que la base no tiene, y esa persona aparecería el día
+ * del evento sin estar en ninguna lista.
+ */
+export async function addPersonAction(_previous: PersonActionState, formData: FormData): Promise<PersonActionState> {
+  await requireSession()
+
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  const result = await guests.addPerson({
+    guestGroupId: String(formData.get('guestGroupId') ?? ''),
+    fullName: String(formData.get('fullName') ?? ''),
+    isCompanion: formData.get('isCompanion') === 'on',
+    dietaryNote: String(formData.get('dietaryNote') ?? ''),
+    vip: formData.get('vip') === 'on',
+  })
+
+  if (isErr(result)) {
+    console.error('alta de persona rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  return { status: 'success' }
+}
+
+export async function updatePersonAction(input: {
+  eventSlug: string
+  id: string
+  fullName?: string
+  dietaryNote?: string | null
+  vip?: boolean
+  isCompanion?: boolean
+  attending?: string | null
+}): Promise<PersonActionState> {
+  await requireSession()
+
+  const { eventSlug, ...patch } = input
+  const result = await guests.updatePerson(patch)
+
+  if (isErr(result)) {
+    console.error('edición de persona rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  return { status: 'success' }
+}
+
+export async function removePersonAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
+  await requireSession()
+
+  const result = await guests.removePerson(input.id)
+  if (isErr(result)) {
+    console.error('baja de persona rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  return { status: 'success' }
+}

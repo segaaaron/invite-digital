@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, plans, venue } from '@/app/composition/container'
+import { events, guests, plans, venue } from '@/app/composition/container'
+import { dietaryReport } from '@/modules/guests'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -34,6 +35,11 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
   if (isErr(permitido)) {
     return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Mesas" />
   }
+
+  // El reporte del catering sale de las personas cargadas. Sin personas no hay reporte,
+  // y se dice: una tabla vacía se lee como «nadie tiene restricciones».
+  const personas = await guests.listPeople(event.value.id)
+  const menus = isErr(personas) ? [] : dietaryReport(personas.value)
 
   const seating = await venue.seating(event.value.id)
   if (isErr(seating)) throw new Error(seating.error.detail)
@@ -70,6 +76,28 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
 
         <PanelCard title="Invitados sin mesa">
           <UnseatedStrip groups={unseated} />
+        </PanelCard>
+
+        <PanelCard title="Reporte de menús para el catering">
+          {menus.length === 0 ? (
+            <p className="text-[13px] text-ink-mute">
+              Ninguna persona cargada tiene restricción alimentaria. Se cargan en la sección Invitados.
+            </p>
+          ) : (
+            <ul className="flex flex-col">
+              {menus.map((linea) => (
+                <li
+                  key={linea.note}
+                  className="flex items-center justify-between gap-4 border-b border-dotted border-line py-2.5 last:border-none"
+                >
+                  <span className="text-[14px] text-ink">{linea.note}</span>
+                  <span className="font-mono text-[13px] text-ink-soft">
+                    {linea.count} comensal{linea.count === 1 ? '' : 'es'}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </PanelCard>
 
         <SeatViewToggle

@@ -27,6 +27,11 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     return database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.eventId, eventId)).orderBy(asc(guestGroups.createdAt))
   },
 
+  async findById(id) {
+    const [row] = await database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.id, id)).limit(1)
+    return row ?? null
+  },
+
   async findByTokenHash(tokenHash) {
     const [row] = await database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.tokenHash, tokenHash)).limit(1)
     return row ?? null

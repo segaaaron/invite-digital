@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
-import { ExportCsvButton, filasToCsv } from './ExportCsvButton'
+import { ExportCsvButton, filasToCsv, personasToCsv } from './ExportCsvButton'
 
 const filas = [
   { label: 'Familia Rojas Peña', seats: 4, confirmed: 4, revokedAt: null },
@@ -24,6 +24,36 @@ describe('filasToCsv', () => {
     expect(csv).toContain('Confirmada')
     expect(csv).toContain('Pendiente')
     expect(csv).toContain('Revocada')
+  })
+})
+
+describe('personasToCsv', () => {
+  it('exporta lo que el catering necesita, con el estado en palabras', () => {
+    const csv = personasToCsv([
+      {
+        fullName: 'Ana Lucía Vega',
+        groupLabel: 'Familia Rojas Peña',
+        attending: 'maybe',
+        isCompanion: false,
+        dietaryNote: 'Sin gluten',
+        vip: true,
+        tableLabel: 'Mesa 01',
+      },
+      {
+        fullName: 'Roberto Núñez',
+        groupLabel: 'Roberto Núñez',
+        attending: null,
+        isCompanion: true,
+        dietaryNote: null,
+        vip: false,
+        tableLabel: null,
+      },
+    ])
+
+    expect(csv).toContain('"Tal vez"')
+    expect(csv).toContain('"Pendiente"')
+    expect(csv).toContain('"Sin mesa"')
+    expect(csv.trim().split('\n')).toHaveLength(3)
   })
 })
 

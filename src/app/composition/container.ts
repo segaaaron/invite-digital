@@ -65,6 +65,13 @@ import { requireFeature } from '@/modules/plans/application/require-feature'
 import { drizzlePlansRepository } from '@/modules/plans/infrastructure/drizzle-plans-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
+import {
+  addPerson,
+  listPeopleByEvent,
+  removePerson,
+  updatePerson,
+} from '@/modules/guests/application/person-use-cases'
+import { drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
 import { revokeInvitation } from '@/modules/guests/application/revoke-invitation'
 import { drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
@@ -148,6 +155,14 @@ export const guests = {
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
+  addPerson: addPerson({
+    groups: drizzleGuestGroupRepository,
+    people: drizzleGuestPersonRepository,
+    ids: () => crypto.randomUUID(),
+  }),
+  updatePerson: updatePerson({ people: drizzleGuestPersonRepository }),
+  removePerson: removePerson({ people: drizzleGuestPersonRepository }),
+  listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
 } as const
 
 export const rsvp = {

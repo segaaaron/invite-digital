@@ -79,6 +79,21 @@ importación masiva con CSV y tabla de resultado, plantilla de mensaje por event
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
 
+### Notas de los invitados por persona (`src/modules/guests/`)
+
+- **Las personas cuelgan del grupo; no lo sustituyen.** El enlace, el token, el RSVP
+  agregado, la mesa y el pase de la puerta siguen siendo del grupo. Un grupo sin personas
+  es válido y es el estado de todos los eventos anteriores a la tabla.
+- **El cupo del grupo es el tope, y se aplica en el servidor.** Cargar cinco personas en
+  un grupo de cuatro deja a alguien fuera el día del evento, delante de la puerta.
+- **`guest_people` no lleva `event_id`.** Se une por su grupo: así no existe la
+  posibilidad de que una persona apunte a un evento distinto del de su grupo.
+- **El reporte del catering no cuenta a quien dijo que no viene**, y agrupa sin distinguir
+  mayúsculas ni espacios de sobra: «Sin gluten» y «sin  gluten» son la misma cocina.
+- **Cada suite e2e abre su propia conexión.** Compartir el pool entre dos specs hace que
+  el primer `afterAll` que cierre deje a la otra escribiendo contra una conexión muerta;
+  el síntoma es «write CONNECTION_ENDED» en un test que no toca la base.
+
 ### Notas de la analítica (`src/modules/analytics/`)
 
 - **Se guardan categorías, no rastros.** Ni IP, ni agente de usuario, ni identificador de
