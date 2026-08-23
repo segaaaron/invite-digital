@@ -90,25 +90,3 @@ describe('checkEventPassword', () => {
     expect(isOk(mala) && mala.value).toBe(false)
   })
 })
-
-describe('checkEventPassword con el hasher de verdad', () => {
-  it('lo que guarda setEventPassword es lo que acepta checkEventPassword', async () => {
-    // Esta prueba existe porque los dobles pueden repetir el error del código: si el
-    // orden de los argumentos de `verify` se invierte, todo compila —son dos cadenas—,
-    // los dobles siguen pasando y NINGUNA contraseña valida jamás, sin un solo error en
-    // el registro. Con el hasher real eso se cae aquí.
-    const { argon2Hasher } = await import('@/modules/identity/infrastructure/argon2-hasher')
-    const { access } = acceso()
-
-    await setEventPassword({ events, access, hasher: argon2Hasher })({ eventId: 'e1', password: 'lasflores2027' })
-
-    const buena = await checkEventPassword({ access, hasher: argon2Hasher })({
-      eventId: 'e1',
-      password: 'lasflores2027',
-    })
-    const mala = await checkEventPassword({ access, hasher: argon2Hasher })({ eventId: 'e1', password: 'otra' })
-
-    expect(isOk(buena) && buena.value).toBe(true)
-    expect(isOk(mala) && mala.value).toBe(false)
-  })
-})

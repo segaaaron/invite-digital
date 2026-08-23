@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events, plans, registry } from '@/app/composition/container'
+import { CurrencyPicker } from '@/modules/events/ui/CurrencyPicker'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { FundCard } from '@/modules/registry/ui/FundCard'
@@ -37,7 +38,14 @@ export default async function RegalosPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <PanelHeader kicker="Mesa de regalos" meta={event.value.title} title="Regalos" />
+      <PanelHeader
+        actions={
+          <CurrencyPicker current={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} />
+        }
+        kicker="Mesa de regalos"
+        meta={event.value.title}
+        title="Regalos"
+      />
 
       <div aria-label="Resumen de la mesa" className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         <StatCard icon="❖" label="En la lista" value={tally.total} />

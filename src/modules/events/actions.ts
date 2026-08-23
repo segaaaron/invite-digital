@@ -218,3 +218,30 @@ export async function setEventPrivacyAction(_previous: PrivacyState, formData: F
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
   return { status: 'success' }
 }
+
+/**
+ * Cambia la moneda del evento desde la cabecera de la mesa de regalos.
+ *
+ * Los importes ya guardados no se convierten: son centavos, no una cantidad con moneda.
+ * Cambiar la moneda **reetiqueta** lo que hay, y quien la cambia tiene que saberlo — el
+ * propio selector lo dice.
+ */
+export async function setEventCurrencyAction(input: {
+  eventId: string
+  eventSlug: string
+  currency: string
+}): Promise<{ status: 'success' } | { status: 'error'; message: string }> {
+  await requireSession()
+
+  const row = await eventUseCases.getById(input.eventId)
+  if (isErr(row)) return { status: 'error', message: row.error.detail }
+
+  const result = await eventUseCases.update({ ...row.value, currency: input.currency })
+  if (isErr(result)) {
+    console.error('cambio de moneda rechazado', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/regalos`)
+  return { status: 'success' }
+}
