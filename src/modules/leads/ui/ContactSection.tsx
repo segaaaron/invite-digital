@@ -18,7 +18,10 @@ export function ContactSection({ categories, dictionary, locale }: Props) {
 
   return (
     <section aria-labelledby="contact-title" className="px-6 py-24" id="contacto">
-      <div className="mx-auto grid max-w-[1180px] items-start gap-14 lg:grid-cols-[0.9fr_1.1fr]">
+      {/* Dos columnas iguales y centradas entre sí, como la maqueta: con una columna más
+          ancha que la otra y alineadas arriba, el formulario quedaba desencajado del
+          bloque de texto. */}
+      <div className="mx-auto grid max-w-[1240px] items-center gap-14 lg:grid-cols-2">
         <Reveal className="flex flex-col gap-6">
           <SectionHeading
             align="left"
