@@ -21,16 +21,38 @@ vi.mock('react', async () => {
 })
 
 describe('ConsultationForm', () => {
-  it('rotula todos los campos y marca el nombre como obligatorio', () => {
+  it('pide nombre y apellido por separado, como la maqueta', () => {
     state.current = { status: 'idle', message: '' }
     render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)
 
-    expect(screen.getByLabelText(/Nombre/)).toBeRequired()
-    expect(screen.getByLabelText(/Email/)).toBeInTheDocument()
-    expect(screen.getByLabelText(/WhatsApp/)).toBeInTheDocument()
+    expect(screen.getByLabelText(/^Nombre/)).toBeRequired()
+    expect(screen.getByLabelText(/Apellido/)).toBeRequired()
+    expect(screen.getByLabelText(/Correo electrónico/)).toBeRequired()
     expect(screen.getByLabelText(/Tipo de evento/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Fecha del evento/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Cuéntanos sobre tu evento/)).toBeInTheDocument()
+  })
+
+  it('los rótulos van dentro del campo, y siguen existiendo para el lector de pantalla', () => {
+    // La maqueta no pinta etiquetas encima: el propio campo dice qué se escribe. Quitar
+    // la etiqueta del DOM dejaría el formulario mudo para quien no ve el marcador.
+    state.current = { status: 'idle', message: '' }
+    render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)
+
+    const nombre = screen.getByLabelText(/^Nombre/)
+    expect(nombre).toHaveAttribute('placeholder', expect.stringContaining('Nombre'))
+  })
+
+  it('el nombre que se guarda junta nombre y apellido', () => {
+    // El dominio guarda un nombre completo; la maqueta lo pide en dos campos. Se unen al
+    // enviar en vez de partir la tabla en dos columnas.
+    state.current = { status: 'idle', message: '' }
+    const { container } = render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)
+
+    fireEvent.change(screen.getByLabelText(/^Nombre/), { target: { value: 'Marcia' } })
+    fireEvent.change(screen.getByLabelText(/Apellido/), { target: { value: 'Rojas Peña' } })
+
+    expect(container.querySelector('input[name="name"]')).toHaveValue('Marcia Rojas Peña')
   })
 
   it('envía el idioma en un campo oculto y ofrece cada categoría', () => {
@@ -59,12 +81,13 @@ describe('ConsultationForm', () => {
     expect(screen.getByLabelText(/Nombre/)).not.toHaveAttribute('aria-describedby')
   })
 
-  it('culpa a los dos campos de contacto cuando falta cualquiera de ellos', () => {
+  it('culpa al correo cuando falta el contacto', () => {
+    // El formulario de la maqueta no pide teléfono: el correo es el único camino de
+    // vuelta, y por eso es obligatorio.
     state.current = { status: 'error', message: 'missing_contact' }
     render(<ConsultationForm categories={categories} dictionary={dictionary} locale="es" />)
 
-    expect(screen.getByLabelText(/Email/)).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.getByLabelText(/WhatsApp/)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/Correo electrónico/)).toHaveAttribute('aria-invalid', 'true')
   })
 
   it('reemplaza el formulario por el acuse cuando la consulta se guarda', () => {

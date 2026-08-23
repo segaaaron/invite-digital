@@ -89,7 +89,10 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
                     className="object-cover"
                     fill
                     priority={i < 2}
-                    sizes="330px"
+                    // Las tarjetas miden 330 px CSS: en pantalla Retina piden 660, y con
+                    // `sizes="330px"` Next servía una variante de 384 que se veía blanda.
+                    quality={82}
+                    sizes="660px"
                     src={slide.src}
                   />
                   <span className="absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-linear-to-t from-ink/85 to-transparent px-6 pt-14 pb-6">

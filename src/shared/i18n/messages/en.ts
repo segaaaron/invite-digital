@@ -172,7 +172,8 @@ export const en = {
   },
   contact: {
     eyebrow: 'A quiet-luxury atelier',
-    title: 'Begin your journey',
+    title: 'Begin your',
+    titleAccent: 'journey',
     body: 'Tell us the date and the venue. Within 24 hours you’ll receive a proposal with a sketch and a navigable demo of your invitation.',
     submit: 'Request a consultation',
     successTitle: 'Request received',
@@ -185,7 +186,8 @@ export const en = {
     emailLabel: 'Atelier email',
     fields: {
       name: 'Name',
-      email: 'Email',
+      lastName: 'Last name',
+      email: 'Email address',
       phone: 'WhatsApp',
       category: 'Event type',
       categoryAny: 'Choose an option',

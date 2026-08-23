@@ -44,18 +44,24 @@ test('un idioma desconocido en la ruta da 404', async ({ page }) => {
 
 test('envía una consulta y muestra la confirmación', async ({ page }) => {
   await page.goto('/es#contacto')
-  await page.getByLabel('Nombre').fill('María Rojas E2E')
-  await page.getByLabel('Email').fill('e2e@example.com')
+  // Nombre y apellido van separados, como en la maqueta, y se guardan como un nombre.
+  await page.getByLabel('Nombre', { exact: true }).fill('María')
+  await page.getByLabel('Apellido').fill('Rojas E2E')
+  await page.getByLabel('Correo electrónico').fill('e2e@example.com')
   await page.getByRole('button', { name: 'Solicitar consulta' }).click()
   await expect(page.getByText('Solicitud recibida')).toBeVisible()
 })
 
-test('rechaza una consulta sin ningún contacto', async ({ page }) => {
+test('el navegador no deja enviar una consulta sin correo', async ({ page }) => {
+  // El correo es el único camino de vuelta desde que el formulario dejó de pedir
+  // teléfono: es obligatorio, y el navegador corta antes de gastar una petición.
   await page.goto('/en#contacto')
-  await page.getByLabel('Name').fill('No contact E2E')
+  await page.getByLabel('Name', { exact: true }).fill('No contact')
+  await page.getByLabel('Last name').fill('E2E')
   await page.getByRole('button', { name: 'Request a consultation' }).click()
-  // Scoped to the section: Next renders its own route announcer with role="alert".
-  await expect(page.locator('#contacto').getByRole('alert')).toContainText('WhatsApp')
+
+  await expect(page.getByText('Request received')).toHaveCount(0)
+  await expect(page.getByLabel('Email address')).toHaveJSProperty('validity.valueMissing', true)
 })
 
 test('publica hreflang para ambos idiomas y x-default', async ({ page }) => {

@@ -23,51 +23,53 @@ export function ContactSection({ categories, dictionary, locale }: Props) {
           <SectionHeading
             align="left"
             eyebrow={contact.eyebrow}
-            title={<span id="contact-title">{contact.title}</span>}
+            title={
+              <span id="contact-title">
+                {contact.title}{' '}
+                <em className="bg-linear-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text text-transparent">
+                  {contact.titleAccent}
+                </em>
+              </span>
+            }
           />
           <p className="max-w-[42ch] text-[15px] leading-[1.75] text-ink-soft">{contact.body}</p>
 
-          <dl className="mt-2 flex flex-col gap-5">
-            <div className="flex flex-col gap-1">
-              <dt className="flex items-center gap-2 text-[11px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+          {/* Una línea por canal, con su icono delante: en la maqueta el rótulo y el dato
+              van juntos, no apilados. */}
+          <ul className="mt-2 flex flex-col gap-3.5">
+            <li>
+              <a
+                className="flex items-center gap-2.5 text-[15px] text-ink transition-colors hover:text-gold-deep"
+                href={whatsappHref}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
                 <WhatsAppIcon className="text-gold-deep" />
-                {contact.whatsappLabel}
-              </dt>
-              <dd>
-                <a
-                  className="font-display text-[22px] font-light text-ink underline-offset-4 hover:text-gold-deep hover:underline"
-                  href={whatsappHref}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  {BRAND.whatsappDisplay}
-                </a>
-              </dd>
-            </div>
-
-            <div className="flex flex-col gap-1">
-              <dt className="flex items-center gap-2 text-[11px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+                <span className="sr-only">{contact.whatsappLabel}: </span>
+                WhatsApp {BRAND.whatsappDisplay}
+              </a>
+            </li>
+            <li>
+              <a
+                className="flex items-center gap-2.5 text-[15px] text-ink transition-colors hover:text-gold-deep"
+                href={`mailto:${BRAND.email}`}
+              >
                 <MailIcon className="text-gold-deep" />
-                {contact.emailLabel}
-              </dt>
-              <dd>
-                <a
-                  className="text-[15px] text-ink-soft underline-offset-4 hover:text-gold-deep hover:underline"
-                  href={`mailto:${BRAND.email}`}
-                >
-                  {BRAND.email}
-                </a>
-              </dd>
-            </div>
-          </dl>
+                <span className="sr-only">{contact.emailLabel}: </span>
+                {BRAND.email}
+              </a>
+            </li>
+          </ul>
 
           {/* La fotografía del taller que la maqueta pone bajo los datos de contacto. */}
-          <div className="relative mt-4 aspect-16/11 overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] shadow-[var(--shadow-lift)]">
+          {/* La fotografía acompaña; no compite con el formulario. En la maqueta ocupa
+              poco más de la mitad de la columna. */}
+          <div className="relative mt-2 aspect-3/2 w-full max-w-[440px] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] shadow-[var(--shadow-lift)]">
             <Image
               alt={contact.atelierAlt}
               className="object-cover"
               fill
-              sizes="(min-width: 1024px) 480px, 100vw"
+              sizes="(min-width: 1024px) 440px, 100vw"
               src="/site/contacto/atelier.avif"
             />
           </div>

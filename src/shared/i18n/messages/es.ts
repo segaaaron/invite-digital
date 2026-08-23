@@ -172,7 +172,8 @@ export const es = {
   },
   contact: {
     eyebrow: 'Atelier de lujo sereno',
-    title: 'Comienza tu viaje',
+    title: 'Comienza tu',
+    titleAccent: 'viaje',
     body: 'Cuéntanos la fecha y el lugar. En menos de 24 horas recibes una propuesta con boceto y demo navegable de tu invitación.',
     submit: 'Solicitar consulta',
     successTitle: 'Solicitud recibida',
@@ -185,7 +186,8 @@ export const es = {
     emailLabel: 'Correo del atelier',
     fields: {
       name: 'Nombre',
-      email: 'Email',
+      lastName: 'Apellido',
+      email: 'Correo electrónico',
       phone: 'WhatsApp',
       category: 'Tipo de evento',
       categoryAny: 'Elige una opción',

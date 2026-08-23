@@ -133,6 +133,7 @@ export interface ModelsDictionary {
 
 export interface ContactFieldsDictionary {
   name: string
+  lastName: string
   email: string
   phone: string
   category: string
@@ -157,6 +158,8 @@ export interface ContactErrorsDictionary {
 export interface ContactDictionary {
   eyebrow: string
   title: string
+  /** La palabra que va en cursiva dorada al final del título. */
+  titleAccent: string
   body: string
   submit: string
   successTitle: string

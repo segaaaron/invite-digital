@@ -13,18 +13,27 @@ const INITIAL_STATE: ConsultationActionState = { status: 'idle', message: '' }
 const FIELD_CLASS =
   'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none transition-colors placeholder:text-ink-mute focus-visible:border-gold'
 
-const LABEL_CLASS = 'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
+/**
+ * La maqueta no pinta etiquetas encima de los campos: el propio campo dice qué se
+ * escribe. La etiqueta sigue en el DOM, oculta a la vista, porque un formulario sin
+ * etiquetas es un formulario mudo para quien no ve el marcador de posición —y el
+ * marcador desaparece en cuanto se empieza a escribir—.
+ */
+const LABEL_CLASS = 'flex flex-col gap-2'
+const LABEL_TEXT = 'sr-only'
 
 export function ConsultationForm({ categories, dictionary, locale }: Props) {
   const [state, formAction, isPending] = useActionState(submitConsultationAction, INITIAL_STATE)
   // Every action result is a fresh object, so remembering the acknowledged one brings
   // the form back on "send another" and still shows the panel after the next success.
   const [acknowledged, setAcknowledged] = useState<ConsultationActionState | null>(null)
+  const [nombre, setNombre] = useState('')
+  const [apellido, setApellido] = useState('')
   const { contact } = dictionary
   const errorId = useId()
   const nameId = useId()
+  const lastNameId = useId()
   const emailId = useId()
-  const phoneId = useId()
   const categoryId = useId()
   const dateId = useId()
   const messageId = useId()
@@ -55,7 +64,9 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
   const FIELD_ERRORS: Record<string, ReadonlyArray<'name' | 'email' | 'phone' | 'eventDate'>> = {
     invalid_name: ['name'],
     invalid_email: ['email'],
-    missing_contact: ['email', 'phone'],
+    // El formulario ya no pide teléfono —la maqueta no lo tiene—, así que el correo es el
+    // único camino de vuelta y es quien carga con este error.
+    missing_contact: ['email'],
     past_event_date: ['eventDate'],
     invalid_event_date: ['eventDate'],
   }
@@ -68,63 +79,60 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
     <form action={formAction} className="flex flex-col gap-5 p-8">
       <input name="locale" type="hidden" value={locale} readOnly />
 
-      <label className={LABEL_CLASS} htmlFor={nameId}>
-        {contact.fields.name}
-        <input
-          aria-describedby={describedBy('name')}
-          aria-invalid={invalid('name')}
-          className={FIELD_CLASS}
-          id={nameId}
-          maxLength={160}
-          name="name"
-          required
-          type="text"
-        />
-      </label>
+      {/* El dominio guarda un nombre completo y la maqueta lo pide en dos campos: se unen
+          al escribir, en un campo oculto, en vez de partir la tabla en dos columnas. */}
+      <input name="name" type="hidden" value={`${nombre} ${apellido}`.trim()} readOnly />
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <label className={LABEL_CLASS} htmlFor={emailId}>
-          {contact.fields.email}
+        <label className={LABEL_CLASS} htmlFor={nameId}>
+          <span className={LABEL_TEXT}>{contact.fields.name}</span>
           <input
-            aria-describedby={describedBy('email')}
-            aria-invalid={invalid('email')}
+            aria-describedby={describedBy('name')}
+            aria-invalid={invalid('name')}
             className={FIELD_CLASS}
-            id={emailId}
-            maxLength={200}
-            name="email"
-            type="email"
+            id={nameId}
+            maxLength={80}
+            onChange={(e) => setNombre(e.target.value)}
+            placeholder={contact.fields.name}
+            required
+            type="text"
+            value={nombre}
           />
         </label>
 
-        <label className={LABEL_CLASS} htmlFor={phoneId}>
-          {contact.fields.phone}
+        <label className={LABEL_CLASS} htmlFor={lastNameId}>
+          <span className={LABEL_TEXT}>{contact.fields.lastName}</span>
           <input
-            aria-describedby={describedBy('phone')}
-            aria-invalid={invalid('phone')}
             className={FIELD_CLASS}
-            id={phoneId}
-            maxLength={32}
-            name="phone"
-            type="tel"
+            id={lastNameId}
+            maxLength={80}
+            onChange={(e) => setApellido(e.target.value)}
+            placeholder={contact.fields.lastName}
+            required
+            type="text"
+            value={apellido}
           />
         </label>
       </div>
 
-      <div className="grid gap-5 sm:grid-cols-2">
-        <label className={LABEL_CLASS} htmlFor={categoryId}>
-          {contact.fields.category}
-          <select className={FIELD_CLASS} defaultValue="" id={categoryId} name="categorySlug">
-            <option value="">{contact.fields.categoryAny}</option>
-            {categories.map((category) => (
-              <option key={category.slug} value={category.slug}>
-                {category.name}
-              </option>
-            ))}
-          </select>
-        </label>
+      <label className={LABEL_CLASS} htmlFor={emailId}>
+        <span className={LABEL_TEXT}>{contact.fields.email}</span>
+        <input
+          aria-describedby={describedBy('email')}
+          aria-invalid={invalid('email')}
+          className={FIELD_CLASS}
+          id={emailId}
+          maxLength={200}
+          name="email"
+          placeholder={contact.fields.email}
+          required
+          type="email"
+        />
+      </label>
 
+      <div className="grid gap-5 sm:grid-cols-2">
         <label className={LABEL_CLASS} htmlFor={dateId}>
-          {`${contact.fields.date} (${contact.fields.optional})`}
+          <span className={LABEL_TEXT}>{`${contact.fields.date} (${contact.fields.optional})`}</span>
           <input
             aria-describedby={describedBy('eventDate')}
             aria-invalid={invalid('eventDate')}
@@ -134,11 +142,30 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
             type="date"
           />
         </label>
+
+        <label className={LABEL_CLASS} htmlFor={categoryId}>
+          <span className={LABEL_TEXT}>{contact.fields.category}</span>
+          <select className={FIELD_CLASS} defaultValue="" id={categoryId} name="categorySlug">
+            <option value="">{contact.fields.categoryAny}</option>
+            {categories.map((category) => (
+              <option key={category.slug} value={category.slug}>
+                {category.name}
+              </option>
+            ))}
+          </select>
+        </label>
       </div>
 
       <label className={LABEL_CLASS} htmlFor={messageId}>
-        {contact.fields.message}
-        <textarea className={FIELD_CLASS} id={messageId} maxLength={2000} name="message" rows={4} />
+        <span className={LABEL_TEXT}>{contact.fields.message}</span>
+        <textarea
+          className={FIELD_CLASS}
+          id={messageId}
+          maxLength={2000}
+          name="message"
+          placeholder={contact.fields.message}
+          rows={4}
+        />
       </label>
 
       {errorText ? (
