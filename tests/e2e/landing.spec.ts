@@ -37,6 +37,23 @@ test('el CTA de un plan lleva a WhatsApp con el mensaje correcto', async ({ page
   await expect(cta).toHaveAttribute('href', new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=.*Firma%203D`))
 })
 
+test('el hero se ve aunque se llegue por un ancla y se suba después', async ({ page }) => {
+  // El caso real: se entra por «#precios», se sube al principio, y la portada aparecía
+  // con el sobre y sin una sola palabra, porque el texto esperaba a cruzar el viewport.
+  await page.goto('/es#precios')
+  await page.waitForTimeout(500)
+  await page.evaluate(() => window.scrollTo(0, 0))
+
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+  await expect(page.getByRole('link', { name: /crear invitación/i }).first()).toBeVisible()
+
+  const opacidad = await page
+    .locator('#hero [data-reveal="mount"]')
+    .first()
+    .evaluate((el) => Number(getComputedStyle(el).opacity))
+  expect(opacidad).toBeGreaterThan(0.9)
+})
+
 test('un idioma desconocido en la ruta da 404', async ({ page }) => {
   const response = await page.goto('/fr')
   expect(response?.status()).toBe(404)

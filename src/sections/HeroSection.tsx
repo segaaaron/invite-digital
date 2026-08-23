@@ -14,7 +14,9 @@ export function HeroSection({ dictionary, slot }: Props) {
   return (
     <section className="relative px-5 pb-20 pt-[clamp(132px,16vw,168px)]" id="hero">
       <div className="mx-auto grid max-w-[1180px] items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
-        <Reveal className="flex flex-col gap-7">
+        {/* El hero aparece al cargar, no al entrar en pantalla: es lo primero que se ve y
+            no puede depender de que el scroll lo cruce. */}
+        <Reveal className="flex flex-col gap-7" onMount>
           {/* El kicker de la maqueta abre con una línea dorada que se apaga hacia la derecha. */}
           <span className="flex items-center gap-3.5">
             <span
@@ -65,7 +67,7 @@ export function HeroSection({ dictionary, slot }: Props) {
       </div>
 
       {/* La franja de cifras que cierra el hero en la maqueta. */}
-      <Reveal className="mx-auto mt-20 grid max-w-[1180px] grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-px bg-gold/25">
+      <Reveal className="mx-auto mt-20 grid max-w-[1180px] grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-px bg-gold/25" onMount>
         {hero.metrics.map((metric) => {
           const Icono = METRIC_ICONS[metric.icon]
           return (
