@@ -1,11 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { analytics, checkin, events, guestbook, guests, plans, rsvp, venue } from '@/app/composition/container'
+import { analytics, checkin, events, guestbook, guests, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { ActivityFeed, mergeActivity, type ActivityItem } from '@/modules/shell/ui/ActivityFeed'
 import { DonutChart, PanelCard, StatCard } from '@/modules/shell/ui/cards'
 import { isErr } from '@/shared/result'
 
@@ -52,6 +53,39 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // Los mensajes sin leer, para la acción rápida.
   const libroResumen = await guestbook.list(event.value.id)
   const sinLeerResumen = isErr(libroResumen) ? 0 : unreadCount(libroResumen.value)
+
+  // La actividad reciente se **compone** de lo que ya se registra: mensajes, llegadas y
+  // regalos reservados. No hay tabla de actividad, y no hace falta: duplicar esos hechos
+  // en un registro aparte crearía dos versiones de la misma verdad.
+  const mesaDeRegalos = isErr(await plans.requireFeature(event.value.id, 'registry'))
+    ? null
+    : await registry.list(event.value.id)
+
+  const actividadMensajes: ActivityItem[] = isErr(libroResumen)
+    ? []
+    : libroResumen.value.map((mensaje) => ({
+        at: mensaje.writtenAt,
+        icon: '💬',
+        text: `${mensaje.groupLabel} dejó un mensaje`,
+      }))
+
+  const actividadLlegadas: ActivityItem[] =
+    puerta === null || isErr(puerta)
+      ? []
+      : puerta.value.arrivals.map((llegada) => ({
+          at: llegada.arrivedAt,
+          icon: '✓',
+          text: `${puerta.value.groups.find((g) => g.id === llegada.guestGroupId)?.label ?? 'Un grupo'} llegó al evento`,
+        }))
+
+  const actividadRegalos: ActivityItem[] =
+    mesaDeRegalos === null || isErr(mesaDeRegalos)
+      ? []
+      : mesaDeRegalos.value.gifts
+          .filter((regalo) => regalo.claimedAt !== null)
+          .map((regalo) => ({ at: regalo.claimedAt!, icon: '🎁', text: `Reservaron «${regalo.name}»` }))
+
+  const actividad = mergeActivity(actividadMensajes, actividadLlegadas, actividadRegalos)
 
   // Las visitas a la invitación, que es la cuarta cifra de la maqueta.
   const visitas = await analytics.tally(event.value.id)
@@ -120,12 +154,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             ]}
           />
         </PanelCard>
-        <PanelCard title="Llegada">
-          <ArrivalStrip tally={llegadas} />
+        <PanelCard title="Actividad reciente">
+          <ActivityFeed items={actividad} />
         </PanelCard>
       </div>
 
-      <div className="flex flex-col gap-4.5">
+      <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1fr_1.6fr]">
+        <PanelCard title="Llegada">
+          <ArrivalStrip tally={llegadas} />
+        </PanelCard>
         <PanelCard
           action={
             <Link
