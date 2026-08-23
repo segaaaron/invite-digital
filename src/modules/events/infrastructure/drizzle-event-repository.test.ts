@@ -24,7 +24,7 @@ const evento = (slug: string) => ({
   locale: 'es' as const,
   themeKey: 'clasico',
   status: 'draft' as const,
-  retentionDays: 90,
+  retentionDays: 90, currency: 'BOB' as const,
 })
 
 describe('repositorio de eventos', () => {

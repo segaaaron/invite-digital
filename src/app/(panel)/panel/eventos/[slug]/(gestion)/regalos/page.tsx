@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import { events, plans, registry } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
-import { DEFAULT_CURRENCY } from '@/modules/registry'
 import { FundCard } from '@/modules/registry/ui/FundCard'
 import { FundForm } from '@/modules/registry/ui/FundForm'
 import { GiftForm } from '@/modules/registry/ui/GiftForm'
@@ -53,7 +52,7 @@ export default async function RegalosPage({ params }: { params: Promise<{ slug: 
         </PanelCard>
 
         <PanelCard title="Lista de regalos">
-          <GiftList currency={DEFAULT_CURRENCY} eventId={event.value.id} eventSlug={event.value.slug} gifts={gifts} />
+          <GiftList currency={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} gifts={gifts} />
         </PanelCard>
 
         <PanelCard title="Fondos en efectivo">
@@ -69,7 +68,7 @@ export default async function RegalosPage({ params }: { params: Promise<{ slug: 
                 {funds.map((view) => (
                   <FundCard
                     key={view.fund.id}
-                    currency={DEFAULT_CURRENCY}
+                    currency={event.value.currency}
                     eventId={event.value.id}
                     eventSlug={event.value.slug}
                     view={view}

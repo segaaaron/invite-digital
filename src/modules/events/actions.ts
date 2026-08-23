@@ -19,6 +19,7 @@ const readForm = (formData: FormData) => ({
   themeKey: String(formData.get('themeKey') ?? 'clasico'),
   status: String(formData.get('status') ?? 'draft'),
   retentionDays: Number(formData.get('retentionDays') ?? 90),
+  currency: String(formData.get('currency') ?? 'BOB'),
 })
 
 // Cada acción empieza por requireSession: una Server Action es un extremo HTTP público,

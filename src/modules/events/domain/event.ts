@@ -5,6 +5,9 @@ import { eventError, type EventError } from './errors'
 export type EventStatus = 'draft' | 'live' | 'closed'
 
 const STATUSES: readonly string[] = ['draft', 'live', 'closed']
+/** Las tres que ofrece la maqueta. Añadir una es una decisión comercial, no técnica. */
+export const CURRENCIES = ['BOB', 'USD', 'CAD'] as const
+export type Currency = (typeof CURRENCIES)[number]
 const SLUG_SHAPE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
@@ -18,6 +21,8 @@ export type Event = {
   readonly themeKey: string
   readonly status: EventStatus
   readonly retentionDays: number
+  /** La moneda de la mesa de regalos de este evento. */
+  readonly currency: Currency
 }
 
 export type EventInput = {
@@ -30,6 +35,7 @@ export type EventInput = {
   themeKey: string
   status: string
   retentionDays: number
+  currency?: string | undefined
 }
 
 export function createEvent(input: EventInput): Result<Event, EventError> {
@@ -68,6 +74,13 @@ export function createEvent(input: EventInput): Result<Event, EventError> {
     return err(eventError('invalid_retention', 'La retención se mide en días enteros y positivos'))
   }
 
+  // Los eventos anteriores a la columna llegan sin moneda: se leen como BOB, que es lo
+  // que tenían clavado en el código.
+  const currency = input.currency ?? 'BOB'
+  if (!(CURRENCIES as readonly string[]).includes(currency)) {
+    return err(eventError('invalid_status', `Moneda no soportada: ${currency}`))
+  }
+
   return ok({
     id: input.id,
     slug,
@@ -78,6 +91,7 @@ export function createEvent(input: EventInput): Result<Event, EventError> {
     themeKey,
     status: input.status as EventStatus,
     retentionDays: input.retentionDays,
+    currency: currency as Currency,
   })
 }
 

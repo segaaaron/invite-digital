@@ -37,6 +37,7 @@ export function EventForm({ event }: { event?: Event }) {
   const themeId = useId()
   const statusId = useId()
   const retentionId = useId()
+  const currencyId = useId()
   const errorId = useId()
 
   const error = state.status === 'error' && state.message !== '' ? MESSAGES[state.message] : null
@@ -101,6 +102,17 @@ export function EventForm({ event }: { event?: Event }) {
         <label className={LABEL_CLASS} htmlFor={retentionId}>
           Retención de datos (días)
           <input className={FIELD_CLASS} defaultValue={event?.retentionDays ?? 90} id={retentionId} min={1} name="retentionDays" required type="number" />
+        </label>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className={LABEL_CLASS} htmlFor={currencyId}>
+          Moneda de la mesa de regalos
+          <select className={FIELD_CLASS} defaultValue={event?.currency ?? 'BOB'} id={currencyId} name="currency">
+            <option value="BOB">BOB — Boliviano</option>
+            <option value="USD">USD — Dólar (EE. UU.)</option>
+            <option value="CAD">CAD — Dólar canadiense</option>
+          </select>
         </label>
       </div>
 

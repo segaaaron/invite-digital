@@ -9,9 +9,9 @@ import { registryError, type RegistryError } from './errors'
 export const MAX_AMOUNT_CENTS = 2_147_483_647
 
 /**
- * La moneda mientras `events` no tenga columna propia. El diseño la describe como
- * `events.currency`, pero esa columna no existe todavía en el esquema: este es el único
- * sitio que hay que tocar el día que se añada.
+ * El respaldo cuando no hay evento a mano. Desde que `events.currency` existe, la moneda
+ * que se pinta sale del evento: esta constante solo cubre a los eventos anteriores a esa
+ * columna, que se leen como BOB —que es lo que tenían clavado en el código—.
  */
 export const DEFAULT_CURRENCY = 'BOB'
 

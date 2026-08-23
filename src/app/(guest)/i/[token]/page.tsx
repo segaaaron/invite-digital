@@ -5,7 +5,6 @@ import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
-import { DEFAULT_CURRENCY } from '@/modules/registry'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
 import { env } from '@/shared/config/env'
@@ -64,7 +63,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
       {isErr(mesa) ? null : (
         <GuestRegistry
-          currency={DEFAULT_CURRENCY}
+          currency={event.currency}
           dictionary={registryDictionary}
           funds={mesa.value.funds}
           gifts={mesa.value.gifts}

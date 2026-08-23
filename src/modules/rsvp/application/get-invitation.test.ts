@@ -18,7 +18,7 @@ const evento: Event = {
   locale: 'es',
   themeKey: 'clasico',
   status: 'live',
-  retentionDays: 90,
+  retentionDays: 90, currency: 'BOB' as const,
 }
 
 const rsvp: RsvpRepository = {

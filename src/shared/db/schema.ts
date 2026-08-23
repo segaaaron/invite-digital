@@ -171,6 +171,9 @@ export const events = pgTable('events', {
   // closed: enlaces válidos, respuestas cerradas
   status: varchar('status', { length: 16 }).notNull().default('draft'),
   retentionDays: integer('retention_days').notNull().default(90),
+  // La moneda de la mesa de regalos de este evento. Por defecto BOB, que es lo que había
+  // clavado en el código hasta que la maqueta pidió elegirla.
+  currency: varchar('currency', { length: 3 }).notNull().default('BOB'),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
   /**
    * Anulable a propósito: los eventos creados antes de esta rebanada no tienen plan, y

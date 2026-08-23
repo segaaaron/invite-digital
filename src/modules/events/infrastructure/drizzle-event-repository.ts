@@ -13,6 +13,7 @@ const COLUMNS = {
   themeKey: events.themeKey,
   status: events.status,
   retentionDays: events.retentionDays,
+  currency: events.currency,
 } as const
 
 export const createDrizzleEventRepository = (database: DbExecutor): EventRepository => ({
@@ -100,6 +101,7 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         themeKey: event.themeKey,
         status: event.status,
         retentionDays: event.retentionDays,
+        currency: event.currency,
       })
       .where(eq(events.id, event.id))
   },
