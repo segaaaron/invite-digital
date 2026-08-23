@@ -181,8 +181,10 @@ export async function markInvitationSentAction(input: {
 
 export type ResendState =
   | { status: 'idle' }
-  // El enlace nuevo viaja una sola vez, igual que al crear el grupo.
-  | { status: 'success'; label: string; url: string }
+  // El enlace nuevo viaja una sola vez, igual que al crear el grupo. Lleva el `groupId`
+  // porque las etiquetas **no son únicas**: «Familia Vega» dos veces es corriente, y
+  // buscar por nombre mandaría la invitación de una familia al teléfono de otra.
+  | { status: 'success'; groupId: string; label: string; url: string }
   | { status: 'error'; message: string }
 
 /**
@@ -194,7 +196,8 @@ export async function resendInvitationAction(_previous: ResendState, formData: F
   await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  const result = await guests.resend({ id: String(formData.get('groupId') ?? '') })
+  const groupId = String(formData.get('groupId') ?? '')
+  const result = await guests.resend({ id: groupId })
 
   if (isErr(result)) {
     console.error('reenvío rechazado', result.error.kind, result.error.detail)
@@ -202,7 +205,12 @@ export async function resendInvitationAction(_previous: ResendState, formData: F
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
-  return { status: 'success', label: result.value.label, url: invitationUrl(result.value.token, env.SITE_URL) }
+  return {
+    status: 'success',
+    groupId,
+    label: result.value.label,
+    url: invitationUrl(result.value.token, env.SITE_URL),
+  }
 }
 
 export type ImportState =
@@ -233,11 +241,23 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
   const capacidad = await plans.allowanceFor(eventId)
   const actuales = await guests.list(eventId)
 
+  // Si cualquiera de las dos lecturas falla, **no se importa**. Tratar el fallo como
+  // «sin límite» o «cero grupos» convertiría un error transitorio de base en un salto del
+  // tope del plan, en silencio y con cincuenta grupos de golpe. El alta de uno en uno ya
+  // corta así; la vía masiva no puede ser la más laxa.
+  if (isErr(capacidad) || isErr(actuales)) {
+    console.error('importación abortada: no se pudo leer el plan o los grupos actuales')
+    return {
+      status: 'error',
+      message: 'No pudimos comprobar el límite de tu plan. Vuelve a intentarlo en un momento.',
+    }
+  }
+
   const result = await guests.importCsv({
     eventId,
     csv: String(formData.get('csv') ?? ''),
-    allowance: { maxGuestGroups: isErr(capacidad) ? null : capacidad.value.maxGuestGroups },
-    currentGroups: isErr(actuales) ? 0 : actuales.value.length,
+    allowance: { maxGuestGroups: capacidad.value.maxGuestGroups },
+    currentGroups: actuales.value.length,
   })
 
   if (isErr(result)) {

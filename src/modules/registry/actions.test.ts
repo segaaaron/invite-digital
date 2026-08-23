@@ -1,0 +1,51 @@
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ok } from '@/shared/result'
+
+/**
+ * Las dos acciones del invitado sobre la mesa de regalos son extremos públicos: con el
+ * enlace se pueden llamar sin abrir la página. Si el evento está protegido con
+ * contraseña, tienen que quedarse fuera igual que el render.
+ */
+
+const claim = vi.fn()
+const resolveByToken = vi.fn()
+const requireFeature = vi.fn()
+const eventUnlocked = vi.fn()
+
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
+vi.mock('@/modules/identity/session-cookie', () => ({ requireSession: vi.fn() }))
+vi.mock('@/app/composition/container', () => ({
+  registry: { claim: (...args: unknown[]) => claim(...args), release: vi.fn() },
+  guests: { resolveByToken: (...args: unknown[]) => resolveByToken(...args) },
+  plans: { requireFeature: (...args: unknown[]) => requireFeature(...args) },
+}))
+vi.mock('@/modules/events/actions', () => ({ eventUnlocked: (...args: unknown[]) => eventUnlocked(...args) }))
+
+beforeEach(() => {
+  vi.clearAllMocks()
+  resolveByToken.mockResolvedValue(ok({ id: 'g1', eventId: 'e1' }))
+  requireFeature.mockResolvedValue(ok(true))
+  claim.mockResolvedValue(ok(true))
+})
+
+describe('claimGiftAction con un evento protegido', () => {
+  it('sin desbloquear no reserva nada', async () => {
+    eventUnlocked.mockResolvedValue(false)
+    const { claimGiftAction } = await import('./actions')
+
+    const result = await claimGiftAction({ token: 'tok', giftId: 'r1' })
+
+    expect(result.ok).toBe(false)
+    expect(claim).not.toHaveBeenCalled()
+  })
+
+  it('desbloqueado reserva con normalidad', async () => {
+    eventUnlocked.mockResolvedValue(true)
+    const { claimGiftAction } = await import('./actions')
+
+    await claimGiftAction({ token: 'tok', giftId: 'r1' })
+
+    expect(claim).toHaveBeenCalled()
+  })
+})

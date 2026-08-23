@@ -38,6 +38,8 @@ const requireSession = vi.fn().mockResolvedValue({ userId: 'u1' })
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-real-ip': '203.0.113.7' }) }))
 vi.mock('@/modules/identity/session-cookie', () => ({ requireSession: () => requireSession() }))
+// El evento de estas pruebas es público: la puerta de la contraseña no aplica aquí.
+vi.mock('@/modules/events/actions', () => ({ eventUnlocked: async () => true }))
 vi.mock('@/app/composition/container', () => ({
   plans: { requireFeature: (...args: unknown[]) => requireFeature(...args), allowanceFor: vi.fn(), listActive: vi.fn() },
   venue,

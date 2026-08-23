@@ -53,6 +53,21 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where g.id = numerado.id
       `)
 
+      // Las personas del grupo: el nombre y apellido de alguien concreto, y su
+      // restricción alimentaria, que en la práctica es un dato de salud. Se conserva el
+      // agregado —cuántas eran y quién era acompañante—, como con los cupos.
+      await tx.execute(sql`
+        update guest_people as p
+        set full_name = 'Invitado ' || numerado.posicion, dietary_note = null
+        from (
+          select gp.id, row_number() over (order by gp.created_at) as posicion
+          from guest_people gp
+          join guest_groups g on g.id = gp.guest_group_id
+          where g.event_id = ${eventId}
+        ) as numerado
+        where p.id = numerado.id
+      `)
+
       await tx.execute(sql`
         update rsvp_responses
         set message = null

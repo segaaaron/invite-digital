@@ -12,23 +12,29 @@ test.afterAll(async () => {
 test('abrir la invitación cuenta una visita, con su dispositivo y su camino', async ({ browser }) => {
   const { eventId, token } = await seedAnalyticsEvent(SLUG)
 
-  // 1. El invitado abre desde un iPhone y llegando por WhatsApp.
+  // 1. El invitado abre desde un iPhone y llegando por el QR impreso.
+  //
+  // La fuente viaja en la URL, como en el enlace que se reparte, y **no** se fuerza la
+  // cabecera `Referer`: forzarla hacía pasar la prueba con la fuente leída en el
+  // servidor, que en producción siempre habría dicho «otras».
+  //
+  // Se usa `qr` y no `whatsapp` a propósito: con `whatsapp` la propia URL contiene esa
+  // palabra, el `Referer` del POST también, y la prueba pasaba igual con el código roto.
   const movil = await browser.newContext({
     userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148',
     viewport: { width: 390, height: 844 },
-    extraHTTPHeaders: { referer: 'https://web.whatsapp.com/' },
   })
   const invitado = await movil.newPage()
-  await invitado.goto(`/i/${token}`)
+  await invitado.goto(`/i/${token}?utm_source=qr`)
   await expect(invitado.getByRole('heading', { level: 1 })).toBeVisible()
   await expect.poll(async () => (await viewsOf(eventId)).length).toBe(1)
 
   const [primera] = await viewsOf(eventId)
   expect(primera?.device).toBe('mobile')
-  expect(primera?.source).toBe('whatsapp')
+  expect(primera?.source).toBe('qr')
 
-  // 2. Recargar en la misma pestaña NO suma otra: el guardo vive en sessionStorage.
-  await invitado.goto(`/i/${token}`)
+  // 2. Volver a la misma pestaña NO suma otra: el guardo vive en sessionStorage.
+  await invitado.goto(`/i/${token}?utm_source=qr`)
   await invitado.waitForTimeout(800)
   expect(await viewsOf(eventId)).toHaveLength(1)
 
@@ -37,7 +43,7 @@ test('abrir la invitación cuenta una visita, con su dispositivo y su camino', a
   const panel = await atelier.newPage()
   await panel.goto(`/panel/eventos/${SLUG}/estadisticas`)
   await expect(panel.getByText('Móvil')).toBeVisible()
-  await expect(panel.getByText('WhatsApp')).toBeVisible()
+  await expect(panel.getByText('Código QR')).toBeVisible()
 
   await panel.goto(`/panel/eventos/${SLUG}`)
   await expect(panel.getByText('Visitas a la invitación')).toBeVisible()

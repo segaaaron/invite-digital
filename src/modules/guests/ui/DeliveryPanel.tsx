@@ -37,6 +37,7 @@ export function DeliveryPanel({
     Object.fromEntries(rows.map((fila) => [fila.id, fila.phone ?? ''])),
   )
   const [copiado, setCopiado] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const mensaje = (label: string, url: string) =>
     renderMessage({ template, locale: eventLocale, groupLabel: label, url })
@@ -47,10 +48,14 @@ export function DeliveryPanel({
         Al reenviar se genera un enlace nuevo y el anterior deja de funcionar, también para quien ya lo tuviera. El
         enlace nuevo se enseña una sola vez.
       </p>
+      <p className="text-[12px] leading-[1.7] text-gold-deep">
+        Y su pase de la puerta deja de valer: el QR guardado en el teléfono del invitado apunta al enlace viejo. Si el
+        evento ya empezó, avísale antes de reenviar.
+      </p>
 
-      {state.status === 'error' ? (
+      {state.status === 'error' || error !== null ? (
         <p className="text-[13px] text-gold-deep" role="alert">
-          {state.message}
+          {state.status === 'error' ? state.message : error}
         </p>
       ) : null}
 
@@ -77,7 +82,9 @@ export function DeliveryPanel({
             <a
               className="rounded-full bg-gold px-3.5 py-1.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
               href={whatsappLink({
-                phone: telefonos[rows.find((f) => f.label === state.label)?.id ?? ''] ?? null,
+                // Por `groupId`, nunca por etiqueta: dos grupos pueden llamarse igual, y
+                // el enlace saldría con el teléfono del otro.
+                phone: telefonos[state.groupId] ?? null,
                 message: mensaje(state.label, state.url),
               })}
               rel="noopener noreferrer"
@@ -106,9 +113,16 @@ export function DeliveryPanel({
               <span className="sr-only">Teléfono de {fila.label}</span>
               <input
                 className="w-[170px] rounded-full border border-line bg-bg-top px-3 py-1.5 text-[12px] text-ink"
-                onBlur={() =>
-                  void setGroupPhoneAction({ eventSlug, id: fila.id, phone: telefonos[fila.id] ?? '' })
-                }
+                onBlur={() => {
+                  setError(null)
+                  // Un fallo mudo aquí deja el número en pantalla y no en la base: al
+                  // reenviar, WhatsApp abriría sin destinatario.
+                  void setGroupPhoneAction({ eventSlug, id: fila.id, phone: telefonos[fila.id] ?? '' }).then(
+                    (estado) => {
+                      if (estado.status === 'error') setError(estado.message)
+                    },
+                  )
+                }}
                 onChange={(e) => setTelefonos((previo) => ({ ...previo, [fila.id]: e.target.value }))}
                 placeholder="+591 700 11122"
                 value={telefonos[fila.id] ?? ''}

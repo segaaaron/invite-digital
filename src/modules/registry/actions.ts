@@ -5,6 +5,7 @@ import { headers } from 'next/headers'
 import { guests, plans, registry } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
+import { eventUnlocked } from '@/modules/events/actions'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { ContributionMethod } from './domain/fund'
@@ -252,6 +253,14 @@ export async function recordContributionAction(input: {
 const cerradaParaElInvitado = async (token: string): Promise<RegistryActionResult | null> => {
   const group = await guests.resolveByToken(token)
   if (isErr(group)) return null
+
+  // El candado de la contraseña del evento cierra también estas escrituras. Sin él, con
+  // el enlace en la mano se podría reservar la cafetera de un evento «privado» por POST
+  // directo, sin haber pasado nunca por la puerta. Se responde `not_found`, como con un
+  // token desconocido: distinguirlos confirmaría que el enlace es bueno.
+  if (!(await eventUnlocked(group.value.eventId))) {
+    return { ok: false, kind: 'not_found', message: 'not_found' }
+  }
 
   const permitido = await plans.requireFeature(group.value.eventId, 'registry')
   return isErr(permitido) ? { ok: false, kind: permitido.error.kind, message: permitido.error.kind } : null

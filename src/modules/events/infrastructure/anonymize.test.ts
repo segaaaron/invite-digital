@@ -1,7 +1,15 @@
 import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, fundContributions, giftFunds, guestGroups, messageNotes, rsvpResponses } from '@/shared/db/schema'
+import {
+  events,
+  fundContributions,
+  giftFunds,
+  guestGroups,
+  guestPeople,
+  messageNotes,
+  rsvpResponses,
+} from '@/shared/db/schema'
 import { createDrizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { createDrizzleEventRepository } from './drizzle-event-repository'
 
@@ -52,6 +60,35 @@ describe('anonimización', () => {
       expect(slugs).toContain(vencido.slug)
       expect(slugs).not.toContain(vigente.slug)
       expect(slugs).not.toContain(yaHecho.slug)
+    })
+  })
+
+  it('anonimiza también a las personas del grupo: nombre y restricción alimentaria', async () => {
+    // `guest_people` guarda el nombre y apellido de una persona concreta y su restricción
+    // alimentaria, que en la práctica es un dato de salud —«alergia a los frutos secos»—.
+    // Quedarse eso tras la retención es peor que quedarse la etiqueta del grupo.
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+
+      const [grupo] = await tx
+        .insert(guestGroups)
+        .values({ eventId: evento.id, label: 'Familia Rojas Peña', seats: 4, tokenHash: Buffer.alloc(32, 21) })
+        .returning({ id: guestGroups.id })
+
+      await tx.insert(guestPeople).values([
+        { guestGroupId: grupo!.id, fullName: 'Ana Lucía Vega', dietaryNote: 'Alergia a los frutos secos', vip: true },
+        { guestGroupId: grupo!.id, fullName: 'Roberto Núñez', dietaryNote: null, isCompanion: true },
+      ])
+
+      await repo.anonymize(evento.id, NOW)
+
+      const personas = await tx.select().from(guestPeople).where(eq(guestPeople.guestGroupId, grupo!.id))
+      expect(personas).toHaveLength(2)
+      expect(personas.every((p) => !p.fullName.includes('Ana') && !p.fullName.includes('Roberto'))).toBe(true)
+      expect(personas.every((p) => p.dietaryNote === null)).toBe(true)
+      // El agregado se conserva: cuántas personas eran, y si eran acompañantes.
+      expect(personas.filter((p) => p.isCompanion)).toHaveLength(1)
     })
   })
 

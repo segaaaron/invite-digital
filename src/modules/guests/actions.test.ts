@@ -13,9 +13,18 @@ const requireSession = vi.fn().mockResolvedValue({ userId: 'u1' })
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/modules/identity/session-cookie', () => ({ requireSession: () => requireSession() }))
+const importCsv = vi.fn()
+const listGroups = vi.fn()
+const allowanceFor = vi.fn()
+
 vi.mock('@/app/composition/container', () => ({
-  guests: { revoke: (...args: unknown[]) => revoke(...args), list: vi.fn(), add: vi.fn() },
-  plans: { allowanceFor: vi.fn(), requireFeature: vi.fn() },
+  guests: {
+    revoke: (...args: unknown[]) => revoke(...args),
+    list: (...args: unknown[]) => listGroups(...args),
+    add: vi.fn(),
+    importCsv: (...args: unknown[]) => importCsv(...args),
+  },
+  plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: vi.fn() },
 }))
 
 const form = (): FormData => {
@@ -66,5 +75,54 @@ describe('revokeInvitationAction', () => {
 
     await revokeInvitationAction({ status: 'idle' }, form())
     expect(requireSession).toHaveBeenCalled()
+  })
+})
+
+describe('importGuestsAction y el tope del plan', () => {
+  const csvForm = (): FormData => {
+    const fd = new FormData()
+    fd.set('eventId', 'e1')
+    fd.set('eventSlug', 'boda')
+    fd.set('csv', 'Familia Rojas;4')
+    return fd
+  }
+
+  it('si no se puede leer el plan, NO importa: se corta con un error', async () => {
+    // Pasar `maxGuestGroups: null` cuando la lectura falla significa «sin límite» en este
+    // dominio: un fallo transitorio de base convertiría la importación masiva en un salto
+    // del tope del plan, en silencio y con cincuenta grupos de golpe.
+    allowanceFor.mockResolvedValue(err(guestError('storage_failure', 'la base no responde')))
+    listGroups.mockResolvedValue(ok([]))
+    const { importGuestsAction } = await import('./actions')
+
+    const estado = await importGuestsAction({ status: 'idle' }, csvForm())
+
+    expect(estado.status).toBe('error')
+    expect(importCsv).not.toHaveBeenCalled()
+  })
+
+  it('si no se pueden leer los grupos actuales, tampoco importa', async () => {
+    // Con `currentGroups: 0` el tope se calcularía desde cero y volvería a saltarse.
+    allowanceFor.mockResolvedValue(ok({ planSlug: 'atelier', maxGuestGroups: 2 }))
+    listGroups.mockResolvedValue(err(guestError('storage_failure', 'la base no responde')))
+    const { importGuestsAction } = await import('./actions')
+
+    const estado = await importGuestsAction({ status: 'idle' }, csvForm())
+
+    expect(estado.status).toBe('error')
+    expect(importCsv).not.toHaveBeenCalled()
+  })
+
+  it('con las dos lecturas buenas, importa con el tope real del plan', async () => {
+    allowanceFor.mockResolvedValue(ok({ planSlug: 'atelier', maxGuestGroups: 2 }))
+    listGroups.mockResolvedValue(ok([{ id: 'g1' }]))
+    importCsv.mockResolvedValue(ok({ rows: [], created: 0, rejected: 0 }))
+    const { importGuestsAction } = await import('./actions')
+
+    await importGuestsAction({ status: 'idle' }, csvForm())
+
+    expect(importCsv).toHaveBeenCalledWith(
+      expect.objectContaining({ allowance: { maxGuestGroups: 2 }, currentGroups: 1 }),
+    )
   })
 })

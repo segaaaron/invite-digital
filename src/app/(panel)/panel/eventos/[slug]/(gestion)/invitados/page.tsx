@@ -121,7 +121,14 @@ export default async function InvitadosPage({ params }: { params: Promise<{ slug
                 free: Math.max(0, fila.seats - (cargadasPorGrupo.get(fila.id) ?? 0)),
               }))}
             />
-            {filasPersona.length === 0 ? (
+            {isErr(personas) ? (
+              // Pintar «todavía no hay personas» cuando la lectura falló no es un error
+              // invisible: es un error que **miente**. El atelier daría por vacía una
+              // lista que existe.
+              <p className="text-[13px] text-gold-deep" role="alert">
+                No pudimos leer las personas. La base no responde; vuelve a intentarlo en un momento.
+              </p>
+            ) : filasPersona.length === 0 ? (
               <p className="text-[13px] text-ink-mute">
                 Todavía no hay personas cargadas. Un grupo sin personas se sigue viendo abajo como una sola fila.
               </p>

@@ -13,7 +13,12 @@ export type ResentInvitation = { readonly token: string; readonly label: string 
  * tampoco sería buena idea: si hizo falta reenviarlo es porque se perdió, y un enlace
  * perdido pudo acabar en cualquier parte. Rotarlo cierra esa puerta.
  *
- * El RSVP, la mesa y el pase de la puerta no se tocan: son del grupo, no del token.
+ * El RSVP y la mesa **no** se tocan: son del grupo, no del token.
+ *
+ * El **pase de la puerta sí**: el QR del invitado codifica su enlace, y la puerta resuelve
+ * por el hash del token. Quien guardó su pase antes del reenvío se planta en la puerta con
+ * una tarjeta roja, y un manifiesto descargado antes de la rotación tampoco lo reconoce.
+ * Por eso la pantalla lo avisa antes de pulsar, y por eso reenviar no es gratis.
  *
  * Un grupo revocado **no** se reenvía: revocar es una decisión que hay que deshacer a
  * propósito, no de refilón al pulsar «reenviar».

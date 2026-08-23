@@ -18,11 +18,21 @@ import { isErr } from '@/shared/result'
  *
  * No devuelve nada que permita distinguir un token bueno de uno malo.
  */
-export async function recordInvitationViewAction(input: { token: string; kind: 'guest' | 'client' }): Promise<void> {
+export async function recordInvitationViewAction(input: {
+  token: string
+  kind: 'guest' | 'client'
+  /** El `utm_source` de la URL que abrió el invitado. Lo lee el navegador, no el servidor. */
+  utmSource?: string | null
+  /** El referente real de la navegación, ya filtrado si era del propio sitio. */
+  referrer?: string | null
+}): Promise<void> {
   try {
     const cabeceras = await headers()
+    // El dispositivo sí sale de la cabecera: el agente de usuario del POST es el mismo
+    // navegador. La fuente no, porque el `Referer` de una Server Action es la propia
+    // página de la invitación.
     const device = classifyDevice(cabeceras.get('user-agent') ?? '')
-    const source = classifySource(cabeceras.get('x-utm-source'), cabeceras.get('referer'))
+    const source = classifySource(input.utmSource ?? null, input.referrer ?? null)
 
     if (input.kind === 'guest') {
       const group = await guests.resolveByToken(input.token)

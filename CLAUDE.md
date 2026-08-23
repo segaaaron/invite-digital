@@ -79,6 +79,29 @@ importación masiva con CSV y tabla de resultado, plantilla de mensaje por event
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
 
+### Lo que salió de la revisión de código (22 de agosto)
+
+- **`unlockEventAction` lleva límite de intentos, por IP y por evento.** Es un extremo
+  público, sin sesión, contra una contraseña de seis caracteres, y **cada intento cuesta
+  un argon2 de 19 MiB**: sin límite es fuerza bruta y además un vector de CPU. Cuando está
+  limitado no se comprueba nada, que es justo el punto.
+- **La cookie de desbloqueo caduca en el servidor.** Antes el valor era constante y la
+  caducidad la ponía el `maxAge` del navegador: copiándola se entraba para siempre. Ahora
+  la marca de tiempo va firmada dentro, y la comparación es en tiempo constante.
+- **El candado de la contraseña cierra las escrituras, no solo el render.** `respondAction`
+  y las acciones de invitado de la mesa de regalos comprueban `eventUnlocked`: con el
+  enlace en la mano se podía confirmar y reservar por POST en un evento «privado».
+- **La retención anonimiza `guest_people`**: nombre y restricción alimentaria —que en la
+  práctica es dato de salud—. Se conserva el agregado.
+- **La importación masiva aborta si no puede leer el plan o los grupos actuales.** Tratar
+  el fallo como «sin límite» convertía un error transitorio en un salto del tope, con
+  cincuenta grupos de golpe.
+- **La fuente de la visita la lee el navegador, no el servidor.** El `Referer` de una
+  Server Action es la propia página de la invitación: leerlo allí hacía que **todas** las
+  visitas salieran como «otras», y la e2e lo tapaba porque forzaba la cabecera. Ojo con el
+  valor de prueba: con `utm_source=whatsapp` la palabra viaja en la URL y el fallo vuelve
+  a colarse; la prueba usa `qr`.
+
 ### Notas del plan y la portada
 
 - **Un componente cliente no recibe funciones desde el servidor.** `BillingToggle` pintaba

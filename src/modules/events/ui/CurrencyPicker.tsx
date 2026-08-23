@@ -1,6 +1,6 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useState, useTransition } from 'react'
 import { setEventCurrencyAction } from '../actions'
 import { CURRENCIES, type Currency } from '../domain/event'
 
@@ -24,21 +24,34 @@ export function CurrencyPicker({
   current: Currency
 }) {
   const [pending, start] = useTransition()
+  const [elegida, setElegida] = useState<Currency>(current)
+  const [error, setError] = useState<string | null>(null)
 
   return (
+    <div className="flex flex-col items-end gap-1.5">
     <label className="flex items-center gap-2.5">
       <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">Moneda</span>
       <select
         className="rounded-full border border-line bg-bg-top/80 px-3.5 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase disabled:opacity-60"
         disabled={pending}
         onChange={(e) => {
-          const elegida = e.target.value
+          const siguiente = e.target.value as Currency
+          const anterior = elegida
+          setElegida(siguiente)
+          setError(null)
           start(() => {
-            void setEventCurrencyAction({ eventId, eventSlug, currency: elegida })
+            void setEventCurrencyAction({ eventId, eventSlug, currency: siguiente }).then((estado) => {
+              // Un fallo mudo dejaría el selector en la moneda nueva y el evento en la
+              // vieja: el invitado seguiría viendo la mesa de regalos en la otra.
+              if (estado.status === 'error') {
+                setElegida(anterior)
+                setError(estado.message)
+              }
+            })
           })
         }}
         title="Cambia la moneda del evento. Los importes ya cargados no se convierten: se reetiquetan."
-        value={current}
+        value={elegida}
       >
         {CURRENCIES.map((moneda) => (
           <option key={moneda} value={moneda}>
@@ -47,5 +60,11 @@ export function CurrencyPicker({
         ))}
       </select>
     </label>
+      {error === null ? null : (
+        <p className="max-w-[28ch] text-right text-[11px] text-gold-deep" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
   )
 }

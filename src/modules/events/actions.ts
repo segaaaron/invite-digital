@@ -1,10 +1,13 @@
 'use server'
 
-import { createHmac } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { events as eventUseCases, guests } from '@/app/composition/container'
+import { clientIpFrom } from '@/modules/leads/application/client-ip'
+import { createRateLimiter } from '@/modules/leads/application/rate-limit'
+import { guardedUnlock } from './application/guarded-unlock'
+import { isUnlockValid, unlockValue, UNLOCK_MS } from './domain/unlock-token'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
@@ -132,8 +135,22 @@ export async function deleteEventAction(
 
 export type UnlockState = { status: 'idle' } | { status: 'error'; message: string }
 
-/** Cuánto dura el desbloqueo de un evento protegido. Una tarde entera de fiesta cabe. */
-const UNLOCK_HOURS = 12
+/**
+ * Cinco intentos por minuto y por IP, veinte por minuto y por evento.
+ *
+ * Un invitado que se equivoca al teclear cabe de sobra; probar contraseñas de seis
+ * caracteres a fuerza bruta, no. El límite por evento existe porque un ataque distribuido
+ * cambia de IP en cada intento, y cada intento cuesta un argon2 de 19 MiB.
+ */
+const abrirEvento = guardedUnlock({
+  limiter: createRateLimiter({ windowMs: 60_000, max: 5 }),
+  eventLimiter: createRateLimiter({ windowMs: 60_000, max: 20 }),
+  check: async ({ eventId, password }) => {
+    const correcta = await eventUseCases.checkPassword({ eventId, password })
+    return !isErr(correcta) && correcta.value
+  },
+  clock: () => Date.now(),
+})
 
 const unlockCookieName = (eventId: string): string => `evento-abierto-${eventId}`
 
@@ -153,20 +170,34 @@ export async function unlockEventAction(_previous: UnlockState, formData: FormDa
   const group = await guests.resolveByToken(token)
   if (isErr(group)) return { status: 'error', message: 'No pudimos abrir la invitación con esos datos.' }
 
-  const correcta = await eventUseCases.checkPassword({ eventId: group.value.eventId, password })
-  if (isErr(correcta) || !correcta.value) {
+  const cabeceras = await headers()
+  const ip = clientIpFrom({
+    realIp: cabeceras.get('x-real-ip'),
+    forwardedFor: cabeceras.get('x-forwarded-for'),
+  })
+
+  const intento = await abrirEvento({ ip, eventId: group.value.eventId, password })
+
+  if (intento.status === 'rate_limited') {
+    return { status: 'error', message: 'Demasiados intentos. Espera un minuto y vuelve a probar.' }
+  }
+  if (intento.status === 'invalid') {
     return { status: 'error', message: 'No pudimos abrir la invitación con esos datos.' }
   }
 
   const hash = await eventUseCases.passwordHashOf(group.value.eventId)
   const jar = await cookies()
-  jar.set(unlockCookieName(group.value.eventId), unlockValue(group.value.eventId, hash), {
-    httpOnly: true,
-    sameSite: 'lax',
-    secure: env.SITE_URL.startsWith('https://'),
-    path: '/',
-    maxAge: UNLOCK_HOURS * 60 * 60,
-  })
+  jar.set(
+    unlockCookieName(group.value.eventId),
+    unlockValue({ eventId: group.value.eventId, passwordHash: hash ?? '', issuedAt: Date.now() }),
+    {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: env.SITE_URL.startsWith('https://'),
+      path: '/',
+      maxAge: Math.floor(UNLOCK_MS / 1000),
+    },
+  )
 
   // Redirige en vez de revalidar: la cookie se escribe en esta misma respuesta, y
   // revalidar el árbol dentro de la propia acción lo vuelve a pintar **antes** de que el
@@ -174,26 +205,22 @@ export async function unlockEventAction(_previous: UnlockState, formData: FormDa
   redirect(`/i/${token}`)
 }
 
-/**
- * El valor de la cookie: HMAC del identificador del evento con **el hash de su propia
- * contraseña** como clave.
- *
- * Así, cambiar la contraseña invalida por sí sola todos los desbloqueos repartidos, sin
- * inventar otro secreto que alguien tendría que rotar. Y una cookie fabricada a mano no
- * abre nada: quien la escribe no conoce el hash.
- */
-function unlockValue(eventId: string, passwordHash: string | null): string {
-  return createHmac('sha256', passwordHash ?? 'evento-publico').update(eventId).digest('base64url')
-}
 
-/** ¿Este navegador ya escribió la contraseña de este evento? */
+/**
+ * ¿Este navegador ya escribió la contraseña de este evento?
+ *
+ * La caducidad la comprueba **el servidor**, con la marca de tiempo que va firmada dentro
+ * del valor: el `maxAge` de la cookie lo controla el navegador y quien la copie se lo
+ * salta.
+ */
 export async function eventUnlocked(eventId: string): Promise<boolean> {
   const hash = await eventUseCases.passwordHashOf(eventId)
   // Sin contraseña no hay puerta que abrir: el evento es público con el enlace.
   if (hash === null) return true
 
   const jar = await cookies()
-  return jar.get(unlockCookieName(eventId))?.value === unlockValue(eventId, hash)
+  const valor = jar.get(unlockCookieName(eventId))?.value
+  return valor !== undefined && isUnlockValid({ value: valor, eventId, passwordHash: hash, now: Date.now() })
 }
 
 export type PrivacyState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
