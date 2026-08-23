@@ -1,8 +1,10 @@
 'use server'
 
+import { createHmac } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { events as eventUseCases } from '@/app/composition/container'
+import { events as eventUseCases, guests } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
@@ -125,4 +127,94 @@ export async function deleteEventAction(
   }
 
   redirect('/panel')
+}
+
+export type UnlockState = { status: 'idle' } | { status: 'error'; message: string }
+
+/** Cuánto dura el desbloqueo de un evento protegido. Una tarde entera de fiesta cabe. */
+const UNLOCK_HOURS = 12
+
+const unlockCookieName = (eventId: string): string => `evento-abierto-${eventId}`
+
+/**
+ * Comprueba la contraseña de un evento y, si es la buena, deja una cookie de sesión para
+ * ese evento y solo para ese.
+ *
+ * La cookie guarda el hash del identificador del evento con el secreto del servidor: una
+ * cookie fabricada a mano no abre nada. Y el mensaje de error es siempre el mismo, sin
+ * distinguir enlace inválido de contraseña incorrecta: distinguirlos confirmaría que el
+ * enlace existe.
+ */
+export async function unlockEventAction(_previous: UnlockState, formData: FormData): Promise<UnlockState> {
+  const token = String(formData.get('token') ?? '')
+  const password = String(formData.get('password') ?? '')
+
+  const group = await guests.resolveByToken(token)
+  if (isErr(group)) return { status: 'error', message: 'No pudimos abrir la invitación con esos datos.' }
+
+  const correcta = await eventUseCases.checkPassword({ eventId: group.value.eventId, password })
+  if (isErr(correcta) || !correcta.value) {
+    return { status: 'error', message: 'No pudimos abrir la invitación con esos datos.' }
+  }
+
+  const hash = await eventUseCases.passwordHashOf(group.value.eventId)
+  const jar = await cookies()
+  jar.set(unlockCookieName(group.value.eventId), unlockValue(group.value.eventId, hash), {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: env.SITE_URL.startsWith('https://'),
+    path: '/',
+    maxAge: UNLOCK_HOURS * 60 * 60,
+  })
+
+  // Redirige en vez de revalidar: la cookie se escribe en esta misma respuesta, y
+  // revalidar el árbol dentro de la propia acción lo vuelve a pintar **antes** de que el
+  // navegador tenga la cookie, así que la puerta seguía cerrada tras acertar.
+  redirect(`/i/${token}`)
+}
+
+/**
+ * El valor de la cookie: HMAC del identificador del evento con **el hash de su propia
+ * contraseña** como clave.
+ *
+ * Así, cambiar la contraseña invalida por sí sola todos los desbloqueos repartidos, sin
+ * inventar otro secreto que alguien tendría que rotar. Y una cookie fabricada a mano no
+ * abre nada: quien la escribe no conoce el hash.
+ */
+function unlockValue(eventId: string, passwordHash: string | null): string {
+  return createHmac('sha256', passwordHash ?? 'evento-publico').update(eventId).digest('base64url')
+}
+
+/** ¿Este navegador ya escribió la contraseña de este evento? */
+export async function eventUnlocked(eventId: string): Promise<boolean> {
+  const hash = await eventUseCases.passwordHashOf(eventId)
+  // Sin contraseña no hay puerta que abrir: el evento es público con el enlace.
+  if (hash === null) return true
+
+  const jar = await cookies()
+  return jar.get(unlockCookieName(eventId))?.value === unlockValue(eventId, hash)
+}
+
+export type PrivacyState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+
+/**
+ * Pone o quita la contraseña del evento. Elegir «pública» borra el hash, y con él quedan
+ * inservibles todos los desbloqueos repartidos, porque la cookie se firma con ese hash.
+ */
+export async function setEventPrivacyAction(_previous: PrivacyState, formData: FormData): Promise<PrivacyState> {
+  await requireSession()
+
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  const publica = formData.get('privacy') !== 'password'
+  const password = String(formData.get('password') ?? '')
+
+  const result = await eventUseCases.setPassword({ eventId, password: publica ? null : password })
+  if (isErr(result)) {
+    console.error('privacidad rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success' }
 }

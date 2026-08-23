@@ -13,6 +13,8 @@ import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-e
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
 import { deleteEvent } from '@/modules/events/application/delete-event'
+import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
+import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
@@ -124,6 +126,18 @@ export const events = {
   update: updateEventUseCase({ events: drizzleEventRepository }),
   list: listEvents({ events: drizzleEventRepository }),
   remove: deleteEvent({ events: drizzleEventRepository }),
+  setPassword: setEventPassword({
+    events: drizzleEventRepository,
+    access: drizzleAccessRepository,
+    hasher: argon2Hasher,
+  }),
+  checkPassword: checkEventPassword({ access: drizzleAccessRepository, hasher: argon2Hasher }),
+  /**
+   * El hash de la contraseña del evento. Lo usa la cookie de desbloqueo como clave: así
+   * cambiar la contraseña invalida por sí solo los desbloqueos ya repartidos, sin
+   * inventar otro secreto que administrar.
+   */
+  passwordHashOf: (eventId: string) => drizzleAccessRepository.passwordHashOf(eventId),
   getBySlug: getEventBySlug({ events: drizzleEventRepository }),
   getById: getEventById({ events: drizzleEventRepository }),
   createShare: createClientShare({ shares: drizzleClientShareRepository, minter, ids: () => crypto.randomUUID(), clock }),

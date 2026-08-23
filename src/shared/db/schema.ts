@@ -174,6 +174,9 @@ export const events = pgTable('events', {
   // La moneda de la mesa de regalos de este evento. Por defecto BOB, que es lo que había
   // clavado en el código hasta que la maqueta pidió elegirla.
   currency: varchar('currency', { length: 3 }).notNull().default('BOB'),
+  // Hash de la contraseña de acceso, nunca la contraseña. Nulo = evento público: basta
+  // con tener el enlace, que es lo que había hasta ahora.
+  accessPasswordHash: text('access_password_hash'),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
   /**
    * Anulable a propósito: los eventos creados antes de esta rebanada no tienen plan, y

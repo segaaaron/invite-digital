@@ -12,6 +12,8 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
 import { ViewBeacon } from '@/modules/analytics/ui/ViewBeacon'
+import { eventUnlocked } from '@/modules/events/actions'
+import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -26,6 +28,12 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   }
 
   const { group, event, latest } = invitation.value
+
+  // Evento protegido con contraseña: sin desbloquear no se enseña nada, ni el título.
+  // Quien no la tiene no debe averiguar de qué boda se trata por tener el enlace.
+  if (!(await eventUnlocked(event.id))) {
+    return <EventPasswordGate token={token} />
+  }
   const dictionary = getDictionary(event.locale).invitation
   const registryDictionary = getDictionary(event.locale).registry
   const guestbookDictionary = getDictionary(event.locale).guestbook

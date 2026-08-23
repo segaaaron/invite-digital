@@ -79,6 +79,22 @@ importación masiva con CSV y tabla de resultado, plantilla de mensaje por event
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
 
+### Notas de la privacidad del evento (`src/modules/events/`)
+
+- **`verify(password, hash)`, en ese orden.** Es el contrato que ya usa la identidad del
+  atelier. Invertirlo compila —son dos cadenas—, los dobles de prueba lo repiten sin
+  quejarse y **ninguna contraseña valida jamás**, sin un solo error en el registro. Pasó,
+  y por eso hay una prueba que usa el hasher de argon2 de verdad.
+- **La cookie de desbloqueo se firma con el hash de la propia contraseña.** Cambiarla
+  invalida por sí sola todos los desbloqueos repartidos, sin inventar otro secreto que
+  administrar.
+- **Desbloquear redirige, no revalida.** La cookie se escribe en esa misma respuesta, y
+  revalidar dentro de la acción vuelve a pintar el árbol **antes** de que el navegador la
+  tenga: la puerta seguía cerrada tras acertar la contraseña.
+- **La puerta no enseña nada del evento**, ni el título: quien no tiene la contraseña no
+  debe averiguar de qué boda se trata por tener el enlace. Y el error es siempre el mismo,
+  sin distinguir enlace inválido de contraseña incorrecta.
+
 ### Notas de los invitados por persona (`src/modules/guests/`)
 
 - **Las personas cuelgan del grupo; no lo sustituyen.** El enlace, el token, el RSVP
