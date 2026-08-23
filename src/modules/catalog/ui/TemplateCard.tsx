@@ -4,14 +4,6 @@ import type { Template } from '../domain/template'
 
 type Props = { template: Template; dictionary: Dictionary }
 
-const initials = (name: string): string =>
-  name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word.charAt(0).toUpperCase())
-    .join(' ')
-
 /** El icono de código QR de la maqueta. */
 function QrIcon() {
   return (
@@ -33,54 +25,91 @@ function PlayIcon() {
   )
 }
 
+/**
+ * La tarjeta de modelo, portada de la maqueta: **la invitación dibujada**, no una
+ * fotografía.
+ *
+ * Se compone la pieza —categoría, monograma, nombres, fecha y lugar— sobre papel con su
+ * doble filete y su cinta. Una foto de relleno no enseña el modelo, que es exactamente lo
+ * que el cliente viene a mirar en esta sección.
+ *
+ * Sin muestra cargada cae a la fotografía de la plantilla: media tarjeta con el monograma
+ * y sin nombres se leería como un fallo de carga.
+ */
 export function TemplateCard({ template, dictionary }: Props) {
   const { models } = dictionary
+  const acento = template.palette.accent
 
   return (
-    <figure
-      className="m-0 flex w-[230px] shrink-0 flex-col overflow-hidden rounded-[var(--radius-card)] border bg-bg-raised shadow-[var(--shadow-float)]"
-      style={{ borderColor: template.palette.accent }}
-    >
-      <div className="relative aspect-[5/7] w-full">
-        <Image
-          alt={template.name}
-          className="h-full w-full object-cover"
-          height={640}
-          sizes="(max-width: 768px) 80vw, 280px"
-          src={template.coverImagePath}
-          width={450}
+    <figure className="m-0 flex w-[238px] shrink-0 flex-col items-center gap-5">
+      <div
+        className="relative aspect-5/7 w-full [transform:rotateY(-11deg)_rotateX(3deg)] [transform-style:preserve-3d]"
+        style={{ background: template.palette.base }}
+      >
+        {/* El doble filete del papel y la cinta del lomo, en el acento de la plantilla. */}
+        <span aria-hidden className="absolute inset-2.5 border" style={{ borderColor: `${acento}6b` }} />
+        <span aria-hidden className="absolute inset-4 border opacity-45" style={{ borderColor: `${acento}6b` }} />
+        <span
+          aria-hidden
+          className="absolute -top-1 left-6 h-11 w-5 [clip-path:polygon(0_0,100%_0,100%_100%,50%_78%,0_100%)]"
+          style={{ background: `linear-gradient(180deg, ${acento}, ${acento}88)` }}
         />
-        <span
-          className="absolute left-3 top-3 rounded-[var(--radius-pill)] bg-bg-raised/85 px-3 py-1 text-[9px] uppercase tracking-[var(--tracking-luxe)] backdrop-blur-md"
-          style={{ color: template.palette.accent }}
-        >
-          {template.categoryName}
-        </span>
-        <span
-          aria-hidden="true"
-          className="absolute bottom-3 right-3 grid h-9 w-9 place-items-center rounded-full border bg-bg-raised/90 font-display text-[12px]"
-          style={{ borderColor: template.palette.accent, color: template.palette.accent }}
-        >
-          {initials(template.name)}
-        </span>
+
+        {template.sample === null ? (
+          <Image
+            alt={template.name}
+            className="h-full w-full object-cover"
+            height={640}
+            sizes="(max-width: 768px) 80vw, 280px"
+            src={template.coverImagePath}
+            width={450}
+          />
+        ) : (
+          <div className="relative flex h-full flex-col items-center gap-2.5 px-6 pt-8 pb-6 text-center">
+            <span className="font-mono text-[9px] tracking-[0.3em] uppercase" style={{ color: acento }}>
+              {template.categoryName}
+            </span>
+
+            <span
+              className="grid size-11 place-items-center rounded-full border font-display text-[13px] tracking-[0.06em]"
+              style={{ borderColor: `${acento}6b`, color: acento }}
+            >
+              {template.sample.monogram}
+            </span>
+
+            <span className="font-display text-[24px] leading-[1.14] font-light italic" style={{ color: acento }}>
+              {/* Cada línea, tal y como viene del catálogo. Añadir un «&» por el hecho de
+                  haber dos líneas convertía «Gala / Anual» —el nombre de un evento
+                  corporativo— en una pareja. */}
+              {template.sample.names.split('\n').map((linea) => (
+                <span className="block" key={linea}>
+                  {linea}
+                </span>
+              ))}
+            </span>
+
+            <span aria-hidden className="my-1 h-px w-10" style={{ background: `${acento}55` }} />
+
+            <span className="font-mono text-[11px] tracking-[0.18em] text-ink-soft">
+              {template.sample.dateLabel}
+            </span>
+            <span className="text-[11.5px] text-ink-mute">{template.sample.venue}</span>
+
+            <span className="mt-auto flex w-full items-center justify-between gap-2 border-t pt-3 text-[9px] tracking-[var(--tracking-luxe)] uppercase" style={{ borderColor: `${acento}3d`, color: acento }}>
+              <span className="flex items-center gap-1.5">
+                <QrIcon />
+                {models.qr}
+              </span>
+              <span className="flex items-center gap-1.5 rounded-[var(--radius-pill)] border px-2.5 py-1" style={{ borderColor: `${acento}6b` }}>
+                <PlayIcon />
+                {models.open}
+              </span>
+            </span>
+          </div>
+        )}
       </div>
 
-      <figcaption className="flex flex-col gap-2 border-t px-4 py-4" style={{ borderColor: template.palette.accent }}>
-        <p className="font-display text-[20px] font-light text-ink">{template.name}</p>
-        <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-[var(--tracking-luxe)]" style={{ color: template.palette.accent }}>
-          <span className="flex items-center gap-1.5">
-            <QrIcon />
-            {models.qr}
-          </span>
-          <span
-            className="flex items-center gap-1.5 rounded-[var(--radius-pill)] border px-3 py-1"
-            style={{ borderColor: template.palette.accent }}
-          >
-            <PlayIcon />
-            {models.open}
-          </span>
-        </div>
-      </figcaption>
+      <figcaption className="font-display text-[20px] font-light text-ink">{template.name}</figcaption>
     </figure>
   )
 }

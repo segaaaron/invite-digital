@@ -14,6 +14,10 @@ export type TemplateRow = {
   sortOrder: number
   name: string
   description: string
+  sampleMonogram: string | null
+  sampleNames: string | null
+  sampleDateLabel: string | null
+  sampleVenue: string | null
 }
 
 /**
@@ -37,6 +41,12 @@ export const toTemplateInput = (row: TemplateRow): TemplateInput => ({
   categoryName: row.categoryName,
   coverImagePath: row.coverImagePath,
   palette: { base: row.palette.base, accent: row.palette.accent },
+  sample: {
+    monogram: row.sampleMonogram ?? undefined,
+    names: row.sampleNames ?? undefined,
+    dateLabel: row.sampleDateLabel ?? undefined,
+    venue: row.sampleVenue ?? undefined,
+  },
   sortOrder: row.sortOrder,
   name: row.name,
   description: row.description,

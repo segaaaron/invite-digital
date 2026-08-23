@@ -90,6 +90,12 @@ export const templates = pgTable(
       .references(() => eventCategories.id),
     coverImagePath: varchar('cover_image_path', { length: 255 }).notNull(),
     palette: jsonb('palette').$type<{ base: string; accent: string }>().notNull(),
+    // Los datos de escaparate que la tarjeta de modelo dibuja: monograma, nombres, fecha
+    // y lugar. Son del catálogo, no del código, porque cambian con el escaparate.
+    sampleMonogram: varchar('sample_monogram', { length: 16 }),
+    sampleNames: varchar('sample_names', { length: 80 }),
+    sampleDateLabel: varchar('sample_date_label', { length: 32 }),
+    sampleVenue: varchar('sample_venue', { length: 120 }),
     sortOrder: integer('sort_order').notNull().default(0),
     isPublished: boolean('is_published').notNull().default(true),
     ...timestamps,

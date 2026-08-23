@@ -28,12 +28,19 @@ describe('CompareSlider', () => {
     expect(control).toHaveValue('80')
   })
 
-  it('el panel tradicional se recorta según el deslizador', () => {
+  it('los dos paneles se recortan contra el deslizador, cada uno por su lado', () => {
+    // La maqueta enseña la invitación de verdad en medio, con «Tradicional» a la
+    // izquierda y «LUXE» a la derecha: el deslizador reparte el ancho entre los dos, no
+    // tapa uno con el otro.
     render(<CompareSlider {...props} />)
-    const panel = screen.getByTestId('panel-tradicional')
-    expect(panel.style.clipPath).toContain('50%')
+
+    const tradicional = screen.getByTestId('panel-tradicional')
+    const luxe = screen.getByTestId('panel-luxe')
+    expect(tradicional.style.clipPath).toBe('inset(0 50% 0 0)')
+    expect(luxe.style.clipPath).toBe('inset(0 0 0 50%)')
 
     fireEvent.change(screen.getByRole('slider'), { target: { value: '20' } })
-    expect(panel.style.clipPath).toContain('20%')
+    expect(tradicional.style.clipPath).toBe('inset(0 80% 0 0)')
+    expect(luxe.style.clipPath).toBe('inset(0 0 0 20%)')
   })
 })

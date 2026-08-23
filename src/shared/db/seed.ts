@@ -100,14 +100,14 @@ const PLANS = [
 ] as const
 
 const TEMPLATES = [
-  { slug: 'perla', category: 'boda', order: 1, palette: { base: '#fdfaf4', accent: '#c19b4a' }, es: 'Perla', en: 'Pearl' },
-  { slug: 'marmol', category: 'boda', order: 2, palette: { base: '#f4f1ec', accent: '#8d7a52' }, es: 'Mármol', en: 'Marble' },
-  { slug: 'laurel', category: 'boda-civil', order: 3, palette: { base: '#f2f4ef', accent: '#5f7350' }, es: 'Laurel', en: 'Laurel' },
-  { slug: 'carmesi', category: 'boda', order: 4, palette: { base: '#f7efec', accent: '#b3775f' }, es: 'Carmesí', en: 'Crimson' },
-  { slug: 'zafiro', category: 'xv-anos', order: 5, palette: { base: '#eef1f6', accent: '#7b8ea8' }, es: 'Zafiro', en: 'Sapphire' },
-  { slug: 'nacarado', category: 'xv-anos', order: 6, palette: { base: '#fbf6f2', accent: '#d7c08a' }, es: 'Nacarado', en: 'Nacre' },
-  { slug: 'onix', category: 'corporativo', order: 7, palette: { base: '#eceae7', accent: '#4a443c' }, es: 'Ónix', en: 'Onyx' },
-  { slug: 'sobre', category: 'bautizo', order: 8, palette: { base: '#fbf9f4', accent: '#eed8a4' }, es: 'Sobre', en: 'Envelope' },
+  { sample: { monogram: 'M & A', names: 'María\n& Alejandro', dateLabel: '12 · 10 · 2026', venue: 'Jardín Botánico Luna' }, slug: 'perla', category: 'boda', order: 1, palette: { base: '#fdfaf4', accent: '#c19b4a' }, es: 'Perla', en: 'Pearl' },
+  { sample: { monogram: 'S & T', names: 'Sofía\n& Tomás', dateLabel: '04 · 07 · 2026', venue: 'Salón Mármol, Centro' }, slug: 'marmol', category: 'boda', order: 2, palette: { base: '#f4f1ec', accent: '#8d7a52' }, es: 'Mármol', en: 'Marble' },
+  { sample: { monogram: 'C & N', names: 'Camila\n& Nicolás', dateLabel: '21 · 03 · 2026', venue: 'Casona del Olivar' }, slug: 'laurel', category: 'boda-civil', order: 3, palette: { base: '#f2f4ef', accent: '#5f7350' }, es: 'Laurel', en: 'Laurel' },
+  { sample: { monogram: 'H & V', names: 'Helena\n& Víctor', dateLabel: '17 · 08 · 2026', venue: 'Hacienda La Vid' }, slug: 'carmesi', category: 'boda', order: 4, palette: { base: '#f7efec', accent: '#b3775f' }, es: 'Carmesí', en: 'Crimson' },
+  { sample: { monogram: 'V', names: 'Valentina', dateLabel: '09 · 05 · 2026', venue: 'Salón Imperial' }, slug: 'zafiro', category: 'xv-anos', order: 5, palette: { base: '#eef1f6', accent: '#7b8ea8' }, es: 'Zafiro', en: 'Sapphire' },
+  { sample: { monogram: 'I', names: 'Isabella', dateLabel: '28 · 06 · 2026', venue: 'Terraza Perla' }, slug: 'nacarado', category: 'xv-anos', order: 6, palette: { base: '#fbf6f2', accent: '#d7c08a' }, es: 'Nacarado', en: 'Nacre' },
+  { sample: { monogram: 'IP', names: 'Gala\nAnual', dateLabel: '30 · 11 · 2026', venue: 'Hotel Los Portales' }, slug: 'onix', category: 'corporativo', order: 7, palette: { base: '#eceae7', accent: '#4a443c' }, es: 'Ónix', en: 'Onyx' },
+  { sample: { monogram: 'N', names: 'Nora', dateLabel: '17 · 10 · 2026', venue: 'Iglesia Santa Teresa' }, slug: 'sobre', category: 'bautizo', order: 8, palette: { base: '#fbf9f4', accent: '#eed8a4' }, es: 'Sobre', en: 'Envelope' },
 ] as const
 
 async function seed() {
@@ -183,8 +183,29 @@ async function seed() {
     if (!categoryId) throw new Error(`Categoría desconocida: ${t.category}`)
     const [row] = await db
       .insert(templates)
-      .values({ slug: t.slug, categoryId, coverImagePath: `/templates/${t.slug}.avif`, palette: t.palette, sortOrder: t.order })
-      .onConflictDoUpdate({ target: templates.slug, set: { categoryId, sortOrder: t.order, palette: t.palette } })
+      .values({
+        slug: t.slug,
+        categoryId,
+        coverImagePath: `/templates/${t.slug}.avif`,
+        palette: t.palette,
+        sortOrder: t.order,
+        sampleMonogram: t.sample.monogram,
+        sampleNames: t.sample.names,
+        sampleDateLabel: t.sample.dateLabel,
+        sampleVenue: t.sample.venue,
+      })
+      .onConflictDoUpdate({
+        target: templates.slug,
+        set: {
+          categoryId,
+          sortOrder: t.order,
+          palette: t.palette,
+          sampleMonogram: t.sample.monogram,
+          sampleNames: t.sample.names,
+          sampleDateLabel: t.sample.dateLabel,
+          sampleVenue: t.sample.venue,
+        },
+      })
       .returning({ id: templates.id })
     if (!row) throw new Error(`No se pudo insertar la plantilla ${t.slug}`)
     await db

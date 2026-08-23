@@ -133,9 +133,10 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
                 eyebrow={dictionary.collections.eyebrow}
                 title={<span id="collections-title">{dictionary.collections.title}</span>}
               />
-              <p className="text-[13px] text-ink-mute">{dictionary.collections.hint}</p>
             </div>
-            <div className="mt-14 flex justify-center">
+            {/* El escenario ocupa el ancho entero: las flechas van a sus bordes, como en
+                la maqueta, y no encima de la escena central. */}
+            <div className="mt-14">
               <CollectionsCarousel
                 dictionary={dictionary}
                 slides={dictionary.collections.scenes.map((scene, i) => ({
