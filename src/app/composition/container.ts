@@ -12,6 +12,7 @@ import {
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
+import { deleteEvent } from '@/modules/events/application/delete-event'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
@@ -122,6 +123,7 @@ export const events = {
   create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
   update: updateEventUseCase({ events: drizzleEventRepository }),
   list: listEvents({ events: drizzleEventRepository }),
+  remove: deleteEvent({ events: drizzleEventRepository }),
   getBySlug: getEventBySlug({ events: drizzleEventRepository }),
   getById: getEventById({ events: drizzleEventRepository }),
   createShare: createClientShare({ shares: drizzleClientShareRepository, minter, ids: () => crypto.randomUUID(), clock }),

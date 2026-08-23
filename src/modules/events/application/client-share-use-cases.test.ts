@@ -48,6 +48,7 @@ const events: EventRepository = {
   listAll: async () => [],
   findBySlug: async () => null,
   findById: async () => eventRow,
+  remove: async () => {},
 }
 
 describe('createClientShare', () => {

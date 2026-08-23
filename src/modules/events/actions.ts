@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { events as eventUseCases } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { env } from '@/shared/config/env'
@@ -97,4 +98,31 @@ export async function revokeClientShareAction(
 
   revalidatePath(`/panel/eventos/${String(formData.get('eventSlug') ?? '')}`)
   return { status: 'success' }
+}
+
+export type DeleteEventState = { status: 'idle' } | { status: 'error'; message: string }
+
+/**
+ * Borra un evento entero, con el identificador escrito a mano como confirmación.
+ *
+ * Al terminar redirige a la bandeja: quedarse en la página de un evento que ya no existe
+ * daría un 404 justo después de una acción destructiva, y parecería que algo falló.
+ */
+export async function deleteEventAction(
+  _previous: DeleteEventState,
+  formData: FormData,
+): Promise<DeleteEventState> {
+  await requireSession()
+
+  const result = await eventUseCases.remove({
+    eventId: String(formData.get('eventId') ?? ''),
+    confirmation: String(formData.get('confirmation') ?? ''),
+  })
+
+  if (isErr(result)) {
+    console.error('borrado de evento rechazado', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  redirect('/panel')
 }

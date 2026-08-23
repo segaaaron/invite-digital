@@ -89,6 +89,10 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
     await database.insert(events).values(event)
   },
 
+  async remove(eventId) {
+    await database.delete(events).where(eq(events.id, eventId))
+  },
+
   async update(event) {
     await database
       .update(events)

@@ -15,6 +15,7 @@ const repo = (pending: AnonymizationCandidate[]) => {
     listAll: async () => [],
     findBySlug: async () => null,
     findById: async () => null,
+    remove: async () => {},
   }
   return { events, anonymized }
 }

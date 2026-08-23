@@ -12,6 +12,8 @@ export interface EventRepository {
   listAll(): Promise<EventInput[]>
   findBySlug(slug: string): Promise<EventInput | null>
   findById(id: string): Promise<EventInput | null>
+  /** Borra el evento. La base se lleva en cascada invitados, mesas, regalos y mensajes. */
+  remove(eventId: string): Promise<void>
 }
 
 export type ClientShareRow = {

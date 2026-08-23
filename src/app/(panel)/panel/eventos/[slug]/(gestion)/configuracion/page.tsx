@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
+import { DangerZone } from '@/modules/events/ui/DangerZone'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -36,7 +37,10 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
       <div className="grid gap-4.5 lg:grid-cols-[1.25fr_1fr]">
         <PanelCard title="Detalles del evento">
-          <EventForm event={event.value} />
+          <div className="flex flex-col gap-6">
+            <EventForm event={event.value} />
+            <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
+          </div>
         </PanelCard>
 
         <PanelCard title="Vista previa del enlace">

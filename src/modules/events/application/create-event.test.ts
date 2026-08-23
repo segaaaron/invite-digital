@@ -26,6 +26,7 @@ const repo = (existing: string[] = []) => {
     listAll: async () => [],
     findBySlug: async (slug) => (existing.includes(slug) ? fila(slug) : null),
     findById: async () => null,
+    remove: async () => {},
   }
   return { events, inserted }
 }
@@ -74,6 +75,7 @@ describe('createEventUseCase', () => {
       listAll: async () => [],
       findBySlug: async () => null,
       findById: async () => null,
+      remove: async () => {},
     }
     const result = await createEventUseCase({ events, ids: () => 'id-fijo' })(input)
     expect(isErr(result) && result.error.kind).toBe('storage_failure')
