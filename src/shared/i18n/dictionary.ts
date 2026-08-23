@@ -16,8 +16,6 @@ export interface HeroDictionary {
   ctaPrimary: string
   ctaSecondary: string
   trustLabel: string
-  /** Los tres sellos de confianza de la banda. Marcadores hasta que el usuario dé los suyos. */
-  trustBrands: readonly [string, string, string]
   /** La franja de cifras bajo el sobre. */
   metrics: readonly [HeroMetric, HeroMetric, HeroMetric, HeroMetric]
   posterAlt: string

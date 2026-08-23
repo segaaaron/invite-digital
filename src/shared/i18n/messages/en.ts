@@ -11,7 +11,6 @@ export const en = {
     ctaPrimary: 'Create your invitation',
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
-    trustBrands: ['Partner brand 1', 'Partner brand 2', 'Partner brand 3'],
     metrics: [
       { value: '480', label: 'Events delivered', icon: 'mail' },
       { value: '72h', label: 'Average delivery', icon: 'clock' },

@@ -45,6 +45,9 @@ export const plans = pgTable('plans', {
   id: uuid('id').defaultRandom().primaryKey(),
   slug: varchar('slug', { length: 64 }).notNull().unique(),
   priceCents: integer('price_cents').notNull(),
+  // Precio anual, para el conmutador de la maqueta. Nulo mientras el plan se cobre una
+  // sola vez por evento, que es como se vende hoy.
+  priceAnnualCents: integer('price_annual_cents'),
   currency: char('currency', { length: 3 }).notNull().default('BOB'),
   highlighted: boolean('highlighted').notNull().default(false),
   sortOrder: integer('sort_order').notNull().default(0),

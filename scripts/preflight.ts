@@ -14,6 +14,7 @@ function runPreflight(): number {
     siteUrl: process.env.SITE_URL ?? '',
     siteDomain: process.env.SITE_DOMAIN ?? '',
     postgresPassword: process.env.POSTGRES_PASSWORD ?? '',
+    trustBrands: BRAND.trustBrands,
   })
 
   if (blockers.length === 0) {

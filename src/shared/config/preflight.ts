@@ -20,6 +20,8 @@ const KNOWN_WEAK_PASSWORDS = ['invite', 'postgres', 'password', 'prueba-local-no
 const MIN_PASSWORD_LENGTH = 16
 
 export type ReleaseConfig = {
+  /** Los sellos del hero. Vacío es válido: la banda no se pinta. */
+  trustBrands: readonly string[]
   whatsapp: string
   email: string
   siteUrl: string
@@ -42,6 +44,12 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
 
   if (config.siteDomain.trim().toLowerCase() === PLACEHOLDERS.domain) {
     blockers.push(`SITE_DOMAIN sigue siendo el marcador ${PLACEHOLDERS.domain}: Caddy pediría un certificado para un dominio que no es tuyo.`)
+  }
+
+  if (config.trustBrands.some((marca) => /^marca aliada/i.test(marca.trim()))) {
+    blockers.push(
+      'La banda de confianza del hero sigue con marcadores «Marca aliada N»: pon las marcas reales o deja la lista vacía para que no se pinte.',
+    )
   }
 
   blockers.push(...checkPassword(config.postgresPassword))

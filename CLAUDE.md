@@ -79,6 +79,22 @@ importación masiva con CSV y tabla de resultado, plantilla de mensaje por event
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
 
+### Notas del plan y la portada
+
+- **Un componente cliente no recibe funciones desde el servidor.** `BillingToggle` pintaba
+  sus hijos con un *render prop* y la página del plan reventaba entera en tiempo de
+  ejecución —«Functions are not valid as a child of Client Components»— **sin que el
+  typecheck dijera nada**. Recibe datos y pinta él.
+- **El conmutador por evento / anual solo aparece si algún plan tiene precio anual.** Hoy
+  se cobra una vez por evento; un conmutador de suscripción sin precios detrás haría
+  esperar una factura mensual que no existe. El ahorro se calcula de los dos precios, no
+  es el 17 % fijo del cartel de la maqueta.
+- **La banda de confianza del hero sale de `BRAND.trustBrands`, y vacía no se pinta.**
+  Publicar el nombre de una marca ajena afirmando que confía en el atelier es afirmar una
+  relación que puede no existir; `pnpm preflight` corta si quedan los marcadores.
+- **Un solo `<main>` por página.** La carcasa del panel emite el suyo; el layout raíz usa
+  `div`. Dos anidados dejan la página con dos regiones principales.
+
 ### Notas del reparto de invitaciones (`src/modules/guests/`)
 
 - **Reenviar rota el token.** No se puede «volver a enseñar» un enlace que no existe —en

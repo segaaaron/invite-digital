@@ -11,7 +11,6 @@ export const es = {
     ctaPrimary: 'Crear invitación',
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
-    trustBrands: ['Marca aliada 1', 'Marca aliada 2', 'Marca aliada 3'],
     metrics: [
       { value: '480', label: 'Eventos entregados', icon: 'mail' },
       { value: '72h', label: 'Entrega promedio', icon: 'clock' },

@@ -6,6 +6,13 @@ export type PlanRow = {
   readonly includesSeating: boolean
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
+  /** Precio de una vez, por evento. Es como se vende hoy. */
+  readonly priceCents?: number
+  /**
+   * Precio anual, para el conmutador de la maqueta. Nulo mientras nadie venda el plan por
+   * suscripción: el conmutador solo aparece si hay precio anual cargado.
+   */
+  readonly priceAnnualCents?: number | null
 }
 
 export type PlanChangeStatus = 'pending' | 'applied' | 'rejected'

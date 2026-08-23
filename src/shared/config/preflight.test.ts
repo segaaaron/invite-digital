@@ -7,9 +7,22 @@ const REAL = {
   siteUrl: 'https://atelierdeejemplo.bo',
   siteDomain: 'atelierdeejemplo.bo',
   postgresPassword: 'CDwYGpyOXaB6mgTd1TVKbg',
+  trustBrands: [] as readonly string[],
 }
 
 describe('comprobación previa al despliegue', () => {
+  it('detiene el despliegue si la banda de confianza sigue con marcadores', () => {
+    // Publicar «Marca aliada 1» como aval es enseñar un respaldo que no existe; y poner
+    // ahí una marca real sin permiso es peor. Con la lista vacía la banda no se pinta.
+    const blockers = checkReleaseReadiness({ ...REAL, trustBrands: ['Marca aliada 1', 'Marca aliada 2'] })
+    expect(blockers).toHaveLength(1)
+    expect(blockers[0]).toContain('banda de confianza')
+  })
+
+  it('una lista de marcas vacía es válida: la banda simplemente no se pinta', () => {
+    expect(checkReleaseReadiness({ ...REAL, trustBrands: [] })).toEqual([])
+  })
+
   it('deja pasar una configuración con datos reales', () => {
     expect(checkReleaseReadiness(REAL)).toEqual([])
   })
@@ -57,7 +70,8 @@ describe('comprobación previa al despliegue', () => {
       siteUrl: 'http://localhost:3000',
       siteDomain: PLACEHOLDERS.domain,
       postgresPassword: 'invite',
+      trustBrands: ['Marca aliada 1'],
     })
-    expect(blockers.length).toBeGreaterThanOrEqual(5)
+    expect(blockers.length).toBeGreaterThanOrEqual(6)
   })
 })

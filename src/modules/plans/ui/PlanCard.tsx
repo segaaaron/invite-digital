@@ -12,7 +12,44 @@ const NOMBRES: ReadonlyArray<{ feature: PlanFeature; label: string }> = [
  * lado. Enseñar solo lo incluido obligaría a comparar tarjetas para deducir lo que
  * falta, que es justo lo que hay que decidir aquí.
  */
-export function PlanCard({ plan, current }: { plan: Allowance; current: boolean }) {
+/**
+ * El precio, en la moneda del catálogo. Se compone a partir de la cadena decimal y nunca
+ * de un `parseFloat` sobre los centavos: `1234.5 * 100` no vuelve a dar 123450.
+ */
+function formatPrice(cents: number, currency: string): string {
+  const entero = Math.trunc(cents / 100)
+  const decimal = String(Math.abs(cents % 100)).padStart(2, '0')
+  return new Intl.NumberFormat('es-BO', { style: 'currency', currency, minimumFractionDigits: 2 }).format(
+    Number(`${entero}.${decimal}`),
+  )
+}
+
+export type PlanPrice = {
+  readonly cents: number
+  readonly annualCents: number | null
+  readonly currency: string
+}
+
+/** El ahorro anual real, redondeado. La maqueta dice 17 %; aquí sale de los dos precios. */
+export function annualSaving(price: PlanPrice): number | null {
+  if (price.annualCents === null || price.cents <= 0) return null
+  const doceMeses = price.cents * 12
+  if (price.annualCents >= doceMeses) return null
+  return Math.round(((doceMeses - price.annualCents) / doceMeses) * 100)
+}
+
+export function PlanCard({
+  plan,
+  current,
+  price,
+  billing = 'once',
+}: {
+  plan: Allowance
+  current: boolean
+  price?: PlanPrice | undefined
+  /** `once` es el pago por evento; `annual` solo existe si el plan tiene precio anual. */
+  billing?: 'once' | 'annual' | undefined
+}) {
   return (
     <article
       className={`flex flex-col gap-4 rounded-[18px] border p-6 ${current ? 'border-gold' : 'border-line'}`}
@@ -26,6 +63,17 @@ export function PlanCard({ plan, current }: { plan: Allowance; current: boolean 
           </span>
         ) : null}
       </header>
+
+      {price === undefined ? null : (
+        <p className="flex items-baseline gap-2">
+          <span className="font-display text-[30px] leading-none font-light text-ink">
+            {formatPrice(billing === 'annual' && price.annualCents !== null ? price.annualCents : price.cents, price.currency)}
+          </span>
+          <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+            {billing === 'annual' && price.annualCents !== null ? 'al año' : 'por evento'}
+          </span>
+        </p>
+      )}
 
       <p className="text-[13px] text-ink-mute">
         Grupos de invitados:{' '}

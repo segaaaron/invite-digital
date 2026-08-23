@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { BRAND } from '@/shared/config/brand'
 import { Button } from '@/shared/design/ui/Button'
 import { ArrowRightIcon, METRIC_ICONS } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
@@ -42,19 +43,22 @@ export function HeroSection({ dictionary, slot }: Props) {
             </Button>
           </div>
 
-          {/* La banda de confianza de la maqueta. Los tres sellos son marcadores hasta
-              que el usuario dé los suyos: no se publica el nombre de una marca ajena
-              afirmando que confía en el atelier. */}
-          <div className="mt-2 flex flex-col gap-4.5">
-            <p className="text-[10px] tracking-[0.32em] text-ink-mute uppercase">{hero.trustLabel}</p>
-            <ul className="flex flex-wrap items-center gap-8.5 opacity-80">
-              {hero.trustBrands.map((marca) => (
-                <li key={marca} className="font-display text-[22px] tracking-[0.1em] text-ink-soft">
-                  {marca}
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* La banda de confianza de la maqueta. Las marcas salen de `BRAND`, y con la
+              lista vacía **no se pinta nada**: publicar el nombre de una marca ajena
+              afirmando que confía en el atelier es afirmar una relación que puede no
+              existir. */}
+          {BRAND.trustBrands.length === 0 ? null : (
+            <div className="mt-2 flex flex-col gap-4.5">
+              <p className="text-[10px] tracking-[0.32em] text-ink-mute uppercase">{hero.trustLabel}</p>
+              <ul className="flex flex-wrap items-center gap-8.5 opacity-80">
+                {BRAND.trustBrands.map((marca) => (
+                  <li key={marca} className="font-display text-[22px] tracking-[0.1em] text-ink-soft">
+                    {marca}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </Reveal>
 
         <div className="relative min-h-[420px]">{slot ?? <HeroEnvelope />}</div>

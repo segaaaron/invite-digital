@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { events, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import type { Allowance } from '@/modules/plans'
-import { PlanCard } from '@/modules/plans/ui/PlanCard'
+import { BillingToggle } from '@/modules/plans/ui/BillingToggle'
 import { PlanChangeForm } from '@/modules/plans/ui/PlanChangeForm'
 import { PlanDecisionForms } from '@/modules/plans/ui/PlanDecisionForms'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -31,8 +31,16 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
   const catalogo = await plans.listActive()
   const pendiente = await plans.pendingChange(event.value.id)
 
-  const tarjetas: Array<{ id: string; allowance: Allowance }> = catalogo.map((plan) => ({
+  const tarjetas: Array<{
+    id: string
+    allowance: Allowance
+    price?: { cents: number; annualCents: number | null; currency: string } | undefined
+  }> = catalogo.map((plan) => ({
     id: plan.id,
+    price:
+      plan.priceCents === undefined
+        ? undefined
+        : { cents: plan.priceCents, annualCents: plan.priceAnnualCents ?? null, currency: 'BOB' },
     allowance: {
       planSlug: plan.slug,
       maxGuestGroups: plan.maxGuestGroups,
@@ -50,11 +58,17 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
 
       <div className="flex flex-col gap-4.5">
         <PanelCard title="Planes">
-          <div className="grid gap-5 md:grid-cols-3">
-            {tarjetas.map((tarjeta) => (
-              <PlanCard current={tarjeta.allowance.planSlug === actual} key={tarjeta.id} plan={tarjeta.allowance} />
-            ))}
-          </div>
+          {/* El conmutador solo aparece si algún plan tiene precio anual cargado: hoy se
+              cobran una vez por evento, y pintar una suscripción que nadie vende haría
+              esperar una factura mensual que no existe. */}
+          <BillingToggle
+            plans={tarjetas.map((tarjeta) => ({
+              id: tarjeta.id,
+              current: tarjeta.allowance.planSlug === actual,
+              allowance: tarjeta.allowance,
+              price: tarjeta.price,
+            }))}
+          />
         </PanelCard>
 
         <PanelCard title="Cambio de plan">

@@ -10,6 +10,8 @@ const columnas = {
   includesSeating: plans.includesSeating,
   includesRegistry: plans.includesRegistry,
   includesCheckin: plans.includesCheckin,
+  priceCents: plans.priceCents,
+  priceAnnualCents: plans.priceAnnualCents,
 }
 
 export const createDrizzlePlanReader = (database: DbExecutor): PlanReader => ({

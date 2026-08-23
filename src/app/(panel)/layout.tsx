@@ -9,7 +9,10 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body>
-        <main className="min-h-dvh bg-bg-top">{children}</main>
+        {/* `div`, no `main`: la carcasa del panel emite su propio `main` y dos anidados
+            dejan la página con dos regiones principales, que es un error de HTML y hace
+            ambiguo el salto al contenido para quien navega con lector de pantalla. */}
+        <div className="min-h-dvh bg-bg-top">{children}</div>
       </body>
     </html>
   )
