@@ -143,7 +143,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1.6fr_1fr]">
-        <PanelCard title="Estado de los RSVP">
+        <PanelCard title="Estado de RSVPs">
           <DonutChart
             big={filas.length === 0 ? '—' : `${Math.round((respondieron / filas.length) * 100)}%`}
             caption="RESPONDIERON"

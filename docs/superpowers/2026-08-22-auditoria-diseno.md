@@ -82,3 +82,46 @@ no un retoque de pantalla.
 2. Panel, lo que es piel pura: Configuración como vista propia, cabeceras con sus
    acciones, títulos y crumbs, paneles que faltan con los datos que **ya** existen.
 3. Ciclos nuevos, en este orden: invitado por persona → analítica → envío → actividad.
+
+
+---
+
+## Estado al cerrar la sesión del 22 de agosto
+
+**Web.** Medios por sección, medidos otra vez contra la maqueta:
+
+| Sección | maqueta → app |
+|---|---|
+| experiencia · móvil · colecciones · diferencia · precios · contacto | igualadas |
+| modelos | 16 → 24 (nuestras tarjetas llevan además la fotografía de la plantilla) |
+| hero | 9 → 8 |
+
+Lo único que falta en la portada es el tercer sello de la banda de confianza: son tres
+marcadores, y **no se publican nombres de marcas ajenas afirmando que confían en el
+atelier**. Lo pone el usuario o se retira la banda.
+
+**Panel.** Todos los paneles que la maqueta enseña existen ya en la aplicación: Estado de
+RSVPs, Actividad reciente, Invitados recientes, Distribución de mesas, Acciones rápidas,
+Invitados sin mesa, Reporte de menús para el catering, Plano del salón, Buscar a mano,
+Progreso de llegada, Últimas llegadas, Embudo de conversión, Dispositivos, Fuentes de
+tráfico, Detalles del evento, Vista previa del enlace y Contactar soporte.
+
+Los que la aplicación añade —Llegada, Reparto, Zonas del salón, Grupos y cupos— se quedan:
+son funcionalidad construida y verificada que la maqueta no llegó a dibujar.
+
+**Lo construido para llegar hasta aquí**, cada uno con su spec o su nota en `CLAUDE.md`:
+analítica de la invitación, invitados por persona con restricciones y menús, actividad
+reciente, columna «Enviado», moneda por evento, privacidad con contraseña y borrado de
+evento.
+
+## Lo único que queda, y por qué no lo decido yo
+
+**El conmutador MENSUAL / ANUAL · AHORRA 17 % de la vista «Tu plan».** No se ha construido
+porque contradice el propio producto: la web vende **pago único por evento** —Bs 690,
+Bs 1.450 y Bs 2.900— y el panel de la maqueta enseña una suscripción. Construir el
+conmutador exige decidir antes qué se cobra cada mes cuando lo que se entrega es una
+invitación para una fecha concreta. Es una decisión comercial del usuario, no técnica.
+
+**«Enviar invitaciones»** sigue siendo el ciclo 3 rebanada 2 —WhatsApp asistido,
+importación CSV, QR de reparto—, que nunca se planificó. La columna «Enviado» ya existe y
+se marca a mano.
