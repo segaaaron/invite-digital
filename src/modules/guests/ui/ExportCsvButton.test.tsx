@@ -57,6 +57,33 @@ describe('personasToCsv', () => {
   })
 })
 
+describe('escape de fórmulas', () => {
+  it('una celda que empieza por = no se ejecuta al abrir la hoja', () => {
+    // Un invitado escribe «=HYPERLINK("http://malo","gracias")» como restricción y Excel
+    // lo ejecuta al abrir el archivo que el atelier acaba de exportar.
+    const csv = personasToCsv([
+      {
+        fullName: '=HYPERLINK("http://malo","pincha")',
+        groupLabel: 'Familia',
+        attending: 'yes',
+        isCompanion: false,
+        dietaryNote: '+1234',
+        vip: false,
+        tableLabel: null,
+      },
+    ])
+
+    expect(csv).not.toContain('"=HYPERLINK')
+    expect(csv).toContain(`"'=HYPERLINK`)
+    expect(csv).toContain(`"'+1234"`)
+  })
+
+  it('el texto normal no se toca', () => {
+    const csv = filasToCsv([{ label: 'Familia Rojas Peña', seats: 4, confirmed: 4, revokedAt: null }])
+    expect(csv).toContain('"Familia Rojas Peña"')
+  })
+})
+
 describe('ExportCsvButton', () => {
   it('descarga un archivo con el nombre del evento', () => {
     const crear = vi.fn(() => 'blob:x')

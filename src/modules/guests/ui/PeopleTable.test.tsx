@@ -78,6 +78,16 @@ describe('PeopleTable', () => {
     expect(screen.getByText('Ana Lucía Vega')).toBeInTheDocument()
   })
 
+  it('quitar a una persona pide confirmación antes de borrarla', () => {
+    // Borrar es inmediato y no hay deshacer: un clic de más se lleva a alguien de la
+    // lista y nadie se entera hasta el día del evento.
+    render(<PeopleTable eventSlug="boda" rows={filas} />)
+
+    fireEvent.click(screen.getAllByRole('button', { name: 'Quitar' })[0]!)
+
+    expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument()
+  })
+
   it('sin mesa lo dice, en vez de dejar la celda muda', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
     expect(screen.getAllByText('Sin mesa').length).toBeGreaterThan(0)

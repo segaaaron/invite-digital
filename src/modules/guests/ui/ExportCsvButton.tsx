@@ -29,7 +29,18 @@ const estado = (fila: CsvRow): string => {
  * Sin esto, una etiqueta con `;` o con comillas —«Ana "La Tía" Vega»— parte la fila y
  * corre las columnas de todas las siguientes. La hoja abre igual y los datos están mal.
  */
-const celda = (valor: string): string => `"${valor.replace(/"/g, '""')}"`
+const celda = (valor: string): string => `"${neutralizarFormula(valor).replace(/"/g, '""')}"`
+
+/**
+ * Antepone un apóstrofo a lo que una hoja de cálculo tomaría por fórmula.
+ *
+ * Un invitado escribe `=HYPERLINK("http://malo","gracias")` en su restricción alimentaria
+ * y Excel lo ejecuta al abrir el archivo que el atelier acaba de exportar. El texto se
+ * sigue leyendo igual; lo que se pierde es la ejecución.
+ */
+function neutralizarFormula(valor: string): string {
+  return /^[=+\-@\t\r]/.test(valor) ? `'${valor}` : valor
+}
 
 export function filasToCsv(rows: readonly CsvRow[]): string {
   const cabecera = ['Grupo', 'Cupos', 'Confirmados', 'Estado'].map(celda).join(';')

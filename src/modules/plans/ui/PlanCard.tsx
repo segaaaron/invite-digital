@@ -30,12 +30,16 @@ export type PlanPrice = {
   readonly currency: string
 }
 
-/** El ahorro anual real, redondeado. La maqueta dice 17 %; aquí sale de los dos precios. */
-export function annualSaving(price: PlanPrice): number | null {
-  if (price.annualCents === null || price.cents <= 0) return null
-  const doceMeses = price.cents * 12
-  if (price.annualCents >= doceMeses) return null
-  return Math.round(((doceMeses - price.annualCents) / doceMeses) * 100)
+/**
+ * ¿Este plan tiene precio anual?
+ *
+ * No se anuncia porcentaje de ahorro. El «AHORRA 17 %» de la maqueta comparaba el precio
+ * **por evento** multiplicado por doce con el anual: solo sería cierto para quien celebre
+ * doce bodas al año, y prometer un ahorro que nadie va a tener es publicidad engañosa. Se
+ * enseñan los dos precios y que cada cual haga su cuenta.
+ */
+export function hasAnnual(price: PlanPrice): boolean {
+  return price.annualCents !== null
 }
 
 export function PlanCard({

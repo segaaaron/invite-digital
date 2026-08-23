@@ -44,6 +44,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
+  // Quién está a un clic de ser borrado. Borrar no tiene deshacer, y un clic de más se
+  // lleva a alguien de la lista sin que nadie se entere hasta el día del evento.
+  const [porQuitar, setPorQuitar] = useState<string | null>(null)
 
   // Los contadores se calculan sobre todas las filas, nunca sobre las visibles.
   const cuentas = useMemo(
@@ -169,13 +172,35 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     >
                       {fila.vip ? 'Quitar VIP' : 'Marcar VIP'}
                     </button>
-                    <button
-                      className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase hover:text-gold-deep"
-                      onClick={() => aplicar(removePersonAction({ eventSlug, id: fila.id }))}
-                      type="button"
-                    >
-                      Quitar
-                    </button>
+                    {porQuitar === fila.id ? (
+                      <>
+                        <button
+                          className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
+                          onClick={() => {
+                            setPorQuitar(null)
+                            aplicar(removePersonAction({ eventSlug, id: fila.id }))
+                          }}
+                          type="button"
+                        >
+                          Confirmar
+                        </button>
+                        <button
+                          className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
+                          onClick={() => setPorQuitar(null)}
+                          type="button"
+                        >
+                          Cancelar
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase hover:text-gold-deep"
+                        onClick={() => setPorQuitar(fila.id)}
+                        type="button"
+                      >
+                        Quitar
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import type { Allowance } from '../domain/allowance'
-import { annualSaving, PlanCard, type PlanPrice } from './PlanCard'
+import { hasAnnual, PlanCard, type PlanPrice } from './PlanCard'
 
 export type PlanCardData = {
   readonly id: string
@@ -25,10 +25,7 @@ export type PlanCardData = {
 export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
   const [billing, setBilling] = useState<'once' | 'annual'>('once')
 
-  const ahorro = plans.reduce<number | null>(
-    (mayor, plan) => (plan.price ? (annualSaving(plan.price) ?? mayor) : mayor),
-    null,
-  )
+  const hayAnual = plans.some((plan) => plan.price !== undefined && hasAnnual(plan.price))
 
   const tarjetas = (
     <div className="grid gap-5 md:grid-cols-3">
@@ -44,7 +41,7 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
     </div>
   )
 
-  if (ahorro === null) return tarjetas
+  if (!hayAnual) return tarjetas
 
   const boton = (clave: 'once' | 'annual', texto: string) => (
     <button
@@ -63,7 +60,7 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
     <div className="flex flex-col gap-4.5">
       <div className="flex flex-wrap items-center gap-2.5">
         {boton('once', 'Por evento')}
-        {boton('annual', `Anual · ahorra ${ahorro} %`)}
+        {boton('annual', 'Anual')}
       </div>
       {tarjetas}
     </div>

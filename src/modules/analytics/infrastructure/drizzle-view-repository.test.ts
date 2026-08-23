@@ -86,16 +86,4 @@ describe('drizzleViewRepository', () => {
     ).rejects.toThrow()
   })
 
-  it('barre por fecha las visitas viejas', async () => {
-    await drizzleViewRepository.record({
-      eventId,
-      guestGroupId: null,
-      device: 'mobile',
-      source: 'qr',
-      viewedAt: new Date('2020-01-01T00:00:00Z'),
-    })
-
-    const borradas = await drizzleViewRepository.deleteOlderThan(new Date('2021-01-01T00:00:00Z'))
-    expect(borradas).toBeGreaterThanOrEqual(1)
-  })
 })

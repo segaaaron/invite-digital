@@ -1,4 +1,4 @@
-import { desc, eq, lt } from 'drizzle-orm'
+import { desc, eq } from 'drizzle-orm'
 import { db } from '@/shared/db/client'
 import { invitationViews } from '@/shared/db/schema'
 import type { ViewRepository } from '../application/ports'
@@ -36,8 +36,4 @@ export const drizzleViewRepository: ViewRepository = {
     return borradas.length
   },
 
-  async deleteOlderThan(cutoff) {
-    const borradas = await db.delete(invitationViews).where(lt(invitationViews.viewedAt, cutoff)).returning({ id: invitationViews.id })
-    return borradas.length
-  },
 }

@@ -1,21 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { BillingToggle } from './BillingToggle'
-import { annualSaving } from './PlanCard'
+import { hasAnnual } from './PlanCard'
 
-describe('annualSaving', () => {
-  it('calcula el ahorro real desde los dos precios, no un número fijo', () => {
-    // La maqueta dice «AHORRA 17 %». Ese número tiene que salir de los precios de verdad:
-    // si mañana cambia uno, el cartel no puede seguir prometiendo lo mismo.
-    expect(annualSaving({ cents: 100_00, annualCents: 1000_00, currency: 'BOB' })).toBe(17)
-  })
-
-  it('sin precio anual no hay ahorro que anunciar', () => {
-    expect(annualSaving({ cents: 100_00, annualCents: null, currency: 'BOB' })).toBeNull()
-  })
-
-  it('si el anual no ahorra nada, no se anuncia un ahorro', () => {
-    expect(annualSaving({ cents: 100_00, annualCents: 1200_00, currency: 'BOB' })).toBeNull()
+describe('hasAnnual', () => {
+  it('dice si el plan tiene precio anual, sin prometer ningún ahorro', () => {
+    // El «ahorra 17 %» de la maqueta comparaba el precio por evento × 12 con el anual:
+    // solo sería cierto para quien celebre doce bodas al año. Un cartel que promete un
+    // ahorro que nadie va a tener es publicidad engañosa, así que no se pinta.
+    expect(hasAnnual({ cents: 690_00, annualCents: 4_900_00, currency: 'BOB' })).toBe(true)
+    expect(hasAnnual({ cents: 690_00, annualCents: null, currency: 'BOB' })).toBe(false)
   })
 })
 
@@ -39,7 +33,7 @@ describe('BillingToggle', () => {
   it('con precio anual conmuta, y el ahorro sale de los dos precios', () => {
     render(<BillingToggle plans={[tarjeta('firma-3d', 100_00, 1000_00)]} />)
 
-    const anual = screen.getByRole('button', { name: /anual · ahorra 17/i })
+    const anual = screen.getByRole('button', { name: /^anual$/i })
     expect(screen.getByRole('button', { name: /por evento/i })).toHaveAttribute('aria-pressed', 'true')
 
     fireEvent.click(anual)

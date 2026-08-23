@@ -23,6 +23,27 @@ describe('parseGuestCsv', () => {
     expect(filas[2]?.problem).toContain('Cupos inválidos')
   })
 
+  it('el número de línea es el del archivo, aunque haya líneas en blanco', () => {
+    // El informe lo lee alguien con el CSV abierto delante: si dice «línea 3» y en la 3
+    // hay otra cosa, no sirve para arreglarlo.
+    const filas = parseGuestCsv('Familia Rojas;4\n\n;3')
+    expect(filas[1]?.line).toBe(3)
+  })
+
+  it('un campo entrecomillado puede llevar el separador dentro', () => {
+    // «Familia Rojas; Peña» entre comillas es un solo grupo, no dos columnas: partirlo
+    // corre todas las columnas de esa fila y los cupos acaban en la etiqueta.
+    const filas = parseGuestCsv('"Familia Rojas; Peña";4;+59170011122')
+    expect(filas[0]).toMatchObject({ label: 'Familia Rojas; Peña', seats: 4, phone: '+59170011122' })
+  })
+
+  it('una única fila con cupos no numéricos no se traga como cabecera en silencio', () => {
+    // Si se salta, la importación responde «0 creadas, 0 rechazadas» y nadie sabe por qué.
+    const filas = parseGuestCsv('Grupo;Cupos;Teléfono')
+    expect(filas).toHaveLength(1)
+    expect(filas[0]?.problem).toContain('Cupos inválidos')
+  })
+
   it('un archivo vacío no es un error, es una lista vacía', () => {
     expect(parseGuestCsv('')).toEqual([])
     expect(parseGuestCsv('\n\n')).toEqual([])
