@@ -10,6 +10,7 @@ const COLUMNS = {
   seats: guestGroups.seats,
   revokedAt: guestGroups.revokedAt,
   openedAt: guestGroups.openedAt,
+  invitationSentAt: guestGroups.invitationSentAt,
 } as const
 
 export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGroupRepository => ({
@@ -35,6 +36,10 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
   async findByTokenHash(tokenHash) {
     const [row] = await database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.tokenHash, tokenHash)).limit(1)
     return row ?? null
+  },
+
+  async markSent(id, at) {
+    await database.update(guestGroups).set({ invitationSentAt: at }).where(eq(guestGroups.id, id))
   },
 
   async revoke(id, at) {

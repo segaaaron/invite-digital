@@ -273,6 +273,9 @@ export const guestGroups = pgTable(
     tokenHash: bytea('token_hash').notNull().unique(),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     openedAt: timestamp('opened_at', { withTimezone: true }),
+    // Marca del atelier: «este enlace ya lo repartí». No es prueba de entrega — ni
+    // WhatsApp ni el correo avisan de vuelta, y decir «entregado» sería mentir.
+    invitationSentAt: timestamp('invitation_sent_at', { withTimezone: true }),
     // `set null`, no `cascade`: borrar una mesa deja a sus grupos sin mesa, no los borra.
     // Perder invitados por eliminar una mesa sería catastrófico y silencioso.
     tableId: uuid('table_id').references(() => venueTables.id, { onDelete: 'set null' }),

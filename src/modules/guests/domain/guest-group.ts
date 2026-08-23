@@ -7,6 +7,8 @@ export type GuestGroup = {
   readonly label: string
   readonly seats: number
   readonly revokedAt: Date | null
+  /** Cuándo dio el atelier por repartida la invitación. No es prueba de entrega. */
+  readonly invitationSentAt: Date | null
 }
 
 export type GuestGroupInput = {
@@ -15,6 +17,7 @@ export type GuestGroupInput = {
   label: string
   seats: number
   revokedAt: Date | null
+  invitationSentAt?: Date | null | undefined
 }
 
 const MAX_LABEL = 160
@@ -33,7 +36,14 @@ export function createGuestGroup(input: GuestGroupInput): Result<GuestGroup, Gue
     return err(guestError('invalid_seats', `Cupos inválidos: ${input.seats}. Un grupo sin cupos no es una invitación.`))
   }
 
-  return ok({ id: input.id, eventId: input.eventId, label, seats: input.seats, revokedAt: input.revokedAt })
+  return ok({
+    id: input.id,
+    eventId: input.eventId,
+    label,
+    seats: input.seats,
+    revokedAt: input.revokedAt,
+    invitationSentAt: input.invitationSentAt ?? null,
+  })
 }
 
 export const isRevoked = (group: GuestGroup): boolean => group.revokedAt !== null

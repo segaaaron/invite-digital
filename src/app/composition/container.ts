@@ -65,6 +65,7 @@ import { requireFeature } from '@/modules/plans/application/require-feature'
 import { drizzlePlansRepository } from '@/modules/plans/infrastructure/drizzle-plans-repository'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
+import { markInvitationSent } from '@/modules/guests/application/mark-invitation-sent'
 import {
   addPerson,
   listPeopleByEvent,
@@ -163,6 +164,7 @@ export const guests = {
   updatePerson: updatePerson({ people: drizzleGuestPersonRepository }),
   removePerson: removePerson({ people: drizzleGuestPersonRepository }),
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
+  markSent: markInvitationSent({ groups: drizzleGuestGroupRepository, clock }),
 } as const
 
 export const rsvp = {

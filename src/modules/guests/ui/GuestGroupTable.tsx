@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { markInvitationSentAction } from '../actions'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 
 export type GuestGroupRowView = {
@@ -10,6 +11,8 @@ export type GuestGroupRowView = {
   readonly revokedAt: Date | null
   /** Cupos confirmados en la última respuesta; `null` si el grupo aún no respondió. */
   readonly confirmed: number | null
+  /** Cuándo dio el atelier por repartida la invitación. No es prueba de entrega. */
+  readonly invitationSentAt?: Date | null
 }
 
 const estado = (row: GuestGroupRowView): string => {
@@ -41,6 +44,7 @@ const ETIQUETA: Record<Filtro, string> = {
 export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; groups: readonly GuestGroupRowView[] }) {
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [query, setQuery] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
   // Los contadores se calculan sobre **todos** los grupos, nunca sobre los visibles: un
   // contador que baja al filtrar no cuenta nada, solo repite lo que ya se ve.
@@ -89,6 +93,12 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
         ))}
       </div>
 
+      {error === null ? null : (
+        <p className="text-[13px] text-gold-deep" role="alert">
+          {error}
+        </p>
+      )}
+
       {visibles.length === 0 ? (
         <p className="text-[13px] text-ink-mute">Ningún grupo coincide.</p>
       ) : (
@@ -98,6 +108,7 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
           <th className="border-b border-[var(--color-line)] py-3 font-normal">Grupo</th>
           <th className="border-b border-[var(--color-line)] py-3 font-normal">Confirmados</th>
           <th className="border-b border-[var(--color-line)] py-3 font-normal">Estado</th>
+          <th className="border-b border-[var(--color-line)] py-3 font-normal">Enviado</th>
           <th className="border-b border-[var(--color-line)] py-3 font-normal" />
         </tr>
       </thead>
@@ -110,6 +121,24 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
             </td>
             <td className="border-b border-[var(--color-line)] py-4 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
               {estado(row)}
+            </td>
+            <td className="border-b border-[var(--color-line)] py-4">
+              <button
+                className="rounded-full border border-line px-3 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase transition-colors hover:border-gold/60"
+                onClick={() => {
+                  void markInvitationSentAction({
+                    eventSlug,
+                    id: row.id,
+                    sent: !row.invitationSentAt,
+                  }).then((estado) => {
+                    if (estado.status === 'error') setError(estado.message)
+                  })
+                }}
+                title="Marca que ya repartiste el enlace. No es una prueba de entrega."
+                type="button"
+              >
+                {row.invitationSentAt ? 'Enviada' : 'Sin enviar'}
+              </button>
             </td>
             <td className="border-b border-[var(--color-line)] py-4 text-right">
               {row.revokedAt === null ? (

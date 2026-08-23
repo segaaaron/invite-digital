@@ -8,7 +8,7 @@ import type { RsvpResponse } from '../domain/rsvp-response'
 import type { RsvpRepository } from './ports'
 import { respondToInvitation } from './respond-to-invitation'
 
-const grupo: GuestGroup = { id: 'g1', eventId: 'e1', label: 'Familia Rojas', seats: 4, revokedAt: null }
+const grupo: GuestGroup = { id: 'g1', eventId: 'e1', label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null }
 
 const evento: Event = {
   id: 'e1',

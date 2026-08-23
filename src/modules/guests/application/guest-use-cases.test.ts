@@ -27,6 +27,7 @@ const repo = (row: GuestGroupRow | null) => {
     listByEvent: async () => [],
     findByTokenHash: async () => row,
     findById: async () => row,
+    markSent: async () => {},
     revoke: async () => {},
     markOpened: async (id, at) => void opened.push({ id, at }),
   }
@@ -131,6 +132,7 @@ describe('resolveByToken', () => {
       insert: async () => {},
       listByEvent: async () => [],
       findById: async () => null,
+      markSent: async () => {},
       findByTokenHash: async () => {
         throw new Error('conexión rechazada')
       },

@@ -156,3 +156,25 @@ export async function removePersonAction(input: { eventSlug: string; id: string 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   return { status: 'success' }
 }
+
+/**
+ * Marca el reparto de una invitación. Devuelve estado: si el servidor rechaza, el atelier
+ * tiene que enterarse, porque la columna «Enviado» es la que usa para saber a quién le
+ * falta el enlace.
+ */
+export async function markInvitationSentAction(input: {
+  eventSlug: string
+  id: string
+  sent: boolean
+}): Promise<PersonActionState> {
+  await requireSession()
+
+  const result = await guests.markSent({ id: input.id, sent: input.sent })
+  if (isErr(result)) {
+    console.error('marca de envío rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  return { status: 'success' }
+}

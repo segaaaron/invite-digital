@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { GuestGroupTable, type GuestGroupRowView } from './GuestGroupTable'
+
+vi.mock('../actions', async (original) => ({
+  // Mock parcial: `RevokeInvitationForm` usa la acción de revocar de verdad.
+  ...(await original<typeof import('../actions')>()),
+  markInvitationSentAction: vi.fn(async () => ({ status: 'success' as const })),
+}))
 
 const groups: GuestGroupRowView[] = [
   { id: 'g1', label: 'Familia Rojas Peña', seats: 4, revokedAt: null, confirmed: 4 },
@@ -41,6 +47,19 @@ describe('GuestGroupTable', () => {
 
     fireEvent.change(screen.getByLabelText(/buscar/i), { target: { value: 'nadie' } })
     expect(screen.getByText(/ningún grupo coincide/i)).toBeInTheDocument()
+  })
+
+  it('la columna «Enviado» dice si el enlace ya se repartió', () => {
+    // Es una marca del atelier, no una prueba de entrega: ni WhatsApp ni el correo
+    // avisan de vuelta, y llamarlo «entregado» sería afirmar lo que nadie comprobó.
+    render(
+      <GuestGroupTable
+        eventSlug="boda"
+        groups={[{ ...groups[0]!, invitationSentAt: new Date('2026-08-20') }, groups[1]!]}
+      />,
+    )
+    expect(screen.getByRole('button', { name: 'Enviada' })).toBeInTheDocument()
+    expect(screen.getAllByRole('button', { name: 'Sin enviar' }).length).toBeGreaterThan(0)
   })
 
   it('el estado se lee como texto, no solo por color', () => {

@@ -10,6 +10,7 @@ const grupo = (seats: number): GuestGroupRepository => ({
   findByTokenHash: async () => null,
   revoke: async () => {},
   markOpened: async () => {},
+  markSent: async () => {},
   findById: async () => ({
     id: 'g1',
     eventId: 'e1',
