@@ -6,12 +6,19 @@ export function SiteFooter({ dictionary }: { locale: Locale; dictionary: Diction
   const year = new Date().getUTCFullYear()
 
   return (
-    <footer className="border-t border-[var(--color-line)] px-6 py-14 text-center">
-      <p className="font-display text-[22px] tracking-[0.12em] text-ink">LUXE · {BRAND.siteName}</p>
-      <p className="mt-3 text-[12px] text-ink-mute">{dictionary.footer.coverage}</p>
-      <p className="mt-6 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-        © {year} {dictionary.footer.rights}
-      </p>
+    // Una sola línea de tres bloques, como la maqueta: marca a la izquierda, cobertura en
+    // medio y derechos a la derecha. El pie centrado en tres alturas que había antes
+    // pesaba más que la sección de contacto que lo precede.
+    <footer className="border-t border-[var(--color-line)] px-6 py-9">
+      <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-5 text-center">
+        <span className="font-display text-[19px] tracking-[0.12em] text-gold-deep">LUXE · {BRAND.siteName}</span>
+        <span className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+          {dictionary.footer.coverage}
+        </span>
+        <span className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+          © {year} {dictionary.footer.rights}
+        </span>
+      </div>
     </footer>
   )
 }

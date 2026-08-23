@@ -127,7 +127,25 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
         <ArrowRightIcon />
       </button>
 
-      <p aria-live="polite" className="mt-6 text-center text-[12px] text-ink-mute">
+      {/* Los puntos de la maqueta: dicen cuántas escenas hay y en cuál estás, que es lo
+          único que un carrusel con perspectiva no cuenta por sí solo. El activo se
+          alarga en vez de solo cambiar de color: la forma se ve sin distinguir tonos. */}
+      <div className="mt-8.5 flex justify-center gap-2.5">
+        {slides.map((slide, i) => (
+          <button
+            aria-current={i === index ? 'true' : undefined}
+            aria-label={`Ir a la escena ${i + 1}: ${slide.name}`}
+            className={`h-2 rounded-full transition-all duration-500 ${
+              i === index ? 'w-7 bg-linear-to-r from-gold-deep to-gold-light' : 'w-2 bg-ink-mute/30 hover:bg-ink-mute/60'
+            }`}
+            key={slide.key}
+            onClick={() => setIndex(i)}
+            type="button"
+          />
+        ))}
+      </div>
+
+      <p aria-live="polite" className="mt-5 text-center text-[12px] text-ink-mute">
         {dictionary.collections.hint}
         {active ? ` · ${active.name}` : ''}
       </p>

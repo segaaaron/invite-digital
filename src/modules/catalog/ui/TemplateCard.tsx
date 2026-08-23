@@ -43,9 +43,19 @@ export function TemplateCard({ template, dictionary }: Props) {
   return (
     <figure className="m-0 flex w-[238px] shrink-0 flex-col items-center gap-5">
       <div
-        className="relative aspect-5/7 w-full [transform:rotateY(-11deg)_rotateX(3deg)] [transform-style:preserve-3d]"
-        style={{ background: template.palette.base }}
+        className="relative aspect-5/7 w-full [transform:rotateY(-11deg)_rotateX(3deg)] [transform-style:preserve-3d] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] hover:[transform:rotateY(0deg)_rotateX(0deg)_translateY(-8px)] motion-reduce:transition-none"
+        style={{
+          background: template.palette.base,
+          boxShadow: '0 26px 50px -24px rgb(90 66 26 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.3)',
+        }}
       >
+        {/* La segunda hoja que asoma detrás, como en la maqueta: da el grosor del papel. */}
+        <span
+          aria-hidden
+          className="absolute -inset-x-[5%] -top-[4%] -bottom-[6%] -z-1 border"
+          style={{ borderColor: `${acento}47` }}
+        />
+
         {/* El doble filete del papel y la cinta del lomo, en el acento de la plantilla. */}
         <span aria-hidden className="absolute inset-2.5 border" style={{ borderColor: `${acento}6b` }} />
         <span aria-hidden className="absolute inset-4 border opacity-45" style={{ borderColor: `${acento}6b` }} />

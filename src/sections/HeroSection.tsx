@@ -28,7 +28,7 @@ export function HeroSection({ dictionary, slot }: Props) {
             <br />
             {hero.titleLine2}
             <br />
-            <em className="bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text not-italic text-transparent">
+            <em className="anim-brillo bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text text-transparent not-italic">
               {hero.titleAccent}
             </em>
           </h1>

@@ -9,10 +9,10 @@ import Image from 'next/image'
  */
 export function HeroStack({ alt }: { alt: string }) {
   return (
-    <div aria-label={alt} className="relative mx-auto h-[440px] w-full max-w-[580px] lg:h-[540px]" role="img">
+    <div aria-label={alt} className="anim-flotar relative mx-auto h-[440px] w-full max-w-[580px] lg:h-[540px]" role="img">
       <span
         aria-hidden
-        className="absolute top-[46%] left-1/2 aspect-square w-[82%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/30"
+        className="anim-girar-lento absolute top-[46%] left-1/2 aspect-square w-[82%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/30"
       />
       <span
         aria-hidden
@@ -22,7 +22,7 @@ export function HeroStack({ alt }: { alt: string }) {
       <Image
         alt=""
         aria-hidden
-        className="absolute top-[2%] left-0 w-[40%] -rotate-9 object-contain drop-shadow-[0_26px_34px_rgb(104_80_36/0.28)]"
+        className="anim-flotar-lento absolute top-[2%] left-0 w-[40%] -rotate-9 object-contain drop-shadow-[0_26px_34px_rgb(104_80_36/0.28)]"
         height={992}
         sizes="220px"
         src="/site/hero/sobre-abierto.avif"
@@ -31,7 +31,7 @@ export function HeroStack({ alt }: { alt: string }) {
       <Image
         alt=""
         aria-hidden
-        className="absolute bottom-[-4%] left-[2%] z-2 w-[34%] -rotate-6 object-contain drop-shadow-[0_30px_40px_rgb(104_80_36/0.32)]"
+        className="anim-flotar-lento absolute bottom-[-4%] left-[2%] z-2 w-[34%] -rotate-6 object-contain drop-shadow-[0_30px_40px_rgb(104_80_36/0.32)] [animation-delay:0.3s]"
         height={747}
         sizes="200px"
         src="/site/hero/sobre-cerrado.avif"

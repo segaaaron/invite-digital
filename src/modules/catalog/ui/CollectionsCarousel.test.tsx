@@ -44,6 +44,26 @@ describe('CollectionsCarousel en 3D', () => {
   })
 })
 
+describe('los puntos del carrusel', () => {
+  it('hay uno por escena y el activo lo declara', () => {
+    // La maqueta los pinta bajo el escenario: dicen cuántas escenas hay y en cuál estás,
+    // que es lo único que no cuenta un carrusel con perspectiva.
+    render(<CollectionsCarousel dictionary={es} slides={slides} />)
+
+    const puntos = screen.getAllByRole('button', { name: /ir a la escena/i })
+    expect(puntos).toHaveLength(slides.length)
+    expect(puntos[2]).toHaveAttribute('aria-current', 'true')
+  })
+
+  it('pulsar un punto lleva a esa escena', () => {
+    render(<CollectionsCarousel dictionary={es} slides={slides} />)
+
+    fireEvent.click(screen.getAllByRole('button', { name: /ir a la escena/i })[0]!)
+
+    expect(screen.getByRole('group', { current: true }).textContent).toContain('Perla')
+  })
+})
+
 describe('CollectionsCarousel', () => {
   it('expone controles accesibles de navegación', () => {
     render(<CollectionsCarousel slides={slides} dictionary={es} />)

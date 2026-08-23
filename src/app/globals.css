@@ -15,6 +15,67 @@ body {
 ::selection { background: rgb(var(--color-gold-rgb) / 0.24); color: var(--color-ink-selection); }
 :focus-visible { outline: 1px solid var(--color-gold); outline-offset: 3px; }
 
+/*
+ * Las animaciones de ambiente de la maqueta. Van en CSS y no en JavaScript porque son
+ * decorativas y no dependen de estado: así el bloque de `prefers-reduced-motion` de más
+ * abajo las apaga todas de una vez.
+ */
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.4deg);
+  }
+  50% {
+    transform: translateY(-18px) rotate(0.5deg);
+  }
+}
+
+@keyframes flotar-lento {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-11px);
+  }
+}
+
+@keyframes girar-lento {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes brillo-dorado {
+  0% {
+    background-position: -220% 0;
+  }
+  100% {
+    background-position: 220% 0;
+  }
+}
+
+.anim-flotar {
+  animation: flotar 8s ease-in-out infinite;
+}
+
+.anim-flotar-lento {
+  animation: flotar-lento 7s 0.6s ease-in-out infinite;
+}
+
+.anim-girar-lento {
+  animation: girar-lento 46s linear infinite;
+}
+
+/* El barrido dorado del texto en degradado del hero. */
+.anim-brillo {
+  background-size: 240% 100%;
+  animation: brillo-dorado 7s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;

@@ -42,7 +42,7 @@ export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
           {mobile.shots.map((shot, index) => (
             <figure
               key={shot.tag}
-              className={`overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-bg-raised shadow-[var(--shadow-lift)] ${
+              className={`overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-bg-raised shadow-[var(--shadow-lift)] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] hover:-translate-y-2.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
                 index === 1 ? 'mt-10' : ''
               }`}
             >
