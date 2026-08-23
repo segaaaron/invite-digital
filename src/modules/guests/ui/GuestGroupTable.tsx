@@ -13,6 +13,7 @@ export type GuestGroupRowView = {
   readonly confirmed: number | null
   /** Cuándo dio el atelier por repartida la invitación. No es prueba de entrega. */
   readonly invitationSentAt?: Date | null
+  readonly phone?: string | null
 }
 
 const estado = (row: GuestGroupRowView): string => {

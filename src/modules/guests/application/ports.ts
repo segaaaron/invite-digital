@@ -2,7 +2,11 @@ import type { GuestGroup, GuestGroupInput } from '../domain/guest-group'
 import type { GuestPerson } from '../domain/person'
 
 /** Lo que devuelve la base: el grupo más la telemetría de apertura, que el dominio ignora. */
-export type GuestGroupRow = GuestGroupInput & { openedAt: Date | null; invitationSentAt?: Date | null }
+export type GuestGroupRow = GuestGroupInput & {
+  openedAt: Date | null
+  invitationSentAt?: Date | null
+  phone?: string | null
+}
 
 export interface GuestGroupRepository {
   insert(group: GuestGroup, tokenHash: Buffer): Promise<void>
@@ -13,6 +17,9 @@ export interface GuestGroupRepository {
   findById(id: string): Promise<GuestGroupRow | null>
   /** Marca el reparto de la invitación. `null` la devuelve a «sin enviar». */
   markSent(id: string, at: Date | null): Promise<void>
+  /** Cambia el hash del token: el enlace anterior deja de abrir nada. */
+  replaceToken(id: string, tokenHash: Buffer): Promise<void>
+  setPhone(id: string, phone: string | null): Promise<void>
 }
 
 /**

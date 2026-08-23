@@ -42,8 +42,8 @@ describe('repositorio de grupos', () => {
 
       const primero = minter.mint()
       const segundo = minter.mint()
-      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null }, primero.hash)
-      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Daniela Ortiz', seats: 1, revokedAt: null, invitationSentAt: null }, segundo.hash)
+      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null }, primero.hash)
+      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Daniela Ortiz', seats: 1, revokedAt: null, invitationSentAt: null, phone: null }, segundo.hash)
 
       expect((await repo.listByEvent(eventId)).map((row) => row.label)).toEqual(['Familia Rojas', 'Daniela Ortiz'])
       expect((await repo.findByTokenHash(minter.hashOf(primero.token)))?.label).toBe('Familia Rojas')
@@ -59,7 +59,7 @@ describe('repositorio de grupos', () => {
       const id = crypto.randomUUID()
       const { hash } = minter.mint()
 
-      await repo.insert({ id, eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null }, hash)
+      await repo.insert({ id, eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null }, hash)
 
       const primera = new Date('2026-08-19T12:00:00Z')
       await repo.markOpened(id, primera)

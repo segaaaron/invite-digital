@@ -177,6 +177,9 @@ export const events = pgTable('events', {
   // Hash de la contraseña de acceso, nunca la contraseña. Nulo = evento público: basta
   // con tener el enlace, que es lo que había hasta ahora.
   accessPasswordHash: text('access_password_hash'),
+  // Plantilla del mensaje de reparto, con {grupo} y {enlace}. Nunca guarda un enlace
+  // dentro: el enlace se pega al abrir WhatsApp, no aquí.
+  messageTemplate: text('message_template'),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
   /**
    * Anulable a propósito: los eventos creados antes de esta rebanada no tienen plan, y
@@ -282,6 +285,9 @@ export const guestGroups = pgTable(
     // Marca del atelier: «este enlace ya lo repartí». No es prueba de entrega — ni
     // WhatsApp ni el correo avisan de vuelta, y decir «entregado» sería mentir.
     invitationSentAt: timestamp('invitation_sent_at', { withTimezone: true }),
+    // Teléfono para abrir WhatsApp con el destinatario ya puesto. Dato personal del
+    // invitado: la anonimización de la retención lo borra, como la etiqueta.
+    phone: varchar('phone', { length: 32 }),
     // `set null`, no `cascade`: borrar una mesa deja a sus grupos sin mesa, no los borra.
     // Perder invitados por eliminar una mesa sería catastrófico y silencioso.
     tableId: uuid('table_id').references(() => venueTables.id, { onDelete: 'set null' }),

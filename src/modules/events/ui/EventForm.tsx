@@ -38,6 +38,7 @@ export function EventForm({ event }: { event?: Event }) {
   const statusId = useId()
   const retentionId = useId()
   const currencyId = useId()
+  const templateId = useId()
   const errorId = useId()
 
   const error = state.status === 'error' && state.message !== '' ? MESSAGES[state.message] : null
@@ -104,6 +105,21 @@ export function EventForm({ event }: { event?: Event }) {
           <input className={FIELD_CLASS} defaultValue={event?.retentionDays ?? 90} id={retentionId} min={1} name="retentionDays" required type="number" />
         </label>
       </div>
+
+      <label className={LABEL_CLASS} htmlFor={templateId}>
+        Plantilla del mensaje de reparto
+        <textarea
+          className={FIELD_CLASS}
+          defaultValue={event?.messageTemplate ?? ''}
+          id={templateId}
+          name="messageTemplate"
+          placeholder="Hola {grupo}: nos encantaría celebrar con ustedes. Aquí está su invitación: {enlace}"
+          rows={3}
+        />
+        <span className="text-[11px] text-ink-mute">
+          {'{grupo}'} y {'{enlace}'} se sustituyen al enviar. El enlace nunca se guarda aquí.
+        </span>
+      </label>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={LABEL_CLASS} htmlFor={currencyId}>

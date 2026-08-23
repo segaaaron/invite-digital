@@ -14,6 +14,7 @@ const COLUMNS = {
   status: events.status,
   retentionDays: events.retentionDays,
   currency: events.currency,
+  messageTemplate: events.messageTemplate,
 } as const
 
 export const createDrizzleEventRepository = (database: DbExecutor): EventRepository => ({
@@ -42,7 +43,8 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
     await database.transaction(async (tx) => {
       await tx.execute(sql`
         update guest_groups as g
-        set label = 'Grupo ' || numerado.posicion
+        -- El teléfono se borra con la etiqueta: los dos identifican a la misma persona.
+        set label = 'Grupo ' || numerado.posicion, phone = null
         from (
           select id, row_number() over (order by created_at) as posicion
           from guest_groups
@@ -106,6 +108,7 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         status: event.status,
         retentionDays: event.retentionDays,
         currency: event.currency,
+        messageTemplate: event.messageTemplate,
       })
       .where(eq(events.id, event.id))
   },

@@ -178,3 +178,104 @@ export async function markInvitationSentAction(input: {
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   return { status: 'success' }
 }
+
+export type ResendState =
+  | { status: 'idle' }
+  // El enlace nuevo viaja una sola vez, igual que al crear el grupo.
+  | { status: 'success'; label: string; url: string }
+  | { status: 'error'; message: string }
+
+/**
+ * Vuelve a repartir la invitación de un grupo. **Rota el token**: el enlace anterior deja
+ * de abrir nada, y quien lo tuviera —incluido el propio invitado— tendrá que usar el
+ * nuevo. La pantalla lo avisa antes de que nadie pulse.
+ */
+export async function resendInvitationAction(_previous: ResendState, formData: FormData): Promise<ResendState> {
+  await requireSession()
+
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  const result = await guests.resend({ id: String(formData.get('groupId') ?? '') })
+
+  if (isErr(result)) {
+    console.error('reenvío rechazado', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  return { status: 'success', label: result.value.label, url: invitationUrl(result.value.token, env.SITE_URL) }
+}
+
+export type ImportState =
+  | { status: 'idle' }
+  | { status: 'success'; created: number; rejected: number; rows: readonly ImportRowView[] }
+  | { status: 'error'; message: string }
+
+export type ImportRowView = {
+  line: number
+  label: string
+  seats: number
+  url: string | null
+  problem: string | null
+}
+
+/**
+ * Importa un CSV de invitados y devuelve **la tabla entera**, fila por fila.
+ *
+ * Un «se importaron 37 de 50» obliga a comparar dos listas a mano para saber cuáles
+ * faltan. Aquí cada fila dice si entró, con su enlace, o por qué no.
+ */
+export async function importGuestsAction(_previous: ImportState, formData: FormData): Promise<ImportState> {
+  await requireSession()
+
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+
+  const capacidad = await plans.allowanceFor(eventId)
+  const actuales = await guests.list(eventId)
+
+  const result = await guests.importCsv({
+    eventId,
+    csv: String(formData.get('csv') ?? ''),
+    allowance: { maxGuestGroups: isErr(capacidad) ? null : capacidad.value.maxGuestGroups },
+    currentGroups: isErr(actuales) ? 0 : actuales.value.length,
+  })
+
+  if (isErr(result)) {
+    console.error('importación rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  return {
+    status: 'success',
+    created: result.value.created,
+    rejected: result.value.rejected,
+    rows: result.value.rows.map((fila) => ({
+      line: fila.line,
+      label: fila.label,
+      seats: fila.seats,
+      url: fila.token === null ? null : invitationUrl(fila.token, env.SITE_URL),
+      problem: fila.problem,
+    })),
+  }
+}
+
+/** El teléfono del grupo, para abrir WhatsApp con el destinatario ya puesto. */
+export async function setGroupPhoneAction(input: {
+  eventSlug: string
+  id: string
+  phone: string
+}): Promise<PersonActionState> {
+  await requireSession()
+
+  const limpio = input.phone.trim()
+  try {
+    await guests.setPhone(input.id, limpio === '' ? null : limpio)
+  } catch (cause) {
+    console.error('no se pudo guardar el teléfono', cause)
+    return { status: 'error', message: 'No se pudo guardar el teléfono.' }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  return { status: 'success' }
+}

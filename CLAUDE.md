@@ -79,6 +79,23 @@ importación masiva con CSV y tabla de resultado, plantilla de mensaje por event
 teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
 Plan B— siguen sin construirse.
 
+### Notas del reparto de invitaciones (`src/modules/guests/`)
+
+- **Reenviar rota el token.** No se puede «volver a enseñar» un enlace que no existe —en
+  la base solo está su hash—, y tampoco convendría: si hizo falta reenviarlo es porque se
+  perdió, y un enlace perdido pudo acabar en cualquier parte. La pantalla lo avisa **antes**
+  de que nadie pulse, porque el invitado que ya lo tenía se queda fuera.
+- **Un grupo revocado no se reenvía.** Revocar se deshace a propósito, no de refilón.
+- **`invitationUrl(token, siteUrl)`, en ese orden.** Invertirlo compila —son dos cadenas—
+  y produce enlaces como `TOKEN/i/http://localhost`. Lo cazó la e2e, no el typecheck.
+- **La importación no es transaccional a propósito.** Al llegar al tope del plan, lo ya
+  creado se queda y el resto se rechaza **con su motivo, fila por fila**: un «37 de 50»
+  obliga a comparar dos listas a mano, y esos enlaces no se pueden volver a mostrar.
+- **La plantilla del mensaje nunca guarda un enlace dentro.** `{grupo}` y `{enlace}` se
+  sustituyen al abrir WhatsApp; un enlace dentro de la plantilla sería un token en claro
+  guardado en la base.
+- **El teléfono del grupo se anonimiza con la etiqueta**: identifican a la misma persona.
+
 ### Notas de la privacidad del evento (`src/modules/events/`)
 
 - **`verify(password, hash)`, en ese orden.** Es el contrato que ya usa la identidad del

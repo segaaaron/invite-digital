@@ -11,6 +11,7 @@ const COLUMNS = {
   revokedAt: guestGroups.revokedAt,
   openedAt: guestGroups.openedAt,
   invitationSentAt: guestGroups.invitationSentAt,
+  phone: guestGroups.phone,
 } as const
 
 export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGroupRepository => ({
@@ -36,6 +37,16 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
   async findByTokenHash(tokenHash) {
     const [row] = await database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.tokenHash, tokenHash)).limit(1)
     return row ?? null
+  },
+
+  async replaceToken(id, tokenHash) {
+    // Reenviar rota el token: el enlace viejo deja de abrir nada. No se puede «volver a
+    // enseñar» el anterior porque en la base solo estaba su hash.
+    await database.update(guestGroups).set({ tokenHash }).where(eq(guestGroups.id, id))
+  },
+
+  async setPhone(id, phone) {
+    await database.update(guestGroups).set({ phone }).where(eq(guestGroups.id, id))
   },
 
   async markSent(id, at) {

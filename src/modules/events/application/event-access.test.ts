@@ -14,7 +14,7 @@ const fila: EventInput = {
   themeKey: 'clasico',
   status: 'live',
   retentionDays: 90,
-  currency: 'BOB',
+  currency: 'BOB', messageTemplate: null,
 }
 
 const events: EventRepository = {

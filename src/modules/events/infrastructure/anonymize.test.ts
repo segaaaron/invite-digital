@@ -63,7 +63,13 @@ describe('anonimización', () => {
 
       const [primero] = await tx
         .insert(guestGroups)
-        .values({ eventId: evento.id, label: 'Familia Rojas Peña', seats: 4, tokenHash: Buffer.alloc(32, 11) })
+        .values({
+          eventId: evento.id,
+          label: 'Familia Rojas Peña',
+          seats: 4,
+          phone: '+59170011122',
+          tokenHash: Buffer.alloc(32, 11),
+        })
         .returning({ id: guestGroups.id })
       await tx
         .insert(guestGroups)
@@ -77,6 +83,8 @@ describe('anonimización', () => {
       const grupos = await tx.select().from(guestGroups).where(eq(guestGroups.eventId, evento.id))
       expect(grupos.map((g) => g.label).sort()).toEqual(['Grupo 1', 'Grupo 2'])
       expect(grupos.map((g) => g.seats).sort()).toEqual([1, 4])
+      // El teléfono identifica a la misma persona que la etiqueta: se borra con ella.
+      expect(grupos.every((g) => g.phone === null)).toBe(true)
 
       const respuestas = await tx.select().from(rsvpResponses).where(eq(rsvpResponses.guestGroupId, primero!.id))
       expect(respuestas[0]?.message).toBeNull()

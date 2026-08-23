@@ -23,6 +23,8 @@ export type Event = {
   readonly retentionDays: number
   /** La moneda de la mesa de regalos de este evento. */
   readonly currency: Currency
+  /** Plantilla del mensaje de reparto, con {grupo} y {enlace}. */
+  readonly messageTemplate: string | null
 }
 
 export type EventInput = {
@@ -36,6 +38,7 @@ export type EventInput = {
   status: string
   retentionDays: number
   currency?: string | undefined
+  messageTemplate?: string | null | undefined
 }
 
 export function createEvent(input: EventInput): Result<Event, EventError> {
@@ -92,6 +95,7 @@ export function createEvent(input: EventInput): Result<Event, EventError> {
     status: input.status as EventStatus,
     retentionDays: input.retentionDays,
     currency: currency as Currency,
+    messageTemplate: input.messageTemplate?.trim() === '' ? null : (input.messageTemplate ?? null),
   })
 }
 

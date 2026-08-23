@@ -2,6 +2,8 @@ import { notFound } from 'next/navigation'
 import { events, guests, plans, rsvp, venue } from '@/app/composition/container'
 import { ExportCsvButton } from '@/modules/guests/ui/ExportCsvButton'
 import { PeopleTable, type PersonRowView } from '@/modules/guests/ui/PeopleTable'
+import { DeliveryPanel } from '@/modules/guests/ui/DeliveryPanel'
+import { ImportPanel } from '@/modules/guests/ui/ImportPanel'
 import { PersonForm } from '@/modules/guests/ui/PersonForm'
 import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
@@ -127,6 +129,25 @@ export default async function InvitadosPage({ params }: { params: Promise<{ slug
               <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
             )}
           </div>
+        </PanelCard>
+
+        <PanelCard title="Enviar invitaciones">
+          <DeliveryPanel
+            eventLocale={event.value.locale}
+            eventSlug={event.value.slug}
+            rows={filas.map((fila) => ({
+              id: fila.id,
+              label: fila.label,
+              phone: fila.phone ?? null,
+              sent: fila.invitationSentAt !== null && fila.invitationSentAt !== undefined,
+              revoked: fila.revokedAt !== null,
+            }))}
+            template={event.value.messageTemplate ?? null}
+          />
+        </PanelCard>
+
+        <PanelCard title="Importar desde CSV">
+          <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} />
         </PanelCard>
 
         <PanelCard title="Grupos y cupos">

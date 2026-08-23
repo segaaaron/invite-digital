@@ -119,7 +119,8 @@ test.describe('invitados del evento', () => {
     await expect(page.getByText('— / 4')).toBeVisible()
 
     await page.getByRole('button', { name: 'Revocar' }).click()
-    await expect(page.getByText('Revocada')).toBeVisible()
+    // La fila de la tabla; el panel de reparto también dice «Revocada» en su tarjeta.
+    await expect(page.getByRole('cell', { name: 'Revocada' })).toBeVisible()
   })
 
   test('crea el enlace del cliente, se abre en solo lectura y se revoca', async ({ page, context }) => {

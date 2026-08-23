@@ -9,6 +9,8 @@ export type GuestGroup = {
   readonly revokedAt: Date | null
   /** Cuándo dio el atelier por repartida la invitación. No es prueba de entrega. */
   readonly invitationSentAt: Date | null
+  /** Teléfono para abrir WhatsApp con el destinatario puesto. Opcional a propósito. */
+  readonly phone: string | null
 }
 
 export type GuestGroupInput = {
@@ -18,6 +20,7 @@ export type GuestGroupInput = {
   seats: number
   revokedAt: Date | null
   invitationSentAt?: Date | null | undefined
+  phone?: string | null | undefined
 }
 
 const MAX_LABEL = 160
@@ -43,6 +46,7 @@ export function createGuestGroup(input: GuestGroupInput): Result<GuestGroup, Gue
     seats: input.seats,
     revokedAt: input.revokedAt,
     invitationSentAt: input.invitationSentAt ?? null,
+    phone: input.phone?.trim() === '' ? null : (input.phone ?? null),
   })
 }
 
