@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { addTableAction, autoAssignAction } from '../actions'
+import { SearchField } from '@/shared/design/ui/panel/PanelKit'
+import { addTableAction } from '../actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
@@ -11,8 +12,6 @@ type Props = {
   eventSlug: string
   tables: readonly SeatedTable[]
   unseated: readonly SeatedGroupRow[]
-  totalSeats: number
-  totalConfirmed: number
 }
 
 const NOMBRE_FORMA: Record<TableShape, string> = {
@@ -46,7 +45,7 @@ const buscar = (
   return `No encontramos a nadie que se llame así.`
 }
 
-export function SeatingToolbar({ eventId, eventSlug, tables, unseated, totalSeats, totalConfirmed }: Props) {
+export function SeatingToolbar({ eventId, eventSlug, tables, unseated }: Props) {
   const [label, setLabel] = useState('')
   const [capacity, setCapacity] = useState('8')
   const [shape, setShape] = useState<TableShape>('round')
@@ -72,34 +71,7 @@ export function SeatingToolbar({ eventId, eventSlug, tables, unseated, totalSeat
   }
 
   return (
-    <section className="flex flex-col gap-5 rounded-card border border-line bg-bg-raised p-5">
-      <div className="flex flex-wrap items-baseline gap-6">
-        <p className="flex items-baseline gap-2">
-          <span aria-label="Sitios del salón" className="font-mono text-[20px] text-ink">
-            {totalSeats}
-          </span>
-          <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">sitios</span>
-        </p>
-        <p className="flex items-baseline gap-2">
-          <span aria-label="Comensales confirmados" className="font-mono text-[20px] text-ink">
-            {totalConfirmed}
-          </span>
-          <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-            confirmados
-          </span>
-        </p>
-        {unseated.length === 0 ? null : (
-          <button
-            type="button"
-            disabled={pendiente}
-            onClick={() => correr(() => autoAssignAction({ eventId, eventSlug }))}
-            className="ml-auto rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
-          >
-            Repartir los que faltan
-          </button>
-        )}
-      </div>
-
+    <section className="flex flex-col gap-5">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <label className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" htmlFor="mesa-label">
@@ -110,7 +82,7 @@ export function SeatingToolbar({ eventId, eventSlug, tables, unseated, totalSeat
             value={label}
             onChange={(e) => setLabel(e.target.value)}
             placeholder="Mesa 01"
-            className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+            className="rounded-pill border border-line-panel bg-white px-3 py-2 text-[13px] text-ink"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -123,7 +95,7 @@ export function SeatingToolbar({ eventId, eventSlug, tables, unseated, totalSeat
             min={1}
             value={capacity}
             onChange={(e) => setCapacity(e.target.value)}
-            className="w-20 rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+            className="w-20 rounded-pill border border-line-panel bg-white px-3 py-2 text-[13px] text-ink"
           />
         </div>
         <div className="flex flex-col gap-1">
@@ -134,7 +106,7 @@ export function SeatingToolbar({ eventId, eventSlug, tables, unseated, totalSeat
             id="mesa-forma"
             value={shape}
             onChange={(e) => setShape(e.target.value as TableShape)}
-            className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+            className="rounded-pill border border-line-panel bg-white px-3 py-2 text-[13px] text-ink"
           >
             {TABLE_SHAPES.map((s) => (
               <option key={s} value={s}>
@@ -152,22 +124,18 @@ export function SeatingToolbar({ eventId, eventSlug, tables, unseated, totalSeat
               () => setLabel(''),
             )
           }
-          className="rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
+          className="cursor-pointer rounded-pill border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase disabled:opacity-40"
         >
           Añadir mesa
         </button>
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" htmlFor="mesa-buscar">
-          Buscar grupo
-        </label>
-        <input
-          id="mesa-buscar"
-          value={termino}
+      <div className="flex">
+        <SearchField
+          label="Buscar grupo"
           onChange={(e) => setTermino(e.target.value)}
-          placeholder="¿Dónde se sienta…?"
-          className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+          placeholder="Buscar invitado para ver su mesa…"
+          value={termino}
         />
       </div>
 

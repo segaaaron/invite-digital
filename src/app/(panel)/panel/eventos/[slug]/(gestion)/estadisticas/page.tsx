@@ -5,6 +5,7 @@ import type { Breakdown } from '@/modules/analytics'
 import { EventStats } from '@/modules/rsvp/ui/EventStats'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { DonutChart, PanelCard } from '@/modules/shell/ui/cards'
+import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
 // Los números cambian con cada respuesta: esta página no se cachea.
@@ -18,7 +19,7 @@ export const dynamic = 'force-dynamic'
 function Desglose({ filas, total }: { filas: readonly Breakdown[] | null; total: number }) {
   if (filas === null) {
     return (
-      <p className="text-[13px] text-gold-deep" role="alert">
+      <p className="text-[13px] text-danger" role="alert">
         No pudimos leer las visitas. La base no responde; vuelve a intentarlo en un momento.
       </p>
     )
@@ -28,23 +29,13 @@ function Desglose({ filas, total }: { filas: readonly Breakdown[] | null; total:
     return <p className="text-[13px] text-ink-mute">Todavía nadie ha abierto la invitación.</p>
   }
 
+  // Etiqueta, carril y cifra en la misma línea, como la maqueta: apilar la barra debajo
+  // del rótulo doblaba el alto de la tarjeta y rompía la simetría de la rejilla.
   return (
-    <ul className="flex flex-col gap-4">
+    <ul className="flex flex-col">
       {filas.map((fila) => (
-        <li key={fila.label} className="flex flex-col gap-2">
-          <span className="flex items-baseline justify-between gap-3">
-            <span className="text-[13px] text-ink">{fila.label}</span>
-            <span className="font-mono text-[12px] text-ink-soft">
-              {fila.count} · {fila.percent} %
-            </span>
-          </span>
-          <span className="h-2 overflow-hidden rounded-full bg-bg-sunken">
-            <span
-              aria-hidden
-              className="block h-full rounded-full bg-sage transition-[width] duration-500 motion-reduce:transition-none"
-              style={{ width: `${fila.percent}%` }}
-            />
-          </span>
+        <li key={fila.label}>
+          <BarRow label={fila.label} ratio={fila.percent / 100} value={`${fila.percent} %`} />
         </li>
       ))}
     </ul>
@@ -71,12 +62,12 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
 
       {isErr(stats) ? (
         <PanelCard>
-          <p className="text-[13px] text-gold-deep" role="alert">
+          <p className="text-[13px] text-danger" role="alert">
             No pudimos leer las estadísticas. La base no responde; vuelve a intentarlo en un momento.
           </p>
         </PanelCard>
       ) : (
-        <div className="grid gap-4.5 lg:grid-cols-[1fr_1.2fr]">
+        <div className="grid items-start gap-4.5 lg:grid-cols-2">
           <PanelCard title="Estado de RSVPs">
             {stats.value.empty ? (
               <p className="text-[13px] text-ink-mute">Todavía no hay invitados en este evento.</p>
@@ -99,7 +90,7 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
         </div>
       )}
 
-      <div className="mt-4.5 grid gap-4.5 lg:grid-cols-2">
+      <div className="mt-4.5 grid items-start gap-4.5 lg:grid-cols-2">
         <PanelCard title="Dispositivos">
           <Desglose filas={vistas?.devices ?? null} total={vistas?.total ?? 0} />
         </PanelCard>

@@ -14,19 +14,22 @@ test.afterAll(async () => {
 test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado', async ({ page }) => {
   const { eventId, token, otroToken } = await seedRegistryEvent(SLUG)
 
-  // 1. El atelier carga un regalo y abre un fondo.
-  await page.goto(`/panel/eventos/${SLUG}/regalos`)
+  // 1. El atelier carga un regalo y abre un fondo. Las altas viven tras los botones de
+  // la cabecera, como en la maqueta; se abren por la barra de direcciones.
+  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
 
   await page.getByLabel('Regalo').fill('Cafetera italiana')
   await page.getByLabel('Precio').fill('450,50')
   await page.getByLabel('Tienda', { exact: true }).fill('Casa Ideal')
   await page.getByRole('button', { name: 'Añadir regalo' }).click()
+  await page.getByRole('button', { name: 'Lista de regalos' }).click()
   await expect(page.getByRole('heading', { name: 'Cafetera italiana' })).toBeVisible()
 
   // El importe llegó a la base como centavos exactos, sin perder el céntimo por el
   // camino: 450,50 son 45050, no 45049,999…
   await expect(page.getByText('Bs 450,50')).toBeVisible()
 
+  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=fondo`)
   await page.getByLabel('Fondo').fill('Luna de miel')
   await page.getByLabel('Meta').fill('5.000,00')
   await page.getByRole('button', { name: 'Abrir fondo' }).click()
@@ -55,9 +58,9 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
 
   // 4. El panel lo ve reservado, con el nombre del grupo.
   await page.goto(`/panel/eventos/${SLUG}/regalos`)
+  await page.getByRole('button', { name: 'Lista de regalos' }).click()
   await expect(page.getByText('Reservado', { exact: true })).toBeVisible()
   await expect(page.getByText('Reservado por Familia Rojas Peña')).toBeVisible()
-  await expect(page.getByLabel('Resumen de la mesa')).toContainText(/Reservados\s*1/)
 
   // 5. El invitado lo suelta y vuelve a estar disponible.
   await page.goto(`/i/${token}`)

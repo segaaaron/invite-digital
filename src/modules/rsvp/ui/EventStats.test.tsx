@@ -27,24 +27,22 @@ describe('EventStats', () => {
     expect(screen.getByText('5 de 10')).toBeInTheDocument()
   })
 
-  it('desglosa el RSVP en asisten, no asisten y sin responder', () => {
+  it('es el embudo de la maqueta: invitados, respondieron y confirmaron', () => {
     render(<EventStats stats={stats(CUATRO)} />)
 
-    expect(screen.getByText(/^asisten$/i)).toBeInTheDocument()
-    expect(screen.getByText(/^no asisten$/i)).toBeInTheDocument()
-    expect(screen.getByText(/^sin responder$/i)).toBeInTheDocument()
+    expect(screen.getByText('Grupos invitados')).toBeInTheDocument()
+    expect(screen.getByText('Respondieron')).toBeInTheDocument()
+    expect(screen.getByText('Confirmaron')).toBeInTheDocument()
   })
 
-  it('los porcentajes del desglose suman 100 y ninguno es NaN', () => {
+  it('no repite el desglose del donut que tiene al lado', () => {
     render(<EventStats stats={stats(CUATRO)} />)
+    expect(screen.queryByText(/^no asisten$/i)).not.toBeInTheDocument()
+  })
 
-    const textos = screen.getAllByText(/%$/).map((n) => Number.parseInt(n.textContent ?? '', 10))
-    expect(textos.some(Number.isNaN)).toBe(false)
-
-    const desglose = screen
-      .getAllByTestId('desglose-porcentaje')
-      .map((n) => Number.parseInt(n.textContent ?? '', 10))
-    expect(desglose.reduce((a, b) => a + b, 0)).toBe(100)
+  it('ninguna cifra del embudo sale como NaN', () => {
+    render(<EventStats stats={stats(CUATRO)} />)
+    expect(screen.queryByText(/nan/i)).not.toBeInTheDocument()
   })
 
   it('sin invitados lo dice en vez de pintar ceros y porcentajes', () => {
@@ -65,13 +63,10 @@ describe('EventStats', () => {
     expect(screen.queryByText(/móvil|escritorio/i)).not.toBeInTheDocument()
   })
 
-  it('con todos pendientes el desglose sigue cerrando en 100', () => {
+  it('con todos pendientes el embudo se estrecha a cero sin romperse', () => {
     render(<EventStats stats={stats([{ seats: 2, attending: null }])} />)
-
-    const desglose = screen
-      .getAllByTestId('desglose-porcentaje')
-      .map((n) => Number.parseInt(n.textContent ?? '', 10))
-    expect(desglose.reduce((a, b) => a + b, 0)).toBe(100)
+    expect(screen.getByText('Respondieron')).toBeInTheDocument()
+    expect(screen.queryByText(/nan/i)).not.toBeInTheDocument()
   })
 
   it('sin cupos declarados no pinta el porcentaje de cupos: no hay contra qué medirlo', () => {

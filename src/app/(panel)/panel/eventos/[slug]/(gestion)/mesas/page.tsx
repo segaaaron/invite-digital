@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events, guests, plans, venue } from '@/app/composition/container'
 import { dietaryReport } from '@/modules/guests'
@@ -6,7 +5,9 @@ import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
+import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
+import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatingToolbar } from '@/modules/venue/ui/SeatingToolbar'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
@@ -45,33 +46,24 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
   if (isErr(seating)) throw new Error(seating.error.detail)
 
   const { tables, zones, unseated, totalSeats, totalConfirmed } = seating.value
+  const asignados = tables.reduce((suma, mesa) => suma + mesa.taken, 0)
+  // El carril más largo es el del menú más pedido: las barras se comparan entre sí.
+  const comensalesMaximos = menus.reduce((max, linea) => Math.max(max, linea.count), 0)
 
   return (
     <>
       <PanelHeader
         actions={
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
-            href={`/panel/eventos/${event.value.slug}/mesas/imprimir`}
-          >
-            Imprimir plan ↓
-          </Link>
+          <SeatingActions eventId={event.value.id} eventSlug={event.value.slug} unseatedCount={unseated.length} />
         }
         kicker="Distribución"
-        meta={event.value.title}
+        meta={`${tables.length} mesas · capacidad ${totalSeats} · ${asignados}/${totalSeats} asignados`}
         title="Mesas"
       />
 
       <div className="flex flex-col gap-4.5">
-        <PanelCard title="Reparto">
-          <SeatingToolbar
-            eventId={event.value.id}
-            eventSlug={event.value.slug}
-            tables={tables}
-            unseated={unseated}
-            totalSeats={totalSeats}
-            totalConfirmed={totalConfirmed}
-          />
+        <PanelCard id="anadir-mesa" title="Reparto">
+          <SeatingToolbar eventId={event.value.id} eventSlug={event.value.slug} tables={tables} unseated={unseated} />
         </PanelCard>
 
         <PanelCard title="Invitados sin mesa">
@@ -84,19 +76,22 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
               Ninguna persona cargada tiene restricción alimentaria. Se cargan en la sección Invitados.
             </p>
           ) : (
-            <ul className="flex flex-col">
-              {menus.map((linea) => (
-                <li
-                  key={linea.note}
-                  className="flex items-center justify-between gap-4 border-b border-dotted border-line py-2.5 last:border-none"
-                >
-                  <span className="text-[14px] text-ink">{linea.note}</span>
-                  <span className="font-mono text-[13px] text-ink-soft">
-                    {linea.count} comensal{linea.count === 1 ? '' : 'es'}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <p className="mb-3 text-[12px] text-ink-mute">
+                {totalConfirmed} comensales confirmados · para compartir con el servicio de banquetes
+              </p>
+              <ul className="flex flex-col">
+                {menus.map((linea) => (
+                  <li key={linea.note}>
+                    <BarRow
+                      label={linea.note}
+                      ratio={comensalesMaximos === 0 ? 0 : linea.count / comensalesMaximos}
+                      value={String(linea.count)}
+                    />
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </PanelCard>
 

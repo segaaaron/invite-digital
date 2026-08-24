@@ -40,8 +40,6 @@ const props = {
   eventSlug: 'boda',
   tables: [mesa],
   unseated: [grupo('b', 'Camila Vargas', null)],
-  totalSeats: 8,
-  totalConfirmed: 4,
 }
 
 beforeEach(() => {
@@ -50,12 +48,6 @@ beforeEach(() => {
 })
 
 describe('SeatingToolbar', () => {
-  it('resume los sitios del salón frente a los comensales confirmados', () => {
-    render(<SeatingToolbar {...props} />)
-    expect(screen.getByLabelText('Sitios del salón')).toHaveTextContent('8')
-    expect(screen.getByLabelText('Comensales confirmados')).toHaveTextContent('4')
-  })
-
   it('crea una mesa con su etiqueta, cupo y forma', () => {
     render(<SeatingToolbar {...props} />)
     fireEvent.change(screen.getByLabelText('Etiqueta'), { target: { value: 'Mesa 02' } })
@@ -77,19 +69,6 @@ describe('SeatingToolbar', () => {
     fireEvent.change(screen.getByLabelText('Etiqueta'), { target: { value: 'Mesa 01' } })
     fireEvent.click(screen.getByRole('button', { name: /añadir mesa/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya hay una «Mesa 01»')
-  })
-
-  it('reparte lo que falta y cuenta lo que quedó fuera', async () => {
-    autoAssignAction.mockResolvedValueOnce({ ok: true, message: '1 repartido. Sin sitio: Los Nieto.' } as never)
-    render(<SeatingToolbar {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: /repartir/i }))
-    expect(autoAssignAction).toHaveBeenCalledWith({ eventId: 'e1', eventSlug: 'boda' })
-    expect(await screen.findByRole('status')).toHaveTextContent('Sin sitio: Los Nieto.')
-  })
-
-  it('no ofrece repartir cuando no queda nadie sin mesa', () => {
-    render(<SeatingToolbar {...props} unseated={[]} />)
-    expect(screen.queryByRole('button', { name: /repartir/i })).not.toBeInTheDocument()
   })
 
   it('el buscador dice en qué mesa se sienta un grupo', () => {
