@@ -122,6 +122,36 @@ Plan B— siguen sin construirse.
 - **Un solo `<main>` por página.** La carcasa del panel emite el suyo; el layout raíz usa
   `div`. Dos anidados dejan la página con dos regiones principales.
 
+### Notas de la piel del panel (`src/shared/design/ui/panel/PanelKit.tsx`)
+
+- **Ningún botón del panel se escribe a mano.** Botón, píldora de estado, chip de filtro,
+  buscador, botón de icono y fila de barra viven en `PanelKit`. Pintarlos con clases
+  sueltas en cada vista fue lo que metió el dorado de la web pública donde
+  `Dashboard.html` pone tinta oscura: catorce botones, catorce sitios donde desviarse.
+- **La acción principal es negra; el resto, blanca con borde.** El dorado se queda en la
+  web pública y en la página del invitado. La excepción es lo que va **sobre la tarjeta
+  oscura** —modo puerta, fondos en efectivo—, donde la tinta no contrasta y la llamada es
+  dorada.
+- **El estado se dice con la palabra, y el color acompaña.** `Pill` lleva siempre el texto
+  («Asistirá», «Sin leer»); quien no distingue el verde del rojo lo lee igual.
+- **Las cifras grandes van en Cormorant con `lining-nums`.** Sin esa clase la fuente usa
+  números de estilo antiguo —el 1 se lee como I y el 0 como paréntesis—, que es lo que en
+  su día las pasó a monoespaciada y alejó el panel de la maqueta.
+- **El borde de las tarjetas del panel es `--color-line-panel`, neutro.** `--color-line`
+  es dorado al 22 % y es de la web pública: en el panel dibujaba un marco de más.
+
+### Notas del estado que vive en la URL
+
+- **Lo que la maqueta abre con un botón de cabecera se abre con un parámetro**, no con
+  `useState`: `?panel=alta` y `?panel=envio` en Invitados, `?panel=regalo` y
+  `?panel=fondo` en Regalos, `?vista=regalos` en el conmutador de la mesa, `?plan=<slug>`
+  en «Tu plan». Cada Server Action revalida el árbol y **remonta** el componente: con
+  estado en el cliente, el conmutador saltaba solo a los fondos justo después de añadir un
+  regalo y el atelier veía desaparecer lo que acababa de crear. Además así es enlazable y
+  sobrevive a recargar.
+- **Las e2e navegan con ese parámetro** (`/invitados?panel=alta`), no pulsan el botón: no
+  dependen de un clic previo para llegar al formulario.
+
 ### Notas del reparto de invitaciones (`src/modules/guests/`)
 
 - **Reenviar rota el token.** No se puede «volver a enseñar» un enlace que no existe —en
