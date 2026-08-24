@@ -20,10 +20,24 @@ const alta: Allowance = {
 }
 
 describe('PlanCard', () => {
-  it('marca el plan actual', () => {
+  it('marca el plan actual arriba y en el pie, como la maqueta', () => {
     render(<PlanCard current plan={atelier} />)
 
-    expect(screen.getByText(/plan actual/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/plan actual/i)).toHaveLength(2)
+  })
+
+  it('el plan actual no ofrece nada que pulsar', () => {
+    render(<PlanCard changeHref="/panel/eventos/boda/plan?plan=atelier" current plan={atelier} />)
+
+    expect(screen.queryByRole('link', { name: /cambiar a/i })).not.toBeInTheDocument()
+  })
+
+  it('los demás llevan a pedir el cambio, con su plan ya elegido', () => {
+    render(<PlanCard changeHref="/panel/eventos/boda/plan?plan=atelier" current={false} plan={atelier} />)
+
+    expect(screen.getByRole('link', { name: /cambiar a/i }).getAttribute('href')).toBe(
+      '/panel/eventos/boda/plan?plan=atelier',
+    )
   })
 
   it('el que no es el actual no se marca', () => {

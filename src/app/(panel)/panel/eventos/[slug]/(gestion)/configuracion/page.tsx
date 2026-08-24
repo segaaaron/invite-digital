@@ -7,6 +7,7 @@ import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
+import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Configuración' }
@@ -52,6 +53,22 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
               Así verán tus invitados la información básica del evento. El enlace de solo lectura es el que se comparte
               con el cliente; el de cada invitado se reparte desde la sección Invitados.
             </p>
+
+            {/* La ficha de la maqueta: lo que el invitado ve antes de abrir nada. */}
+            <div className="rounded-[14px] border border-line-panel bg-bg-raised p-5">
+              <p className="font-display text-[22px] italic text-ink">{event.value.title}</p>
+              <p className="mt-1.5 text-[12px] text-ink-soft">
+                {new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </p>
+              <p className="mt-1.5 font-mono text-[11px] break-all text-ink-mute">{`/i/${event.value.slug}`}</p>
+              <p className="mt-3">
+                {conContrasena ? <Pill tone="pending">Protegida</Pill> : <Pill tone="ok">Pública</Pill>}
+              </p>
+            </div>
             <ClientSharePanel
               eventId={event.value.id}
               eventSlug={event.value.slug}

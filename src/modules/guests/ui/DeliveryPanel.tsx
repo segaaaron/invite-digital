@@ -80,7 +80,7 @@ export function DeliveryPanel({
               Copiar
             </button>
             <a
-              className="rounded-full bg-gold px-3.5 py-1.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
+              className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
               href={whatsappLink({
                 // Por `groupId`, nunca por etiqueta: dos grupos pueden llamarse igual, y
                 // el enlace saldría con el teléfono del otro.

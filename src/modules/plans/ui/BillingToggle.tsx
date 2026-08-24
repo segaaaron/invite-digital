@@ -9,6 +9,8 @@ export type PlanCardData = {
   readonly current: boolean
   readonly allowance: Allowance
   readonly price?: PlanPrice | undefined
+  /** Adónde lleva «Cambiar a…» desde esta tarjeta. */
+  readonly changeHref?: string | undefined
 }
 
 /**
@@ -32,6 +34,7 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
       {plans.map((plan) => (
         <PlanCard
           billing={billing}
+          changeHref={plan.changeHref}
           current={plan.current}
           key={plan.id}
           plan={plan.allowance}
@@ -47,7 +50,7 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
     <button
       aria-pressed={billing === clave}
       className={`rounded-full border px-3.5 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase transition-colors ${
-        billing === clave ? 'border-gold bg-gold/15 text-ink' : 'border-line text-ink-mute hover:border-gold/50'
+        billing === clave ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
       }`}
       onClick={() => setBilling(clave)}
       type="button"

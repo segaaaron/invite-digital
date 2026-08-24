@@ -13,10 +13,10 @@ type Props = {
 }
 
 const PILL =
-  'rounded-[var(--radius-pill)] border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40'
+  'cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink uppercase transition-colors hover:border-ink disabled:opacity-40'
 
 const PILL_ON =
-  'rounded-[var(--radius-pill)] border border-gold-deep bg-gold-deep px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised disabled:opacity-40'
+  'cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 px-4 py-2 text-[9px]'
 
 /** Panel en español: aquí no se negocia idioma, a diferencia de la página del invitado. */
 const cuando = (d: Date): string =>
@@ -61,13 +61,24 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
 
   return (
     <article
-      className={`flex flex-col gap-3 rounded-card border bg-bg-raised p-5 ${sinLeer ? 'border-gold' : 'border-line'}`}
+      className={`flex flex-col gap-3 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-5 shadow-card ${
+        sinLeer ? 'border-gold/60' : 'border-line-panel'
+      }`}
     >
-      <header className="flex flex-wrap items-baseline justify-between gap-3">
-        <h3 className="font-display text-[18px] font-light text-ink">{message.groupLabel}</h3>
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <span className="flex items-center gap-3">
+          {/* El avatar es decorativo: la etiqueta del grupo va escrita al lado. */}
+          <span
+            aria-hidden
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[16px] italic text-white"
+          >
+            {message.groupLabel.slice(0, 1)}
+          </span>
+          <h3 className="text-[13px] font-medium text-ink">{message.groupLabel}</h3>
+        </span>
         <div className="flex items-center gap-3">
           {sinLeer ? (
-            <span className="rounded-[var(--radius-pill)] border border-gold px-3 py-1 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep">
+            <span className="rounded-[var(--radius-pill)] bg-pill-pending px-2.5 py-1 font-mono text-[9px] tracking-[0.25em] text-pill-pending-ink uppercase">
               Sin leer
             </span>
           ) : null}

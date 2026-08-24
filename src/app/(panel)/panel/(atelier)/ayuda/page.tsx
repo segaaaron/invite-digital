@@ -22,7 +22,7 @@ export default async function HelpPage() {
           <div className="flex flex-col gap-4 text-[13px] leading-[1.7] text-ink-soft">
             <p>¿La respuesta no está arriba? Escríbenos y lo vemos contigo.</p>
             <a
-              className="w-fit rounded-full bg-gold px-5 py-2.5 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
+              className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
               href={`https://wa.me/${BRAND.whatsapp.replace('+', '')}`}
               rel="noopener noreferrer"
               target="_blank"

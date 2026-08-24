@@ -15,7 +15,7 @@ export function FeatureLocked({ title, reason, eventSlug }: { title: string; rea
       <p className="text-[14px] leading-relaxed text-ink-mute">{reason}</p>
       <div className="flex items-center gap-4">
         <Link
-          className="rounded-[var(--radius-pill)] bg-gold px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised"
+          className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
           href={`/panel/eventos/${eventSlug}/plan`}
         >
           Ver planes

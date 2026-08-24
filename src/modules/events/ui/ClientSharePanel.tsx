@@ -33,7 +33,7 @@ export function ClientSharePanel({ eventId, eventSlug, live }: Props) {
           <input name="eventId" type="hidden" value={eventId} readOnly />
           <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
           <button
-            className="rounded-[var(--radius-pill)] bg-gold px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised disabled:opacity-60"
+            className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
             disabled={isPending}
             type="submit"
           >

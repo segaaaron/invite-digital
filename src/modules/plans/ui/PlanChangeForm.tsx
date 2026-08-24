@@ -17,7 +17,7 @@ const MENSAJES: Record<PlansErrorKind, string> = {
 }
 
 const FIELD_CLASS =
-  'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-gold'
+  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
 
 const LABEL_CLASS = 'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
 
@@ -25,10 +25,13 @@ export function PlanChangeForm({
   eventId,
   eventSlug,
   options,
+  defaultPlanSlug = null,
 }: {
   eventId: string
   eventSlug: string
   options: ReadonlyArray<{ id: string; slug: string }>
+  /** El plan que se pulsó en su tarjeta, ya elegido en el desplegable. */
+  defaultPlanSlug?: string | null
 }) {
   const [state, formAction, isPending] = useActionState(requestPlanChangeAction, INITIAL)
   const planId = useId()
@@ -39,13 +42,19 @@ export function PlanChangeForm({
   if (options.length === 0) return null
 
   return (
-    <form action={formAction} className="flex flex-col gap-5 rounded-[18px] border border-line p-6">
+    <form action={formAction} className="flex flex-col gap-5 rounded-[18px] border border-line-panel p-6">
       <input name="eventId" type="hidden" value={eventId} readOnly />
       <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
 
       <label className={LABEL_CLASS} htmlFor={planId}>
         Plan que se quiere
-        <select className={FIELD_CLASS} id={planId} name="planId" required>
+        <select
+          className={FIELD_CLASS}
+          defaultValue={options.find((option) => option.slug === defaultPlanSlug)?.id}
+          id={planId}
+          name="planId"
+          required
+        >
           {options.map((option) => (
             <option key={option.id} value={option.id}>
               {option.slug}
@@ -72,7 +81,7 @@ export function PlanChangeForm({
       ) : null}
 
       <button
-        className="self-start rounded-[var(--radius-pill)] bg-gold px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised disabled:cursor-not-allowed disabled:opacity-60"
+        className="self-start cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isPending}
         type="submit"
       >

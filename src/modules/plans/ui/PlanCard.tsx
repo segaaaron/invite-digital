@@ -1,3 +1,4 @@
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import type { Allowance, PlanFeature } from '../domain/allowance'
 import { hasFeature } from '../domain/allowance'
 
@@ -47,30 +48,33 @@ export function PlanCard({
   current,
   price,
   billing = 'once',
+  changeHref,
 }: {
   plan: Allowance
   current: boolean
   price?: PlanPrice | undefined
   /** `once` es el pago por evento; `annual` solo existe si el plan tiene precio anual. */
   billing?: 'once' | 'annual' | undefined
+  /** Adónde lleva «Cambiar a…». Sin él la tarjeta solo informa. */
+  changeHref?: string | undefined
 }) {
   return (
     <article
-      className={`flex flex-col gap-4 rounded-[18px] border p-6 ${current ? 'border-gold' : 'border-line'}`}
+      className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-6 shadow-card ${
+        current ? 'border-gold' : 'border-line-panel'
+      }`}
       aria-label={`Plan ${plan.planSlug}`}
     >
-      <header className="flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-[19px] font-light text-ink">{plan.planSlug}</h3>
+      <header className="flex flex-col gap-1">
         {current ? (
-          <span className="rounded-full border border-gold px-3 py-1 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep">
-            Plan actual
-          </span>
+          <p className="font-mono text-[9px] tracking-[0.35em] text-gold-deep uppercase">Plan actual</p>
         ) : null}
+        <h3 className="font-display text-[22px] font-light italic text-ink">{plan.planSlug}</h3>
       </header>
 
       {price === undefined ? null : (
         <p className="flex items-baseline gap-2">
-          <span className="font-display text-[30px] leading-none font-light text-ink">
+          <span className="font-display text-[34px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">
             {formatPrice(billing === 'annual' && price.annualCents !== null ? price.annualCents : price.cents, price.currency)}
           </span>
           <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
@@ -86,9 +90,13 @@ export function PlanCard({
         </strong>
       </p>
 
-      <ul className="flex flex-col gap-2">
+      <ul className="flex flex-col">
         {NOMBRES.map(({ feature, label }) => (
-          <li aria-label={label} className="flex items-center justify-between gap-3 text-[13px] text-ink-mute" key={feature}>
+          <li
+            aria-label={label}
+            className="flex items-center justify-between gap-3 border-b border-line-panel py-2.5 text-[13px] text-ink-mute last:border-none"
+            key={feature}
+          >
             <span>{label}</span>
             <span className={hasFeature(plan, feature) ? 'text-ink' : 'text-ink-mute/60'}>
               {hasFeature(plan, feature) ? 'Sí' : 'No'}
@@ -96,6 +104,19 @@ export function PlanCard({
           </li>
         ))}
       </ul>
+
+      {/* El pie de la maqueta: una llamada por tarjeta, y la actual sin nada que pulsar. */}
+      <div className="mt-auto pt-2">
+        {current ? (
+          <p className="rounded-[var(--radius-pill)] border border-line-panel py-2.5 text-center font-mono text-[10px] tracking-[0.25em] text-ink-mute uppercase">
+            Plan actual
+          </p>
+        ) : changeHref === undefined ? null : (
+          <PanelButton className="w-full" href={changeHref} variant="primary">
+            Cambiar a {plan.planSlug}
+          </PanelButton>
+        )}
+      </div>
     </article>
   )
 }

@@ -15,9 +15,16 @@ export const metadata = { title: 'Plan' }
 export const dynamic = 'force-dynamic'
 
 
-export default async function PlanPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function PlanPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ plan?: string }>
+}) {
   await requireSession()
   const { slug } = await params
+  const { plan: planPedido } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -57,24 +64,26 @@ export default async function PlanPage({ params }: { params: Promise<{ slug: str
       <PanelHeader kicker="Cuenta" meta={event.value.title} title="Tu plan" />
 
       <div className="flex flex-col gap-4.5">
-        <PanelCard title="Planes">
-          {/* El conmutador solo aparece si algún plan tiene precio anual cargado: hoy se
-              cobran una vez por evento, y pintar una suscripción que nadie vende haría
-              esperar una factura mensual que no existe. */}
-          <BillingToggle
-            plans={tarjetas.map((tarjeta) => ({
-              id: tarjeta.id,
-              current: tarjeta.allowance.planSlug === actual,
-              allowance: tarjeta.allowance,
-              price: tarjeta.price,
-            }))}
-          />
-        </PanelCard>
+        {/* Las tarjetas van sueltas sobre el marfil, como en la maqueta: meterlas dentro
+            de otra tarjeta las encerraba en un marco que la maqueta no tiene.
+            El conmutador solo aparece si algún plan tiene precio anual cargado: hoy se
+            cobran una vez por evento, y pintar una suscripción que nadie vende haría
+            esperar una factura mensual que no existe. */}
+        <BillingToggle
+          plans={tarjetas.map((tarjeta) => ({
+            id: tarjeta.id,
+            current: tarjeta.allowance.planSlug === actual,
+            allowance: tarjeta.allowance,
+            price: tarjeta.price,
+            changeHref: `/panel/eventos/${event.value.slug}/plan?plan=${tarjeta.allowance.planSlug}#cambio`,
+          }))}
+        />
 
-        <PanelCard title="Cambio de plan">
+        <PanelCard id="cambio" title="Cambio de plan">
           {isErr(pendiente) || pendiente.value === null ? (
             // No hay cobro en línea: esto registra la petición, no la cobra ni la aplica.
             <PlanChangeForm
+              defaultPlanSlug={planPedido ?? null}
               eventId={event.value.id}
               eventSlug={event.value.slug}
               options={tarjetas
