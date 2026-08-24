@@ -1,7 +1,9 @@
 export type ActivityItem = {
   readonly at: Date
-  readonly icon: string
-  readonly text: string
+  /** Quién lo hizo. Da la inicial del avatar y la primera línea. */
+  readonly actor: string
+  /** Qué hizo, en minúscula y sin repetir el nombre. */
+  readonly action: string
 }
 
 const MAXIMO = 10
@@ -30,14 +32,22 @@ export function ActivityFeed({ items }: { items: readonly ActivityItem[] }) {
     <ul className="flex flex-col">
       {items.map((item) => (
         <li
-          key={`${item.at.toISOString()}-${item.text}`}
-          className="flex items-baseline gap-3 border-b border-dotted border-line py-2.5 last:border-none"
+          key={`${item.at.toISOString()}-${item.actor}-${item.action}`}
+          className="flex gap-3 border-b border-line-panel py-3 last:border-none"
         >
-          <span aria-hidden className="text-[13px]">
-            {item.icon}
+          {/* El avatar es decorativo: el nombre va escrito al lado, en texto. */}
+          <span
+            aria-hidden
+            data-avatar
+            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[16px] italic text-white"
+          >
+            {item.actor.slice(0, 1)}
           </span>
-          <span className="flex-1 text-[13.5px] text-ink">{item.text}</span>
-          <span className="font-mono text-[10px] whitespace-nowrap text-ink-mute">
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[13px] font-medium text-ink">{item.actor}</span>
+            <span className="block text-[12px] text-ink-soft">{item.action}</span>
+          </span>
+          <span className="font-mono text-[9px] tracking-[0.2em] whitespace-nowrap text-ink-mute uppercase">
             {item.at.toLocaleDateString('es-BO', { day: 'numeric', month: 'long' })}
           </span>
         </li>

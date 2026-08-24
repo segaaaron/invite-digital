@@ -28,7 +28,9 @@ export function PanelFrame({
       <div className="bg-shell-deep">
         <PanelSidebar brandSub={brandSub} sections={sections} user={user} />
       </div>
-      <main className="relative z-1 min-w-0 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(90_112_92/0.14),transparent_55%)] p-4.5 md:p-7">
+      {/* Los tres focos de la maqueta, fijos al viewport: el tercero es el que sostiene
+          el pie de una página larga, que sin él se quedaba en marfil plano. */}
+      <main className="relative z-1 min-w-0 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(90_112_92/0.14),transparent_55%),radial-gradient(ellipse_900px_800px_at_50%_120%,rgb(90_112_92/0.08),transparent_60%)] bg-fixed px-4.5 py-4.5 md:px-8 md:py-7">
         {children}
       </main>
     </div>

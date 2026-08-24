@@ -7,6 +7,7 @@ const repo = (rows: Array<{ seats: number; attending: number | null }>): RsvpRep
   append: vi.fn(),
   latestFor: vi.fn(),
   tallyRowsFor: vi.fn(async () => rows),
+    respondedAtsFor: vi.fn(async () => []),
 })
 
 describe('getEventStats', () => {
@@ -41,6 +42,7 @@ describe('getEventStats', () => {
       tallyRowsFor: vi.fn(async () => {
         throw new Error('sin conexión')
       }),
+      respondedAtsFor: vi.fn(async () => []),
     }
 
     const result = await getEventStats({ rsvp: roto })('e1')

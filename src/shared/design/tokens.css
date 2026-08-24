@@ -25,6 +25,24 @@
   /* Carcasa del panel, portada del diseño entregado: barra lateral oscura sobre cuerpo
      marfil. Los valores son los de `docs/design-reference/dashboard/Dashboard.html`,
      ajustados a la tinta de marca. */
+  /* Píldoras de estado de la maqueta del panel (`Dashboard.html`, clase `.pill`). El
+     estado se dice con fondo y texto, no solo con la palabra: una tabla de veinte filas
+     se lee de un vistazo por el color y se comprueba leyendo. */
+  --color-pill-ok: #e1ecd6;
+  --color-pill-ok-ink: #3a5a42;
+  --color-pill-no: #f4d8d0;
+  --color-pill-no-ink: #7a2c1a;
+  --color-pill-pending: #f0ebe0;
+  --color-pill-pending-ink: #8a7848;
+  --color-pill-maybe: #d6e6ec;
+  --color-pill-maybe-ink: #1a4a5a;
+
+  /* El borde de las tarjetas del panel es neutro, no dorado: en la maqueta las tarjetas
+     se separan del marfil por una sombra y una línea casi invisible. `--color-line`
+     —dorado al 22 %— es de la web pública y aquí dibujaba un marco de más. */
+  --color-line-panel: rgb(26 26 26 / 0.08);
+  --color-line-panel-strong: rgb(26 26 26 / 0.15);
+
   --color-shell: #1f1f1d;
   --color-shell-deep: #141412;
   --color-shell-ink: #f8f6f1;

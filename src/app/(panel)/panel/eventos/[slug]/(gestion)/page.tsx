@@ -7,8 +7,13 @@ import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { ActivityFeed, mergeActivity, type ActivityItem } from '@/modules/shell/ui/ActivityFeed'
-import { DonutChart, PanelCard, StatCard } from '@/modules/shell/ui/cards'
+import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/modules/shell/ui/cards'
+import { TimelineChart } from '@/modules/shell/ui/TimelineChart'
+import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+
+/** Las dos semanas del gráfico de la maqueta. */
+const DIAS_DEL_GRAFICO = 14
 
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   await requireSession()
@@ -34,6 +39,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       )
 
   const tally = await rsvp.tally(event.value.id)
+  const historial = await rsvp.timeline(event.value.id, DIAS_DEL_GRAFICO)
 
   // Cuánta gente ha llegado. Solo se lee si el plan trae la puerta: sin ella no hay
   // llegadas que contar, y una tira de ceros haría creer que la recepción ya empezó.
@@ -65,8 +71,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? []
     : libroResumen.value.map((mensaje) => ({
         at: mensaje.writtenAt,
-        icon: '💬',
-        text: `${mensaje.groupLabel} dejó un mensaje`,
+        actor: mensaje.groupLabel,
+        action: 'dejó un mensaje',
       }))
 
   const actividadLlegadas: ActivityItem[] =
@@ -74,8 +80,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ? []
       : puerta.value.arrivals.map((llegada) => ({
           at: llegada.arrivedAt,
-          icon: '✓',
-          text: `${puerta.value.groups.find((g) => g.id === llegada.guestGroupId)?.label ?? 'Un grupo'} llegó al evento`,
+          actor: puerta.value.groups.find((g) => g.id === llegada.guestGroupId)?.label ?? 'Un grupo',
+          action: 'llegó al evento',
         }))
 
   const actividadRegalos: ActivityItem[] =
@@ -83,7 +89,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ? []
       : mesaDeRegalos.value.gifts
           .filter((regalo) => regalo.claimedAt !== null)
-          .map((regalo) => ({ at: regalo.claimedAt!, icon: '🎁', text: `Reservaron «${regalo.name}»` }))
+          .map((regalo) => ({ at: regalo.claimedAt!, actor: regalo.name, action: 'quedó reservado' }))
 
   const actividad = mergeActivity(actividadMensajes, actividadLlegadas, actividadRegalos)
 
@@ -95,35 +101,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const salon = isErr(conSalon) ? null : await venue.seating(event.value.id)
   const mesas = salon === null || isErr(salon) ? null : salon.value
 
-  const fecha = new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  })
+  const fechaDelEvento = new Date(`${event.value.eventDate}T00:00:00`)
+  const fecha = fechaDelEvento.toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' })
+
+  // «Faltan N días» de la maqueta. Se cuenta en días de calendario, no en horas: a doce
+  // horas del evento la resta cruda diría «faltan 0 días».
+  const hoy = new Date()
+  const diasQueFaltan = Math.round(
+    (Date.UTC(fechaDelEvento.getFullYear(), fechaDelEvento.getMonth(), fechaDelEvento.getDate()) -
+      Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) /
+      86_400_000,
+  )
+  const cuentaAtras =
+    diasQueFaltan > 1 ? `faltan ${diasQueFaltan} días` : diasQueFaltan === 1 ? 'falta un día' : diasQueFaltan === 0 ? 'es hoy' : null
 
   return (
     <>
       <PanelHeader
         actions={
           <>
-            <Link
-              className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
-              href={`/panel/eventos/${event.value.slug}/configuracion`}
-            >
-              Compartir enlace
-            </Link>
-            <Link
-              className="rounded-full bg-gold px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase"
-              href={`/panel/eventos/${event.value.slug}/invitados`}
-            >
-              + Invitar
-            </Link>
+            <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Compartir enlace</PanelButton>
+            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados#exportar`}>Exportar lista</PanelButton>
+            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados`} variant="primary">
+              + Invitar persona
+            </PanelButton>
           </>
         }
         kicker={`Panel · ${event.value.title}`}
-        meta={fecha}
+        meta={cuentaAtras === null ? fecha : `${fecha} · ${cuentaAtras}`}
         title={`Bienvenida, ${event.value.title}`}
       />
+
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
         <StatCard label="Invitados" value={filas.length} icon="✉" detail={`${t ? t.seatsInvited : 0} cupos repartidos`} />
         <StatCard
@@ -133,17 +141,27 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           icon="✓"
           progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
         />
-        <StatCard label="Pendientes" value={t ? t.groupsPending : pendientes} icon="◔" />
+        <StatCard
+          label="Pendientes"
+          value={t ? t.groupsPending : pendientes}
+          icon="◔"
+          progress={filas.length > 0 ? pendientes / filas.length : 0}
+        />
         <StatCard
           label="Visitas a la invitación"
           value={vistas ? vistas.total : '—'}
-          detail={vistas && vistas.today > 0 ? `↑ ${vistas.today} hoy` : 'Nadie la ha abierto hoy'}
+          detail={vistas && vistas.today > 0 ? undefined : 'Nadie la ha abierto hoy'}
+          change={vistas && vistas.today > 0 ? { direction: 'up', text: `${vistas.today} hoy` } : undefined}
           icon="👁"
         />
       </div>
 
-      <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1.6fr_1fr]">
-        <PanelCard title="Estado de RSVPs">
+      {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
+      <div className="mb-5.5 grid items-start gap-4.5 lg:grid-cols-[1.6fr_1fr]">
+        <PanelCard
+          action={<PanelCardLink>{`Últimos ${DIAS_DEL_GRAFICO} días`}</PanelCardLink>}
+          title="Estado de RSVPs"
+        >
           <DonutChart
             big={filas.length === 0 ? '—' : `${Math.round((respondieron / filas.length) * 100)}%`}
             caption="RESPONDIERON"
@@ -153,116 +171,162 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               { label: 'Sin responder', value: pendientes, color: 'var(--color-gold-light)' },
             ]}
           />
+          {isErr(historial) ? (
+            <p className="mt-4 text-[12px] text-danger" role="alert">
+              No pudimos leer el historial de respuestas. La base no responde; vuelve a intentarlo en un momento.
+            </p>
+          ) : (
+            <TimelineChart bars={historial.value} caption={`RSVPs por día · últimas ${DIAS_DEL_GRAFICO / 7} semanas`} />
+          )}
         </PanelCard>
+
         <PanelCard title="Actividad reciente">
           <ActivityFeed items={actividad} />
         </PanelCard>
       </div>
 
-      <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1fr_1.6fr]">
-        <PanelCard title="Llegada">
-          <ArrivalStrip tally={llegadas} />
-        </PanelCard>
+      {/* Los invitados recientes ocupan el ancho entero, como en la maqueta. */}
+      <PanelCard
+        action={
+          <Link href={`/panel/eventos/${event.value.slug}/invitados`}>
+            <PanelCardLink>Ver todos →</PanelCardLink>
+          </Link>
+        }
+        className="mb-5.5"
+        title="Invitados recientes"
+      >
+        {isErr(groups) ? (
+          <p className="text-[13px] text-danger" role="alert">
+            No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
+          </p>
+        ) : filas.length === 0 ? (
+          <p className="text-[14px] text-ink-soft">Todavía no hay invitados. Se cargan en la sección Invitados de la barra.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr>
+                  {['Grupo', 'RSVP', 'Confirmados', 'Cupos', 'Mesa'].map((columna) => (
+                    <th
+                      key={columna}
+                      className="border-b border-line-panel px-3.5 py-3 text-left font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
+                      scope="col"
+                    >
+                      {columna}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filas.slice(0, 6).map((fila) => (
+                  <tr key={fila.id} className="hover:bg-bg-raised">
+                    <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink">{fila.label}</td>
+                    <td className="border-b border-line-panel px-3.5 py-3">
+                      {fila.revokedAt !== null ? (
+                        <Pill tone="no">Revocada</Pill>
+                      ) : fila.confirmed === null ? (
+                        <Pill tone="pending">Pendiente</Pill>
+                      ) : fila.confirmed === 0 ? (
+                        <Pill tone="no">No podrá</Pill>
+                      ) : (
+                        <Pill tone="ok">Asistirá</Pill>
+                      )}
+                    </td>
+                    <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">
+                      {fila.confirmed ?? '—'}
+                    </td>
+                    <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">{fila.seats}</td>
+                    <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
+                      {mesas?.tables.find((mesa) => mesa.groups.some((grupo) => grupo.id === fila.id))?.label ?? '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </PanelCard>
+
+      {/* Distribución de mesas y acciones rápidas, otra vez 1.6fr / 1fr. */}
+      <div className="grid items-start gap-4.5 lg:grid-cols-[1.6fr_1fr]">
         <PanelCard
           action={
-            <Link
-              className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase"
-              href={`/panel/eventos/${event.value.slug}/invitados`}
-            >
-              Ver todos →
+            <Link href={`/panel/eventos/${event.value.slug}/mesas`}>
+              <PanelCardLink>Editar asignaciones →</PanelCardLink>
             </Link>
           }
-          title="Invitados recientes"
+          title="Distribución de mesas"
         >
-          {isErr(groups) ? (
-            <p className="text-[13px] text-gold-deep" role="alert">
-              No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
-            </p>
-          ) : filas.length === 0 ? (
-            <p className="text-[14px] text-ink-soft">
-              Todavía no hay invitados. Se cargan en la sección Invitados de la barra.
-            </p>
+          {mesas === null ? (
+            <p className="text-[13px] text-ink-mute">El plan de este evento no incluye el plano del salón.</p>
+          ) : mesas.tables.length === 0 ? (
+            <p className="text-[13px] text-ink-mute">Todavía no hay mesas. Se crean en la sección Mesas.</p>
           ) : (
-            <ul className="flex flex-col">
-              {filas.slice(0, 5).map((fila) => (
-                <li
-                  key={fila.id}
-                  className="flex flex-wrap items-center gap-3 border-b border-dotted border-line py-2.5 last:border-none"
-                >
-                  <span className="flex-1 text-[14px] text-ink">{fila.label}</span>
-                  <span className="font-mono text-[12px] text-ink-soft">{`${fila.confirmed ?? '—'} / ${fila.seats}`}</span>
-                  <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-                    {fila.revokedAt !== null ? 'Revocada' : fila.confirmed === null ? 'Pendiente' : 'Confirmada'}
-                  </span>
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="grid grid-cols-4 gap-1.5">
+                {mesas.tables.map((mesa) => {
+                  const cupo = mesa.taken + mesa.free
+                  const lleno = mesa.free === 0
+                  return (
+                    <li
+                      key={mesa.id}
+                      className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg border text-center ${
+                        lleno
+                          ? 'border-sage bg-sage text-white'
+                          : mesa.taken > 0
+                            ? 'border-line-panel bg-pill-ok text-ink'
+                            : 'border-line-panel bg-bg-raised text-ink'
+                      }`}
+                    >
+                      <span className="font-display text-[16px] font-medium [font-variant-numeric:lining-nums]">
+                        {mesa.label.replace(/^mesa\s*/i, '')}
+                      </span>
+                      <span className="font-mono text-[8px] tracking-[0.2em] opacity-70">
+                        {mesa.taken}/{cupo}
+                      </span>
+                    </li>
+                  )
+                })}
+              </ul>
+              <p className="mt-4 flex justify-between font-mono text-[11px] text-ink-mute">
+                <span>
+                  {mesas.tables.length} mesas · capacidad {mesas.tables.reduce((suma, mesa) => suma + mesa.taken + mesa.free, 0)}
+                </span>
+                <span>{mesas.unseated.length} grupos sin mesa</span>
+              </p>
+            </>
           )}
         </PanelCard>
 
-
-        <div className="grid gap-4.5 lg:grid-cols-2">
-          <PanelCard
-            action={
-              <Link
-                className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase"
-                href={`/panel/eventos/${event.value.slug}/mesas`}
-              >
-                Editar asignaciones →
-              </Link>
-            }
-            title="Distribución de mesas"
-          >
-            {mesas === null ? (
-              <p className="text-[13px] text-ink-mute">El plan de este evento no incluye el plano del salón.</p>
-            ) : mesas.tables.length === 0 ? (
-              <p className="text-[13px] text-ink-mute">Todavía no hay mesas. Se crean en la sección Mesas.</p>
-            ) : (
-              <>
-                <ul className="flex flex-wrap gap-2.5">
-                  {mesas.tables.map((mesa) => {
-                    const sentados = mesa.taken
-                    return (
-                      <li
-                        key={mesa.id}
-                        className="flex size-20 flex-col items-center justify-center rounded-full border border-line bg-bg-top text-center"
-                      >
-                        <span className="font-mono text-[10px] text-ink-mute uppercase">{mesa.label}</span>
-                        <span className="font-mono text-[13px] text-ink">
-                          {sentados}/{sentados + mesa.free}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
-                <p className="mt-4 flex justify-between font-mono text-[11px] text-ink-mute">
-                  <span>{mesas.tables.length} mesas</span>
-                  <span>{mesas.unseated.length} grupos sin mesa</span>
-                </p>
-              </>
-            )}
-          </PanelCard>
-
+        <div className="flex flex-col gap-4.5">
           <PanelCard title="Acciones rápidas">
-            <div className="flex flex-col gap-2.5">
+            <div className="flex flex-col gap-2">
               {[
-                { href: `/panel/eventos/${event.value.slug}/invitados`, t: 'Invitar a un grupo', d: 'Genera su enlace propio' },
-                { href: `/panel/eventos/${event.value.slug}/configuracion`, t: 'Editar la invitación', d: 'Fecha, plantilla e idioma' },
-                { href: `/panel/eventos/${event.value.slug}/mensajes`, t: 'Leer los mensajes', d: `${sinLeerResumen} sin leer` },
-                { href: `/panel/eventos/${event.value.slug}/checkin`, t: 'Preparar la puerta', d: 'Escáner y lista de llegada' },
+                { href: `/panel/eventos/${event.value.slug}/invitados`, icon: '✉', t: 'Invitar a un grupo', d: 'Genera su enlace propio' },
+                { href: `/panel/eventos/${event.value.slug}/configuracion`, icon: '✎', t: 'Editar la invitación', d: 'Fecha, plantilla e idioma' },
+                { href: `/panel/eventos/${event.value.slug}/mensajes`, icon: '💬', t: 'Leer los mensajes', d: `${sinLeerResumen} sin leer` },
+                { href: `/panel/eventos/${event.value.slug}/checkin`, icon: '✓', t: 'Preparar la puerta', d: 'Escáner y lista de llegada' },
               ].map((accion) => (
                 <Link
                   key={accion.href}
-                  className="flex flex-col gap-0.5 rounded-2xl border border-line bg-bg-top/60 px-4 py-3 transition-colors hover:border-gold/50"
+                  className="flex items-center gap-3.5 rounded-[14px] border border-line-panel bg-linear-to-b from-bg-top to-white px-4 py-3.5 shadow-card transition-all duration-200 hover:translate-x-[3px] hover:border-gold/40"
                   href={accion.href}
                 >
-                  <span className="text-[14px] text-ink">{accion.t}</span>
-                  <span className="text-[11px] text-ink-mute">{accion.d}</span>
+                  <span
+                    aria-hidden
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bg-sunken text-[17px] text-sage"
+                  >
+                    {accion.icon}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[13px] font-medium text-ink">{accion.t}</span>
+                    <span className="block truncate text-[11px] text-ink-mute">{accion.d}</span>
+                  </span>
                 </Link>
               ))}
             </div>
 
-            <div className="mt-5 rounded-2xl bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-4 text-white">
+            <div className="mt-5 rounded-[14px] bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-4 text-white">
               <p className="font-mono text-[9px] tracking-[0.3em] opacity-85 uppercase">Recordatorio</p>
               <p className="mt-1.5 font-display text-[20px] italic">Fecha límite de confirmación</p>
               <p className="mt-1.5 text-[12px] opacity-85">
@@ -273,6 +337,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 })}
               </p>
             </div>
+          </PanelCard>
+
+          {/* La tira de llegadas no está en la maqueta: es del ciclo 4 y se queda, pero
+              acomodada a su lenguaje y no ocupando media fila ella sola. */}
+          <PanelCard title="Llegada">
+            <ArrivalStrip tally={llegadas} />
           </PanelCard>
         </div>
       </div>

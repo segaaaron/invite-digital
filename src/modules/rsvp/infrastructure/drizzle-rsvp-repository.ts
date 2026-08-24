@@ -1,4 +1,4 @@
-import { and, desc, eq, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, isNull } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups, rsvpResponses } from '@/shared/db/schema'
 import type { RsvpRepository } from '../application/ports'
@@ -46,6 +46,25 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
       .leftJoin(latest, eq(latest.guestGroupId, guestGroups.id))
       // Un grupo revocado ya no cuenta como invitado: sus cupos no se van a ocupar.
       .where(and(eq(guestGroups.eventId, eventId), isNull(guestGroups.revokedAt)))
+  },
+
+  async respondedAtsFor(eventId, since) {
+    // Todas las respuestas del tramo, no la última de cada grupo: el gráfico cuenta
+    // actos de responder, y quien cambió de opinión respondió dos veces.
+    const filas = await database
+      .select({ respondedAt: rsvpResponses.respondedAt })
+      .from(rsvpResponses)
+      .innerJoin(guestGroups, eq(guestGroups.id, rsvpResponses.guestGroupId))
+      .where(
+        and(
+          eq(guestGroups.eventId, eventId),
+          isNull(guestGroups.revokedAt),
+          gte(rsvpResponses.respondedAt, since),
+        ),
+      )
+      .orderBy(asc(rsvpResponses.respondedAt))
+
+    return filas.map((fila) => fila.respondedAt)
   },
 })
 

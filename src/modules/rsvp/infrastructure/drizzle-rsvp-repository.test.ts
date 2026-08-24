@@ -106,3 +106,46 @@ describe('repositorio de RSVP', () => {
     })
   })
 })
+
+describe('respondedAtsFor', () => {
+  it('devuelve solo las respuestas del evento y desde la fecha pedida', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleRsvpRepository(tx)
+      const eventoA = await seedEvent(tx)
+      const eventoB = await seedEvent(tx)
+      const grupoA = await seedGroup(tx, eventoA, 2, 41)
+      const grupoB = await seedGroup(tx, eventoB, 2, 42)
+
+      const responder = (guestGroupId: string, iso: string) =>
+        repo.append({ id: crypto.randomUUID(), guestGroupId, attending: 2, message: null, respondedAt: new Date(iso) })
+
+      await responder(grupoA, '2026-08-01T12:00:00Z')
+      await responder(grupoA, '2026-08-20T12:00:00Z')
+      await responder(grupoA, '2026-08-21T12:00:00Z')
+      // Otro evento: no debe colarse en el gráfico de este.
+      await responder(grupoB, '2026-08-21T12:00:00Z')
+
+      const fechas = await repo.respondedAtsFor(eventoA, new Date('2026-08-10T00:00:00Z'))
+      expect(fechas).toHaveLength(2)
+      expect(fechas.every((f) => f instanceof Date)).toBe(true)
+    })
+  })
+
+  it('un grupo revocado deja de contar, como en el recuento', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleRsvpRepository(tx)
+      const eventoId = await seedEvent(tx)
+      const grupoId = await seedGroup(tx, eventoId, 2, 43)
+      await repo.append({
+        id: crypto.randomUUID(),
+        guestGroupId: grupoId,
+        attending: 2,
+        message: null,
+        respondedAt: new Date('2026-08-20T12:00:00Z'),
+      })
+      await tx.update(guestGroups).set({ revokedAt: new Date() }).where(eq(guestGroups.id, grupoId))
+
+      expect(await repo.respondedAtsFor(eventoId, new Date('2026-08-01T00:00:00Z'))).toEqual([])
+    })
+  })
+})

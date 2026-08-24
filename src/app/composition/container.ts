@@ -84,6 +84,7 @@ import { drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/dri
 import { getInvitation } from '@/modules/rsvp/application/get-invitation'
 import { getEventStats } from '@/modules/rsvp/application/get-event-stats'
 import { getTally } from '@/modules/rsvp/application/get-tally'
+import { getRsvpTimeline } from '@/modules/rsvp/application/get-rsvp-timeline'
 import { respondToInvitation } from '@/modules/rsvp/application/respond-to-invitation'
 import { drizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
@@ -201,6 +202,7 @@ export const rsvp = {
     clock,
   }),
   tally: getTally({ rsvp: drizzleRsvpRepository }),
+  timeline: getRsvpTimeline({ rsvp: drizzleRsvpRepository, clock }),
   stats: getEventStats({ rsvp: drizzleRsvpRepository }),
   getInvitation: getInvitation({
     resolveGroup: (token) => guests.resolveByToken(token),

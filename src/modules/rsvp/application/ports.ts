@@ -7,4 +7,6 @@ export interface RsvpRepository {
   append(response: RsvpResponse): Promise<void>
   latestFor(guestGroupId: string): Promise<LatestResponse | null>
   tallyRowsFor(eventId: string): Promise<Array<{ seats: number; attending: number | null }>>
+  /** Las marcas de tiempo de las respuestas desde `since`, para el gráfico por día. */
+  respondedAtsFor(eventId: string, since: Date): Promise<Date[]>
 }

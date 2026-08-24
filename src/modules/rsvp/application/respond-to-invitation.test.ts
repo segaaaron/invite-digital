@@ -28,6 +28,7 @@ const repo = () => {
     append: async (response) => void appended.push(response),
     latestFor: async () => null,
     tallyRowsFor: async () => [],
+    respondedAtsFor: async () => [],
   }
   return { rsvp, appended }
 }

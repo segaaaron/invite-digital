@@ -67,3 +67,4 @@ tests/e2e/.auth
 # sirviendo el JS del último commit en vez del de la imagen desplegada.
 /public/sw.js
 /public/sw.js.map
+.audit/

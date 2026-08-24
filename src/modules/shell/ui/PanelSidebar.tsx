@@ -107,7 +107,7 @@ export function PanelSidebar({
           </span>
           <div className="min-w-0">
             <p className="truncate text-[12px] md:text-[13px]">{user.title}</p>
-            <p className="truncate font-mono text-[9px] tracking-[0.2em] uppercase opacity-60">{user.planLabel}</p>
+            <p className="font-mono text-[9px] tracking-[0.2em] uppercase opacity-60">{user.planLabel}</p>
           </div>
         </div>
 
