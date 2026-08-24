@@ -25,11 +25,11 @@ export default async function RegalosPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string }>
+  searchParams: Promise<{ panel?: string; vista?: string }>
 }) {
   await requireSession()
   const { slug } = await params
-  const { panel } = await searchParams
+  const { panel, vista } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -49,7 +49,7 @@ export default async function RegalosPage({
 
   // La cabecera de la maqueta cuenta el dinero, no las tarjetas: lo recaudado en fondos
   // y lo que ya se llevaron de la lista frente a lo que vale entera.
-  const recaudado = funds.reduce((suma, vista) => suma + vista.progress.raisedCents, 0)
+  const recaudado = funds.reduce((suma, fondo) => suma + fondo.progress.raisedCents, 0)
   const valorLista = gifts.reduce((suma, regalo) => suma + (regalo.priceCents ?? 0), 0)
   const yaTomado = gifts
     .filter((regalo) => regalo.status !== 'available')
@@ -106,6 +106,10 @@ export default async function RegalosPage({
         ) : null}
 
         <RegistryTabs
+          base={base}
+          // Con el alta de regalo abierta se enseña la lista: quien acaba de añadir uno
+          // quiere verlo, y dejarlo en los fondos hacía creer que no se había guardado.
+          current={vista === 'regalos' || abierto === 'regalo' ? 'regalos' : 'fondos'}
           funds={
             funds.length === 0 ? (
               <PanelCard>

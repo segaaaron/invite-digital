@@ -22,12 +22,14 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   await page.getByLabel('Precio').fill('450,50')
   await page.getByLabel('Tienda', { exact: true }).fill('Casa Ideal')
   await page.getByRole('button', { name: 'Añadir regalo' }).click()
-  await page.getByRole('button', { name: 'Lista de regalos' }).click()
+  await page.getByRole('link', { name: 'Lista de regalos' }).click()
   await expect(page.getByRole('heading', { name: 'Cafetera italiana' })).toBeVisible()
 
   // El importe llegó a la base como centavos exactos, sin perder el céntimo por el
   // camino: 450,50 son 45050, no 45049,999…
-  await expect(page.getByText('Bs 450,50')).toBeVisible()
+  // La cabecera también cuenta el dinero de la mesa, así que el importe aparece dos
+  // veces: se comprueba el de la tarjeta del regalo.
+  await expect(page.getByText('Bs 450,50').first()).toBeVisible()
 
   await page.goto(`/panel/eventos/${SLUG}/regalos?panel=fondo`)
   await page.getByLabel('Fondo').fill('Luna de miel')
@@ -58,7 +60,7 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
 
   // 4. El panel lo ve reservado, con el nombre del grupo.
   await page.goto(`/panel/eventos/${SLUG}/regalos`)
-  await page.getByRole('button', { name: 'Lista de regalos' }).click()
+  await page.getByRole('link', { name: 'Lista de regalos' }).click()
   await expect(page.getByText('Reservado', { exact: true })).toBeVisible()
   await expect(page.getByText('Reservado por Familia Rojas Peña')).toBeVisible()
 
@@ -74,7 +76,7 @@ test('un enlace revocado no reserva nada: la página ni siquiera existe', async 
   const slug = `${SLUG}-revocado`
   const { token } = await seedRegistryEvent(slug)
 
-  await page.goto(`/panel/eventos/${slug}/regalos`)
+  await page.goto(`/panel/eventos/${slug}/regalos?panel=regalo`)
   await page.getByLabel('Regalo').fill('Batidora')
   await page.getByLabel('Precio').fill('300')
   await page.getByRole('button', { name: 'Añadir regalo' }).click()

@@ -17,9 +17,12 @@ export type GuestGroupRowView = {
   readonly phone?: string | null
 }
 
+// Quien respondió **cero** dijo que no viene: llamarlo «Confirmada» junto a un «0 / 2»
+// hace leer lo contrario de lo que pasó.
 const estado = (row: GuestGroupRowView): string => {
   if (row.revokedAt !== null) return 'Revocada'
-  return row.confirmed === null ? 'Pendiente' : 'Confirmada'
+  if (row.confirmed === null) return 'Pendiente'
+  return row.confirmed === 0 ? 'No vienen' : 'Confirmada'
 }
 
 type Filtro = 'todos' | 'confirmados' | 'pendientes' | 'no-vienen'

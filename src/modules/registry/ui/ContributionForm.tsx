@@ -3,7 +3,7 @@
 import { useId, useState, useTransition } from 'react'
 import { CONTRIBUTION_METHODS, type ContributionMethod } from '../domain/fund'
 import { recordContributionAction } from '../actions'
-import { centsOrMessage, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
+import { centsOrMessage, FIELD_CLASS_DARK, LABEL_CLASS_DARK, nullIfBlank, SUBMIT_CLASS_DARK } from './shared'
 
 const NOMBRE_DEL_METODO: Record<ContributionMethod, string> = {
   transfer: 'Transferencia',
@@ -64,10 +64,10 @@ export function ContributionForm({ eventId, eventSlug, fundId }: { eventId: stri
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={LABEL_CLASS} htmlFor={nameId}>
+        <label className={LABEL_CLASS_DARK} htmlFor={nameId}>
           De parte de
           <input
-            className={FIELD_CLASS}
+            className={FIELD_CLASS_DARK}
             id={nameId}
             maxLength={160}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -77,10 +77,10 @@ export function ContributionForm({ eventId, eventSlug, fundId }: { eventId: stri
           />
         </label>
 
-        <label className={LABEL_CLASS} htmlFor={amountId}>
+        <label className={LABEL_CLASS_DARK} htmlFor={amountId}>
           Importe
           <input
-            className={FIELD_CLASS}
+            className={FIELD_CLASS_DARK}
             id={amountId}
             inputMode="decimal"
             onChange={(e) => setAmount(e.target.value)}
@@ -92,10 +92,10 @@ export function ContributionForm({ eventId, eventSlug, fundId }: { eventId: stri
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className={LABEL_CLASS} htmlFor={methodId}>
+        <label className={LABEL_CLASS_DARK} htmlFor={methodId}>
           Forma de pago
           <select
-            className={FIELD_CLASS}
+            className={FIELD_CLASS_DARK}
             id={methodId}
             onChange={(e) => setMethod(e.target.value as ContributionMethod)}
             value={method}
@@ -108,10 +108,10 @@ export function ContributionForm({ eventId, eventSlug, fundId }: { eventId: stri
           </select>
         </label>
 
-        <label className={LABEL_CLASS} htmlFor={messageId}>
+        <label className={LABEL_CLASS_DARK} htmlFor={messageId}>
           Mensaje
           <input
-            className={FIELD_CLASS}
+            className={FIELD_CLASS_DARK}
             id={messageId}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Opcional"
@@ -122,12 +122,12 @@ export function ContributionForm({ eventId, eventSlug, fundId }: { eventId: stri
       </div>
 
       {error === null ? null : (
-        <p className="text-[13px] text-danger" role="alert">
+        <p className="text-[13px] text-[var(--color-gold-light)]" role="alert">
           {error}
         </p>
       )}
 
-      <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
+      <button className={SUBMIT_CLASS_DARK} disabled={pendiente} onClick={enviar} type="button">
         {pendiente ? 'Registrando…' : 'Registrar'}
       </button>
     </div>

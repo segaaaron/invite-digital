@@ -43,7 +43,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   await expect(mesa01).toContainText('4 / 8')
 
   // El resto lo reparte la auto-asignación.
-  await page.getByRole('button', { name: 'Repartir los que faltan' }).click()
+  await page.getByRole('button', { name: '+ Auto-asignar' }).click()
   await expect(page.getByRole('region', { name: 'Invitados sin mesa' })).toBeHidden()
 
   // El plan del banquete lo lleva impreso.

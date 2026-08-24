@@ -68,3 +68,26 @@ describe('GuestGroupTable', () => {
     expect(screen.getAllByText('Pendiente').length).toBeGreaterThan(0)
   })
 })
+
+describe('GuestGroupTable · el estado dice lo que pasó', () => {
+  it('un grupo que respondió cero no se llama «Confirmada»', () => {
+    render(
+      <GuestGroupTable
+        eventSlug="boda"
+        groups={[
+          {
+            id: 'g9',
+            label: 'Sergio Aldama y señora',
+            seats: 2,
+            confirmed: 0,
+            revokedAt: null,
+            invitationSentAt: null,
+            phone: null,
+          },
+        ]}
+      />,
+    )
+    expect(screen.getByText('No vienen')).toBeInTheDocument()
+    expect(screen.queryByText('Confirmada')).not.toBeInTheDocument()
+  })
+})

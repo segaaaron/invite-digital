@@ -4,13 +4,27 @@ import { parseAmount } from '../domain/money'
 export const FIELD_CLASS =
   'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-gold'
 
+/**
+ * Los mismos campos, sobre la tarjeta oscura del fondo en efectivo. Con las clases
+ * claras el marcador quedaba gris sobre gris y no se leía lo que había escrito.
+ */
+export const FIELD_CLASS_DARK =
+  'w-full rounded-[14px] border border-white/20 bg-white/10 px-4 py-3 text-[14px] text-white outline-none transition-colors placeholder:text-white/45 focus-visible:border-white/60'
+
+export const LABEL_CLASS_DARK =
+  'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-white/60'
+
 export const LABEL_CLASS = 'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
 
 export const PILL_CLASS =
   'rounded-[var(--radius-pill)] border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40'
 
 export const SUBMIT_CLASS =
-  'self-start rounded-[var(--radius-pill)] bg-gold px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised disabled:cursor-not-allowed disabled:opacity-60'
+  'w-fit cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40'
+
+/** Sobre la tarjeta oscura la tinta no contrasta: ahí la llamada es dorada. */
+export const SUBMIT_CLASS_DARK =
+  'w-fit cursor-pointer rounded-[var(--radius-pill)] bg-linear-to-b from-[var(--color-gold-light)] to-gold px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-shell-deep uppercase transition-colors hover:to-gold-deep disabled:cursor-not-allowed disabled:opacity-40'
 
 /** Un campo de texto vacío es «no hay dato», no una cadena vacía que la base guardaría. */
 export const nullIfBlank = (value: string): string | null => (value.trim().length === 0 ? null : value.trim())

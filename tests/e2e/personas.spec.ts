@@ -35,7 +35,7 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   // 4. El reporte del catering sale de esas restricciones.
   await page.goto(`/panel/eventos/${SLUG}/mesas`)
   await expect(page.getByText('Sin gluten')).toBeVisible()
-  await expect(page.getByText('1 comensal')).toBeVisible()
+  await expect(page.getByText('comensales confirmados')).toBeVisible()
 })
 
 test('el cupo del grupo es el tope, y el servidor lo dice', async ({ page }) => {

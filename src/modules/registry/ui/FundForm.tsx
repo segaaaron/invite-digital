@@ -3,7 +3,17 @@
 import { useId, useState, useTransition } from 'react'
 import type { Fund } from '../domain/fund'
 import { addFundAction, updateFundAction } from '../actions'
-import { centsOrMessage, centsToInput, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
+import {
+  centsOrMessage,
+  centsToInput,
+  FIELD_CLASS,
+  FIELD_CLASS_DARK,
+  LABEL_CLASS,
+  LABEL_CLASS_DARK,
+  nullIfBlank,
+  SUBMIT_CLASS,
+  SUBMIT_CLASS_DARK,
+} from './shared'
 
 /**
  * El mismo formulario abre un fondo y corrige uno abierto. Con `fund` está en modo
@@ -26,6 +36,10 @@ export function FundForm({
   onDone?: () => void
 }) {
   const editando = fund !== undefined
+  // Editar se hace dentro de la tarjeta oscura del fondo; abrir uno nuevo, sobre marfil.
+  const campo = editando ? FIELD_CLASS_DARK : FIELD_CLASS
+  const rotulo = editando ? LABEL_CLASS_DARK : LABEL_CLASS
+  const enviarClase = editando ? SUBMIT_CLASS_DARK : SUBMIT_CLASS
 
   const [name, setName] = useState(fund?.name ?? '')
   const [goal, setGoal] = useState(fund === undefined ? '' : centsToInput(fund.goalCents))
@@ -75,10 +89,10 @@ export function FundForm({
   return (
     <div className="flex flex-col gap-5 rounded-[18px] border border-[var(--color-line)] p-6">
       <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
-        <label className={LABEL_CLASS} htmlFor={nameId}>
+        <label className={rotulo} htmlFor={nameId}>
           Fondo
           <input
-            className={FIELD_CLASS}
+            className={campo}
             id={nameId}
             maxLength={160}
             onChange={(e) => setName(e.target.value)}
@@ -88,10 +102,10 @@ export function FundForm({
           />
         </label>
 
-        <label className={LABEL_CLASS} htmlFor={goalId}>
+        <label className={rotulo} htmlFor={goalId}>
           Meta
           <input
-            className={FIELD_CLASS}
+            className={campo}
             id={goalId}
             inputMode="decimal"
             onChange={(e) => setGoal(e.target.value)}
@@ -102,10 +116,10 @@ export function FundForm({
         </label>
       </div>
 
-      <label className={LABEL_CLASS} htmlFor={descriptionId}>
+      <label className={rotulo} htmlFor={descriptionId}>
         Descripción
         <input
-          className={FIELD_CLASS}
+          className={campo}
           id={descriptionId}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Para los pasajes y las noches de hotel."
@@ -121,7 +135,7 @@ export function FundForm({
       )}
 
       <div className="flex flex-wrap items-center gap-4">
-        <button className={SUBMIT_CLASS} disabled={pendiente} onClick={enviar} type="button">
+        <button className={enviarClase} disabled={pendiente} onClick={enviar} type="button">
           {editando ? (pendiente ? 'Guardando…' : 'Guardar cambios') : pendiente ? 'Abriendo…' : 'Abrir fondo'}
         </button>
 
