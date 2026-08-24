@@ -93,3 +93,38 @@ describe('PeopleTable', () => {
     expect(screen.getAllByText('Sin mesa').length).toBeGreaterThan(0)
   })
 })
+
+describe('PeopleTable · piel de la maqueta', () => {
+  const muchas: PersonRowView[] = Array.from({ length: 23 }, (_, i) => ({
+    id: `x${i}`,
+    fullName: `Invitado ${i}`,
+    groupLabel: 'Grupo',
+    isCompanion: false,
+    dietaryNote: null,
+    vip: false,
+    attending: 'yes' as const,
+    tableLabel: null,
+  }))
+
+  it('pagina de diez en diez, como la maqueta', () => {
+    render(<PeopleTable eventSlug="boda" rows={muchas} />)
+    expect(screen.getByText('Invitado 0')).toBeInTheDocument()
+    expect(screen.queryByText('Invitado 10')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Página 2' }))
+    expect(screen.getByText('Invitado 10')).toBeInTheDocument()
+    expect(screen.queryByText('Invitado 0')).not.toBeInTheDocument()
+  })
+
+  it('al filtrar vuelve a la primera página: si no, la lista se ve vacía sin estarlo', () => {
+    render(<PeopleTable eventSlug="boda" rows={muchas} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Página 3' }))
+    fireEvent.change(screen.getByLabelText('Buscar invitado o grupo'), { target: { value: 'Invitado 1' } })
+    expect(screen.getByText('Invitado 1')).toBeInTheDocument()
+  })
+
+  it('con una sola página no pinta paginación', () => {
+    render(<PeopleTable eventSlug="boda" rows={muchas.slice(0, 4)} />)
+    expect(screen.queryByRole('button', { name: 'Página 2' })).not.toBeInTheDocument()
+  })
+})

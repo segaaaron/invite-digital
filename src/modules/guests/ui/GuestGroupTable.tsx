@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { FilterChip, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { markInvitationSentAction } from '../actions'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 
@@ -69,33 +70,22 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2.5">
-        <label className="flex-1">
-          <span className="sr-only">Buscar invitado o grupo</span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar invitado o grupo..."
-            autoComplete="off"
-            className="w-full min-w-[220px] rounded-full border border-line bg-bg-top/80 px-4 py-2.5 text-[13px] text-ink outline-none focus-visible:border-gold"
-          />
-        </label>
+        <SearchField
+          label="Buscar grupo"
+          autoComplete="off"
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar grupo..."
+          value={query}
+        />
         {(Object.keys(CASA) as Filtro[]).map((clave) => (
-          <button
-            key={clave}
-            type="button"
-            aria-pressed={filtro === clave}
-            onClick={() => setFiltro(clave)}
-            className={`rounded-full border px-3.5 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase transition-colors ${
-              filtro === clave ? 'border-gold bg-gold/15 text-ink' : 'border-line text-ink-mute hover:border-gold/50'
-            }`}
-          >
+          <FilterChip key={clave} active={filtro === clave} onClick={() => setFiltro(clave)}>
             {ETIQUETA[clave]} {cuentas[clave]}
-          </button>
+          </FilterChip>
         ))}
       </div>
 
       {error === null ? null : (
-        <p className="text-[13px] text-gold-deep" role="alert">
+        <p className="text-[13px] text-danger" role="alert">
           {error}
         </p>
       )}
@@ -105,27 +95,34 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
       ) : (
     <table className="w-full border-collapse text-left">
       <thead>
-        <tr className="text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-          <th className="border-b border-[var(--color-line)] py-3 font-normal">Grupo</th>
-          <th className="border-b border-[var(--color-line)] py-3 font-normal">Confirmados</th>
-          <th className="border-b border-[var(--color-line)] py-3 font-normal">Estado</th>
-          <th className="border-b border-[var(--color-line)] py-3 font-normal">Enviado</th>
-          <th className="border-b border-[var(--color-line)] py-3 font-normal" />
+        <tr>
+          {['Grupo', 'Confirmados', 'Estado', 'Enviado'].map((columna) => (
+            <th
+              key={columna}
+              className="border-b border-line-panel py-3 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
+              scope="col"
+            >
+              {columna}
+            </th>
+          ))}
+          <th className="border-b border-line-panel py-3" />
         </tr>
       </thead>
       <tbody>
         {visibles.map((row) => (
           <tr key={row.id}>
-            <td className="border-b border-[var(--color-line)] py-4 text-[14px] text-ink">{row.label}</td>
-            <td className="border-b border-[var(--color-line)] py-4 text-[14px] text-ink-soft">
+            <td className="border-b border-line-panel py-4 text-[14px] text-ink">{row.label}</td>
+            <td className="border-b border-line-panel py-4 text-[14px] text-ink-soft">
               {`${row.confirmed ?? '—'} / ${row.seats}`}
             </td>
-            <td className="border-b border-[var(--color-line)] py-4 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-              {estado(row)}
+            <td className="border-b border-line-panel py-4">
+              <Pill tone={row.revokedAt !== null ? 'no' : row.confirmed === null ? 'pending' : row.confirmed === 0 ? 'no' : 'ok'}>
+                {estado(row)}
+              </Pill>
             </td>
-            <td className="border-b border-[var(--color-line)] py-4">
+            <td className="border-b border-line-panel py-4">
               <button
-                className="rounded-full border border-line px-3 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase transition-colors hover:border-gold/60"
+                className="cursor-pointer"
                 onClick={() => {
                   void markInvitationSentAction({
                     eventSlug,
@@ -138,10 +135,12 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
                 title="Marca que ya repartiste el enlace. No es una prueba de entrega."
                 type="button"
               >
-                {row.invitationSentAt ? 'Enviada' : 'Sin enviar'}
+                <Pill tone={row.invitationSentAt ? 'ok' : 'pending'}>
+                  {row.invitationSentAt ? 'Enviada' : 'Sin enviar'}
+                </Pill>
               </button>
             </td>
-            <td className="border-b border-[var(--color-line)] py-4 text-right">
+            <td className="border-b border-line-panel py-4 text-right">
               {row.revokedAt === null ? (
                 <RevokeInvitationForm eventSlug={eventSlug} groupId={row.id} />
               ) : null}

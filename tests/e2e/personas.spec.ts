@@ -14,7 +14,7 @@ test.afterAll(async () => {
 test('el atelier carga personas dentro del grupo, y el catering ve sus menús', async ({ page }) => {
   await seedPeopleEvent(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
   // 1. Una persona con restricción, dentro del grupo sembrado (4 cupos).
   await page.getByLabel('Nombre de la persona').fill('Ana Lucía Vega')
@@ -42,7 +42,7 @@ test('el cupo del grupo es el tope, y el servidor lo dice', async ({ page }) => 
   const slug = `${SLUG}-tope`
   await seedPeopleEvent(slug)
 
-  await page.goto(`/panel/eventos/${slug}/invitados`)
+  await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
 
   // El grupo sembrado tiene 4 cupos: la quinta persona no entra.
   for (const nombre of ['Uno', 'Dos', 'Tres', 'Cuatro']) {

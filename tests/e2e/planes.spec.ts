@@ -16,7 +16,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   // bajado para el resto de la suite y para la base de desarrollo.
   const { eventId } = await seedPlanEvent(SLUG, 2)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
   // 1. Los dos que caben entran.
   await page.getByLabel('Grupo invitado').fill('Familia Rojas')
@@ -89,6 +89,6 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
   await expect(page.getByLabel('Plan alta-costura')).toContainText('Plan actual')
 
   // El formulario vive en la vista de invitados, que es propia como en la maqueta.
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
   await expect(page.getByRole('button', { name: 'Crear invitación' })).toBeEnabled()
 })

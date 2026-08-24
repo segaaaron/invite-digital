@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { FilterChip, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { removePersonAction, updatePersonAction } from '../actions'
 import type { Attendance } from '../domain/person'
 
@@ -38,6 +39,12 @@ const ETIQUETA: Record<Filtro, string> = {
 
 const ESTADO: Record<string, string> = { yes: 'Confirmado', no: 'No viene', maybe: 'Tal vez' }
 
+/** El tono de la píldora por estado, como en la maqueta. */
+const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
+
+/** La maqueta pagina de diez en diez y numera las páginas. */
+const POR_PAGINA = 10
+
 const SIGUIENTE: Record<string, Attendance | null> = { null: 'yes', yes: 'maybe', maybe: 'no', no: null }
 
 export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[]; eventSlug: string }) {
@@ -47,6 +54,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   // Quién está a un clic de ser borrado. Borrar no tiene deshacer, y un clic de más se
   // lleva a alguien de la lista sin que nadie se entere hasta el día del evento.
   const [porQuitar, setPorQuitar] = useState<string | null>(null)
+  const [pagina, setPagina] = useState(1)
 
   // Los contadores se calculan sobre todas las filas, nunca sobre las visibles.
   const cuentas = useMemo(
@@ -69,6 +77,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
     )
   }, [rows, filtro, query])
 
+  const paginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA))
+  const enPagina = visibles.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+
   const aplicar = (accion: Promise<{ status: string; message?: string }>) => {
     void accion.then((estado) => {
       // Un fallo que solo va al registro deja al atelier creyendo que marcó a alguien.
@@ -79,33 +90,34 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2.5">
-        <label className="flex-1">
-          <span className="sr-only">Buscar invitado o grupo</span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar invitado o grupo..."
-            autoComplete="off"
-            className="w-full min-w-[220px] rounded-full border border-line bg-bg-top/80 px-4 py-2.5 text-[13px] text-ink outline-none focus-visible:border-gold"
-          />
-        </label>
+        <SearchField
+          label="Buscar invitado o grupo"
+          autoComplete="off"
+          onChange={(e) => {
+            setQuery(e.target.value)
+            // Buscar con la página 3 puesta enseñaba una tabla vacía con resultados
+            // dentro: el filtro y el buscador vuelven siempre a la primera.
+            setPagina(1)
+          }}
+          placeholder="Buscar invitado o grupo..."
+          value={query}
+        />
         {(Object.keys(CASA) as Filtro[]).map((clave) => (
-          <button
+          <FilterChip
             key={clave}
-            type="button"
-            aria-pressed={filtro === clave}
-            onClick={() => setFiltro(clave)}
-            className={`rounded-full border px-3.5 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase transition-colors ${
-              filtro === clave ? 'border-gold bg-gold/15 text-ink' : 'border-line text-ink-mute hover:border-gold/50'
-            }`}
+            active={filtro === clave}
+            onClick={() => {
+              setFiltro(clave)
+              setPagina(1)
+            }}
           >
             {ETIQUETA[clave]} {cuentas[clave]}
-          </button>
+          </FilterChip>
         ))}
       </div>
 
       {error === null ? null : (
-        <p className="text-[13px] text-gold-deep" role="alert">
+        <p className="text-[13px] text-danger" role="alert">
           {error}
         </p>
       )}
@@ -116,30 +128,34 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead>
-              <tr className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+              <tr>
                 {['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa'].map((columna) => (
-                  <th key={columna} className="border-b border-line py-3 pr-4 font-normal whitespace-nowrap">
+                  <th
+                    key={columna}
+                    className="border-b border-line-panel py-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase"
+                    scope="col"
+                  >
                     {columna}
                   </th>
                 ))}
-                <th className="border-b border-line py-3 font-normal" />
+                <th className="border-b border-line-panel py-3" />
               </tr>
             </thead>
             <tbody>
-              {visibles.map((fila) => (
-                <tr key={fila.id}>
-                  <td className="border-b border-line py-3.5 pr-4 text-[14px] text-ink">
+              {enPagina.map((fila) => (
+                <tr key={fila.id} className="hover:bg-bg-raised">
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[14px] text-ink">
                     {fila.fullName}
                     {fila.vip ? (
-                      <span className="ml-2 rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep uppercase">
-                        VIP
+                      <span aria-label="VIP" className="ml-1 text-gold" title="VIP">
+                        ★
                       </span>
                     ) : null}
                   </td>
-                  <td className="border-b border-line py-3.5 pr-4 text-[13px] text-ink-soft">{fila.groupLabel}</td>
-                  <td className="border-b border-line py-3.5 pr-4">
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">{fila.groupLabel}</td>
+                  <td className="border-b border-line-panel py-3.5 pr-4">
                     <button
-                      className="rounded-full border border-line px-3 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase transition-colors hover:border-gold/60"
+                      className="cursor-pointer"
                       onClick={() =>
                         aplicar(
                           updatePersonAction({
@@ -152,19 +168,21 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       title="Cambiar el estado"
                       type="button"
                     >
-                      {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
+                      <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
+                        {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
+                      </Pill>
                     </button>
                   </td>
-                  <td className="border-b border-line py-3.5 pr-4 text-[13px] text-ink-soft">
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {fila.isCompanion ? 'Sí' : '—'}
                   </td>
-                  <td className="border-b border-line py-3.5 pr-4 text-[13px] text-ink-soft">
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {fila.dietaryNote ?? '—'}
                   </td>
-                  <td className="border-b border-line py-3.5 pr-4 text-[13px] text-ink-soft">
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {fila.tableLabel ?? 'Sin mesa'}
                   </td>
-                  <td className="border-b border-line py-3.5 text-right whitespace-nowrap">
+                  <td className="border-b border-line-panel py-3.5 text-right whitespace-nowrap">
                     <button
                       className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase hover:text-gold-deep"
                       onClick={() => aplicar(updatePersonAction({ eventSlug, id: fila.id, vip: !fila.vip }))}
@@ -206,6 +224,41 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
               ))}
             </tbody>
           </table>
+
+          {paginas === 1 ? null : (
+            <nav aria-label="Páginas de invitados" className="mt-4.5 flex items-center justify-center gap-1.5">
+              <button
+                className="cursor-pointer rounded-lg border border-line-panel bg-white px-2.5 py-1.5 font-mono text-[11px] disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={pagina === 1}
+                onClick={() => setPagina((n) => Math.max(1, n - 1))}
+                type="button"
+              >
+                ‹ Anterior
+              </button>
+              {Array.from({ length: paginas }, (_, i) => i + 1).map((numero) => (
+                <button
+                  key={numero}
+                  aria-current={numero === pagina ? 'page' : undefined}
+                  aria-label={`Página ${numero}`}
+                  className={`size-8 cursor-pointer rounded-lg border font-mono text-[11px] ${
+                    numero === pagina ? 'border-ink bg-ink text-white' : 'border-line-panel bg-white text-ink'
+                  }`}
+                  onClick={() => setPagina(numero)}
+                  type="button"
+                >
+                  {numero}
+                </button>
+              ))}
+              <button
+                className="cursor-pointer rounded-lg border border-line-panel bg-white px-2.5 py-1.5 font-mono text-[11px] disabled:cursor-not-allowed disabled:opacity-35"
+                disabled={pagina === paginas}
+                onClick={() => setPagina((n) => Math.min(paginas, n + 1))}
+                type="button"
+              >
+                Siguiente ›
+              </button>
+            </nav>
+          )}
         </div>
       )}
     </div>

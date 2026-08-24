@@ -2,11 +2,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, plans } from '@/app/composition/container'
 import { ManualCheckin } from '@/modules/checkin/ui/ManualCheckin'
-import { ScanButton } from '@/modules/checkin/ui/ScanButton'
+import { DoorModeCard } from '@/modules/checkin/ui/DoorModeCard'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { DonutChart, PanelCard } from '@/modules/shell/ui/cards'
+import { DonutChart, PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Check-in' }
@@ -49,13 +49,14 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <PanelHeader
-        actions={<ScanButton href={`/panel/eventos/${event.value.slug}/puerta`} />}
         kicker="Día del evento"
         meta={`${tally.arrivedGroups} de ${tally.expectedGroups} grupos · ${tally.headsInside} personas dentro`}
         title="Check-in de invitados"
       />
 
-      <div className="mb-5.5 grid gap-4.5 lg:grid-cols-[1.3fr_1fr]">
+      <DoorModeCard href={`/panel/eventos/${event.value.slug}/puerta`} />
+
+      <div className="mb-5.5 grid items-start gap-4.5 lg:grid-cols-[1.3fr_1fr]">
         <PanelCard title="Buscar a mano">
           <div className="flex flex-col gap-4">
             <p className="text-[12px] leading-[1.7] text-ink-soft">
@@ -96,11 +97,8 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
       <PanelCard
         action={
-          <Link
-            className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase"
-            href={`/panel/eventos/${event.value.slug}/invitados`}
-          >
-            Ver todos los invitados →
+          <Link href={`/panel/eventos/${event.value.slug}/invitados`}>
+            <PanelCardLink>Ver todos los invitados →</PanelCardLink>
           </Link>
         }
         title="Últimas llegadas"
@@ -112,7 +110,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
             {ultimas.map((a) => (
               <li
                 key={a.guestGroupId}
-                className="flex flex-wrap items-center gap-3 border-b border-dotted border-line py-2.5 last:border-none"
+                className="flex flex-wrap items-center gap-3 border-b border-line-panel py-2.5 last:border-none"
               >
                 <span className="flex-1 text-[14px] text-ink">{etiquetaDe.get(a.guestGroupId) ?? 'Grupo retirado'}</span>
                 <span className="font-mono text-[11px] text-ink-soft">

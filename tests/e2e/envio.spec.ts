@@ -19,7 +19,7 @@ test('reenviar rota el enlace: el viejo deja de abrir y el nuevo abre', async ({
   expect((await invitado.goto(`/i/${token}`))?.status()).toBe(200)
 
   // El atelier lo reenvía.
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=envio`)
   await page.getByRole('button', { name: /generar enlace|reenviar/i }).first().click()
   const nuevo = await page.getByLabel('Enlace de la invitación').inputValue()
   expect(nuevo).toMatch(/\/i\/[A-Za-z0-9_-]{22}$/)
@@ -33,7 +33,7 @@ test('la importación dice fila por fila qué entró y qué no', async ({ page }
   const slug = `${SLUG}-csv`
   await seedEnvioEvent(slug)
 
-  await page.goto(`/panel/eventos/${slug}/invitados`)
+  await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
   await page.getByLabel(/pega el listado/i).fill('Familia García;5;+59170022233\n;3\nAna Vega;2;')
   await page.getByRole('button', { name: 'Importar invitados' }).click()
 

@@ -1,5 +1,7 @@
 'use client'
 
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+
 export type CsvRow = {
   readonly label: string
   readonly seats: number
@@ -83,8 +85,7 @@ export function ExportCsvButton({
   eventSlug: string
 }) {
   return (
-    <button
-      className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase transition-colors hover:border-gold/60"
+    <PanelButton
       onClick={() => {
         const contenido = people && people.length > 0 ? personasToCsv(people) : filasToCsv(rows)
         const blob = new Blob([contenido], { type: 'text/csv;charset=utf-8' })
@@ -95,9 +96,8 @@ export function ExportCsvButton({
         enlace.click()
         URL.revokeObjectURL(url)
       }}
-      type="button"
     >
       Exportar CSV ↓
-    </button>
+    </PanelButton>
   )
 }
