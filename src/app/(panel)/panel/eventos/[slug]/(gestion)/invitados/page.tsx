@@ -203,6 +203,7 @@ export default async function InvitadosPage({
             <DeliveryPanel
               eventLocale={event.value.locale}
               eventSlug={event.value.slug}
+              eventTitle={event.value.title}
               rows={filas.map((fila) => ({
                 id: fila.id,
                 label: fila.label,
@@ -235,7 +236,7 @@ export default async function InvitadosPage({
         </PanelCard>
 
         <PanelCard title="Importar desde CSV">
-          <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} />
+          <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
         </PanelCard>
 
         {/* Los grupos con sus cupos y su enlace no están en la maqueta —que modela

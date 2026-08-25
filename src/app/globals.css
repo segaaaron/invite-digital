@@ -84,3 +84,34 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/**
+ * Lo que el panel manda al papel: el pase de la puerta y la hoja de reparto.
+ *
+ * Las dos cosas viven dentro de una pantalla llena de controles y no pueden mudarse a una
+ * ruta propia como el plan del banquete, porque dibujan un enlace que acaba de nacer en el
+ * navegador. `printMarkedOnly()` marca el cuerpo, y esta regla esconde todo lo que no
+ * lleve `data-para-imprimir`.
+ *
+ * Se esconde con `visibility`, no con `display: none`: el `display` de los ancestros
+ * arrastraría también a lo marcado, que cuelga de ellos. Con `visibility` basta volver a
+ * encenderlo en el subárbol que sí sale en el papel. Y sirve igual dentro de un `<dialog>`
+ * modal, que vive en la capa superior.
+ */
+@media print {
+  body[data-imprimiendo='tarjeta'] * {
+    visibility: hidden;
+  }
+
+  body[data-imprimiendo='tarjeta'] [data-para-imprimir],
+  body[data-imprimiendo='tarjeta'] [data-para-imprimir] * {
+    visibility: visible;
+  }
+
+  body[data-imprimiendo='tarjeta'] [data-para-imprimir] {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 100%;
+  }
+}

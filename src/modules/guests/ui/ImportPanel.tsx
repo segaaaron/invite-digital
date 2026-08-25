@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { importGuestsAction, type ImportState } from '../actions'
+import { DeliverySheet } from './DeliverySheet'
 
 /**
  * Importación masiva desde un CSV.
@@ -11,7 +12,15 @@ import { importGuestsAction, type ImportState } from '../actions'
  * importaron 37 de 50» obliga a comparar dos listas a mano para saber quién falta, y esos
  * enlaces no se pueden volver a mostrar.
  */
-export function ImportPanel({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
+export function ImportPanel({
+  eventId,
+  eventSlug,
+  eventTitle,
+}: {
+  eventId: string
+  eventSlug: string
+  eventTitle: string
+}) {
   const [state, action, pending] = useActionState<ImportState, FormData>(importGuestsAction, { status: 'idle' })
 
   return (
@@ -90,6 +99,13 @@ export function ImportPanel({ eventId, eventSlug }: { eventId: string; eventSlug
               </tbody>
             </table>
           </div>
+
+          {/* Cincuenta grupos importados son cincuenta enlaces que no se vuelven a
+              mostrar: la hoja los deja en papel de una vez. */}
+          <DeliverySheet
+            cards={state.rows.flatMap((fila) => (fila.url === null ? [] : [{ label: fila.label, url: fila.url }]))}
+            eventTitle={eventTitle}
+          />
         </div>
       ) : null}
     </div>

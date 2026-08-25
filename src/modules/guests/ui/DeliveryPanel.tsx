@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { resendInvitationAction, setGroupPhoneAction, type ResendState } from '../actions'
+import { DeliverySheet } from './DeliverySheet'
 import { renderMessage, whatsappLink } from '../domain/message-template'
 
 export type DeliveryRow = {
@@ -30,11 +31,13 @@ function estado(fila: DeliveryRow): { tone: PillTone; text: string } {
  */
 export function DeliveryPanel({
   eventSlug,
+  eventTitle,
   eventLocale,
   template,
   rows,
 }: {
   eventSlug: string
+  eventTitle: string
   eventLocale: string
   template: string | null
   rows: readonly DeliveryRow[]
@@ -93,6 +96,10 @@ export function DeliveryPanel({
               Enviar por WhatsApp
             </PanelButton>
           </div>
+
+          {/* La tarjeta con el QR solo puede existir aquí y ahora: el enlace en claro se
+              va con esta pantalla. */}
+          <DeliverySheet cards={[{ label: state.label, url: state.url }]} eventTitle={eventTitle} />
         </div>
       ) : null}
 

@@ -43,5 +43,39 @@ test('la importación dice fila por fila qué entró y qué no', async ({ page }
   await expect(informe).toContainText('Sin etiqueta')
   await expect(page.getByLabel('Enlace de Familia García')).toHaveValue(/\/i\/[A-Za-z0-9_-]{22}$/)
 
+  // La hoja de reparto trae un QR por enlace creado, y solo por los creados: la fila
+  // rechazada no tiene enlace que imprimir.
+  await expect(page.getByRole('img', { name: 'Invitación de Familia García' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Invitación de Ana Vega' })).toBeVisible()
+  await expect(page.getByRole('img', { name: /^Invitación de/ })).toHaveCount(2)
+
+  await deleteEnvioEvent(slug)
+})
+
+test('la hoja de reparto se imprime sola: el resto del panel no sale en el papel', async ({ page }) => {
+  const slug = `${SLUG}-qr`
+  await seedEnvioEvent(slug)
+
+  await page.goto(`/panel/eventos/${slug}/invitados?panel=envio`)
+  await page.getByRole('button', { name: /generar enlace|reenviar/i }).first().click()
+  await expect(page.getByRole('img', { name: 'Invitación de Familia Rojas Peña' })).toBeVisible()
+
+  // Con el papel puesto, lo único visible es la tarjeta. Se mide con `visibility`
+  // calculada, que es justo lo que la regla cambia; `toBeVisible` de Playwright no
+  // consulta el medio de impresión.
+  await page.emulateMedia({ media: 'print' })
+  const oculto = await page.evaluate(() => {
+    document.body.dataset.imprimiendo = 'tarjeta'
+    const tarjeta = document.querySelector('[data-para-imprimir]')
+    const barra = document.querySelector('nav')
+    return {
+      tarjeta: tarjeta === null ? null : getComputedStyle(tarjeta).visibility,
+      barra: barra === null ? null : getComputedStyle(barra).visibility,
+    }
+  })
+
+  expect(oculto.tarjeta).toBe('visible')
+  expect(oculto.barra).toBe('hidden')
+
   await deleteEnvioEvent(slug)
 })

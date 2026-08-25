@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef } from 'react'
 import { resendInvitationAction, type ResendState } from '../actions'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { printMarkedOnly } from '@/shared/design/ui/print'
 import { PassQrSvg } from './PassQrSvg'
 
 const INICIAL: ResendState = { status: 'idle' }
@@ -102,6 +103,7 @@ export function PassDialog({
         <>
           <div
             className="mt-5 flex flex-col items-center gap-4 rounded-[18px] border border-gold/40 bg-linear-to-br from-bg-top to-bg-raised p-7 text-center shadow-float print:shadow-none"
+            data-para-imprimir
             id="pase-para-imprimir"
           >
             <p className="font-mono text-[9px] tracking-[0.35em] text-gold-deep uppercase">Pase de entrada</p>
@@ -126,7 +128,7 @@ export function PassDialog({
 
           <div className="mt-6 flex justify-end gap-2.5">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
-            <PanelButton variant="primary" onClick={() => window.print()}>
+            <PanelButton variant="primary" onClick={printMarkedOnly}>
               Imprimir pase
             </PanelButton>
           </div>
