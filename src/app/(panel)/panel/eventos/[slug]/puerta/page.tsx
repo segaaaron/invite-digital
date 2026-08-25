@@ -18,7 +18,8 @@ export default async function DoorPage({ params }: { params: Promise<{ slug: str
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug)
+    // Modo puerta: la misma sección que el check-in, y por eso el personal entra.
+  const event = await events.getFor(actor, slug, { section: 'checkin' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

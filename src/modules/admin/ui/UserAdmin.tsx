@@ -2,6 +2,7 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import type { Role } from '@/modules/identity/domain/access'
 import { createUserAction, deleteUserAction, setUserRoleAction, type AdminActionState } from '../actions'
 
 const INICIAL: AdminActionState = { status: 'idle' }
@@ -9,7 +10,7 @@ const INICIAL: AdminActionState = { status: 'idle' }
 export type UserView = {
   readonly id: string
   readonly email: string
-  readonly role: 'admin' | 'atelier'
+  readonly role: Role
   readonly eventos: number
   readonly esUnoMismo: boolean
 }
@@ -58,6 +59,9 @@ export function NewUserForm() {
         <select className={FIELD_CLASS} defaultValue="atelier" id={`${id}-rol`} name="role">
           <option value="atelier">Atelier — solo sus eventos</option>
           <option value="admin">Administrador — todo el sistema</option>
+          {/* El personal de puerta se da de alta desde el propio evento, que es quien
+              sabe qué boda trabaja: aquí no aparece, porque un puerta sin evento
+              asignado no puede hacer nada. */}
         </select>
       </div>
 
@@ -101,14 +105,18 @@ export function UserRow({ user }: { user: UserView }) {
           </span>
         </span>
 
-        <Pill tone={user.role === 'admin' ? 'ok' : 'pending'}>{user.role === 'admin' ? 'Administrador' : 'Atelier'}</Pill>
+        <Pill tone={user.role === 'admin' ? 'ok' : user.role === 'puerta' ? 'maybe' : 'pending'}>
+          {user.role === 'admin' ? 'Administrador' : user.role === 'puerta' ? 'Puerta' : 'Atelier'}
+        </Pill>
 
         {/* Cambiar el rol y borrar son dos formularios distintos: uno solo con dos
             emisores obligaría a leer el `decision` para saber qué se pidió. */}
         <form action={cambiarRol}>
           <input name="userId" type="hidden" value={user.id} />
           <input name="role" type="hidden" value={user.role === 'admin' ? 'atelier' : 'admin'} />
-          <PanelButton disabled={cambiando || user.esUnoMismo} type="submit">
+          {/* Al personal de puerta no se le ofrece el ascenso desde aquí: su alta y su
+              baja las hace el dueño del evento en el que trabaja. */}
+          <PanelButton disabled={cambiando || user.esUnoMismo || user.role === 'puerta'} type="submit">
             {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
           </PanelButton>
         </form>

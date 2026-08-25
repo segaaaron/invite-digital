@@ -45,7 +45,12 @@ export type NavCounts = {
  * `requireAdmin()`, que devuelve 404— pero enseñar enlaces que llevan a un 404 es
  * enseñar que existe algo a lo que no se llega.
  */
-export function panelNav(slug: string | null, counts: NavCounts = {}, esAdmin = false): NavSection[] {
+export function panelNav(
+  slug: string | null,
+  counts: NavCounts = {},
+  esAdmin = false,
+  esPuerta = false,
+): NavSection[] {
   const base = slug === null ? null : `/panel/eventos/${slug}`
   const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
 
@@ -62,6 +67,20 @@ export function panelNav(slug: string | null, counts: NavCounts = {}, esAdmin = 
         },
       ]
     : []
+
+  // El personal de puerta ve una barra de una sola entrada. Enseñarle el resto sería
+  // enseñarle enlaces que le devuelven 404: el corte de verdad está en la sección que
+  // pide cada página.
+  if (esPuerta) {
+    return [
+      {
+        label: 'Puerta',
+        items: [
+          { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
+        ],
+      },
+    ]
+  }
 
   return [
     {

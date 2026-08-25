@@ -1,4 +1,4 @@
-import { asc, eq, sql } from 'drizzle-orm'
+import { asc, eq, inArray, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { events } from '@/shared/db/schema'
 import type { EventRepository } from '../application/ports'
@@ -137,6 +137,12 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
 
   async listByUser(userId) {
     return database.select(COLUMNS).from(events).where(eq(events.userId, userId)).orderBy(asc(events.eventDate))
+  },
+
+  async listByIds(ids) {
+    // Con la lista vacía, `inArray` genera un `in ()` que Postgres rechaza.
+    if (ids.length === 0) return []
+    return database.select(COLUMNS).from(events).where(inArray(events.id, [...ids])).orderBy(asc(events.eventDate))
   },
 
   async setOwner(eventId, userId) {

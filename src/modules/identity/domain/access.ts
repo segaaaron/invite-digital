@@ -5,7 +5,11 @@
  * traer los datos que necesitan.
  */
 
-export const ROLES = ['admin', 'atelier'] as const
+/**
+ * `puerta` es el personal de recepción: registra llegadas y **nada más**. No es un
+ * atelier con menos permisos, es otro oficio.
+ */
+export const ROLES = ['admin', 'atelier', 'puerta'] as const
 export type Role = (typeof ROLES)[number]
 
 export type Actor = {
@@ -28,15 +32,44 @@ export function isAdmin(actor: Actor): boolean {
 }
 
 /**
- * El evento es suyo, o es admin.
+ * Las secciones de un evento, a efectos de permisos.
+ *
+ * `full` es todo lo del atelier; `checkin` es la puerta. **`full` es lo que se hereda
+ * cuando nadie dice nada**, y `full` deniega a un puerta: el olvido cae del lado seguro,
+ * que es la única forma de que una regla de permisos sobreviva a la siguiente sesión.
+ */
+export type EventSection = 'full' | 'checkin'
+
+/**
+ * El evento es suyo, o es admin, o es personal de puerta de **ese** evento y va a la
+ * sección de la puerta.
  *
  * Un evento **sin dueño** solo lo ve el admin. No debería existir ninguno —la migración
  * `0021` los asignó todos—, pero la columna es anulable y «sin dueño» no puede
  * significar «de cualquiera».
  */
-export function canAccessEvent(actor: Actor, event: { userId: string | null }): boolean {
+export function canAccessEvent(
+  actor: Actor,
+  event: { userId: string | null },
+  options: { section?: EventSection | undefined; isStaff?: boolean | undefined } = {},
+): boolean {
+  const section = options.section ?? 'full'
+
   if (isAdmin(actor)) return true
+
+  if (actor.role === 'puerta') {
+    // La pertenencia y la sección, las dos. Ser personal de una boda no abre la lista de
+    // invitados de esa boda, y serlo de una no abre la puerta de otra.
+    return section === 'checkin' && options.isStaff === true
+  }
+
   return event.userId !== null && event.userId === actor.userId
+}
+
+/** Quién puede dar de alta al personal de puerta de un evento: su dueño, y el admin. */
+export function canManageStaff(actor: Actor, event: { userId: string | null }): boolean {
+  if (isAdmin(actor)) return true
+  return actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId
 }
 
 /**

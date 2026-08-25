@@ -156,6 +156,27 @@ export const users = pgTable('users', {
 })
 
 /**
+ * Quién puede registrar llegadas en qué evento.
+ *
+ * Es una **pertenencia**, no un dato, y por eso va con `cascade` por los dos lados:
+ * borrado el evento o el usuario, el permiso no significa nada. Lo que nunca cae en
+ * cascada son los datos — `events.user_id` va con `restrict`.
+ */
+export const eventStaff = pgTable(
+  'event_staff',
+  {
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.userId] }), index('event_staff_user_idx').on(t.userId)],
+)
+
+/**
  * Quién hizo qué y cuándo en la administración.
  *
  * `actorUserId` va con `set null` y `actorEmail` es **texto copiado**, no una unión:

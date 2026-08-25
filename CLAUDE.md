@@ -338,6 +338,35 @@ correo, que necesita proveedor.
   el componente, así que ese `useState` se pierde en ese mismo instante. Lo que se ve es
   la cola recalculada, donde la fila ya no está. Lo cazó la e2e.
 
+### Notas del personal de puerta (`event_staff`)
+
+- **El rol solo no basta: hace falta la pertenencia.** Una persona de puerta trabaja una
+  boda, una noche. Un rol global le daría el check-in de *todos* los eventos del atelier,
+  con listas de invitados de bodas que no son la suya. De ahí `event_staff(event_id,
+  user_id)`.
+- **`CASCADE` por los dos lados, y aquí sí.** Una pertenencia es un permiso, no un dato:
+  borrado el evento o el usuario, no significa nada. Lo que nunca cae en cascada son los
+  datos — `events.user_id` sigue con `RESTRICT`.
+- **El corte va en la firma, con la sección.** `events.getFor(actor, slug)` acepta
+  `{ section: 'checkin' }`, y **`full` es lo que se hereda cuando nadie dice nada**. Una
+  página nueva que no declare su sección deniega a un puerta: el olvido cae del lado
+  seguro, que es la única forma de que una regla de permisos sobreviva a la siguiente
+  sesión. Igual en `requireEventAccess`.
+- **El layout de `(gestion)` pide `checkin`, no `full`.** Envuelve también al check-in, y
+  pidiendo `full` dejaría al personal fuera antes de llegar a su propia pantalla. El corte
+  de las demás secciones lo hace cada página.
+- **Lo da de alta el dueño del evento**, desde su Configuración, no el admin desde la
+  administración: quien contrata a la edecán es quien lleva la boda. `canManageStaff` lo
+  decide y se comprueba en el servidor.
+- **Un alta sobre un correo que ya existe no toca su cuenta**: le añade la pertenencia y
+  nada más. Cambiar la contraseña de un usuario existente escribiendo su correo sería una
+  forma de robarle la cuenta.
+- **Quitar el acceso borra la pertenencia, nunca la cuenta**: esa misma persona puede
+  estar en la puerta de otra boda la semana que viene.
+- **`verify:tenancy` exige que cada acción llame a `requireSession()` en su propio
+  cuerpo.** Delegarlo en un ayudante lo escondía del verificador: `addDoorStaffAction` se
+  le coló hasta que se cerró ese hueco. Ahora, o lo llama, o está apuntada con su motivo.
+
 ### Notas de la multitenencia y el admin
 
 - **El evento tiene dueño (`events.user_id`) y el usuario tiene rol (`users.role`).** Antes

@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { events, identity } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
-import { type Actor, isAdmin, parseRole } from './domain/access'
+import { type Actor, type EventSection, isAdmin, parseRole } from './domain/access'
 
 export const SESSION_COOKIE = 'invite_session'
 
@@ -62,7 +62,7 @@ export async function requireAdmin(): Promise<Actor> {
  */
 export async function requireEventAccess(
   actor: Actor,
-  ref: { eventId?: string | undefined; eventSlug?: string | undefined },
+  ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
 ): Promise<void> {
   const permitido = await events.canTouch(actor, ref)
   if (!permitido) {

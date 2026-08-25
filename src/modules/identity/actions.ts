@@ -51,7 +51,16 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
 
   // `redirect` lanza para hacer su trabajo: va después de escribir la cookie y nunca
   // dentro de un try.
-  redirect(activo === null ? '/panel' : `/panel/eventos/${activo.slug}`)
+  // El personal de puerta cae directamente en su check-in: el resumen del evento le
+  // daría 404, que es lo correcto pero una bienvenida pésima.
+  const esPuerta = usuario !== null && parseRole(usuario.role) === 'puerta'
+  redirect(
+    activo === null
+      ? '/panel'
+      : esPuerta
+        ? `/panel/eventos/${activo.slug}/checkin`
+        : `/panel/eventos/${activo.slug}`,
+  )
 }
 
 export async function signOutAction(): Promise<void> {

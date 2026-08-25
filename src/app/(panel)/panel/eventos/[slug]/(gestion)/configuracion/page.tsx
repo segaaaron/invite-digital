@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
+import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
+import { canManageStaff } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
@@ -34,6 +36,11 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
 
+  // El personal de puerta solo lo gestiona el dueño del evento —y el admin—. Para
+  // cualquier otro, la tarjeta no se pinta: el corte de verdad está en la acción.
+  const puedeGestionarPersonal = canManageStaff(actor, event.value)
+  const personal = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id) : []
+
   return (
     <>
       <PanelHeader kicker="Cuenta" meta={event.value.title} title="Configuración del evento" />
@@ -46,6 +53,12 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
           </div>
         </PanelCard>
+
+        {puedeGestionarPersonal ? (
+          <PanelCard title="Personal de puerta">
+            <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />
+          </PanelCard>
+        ) : null}
 
         <PanelCard title="Vista previa del enlace">
           <div className="flex flex-col gap-4">

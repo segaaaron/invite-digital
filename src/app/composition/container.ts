@@ -25,6 +25,7 @@ import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
+import { drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
 import { checkInByGroup } from '@/modules/checkin/application/check-in-by-group'
 import { checkInByScan } from '@/modules/checkin/application/check-in-by-scan'
@@ -83,6 +84,7 @@ import {
   setUserRole as setUserRoleUseCase,
 } from '@/modules/admin/application/admin-use-cases'
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
+import type { Role } from '@/modules/identity/domain/access'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
 import { env } from '@/shared/config/env'
 import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
@@ -168,11 +170,21 @@ export const events = {
    * pregunta no compila.
    */
   listAll: listEvents({ events: drizzleEventRepository }),
-  getFor: getEventFor({ events: drizzleEventRepository }),
-  getByIdFor: getEventByIdFor({ events: drizzleEventRepository }),
-  listFor: listEventsFor({ events: drizzleEventRepository }),
-  canTouch: actorCanTouchEvent({ events: drizzleEventRepository }),
+  getFor: getEventFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
+  getByIdFor: getEventByIdFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
+  listFor: listEventsFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
+  canTouch: actorCanTouchEvent({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   setOwner: (eventId: string, userId: string) => drizzleEventRepository.setOwner(eventId, userId),
+  /**
+   * El personal de puerta de un evento. Vive aquí y no en un módulo propio porque es una
+   * pertenencia del evento, no una entidad con vida propia.
+   */
+  staff: {
+    add: (eventId: string, userId: string) => drizzleStaffRepository.add(eventId, userId),
+    remove: (eventId: string, userId: string) => drizzleStaffRepository.remove(eventId, userId),
+    listUserIds: (eventId: string) => drizzleStaffRepository.listUserIds(eventId),
+    listWithEmail: (eventId: string) => drizzleStaffRepository.listWithEmail(eventId),
+  },
   remove: deleteEvent({ events: drizzleEventRepository }),
   setPassword: setEventPassword({
     events: drizzleEventRepository,
@@ -374,7 +386,7 @@ export const admin = {
   record: recordAdminAction({ admin: drizzleAdminRepository }),
   planSlugs: () => drizzleAdminRepository.listPlanSlugs(),
   /** El alta la hace el admin: no hay registro público. */
-  createUser: async (input: { email: string; password: string; role: 'admin' | 'atelier' }) => {
+  createUser: async (input: { email: string; password: string; role: Role }) => {
     const passwordHash = await argon2Hasher.hash(input.password)
     return drizzleUserRepository.create({ email: input.email, passwordHash, role: input.role })
   },

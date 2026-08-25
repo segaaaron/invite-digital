@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canAccessEvent, canDeleteUser, canDemote, isAdmin, parseRole, type Actor } from './access'
+import { canAccessEvent, canDeleteUser, canDemote, canManageStaff, isAdmin, parseRole, type Actor } from './access'
 
 const atelier: Actor = { userId: 'u1', email: 'a@ejemplo.bo', role: 'atelier' }
 const otro: Actor = { userId: 'u2', email: 'b@ejemplo.bo', role: 'atelier' }
@@ -91,5 +91,54 @@ describe('canDeleteUser', () => {
 
   it('un usuario sin eventos se borra', () => {
     expect(canDeleteUser(admin, { userId: 'u1', eventos: 0, targetIsAdmin: false, adminCount: 2 })).toEqual({ ok: true })
+  })
+})
+
+describe('canAccessEvent · el personal de puerta', () => {
+  const puerta: Actor = { userId: 'p1', email: 'puerta@ejemplo.bo', role: 'puerta' }
+  const evento = { userId: 'u1' }
+
+  it('abre el check-in del evento donde es personal', () => {
+    expect(canAccessEvent(puerta, evento, { section: 'checkin', isStaff: true })).toBe(true)
+  })
+
+  it('no abre nada más de ese mismo evento', () => {
+    // Ser personal de una boda no abre la lista de invitados de esa boda.
+    expect(canAccessEvent(puerta, evento, { section: 'full', isStaff: true })).toBe(false)
+  })
+
+  it('ni el check-in de un evento donde no lo es', () => {
+    expect(canAccessEvent(puerta, evento, { section: 'checkin', isStaff: false })).toBe(false)
+  })
+
+  it('sin decir la sección, hereda «full» y queda fuera', () => {
+    // El olvido cae del lado seguro: una página nueva que no diga su sección deniega.
+    expect(canAccessEvent(puerta, evento, { isStaff: true })).toBe(false)
+    expect(canAccessEvent(puerta, evento)).toBe(false)
+  })
+
+  it('el dueño y el admin no se ven afectados por la sección', () => {
+    expect(canAccessEvent(atelier, { userId: 'u1' }, { section: 'checkin' })).toBe(true)
+    expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'full' })).toBe(true)
+  })
+})
+
+describe('canManageStaff', () => {
+  it('el dueño del evento da de alta a su gente de puerta', () => {
+    expect(canManageStaff(atelier, { userId: 'u1' })).toBe(true)
+  })
+
+  it('otro atelier no', () => {
+    expect(canManageStaff(otro, { userId: 'u1' })).toBe(false)
+  })
+
+  it('el admin sí, porque puede todo', () => {
+    expect(canManageStaff(admin, { userId: 'u1' })).toBe(true)
+  })
+
+  it('y el propio personal de puerta no se añade compañeros', () => {
+    const puerta: Actor = { userId: 'p1', email: 'p@ejemplo.bo', role: 'puerta' }
+
+    expect(canManageStaff(puerta, { userId: 'p1' })).toBe(false)
   })
 })

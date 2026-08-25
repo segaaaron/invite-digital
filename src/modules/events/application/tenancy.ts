@@ -1,8 +1,15 @@
-import { canAccessEvent, isAdmin, type Actor } from '@/modules/identity/domain/access'
+import { canAccessEvent, isAdmin, type Actor, type EventSection } from '@/modules/identity/domain/access'
 import { attempt, err, isErr, isOk, ok, type Result } from '@/shared/result'
 import { createEvent, type Event } from '../domain/event'
 import { eventError, type EventError } from '../domain/errors'
-import type { EventRepository } from './ports'
+import type { EventRepository, StaffReader } from './ports'
+
+/**
+ * La sección que se pide. **`full` por omisión**, y `full` deniega al personal de puerta:
+ * una página nueva que no diga su sección hereda la más restrictiva. El olvido cae del
+ * lado seguro.
+ */
+type Opciones = { section?: EventSection | undefined }
 
 /**
  * El evento de este actor.
@@ -16,8 +23,8 @@ import type { EventRepository } from './ports'
  * tiene nada que hacer ahí. Es la misma regla que los tokens de invitado.
  */
 export const getEventFor =
-  (deps: { events: EventRepository }) =>
-  async (actor: Actor, slug: string): Promise<Result<Event, EventError>> =>
+  (deps: { events: EventRepository; staff: StaffReader }) =>
+  async (actor: Actor, slug: string, opciones: Opciones = {}): Promise<Result<Event, EventError>> =>
     attempt<Event, EventError>(
       async () => {
         const row = await deps.events.findBySlug(slug)
@@ -25,7 +32,7 @@ export const getEventFor =
 
         const event = createEvent(row)
         if (isErr(event)) return event
-        if (!canAccessEvent(actor, event.value)) {
+        if (!(await permitido(deps, actor, event.value, opciones))) {
           return err(eventError('not_found', `El evento ${slug} no es de ${actor.email}`))
         }
 
@@ -34,10 +41,24 @@ export const getEventFor =
       (cause) => eventError('storage_failure', `No se pudo leer el evento ${slug}: ${String(cause)}`),
     )
 
+/**
+ * La pertenencia solo se consulta si el actor es de puerta: para un atelier o un admin la
+ * respuesta no depende de ella, y sería un viaje más a la base en cada página del panel.
+ */
+async function permitido(
+  deps: { staff: StaffReader },
+  actor: Actor,
+  event: Event,
+  opciones: Opciones,
+): Promise<boolean> {
+  const isStaff = actor.role === 'puerta' ? await deps.staff.isStaffOf(event.id, actor.userId) : false
+  return canAccessEvent(actor, event, { section: opciones.section, isStaff })
+}
+
 /** Lo mismo por identificador, para las acciones que reciben `eventId` de un formulario. */
 export const getEventByIdFor =
-  (deps: { events: EventRepository }) =>
-  async (actor: Actor, id: string): Promise<Result<Event, EventError>> =>
+  (deps: { events: EventRepository; staff: StaffReader }) =>
+  async (actor: Actor, id: string, opciones: Opciones = {}): Promise<Result<Event, EventError>> =>
     attempt<Event, EventError>(
       async () => {
         const row = await deps.events.findById(id)
@@ -45,7 +66,7 @@ export const getEventByIdFor =
 
         const event = createEvent(row)
         if (isErr(event)) return event
-        if (!canAccessEvent(actor, event.value)) {
+        if (!(await permitido(deps, actor, event.value, opciones))) {
           return err(eventError('not_found', `El evento ${id} no es de ${actor.email}`))
         }
 
@@ -62,11 +83,18 @@ export const getEventByIdFor =
  * títulos de boda ajenos a la memoria del proceso.
  */
 export const listEventsFor =
-  (deps: { events: EventRepository }) =>
+  (deps: { events: EventRepository; staff: StaffReader }) =>
   async (actor: Actor): Promise<Result<Event[], EventError>> =>
     attempt<Event[], EventError>(
       async () => {
-        const rows = isAdmin(actor) ? await deps.events.listAll() : await deps.events.listByUser(actor.userId)
+        // El personal de puerta ve los eventos donde trabaja, y solo para llegar a su
+        // check-in: la bandeja es su única forma de elegir boda cuando cubre dos la misma
+        // semana.
+        const rows = isAdmin(actor)
+          ? await deps.events.listAll()
+          : actor.role === 'puerta'
+            ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId))
+            : await deps.events.listByUser(actor.userId)
         const built: Event[] = []
 
         for (const row of rows) {
@@ -82,14 +110,18 @@ export const listEventsFor =
 
 /** Lo usa la guardia de las Server Actions, que solo necesita un sí o un no. */
 export const actorCanTouchEvent =
-  (deps: { events: EventRepository }) =>
-  async (actor: Actor, ref: { eventId?: string | undefined; eventSlug?: string | undefined }): Promise<boolean> => {
+  (deps: { events: EventRepository; staff: StaffReader }) =>
+  async (
+    actor: Actor,
+    ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
+  ): Promise<boolean> => {
+    const opciones = { section: ref.section }
     if (ref.eventId !== undefined) {
-      const porId = await getEventByIdFor(deps)(actor, ref.eventId)
+      const porId = await getEventByIdFor(deps)(actor, ref.eventId, opciones)
       if (!isOk(porId)) return false
     }
     if (ref.eventSlug !== undefined) {
-      const porSlug = await getEventFor(deps)(actor, ref.eventSlug)
+      const porSlug = await getEventFor(deps)(actor, ref.eventSlug, opciones)
       if (!isOk(porSlug)) return false
     }
     // Sin ninguna referencia no hay nada que comprobar, y eso es un error de quien llama:

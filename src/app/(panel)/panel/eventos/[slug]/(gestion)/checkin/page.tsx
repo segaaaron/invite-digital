@@ -26,7 +26,8 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug)
+    // La única sección que abre al personal de puerta. Todo lo demás hereda `full`.
+  const event = await events.getFor(actor, slug, { section: 'checkin' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

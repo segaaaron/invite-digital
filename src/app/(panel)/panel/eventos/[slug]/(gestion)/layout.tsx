@@ -26,7 +26,10 @@ export default async function EventoLayout({
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug)
+  // La carcasa envuelve también al check-in, así que pide la sección de la puerta: si
+  // pidiera `full`, el personal se quedaría fuera antes de llegar a su propia pantalla.
+  // El corte de las demás secciones lo hace cada página, no este layout.
+  const event = await events.getFor(actor, slug, { section: 'checkin' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
@@ -54,7 +57,7 @@ export default async function EventoLayout({
         sinLeer: isErr(libro) ? null : unreadCount(libro.value),
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: porRevisar,
-      }, isAdmin(actor))}
+      }, isAdmin(actor), actor.role === 'puerta')}
       user={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,

@@ -12,6 +12,8 @@ export interface EventRepository {
   listAll(): Promise<EventInput[]>
   /** Los eventos de un atelier. El admin usa `listAll`. */
   listByUser(userId: string): Promise<EventInput[]>
+  /** Los eventos donde alguien es personal de puerta. */
+  listByIds(ids: readonly string[]): Promise<EventInput[]>
   /** Cambia el dueño. Lo usa el admin al reasignar. */
   setOwner(eventId: string, userId: string): Promise<void>
   findBySlug(slug: string): Promise<EventInput | null>
@@ -32,4 +34,15 @@ export interface ClientShareRepository {
   findByTokenHash(tokenHash: Buffer): Promise<ClientShareRow | null>
   findLiveByEvent(eventId: string, now: Date): Promise<ClientShareRow | null>
   revoke(id: string, at: Date): Promise<void>
+}
+
+/**
+ * Quién es personal de puerta de qué evento.
+ *
+ * Va en su propio puerto y no dentro de `EventRepository` porque la pertenencia no es un
+ * dato del evento: es un permiso, y se consulta **solo** cuando el actor es de puerta.
+ */
+export interface StaffReader {
+  isStaffOf(eventId: string, userId: string): Promise<boolean>
+  eventIdsOf(userId: string): Promise<string[]>
 }

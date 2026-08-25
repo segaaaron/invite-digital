@@ -24,6 +24,7 @@ const repo = (existing: string[] = []) => {
     anonymize: async () => {},
     insert: async (event) => void inserted.push(event),
     update: async () => {},
+    listByIds: async () => [],
     listByUser: async () => [],
     setOwner: async () => {},
     listAll: async () => [],
@@ -75,6 +76,7 @@ describe('createEventUseCase', () => {
         throw new Error('conexión rechazada')
       },
       update: async () => {},
+      listByIds: async () => [],
       listByUser: async () => [],
       setOwner: async () => {},
       listAll: async () => [],

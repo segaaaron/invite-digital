@@ -1,5 +1,9 @@
 'use server'
 
+// Todas las acciones de este fichero declaran `section: 'checkin'`: son las únicas que el
+// personal de puerta puede llamar. Cualquier acción del panel que no diga su sección
+// hereda `full`, y `full` deniega a un puerta — el olvido cae del lado seguro.
+
 import { revalidatePath } from 'next/cache'
 import { checkin, plans } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
@@ -42,7 +46,7 @@ export async function recordScansAction(input: {
   scans: ScanInput[]
 }): Promise<ScanOutcome[]> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.record({
@@ -77,7 +81,7 @@ export async function checkInByGroupAction(input: {
   scannedAtMs: number
 }): Promise<ScanOutcome> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.recordGroup({
@@ -116,7 +120,7 @@ export async function adjustArrivalAction(input: {
   eventSlug: string
 }): Promise<DoorActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.adjust({ scanId: input.scanId, arrivedCount: input.arrivedCount })
@@ -135,7 +139,7 @@ export async function voidArrivalAction(input: {
   eventSlug: string
 }): Promise<DoorActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.void({ scanId: input.scanId })
