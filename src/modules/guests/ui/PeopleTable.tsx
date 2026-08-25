@@ -102,7 +102,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <SearchField
           label="Buscar invitado o grupo"
@@ -139,8 +139,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
       {visibles.length === 0 ? (
         <p className="text-[13px] text-ink-mute">Ningún invitado coincide.</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-left">
+        <div className="relative min-w-0 overflow-x-auto">
+          <table className="w-full min-w-[720px] border-collapse text-left">
             <thead>
               <tr>
                 {['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna) => (

@@ -13,7 +13,7 @@ export default async function HelpPage() {
     <>
       <PanelHeader kicker="Soporte" title="Centro de ayuda" />
 
-      <div className="grid gap-4.5 lg:grid-cols-[1.4fr_1fr]">
+      <div className="grid gap-4.5 min-[900px]:grid-cols-[1.4fr_1fr]">
         <PanelCard>
           <HelpCenter />
         </PanelCard>

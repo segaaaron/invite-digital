@@ -73,7 +73,7 @@ export function PlanCard({
       </header>
 
       {price === undefined ? null : (
-        <p className="flex items-baseline gap-2">
+        <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <span className="font-display text-[34px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">
             {formatPrice(billing === 'annual' && price.annualCents !== null ? price.annualCents : price.cents, price.currency)}
           </span>

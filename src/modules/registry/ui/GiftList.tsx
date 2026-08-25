@@ -156,7 +156,7 @@ export function GiftList({ eventId, eventSlug, currency, gifts }: Props) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
       {gifts.map((gift) => (
         <GiftCard key={gift.id} currency={currency} eventId={eventId} eventSlug={eventSlug} gift={gift} />
       ))}

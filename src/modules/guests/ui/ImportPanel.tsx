@@ -52,7 +52,7 @@ export function ImportPanel({ eventId, eventSlug }: { eventId: string; eventSlug
           <p className="text-[13px] text-ink">
             {state.created} creadas · {state.rejected} rechazadas. Los enlaces solo se muestran aquí: cópialos ahora.
           </p>
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">

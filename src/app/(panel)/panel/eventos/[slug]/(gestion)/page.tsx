@@ -152,7 +152,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         title="Bienvenida, "
       />
 
-      <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
+      <div className="mb-5.5 grid grid-cols-2 gap-3.5 min-[900px]:grid-cols-4">
         <StatCard
           label="Invitados"
           value={filas.length}
@@ -187,7 +187,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </div>
 
       {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
-      <div className="mb-5.5 grid items-start gap-4.5 lg:grid-cols-[1.6fr_1fr]">
+      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
         <PanelCard
           action={
             <Link href={`/panel/eventos/${event.value.slug}/estadisticas`}>
@@ -243,7 +243,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         ) : recientes.length === 0 ? (
           <p className="text-[14px] text-ink-soft">Todavía no hay invitados. Se cargan en la sección Invitados.</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="relative overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
@@ -302,7 +302,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </PanelCard>
 
       {/* Distribución de mesas y acciones rápidas, otra vez 1.6fr / 1fr. */}
-      <div className="grid items-start gap-4.5 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
         <PanelCard
           action={
             <Link href={`/panel/eventos/${event.value.slug}/mesas`}>

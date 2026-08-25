@@ -73,7 +73,7 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <SearchField
           label="Buscar grupo"
@@ -98,7 +98,10 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
       {visibles.length === 0 ? (
         <p className="text-[13px] text-ink-mute">Ningún grupo coincide.</p>
       ) : (
-    <table className="w-full border-collapse text-left">
+        // La tabla se desplaza dentro de su propia caja. Sin esto, en un teléfono empuja
+        // la página entera y aparece una barra horizontal que nadie busca.
+        <div className="relative min-w-0 overflow-x-auto">
+          <table className="w-full min-w-[520px] border-collapse text-left">
       <thead>
         <tr>
           {['Grupo', 'Confirmados', 'Estado', 'Enviado'].map((columna) => (
@@ -153,7 +156,8 @@ export function GuestGroupTable({ eventSlug, groups }: { eventSlug: string; grou
           </tr>
         ))}
       </tbody>
-    </table>
+          </table>
+        </div>
       )}
     </div>
   )

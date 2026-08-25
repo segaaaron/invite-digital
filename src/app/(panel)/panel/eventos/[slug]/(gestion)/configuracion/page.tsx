@@ -38,7 +38,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     <>
       <PanelHeader kicker="Cuenta" meta={event.value.title} title="Configuración del evento" />
 
-      <div className="grid gap-4.5 lg:grid-cols-[1.25fr_1fr]">
+      <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
         <PanelCard title="Detalles del evento">
           <div className="flex flex-col gap-6">
             <EventForm event={event.value} />

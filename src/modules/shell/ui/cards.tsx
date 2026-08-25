@@ -34,7 +34,7 @@ export function StatCard({
   const filled = progress === undefined ? null : Math.max(0, Math.min(1, progress))
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-5.5 shadow-card transition-shadow hover:shadow-float">
+    <div className="relative overflow-hidden rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-4 shadow-card transition-shadow min-[560px]:p-5.5 hover:shadow-float">
       {/* El filo de luz del borde superior de la maqueta (`.stat::before`). */}
       <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/90 to-transparent" />
       {icon ? (
@@ -43,7 +43,7 @@ export function StatCard({
         </span>
       ) : null}
       <p className="font-mono text-[9px] tracking-[0.35em] uppercase text-ink-mute">{label}</p>
-      <p className="mt-2 font-display text-[44px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">
+      <p className="mt-2 font-display text-[32px] leading-none font-light text-ink [font-variant-numeric:lining-nums] min-[560px]:text-[44px]">
         {value}
         {suffix ? <span className="ml-1 text-[18px] text-ink-mute">{suffix}</span> : null}
       </p>
@@ -83,7 +83,7 @@ export function PanelCard({
   return (
     <section
       id={id}
-      className={`scroll-mt-6 rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-5.5 shadow-card ${className}`.trim()}
+      className={`min-w-0 scroll-mt-6 rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-5.5 shadow-card ${className}`.trim()}
     >
       {title || action ? (
         <div className="mb-4.5 flex flex-wrap items-baseline justify-between gap-4">

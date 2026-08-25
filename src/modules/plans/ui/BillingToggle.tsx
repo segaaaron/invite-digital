@@ -30,7 +30,9 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
   const hayAnual = plans.some((plan) => plan.price !== undefined && hasAnnual(plan.price))
 
   const tarjetas = (
-    <div className="grid gap-5 md:grid-cols-3">
+    // Tres columnas solo cuando caben: en una tableta, tres tarjetas de plan estrujadas
+    // parten el precio en dos líneas y dejan «por evento» fuera de la tarjeta.
+    <div className="grid gap-5 min-[900px]:grid-cols-3">
       {plans.map((plan) => (
         <PlanCard
           billing={billing}

@@ -22,7 +22,7 @@ export function PanelFrame({
   children: ReactNode
 }) {
   return (
-    <div className="grid min-h-dvh grid-cols-1 md:grid-cols-[240px_1fr]">
+    <div className="grid min-h-dvh grid-cols-1 min-[860px]:grid-cols-[240px_1fr]">
       {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
           la ventana y en una página larga dejaba una franja blanca por debajo. */}
       <div className="bg-shell-deep">
@@ -30,7 +30,7 @@ export function PanelFrame({
       </div>
       {/* Los tres focos de la maqueta, fijos al viewport: el tercero es el que sostiene
           el pie de una página larga, que sin él se quedaba en marfil plano. */}
-      <main className="relative z-1 min-w-0 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(var(--color-sage-rgb)/0.14),transparent_55%),radial-gradient(ellipse_900px_800px_at_50%_120%,rgb(var(--color-sage-rgb)/0.08),transparent_60%)] bg-fixed px-4.5 py-4.5 md:px-8 md:py-7">
+      <main className="relative z-1 min-w-0 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(var(--color-sage-rgb)/0.14),transparent_55%),radial-gradient(ellipse_900px_800px_at_50%_120%,rgb(var(--color-sage-rgb)/0.08),transparent_60%)] bg-fixed px-4.5 py-4.5 min-[860px]:px-8 min-[860px]:py-7">
         {children}
       </main>
     </div>

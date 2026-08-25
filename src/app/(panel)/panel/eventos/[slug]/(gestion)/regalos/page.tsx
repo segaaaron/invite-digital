@@ -107,7 +107,7 @@ export default async function RegalosPage({
                 </p>
               </PanelCard>
             ) : (
-              <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
                 {funds.map((view) => (
                   <FundCard
                     key={view.fund.id}

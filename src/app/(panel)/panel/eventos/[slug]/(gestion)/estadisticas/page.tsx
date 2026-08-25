@@ -75,7 +75,7 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
           </p>
         </PanelCard>
       ) : (
-        <div className="grid items-start gap-4.5 lg:grid-cols-2">
+        <div className="grid items-start gap-4.5 min-[900px]:grid-cols-2">
           <PanelCard title="Estado de RSVPs">
             {stats.value.empty ? (
               <p className="text-[13px] text-ink-mute">Todavía no hay invitados en este evento.</p>
@@ -98,7 +98,7 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
         </div>
       )}
 
-      <div className="mt-4.5 grid items-start gap-4.5 lg:grid-cols-2">
+      <div className="mt-4.5 grid items-start gap-4.5 min-[900px]:grid-cols-2">
         <PanelCard title="Dispositivos">
           <Desglose filas={vistas?.devices ?? null} tone="device" total={vistas?.total ?? 0} />
         </PanelCard>

@@ -56,7 +56,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
       <DoorModeCard href={`/panel/eventos/${event.value.slug}/puerta`} />
 
-      <div className="mb-5.5 grid items-start gap-4.5 lg:grid-cols-[1.3fr_1fr]">
+      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.3fr_1fr]">
         <PanelCard title="Buscar a mano">
           <div className="flex flex-col gap-4">
             <p className="text-[12px] leading-[1.7] text-ink-soft">
