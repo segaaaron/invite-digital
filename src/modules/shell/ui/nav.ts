@@ -1,7 +1,13 @@
+import type { NavIcon } from './nav-icons'
+
 export type NavItem = {
   readonly href: string | null
   readonly label: string
-  readonly icon: string
+  /**
+   * La clave del icono, no el dibujo. Este fichero es un `.ts` sin JSX; el SVG lo pone
+   * `nav-icons.tsx`, y el `Record` de allí obliga a que cada clave traiga el suyo.
+   */
+  readonly icon: NavIcon
   /** Insignia con el número pendiente. `null` o cero no pintan nada. */
   readonly count?: number | null
   /** Qué cuenta la insignia. Un número suelto no dice nada a quien no ve el color. */
@@ -41,33 +47,33 @@ export function panelNav(slug: string | null, counts: NavCounts = {}): NavSectio
     {
       label: 'Evento activo',
       items: [
-        { href: base, label: 'Resumen', icon: '●' },
-        { href: en('/invitados'), label: 'Invitados', icon: '✉', count: counts.invitados ?? null, countLabel: 'grupos' },
-        { href: en('/mesas'), label: 'Mesas', icon: '🪑' },
-        { href: en('/regalos'), label: 'Mesa de regalos', icon: '🎁' },
-        { href: en('/mensajes'), label: 'Mensajes', icon: '💬', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-        { href: en('/checkin'), label: 'Check-in', icon: '✓', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
+        { href: base, label: 'Resumen', icon: 'resumen' },
+        { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
+        { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
+        { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
+        { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
+        { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
       ],
     },
     {
       label: 'Diseño',
       items: [
-        { href: en('/configuracion'), label: 'Editar invitación', icon: '✎' },
-        { href: en('/configuracion#vista-previa'), label: 'Vista previa', icon: '↗' },
-        { href: en('/estadisticas'), label: 'Estadísticas', icon: '📊' },
+        { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
+        { href: en('/configuracion#vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+        { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],
     },
     {
       label: 'Cuenta',
       items: [
-        { href: en('/configuracion'), label: 'Configuración', icon: '⚙' },
-        { href: en('/plan'), label: 'Plan', icon: '💳' },
-        { href: '/panel', label: 'Todos los eventos', icon: '⌂' },
+        { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
+        { href: en('/plan'), label: 'Plan', icon: 'plan' },
+        { href: '/panel', label: 'Todos los eventos', icon: 'eventos' },
         // La maqueta no dibujó el Plan B, igual que no dibujó Reparto ni las Zonas del
         // salón. Se queda: es funcionalidad construida, y un pedido que nadie mira es un
         // cliente que transfirió y no recibió nada.
-        { href: '/panel/pedidos', label: 'Pedidos', icon: '🧾', count: counts.pedidos ?? null, countLabel: 'por revisar' },
-        { href: '/panel/ayuda', label: 'Ayuda', icon: '?' },
+        { href: '/panel/pedidos', label: 'Pedidos', icon: 'pedidos', count: counts.pedidos ?? null, countLabel: 'por revisar' },
+        { href: '/panel/ayuda', label: 'Ayuda', icon: 'ayuda' },
       ],
     },
   ]

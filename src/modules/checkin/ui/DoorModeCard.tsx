@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { ScanIcon } from '@/shared/design/ui/icons'
 import { useState } from 'react'
 
 /**
@@ -19,11 +20,13 @@ export function DoorModeCard({ href }: { href: string }) {
   return (
     <section className="mb-5.5 overflow-hidden rounded-[18px] bg-linear-to-r from-shell to-shell-deep p-5.5 text-shell-ink shadow-card">
       <div className="flex flex-wrap items-center gap-4.5">
+        {/* La mira de escaneo, no un icono de puerta: lo que se hace aquí es leer
+            pases con la cámara. */}
         <span
           aria-hidden
-          className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-white/8 text-[22px]"
+          className="flex size-12 shrink-0 items-center justify-center rounded-[14px] bg-white/8"
         >
-          ⛩
+          <ScanIcon className="size-6" />
         </span>
 
         <div className="min-w-[240px] flex-1">

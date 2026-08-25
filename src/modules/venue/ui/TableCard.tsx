@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { PinIcon } from '@/shared/design/ui/icons'
 import { assignGroupAction, removeTableAction, unassignGroupAction, updateTableAction } from '../actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
@@ -139,8 +140,8 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
       </header>
 
       {table.notes === null ? null : (
-        <p className="rounded-lg bg-bg-raised px-2.5 py-1.5 text-[11px] text-ink-soft">
-          <span aria-hidden>📌 </span>
+        <p className="flex items-start gap-1.5 rounded-lg bg-bg-raised px-2.5 py-1.5 text-[11px] text-ink-soft">
+          <PinIcon className="mt-px shrink-0" />
           {table.notes}
         </p>
       )}

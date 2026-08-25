@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOutAction } from '@/modules/identity/actions'
 import type { NavItem, NavSection } from './nav'
+import { NAV_ICONS } from './nav-icons'
 
 export type PanelUser = {
   /** El evento activo. Sin ninguno creado, la tarjeta lo dice en vez de mentir. */
@@ -14,10 +15,12 @@ export type PanelUser = {
 const ITEM_BASE =
   'flex items-center gap-3 rounded-lg px-2.5 py-2 text-[12px] whitespace-nowrap transition-colors min-[860px]:text-[13px]'
 
-function Icono({ icon }: { icon: string }) {
+function Icono({ icon }: { icon: NavItem['icon'] }) {
+  // `shrink-0` y ancho fijo: los rótulos arrancan todos en la misma columna, que es lo
+  // que hace que la barra se lea como una lista y no como una escalera.
   return (
-    <span aria-hidden className="w-4.5 text-[15px] opacity-85">
-      {icon}
+    <span aria-hidden className="flex w-4.5 shrink-0 justify-center opacity-80">
+      {NAV_ICONS[icon]}
     </span>
   )
 }

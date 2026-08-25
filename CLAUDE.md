@@ -165,6 +165,19 @@ correo, que necesita proveedor.
 
 ### Notas de la piel del panel (`src/shared/design/ui/panel/PanelKit.tsx`)
 
+- **Ningún icono del panel es un carácter, y menos un emoji.** La barra tenía una mezcla
+  de glifos monocromos —`●`, `✉`, `✓`— y emoji a todo color —🪑, 🎁, 📊, 💳, 🧾—. El emoji
+  lo pinta la fuente del sistema con su propia paleta: sobre la tinta oscura de la barra
+  eran seis manchas de color ajenas a la marca, y además cambian de forma entre macOS,
+  Windows y Android. Todos son SVG de línea en `shared/design/ui/icons.tsx`, con
+  `currentColor`, y `nav.ts` guarda **la clave** del icono, no el dibujo: es un `.ts` sin
+  JSX. Lo vigila `src/modules/shell/ui/nav-icons.test.tsx`, y se comprobó que falla al
+  devolver un emoji.
+- **Un icono se juzga a 16 píxeles, no en el editor.** El de Mesas pasó por tres
+  versiones: la mesa vista desde arriba se leía como un diagrama de átomos y la silla que
+  la sustituyó era una silla. El de Configuración empezó siendo un engranaje cuyos dientes,
+  con trazo de 1,4, formaban un halo que se leía como el icono de brillo de pantalla; son
+  mandos.
 - **Ningún botón del panel se escribe a mano.** Botón, píldora de estado, chip de filtro,
   buscador, botón de icono y fila de barra viven en `PanelKit`. Pintarlos con clases
   sueltas en cada vista fue lo que metió el dorado de la web pública donde
