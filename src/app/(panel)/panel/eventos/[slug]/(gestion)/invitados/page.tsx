@@ -6,6 +6,8 @@ import { PeopleTable, type PersonRowView } from '@/modules/guests/ui/PeopleTable
 import { DeliveryPanel } from '@/modules/guests/ui/DeliveryPanel'
 import { ImportPanel } from '@/modules/guests/ui/ImportPanel'
 import { GuestDialog } from '@/modules/guests/ui/GuestDialog'
+import { EditPersonDialog } from '@/modules/guests/ui/EditPersonDialog'
+import { PassDialog } from '@/modules/guests/ui/PassDialog'
 import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
@@ -34,11 +36,11 @@ export default async function InvitadosPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string }>
+  searchParams: Promise<{ panel?: string; persona?: string }>
 }) {
   await requireSession()
   const { slug } = await params
-  const { panel } = await searchParams
+  const { panel, persona } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -72,6 +74,7 @@ export default async function InvitadosPage({
     : personas.value.map((persona) => ({
         id: persona.id,
         fullName: persona.fullName,
+        groupId: persona.guestGroupId,
         groupLabel: etiquetaDeGrupo.get(persona.guestGroupId) ?? '—',
         isCompanion: persona.isCompanion,
         dietaryNote: persona.dietaryNote,
@@ -97,6 +100,20 @@ export default async function InvitadosPage({
 
   const base = `/panel/eventos/${event.value.slug}/invitados`
   const abierto = panel === 'alta' || panel === 'envio' ? panel : null
+
+  // «✎» y «▣» abren su diálogo con la persona en la dirección. Una persona que ya no
+  // existe —la lista se recarga sola mientras el atelier mira— no abre nada, en vez de
+  // reventar la página entera.
+  const enFoco = persona === undefined ? null : (filasPersona.find((f) => f.id === persona) ?? null)
+  const personaCompleta =
+    enFoco === null || isErr(personas) ? null : (personas.value.find((p) => p.id === enFoco.id) ?? null)
+  const grupoDeLaPersona = enFoco === null ? null : (filas.find((f) => f.id === enFoco.groupId) ?? null)
+
+  const eleccionDeGrupos = filas.map((fila) => ({
+    id: fila.id,
+    label: fila.label,
+    free: Math.max(0, fila.seats - (cargadasPorGrupo.get(fila.id) ?? 0)),
+  }))
 
   return (
     <>
@@ -134,14 +151,42 @@ export default async function InvitadosPage({
           closeHref={base}
           eventId={event.value.id}
           eventSlug={event.value.slug}
-          groups={filas.map((fila) => ({
-            id: fila.id,
-            label: fila.label,
-            free: Math.max(0, fila.seats - (cargadasPorGrupo.get(fila.id) ?? 0)),
-          }))}
+          groups={eleccionDeGrupos}
           notice={
             <AllowanceNotice currentGroups={filas.length} eventSlug={event.value.slug} maxGuestGroups={limite} />
           }
+        />
+      ) : null}
+
+      {panel === 'editar' && personaCompleta !== null && enFoco !== null ? (
+        <EditPersonDialog
+          closeHref={base}
+          eventSlug={event.value.slug}
+          groups={eleccionDeGrupos}
+          person={{
+            id: personaCompleta.id,
+            fullName: personaCompleta.fullName,
+            groupId: personaCompleta.guestGroupId,
+            isCompanion: personaCompleta.isCompanion,
+            dietaryNote: personaCompleta.dietaryNote,
+            vip: personaCompleta.vip,
+            attending: personaCompleta.attending,
+            email: personaCompleta.email,
+            phone: grupoDeLaPersona?.phone ?? null,
+          }}
+        />
+      ) : null}
+
+      {panel === 'pase' && enFoco !== null && grupoDeLaPersona !== undefined && grupoDeLaPersona !== null ? (
+        <PassDialog
+          closeHref={base}
+          eventMeta={new Date(`${event.value.eventDate}T00:00:00Z`).toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}
+          eventSlug={event.value.slug}
+          eventTitle={event.value.title}
+          group={{ id: grupoDeLaPersona.id, label: grupoDeLaPersona.label, revoked: grupoDeLaPersona.revokedAt !== null }}
+          personName={enFoco.fullName}
+          tableLabel={enFoco.tableLabel}
+          venue={event.value.venue}
         />
       ) : null}
 

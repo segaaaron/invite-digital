@@ -56,9 +56,16 @@ export const addPerson =
       (cause) => guestError('storage_failure', `No se pudo añadir a la persona: ${String(cause)}`),
     )
 
-/** Edita a una persona sin perder lo que ya tenía: el parche lleva solo lo que cambia. */
+/**
+ * Edita a una persona sin perder lo que ya tenía: el parche lleva solo lo que cambia.
+ *
+ * Cada campo se copia del actual cuando no viene. Es tedioso a propósito: `createPerson`
+ * recibe un objeto literal, así que un campo que se olvide no es un error de tipos —es un
+ * `undefined` que se convierte en nulo y borra el dato sin decir nada. Ya pasó con
+ * `attending` y volvió a pasar con `email`.
+ */
 export const updatePerson =
-  (deps: { people: GuestPersonRepository }) =>
+  (deps: { people: GuestPersonRepository; groups: GuestGroupRepository }) =>
   async (input: {
     id: string
     fullName?: string | undefined
@@ -66,20 +73,40 @@ export const updatePerson =
     dietaryNote?: string | null | undefined
     vip?: boolean | undefined
     attending?: string | null | undefined
+    email?: string | null | undefined
+    /** Mover de grupo: cambia de enlace, de cupo y de mesa, así que se valida aquí. */
+    guestGroupId?: string | undefined
   }): Promise<Result<GuestPerson, GuestError>> =>
     attempt<GuestPerson, GuestError>(
       async () => {
         const actual = await deps.people.findById(input.id)
         if (actual === null) return err(guestError('not_found', 'La persona no existe'))
 
+        const destino = input.guestGroupId ?? actual.guestGroupId
+        if (destino !== actual.guestGroupId) {
+          const grupo = await deps.groups.findById(destino)
+          if (grupo === null) return err(guestError('not_found', 'El grupo de destino no existe'))
+
+          const cuantas = await deps.people.countInGroup(destino)
+          if (!fitsInGroup(grupo.seats, cuantas)) {
+            return err(
+              guestError(
+                'invalid_seats',
+                `«${grupo.label}» tiene ${grupo.seats} cupos y ya hay ${cuantas} personas cargadas. Sube el cupo del grupo primero.`,
+              ),
+            )
+          }
+        }
+
         const person = createPerson({
           id: actual.id,
-          guestGroupId: actual.guestGroupId,
+          guestGroupId: destino,
           fullName: input.fullName ?? actual.fullName,
           isCompanion: input.isCompanion ?? actual.isCompanion,
           dietaryNote: input.dietaryNote === undefined ? actual.dietaryNote : input.dietaryNote,
           vip: input.vip ?? actual.vip,
           attending: input.attending === undefined ? actual.attending : input.attending,
+          email: input.email === undefined ? actual.email : input.email,
         })
         if (isErr(person)) return person
 

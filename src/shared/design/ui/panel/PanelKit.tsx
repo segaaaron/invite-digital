@@ -143,6 +143,27 @@ export function SearchField({
   )
 }
 
+/**
+ * El mismo botón de icono, pero navegando.
+ *
+ * Lo que la maqueta abre con un `onclick` aquí se abre con un parámetro de la dirección
+ * —`?panel=pase&persona=…`—, así que el control tiene que ser un enlace de verdad: se
+ * puede abrir en otra pestaña, sobrevive a recargar y no depende de un `useState` que el
+ * siguiente `revalidatePath` se llevaría por delante.
+ */
+export function IconLink({ label, href, children }: { label: string; href: string; children: ReactNode }) {
+  return (
+    <Link
+      aria-label={label}
+      className="inline-flex size-7 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
+      href={href}
+      title={label}
+    >
+      <span aria-hidden>{children}</span>
+    </Link>
+  )
+}
+
 export function IconButton({
   label,
   children,

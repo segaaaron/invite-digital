@@ -97,7 +97,7 @@ describe('updatePerson', () => {
       },
     ])
 
-    const result = await updatePerson({ people: repo })({ id: 'a', vip: true })
+    const result = await updatePerson({ people: repo, groups: grupo(4) })({ id: 'a', vip: true })
 
     expect(isOk(result)).toBe(true)
     expect(filas[0]?.vip).toBe(true)
@@ -110,8 +110,104 @@ describe('updatePerson', () => {
       { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: 'Sin gluten', vip: false, attending: null, email: null },
     ])
 
-    await updatePerson({ people: repo })({ id: 'a', dietaryNote: null })
+    await updatePerson({ people: repo, groups: grupo(4) })({ id: 'a', dietaryNote: null })
 
     expect(filas[0]?.dietaryNote).toBeNull()
+  })
+})
+
+/**
+ * Editar es un parche: lo que no viene en la entrada tiene que quedar como estaba.
+ *
+ * El correo se perdía en silencio —`updatePerson` rehacía la persona sin pasarlo, así que
+ * marcar VIP desde la tabla borraba el email de quien lo tuviera—. Es el mismo fallo que
+ * ya se coló una vez con `attending`, y por la misma razón: `createPerson` recibe un
+ * objeto literal donde el campo que falta es, sencillamente, `undefined`.
+ */
+describe('updatePerson · lo que no se toca se conserva', () => {
+  const conCorreo: GuestPerson = {
+    id: 'p1',
+    guestGroupId: 'g1',
+    fullName: 'Ana Vega',
+    isCompanion: false,
+    dietaryNote: 'Sin gluten',
+    vip: false,
+    attending: 'yes',
+    email: 'ana@ejemplo.com',
+  }
+
+  it('marcar VIP no borra el correo', async () => {
+    const { repo, filas } = personas([conCorreo])
+
+    const result = await updatePerson({ people: repo, groups: grupo(4) })({ id: 'p1', vip: true })
+
+    expect(isOk(result)).toBe(true)
+    expect(filas[0]?.email).toBe('ana@ejemplo.com')
+    expect(filas[0]?.vip).toBe(true)
+  })
+
+  it('acepta un correo nuevo', async () => {
+    const { repo, filas } = personas([conCorreo])
+
+    await updatePerson({ people: repo, groups: grupo(4) })({ id: 'p1', email: 'nueva@ejemplo.com' })
+
+    expect(filas[0]?.email).toBe('nueva@ejemplo.com')
+  })
+
+  it('borra el correo cuando llega nulo, que no es lo mismo que no venir', async () => {
+    const { repo, filas } = personas([conCorreo])
+
+    await updatePerson({ people: repo, groups: grupo(4) })({ id: 'p1', email: null })
+
+    expect(filas[0]?.email).toBeNull()
+  })
+})
+
+/**
+ * Mover a alguien de grupo cambia de enlace, de cupo y de mesa: es el grupo quien tiene
+ * todo eso. Por eso el cupo del **destino** se comprueba en el servidor, igual que en el
+ * alta, y no en el formulario.
+ */
+describe('updatePerson · mover de grupo', () => {
+  const ana: GuestPerson = {
+    id: 'p1',
+    guestGroupId: 'g1',
+    fullName: 'Ana Vega',
+    isCompanion: false,
+    dietaryNote: null,
+    vip: false,
+    attending: null,
+    email: null,
+  }
+
+  const grupos = (seats: number): GuestGroupRepository => ({ ...grupo(seats), findById: async (id) => ({ id, eventId: 'e1', label: 'Destino', seats, revokedAt: null, openedAt: null }) })
+
+  it('cambia el grupo cuando queda sitio', async () => {
+    const { repo, filas } = personas([ana])
+
+    const result = await updatePerson({ people: repo, groups: grupos(4) })({ id: 'p1', guestGroupId: 'g2' })
+
+    expect(isOk(result)).toBe(true)
+    expect(filas[0]?.guestGroupId).toBe('g2')
+  })
+
+  it('rechaza el traslado si el grupo de destino ya está lleno', async () => {
+    const { repo, filas } = personas([ana])
+    // El repositorio cuenta una persona en el destino y el destino tiene un solo cupo.
+    const result = await updatePerson({ people: repo, groups: grupos(1) })({ id: 'p1', guestGroupId: 'g2' })
+
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) expect(result.error.kind).toBe('invalid_seats')
+    expect(filas[0]?.guestGroupId).toBe('g1')
+  })
+
+  it('un grupo de destino que no existe es un error, no un traslado a la nada', async () => {
+    const { repo } = personas([ana])
+    const sinGrupo: GuestGroupRepository = { ...grupo(4), findById: async () => null }
+
+    const result = await updatePerson({ people: repo, groups: sinGrupo })({ id: 'p1', guestGroupId: 'fantasma' })
+
+    expect(isErr(result)).toBe(true)
+    if (isErr(result)) expect(result.error.kind).toBe('not_found')
   })
 })

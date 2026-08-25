@@ -11,6 +11,7 @@ const filas: PersonRowView[] = [
   {
     id: 'p1',
     fullName: 'Ana Lucía Vega',
+    groupId: 'g1',
     groupLabel: 'Familia Rojas Peña',
     isCompanion: false,
     dietaryNote: 'Sin gluten',
@@ -21,6 +22,7 @@ const filas: PersonRowView[] = [
   {
     id: 'p2',
     fullName: 'Acompañante de Ana',
+    groupId: 'g1',
     groupLabel: 'Familia Rojas Peña',
     isCompanion: true,
     dietaryNote: null,
@@ -31,6 +33,7 @@ const filas: PersonRowView[] = [
   {
     id: 'p3',
     fullName: 'Roberto Núñez',
+    groupId: 'g2',
     groupLabel: 'Roberto Núñez',
     isCompanion: false,
     dietaryNote: null,
@@ -91,7 +94,7 @@ describe('PeopleTable', () => {
     // lista y nadie se entera hasta el día del evento.
     render(<PeopleTable eventSlug="boda" rows={filas} />)
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Quitar' })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: /^eliminar a /i })[0]!)
 
     expect(screen.getByRole('button', { name: /confirmar/i })).toBeInTheDocument()
   })
@@ -106,6 +109,7 @@ describe('PeopleTable · piel de la maqueta', () => {
   const muchas: PersonRowView[] = Array.from({ length: 23 }, (_, i) => ({
     id: `x${i}`,
     fullName: `Invitado ${i}`,
+    groupId: 'g1',
     groupLabel: 'Grupo',
     isCompanion: false,
     dietaryNote: null,
@@ -151,5 +155,48 @@ describe('PeopleTable · la fecha de confirmación', () => {
 
     // 22 de agosto en UTC, aunque quien lo pinte esté en La Paz (UTC−4) o en Tokio.
     expect(screen.getByText('22-ago')).toBeInTheDocument()
+  })
+})
+
+
+/**
+ * Las tres acciones de fila de la maqueta: ver el pase, editar y eliminar, en ese orden y
+ * como botones de icono.
+ *
+ * Ver pase y editar abren un diálogo, y ese diálogo se abre **por la dirección**
+ * (`?panel=pase&persona=…`), no con estado del cliente: cada guardado revalida el árbol y
+ * remonta la tabla, que es lo que ya se llevó por delante otros modales de este panel.
+ */
+describe('PeopleTable · acciones de la fila', () => {
+  it('cada fila trae ver pase, editar y eliminar', () => {
+    render(<PeopleTable eventSlug="boda" rows={[filas[0]!]} />)
+
+    expect(screen.getByRole('link', { name: 'Ver el pase de Ana Lucía Vega' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Editar a Ana Lucía Vega' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Eliminar a Ana Lucía Vega' })).toBeInTheDocument()
+  })
+
+  it('ver pase y editar llevan a su propio panel, con la persona en la dirección', () => {
+    render(<PeopleTable eventSlug="boda" rows={[filas[0]!]} />)
+
+    expect(screen.getByRole('link', { name: 'Ver el pase de Ana Lucía Vega' })).toHaveAttribute(
+      'href',
+      '/panel/eventos/boda/invitados?panel=pase&persona=p1',
+    )
+    expect(screen.getByRole('link', { name: 'Editar a Ana Lucía Vega' })).toHaveAttribute(
+      'href',
+      '/panel/eventos/boda/invitados?panel=editar&persona=p1',
+    )
+  })
+
+  it('eliminar pregunta y solo el segundo clic borra', async () => {
+    const { removePersonAction } = await import('../actions')
+    render(<PeopleTable eventSlug="boda" rows={[filas[0]!]} />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar a Ana Lucía Vega' }))
+    expect(removePersonAction).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
+    expect(removePersonAction).toHaveBeenCalledWith({ eventSlug: 'boda', id: 'p1' })
   })
 })

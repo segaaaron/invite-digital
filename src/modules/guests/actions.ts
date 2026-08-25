@@ -196,6 +196,8 @@ export async function updatePersonAction(input: {
   vip?: boolean
   isCompanion?: boolean
   attending?: string | null
+  email?: string | null
+  guestGroupId?: string
 }): Promise<PersonActionState> {
   await requireSession()
 

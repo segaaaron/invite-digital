@@ -58,7 +58,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
   await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'Familia Colada' })).toBeHidden()
+  await expect(page.getByRole('cell', { name: 'Familia Colada', exact: true })).toBeHidden()
 
   // La base es el testigo, no la pantalla: siguen siendo dos.
   expect(await guestGroupCount(eventId)).toBe(2)

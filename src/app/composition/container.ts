@@ -204,7 +204,7 @@ export const guests = {
     },
   }),
   addPerson: altaDePersona,
-  updatePerson: updatePerson({ people: drizzleGuestPersonRepository }),
+  updatePerson: updatePerson({ people: drizzleGuestPersonRepository, groups: drizzleGuestGroupRepository }),
   removePerson: removePerson({ people: drizzleGuestPersonRepository }),
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
   markSent: markInvitationSent({ groups: drizzleGuestGroupRepository, clock }),

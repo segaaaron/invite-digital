@@ -1,13 +1,15 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { FilterChip, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
+import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { removePersonAction, updatePersonAction } from '../actions'
 import type { Attendance } from '../domain/person'
 
 export type PersonRowView = {
   readonly id: string
   readonly fullName: string
+  /** El grupo es el dueño del enlace, del cupo y de la mesa; la fila necesita su id. */
+  readonly groupId: string
   readonly groupLabel: string
   readonly isCompanion: boolean
   readonly dietaryNote: string | null
@@ -69,6 +71,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   // lleva a alguien de la lista sin que nadie se entere hasta el día del evento.
   const [porQuitar, setPorQuitar] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
+
+  const base = `/panel/eventos/${eventSlug}/invitados`
 
   // Los contadores se calculan sobre todas las filas, nunca sobre las visibles.
   const cuentas = useMemo(
@@ -206,18 +210,11 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       ? '—'
                       : fechaCorta(fila.respondedAt)}
                   </td>
-                  <td className="border-b border-line-panel py-3.5 text-right whitespace-nowrap">
-                    <button
-                      className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase hover:text-gold-deep"
-                      onClick={() => aplicar(updatePersonAction({ eventSlug, id: fila.id, vip: !fila.vip }))}
-                      type="button"
-                    >
-                      {fila.vip ? 'Quitar VIP' : 'Marcar VIP'}
-                    </button>
+                  <td className="border-b border-line-panel py-3.5 whitespace-nowrap">
                     {porQuitar === fila.id ? (
-                      <>
+                      <div className="flex justify-end gap-1.5">
                         <button
-                          className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
+                          className="cursor-pointer rounded-lg border border-danger px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
                           onClick={() => {
                             setPorQuitar(null)
                             aplicar(removePersonAction({ eventSlug, id: fila.id }))
@@ -227,21 +224,25 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           Confirmar
                         </button>
                         <button
-                          className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
+                          className="cursor-pointer rounded-lg border border-line-panel px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
                           onClick={() => setPorQuitar(null)}
                           type="button"
                         >
                           Cancelar
                         </button>
-                      </>
+                      </div>
                     ) : (
-                      <button
-                        className="ml-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase hover:text-gold-deep"
-                        onClick={() => setPorQuitar(fila.id)}
-                        type="button"
-                      >
-                        Quitar
-                      </button>
+                      <div className="flex justify-end gap-1.5">
+                        <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
+                          ▣
+                        </IconLink>
+                        <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
+                          ✎
+                        </IconLink>
+                        <IconButton label={`Eliminar a ${fila.fullName}`} onClick={() => setPorQuitar(fila.id)}>
+                          ×
+                        </IconButton>
+                      </div>
                     )}
                   </td>
                 </tr>
