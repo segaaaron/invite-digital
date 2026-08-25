@@ -133,6 +133,34 @@ const VISTAS_ATELIER = [
   ['pedidos', '/panel/pedidos'],
 ] as const
 
+/**
+ * La puerta del panel va aparte de todas: es la única pantalla **sin sesión**, y en ella
+ * la mitad oscura de la marca desaparece por debajo de 860. Media pantalla de decoración
+ * en un teléfono dejaría el formulario por debajo del pliegue.
+ */
+test('la puerta del panel no desborda en ningún ancho', async ({ browser }) => {
+  const anonima = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const page = await anonima.newPage()
+
+  for (const tamano of ANCHOS) {
+    await page.setViewportSize({ width: tamano.width, height: tamano.height })
+    await page.goto('/panel/entrar')
+    await page.waitForLoadState('networkidle')
+
+    const fuera = await page.evaluate(cortados)
+    expect(fuera, `la puerta deja contenido fuera de la pantalla en ${tamano.nombre}`).toEqual([])
+
+    const doc = await page.evaluate(anchoDocumento)
+    expect(doc.ancho, `la puerta estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
+
+    // El formulario entra sin desplazar: es lo único que se viene a hacer a esta página.
+    const boton = page.getByRole('button', { name: 'Entrar' })
+    await expect(boton).toBeInViewport()
+  }
+
+  await anonima.close()
+})
+
 test('las vistas del atelier tampoco desbordan', async ({ page }) => {
   for (const tamano of ANCHOS) {
     await page.setViewportSize({ width: tamano.width, height: tamano.height })

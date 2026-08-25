@@ -11,10 +11,15 @@ const MESSAGES = {
   storage_failure: 'No pudimos comprobar tus datos. Inténtalo en un momento.',
 } as const
 
+/**
+ * El campo lleva el foco en un anillo dorado, no en el contorno del navegador: el azul
+ * del sistema es lo único de esta pantalla que no es de la marca. Sigue siendo visible
+ * con el teclado, que es lo que el contorno estaba haciendo.
+ */
 const FIELD_CLASS =
-  'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-gold'
+  'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-raised px-4 py-3.5 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(43_39_35/0.04)] outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-mute/70 focus-visible:border-gold focus-visible:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.18)]'
 
-const LABEL_CLASS = 'flex flex-col gap-2 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
+const LABEL_CLASS = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInAction, INITIAL)
@@ -24,30 +29,68 @@ export function SignInForm() {
   const error = state.status === 'error' && state.message !== '' ? MESSAGES[state.message] : null
 
   return (
-    <form action={formAction} className="flex w-full max-w-[380px] flex-col gap-5">
-      <label className={LABEL_CLASS} htmlFor={emailId}>
-        Correo
-        <input autoComplete="username" className={FIELD_CLASS} id={emailId} name="email" required type="email" />
-      </label>
+    <form action={formAction} className="flex w-full flex-col gap-5">
+      <div className="flex flex-col gap-2">
+        <label className={LABEL_CLASS} htmlFor={emailId}>
+          Correo
+        </label>
+        <input
+          autoComplete="username"
+          autoFocus
+          // `aria-invalid` en los dos campos y no en uno: el error no dice cuál de los
+          // dos falla, a propósito, y señalar solo el correo sería inventarse el motivo.
+          aria-describedby={error ? errorId : undefined}
+          aria-invalid={error !== null}
+          className={FIELD_CLASS}
+          id={emailId}
+          name="email"
+          placeholder="atelier@tudominio.bo"
+          required
+          type="email"
+        />
+      </div>
 
-      <label className={LABEL_CLASS} htmlFor={passwordId}>
-        Contraseña
-        <input autoComplete="current-password" className={FIELD_CLASS} id={passwordId} name="password" required type="password" />
-      </label>
+      <div className="flex flex-col gap-2">
+        <label className={LABEL_CLASS} htmlFor={passwordId}>
+          Contraseña
+        </label>
+        <input
+          aria-describedby={error ? errorId : undefined}
+          aria-invalid={error !== null}
+          autoComplete="current-password"
+          className={FIELD_CLASS}
+          id={passwordId}
+          name="password"
+          placeholder="••••••••"
+          required
+          type="password"
+        />
+      </div>
 
       {error ? (
-        <p className="text-[13px] text-gold-deep" id={errorId} role="alert">
+        <p
+          className="rounded-[12px] border border-danger/30 bg-danger/8 px-3.5 py-2.5 text-[13px] text-danger-deep"
+          id={errorId}
+          role="alert"
+        >
           {error}
         </p>
       ) : null}
 
       <button
-        className="rounded-[var(--radius-pill)] bg-gold px-7 py-3.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised transition-transform duration-300 hover:-translate-y-0.5 hover:bg-gold-deep disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="mt-1 cursor-pointer rounded-[var(--radius-pill)] bg-linear-to-b from-gold to-gold-deep px-7 py-3.5 font-mono text-[10px] tracking-[0.3em] text-bg-raised uppercase shadow-[0_6px_18px_rgb(var(--color-gold-rgb)/0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgb(var(--color-gold-rgb)/0.34)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         disabled={isPending}
         type="submit"
       >
         {isPending ? 'Entrando…' : 'Entrar'}
       </button>
+
+      {/* No hay «crear cuenta» ni «olvidé mi contraseña», y no es un descuido: las altas
+          se hacen con `pnpm user:create` desde el servidor. Un enlace de recuperación
+          exigiría el canal de correo, que este proyecto todavía no tiene. */}
+      <p className="text-[11px] leading-[1.7] text-ink-mute">
+        Las cuentas se dan de alta desde el servidor. Si perdiste la contraseña, hay que reemitirla ahí.
+      </p>
     </form>
   )
 }
