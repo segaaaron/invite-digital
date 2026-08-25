@@ -206,6 +206,31 @@ export const en = {
       too_many_requests: 'We received several requests from you. Please wait a minute and retry.',
     },
   },
+  orders: {
+    orderTitle: 'Reserve your invitation',
+    orderIntro:
+      'Leave us your details and we will give you a reference. Use it to pay by bank transfer and follow your order; nothing is charged online.',
+    trackTitle: 'Your order',
+    trackNotFound: 'We could not find an order with that reference. Check it: it is eight characters long.',
+    refLabel: 'Reference',
+    payHeading: 'How to pay',
+    payIntro: 'Transfer the plan amount to this account and upload the receipt right here.',
+    bank: 'Bank',
+    accountHolder: 'Account holder',
+    accountNumber: 'Account',
+    qrAlt: 'QR code to pay',
+    proofHeading: 'Upload your receipt',
+    statusHeading: 'Status',
+    status: {
+      pending_payment: 'Waiting for your payment',
+      proof_submitted: 'Receipt received, under review',
+      approved: 'Payment confirmed',
+      rejected: 'We need you to check it',
+    },
+    decisionNote: 'Note from the atelier',
+    proofsHeading: 'Receipts sent',
+    keepRef: 'Keep this address: it is the only way back to your order.',
+  },
   seo: {
     homeTitle: 'Luxury 3D digital wedding invitations | InvitePremium',
     homeDescription:

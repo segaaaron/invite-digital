@@ -31,6 +31,12 @@ services:
       DATABASE_URL: postgres://${POSTGRES_USER:?POSTGRES_USER es obligatorio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@db:5432/${POSTGRES_DB:?POSTGRES_DB es obligatorio}
       SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
       NODE_ENV: production
+      # Los comprobantes de pago del Plan B. En un volumen y **fuera de la imagen**: si
+      # vivieran en el sistema de ficheros del contenedor, cada despliegue borraría los
+      # comprobantes de todos los pedidos en curso.
+      ORDERS_DIR: /var/lib/invitepremium/comprobantes
+    volumes:
+      - proofs:/var/lib/invitepremium/comprobantes
     depends_on:
       db:
         condition: service_healthy
@@ -132,6 +138,9 @@ services:
 
 volumes:
   pgdata:
+  # Los comprobantes de pago. Llevan nombre, banco y cuenta de una persona: este volumen
+  # entra en la copia de seguridad y no se sirve por HTTP en ninguna circunstancia.
+  proofs:
   backups:
   caddy_data:
   caddy_config:

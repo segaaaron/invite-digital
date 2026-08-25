@@ -57,6 +57,17 @@ import {
   toggleFeatured,
 } from '@/modules/guestbook/application/guestbook-use-cases'
 import { drizzleGuestbookRepository } from '@/modules/guestbook/infrastructure/drizzle-guestbook-repository'
+import {
+  attachProof,
+  decideOrder,
+  findOrderByRef,
+  listOrders,
+  placeOrder,
+  readProof,
+} from '@/modules/orders/application/order-use-cases'
+import { createDiskFileStorage } from '@/modules/orders/infrastructure/disk-file-storage'
+import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
+import { env } from '@/shared/config/env'
 import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
 import { drizzleReminderRepository } from '@/modules/reminders/infrastructure/drizzle-reminder-repository'
 import {
@@ -296,6 +307,26 @@ export const registry = {
  * El libro de firmas. Todo lo de aquí es del atelier: el invitado ya escribió su mensaje
  * al confirmar y en esta rebanada solo lee la respuesta, sin ninguna escritura nueva.
  */
+/**
+ * El almacén de comprobantes vive fuera de `public/`: ahí dentro estarían publicados en
+ * internet, y un comprobante lleva nombre, banco y cuenta de una persona.
+ */
+const proofStorage = createDiskFileStorage(env.ORDERS_DIR)
+
+export const orders = {
+  place: placeOrder({ orders: drizzleOrderRepository, clock }),
+  byRef: findOrderByRef({ orders: drizzleOrderRepository, clock }),
+  attachProof: attachProof({
+    orders: drizzleOrderRepository,
+    storage: proofStorage,
+    clock,
+    newKey: () => crypto.randomUUID(),
+  }),
+  list: listOrders({ orders: drizzleOrderRepository, clock }),
+  decide: decideOrder({ orders: drizzleOrderRepository, clock }),
+  readProof: readProof({ orders: drizzleOrderRepository, storage: proofStorage, clock }),
+}
+
 export const reminders = {
   due: listDueReminders({ reminders: drizzleReminderRepository, clock }),
   markSent: markReminderSent({ reminders: drizzleReminderRepository, clock }),

@@ -264,6 +264,32 @@ export interface GuestbookDictionary {
   replyTitle: string
 }
 
+/**
+ * El Plan B: pedir un plan y pagar por transferencia.
+ *
+ * Va por diccionario como el resto de la web pública. El **panel** de pedidos no: es
+ * solo español, como todo el panel.
+ */
+export interface OrdersDictionary {
+  orderTitle: string
+  orderIntro: string
+  trackTitle: string
+  trackNotFound: string
+  refLabel: string
+  payHeading: string
+  payIntro: string
+  bank: string
+  accountHolder: string
+  accountNumber: string
+  qrAlt: string
+  proofHeading: string
+  statusHeading: string
+  status: Record<'pending_payment' | 'proof_submitted' | 'approved' | 'rejected', string>
+  decisionNote: string
+  proofsHeading: string
+  keepRef: string
+}
+
 export interface Dictionary {
   nav: NavDictionary
   hero: HeroDictionary
@@ -276,6 +302,7 @@ export interface Dictionary {
   invitation: InvitationDictionary
   registry: RegistryDictionary
   guestbook: GuestbookDictionary
+  orders: OrdersDictionary
   testimonials: TestimonialsDictionary
   faq: FaqDictionary
   contact: ContactDictionary

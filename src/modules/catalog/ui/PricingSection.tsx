@@ -24,22 +24,31 @@ export function PricingSection({ plans, locale, dictionary }: Props) {
         <SectionHeading eyebrow={pricing.eyebrow} title={<span id="pricing-title">{pricing.title}</span>} />
 
         <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {plans.map((plan, index) => (
+          {plans.map((plan, index) => {
+            // El más caro agenda una llamada, como en la maqueta: se cotiza, no se
+            // compra de un clic. Los demás abren el pedido, que desde el Plan B existe:
+            // dejarlos en WhatsApp sería tener el flujo construido y sin puerta.
+            const agendaLlamada = plan.id === masCaro?.id
+
+            return (
             <Reveal key={plan.id} delay={index * 0.08}>
               <PlanCard
-                ctaExternal
-                ctaHref={buildWhatsAppLink({
-                  message: whatsAppPlanMessage({ name: plan.name, price: formatMoney(plan.price, locale) }, locale),
-                })}
-                ctaLabel={
-                  plan.id === masCaro?.id ? pricing.bookCall : pricing.choose.replace('{plan}', plan.name)
+                ctaExternal={agendaLlamada}
+                ctaHref={
+                  agendaLlamada
+                    ? buildWhatsAppLink({
+                        message: whatsAppPlanMessage({ name: plan.name, price: formatMoney(plan.price, locale) }, locale),
+                      })
+                    : `/${locale}/pedido/${plan.slug}`
                 }
+                ctaLabel={agendaLlamada ? pricing.bookCall : pricing.choose.replace('{plan}', plan.name)}
                 dictionary={dictionary}
                 locale={locale}
                 plan={plan}
               />
             </Reveal>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>

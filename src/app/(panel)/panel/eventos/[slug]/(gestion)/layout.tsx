@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, guests, plans } from '@/app/composition/container'
+import { checkin, events, guestbook, guests, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
@@ -40,6 +40,11 @@ export default async function EventoLayout({
   const conPuerta = await plans.requireFeature(event.value.id, 'checkin')
   const puerta = isErr(conPuerta) ? null : await checkin.state(event.value.id)
 
+  // La insignia cuenta lo que espera decisión. Un pedido con comprobante y sin mirar es
+  // alguien que transfirió y no ha recibido nada.
+  const pedidos = await orders.list()
+  const porRevisar = isErr(pedidos) ? null : pedidos.value.filter((p) => p.order.status === 'proof_submitted').length
+
   return (
     <PanelFrame
       brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
@@ -47,6 +52,7 @@ export default async function EventoLayout({
         invitados: isErr(grupos) ? null : grupos.value.length,
         sinLeer: isErr(libro) ? null : unreadCount(libro.value),
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
+        pedidos: porRevisar,
       })}
       user={{
         title: event.value.title,

@@ -31,10 +31,19 @@ test('muestra los tres planes con precios en bolivianos', async ({ page }) => {
   await expect(page.getByText('Bs 2.900')).toBeVisible()
 })
 
-test('el CTA de un plan lleva a WhatsApp con el mensaje correcto', async ({ page }) => {
+test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada', async ({ page }) => {
   await page.goto('/es')
-  const cta = page.getByRole('link', { name: 'Firma 3D' }).first()
-  await expect(cta).toHaveAttribute('href', new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=.*Firma%203D`))
+
+  // Desde el Plan B, «Firma 3D» se compra: su botón abre el pedido. Dejarlo en WhatsApp
+  // sería tener el flujo construido y sin ninguna puerta que lo alcance.
+  await expect(page.getByRole('link', { name: 'Firma 3D' }).first()).toHaveAttribute('href', '/es/pedido/firma-3d')
+
+  // El más caro se cotiza, no se compra de un clic: sigue agendando la llamada, como en
+  // la maqueta.
+  await expect(page.getByRole('link', { name: 'Agendar llamada' }).first()).toHaveAttribute(
+    'href',
+    new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=`),
+  )
 })
 
 test('el hero se ve aunque se llegue por un ancla y se suba después', async ({ page }) => {

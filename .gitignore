@@ -68,3 +68,7 @@ tests/e2e/.auth
 /public/sw.js
 /public/sw.js.map
 .audit/
+
+# Los comprobantes de pago del Plan B en desarrollo. Nunca se versionan: son datos
+# personales de terceros —nombre, banco y cuenta— dentro de una imagen.
+.data/

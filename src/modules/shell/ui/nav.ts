@@ -17,6 +17,8 @@ export type NavCounts = {
   readonly invitados?: number | null
   readonly sinLeer?: number | null
   readonly llegadas?: number | null
+  /** Pedidos del Plan B con comprobante por revisar. */
+  readonly pedidos?: number | null
 }
 
 /**
@@ -61,6 +63,10 @@ export function panelNav(slug: string | null, counts: NavCounts = {}): NavSectio
         { href: en('/configuracion'), label: 'Configuración', icon: '⚙' },
         { href: en('/plan'), label: 'Plan', icon: '💳' },
         { href: '/panel', label: 'Todos los eventos', icon: '⌂' },
+        // La maqueta no dibujó el Plan B, igual que no dibujó Reparto ni las Zonas del
+        // salón. Se queda: es funcionalidad construida, y un pedido que nadie mira es un
+        // cliente que transfirió y no recibió nada.
+        { href: '/panel/pedidos', label: 'Pedidos', icon: '🧾', count: counts.pedidos ?? null, countLabel: 'por revisar' },
         { href: '/panel/ayuda', label: 'Ayuda', icon: '?' },
       ],
     },

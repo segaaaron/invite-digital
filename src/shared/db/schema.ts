@@ -475,6 +475,54 @@ export const messageNotes = pgTable(
 )
 
 /**
+ * Un pedido del Plan B. `plan_id` es `set null`, nunca `cascade`: retirar un plan del
+ * catálogo no puede llevarse por delante los pedidos que lo compraron.
+ */
+export const orders = pgTable(
+  'orders',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    // Ocho caracteres sin 0/O/1/I/L: se dicta por teléfono.
+    publicRef: varchar('public_ref', { length: 16 }).notNull().unique(),
+    planId: uuid('plan_id').references(() => plans.id, { onDelete: 'set null' }),
+    customerName: varchar('customer_name', { length: 160 }).notNull(),
+    contact: varchar('contact', { length: 160 }).notNull(),
+    eventDate: date('event_date'),
+    notes: text('notes'),
+    // 'pending_payment' | 'proof_submitted' | 'approved' | 'rejected'
+    status: varchar('status', { length: 24 }).notNull().default('pending_payment'),
+    decisionNote: text('decision_note'),
+    decidedAt: timestamp('decided_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('orders_status_idx').on(t.status, t.createdAt.desc())],
+)
+
+/**
+ * Los comprobantes de un pedido. Son **varios**: un rechazo lleva a otra subida, y lo que
+ * se mandó antes es parte de la conversación.
+ *
+ * `storage_key` es el nombre con el que el fichero vive en disco, y es un UUID.
+ * `original_name` se guarda solo para enseñarlo: usarlo para construir una ruta sería
+ * dejar que quien sube el fichero elija dónde se escribe.
+ */
+export const orderProofs = pgTable(
+  'order_proofs',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    orderId: uuid('order_id')
+      .notNull()
+      .references(() => orders.id, { onDelete: 'cascade' }),
+    storageKey: uuid('storage_key').notNull(),
+    originalName: varchar('original_name', { length: 255 }).notNull(),
+    mime: varchar('mime', { length: 64 }).notNull(),
+    sizeBytes: integer('size_bytes').notNull(),
+    uploadedAt: timestamp('uploaded_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('order_proofs_order_idx').on(t.orderId, t.uploadedAt.desc())],
+)
+
+/**
  * Cuándo se recordó qué a quién. Es lo único que hace que la cola de recordatorios
  * encoja: sin este registro el mismo grupo vuelve a salir todos los días.
  *

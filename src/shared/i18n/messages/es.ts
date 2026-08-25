@@ -206,6 +206,31 @@ export const es = {
       too_many_requests: 'Recibimos varias consultas tuyas. Espera un minuto antes de reintentar.',
     },
   },
+  orders: {
+    orderTitle: 'Reserva tu invitación',
+    orderIntro:
+      'Déjanos tus datos y te damos una referencia. Con ella pagas por transferencia y sigues tu pedido; no se cobra nada en línea.',
+    trackTitle: 'Tu pedido',
+    trackNotFound: 'No encontramos ningún pedido con esa referencia. Revísala: son ocho caracteres.',
+    refLabel: 'Referencia',
+    payHeading: 'Cómo pagar',
+    payIntro: 'Transfiere el importe del plan a esta cuenta y súbenos el comprobante aquí mismo.',
+    bank: 'Banco',
+    accountHolder: 'Titular',
+    accountNumber: 'Cuenta',
+    qrAlt: 'Código QR para pagar',
+    proofHeading: 'Sube tu comprobante',
+    statusHeading: 'Estado',
+    status: {
+      pending_payment: 'Esperando tu pago',
+      proof_submitted: 'Comprobante recibido, en revisión',
+      approved: 'Pago confirmado',
+      rejected: 'Necesitamos que lo revises',
+    },
+    decisionNote: 'Nota del atelier',
+    proofsHeading: 'Comprobantes enviados',
+    keepRef: 'Guarda esta dirección: es la única forma de volver a tu pedido.',
+  },
   seo: {
     homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | InvitePremium',
     homeDescription:

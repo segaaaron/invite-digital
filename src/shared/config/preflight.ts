@@ -12,6 +12,8 @@ export const PLACEHOLDERS = {
   whatsapp: '+59170012345',
   email: 'atelier@invitepremium.bo',
   domain: 'invitepremium.bo',
+  /** Los datos de transferencia del Plan B nacen así, y así no cobran a nadie. */
+  payment: ['BANCO PENDIENTE', 'TITULAR PENDIENTE', 'CUENTA PENDIENTE'] as readonly string[],
 } as const
 
 /** Contraseñas que aparecen en el repositorio o en la documentación. */
@@ -27,6 +29,8 @@ export type ReleaseConfig = {
   siteUrl: string
   siteDomain: string
   postgresPassword: string
+  /** Banco, titular y cuenta que se le enseñan a quien hace un pedido. */
+  payment: { bank: string; accountHolder: string; accountNumber: string }
 }
 
 export function checkReleaseReadiness(config: ReleaseConfig): string[] {
@@ -49,6 +53,13 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
   if (config.trustBrands.some((marca) => /^marca aliada/i.test(marca.trim()))) {
     blockers.push(
       'La banda de confianza del hero sigue con marcadores «Marca aliada N»: pon las marcas reales o deja la lista vacía para que no se pinte.',
+    )
+  }
+
+  const pago = [config.payment.bank, config.payment.accountHolder, config.payment.accountNumber]
+  if (pago.some((dato) => PLACEHOLDERS.payment.includes(dato.trim().toUpperCase())) || pago.some((d) => d.trim() === '')) {
+    blockers.push(
+      'Los datos de transferencia del Plan B siguen siendo marcadores: un pedido enseñaría un número de cuenta que no existe, y el cliente se entera cuando ya transfirió.',
     )
   }
 

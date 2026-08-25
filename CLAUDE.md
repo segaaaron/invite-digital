@@ -35,6 +35,8 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-21-planes-design.md` | Entender los límites por plan y las solicitudes de cambio (ciclo 4, rebanada 4) |
 | `docs/superpowers/plans/2026-08-21-planes.md` | Consultar cómo se construyó el ciclo 4 rebanada 4: 9 tareas |
 | `docs/superpowers/plans/2026-08-21-cabos-sueltos.md` | Consultar cómo se cerraron los cabos sueltos del ciclo 4: 7 tareas |
+| `docs/superpowers/specs/2026-08-25-recordatorios-design.md` | Entender los recordatorios de RSVP (ciclo 3, rebanada 4) |
+| `docs/superpowers/specs/2026-08-25-pedidos-design.md` | Entender el Plan B: pedidos, comprobantes y administración |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
@@ -92,7 +94,13 @@ Del **menú por invitado** de la rebanada 4 vale lo mismo: `dietaryNote` y el re
 catering existen desde los invitados por persona. Lo que falta de esa rebanada son los
 **recordatorios automáticos**.
 
-Ojo: pedidos, comprobantes y panel de administración —el Plan B— siguen sin construirse.
+**El Plan B está construido**: pedidos por transferencia con referencia pública,
+comprobante subido por el cliente, y la bandeja del atelier donde se aprueba o se rechaza
+con nota. Le faltan **los datos reales de transferencia**, que corta `pnpm preflight`.
+
+**Los recordatorios de RSVP también**: el servidor calcula a quién toca recordar y el
+atelier despacha por WhatsApp. Con eso, la rebanada 4 del ciclo 3 solo deja fuera el canal
+correo, que necesita proveedor.
 
 ### Lo que salió de la revisión de código (22 de agosto)
 
@@ -274,6 +282,59 @@ Ojo: pedidos, comprobantes y panel de administración —el Plan B— siguen sin
   vista llama es código muerto con coartada. Antes de cerrar una rebanada, repasa los
   exportados de cada `actions.ts` y de cada `application/` y comprueba que algo los llama.
 
+### Notas de los recordatorios (`src/modules/reminders/`)
+
+- **El servidor decide a quién toca; envía una persona.** No hay proveedor de correo ni
+  disparador periódico, y el canal de WhatsApp es asistido. La pantalla se llama
+  «Recordatorios» y es una lista de tareas del día, no una bandeja de salida: llamarla
+  «envío automático» sería mentir sobre lo que hace.
+- **Un recordatorio no lleva el enlace dentro, y no es un olvido.** De ese token la base
+  guarda solo su SHA-256: reproducirlo es imposible y regenerarlo invalidaría el que el
+  invitado ya tiene. El texto apunta al mensaje anterior del mismo chat. Hay prueba
+  —unitaria y e2e— de que ningún mensaje lleva una URL dentro.
+- **`dueReminders` recibe el día como argumento** y no llama al reloj, igual que
+  `autoAssign` no llama a `Math.random`. La cola de la víspera del cierre se prueba sin
+  tocar el reloj del sistema.
+- **`sin_abrir` gana a `sin_respuesta`.** Quien no abrió el enlace tampoco pudo contestar,
+  y sacarlo dos veces obligaría a escribirle dos mensajes al mismo número la misma tarde.
+- **Nada se recuerda el mismo día en que se reparte el enlace**, ni con el cierre encima:
+  escribir dos horas después de mandar la invitación no es recordar, es meter prisa.
+- **La vista no lleva estado de «ya lo marqué».** La acción revalida el árbol y **remonta**
+  el componente, así que ese `useState` se pierde en ese mismo instante. Lo que se ve es
+  la cola recalculada, donde la fila ya no está. Lo cazó la e2e.
+
+### Notas del Plan B (`src/modules/orders/`)
+
+- **El tipo de un comprobante lo deciden sus primeros bytes**, nunca la extensión ni el
+  `Content-Type`: las dos las escribe quien sube el fichero. Y `RIFF` no basta para
+  WEBP —lo comparten WAV y AVI—, hay que mirar el byte 8.
+- **El fichero se guarda con un UUID.** El nombre original se conserva **solo para
+  enseñarlo**: usarlo para componer una ruta sería dejar que quien sube elija dónde se
+  escribe. Hay prueba con `../../etc/passwd` de nombre.
+- **Los comprobantes viven fuera de `public/`.** Ahí dentro estarían publicados en
+  internet, y llevan nombre, banco y número de cuenta de una persona. Los sirve un route
+  handler tras `requireSession()`, con `Content-Disposition: attachment` y
+  `Content-Security-Policy: sandbox`: un PDF servido en línea desde el origen del panel
+  puede ejecutar guion.
+- **La referencia pública no lleva `0`, `O`, `1`, `I` ni `L`**: se dicta por teléfono. Y es
+  aleatoria, no correlativa —un `PED-000042` dice cuántos pedidos lleva el atelier y deja
+  adivinar el del vecino—. Una referencia desconocida responde **404, nunca 403**.
+- **La página pública de seguimiento no enseña datos de contacto.** La referencia es un
+  secreto de baja intensidad; el panel sí los enseña, porque vive tras la sesión.
+- **`rejected` no es terminal.** Se rechaza con nota y el cliente sube otro comprobante;
+  un rechazo terminal obligaría a abrir un pedido nuevo y a perder el hilo. `approved` sí
+  lo es. Y rechazar **exige nota**, comprobado en el servidor.
+- **La decisión viaja en el botón que se pulsa**, no en un campo oculto que un `onClick`
+  actualiza: `setState` no ha corrido cuando el formulario se envía, así que «Rechazar»
+  habría aprobado el pedido. El emisor entra en el `FormData` con su `name` y su `value`.
+- **El tope de 8 MB se comprueba antes de leer el fichero a memoria.** Un `arrayBuffer()`
+  de un archivo de dos gigas se los trae enteros al servidor antes de que nadie lo
+  rechace.
+- **`actions.ts` tiene dos bloques comentados**, como el de la mesa de regalos: arriba las
+  públicas —con límite de tasa por IP—, abajo las del atelier tras `requireSession()`.
+- **Los dos planes baratos compran; el más caro agenda una llamada.** Ese botón lo dibujó
+  así la maqueta, y se cotiza en vez de comprarse de un clic.
+
 ### Notas de la mesa de regalos (`src/modules/registry/`)
 
 - **Todo importe es un entero en centavos.** `parseAmount` separa la parte entera de la
@@ -443,6 +504,11 @@ imagen cacheada y aplicaría un juego de migraciones viejo sin quejarse.
 Cualquier comando que toque la base o compile necesita:
 `DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000`
 
+`ORDERS_DIR` tiene valor por defecto (`.data/comprobantes`, ignorado por git) y no hace
+falta ponerlo en desarrollo. En producción es un **volumen**, no una carpeta de la imagen:
+dentro de la imagen, cada despliegue borraría los comprobantes de todos los pedidos en
+curso. Y no entra en `pg_dump`: el runbook explica cómo copiarlo.
+
 Puerto 5434, no 5432: los puertos 5432 y 5433 los ocupan contenedores de otros proyectos de la máquina.
 Docker Desktop puede estar parado; arráncalo con `open -a Docker`.
 
@@ -514,7 +580,9 @@ visible, y esa es justo la razón de que exista la puerta.
 - [ ] **Dominio real** — ahora `invitepremium.bo`; define canonical, sitemap y el TLS de Caddy
 - [ ] **Email real** — ahora `atelier@invitepremium.bo`
 - [ ] **Contraseña de Postgres de producción** — `.env.production`, generada con `openssl rand -base64 24`
-- [ ] **Datos de transferencia y QR de pago** — los necesita el Plan B
+- [ ] **Datos de transferencia y QR de pago** — `BRAND.payment`. El Plan B ya los enseña,
+      y `pnpm preflight` corta mientras sigan siendo marcadores: un pedido con un número
+      de cuenta inventado no cobra a nadie, y el cliente se entera cuando ya transfirió
 - [ ] **Fotos de las plantillas `zafiro` y `onix`** — hoy usan marcadores generados
 - [x] **Testimonios** — hecho: quedó solo el real (Daniela Ortiz). Si algún día se añaden
       más, que sean auténticos; no se publican redactados de relleno.
@@ -530,9 +598,8 @@ visible, y esa es justo la razón de que exista la puerta.
   check-in lo razona.)
 - **Ciclo 3, rebanada 4**: quedan los **recordatorios automáticos**. La asignación de
   mesas es del ciclo 4 rebanada 1, y el menú por invitado ya vive en `guest_people`.
-- **Plan B**: pedidos, subida de comprobante de pago, panel de administración mínimo.
-  La sección 9 del spec del ciclo 1 ya lo describe. La deuda del layout raíz que lo bloqueaba ya
-  está saldada: cuelga del grupo `(panel)`.
+- **Plan B**: construido el 25 de agosto. Falta lo que no es código: los datos reales de
+  transferencia y el QR de pago.
 - **Ciclo 4**: cerrado. Quedan fuera el sitio concreto dentro de la mesa y el dashboard
   completo.
 

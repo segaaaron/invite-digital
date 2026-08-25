@@ -1,0 +1,204 @@
+import { attempt, err, ok, type Result } from '@/shared/result'
+import { ordersError, type OrdersError } from '../domain/errors'
+import { canDecide, canReceiveProof, newPublicRef, normalizeRef, type Order } from '../domain/order'
+import { checkProof } from '../domain/proof'
+import type { FileStorage, OrderRepository, ProofRow } from './ports'
+
+type Deps = { orders: OrderRepository; clock: () => Date }
+type WithStorage = Deps & { storage: FileStorage; newKey: () => string }
+
+const MAX_NAME = 160
+const MAX_NOTES = 1000
+
+/**
+ * Alta de pedido desde la web pública.
+ *
+ * La referencia se acuña aquí y se reintenta ante colisión: son 31⁸ combinaciones, así
+ * que no va a pasar, pero un `unique` que revienta en la cara del cliente sí sería
+ * definitivo para él.
+ */
+export const placeOrder =
+  (deps: Deps) =>
+  async (input: {
+    planSlug: string
+    customerName: string
+    contact: string
+    eventDate: string | null
+    notes: string | null
+  }): Promise<Result<Order, OrdersError>> => {
+    const nombre = input.customerName.trim()
+    const contacto = input.contact.trim()
+
+    if (nombre === '' || nombre.length > MAX_NAME) {
+      return err(ordersError('invalid_input', 'El nombre es obligatorio y no puede pasar de 160 caracteres.'))
+    }
+    if (contacto === '' || contacto.length > MAX_NAME) {
+      return err(ordersError('invalid_input', 'Hace falta un contacto: WhatsApp o correo.'))
+    }
+    if (input.planSlug.trim() === '') return err(ordersError('invalid_input', 'Falta el plan.'))
+
+    const notas = input.notes?.trim() ?? ''
+    if (notas.length > MAX_NOTES) return err(ordersError('invalid_input', 'Las notas no pueden pasar de 1000 caracteres.'))
+
+    return attempt(
+      async () => {
+        for (let intento = 0; intento < 5; intento += 1) {
+          const publicRef = newPublicRef()
+          if ((await deps.orders.findByRef(publicRef)) !== null) continue
+
+          return ok(
+            await deps.orders.create({
+              publicRef,
+              planSlug: input.planSlug.trim(),
+              customerName: nombre,
+              contact: contacto,
+              eventDate: input.eventDate,
+              notes: notas === '' ? null : notas,
+            }),
+          )
+        }
+
+        return err(ordersError('storage_failure', 'No se pudo acuñar una referencia libre.'))
+      },
+      (cause) => ordersError('storage_failure', `No se pudo crear el pedido: ${String(cause)}`),
+    )
+  }
+
+/** El pedido que hay detrás de una referencia. Una referencia desconocida es `not_found`, nunca «prohibido». */
+export const findOrderByRef =
+  (deps: Deps) =>
+  async (rawRef: string): Promise<Result<{ order: Order; proofs: ProofRow[] }, OrdersError>> => {
+    const publicRef = normalizeRef(rawRef)
+    if (publicRef === null) return err(ordersError('not_found', 'Esa referencia no tiene forma de referencia.'))
+
+    return attempt(
+      async () => {
+        const order = await deps.orders.findByRef(publicRef)
+        if (order === null) return err(ordersError('not_found', `No existe el pedido ${publicRef}.`))
+        return ok({ order, proofs: await deps.orders.listProofs(order.id) })
+      },
+      (cause) => ordersError('storage_failure', `No se pudo leer el pedido: ${String(cause)}`),
+    )
+  }
+
+/**
+ * El cliente sube su comprobante.
+ *
+ * El tipo lo decide el contenido —`checkProof` mira los magic bytes—, no la extensión ni
+ * el `Content-Type`: los dos los escribe quien sube el fichero. Y el fichero se guarda con
+ * un UUID por nombre: usar el original dejaría que quien sube eligiera dónde se escribe.
+ */
+export const attachProof =
+  (deps: WithStorage) =>
+  async (input: {
+    rawRef: string
+    bytes: Uint8Array
+    declaredName: string
+    declaredType: string
+  }): Promise<Result<Order, OrdersError>> => {
+    const publicRef = normalizeRef(input.rawRef)
+    if (publicRef === null) return err(ordersError('not_found', 'Esa referencia no tiene forma de referencia.'))
+
+    const veredicto = checkProof({
+      bytes: input.bytes,
+      declaredName: input.declaredName,
+      declaredType: input.declaredType,
+    })
+    if (!veredicto.ok) return err(ordersError('proof_rejected', veredicto.reason))
+
+    return attempt(
+      async () => {
+        const order = await deps.orders.findByRef(publicRef)
+        if (order === null) return err(ordersError('not_found', `No existe el pedido ${publicRef}.`))
+        if (!canReceiveProof(order.status)) {
+          return err(ordersError('wrong_status', 'Este pedido ya está aprobado: no admite más comprobantes.'))
+        }
+
+        const storageKey = deps.newKey()
+        // Primero el fichero y después la fila: al revés, un fallo al escribir en disco
+        // dejaría en la base un comprobante que el panel no puede abrir.
+        await deps.storage.put(storageKey, input.bytes)
+        await deps.orders.addProof({
+          orderId: order.id,
+          storageKey,
+          // El nombre original se recorta y se guarda **solo para enseñarlo**.
+          originalName: input.declaredName.slice(0, 255),
+          mime: veredicto.mime,
+          sizeBytes: input.bytes.length,
+        })
+        await deps.orders.setStatus({ id: order.id, status: 'proof_submitted', decisionNote: null, decidedAt: null })
+
+        return ok({ ...order, status: 'proof_submitted' as const, decisionNote: null, decidedAt: null })
+      },
+      (cause) => ordersError('storage_failure', `No se pudo guardar el comprobante: ${String(cause)}`),
+    )
+  }
+
+/**
+ * La bandeja del atelier, de lo más nuevo a lo más viejo, con sus comprobantes.
+ *
+ * Los comprobantes vienen en **una** consulta agrupada, no una por fila: veinte pedidos en
+ * pantalla serían veintiún viajes a la base para pintar una lista.
+ */
+export const listOrders =
+  (deps: Deps) => async (): Promise<Result<{ order: Order; proofs: ProofRow[] }[], OrdersError>> =>
+    attempt(
+      async () => {
+        const filas = await deps.orders.list()
+        const porPedido = await deps.orders.listProofsFor(filas.map((o) => o.id))
+        return ok(filas.map((order) => ({ order, proofs: porPedido.get(order.id) ?? [] })))
+      },
+      (cause) => ordersError('storage_failure', `No se pudieron leer los pedidos: ${String(cause)}`),
+    )
+
+/**
+ * El atelier aprueba o rechaza.
+ *
+ * Rechazar **exige nota**: «rechazado» a secas deja al cliente sin saber si transfirió de
+ * menos, a otra cuenta o subió la foto equivocada, y la única salida es una llamada.
+ */
+export const decideOrder =
+  (deps: Deps) =>
+  async (input: { orderId: string; decision: 'approved' | 'rejected'; note: string }): Promise<Result<null, OrdersError>> => {
+    const nota = input.note.trim()
+    if (input.decision === 'rejected' && nota === '') {
+      return err(ordersError('invalid_input', 'Un rechazo sin motivo obliga al cliente a llamar para averiguarlo.'))
+    }
+
+    return attempt(
+      async () => {
+        const order = await deps.orders.findById(input.orderId)
+        if (order === null) return err(ordersError('not_found', `No existe el pedido ${input.orderId}.`))
+        if (!canDecide(order.status)) {
+          return err(ordersError('wrong_status', 'Solo se decide sobre un pedido con comprobante presentado.'))
+        }
+
+        await deps.orders.setStatus({
+          id: order.id,
+          status: input.decision,
+          decisionNote: nota === '' ? null : nota,
+          decidedAt: deps.clock(),
+        })
+
+        return ok(null)
+      },
+      (cause) => ordersError('storage_failure', `No se pudo decidir el pedido: ${String(cause)}`),
+    )
+  }
+
+/** El comprobante, para el route handler que lo sirve tras la sesión del atelier. */
+export const readProof =
+  (deps: Deps & { storage: FileStorage }) =>
+  async (proofId: string): Promise<Result<{ proof: ProofRow; bytes: Uint8Array }, OrdersError>> =>
+    attempt(
+      async () => {
+        const proof = await deps.orders.findProof(proofId)
+        if (proof === null) return err(ordersError('not_found', `No existe el comprobante ${proofId}.`))
+
+        const bytes = await deps.storage.get(proof.storageKey)
+        if (bytes === null) return err(ordersError('not_found', 'El fichero del comprobante no está en el almacén.'))
+
+        return ok({ proof, bytes })
+      },
+      (cause) => ordersError('storage_failure', `No se pudo leer el comprobante: ${String(cause)}`),
+    )

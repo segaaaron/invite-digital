@@ -8,6 +8,7 @@ const REAL = {
   siteDomain: 'atelierdeejemplo.bo',
   postgresPassword: 'CDwYGpyOXaB6mgTd1TVKbg',
   trustBrands: [] as readonly string[],
+  payment: { bank: 'Banco de ejemplo', accountHolder: 'Atelier de ejemplo SRL', accountNumber: '1234567890' },
 }
 
 describe('comprobación previa al despliegue', () => {
@@ -71,7 +72,34 @@ describe('comprobación previa al despliegue', () => {
       siteDomain: PLACEHOLDERS.domain,
       postgresPassword: 'invite',
       trustBrands: ['Marca aliada 1'],
+      payment: { bank: 'BANCO PENDIENTE', accountHolder: 'TITULAR PENDIENTE', accountNumber: 'CUENTA PENDIENTE' },
     })
     expect(blockers.length).toBeGreaterThanOrEqual(6)
+  })
+})
+
+describe('los datos de transferencia del Plan B', () => {
+  it('detienen el despliegue mientras sigan siendo marcadores', () => {
+    const blockers = checkReleaseReadiness({
+      ...REAL,
+      payment: { bank: 'BANCO PENDIENTE', accountHolder: 'TITULAR PENDIENTE', accountNumber: 'CUENTA PENDIENTE' },
+    })
+
+    expect(blockers).toHaveLength(1)
+    expect(blockers[0]).toContain('transferencia')
+  })
+
+  it('y también si alguien los vacía en vez de rellenarlos', () => {
+    // Vaciar el marcador quita el aviso feo de la pantalla y deja el mismo agujero.
+    const blockers = checkReleaseReadiness({
+      ...REAL,
+      payment: { bank: '', accountHolder: '', accountNumber: '' },
+    })
+
+    expect(blockers).toHaveLength(1)
+  })
+
+  it('con datos de verdad no dicen nada', () => {
+    expect(checkReleaseReadiness(REAL)).toEqual([])
   })
 })

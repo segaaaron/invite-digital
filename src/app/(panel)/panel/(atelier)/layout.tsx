@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { events, guestbook, guests, plans } from '@/app/composition/container'
+import { events, guestbook, guests, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
@@ -24,12 +24,18 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   const libro = activo === null ? null : await guestbook.list(activo.id)
   const capacidad = activo === null ? null : await plans.allowanceFor(activo.id)
 
+  // La insignia cuenta lo que espera decisión. Un pedido con comprobante y sin mirar es
+  // alguien que transfirió y no ha recibido nada.
+  const pedidos = await orders.list()
+  const porRevisar = isErr(pedidos) ? null : pedidos.value.filter((p) => p.order.status === 'proof_submitted').length
+
   return (
     <PanelFrame
       brandSub={activo === null ? 'ATELIER' : `EVENTO · ${activo.slug.toUpperCase()}`}
       sections={panelNav(activo?.slug ?? null, {
         invitados: grupos === null || isErr(grupos) ? null : grupos.value.length,
         sinLeer: libro === null || isErr(libro) ? null : unreadCount(libro.value),
+        pedidos: porRevisar,
       })}
       user={{
         title: activo?.title ?? 'Sin eventos todavía',

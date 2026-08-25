@@ -138,6 +138,23 @@ docker compose exec db psql -U "$POSTGRES_USER" -d postgres -c 'drop database re
 Y saca los volcados del servidor. Un respaldo que vive en la misma máquina que la base
 no protege del único caso que importa: perder la máquina.
 
+### Los comprobantes de pago no están en el volcado
+
+`pg_dump` guarda la base. Los comprobantes del Plan B son **ficheros**, y viven en el
+volumen `proofs` (`ORDERS_DIR=/var/lib/invitepremium/comprobantes`). Restaurar solo la
+base deja las filas de `order_proofs` apuntando a ficheros que no existen, y el panel
+responde 404 al abrirlos.
+
+Cópialos con el mismo pase que se lleva los volcados:
+
+```bash
+docker run --rm -v invitepremium_proofs:/origen -v "$PWD":/destino alpine \
+  tar czf /destino/comprobantes-$(date +%F).tar.gz -C /origen .
+```
+
+Ese archivo lleva nombre, banco y número de cuenta de terceros. Trátalo como el volcado
+de la base: cifrado en reposo y fuera del servidor.
+
 ## 7. Mantenimiento
 
 El servicio `maintenance` corre un pase al día: anonimiza los eventos cuya retención
