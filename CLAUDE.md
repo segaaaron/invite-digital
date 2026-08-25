@@ -416,8 +416,10 @@ de ficheros del `output: standalone` se queda sin memoria bajo webpack con el he
 defecto, de ahí el `NODE_OPTIONS` del script.
 
 **Si `pnpm build` muere con «Reached heap limit», borra `.next` antes de tocar nada.**
-Con el caché de una sesión larga el rastreo de ficheros se come los 8 GB del script; con
-`.next` limpio compila. Pasó dos veces en la sesión del 22 de agosto.
+Con el caché de una sesión larga el rastreo de ficheros se come el heap del script; con
+`.next` limpio compila. Pasó dos veces en la sesión del 22 de agosto. El 25 de agosto ya
+**no bastó**: con `.next` recién borrado seguía muriendo con 8 GB, y el script pasó a
+12288. Si vuelve a morir, súbelo antes de buscar la causa en el código.
 
 **Si las e2e fallan en masa con «This page couldn't load», mata el 3100 antes de mirar el
 código**: `lsof -ti :3100 | xargs kill -9`. `reuseExistingServer` reaprovecha un
