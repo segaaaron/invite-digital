@@ -86,7 +86,7 @@ const ZONA_TEXTO: Record<VenueZone['kind'], string> = {
 const TONO_ZONA: Record<VenueZone['kind'], string> = {
   dance: 'bg-gold/10',
   stage: 'bg-sage/10',
-  music: 'bg-device/10',
+  music: 'bg-device/8',
   bar: 'bg-white/45',
   entrance: 'bg-white/45',
   kitchen: 'bg-white/45',
@@ -94,11 +94,12 @@ const TONO_ZONA: Record<VenueZone['kind'], string> = {
   custom: 'bg-white/45',
 }
 
-const bordeDeMesa = (table: SeatedTable): string => {
-  if (table.free === 0) return 'border-sage'
-  if (table.taken === 0) return 'border-line-panel'
-  return 'border-gold'
-}
+/**
+ * En la maqueta el disco es **siempre** arena y quien dice cómo va la mesa son las
+ * sillas: llenas de verde, vacías con su número. Un borde de color por estado repetía esa
+ * información y hacía que el plano gritara.
+ */
+const bordeDeMesa = (): string => 'border-table-edge'
 
 const PASO_TECLADO = 1
 
@@ -404,7 +405,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
       <div
         ref={plano}
         aria-label="Plano del salón"
-        className="relative aspect-[4/3] w-full rounded-card border border-line-panel bg-bg-sunken bg-[linear-gradient(to_right,rgb(var(--color-shadow-rgb)/0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgb(var(--color-shadow-rgb)/0.07)_1px,transparent_1px)] bg-[length:5%_6.66%]"
+        className="relative h-[760px] w-full overflow-hidden rounded-[14px] border border-line-panel bg-[repeating-linear-gradient(0deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),repeating-linear-gradient(90deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),linear-gradient(160deg,var(--color-plan-from),var(--color-plan-to))]"
       >
         {zones.map((zone) => {
           const key = clave('zone', zone.id)
@@ -425,7 +426,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 width: `${tamActuales[key]?.w ?? zone.w}%`,
                 height: `${tamActuales[key]?.h ?? zone.h}%`,
               }}
-              className={`group/zona absolute touch-none rounded-card border border-dashed border-line-panel font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase ${TONO_ZONA[zone.kind]}`}
+              className={`group/zona absolute touch-none rounded-[12px] border border-dashed border-line-panel-strong/70 p-1 font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase ${TONO_ZONA[zone.kind]}`}
             >
               {zone.label}
 
@@ -434,7 +435,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   ya redimensiona con Mayúsculas + flechas. */}
               <span
                 aria-hidden
-                className="absolute right-0.5 bottom-0.5 size-3 cursor-nwse-resize rounded-[3px] border border-line-panel-strong bg-white"
+                className="absolute right-0.5 bottom-0.5 size-3 cursor-nwse-resize border-r-2 border-b-2 border-ink/50 opacity-40"
                 onPointerDown={alEstirarInicio(key)}
                 onPointerMove={alEstirar}
                 onPointerUp={alSoltarMango}
@@ -491,7 +492,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               onPointerUp={alSoltar}
               onKeyDown={alTeclear(key)}
               style={estiloDe(key, arrastrando === key)}
-              className="absolute size-[112px] -translate-x-1/2 -translate-y-1/2 touch-none text-ink"
+              className="absolute size-[74px] -translate-x-1/2 -translate-y-1/2 touch-none text-ink"
             >
               {/* Las sillas alrededor, como en la maqueta: la ocupada lleva la inicial de
                   su grupo. Son decorativas para el lector de pantalla —los nombres ya van
@@ -518,21 +519,18 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   ocupación van debajo, donde caben sin apretarse. */}
               <span
                 aria-hidden
-                className={`absolute top-1/2 left-1/2 flex size-[58px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border-2 bg-bg-raised font-mono text-[13px] ${bordeDeMesa(table)} ${
-                  table.shape === 'round' ? 'rounded-full' : 'rounded-card'
+                className={`absolute top-1/2 left-1/2 flex size-[34px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border bg-linear-to-br from-table-from to-table-to font-mono text-[8px] tracking-[0.1em] text-table-ink shadow-[inset_0_2px_4px_rgb(255_255_255/0.6),inset_0_-3px_6px_rgb(140_110_60/0.25),0_3px_8px_rgb(26_26_26/0.12)] ${bordeDeMesa()} ${
+                  table.shape === 'round' ? 'rounded-full' : 'rounded-[12px]'
                 } ${resaltada ? 'ring-4 ring-gold/50' : ''}`}
               >
                 #{table.label.replace(/^mesa\s*/i, '') || table.label}
               </span>
 
-              {/* Fondo propio: sin él la etiqueta caía sobre el rótulo de una zona y se
-                  leían las dos letras encimadas. */}
-              <span
-                aria-hidden
-                className="absolute top-full left-1/2 -translate-x-1/2 rounded-[6px] bg-bg-sunken/85 px-1.5 py-0.5 text-center whitespace-nowrap"
-              >
-                <span className="block font-mono text-[9px] tracking-[var(--tracking-luxe)] uppercase">{table.label}</span>
-                <span className="block font-mono text-[10px] text-ink-mute">
+              {/* Etiqueta y ocupación justo debajo del disco, como en la maqueta: 9 px
+                  y 8 px, sin recuadro. */}
+              <span aria-hidden className="absolute top-full left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+                <span className="mt-0.5 block text-[9px] font-medium text-ink">{table.label}</span>
+                <span className="block font-mono text-[8px] text-ink-mute">
                   {table.taken}/{table.capacity}
                 </span>
               </span>

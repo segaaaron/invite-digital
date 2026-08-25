@@ -62,6 +62,17 @@
      se separan del marfil por una sombra y una línea casi invisible. `--color-line`
      —dorado al 22 %— es de la web pública y aquí dibujaba un marco de más. */
   --color-line-panel: rgb(26 26 26 / 0.08);
+
+  /* El plano del salón, con los valores medidos de la maqueta: fondo casi blanco, rejilla
+     de 32 px y el disco de la mesa en arena. Estaba pintado sobre `--color-bg-sunken`, que
+     es dos tonos más oscuro, y con las mesas al doble de tamaño. */
+  --color-plan-from: #fbf8f1;
+  --color-plan-to: #f4f0e6;
+  --color-plan-grid: #f3efe4;
+  --color-table-from: #efe6d3;
+  --color-table-to: #e2d5b8;
+  --color-table-edge: rgb(140 110 60 / 0.25);
+  --color-table-ink: #6b5a35;
   --color-line-panel-strong: rgb(26 26 26 / 0.15);
 
   --color-shell: #1f1f1d;
