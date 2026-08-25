@@ -54,6 +54,7 @@ function accionesDe(fuente: string): { nombre: string; cuerpo: string }[] {
 function main(): number {
   const problemas: string[] = []
   let revisadas = 0
+  let deAdmin = 0
 
   for (const modulo of readdirSync(RAIZ)) {
     const ruta = join(RAIZ, modulo, 'actions.ts')
@@ -65,6 +66,12 @@ function main(): number {
     }
 
     for (const { nombre, cuerpo } of accionesDe(fuente)) {
+      // Las del admin no llevan guardia por definición: opera sobre eventos que no son
+      // suyos. Se cuentan aparte para que el informe no las esconda.
+      if (cuerpo.includes('requireAdmin()')) {
+        deAdmin += 1
+        continue
+      }
       if (!cuerpo.includes('requireSession()')) continue
       revisadas += 1
       if (cuerpo.includes('requireEventAccess')) continue
@@ -83,7 +90,10 @@ function main(): number {
     return 1
   }
 
-  console.log(`Multitenencia: ${revisadas} acciones con sesión revisadas, todas cerradas.`)
+  console.log(
+    `Multitenencia: ${revisadas} acciones con sesión revisadas, todas cerradas. ` +
+      `${deAdmin} del admin, sin guardia a propósito.`,
+  )
   return 0
 }
 

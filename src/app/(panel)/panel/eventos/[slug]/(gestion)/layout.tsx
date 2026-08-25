@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { checkin, events, guestbook, guests, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
+import { isAdmin } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
@@ -53,7 +54,7 @@ export default async function EventoLayout({
         sinLeer: isErr(libro) ? null : unreadCount(libro.value),
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: porRevisar,
-      })}
+      }, isAdmin(actor))}
       user={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,

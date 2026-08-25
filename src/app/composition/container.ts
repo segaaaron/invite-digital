@@ -72,6 +72,17 @@ import {
   readProof,
 } from '@/modules/orders/application/order-use-cases'
 import { createDiskFileStorage } from '@/modules/orders/infrastructure/disk-file-storage'
+import {
+  deleteUser as deleteUserUseCase,
+  listAllEvents,
+  listUsers,
+  readAudit,
+  readMetrics,
+  recordAdminAction,
+  setEventPlan as setEventPlanUseCase,
+  setUserRole as setUserRoleUseCase,
+} from '@/modules/admin/application/admin-use-cases'
+import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
 import { env } from '@/shared/config/env'
 import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
@@ -350,6 +361,24 @@ export const orders = {
   list: listOrders({ orders: drizzleOrderRepository, clock }),
   decide: decideOrder({ orders: drizzleOrderRepository, clock }),
   readProof: readProof({ orders: drizzleOrderRepository, storage: proofStorage, clock }),
+}
+
+export const admin = {
+  users: listUsers({ admin: drizzleAdminRepository }),
+  events: listAllEvents({ admin: drizzleAdminRepository }),
+  metrics: readMetrics({ admin: drizzleAdminRepository }),
+  audit: readAudit({ admin: drizzleAdminRepository }),
+  setRole: setUserRoleUseCase({ admin: drizzleAdminRepository }),
+  deleteUser: deleteUserUseCase({ admin: drizzleAdminRepository }),
+  setEventPlan: setEventPlanUseCase({ admin: drizzleAdminRepository }),
+  record: recordAdminAction({ admin: drizzleAdminRepository }),
+  planSlugs: () => drizzleAdminRepository.listPlanSlugs(),
+  /** El alta la hace el admin: no hay registro público. */
+  createUser: async (input: { email: string; password: string; role: 'admin' | 'atelier' }) => {
+    const passwordHash = await argon2Hasher.hash(input.password)
+    return drizzleUserRepository.create({ email: input.email, passwordHash, role: input.role })
+  },
+  findUserByEmail: (email: string) => drizzleUserRepository.findByEmail(email),
 }
 
 export const reminders = {

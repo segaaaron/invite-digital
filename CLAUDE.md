@@ -42,6 +42,7 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/plans/2026-08-21-cabos-sueltos.md` | Consultar cómo se cerraron los cabos sueltos del ciclo 4: 7 tareas |
 | `docs/superpowers/specs/2026-08-25-recordatorios-design.md` | Entender los recordatorios de RSVP (ciclo 3, rebanada 4) |
 | `docs/superpowers/specs/2026-08-25-pedidos-design.md` | Entender el Plan B: pedidos, comprobantes y administración |
+| `docs/superpowers/specs/2026-08-25-multitenencia-y-admin-design.md` | Entender quién ve qué: dueño por evento, rol por usuario y el admin |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
@@ -337,6 +338,42 @@ correo, que necesita proveedor.
   el componente, así que ese `useState` se pierde en ese mismo instante. Lo que se ve es
   la cola recalculada, donde la fila ya no está. Lo cazó la e2e.
 
+### Notas de la multitenencia y el admin
+
+- **El evento tiene dueño (`events.user_id`) y el usuario tiene rol (`users.role`).** Antes
+  de la migración `0021` no había ni una cosa ni la otra: `requireSession()` comprobaba
+  que hubiera sesión, no de quién, y con dos usuarios dados de alta cada uno veía y
+  editaba las bodas del otro.
+- **En las páginas, la firma es la guardia.** No existe `events.getBySlug(slug)`: hay
+  `getFor(actor, slug)` y `listFor(actor)`. Una vista que no diga quién pregunta **no
+  compila**. Las versiones sin actor se llaman `getBySlugUnscoped` a propósito, y solo son
+  para lo que no tiene sesión —la página del invitado, que se autoriza por token— y para
+  el mantenimiento.
+- **El evento ajeno responde `not_found`.** 404, nunca 403: un 403 confirmaría que ese
+  `slug` existe. Misma regla que los tokens de invitado, y la misma para `/panel/admin`
+  cuando entra alguien que no es admin.
+- **En las Server Actions, `requireEventAccess(actor, ref)` tras `requireSession()`, y
+  lanza.** No devuelve un estado de error porque un usuario legítimo no llega ahí desde
+  ninguna pantalla: sería mantener texto para un estado inalcanzable. Lo que importa es
+  que no se escribe nada.
+- **`pnpm verify:tenancy` es lo que impide que se olvide una.** Una acción con sesión y
+  sin guardia deja el comando en rojo, salvo que esté apuntada como exenta **con su
+  motivo**. Se comprobó que falla al quitarle la guardia a una.
+- **`events.user_id` es `ON DELETE RESTRICT`.** Borrar un usuario no puede llevarse por
+  delante las bodas que gestiona: el admin reasigna o borra primero, y la pantalla dice
+  cuántas son.
+- **Un rol desconocido cae a `atelier`.** Un rol que se concede por no reconocerlo no es
+  un rol.
+- **Nadie se quita a sí mismo el admin y no se degrada al último que queda.** Cualquiera
+  de las dos cosas deja el sistema sin nadie que administre. La puerta de emergencia es
+  `pnpm user:create <correo> --admin`.
+- **La auditoría copia el correo del actor como texto**, además del identificador, y este
+  va con `SET NULL`: borrar al admin no puede borrar el rastro de lo que hizo. Solo se
+  anotan escrituras; registrar las lecturas sería un rastro de navegación del atelier.
+- **La sección del admin en la barra solo se pinta para un admin.** Ocultarla no es la
+  protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
+  que existe algo a lo que no se llega.
+
 ### Notas del Plan B (`src/modules/orders/`)
 
 - **El tipo de un comprobante lo deciden sus primeros bytes**, nunca la extensión ni el
@@ -498,6 +535,8 @@ pnpm user:create <correo>                          # única alta de usuario del 
 pnpm maintenance                                   # anonimiza vencidos y barre sesiones
 pnpm preflight                                     # puerta previa al despliegue
 pnpm verify:boundaries                             # prueba que las fronteras cortan de verdad
+pnpm verify:tenancy                                # ninguna acción del panel sin guardia de dueño
+pnpm user:create <correo> --admin                  # alta de administrador
 ```
 
 **El modo puerta se prueba contra la imagen, no contra `pnpm dev`.** Serwist va apagado

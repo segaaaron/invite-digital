@@ -133,6 +133,10 @@ test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', a
 const VISTAS_ATELIER = [
   ['ayuda', '/panel/ayuda'],
   ['pedidos', '/panel/pedidos'],
+  ['admin · panorama', '/panel/admin'],
+  ['admin · eventos', '/panel/admin/eventos'],
+  ['admin · usuarios', '/panel/admin/usuarios'],
+  ['admin · auditoría', '/panel/admin/auditoria'],
 ] as const
 
 /**

@@ -257,3 +257,25 @@ export function PinIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Un edificio: los eventos de todo el sistema, no los de una boda. */
+export function BuildingIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M4 20.5V6.5l7-3v17" />
+      <path d="M11 10.5h6.5v10" />
+      <path d="M2.5 20.5h19" />
+      <path d="M7 9.5h1M7 13h1M14 14h1M14 17.5h1" />
+    </svg>
+  )
+}
+
+/** Un escudo: la auditoría. */
+export function ShieldIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M12 3l7 2.6v5.6c0 4.3-2.9 7.7-7 9.3-4.1-1.6-7-5-7-9.3V5.6z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  )
+}

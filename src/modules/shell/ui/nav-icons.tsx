@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import {
+  BuildingIcon,
   CalendarIcon,
   CardIcon,
   ChartIcon,
@@ -12,6 +13,7 @@ import {
   PenIcon,
   ReceiptIcon,
   ScanIcon,
+  ShieldIcon,
   TableIcon,
   UsersIcon,
 } from '@/shared/design/ui/icons'
@@ -39,6 +41,10 @@ export const NAV_ICONS = {
   eventos: <CalendarIcon />,
   pedidos: <ReceiptIcon />,
   ayuda: <HelpIcon />,
+  panorama: <ChartIcon />,
+  usuarios: <UsersIcon />,
+  todosLosEventos: <BuildingIcon />,
+  auditoria: <ShieldIcon />,
 } as const satisfies Record<string, ReactNode>
 
 export type NavIcon = keyof typeof NAV_ICONS

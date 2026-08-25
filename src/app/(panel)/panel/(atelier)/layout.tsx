@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { events, guestbook, guests, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
+import { isAdmin } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
@@ -36,7 +37,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
         invitados: grupos === null || isErr(grupos) ? null : grupos.value.length,
         sinLeer: libro === null || isErr(libro) ? null : unreadCount(libro.value),
         pedidos: porRevisar,
-      })}
+      }, isAdmin(actor))}
       user={{
         title: activo?.title ?? 'Sin eventos todavía',
         planLabel:

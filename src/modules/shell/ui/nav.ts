@@ -39,9 +39,29 @@ export type NavCounts = {
  * Sin ningún evento creado, los enlaces del evento van a `null`: se pintan apagados y no
  * llevan a ninguna parte, en vez de desaparecer.
  */
-export function panelNav(slug: string | null, counts: NavCounts = {}): NavSection[] {
+/**
+ * La administración es una sección **más** de la misma barra, y solo se pinta para un
+ * admin: un atelier no ve ni el rótulo. Ocultarla no es la protección —esa vive en
+ * `requireAdmin()`, que devuelve 404— pero enseñar enlaces que llevan a un 404 es
+ * enseñar que existe algo a lo que no se llega.
+ */
+export function panelNav(slug: string | null, counts: NavCounts = {}, esAdmin = false): NavSection[] {
   const base = slug === null ? null : `/panel/eventos/${slug}`
   const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
+
+  const administracion: NavSection[] = esAdmin
+    ? [
+        {
+          label: 'Administración',
+          items: [
+            { href: '/panel/admin', label: 'Panorama', icon: 'panorama' },
+            { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
+            { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
+            { href: '/panel/admin/auditoria', label: 'Auditoría', icon: 'auditoria' },
+          ],
+        },
+      ]
+    : []
 
   return [
     {
@@ -76,5 +96,6 @@ export function panelNav(slug: string | null, counts: NavCounts = {}): NavSectio
         { href: '/panel/ayuda', label: 'Ayuda', icon: 'ayuda' },
       ],
     },
+    ...administracion,
   ]
 }

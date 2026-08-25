@@ -4,6 +4,11 @@
  * del intérprete de órdenes.
  *
  *   DATABASE_URL=… SITE_URL=… pnpm user:create atelier@invitepremium.bo
+ *   DATABASE_URL=… SITE_URL=… pnpm user:create jefe@invitepremium.bo --admin
+ *
+ * Con `--admin` el usuario nace administrador. Es la puerta de emergencia: si un día no
+ * queda ningún admin —no debería, las reglas lo impiden desde la aplicación— esta es la
+ * única forma de volver a tener uno sin escribir SQL.
  */
 import { createInterface } from 'node:readline/promises'
 import { createCredential } from '@/modules/identity/domain/credential'
@@ -15,8 +20,9 @@ import { isErr } from '@/shared/result'
 // lo admite. Mismo patrón que src/shared/db/seed.ts.
 async function createAtelierUser(): Promise<number> {
   const email = process.argv[2]
+  const esAdmin = process.argv.includes('--admin')
   if (email === undefined) {
-    console.error('Uso: pnpm user:create <correo>')
+    console.error('Uso: pnpm user:create <correo> [--admin]')
     return 1
   }
 
@@ -36,8 +42,12 @@ async function createAtelierUser(): Promise<number> {
   }
 
   const passwordHash = await argon2Hasher.hash(credential.value.password)
-  const { id } = await drizzleUserRepository.create({ email: credential.value.email, passwordHash })
-  console.log(`Usuario creado: ${credential.value.email} (${id})`)
+  const { id } = await drizzleUserRepository.create({
+    email: credential.value.email,
+    passwordHash,
+    role: esAdmin ? 'admin' : 'atelier',
+  })
+  console.log(`Usuario creado: ${credential.value.email} (${id})${esAdmin ? ' — administrador' : ''}`)
   return 0
 }
 

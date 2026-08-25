@@ -23,7 +23,11 @@ export const createDrizzleUserRepository = (database: DbExecutor): UserRepositor
   },
 
   async create(user) {
-    const [row] = await database.insert(users).values(user).returning({ id: users.id })
+    const [row] = await database
+      .insert(users)
+      // El rol por omisión lo pone la columna: `atelier`, el de menos poder.
+      .values({ email: user.email, passwordHash: user.passwordHash, ...(user.role ? { role: user.role } : {}) })
+      .returning({ id: users.id })
     // `returning` siempre trae la fila insertada; si algún día no lo hiciera, el fallo
     // debe estallar aquí y no viajar como un id vacío.
     if (row === undefined) throw new Error('El alta de usuario no devolvió id')
