@@ -46,10 +46,15 @@ const ZONA_TEXTO: Record<VenueZone['kind'], string> = {
   entrance: 'Entrada',
 }
 
+/**
+ * El color del borde dice cómo va la mesa, como en la maqueta: llena en verde —está
+ * resuelta—, empezada en dorado y vacía en línea tenue. El rojo que llevaba la llena
+ * decía «problema» donde no lo hay.
+ */
 const bordeDeMesa = (table: SeatedTable): string => {
-  if (table.free === 0) return 'border-danger'
-  if (table.taken === 0) return 'border-line'
-  return 'border-warn'
+  if (table.free === 0) return 'border-sage'
+  if (table.taken === 0) return 'border-line-panel'
+  return 'border-gold'
 }
 
 const PASO_TECLADO = 1
@@ -343,7 +348,12 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
                 {table.label.replace(/^mesa\s*/i, '') || table.label}
               </span>
 
-              <span aria-hidden className="absolute top-full left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+              {/* Fondo propio: sin él la etiqueta caía sobre el rótulo de una zona y se
+                  leían las dos letras encimadas. */}
+              <span
+                aria-hidden
+                className="absolute top-full left-1/2 -translate-x-1/2 rounded-[6px] bg-bg-sunken/85 px-1.5 py-0.5 text-center whitespace-nowrap"
+              >
                 <span className="block font-mono text-[9px] tracking-[var(--tracking-luxe)] uppercase">{table.label}</span>
                 <span className="block font-mono text-[10px] text-ink-mute">
                   {table.taken}/{table.capacity}

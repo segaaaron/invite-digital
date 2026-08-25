@@ -10,7 +10,7 @@ export function UnseatedStrip({ groups }: { groups: readonly SeatedGroupRow[] })
   return (
     <section
       aria-label="Invitados sin mesa"
-      className="flex flex-col gap-3 rounded-card border border-warn bg-bg-raised p-5"
+      className="flex flex-col gap-3"
     >
       <h2 className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
         {groups.length} sin mesa
@@ -19,7 +19,7 @@ export function UnseatedStrip({ groups }: { groups: readonly SeatedGroupRow[] })
         {groups.map((group) => (
           <li
             key={group.id}
-            className="flex items-baseline gap-2 rounded-pill border border-line bg-bg-top px-3 py-1.5 text-[13px] text-ink-soft"
+            className="flex items-baseline gap-2 rounded-pill border border-line-panel bg-white px-3 py-1.5 text-[13px] text-ink-soft"
           >
             <span>{group.label}</span>
             <span className="font-mono text-[10px] text-ink-mute">

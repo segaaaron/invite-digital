@@ -112,6 +112,15 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) /
       86_400_000,
   )
+  // Los deltas «esta semana» de la maqueta, calculados con lo que ya se mide: grupos
+  // creados en los últimos siete días y respuestas recibidas en ese mismo tramo. Nada de
+  // porcentajes inventados: si la semana fue en blanco, no se pinta la línea.
+  const HACE_UNA_SEMANA = new Date(hoy.getTime() - 7 * 86_400_000)
+  const gruposNuevos = filas.filter((fila) => (fila.createdAt?.getTime() ?? 0) >= HACE_UNA_SEMANA.getTime()).length
+  const respuestasSemana = isErr(historial)
+    ? 0
+    : historial.value.slice(-7).reduce((suma, barra) => suma + barra.count, 0)
+
   const cuentaAtras =
     diasQueFaltan > 1 ? `faltan ${diasQueFaltan} días` : diasQueFaltan === 1 ? 'falta un día' : diasQueFaltan === 0 ? 'es hoy' : null
 
@@ -133,18 +142,28 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       />
 
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-        <StatCard label="Invitados" value={filas.length} icon="✉" detail={`${t ? t.seatsInvited : 0} cupos repartidos`} />
+        <StatCard
+          label="Invitados"
+          value={filas.length}
+          icon="✉"
+          change={gruposNuevos > 0 ? { direction: 'up', text: `${gruposNuevos} esta semana` } : undefined}
+          detail={gruposNuevos > 0 ? undefined : `${t ? t.seatsInvited : 0} cupos repartidos`}
+        />
         <StatCard
           label="Confirmados"
           value={t ? t.seatsConfirmed : 0}
           suffix={`/ ${t ? t.seatsInvited : 0}`}
           icon="✓"
+          change={respuestasSemana > 0 ? { direction: 'up', text: `${respuestasSemana} esta semana` } : undefined}
           progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
         />
         <StatCard
           label="Pendientes"
           value={t ? t.groupsPending : pendientes}
           icon="◔"
+          // Cada respuesta de la semana es un pendiente menos: la flecha va hacia abajo,
+          // que en esta tarjeta es la buena noticia.
+          change={respuestasSemana > 0 ? { direction: 'down', text: `${respuestasSemana} esta semana` } : undefined}
           progress={filas.length > 0 ? pendientes / filas.length : 0}
         />
         <StatCard

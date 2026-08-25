@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 import { markReadAction, replyAction, toggleFeaturedAction } from '../actions'
 import { createReply } from '../domain/message-note'
 import type { GuestMessage } from '../domain/inbox'
+import { avatarColor } from '@/modules/shell/ui/avatar-color'
 import { isErr } from '@/shared/result'
 
 type Props = {
@@ -70,7 +71,7 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
           {/* El avatar es decorativo: la etiqueta del grupo va escrita al lado. */}
           <span
             aria-hidden
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[16px] italic text-white"
+            className={`flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br font-display text-[16px] italic text-white ${avatarColor(message.groupLabel)}`}
           >
             {message.groupLabel.slice(0, 1)}
           </span>
@@ -97,26 +98,33 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
         </div>
       )}
 
-      <div className="flex flex-col gap-2">
-        <label
-          className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
-          htmlFor={`respuesta-${message.responseId}`}
-        >
-          {`Responder a ${message.groupLabel}`}
-        </label>
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            className="min-w-[220px] flex-1 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-top/80 px-4 py-2 text-[13px] text-ink outline-none transition-colors focus-visible:border-gold"
-            id={`respuesta-${message.responseId}`}
-            onChange={(e) => setTexto(e.target.value)}
-            type="text"
-            value={texto}
-          />
-          <button className={PILL} disabled={pendiente} onClick={responder} type="button">
-            Responder
-          </button>
+      {/* La maqueta solo enseña «Marcar leído» y «Destacar»; responder es nuestro y se
+          pliega tras su botón para no dejar un campo abierto por mensaje. */}
+      <details className="group">
+        <summary className={`${PILL} w-fit list-none cursor-pointer`}>
+          {message.reply === null ? 'Responder' : 'Editar respuesta'}
+        </summary>
+        <div className="mt-3 flex flex-col gap-2">
+          <label
+            className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
+            htmlFor={`respuesta-${message.responseId}`}
+          >
+            {`Responder a ${message.groupLabel}`}
+          </label>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              className="min-w-[220px] flex-1 rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 text-[13px] text-ink outline-none transition-colors focus-visible:border-ink"
+              id={`respuesta-${message.responseId}`}
+              onChange={(e) => setTexto(e.target.value)}
+              type="text"
+              value={texto}
+            />
+            <button className={PILL} disabled={pendiente} onClick={responder} type="button">
+              Responder
+            </button>
+          </div>
         </div>
-      </div>
+      </details>
 
       <footer className="flex flex-wrap items-center gap-2">
         {sinLeer ? (

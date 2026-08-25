@@ -1,5 +1,6 @@
 import { attempt, err, isErr, ok, type Result } from '@/shared/result'
 import { venueError, type VenueError } from '../domain/errors'
+import { freeSpot } from '../domain/free-spot'
 import { createVenueTable, type TableShape, type VenueTable } from '../domain/venue-table'
 import type { VenueRepository } from './ports'
 
@@ -37,18 +38,22 @@ export const addTable =
   async (input: AddTableInput): Promise<Result<VenueTable, VenueError>> =>
     attempt<VenueTable, VenueError>(
       async () => {
+        // Las mesas y las zonas que ya están puestas, para no nacer encima de ninguna.
+        const existing = await deps.venue.listTables(input.eventId)
+        const zonas = await deps.venue.listZones(input.eventId)
+        const sitio = freeSpot([...existing, ...zonas])
+
         const table = createVenueTable({
           id: deps.ids(),
           eventId: input.eventId,
           label: input.label,
           capacity: input.capacity,
           shape: input.shape,
-          x: input.x ?? 50,
-          y: input.y ?? 50,
+          x: input.x ?? sitio.x,
+          y: input.y ?? sitio.y,
         })
         if (isErr(table)) return table
 
-        const existing = await deps.venue.listTables(input.eventId)
         if (clashes(existing, table.value.label)) {
           return err(venueError('duplicate_label', `Ya hay una «${table.value.label}» en este evento.`))
         }

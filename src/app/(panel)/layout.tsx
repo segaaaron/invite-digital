@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { display, sans } from '@/shared/design/fonts'
+import { display, panelMono, panelSans } from '@/shared/design/fonts'
 import '../globals.css'
 
 // El panel no negocia idioma: lo usa el atelier y está en español.
@@ -7,7 +7,7 @@ export const metadata = { title: 'Panel · InvitePremium', robots: { index: fals
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
         {/* `div`, no `main`: la carcasa del panel emite su propio `main` y dos anidados
             dejan la página con dos regiones principales, que es un error de HTML y hace

@@ -40,7 +40,9 @@ test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la r
   await expect(page.getByRole('button', { name: /^Sin leer/ })).toHaveText(/0/)
   await expect(page.getByText('Sin leer', { exact: true })).toBeHidden()
 
-  // 5. El atelier responde, y la respuesta llega a la base.
+  // 5. El atelier responde, y la respuesta llega a la base. Responder va plegado tras su
+  // botón: la maqueta solo enseña «Marcar leído» y «Destacar» en la tarjeta.
+  await page.getByText('Responder', { exact: true }).first().click()
   await page.getByLabel('Responder a Familia Rojas Peña').fill('Gracias, los esperamos con muchas ganas.')
   await page.getByRole('button', { name: 'Responder' }).click()
   await expect(page.getByText('Tu respuesta')).toBeVisible()

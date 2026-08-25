@@ -184,3 +184,72 @@ describe('removeTable', () => {
     expect(isErr(r) && r.error.kind).toBe('not_found')
   })
 })
+
+describe('addTable · dónde nace la mesa', () => {
+  const salon = () => fakeVenueRepository({})
+
+  it('la primera no nace en el centro del plano', async () => {
+    const { repo: venue } = salon()
+    const creada = await addTable({ venue, ids: () => 'mesa-1' })({
+      eventId: 'e1',
+      label: 'Mesa 01',
+      capacity: 8,
+      shape: 'round',
+    })
+
+    expect(isErr(creada)).toBe(false)
+    if (isErr(creada)) return
+    expect({ x: creada.value.x, y: creada.value.y }).not.toEqual({ x: 50, y: 50 })
+  })
+
+  it('la segunda no nace encima de la primera: se veían como una sola', async () => {
+    const { repo: venue } = salon()
+    const uno = await addTable({ venue, ids: () => 'mesa-1' })({
+      eventId: 'e1',
+      label: 'Mesa 01',
+      capacity: 8,
+      shape: 'round',
+    })
+    const dos = await addTable({ venue, ids: () => 'mesa-2' })({
+      eventId: 'e1',
+      label: 'Mesa 02',
+      capacity: 8,
+      shape: 'round',
+    })
+
+    expect(isErr(uno) || isErr(dos)).toBe(false)
+    if (isErr(uno) || isErr(dos)) return
+    expect({ x: uno.value.x, y: uno.value.y }).not.toEqual({ x: dos.value.x, y: dos.value.y })
+  })
+
+  it('tampoco nace encima de una zona ya colocada', async () => {
+    const { repo: venue, zones } = salon()
+    zones.push({ id: 'z1', eventId: 'e1', kind: 'dance', label: 'Pista', x: 18, y: 20, w: 20, h: 15 })
+    const creada = await addTable({ venue, ids: () => 'mesa-1' })({
+      eventId: 'e1',
+      label: 'Mesa 01',
+      capacity: 8,
+      shape: 'round',
+    })
+
+    expect(isErr(creada)).toBe(false)
+    if (isErr(creada)) return
+    expect({ x: creada.value.x, y: creada.value.y }).not.toEqual({ x: 18, y: 20 })
+  })
+
+  it('una posición explícita manda sobre el hueco automático', async () => {
+    const { repo: venue } = salon()
+    const creada = await addTable({ venue, ids: () => 'mesa-1' })({
+      eventId: 'e1',
+      label: 'Mesa 01',
+      capacity: 8,
+      shape: 'round',
+      x: 70,
+      y: 70,
+    })
+
+    expect(isErr(creada)).toBe(false)
+    if (isErr(creada)) return
+    expect({ x: creada.value.x, y: creada.value.y }).toEqual({ x: 70, y: 70 })
+  })
+})

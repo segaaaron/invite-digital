@@ -25,6 +25,27 @@
   /* Carcasa del panel, portada del diseño entregado: barra lateral oscura sobre cuerpo
      marfil. Los valores son los de `docs/design-reference/dashboard/Dashboard.html`,
      ajustados a la tinta de marca. */
+  /* Los seis avatares de la actividad y del libro de firmas. La regla del proyecto es
+     que ningún hexadecimal viva fuera de este fichero, y estos son colores de marca
+     igual que los demás. */
+  --color-avatar-1: #c96a6a;
+  --color-avatar-1-deep: #a35555;
+  --color-avatar-2: #7a8c64;
+  --color-avatar-2-deep: #3f5340;
+  --color-avatar-3: #e2c584;
+  --color-avatar-3-deep: #c19b4a;
+  --color-avatar-4: #8f7bd8;
+  --color-avatar-4-deep: #6c5ce7;
+  --color-avatar-5: #5aa0b8;
+  --color-avatar-5-deep: #3d7d94;
+  --color-avatar-6: #c98a4b;
+  --color-avatar-6-deep: #a3653a;
+
+  /* El violeta con el que la maqueta pinta las barras de dispositivos. Es el único sitio
+     donde vive: separa de un vistazo «con qué lo abrieron» de «por dónde llegaron», que
+     son dos preguntas distintas en la misma rejilla. */
+  --color-device: #6c5ce7;
+
   /* Píldoras de estado de la maqueta del panel (`Dashboard.html`, clase `.pill`). El
      estado se dice con fondo y texto, no solo con la palabra: una tabla de veinte filas
      se lee de un vistazo por el color y se comprueba leyendo. */
@@ -54,7 +75,10 @@
   /* Las cifras van aquí, no en Cormorant: sus números de estilo antiguo hacen que el 1
      se lea como I y el 0 como paréntesis. Se detectó en la puerta y volvía a pasar en
      «1 grupos pendientes». Pila del sistema: ni una descarga más. */
-  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  /* En el panel la define `panelMono` —JetBrains Mono, la de la maqueta del panel—; en
+     la web pública y en la invitación nadie la define y cae en la del sistema, que es lo
+     que la maqueta Ivory pide. */
+  --font-mono: var(--font-mono-raw), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   --radius-pill: 999px;
   --radius-card: 22px;

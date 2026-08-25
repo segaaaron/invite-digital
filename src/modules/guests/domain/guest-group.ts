@@ -11,6 +11,8 @@ export type GuestGroup = {
   readonly invitationSentAt: Date | null
   /** Teléfono para abrir WhatsApp con el destinatario puesto. Opcional a propósito. */
   readonly phone: string | null
+  /** Cuándo se creó el grupo. El panel lo usa para decir cuántos entraron esta semana. */
+  readonly createdAt: Date
 }
 
 export type GuestGroupInput = {
@@ -21,9 +23,18 @@ export type GuestGroupInput = {
   revokedAt: Date | null
   invitationSentAt?: Date | null | undefined
   phone?: string | null | undefined
+  /** Lo pone la base al insertar; en el alta se toma del reloj de la acción. */
+  createdAt?: Date | undefined
 }
 
 const MAX_LABEL = 160
+
+/**
+ * Sin fecha de creación conocida se usa la época. Es deliberado y visible: un grupo así
+ * nunca cuenta como «entró esta semana», que es preferible a inflar el contador con
+ * `new Date()` cada vez que alguien reconstruye un grupo viejo desde una fila.
+ */
+const EPOCA = new Date(0)
 
 /**
  * La unidad invitada es el grupo, no la persona: en Bolivia se invita a "Familia Rojas
@@ -47,6 +58,7 @@ export function createGuestGroup(input: GuestGroupInput): Result<GuestGroup, Gue
     revokedAt: input.revokedAt,
     invitationSentAt: input.invitationSentAt ?? null,
     phone: input.phone?.trim() === '' ? null : (input.phone ?? null),
+    createdAt: input.createdAt ?? EPOCA,
   })
 }
 

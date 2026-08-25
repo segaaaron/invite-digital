@@ -15,7 +15,7 @@ const ANA: GuestGroup = {
   eventId: EVENTO,
   label: 'Familia Rojas',
   seats: 4,
-  revokedAt: null, invitationSentAt: null, phone: null,
+  revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0),
 }
 
 const BRUNO: GuestGroup = { ...ANA, id: 'grupo-bruno', label: 'Familia Vargas' }

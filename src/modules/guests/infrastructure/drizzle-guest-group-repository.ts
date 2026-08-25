@@ -12,6 +12,7 @@ const COLUMNS = {
   openedAt: guestGroups.openedAt,
   invitationSentAt: guestGroups.invitationSentAt,
   phone: guestGroups.phone,
+  createdAt: guestGroups.createdAt,
 } as const
 
 export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGroupRepository => ({

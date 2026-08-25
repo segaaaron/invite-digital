@@ -4,6 +4,8 @@ import { useState, useTransition } from 'react'
 import { assignGroupAction, removeTableAction, unassignGroupAction, updateTableAction } from '../actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
+import { IconButton } from '@/shared/design/ui/panel/PanelKit'
+import { seatRing } from '../domain/seat-ring'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
 
 const NOMBRE_FORMA: Record<TableShape, string> = {
@@ -22,14 +24,14 @@ type Props = {
 }
 
 /**
- * El estado de la mesa se lee del color del borde: verde con sitio, ámbar casi llena,
- * rojo sin nada libre. Son `--color-ok`, `--color-warn` y `--color-danger` de
- * `tokens.css`; aquí no hay ni un hexadecimal.
+ * El estado de la mesa se lee del color, como en la maqueta: verde cuando está resuelta,
+ * dorado a medias y línea tenue vacía. El rojo de «completa» decía «problema» donde lo
+ * que hay es una mesa terminada.
  */
 const estado = (table: SeatedTable): { clase: string; texto: string } => {
-  if (table.free === 0) return { clase: 'border-danger text-danger', texto: 'Completa' }
-  if (table.taken === 0) return { clase: 'border-line text-ink-mute', texto: 'Vacía' }
-  return { clase: 'border-warn text-warn', texto: 'A medias' }
+  if (table.free === 0) return { clase: 'border-sage text-sage', texto: 'Completa' }
+  if (table.taken === 0) return { clase: 'border-line-panel text-ink-mute', texto: 'Vacía' }
+  return { clase: 'border-gold text-gold-deep', texto: 'A medias' }
 }
 
 export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
@@ -77,33 +79,73 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   }
 
   return (
-    <article className={`flex flex-col gap-4 rounded-card border bg-bg-raised p-5 ${clase}`}>
+    <article className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-5 shadow-card ${clase}`}>
       <header className="flex items-baseline justify-between gap-3">
         <h3 className="font-display text-[20px] font-light text-ink">{table.label}</h3>
         <p className="flex items-baseline gap-2">
-          <span className="font-mono text-[16px] text-ink">
+          <span className="font-mono text-[13px] text-ink-soft">
             {table.taken} / {table.capacity}
           </span>
-          <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)]">{texto}</span>
+          <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] uppercase">{texto}</span>
+          <IconButton disabled={pendiente} label={`Editar ${table.label}`} onClick={() => setEditando(true)}>
+            ✎
+          </IconButton>
+          <IconButton
+            disabled={pendiente}
+            label={`Eliminar ${table.label}`}
+            onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
+          >
+            ✕
+          </IconButton>
         </p>
       </header>
+
+      {/* La mesa dibujada con sus sillas, como en la maqueta: se ve de un vistazo cuánto
+          queda libre sin leer el contador. */}
+      <div aria-hidden className="relative mx-auto size-[150px]">
+        {seatRing(table.capacity, table.groups).map((silla, indice) => (
+          <span
+            key={indice}
+            className={`absolute top-1/2 left-1/2 flex size-5 items-center justify-center rounded-full font-mono text-[8px] ${
+              silla.occupant === null ? 'bg-bg-sunken text-ink-mute' : 'bg-sage text-white'
+            }`}
+            style={{
+              transform: `translate(-50%, -50%) rotate(${silla.angle}deg) translateY(-58px) rotate(${-silla.angle}deg)`,
+            }}
+          >
+            {silla.initial ?? indice + 1}
+          </span>
+        ))}
+        <span
+          className={`absolute top-1/2 left-1/2 flex size-[74px] -translate-x-1/2 -translate-y-1/2 items-center justify-center bg-bg-sunken font-mono text-[15px] text-ink ${
+            table.shape === 'round' ? 'rounded-full' : 'rounded-[14px]'
+          }`}
+        >
+          {table.label.replace(/^mesa\s*/i, '') || table.label}
+        </span>
+      </div>
 
       {table.groups.length === 0 ? (
         <p className="text-[13px] text-ink-mute">Nadie sentado todavía.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
+        // Chips con su aspa, como la maqueta: una lista de filas con botones «Quitar»
+        // ocupaba el triple y competía con la mesa dibujada.
+        <ul className="flex flex-wrap gap-2">
           {table.groups.map((group) => (
-            <li key={group.id} className="flex items-center justify-between gap-3 text-[13px] text-ink-soft">
+            <li
+              key={group.id}
+              className="flex items-center gap-2 rounded-pill border border-line-panel bg-bg-raised py-1 pr-1 pl-3 text-[12px] text-ink-soft"
+            >
               <span>{group.label}</span>
-              <span className="ml-auto font-mono text-[11px] text-ink-mute">{group.seats}</span>
+              <span className="font-mono text-[10px] text-ink-mute">{group.seats}</span>
               <button
                 type="button"
                 aria-label={`Quitar de la mesa a ${group.label}`}
                 disabled={pendiente}
                 onClick={() => correr(() => unassignGroupAction({ eventId, eventSlug, groupId: group.id }))}
-                className="rounded-pill border border-line px-3 py-1 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+                className="flex size-5 cursor-pointer items-center justify-center rounded-full text-ink-mute transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-40"
               >
-                Quitar
+                <span aria-hidden>✕</span>
               </button>
             </li>
           ))}
@@ -205,26 +247,7 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
             </button>
           </div>
         </div>
-      ) : (
-        <footer className="flex items-center gap-4">
-          <button
-            type="button"
-            disabled={pendiente}
-            onClick={() => setEditando(true)}
-            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-          >
-            Editar mesa
-          </button>
-          <button
-            type="button"
-            disabled={pendiente}
-            onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
-            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-          >
-            Eliminar mesa
-          </button>
-        </footer>
-      )}
+      ) : null}
 
       {error === null ? null : (
         <p role="alert" className="text-[12px] text-danger">

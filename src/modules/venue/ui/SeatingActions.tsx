@@ -15,10 +15,13 @@ export function SeatingActions({
   eventId,
   eventSlug,
   unseatedCount,
+  addHref,
 }: {
   eventId: string
   eventSlug: string
   unseatedCount: number
+  /** Adónde lleva «+ Añadir mesa»: abre el alta, que no vive desplegada en la página. */
+  addHref: string
 }) {
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -47,7 +50,7 @@ export function SeatingActions({
           </PanelButton>
         )}
         <PanelButton href={`/panel/eventos/${eventSlug}/mesas/imprimir`}>Imprimir plan ↓</PanelButton>
-        <PanelButton href="#anadir-mesa" variant="primary">
+        <PanelButton href={addHref} variant="primary">
           + Añadir mesa
         </PanelButton>
       </div>

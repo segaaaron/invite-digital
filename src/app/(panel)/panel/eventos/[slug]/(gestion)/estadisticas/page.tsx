@@ -16,7 +16,15 @@ export const dynamic = 'force-dynamic'
  * sus porcentajes se lee como «nadie usa esto», y es distinto de «nadie ha mirado
  * todavía».
  */
-function Desglose({ filas, total }: { filas: readonly Breakdown[] | null; total: number }) {
+function Desglose({
+  filas,
+  total,
+  tone,
+}: {
+  filas: readonly Breakdown[] | null
+  total: number
+  tone: 'device' | 'gold'
+}) {
   if (filas === null) {
     return (
       <p className="text-[13px] text-danger" role="alert">
@@ -35,7 +43,7 @@ function Desglose({ filas, total }: { filas: readonly Breakdown[] | null; total:
     <ul className="flex flex-col">
       {filas.map((fila) => (
         <li key={fila.label}>
-          <BarRow label={fila.label} ratio={fila.percent / 100} value={`${fila.percent} %`} />
+          <BarRow label={fila.label} ratio={fila.percent / 100} tone={tone} value={`${fila.percent} %`} />
         </li>
       ))}
     </ul>
@@ -92,10 +100,10 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
 
       <div className="mt-4.5 grid items-start gap-4.5 lg:grid-cols-2">
         <PanelCard title="Dispositivos">
-          <Desglose filas={vistas?.devices ?? null} total={vistas?.total ?? 0} />
+          <Desglose filas={vistas?.devices ?? null} tone="device" total={vistas?.total ?? 0} />
         </PanelCard>
         <PanelCard title="Fuentes de tráfico">
-          <Desglose filas={vistas?.sources ?? null} total={vistas?.total ?? 0} />
+          <Desglose filas={vistas?.sources ?? null} tone="gold" total={vistas?.total ?? 0} />
         </PanelCard>
       </div>
     </>

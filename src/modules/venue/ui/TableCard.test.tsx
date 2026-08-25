@@ -119,7 +119,7 @@ describe('TableCard', () => {
 describe('TableCard · corregir la mesa', () => {
   it('abre el formulario relleno con los datos de la mesa', () => {
     render(<TableCard {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: /^editar mesa$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^editar mesa 01$/i }))
 
     expect(screen.getByLabelText('Nombre de la mesa')).toHaveValue('Mesa 01')
     expect(screen.getByLabelText('Sitios')).toHaveValue(8)
@@ -128,7 +128,7 @@ describe('TableCard · corregir la mesa', () => {
 
   it('guardar llama a updateTableAction con el id y lo cambiado', () => {
     render(<TableCard {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: /^editar mesa$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^editar mesa 01$/i }))
     fireEvent.change(screen.getByLabelText('Nombre de la mesa'), { target: { value: 'Mesa de los abuelos' } })
     fireEvent.change(screen.getByLabelText('Sitios'), { target: { value: '10' } })
     fireEvent.change(screen.getByLabelText('Forma'), { target: { value: 'rect' } })
@@ -146,7 +146,7 @@ describe('TableCard · corregir la mesa', () => {
 
   it('corregir la mesa no toca a quien ya está sentado', () => {
     render(<TableCard {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: /^editar mesa$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^editar mesa 01$/i }))
 
     expect(screen.getByText('Familia Rojas')).toBeInTheDocument()
     expect(screen.getByText('Camila Vargas')).toBeInTheDocument()
@@ -158,7 +158,7 @@ describe('TableCard · corregir la mesa', () => {
 
   it('una capacidad que no es un número no llama a la acción', () => {
     render(<TableCard {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: /^editar mesa$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^editar mesa 01$/i }))
     fireEvent.change(screen.getByLabelText('Sitios'), { target: { value: '' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
 
@@ -168,7 +168,7 @@ describe('TableCard · corregir la mesa', () => {
 
   it('cancelar cierra el formulario sin llamar a nada', () => {
     render(<TableCard {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: /^editar mesa$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^editar mesa 01$/i }))
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
 
     expect(updateTableAction).not.toHaveBeenCalled()

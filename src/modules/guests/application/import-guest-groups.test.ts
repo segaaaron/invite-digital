@@ -30,7 +30,7 @@ const ids = () => `id${contador}`
 describe('importGuestGroups', () => {
   it('crea las filas buenas y devuelve el enlace de cada una', async () => {
     const { groups, insertados, telefonos } = repo()
-    const importar = importGuestGroups({ groups, minter, ids })
+    const importar = importGuestGroups({ groups, minter, ids, clock: () => new Date('2026-08-24T12:00:00Z') })
 
     const result = await importar({
       eventId: 'e1',
@@ -47,7 +47,7 @@ describe('importGuestGroups', () => {
 
   it('las filas malas salen en el informe con su motivo, y no cortan la importación', async () => {
     const { groups, insertados } = repo()
-    const result = await importGuestGroups({ groups, minter, ids })({
+    const result = await importGuestGroups({ groups, minter, ids, clock: () => new Date('2026-08-24T12:00:00Z') })({
       eventId: 'e1',
       csv: 'Familia Rojas;4\n;3\nAna Vega;2',
       allowance: { maxGuestGroups: null },
@@ -63,7 +63,7 @@ describe('importGuestGroups', () => {
     // Deshacerlo todo por culpa de la fila que no cabe obligaría a repetir el trabajo
     // entero; y el tope del plan es del servidor, no del formulario.
     const { groups, insertados } = repo()
-    const result = await importGuestGroups({ groups, minter, ids })({
+    const result = await importGuestGroups({ groups, minter, ids, clock: () => new Date('2026-08-24T12:00:00Z') })({
       eventId: 'e1',
       csv: 'Uno;2\nDos;2\nTres;2',
       allowance: { maxGuestGroups: 2 },

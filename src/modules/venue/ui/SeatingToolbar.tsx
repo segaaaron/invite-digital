@@ -1,18 +1,10 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { addTableAction } from '../actions'
-import type { SeatedTable } from '../application/list-seating'
-import type { SeatedGroupRow } from '../application/ports'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
 
-type Props = {
-  eventId: string
-  eventSlug: string
-  tables: readonly SeatedTable[]
-  unseated: readonly SeatedGroupRow[]
-}
+type Props = { eventId: string; eventSlug: string }
 
 const NOMBRE_FORMA: Record<TableShape, string> = {
   round: 'Redonda',
@@ -21,40 +13,13 @@ const NOMBRE_FORMA: Record<TableShape, string> = {
   imperial: 'Imperial',
 }
 
-/**
- * El buscador responde a la pregunta que más se hace el día antes: «¿dónde se sienta
- * esta familia?». Busca sobre lo que ya está en pantalla, sin ir al servidor: una lista
- * de invitados cabe en memoria y un viaje por tecla no aporta nada.
- */
-const buscar = (
-  termino: string,
-  tables: readonly SeatedTable[],
-  unseated: readonly SeatedGroupRow[],
-): string | null => {
-  const q = termino.trim().toLocaleLowerCase()
-  if (q === '') return null
-
-  for (const table of tables) {
-    const group = table.groups.find((g) => g.label.toLocaleLowerCase().includes(q))
-    if (group) return `${group.label} se sienta en ${table.label}.`
-  }
-
-  const suelto = unseated.find((g) => g.label.toLocaleLowerCase().includes(q))
-  if (suelto) return `${suelto.label} todavía está sin mesa.`
-
-  return `No encontramos a nadie que se llame así.`
-}
-
-export function SeatingToolbar({ eventId, eventSlug, tables, unseated }: Props) {
+export function SeatingToolbar({ eventId, eventSlug }: Props) {
   const [label, setLabel] = useState('')
   const [capacity, setCapacity] = useState('8')
   const [shape, setShape] = useState<TableShape>('round')
-  const [termino, setTermino] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
-
-  const hallazgo = buscar(termino, tables, unseated)
 
   const correr = (accion: () => Promise<{ ok: boolean; message?: string }>, alAcabar?: () => void) => {
     setError(null)
@@ -130,21 +95,13 @@ export function SeatingToolbar({ eventId, eventSlug, tables, unseated }: Props) 
         </button>
       </div>
 
-      <div className="flex">
-        <SearchField
-          label="Buscar grupo"
-          onChange={(e) => setTermino(e.target.value)}
-          placeholder="Buscar invitado para ver su mesa…"
-          value={termino}
-        />
-      </div>
-
       {error === null ? (
-        <p role="status" className="min-h-4 text-[12px] text-ink-soft">
-          {hallazgo ?? aviso ?? ''}
+        <p className="min-h-4 text-[12px] text-ink-soft" role="status">
+          {aviso ?? ''}
         </p>
       ) : (
-        <p role="alert" className="text-[12px] text-danger">
+        // Un alta que falla en silencio deja al atelier creyendo que la mesa existe.
+        <p className="text-[12px] text-danger" role="alert">
           {error}
         </p>
       )}

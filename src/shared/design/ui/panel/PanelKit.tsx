@@ -158,7 +158,7 @@ export function BarRow({
   value: string
   /** 0..1. Se recorta: una barra al 140 % se sale de su carril. */
   ratio: number
-  tone?: 'sage' | 'gold'
+  tone?: 'sage' | 'gold' | 'device'
 }) {
   const ancho = Math.max(0, Math.min(1, ratio)) * 100
 
@@ -168,7 +168,9 @@ export function BarRow({
       <span className="h-2.5 flex-1 overflow-hidden rounded-[var(--radius-pill)] bg-bg-sunken">
         <span
           data-barra
-          className={`block h-full rounded-[var(--radius-pill)] ${tone === 'gold' ? 'bg-gold' : 'bg-sage'}`}
+          className={`block h-full rounded-[var(--radius-pill)] ${
+            tone === 'gold' ? 'bg-gold' : tone === 'device' ? 'bg-device' : 'bg-sage'
+          }`}
           style={{ width: `${ancho}%` }}
         />
       </span>

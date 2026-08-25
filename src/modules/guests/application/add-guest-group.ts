@@ -27,7 +27,7 @@ export type AddGuestGroupInput = {
 }
 
 export const addGuestGroup =
-  (deps: { groups: GuestGroupRepository; minter: Minter; ids: () => string }) =>
+  (deps: { groups: GuestGroupRepository; minter: Minter; ids: () => string; clock: () => Date }) =>
   async (input: AddGuestGroupInput): Promise<Result<AddedGuestGroup, GuestError>> =>
     attempt<AddedGuestGroup, GuestError>(
       async () => {
@@ -50,6 +50,9 @@ export const addGuestGroup =
           label: input.label,
           seats: input.seats,
           revokedAt: null,
+          // La base pone su propio `created_at` al insertar; este es el mismo instante,
+          // para que el grupo recién creado no vuelva de la aplicación fechado en 1970.
+          createdAt: deps.clock(),
         })
         if (isErr(group)) return group
 

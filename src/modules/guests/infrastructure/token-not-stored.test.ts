@@ -44,6 +44,7 @@ describe('el token no se guarda en claro', () => {
         groups: createDrizzleGuestGroupRepository(tx),
         minter: createTokenMinter(),
         ids: () => crypto.randomUUID(),
+        clock: () => new Date('2026-08-24T12:00:00Z'),
       })({
         eventId: event!.id,
         label: 'Familia Rojas Peña',

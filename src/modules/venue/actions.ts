@@ -52,7 +52,9 @@ export async function addTableAction(input: {
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
 
   refresh(input.eventSlug)
-  return { ok: true }
+  // Se dice cuál se creó y dónde mirarla: sin aviso, quien pulsa «Añadir mesa» no sabe
+  // si pasó algo hasta que encuentra el círculo nuevo en el plano.
+  return { ok: true, message: `«${result.value.label}» creada. Ya está en el plano; arrástrala a su sitio.` }
 }
 
 export async function updateTableAction(input: {

@@ -1,3 +1,5 @@
+import { avatarColor } from './avatar-color'
+
 export type ActivityItem = {
   readonly at: Date
   /** Quién lo hizo. Da la inicial del avatar y la primera línea. */
@@ -39,7 +41,7 @@ export function ActivityFeed({ items }: { items: readonly ActivityItem[] }) {
           <span
             aria-hidden
             data-avatar
-            className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[16px] italic text-white"
+            className={`flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br font-display text-[16px] italic text-white ${avatarColor(item.actor)}`}
           >
             {item.actor.slice(0, 1)}
           </span>

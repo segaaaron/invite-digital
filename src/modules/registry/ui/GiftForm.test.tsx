@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { GiftRow } from '../application/ports'
 import { GiftForm } from './GiftForm'
@@ -164,13 +164,14 @@ describe('GiftForm en modo edición', () => {
     updateGiftAction.mockResolvedValueOnce({ ok: false, kind: 'invalid_url', message: 'Solo http o https' })
     render(<GiftForm {...props} gift={reservado} onDone={alTerminar} />)
 
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
+    // Mientras guarda, el botón se llama «Guardando…»: hay que esperar a que vuelva a su
+    // nombre antes de volver a pulsarlo, o la prueba falla de vez en cuando por carrera.
+    fireEvent.click(await screen.findByRole('button', { name: 'Guardar cambios' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Solo http o https')
     expect(alTerminar).not.toHaveBeenCalled()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }))
-    await screen.findByRole('button', { name: 'Guardar cambios' })
-    expect(alTerminar).toHaveBeenCalledTimes(1)
+    fireEvent.click(await screen.findByRole('button', { name: 'Guardar cambios' }))
+    await waitFor(() => expect(alTerminar).toHaveBeenCalledTimes(1))
   })
 
   it('el modo alta no ofrece cancelar: no hay nada de lo que volver', () => {

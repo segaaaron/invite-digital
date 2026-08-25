@@ -17,7 +17,8 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   const { token, eventId } = await seedVenueEvent(SLUG)
   await createGuestGroup(page, SLUG, 'Familia Nieto', 2)
 
-  await page.goto(`/panel/eventos/${SLUG}/mesas`)
+  // El alta vive tras «+ Añadir mesa» de la cabecera, como en la maqueta.
+  await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
 
   // Dos mesas, creadas por el formulario como lo haría el atelier.
   await page.getByLabel('Etiqueta').fill('Mesa 01')
@@ -70,7 +71,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
 test('el plano no guarda hasta que se pulsa Guardar', async ({ page }) => {
   await seedVenueEvent(`${SLUG}-plano`)
 
-  await page.goto(`/panel/eventos/${SLUG}-plano/mesas`)
+  await page.goto(`/panel/eventos/${SLUG}-plano/mesas?panel=mesa`)
   await page.getByLabel('Etiqueta').fill('Mesa 01')
   await page.getByRole('button', { name: 'Añadir mesa' }).click()
 

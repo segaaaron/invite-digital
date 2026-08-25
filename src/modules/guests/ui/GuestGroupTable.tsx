@@ -15,6 +15,8 @@ export type GuestGroupRowView = {
   /** Cuándo dio el atelier por repartida la invitación. No es prueba de entrega. */
   readonly invitationSentAt?: Date | null
   readonly phone?: string | null
+  /** Cuándo entró el grupo. El resumen lo usa para el «↑ N esta semana». */
+  readonly createdAt?: Date
 }
 
 // Quien respondió **cero** dijo que no viene: llamarlo «Confirmada» junto a un «0 / 2»

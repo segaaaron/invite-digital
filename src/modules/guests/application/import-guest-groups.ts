@@ -30,7 +30,7 @@ export type ImportReport = {
  * trabajo entero.
  */
 export const importGuestGroups =
-  (deps: { groups: GuestGroupRepository; minter: Minter; ids: () => string }) =>
+  (deps: { groups: GuestGroupRepository; minter: Minter; ids: () => string; clock: () => Date }) =>
   async (input: {
     eventId: string
     csv: string

@@ -171,7 +171,7 @@ export const plans = {
 } as const
 
 export const guests = {
-  add: addGuestGroup({ groups: drizzleGuestGroupRepository, minter, ids: () => crypto.randomUUID() }),
+  add: addGuestGroup({ groups: drizzleGuestGroupRepository, minter, ids: () => crypto.randomUUID(), clock }),
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
@@ -189,7 +189,8 @@ export const guests = {
     groups: drizzleGuestGroupRepository,
     minter,
     ids: () => crypto.randomUUID(),
-  }),
+      clock,
+}),
   setPhone: (id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(id, phone),
 } as const
 

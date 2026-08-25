@@ -4,10 +4,12 @@ import { dietaryReport } from '@/modules/guests'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
+import Link from 'next/link'
 import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
+import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
 import { SeatingToolbar } from '@/modules/venue/ui/SeatingToolbar'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
@@ -20,9 +22,16 @@ export const metadata = { title: 'Mesas' }
 // La ocupación cambia con cada RSVP y con cada reparto: esta página no se cachea.
 export const dynamic = 'force-dynamic'
 
-export default async function MesasPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function MesasPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<{ panel?: string }>
+}) {
   await requireSession()
   const { slug } = await params
+  const { panel } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -47,6 +56,7 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
 
   const { tables, zones, unseated, totalSeats, totalConfirmed } = seating.value
   const asignados = tables.reduce((suma, mesa) => suma + mesa.taken, 0)
+  const base = `/panel/eventos/${event.value.slug}/mesas`
   // El carril más largo es el del menú más pedido: las barras se comparan entre sí.
   const comensalesMaximos = menus.reduce((max, linea) => Math.max(max, linea.count), 0)
 
@@ -54,17 +64,36 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
     <>
       <PanelHeader
         actions={
-          <SeatingActions eventId={event.value.id} eventSlug={event.value.slug} unseatedCount={unseated.length} />
+          <SeatingActions
+            addHref={panel === 'mesa' ? base : `${base}?panel=mesa`}
+            eventId={event.value.id}
+            eventSlug={event.value.slug}
+            unseatedCount={unseated.length}
+          />
         }
         kicker="Distribución"
         meta={`${tables.length} mesas · capacidad ${totalSeats} · ${asignados}/${totalSeats} asignados`}
         title="Mesas"
       />
 
+      {/* El buscador ancho va justo debajo de la cabecera, como en la maqueta. */}
+      <div className="mb-4.5">
+        <SeatSearch tables={tables} unseated={unseated} />
+      </div>
+
       <div className="flex flex-col gap-4.5">
-        <PanelCard id="anadir-mesa" title="Reparto">
-          <SeatingToolbar eventId={event.value.id} eventSlug={event.value.slug} tables={tables} unseated={unseated} />
-        </PanelCard>
+        {panel === 'mesa' ? (
+          <PanelCard
+            action={
+              <Link href={base}>
+                <PanelCardLink>Cerrar ✕</PanelCardLink>
+              </Link>
+            }
+            title="Añadir mesa"
+          >
+            <SeatingToolbar eventId={event.value.id} eventSlug={event.value.slug} />
+          </PanelCard>
+        ) : null}
 
         <PanelCard title="Invitados sin mesa">
           <UnseatedStrip groups={unseated} />
@@ -127,7 +156,16 @@ export default async function MesasPage({ params }: { params: Promise<{ slug: st
                   zones={zones}
                   exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
                 />
-                <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
+                {/* La maqueta abre las zonas con «+ Elemento del salón»: desplegadas
+                    dejaban tres formularios crudos colgando bajo el plano. */}
+                <details>
+                  <summary className="w-fit cursor-pointer list-none rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink">
+                    + Elemento del salón
+                  </summary>
+                  <div className="mt-4.5">
+                    <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
+                  </div>
+                </details>
               </div>
             </PanelCard>
           }

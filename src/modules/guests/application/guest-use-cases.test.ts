@@ -45,7 +45,7 @@ const input = { eventId: 'e1', label: 'Familia Rojas', seats: 4 }
 describe('addGuestGroup', () => {
   it('guarda el hash y devuelve el token en claro', async () => {
     const { groups, inserted } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({ ...input, ...SIN_LIMITE })
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1', clock: () => new Date('2026-08-24T12:00:00Z') })({ ...input, ...SIN_LIMITE })
 
     expect(isOk(result) && result.value.token).toBe('token-visible')
     expect(inserted[0]?.hash.equals(HASH)).toBe(true)
@@ -53,7 +53,7 @@ describe('addGuestGroup', () => {
 
   it('no guarda nada cuando el dominio rechaza los cupos', async () => {
     const { groups, inserted } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({ ...input, seats: 0, ...SIN_LIMITE })
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1', clock: () => new Date('2026-08-24T12:00:00Z') })({ ...input, seats: 0, ...SIN_LIMITE })
 
     expect(isErr(result) && result.error.kind).toBe('invalid_seats')
     expect(inserted).toHaveLength(0)
@@ -61,7 +61,7 @@ describe('addGuestGroup', () => {
 
   it('rechaza el grupo que pasa del límite del plan', async () => {
     const { groups, inserted } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1', clock: () => new Date('2026-08-24T12:00:00Z') })({
       ...input,
       allowance: { maxGuestGroups: 2 },
       currentGroups: 2,
@@ -75,7 +75,7 @@ describe('addGuestGroup', () => {
 
   it('el que hace tope justo sí entra', async () => {
     const { groups } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1', clock: () => new Date('2026-08-24T12:00:00Z') })({
       ...input,
       allowance: { maxGuestGroups: 2 },
       currentGroups: 1,
@@ -86,7 +86,7 @@ describe('addGuestGroup', () => {
 
   it('sin límite no rechaza nunca', async () => {
     const { groups } = repo(null)
-    const result = await addGuestGroup({ groups, minter, ids: () => 'g1' })({
+    const result = await addGuestGroup({ groups, minter, ids: () => 'g1', clock: () => new Date('2026-08-24T12:00:00Z') })({
       ...input,
       allowance: { maxGuestGroups: null },
       currentGroups: 9999,

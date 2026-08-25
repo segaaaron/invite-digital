@@ -1,50 +1,17 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import type { SeatedTable } from '../application/list-seating'
-import type { SeatedGroupRow } from '../application/ports'
 import { SeatingToolbar } from './SeatingToolbar'
 
 const addTableAction = vi.fn(async () => ({ ok: true as const }))
-const autoAssignAction = vi.fn(async () => ({ ok: true as const }))
 
 vi.mock('../actions', () => ({
   addTableAction: (...args: unknown[]) => addTableAction(...(args as [])),
-  autoAssignAction: (...args: unknown[]) => autoAssignAction(...(args as [])),
 }))
 
-const grupo = (id: string, label: string, tableId: string | null): SeatedGroupRow => ({
-  id,
-  eventId: 'e1',
-  label,
-  seats: 2,
-  tableId,
-  revoked: false,
-  confirmed: 2,
-})
-
-const mesa: SeatedTable = {
-  id: 't1',
-  eventId: 'e1',
-  label: 'Mesa 01',
-  capacity: 8,
-  shape: 'round',
-  x: 50,
-  y: 50,
-  taken: 2,
-  free: 6,
-  groups: [grupo('a', 'Familia Rojas', 't1')],
-}
-
-const props = {
-  eventId: 'e1',
-  eventSlug: 'boda',
-  tables: [mesa],
-  unseated: [grupo('b', 'Camila Vargas', null)],
-}
+const props = { eventId: 'e1', eventSlug: 'boda' }
 
 beforeEach(() => {
   addTableAction.mockClear()
-  autoAssignAction.mockClear()
 })
 
 describe('SeatingToolbar', () => {
@@ -71,21 +38,4 @@ describe('SeatingToolbar', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya hay una «Mesa 01»')
   })
 
-  it('el buscador dice en qué mesa se sienta un grupo', () => {
-    render(<SeatingToolbar {...props} />)
-    fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'rojas' } })
-    expect(screen.getByRole('status')).toHaveTextContent('Mesa 01')
-  })
-
-  it('el buscador avisa cuando el grupo aún no tiene mesa', () => {
-    render(<SeatingToolbar {...props} />)
-    fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'camila' } })
-    expect(screen.getByRole('status')).toHaveTextContent(/sin mesa/i)
-  })
-
-  it('el buscador avisa cuando no encuentra a nadie con ese nombre', () => {
-    render(<SeatingToolbar {...props} />)
-    fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'zulema' } })
-    expect(screen.getByRole('status')).toHaveTextContent(/no encontramos/i)
-  })
 })

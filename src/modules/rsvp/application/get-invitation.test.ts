@@ -7,7 +7,7 @@ import type { GuestGroup } from '@/modules/guests'
 import { getInvitation } from './get-invitation'
 import type { RsvpRepository } from './ports'
 
-const grupo: GuestGroup = { id: 'g1', eventId: 'e1', label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null }
+const grupo: GuestGroup = { id: 'g1', eventId: 'e1', label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }
 
 const evento: Event = {
   id: 'e1',
