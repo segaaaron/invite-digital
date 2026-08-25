@@ -12,6 +12,12 @@ import {
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
+import {
+  actorCanTouchEvent,
+  getEventByIdFor,
+  getEventFor,
+  listEventsFor,
+} from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
@@ -137,12 +143,25 @@ export const identity = {
   signIn: signIn({ users: drizzleUserRepository, sessions: drizzleSessionRepository, hasher: argon2Hasher, minter, clock }),
   signOut: signOut({ sessions: drizzleSessionRepository, minter }),
   authenticateSession: authenticateSession({ sessions: drizzleSessionRepository, minter, clock }),
+  /** Quién es y qué puede quien tiene esta sesión. Lo consume `requireSession()`. */
+  actorOf: (userId: string) => drizzleUserRepository.findActor(userId),
 } as const
 
 export const events = {
   create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
   update: updateEventUseCase({ events: drizzleEventRepository }),
-  list: listEvents({ events: drizzleEventRepository }),
+  /**
+   * `getBySlug`, `getById` y `list` **sin actor** solo los usan la ruta del invitado —que
+   * se autoriza por token—, el mantenimiento y el propio admin. Todo lo del panel pasa
+   * por las versiones con actor: la firma es la guardia, y una página que no diga quién
+   * pregunta no compila.
+   */
+  listAll: listEvents({ events: drizzleEventRepository }),
+  getFor: getEventFor({ events: drizzleEventRepository }),
+  getByIdFor: getEventByIdFor({ events: drizzleEventRepository }),
+  listFor: listEventsFor({ events: drizzleEventRepository }),
+  canTouch: actorCanTouchEvent({ events: drizzleEventRepository }),
+  setOwner: (eventId: string, userId: string) => drizzleEventRepository.setOwner(eventId, userId),
   remove: deleteEvent({ events: drizzleEventRepository }),
   setPassword: setEventPassword({
     events: drizzleEventRepository,
@@ -156,8 +175,14 @@ export const events = {
    * inventar otro secreto que administrar.
    */
   passwordHashOf: (eventId: string) => drizzleAccessRepository.passwordHashOf(eventId),
-  getBySlug: getEventBySlug({ events: drizzleEventRepository }),
-  getById: getEventById({ events: drizzleEventRepository }),
+  /**
+   * Sin actor y a propósito: **solo** para lo que no tiene sesión de la que sacarlo —la
+   * página del invitado, que se autoriza por token, y el mantenimiento— y para el admin,
+   * que ve todo por definición. El nombre lo dice para que nadie las use por descuido
+   * desde una vista del panel.
+   */
+  getBySlugUnscoped: getEventBySlug({ events: drizzleEventRepository }),
+  getByIdUnscoped: getEventById({ events: drizzleEventRepository }),
   createShare: createClientShare({ shares: drizzleClientShareRepository, minter, ids: () => crypto.randomUUID(), clock }),
   revokeShare: revokeClientShare({ shares: drizzleClientShareRepository, clock }),
   liveShare: getLiveClientShare({ shares: drizzleClientShareRepository, clock }),
@@ -234,7 +259,7 @@ export const guests = {
 export const rsvp = {
   respond: respondToInvitation({
     resolveGroup: (token) => guests.resolveByToken(token),
-    findEventById: (id) => events.getById(id),
+    findEventById: (id) => events.getByIdUnscoped(id),
     rsvp: drizzleRsvpRepository,
     ids: () => crypto.randomUUID(),
     clock,
@@ -244,7 +269,7 @@ export const rsvp = {
   stats: getEventStats({ rsvp: drizzleRsvpRepository }),
   getInvitation: getInvitation({
     resolveGroup: (token) => guests.resolveByToken(token),
-    findEventById: (id) => events.getById(id),
+    findEventById: (id) => events.getByIdUnscoped(id),
     rsvp: drizzleRsvpRepository,
   }),
   latestFor: (guestGroupId: string) => drizzleRsvpRepository.latestFor(guestGroupId),

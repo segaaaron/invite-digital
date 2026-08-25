@@ -7,8 +7,8 @@ import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
 export default async function PanelHomePage() {
-  await requireSession()
-  const listed = await events.list()
+  const actor = await requireSession()
+  const listed = await events.listFor(actor)
 
   return (
     <>

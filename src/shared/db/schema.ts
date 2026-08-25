@@ -149,8 +149,35 @@ export const users = pgTable('users', {
   id: uuid('id').defaultRandom().primaryKey(),
   email: citext('email').notNull().unique(),
   passwordHash: text('password_hash').notNull(),
+  // 'admin' | 'atelier'. Por defecto el de menos poder: un rol que se otorga por olvido
+  // no es un rol.
+  role: varchar('role', { length: 16 }).notNull().default('atelier'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+/**
+ * Quién hizo qué y cuándo en la administración.
+ *
+ * `actorUserId` va con `set null` y `actorEmail` es **texto copiado**, no una unión:
+ * borrar al admin no puede borrar el rastro de lo que hizo. Un registro de auditoría que
+ * desaparece con su autor no es un registro de auditoría.
+ *
+ * No se anota ninguna lectura: eso sería un rastro de navegación del atelier, y lo que no
+ * se escribe no se filtra.
+ */
+export const auditLog = pgTable(
+  'audit_log',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'set null' }),
+    actorEmail: varchar('actor_email', { length: 160 }).notNull(),
+    action: varchar('action', { length: 48 }).notNull(),
+    subject: varchar('subject', { length: 160 }),
+    detail: text('detail'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('audit_log_recent_idx').on(t.createdAt.desc())],
+)
 
 export const sessions = pgTable(
   'sessions',
@@ -169,6 +196,17 @@ export const sessions = pgTable(
 
 export const events = pgTable('events', {
   id: uuid('id').defaultRandom().primaryKey(),
+  /**
+   * El atelier al que pertenece el evento.
+   *
+   * `restrict`, nunca `cascade`: borrar un usuario no puede llevarse por delante las
+   * bodas que gestiona. El admin reasigna o borra los eventos primero, y la pantalla se
+   * lo dice con el número.
+   *
+   * Anulable solo porque la columna nació después que los datos; la migración `0021` no
+   * dejó ninguna fila sin dueño.
+   */
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'restrict' }),
   slug: varchar('slug', { length: 64 }).notNull().unique(),
   title: varchar('title', { length: 160 }).notNull(),
   eventDate: date('event_date').notNull(),

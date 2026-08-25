@@ -29,11 +29,11 @@ export default async function MesasPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ panel?: string; vista?: string; zona?: string }>
 }) {
-  await requireSession()
+  const actor = await requireSession()
   const { slug } = await params
   const { panel, vista, zona } = await searchParams
 
-  const event = await events.getBySlug(slug)
+  const event = await events.getFor(actor, slug)
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

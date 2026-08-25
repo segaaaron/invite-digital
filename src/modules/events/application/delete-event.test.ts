@@ -6,6 +6,7 @@ import { isErr, isOk } from '@/shared/result'
 
 const fila: EventInput = {
   id: 'e1',
+  userId: null,
   slug: 'boda-marcia-ricardo',
   title: 'Marcia & Ricardo',
   eventDate: '2027-05-15',
@@ -24,6 +25,8 @@ function repo() {
     anonymize: async () => {},
     insert: async () => {},
     update: async () => {},
+    listByUser: async () => [],
+    setOwner: async () => {},
     listAll: async () => [],
     findBySlug: async () => fila,
     findById: async () => fila,

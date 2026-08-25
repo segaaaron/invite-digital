@@ -10,6 +10,10 @@ export interface EventRepository {
   insert(event: Event): Promise<void>
   update(event: Event): Promise<void>
   listAll(): Promise<EventInput[]>
+  /** Los eventos de un atelier. El admin usa `listAll`. */
+  listByUser(userId: string): Promise<EventInput[]>
+  /** Cambia el dueño. Lo usa el admin al reasignar. */
+  setOwner(eventId: string, userId: string): Promise<void>
   findBySlug(slug: string): Promise<EventInput | null>
   findById(id: string): Promise<EventInput | null>
   /** Borra el evento. La base se lleva en cascada invitados, mesas, regalos y mensajes. */

@@ -40,11 +40,11 @@ export default async function InvitadosPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ panel?: string; persona?: string; vista?: string }>
 }) {
-  await requireSession()
+  const actor = await requireSession()
   const { slug } = await params
   const { panel, persona, vista } = await searchParams
 
-  const event = await events.getBySlug(slug)
+  const event = await events.getFor(actor, slug)
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

@@ -1,6 +1,12 @@
 export interface UserRepository {
   findByEmail(email: string): Promise<{ id: string; email: string; passwordHash: string } | null>
-  create(user: { email: string; passwordHash: string }): Promise<{ id: string }>
+  /**
+   * El actor de una sesión: quién es y qué puede. Lo pide `requireSession()` en cada
+   * página del panel, y por eso devuelve el rol en la misma consulta: resolverlo aparte
+   * sería un viaje más por página para un dato de dieciséis caracteres.
+   */
+  findActor(userId: string): Promise<{ id: string; email: string; role: string } | null>
+  create(user: { email: string; passwordHash: string; role?: string }): Promise<{ id: string }>
 }
 
 export interface SessionRepository {

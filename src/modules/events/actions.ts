@@ -8,7 +8,7 @@ import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { guardedUnlock } from './application/guarded-unlock'
 import { isUnlockValid, unlockValue, UNLOCK_MS } from './domain/unlock-token'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { shareUrl } from './domain/client-share'
@@ -33,9 +33,11 @@ const readForm = (formData: FormData) => ({
 // Cada acción empieza por requireSession: una Server Action es un extremo HTTP público,
 // y que el formulario viva tras el inicio de sesión no la protege.
 export async function createEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
-  await requireSession()
+  const actor = await requireSession()
 
-  const result = await eventUseCases.create(readForm(formData))
+  // El evento nace con dueño. Sin esta línea la multitenencia sería un adorno: cada alta
+  // dejaría un evento huérfano que solo vería el admin.
+  const result = await eventUseCases.create({ ...readForm(formData), userId: actor.userId })
   if (isErr(result)) {
     console.error('alta de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
@@ -46,9 +48,12 @@ export async function createEventAction(_previous: EventActionState, formData: F
 }
 
 export async function updateEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
-  await requireSession()
+  const actor = await requireSession()
 
-  const result = await eventUseCases.update({ ...readForm(formData), id: String(formData.get('id') ?? '') })
+  const eventId = String(formData.get('id') ?? '')
+  await requireEventAccess(actor, { eventId })
+
+  const result = await eventUseCases.update({ ...readForm(formData), id: eventId })
   if (isErr(result)) {
     console.error('edición de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
@@ -67,10 +72,13 @@ export type ClientShareState =
   | { status: 'error' }
 
 export async function createClientShareAction(_previous: ClientShareState, formData: FormData): Promise<ClientShareState> {
-  await requireSession()
+  const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  const result = await eventUseCases.createShare({ eventId: String(formData.get('eventId') ?? '') })
+  const eventId = String(formData.get('eventId') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug })
+
+  const result = await eventUseCases.createShare({ eventId })
 
   if (isErr(result)) {
     console.error('alta de enlace de cliente rechazada', result.error.kind, result.error.detail)
@@ -95,7 +103,10 @@ export async function revokeClientShareAction(
   _previous: RevokeShareState,
   formData: FormData,
 ): Promise<RevokeShareState> {
-  await requireSession()
+  const actor = await requireSession()
+
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventSlug })
 
   const result = await eventUseCases.revokeShare(String(formData.get('shareId') ?? ''))
   if (isErr(result)) {
@@ -103,7 +114,7 @@ export async function revokeClientShareAction(
     return { status: 'error' }
   }
 
-  revalidatePath(`/panel/eventos/${String(formData.get('eventSlug') ?? '')}`)
+  revalidatePath(`/panel/eventos/${eventSlug}`)
   return { status: 'success' }
 }
 
@@ -119,10 +130,13 @@ export async function deleteEventAction(
   _previous: DeleteEventState,
   formData: FormData,
 ): Promise<DeleteEventState> {
-  await requireSession()
+  const actor = await requireSession()
+
+  const eventId = String(formData.get('eventId') ?? '')
+  await requireEventAccess(actor, { eventId })
 
   const result = await eventUseCases.remove({
-    eventId: String(formData.get('eventId') ?? ''),
+    eventId,
     confirmation: String(formData.get('confirmation') ?? ''),
   })
 
@@ -231,10 +245,11 @@ export type PrivacyState = { status: 'idle' } | { status: 'success' } | { status
  * inservibles todos los desbloqueos repartidos, porque la cookie se firma con ese hash.
  */
 export async function setEventPrivacyAction(_previous: PrivacyState, formData: FormData): Promise<PrivacyState> {
-  await requireSession()
+  const actor = await requireSession()
 
   const eventId = String(formData.get('eventId') ?? '')
   const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug })
   const publica = formData.get('privacy') !== 'password'
   const password = String(formData.get('password') ?? '')
 
@@ -260,9 +275,10 @@ export async function setEventCurrencyAction(input: {
   eventSlug: string
   currency: string
 }): Promise<{ status: 'success' } | { status: 'error'; message: string }> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
-  const row = await eventUseCases.getById(input.eventId)
+  const row = await eventUseCases.getByIdFor(actor, input.eventId)
   if (isErr(row)) return { status: 'error', message: row.error.detail }
 
   const result = await eventUseCases.update({ ...row.value, currency: input.currency })

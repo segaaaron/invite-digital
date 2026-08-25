@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { guestbook } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 
 export type GuestbookActionResult = { ok: true } | { ok: false; kind: string; message: string }
@@ -29,7 +29,8 @@ type Target = { responseId: string; eventId: string; eventSlug: string }
 const refrescar = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mensajes`)
 
 export async function markReadAction(input: Target): Promise<GuestbookActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const result = await guestbook.markRead({ responseId: input.responseId, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -39,7 +40,8 @@ export async function markReadAction(input: Target): Promise<GuestbookActionResu
 }
 
 export async function toggleFeaturedAction(input: Target): Promise<GuestbookActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const result = await guestbook.toggleFeatured({ responseId: input.responseId, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -49,7 +51,8 @@ export async function toggleFeaturedAction(input: Target): Promise<GuestbookActi
 }
 
 export async function replyAction(input: Target & { text: string }): Promise<GuestbookActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const result = await guestbook.reply({
     responseId: input.responseId,

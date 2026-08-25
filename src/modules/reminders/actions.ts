@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { reminders } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { ReminderKind } from './domain/due'
 
@@ -23,7 +23,8 @@ export async function markReminderSentAction(input: {
   guestGroupId: string
   kind: ReminderKind
 }): Promise<ReminderActionState> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const result = await reminders.markSent({
     eventId: input.eventId,

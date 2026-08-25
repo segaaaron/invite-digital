@@ -5,6 +5,7 @@ import type { EventRepository } from '../application/ports'
 
 const COLUMNS = {
   id: events.id,
+  userId: events.userId,
   slug: events.slug,
   title: events.title,
   eventDate: events.eventDate,
@@ -132,6 +133,14 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
 
   async listAll() {
     return database.select(COLUMNS).from(events).orderBy(asc(events.eventDate))
+  },
+
+  async listByUser(userId) {
+    return database.select(COLUMNS).from(events).where(eq(events.userId, userId)).orderBy(asc(events.eventDate))
+  },
+
+  async setOwner(eventId, userId) {
+    await database.update(events).set({ userId }).where(eq(events.id, eventId))
   },
 
   async findBySlug(slug) {

@@ -37,7 +37,13 @@ const requireSession = vi.fn().mockResolvedValue({ userId: 'u1' })
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/headers', () => ({ headers: async () => new Headers({ 'x-real-ip': '203.0.113.7' }) }))
-vi.mock('@/modules/identity/session-cookie', () => ({ requireSession: () => requireSession() }))
+// La guardia de multitenencia se deja pasar en estas pruebas: lo que comprueban es el
+// comportamiento de la acción, y que la guardia esté puesta lo vigila `pnpm verify:tenancy`
+// y la e2e con dos usuarios de verdad.
+vi.mock('@/modules/identity/session-cookie', () => ({
+  requireSession: () => requireSession(),
+  requireEventAccess: async () => {},
+}))
 // El evento de estas pruebas es público: la puerta de la contraseña no aplica aquí.
 vi.mock('@/modules/events/actions', () => ({ eventUnlocked: async () => true }))
 vi.mock('@/app/composition/container', () => ({

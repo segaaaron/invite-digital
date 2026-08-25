@@ -15,9 +15,9 @@ import { isErr } from '@/shared/result'
  * evento creado, los enlaces del evento se pintan apagados.
  */
 export default async function AtelierLayout({ children }: { children: ReactNode }) {
-  await requireSession()
+  const actor = await requireSession()
 
-  const listed = await events.list()
+  const listed = await events.listFor(actor)
   const activo = isErr(listed) ? null : (listed.value[0] ?? null)
 
   const grupos = activo === null ? null : await guests.list(activo.id)

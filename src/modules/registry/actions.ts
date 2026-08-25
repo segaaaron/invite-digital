@@ -6,7 +6,7 @@ import { guests, plans, registry } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { eventUnlocked } from '@/modules/events/actions'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { ContributionMethod } from './domain/fund'
 
@@ -55,7 +55,8 @@ export async function addGiftAction(input: {
   store: string | null
   url: string | null
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -76,7 +77,8 @@ export async function updateGiftAction(input: {
   store: string | null
   url: string | null
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -93,7 +95,8 @@ export async function removeGiftAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -110,7 +113,8 @@ export async function markPurchasedAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -127,7 +131,8 @@ export async function releaseGiftAsAtelierAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -146,7 +151,8 @@ export async function addFundAction(input: {
   description: string | null
   goalCents: number
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -166,7 +172,8 @@ export async function updateFundAction(input: {
   description: string | null
   goalCents: number
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -183,7 +190,8 @@ export async function removeFundAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -212,7 +220,8 @@ export async function recordContributionAction(input: {
   method: ContributionMethod
   message: string | null
 }): Promise<RegistryActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado

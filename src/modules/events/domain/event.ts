@@ -13,6 +13,11 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
 
 export type Event = {
   readonly id: string
+  /**
+   * El atelier dueño del evento. Anulable solo porque la columna nació después que los
+   * datos; **sin dueño no es «de cualquiera»**: solo el admin lo ve.
+   */
+  readonly userId: string | null
   readonly slug: string
   readonly title: string
   readonly eventDate: string
@@ -31,6 +36,7 @@ export type Event = {
 
 export type EventInput = {
   id: string
+  userId?: string | null | undefined
   slug: string
   title: string
   eventDate: string
@@ -92,6 +98,7 @@ export function createEvent(input: EventInput): Result<Event, EventError> {
 
   return ok({
     id: input.id,
+    userId: input.userId ?? null,
     slug,
     title,
     venue,

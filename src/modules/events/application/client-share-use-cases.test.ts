@@ -19,6 +19,7 @@ const fila = (overrides: Partial<ClientShareRow> = {}): ClientShareRow => ({
 
 const eventRow: EventInput = {
   id: 'e1',
+  userId: null,
   slug: 'boda-ana',
   title: 'Boda de Ana',
   eventDate: '2026-12-05',
@@ -45,6 +46,8 @@ const events: EventRepository = {
   anonymize: async () => {},
   insert: async () => {},
   update: async () => {},
+  listByUser: async () => [],
+  setOwner: async () => {},
   listAll: async () => [],
   findBySlug: async () => null,
   findById: async () => eventRow,

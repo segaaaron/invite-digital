@@ -17,6 +17,7 @@ async function inRolledBackTransaction(run: (tx: Parameters<Parameters<typeof db
 
 const evento = (slug: string) => ({
   id: crypto.randomUUID(),
+  userId: null,
   slug,
   title: `Evento ${slug}`,
   eventDate: '2026-12-05',

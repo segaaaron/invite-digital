@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { plans, venue } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { TableShape } from './domain/venue-table'
 import type { ZoneKind } from './domain/venue-zone'
@@ -39,7 +39,8 @@ export async function addTableAction(input: {
   shape: TableShape
   notes?: string | null
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -68,7 +69,8 @@ export async function updateTableAction(input: {
   shape: TableShape
   notes?: string | null
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -85,7 +87,8 @@ export async function removeTableAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -109,7 +112,8 @@ export async function assignGroupAction(input: {
   groupId: string
   tableId: string
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -126,7 +130,8 @@ export async function unassignGroupAction(input: {
   eventSlug: string
   groupId: string
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -139,7 +144,8 @@ export async function unassignGroupAction(input: {
 }
 
 export async function autoAssignAction(input: { eventId: string; eventSlug: string }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -164,7 +170,8 @@ export async function addZoneAction(input: {
   kind: ZoneKind
   label: string
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -200,7 +207,8 @@ export async function updateZoneAction(input: {
   w: number
   h: number
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -217,7 +225,8 @@ export async function removeZoneAction(input: {
   eventId: string
   eventSlug: string
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -239,7 +248,8 @@ export async function moveElementsAction(input: {
   eventSlug: string
   moves: ElementMove[]
 }): Promise<VenueActionResult> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado

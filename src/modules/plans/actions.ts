@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { PlansErrorKind } from './domain/errors'
 
@@ -13,9 +13,10 @@ export type PlanChangeState = { status: 'idle' } | { status: 'success'; planSlug
  * sistema y luego la aplica desde la misma página.
  */
 export async function requestPlanChangeAction(_previous: PlanChangeState, formData: FormData): Promise<PlanChangeState> {
-  await requireSession()
+  const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventSlug })
   const nota = String(formData.get('note') ?? '').trim()
 
   const result = await plans.requestChange({
@@ -47,9 +48,10 @@ export async function applyPlanChangeAction(
   _previous: PlanDecisionState,
   formData: FormData,
 ): Promise<PlanDecisionState> {
-  await requireSession()
+  const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventSlug })
   const result = await plans.applyChange(String(formData.get('requestId') ?? ''))
   if (isErr(result)) {
     console.error('cambio de plan no aplicado', result.error.kind, result.error.detail)
@@ -65,9 +67,10 @@ export async function rejectPlanChangeAction(
   _previous: PlanDecisionState,
   formData: FormData,
 ): Promise<PlanDecisionState> {
-  await requireSession()
+  const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventSlug })
   const result = await plans.rejectChange(String(formData.get('requestId') ?? ''))
   if (isErr(result)) {
     console.error('solicitud no rechazada', result.error.kind, result.error.detail)

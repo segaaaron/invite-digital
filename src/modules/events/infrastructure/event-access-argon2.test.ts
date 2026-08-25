@@ -15,6 +15,7 @@ import { isOk } from '@/shared/result'
 
 const fila: EventInput = {
   id: 'e1',
+  userId: null,
   slug: 'boda',
   title: 'Boda',
   eventDate: '2027-05-15',
@@ -31,6 +32,8 @@ const events: EventRepository = {
   anonymize: async () => {},
   insert: async () => {},
   update: async () => {},
+  listByUser: async () => [],
+  setOwner: async () => {},
   listAll: async () => [],
   findBySlug: async () => fila,
   findById: async () => fila,

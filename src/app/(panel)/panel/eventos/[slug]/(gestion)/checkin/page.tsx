@@ -23,10 +23,10 @@ export const dynamic = 'force-dynamic'
  * máquina no tiene cámara, que es lo que pasaba al entrar aquí desde la barra.
  */
 export default async function CheckinPage({ params }: { params: Promise<{ slug: string }> }) {
-  await requireSession()
+  const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getBySlug(slug)
+  const event = await events.getFor(actor, slug)
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

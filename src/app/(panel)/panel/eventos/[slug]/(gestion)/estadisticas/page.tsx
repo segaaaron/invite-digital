@@ -51,10 +51,10 @@ function Desglose({
 }
 
 export default async function EventStatsPage({ params }: { params: Promise<{ slug: string }> }) {
-  await requireSession()
+  const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getBySlug(slug)
+  const event = await events.getFor(actor, slug)
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

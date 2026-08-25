@@ -5,6 +5,7 @@ import { EventList } from './EventList'
 
 const evento = (slug: string, title: string): Event => ({
   id: slug,
+  userId: null,
   slug,
   title,
   eventDate: '2026-12-05',

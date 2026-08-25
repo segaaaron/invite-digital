@@ -27,11 +27,11 @@ export default async function RegalosPage({
   params: Promise<{ slug: string }>
   searchParams: Promise<{ panel?: string; vista?: string }>
 }) {
-  await requireSession()
+  const actor = await requireSession()
   const { slug } = await params
   const { panel, vista } = await searchParams
 
-  const event = await events.getBySlug(slug)
+  const event = await events.getFor(actor, slug)
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

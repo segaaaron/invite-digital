@@ -6,6 +6,7 @@ import type { EventRepository } from './ports'
 
 const fila = (slug: string): EventInput => ({
   id: 'existente',
+  userId: null,
   slug,
   title: 'Ya existe',
   eventDate: '2026-12-05',
@@ -23,6 +24,8 @@ const repo = (existing: string[] = []) => {
     anonymize: async () => {},
     insert: async (event) => void inserted.push(event),
     update: async () => {},
+    listByUser: async () => [],
+    setOwner: async () => {},
     listAll: async () => [],
     findBySlug: async (slug) => (existing.includes(slug) ? fila(slug) : null),
     findById: async () => null,
@@ -72,6 +75,8 @@ describe('createEventUseCase', () => {
         throw new Error('conexión rechazada')
       },
       update: async () => {},
+      listByUser: async () => [],
+      setOwner: async () => {},
       listAll: async () => [],
       findBySlug: async () => null,
       findById: async () => null,

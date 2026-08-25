@@ -5,6 +5,7 @@ import { ClasicoTheme } from './ClasicoTheme'
 
 const evento = (over: Partial<Event> = {}): Event => ({
   id: 'e1',
+  userId: null,
   slug: 'boda-demo',
   title: 'Marcia & Ricardo',
   eventDate: '2026-10-18',

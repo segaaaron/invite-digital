@@ -12,6 +12,8 @@ const repo = (pending: AnonymizationCandidate[]) => {
     anonymize: async (id, at) => void anonymized.push({ id, at }),
     insert: async () => {},
     update: async () => {},
+    listByUser: async () => [],
+    setOwner: async () => {},
     listAll: async () => [],
     findBySlug: async () => null,
     findById: async () => null,

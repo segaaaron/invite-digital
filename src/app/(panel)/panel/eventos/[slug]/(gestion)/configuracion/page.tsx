@@ -22,10 +22,10 @@ export const dynamic = 'force-dynamic'
  * una pantalla, y quien viene a cambiar la fecha no debería pasar por los contadores.
  */
 export default async function ConfiguracionPage({ params }: { params: Promise<{ slug: string }> }) {
-  await requireSession()
+  const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getBySlug(slug)
+  const event = await events.getFor(actor, slug)
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

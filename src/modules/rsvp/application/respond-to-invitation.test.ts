@@ -12,6 +12,7 @@ const grupo: GuestGroup = { id: 'g1', eventId: 'e1', label: 'Familia Rojas', sea
 
 const evento: Event = {
   id: 'e1',
+  userId: null,
   slug: 'boda-ana',
   title: 'Boda de Ana',
   eventDate: '2026-12-05',

@@ -13,6 +13,15 @@ export const createDrizzleUserRepository = (database: DbExecutor): UserRepositor
     return row ?? null
   },
 
+  async findActor(userId) {
+    const [row] = await database
+      .select({ id: users.id, email: users.email, role: users.role })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1)
+    return row ?? null
+  },
+
   async create(user) {
     const [row] = await database.insert(users).values(user).returning({ id: users.id })
     // `returning` siempre trae la fila insertada; si algún día no lo hiciera, el fallo

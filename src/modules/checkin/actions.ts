@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { checkin, plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 import type { CheckinErrorKind } from './domain/errors'
 import type { ScanOutcome } from './application/check-in-by-scan'
@@ -41,7 +41,8 @@ export async function recordScansAction(input: {
   eventSlug: string
   scans: ScanInput[]
 }): Promise<ScanOutcome[]> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.record({
@@ -75,7 +76,8 @@ export async function checkInByGroupAction(input: {
   arrivedCount: number | null
   scannedAtMs: number
 }): Promise<ScanOutcome> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.recordGroup({
@@ -113,7 +115,8 @@ export async function adjustArrivalAction(input: {
   arrivedCount: number
   eventSlug: string
 }): Promise<DoorActionState> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.adjust({ scanId: input.scanId, arrivedCount: input.arrivedCount })
@@ -131,7 +134,8 @@ export async function voidArrivalAction(input: {
   scanId: string
   eventSlug: string
 }): Promise<DoorActionState> {
-  await requireSession()
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
   await exigirModoPuerta(input.eventId)
 
   const result = await checkin.void({ scanId: input.scanId })
