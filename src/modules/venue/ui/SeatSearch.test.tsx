@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { SeatSearch } from './SeatSearch'
+import { SeatingSearchProvider } from './SeatingSearchContext'
 
 const grupo = (id: string, label: string) => ({
   id,
@@ -28,25 +29,25 @@ const mesa = {
 
 describe('SeatSearch', () => {
   it('dice en qué mesa se sienta un grupo', () => {
-    render(<SeatSearch tables={[mesa]} unseated={[]} />)
+    render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[]} /></SeatingSearchProvider>)
     fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'rojas' } })
     expect(screen.getByRole('status')).toHaveTextContent('Mesa 01')
   })
 
   it('avisa cuando el grupo aún no tiene mesa', () => {
-    render(<SeatSearch tables={[mesa]} unseated={[grupo('g2', 'Camila Vargas')]} />)
+    render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[grupo('g2', 'Camila Vargas')]} /></SeatingSearchProvider>)
     fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'camila' } })
     expect(screen.getByRole('status')).toHaveTextContent(/sin mesa/i)
   })
 
   it('avisa cuando no encuentra a nadie con ese nombre', () => {
-    render(<SeatSearch tables={[mesa]} unseated={[]} />)
+    render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[]} /></SeatingSearchProvider>)
     fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'zulema' } })
     expect(screen.getByRole('status')).toHaveTextContent(/no encontramos/i)
   })
 
   it('sin escribir nada no dice nada', () => {
-    render(<SeatSearch tables={[mesa]} unseated={[]} />)
+    render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[]} /></SeatingSearchProvider>)
     expect(screen.getByRole('status')).toHaveTextContent('')
   })
 })

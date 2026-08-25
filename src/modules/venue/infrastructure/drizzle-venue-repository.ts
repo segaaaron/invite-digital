@@ -1,6 +1,6 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, isNotNull, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { guestGroups, rsvpResponses, venueTables, venueZones } from '@/shared/db/schema'
+import { guestGroups, guestPeople, rsvpResponses, venueTables, venueZones } from '@/shared/db/schema'
 import { TABLE_SHAPES, type TableShape, type VenueTable } from '../domain/venue-table'
 import { ZONE_KINDS, type VenueZone, type ZoneKind } from '../domain/venue-zone'
 import type { SeatedGroupRow, VenueRepository } from '../application/ports'
@@ -182,11 +182,26 @@ export const createDrizzleVenueRepository = (database: DbExecutor): VenueReposit
         tableId: guestGroups.tableId,
         revokedAt: guestGroups.revokedAt,
         attending: latest.attending,
+        // Dos preguntas del salón que la maqueta contesta con un color y un icono:
+        // ¿va alguien VIP en este grupo?, ¿alguien come distinto? Se resuelven aquí, en
+        // un agregado, y no con una consulta por grupo desde la página.
+        vip: sql<boolean>`coalesce(bool_or(${guestPeople.vip}), false)`,
+        dietary: sql<boolean>`coalesce(bool_or(${isNotNull(guestPeople.dietaryNote)}), false)`,
       })
       .from(guestGroups)
+      .leftJoin(guestPeople, eq(guestPeople.guestGroupId, guestGroups.id))
       // Left join, no inner: un grupo que aún no ha respondido tiene que salir igual.
       .leftJoin(latest, eq(latest.guestGroupId, guestGroups.id))
       .where(eq(guestGroups.eventId, eventId))
+      .groupBy(
+        guestGroups.id,
+        guestGroups.eventId,
+        guestGroups.label,
+        guestGroups.seats,
+        guestGroups.tableId,
+        guestGroups.revokedAt,
+        latest.attending,
+      )
       .orderBy(guestGroups.label)
 
     return rows.map((r) => ({
@@ -197,6 +212,8 @@ export const createDrizzleVenueRepository = (database: DbExecutor): VenueReposit
       tableId: r.tableId,
       revoked: r.revokedAt !== null,
       confirmed: r.attending,
+      vip: r.vip,
+      dietary: r.dietary,
     }))
   },
 

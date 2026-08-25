@@ -9,6 +9,10 @@ export type SeatedGroup = {
   readonly label: string
   readonly seats: number
   readonly tableId: string | null
+  /** Alguien del grupo está marcado VIP: la maqueta le pinta la silla en dorado. */
+  readonly vip?: boolean
+  /** Alguien del grupo tiene restricción alimentaria: la maqueta lo marca con 🍽. */
+  readonly dietary?: boolean
 }
 
 export type Occupancy = { readonly taken: number; readonly free: number }

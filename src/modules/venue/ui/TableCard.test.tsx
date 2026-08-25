@@ -78,8 +78,8 @@ describe('TableCard', () => {
 
   it('sentar a un grupo llama a la acción con la mesa y el grupo', async () => {
     render(<TableCard {...props} unseated={[grupo('c', 'Pareja Nieto', 2, null)]} />)
+    // Elegir es sentar: la maqueta no pone un botón aparte.
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'c' } })
-    fireEvent.click(screen.getByRole('button', { name: /sentar/i }))
     expect(assignGroupAction).toHaveBeenCalledWith({ eventId: 'e1', eventSlug: 'boda', groupId: 'c', tableId: 't1' })
   })
 
@@ -101,13 +101,12 @@ describe('TableCard', () => {
     assignGroupAction.mockResolvedValueOnce({ ok: false, kind: 'does_not_fit', message: 'faltan 3' } as never)
     render(<TableCard {...props} unseated={[grupo('c', 'Pareja Nieto', 2, null)]} />)
     fireEvent.change(screen.getByRole('combobox'), { target: { value: 'c' } })
-    fireEvent.click(screen.getByRole('button', { name: /sentar/i }))
     expect(await screen.findByRole('alert')).toHaveTextContent('faltan 3')
   })
 
   it('una mesa vacía lo dice en vez de mostrar una lista en blanco', () => {
     render(<TableCard {...props} table={{ ...mesa, taken: 0, free: 8, groups: [] }} />)
-    expect(screen.getByText(/nadie sentado/i)).toBeInTheDocument()
+    expect(screen.getByText(/sin invitados asignados/i)).toBeInTheDocument()
   })
 })
 

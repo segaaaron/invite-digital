@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { moveElementsAction } from '../actions'
+import { moveElementsAction, removeZoneAction } from '../actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { ElementMove } from '../application/move-element'
 import { seatRing } from '../domain/seat-ring'
+import { matchesSearch, useSeatingSearch } from './SeatingSearchContext'
 import { clampToPlan } from '../domain/venue-table'
 import type { VenueZone } from '../domain/venue-zone'
 
@@ -18,6 +19,14 @@ type Props = {
   zones: readonly VenueZone[]
   /** Salidas dentro de la aplicación. El plano las intercepta si hay cambios sin guardar. */
   exits: readonly Exit[]
+  /**
+   * Prefijo del enlace de edición de una zona; se le pega el id.
+   *
+   * Es una **cadena**, no una función que la construya: un componente cliente no puede
+   * recibir funciones desde el servidor, y hacerlo revienta la página entera en tiempo de
+   * ejecución sin que el typecheck diga una palabra. Ya pasó en la página del plan.
+   */
+  zoneEditHrefPrefix?: string
 }
 
 type Punto = { x: number; y: number }
@@ -72,6 +81,19 @@ const ZONA_TEXTO: Record<VenueZone['kind'], string> = {
  * resuelta—, empezada en dorado y vacía en línea tenue. El rojo que llevaba la llena
  * decía «problema» donde no lo hay.
  */
+/** El tinte de cada elemento del salón, como en la maqueta: pista dorada, mesa de honor
+ *  verde, banda violeta, y el resto en blanco translúcido. */
+const TONO_ZONA: Record<VenueZone['kind'], string> = {
+  dance: 'bg-gold/10',
+  stage: 'bg-sage/10',
+  music: 'bg-device/10',
+  bar: 'bg-white/45',
+  entrance: 'bg-white/45',
+  kitchen: 'bg-white/45',
+  photo: 'bg-white/45',
+  custom: 'bg-white/45',
+}
+
 const bordeDeMesa = (table: SeatedTable): string => {
   if (table.free === 0) return 'border-sage'
   if (table.taken === 0) return 'border-line-panel'
@@ -114,8 +136,9 @@ const usePrefiereMenosMovimiento = (): boolean =>
  * Se mueve con el ratón y con las flechas del teclado. Un plano solo arrastrable deja
  * fuera a quien no usa ratón.
  */
-export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
+export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHrefPrefix }: Props) {
   const router = useRouter()
+  const { termino } = useSeatingSearch()
   const reduceMotion = usePrefiereMenosMovimiento()
   const plano = useRef<HTMLDivElement>(null)
   const arrastre = useRef<{ key: string; desdeX: number; desdeY: number; origen: Punto } | null>(null)
@@ -256,6 +279,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
     mover(key, { x: origen.x + delta.x, y: origen.y + delta.y })
   }
 
+  const borrarZona = (id: string) => {
+    setError(null)
+    void removeZoneAction({ id, eventId, eventSlug }).then((r) => {
+      // Borrar en silencio dejaría la zona en pantalla y al atelier pulsando otra vez.
+      if (!r.ok) setError(r.message ?? 'No se pudo eliminar el elemento.')
+    })
+  }
+
   const loteDeCambios = (): ElementMove[] => {
     const moves: ElementMove[] = []
     for (const t of tables) {
@@ -391,9 +422,38 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
                 width: `${tamActuales[key]?.w ?? zone.w}%`,
                 height: `${tamActuales[key]?.h ?? zone.h}%`,
               }}
-              className="absolute touch-none rounded-card border border-dashed border-line-panel bg-bg-top/60 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
+              className={`group/zona absolute touch-none rounded-card border border-dashed border-line-panel font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase ${TONO_ZONA[zone.kind]}`}
             >
               {zone.label}
+
+              {/* Editar y eliminar viven **dentro** de la zona, como en la maqueta: se
+                  ven al pasar por encima y no obligan a buscar la zona en otra lista. */}
+              <span className="absolute -top-2.5 -right-2.5 hidden gap-1 group-hover/zona:flex">
+                {zoneEditHrefPrefix === undefined ? null : (
+                  <a
+                    aria-label={`Editar ${zone.label}`}
+                    className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
+                    href={`${zoneEditHrefPrefix}${zone.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    title={`Editar ${zone.label}`}
+                  >
+                    ✎
+                  </a>
+                )}
+                <span
+                  aria-hidden
+                  className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
+                  onPointerDown={(e) => {
+                    e.stopPropagation()
+                    e.preventDefault()
+                    borrarZona(zone.id)
+                  }}
+                  role="presentation"
+                >
+                  ✕
+                </span>
+              </span>
 
               {/* El mango de la esquina, como en la maqueta. Es un `span` dentro del
                   botón: un botón dentro de otro botón no es HTML válido, y el teclado
@@ -411,7 +471,8 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
 
         {tables.map((table) => {
           const key = clave('table', table.id)
-          const sillas = seatRing(table.capacity, table.groups)
+          const sillas = seatRing(table.capacity, table.groups, table.shape)
+          const resaltada = matchesSearch(termino, table.groups.map((g) => g.label))
           return (
             <button
               key={key}
@@ -433,12 +494,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
                 {sillas.map((silla, indice) => (
                   <span
                     key={indice}
-                    className={`absolute top-1/2 left-1/2 flex size-4.5 items-center justify-center rounded-full font-mono text-[8px] ${
-                      silla.occupant === null ? 'bg-bg-top text-ink-mute' : 'bg-sage text-white'
+                    className={`absolute flex size-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[7px] ${
+                      silla.occupant === null
+                        ? 'border-line-panel bg-bg-top text-ink-mute'
+                        : silla.vip
+                          ? 'border-gold-deep bg-linear-to-br from-[var(--color-gold-light)] to-gold-deep text-white'
+                          : 'border-sage bg-linear-to-br from-[#7a8c64] to-sage text-white'
                     }`}
-                    style={{
-                      transform: `translate(-50%, -50%) rotate(${silla.angle}deg) translateY(-42px) rotate(${-silla.angle}deg)`,
-                    }}
+                    style={{ left: `${silla.x}%`, top: `${silla.y}%` }}
                   >
                     {silla.initial ?? indice + 1}
                   </span>
@@ -451,9 +514,9 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
                 aria-hidden
                 className={`absolute top-1/2 left-1/2 flex size-[58px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border-2 bg-bg-raised font-mono text-[13px] ${bordeDeMesa(table)} ${
                   table.shape === 'round' ? 'rounded-full' : 'rounded-card'
-                }`}
+                } ${resaltada ? 'ring-4 ring-gold/50' : ''}`}
               >
-                {table.label.replace(/^mesa\s*/i, '') || table.label}
+                #{table.label.replace(/^mesa\s*/i, '') || table.label}
               </span>
 
               {/* Fondo propio: sin él la etiqueta caía sobre el rótulo de una zona y se

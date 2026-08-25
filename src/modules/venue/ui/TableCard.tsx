@@ -6,6 +6,7 @@ import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
 import { IconButton } from '@/shared/design/ui/panel/PanelKit'
 import { seatRing } from '../domain/seat-ring'
+import { matchesSearch, useSeatingSearch } from './SeatingSearchContext'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
 
 const NOMBRE_FORMA: Record<TableShape, string> = {
@@ -44,6 +45,8 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
+  const { termino } = useSeatingSearch()
+  const resaltada = matchesSearch(termino, table.groups.map((g) => g.label))
 
   // Un grupo no se parte entre dos mesas: solo se ofrecen los que caben enteros.
   const caben = unseated.filter((g) => g.seats <= table.free)
@@ -91,7 +94,11 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   }
 
   return (
-    <article className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-5 shadow-card ${clase}`}>
+    <article
+      className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-5 shadow-card ${clase} ${
+        resaltada ? 'ring-4 ring-gold/50' : ''
+      }`}
+    >
       <header className="flex items-baseline justify-between gap-3">
         <h3 className="font-display text-[20px] font-light text-ink">{table.label}</h3>
         <p className="flex items-baseline gap-2">
@@ -112,18 +119,36 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
         </p>
       </header>
 
+      {table.notes === null ? null : (
+        <p className="rounded-lg bg-bg-raised px-2.5 py-1.5 text-[11px] text-ink-soft">
+          <span aria-hidden>📌 </span>
+          {table.notes}
+        </p>
+      )}
+
+      {/* La barra de la maqueta: dorada mientras se llena, verde cuando la mesa está
+          resuelta. Dice de un vistazo lo mismo que el contador, pero sin leerlo. */}
+      <div className="h-1 overflow-hidden rounded-sm bg-bg-sunken">
+        <div
+          className={`h-full rounded-sm ${table.free === 0 ? 'bg-sage' : 'bg-gold'}`}
+          style={{ width: `${table.capacity === 0 ? 0 : Math.min(100, (table.taken / table.capacity) * 100)}%` }}
+        />
+      </div>
+
       {/* La mesa dibujada con sus sillas, como en la maqueta: se ve de un vistazo cuánto
           queda libre sin leer el contador. */}
       <div aria-hidden className="relative mx-auto size-[150px]">
-        {seatRing(table.capacity, table.groups).map((silla, indice) => (
+        {seatRing(table.capacity, table.groups, table.shape).map((silla, indice) => (
           <span
             key={indice}
-            className={`absolute top-1/2 left-1/2 flex size-5 items-center justify-center rounded-full font-mono text-[8px] ${
-              silla.occupant === null ? 'bg-bg-sunken text-ink-mute' : 'bg-sage text-white'
+            className={`absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[9px] ${
+              silla.occupant === null
+                ? 'border-line-panel bg-bg-sunken text-ink-mute'
+                : silla.vip
+                  ? 'border-gold-deep bg-linear-to-br from-[var(--color-gold-light)] to-gold-deep text-white'
+                  : 'border-sage bg-linear-to-br from-[#7a8c64] to-sage text-white shadow-[0_2px_6px_rgb(90_112_92/0.4)]'
             }`}
-            style={{
-              transform: `translate(-50%, -50%) rotate(${silla.angle}deg) translateY(-58px) rotate(${-silla.angle}deg)`,
-            }}
+            style={{ left: `${silla.x}%`, top: `${silla.y}%` }}
           >
             {silla.initial ?? indice + 1}
           </span>
@@ -133,12 +158,12 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
             table.shape === 'round' ? 'rounded-full' : 'rounded-[14px]'
           }`}
         >
-          {table.label.replace(/^mesa\s*/i, '') || table.label}
+          #{table.label.replace(/^mesa\s*/i, '') || table.label}
         </span>
       </div>
 
       {table.groups.length === 0 ? (
-        <p className="text-[13px] text-ink-mute">Nadie sentado todavía.</p>
+        <p className="text-[12px] text-ink-mute italic">Sin invitados asignados</p>
       ) : (
         // Chips con su aspa, como la maqueta: una lista de filas con botones «Quitar»
         // ocupaba el triple y competía con la mesa dibujada.
@@ -146,9 +171,14 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
           {table.groups.map((group) => (
             <li
               key={group.id}
-              className="flex items-center gap-2 rounded-pill border border-line-panel bg-bg-raised py-1 pr-1 pl-3 text-[12px] text-ink-soft"
+              className="flex items-center gap-1.5 rounded-pill bg-pill-pending px-2.5 py-1 text-[11px] text-ink"
             >
               <span>{group.label}</span>
+              {group.dietary === true ? (
+                <span aria-label="con restricción alimentaria" title="Con restricción alimentaria">
+                  🍽
+                </span>
+              ) : null}
               <span className="font-mono text-[10px] text-ink-mute">{group.seats}</span>
               <button
                 type="button"
@@ -164,8 +194,6 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
         </ul>
       )}
 
-      {table.notes === null ? null : <p className="text-[12px] text-ink-soft italic">{table.notes}</p>}
-
       {table.free === 0 ? (
         <p className="text-[12px] text-ink-mute">Sin sitios libres.</p>
       ) : caben.length === 0 ? (
@@ -177,27 +205,25 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
           <label className="sr-only" htmlFor={`sentar-${table.id}`}>
             Grupo a sentar en {table.label}
           </label>
+          {/* Elegir **es** sentar, como en la maqueta: el botón aparte era un paso de más
+              en la pantalla donde se reparte el salón entero grupo a grupo. */}
           <select
             id={`sentar-${table.id}`}
             value={elegido}
-            onChange={(e) => setElegido(e.target.value)}
-            className="min-w-0 flex-1 rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
+            onChange={(e) => {
+              const id = e.target.value
+              setElegido('')
+              if (id !== '') correr(() => assignGroupAction({ eventId, eventSlug, groupId: id, tableId: table.id }))
+            }}
+            className="min-w-0 flex-1 rounded-pill border border-line-panel-strong bg-white px-3 py-2 text-[13px] text-ink"
           >
-            <option value="">Elige un grupo…</option>
+            <option value="">+ asignar invitado…</option>
             {caben.map((g) => (
               <option key={g.id} value={g.id}>
                 {g.label} · {g.seats}
               </option>
             ))}
           </select>
-          <button
-            type="button"
-            disabled={pendiente || elegido === ''}
-            onClick={() => correr(() => assignGroupAction({ eventId, eventSlug, groupId: elegido, tableId: table.id }))}
-            className="rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
-          >
-            Sentar
-          </button>
         </div>
       )}
 

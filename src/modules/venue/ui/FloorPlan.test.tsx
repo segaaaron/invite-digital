@@ -307,3 +307,31 @@ describe('FloorPlan · redimensionar zonas', () => {
     expect(screen.getByLabelText('Estado del plano')).toHaveTextContent(/sin guardar/i)
   })
 })
+
+describe('FloorPlan · editar una zona desde el plano', () => {
+  const zona = { id: 'z9', eventId: 'e1', kind: 'bar' as const, label: 'Barra', x: 30, y: 30, w: 20, h: 15 }
+
+  it('el ✎ de la zona lleva a su edición, con el id pegado al prefijo', () => {
+    render(
+      <FloorPlan
+        eventId="e1"
+        eventSlug="boda"
+        exits={[]}
+        tables={[]}
+        zoneEditHrefPrefix="/panel/eventos/boda/mesas?panel=zona&zona="
+        zones={[zona]}
+      />,
+    )
+
+    // Una **cadena**, no una función: un componente cliente no recibe funciones del
+    // servidor, y hacerlo revienta la página en ejecución sin que el typecheck avise.
+    expect(screen.getByRole('link', { name: 'Editar Barra' }).getAttribute('href')).toBe(
+      '/panel/eventos/boda/mesas?panel=zona&zona=z9',
+    )
+  })
+
+  it('sin prefijo no ofrece editar: la zona solo se arrastra', () => {
+    render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
+    expect(screen.queryByRole('link', { name: 'Editar Barra' })).not.toBeInTheDocument()
+  })
+})

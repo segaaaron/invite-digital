@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useSeatingSearch } from './SeatingSearchContext'
 import { SearchField } from '@/shared/design/ui/panel/PanelKit'
 import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
@@ -19,7 +19,7 @@ export function SeatSearch({
   tables: readonly SeatedTable[]
   unseated: readonly SeatedGroupRow[]
 }) {
-  const [termino, setTermino] = useState('')
+  const { termino, setTermino } = useSeatingSearch()
 
   const q = termino.trim().toLocaleLowerCase()
   let hallazgo: string | null = null

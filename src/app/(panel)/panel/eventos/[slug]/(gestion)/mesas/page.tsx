@@ -9,12 +9,12 @@ import { BarRow, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
 import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
+import { SeatingSearchProvider } from '@/modules/venue/ui/SeatingSearchContext'
 import { TableDialog } from '@/modules/venue/ui/TableDialog'
 import { ZoneDialog } from '@/modules/venue/ui/ZoneDialog'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
 import { UnseatedStrip } from '@/modules/venue/ui/UnseatedStrip'
-import { ZoneControls } from '@/modules/venue/ui/ZoneControls'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Mesas' }
@@ -27,11 +27,11 @@ export default async function MesasPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string; vista?: string }>
+  searchParams: Promise<{ panel?: string; vista?: string; zona?: string }>
 }) {
   await requireSession()
   const { slug } = await params
-  const { panel, vista } = await searchParams
+  const { panel, vista, zona } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -79,10 +79,19 @@ export default async function MesasPage({
 
       {/* Las altas son los diálogos de la maqueta, no paneles desplegados en la página. */}
       {panel === 'mesa' ? <TableDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} /> : null}
-      {panel === 'zona' ? <ZoneDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} /> : null}
+      {panel === 'zona' ? (
+        <ZoneDialog
+          closeHref={base}
+          eventId={event.value.id}
+          eventSlug={event.value.slug}
+          zone={zones.find((z) => z.id === zona)}
+        />
+      ) : null}
 
       {/* Buscador y conmutador en la misma fila, debajo de la cabecera: es la
-          `seating-toolbar` de la maqueta. */}
+          `seating-toolbar` de la maqueta. El proveedor comparte el término con el plano y
+          con las tarjetas, que son las que se iluminan. */}
+      <SeatingSearchProvider>
       <div className="mb-4.5 flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-[280px] flex-1">
           <SeatSearch tables={tables} unseated={unseated} />
@@ -156,14 +165,13 @@ export default async function MesasPage({
                 tables={tables}
                 zones={zones}
                 exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
+                zoneEditHrefPrefix={`${base}?panel=zona&zona=`}
               />
-              {zones.length === 0 ? null : (
-                <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
-              )}
             </div>
           </PanelCard>
         )}
       </div>
+      </SeatingSearchProvider>
     </>
   )
 }

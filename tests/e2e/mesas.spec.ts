@@ -42,8 +42,8 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
 
   // Uno se sienta a mano.
   const mesa01 = page.locator('article').filter({ hasText: 'Mesa 01' })
+  // Elegir es sentar: el diseño no tiene botón aparte.
   await mesa01.getByLabel('Grupo a sentar en Mesa 01').selectOption({ label: 'Familia Rojas Peña · 4' })
-  await mesa01.getByRole('button', { name: 'Sentar' }).click()
   await expect(mesa01).toContainText('4 / 8')
 
   // El resto lo reparte la auto-asignación.

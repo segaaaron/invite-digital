@@ -38,3 +38,38 @@ describe('seatRing', () => {
     expect(seatRing(1, [grupo('g1', '   ', 1)])[0]?.initial).toBe('·')
   })
 })
+
+describe('seatRing · forma de la mesa', () => {
+  it('la redonda reparte por la circunferencia', () => {
+    const sillas = seatRing(4, [], 'round')
+    // Arriba, derecha, abajo, izquierda.
+    expect(sillas.map((s) => Math.round(s.y))).toEqual([8, 50, 92, 50])
+  })
+
+  it('la rectangular sienta en dos lados, no en círculo', () => {
+    const sillas = seatRing(6, [], 'rect')
+    const filas = new Set(sillas.map((s) => s.y))
+    expect(filas).toEqual(new Set([12, 88]))
+  })
+
+  it('la imperial también va en dos filas', () => {
+    expect(new Set(seatRing(8, [], 'imperial').map((s) => s.y))).toEqual(new Set([12, 88]))
+  })
+
+  it('marca la silla del grupo que lleva a alguien VIP', () => {
+    const sillas = seatRing(2, [{ id: 'g1', label: 'Padrinos', seats: 1, tableId: 't1', vip: true }], 'round')
+    expect(sillas[0]?.vip).toBe(true)
+    expect(sillas[1]?.vip).toBe(false)
+  })
+
+  it('ninguna silla se sale del recuadro de la mesa', () => {
+    for (const forma of ['round', 'rect', 'sweetheart', 'imperial'] as const) {
+      for (const silla of seatRing(9, [], forma)) {
+        expect(silla.x).toBeGreaterThanOrEqual(0)
+        expect(silla.x).toBeLessThanOrEqual(100)
+        expect(silla.y).toBeGreaterThanOrEqual(0)
+        expect(silla.y).toBeLessThanOrEqual(100)
+      }
+    }
+  })
+})

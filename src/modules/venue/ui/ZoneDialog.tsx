@@ -2,8 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
-import { addZoneAction } from '../actions'
-import { ZONE_KINDS, type ZoneKind } from '../domain/venue-zone'
+import { addZoneAction, updateZoneAction } from '../actions'
+import { ZONE_KINDS, type VenueZone, type ZoneKind } from '../domain/venue-zone'
 
 const NOMBRE_CLASE: Record<ZoneKind, string> = {
   dance: 'Pista de baile',
@@ -28,11 +28,23 @@ const ROTULO = 'flex flex-col gap-2 font-mono text-[9px] tracking-[0.3em] text-i
  * propio, pedirlo sería preguntar dos veces lo mismo y abrir la puerta a una pista de
  * baile llamada «barra».
  */
-export function ZoneDialog({ eventId, eventSlug, closeHref }: { eventId: string; eventSlug: string; closeHref: string }) {
+export function ZoneDialog({
+  eventId,
+  eventSlug,
+  closeHref,
+  zone,
+}: {
+  eventId: string
+  eventSlug: string
+  closeHref: string
+  /** Con zona, el diálogo corrige la que ya existe; sin ella, crea una nueva. */
+  zone?: VenueZone | undefined
+}) {
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
-  const [kind, setKind] = useState<ZoneKind>('dance')
-  const [label, setLabel] = useState('')
+  const editando = zone !== undefined
+  const [kind, setKind] = useState<ZoneKind>(zone?.kind ?? 'dance')
+  const [label, setLabel] = useState(zone?.label ?? '')
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
 
@@ -58,9 +70,23 @@ export function ZoneDialog({ eventId, eventSlug, closeHref }: { eventId: string;
 
     setError(null)
     empezar(async () => {
-      const r = await addZoneAction({ eventId, eventSlug, kind, label: nombre })
+      // Corregir manda también el sitio y el tamaño: el caso de uso rehace la zona
+      // entera y sin ellos volvería al centro del plano.
+      const r = editando
+        ? await updateZoneAction({
+            id: zone.id,
+            eventId,
+            eventSlug,
+            kind,
+            label: nombre,
+            x: zone.x,
+            y: zone.y,
+            w: zone.w,
+            h: zone.h,
+          })
+        : await addZoneAction({ eventId, eventSlug, kind, label: nombre })
       if (!r.ok) {
-        setError(r.message ?? 'No se pudo añadir el elemento.')
+        setError(r.message ?? 'No se pudo guardar el elemento.')
         return
       }
       cerrar()
@@ -78,7 +104,7 @@ export function ZoneDialog({ eventId, eventSlug, closeHref }: { eventId: string;
       }}
     >
       <h2 className="font-display text-[24px] font-light italic" id={`${idTipo}-titulo`}>
-        Añadir elemento del salón
+        {editando ? 'Editar elemento del salón' : 'Añadir elemento del salón'}
       </h2>
 
       <div className="mt-5 flex flex-col gap-4">
