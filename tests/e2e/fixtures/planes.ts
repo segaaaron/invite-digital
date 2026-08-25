@@ -23,8 +23,10 @@ export async function seedPlanEvent(slug: string, maxGuestGroups: number): Promi
   `
 
   const [event] = await sql<{ id: string }[]>`
-    insert into events (slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
-    values (${slug}, ${`Boda ${slug}`}, '2027-06-12', '2027-06-01', 'es', 'clasico', 'live', ${plan!.id})
+    -- El dueño: desde la multitenencia, un evento sin usuario solo lo ve el admin, y
+    -- estas pruebas entran como el atelier. Sin esta columna la suite entera da 404.
+    insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
+    values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Boda ${slug}`}, '2027-06-12', '2027-06-01', 'es', 'clasico', 'live', ${plan!.id})
     returning id
   `
 

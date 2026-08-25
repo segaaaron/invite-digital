@@ -16,11 +16,13 @@ export async function seedDoorEvent(slug: string, seats = 4, attending: number |
   await deleteEvent(slug)
 
   const [event] = await sql<{ id: string }[]>`
-    insert into events (slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
+    -- El dueño: desde la multitenencia, un evento sin usuario solo lo ve el admin, y
+    -- estas pruebas entran como el atelier. Sin esta columna la suite entera da 404.
+    insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     -- Plan que trae todo. Sin plan, el evento se trataría como el más barato activo
     -- (atelier), que no incluye mesa de regalos ni modo puerta, y estas pruebas
     -- chocarían con la pantalla de función no incluida en vez de con lo que miden.
-    values (${slug}, ${`Evento ${slug}`}, '2027-05-15', '2027-05-01', 'es', 'clasico', 'live',
+    values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Evento ${slug}`}, '2027-05-15', '2027-05-01', 'es', 'clasico', 'live',
             (select id from plans where slug = 'alta-costura'))
     returning id
   `

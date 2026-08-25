@@ -176,12 +176,20 @@ async function seedDemo() {
     throw new Error('El sembrador de demostración no se corre en producción: sus tokens son adivinables.')
   }
 
+  const [dueno] = await db.execute<{ id: string }>(sql`select id from users order by created_at asc limit 1`)
+  if (!dueno) {
+    throw new Error('No hay ningún usuario: crea uno con `pnpm user:create` antes de sembrar la demo.')
+  }
+
   await db.execute(sql`delete from events where slug = ${SLUG}`)
 
   const [evento] = await db.execute<{ id: string }>(sql`
-    insert into events (slug, title, event_date, rsvp_deadline, locale, theme_key, status, venue, currency,
+    -- El dueño es el usuario más antiguo. Un evento sin usuario solo lo ve el admin, y
+    -- la demo existe para que cualquiera vea el panel con algo dentro.
+    insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, venue, currency,
                         message_template, plan_id)
-    values (${SLUG}, 'María & Alejandro', '2026-10-12', '2026-09-28', 'es', 'perla', 'live',
+    values ((select id from users order by created_at asc limit 1),
+            ${SLUG}, 'María & Alejandro', '2026-10-12', '2026-09-28', 'es', 'perla', 'live',
             'Jardín Botánico Luna', 'BOB',
             'Hola {grupo}, les compartimos nuestra invitación: {enlace}',
             (select id from plans where slug = 'alta-costura'))

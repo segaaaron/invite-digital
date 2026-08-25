@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
-import { AUTH_STATE } from './fixtures/atelier'
+import { ADMIN_AUTH_STATE, AUTH_STATE } from './fixtures/atelier'
 import { createEvent, createGuestGroup } from './helpers/panel'
 
 /**
@@ -133,6 +133,10 @@ test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', a
 const VISTAS_ATELIER = [
   ['ayuda', '/panel/ayuda'],
   ['pedidos', '/panel/pedidos'],
+] as const
+
+/** Las del administrador, que necesitan su propia sesión: a un atelier le dan 404. */
+const VISTAS_ADMIN = [
   ['admin · panorama', '/panel/admin'],
   ['admin · eventos', '/panel/admin/eventos'],
   ['admin · usuarios', '/panel/admin/usuarios'],
@@ -182,6 +186,28 @@ test('las vistas del atelier tampoco desbordan', async ({ page }) => {
       expect(doc.ancho, `${nombre} estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
     }
   }
+})
+
+test('las vistas del administrador tampoco desbordan', async ({ browser }) => {
+  const sesion = await browser.newContext({ storageState: ADMIN_AUTH_STATE })
+  const page = await sesion.newPage()
+
+  for (const tamano of ANCHOS) {
+    await page.setViewportSize({ width: tamano.width, height: tamano.height })
+
+    for (const [nombre, ruta] of VISTAS_ADMIN) {
+      await page.goto(ruta)
+      await page.waitForLoadState('networkidle')
+
+      const fuera = await page.evaluate(cortados)
+      expect(fuera, `${nombre} deja contenido fuera de la pantalla en ${tamano.nombre}`).toEqual([])
+
+      const doc = await page.evaluate(anchoDocumento)
+      expect(doc.ancho, `${nombre} estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
+    }
+  }
+
+  await sesion.close()
 })
 
 test('las páginas públicas del pedido tampoco desbordan', async ({ page }) => {

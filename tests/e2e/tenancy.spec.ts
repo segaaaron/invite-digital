@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { ATELIER } from './fixtures/atelier'
+import { ADMIN } from './fixtures/atelier'
 import { OTRO, closeTenancyDb, deleteTenancyFixture, seedOtroAtelier } from './fixtures/tenancy'
 
 const SLUG = 'boda-del-otro-e2e'
@@ -46,7 +46,7 @@ test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browse
 
   // --- El admin entra en el evento del otro y ve la administración.
   const admin = await (await browser.newContext()).newPage()
-  await entrar(admin, ATELIER)
+  await entrar(admin, ADMIN)
   expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(200)
   await expect(admin.getByRole('link', { name: 'Panorama' })).toBeVisible()
 

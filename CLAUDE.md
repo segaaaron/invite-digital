@@ -378,6 +378,13 @@ correo, que necesita proveedor.
   van con los nombres escritos a mano y cualificados. Lo cazó la pantalla —una lista que
   decía «0 eventos» junto a otra que los enseñaba—, y ahora hay prueba contra Postgres
   real.
+- **Todo evento sembrado a mano necesita `user_id`.** Un evento sin dueño solo lo ve el
+  admin, así que un fixture de e2e o un guion de siembra que lo omita deja la suite entera
+  en 404 sin decir por qué. Lo llevan los doce fixtures y `db:seed:demo`.
+- **Las e2e traen su propio administrador** (`admin-e2e@invitepremium.bo`, sembrado por
+  `auth.setup.ts`). Antes daban por hecho que `atelier@` lo era, y eso ataba la suite a
+  cómo estén repartidos los roles en la base: el día que alguien se lo quita desde el
+  propio panel, la suite se cae por un cambio de datos y no de código. Pasó.
 - **La sección del admin en la barra solo se pinta para un admin.** Ocultarla no es la
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
