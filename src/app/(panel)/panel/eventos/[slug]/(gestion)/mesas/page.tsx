@@ -129,46 +129,44 @@ export default async function MesasPage({
           )}
         </PanelCard>
 
-        {enTarjetas ? (
-          tables.length === 0 ? (
-            <PanelCard>
-              <p className="text-[13px] text-ink-mute">
-                Todavía no hay mesas. Créalas con «+ Añadir mesa» y empieza a repartir a los invitados.
-              </p>
-            </PanelCard>
-          ) : (
-            // Las tarjetas van sueltas sobre el marfil, como en la maqueta: encerrarlas en
-            // otra tarjeta les ponía un marco que el diseño no tiene.
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {tables.map((table) => (
-                <TableCard
-                  key={table.id}
-                  eventId={event.value.id}
-                  eventSlug={event.value.slug}
-                  table={table}
-                  unseated={unseated}
-                />
-              ))}
-            </div>
-          )
-        ) : (
+        {/* Las tarjetas van sueltas sobre el marfil, como en la maqueta, y se ven **a la
+            vez** que el plano: en el diseño el `hidden` de la rejilla lo anula su propio
+            `display: grid`, así que lo que enseña es el plano arriba y las tarjetas
+            debajo. El conmutador sirve para quedarse solo con las tarjetas. */}
+        {enTarjetas ? null : (
           <PanelCard
-            action={
-              <PanelButton href={`${base}?panel=zona`}>+ Elemento del salón</PanelButton>
-            }
+            action={<PanelButton href={`${base}?panel=zona`}>+ Elemento del salón</PanelButton>}
             title="Plano del salón"
           >
-            <div className="flex flex-col gap-4.5">
-              <FloorPlan
+            <FloorPlan
+              eventId={event.value.id}
+              eventSlug={event.value.slug}
+              tables={tables}
+              zones={zones}
+              exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
+              zoneEditHrefPrefix={`${base}?panel=zona&zona=`}
+            />
+          </PanelCard>
+        )}
+
+        {tables.length === 0 ? (
+          <PanelCard>
+            <p className="text-[13px] text-ink-mute">
+              Todavía no hay mesas. Créalas con «+ Añadir mesa» y empieza a repartir a los invitados.
+            </p>
+          </PanelCard>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {tables.map((table) => (
+              <TableCard
+                key={table.id}
                 eventId={event.value.id}
                 eventSlug={event.value.slug}
-                tables={tables}
-                zones={zones}
-                exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
-                zoneEditHrefPrefix={`${base}?panel=zona&zona=`}
+                table={table}
+                unseated={unseated}
               />
-            </div>
-          </PanelCard>
+            ))}
+          </div>
         )}
       </div>
       </SeatingSearchProvider>
