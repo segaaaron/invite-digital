@@ -125,3 +125,24 @@ invitación para una fecha concreta. Es una decisión comercial del usuario, no 
 **«Enviar invitaciones»** sigue siendo el ciclo 3 rebanada 2 —WhatsApp asistido,
 importación CSV, QR de reparto—, que nunca se planificó. La columna «Enviado» ya existe y
 se marca a mano.
+
+---
+
+## Corrección del 25 de agosto
+
+Lo que la sección de arriba da por pendiente ya no lo está, y conviene decirlo aquí en vez
+de reescribirla: un documento fechado cuenta lo que se sabía ese día.
+
+**«Enviar invitaciones» se construyó esa misma tarde**, en `b9b18a7`, unas horas después
+de cerrar esta auditoría. Reenviar rota el token, cada grupo lleva teléfono, WhatsApp se
+abre con el mensaje del evento ya escrito, la plantilla vive en `events.message_template`
+y la importación de CSV devuelve la tabla fila por fila. Quedan fuera el **QR de reparto**
+y el **canal correo**.
+
+**El conmutador MENSUAL / ANUAL sigue sin construirse**, y por el mismo motivo: es una
+decisión comercial. `BillingToggle` existe y solo se pinta si algún plan tiene precio
+anual; hoy ninguno lo tiene, así que no aparece. Eso es lo correcto mientras se cobre una
+vez por evento.
+
+**El tercer sello de la banda de confianza tampoco se ha puesto**, y no se pondrá desde
+aquí: `pnpm preflight` corta si quedan los marcadores.

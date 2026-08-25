@@ -82,12 +82,17 @@ Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
 
 Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
 
-Lo siguiente son las rebanadas 2 (canales de envío) y 4 (refinamientos) del ciclo 3, y el
-Plan B. La
-rebanada 2 tiene diseño hablado y **no** escrito: rotar el enlace al reenviar,
-importación masiva con CSV y tabla de resultado, plantilla de mensaje por evento y
-teléfono opcional por grupo. Ojo: pedidos, comprobantes y panel de administración —el
-Plan B— siguen sin construirse.
+**La rebanada 2 del ciclo 3 —canales de envío— está construida** desde el 22 de agosto
+(`b9b18a7`): rotar el enlace al reenviar, teléfono por grupo, WhatsApp asistido, plantilla
+de mensaje por evento, importación de CSV con su tabla fila por fila y exportación. Esta
+lista dijo lo contrario durante tres días; si vuelves a leerlo en algún documento viejo,
+es el documento el que está atrasado. Le faltan el **QR de reparto** y el **canal correo**.
+
+Del **menú por invitado** de la rebanada 4 vale lo mismo: `dietaryNote` y el reporte del
+catering existen desde los invitados por persona. Lo que falta de esa rebanada son los
+**recordatorios automáticos**.
+
+Ojo: pedidos, comprobantes y panel de administración —el Plan B— siguen sin construirse.
 
 ### Lo que salió de la revisión de código (22 de agosto)
 
@@ -390,7 +395,8 @@ Plan B— siguen sin construirse.
 
 ```bash
 docker compose -f docker/compose.dev.yml up -d    # Postgres en el puerto 5434
-pnpm db:seed                                       # idempotente
+pnpm db:seed                                       # idempotente: catálogo, también en producción
+pnpm db:seed:demo                                  # una boda de relleno; jamás en producción
 pnpm dev · pnpm test · pnpm typecheck · pnpm lint · pnpm build
 pnpm test:e2e                                      # arranca su propio servidor en el 3100
 pnpm user:create <correo>                          # única alta de usuario del atelier
@@ -513,14 +519,15 @@ visible, y esa es justo la razón de que exista la puerta.
 
 ## Ciclos siguientes (aún sin planificar)
 
-- **Ciclo 3, rebanada 2**: canales de envío — WhatsApp asistido, email, copiar/CSV y QR de reparto.
-  (La rebanada 3, check-in por QR, ya está construida. **No usa route handlers**, al
-  contrario de lo que decía esta lista: los escaneos suben por Server Actions, que es lo
-  que ya usa el panel, y el reenvío lo dispara la propia página al recuperar la red. El
-  Service Worker solo sirve recursos. La sección 6 del spec del check-in lo razona.)
-- **Ciclo 3, rebanada 4**: recordatorios automáticos y menú por invitado. La asignación de
-  mesas ya está construida (ciclo 4, rebanada 1); el menú necesita invitados por persona,
-  que todavía no existe.
+- **Ciclo 3, rebanada 2**: construida salvo el **QR de reparto** y el **canal correo**.
+  El correo necesita antes un proveedor de envío y un remitente verificado, que son datos
+  del usuario. (La rebanada 3, check-in por QR, también está construida. **No usa route
+  handlers**, al contrario de lo que decía esta lista: los escaneos suben por Server
+  Actions, que es lo que ya usa el panel, y el reenvío lo dispara la propia página al
+  recuperar la red. El Service Worker solo sirve recursos. La sección 6 del spec del
+  check-in lo razona.)
+- **Ciclo 3, rebanada 4**: quedan los **recordatorios automáticos**. La asignación de
+  mesas es del ciclo 4 rebanada 1, y el menú por invitado ya vive en `guest_people`.
 - **Plan B**: pedidos, subida de comprobante de pago, panel de administración mínimo.
   La sección 9 del spec del ciclo 1 ya lo describe. La deuda del layout raíz que lo bloqueaba ya
   está saldada: cuelga del grupo `(panel)`.
