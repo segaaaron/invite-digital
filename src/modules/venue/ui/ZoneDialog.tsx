@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { addZoneAction, updateZoneAction } from '../actions'
-import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ZONE_KINDS, type VenueZone, type ZoneKind } from '../domain/venue-zone'
 
 const NOMBRE_CLASE: Record<ZoneKind, string> = {
@@ -16,7 +16,6 @@ const NOMBRE_CLASE: Record<ZoneKind, string> = {
   photo: 'Photobooth',
   custom: 'Otro (personalizado)',
 }
-
 
 /**
  * «+ Elemento del salón» abre este diálogo, como en la maqueta: tipo y, solo si el tipo
@@ -110,7 +109,12 @@ export function ZoneDialog({
           <label className={LABEL_CLASS} htmlFor={idTipo}>
             Tipo
           </label>
-          <select className={FIELD_CLASS} id={idTipo} onChange={(e) => setKind(e.target.value as ZoneKind)} value={kind}>
+          <select
+            className={FIELD_CLASS}
+            id={idTipo}
+            onChange={(e) => setKind(e.target.value as ZoneKind)}
+            value={kind}
+          >
             {ZONE_KINDS.map((k) => (
               <option key={k} value={k}>
                 {NOMBRE_CLASE[k]}
@@ -145,22 +149,12 @@ export function ZoneDialog({
       )}
 
       <div className="mt-6 flex justify-end gap-2.5">
-        <button
-          className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink disabled:opacity-40"
-          disabled={pendiente}
-          onClick={cerrar}
-          type="button"
-        >
+        <PanelButton disabled={pendiente} onClick={cerrar}>
           Cancelar
-        </button>
-        <button
-          className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={pendiente}
-          onClick={guardar}
-          type="button"
-        >
+        </PanelButton>
+        <PanelButton variant="primary" disabled={pendiente} onClick={guardar}>
           {pendiente ? 'Guardando…' : 'Guardar'}
-        </button>
+        </PanelButton>
       </div>
     </dialog>
   )

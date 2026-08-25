@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { FilterChip } from '@/shared/design/ui/panel/PanelKit'
 import { filterMessages, unreadCount, type GuestMessage, type InboxFilter } from '../domain/inbox'
 import { MessageCard } from './MessageCard'
 
@@ -15,12 +16,6 @@ const ETIQUETA: Record<InboxFilter, string> = {
   unread: 'Sin leer',
   featured: 'Destacados',
 }
-
-const PILL =
-  'rounded-[var(--radius-pill)] border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink'
-
-const PILL_ON =
-  'rounded-[var(--radius-pill)] border border-ink bg-ink px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised'
 
 /**
  * La bandeja con sus tres filtros. El filtrado y el orden vienen del dominio, no de aquí:
@@ -43,15 +38,9 @@ export function InboxFilters({ eventId, eventSlug, messages }: Props) {
     <div className="flex flex-col gap-6">
       <div aria-label="Filtros de la bandeja" className="flex flex-wrap items-center gap-2" role="group">
         {(['all', 'unread', 'featured'] as const).map((clave) => (
-          <button
-            key={clave}
-            aria-pressed={filtro === clave}
-            className={filtro === clave ? PILL_ON : PILL}
-            onClick={() => setFiltro(clave)}
-            type="button"
-          >
+          <FilterChip key={clave} active={filtro === clave} onClick={() => setFiltro(clave)}>
             {`${ETIQUETA[clave]} ${cuenta[clave]}`}
-          </button>
+          </FilterChip>
         ))}
       </div>
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { applyPlanChangeAction, type PlanDecisionState, rejectPlanChangeAction } from '../actions'
 import type { PlansErrorKind } from '../domain/errors'
 
@@ -15,8 +16,6 @@ const MENSAJES: Record<PlansErrorKind, string> = {
   not_found: 'Esa solicitud ya no existe. Vuelve a cargar la página.',
   storage_failure: 'No pudimos resolver la solicitud. Sigue pendiente; inténtalo en un momento.',
 }
-
-const BOTON = 'rounded-full border border-line px-4 py-2 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40'
 
 /**
  * Aplicar y descartar una solicitud de cambio de plan. Va en un componente de cliente
@@ -37,21 +36,17 @@ export function PlanDecisionForms({ requestId, eventSlug }: { requestId: string;
         <form action={aplicarAction}>
           <input name="requestId" type="hidden" value={requestId} readOnly />
           <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
-          <button className={BOTON} disabled={aplicando} type="submit">
+          <PanelButton disabled={aplicando} type="submit" variant="primary">
             {aplicando ? 'Aplicando…' : 'Aplicar el cambio'}
-          </button>
+          </PanelButton>
         </form>
 
         <form action={descartarAction}>
           <input name="requestId" type="hidden" value={requestId} readOnly />
           <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
-          <button
-            className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-            disabled={descartando}
-            type="submit"
-          >
+          <PanelButton disabled={descartando} type="submit">
             {descartando ? 'Descartando…' : 'Descartar'}
-          </button>
+          </PanelButton>
         </form>
       </div>
 

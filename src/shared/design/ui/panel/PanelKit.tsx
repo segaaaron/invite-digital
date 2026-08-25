@@ -29,11 +29,32 @@ type PanelButtonProps = {
   children: ReactNode
   variant?: keyof typeof BOTON_VARIANTES
   href?: string
+  /**
+   * El destino sale de la aplicación —`https://wa.me/…`—. Va en un `<a>` normal, no en
+   * `next/link`: prefetch y navegación de cliente no significan nada fuera del sitio, y
+   * el enlace necesita `target` y `rel` propios.
+   */
+  external?: boolean
   className?: string
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'>
 
-export function PanelButton({ children, variant = 'default', href, className = '', ...rest }: PanelButtonProps) {
+export function PanelButton({
+  children,
+  variant = 'default',
+  href,
+  external = false,
+  className = '',
+  ...rest
+}: PanelButtonProps) {
   const clases = `${BOTON_BASE} ${BOTON_VARIANTES[variant]} ${className}`.trim()
+
+  if (href && external) {
+    return (
+      <a className={clases} href={href} rel="noopener noreferrer" target="_blank">
+        {children}
+      </a>
+    )
+  }
 
   if (href) {
     return (

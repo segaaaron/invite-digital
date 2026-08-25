@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { setEventCurrencyAction } from '../actions'
 import { CURRENCIES, type Currency } from '../domain/event'
 
@@ -30,9 +31,9 @@ export function CurrencyPicker({
   return (
     <div className="flex flex-col items-end gap-1.5">
     <label className="flex items-center gap-2.5">
-      <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">Moneda</span>
+      <span className={LABEL_CLASS}>Moneda</span>
       <select
-        className="rounded-full border border-line bg-bg-top/80 px-3.5 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase disabled:opacity-60"
+        className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-60"
         disabled={pending}
         onChange={(e) => {
           const siguiente = e.target.value as Currency
@@ -61,7 +62,7 @@ export function CurrencyPicker({
       </select>
     </label>
       {error === null ? null : (
-        <p className="max-w-[28ch] text-right text-[11px] text-gold-deep" role="alert">
+        <p className="max-w-[28ch] text-right text-[11px] text-danger" role="alert">
           {error}
         </p>
       )}

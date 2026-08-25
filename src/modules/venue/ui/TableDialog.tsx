@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { addTableAction } from '../actions'
-import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
 
 const NOMBRE_FORMA: Record<TableShape, string> = {
@@ -12,7 +12,6 @@ const NOMBRE_FORMA: Record<TableShape, string> = {
   sweetheart: 'De los novios',
   imperial: 'Imperial',
 }
-
 
 /**
  * «+ Añadir mesa» abre este diálogo, como en la maqueta: nombre, capacidad, forma y
@@ -25,7 +24,15 @@ const NOMBRE_FORMA: Record<TableShape, string> = {
  * Está abierto porque la dirección lo dice (`?panel=mesa`), no por estado del cliente:
  * cada alta revalida el árbol y un `useState` se perdería en ese remontaje.
  */
-export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string; eventSlug: string; closeHref: string }) {
+export function TableDialog({
+  eventId,
+  eventSlug,
+  closeHref,
+}: {
+  eventId: string
+  eventSlug: string
+  closeHref: string
+}) {
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [label, setLabel] = useState('')
@@ -62,7 +69,14 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
 
     setError(null)
     empezar(async () => {
-      const r = await addTableAction({ eventId, eventSlug, label, capacity: sitios, shape, notes: notes.trim() || null })
+      const r = await addTableAction({
+        eventId,
+        eventSlug,
+        label,
+        capacity: sitios,
+        shape,
+        notes: notes.trim() || null,
+      })
       if (!r.ok) {
         setError(r.message ?? 'No se pudo crear la mesa.')
         return
@@ -117,7 +131,12 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
             <label className={LABEL_CLASS} htmlFor={idForma}>
               Forma
             </label>
-            <select className={FIELD_CLASS} id={idForma} onChange={(e) => setShape(e.target.value as TableShape)} value={shape}>
+            <select
+              className={FIELD_CLASS}
+              id={idForma}
+              onChange={(e) => setShape(e.target.value as TableShape)}
+              value={shape}
+            >
               {TABLE_SHAPES.map((s) => (
                 <option key={s} value={s}>
                   {NOMBRE_FORMA[s]}
@@ -148,22 +167,12 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
       )}
 
       <div className="mt-6 flex justify-end gap-2.5">
-        <button
-          className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink disabled:opacity-40"
-          disabled={pendiente}
-          onClick={cerrar}
-          type="button"
-        >
+        <PanelButton disabled={pendiente} onClick={cerrar}>
           Cancelar
-        </button>
-        <button
-          className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={pendiente}
-          onClick={guardar}
-          type="button"
-        >
+        </PanelButton>
+        <PanelButton variant="primary" disabled={pendiente} onClick={guardar}>
           {pendiente ? 'Guardando…' : 'Guardar'}
-        </button>
+        </PanelButton>
       </div>
     </dialog>
   )

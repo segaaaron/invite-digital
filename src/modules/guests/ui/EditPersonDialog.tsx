@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
-import { Field, FIELD_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { setGroupPhoneAction, updatePersonAction } from '../actions'
 import type { Attendance } from '../domain/person'
 
@@ -19,7 +19,11 @@ export type EditablePerson = {
   readonly phone: string | null
 }
 
-export type GroupChoice = { readonly id: string; readonly label: string; readonly free: number }
+export type GroupChoice = {
+  readonly id: string
+  readonly label: string
+  readonly free: number
+}
 
 /** Vacío es «no hay dato», no una cadena en blanco que luego el catering agruparía. */
 const oNulo = (valor: string): string | null => (valor.trim() === '' ? null : valor.trim())
@@ -104,7 +108,11 @@ export function EditPersonDialog({
       }
 
       if ((person.phone ?? '') !== phone) {
-        const t = await setGroupPhoneAction({ eventSlug, id: groupId, phone: phone.trim() })
+        const t = await setGroupPhoneAction({
+          eventSlug,
+          id: groupId,
+          phone: phone.trim(),
+        })
         if (t.status === 'error') {
           setError(t.message ?? 'Se guardó el invitado, pero no el teléfono del grupo.')
           return
@@ -168,7 +176,12 @@ export function EditPersonDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field htmlFor={idRsvp} label="RSVP">
-            <select className={FIELD_CLASS} id={idRsvp} onChange={(e) => setAttending(e.target.value)} value={attending}>
+            <select
+              className={FIELD_CLASS}
+              id={idRsvp}
+              onChange={(e) => setAttending(e.target.value)}
+              value={attending}
+            >
               <option value="">Pendiente</option>
               <option value="yes">Asistirá</option>
               <option value="no">No podrá</option>
@@ -234,22 +247,12 @@ export function EditPersonDialog({
       )}
 
       <div className="mt-6 flex justify-end gap-2.5">
-        <button
-          className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink disabled:opacity-40"
-          disabled={pendiente}
-          onClick={cerrar}
-          type="button"
-        >
+        <PanelButton disabled={pendiente} onClick={cerrar}>
           Cancelar
-        </button>
-        <button
-          className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
-          disabled={pendiente}
-          onClick={guardar}
-          type="button"
-        >
+        </PanelButton>
+        <PanelButton variant="primary" disabled={pendiente} onClick={guardar}>
           {pendiente ? 'Guardando…' : 'Guardar'}
-        </button>
+        </PanelButton>
       </div>
     </dialog>
   )

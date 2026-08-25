@@ -2,12 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { Field, FIELD_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { addGuestAction, type GuestActionState } from '../actions'
 
-export type GroupChoice = { readonly id: string; readonly label: string; readonly free: number }
-
-
+export type GroupChoice = {
+  readonly id: string
+  readonly label: string
+  readonly free: number
+}
 
 const INICIAL: GuestActionState = { status: 'idle', message: '' }
 
@@ -115,7 +117,13 @@ export function GuestDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field htmlFor={idGrupo} label="Grupo">
-            <select className={FIELD_CLASS} id={idGrupo} name="groupId" onChange={(e) => setGrupo(e.target.value)} value={grupo}>
+            <select
+              className={FIELD_CLASS}
+              id={idGrupo}
+              name="groupId"
+              onChange={(e) => setGrupo(e.target.value)}
+              value={grupo}
+            >
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.label} · {g.free} libre{g.free === 1 ? '' : 's'}
@@ -170,7 +178,14 @@ export function GuestDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field htmlFor={idTel} label="WhatsApp / Teléfono">
-            <input className={FIELD_CLASS} id={idTel} maxLength={32} name="phone" placeholder="+591 700 00000" type="tel" />
+            <input
+              className={FIELD_CLASS}
+              id={idTel}
+              maxLength={32}
+              name="phone"
+              placeholder="+591 700 00000"
+              type="tel"
+            />
           </Field>
 
           <Field htmlFor={idCorreo} label="Email">
@@ -199,20 +214,10 @@ export function GuestDialog({
         <div className="mt-2 flex justify-end gap-2.5">
           {/* Cierra el diálogo **y** navega: solo navegar deja el modal abierto encima de
               la lista hasta que Next termina la transición, y con él la página bloqueada. */}
-          <button
-            className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink"
-            onClick={cerrar}
-            type="button"
-          >
-            {hayEnlace ? 'Cerrar' : 'Cancelar'}
-          </button>
-          <button
-            className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
-            disabled={pendiente || (nuevoGrupo && atLimit)}
-            type="submit"
-          >
+          <PanelButton onClick={cerrar}>{hayEnlace ? 'Cerrar' : 'Cancelar'}</PanelButton>
+          <PanelButton variant="primary" disabled={pendiente || (nuevoGrupo && atLimit)} type="submit">
             {pendiente ? 'Guardando…' : 'Guardar'}
-          </button>
+          </PanelButton>
         </div>
       </form>
     </dialog>

@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef } from 'react'
 import { resendInvitationAction, type ResendState } from '../actions'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { PassQrSvg } from './PassQrSvg'
 
 const INICIAL: ResendState = { status: 'idle' }
@@ -77,9 +78,9 @@ export function PassDialog({
       ) : emitido === null ? (
         <>
           <p className="mt-5 text-[13px] text-ink-soft">
-            El pase de {personName} es el enlace de «{group.label}», y de ese enlace la base solo guarda su huella: no se
-            puede volver a mostrar. Al generar un pase nuevo, <b className="font-medium">el anterior deja de servir</b> —
-            incluido el que el invitado ya tenga—.
+            El pase de {personName} es el enlace de «{group.label}», y de ese enlace la base solo guarda su huella: no
+            se puede volver a mostrar. Al generar un pase nuevo,{' '}
+            <b className="font-medium">el anterior deja de servir</b> — incluido el que el invitado ya tenga—.
           </p>
 
           {estado.status === 'error' ? (
@@ -91,20 +92,10 @@ export function PassDialog({
           <form action={accion} className="mt-6 flex justify-end gap-2.5">
             <input name="eventSlug" type="hidden" value={eventSlug} />
             <input name="groupId" type="hidden" value={group.id} />
-            <button
-              className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink"
-              onClick={cerrar}
-              type="button"
-            >
-              Cerrar
-            </button>
-            <button
-              className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
-              disabled={pendiente}
-              type="submit"
-            >
+            <PanelButton onClick={cerrar}>Cerrar</PanelButton>
+            <PanelButton variant="primary" disabled={pendiente} type="submit">
               {pendiente ? 'Generando…' : 'Generar pase'}
-            </button>
+            </PanelButton>
           </form>
         </>
       ) : (
@@ -134,20 +125,10 @@ export function PassDialog({
           </p>
 
           <div className="mt-6 flex justify-end gap-2.5">
-            <button
-              className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink"
-              onClick={cerrar}
-              type="button"
-            >
-              Cerrar
-            </button>
-            <button
-              className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px"
-              onClick={() => window.print()}
-              type="button"
-            >
+            <PanelButton onClick={cerrar}>Cerrar</PanelButton>
+            <PanelButton variant="primary" onClick={() => window.print()}>
               Imprimir pase
-            </button>
+            </PanelButton>
           </div>
         </>
       )}

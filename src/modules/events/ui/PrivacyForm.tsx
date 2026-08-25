@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useId, useState } from 'react'
+import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { setEventPrivacyAction, type PrivacyState } from '../actions'
 
 /**
@@ -28,7 +29,7 @@ export function PrivacyForm({
       <input name="eventId" type="hidden" value={eventId} />
       <input name="eventSlug" type="hidden" value={eventSlug} />
 
-      <p className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">Privacidad</p>
+      <p className={LABEL_CLASS}>Privacidad</p>
 
       <label className="flex items-center gap-2.5 text-[13px] text-ink">
         <input checked={modo === 'public'} name="privacy" onChange={() => setModo('public')} type="radio" value="public" />
@@ -48,12 +49,10 @@ export function PrivacyForm({
 
       {modo === 'password' ? (
         <label className="flex flex-col gap-2" htmlFor={campoId}>
-          <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-            {hasPassword ? 'Nueva contraseña de acceso' : 'Contraseña de acceso'}
-          </span>
+          <span className={LABEL_CLASS}>{hasPassword ? 'Nueva contraseña de acceso' : 'Contraseña de acceso'}</span>
           <input
             autoComplete="new-password"
-            className="rounded-[14px] border border-line bg-bg-top/80 px-4 py-3 text-[14px] text-ink"
+            className={FIELD_CLASS}
             id={campoId}
             name="password"
             required
@@ -66,7 +65,7 @@ export function PrivacyForm({
       ) : null}
 
       {state.status === 'error' ? (
-        <p className="text-[13px] text-gold-deep" role="alert">
+        <p className="text-[13px] text-danger" role="alert">
           {state.message}
         </p>
       ) : null}
@@ -76,13 +75,9 @@ export function PrivacyForm({
         </p>
       ) : null}
 
-      <button
-        className="w-fit rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase disabled:opacity-60"
-        disabled={pending}
-        type="submit"
-      >
+      <PanelButton className="w-fit" disabled={pending} type="submit" variant="primary">
         {pending ? 'Guardando…' : 'Guardar privacidad'}
-      </button>
+      </PanelButton>
     </form>
   )
 }

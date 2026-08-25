@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { LABEL_CLASS, PanelButton, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { checkInByGroupAction } from '../actions'
 
 export type ManualGroup = {
@@ -41,21 +42,17 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex flex-col gap-2">
-        <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-          Buscar por nombre o grupo
-        </span>
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Nombre, grupo o código del pase…"
-          autoComplete="off"
-          className="w-full rounded-full border border-line bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none focus-visible:border-gold"
-        />
-      </label>
+      <SearchField
+        autoComplete="off"
+        className="w-full"
+        label="Buscar por nombre o grupo"
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Nombre, grupo o código del pase…"
+        value={query}
+      />
 
       {error === null ? null : (
-        <p className="text-[13px] text-gold-deep" role="alert">
+        <p className="text-[13px] text-danger" role="alert">
           {error}
         </p>
       )}
@@ -69,7 +66,7 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
             return (
               <li
                 key={g.id}
-                className="flex flex-wrap items-center gap-3 rounded-2xl border border-line bg-bg-top/60 p-3.5"
+                className="flex flex-wrap items-center gap-3 rounded-2xl border border-line-panel bg-white p-3.5"
               >
                 <span className="min-w-0 flex-1">
                   <span className="block text-[14px] text-ink">{g.label}</span>
@@ -81,12 +78,9 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
                 </span>
 
                 {llego ? (
-                  <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-sage uppercase">
-                    Ya está dentro
-                  </span>
+                  <span className={`${LABEL_CLASS} text-sage`}>Ya está dentro</span>
                 ) : (
-                  <button
-                    type="button"
+                  <PanelButton
                     disabled={enCurso === g.id}
                     onClick={() => {
                       setEnCurso(g.id)
@@ -106,10 +100,9 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
                         .catch(() => setError('No se pudo registrar la llegada. Vuelve a intentarlo.'))
                         .finally(() => setEnCurso(null))
                     }}
-                    className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase transition-colors hover:border-gold/60 disabled:opacity-50"
                   >
                     {enCurso === g.id ? 'Registrando…' : 'Registrar'}
-                  </button>
+                  </PanelButton>
                 )}
               </li>
             )
