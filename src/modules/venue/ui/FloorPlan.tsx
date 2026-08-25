@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { moveElementsAction } from '../actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { ElementMove } from '../application/move-element'
+import { seatRing } from '../domain/seat-ring'
 import { clampToPlan } from '../domain/venue-table'
 import type { VenueZone } from '../domain/venue-zone'
 
@@ -297,21 +298,56 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
 
         {tables.map((table) => {
           const key = clave('table', table.id)
+          const sillas = seatRing(table.capacity, table.groups)
           return (
             <button
               key={key}
               type="button"
-              aria-label={`${table.label}: ${table.taken} de ${table.capacity} sitios. Muévela con las flechas.`}
+              aria-label={`${table.label}: ${table.taken} de ${table.capacity} sitios${
+                table.groups.length === 0 ? ' y nadie sentado' : `. Se sientan ${table.groups.map((g) => g.label).join(', ')}`
+              }. Muévela con las flechas.`}
               onPointerDown={alPulsar(key)}
               onPointerMove={alArrastrar}
               onPointerUp={alSoltar}
               onKeyDown={alTeclear(key)}
               style={estiloDe(key, arrastrando === key)}
-              className={`absolute flex size-[64px] -translate-x-1/2 -translate-y-1/2 touch-none flex-col items-center justify-center gap-0.5 border-2 bg-bg-raised text-ink ${bordeDeMesa(table)} ${table.shape === 'round' ? 'rounded-full' : 'rounded-card'}`}
+              className="absolute size-[112px] -translate-x-1/2 -translate-y-1/2 touch-none text-ink"
             >
-              <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)]">{table.label}</span>
-              <span className="font-mono text-[11px]">
-                {table.taken}/{table.capacity}
+              {/* Las sillas alrededor, como en la maqueta: la ocupada lleva la inicial de
+                  su grupo. Son decorativas para el lector de pantalla —los nombres ya van
+                  en la etiqueta del botón—; repetir ocho iniciales sueltas sería ruido. */}
+              <span aria-hidden className="absolute inset-0">
+                {sillas.map((silla, indice) => (
+                  <span
+                    key={indice}
+                    className={`absolute top-1/2 left-1/2 flex size-4.5 items-center justify-center rounded-full font-mono text-[8px] ${
+                      silla.occupant === null ? 'bg-bg-top text-ink-mute' : 'bg-sage text-white'
+                    }`}
+                    style={{
+                      transform: `translate(-50%, -50%) rotate(${silla.angle}deg) translateY(-42px) rotate(${-silla.angle}deg)`,
+                    }}
+                  >
+                    {silla.initial ?? indice + 1}
+                  </span>
+                ))}
+              </span>
+
+              {/* Dentro va el número, como en la maqueta; el nombre entero y la
+                  ocupación van debajo, donde caben sin apretarse. */}
+              <span
+                aria-hidden
+                className={`absolute top-1/2 left-1/2 flex size-[58px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border-2 bg-bg-raised font-mono text-[13px] ${bordeDeMesa(table)} ${
+                  table.shape === 'round' ? 'rounded-full' : 'rounded-card'
+                }`}
+              >
+                {table.label.replace(/^mesa\s*/i, '') || table.label}
+              </span>
+
+              <span aria-hidden className="absolute top-full left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
+                <span className="block font-mono text-[9px] tracking-[var(--tracking-luxe)] uppercase">{table.label}</span>
+                <span className="block font-mono text-[10px] text-ink-mute">
+                  {table.taken}/{table.capacity}
+                </span>
               </span>
             </button>
           )
