@@ -83,3 +83,33 @@ describe('HELP_TOPICS', () => {
     for (const topic of HELP_TOPICS) expect(topic.answer.trim().length).toBeGreaterThan(0)
   })
 })
+
+describe('HelpCenter · buscador', () => {
+  it('filtra las preguntas por lo que se escribe', () => {
+    render(<HelpCenter />)
+    const antes = screen.getAllByRole('button', { expanded: false }).length
+
+    fireEvent.change(screen.getByLabelText('Buscar en preguntas frecuentes'), { target: { value: 'zzzz' } })
+    expect(screen.queryAllByRole('button', { expanded: false })).toHaveLength(0)
+    expect(antes).toBeGreaterThan(0)
+  })
+
+  it('sin coincidencias lo dice y no deja la lista muda', () => {
+    render(<HelpCenter />)
+    fireEvent.change(screen.getByLabelText('Buscar en preguntas frecuentes'), { target: { value: 'zzzz' } })
+    expect(screen.getByText(/ninguna pregunta coincide/i)).toBeInTheDocument()
+  })
+
+  it('busca también dentro de la respuesta, no solo en el título', () => {
+    // Quien no sabe cómo se llama lo que busca escribe la palabra que recuerda del texto.
+    const conLaPalabra = HELP_TOPICS.filter((t) => t.answer.toLocaleLowerCase().includes('cupo'))
+    expect(conLaPalabra.length).toBeGreaterThan(0)
+
+    render(<HelpCenter />)
+    fireEvent.change(screen.getByLabelText('Buscar en preguntas frecuentes'), { target: { value: 'cupo' } })
+
+    const visibles = screen.getAllByRole('button', { expanded: false })
+    expect(visibles.length).toBeGreaterThan(0)
+    expect(screen.queryByText(/ninguna pregunta coincide/i)).not.toBeInTheDocument()
+  })
+})

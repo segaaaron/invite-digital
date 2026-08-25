@@ -25,6 +25,8 @@ export type Event = {
   readonly currency: Currency
   /** Plantilla del mensaje de reparto, con {grupo} y {enlace}. */
   readonly messageTemplate: string | null
+  /** Dónde es. Lo enseña la vista previa del enlace y la propia invitación. */
+  readonly venue: string | null
 }
 
 export type EventInput = {
@@ -39,6 +41,7 @@ export type EventInput = {
   retentionDays: number
   currency?: string | undefined
   messageTemplate?: string | null | undefined
+  venue?: string | null | undefined
 }
 
 export function createEvent(input: EventInput): Result<Event, EventError> {
@@ -84,10 +87,14 @@ export function createEvent(input: EventInput): Result<Event, EventError> {
     return err(eventError('invalid_status', `Moneda no soportada: ${currency}`))
   }
 
+  // Un lugar en blanco es «todavía no se sabe dónde», no una cadena vacía en la base.
+  const venue = input.venue?.trim() === '' ? null : (input.venue?.trim() ?? null)
+
   return ok({
     id: input.id,
     slug,
     title,
+    venue,
     eventDate: input.eventDate,
     rsvpDeadline: input.rsvpDeadline,
     locale: input.locale as Locale,

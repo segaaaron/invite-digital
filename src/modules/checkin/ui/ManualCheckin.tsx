@@ -48,7 +48,7 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Familia Rojas Peña..."
+          placeholder="Nombre, grupo o código del pase…"
           autoComplete="off"
           className="w-full rounded-full border border-line bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none focus-visible:border-gold"
         />

@@ -64,6 +64,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
                   year: 'numeric',
                 })}
               </p>
+              {event.value.venue === null ? null : (
+                <p className="mt-1 text-[12px] text-ink-soft">{event.value.venue}</p>
+              )}
               <p className="mt-1.5 font-mono text-[11px] break-all text-ink-mute">{`/i/${event.value.slug}`}</p>
               <p className="mt-3">
                 {conContrasena ? <Pill tone="pending">Protegida</Pill> : <Pill tone="ok">Pública</Pill>}

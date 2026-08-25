@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, plans, registry, rsvp, venue } from '@/app/composition/container'
-import { unreadCount } from '@/modules/guestbook'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -38,6 +37,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         })),
       )
 
+  // La maqueta lista **personas** en «Invitados recientes»: nombre, grupo, RSVP,
+  // acompañantes y mesa.
+  const personasResumen = await guests.listPeople(event.value.id)
   const tally = await rsvp.tally(event.value.id)
   const historial = await rsvp.timeline(event.value.id, DIAS_DEL_GRAFICO)
 
@@ -58,7 +60,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // no se pinta: enseñar mesas vacías haría creer que el salón está sin repartir.
   // Los mensajes sin leer, para la acción rápida.
   const libroResumen = await guestbook.list(event.value.id)
-  const sinLeerResumen = isErr(libroResumen) ? 0 : unreadCount(libroResumen.value)
 
   // La actividad reciente se **compone** de lo que ya se registra: mensajes, llegadas y
   // regalos reservados. No hay tabla de actividad, y no hace falta: duplicar esos hechos
@@ -136,9 +137,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </PanelButton>
           </>
         }
-        kicker={`Panel · ${event.value.title}`}
+        highlight={event.value.title}
+        kicker="Dashboard / Evento"
         meta={cuentaAtras === null ? fecha : `${fecha} · ${cuentaAtras}`}
-        title={`Bienvenida, ${event.value.title}`}
+        title="Bienvenida, "
       />
 
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 lg:grid-cols-4">
@@ -148,6 +150,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           icon="✉"
           change={gruposNuevos > 0 ? { direction: 'up', text: `${gruposNuevos} esta semana` } : undefined}
           detail={gruposNuevos > 0 ? undefined : `${t ? t.seatsInvited : 0} cupos repartidos`}
+          progress={1}
         />
         <StatCard
           label="Confirmados"
@@ -172,13 +175,21 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           detail={vistas && vistas.today > 0 ? undefined : 'Nadie la ha abierto hoy'}
           change={vistas && vistas.today > 0 ? { direction: 'up', text: `${vistas.today} hoy` } : undefined}
           icon="👁"
+          // La barra de visitas es la proporción de grupos que han abierto su enlace: la
+          // maqueta pinta una barra violeta y este es el dato que le corresponde.
+          progress={filas.length > 0 && vistas ? Math.min(1, vistas.total / filas.length) : 0}
+          tone="device"
         />
       </div>
 
       {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
       <div className="mb-5.5 grid items-start gap-4.5 lg:grid-cols-[1.6fr_1fr]">
         <PanelCard
-          action={<PanelCardLink>{`Últimos ${DIAS_DEL_GRAFICO} días`}</PanelCardLink>}
+          action={
+            <Link href={`/panel/eventos/${event.value.slug}/estadisticas`}>
+              <PanelCardLink>Ver detalle →</PanelCardLink>
+            </Link>
+          }
           title="Estado de RSVPs"
         >
           <DonutChart
@@ -199,7 +210,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           )}
         </PanelCard>
 
-        <PanelCard title="Actividad reciente">
+        <PanelCard
+          action={
+            <Link href={`/panel/eventos/${event.value.slug}/mensajes`}>
+              <PanelCardLink>Ver mensajes →</PanelCardLink>
+            </Link>
+          }
+          title="Actividad reciente"
+        >
           <ActivityFeed items={actividad} />
         </PanelCard>
       </div>
@@ -214,18 +232,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         className="mb-5.5"
         title="Invitados recientes"
       >
-        {isErr(groups) ? (
+        {isErr(personasResumen) ? (
           <p className="text-[13px] text-danger" role="alert">
             No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
           </p>
-        ) : filas.length === 0 ? (
-          <p className="text-[14px] text-ink-soft">Todavía no hay invitados. Se cargan en la sección Invitados de la barra.</p>
+        ) : personasResumen.value.length === 0 ? (
+          <p className="text-[14px] text-ink-soft">Todavía no hay invitados. Se cargan en la sección Invitados.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  {['Grupo', 'RSVP', 'Confirmados', 'Cupos', 'Mesa'].map((columna) => (
+                  {['Nombre', 'Grupo', 'RSVP', 'Acompañantes', 'Mesa'].map((columna) => (
                     <th
                       key={columna}
                       className="border-b border-line-panel px-3.5 py-3 text-left font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
@@ -237,29 +255,42 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 </tr>
               </thead>
               <tbody>
-                {filas.slice(0, 6).map((fila) => (
-                  <tr key={fila.id} className="hover:bg-bg-raised">
-                    <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink">{fila.label}</td>
-                    <td className="border-b border-line-panel px-3.5 py-3">
-                      {fila.revokedAt !== null ? (
-                        <Pill tone="no">Revocada</Pill>
-                      ) : fila.confirmed === null ? (
-                        <Pill tone="pending">Pendiente</Pill>
-                      ) : fila.confirmed === 0 ? (
-                        <Pill tone="no">No podrá</Pill>
-                      ) : (
-                        <Pill tone="ok">Asistirá</Pill>
-                      )}
-                    </td>
-                    <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">
-                      {fila.confirmed ?? '—'}
-                    </td>
-                    <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">{fila.seats}</td>
-                    <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
-                      {mesas?.tables.find((mesa) => mesa.groups.some((grupo) => grupo.id === fila.id))?.label ?? '—'}
-                    </td>
-                  </tr>
-                ))}
+                {personasResumen.value.slice(0, 6).map((persona) => {
+                  const grupo = filas.find((f) => f.id === persona.guestGroupId)
+                  const mesa = mesas?.tables.find((m) => m.groups.some((g) => g.id === persona.guestGroupId))
+                  return (
+                    <tr key={persona.id} className="hover:bg-bg-raised">
+                      <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink">
+                        {persona.fullName}
+                        {persona.vip ? (
+                          <span aria-label="VIP" className="ml-1 text-gold" title="VIP">
+                            ★
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
+                        {grupo?.label ?? '—'}
+                      </td>
+                      <td className="border-b border-line-panel px-3.5 py-3">
+                        {persona.attending === 'yes' ? (
+                          <Pill tone="ok">Asistirá</Pill>
+                        ) : persona.attending === 'no' ? (
+                          <Pill tone="no">No podrá</Pill>
+                        ) : persona.attending === 'maybe' ? (
+                          <Pill tone="maybe">Tal vez</Pill>
+                        ) : (
+                          <Pill tone="pending">Pendiente</Pill>
+                        )}
+                      </td>
+                      <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">
+                        {persona.isCompanion ? 'Sí' : '—'}
+                      </td>
+                      <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
+                        {mesa?.label ?? '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -321,13 +352,37 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <PanelCard title="Acciones rápidas">
             <div className="flex flex-col gap-2">
               {[
-                { href: `/panel/eventos/${event.value.slug}/invitados`, icon: '✉', t: 'Invitar a un grupo', d: 'Genera su enlace propio' },
-                { href: `/panel/eventos/${event.value.slug}/configuracion`, icon: '✎', t: 'Editar la invitación', d: 'Fecha, plantilla e idioma' },
-                { href: `/panel/eventos/${event.value.slug}/mensajes`, icon: '💬', t: 'Leer los mensajes', d: `${sinLeerResumen} sin leer` },
-                { href: `/panel/eventos/${event.value.slug}/checkin`, icon: '✓', t: 'Preparar la puerta', d: 'Escáner y lista de llegada' },
+                {
+                  href: `/panel/eventos/${event.value.slug}/invitados?panel=envio`,
+                  icon: '✉',
+                  t: 'Recordar pendientes',
+                  d: `${pendientes} grupo${pendientes === 1 ? '' : 's'} sin responder`,
+                },
+                {
+                  href: `/panel/eventos/${event.value.slug}/configuracion`,
+                  icon: '⛓',
+                  t: 'Copiar enlace',
+                  d: 'El enlace de solo lectura del cliente',
+                },
+                {
+                  href: `/panel/eventos/${event.value.slug}/checkin`,
+                  icon: '▣',
+                  t: 'Pases con QR',
+                  d: 'Para la puerta el día del evento',
+                },
+                {
+                  href: `/panel/eventos/${event.value.slug}/configuracion`,
+                  icon: '✎',
+                  t: 'Editar la invitación',
+                  d: 'Fecha, plantilla e idioma',
+                },
               ].map((accion) => (
                 <Link
-                  key={accion.href}
+                  // La clave es el rótulo, no el destino: dos acciones distintas pueden
+                  // llevar al mismo sitio —copiar el enlace y editar la invitación viven
+                  // las dos en Configuración— y React descarta la segunda si comparten
+                  // clave. Se ve como una acción que desaparece de la lista.
+                  key={accion.t}
                   className="flex items-center gap-3.5 rounded-[14px] border border-line-panel bg-linear-to-b from-bg-top to-white px-4 py-3.5 shadow-card transition-all duration-200 hover:translate-x-[3px] hover:border-gold/40"
                   href={accion.href}
                 >

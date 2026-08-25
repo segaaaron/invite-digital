@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { HELP_CONTACT, HELP_TOPICS } from './topics'
 
 /**
@@ -10,6 +11,17 @@ import { HELP_CONTACT, HELP_TOPICS } from './topics'
  */
 export function HelpCenter() {
   const [abiertas, setAbiertas] = useState<readonly string[]>([])
+  const [busqueda, setBusqueda] = useState('')
+
+  // Busca en la pregunta **y en la respuesta**: quien no sabe cómo se llama lo que busca
+  // escribe la palabra que recuerda del texto, y eso es justo lo que hay que encontrar.
+  const visibles = useMemo(() => {
+    const q = busqueda.trim().toLocaleLowerCase()
+    if (q === '') return HELP_TOPICS
+    return HELP_TOPICS.filter(
+      (t) => t.question.toLocaleLowerCase().includes(q) || t.answer.toLocaleLowerCase().includes(q),
+    )
+  }, [busqueda])
 
   const alternar = (question: string) =>
     setAbiertas((previas) =>
@@ -17,13 +29,28 @@ export function HelpCenter() {
     )
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-6">
+      <div className="flex">
+        <SearchField
+          label="Buscar en preguntas frecuentes"
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar en preguntas frecuentes…"
+          value={busqueda}
+        />
+      </div>
+
+      {visibles.length === 0 ? (
+        <p className="text-[13px] text-ink-mute">
+          Ninguna pregunta coincide con «{busqueda.trim()}». Escríbenos y te contestamos.
+        </p>
+      ) : null}
+
       <ul className="flex flex-col">
-        {HELP_TOPICS.map((topic) => {
+        {visibles.map((topic) => {
           const abierta = abiertas.includes(topic.question)
 
           return (
-            <li key={topic.question} className="border-b border-line">
+            <li key={topic.question} className="border-b border-line-panel">
               <button
                 aria-expanded={abierta}
                 className="flex w-full items-center justify-between gap-6 py-5 text-left text-[15px] text-ink"

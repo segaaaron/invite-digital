@@ -17,6 +17,7 @@ export function StatCard({
   icon,
   progress,
   change,
+  tone = 'sage',
 }: {
   label: string
   value: string | number
@@ -27,6 +28,8 @@ export function StatCard({
   progress?: number | undefined
   /** La variación de la semana. La dirección va en la flecha, no solo en el color. */
   change?: { direction: 'up' | 'down'; text: string } | undefined
+  /** El color de la barra. La maqueta pinta las visitas en violeta y el resto en verde. */
+  tone?: 'sage' | 'device' | undefined
 }) {
   const filled = progress === undefined ? null : Math.max(0, Math.min(1, progress))
 
@@ -52,7 +55,11 @@ export function StatCard({
       {detail ? <p className="mt-2 text-[11px] text-ink-soft">{detail}</p> : null}
       {filled === null ? null : (
         <div className="mt-3 h-1 overflow-hidden rounded-sm bg-bg-sunken">
-          <div data-barra className="h-full rounded-sm bg-sage" style={{ width: `${filled * 100}%` }} />
+          <div
+            data-barra
+            className={`h-full rounded-sm ${tone === 'device' ? 'bg-device' : 'bg-sage'}`}
+            style={{ width: `${filled * 100}%` }}
+          />
         </div>
       )}
     </div>

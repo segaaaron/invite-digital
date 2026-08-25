@@ -60,8 +60,8 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
         <PanelCard title="Buscar a mano">
           <div className="flex flex-col gap-4">
             <p className="text-[12px] leading-[1.7] text-ink-soft">
-              Para quien llegue sin el pase, con el celular sin batería o con la pantalla rota. Registra el ingreso
-              directo, sin escanear nada.
+              Para quien llegue sin el pase, con el celular sin batería o con la pantalla rota. Busca por nombre o
+              grupo y registra el ingreso directo, sin escanear nada.
             </p>
             <ManualCheckin
               arrivedIds={arrivals.map((a) => a.guestGroupId)}
@@ -75,6 +75,12 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
                 revoked: g.revoked,
               }))}
             />
+            {/* La nota del lector de códigos que la maqueta pone bajo el buscador: en la
+                recepción es habitual tener uno por USB, y nadie lo probaría si no se dice. */}
+            <p className="text-[11px] leading-[1.6] text-ink-mute">
+              Un lector de códigos por USB o Bluetooth también escribe aquí: termina con Enter y registra el ingreso
+              directo.
+            </p>
           </div>
         </PanelCard>
 

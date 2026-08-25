@@ -15,6 +15,7 @@ const COLUMNS = {
   retentionDays: events.retentionDays,
   currency: events.currency,
   messageTemplate: events.messageTemplate,
+  venue: events.venue,
 } as const
 
 export const createDrizzleEventRepository = (database: DbExecutor): EventRepository => ({
@@ -124,6 +125,7 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         retentionDays: event.retentionDays,
         currency: event.currency,
         messageTemplate: event.messageTemplate,
+        venue: event.venue,
       })
       .where(eq(events.id, event.id))
   },

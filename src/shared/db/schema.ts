@@ -180,6 +180,9 @@ export const events = pgTable('events', {
   // closed: enlaces válidos, respuestas cerradas
   status: varchar('status', { length: 16 }).notNull().default('draft'),
   retentionDays: integer('retention_days').notNull().default(90),
+  // Dónde es. La maqueta lo pide en Configuración y lo enseña en la vista previa; sin él
+  // la invitación no decía el lugar en ninguna parte.
+  venue: varchar('venue', { length: 160 }),
   // La moneda de la mesa de regalos de este evento. Por defecto BOB, que es lo que había
   // clavado en el código hasta que la maqueta pidió elegirla.
   currency: varchar('currency', { length: 3 }).notNull().default('BOB'),

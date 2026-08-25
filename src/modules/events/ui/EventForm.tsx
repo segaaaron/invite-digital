@@ -31,6 +31,7 @@ export function EventForm({ event }: { event?: Event }) {
   const [state, formAction, isPending] = useActionState(event ? updateEventAction : createEventAction, INITIAL)
   const slugId = useId()
   const titleId = useId()
+  const venueId = useId()
   const dateId = useId()
   const deadlineId = useId()
   const localeId = useId()
@@ -105,6 +106,19 @@ export function EventForm({ event }: { event?: Event }) {
           <input className={FIELD_CLASS} defaultValue={event?.retentionDays ?? 90} id={retentionId} min={1} name="retentionDays" required type="number" />
         </label>
       </div>
+
+      <label className={LABEL_CLASS} htmlFor={venueId}>
+        Lugar / Venue
+        <input
+          className={FIELD_CLASS}
+          defaultValue={event?.venue ?? ''}
+          id={venueId}
+          maxLength={160}
+          name="venue"
+          placeholder="Hacienda Los Encinos, Cochabamba"
+          type="text"
+        />
+      </label>
 
       <label className={LABEL_CLASS} htmlFor={templateId}>
         Plantilla del mensaje de reparto

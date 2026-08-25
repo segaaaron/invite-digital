@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation'
 import { events, guestbook } from '@/app/composition/container'
+import { unreadCount } from '@/modules/guestbook'
 import { InboxFilters } from '@/modules/guestbook/ui/InboxFilters'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Mensajes' }
@@ -24,17 +24,19 @@ export default async function MensajesPage({ params }: { params: Promise<{ slug:
   const libro = await guestbook.list(event.value.id)
   if (isErr(libro)) throw new Error(libro.error.detail)
 
+  const sinLeer = unreadCount(libro.value)
+
   return (
     <>
       <PanelHeader
         kicker="Libro de firmas"
-        meta="Lo que los invitados escribieron al confirmar. Lo que destaques aquí es lo que verá la pareja en su enlace de solo lectura."
+        meta={`${libro.value.length} mensaje${libro.value.length === 1 ? '' : 's'} en tu libro de firmas · ${sinLeer} sin leer`}
         title="Mensajes"
       />
 
-      <PanelCard>
-        <InboxFilters eventId={event.value.id} eventSlug={event.value.slug} messages={libro.value} />
-      </PanelCard>
+      {/* Sin tarjeta que lo envuelva: la maqueta pinta los mensajes sueltos sobre el
+          marfil, y cada firma ya es su propia tarjeta. */}
+      <InboxFilters eventId={event.value.id} eventSlug={event.value.slug} messages={libro.value} />
     </>
   )
 }
