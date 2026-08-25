@@ -1,9 +1,9 @@
-import Link from 'next/link'
 import { events } from '@/app/composition/container'
 import { EventList } from '@/modules/events/ui/EventList'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
 export default async function PanelHomePage() {
@@ -14,12 +14,9 @@ export default async function PanelHomePage() {
     <>
       <PanelHeader
         actions={
-          <Link
-            className="rounded-full border border-line px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
-            href="/panel/eventos/nuevo"
-          >
-            Nuevo evento
-          </Link>
+          <PanelButton href="/panel/eventos/nuevo" variant="primary">
+            + Nuevo evento
+          </PanelButton>
         }
         kicker="Atelier"
         title="Eventos"
@@ -27,7 +24,7 @@ export default async function PanelHomePage() {
 
       <PanelCard>
         {isErr(listed) ? (
-          <p className="text-[14px] text-gold-deep" role="alert">
+          <p className="text-[14px] text-danger" role="alert">
             No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
           </p>
         ) : (

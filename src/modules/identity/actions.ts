@@ -2,9 +2,10 @@
 
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { identity } from '@/app/composition/container'
+import { events, identity } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
+import { isErr } from '@/shared/result'
 import { guardedSignIn } from './application/guarded-sign-in'
 import { SESSION_COOKIE, sessionCookieOptions } from './session-cookie'
 
@@ -32,9 +33,16 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   const jar = await cookies()
   jar.set(SESSION_COOKIE, outcome.token, sessionCookieOptions(outcome.expiresAt))
 
+  // Entrar deja al atelier en el resumen del evento activo —el de fecha más próxima—,
+  // que es la pantalla de la maqueta y la que se mira todos los días. La bandeja de
+  // eventos sigue en `/panel`, en «Todos los eventos» de la barra, y es adonde se cae
+  // cuando todavía no hay ningún evento creado o la base no responde.
+  const listados = await events.list()
+  const activo = isErr(listados) ? null : (listados.value[0] ?? null)
+
   // `redirect` lanza para hacer su trabajo: va después de escribir la cookie y nunca
   // dentro de un try.
-  redirect('/panel')
+  redirect(activo === null ? '/panel' : `/panel/eventos/${activo.slug}`)
 }
 
 export async function signOutAction(): Promise<void> {

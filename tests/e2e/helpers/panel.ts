@@ -11,7 +11,8 @@ export async function signIn(page: Page): Promise<void> {
   await page.getByLabel('Correo').fill(ATELIER.email)
   await page.getByLabel('Contraseña').fill(ATELIER.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/panel$/)
+  // Entrar cae en el resumen del evento activo; sin ningún evento, en la bandeja.
+  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+)?$/)
 }
 
 type EventInput = {
