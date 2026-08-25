@@ -323,6 +323,29 @@ Plan B— siguen sin construirse.
 - **Lo «sin leer» se distingue por texto además de por color**, y el contador del filtro se
   calcula sobre todos los mensajes, no sobre los visibles.
 
+### Notas de las acciones de la fila de invitados
+
+- **`<dialog open>` en el marcado no es un modal.** `showModal()` es lo único que sube el
+  diálogo a la capa superior y hace inerte el fondo; con el atributo `open` puesto, la
+  condición `if (!nodo.open) showModal()` no dispara nunca y el diálogo se pinta dentro
+  del flujo: parece abierto y los elementos de detrás siguen recibiendo los clics. Lo cazó
+  la e2e —una píldora de la tabla interceptando «Guardar»—, no el typecheck ni jsdom. Los
+  dobles de jsdom marcan `open` como haría el navegador; fingir `showModal` con un
+  `vi.fn()` vacío deja el diálogo cerrado y sin contenido que consultar.
+- **`updatePerson` copia campo a campo, y por eso es tedioso.** `createPerson` recibe un
+  objeto literal: el campo que se olvide no es un error de tipos, es un `undefined` que se
+  guarda como nulo. Pasó con `attending` y volvió a pasar con `email` —marcar VIP borraba
+  el correo—. Hay prueba de que lo que no se toca se conserva.
+- **Mover de grupo se valida en el servidor**, con el cupo del destino, igual que el alta:
+  el grupo es el dueño del enlace, del cupo y de la mesa.
+- **El «▣» no puede redibujar un pase ya repartido.** Lo que la puerta lee es el token del
+  enlace del invitado y de él la base solo guarda su SHA-256. El diálogo avisa y emite uno
+  nuevo bajo petición —lo que invalida el anterior—, en vez de fingir un pase. Un grupo
+  revocado no emite ninguno.
+- **Los rótulos de los iconos llevan el nombre dentro** («Ver el pase de Ana Lucía Vega»),
+  así que un `getByRole('cell', { name })` casa también con la celda de acciones: en las
+  e2e esos selectores van con `exact: true`.
+
 ### Notas de los anchos del panel
 
 - **Los cortes son los de la maqueta, no los de Tailwind**: 860 para la carcasa y la
