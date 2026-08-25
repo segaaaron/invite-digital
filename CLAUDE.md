@@ -5,8 +5,13 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-25-handoff.md`** — estado completo, decisiones tomadas y qué
-sigue. No empieces a trabajar sin leerlo. Cuenta el cierre de la fidelidad del panel con
+**`docs/superpowers/2026-08-25-handoff-plan-b.md`** — estado completo, decisiones tomadas
+y qué sigue. No empieces a trabajar sin leerlo. Cuenta el cierre de **todo lo que quedaba
+sin construir**: el QR de reparto, los recordatorios de RSVP y el Plan B entero. Lo
+primero que dice importa: la documentación daba por pendiente una rebanada que llevaba
+tres días en `main`.
+
+El anterior, **`docs/superpowers/2026-08-25-handoff.md`**, cuenta de dónde parte. Cuenta el cierre de la fidelidad del panel con
 `Dashboard.html`: la piel, los modales, los anchos y las acciones de la fila de invitados.
 El anterior, `2026-08-23-handoff.md`, cuenta de dónde venía esa sesión;
 `2026-08-22-handoff.md`, el cierre del ciclo 4; `2026-08-19-handoff-ciclo3.md` sigue
