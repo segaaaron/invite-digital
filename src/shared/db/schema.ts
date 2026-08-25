@@ -475,6 +475,28 @@ export const messageNotes = pgTable(
 )
 
 /**
+ * Cuándo se recordó qué a quién. Es lo único que hace que la cola de recordatorios
+ * encoja: sin este registro el mismo grupo vuelve a salir todos los días.
+ *
+ * No guarda un solo dato personal —el grupo, el motivo y la fecha—, así que la
+ * anonimización de la retención no tiene nada que borrar aquí, y el `cascade` se lo lleva
+ * con el grupo.
+ */
+export const reminderLog = pgTable(
+  'reminder_log',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    guestGroupId: uuid('guest_group_id')
+      .notNull()
+      .references(() => guestGroups.id, { onDelete: 'cascade' }),
+    // 'sin_abrir' | 'sin_respuesta'
+    kind: varchar('kind', { length: 16 }).notNull(),
+    sentAt: timestamp('sent_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('reminder_log_group_idx').on(t.guestGroupId, t.kind, t.sentAt.desc())],
+)
+
+/**
  * Una fila por visita a una invitación. Guarda **categorías**, no rastros: ni dirección
  * IP, ni agente de usuario, ni identificador de navegador. Lo que no se escribe no se
  * filtra, y el atelier solo necesita saber cuántos abrieron, desde qué clase de aparato

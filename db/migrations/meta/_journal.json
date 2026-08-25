@@ -134,6 +134,13 @@
       "when": 1787365878032,
       "tag": "0018_event_venue",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1787365879032,
+      "tag": "0019_reminder_log",
+      "breakpoints": true
     }
   ]
 }

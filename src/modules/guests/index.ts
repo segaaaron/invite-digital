@@ -1,6 +1,7 @@
 export type { GuestGroup } from './domain/guest-group'
 export type { GuestError, GuestErrorKind } from './domain/errors'
 export { invitationUrl } from './domain/invitation-url'
+export { renderMessage, whatsappLink } from './domain/message-template'
 export type { GuestGroupRepository } from './application/ports'
 export type { GuestPerson, Attendance, DietaryLine } from './domain/person'
 export { dietaryReport } from './domain/person'

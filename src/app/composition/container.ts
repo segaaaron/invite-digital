@@ -57,6 +57,8 @@ import {
   toggleFeatured,
 } from '@/modules/guestbook/application/guestbook-use-cases'
 import { drizzleGuestbookRepository } from '@/modules/guestbook/infrastructure/drizzle-guestbook-repository'
+import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
+import { drizzleReminderRepository } from '@/modules/reminders/infrastructure/drizzle-reminder-repository'
 import {
   applyPlanChange,
   getPendingRequest,
@@ -294,6 +296,11 @@ export const registry = {
  * El libro de firmas. Todo lo de aquí es del atelier: el invitado ya escribió su mensaje
  * al confirmar y en esta rebanada solo lee la respuesta, sin ninguna escritura nueva.
  */
+export const reminders = {
+  due: listDueReminders({ reminders: drizzleReminderRepository, clock }),
+  markSent: markReminderSent({ reminders: drizzleReminderRepository, clock }),
+}
+
 export const guestbook = {
   list: listGuestbook({ guestbook: drizzleGuestbookRepository }),
   markRead: markRead({ guestbook: drizzleGuestbookRepository, clock }),

@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, guests, plans, rsvp, venue } from '@/app/composition/container'
+import { events, guests, plans, reminders, rsvp, venue } from '@/app/composition/container'
 import { ExportCsvButton } from '@/modules/guests/ui/ExportCsvButton'
 import { PeopleTable, type PersonRowView } from '@/modules/guests/ui/PeopleTable'
 import { DeliveryPanel } from '@/modules/guests/ui/DeliveryPanel'
@@ -12,6 +12,7 @@ import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
+import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
@@ -93,6 +94,14 @@ export default async function InvitadosPage({
       cargadasPorGrupo.set(persona.guestGroupId, (cargadasPorGrupo.get(persona.guestGroupId) ?? 0) + 1)
     }
   }
+
+  // La cola de recordatorios del día. Si la lectura falla, la tarjeta lo dice: una cola
+  // vacía afirmaría que no hay nadie por recordar, que es lo contrario de lo que pasó.
+  const cola = await reminders.due({
+    id: event.value.id,
+    locale: event.value.locale,
+    rsvpDeadline: new Date(`${event.value.rsvpDeadline}T00:00:00Z`),
+  })
 
   const capacidad = await plans.allowanceFor(event.value.id)
   const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
@@ -232,6 +241,24 @@ export default async function InvitadosPage({
             </p>
           ) : (
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
+          )}
+        </PanelCard>
+
+        {/* Recordatorios: el servidor calcula a quién toca, el atelier despacha. No es
+            una bandeja de salida y la pantalla no lo llama así. */}
+        <PanelCard title="Recordatorios">
+          {isErr(cola) ? (
+            <p className="text-[13px] text-danger" role="alert">
+              No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.
+            </p>
+          ) : (
+            <ReminderQueue
+              deadline={new Date(`${event.value.rsvpDeadline}T00:00:00Z`)}
+              eventId={event.value.id}
+              eventLocale={event.value.locale}
+              eventSlug={event.value.slug}
+              rows={cola.value}
+            />
           )}
         </PanelCard>
 
