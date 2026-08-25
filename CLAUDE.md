@@ -482,3 +482,21 @@ visible, y esa es justo la razón de que exista la puerta.
 
 Escribe en español. Tiene el modo caveman activo: respuestas comprimidas, sin relleno ni preámbulos.
 Avísale al cerrar cada tarea; no pidas permiso entre tareas de un plan ya aprobado.
+
+**Nada de subagentes.** Ni para revisar, ni para buscar, ni para repartir trabajo: el
+trabajo lo haces tú, en esta sesión. Eso incluye `superpowers:requesting-code-review`, que
+despacha uno: la revisión de código la haces tú leyendo el diff. Dicho por el usuario el
+25 de agosto de 2026.
+
+**Solo los skills que hagan falta.** No los invoques por rutina ni para adornar la
+respuesta. Los que sí valen la pena aquí, y cuándo:
+
+| Skill | Cuándo |
+|---|---|
+| `superpowers:test-driven-development` | Cambio con lógica: dominio, casos de uso, acciones |
+| `superpowers:systematic-debugging` | Una prueba falla o algo no se comporta como debe |
+| `superpowers:verification-before-completion` | Antes de decir que algo está hecho |
+| `superpowers:brainstorming` | Decisión de modelo de datos o frente nuevo, antes de escribir código |
+
+La piel —clases, colores, orden de bloques— no necesita ceremonia: se cambia y se
+verifica.
