@@ -122,13 +122,40 @@ test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', a
   }
 })
 
-test('la ayuda tampoco desborda', async ({ page }) => {
+/**
+ * Las vistas del atelier que no cuelgan de un evento. Van aparte porque no llevan `slug`
+ * en la ruta, no porque importen menos: la de pedidos enseña referencias en monoespaciada
+ * y enlaces con el nombre del fichero que subió el cliente, que es exactamente la clase de
+ * texto largo que estira un documento.
+ */
+const VISTAS_ATELIER = [
+  ['ayuda', '/panel/ayuda'],
+  ['pedidos', '/panel/pedidos'],
+] as const
+
+test('las vistas del atelier tampoco desbordan', async ({ page }) => {
+  for (const tamano of ANCHOS) {
+    await page.setViewportSize({ width: tamano.width, height: tamano.height })
+
+    for (const [nombre, ruta] of VISTAS_ATELIER) {
+      await page.goto(ruta)
+      await page.waitForLoadState('networkidle')
+
+      const fuera = await page.evaluate(cortados)
+      expect(fuera, `${nombre} deja contenido fuera de la pantalla en ${tamano.nombre}`).toEqual([])
+
+      const doc = await page.evaluate(anchoDocumento)
+      expect(doc.ancho, `${nombre} estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
+    }
+  }
+})
+
+test('las páginas públicas del pedido tampoco desbordan', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto('/panel/ayuda')
+
+  await page.goto('/es/pedido/firma-3d')
   await page.waitForLoadState('networkidle')
-
   expect(await page.evaluate(cortados)).toEqual([])
-
-  const doc = await page.evaluate(anchoDocumento)
-  expect(doc.ancho).toBeLessThanOrEqual(doc.ventana)
+  const alta = await page.evaluate(anchoDocumento)
+  expect(alta.ancho).toBeLessThanOrEqual(alta.ventana)
 })
