@@ -5,10 +5,12 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-23-handoff.md`** — estado completo, decisiones tomadas y qué
-sigue. No empieces a trabajar sin leerlo. El anterior, `2026-08-22-handoff.md`, cuenta el
-cierre del ciclo 4; `2026-08-19-handoff-ciclo3.md` sigue sirviendo para el detalle de cómo
-se construyó la rebanada 1.
+**`docs/superpowers/2026-08-25-handoff.md`** — estado completo, decisiones tomadas y qué
+sigue. No empieces a trabajar sin leerlo. Cuenta el cierre de la fidelidad del panel con
+`Dashboard.html`: la piel, los modales, los anchos y las acciones de la fila de invitados.
+El anterior, `2026-08-23-handoff.md`, cuenta de dónde venía esa sesión;
+`2026-08-22-handoff.md`, el cierre del ciclo 4; `2026-08-19-handoff-ciclo3.md` sigue
+sirviendo para el detalle de cómo se construyó la rebanada 1.
 
 **`docs/superpowers/2026-08-22-auditoria-diseno.md`** — la comparación medida contra las
 dos maquetas, lo que se corrigió y lo único que queda. Léela antes de tocar la piel.
@@ -37,9 +39,13 @@ Después, según lo que vayas a hacer:
 
 ## Estado
 
+El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
+fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
+que lo vigila. 1396 unitarias y 54 e2e en verde.
+
 **Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y el ciclo 4 entero —mesas y plano del
 salón, mesa de regalos y fondos, libro de firmas, y los límites por plan— cerrados y
-fusionados a `main`, **sin cabos sueltos**. 1101 pruebas unitarias y 42 e2e en verde.
+fusionados a `main`, **sin cabos sueltos**.
 
 El atelier crea eventos, carga grupos de invitados con cupos, reparte un enlace por
 grupo, ve los contadores en vivo y comparte una vista de solo lectura con el cliente. El
