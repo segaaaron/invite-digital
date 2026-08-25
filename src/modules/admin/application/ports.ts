@@ -35,7 +35,7 @@ export type AdminMetrics = {
   readonly usuarios: number
   readonly invitados: number
   readonly pedidosAprobados: number
-  /** Eventos por mes, de los últimos doce, en orden cronológico. */
+  /** Eventos por mes, de los **doce que vienen**: en este negocio están por delante. */
   readonly porMes: readonly { readonly mes: string; readonly total: number }[]
   readonly porPlan: readonly { readonly plan: string; readonly total: number }[]
 }

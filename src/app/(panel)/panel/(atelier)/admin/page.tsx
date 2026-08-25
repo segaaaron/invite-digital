@@ -8,7 +8,8 @@ import { isErr } from '@/shared/result'
 export const metadata = { title: 'Administración' }
 export const dynamic = 'force-dynamic'
 
-const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', timeZone: 'UTC' })
+// Con el año dentro: la serie cruza de año y «ene» sin más no dice cuál.
+const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', year: '2-digit', timeZone: 'UTC' })
 
 export default async function AdminPage() {
   await requireAdmin()
@@ -44,9 +45,9 @@ export default async function AdminPage() {
       </div>
 
       <div className="mt-4.5 grid gap-4.5 min-[900px]:grid-cols-2">
-        <PanelCard title="Eventos por mes">
-          {/* Los doce meses siempre, con los huecos a cero: una serie que se salta los
-              meses vacíos miente sobre la forma del negocio. */}
+        <PanelCard title="Eventos de los próximos doce meses">
+          {/* Hacia adelante, no hacia atrás: las bodas están siempre por venir. Y los
+              doce meses siempre, con los huecos a cero. */}
           <div className="flex flex-col">
             {porMes.map((fila) => (
               <BarRow

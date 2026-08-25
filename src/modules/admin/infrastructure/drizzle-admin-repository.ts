@@ -1,21 +1,26 @@
 import { count, desc, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { auditLog, events, guestGroups, guestPeople, orders, plans, users } from '@/shared/db/schema'
+import { auditLog, events, guestPeople, orders, plans, users } from '@/shared/db/schema'
 import { parseRole } from '@/modules/identity/domain/access'
 import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
 
 export const createDrizzleAdminRepository = (database: DbExecutor): AdminRepository => ({
   async listUsers(): Promise<AdminUserRow[]> {
-    // El recuento de eventos va en una subconsulta correlacionada y no en un `join` con
-    // `group by`: unir y agrupar por el usuario obliga a arrastrar todos sus eventos para
-    // quedarse con el número.
+    // El recuento va en una subconsulta correlacionada y no en un `join` con `group by`:
+    // unir y agrupar por el usuario obliga a arrastrar todos sus eventos para quedarse
+    // con el número.
+    //
+    // **Los nombres van cualificados a mano y sin interpolar.** Drizzle emite
+    // `${users.id}` como `"id"` a secas, y dentro de esta subconsulta `"id"` es
+    // `events.id`: la condición se convertía en `events.user_id = events.id` y contaba
+    // cero para todo el mundo, sin un solo error. Lo cazó la pantalla, no el typecheck.
     const filas = await database
       .select({
         id: users.id,
         email: users.email,
         role: users.role,
         createdAt: users.createdAt,
-        eventos: sql<number>`(select count(*)::int from ${events} where ${events.userId} = ${users.id})`,
+        eventos: sql<number>`(select count(*)::int from events where events.user_id = users.id)`,
       })
       .from(users)
       .orderBy(users.createdAt)
@@ -35,7 +40,7 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         email: users.email,
         role: users.role,
         createdAt: users.createdAt,
-        eventos: sql<number>`(select count(*)::int from ${events} where ${events.userId} = ${users.id})`,
+        eventos: sql<number>`(select count(*)::int from events where events.user_id = users.id)`,
       })
       .from(users)
       .where(eq(users.id, id))
@@ -63,7 +68,7 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         ownerId: events.userId,
         ownerEmail: users.email,
         planSlug: plans.slug,
-        grupos: sql<number>`(select count(*)::int from ${guestGroups} where ${guestGroups.eventId} = ${events.id})`,
+        grupos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id)`,
       })
       .from(events)
       // `leftJoin` en los dos: un evento sin dueño o sin plan tiene que salir igual en la
@@ -98,14 +103,18 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
              (select count(*)::int from ${orders} where status = 'approved')   as pedidos
     `)
 
-    // Los últimos doce meses **con hueco incluido**: un mes sin eventos tiene que salir
-    // con cero, o la serie miente sobre la forma del negocio.
+    // Los **doce meses que vienen**, no los doce pasados: en este negocio los eventos
+    // están siempre por delante. La primera versión miraba hacia atrás y enseñaba doce
+    // ceros con dos bodas en la base, que es una gráfica que miente por omisión.
+    //
+    // Con los huecos incluidos: un mes sin bodas sale con cero, o la serie miente sobre
+    // la forma del año.
     const porMes = await database.execute<{ mes: string; total: number }>(sql`
       select to_char(m.mes, 'YYYY-MM') as mes,
              (select count(*)::int from ${events} e
                where date_trunc('month', e.event_date::date) = m.mes) as total
-        from generate_series(date_trunc('month', current_date) - interval '11 months',
-                             date_trunc('month', current_date),
+        from generate_series(date_trunc('month', current_date),
+                             date_trunc('month', current_date) + interval '11 months',
                              interval '1 month') as m(mes)
        order by m.mes
     `)

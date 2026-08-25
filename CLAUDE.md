@@ -370,6 +370,14 @@ correo, que necesita proveedor.
 - **La auditoría copia el correo del actor como texto**, además del identificador, y este
   va con `SET NULL`: borrar al admin no puede borrar el rastro de lo que hizo. Solo se
   anotan escrituras; registrar las lecturas sería un rastro de navegación del atelier.
+- **Drizzle emite las columnas sin cualificar dentro de un `sql` interpolado.**
+  `sql`(select count(*) from ${events} where ${events.userId} = ${users.id})`` sale como
+  `where "user_id" = "id"`, y dentro de la subconsulta `"id"` es **`events.id`**: la
+  condición se convertía en `events.user_id = events.id` y contaba **cero para todo el
+  mundo**, sin un solo error y con el typecheck en verde. Las subconsultas correlacionadas
+  van con los nombres escritos a mano y cualificados. Lo cazó la pantalla —una lista que
+  decía «0 eventos» junto a otra que los enseñaba—, y ahora hay prueba contra Postgres
+  real.
 - **La sección del admin en la barra solo se pinta para un admin.** Ocultarla no es la
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
