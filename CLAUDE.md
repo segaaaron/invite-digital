@@ -122,6 +122,23 @@ Plan B— siguen sin construirse.
 - **Un solo `<main>` por página.** La carcasa del panel emite el suyo; el layout raíz usa
   `div`. Dos anidados dejan la página con dos regiones principales.
 
+### Notas de las migraciones
+
+- **Toda migración va dada de alta en `db/migrations/meta/_journal.json`.** El registro se
+  quedó una vez en `0007` mientras se escribían nueve migraciones a mano: `pnpm db:migrate`
+  **ni las miraba**. En desarrollo no se notaba —se habían corrido a mano—, pero una base
+  nueva arrancaba sin `guest_people`, sin `invitation_views` y sin once columnas, y la
+  aplicación reventaba en la primera consulta. Lo comprueba
+  `src/shared/db/migrations-journal.test.ts`; se verificó que falla al quitar una entrada.
+- **Una migración escrita a mano tiene que poder aplicarse dos veces.** Al reconciliar el
+  registro, una base que ya las tenía las vuelve a ver. Todo `create`/`alter` lleva
+  `if (not) exists`, y como `add constraint` **no** admite esa forma, va siempre precedido
+  de su `drop constraint if exists`.
+- **Antes de tocar el registro, pruébalo por los dos caminos**: base vacía —el esquema
+  tiene que quedar idéntico al de desarrollo, columna por columna, restricción por
+  restricción— y copia de la base real —tiene que aplicar sin un solo error y sin mover un
+  dato—.
+
 ### Notas de la piel del panel (`src/shared/design/ui/panel/PanelKit.tsx`)
 
 - **Ningún botón del panel se escribe a mano.** Botón, píldora de estado, chip de filtro,
