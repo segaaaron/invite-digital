@@ -31,7 +31,7 @@ const mesa: SeatedTable = {
   eventId: 'e1',
   label: 'Mesa 01',
   capacity: 8,
-  shape: 'round',
+  shape: 'round', notes: null,
   x: 50,
   y: 50,
   taken: 6,
@@ -141,6 +141,7 @@ describe('TableCard · corregir la mesa', () => {
       label: 'Mesa de los abuelos',
       capacity: 10,
       shape: 'rect',
+      notes: null,
     })
   })
 

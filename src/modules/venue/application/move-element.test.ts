@@ -10,7 +10,7 @@ const mesa = (id: string, eventId = 'e1'): VenueTable => ({
   eventId,
   label: `Mesa ${id}`,
   capacity: 8,
-  shape: 'round',
+  shape: 'round', notes: null,
   x: 50,
   y: 50,
 })

@@ -20,7 +20,7 @@ const mesa = (id: string, label: string, x: number, y: number): SeatedTable => (
   eventId: 'e1',
   label,
   capacity: 8,
-  shape: 'round',
+  shape: 'round', notes: null,
   x,
   y,
   taken: 4,
@@ -136,7 +136,9 @@ describe('FloorPlan', () => {
       eventSlug: 'boda',
       moves: [
         { kind: 'table', id: 't1', x: 50, y: 60 },
-        { kind: 'zone', id: 'z1', x: 60, y: 60 },
+        // La zona viaja con su tamaño: el lote lleva posición **y** medidas desde que el
+        // plano deja redimensionarlas.
+        { kind: 'zone', id: 'z1', x: 60, y: 60, w: 20, h: 20 },
       ],
     })
   })
@@ -270,5 +272,38 @@ describe('FloorPlan', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('de otro evento')
     expect(marca.style.left).toBe('50%')
     expect(screen.getByRole('button', { name: /guardar cambios/i })).not.toBeDisabled()
+  })
+})
+
+describe('FloorPlan · redimensionar zonas', () => {
+  it('con Mayúsculas, las flechas cambian el tamaño de la zona en vez de moverla', () => {
+    const zona = { id: 'z1', eventId: 'e1', kind: 'dance' as const, label: 'Pista', x: 40, y: 40, w: 20, h: 15 }
+    render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
+
+    const marca = screen.getByRole('button', { name: /Pista/ })
+    const anchoAntes = marca.style.width
+    fireEvent.keyDown(marca, { key: 'ArrowRight', shiftKey: true })
+
+    expect(marca.style.width).not.toBe(anchoAntes)
+    // Y no se ha movido: redimensionar no es mover.
+    expect(marca.style.left).toBe('40%')
+  })
+
+  it('una zona no se puede encoger hasta desaparecer', () => {
+    const zona = { id: 'z1', eventId: 'e1', kind: 'dance' as const, label: 'Pista', x: 40, y: 40, w: 7, h: 7 }
+    render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
+
+    const marca = screen.getByRole('button', { name: /Pista/ })
+    for (let i = 0; i < 10; i += 1) fireEvent.keyDown(marca, { key: 'ArrowLeft', shiftKey: true })
+
+    expect(Number.parseFloat(marca.style.width)).toBeGreaterThanOrEqual(6)
+  })
+
+  it('cambiar el tamaño cuenta como cambio sin guardar', () => {
+    const zona = { id: 'z1', eventId: 'e1', kind: 'dance' as const, label: 'Pista', x: 40, y: 40, w: 20, h: 15 }
+    render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
+
+    fireEvent.keyDown(screen.getByRole('button', { name: /Pista/ }), { key: 'ArrowDown', shiftKey: true })
+    expect(screen.getByLabelText('Estado del plano')).toHaveTextContent(/sin guardar/i)
   })
 })

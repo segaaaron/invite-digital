@@ -17,21 +17,24 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   const { token, eventId } = await seedVenueEvent(SLUG)
   await createGuestGroup(page, SLUG, 'Familia Nieto', 2)
 
-  // El alta vive tras «+ Añadir mesa» de la cabecera, como en la maqueta.
-  await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+  // El alta es el diálogo de la maqueta, que abre «+ Añadir mesa». Se entra por la barra
+  // de direcciones para no depender de un clic previo.
+  const crearMesa = async (nombre: string, cupo: string) => {
+    await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+    await page.getByLabel('Nombre de la mesa').fill(nombre)
+    await page.getByLabel('Capacidad (asientos)').fill(cupo)
+    await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(page.locator('dialog')).toHaveCount(0)
+  }
 
-  // Dos mesas, creadas por el formulario como lo haría el atelier.
-  await page.getByLabel('Etiqueta').fill('Mesa 01')
-  await page.getByLabel('Cupo').fill('8')
-  await page.getByRole('button', { name: 'Añadir mesa' }).click()
+  await crearMesa('Mesa 01', '8')
   // Las tarjetas de mesa viven tras el conmutador de la maqueta; el plano es la vista
   // por defecto, igual que en el diseño.
   await page.getByRole('button', { name: 'Vista de tarjetas' }).click()
   await expect(page.getByRole('heading', { name: 'Mesa 01' })).toBeVisible()
 
-  await page.getByLabel('Etiqueta').fill('Mesa 02')
-  await page.getByLabel('Cupo').fill('4')
-  await page.getByRole('button', { name: 'Añadir mesa' }).click()
+  await crearMesa('Mesa 02', '4')
+  await page.getByRole('button', { name: 'Vista de tarjetas' }).click()
   await expect(page.getByRole('heading', { name: 'Mesa 02' })).toBeVisible()
 
   // Los dos grupos empiezan sin mesa.
@@ -72,8 +75,9 @@ test('el plano no guarda hasta que se pulsa Guardar', async ({ page }) => {
   await seedVenueEvent(`${SLUG}-plano`)
 
   await page.goto(`/panel/eventos/${SLUG}-plano/mesas?panel=mesa`)
-  await page.getByLabel('Etiqueta').fill('Mesa 01')
-  await page.getByRole('button', { name: 'Añadir mesa' }).click()
+  await page.getByLabel('Nombre de la mesa').fill('Mesa 01')
+  await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
+  await expect(page.locator('dialog')).toHaveCount(0)
 
   const plano = page.getByLabel('Plano del salón')
   const marca = plano.getByRole('button', { name: /Mesa 01/ })

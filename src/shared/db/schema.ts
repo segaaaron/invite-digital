@@ -246,6 +246,9 @@ export const venueTables = pgTable(
     capacity: integer('capacity').notNull(),
     // 'round' | 'rect' | 'sweetheart' | 'imperial'
     shape: varchar('shape', { length: 16 }).notNull().default('round'),
+    // Lo que la recepción tiene que saber de esa mesa: «cerca del baño», «acceso silla
+    // de ruedas». Va al plan del banquete impreso; no es un dato de nadie en concreto.
+    notes: varchar('notes', { length: 200 }),
     x: numeric('x', { precision: 5, scale: 2 }).notNull().default('50'),
     y: numeric('y', { precision: 5, scale: 2 }).notNull().default('50'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -18,6 +18,7 @@ const mesa = {
   label: 'Mesa 01',
   capacity: 8,
   shape: 'round' as const,
+  notes: null,
   x: 50,
   y: 50,
   taken: 4,

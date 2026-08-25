@@ -10,6 +10,8 @@ export type VenueTable = {
   readonly label: string
   readonly capacity: number
   readonly shape: TableShape
+  /** Lo que la recepción tiene que saber: «cerca del baño», «acceso silla de ruedas». */
+  readonly notes: string | null
   /** Porcentaje del ancho del plano, 0..100. */
   readonly x: number
   /** Porcentaje del alto del plano, 0..100. */
@@ -22,6 +24,7 @@ export type VenueTableInput = {
   label: string
   capacity: number
   shape: TableShape
+  notes?: string | null | undefined
   x: number
   y: number
 }
@@ -51,6 +54,8 @@ export function createVenueTable(input: VenueTableInput): Result<VenueTable, Ven
     label,
     capacity: input.capacity,
     shape: input.shape,
+    // Una nota en blanco es «no hay nota», no una cadena vacía guardada en la base.
+    notes: input.notes?.trim() === '' ? null : (input.notes?.trim() ?? null),
     x: clampToPlan(input.x),
     y: clampToPlan(input.y),
   })

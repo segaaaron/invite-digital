@@ -10,7 +10,7 @@ const mesa = (id: string, label: string, eventId = 'e1', capacity = 8): VenueTab
   eventId,
   label,
   capacity,
-  shape: 'round',
+  shape: 'round', notes: null,
   x: 50,
   y: 50,
 })
@@ -34,7 +34,7 @@ describe('addTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isOk(r) && r.value.label).toBe('Mesa 01')
     expect(await fake.repo.listTables('e1')).toHaveLength(1)
@@ -46,7 +46,7 @@ describe('addTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isErr(r) && r.error.kind).toBe('duplicate_label')
   })
@@ -57,7 +57,7 @@ describe('addTable', () => {
       eventId: 'e1',
       label: '  Mesa 01  ',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isErr(r) && r.error.kind).toBe('duplicate_label')
   })
@@ -68,7 +68,7 @@ describe('addTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isOk(r)).toBe(true)
   })
@@ -96,7 +96,7 @@ describe('updateTable', () => {
       eventId: 'e1',
       label: 'Mesa de honor',
       capacity: 12,
-      shape: 'imperial',
+      shape: 'imperial', notes: null,
     })
     expect(isOk(r) && r.value.capacity).toBe(12)
     const [row] = await fake.repo.listTables('e1')
@@ -110,7 +110,7 @@ describe('updateTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isErr(r) && r.error.kind).toBe('wrong_event')
   })
@@ -122,7 +122,7 @@ describe('updateTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isErr(r) && r.error.kind).toBe('not_found')
   })
@@ -134,7 +134,7 @@ describe('updateTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 10,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isOk(r)).toBe(true)
   })
@@ -146,7 +146,7 @@ describe('updateTable', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     expect(isErr(r) && r.error.kind).toBe('duplicate_label')
   })
@@ -194,7 +194,7 @@ describe('addTable · dónde nace la mesa', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
 
     expect(isErr(creada)).toBe(false)
@@ -208,13 +208,13 @@ describe('addTable · dónde nace la mesa', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
     const dos = await addTable({ venue, ids: () => 'mesa-2' })({
       eventId: 'e1',
       label: 'Mesa 02',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
 
     expect(isErr(uno) || isErr(dos)).toBe(false)
@@ -229,7 +229,7 @@ describe('addTable · dónde nace la mesa', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
     })
 
     expect(isErr(creada)).toBe(false)
@@ -243,7 +243,7 @@ describe('addTable · dónde nace la mesa', () => {
       eventId: 'e1',
       label: 'Mesa 01',
       capacity: 8,
-      shape: 'round',
+      shape: 'round', notes: null,
       x: 70,
       y: 70,
     })

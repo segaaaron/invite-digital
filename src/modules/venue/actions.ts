@@ -37,6 +37,7 @@ export async function addTableAction(input: {
   label: string
   capacity: number
   shape: TableShape
+  notes?: string | null
 }): Promise<VenueActionResult> {
   await requireSession()
 
@@ -48,6 +49,7 @@ export async function addTableAction(input: {
     label: input.label,
     capacity: input.capacity,
     shape: input.shape,
+    notes: input.notes ?? null,
   })
   if (isErr(result)) return { ok: false, kind: result.error.kind, message: result.error.detail }
 
@@ -64,6 +66,7 @@ export async function updateTableAction(input: {
   label: string
   capacity: number
   shape: TableShape
+  notes?: string | null
 }): Promise<VenueActionResult> {
   await requireSession()
 

@@ -10,7 +10,7 @@ const mesa = (id: string, label: string, capacity: number, eventId = 'e1'): Venu
   eventId,
   label,
   capacity,
-  shape: 'round',
+  shape: 'round', notes: null,
   x: 50,
   y: 50,
 })

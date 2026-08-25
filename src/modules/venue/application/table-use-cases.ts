@@ -12,6 +12,7 @@ export type AddTableInput = {
   label: string
   capacity: number
   shape: TableShape
+  notes?: string | null | undefined
   x?: number
   y?: number
 }
@@ -22,6 +23,7 @@ export type UpdateTableInput = {
   label: string
   capacity: number
   shape: TableShape
+  notes?: string | null | undefined
 }
 
 /**
@@ -49,6 +51,7 @@ export const addTable =
           label: input.label,
           capacity: input.capacity,
           shape: input.shape,
+          notes: input.notes ?? null,
           x: input.x ?? sitio.x,
           y: input.y ?? sitio.y,
         })
@@ -83,6 +86,10 @@ export const updateTable =
           label: input.label,
           capacity: input.capacity,
           shape: input.shape,
+          // Editar sin tocar las notas las conserva: `undefined` es «no lo cambies»,
+          // `null` es «bórralas». Sin esta distinción, guardar el nombre desde un
+          // formulario que no las trae las borraba en silencio.
+          notes: input.notes === undefined ? current.notes : input.notes,
           x: current.x,
           y: current.y,
         })

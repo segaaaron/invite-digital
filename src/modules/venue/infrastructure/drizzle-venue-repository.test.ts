@@ -15,7 +15,7 @@ const mesa = (label: string, over: Partial<VenueTable> = {}): VenueTable => ({
   eventId,
   label,
   capacity: 8,
-  shape: 'round',
+  shape: 'round', notes: null,
   x: 50,
   y: 50,
   ...over,
@@ -84,9 +84,9 @@ describe('mesas', () => {
   it('edita cupo, etiqueta, forma y posición', async () => {
     const t = mesa('Mesa editable')
     await drizzleVenueRepository.insertTable(t)
-    await drizzleVenueRepository.updateTable({ ...t, label: 'Mesa de honor', capacity: 12, shape: 'imperial', x: 1, y: 2 })
+    await drizzleVenueRepository.updateTable({ ...t, label: 'Mesa de honor', capacity: 12, shape: 'imperial', notes: null, x: 1, y: 2 })
     const row = await drizzleVenueRepository.findTable(t.id)
-    expect(row).toEqual({ ...t, label: 'Mesa de honor', capacity: 12, shape: 'imperial', x: 1, y: 2 })
+    expect(row).toEqual({ ...t, label: 'Mesa de honor', capacity: 12, shape: 'imperial', notes: null, x: 1, y: 2 })
   })
 
   it('BORRAR UNA MESA PONE table_id A NULL Y NO BORRA EL GRUPO', async () => {

@@ -22,6 +22,12 @@ type Props = {
 
 type Punto = { x: number; y: number }
 type Mapa = Record<string, Punto>
+/** Ancho y alto de una zona, en porcentaje del plano. Las mesas no se redimensionan. */
+type Tamano = { w: number; h: number }
+type Tamanos = Record<string, Tamano>
+
+/** Una zona más pequeña que esto no se puede ni agarrar para volver a estirarla. */
+const MINIMO = 6
 
 const clave = (kind: 'table' | 'zone', id: string) => `${kind}:${id}`
 
@@ -31,6 +37,18 @@ const posicionesDe = (tables: readonly SeatedTable[], zones: readonly VenueZone[
   for (const z of zones) mapa[clave('zone', z.id)] = { x: z.x, y: z.y }
   return mapa
 }
+
+const tamanosDe = (zones: readonly VenueZone[]): Tamanos => {
+  const mapa: Tamanos = {}
+  for (const z of zones) mapa[clave('zone', z.id)] = { w: z.w, h: z.h }
+  return mapa
+}
+
+const firmaTamanos = (mapa: Tamanos): string =>
+  Object.keys(mapa)
+    .sort()
+    .map((k) => `${k}:${mapa[k]?.w}x${mapa[k]?.h}`)
+    .join('|')
 
 const firma = (mapa: Mapa): string =>
   Object.keys(mapa)
@@ -100,8 +118,12 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
   const arrastre = useRef<{ key: string; desdeX: number; desdeY: number; origen: Punto } | null>(null)
 
   const inicial = posicionesDe(tables, zones)
+  const inicialTamanos = tamanosDe(zones)
   const [guardadas, setGuardadas] = useState<Mapa>(inicial)
   const [actuales, setActuales] = useState<Mapa>(inicial)
+  const [tamGuardados, setTamGuardados] = useState<Tamanos>(inicialTamanos)
+  const [tamActuales, setTamActuales] = useState<Tamanos>(inicialTamanos)
+  const estirando = useRef<{ key: string; desdeX: number; desdeY: number; origen: Tamano } | null>(null)
   const [arrastrando, setArrastrando] = useState<string | null>(null)
   const [salida, setSalida] = useState<Exit | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -111,17 +133,23 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
   // pero solo cuando no hay trabajo local sin guardar: pisarlo sería perder el gesto.
   // Ajuste durante el render, no en un efecto: así no hay un fotograma con las
   // posiciones viejas ya pintadas.
-  const firmaEntrante = firma(inicial)
+  const firmaEntrante = `${firma(inicial)}#${firmaTamanos(inicialTamanos)}`
   const [firmaBase, setFirmaBase] = useState(firmaEntrante)
-  const sinCambios = firma(actuales) === firma(guardadas)
+  const sinCambios = firma(actuales) === firma(guardadas) && firmaTamanos(tamActuales) === firmaTamanos(tamGuardados)
   if (firmaEntrante !== firmaBase && sinCambios) {
     setFirmaBase(firmaEntrante)
     setGuardadas(inicial)
     setActuales(inicial)
+    setTamGuardados(inicialTamanos)
+    setTamActuales(inicialTamanos)
   }
 
   const pendientes = Object.keys(actuales).filter(
-    (k) => actuales[k]?.x !== guardadas[k]?.x || actuales[k]?.y !== guardadas[k]?.y,
+    (k) =>
+      actuales[k]?.x !== guardadas[k]?.x ||
+      actuales[k]?.y !== guardadas[k]?.y ||
+      tamActuales[k]?.w !== tamGuardados[k]?.w ||
+      tamActuales[k]?.h !== tamGuardados[k]?.h,
   )
   const hayPendientes = pendientes.length > 0
 
@@ -167,6 +195,35 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
     setArrastrando(null)
   }
 
+  const alEstirarInicio = (key: string) => (e: React.PointerEvent<HTMLSpanElement>) => {
+    const origen = tamActuales[key]
+    if (!origen) return
+    // El arrastre de la zona no debe empezar también: el mango es suyo.
+    e.stopPropagation()
+    e.preventDefault()
+    e.currentTarget.setPointerCapture?.(e.pointerId)
+    estirando.current = { key, desdeX: e.clientX, desdeY: e.clientY, origen }
+  }
+
+  const alEstirar = (e: React.PointerEvent<HTMLSpanElement>) => {
+    const activo = estirando.current
+    const caja = plano.current?.getBoundingClientRect()
+    if (!activo || !caja || caja.width === 0 || caja.height === 0) return
+    e.stopPropagation()
+    setTamActuales((prev) => ({
+      ...prev,
+      [activo.key]: {
+        w: Math.min(100, Math.max(MINIMO, activo.origen.w + ((e.clientX - activo.desdeX) / caja.width) * 100)),
+        h: Math.min(100, Math.max(MINIMO, activo.origen.h + ((e.clientY - activo.desdeY) / caja.height) * 100)),
+      },
+    }))
+  }
+
+  const alSoltarMango = (e: React.PointerEvent<HTMLSpanElement>) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId)
+    estirando.current = null
+  }
+
   const alTeclear = (key: string) => (e: React.KeyboardEvent<HTMLButtonElement>) => {
     const paso: Record<string, Punto> = {
       ArrowLeft: { x: -PASO_TECLADO, y: 0 },
@@ -178,6 +235,21 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
     const origen = actuales[key]
     if (!delta || !origen) return
     e.preventDefault()
+
+    // Con Mayúsculas, las flechas redimensionan la zona en vez de moverla. Un plano que
+    // solo se redimensiona con el ratón deja fuera a quien no usa ratón.
+    const tam = tamActuales[key]
+    if (e.shiftKey && tam !== undefined) {
+      setTamActuales((prev) => ({
+        ...prev,
+        [key]: {
+          w: Math.min(100, Math.max(MINIMO, tam.w + delta.x)),
+          h: Math.min(100, Math.max(MINIMO, tam.h + delta.y)),
+        },
+      }))
+      return
+    }
+
     mover(key, { x: origen.x + delta.x, y: origen.y + delta.y })
   }
 
@@ -189,7 +261,16 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
     }
     for (const z of zones) {
       const k = clave('zone', z.id)
-      if (pendientes.includes(k)) moves.push({ kind: 'zone', id: z.id, x: actuales[k]!.x, y: actuales[k]!.y })
+      if (pendientes.includes(k)) {
+        moves.push({
+          kind: 'zone',
+          id: z.id,
+          x: actuales[k]!.x,
+          y: actuales[k]!.y,
+          w: tamActuales[k]?.w ?? z.w,
+          h: tamActuales[k]?.h ?? z.h,
+        })
+      }
     }
     return moves
   }
@@ -206,6 +287,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
         return false
       }
       setGuardadas(actuales)
+      setTamGuardados(tamActuales)
       return true
     } finally {
       setGuardando(false)
@@ -215,6 +297,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
   const descartar = () => {
     setError(null)
     setActuales(guardadas)
+    setTamActuales(tamGuardados)
   }
 
   const intentarSalir = (exit: Exit) => {
@@ -277,10 +360,17 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
         </p>
       )}
 
+      <p className="text-[12px] text-ink-mute">
+        Arrastra las mesas y los elementos para acomodar el salón · usa la esquina inferior derecha de una zona para
+        redimensionarla
+      </p>
+
+      {/* La rejilla de fondo de la maqueta. Es un degradado repetido, no doscientos
+          `div`s: sirve de guía al colocar y no añade un solo nodo al árbol. */}
       <div
         ref={plano}
         aria-label="Plano del salón"
-        className="relative aspect-[4/3] w-full rounded-card border border-line bg-bg-sunken"
+        className="relative aspect-[4/3] w-full rounded-card border border-line-panel bg-bg-sunken bg-[linear-gradient(to_right,rgb(26_26_26/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(26_26_26/0.05)_1px,transparent_1px)] bg-[length:5%_6.66%]"
       >
         {zones.map((zone) => {
           const key = clave('zone', zone.id)
@@ -293,10 +383,25 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits }: Props) {
               onPointerMove={alArrastrar}
               onPointerUp={alSoltar}
               onKeyDown={alTeclear(key)}
-              style={{ ...estiloDe(key, arrastrando === key), width: `${zone.w}%`, height: `${zone.h}%` }}
-              className="absolute touch-none rounded-card border border-dashed border-line bg-bg-top/60 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
+              style={{
+                ...estiloDe(key, arrastrando === key),
+                width: `${tamActuales[key]?.w ?? zone.w}%`,
+                height: `${tamActuales[key]?.h ?? zone.h}%`,
+              }}
+              className="absolute touch-none rounded-card border border-dashed border-line-panel bg-bg-top/60 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
             >
               {zone.label}
+
+              {/* El mango de la esquina, como en la maqueta. Es un `span` dentro del
+                  botón: un botón dentro de otro botón no es HTML válido, y el teclado
+                  ya redimensiona con Mayúsculas + flechas. */}
+              <span
+                aria-hidden
+                className="absolute right-0.5 bottom-0.5 size-3 cursor-nwse-resize rounded-[3px] border border-line-panel-strong bg-white"
+                onPointerDown={alEstirarInicio(key)}
+                onPointerMove={alEstirar}
+                onPointerUp={alSoltarMango}
+              />
             </button>
           )
         })}

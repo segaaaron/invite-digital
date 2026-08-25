@@ -4,13 +4,12 @@ import { dietaryReport } from '@/modules/guests'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/modules/shell/ui/cards'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
-import Link from 'next/link'
 import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
-import { SeatingToolbar } from '@/modules/venue/ui/SeatingToolbar'
+import { TableDialog } from '@/modules/venue/ui/TableDialog'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
 import { UnseatedStrip } from '@/modules/venue/ui/UnseatedStrip'
@@ -76,25 +75,15 @@ export default async function MesasPage({
         title="Mesas"
       />
 
+      {/* «+ Añadir mesa» abre el diálogo de la maqueta, no un panel desplegado. */}
+      {panel === 'mesa' ? <TableDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} /> : null}
+
       {/* El buscador ancho va justo debajo de la cabecera, como en la maqueta. */}
       <div className="mb-4.5">
         <SeatSearch tables={tables} unseated={unseated} />
       </div>
 
       <div className="flex flex-col gap-4.5">
-        {panel === 'mesa' ? (
-          <PanelCard
-            action={
-              <Link href={base}>
-                <PanelCardLink>Cerrar ✕</PanelCardLink>
-              </Link>
-            }
-            title="Añadir mesa"
-          >
-            <SeatingToolbar eventId={event.value.id} eventSlug={event.value.slug} />
-          </PanelCard>
-        ) : null}
-
         <PanelCard title="Invitados sin mesa">
           <UnseatedStrip groups={unseated} />
         </PanelCard>

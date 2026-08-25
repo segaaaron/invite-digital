@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { autoAssign, canSeat, occupancyOf, type SeatedGroup } from './seating'
 import type { VenueTable } from './venue-table'
 
-const table: VenueTable = { id: 't1', eventId: 'e1', label: 'Mesa 01', capacity: 8, shape: 'round', x: 0, y: 0 }
+const table: VenueTable = { id: 't1', eventId: 'e1', label: 'Mesa 01', capacity: 8, shape: 'round', notes: null, x: 0, y: 0 }
 const g = (id: string, seats: number, tableId: string | null = null): SeatedGroup => ({
   id,
   label: `G${id}`,
@@ -48,7 +48,7 @@ describe('autoAssign', () => {
     eventId: 'e1',
     label,
     capacity,
-    shape: 'round',
+    shape: 'round', notes: null,
     x: 0,
     y: 0,
   })

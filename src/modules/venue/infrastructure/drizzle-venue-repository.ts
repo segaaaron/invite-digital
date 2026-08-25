@@ -30,11 +30,21 @@ const tableColumns = {
   label: venueTables.label,
   capacity: venueTables.capacity,
   shape: venueTables.shape,
+  notes: venueTables.notes,
   x: venueTables.x,
   y: venueTables.y,
 }
 
-type TableRow = { id: string; eventId: string; label: string; capacity: number; shape: string; x: string; y: string }
+type TableRow = {
+  id: string
+  eventId: string
+  label: string
+  capacity: number
+  shape: string
+  notes: string | null
+  x: string
+  y: string
+}
 
 const toTable = (r: TableRow): VenueTable => ({
   id: r.id,
@@ -42,6 +52,7 @@ const toTable = (r: TableRow): VenueTable => ({
   label: r.label,
   capacity: r.capacity,
   shape: toShape(r.shape),
+  notes: r.notes,
   x: toNumber(r.x),
   y: toNumber(r.y),
 })
@@ -92,6 +103,7 @@ export const createDrizzleVenueRepository = (database: DbExecutor): VenueReposit
       label: table.label,
       capacity: table.capacity,
       shape: table.shape,
+      notes: table.notes,
       x: toNumeric(table.x),
       y: toNumeric(table.y),
     })
@@ -104,6 +116,7 @@ export const createDrizzleVenueRepository = (database: DbExecutor): VenueReposit
         label: table.label,
         capacity: table.capacity,
         shape: table.shape,
+        notes: table.notes,
         x: toNumeric(table.x),
         y: toNumeric(table.y),
       })

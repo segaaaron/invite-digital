@@ -40,6 +40,7 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   const [label, setLabel] = useState(table.label)
   const [capacity, setCapacity] = useState(String(table.capacity))
   const [shape, setShape] = useState<TableShape>(table.shape)
+  const [notes, setNotes] = useState(table.notes ?? '')
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
@@ -73,7 +74,18 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
     }
 
     correr(
-      () => updateTableAction({ id: table.id, eventId, eventSlug, label: label.trim(), capacity: sitios, shape }),
+      () =>
+        updateTableAction({
+          id: table.id,
+          eventId,
+          eventSlug,
+          label: label.trim(),
+          capacity: sitios,
+          shape,
+          // Vacío es «borra la nota», no «déjala como estaba»: el campo se ve, y lo que
+          // se ve es lo que se guarda.
+          notes: notes.trim() === '' ? null : notes.trim(),
+        }),
       () => setEditando(false),
     )
   }
@@ -152,6 +164,8 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
         </ul>
       )}
 
+      {table.notes === null ? null : <p className="text-[12px] text-ink-soft italic">{table.notes}</p>}
+
       {table.free === 0 ? (
         <p className="text-[12px] text-ink-mute">Sin sitios libres.</p>
       ) : caben.length === 0 ? (
@@ -227,6 +241,18 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
               </select>
             </label>
           </div>
+
+          <label className="flex flex-col gap-1 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+            Notas
+            <input
+              className="rounded-pill border border-line-panel-strong bg-white px-3 py-2 text-[13px] text-ink"
+              maxLength={200}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Ej. cerca del baño, acceso silla de ruedas…"
+              type="text"
+              value={notes}
+            />
+          </label>
 
           <div className="flex flex-wrap items-center gap-4">
             <button
