@@ -6,7 +6,7 @@ const TOKEN = 'AbCdEfGhIjKlMnOpQrStUv'
 const HASH = createHash('sha256').update(TOKEN).digest('hex')
 
 const groups = [
-  { id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tableLabel: 'Mesa 03', tokenHashHex: HASH },
+  { id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tableLabel: 'Mesa 03', leadName: null, tokenHashHex: HASH },
 ]
 
 describe('sha256Hex', () => {

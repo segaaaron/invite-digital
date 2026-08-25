@@ -5,6 +5,13 @@ export type DoorGroupRow = {
   readonly seats: number
   readonly attending: number | null
   readonly revoked: boolean
+  /**
+   * Quien encabeza el grupo: la primera persona cargada que no es acompañante.
+   *
+   * `null` cuando el grupo no tiene personas, que es válido y es el estado de todos los
+   * eventos anteriores a `guest_people`. La puerta cae entonces a la etiqueta.
+   */
+  readonly leadName: string | null
   readonly tokenHash: Buffer
   /** Etiqueta de la mesa asignada, o `null` si el grupo aún no tiene. */
   readonly tableLabel: string | null

@@ -32,7 +32,7 @@ const HASH = '8bfb4a7f6c1cb4073b47072626084118324bcbb904ec7f27e62a39270926b999'
 
 const manifest = {
   eventId: 'e1',
-  groups: [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tableLabel: 'Mesa 03', tokenHashHex: HASH }],
+  groups: [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, leadName: null, tableLabel: 'Mesa 03', tokenHashHex: HASH }],
   arrivals: [],
 }
 

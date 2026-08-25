@@ -9,6 +9,8 @@ export type DoorManifestGroup = {
   readonly seats: number
   readonly attending: number | null
   readonly revoked: boolean
+  /** También el nombre: la puerta lo lee sin red, como la mesa. */
+  readonly leadName: string | null
   /** La mesa viaja en el manifiesto para que la puerta la cante también sin red. */
   readonly tableLabel: string | null
   /** SHA-256 en hexadecimal. Nunca el token en claro. */
@@ -54,6 +56,7 @@ export const getDoorManifest =
             seats: g.seats,
             attending: g.attending,
             revoked: g.revoked,
+            leadName: g.leadName,
             tableLabel: g.tableLabel,
             tokenHashHex: g.tokenHash.toString('hex'),
           })),

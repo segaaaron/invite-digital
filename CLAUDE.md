@@ -338,6 +338,28 @@ correo, que necesita proveedor.
   el componente, así que ese `useState` se pierde en ese mismo instante. Lo que se ve es
   la cola recalculada, donde la fila ya no está. Lo cazó la e2e.
 
+### Notas de lo que una boda le pide a la puerta
+
+- **«Ya había ingresado» no es un aviso, es el caso normal.** Las familias llegan
+  partidas: el padre a las 19:40, los hijos a las 20:20 con el mismo QR. Antes ese segundo
+  escaneo solo ofrecía cerrar y media familia se quedaba sin registrar. Ahora lleva el
+  mismo contador que la bienvenida, y el escaneo **se encola aunque el grupo ya estuviera
+  dentro** — sin esa fila, el ajuste posterior no tenía nada que ajustar.
+- **Se pregunta el total, no cuántos más.** La regla de conflicto se queda con la cantidad
+  **más reciente**, así que un incremento se perdería al reconciliar dos puertas.
+- **Entrar de más está permitido, con tope.** `MAX_EXTRA_ARRIVALS` sobre los cupos: el
+  acompañante que aparece sin estar en la lista existe en todas las bodas y negarlo deja
+  al catering contando mal, pero sin tope un dedo torpe registra cuatrocientos comensales.
+  Los no invitados se **derivan** (`unlistedOf`), no se guardan en otra columna.
+- **La tarjeta dice el nombre, no la etiqueta.** «Valentina Ruiz y 2 acompañantes» se
+  coteja con quien tienes delante; «Familia Rojas Peña» es lo que escribió el atelier. Sin
+  personas cargadas cae a la etiqueta. El nombre **viaja en el manifiesto**, como la mesa:
+  la puerta lo lee sin red.
+- **La cámara no confirma; el código a mano sí.** El escaneo ya es el acto intencionado y
+  con ciento veinte invitados en veinte minutos un toque más por invitado es una fila en
+  la puerta. Teclear es otra cosa: poca luz, prisa y códigos parecidos. `ManualPassDialog`
+  resuelve contra el manifiesto —sin servidor— y enseña el nombre antes de registrar.
+
 ### Notas del personal de puerta (`event_staff`)
 
 - **El rol solo no basta: hace falta la pertenencia.** Una persona de puerta trabaja una

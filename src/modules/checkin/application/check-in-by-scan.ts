@@ -16,6 +16,8 @@ export type ScanRequest = {
 export type ScanGroupView = {
   readonly id: string
   readonly label: string
+  /** El nombre de quien encabeza el grupo, si hay personas cargadas. */
+  readonly leadName: string | null
   readonly seats: number
   /** La puerta canta este número en voz alta; `null` es «mesa por asignar». */
   readonly tableLabel: string | null

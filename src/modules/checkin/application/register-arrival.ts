@@ -7,6 +7,7 @@ import type { ArrivalRepository, DoorGroupRow } from './ports'
 const groupView = (group: DoorGroupRow): ScanGroupView => ({
   id: group.id,
   label: group.label,
+  leadName: group.leadName,
   seats: group.seats,
   tableLabel: group.tableLabel,
 })

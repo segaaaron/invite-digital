@@ -1,6 +1,22 @@
 'use client'
 
-import type { ScanOutcome } from '../application/check-in-by-scan'
+import { MAX_EXTRA_ARRIVALS } from '../domain/arrival'
+import type { ScanGroupView, ScanOutcome } from '../application/check-in-by-scan'
+
+/**
+ * Lo que la puerta lee en voz alta.
+ *
+ * El nombre de quien encabeza el grupo, si hay personas cargadas: «Valentina Ruiz y 2
+ * acompañantes» se coteja con quien tienes delante; «Familia Rojas Peña» es lo que
+ * escribió el atelier. Sin personas cargadas cae a la etiqueta, que es el estado de todos
+ * los eventos anteriores a `guest_people`.
+ */
+function titular(group: ScanGroupView): string {
+  if (group.leadName === null) return group.label
+  const acompanantes = Math.max(0, group.seats - 1)
+  if (acompanantes === 0) return group.leadName
+  return `${group.leadName} y ${acompanantes} acompañante${acompanantes === 1 ? '' : 's'}`
+}
 
 type Props = {
   outcome: ScanOutcome
@@ -42,10 +58,11 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
           <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">
             {outcome.kind === 'welcome' ? '✓ Bienvenidos' : '! Ya había ingresado'}
           </p>
-          <p className="mt-2 font-display text-[30px] italic leading-tight">{outcome.group.label}</p>
+          <p className="mt-2 font-display text-[30px] italic leading-tight">{titular(outcome.group)}</p>
           <p className="mt-1.5 text-[13px] opacity-80">
+            {outcome.group.leadName === null ? '' : `${outcome.group.label} · `}
             {outcome.group.seats} cupo{outcome.group.seats === 1 ? '' : 's'}
-            {outcome.kind === 'already' ? ` · registrado a las ${hora(outcome.arrivedAt)}` : ''}
+            {outcome.kind === 'already' ? ` · ${outcome.arrivedCount} dentro desde las ${hora(outcome.arrivedAt)}` : ''}
           </p>
 
           {/* El dato que el invitado pregunta nada más entrar. Va grande y solo: el
@@ -57,36 +74,49 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
             {outcome.group.tableLabel ?? 'Mesa por asignar'}
           </p>
 
-          {outcome.kind === 'welcome' ? (
-            <div className="mt-4 flex items-center gap-3 text-[13px]">
-              <span className="opacity-80">¿Cuántos entraron?</span>
-              <div className="ml-auto flex items-center gap-2.5 rounded-full border border-white/15 bg-black/20 p-1">
-                <button
-                  type="button"
-                  aria-label="Una persona menos"
-                  disabled={outcome.arrivedCount <= 1}
-                  onClick={() => onAdjust(outcome.scanId, outcome.arrivedCount - 1)}
-                  className="size-[34px] rounded-full bg-white/15 text-[17px] disabled:opacity-30"
-                >
-                  −
-                </button>
-                <span
-                  aria-label="Personas que entraron"
-                  className="min-w-6 text-center font-mono text-[18px] font-semibold"
-                >
-                  {outcome.arrivedCount}
-                </span>
-                <button
-                  type="button"
-                  aria-label="Una persona más"
-                  disabled={outcome.arrivedCount >= outcome.group.seats}
-                  onClick={() => onAdjust(outcome.scanId, outcome.arrivedCount + 1)}
-                  className="size-[34px] rounded-full bg-white/15 text-[17px] disabled:opacity-30"
-                >
-                  +
-                </button>
-              </div>
+          {/* El contador vive en los **dos** estados, y esa es la diferencia que pidió
+              la puerta: en una boda las familias llegan partidas —el padre a las 19:40,
+              los hijos a las 20:20 con el mismo QR— y antes «ya había ingresado» solo
+              ofrecía cerrar, así que media familia se quedaba sin registrar.
+
+              Se pregunta el **total**, no cuántos más: la regla de conflicto se queda con
+              la cantidad más reciente, así que un incremento se perdería al reconciliar. */}
+          <div className="mt-4 flex items-center gap-3 text-[13px]">
+            <span className="opacity-80">
+              {outcome.kind === 'welcome' ? '¿Cuántos entraron?' : '¿Cuántos hay dentro ahora?'}
+            </span>
+            <div className="ml-auto flex items-center gap-2.5 rounded-full border border-white/15 bg-black/20 p-1">
+              <button
+                type="button"
+                aria-label="Una persona menos"
+                disabled={outcome.arrivedCount <= 1}
+                onClick={() => onAdjust(outcome.scanId, outcome.arrivedCount - 1)}
+                className="size-[34px] rounded-full bg-white/15 text-[17px] disabled:opacity-30"
+              >
+                −
+              </button>
+              <span
+                aria-label="Personas que entraron"
+                className="min-w-6 text-center font-mono text-[18px] font-semibold"
+              >
+                {outcome.arrivedCount}
+              </span>
+              <button
+                type="button"
+                aria-label="Una persona más"
+                disabled={outcome.arrivedCount >= outcome.group.seats + MAX_EXTRA_ARRIVALS}
+                onClick={() => onAdjust(outcome.scanId, outcome.arrivedCount + 1)}
+                className="size-[34px] rounded-full bg-white/15 text-[17px] disabled:opacity-30"
+              >
+                +
+              </button>
             </div>
+          </div>
+
+          {/* Pasar de los cupos es el acompañante que aparece sin estar en la lista.
+              Pasa en todas las bodas, y negarlo deja al catering contando mal. */}
+          {outcome.arrivedCount > outcome.group.seats ? (
+            <p className="mt-2 text-[12px] opacity-85">{outcome.arrivedCount - outcome.group.seats} sin invitación</p>
           ) : null}
         </>
       )}

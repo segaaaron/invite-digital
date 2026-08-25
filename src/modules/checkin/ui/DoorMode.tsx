@@ -7,6 +7,7 @@ import type { ScanOutcome } from '../application/check-in-by-scan'
 import type { DoorManifest } from '../application/get-door-manifest'
 import type { ResolvedArrival } from '../domain/conflict'
 import { doorTally } from '../domain/door-tally'
+import { ManualPassDialog } from './ManualPassDialog'
 import { DoorSearchSheet } from './DoorSearchSheet'
 import { resolveLocally } from './local-resolve'
 import { openOutbox, type Outbox } from './outbox'
@@ -25,6 +26,7 @@ type Props = { eventId: string; eventSlug: string; manifest: DoorManifest }
 export function DoorMode({ eventId, eventSlug, manifest }: Props) {
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const [manualOpen, setManualOpen] = useState(false)
   const [arrivals, setArrivals] = useState<readonly ResolvedArrival[]>(manifest.arrivals)
   /**
    * Lo que el servidor rechazó después de que la pantalla ya se hubiera corregido. A la
@@ -147,6 +149,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
       const group = {
         id: local.group.id,
         label: local.group.label,
+        leadName: local.group.leadName,
         seats: local.group.seats,
         tableLabel: local.group.tableLabel,
       }
@@ -154,11 +157,14 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
 
       if (local.kind === 'already') {
         setOutcome({ scanId, kind: 'already', group, arrivedAt: new Date(), arrivedCount })
-        return
+      } else {
+        apply({ scanId, kind: 'welcome', group, arrivedCount })
       }
 
-      apply({ scanId, kind: 'welcome', group, arrivedCount })
-
+      // **También cuando ya había ingresado**, y esa es la corrección: en una boda la
+      // familia llega partida y el segundo escaneo es el de los que faltaban. Antes este
+      // camino salía sin encolar nada, así que el ajuste posterior no tenía fila que
+      // ajustar y los que llegaron tarde no se registraban nunca.
       const box = await getOutbox()
       if (box) {
         await box.push({ scanId, scanned, arrivedCount, scannedAtMs: Date.now(), tries: 0 })
@@ -315,16 +321,37 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
       </div>
 
       {outcome ? null : (
-        <div className="relative z-10 p-4">
+        <div className="relative z-10 flex gap-2.5 p-4">
+          {/* El código a mano: para el invitado que llega con el teléfono muerto y lee
+              el código en voz alta. Confirma antes de registrar, al revés que la cámara. */}
+          <button
+            type="button"
+            onClick={() => setManualOpen(true)}
+            className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-white"
+          >
+            ⌨ Código manual
+          </button>
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
-            className="w-full rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-white"
+            className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-white"
           >
             ⌕ Buscar por nombre
           </button>
         </div>
       )}
+
+      {manualOpen ? (
+        <ManualPassDialog
+          arrivedIds={arrivedIds}
+          groups={manifest.groups}
+          onClose={() => setManualOpen(false)}
+          onConfirm={(scanned) => {
+            setManualOpen(false)
+            void submit(scanned)
+          }}
+        />
+      ) : null}
 
       {outcome ? (
         <ScanResultCard

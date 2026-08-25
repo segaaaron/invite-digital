@@ -15,6 +15,7 @@ const groupRow = {
   seats: 4,
   attending: 4,
   revoked: false,
+  leadName: null,
   tableLabel: 'Mesa 03',
   tokenHash: Buffer.from(`h:${TOKEN}`),
 }
@@ -112,9 +113,16 @@ describe('checkInByScan', () => {
     expect(consultas).toBe(0)
   })
 
-  it('rechaza una cantidad mayor que los cupos sin insertar', async () => {
+  it('admite algún acompañante de más sobre los cupos', async () => {
     const { groups, arrivals, rows } = fakes()
-    const r = await checkInByScan({ groups, arrivals, minter })({ eventId: 'e1', scans: [scan('s1', TOKEN, 9)] })
+    const r = await checkInByScan({ groups, arrivals, minter })({ eventId: 'e1', scans: [scan('s1', TOKEN, 5)] })
+    expect(isOk(r) && r.value[0]?.kind).toBe('welcome')
+    expect(rows).toHaveLength(1)
+  })
+
+  it('pero rechaza una cifra disparatada sin insertar nada', async () => {
+    const { groups, arrivals, rows } = fakes()
+    const r = await checkInByScan({ groups, arrivals, minter })({ eventId: 'e1', scans: [scan('s1', TOKEN, 400)] })
     expect(isOk(r) && r.value[0]?.kind).toBe('unknown')
     expect(rows).toHaveLength(0)
   })

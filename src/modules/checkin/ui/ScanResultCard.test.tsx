@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ScanResultCard } from './ScanResultCard'
 
-const group = { id: 'g1', label: 'Familia Rojas Peña', seats: 4, tableLabel: 'Mesa 03' }
+const group = { id: 'g1', label: 'Familia Rojas Peña', seats: 4, leadName: null, tableLabel: 'Mesa 03' }
 const noop = () => {}
 
 describe('ScanResultCard', () => {
@@ -21,7 +21,7 @@ describe('ScanResultCard', () => {
   it('dice mesa por asignar cuando el grupo no tiene', () => {
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group: { ...group, tableLabel: null }, arrivedCount: 3 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group: { ...group, leadName: null, tableLabel: null }, arrivedCount: 3 }}
         onAdjust={noop}
         onUndo={noop}
         onDismiss={noop}

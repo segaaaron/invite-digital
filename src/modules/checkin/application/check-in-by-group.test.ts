@@ -10,6 +10,7 @@ const groupRow = {
   seats: 4,
   attending: 3,
   revoked: false,
+  leadName: null,
   tableLabel: 'Mesa 03',
   tokenHash: Buffer.alloc(0),
 }
@@ -91,9 +92,18 @@ describe('checkInByGroup', () => {
     expect(isOk(r) && r.value.kind).toBe('already')
   })
 
-  it('rechaza pasarse de los cupos', async () => {
+  it('admite algún acompañante de más sobre los cupos', async () => {
+    // El caso real: la familia de cuatro llega con la abuela. Negarlo dejaría al
+    // catering contando mal.
     const { groups, arrivals, rows } = fakes()
-    const r = await checkInByGroup({ groups, arrivals })({ eventId: 'e1', scan: scan('g1', 9) })
+    const r = await checkInByGroup({ groups, arrivals })({ eventId: 'e1', scan: scan('g1', 5) })
+    expect(isOk(r) && r.value.kind).toBe('welcome')
+    expect(rows).toHaveLength(1)
+  })
+
+  it('pero no una cifra disparatada: eso es un dedo torpe', async () => {
+    const { groups, arrivals, rows } = fakes()
+    const r = await checkInByGroup({ groups, arrivals })({ eventId: 'e1', scan: scan('g1', 400) })
     expect(isOk(r) && r.value.kind).toBe('unknown')
     expect(rows).toHaveLength(0)
   })

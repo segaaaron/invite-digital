@@ -1,4 +1,4 @@
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { arrivals, guestGroups, rsvpResponses, venueTables } from '@/shared/db/schema'
 import type { ArrivalRepository, DoorGroupReader, DoorGroupRow } from '../application/ports'
@@ -80,6 +80,7 @@ const toRow = (r: {
   revokedAt: Date | null
   tokenHash: Buffer
   tableLabel: string | null
+  leadName: string | null
 }): DoorGroupRow => ({
   id: r.id,
   eventId: r.eventId,
@@ -89,6 +90,7 @@ const toRow = (r: {
   revoked: r.revokedAt !== null,
   tokenHash: r.tokenHash,
   tableLabel: r.tableLabel,
+  leadName: r.leadName,
 })
 
 const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
@@ -100,6 +102,22 @@ const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
   revokedAt: guestGroups.revokedAt,
   tokenHash: guestGroups.tokenHash,
   tableLabel: venueTables.label,
+  /**
+   * Quien encabeza el grupo: la primera persona cargada que no es acompañante, y si
+   * todas lo son, la primera a secas.
+   *
+   * Va en una subconsulta con los nombres **cualificados a mano**: interpolar
+   * `${guestGroups.id}` dentro de un `sql` lo emite como `"id"` a secas, y ahí dentro
+   * `"id"` sería `guest_people.id`. Ese fallo ya pasó una vez, en los recuentos del
+   * admin, y contaba cero sin dar error.
+   */
+  leadName: sql<string | null>`(
+    select gp.full_name
+      from guest_people gp
+     where gp.guest_group_id = guest_groups.id
+     order by gp.is_companion asc, gp.created_at asc
+     limit 1
+  )`,
 })
 
 export const createDrizzleDoorGroupReader = (database: DbExecutor): DoorGroupReader => ({

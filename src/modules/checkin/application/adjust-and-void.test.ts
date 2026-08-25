@@ -11,6 +11,7 @@ const group: DoorGroupRow = {
   seats: 4,
   attending: 4,
   revoked: false,
+  leadName: null,
   tableLabel: 'Mesa 03',
   tokenHash: Buffer.alloc(0),
 }
