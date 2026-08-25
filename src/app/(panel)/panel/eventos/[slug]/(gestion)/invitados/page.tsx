@@ -47,14 +47,12 @@ export default async function InvitadosPage({
   }
 
   const groups = await guests.list(event.value.id)
+  // Una sola consulta para las respuestas de todos los grupos. Antes eran dos por grupo y
+  // en serie: doscientos grupos, cuatrocientos viajes a la base para pintar una tabla.
+  const ultimas = await rsvp.latestByEvent(event.value.id)
   const filas: GuestGroupRowView[] = isErr(groups)
     ? []
-    : await Promise.all(
-        groups.value.map(async (group) => ({
-          ...group,
-          confirmed: (await rsvp.latestFor(group.id))?.attending ?? null,
-        })),
-      )
+    : groups.value.map((group) => ({ ...group, confirmed: ultimas.get(group.id)?.attending ?? null }))
 
   // Las personas cargadas dentro de cada grupo, que es lo que la maqueta lista.
   const personas = await guests.listPeople(event.value.id)
@@ -68,11 +66,7 @@ export default async function InvitadosPage({
   }
 
   const etiquetaDeGrupo = new Map(filas.map((f) => [f.id, f.label]))
-  const respuestaDeGrupo = new Map<string, Date>()
-  for (const fila of filas) {
-    const ultima = await rsvp.latestFor(fila.id)
-    if (ultima !== null) respuestaDeGrupo.set(fila.id, ultima.respondedAt)
-  }
+  const respuestaDeGrupo = new Map([...ultimas].map(([id, r]) => [id, r.respondedAt]))
   const filasPersona: PersonRowView[] = isErr(personas)
     ? []
     : personas.value.map((persona) => ({

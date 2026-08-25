@@ -45,6 +45,9 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
+  // Borrar una mesa deja sin sitio a todos sus grupos y no tiene deshacer: hace falta un
+  // segundo clic. El primero pregunta; el segundo borra.
+  const [porBorrar, setPorBorrar] = useState(false)
   const { termino } = useSeatingSearch()
   const resaltada = matchesSearch(termino, table.groups.map((g) => g.label))
 
@@ -109,13 +112,29 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
           <IconButton disabled={pendiente} label={`Editar ${table.label}`} onClick={() => setEditando(true)}>
             ✎
           </IconButton>
-          <IconButton
-            disabled={pendiente}
-            label={`Eliminar ${table.label}`}
-            onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
-          >
-            ✕
-          </IconButton>
+          {porBorrar ? (
+            <>
+              <button
+                className="cursor-pointer rounded-[var(--radius-pill)] border border-danger/40 bg-white px-2.5 py-1 font-mono text-[9px] tracking-[0.2em] text-danger-deep uppercase"
+                disabled={pendiente}
+                onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
+                type="button"
+              >
+                Borrar
+              </button>
+              <button
+                className="cursor-pointer font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase"
+                onClick={() => setPorBorrar(false)}
+                type="button"
+              >
+                No
+              </button>
+            </>
+          ) : (
+            <IconButton disabled={pendiente} label={`Eliminar ${table.label}`} onClick={() => setPorBorrar(true)}>
+              ✕
+            </IconButton>
+          )}
         </p>
       </header>
 
@@ -146,7 +165,7 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
                 ? 'border-line-panel bg-bg-sunken text-ink-mute'
                 : silla.vip
                   ? 'border-gold-deep bg-linear-to-br from-[var(--color-gold-light)] to-gold-deep text-white'
-                  : 'border-sage bg-linear-to-br from-[#7a8c64] to-sage text-white shadow-[0_2px_6px_rgb(90_112_92/0.4)]'
+                  : 'border-sage bg-linear-to-br from-sage-light to-sage text-white shadow-[0_2px_6px_rgb(var(--color-shadow-rgb)/0.25)]'
             }`}
             style={{ left: `${silla.x}%`, top: `${silla.y}%` }}
           >

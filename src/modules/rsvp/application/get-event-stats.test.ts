@@ -8,6 +8,7 @@ const repo = (rows: Array<{ seats: number; attending: number | null }>): RsvpRep
   latestFor: vi.fn(),
   tallyRowsFor: vi.fn(async () => rows),
     respondedAtsFor: vi.fn(async () => []),
+latestByEvent: async () => new Map(),
 })
 
 describe('getEventStats', () => {
@@ -43,6 +44,7 @@ describe('getEventStats', () => {
         throw new Error('sin conexión')
       }),
       respondedAtsFor: vi.fn(async () => []),
+latestByEvent: async () => new Map(),
     }
 
     const result = await getEventStats({ rsvp: roto })('e1')

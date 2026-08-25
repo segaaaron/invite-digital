@@ -65,3 +65,14 @@ describe('GuestDialog', () => {
     expect(push).toHaveBeenCalledWith('/panel/eventos/boda/invitados')
   })
 })
+
+describe('GuestDialog · cerrar con Escape', () => {
+  it('Escape cierra el diálogo **y** quita el parámetro de la dirección', () => {
+    render(<GuestDialog {...props} />)
+    fireEvent(screen.getByRole('dialog'), new Event('cancel', { bubbles: false, cancelable: true }))
+
+    // Sin esto, la dirección se queda en `?panel=alta` y el botón «+ Añadir invitado»
+    // deja de navegar: no pasa nada al pulsarlo hasta que se recarga a mano.
+    expect(push).toHaveBeenCalledWith('/panel/eventos/boda/invitados')
+  })
+})

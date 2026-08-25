@@ -8,6 +8,7 @@ const repo = (overrides: Partial<RsvpRepository> = {}): RsvpRepository => ({
   latestFor: async () => null,
   tallyRowsFor: async () => [],
   respondedAtsFor: async () => [],
+  latestByEvent: async () => new Map(),
   ...overrides,
 })
 

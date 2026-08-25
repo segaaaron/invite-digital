@@ -26,6 +26,7 @@ const rsvp: RsvpRepository = {
   latestFor: async () => ({ attending: 2, message: null, respondedAt: new Date('2026-10-01T12:00:00Z') }),
   tallyRowsFor: async () => [],
     respondedAtsFor: async () => [],
+latestByEvent: async () => new Map(),
 }
 
 const deps = (overrides: Partial<Parameters<typeof getInvitation>[0]> = {}) => ({

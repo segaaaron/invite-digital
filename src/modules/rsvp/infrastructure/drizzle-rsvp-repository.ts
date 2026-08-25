@@ -48,6 +48,25 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
       .where(and(eq(guestGroups.eventId, eventId), isNull(guestGroups.revokedAt)))
   },
 
+  async latestByEvent(eventId) {
+    // `distinct on` deja la más reciente de cada grupo: una consulta, no una por grupo.
+    const filas = await database
+      .selectDistinctOn([rsvpResponses.guestGroupId], {
+        guestGroupId: rsvpResponses.guestGroupId,
+        attending: rsvpResponses.attending,
+        message: rsvpResponses.message,
+        respondedAt: rsvpResponses.respondedAt,
+      })
+      .from(rsvpResponses)
+      .innerJoin(guestGroups, eq(guestGroups.id, rsvpResponses.guestGroupId))
+      .where(eq(guestGroups.eventId, eventId))
+      .orderBy(rsvpResponses.guestGroupId, desc(rsvpResponses.respondedAt))
+
+    return new Map(
+      filas.map((f) => [f.guestGroupId, { attending: f.attending, message: f.message, respondedAt: f.respondedAt }]),
+    )
+  },
+
   async respondedAtsFor(eventId, since) {
     // Todas las respuestas del tramo, no la última de cada grupo: el gráfico cuenta
     // actos de responder, y quien cambió de opinión respondió dos veces.

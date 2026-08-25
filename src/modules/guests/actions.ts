@@ -149,9 +149,18 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
   revalidatePath(`/panel/eventos/${eventSlug}`)
+
+  // Si algún acompañante se quedó fuera por cupo hay que decirlo: un «hecho» a secas deja
+  // a alguien sin sitio el día del evento, delante de la puerta, y nadie se entera hasta
+  // entonces.
+  const { companions, requestedCompanions } = result.value
+  const faltaron = requestedCompanions - companions
   return {
     status: 'success',
-    message: 'Invitado añadido.',
+    message:
+      faltaron > 0
+        ? `Invitado añadido, pero ${faltaron} acompañante${faltaron === 1 ? '' : 's'} no cabe${faltaron === 1 ? '' : 'n'} en el cupo del grupo. Sube el cupo y vuelve a añadirlo${faltaron === 1 ? '' : 's'}.`
+        : 'Invitado añadido.',
     // El enlace del grupo nuevo se enseña **una sola vez**: en la base solo queda su
     // hash. Viaja ya como URL completa; el token suelto no le sirve a nadie.
     token: result.value.token === null ? null : invitationUrl(result.value.token, env.SITE_URL),

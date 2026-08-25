@@ -99,3 +99,51 @@ describe('drizzleGuestPersonRepository', () => {
     ).rejects.toThrow()
   })
 })
+
+describe('lo que el alta guarda de verdad', () => {
+  /**
+   * Contra Postgres, no contra un doble. El alta del panel pasaba `attending` y `email`
+   * y los dos se perdían por el camino —el caso de uso no los declaraba y el repositorio
+   * no los escribía—, sin que el typecheck, el lint ni las pruebas con dobles dijeran una
+   * palabra: el objeto viajaba como variable, así que TypeScript no comprueba propiedades
+   * de más. La invitación quedaba «Pendiente» para siempre y el correo no se guardaba
+   * nunca. Una prueba con un `vi.fn()` no puede cazar esto.
+   */
+  it('el RSVP y el correo del invitado llegan a la base', async () => {
+    const id = crypto.randomUUID()
+    await drizzleGuestPersonRepository.insert({
+      id,
+      guestGroupId: grupoId,
+      fullName: 'Roberto Núñez',
+      isCompanion: false,
+      dietaryNote: null,
+      vip: false,
+      attending: 'yes',
+      email: 'roberto@correo.bo',
+    })
+
+    const [fila] = await db.select().from(guestPeople).where(eq(guestPeople.id, id))
+    expect(fila?.attending).toBe('yes')
+    expect(fila?.email).toBe('roberto@correo.bo')
+  })
+
+  it('editar tampoco pierde el correo', async () => {
+    const id = crypto.randomUUID()
+    const persona = {
+      id,
+      guestGroupId: grupoId,
+      fullName: 'Lucía Saavedra',
+      isCompanion: false,
+      dietaryNote: null,
+      vip: false,
+      attending: 'maybe' as const,
+      email: 'lucia@correo.bo',
+    }
+    await drizzleGuestPersonRepository.insert(persona)
+    await drizzleGuestPersonRepository.update({ ...persona, vip: true })
+
+    const [fila] = await db.select().from(guestPeople).where(eq(guestPeople.id, id))
+    expect(fila?.email).toBe('lucia@correo.bo')
+    expect(fila?.vip).toBe(true)
+  })
+})

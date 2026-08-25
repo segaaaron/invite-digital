@@ -16,6 +16,9 @@ export function ClasicoTheme({ event, children }: ThemeProps) {
     <article className="mx-auto flex min-h-dvh max-w-[560px] flex-col items-center justify-center gap-8 px-6 py-16 text-center">
       <p className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{fecha}</p>
       <h1 className="font-display text-[38px] font-light leading-[1.15] text-ink">{event.title}</h1>
+      {/* Dónde es. Sin esto la invitación decía cuándo y de quién, pero no el lugar: el
+          invitado tenía que preguntarlo por WhatsApp. */}
+      {event.venue === null ? null : <p className="text-[14px] text-ink-soft">{event.venue}</p>}
       <div className="h-px w-16 bg-[var(--color-line)]" />
       {children}
     </article>

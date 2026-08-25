@@ -29,6 +29,7 @@ const repo = () => {
     latestFor: async () => null,
     tallyRowsFor: async () => [],
     respondedAtsFor: async () => [],
+latestByEvent: async () => new Map(),
   }
   return { rsvp, appended }
 }

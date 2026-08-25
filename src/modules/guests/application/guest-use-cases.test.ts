@@ -32,6 +32,7 @@ const repo = (row: GuestGroupRow | null) => {
     setPhone: async () => {},
     revoke: async () => {},
     markOpened: async (id, at) => void opened.push({ id, at }),
+    remove: async () => {},
   }
   return { groups, inserted, opened }
 }
@@ -142,6 +143,7 @@ describe('resolveByToken', () => {
       },
       revoke: async () => {},
       markOpened: async () => {},
+    remove: async () => {},
     }
     const result = await resolveByToken({ groups, minter, clock: () => NOW })('token-visible')
     expect(isErr(result) && result.error.kind).toBe('storage_failure')

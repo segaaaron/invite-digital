@@ -59,7 +59,7 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
       // agregado —cuántas eran y quién era acompañante—, como con los cupos.
       await tx.execute(sql`
         update guest_people as p
-        set full_name = 'Invitado ' || numerado.posicion, dietary_note = null
+        set full_name = 'Invitado ' || numerado.posicion, dietary_note = null, email = null
         from (
           select gp.id, row_number() over (order by gp.created_at) as posicion
           from guest_people gp

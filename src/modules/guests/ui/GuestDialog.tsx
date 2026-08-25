@@ -86,6 +86,11 @@ export function GuestDialog({
     }
   }, [estado, closeHref, router])
 
+  const cerrar = () => {
+    dialogo.current?.close()
+    router.replace(closeHref)
+  }
+
   const nuevoGrupo = grupo === ''
 
   return (
@@ -93,6 +98,13 @@ export function GuestDialog({
       ref={dialogo}
       aria-labelledby={`${idNombre}-titulo`}
       className="m-auto w-[min(560px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
+      onCancel={(e) => {
+        // Escape cierra el `<dialog>` por su cuenta; sin esto la dirección se queda en
+        // `?panel=alta` y volver a pulsar «+ Añadir invitado» no navega a ninguna parte:
+        // el botón queda muerto hasta recargar a mano.
+        e.preventDefault()
+        cerrar()
+      }}
     >
       <h2 className="font-display text-[24px] font-light italic" id={`${idNombre}-titulo`}>
         Añadir invitado
@@ -206,12 +218,7 @@ export function GuestDialog({
               la lista hasta que Next termina la transición, y con él la página bloqueada. */}
           <button
             className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink"
-            onClick={() => {
-              dialogo.current?.close()
-              // `replace`, no `push`: con `push`, volver atrás reabre el diálogo con un
-              // enlace que ya no se puede volver a mostrar, y recargar lo reabre también.
-              router.replace(closeHref)
-            }}
+            onClick={cerrar}
             type="button"
           >
             {hayEnlace ? 'Cerrar' : 'Cancelar'}

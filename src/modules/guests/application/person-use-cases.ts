@@ -19,6 +19,9 @@ export const addPerson =
     isCompanion?: boolean | undefined
     dietaryNote?: string | null | undefined
     vip?: boolean | undefined
+    /** Lo que el atelier eligió en el alta. Sin declararlo aquí se perdía en silencio. */
+    attending?: string | null | undefined
+    email?: string | null | undefined
   }): Promise<Result<GuestPerson, GuestError>> =>
     attempt<GuestPerson, GuestError>(
       async () => {
@@ -42,6 +45,8 @@ export const addPerson =
           isCompanion: input.isCompanion,
           dietaryNote: input.dietaryNote,
           vip: input.vip,
+          attending: input.attending,
+          email: input.email,
         })
         if (isErr(person)) return person
 

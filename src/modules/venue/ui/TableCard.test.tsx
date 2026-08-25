@@ -92,7 +92,9 @@ describe('TableCard', () => {
   it('borrar la mesa avisa de que los grupos quedarán sin sitio', async () => {
     removeTableAction.mockResolvedValueOnce({ ok: true, message: '2 grupos quedaron sin mesa.' } as never)
     render(<TableCard {...props} />)
+    // Dos clics: el aspa pregunta y «Borrar» confirma.
     fireEvent.click(screen.getByRole('button', { name: /eliminar mesa/i }))
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar' }))
     expect(removeTableAction).toHaveBeenCalledWith({ id: 't1', eventId: 'e1', eventSlug: 'boda' })
     expect(await screen.findByRole('status')).toHaveTextContent('2 grupos quedaron sin mesa.')
   })
@@ -173,5 +175,34 @@ describe('TableCard · corregir la mesa', () => {
 
     expect(updateTableAction).not.toHaveBeenCalled()
     expect(screen.queryByLabelText('Nombre de la mesa')).not.toBeInTheDocument()
+  })
+})
+
+describe('TableCard · borrar una mesa', () => {
+  it('el aspa pregunta antes de borrar: no hay deshacer', () => {
+    render(<TableCard {...props} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar Mesa 01' }))
+
+    // Borrar deja sin mesa a todos sus grupos —`ON DELETE SET NULL`— y un clic de más
+    // desasienta una mesa entera sin que nadie se entere hasta el día del evento.
+    expect(removeTableAction).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Borrar' })).toBeInTheDocument()
+  })
+
+  it('el segundo clic sí borra', () => {
+    render(<TableCard {...props} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar Mesa 01' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Borrar' }))
+
+    expect(removeTableAction).toHaveBeenCalledWith({ id: 't1', eventId: 'e1', eventSlug: 'boda' })
+  })
+
+  it('«No» se vuelve atrás sin borrar nada', () => {
+    render(<TableCard {...props} />)
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar Mesa 01' }))
+    fireEvent.click(screen.getByRole('button', { name: 'No' }))
+
+    expect(removeTableAction).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Eliminar Mesa 01' })).toBeInTheDocument()
   })
 })

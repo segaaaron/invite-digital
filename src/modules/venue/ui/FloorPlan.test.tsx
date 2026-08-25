@@ -7,8 +7,11 @@ import { FloorPlan } from './FloorPlan'
 const moveElementsAction = vi.fn(async () => ({ ok: true as const }))
 const push = vi.fn()
 
+const removeZoneAction = vi.fn(async () => ({ ok: true as const }))
+
 vi.mock('../actions', () => ({
   moveElementsAction: (...args: unknown[]) => moveElementsAction(...(args as [])),
+  removeZoneAction: (...args: unknown[]) => removeZoneAction(...(args as [])),
 }))
 
 vi.mock('next/navigation', () => ({
@@ -93,7 +96,7 @@ describe('FloorPlan', () => {
     render(<FloorPlan {...props} />)
     expect(screen.getByRole('button', { name: /Mesa 01/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Mesa 02/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Pista/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Pista.*Muévela/ })).toBeInTheDocument()
   })
 
   it('arrastrar mueve la marca en pantalla', () => {
@@ -127,7 +130,7 @@ describe('FloorPlan', () => {
   it('«Guardar» manda TODAS las posiciones cambiadas en UNA sola llamada', async () => {
     render(<FloorPlan {...props} />)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
-    arrastrar(screen.getByRole('button', { name: /Pista/ }), 500, 500)
+    arrastrar(screen.getByRole('button', { name: /Pista.*Muévela/ }), 500, 500)
     fireEvent.click(screen.getByRole('button', { name: /guardar cambios/i }))
 
     await waitFor(() => expect(moveElementsAction).toHaveBeenCalledTimes(1))
@@ -280,7 +283,7 @@ describe('FloorPlan · redimensionar zonas', () => {
     const zona = { id: 'z1', eventId: 'e1', kind: 'dance' as const, label: 'Pista', x: 40, y: 40, w: 20, h: 15 }
     render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
 
-    const marca = screen.getByRole('button', { name: /Pista/ })
+    const marca = screen.getByRole('button', { name: /Pista.*Muévela/ })
     const anchoAntes = marca.style.width
     fireEvent.keyDown(marca, { key: 'ArrowRight', shiftKey: true })
 
@@ -293,7 +296,7 @@ describe('FloorPlan · redimensionar zonas', () => {
     const zona = { id: 'z1', eventId: 'e1', kind: 'dance' as const, label: 'Pista', x: 40, y: 40, w: 7, h: 7 }
     render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
 
-    const marca = screen.getByRole('button', { name: /Pista/ })
+    const marca = screen.getByRole('button', { name: /Pista.*Muévela/ })
     for (let i = 0; i < 10; i += 1) fireEvent.keyDown(marca, { key: 'ArrowLeft', shiftKey: true })
 
     expect(Number.parseFloat(marca.style.width)).toBeGreaterThanOrEqual(6)
@@ -303,7 +306,7 @@ describe('FloorPlan · redimensionar zonas', () => {
     const zona = { id: 'z1', eventId: 'e1', kind: 'dance' as const, label: 'Pista', x: 40, y: 40, w: 20, h: 15 }
     render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
 
-    fireEvent.keyDown(screen.getByRole('button', { name: /Pista/ }), { key: 'ArrowDown', shiftKey: true })
+    fireEvent.keyDown(screen.getByRole('button', { name: /Pista.*Muévela/ }), { key: 'ArrowDown', shiftKey: true })
     expect(screen.getByLabelText('Estado del plano')).toHaveTextContent(/sin guardar/i)
   })
 })
@@ -333,5 +336,19 @@ describe('FloorPlan · editar una zona desde el plano', () => {
   it('sin prefijo no ofrece editar: la zona solo se arrastra', () => {
     render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
     expect(screen.queryByRole('link', { name: 'Editar Barra' })).not.toBeInTheDocument()
+  })
+})
+
+describe('FloorPlan · eliminar una zona sin ratón', () => {
+  const zona = { id: 'z1', eventId: 'e1', kind: 'bar' as const, label: 'Barra', x: 30, y: 30, w: 20, h: 15 }
+
+  it('el ✕ de la zona es un botón con nombre, no un adorno que solo responde al puntero', () => {
+    render(<FloorPlan eventId="e1" eventSlug="boda" exits={[]} tables={[]} zones={[zona]} />)
+
+    // Con un `span` y `onPointerDown` no había forma de borrar una zona con el teclado, y
+    // el lector de pantalla no la anunciaba siquiera.
+    const boton = screen.getByRole('button', { name: 'Eliminar Barra' })
+    fireEvent.click(boton)
+    expect(removeZoneAction).toHaveBeenCalledWith({ id: 'z1', eventId: 'e1', eventSlug: 'boda' })
   })
 })

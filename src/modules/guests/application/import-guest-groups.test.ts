@@ -13,6 +13,7 @@ function repo() {
     findById: async () => null,
     revoke: async () => {},
     markOpened: async () => {},
+    remove: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},
     setPhone: async (_id, phone) => void telefonos.push(phone),

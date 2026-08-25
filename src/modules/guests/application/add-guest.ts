@@ -15,6 +15,8 @@ type Deps = {
     currentGroups: number
   }) => Promise<AltaGrupo>
   findGroup: (id: string) => Promise<{ id: string } | null>
+  /** Deshace el grupo recién creado cuando la persona que lo motivaba no entra. */
+  removeGroup: (id: string) => Promise<void>
   setPhone: (groupId: string, phone: string | null) => Promise<void>
   addPerson: (input: {
     guestGroupId: string
@@ -44,7 +46,13 @@ export type AddGuestInput = {
   currentGroups: number
 }
 
-export type AddGuestResult = { readonly groupId: string; readonly token: string | null; readonly companions: number }
+export type AddGuestResult = {
+  readonly groupId: string
+  readonly token: string | null
+  /** Acompañantes que **entraron**. Puede ser menos de los pedidos si se acabó el cupo. */
+  readonly companions: number
+  readonly requestedCompanions: number
+}
 
 /**
  * El alta de invitado de la maqueta, entera: nombre, grupo —uno que ya exista o uno
@@ -91,6 +99,8 @@ export const addGuest =
           return err(guestError('not_found', 'Ese grupo ya no existe.'))
         }
 
+        const grupoNuevo = token !== null
+
         const principal = await deps.addPerson({
           guestGroupId: groupId,
           fullName: nombre,
@@ -100,7 +110,13 @@ export const addGuest =
           attending: input.attending,
           email: input.email,
         })
-        if (!principal.ok) return err(guestError('invalid_seats', principal.message))
+        if (!principal.ok) {
+          // El grupo se creó para meter a esta persona. Si no entra, se deshace: dejarlo
+          // vacío quema un hueco del plan y acuña un token que nadie va a ver, y el
+          // atelier solo vería «error» sin saber que hay algo que borrar.
+          if (grupoNuevo) await deps.removeGroup(groupId)
+          return err(guestError('invalid_seats', principal.message))
+        }
 
         // Los acompañantes se cargan uno a uno y **sin tumbar el alta** si alguno no cabe:
         // la persona principal ya está dentro, y quitarla porque el cuarto acompañante no
@@ -122,7 +138,7 @@ export const addGuest =
 
         if (input.phone !== null && input.phone.trim() !== '') await deps.setPhone(groupId, input.phone.trim())
 
-        return ok({ groupId, token, companions: entraron })
+        return ok({ groupId, token, companions: entraron, requestedCompanions: acompanantes })
       },
       (cause) => guestError('storage_failure', `No se pudo crear el invitado: ${String(cause)}`),
     )

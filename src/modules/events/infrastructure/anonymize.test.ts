@@ -63,7 +63,7 @@ describe('anonimización', () => {
     })
   })
 
-  it('anonimiza también a las personas del grupo: nombre y restricción alimentaria', async () => {
+  it('anonimiza también a las personas del grupo: nombre, restricción alimentaria y correo', async () => {
     // `guest_people` guarda el nombre y apellido de una persona concreta y su restricción
     // alimentaria, que en la práctica es un dato de salud —«alergia a los frutos secos»—.
     // Quedarse eso tras la retención es peor que quedarse la etiqueta del grupo.
@@ -77,7 +77,13 @@ describe('anonimización', () => {
         .returning({ id: guestGroups.id })
 
       await tx.insert(guestPeople).values([
-        { guestGroupId: grupo!.id, fullName: 'Ana Lucía Vega', dietaryNote: 'Alergia a los frutos secos', vip: true },
+        {
+          guestGroupId: grupo!.id,
+          fullName: 'Ana Lucía Vega',
+          dietaryNote: 'Alergia a los frutos secos',
+          email: 'ana@correo.bo',
+          vip: true,
+        },
         { guestGroupId: grupo!.id, fullName: 'Roberto Núñez', dietaryNote: null, isCompanion: true },
       ])
 
@@ -87,6 +93,8 @@ describe('anonimización', () => {
       expect(personas).toHaveLength(2)
       expect(personas.every((p) => !p.fullName.includes('Ana') && !p.fullName.includes('Roberto'))).toBe(true)
       expect(personas.every((p) => p.dietaryNote === null)).toBe(true)
+      // El correo es un dato personal como el nombre: se va con él.
+      expect(personas.every((p) => p.email === null)).toBe(true)
       // El agregado se conserva: cuántas personas eran, y si eran acompañantes.
       expect(personas.filter((p) => p.isCompanion)).toHaveLength(1)
     })

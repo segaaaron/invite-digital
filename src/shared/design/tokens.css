@@ -68,6 +68,10 @@
   --color-shell-deep: #141412;
   --color-shell-ink: #f8f6f1;
   --color-sage: #5a705c;
+  /* El verde claro de la silla ocupada y de la barra del gráfico por día. */
+  --color-sage-light: #7a8c64;
+  /* El verde de los focos del fondo del panel, en componentes para poder darle alfa. */
+  --color-sage-rgb: 90 112 92;
   --color-sage-deep: #3f5340;
 
   --font-display: var(--font-display-raw), 'Cormorant Garamond', serif;
@@ -78,7 +82,11 @@
   /* En el panel la define `panelMono` —JetBrains Mono, la de la maqueta del panel—; en
      la web pública y en la invitación nadie la define y cae en la del sistema, que es lo
      que la maqueta Ivory pide. */
-  --font-mono: var(--font-mono-raw), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  /* El respaldo va **dentro** del `var()`: fuera de la carcasa del panel nadie define
+     `--font-mono-raw`, y un `var()` sin respaldo invalida la declaración entera en tiempo
+     de cálculo. La invitación se quedaba sin monoespaciada y volvía el 1 que se lee como
+     I y el 0 como paréntesis, que es justo lo que este token existe para evitar. */
+  --font-mono: var(--font-mono-raw, ui-monospace), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
 
   --radius-pill: 999px;
   --radius-card: 22px;

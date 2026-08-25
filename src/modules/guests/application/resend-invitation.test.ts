@@ -15,6 +15,7 @@ function repo(row: GuestGroupRow | null) {
     findById: async () => row,
     revoke: async () => {},
     markOpened: async () => {},
+    remove: async () => {},
     markSent: async (_id, at) => void enviados.push(at),
     replaceToken: async (_id, hash) => void tokens.push(hash),
     setPhone: async () => {},

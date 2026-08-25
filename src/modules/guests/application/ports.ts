@@ -20,6 +20,11 @@ export interface GuestGroupRepository {
   /** Cambia el hash del token: el enlace anterior deja de abrir nada. */
   replaceToken(id: string, tokenHash: Buffer): Promise<void>
   setPhone(id: string, phone: string | null): Promise<void>
+  /**
+   * Borra el grupo. Solo lo usa el alta para deshacer un grupo recién creado cuya persona
+   * no llegó a entrar: revocar es lo que se hace con un grupo que ya vive.
+   */
+  remove(id: string): Promise<void>
 }
 
 /**

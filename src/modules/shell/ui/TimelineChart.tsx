@@ -21,7 +21,7 @@ export function TimelineChart({ bars, caption }: { bars: readonly TimelineBar[];
           <span key={barra.day} className="flex h-full flex-1 items-end">
             <span
               data-barra
-              className="block w-full rounded-t-[4px] bg-linear-to-b from-[var(--color-sage)] to-[var(--color-sage-deep)]"
+              className="block w-full rounded-t-[4px] bg-linear-to-b from-sage-light to-sage"
               style={{ height: `${techo === 0 ? 0 : (barra.count / techo) * 100}%` }}
             />
           </span>

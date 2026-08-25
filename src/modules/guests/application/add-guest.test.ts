@@ -28,6 +28,10 @@ const deps = (over: Record<string, unknown> = {}) => {
       }),
       findGroup: vi.fn(async (id: string) => grupos.find((g) => g.id === id) ?? null),
       setPhone: vi.fn(async () => {}),
+      removeGroup: vi.fn(async (id: string) => {
+        const i = grupos.findIndex((g) => g.id === id)
+        if (i >= 0) grupos.splice(i, 1)
+      }),
       addPerson: vi.fn(async (input: Record<string, unknown>) => {
         personas.push(input)
         return { ok: true as const }
@@ -116,5 +120,50 @@ describe('addGuest', () => {
     const r = await addGuest(d as never)({ ...base, groupId: 'g1', companions: 3 })
     expect(isOk(r)).toBe(true)
     expect(personas).toHaveLength(2)
+  })
+})
+
+describe('addGuest · lo que no se puede dejar a medias', () => {
+  it('si la persona no entra, el grupo recién creado no se queda huérfano', async () => {
+    // Un grupo vacío quema un hueco del plan y acuña un token que nadie verá nunca, y el
+    // atelier solo ve «error»: no sabría que hay que borrarlo a mano.
+    const { deps: d, grupos } = deps({
+      addPerson: vi.fn(async () => ({ ok: false as const, message: 'nombre demasiado largo' })),
+    })
+
+    const r = await addGuest(d as never)({ ...base, newGroupLabel: 'Los Nieto' })
+
+    expect(isErr(r)).toBe(true)
+    expect(d.removeGroup).toHaveBeenCalled()
+    expect(grupos.map((g) => g.label)).not.toContain('Los Nieto')
+  })
+
+  it('un grupo que ya existía no se borra aunque la persona falle', async () => {
+    const { deps: d, grupos } = deps({
+      addPerson: vi.fn(async () => ({ ok: false as const, message: 'no cabe' })),
+    })
+
+    await addGuest(d as never)({ ...base, groupId: 'g1' })
+
+    expect(d.removeGroup).not.toHaveBeenCalled()
+    expect(grupos).toHaveLength(1)
+  })
+
+  it('dice cuántos acompañantes entraron de verdad', async () => {
+    let llamadas = 0
+    const { deps: d } = deps({
+      addPerson: vi.fn(async () => {
+        llamadas += 1
+        return llamadas > 2 ? { ok: false as const, message: 'no cabe' } : { ok: true as const }
+      }),
+    })
+
+    const r = await addGuest(d as never)({ ...base, groupId: 'g1', companions: 3 })
+
+    expect(isOk(r)).toBe(true)
+    if (!isOk(r)) return
+    // Uno de los tres. Decir «hecho» a secas dejaría a dos personas fuera en silencio.
+    expect(r.value.companions).toBe(1)
+    expect(r.value.requestedCompanions).toBe(3)
   })
 })

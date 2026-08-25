@@ -54,6 +54,12 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     await database.update(guestGroups).set({ invitationSentAt: at }).where(eq(guestGroups.id, id))
   },
 
+  async remove(id) {
+    // Solo para deshacer un alta a medias. Un grupo con vida se revoca, no se borra:
+    // borrarlo se llevaría por delante sus respuestas y su historial.
+    await database.delete(guestGroups).where(eq(guestGroups.id, id))
+  },
+
   async revoke(id, at) {
     await database.update(guestGroups).set({ revokedAt: at }).where(eq(guestGroups.id, id))
   },

@@ -404,13 +404,16 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
       <div
         ref={plano}
         aria-label="Plano del salón"
-        className="relative aspect-[4/3] w-full rounded-card border border-line-panel bg-bg-sunken bg-[linear-gradient(to_right,rgb(26_26_26/0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgb(26_26_26/0.05)_1px,transparent_1px)] bg-[length:5%_6.66%]"
+        className="relative aspect-[4/3] w-full rounded-card border border-line-panel bg-bg-sunken bg-[linear-gradient(to_right,rgb(var(--color-shadow-rgb)/0.07)_1px,transparent_1px),linear-gradient(to_bottom,rgb(var(--color-shadow-rgb)/0.07)_1px,transparent_1px)] bg-[length:5%_6.66%]"
       >
         {zones.map((zone) => {
           const key = clave('zone', zone.id)
           return (
-            <button
+            <span
               key={key}
+              className="group/zona"
+            >
+            <button
               type="button"
               aria-label={`${ZONA_TEXTO[zone.kind]}: ${zone.label}. Muévela con las flechas.`}
               onPointerDown={alPulsar(key)}
@@ -426,35 +429,6 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
             >
               {zone.label}
 
-              {/* Editar y eliminar viven **dentro** de la zona, como en la maqueta: se
-                  ven al pasar por encima y no obligan a buscar la zona en otra lista. */}
-              <span className="absolute -top-2.5 -right-2.5 hidden gap-1 group-hover/zona:flex">
-                {zoneEditHrefPrefix === undefined ? null : (
-                  <a
-                    aria-label={`Editar ${zone.label}`}
-                    className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
-                    href={`${zoneEditHrefPrefix}${zone.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    onPointerDown={(e) => e.stopPropagation()}
-                    title={`Editar ${zone.label}`}
-                  >
-                    ✎
-                  </a>
-                )}
-                <span
-                  aria-hidden
-                  className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
-                  onPointerDown={(e) => {
-                    e.stopPropagation()
-                    e.preventDefault()
-                    borrarZona(zone.id)
-                  }}
-                  role="presentation"
-                >
-                  ✕
-                </span>
-              </span>
-
               {/* El mango de la esquina, como en la maqueta. Es un `span` dentro del
                   botón: un botón dentro de otro botón no es HTML válido, y el teclado
                   ya redimensiona con Mayúsculas + flechas. */}
@@ -466,6 +440,38 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 onPointerUp={alSoltarMango}
               />
             </button>
+
+            {/* Editar y eliminar **fuera** del botón de arrastre: un botón dentro de otro
+                botón no es HTML válido, y como `span` con `onPointerDown` no había forma
+                de borrar una zona con el teclado. Son controles de verdad, con su nombre. */}
+            <span
+              className="absolute z-10 flex gap-1 opacity-0 transition-opacity group-hover/zona:opacity-100 focus-within:opacity-100"
+              style={{
+                left: `calc(${actuales[key]?.x ?? 0}% + ${tamActuales[key]?.w ?? zone.w}% - 18px)`,
+                top: `calc(${actuales[key]?.y ?? 0}% - 10px)`,
+              }}
+            >
+              {zoneEditHrefPrefix === undefined ? null : (
+                <a
+                  aria-label={`Editar ${zone.label}`}
+                  className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
+                  href={`${zoneEditHrefPrefix}${zone.id}`}
+                  title={`Editar ${zone.label}`}
+                >
+                  ✎
+                </a>
+              )}
+              <button
+                aria-label={`Eliminar ${zone.label}`}
+                className="flex size-5 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
+                onClick={() => borrarZona(zone.id)}
+                title={`Eliminar ${zone.label}`}
+                type="button"
+              >
+                <span aria-hidden>✕</span>
+              </button>
+            </span>
+            </span>
           )
         })}
 
@@ -499,7 +505,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                         ? 'border-line-panel bg-bg-top text-ink-mute'
                         : silla.vip
                           ? 'border-gold-deep bg-linear-to-br from-[var(--color-gold-light)] to-gold-deep text-white'
-                          : 'border-sage bg-linear-to-br from-[#7a8c64] to-sage text-white'
+                          : 'border-sage bg-linear-to-br from-sage-light to-sage text-white'
                     }`}
                     style={{ left: `${silla.x}%`, top: `${silla.y}%` }}
                   >

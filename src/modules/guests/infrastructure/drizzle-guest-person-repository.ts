@@ -40,6 +40,7 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
       dietaryNote: person.dietaryNote,
       vip: person.vip,
       attending: person.attending,
+      email: person.email,
     })
   },
 
@@ -52,6 +53,7 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
         dietaryNote: person.dietaryNote,
         vip: person.vip,
         attending: person.attending,
+        email: person.email,
       })
       .where(eq(guestPeople.id, person.id))
   },

@@ -196,6 +196,7 @@ export const guests = {
       return isErr(r) ? { ok: false, message: r.error.detail } : { ok: true, group: r.value.group, token: r.value.token }
     },
     findGroup: (id) => drizzleGuestGroupRepository.findById(id),
+    removeGroup: (id) => drizzleGuestGroupRepository.remove(id),
     setPhone: (id, phone) => drizzleGuestGroupRepository.setPhone(id, phone),
     addPerson: async (input) => {
       const r = await altaDePersona(input)
@@ -234,6 +235,8 @@ export const rsvp = {
     rsvp: drizzleRsvpRepository,
   }),
   latestFor: (guestGroupId: string) => drizzleRsvpRepository.latestFor(guestGroupId),
+  /** La última respuesta de cada grupo del evento, en una sola consulta. */
+  latestByEvent: (eventId: string) => drizzleRsvpRepository.latestByEvent(eventId),
 } as const
 
 export const checkin = {

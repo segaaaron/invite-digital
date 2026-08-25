@@ -25,17 +25,12 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   }
 
   const groups = await guests.list(event.value.id)
-  // La última respuesta de cada grupo, una consulta por grupo. Con listas de invitados
-  // de decenas de filas no compensa una consulta agregada; si un evento crece a
-  // centenares, `tallyRowsFor` ya trae la forma que haría falta.
+  // Las últimas respuestas, en una sola consulta. Una por grupo y en serie convertía el
+  // resumen en decenas de viajes a la base cada vez que alguien lo abría.
+  const ultimas = await rsvp.latestByEvent(event.value.id)
   const filas: GuestGroupRowView[] = isErr(groups)
     ? []
-    : await Promise.all(
-        groups.value.map(async (group) => ({
-          ...group,
-          confirmed: (await rsvp.latestFor(group.id))?.attending ?? null,
-        })),
-      )
+    : groups.value.map((group) => ({ ...group, confirmed: ultimas.get(group.id)?.attending ?? null }))
 
   // La maqueta lista **personas** en «Invitados recientes»: nombre, grupo, RSVP,
   // acompañantes y mesa.
@@ -102,6 +97,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const salon = isErr(conSalon) ? null : await venue.seating(event.value.id)
   const mesas = salon === null || isErr(salon) ? null : salon.value
 
+  // «Recientes» son los **últimos** que entraron, no los primeros: el repositorio los
+  // devuelve del más viejo al más nuevo, así que hay que darles la vuelta antes de
+  // recortar. Y la columna de acompañantes cuenta los del grupo de esa persona; antes
+  // decía «Sí/—» sobre la propia fila, así que el titular de una familia de tres salía
+  // con un guion.
+  const recientes = isErr(personasResumen) ? [] : [...personasResumen.value].reverse().slice(0, 6)
+  const acompanantesPorGrupo = new Map<string, number>()
+  if (!isErr(personasResumen)) {
+    for (const persona of personasResumen.value) {
+      if (!persona.isCompanion) continue
+      acompanantesPorGrupo.set(persona.guestGroupId, (acompanantesPorGrupo.get(persona.guestGroupId) ?? 0) + 1)
+    }
+  }
+
   const fechaDelEvento = new Date(`${event.value.eventDate}T00:00:00`)
   const fecha = fechaDelEvento.toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' })
 
@@ -150,7 +159,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           icon="✉"
           change={gruposNuevos > 0 ? { direction: 'up', text: `${gruposNuevos} esta semana` } : undefined}
           detail={gruposNuevos > 0 ? undefined : `${t ? t.seatsInvited : 0} cupos repartidos`}
-          progress={1}
         />
         <StatCard
           label="Confirmados"
@@ -175,10 +183,6 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           detail={vistas && vistas.today > 0 ? undefined : 'Nadie la ha abierto hoy'}
           change={vistas && vistas.today > 0 ? { direction: 'up', text: `${vistas.today} hoy` } : undefined}
           icon="👁"
-          // La barra de visitas es la proporción de grupos que han abierto su enlace: la
-          // maqueta pinta una barra violeta y este es el dato que le corresponde.
-          progress={filas.length > 0 && vistas ? Math.min(1, vistas.total / filas.length) : 0}
-          tone="device"
         />
       </div>
 
@@ -236,7 +240,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <p className="text-[13px] text-danger" role="alert">
             No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
           </p>
-        ) : personasResumen.value.length === 0 ? (
+        ) : recientes.length === 0 ? (
           <p className="text-[14px] text-ink-soft">Todavía no hay invitados. Se cargan en la sección Invitados.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -255,7 +259,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 </tr>
               </thead>
               <tbody>
-                {personasResumen.value.slice(0, 6).map((persona) => {
+                {recientes.map((persona) => {
                   const grupo = filas.find((f) => f.id === persona.guestGroupId)
                   const mesa = mesas?.tables.find((m) => m.groups.some((g) => g.id === persona.guestGroupId))
                   return (
@@ -283,7 +287,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                         )}
                       </td>
                       <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">
-                        {persona.isCompanion ? 'Sí' : '—'}
+                        {persona.isCompanion ? '—' : (acompanantesPorGrupo.get(persona.guestGroupId) ?? 0)}
                       </td>
                       <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
                         {mesa?.label ?? '—'}
