@@ -5,11 +5,12 @@ import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
-import { BarRow } from '@/shared/design/ui/panel/PanelKit'
+import { BarRow, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
 import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
 import { TableDialog } from '@/modules/venue/ui/TableDialog'
+import { ZoneDialog } from '@/modules/venue/ui/ZoneDialog'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
 import { UnseatedStrip } from '@/modules/venue/ui/UnseatedStrip'
@@ -26,11 +27,11 @@ export default async function MesasPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string }>
+  searchParams: Promise<{ panel?: string; vista?: string }>
 }) {
   await requireSession()
   const { slug } = await params
-  const { panel } = await searchParams
+  const { panel, vista } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -58,6 +59,7 @@ export default async function MesasPage({
   const base = `/panel/eventos/${event.value.slug}/mesas`
   // El carril más largo es el del menú más pedido: las barras se comparan entre sí.
   const comensalesMaximos = menus.reduce((max, linea) => Math.max(max, linea.count), 0)
+  const enTarjetas = vista === 'tarjetas'
 
   return (
     <>
@@ -75,12 +77,17 @@ export default async function MesasPage({
         title="Mesas"
       />
 
-      {/* «+ Añadir mesa» abre el diálogo de la maqueta, no un panel desplegado. */}
+      {/* Las altas son los diálogos de la maqueta, no paneles desplegados en la página. */}
       {panel === 'mesa' ? <TableDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} /> : null}
+      {panel === 'zona' ? <ZoneDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} /> : null}
 
-      {/* El buscador ancho va justo debajo de la cabecera, como en la maqueta. */}
-      <div className="mb-4.5">
-        <SeatSearch tables={tables} unseated={unseated} />
+      {/* Buscador y conmutador en la misma fila, debajo de la cabecera: es la
+          `seating-toolbar` de la maqueta. */}
+      <div className="mb-4.5 flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-[280px] flex-1">
+          <SeatSearch tables={tables} unseated={unseated} />
+        </div>
+        <SeatViewToggle base={base} current={enTarjetas ? 'tarjetas' : 'mapa'} />
       </div>
 
       <div className="flex flex-col gap-4.5">
@@ -113,52 +120,49 @@ export default async function MesasPage({
           )}
         </PanelCard>
 
-        <SeatViewToggle
-          cards={
-            <PanelCard title="Mesas del salón">
-              {tables.length === 0 ? (
-                <p className="text-[13px] text-ink-mute">
-                  Todavía no hay mesas. Crea la primera arriba y empieza a repartir a los invitados.
-                </p>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {tables.map((table) => (
-                    <TableCard
-                      key={table.id}
-                      eventId={event.value.id}
-                      eventSlug={event.value.slug}
-                      table={table}
-                      unseated={unseated}
-                    />
-                  ))}
-                </div>
-              )}
+        {enTarjetas ? (
+          tables.length === 0 ? (
+            <PanelCard>
+              <p className="text-[13px] text-ink-mute">
+                Todavía no hay mesas. Créalas con «+ Añadir mesa» y empieza a repartir a los invitados.
+              </p>
             </PanelCard>
-          }
-          map={
-            <PanelCard title="Plano del salón">
-              <div className="flex flex-col gap-4.5">
-                <FloorPlan
+          ) : (
+            // Las tarjetas van sueltas sobre el marfil, como en la maqueta: encerrarlas en
+            // otra tarjeta les ponía un marco que el diseño no tiene.
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {tables.map((table) => (
+                <TableCard
+                  key={table.id}
                   eventId={event.value.id}
                   eventSlug={event.value.slug}
-                  tables={tables}
-                  zones={zones}
-                  exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
+                  table={table}
+                  unseated={unseated}
                 />
-                {/* La maqueta abre las zonas con «+ Elemento del salón»: desplegadas
-                    dejaban tres formularios crudos colgando bajo el plano. */}
-                <details>
-                  <summary className="w-fit cursor-pointer list-none rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink">
-                    + Elemento del salón
-                  </summary>
-                  <div className="mt-4.5">
-                    <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
-                  </div>
-                </details>
-              </div>
-            </PanelCard>
-          }
-        />
+              ))}
+            </div>
+          )
+        ) : (
+          <PanelCard
+            action={
+              <PanelButton href={`${base}?panel=zona`}>+ Elemento del salón</PanelButton>
+            }
+            title="Plano del salón"
+          >
+            <div className="flex flex-col gap-4.5">
+              <FloorPlan
+                eventId={event.value.id}
+                eventSlug={event.value.slug}
+                tables={tables}
+                zones={zones}
+                exits={[{ href: `/panel/eventos/${event.value.slug}`, label: 'Volver al evento' }]}
+              />
+              {zones.length === 0 ? null : (
+                <ZoneControls eventId={event.value.id} eventSlug={event.value.slug} zones={zones} />
+              )}
+            </div>
+          </PanelCard>
+        )}
       </div>
     </>
   )

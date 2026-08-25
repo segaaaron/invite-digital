@@ -1,0 +1,139 @@
+'use client'
+
+import { useRouter } from 'next/navigation'
+import { useEffect, useId, useRef, useState, useTransition } from 'react'
+import { addZoneAction } from '../actions'
+import { ZONE_KINDS, type ZoneKind } from '../domain/venue-zone'
+
+const NOMBRE_CLASE: Record<ZoneKind, string> = {
+  dance: 'Pista de baile',
+  bar: 'Barra',
+  stage: 'Mesa de honor',
+  music: 'Banda / DJ',
+  entrance: 'Entrada',
+  kitchen: 'Cocina / servicio',
+  photo: 'Photobooth',
+  custom: 'Otro (personalizado)',
+}
+
+const CAMPO =
+  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
+const ROTULO = 'flex flex-col gap-2 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+
+/**
+ * «+ Elemento del salón» abre este diálogo, como en la maqueta: tipo y, solo si el tipo
+ * es personalizado, el nombre.
+ *
+ * El nombre libre aparece **únicamente** con «Otro»: para los siete tipos con nombre
+ * propio, pedirlo sería preguntar dos veces lo mismo y abrir la puerta a una pista de
+ * baile llamada «barra».
+ */
+export function ZoneDialog({ eventId, eventSlug, closeHref }: { eventId: string; eventSlug: string; closeHref: string }) {
+  const router = useRouter()
+  const dialogo = useRef<HTMLDialogElement>(null)
+  const [kind, setKind] = useState<ZoneKind>('dance')
+  const [label, setLabel] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [pendiente, empezar] = useTransition()
+
+  const idTipo = useId()
+  const idNombre = useId()
+
+  useEffect(() => {
+    const nodo = dialogo.current
+    if (nodo !== null && !nodo.open) nodo.showModal()
+  }, [])
+
+  const cerrar = () => {
+    dialogo.current?.close()
+    router.push(closeHref)
+  }
+
+  const guardar = () => {
+    const nombre = kind === 'custom' ? label.trim() : NOMBRE_CLASE[kind]
+    if (nombre === '') {
+      setError('Un elemento personalizado necesita un nombre para reconocerlo en el plano.')
+      return
+    }
+
+    setError(null)
+    empezar(async () => {
+      const r = await addZoneAction({ eventId, eventSlug, kind, label: nombre })
+      if (!r.ok) {
+        setError(r.message ?? 'No se pudo añadir el elemento.')
+        return
+      }
+      cerrar()
+    })
+  }
+
+  return (
+    <dialog
+      ref={dialogo}
+      aria-labelledby={`${idTipo}-titulo`}
+      className="m-auto w-[min(460px,92vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
+      onCancel={(e) => {
+        e.preventDefault()
+        cerrar()
+      }}
+    >
+      <h2 className="font-display text-[24px] font-light italic" id={`${idTipo}-titulo`}>
+        Añadir elemento del salón
+      </h2>
+
+      <div className="mt-5 flex flex-col gap-4">
+        <label className={ROTULO} htmlFor={idTipo}>
+          Tipo
+          <select className={CAMPO} id={idTipo} onChange={(e) => setKind(e.target.value as ZoneKind)} value={kind}>
+            {ZONE_KINDS.map((k) => (
+              <option key={k} value={k}>
+                {NOMBRE_CLASE[k]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {kind === 'custom' ? (
+          <label className={ROTULO} htmlFor={idNombre}>
+            Nombre
+            <input
+              autoFocus
+              className={CAMPO}
+              id={idNombre}
+              maxLength={60}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="Ej. Carpa de cigarros"
+              type="text"
+              value={label}
+            />
+          </label>
+        ) : null}
+      </div>
+
+      {error === null ? null : (
+        <p className="mt-4 text-[13px] text-danger" role="alert">
+          {error}
+        </p>
+      )}
+
+      <div className="mt-6 flex justify-end gap-2.5">
+        <button
+          className="cursor-pointer rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink disabled:opacity-40"
+          disabled={pendiente}
+          onClick={cerrar}
+          type="button"
+        >
+          Cancelar
+        </button>
+        <button
+          className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+          disabled={pendiente}
+          onClick={guardar}
+          type="button"
+        >
+          {pendiente ? 'Guardando…' : 'Guardar'}
+        </button>
+      </div>
+    </dialog>
+  )
+}

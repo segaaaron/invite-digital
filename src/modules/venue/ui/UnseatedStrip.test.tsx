@@ -21,9 +21,9 @@ describe('UnseatedStrip', () => {
     expect(screen.getByText(/1 cupo$/)).toBeInTheDocument()
   })
 
-  it('dice cuántos quedan sin mesa', () => {
+  it('es una tira de chips, como la maqueta: uno por grupo', () => {
     render(<UnseatedStrip groups={[grupo('a', 'Familia Rojas', 4), grupo('b', 'Camila Vargas', 1)]} />)
-    expect(screen.getByRole('region', { name: /sin mesa/i })).toHaveTextContent('2')
+    expect(screen.getAllByRole('listitem')).toHaveLength(2)
   })
 
   it('desaparece cuando no queda ninguno: una tira vacía es ruido', () => {

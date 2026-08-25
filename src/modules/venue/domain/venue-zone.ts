@@ -2,7 +2,10 @@ import { err, ok, type Result } from '@/shared/result'
 import { venueError, type VenueError } from './errors'
 import { clampToPlan } from './venue-table'
 
-export const ZONE_KINDS = ['dance', 'bar', 'stage', 'music', 'entrance'] as const
+// Los ocho elementos del salón de la maqueta. `custom` es el «Otro (personalizado)»:
+// lleva el nombre que escriba el atelier, porque ningún catálogo cerrado cubre la carpa
+// de cigarros de una boda concreta.
+export const ZONE_KINDS = ['dance', 'bar', 'stage', 'music', 'entrance', 'kitchen', 'photo', 'custom'] as const
 export type ZoneKind = (typeof ZONE_KINDS)[number]
 
 export type VenueZone = {

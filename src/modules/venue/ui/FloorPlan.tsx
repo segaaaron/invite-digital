@@ -57,11 +57,14 @@ const firma = (mapa: Mapa): string =>
     .join('|')
 
 const ZONA_TEXTO: Record<VenueZone['kind'], string> = {
-  dance: 'Pista',
+  dance: 'Pista de baile',
   bar: 'Barra',
-  stage: 'Tarima',
-  music: 'Música',
+  stage: 'Mesa de honor',
+  music: 'Banda / DJ',
   entrance: 'Entrada',
+  kitchen: 'Cocina / servicio',
+  photo: 'Photobooth',
+  custom: 'Elemento',
 }
 
 /**

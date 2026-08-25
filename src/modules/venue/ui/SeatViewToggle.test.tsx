@@ -1,25 +1,24 @@
+import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
 import { SeatViewToggle } from './SeatViewToggle'
 
+const base = '/panel/eventos/boda/mesas'
+
 describe('SeatViewToggle', () => {
-  it('arranca en el plano y lo declara con aria-pressed', () => {
-    render(
-      <SeatViewToggle cards={<p>tarjetas</p>} map={<p>plano</p>} />,
-    )
-    expect(screen.getByRole('button', { name: /vista de mapa/i })).toHaveAttribute('aria-pressed', 'true')
-    expect(screen.getByText('plano')).toBeInTheDocument()
-    expect(screen.queryByText('tarjetas')).not.toBeInTheDocument()
+  it('el plano es la vista de partida, como en la maqueta', () => {
+    render(<SeatViewToggle base={base} current="mapa" />)
+    expect(screen.getByRole('link', { name: 'Vista de mapa' })).toHaveAttribute('aria-current', 'page')
   })
 
-  it('cambia a tarjetas y vuelve', () => {
-    render(<SeatViewToggle cards={<p>tarjetas</p>} map={<p>plano</p>} />)
+  it('cada vista es un enlace, así que sobrevive al guardado de una mesa', () => {
+    render(<SeatViewToggle base={base} current="mapa" />)
+    expect(screen.getByRole('link', { name: 'Vista de tarjetas' }).getAttribute('href')).toBe(`${base}?vista=tarjetas`)
+    expect(screen.getByRole('link', { name: 'Vista de mapa' }).getAttribute('href')).toBe(base)
+  })
 
-    fireEvent.click(screen.getByRole('button', { name: /vista de tarjetas/i }))
-    expect(screen.getByText('tarjetas')).toBeInTheDocument()
-    expect(screen.queryByText('plano')).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('button', { name: /vista de mapa/i }))
-    expect(screen.getByText('plano')).toBeInTheDocument()
+  it('marca la vista abierta para quien no distingue el contraste', () => {
+    render(<SeatViewToggle base={base} current="tarjetas" />)
+    expect(screen.getByRole('link', { name: 'Vista de tarjetas' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('link', { name: 'Vista de mapa' })).not.toHaveAttribute('aria-current')
   })
 })

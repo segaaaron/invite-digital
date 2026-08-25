@@ -40,29 +40,7 @@ describe('ZoneControls', () => {
 
   it('sin zonas lo dice en vez de dejar un hueco', () => {
     render(<ZoneControls {...props} zones={[]} />)
-    expect(screen.getByText(/todavía no hay zonas/i)).toBeInTheDocument()
-  })
-
-  it('añadir una zona llama a la acción con su clase y su etiqueta', () => {
-    render(<ZoneControls {...props} />)
-    fireEvent.change(screen.getByLabelText('Nueva zona'), { target: { value: 'Barra principal' } })
-    fireEvent.change(screen.getByLabelText('Clase de zona'), { target: { value: 'bar' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir zona' }))
-
-    expect(addZoneAction).toHaveBeenCalledWith({
-      eventId: 'e1',
-      eventSlug: 'boda',
-      kind: 'bar',
-      label: 'Barra principal',
-    })
-  })
-
-  it('una etiqueta vacía no llama a la acción: una zona sin nombre no se reconoce en el plano', () => {
-    render(<ZoneControls {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir zona' }))
-
-    expect(addZoneAction).not.toHaveBeenCalled()
-    expect(screen.getByRole('alert')).toBeInTheDocument()
+    expect(screen.getByText(/todavía no hay elementos/i)).toBeInTheDocument()
   })
 
   it('renombrar una zona conserva su sitio y su tamaño', () => {
@@ -93,10 +71,9 @@ describe('ZoneControls', () => {
   })
 
   it('enseña el error del servidor sin recargar la página', async () => {
-    addZoneAction.mockResolvedValueOnce({ ok: false, kind: 'invalid_label', message: 'La zona necesita etiqueta' } as never)
+    updateZoneAction.mockResolvedValueOnce({ ok: false, kind: 'invalid_label', message: 'La zona necesita etiqueta' } as never)
     render(<ZoneControls {...props} />)
-    fireEvent.change(screen.getByLabelText('Nueva zona'), { target: { value: 'x' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir zona' }))
+    fireEvent.click(screen.getByRole('button', { name: /guardar pista/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('La zona necesita etiqueta')
   })

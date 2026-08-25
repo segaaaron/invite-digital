@@ -12,9 +12,6 @@ export function UnseatedStrip({ groups }: { groups: readonly SeatedGroupRow[] })
       aria-label="Invitados sin mesa"
       className="flex flex-col gap-3"
     >
-      <h2 className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
-        {groups.length} sin mesa
-      </h2>
       <ul className="flex flex-wrap gap-2">
         {groups.map((group) => (
           <li

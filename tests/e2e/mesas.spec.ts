@@ -30,15 +30,15 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   await crearMesa('Mesa 01', '8')
   // Las tarjetas de mesa viven tras el conmutador de la maqueta; el plano es la vista
   // por defecto, igual que en el diseño.
-  await page.getByRole('button', { name: 'Vista de tarjetas' }).click()
+  await page.getByRole('link', { name: 'Vista de tarjetas' }).click()
   await expect(page.getByRole('heading', { name: 'Mesa 01' })).toBeVisible()
 
   await crearMesa('Mesa 02', '4')
-  await page.getByRole('button', { name: 'Vista de tarjetas' }).click()
+  await page.getByRole('link', { name: 'Vista de tarjetas' }).click()
   await expect(page.getByRole('heading', { name: 'Mesa 02' })).toBeVisible()
 
   // Los dos grupos empiezan sin mesa.
-  await expect(page.getByRole('region', { name: 'Invitados sin mesa' })).toContainText('2 sin mesa')
+  await expect(page.getByRole('region', { name: 'Invitados sin mesa' })).toContainText('Familia Nieto')
 
   // Uno se sienta a mano.
   const mesa01 = page.locator('article').filter({ hasText: 'Mesa 01' })

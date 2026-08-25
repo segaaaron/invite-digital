@@ -1,17 +1,20 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { addZoneAction, removeZoneAction, updateZoneAction } from '../actions'
-import { ZONE_KINDS, type VenueZone, type ZoneKind } from '../domain/venue-zone'
+import { removeZoneAction, updateZoneAction } from '../actions'
+import type { VenueZone, ZoneKind } from '../domain/venue-zone'
 
 type Props = { eventId: string; eventSlug: string; zones: readonly VenueZone[] }
 
 const NOMBRE_CLASE: Record<ZoneKind, string> = {
   dance: 'Pista de baile',
   bar: 'Barra',
-  stage: 'Escenario',
-  music: 'Música',
+  stage: 'Mesa de honor',
+  music: 'Banda / DJ',
   entrance: 'Entrada',
+  kitchen: 'Cocina / servicio',
+  photo: 'Photobooth',
+  custom: 'Otro (personalizado)',
 }
 
 const CAMPO =
@@ -28,8 +31,6 @@ const PILDORA =
  * entera: sin ellos, corregir un nombre la devolvería al centro del plano.
  */
 export function ZoneControls({ eventId, eventSlug, zones }: Props) {
-  const [label, setLabel] = useState('')
-  const [kind, setKind] = useState<ZoneKind>('dance')
   const [etiquetas, setEtiquetas] = useState<Record<string, string>>({})
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
@@ -43,51 +44,13 @@ export function ZoneControls({ eventId, eventSlug, zones }: Props) {
     })
   }
 
-  const anadir = () => {
-    if (label.trim().length === 0) {
-      setError('La zona necesita una etiqueta para reconocerla en el plano.')
-      return
-    }
-
-    correr(() => addZoneAction({ eventId, eventSlug, kind, label: label.trim() }), () => setLabel(''))
-  }
-
   return (
     <section className="flex flex-col gap-5">
-      <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Zonas del salón</h2>
-
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="flex min-w-40 flex-1 flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-          Nueva zona
-          <input
-            className={CAMPO}
-            maxLength={60}
-            onChange={(e) => setLabel(e.target.value)}
-            placeholder="Pista de baile"
-            type="text"
-            value={label}
-          />
-        </label>
-
-        <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-          Clase de zona
-          <select className={CAMPO} onChange={(e) => setKind(e.target.value as ZoneKind)} value={kind}>
-            {ZONE_KINDS.map((k) => (
-              <option key={k} value={k}>
-                {NOMBRE_CLASE[k]}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <button className={PILDORA} disabled={pendiente} onClick={anadir} type="button">
-          Añadir zona
-        </button>
-      </div>
+      <h2 className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Elementos del salón</h2>
 
       {zones.length === 0 ? (
         <p className="text-[13px] text-ink-mute">
-          Todavía no hay zonas. Añade la pista o la barra y colócalas arrastrándolas en el plano.
+          Todavía no hay elementos. Añádelos con «+ Elemento del salón» y colócalos arrastrándolos en el plano.
         </p>
       ) : (
         <ul className="flex flex-col gap-3">
