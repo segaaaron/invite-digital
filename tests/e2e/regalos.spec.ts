@@ -18,10 +18,12 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   // la cabecera, como en la maqueta; se abren por la barra de direcciones.
   await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
 
-  await page.getByLabel('Regalo').fill('Cafetera italiana')
+  await page.getByLabel('Regalo', { exact: true }).fill('Cafetera italiana')
   await page.getByLabel('Precio').fill('450,50')
   await page.getByLabel('Tienda', { exact: true }).fill('Casa Ideal')
   await page.getByRole('button', { name: 'Añadir regalo' }).click()
+  // El diálogo se cierra solo al crear y vuelve a la lista, como en la maqueta.
+  await page.waitForURL(/regalos$/)
   await page.getByRole('link', { name: 'Lista de regalos' }).click()
   await expect(page.getByRole('heading', { name: 'Cafetera italiana' })).toBeVisible()
 
@@ -32,9 +34,10 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   await expect(page.getByText('Bs 450,50').first()).toBeVisible()
 
   await page.goto(`/panel/eventos/${SLUG}/regalos?panel=fondo`)
-  await page.getByLabel('Fondo').fill('Luna de miel')
-  await page.getByLabel('Meta').fill('5.000,00')
+  await page.getByLabel('Fondo', { exact: true }).fill('Luna de miel')
+  await page.getByLabel('Meta', { exact: true }).fill('5.000,00')
   await page.getByRole('button', { name: 'Abrir fondo' }).click()
+  await page.waitForURL(/regalos$/)
   await expect(page.getByRole('heading', { name: 'Luna de miel' })).toBeVisible()
 
   // 2. El invitado abre su enlace y reserva.
@@ -77,9 +80,11 @@ test('un enlace revocado no reserva nada: la página ni siquiera existe', async 
   const { token } = await seedRegistryEvent(slug)
 
   await page.goto(`/panel/eventos/${slug}/regalos?panel=regalo`)
-  await page.getByLabel('Regalo').fill('Batidora')
+  await page.getByLabel('Regalo', { exact: true }).fill('Batidora')
   await page.getByLabel('Precio').fill('300')
   await page.getByRole('button', { name: 'Añadir regalo' }).click()
+  await page.waitForURL(/regalos$/)
+  await page.getByRole('link', { name: 'Lista de regalos' }).click()
   await expect(page.getByRole('heading', { name: 'Batidora' })).toBeVisible()
 
   // El enlace todavía vale: el bloque de regalos se ve.

@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useId, useState, useTransition } from 'react'
 import type { Fund } from '../domain/fund'
 import { addFundAction, updateFundAction } from '../actions'
@@ -29,11 +31,14 @@ export function FundForm({
   eventSlug,
   fund,
   onDone,
+  doneHref,
 }: {
   eventId: string
   eventSlug: string
   fund?: Fund
   onDone?: () => void
+  /** Adónde volver tras crear. Es lo que cierra el diálogo del alta. */
+  doneHref?: string | undefined
 }) {
   const editando = fund !== undefined
   // Editar se hace dentro de la tarjeta oscura del fondo; abrir uno nuevo, sobre marfil.
@@ -46,6 +51,7 @@ export function FundForm({
   const [description, setDescription] = useState(fund?.description ?? '')
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
+  const router = useRouter()
 
   const nameId = useId()
   const goalId = useId()
@@ -80,6 +86,12 @@ export function FundForm({
         return
       }
 
+      // Crear desde el diálogo lo cierra volviendo a la lista, como en la maqueta.
+      if (doneHref !== undefined) {
+        router.replace(doneHref)
+        return
+      }
+
       setName('')
       setGoal('')
       setDescription('')
@@ -87,7 +99,7 @@ export function FundForm({
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-[18px] border border-[var(--color-line)] p-6">
+    <div className={`flex flex-col gap-5 ${doneHref === undefined ? 'rounded-[18px] border border-line-panel p-6' : ''}`}>
       <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
         <label className={rotulo} htmlFor={nameId}>
           Fondo

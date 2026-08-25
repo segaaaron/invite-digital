@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events, plans, registry } from '@/app/composition/container'
 import { CurrencyPicker } from '@/modules/events/ui/CurrencyPicker'
@@ -11,7 +10,8 @@ import { GiftForm } from '@/modules/registry/ui/GiftForm'
 import { GiftList } from '@/modules/registry/ui/GiftList'
 import { RegistryTabs } from '@/modules/registry/ui/RegistryTabs'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
@@ -79,30 +79,18 @@ export default async function RegalosPage({
       />
 
       <div className="flex flex-col gap-4.5">
+        {/* Las altas son los modales de la maqueta (`#modal-gift`, `#modal-fund`), no
+            paneles desplegados sobre la lista. */}
         {abierto === 'regalo' ? (
-          <PanelCard
-            action={
-              <Link href={base}>
-                <PanelCardLink>Cerrar ✕</PanelCardLink>
-              </Link>
-            }
-            title="Añadir un regalo"
-          >
-            <GiftForm eventId={event.value.id} eventSlug={event.value.slug} />
-          </PanelCard>
+          <PanelDialog closeHref={base} title="Añadir regalo">
+            <GiftForm doneHref={base} eventId={event.value.id} eventSlug={event.value.slug} />
+          </PanelDialog>
         ) : null}
 
         {abierto === 'fondo' ? (
-          <PanelCard
-            action={
-              <Link href={base}>
-                <PanelCardLink>Cerrar ✕</PanelCardLink>
-              </Link>
-            }
-            title="Abrir un fondo en efectivo"
-          >
-            <FundForm eventId={event.value.id} eventSlug={event.value.slug} />
-          </PanelCard>
+          <PanelDialog closeHref={base} title="Añadir fondo en efectivo">
+            <FundForm doneHref={base} eventId={event.value.id} eventSlug={event.value.slug} />
+          </PanelDialog>
         ) : null}
 
         <RegistryTabs

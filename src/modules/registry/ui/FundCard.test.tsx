@@ -9,6 +9,7 @@ const recordContributionAction = vi.fn(async () => ({ ok: true as const }))
 const addFundAction = vi.fn(async () => ({ ok: true as const }))
 const updateFundAction = vi.fn(async () => ({ ok: true as const }))
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
 vi.mock('../actions', () => ({
   removeFundAction: (...args: unknown[]) => removeFundAction(...(args as [])),
   recordContributionAction: (...args: unknown[]) => recordContributionAction(...(args as [])),

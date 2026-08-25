@@ -1,5 +1,7 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+
 import { useId, useState, useTransition } from 'react'
 import type { GiftRow } from '../application/ports'
 import { addGiftAction, updateGiftAction } from '../actions'
@@ -22,11 +24,14 @@ export function GiftForm({
   eventSlug,
   gift,
   onDone,
+  doneHref,
 }: {
   eventId: string
   eventSlug: string
   gift?: GiftRow
   onDone?: () => void
+  /** Adónde volver tras crear. Es lo que cierra el diálogo del alta. */
+  doneHref?: string | undefined
 }) {
   const editando = gift !== undefined
 
@@ -36,6 +41,7 @@ export function GiftForm({
   const [url, setUrl] = useState(gift?.url ?? '')
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
+  const router = useRouter()
 
   const nameId = useId()
   const priceId = useId()
@@ -74,6 +80,12 @@ export function GiftForm({
         return
       }
 
+      // Crear desde el diálogo lo cierra volviendo a la lista, como en la maqueta.
+      if (doneHref !== undefined) {
+        router.replace(doneHref)
+        return
+      }
+
       setName('')
       setPrice('')
       setStore('')
@@ -82,7 +94,7 @@ export function GiftForm({
   }
 
   return (
-    <div className="flex flex-col gap-5 rounded-[18px] border border-[var(--color-line)] p-6">
+    <div className={`flex flex-col gap-5 ${doneHref === undefined ? 'rounded-[18px] border border-line-panel p-6' : ''}`}>
       <div className="grid gap-5 sm:grid-cols-[2fr_1fr]">
         <label className={LABEL_CLASS} htmlFor={nameId}>
           Regalo
