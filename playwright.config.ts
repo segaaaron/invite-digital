@@ -15,7 +15,11 @@ export default defineConfig({
   use: { baseURL: BASE_URL, trace: 'on-first-retry' },
   projects: [
     // Inicia sesión una vez y guarda la cookie para las pruebas del panel.
-    { name: 'setup', testMatch: /auth\.setup\.ts/ },
+    // `teardown` borra el administrador de pruebas al terminar: la suite lo necesita
+    // mientras corre, pero un usuario con todos los permisos que sobrevive a la
+    // ejecución es una puerta abierta con la contraseña escrita en el repositorio.
+    { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'cleanup' },
+    { name: 'cleanup', testMatch: /auth\.teardown\.ts/ },
     { name: 'chromium', use: { ...devices['Desktop Chrome'] }, dependencies: ['setup'] },
   ],
   webServer: {

@@ -385,6 +385,10 @@ correo, que necesita proveedor.
   `auth.setup.ts`). Antes daban por hecho que `atelier@` lo era, y eso ataba la suite a
   cómo estén repartidos los roles en la base: el día que alguien se lo quita desde el
   propio panel, la suite se cae por un cambio de datos y no de código. Pasó.
+- **Y `auth.teardown.ts` lo borra al terminar.** Un usuario con todos los permisos que
+  sobrevive a la ejecución es una puerta abierta con la contraseña escrita en el
+  repositorio. La suite lo siembra, lo usa y se lo lleva; entre corridas, **el único admin
+  de la base es el de verdad**.
 - **La sección del admin en la barra solo se pinta para un admin.** Ocultarla no es la
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
