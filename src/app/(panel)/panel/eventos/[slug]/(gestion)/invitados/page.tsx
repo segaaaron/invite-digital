@@ -16,6 +16,7 @@ import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Invitados' }
@@ -37,11 +38,11 @@ export default async function InvitadosPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string; persona?: string }>
+  searchParams: Promise<{ panel?: string; persona?: string; vista?: string }>
 }) {
   await requireSession()
   const { slug } = await params
-  const { panel, persona } = await searchParams
+  const { panel, persona, vista } = await searchParams
 
   const event = await events.getBySlug(slug)
   if (isErr(event)) {
@@ -108,7 +109,13 @@ export default async function InvitadosPage({
   const cupos = filas.reduce((sum, f) => sum + f.seats, 0)
 
   const base = `/panel/eventos/${event.value.slug}/invitados`
-  const abierto = panel === 'alta' || panel === 'envio' ? panel : null
+  const abierto = panel === 'alta' || panel === 'envio' || panel === 'importar' ? panel : null
+
+  // Personas y grupos son **la misma lista mirada de dos maneras**, no dos secciones:
+  // la persona es a quien se sienta y se le sirve de comer; el grupo es quien tiene el
+  // enlace, los cupos y la mesa. Dos tablas abiertas a la vez, cada una con su buscador y
+  // su fila de chips, obligaban a adivinar cuál de los dos buscadores era el bueno.
+  const vistaGrupos = vista === 'grupos'
 
   // «✎» y «▣» abren su diálogo con la persona en la dirección. Una persona que ya no
   // existe —la lista se recarga sola mientras el atelier mira— no abre nada, en vez de
@@ -142,6 +149,7 @@ export default async function InvitadosPage({
               }))}
               rows={filas}
             />
+            <PanelButton href={abierto === 'importar' ? base : `${base}?panel=importar`}>↑ Importar CSV</PanelButton>
             <PanelButton href={abierto === 'envio' ? base : `${base}?panel=envio`}>✉ Enviar invitaciones</PanelButton>
             <PanelButton href={`${base}?panel=alta`} variant="primary">
               + Añadir invitado
@@ -225,10 +233,71 @@ export default async function InvitadosPage({
           </PanelCard>
         ) : null}
 
-        {/* La lista de personas es el centro de la vista en la maqueta: buscador, chips,
-            tabla y paginación dentro de una sola tarjeta. */}
-        <PanelCard title="Invitados">
-          {isErr(personas) ? (
+        {abierto === 'importar' ? (
+          <PanelCard
+            action={
+              <Link href={base}>
+                <PanelCardLink>Cerrar ✕</PanelCardLink>
+              </Link>
+            }
+            title="Importar desde CSV"
+          >
+            <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
+          </PanelCard>
+        ) : null}
+
+        {/* Recordatorios: el servidor calcula a quién toca, el atelier despacha. No es
+            una bandeja de salida y la pantalla no lo llama así.
+            **La tarjeta solo existe cuando hay algo que hacer.** Una tarjeta permanente
+            que casi siempre dice «nadie por recordar hoy» es un hueco fijo que separa la
+            cabecera de la lista, y se deja de mirar justo el día que sí trae a alguien. */}
+        {!isErr(cola) && cola.value.length === 0 ? null : (
+          <PanelCard title="Recordatorios">
+            {isErr(cola) ? (
+              <p className="text-[13px] text-danger" role="alert">
+                No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.
+              </p>
+            ) : (
+              <ReminderQueue
+                deadline={new Date(`${event.value.rsvpDeadline}T00:00:00Z`)}
+                eventId={event.value.id}
+                eventLocale={event.value.locale}
+                eventSlug={event.value.slug}
+                rows={cola.value}
+              />
+            )}
+          </PanelCard>
+        )}
+
+        {/* Una sola tarjeta para las dos vistas de la misma lista. */}
+        <PanelCard
+          action={
+            <SegmentedTabs
+              current={vistaGrupos ? 'grupos' : 'personas'}
+              label="Vista de la lista de invitados"
+              segments={[
+                { key: 'personas', label: 'Personas', href: base, count: filasPersona.length },
+                { key: 'grupos', label: 'Grupos', href: `${base}?vista=grupos`, count: filas.length },
+              ]}
+            />
+          }
+          title="Invitados"
+        >
+          {vistaGrupos ? (
+            isErr(groups) ? (
+              <p className="text-[13px] text-danger" role="alert">
+                No pudimos leer los grupos. La base no responde; vuelve a intentarlo en un momento.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-4.5">
+                <p className="text-[12px] leading-[1.7] text-ink-soft">
+                  El grupo es quien tiene el enlace de invitación, los cupos y la mesa. Revocar un grupo deja su enlace
+                  sin abrir nada.
+                </p>
+                <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
+              </div>
+            )
+          ) : isErr(personas) ? (
             // Pintar «todavía no hay personas» cuando la lectura falló no es un error
             // invisible: es un error que **miente**. El atelier daría por vacía una
             // lista que existe.
@@ -237,44 +306,10 @@ export default async function InvitadosPage({
             </p>
           ) : filasPersona.length === 0 ? (
             <p className="text-[13px] text-ink-mute">
-              Todavía no hay personas cargadas. Un grupo sin personas se sigue viendo abajo como una sola fila.
+              Todavía no hay personas cargadas. Un grupo sin personas sigue siendo válido: míralo en «Grupos».
             </p>
           ) : (
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
-          )}
-        </PanelCard>
-
-        {/* Recordatorios: el servidor calcula a quién toca, el atelier despacha. No es
-            una bandeja de salida y la pantalla no lo llama así. */}
-        <PanelCard title="Recordatorios">
-          {isErr(cola) ? (
-            <p className="text-[13px] text-danger" role="alert">
-              No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.
-            </p>
-          ) : (
-            <ReminderQueue
-              deadline={new Date(`${event.value.rsvpDeadline}T00:00:00Z`)}
-              eventId={event.value.id}
-              eventLocale={event.value.locale}
-              eventSlug={event.value.slug}
-              rows={cola.value}
-            />
-          )}
-        </PanelCard>
-
-        <PanelCard title="Importar desde CSV">
-          <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
-        </PanelCard>
-
-        {/* Los grupos con sus cupos y su enlace no están en la maqueta —que modela
-            personas sueltas— y se quedan: el enlace de invitación es del grupo. */}
-        <PanelCard title="Grupos y cupos">
-          {isErr(groups) ? (
-            <p className="text-[13px] text-danger" role="alert">
-              No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
-            </p>
-          ) : (
-            <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
           )}
         </PanelCard>
       </div>

@@ -64,6 +64,8 @@ function anchoDocumento(): { ancho: number; ventana: number } {
 const VISTAS = [
   ['resumen', ''],
   ['invitados', '/invitados'],
+  ['invitados · grupos', '/invitados?vista=grupos'],
+  ['invitados · importar', '/invitados?panel=importar'],
   ['mesas', '/mesas'],
   ['mesas · tarjetas', '/mesas?vista=tarjetas'],
   ['regalos', '/regalos'],
@@ -99,7 +101,7 @@ test.afterAll(async () => {
 })
 
 test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', async ({ page }) => {
-  // Once vistas por cinco anchos son cincuenta y cinco navegaciones: no caben en el
+  // Trece vistas por cinco anchos son sesenta y cinco navegaciones: no caben en el
   // límite de treinta segundos, y agotarlo se lee como un desborde que no existe.
   test.setTimeout(240_000)
   await createEvent(page, { slug: SLUG, title: 'Boda responsive e2e' })

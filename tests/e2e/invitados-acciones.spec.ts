@@ -97,3 +97,22 @@ test('el servidor rechaza mover a alguien a un grupo sin cupo', async ({ page })
   // Acotado al diálogo: Next monta su propio anunciador de rutas con role="alert".
   await expect(page.getByRole('dialog').getByRole('alert')).toContainText('cupos')
 })
+
+test('personas y grupos son dos vistas de la misma tarjeta, no dos tablas abiertas a la vez', async ({ page }) => {
+  // El evento y su gente los deja la prueba de arriba: aquí solo se mira la forma de la
+  // pantalla, y sembrar otro evento costaría cuatro navegaciones para nada.
+  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+
+  // Un solo buscador en pantalla. Dos tablas abiertas obligaban a adivinar cuál de los
+  // dos era el bueno.
+  await expect(page.getByRole('searchbox')).toHaveCount(1)
+  await expect(page.getByRole('columnheader', { name: 'Nombre' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Confirmados' })).toHaveCount(0)
+
+  await page.getByRole('link', { name: /^Grupos/ }).click()
+
+  await expect(page).toHaveURL(/vista=grupos/)
+  await expect(page.getByRole('searchbox')).toHaveCount(1)
+  await expect(page.getByRole('columnheader', { name: 'Confirmados' })).toBeVisible()
+  await expect(page.getByRole('columnheader', { name: 'Nombre' })).toHaveCount(0)
+})

@@ -33,7 +33,9 @@ test('la importación dice fila por fila qué entró y qué no', async ({ page }
   const slug = `${SLUG}-csv`
   await seedEnvioEvent(slug)
 
-  await page.goto(`/panel/eventos/${slug}/invitados`)
+  // Con el parámetro, no pulsando el botón de la cabecera: la prueba no depende de un
+  // clic previo para llegar al formulario.
+  await page.goto(`/panel/eventos/${slug}/invitados?panel=importar`)
   await page.getByLabel(/pega el listado/i).fill('Familia García;5;+59170022233\n;3\nAna Vega;2;')
   await page.getByRole('button', { name: 'Importar invitados' }).click()
 

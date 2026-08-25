@@ -126,6 +126,9 @@ test.describe('invitados del evento', () => {
     // Al recargar, el enlace ya no existe en ninguna parte: solo queda su hash.
     await page.reload()
     await expect(page.getByLabel('Enlace de la invitación')).toHaveCount(0)
+
+    // Los cupos y «Revocar» son del **grupo**, que es la otra vista de la misma tarjeta.
+    await page.goto(`/panel/eventos/${SLUG}/invitados?vista=grupos`)
     await expect(page.getByText('— / 4')).toBeVisible()
 
     // La fila del grupo recién creado, no cualquier «Revocar» de la página.

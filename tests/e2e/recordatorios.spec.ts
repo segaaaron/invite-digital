@@ -29,7 +29,9 @@ test('el grupo sin contestar sale en la cola, se marca recordado y deja de salir
 
   // Al anotarlo, la acción revalida y la fila desaparece sola: la espera entre
   // recordatorios lo saca de la cola. No hace falta recargar a mano.
+  // Sin nadie a quien recordar, la tarjeta **desaparece entera**: una permanente que casi
+  // siempre dice «nadie por recordar hoy» es un hueco fijo que se deja de mirar justo el
+  // día que sí trae a alguien.
   await fila.getByRole('button', { name: 'Marcar recordado' }).click()
-  await expect(cola.getByRole('listitem').filter({ hasText: 'Familia Rojas Peña' })).toHaveCount(0)
-  await expect(cola).toContainText('Nadie por recordar hoy')
+  await expect(cola).toHaveCount(0)
 })

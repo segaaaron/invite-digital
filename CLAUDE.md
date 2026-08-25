@@ -184,14 +184,30 @@ correo, que necesita proveedor.
 ### Notas del estado que vive en la URL
 
 - **Lo que la maqueta abre con un botón de cabecera se abre con un parámetro**, no con
-  `useState`: `?panel=alta` y `?panel=envio` en Invitados, `?panel=regalo` y
-  `?panel=fondo` en Regalos, `?vista=regalos` en el conmutador de la mesa, `?plan=<slug>`
-  en «Tu plan». Cada Server Action revalida el árbol y **remonta** el componente: con
+  `useState`: `?panel=alta`, `?panel=envio` y `?panel=importar` en Invitados,
+  `?panel=regalo` y `?panel=fondo` en Regalos, `?vista=grupos` en el conmutador de
+  Invitados, `?vista=regalos` en el de la mesa, `?plan=<slug>` en «Tu plan». Cada Server Action revalida el árbol y **remonta** el componente: con
   estado en el cliente, el conmutador saltaba solo a los fondos justo después de añadir un
   regalo y el atelier veía desaparecer lo que acababa de crear. Además así es enlazable y
   sobrevive a recargar.
 - **Las e2e navegan con ese parámetro** (`/invitados?panel=alta`), no pulsan el botón: no
   dependen de un clic previo para llegar al formulario.
+
+### Notas de la vista de Invitados
+
+- **Personas y grupos son la misma lista mirada de dos maneras**, no dos secciones. La
+  persona es a quien se sienta y se le sirve de comer; el grupo es quien tiene el enlace,
+  los cupos y la mesa. Estuvieron como dos tarjetas abiertas a la vez, cada una con su
+  buscador y su fila de chips, y no había forma de saber cuál de los dos buscadores era el
+  bueno. Ahora es una tarjeta con `SegmentedTabs` y `?vista=grupos`.
+- **`SegmentedTabs` no es `FilterChip`, y la diferencia es el punto.** Los chips filtran
+  *lo que se enseña de lo que se mira*; el segmentado cambia *qué se mira*. Con la misma
+  piel, dos filas de píldoras idénticas una encima de otra no dicen cuál hace qué.
+- **La tarjeta de Recordatorios solo existe cuando hay algo que hacer.** Una tarjeta
+  permanente que casi siempre dice «nadie por recordar hoy» es un hueco fijo entre la
+  cabecera y la lista, y se deja de mirar justo el día que sí trae a alguien.
+- **Importar CSV vive detrás de un botón de la cabecera**, no como tarjeta permanente: es
+  una operación de vez en cuando, y ocupaba tanto sitio como la lista entera.
 
 ### Notas del reparto de invitaciones (`src/modules/guests/`)
 
