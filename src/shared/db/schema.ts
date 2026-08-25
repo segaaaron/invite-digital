@@ -273,7 +273,7 @@ export const venueZones = pgTable(
     eventId: uuid('event_id')
       .notNull()
       .references(() => events.id, { onDelete: 'cascade' }),
-    // 'dance' | 'bar' | 'stage' | 'music' | 'entrance'
+    // 'dance' | 'bar' | 'stage' | 'music' | 'entrance' | 'kitchen' | 'photo' | 'custom'
     kind: varchar('kind', { length: 16 }).notNull(),
     label: varchar('label', { length: 80 }).notNull(),
     x: numeric('x', { precision: 5, scale: 2 }).notNull(),

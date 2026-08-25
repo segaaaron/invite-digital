@@ -2,31 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { Field, FIELD_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { addGuestAction, type GuestActionState } from '../actions'
 
 export type GroupChoice = { readonly id: string; readonly label: string; readonly free: number }
 
-const CAMPO =
-  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
 
-// El rótulo va **fuera** del control, no envolviéndolo: un `<label>` que contiene a su
-// `<select>` mete el texto de todas las opciones dentro del nombre accesible del campo, y
-// «Grupo» pasa a llamarse «GrupoAna Lucía Vega · 2 libresFamilia García · 5 libres…».
-// Con eso, ni un lector de pantalla ni una prueba encuentran el campo por su nombre.
-const ROTULO = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
 
 const INICIAL: GuestActionState = { status: 'idle', message: '' }
-
-function Campo({ children, htmlFor, label }: { children: ReactNode; htmlFor: string; label: string }) {
-  return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <label className={ROTULO} htmlFor={htmlFor}>
-        {label}
-      </label>
-      {children}
-    </div>
-  )
-}
 
 /**
  * El alta de invitado de la maqueta, entera y en un diálogo: nombre, grupo, acompañantes,
@@ -118,7 +101,7 @@ export function GuestDialog({
           <label className="sr-only" htmlFor={`${idNombre}-enlace`}>
             Enlace de la invitación
           </label>
-          <input className={CAMPO} id={`${idNombre}-enlace`} readOnly value={estado.token ?? ''} />
+          <input className={FIELD_CLASS} id={`${idNombre}-enlace`} readOnly value={estado.token ?? ''} />
         </div>
       ) : null}
 
@@ -126,13 +109,13 @@ export function GuestDialog({
         <input name="eventId" type="hidden" value={eventId} />
         <input name="eventSlug" type="hidden" value={eventSlug} />
 
-        <Campo htmlFor={idNombre} label="Nombre completo">
-          <input autoFocus className={CAMPO} id={idNombre} maxLength={160} name="fullName" required type="text" />
-        </Campo>
+        <Field htmlFor={idNombre} label="Nombre completo">
+          <input autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
+        </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo htmlFor={idGrupo} label="Grupo">
-            <select className={CAMPO} id={idGrupo} name="groupId" onChange={(e) => setGrupo(e.target.value)} value={grupo}>
+          <Field htmlFor={idGrupo} label="Grupo">
+            <select className={FIELD_CLASS} id={idGrupo} name="groupId" onChange={(e) => setGrupo(e.target.value)} value={grupo}>
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
                   {g.label} · {g.free} libre{g.free === 1 ? '' : 's'}
@@ -140,19 +123,19 @@ export function GuestDialog({
               ))}
               <option value="">Grupo nuevo…</option>
             </select>
-          </Campo>
+          </Field>
 
-          <Campo htmlFor={idAcomp} label="Acompañantes">
-            <input className={CAMPO} defaultValue={0} id={idAcomp} min={0} name="companions" type="number" />
-          </Campo>
+          <Field htmlFor={idAcomp} label="Acompañantes">
+            <input className={FIELD_CLASS} defaultValue={0} id={idAcomp} min={0} name="companions" type="number" />
+          </Field>
         </div>
 
         {notice === undefined ? null : <div>{notice}</div>}
 
         {nuevoGrupo ? (
-          <Campo htmlFor={idNuevo} label="Nombre del grupo nuevo">
+          <Field htmlFor={idNuevo} label="Nombre del grupo nuevo">
             <input
-              className={CAMPO}
+              className={FIELD_CLASS}
               id={idNuevo}
               maxLength={160}
               name="newGroupLabel"
@@ -160,46 +143,46 @@ export function GuestDialog({
               required
               type="text"
             />
-          </Campo>
+          </Field>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo htmlFor={idRsvp} label="RSVP">
-            <select className={CAMPO} id={idRsvp} name="attending">
+          <Field htmlFor={idRsvp} label="RSVP">
+            <select className={FIELD_CLASS} id={idRsvp} name="attending">
               <option value="">Pendiente</option>
               <option value="yes">Asistirá</option>
               <option value="no">No podrá</option>
               <option value="maybe">Tal vez</option>
             </select>
-          </Campo>
+          </Field>
 
-          <Campo htmlFor={idDieta} label="Restricciones">
+          <Field htmlFor={idDieta} label="Restricciones">
             <input
-              className={CAMPO}
+              className={FIELD_CLASS}
               id={idDieta}
               maxLength={200}
               name="dietaryNote"
               placeholder="Vegano, sin gluten…"
               type="text"
             />
-          </Campo>
+          </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Campo htmlFor={idTel} label="WhatsApp / Teléfono">
-            <input className={CAMPO} id={idTel} maxLength={32} name="phone" placeholder="+591 700 00000" type="tel" />
-          </Campo>
+          <Field htmlFor={idTel} label="WhatsApp / Teléfono">
+            <input className={FIELD_CLASS} id={idTel} maxLength={32} name="phone" placeholder="+591 700 00000" type="tel" />
+          </Field>
 
-          <Campo htmlFor={idCorreo} label="Email">
+          <Field htmlFor={idCorreo} label="Email">
             <input
-              className={CAMPO}
+              className={FIELD_CLASS}
               id={idCorreo}
               maxLength={160}
               name="email"
               placeholder="correo@ejemplo.com"
               type="email"
             />
-          </Campo>
+          </Field>
         </div>
 
         <label className="flex items-center gap-2.5 text-[13px] text-ink" htmlFor={idVip}>

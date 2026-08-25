@@ -50,6 +50,28 @@ export function PanelButton({ children, variant = 'default', href, className = '
   )
 }
 
+/**
+ * Los campos de los diálogos y formularios del panel. Estaban copiados en cuatro
+ * ficheros, y el rótulo va **fuera** del control a propósito: un `<label>` que envuelve a
+ * su `<select>` mete el texto de todas las opciones en el nombre accesible del campo, y
+ * ni un lector de pantalla ni una prueba lo encuentran por su nombre.
+ */
+export const FIELD_CLASS =
+  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
+
+export const LABEL_CLASS = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+
+export function Field({ children, htmlFor, label }: { children: ReactNode; htmlFor: string; label: string }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <label className={LABEL_CLASS} htmlFor={htmlFor}>
+        {label}
+      </label>
+      {children}
+    </div>
+  )
+}
+
 const PILL_TONOS = {
   ok: 'bg-pill-ok text-pill-ok-ink',
   no: 'bg-pill-no text-pill-no-ink',

@@ -167,3 +167,48 @@ describe('addGuest · lo que no se puede dejar a medias', () => {
     expect(r.value.requestedCompanions).toBe(3)
   })
 })
+
+describe('addGuest · lo que llega mal desde fuera', () => {
+  it('no sienta a nadie en un grupo de otro evento', async () => {
+    // La acción es un extremo HTTP público: un id de grupo copiado de otra boda no puede
+    // meter a una persona ahí. El resto de acciones del salón ya comprueban el evento.
+    const { deps: d, personas } = deps({
+      findGroup: vi.fn(async () => ({ id: 'g1', eventId: 'otro-evento' })),
+    })
+
+    const r = await addGuest(d as never)({ ...base, groupId: 'g1' })
+
+    expect(isErr(r)).toBe(true)
+    if (!isErr(r)) return
+    expect(r.error.kind).toBe('not_found')
+    expect(personas).toHaveLength(0)
+  })
+
+  it('un número de acompañantes que no es número se trata como ninguno', async () => {
+    // Con grupo nuevo es donde muerde: los cupos son `1 + acompañantes`, así que un NaN
+    // llegaba al dominio y el atelier leía «Cupos inválidos: NaN».
+    const { deps: d } = deps()
+    const r = await addGuest(d as never)({ ...base, newGroupLabel: 'Los Nieto', companions: Number.NaN })
+
+    expect(isOk(r)).toBe(true)
+    expect(d.addGroup).toHaveBeenCalledWith(expect.objectContaining({ seats: 1 }))
+  })
+
+  it('un nombre rechazado por el dominio no se disfraza de problema de cupos', async () => {
+    const { deps: d } = deps({
+      addPerson: vi.fn(async () => ({
+        ok: false as const,
+        kind: 'invalid_label',
+        message: 'La persona necesita un nombre',
+      })),
+    })
+
+    const r = await addGuest(d as never)({ ...base, groupId: 'g1' })
+
+    expect(isErr(r)).toBe(true)
+    if (!isErr(r)) return
+    // Antes todo fallo de la persona salía como `invalid_seats`, y el atelier leía «sube
+    // el cupo del grupo» ante un nombre demasiado largo.
+    expect(r.error.kind).toBe('invalid_label')
+  })
+})

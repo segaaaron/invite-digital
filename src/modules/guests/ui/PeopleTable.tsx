@@ -46,6 +46,16 @@ const ESTADO: Record<string, string> = { yes: 'Confirmado', no: 'No viene', mayb
 /** El tono de la píldora por estado, como en la maqueta. */
 const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
 
+/**
+ * La fecha, con la zona fijada a UTC.
+ *
+ * Este componente se pinta primero en el servidor y luego hidrata en el navegador. Sin
+ * fijar la zona, un servidor en UTC y un navegador en La Paz dan dos días distintos para
+ * la misma respuesta y React avisa de un desajuste de hidratación.
+ */
+const fechaCorta = (fecha: Date): string =>
+  fecha.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', timeZone: 'UTC' })
+
 /** La maqueta pagina de diez en diez y numera las páginas. */
 const POR_PAGINA = 10
 
@@ -142,7 +152,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     {columna}
                   </th>
                 ))}
-                <th className="border-b border-line-panel py-3" />
+                <th className="border-b border-line-panel py-3" scope="col">
+                  <span className="sr-only">Acciones</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -190,9 +202,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     <Pill tone={fila.sentAt ? 'ok' : 'pending'}>{fila.sentAt ? 'Enviado' : 'Pendiente'}</Pill>
                   </td>
                   <td className="border-b border-line-panel py-3.5 pr-4 font-mono text-[11px] text-ink-soft">
-                    {fila.respondedAt
-                      ? fila.respondedAt.toLocaleDateString('es-BO', { day: '2-digit', month: 'short' })
-                      : '—'}
+                    {fila.respondedAt === null || fila.respondedAt === undefined
+                      ? '—'
+                      : fechaCorta(fila.respondedAt)}
                   </td>
                   <td className="border-b border-line-panel py-3.5 text-right whitespace-nowrap">
                     <button

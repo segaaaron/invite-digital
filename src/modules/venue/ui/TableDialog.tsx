@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { addTableAction } from '../actions'
+import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
 
 const NOMBRE_FORMA: Record<TableShape, string> = {
@@ -12,12 +13,6 @@ const NOMBRE_FORMA: Record<TableShape, string> = {
   imperial: 'Imperial',
 }
 
-const CAMPO =
-  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
-// El rótulo va fuera del control: un `<label>` que envuelve a su `<select>` mete el texto
-// de todas las opciones en el nombre accesible del campo, y deja de encontrarse por él.
-const ROTULO = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
-const CAJA = 'flex min-w-0 flex-col gap-2'
 
 /**
  * «+ Añadir mesa» abre este diálogo, como en la maqueta: nombre, capacidad, forma y
@@ -54,7 +49,8 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
 
   const cerrar = () => {
     dialogo.current?.close()
-    router.push(closeHref)
+    // `replace`, no `push`: con `push`, volver atrás reabre el diálogo.
+    router.replace(closeHref)
   }
 
   const guardar = () => {
@@ -90,11 +86,11 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
       </h2>
 
       <div className="mt-5 flex flex-col gap-4">
-        <label className={ROTULO} htmlFor={idLabel}>
+        <label className={LABEL_CLASS} htmlFor={idLabel}>
           Nombre de la mesa
           <input
             autoFocus
-            className={CAMPO}
+            className={FIELD_CLASS}
             id={idLabel}
             maxLength={60}
             onChange={(e) => setLabel(e.target.value)}
@@ -105,10 +101,10 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
         </label>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className={ROTULO} htmlFor={idCupo}>
+          <label className={LABEL_CLASS} htmlFor={idCupo}>
             Capacidad (asientos)
             <input
-              className={CAMPO}
+              className={FIELD_CLASS}
               id={idCupo}
               min={1}
               onChange={(e) => setCapacity(e.target.value)}
@@ -117,11 +113,11 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
             />
           </label>
 
-          <div className={CAJA}>
-            <label className={ROTULO} htmlFor={idForma}>
+          <div className="flex min-w-0 flex-col gap-2">
+            <label className={LABEL_CLASS} htmlFor={idForma}>
               Forma
             </label>
-            <select className={CAMPO} id={idForma} onChange={(e) => setShape(e.target.value as TableShape)} value={shape}>
+            <select className={FIELD_CLASS} id={idForma} onChange={(e) => setShape(e.target.value as TableShape)} value={shape}>
               {TABLE_SHAPES.map((s) => (
                 <option key={s} value={s}>
                   {NOMBRE_FORMA[s]}
@@ -131,10 +127,10 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
           </div>
         </div>
 
-        <label className={ROTULO} htmlFor={idNotas}>
+        <label className={LABEL_CLASS} htmlFor={idNotas}>
           Notas (opcional)
           <input
-            className={CAMPO}
+            className={FIELD_CLASS}
             id={idNotas}
             maxLength={200}
             onChange={(e) => setNotes(e.target.value)}

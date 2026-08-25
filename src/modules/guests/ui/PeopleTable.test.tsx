@@ -136,3 +136,20 @@ describe('PeopleTable · piel de la maqueta', () => {
     expect(screen.queryByRole('button', { name: 'Página 2' })).not.toBeInTheDocument()
   })
 })
+
+describe('PeopleTable · la fecha de confirmación', () => {
+  it('se pinta igual en el servidor y en el navegador', () => {
+    // `toLocaleDateString` depende de la zona horaria de quien lo ejecuta. Este componente
+    // se pinta primero en el servidor y luego hidrata en el navegador: con husos distintos
+    // salían dos fechas y React avisaba de un desajuste de hidratación.
+    render(
+      <PeopleTable
+        eventSlug="boda"
+        rows={[{ ...filas[0]!, respondedAt: new Date('2026-08-22T02:30:00Z') }]}
+      />,
+    )
+
+    // 22 de agosto en UTC, aunque quien lo pinte esté en La Paz (UTC−4) o en Tokio.
+    expect(screen.getByText('22-ago')).toBeInTheDocument()
+  })
+})

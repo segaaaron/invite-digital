@@ -200,7 +200,7 @@ export const guests = {
     setPhone: (id, phone) => drizzleGuestGroupRepository.setPhone(id, phone),
     addPerson: async (input) => {
       const r = await altaDePersona(input)
-      return isErr(r) ? { ok: false, message: r.error.detail } : { ok: true }
+      return isErr(r) ? { ok: false, message: r.error.detail, kind: r.error.kind } : { ok: true }
     },
   }),
   addPerson: altaDePersona,
@@ -214,7 +214,7 @@ export const guests = {
     minter,
     ids: () => crypto.randomUUID(),
       clock,
-}),
+  }),
   setPhone: (id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(id, phone),
 } as const
 

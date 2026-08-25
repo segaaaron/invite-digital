@@ -6,9 +6,10 @@ describe('avatarColor', () => {
     expect(avatarColor('Ana Lucía Vega')).toBe(avatarColor('Ana Lucía Vega'))
   })
 
-  it('nombres distintos reparten la paleta', () => {
+  it('nombres distintos reparten la paleta de verdad, no se amontonan en dos colores', () => {
+    // `> 1` no probaba nada: un hash que colapsara en dos colores lo pasaría igual.
     const colores = new Set(['Ana', 'Roberto', 'Familia García', 'Patricia', 'Daniel', 'Carmen'].map(avatarColor))
-    expect(colores.size).toBeGreaterThan(1)
+    expect(colores.size).toBeGreaterThanOrEqual(4)
   })
 
   it('un nombre vacío no revienta ni devuelve nada', () => {

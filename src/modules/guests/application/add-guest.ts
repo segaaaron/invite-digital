@@ -1,10 +1,10 @@
 import { attempt, err, ok, type Result } from '@/shared/result'
-import { guestError, type GuestError } from '../domain/errors'
+import { guestError, type GuestError, type GuestErrorKind } from '../domain/errors'
 import type { Attendance } from '../domain/person'
 import type { GuestAllowance } from './add-guest-group'
 
 type AltaGrupo = { ok: true; group: { id: string; label: string }; token: string } | { ok: false; message: string }
-type AltaPersona = { ok: true } | { ok: false; message: string }
+type AltaPersona = { ok: true } | { ok: false; message: string; kind?: string }
 
 type Deps = {
   addGroup: (input: {
@@ -14,7 +14,7 @@ type Deps = {
     allowance: GuestAllowance
     currentGroups: number
   }) => Promise<AltaGrupo>
-  findGroup: (id: string) => Promise<{ id: string } | null>
+  findGroup: (id: string) => Promise<{ id: string; eventId: string } | null>
   /** Deshace el grupo recién creado cuando la persona que lo motivaba no entra. */
   removeGroup: (id: string) => Promise<void>
   setPhone: (groupId: string, phone: string | null) => Promise<void>
@@ -74,7 +74,9 @@ export const addGuest =
         const nombre = input.fullName.trim()
         if (nombre === '') return err(guestError('invalid_label', 'El invitado necesita un nombre.'))
 
-        const acompanantes = Math.max(0, Math.trunc(input.companions))
+        // `Number('abc')` es NaN, y `1 + NaN` cupos llegaba al dominio: el atelier leía
+        // «Cupos inválidos: NaN» ante un campo con basura.
+        const acompanantes = Number.isFinite(input.companions) ? Math.max(0, Math.trunc(input.companions)) : 0
         let groupId = input.groupId ?? null
         let token: string | null = null
 
@@ -95,8 +97,13 @@ export const addGuest =
 
           groupId = alta.group.id
           token = alta.token
-        } else if ((await deps.findGroup(groupId)) === null) {
-          return err(guestError('not_found', 'Ese grupo ya no existe.'))
+        } else {
+          // La acción es un extremo HTTP público: un id copiado de otra boda no puede
+          // sentar a nadie aquí. El resto de acciones del salón ya lo comprueban.
+          const grupo = await deps.findGroup(groupId)
+          if (grupo === null || grupo.eventId !== input.eventId) {
+            return err(guestError('not_found', 'Ese grupo ya no existe.'))
+          }
         }
 
         const grupoNuevo = token !== null
@@ -115,7 +122,9 @@ export const addGuest =
           // vacío quema un hueco del plan y acuña un token que nadie va a ver, y el
           // atelier solo vería «error» sin saber que hay algo que borrar.
           if (grupoNuevo) await deps.removeGroup(groupId)
-          return err(guestError('invalid_seats', principal.message))
+          // La clase del error viene de quien lo produjo: un nombre demasiado largo no es
+          // un problema de cupos, y decirle al atelier que suba el cupo no arregla nada.
+          return err(guestError((principal.kind ?? 'invalid_seats') as GuestErrorKind, principal.message))
         }
 
         // Los acompañantes se cargan uno a uno y **sin tumbar el alta** si alguno no cabe:

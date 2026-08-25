@@ -9,7 +9,7 @@ const { addTableAction, push } = vi.hoisted(() => ({
   push: vi.fn(),
 }))
 vi.mock('../actions', () => ({ addTableAction }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: push }) }))
 
 // jsdom no implementa `showModal`; el componente lo llama al montar.
 beforeEach(() => {
