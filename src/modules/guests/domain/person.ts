@@ -13,6 +13,8 @@ export type GuestPerson = {
   readonly vip: boolean
   /** Nulo es pendiente: nadie ha dicho nada de esta persona todavía. */
   readonly attending: Attendance | null
+  /** Correo del invitado, opcional: aquí se reparte por WhatsApp. */
+  readonly email: string | null
 }
 
 const MAX_NOMBRE = 160
@@ -25,6 +27,7 @@ export function createPerson(input: {
   dietaryNote?: string | null | undefined
   vip?: boolean | undefined
   attending?: string | null | undefined
+  email?: string | null | undefined
 }): Result<GuestPerson, GuestError> {
   const fullName = input.fullName.trim()
   if (fullName === '') return err(guestError('invalid_label', 'La persona necesita un nombre'))
@@ -49,6 +52,8 @@ export function createPerson(input: {
     dietaryNote: dietary === '' ? null : dietary,
     vip: input.vip ?? false,
     attending: attending as Attendance | null,
+    // Un correo en blanco es «no hay correo», no una cadena vacía en la base.
+    email: input.email?.trim() === '' ? null : (input.email?.trim() ?? null),
   })
 }
 

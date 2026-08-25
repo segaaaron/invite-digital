@@ -62,7 +62,7 @@ describe('addPerson', () => {
     // Dejar que el panel cargue cinco en un grupo de cuatro deja a alguien fuera el día
     // del evento, delante de la puerta.
     const { repo } = personas([
-      { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: null, vip: false, attending: null },
+      { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: null, vip: false, attending: null, email: null },
     ])
     const alta = addPerson({ groups: grupo(1), people: repo, ids: () => 'p2' })
 
@@ -92,7 +92,7 @@ describe('updatePerson', () => {
         isCompanion: false,
         dietaryNote: 'Sin gluten',
         vip: false,
-        attending: 'yes',
+        attending: 'yes', email: null,
       },
     ])
 
@@ -106,7 +106,7 @@ describe('updatePerson', () => {
 
   it('permite borrar la restricción pasándola en nulo', async () => {
     const { repo, filas } = personas([
-      { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: 'Sin gluten', vip: false, attending: null },
+      { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: 'Sin gluten', vip: false, attending: null, email: null },
     ])
 
     await updatePerson({ people: repo })({ id: 'a', dietaryNote: null })

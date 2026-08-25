@@ -100,6 +100,64 @@ export type PersonActionState = { status: 'idle' } | { status: 'success' } | { s
  * creería que cargó a un invitado que la base no tiene, y esa persona aparecería el día
  * del evento sin estar en ninguna lista.
  */
+export type GuestActionState = { status: 'idle' | 'success' | 'error'; message: string; token?: string | null }
+
+/**
+ * El alta de invitado de la maqueta, con sus nueve campos. Crea el grupo si hace falta,
+ * la persona, sus acompañantes y guarda el teléfono en el grupo.
+ *
+ * El tope del plan se resuelve **aquí**, en la frontera, y baja como capacidad: el módulo
+ * de invitados no importa `plans`.
+ */
+export async function addGuestAction(_previous: GuestActionState, formData: FormData): Promise<GuestActionState> {
+  await requireSession()
+
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  const eventId = String(formData.get('eventId') ?? '')
+
+  const capacidad = await plans.allowanceFor(eventId)
+  const grupos = await guests.list(eventId)
+  if (isErr(capacidad) || isErr(grupos)) {
+    // Tratar un fallo de lectura como «sin límite» convertiría un error pasajero en un
+    // salto del tope del plan.
+    console.error('alta de invitado sin capacidad legible')
+    return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+  }
+
+  const grupoElegido = String(formData.get('groupId') ?? '')
+  const asistencia = String(formData.get('attending') ?? '')
+
+  const result = await guests.addGuest({
+    eventId,
+    groupId: grupoElegido === '' ? undefined : grupoElegido,
+    newGroupLabel: String(formData.get('newGroupLabel') ?? '') || undefined,
+    fullName: String(formData.get('fullName') ?? ''),
+    companions: Number(formData.get('companions') ?? 0),
+    attending: asistencia === '' ? null : (asistencia as 'yes' | 'no' | 'maybe'),
+    dietaryNote: String(formData.get('dietaryNote') ?? '') || null,
+    phone: String(formData.get('phone') ?? '') || null,
+    email: String(formData.get('email') ?? '') || null,
+    vip: formData.get('vip') === 'on',
+    allowance: { maxGuestGroups: capacidad.value.maxGuestGroups },
+    currentGroups: grupos.value.length,
+  })
+
+  if (isErr(result)) {
+    console.error('alta de invitado rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidatePath(`/panel/eventos/${eventSlug}`)
+  return {
+    status: 'success',
+    message: 'Invitado añadido.',
+    // El enlace del grupo nuevo se enseña **una sola vez**: en la base solo queda su
+    // hash. Viaja ya como URL completa; el token suelto no le sirve a nadie.
+    token: result.value.token === null ? null : invitationUrl(result.value.token, env.SITE_URL),
+  }
+}
+
 export async function addPersonAction(_previous: PersonActionState, formData: FormData): Promise<PersonActionState> {
   await requireSession()
 

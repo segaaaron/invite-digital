@@ -12,6 +12,7 @@ type Fila = {
   dietaryNote: string | null
   vip: boolean
   attending: string | null
+  email: string | null
 }
 
 const COLUMNS = {
@@ -22,6 +23,7 @@ const COLUMNS = {
   dietaryNote: guestPeople.dietaryNote,
   vip: guestPeople.vip,
   attending: guestPeople.attending,
+  email: guestPeople.email,
 } as const
 
 // El CHECK de la tabla es quien garantiza que `attending` solo lleva valores conocidos;

@@ -40,11 +40,17 @@ export async function createGuestGroup(
   label: string,
   seats: number,
 ): Promise<string> {
-  // El alta vive tras el botón «+ Añadir invitado» de la cabecera, como en la maqueta:
-  // se abre por la barra de direcciones para no depender de un clic previo.
+  // El alta es el diálogo de la maqueta. Un grupo se crea dando de alta a su primera
+  // persona con «Grupo nuevo…» y tantos acompañantes como cupos de más.
   await page.goto(`/panel/eventos/${eventSlug}/invitados?panel=alta`)
-  await page.getByLabel('Grupo invitado').fill(label)
-  await page.getByLabel('Cupos').fill(String(seats))
-  await page.getByRole('button', { name: 'Crear invitación' }).click()
-  return page.getByLabel('Enlace de la invitación').inputValue()
+  await page.getByLabel('Nombre completo').fill(label)
+  await page.getByLabel('Grupo', { exact: true }).selectOption('')
+  await page.getByLabel('Nombre del grupo nuevo').fill(label)
+  await page.getByLabel('Acompañantes').fill(String(Math.max(0, seats - 1)))
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  const enlace = await page.getByLabel('Enlace de la invitación').inputValue()
+  // El diálogo se queda abierto para copiar el enlace: cerrarlo deja la página usable.
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
+  await page.waitForURL(/invitados$/)
+  return enlace
 }

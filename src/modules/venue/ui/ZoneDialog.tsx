@@ -18,7 +18,10 @@ const NOMBRE_CLASE: Record<ZoneKind, string> = {
 
 const CAMPO =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
-const ROTULO = 'flex flex-col gap-2 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+// El rótulo va fuera del control: un `<label>` que envuelve a su `<select>` mete el texto
+// de todas las opciones en el nombre accesible del campo, y deja de encontrarse por él.
+const ROTULO = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+const CAJA = 'flex min-w-0 flex-col gap-2'
 
 /**
  * «+ Elemento del salón» abre este diálogo, como en la maqueta: tipo y, solo si el tipo
@@ -108,8 +111,10 @@ export function ZoneDialog({
       </h2>
 
       <div className="mt-5 flex flex-col gap-4">
-        <label className={ROTULO} htmlFor={idTipo}>
-          Tipo
+        <div className={CAJA}>
+          <label className={ROTULO} htmlFor={idTipo}>
+            Tipo
+          </label>
           <select className={CAMPO} id={idTipo} onChange={(e) => setKind(e.target.value as ZoneKind)} value={kind}>
             {ZONE_KINDS.map((k) => (
               <option key={k} value={k}>
@@ -117,11 +122,13 @@ export function ZoneDialog({
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
         {kind === 'custom' ? (
-          <label className={ROTULO} htmlFor={idNombre}>
-            Nombre
+          <div className={CAJA}>
+            <label className={ROTULO} htmlFor={idNombre}>
+              Nombre
+            </label>
             <input
               autoFocus
               className={CAMPO}
@@ -132,7 +139,7 @@ export function ZoneDialog({
               type="text"
               value={label}
             />
-          </label>
+          </div>
         ) : null}
       </div>
 

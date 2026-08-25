@@ -33,7 +33,7 @@ test('la importación dice fila por fila qué entró y qué no', async ({ page }
   const slug = `${SLUG}-csv`
   await seedEnvioEvent(slug)
 
-  await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
+  await page.goto(`/panel/eventos/${slug}/invitados`)
   await page.getByLabel(/pega el listado/i).fill('Familia García;5;+59170022233\n;3\nAna Vega;2;')
   await page.getByRole('button', { name: 'Importar invitados' }).click()
 

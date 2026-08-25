@@ -6,6 +6,7 @@ const persona = (over: Partial<GuestPerson> = {}): GuestPerson => ({
   id: over.id ?? crypto.randomUUID(),
   guestGroupId: 'g1',
   fullName: over.fullName ?? 'Ana Vega',
+  email: over.email ?? null,
   isCompanion: over.isCompanion ?? false,
   dietaryNote: over.dietaryNote ?? null,
   vip: over.vip ?? false,

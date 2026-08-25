@@ -16,10 +16,11 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
 
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
-  // 1. Una persona con restricción, dentro del grupo sembrado (4 cupos).
-  await page.getByLabel('Nombre de la persona').fill('Ana Lucía Vega')
-  await page.getByLabel('Restricción alimentaria (opcional)').fill('Sin gluten')
-  await page.getByRole('button', { name: '+ Añadir invitado' }).click()
+  // 1. Una persona con restricción, dentro del grupo sembrado (4 cupos). El alta es el
+  // diálogo de la maqueta.
+  await page.getByLabel('Nombre completo').fill('Ana Lucía Vega')
+  await page.getByLabel('Restricciones').fill('Sin gluten')
+  await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByRole('cell', { name: 'Ana Lucía Vega' })).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Sin gluten' })).toBeVisible()
 
@@ -46,13 +47,15 @@ test('el cupo del grupo es el tope, y el servidor lo dice', async ({ page }) => 
 
   // El grupo sembrado tiene 4 cupos: la quinta persona no entra.
   for (const nombre of ['Uno', 'Dos', 'Tres', 'Cuatro']) {
-    await page.getByLabel('Nombre de la persona').fill(nombre)
-    await page.getByRole('button', { name: '+ Añadir invitado' }).click()
+    await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
+    await page.getByLabel('Nombre completo').fill(nombre)
+    await page.getByRole('button', { name: 'Guardar' }).click()
     await expect(page.getByRole('cell', { name: nombre })).toBeVisible()
   }
 
-  await page.getByLabel('Nombre de la persona').fill('Cinco')
-  await page.getByRole('button', { name: '+ Añadir invitado' }).click()
+  await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
+  await page.getByLabel('Nombre completo').fill('Cinco')
+  await page.getByRole('button', { name: 'Guardar' }).click()
 
   // El anunciador de rutas de Next también es role=alert: el aviso del formulario es el
   // que lleva texto.

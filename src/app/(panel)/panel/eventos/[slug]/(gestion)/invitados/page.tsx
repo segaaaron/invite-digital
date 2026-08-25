@@ -5,12 +5,11 @@ import { ExportCsvButton } from '@/modules/guests/ui/ExportCsvButton'
 import { PeopleTable, type PersonRowView } from '@/modules/guests/ui/PeopleTable'
 import { DeliveryPanel } from '@/modules/guests/ui/DeliveryPanel'
 import { ImportPanel } from '@/modules/guests/ui/ImportPanel'
-import { PersonForm } from '@/modules/guests/ui/PersonForm'
-import { GuestGroupForm } from '@/modules/guests/ui/GuestGroupForm'
-import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { GuestDialog } from '@/modules/guests/ui/GuestDialog'
 import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
+import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
+import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
@@ -69,6 +68,11 @@ export default async function InvitadosPage({
   }
 
   const etiquetaDeGrupo = new Map(filas.map((f) => [f.id, f.label]))
+  const respuestaDeGrupo = new Map<string, Date>()
+  for (const fila of filas) {
+    const ultima = await rsvp.latestFor(fila.id)
+    if (ultima !== null) respuestaDeGrupo.set(fila.id, ultima.respondedAt)
+  }
   const filasPersona: PersonRowView[] = isErr(personas)
     ? []
     : personas.value.map((persona) => ({
@@ -80,6 +84,10 @@ export default async function InvitadosPage({
         vip: persona.vip,
         attending: persona.attending,
         tableLabel: mesaDeGrupo.get(persona.guestGroupId) ?? null,
+        // «Enviado» y «Confirmado» son del **grupo**: el enlace y la respuesta lo son.
+        // La maqueta los enseña en la fila de cada persona, y de ahí salen.
+        sentAt: filas.find((f) => f.id === persona.guestGroupId)?.invitationSentAt ?? null,
+        respondedAt: respuestaDeGrupo.get(persona.guestGroupId) ?? null,
       }))
 
   const cargadasPorGrupo = new Map<string, number>()
@@ -115,55 +123,35 @@ export default async function InvitadosPage({
               rows={filas}
             />
             <PanelButton href={abierto === 'envio' ? base : `${base}?panel=envio`}>✉ Enviar invitaciones</PanelButton>
-            <PanelButton href={abierto === 'alta' ? base : `${base}?panel=alta`} variant="primary">
+            <PanelButton href={`${base}?panel=alta`} variant="primary">
               + Añadir invitado
             </PanelButton>
           </>
         }
         kicker="Gestión"
-        meta={`${filas.length} grupos · ${cupos} cupos repartidos`}
+        meta={`${filasPersona.length} invitados en total · ${filas.length} grupos · ${cupos} cupos`}
         title="Invitados"
       />
 
+      {/* «+ Añadir invitado» abre el diálogo de la maqueta, con sus nueve campos. */}
+      {abierto === 'alta' ? (
+        <GuestDialog
+          atLimit={!canAddGroup(limite, filas.length)}
+          closeHref={base}
+          eventId={event.value.id}
+          eventSlug={event.value.slug}
+          groups={filas.map((fila) => ({
+            id: fila.id,
+            label: fila.label,
+            free: Math.max(0, fila.seats - (cargadasPorGrupo.get(fila.id) ?? 0)),
+          }))}
+          notice={
+            <AllowanceNotice currentGroups={filas.length} eventSlug={event.value.slug} maxGuestGroups={limite} />
+          }
+        />
+      ) : null}
+
       <div className="flex flex-col gap-4.5">
-        {abierto === 'alta' ? (
-          <PanelCard
-            action={
-              <Link href={base}>
-                <PanelCardLink>Cerrar ✕</PanelCardLink>
-              </Link>
-            }
-            title="Añadir invitados"
-          >
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col gap-4">
-                <AllowanceNotice currentGroups={filas.length} eventSlug={event.value.slug} maxGuestGroups={limite} />
-                <GuestGroupForm
-                  atLimit={!canAddGroup(limite, filas.length)}
-                  eventId={event.value.id}
-                  eventSlug={event.value.slug}
-                />
-              </div>
-
-              <div className="border-t border-line-panel pt-6">
-                <PersonForm
-                  eventSlug={event.value.slug}
-                  groups={filas.map((fila) => ({
-                    id: fila.id,
-                    label: fila.label,
-                    free: Math.max(0, fila.seats - (cargadasPorGrupo.get(fila.id) ?? 0)),
-                  }))}
-                />
-              </div>
-
-              <div className="border-t border-line-panel pt-6">
-                <p className="mb-3 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Importar desde CSV</p>
-                <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} />
-              </div>
-            </div>
-          </PanelCard>
-        ) : null}
-
         {abierto === 'envio' ? (
           <PanelCard
             action={
@@ -205,6 +193,10 @@ export default async function InvitadosPage({
           ) : (
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
           )}
+        </PanelCard>
+
+        <PanelCard title="Importar desde CSV">
+          <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} />
         </PanelCard>
 
         {/* Los grupos con sus cupos y su enlace no están en la maqueta —que modela

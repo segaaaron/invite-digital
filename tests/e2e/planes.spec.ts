@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
 import { AUTH_STATE } from './fixtures/atelier'
 import { closePlanesDb, deletePlanEvent, guestGroupCount, seedPlanEvent } from './fixtures/planes'
 
@@ -11,6 +11,17 @@ test.afterAll(async () => {
   await closePlanesDb()
 })
 
+/** Da de alta un grupo por el diálogo de la maqueta: primer invitado y sus acompañantes. */
+async function crearGrupo(page: Page, etiqueta: string, acompanantes = 1): Promise<void> {
+  await page.getByLabel('Nombre completo').fill(etiqueta)
+  await page.getByLabel('Grupo', { exact: true }).selectOption('')
+  await page.getByLabel('Nombre del grupo nuevo').fill(etiqueta)
+  await page.getByLabel('Acompañantes').fill(String(acompanantes))
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
+  await page.waitForURL(/invitados$/)
+}
+
 test('el límite del plan corta en el servidor, no solo en el botón', async ({ page }) => {
   // Plan de prueba con dos grupos de cupo. No se le baja el límite a `atelier`: quedaría
   // bajado para el resto de la suite y para la base de desarrollo.
@@ -19,34 +30,32 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
   // 1. Los dos que caben entran.
-  await page.getByLabel('Grupo invitado').fill('Familia Rojas')
-  await page.getByLabel('Cupos').fill('4')
-  await page.getByRole('button', { name: 'Crear invitación' }).click()
-  await expect(page.getByRole('cell', { name: 'Familia Rojas' })).toBeVisible()
+  await crearGrupo(page, 'Familia Rojas')
+  await expect(page.getByRole('cell', { name: 'Familia Rojas' }).first()).toBeVisible()
 
-  await page.getByLabel('Grupo invitado').fill('Familia Vargas')
-  await page.getByLabel('Cupos').fill('2')
-  await page.getByRole('button', { name: 'Crear invitación' }).click()
-  await expect(page.getByRole('cell', { name: 'Familia Vargas' })).toBeVisible()
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await crearGrupo(page, 'Familia Vargas')
+  await expect(page.getByRole('cell', { name: 'Familia Vargas' }).first()).toBeVisible()
 
   expect(await guestGroupCount(eventId)).toBe(2)
 
-  // 2. En el tope, el aviso cambia de tono y el botón queda deshabilitado.
-  await page.reload()
+  // 2. En el tope, el aviso cambia de tono y el botón de guardar queda deshabilitado.
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
+  await page.getByLabel('Grupo', { exact: true }).selectOption('')
   await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Crear invitación' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Guardar' })).toBeDisabled()
 
   // 3. Y ahora lo que importa: se desactiva el guardia del navegador y se manda el
   //    formulario igual. Es lo que haría cualquiera con las herramientas de desarrollo
   //    abiertas, o llamando a la acción a mano: una Server Action es un extremo HTTP
   //    público y el botón deshabilitado no protege nada. El corte tiene que venir del
   //    servidor.
-  await page.getByLabel('Grupo invitado').fill('Familia Colada')
-  await page.getByLabel('Cupos').fill('2')
+  await page.getByLabel('Nombre completo').fill('Familia Colada')
+  await page.getByLabel('Nombre del grupo nuevo').fill('Familia Colada')
   await page.evaluate(() => {
     document.querySelectorAll('button[type="submit"]').forEach((b) => b.removeAttribute('disabled'))
   })
-  await page.getByRole('button', { name: 'Crear invitación' }).click()
+  await page.getByRole('button', { name: 'Guardar' }).click()
 
   await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Familia Colada' })).toBeHidden()
@@ -88,7 +97,8 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
   // aviso de tope desaparece de la página del evento.
   await expect(page.getByLabel('Plan alta-costura')).toContainText('Plan actual')
 
-  // El formulario vive en la vista de invitados, que es propia como en la maqueta.
+  // El alta vive en la vista de invitados, que es propia como en la maqueta.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-  await expect(page.getByRole('button', { name: 'Crear invitación' })).toBeEnabled()
+  await page.getByLabel('Grupo', { exact: true }).selectOption('')
+  await expect(page.getByRole('button', { name: 'Guardar' })).toBeEnabled()
 })

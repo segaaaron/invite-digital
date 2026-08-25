@@ -66,6 +66,8 @@ import {
 import { getEventAllowance } from '@/modules/plans/application/get-event-allowance'
 import { requireFeature } from '@/modules/plans/application/require-feature'
 import { drizzlePlansRepository } from '@/modules/plans/infrastructure/drizzle-plans-repository'
+import { isErr } from '@/shared/result'
+import { addGuest } from '@/modules/guests/application/add-guest'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { importGuestGroups } from '@/modules/guests/application/import-guest-groups'
@@ -170,16 +172,37 @@ export const plans = {
   pendingChange: getPendingRequest({ plans: drizzlePlansRepository }),
 } as const
 
+// Fuera del objeto: `addGuest` los compone, y un objeto que se referencia a sí mismo
+// dentro de su propia definición no tiene tipo que TypeScript pueda inferir.
+const altaDeGrupo = addGuestGroup({ groups: drizzleGuestGroupRepository, minter, ids: () => crypto.randomUUID(), clock })
+const altaDePersona = addPerson({
+  groups: drizzleGuestGroupRepository,
+  people: drizzleGuestPersonRepository,
+  ids: () => crypto.randomUUID(),
+})
+
 export const guests = {
-  add: addGuestGroup({ groups: drizzleGuestGroupRepository, minter, ids: () => crypto.randomUUID(), clock }),
+  add: altaDeGrupo,
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
-  addPerson: addPerson({
-    groups: drizzleGuestGroupRepository,
-    people: drizzleGuestPersonRepository,
-    ids: () => crypto.randomUUID(),
+  // El alta de invitado de la maqueta: grupo —nuevo o existente—, persona, acompañantes,
+  // teléfono y correo, en una sola pantalla. Compone los casos de uso que ya existen en
+  // vez de duplicar sus reglas: el tope del plan y el cupo del grupo siguen viviendo
+  // donde vivían.
+  addGuest: addGuest({
+    addGroup: async (input) => {
+      const r = await altaDeGrupo(input)
+      return isErr(r) ? { ok: false, message: r.error.detail } : { ok: true, group: r.value.group, token: r.value.token }
+    },
+    findGroup: (id) => drizzleGuestGroupRepository.findById(id),
+    setPhone: (id, phone) => drizzleGuestGroupRepository.setPhone(id, phone),
+    addPerson: async (input) => {
+      const r = await altaDePersona(input)
+      return isErr(r) ? { ok: false, message: r.error.detail } : { ok: true }
+    },
   }),
+  addPerson: altaDePersona,
   updatePerson: updatePerson({ people: drizzleGuestPersonRepository }),
   removePerson: removePerson({ people: drizzleGuestPersonRepository }),
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),

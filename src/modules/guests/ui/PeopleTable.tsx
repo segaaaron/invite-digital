@@ -14,6 +14,10 @@ export type PersonRowView = {
   readonly vip: boolean
   readonly attending: Attendance | null
   readonly tableLabel: string | null
+  /** Cuándo dio el atelier por repartido el enlace del grupo. No es prueba de entrega. */
+  readonly sentAt?: Date | null
+  /** Cuándo respondió el grupo por última vez. */
+  readonly respondedAt?: Date | null
 }
 
 type Filtro = 'todos' | 'confirmados' | 'pendientes' | 'no-vienen' | 'tal-vez' | 'vip'
@@ -129,7 +133,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
           <table className="w-full border-collapse text-left">
             <thead>
               <tr>
-                {['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa'].map((columna) => (
+                {['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna) => (
                   <th
                     key={columna}
                     className="border-b border-line-panel py-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase"
@@ -181,6 +185,14 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                   </td>
                   <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {fila.tableLabel ?? 'Sin mesa'}
+                  </td>
+                  <td className="border-b border-line-panel py-3.5 pr-4">
+                    <Pill tone={fila.sentAt ? 'ok' : 'pending'}>{fila.sentAt ? 'Enviado' : 'Pendiente'}</Pill>
+                  </td>
+                  <td className="border-b border-line-panel py-3.5 pr-4 font-mono text-[11px] text-ink-soft">
+                    {fila.respondedAt
+                      ? fila.respondedAt.toLocaleDateString('es-BO', { day: '2-digit', month: 'short' })
+                      : '—'}
                   </td>
                   <td className="border-b border-line-panel py-3.5 text-right whitespace-nowrap">
                     <button

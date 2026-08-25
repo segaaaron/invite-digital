@@ -14,7 +14,10 @@ const NOMBRE_FORMA: Record<TableShape, string> = {
 
 const CAMPO =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
-const ROTULO = 'flex flex-col gap-2 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+// El rótulo va fuera del control: un `<label>` que envuelve a su `<select>` mete el texto
+// de todas las opciones en el nombre accesible del campo, y deja de encontrarse por él.
+const ROTULO = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+const CAJA = 'flex min-w-0 flex-col gap-2'
 
 /**
  * «+ Añadir mesa» abre este diálogo, como en la maqueta: nombre, capacidad, forma y
@@ -114,8 +117,10 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
             />
           </label>
 
-          <label className={ROTULO} htmlFor={idForma}>
-            Forma
+          <div className={CAJA}>
+            <label className={ROTULO} htmlFor={idForma}>
+              Forma
+            </label>
             <select className={CAMPO} id={idForma} onChange={(e) => setShape(e.target.value as TableShape)} value={shape}>
               {TABLE_SHAPES.map((s) => (
                 <option key={s} value={s}>
@@ -123,7 +128,7 @@ export function TableDialog({ eventId, eventSlug, closeHref }: { eventId: string
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </div>
 
         <label className={ROTULO} htmlFor={idNotas}>

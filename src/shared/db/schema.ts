@@ -514,6 +514,8 @@ export const guestPeople = pgTable(
     isCompanion: boolean('is_companion').notNull().default(false),
     dietaryNote: text('dietary_note'),
     vip: boolean('vip').notNull().default(false),
+    // Correo del invitado. Dato personal: la retención lo anonimiza con el nombre.
+    email: varchar('email', { length: 160 }),
     attending: varchar('attending', { length: 8 }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },

@@ -120,6 +120,13 @@
       "when": 1787365876032,
       "tag": "0016_table_notes",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1787365877032,
+      "tag": "0017_person_email",
+      "breakpoints": true
     }
   ]
 }

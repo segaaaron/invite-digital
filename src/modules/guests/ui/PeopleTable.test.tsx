@@ -50,9 +50,17 @@ describe('PeopleTable', () => {
 
   it('el estado se lee en texto, no solo por color', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    expect(screen.getByText('Confirmado')).toBeInTheDocument()
-    expect(screen.getByText('Tal vez')).toBeInTheDocument()
-    expect(screen.getByText('Pendiente')).toBeInTheDocument()
+    // «Confirmado» es además una columna de la tabla, como en la maqueta: se busca el
+    // botón de la fila, que es el que cambia el estado.
+    expect(screen.getByRole('button', { name: 'Confirmado' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Tal vez' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Pendiente' })).toBeInTheDocument()
+  })
+
+  it('trae las columnas Enviado y Confirmado de la maqueta', () => {
+    render(<PeopleTable eventSlug="boda" rows={filas} />)
+    expect(screen.getByRole('columnheader', { name: 'Enviado' })).toBeInTheDocument()
+    expect(screen.getByRole('columnheader', { name: 'Confirmado' })).toBeInTheDocument()
   })
 
   it('filtra por «tal vez» y por VIP, que es lo que la maqueta añade', () => {

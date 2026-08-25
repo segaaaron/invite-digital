@@ -105,20 +105,32 @@ test.describe('invitados del evento', () => {
   test('crea un grupo, enseña el enlace una sola vez y lo revoca', async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
-    await page.getByLabel('Grupo invitado').fill('Familia Rojas Peña')
-    await page.getByLabel('Cupos').fill('4')
-    await page.getByRole('button', { name: 'Crear invitación' }).click()
+    // El alta es el diálogo de la maqueta: un grupo nace con su primer invitado y sus
+    // acompañantes, que son los cupos de más.
+    await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
+    await page.getByLabel('Grupo', { exact: true }).selectOption('')
+    await page.getByLabel('Nombre del grupo nuevo').fill('Familia Rojas Peña')
+    await page.getByLabel('Acompañantes').fill('3')
+    await page.getByRole('button', { name: 'Guardar' }).click()
 
     const enlace = page.getByLabel('Enlace de la invitación')
     await expect(enlace).toHaveValue(/\/i\/[A-Za-z0-9_-]{22}$/)
-    await expect(page.getByRole('status')).toContainText('no podremos volver a mostrarlo')
+    await expect(page.getByRole('status')).toContainText('no se vuelve a mostrar')
+
+    // El diálogo se queda abierto mientras hay enlace que copiar; lo cierra quien lo copió.
+    await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
+    // Cerrar quita el parámetro de la dirección; sin esperarlo, recargar reabriría el
+    // diálogo y taparía la tabla.
+    await expect(page).toHaveURL(/invitados$/)
 
     // Al recargar, el enlace ya no existe en ninguna parte: solo queda su hash.
     await page.reload()
     await expect(page.getByLabel('Enlace de la invitación')).toHaveCount(0)
     await expect(page.getByText('— / 4')).toBeVisible()
 
-    await page.getByRole('button', { name: 'Revocar' }).click()
+    // La fila del grupo recién creado, no cualquier «Revocar» de la página.
+    const fila = page.getByRole('row').filter({ hasText: 'Familia Rojas Peña' }).last()
+    await fila.getByRole('button', { name: 'Revocar' }).click()
     // La fila de la tabla; el panel de reparto también dice «Revocada» en su tarjeta.
     await expect(page.getByRole('cell', { name: 'Revocada' })).toBeVisible()
   })
@@ -126,10 +138,13 @@ test.describe('invitados del evento', () => {
   test('crea el enlace del cliente, se abre en solo lectura y se revoca', async ({ page, context }) => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
-    await page.getByLabel('Grupo invitado').fill('Familia Rojas Peña')
-    await page.getByLabel('Cupos').fill('4')
-    await page.getByRole('button', { name: 'Crear invitación' }).click()
+    await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
+    await page.getByLabel('Grupo', { exact: true }).selectOption('')
+    await page.getByLabel('Nombre del grupo nuevo').fill('Familia Rojas Peña')
+    await page.getByLabel('Acompañantes').fill('3')
+    await page.getByRole('button', { name: 'Guardar' }).click()
     await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()
+    await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
 
     // El enlace del cliente vive en Configuración, que es una vista propia como en la maqueta.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
@@ -153,15 +168,13 @@ test.describe('invitados del evento', () => {
     await anonima.close()
   })
 
-  test('el navegador no deja enviar un grupo de cero cupos', async ({ page }) => {
+  test('un invitado sin nombre no se envía: el navegador lo corta', async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-    await page.getByLabel('Grupo invitado').fill('Grupo vacío')
-    await page.getByLabel('Cupos').fill('0')
-    await page.getByRole('button', { name: 'Crear invitación' }).click()
+    await page.getByRole('button', { name: 'Guardar' }).click()
 
-    // `min={1}` corta el envío en el navegador; el dominio vuelve a rechazarlo si
+    // `required` corta el envío en el navegador; el dominio vuelve a rechazarlo si
     // alguien llama a la acción por su cuenta (cubierto en las pruebas de aplicación).
-    await expect(page.getByLabel('Cupos')).toHaveJSProperty('validity.rangeUnderflow', true)
+    await expect(page.getByLabel('Nombre completo')).toHaveJSProperty('validity.valueMissing', true)
     await expect(page.getByLabel('Enlace de la invitación')).toHaveCount(0)
   })
 })

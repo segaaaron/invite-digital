@@ -45,7 +45,7 @@ describe('drizzleGuestPersonRepository', () => {
       isCompanion: false,
       dietaryNote: 'Sin gluten',
       vip: true,
-      attending: 'yes',
+      attending: 'yes', email: null,
     })
 
     const leida = await drizzleGuestPersonRepository.findById(id)
@@ -67,7 +67,7 @@ describe('drizzleGuestPersonRepository', () => {
       isCompanion: false,
       dietaryNote: null,
       vip: false,
-      attending: null,
+      attending: null, email: null,
     })
 
     const nuestras = await drizzleGuestPersonRepository.listByEvent(eventId)
@@ -84,7 +84,7 @@ describe('drizzleGuestPersonRepository', () => {
       isCompanion: true,
       dietaryNote: null,
       vip: false,
-      attending: null,
+      attending: null, email: null,
     })
 
     await db.delete(guestGroups).where(eq(guestGroups.id, grupoTemporal))
