@@ -323,6 +323,26 @@ Plan B— siguen sin construirse.
 - **Lo «sin leer» se distingue por texto además de por color**, y el contador del filtro se
   calcula sobre todos los mensajes, no sobre los visibles.
 
+### Notas de los anchos del panel
+
+- **Los cortes son los de la maqueta, no los de Tailwind**: 860 para la carcasa y la
+  barra, 900 para las rejillas de dos y cuatro columnas, 560 para el teléfono. Se
+  escriben `min-[860px]:`. Cuando la barra rompía en `md` (768) y el layout en 860, entre
+  esos dos anchos la barra se pintaba en columna ocupando la pantalla entera.
+- **Las rejillas de tarjetas son `auto-fill minmax`, no breakpoints**: mesas 260 px,
+  regalos 220, fondos 320, como la maqueta. Con `md:grid-cols-2` las tarjetas de mesa
+  caían en dos columnas de 190 px y «Mesa 01» se partía en dos líneas.
+- **Un absoluto dentro de un `overflow-x-auto` no se recorta** si su bloque contenedor
+  está más arriba —el `div` del scroll es `static`, así que acaba siendo el `main`, que sí
+  es `relative`—. Un `span.sr-only` de 1 px en una cabecera de tabla estiraba el documento
+  de 390 a 709 px en el teléfono. Por eso esos contenedores llevan `relative`.
+- **`tests/e2e/responsive.spec.ts` mide dos cosas distintas.** Los elementos que se salen
+  sin ancestro que los desplace —`body` lleva `overflow-x: hidden`, así que el desborde no
+  da barra, da contenido cortado— **y** el `scrollWidth` del documento, que es lo único
+  que caza el caso del absoluto. Cinco anchos, los dos lados de cada corte.
+- **Esa suite abre su propia conexión a Postgres.** Compartir la de `fixtures/db` con
+  `panel.spec.ts` deja a la segunda escribiendo contra una conexión cerrada.
+
 ### Notas del salón (`src/modules/venue/`)
 
 - **El plano no guarda al arrastrar ni al soltar.** Acumula en local y manda el lote
