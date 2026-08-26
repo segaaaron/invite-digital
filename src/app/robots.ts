@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic'
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: [{ userAgent: '*', allow: '/', disallow: ['/panel', '/i/', '/compartir/', '/api'] }],
+    rules: [{ userAgent: '*', allow: '/', disallow: ['/panel', '/i/', '/compartir/', '/api', '/r/', '/qr-de-cobro'] }],
     // No `host`: it is a Yandex-only, deprecated directive that expects a hostname,
     // not a URL with a scheme, and Google ignores it.
     sitemap: `${env.SITE_URL}/sitemap.xml`,

@@ -203,9 +203,12 @@ export const qrCodes = pgTable(
   'qr_codes',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    userId: uuid('user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'restrict' }),
+    /**
+     * Quién lo creó. Es **procedencia, no propiedad**: el código pertenece al evento.
+     * `set null` como `audit_log.actor_user_id` — el rastro de quién hizo qué no puede
+     * impedir dar de baja a nadie.
+     */
+    userId: uuid('user_id').references(() => users.id, { onDelete: 'set null' }),
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'cascade' }),
     label: varchar('label', { length: 120 }).notNull(),
     // 'registry' | 'store' | 'custom'

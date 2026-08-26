@@ -2,7 +2,8 @@ import type { QrKind } from '../domain/qr-code'
 
 export type QrRow = {
   readonly id: string
-  readonly userId: string
+  /** Quién lo creó. Nulo si esa cuenta ya no existe: es procedencia, no propiedad. */
+  readonly userId: string | null
   readonly eventId: string | null
   readonly label: string
   readonly kind: string

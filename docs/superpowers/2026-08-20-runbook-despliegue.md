@@ -138,12 +138,17 @@ docker compose exec db psql -U "$POSTGRES_USER" -d postgres -c 'drop database re
 Y saca los volcados del servidor. Un respaldo que vive en la misma máquina que la base
 no protege del único caso que importa: perder la máquina.
 
-### Los comprobantes de pago no están en el volcado
+### Los ficheros no están en el volcado
 
-`pg_dump` guarda la base. Los comprobantes del Plan B son **ficheros**, y viven en el
-volumen `proofs` (`ORDERS_DIR=/var/lib/invitepremium/comprobantes`). Restaurar solo la
-base deja las filas de `order_proofs` apuntando a ficheros que no existen, y el panel
-responde 404 al abrirlos.
+`pg_dump` guarda la base. En el volumen `proofs`
+(`ORDERS_DIR=/var/lib/invitepremium/comprobantes`) viven **dos** cosas que son ficheros:
+
+- los **comprobantes** del Plan B, y
+- la **imagen del QR de cobro** que el administrador sube en `/panel/admin/pagos`.
+
+Restaurar solo la base deja las filas de `order_proofs` apuntando a ficheros que no
+existen —el panel responde 404 al abrirlos— y la página del pedido sin QR, aunque
+`app_settings` diga que hay uno cargado.
 
 Cópialos con el mismo pase que se lleva los volcados:
 

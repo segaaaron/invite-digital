@@ -98,3 +98,29 @@ describe('drizzleQrRepository', () => {
     expect(await repo.findById(suelto)).toBeNull()
   })
 })
+
+describe('borrar al usuario que creó un código', () => {
+  /**
+   * Esta prueba existe por un fallo que encontró el QA contra la base, no el typecheck:
+   * `qr_codes.user_id` era `RESTRICT`, así que borrar a quien hubiera creado un código
+   * reventaba con un error de clave foránea. `canDeleteUser` solo cuenta eventos, de modo
+   * que el admin veía un fallo genérico sin motivo.
+   *
+   * Quién lo creó es **procedencia, no propiedad**: el código pertenece al evento.
+   */
+  it('no bloquea el borrado: el código sobrevive sin autor', async () => {
+    const [autor] = await db
+      .insert(users)
+      .values({ email: `qr-autor-${crypto.randomUUID().slice(0, 8)}@ejemplo.bo`, passwordHash: 'x', role: 'atelier' })
+      .returning({ id: users.id })
+
+    const suyo = crypto.randomUUID()
+    await repo.insert({ id: suyo, userId: autor!.id, eventId, label: 'Del autor', kind: 'custom', target: '/es' })
+
+    await db.delete(users).where(eq(users.id, autor!.id))
+
+    const fila = await repo.findById(suyo)
+    expect(fila).not.toBeNull()
+    expect(fila?.userId).toBeNull()
+  })
+})

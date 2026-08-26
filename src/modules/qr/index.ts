@@ -1,0 +1,5 @@
+export type { QrCode, QrKind } from './domain/qr-code'
+export { QR_KINDS, createQrCode, internalTarget, qrUrl } from './domain/qr-code'
+export type { QrError, QrErrorKind } from './domain/errors'
+export type { QrRepository, QrRow } from './application/ports'
+export { QrManager } from './ui/QrManager'

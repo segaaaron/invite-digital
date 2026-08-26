@@ -483,6 +483,14 @@ correo, que necesita proveedor.
 - **Contador y última fecha, no una tabla de escaneos.** Lo que la pantalla enseña es
   «cuántos» y «cuándo el último». El día que haga falta una serie en el tiempo, será su
   propia tabla.
+- **Quién creó un código es procedencia, no propiedad.** `qr_codes.user_id` va con
+  `SET NULL`, como `audit_log.actor_user_id`: con `RESTRICT` —como nació— borrar a quien
+  hubiera creado un código reventaba con un error de clave foránea, y `canDeleteUser` solo
+  cuenta eventos, así que el admin veía un fallo genérico sin motivo. Lo encontró el QA
+  contra la base, no el typecheck.
+- **`/r/` y `/qr-de-cobro` están en el `disallow` de `robots.txt`.** Un código de una boda
+  privada no tiene por qué acabar en un índice, y quien siguiera la redirección catalogaría
+  el destino.
 - **El QR de cobro no pasa por aquí y no puede.** En Bolivia lo emite el sistema
   financiero, cifrado y firmado; se sube su imagen en `/panel/admin/pagos`.
 

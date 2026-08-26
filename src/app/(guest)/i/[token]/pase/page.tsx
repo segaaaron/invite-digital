@@ -22,8 +22,10 @@ export const metadata = { robots: { index: false, follow: false } }
  * mensaje de WhatsApp, abrir la invitación y desplazarse hasta el final es lo que forma
  * la fila. Esta pantalla se guarda en la pantalla de inicio y se abre de un toque.
  *
- * Fondo claro y fijo, sin tema oscuro: un QR con poco contraste no lo lee ningún escáner,
- * y el brillo del teléfono en un salón a media luz no da para más.
+ * Fondo claro, el de los tokens: la aplicación no tiene tema oscuro, así que el QR sale
+ * siempre con el contraste que un escáner necesita en un salón a media luz. La primera
+ * versión clavaba los hexadecimales aquí «por si acaso», y los hexadecimales solo viven
+ * en `tokens.css`.
  */
 export default async function PasePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params
@@ -59,7 +61,7 @@ export default async function PasePage({ params }: { params: Promise<{ token: st
   }).format(new Date(`${event.eventDate}T00:00:00Z`))
 
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-[#fffdf9] px-6 py-12 text-[#2b2723]">
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-bg-top px-6 py-12 text-ink">
       <header className="flex flex-col items-center gap-1.5 text-center">
         <p className="font-mono text-[9px] tracking-[0.3em] uppercase opacity-55">{event.title}</p>
         <h1 className="font-display text-[30px] leading-tight font-light italic">{group.label}</h1>
@@ -73,7 +75,7 @@ export default async function PasePage({ params }: { params: Promise<{ token: st
       />
 
       {/* El dato que el invitado pregunta nada más entrar, y que la puerta también canta. */}
-      <p className="rounded-[var(--radius-pill)] bg-[#efe7dc] px-5 py-2 font-mono text-[11px] tracking-[0.2em] uppercase">
+      <p className="rounded-[var(--radius-pill)] bg-bg-sunken px-5 py-2 font-mono text-[11px] tracking-[0.2em] uppercase">
         {mesa ?? dictionary.passNoTable}
       </p>
 
