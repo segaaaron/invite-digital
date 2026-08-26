@@ -444,6 +444,34 @@ correo, que necesita proveedor.
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
 
+### Notas del motor de QR (`src/modules/qr/`)
+
+- **Los códigos apuntan a nosotros, no al destino.** `/r/<id>` redirige. Es lo único que
+  permite **cambiar el destino de algo ya impreso** —un cartel con la dirección final
+  dentro queda muerto el día que esa tienda cambia el enlace, y ya está colgado en el
+  salón— y contar los escaneos, que en un código estático no existe.
+- **El destino solo admite `http`, `https` o una ruta interna.** Acaba siendo la cabecera
+  `Location` de una redirección que pulsa un invitado: un `javascript:` ahí sería un
+  agujero abierto por el propio panel. Misma regla que la URL de tienda de la mesa de
+  regalos.
+- **`//otro-dominio` no es una ruta interna.** Empieza por barra, así que la comprobación
+  ingenua lo daba por interno; el navegador lo lee como protocolo relativo y se va del
+  sitio. Hay prueba.
+- **Apagar, no borrar.** El cartel sigue en la pared: quien lo escanee tiene que
+  encontrarse un «ya no está disponible» —404— y no una redirección a cualquier parte ni
+  la portada como si nada.
+- **La redirección es 302, nunca 301.** Un permanente lo cachea el navegador para siempre,
+  y entonces cambiar el destino no sirve para quien ya escaneó. Que el motor exista es
+  justamente para poder cambiarlo.
+- **El contador se suma en la base** (`scan_count + 1`), no leyendo y volviendo a escribir:
+  dos invitados escaneando el mismo cartel a la vez perderían una cuenta, y eso no aparece
+  jamás en desarrollo. Hay prueba con diez escaneos simultáneos contra Postgres real.
+- **Contador y última fecha, no una tabla de escaneos.** Lo que la pantalla enseña es
+  «cuántos» y «cuándo el último». El día que haga falta una serie en el tiempo, será su
+  propia tabla.
+- **El QR de cobro no pasa por aquí y no puede.** En Bolivia lo emite el sistema
+  financiero, cifrado y firmado; se sube su imagen en `/panel/admin/pagos`.
+
 ### Notas de los datos de cobro
 
 - **El QR de cobro no lo generamos, y no es una limitación nuestra.** En Bolivia el QR de

@@ -100,6 +100,7 @@ export function panelNav(
       items: [
         { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
         { href: en('/configuracion#vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+        { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
         { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],
     },

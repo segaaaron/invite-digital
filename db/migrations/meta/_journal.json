@@ -169,6 +169,13 @@
       "when": 1787365883032,
       "tag": "0023_app_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1787365884032,
+      "tag": "0024_qr_codes",
+      "breakpoints": true
     }
   ]
 }

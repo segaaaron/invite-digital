@@ -279,3 +279,15 @@ export function ShieldIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Un código QR: los tres ojos y un módulo suelto. */
+export function QrIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <rect height="7" rx="1.5" width="7" x="3" y="3" />
+      <rect height="7" rx="1.5" width="7" x="14" y="3" />
+      <rect height="7" rx="1.5" width="7" x="3" y="14" />
+      <path d="M14 14h3v3h-3zM20 14h1M14 20h3M20 17.5v3.5" />
+    </svg>
+  )
+}

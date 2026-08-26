@@ -190,6 +190,36 @@ export const appSettings = pgTable('app_settings', {
 })
 
 /**
+ * Un código QR que apunta a **nosotros** y redirige.
+ *
+ * Un QR con la dirección final dentro queda muerto el día que esa tienda cambia el
+ * enlace, y para entonces ya está impreso. Con este, se cambia una fila.
+ *
+ * `scanCount` y `lastScanAt` en vez de una tabla de escaneos: lo que la pantalla enseña
+ * es «cuántos» y «cuándo el último». Una fila por escaneo solo haría falta para dibujar
+ * una serie en el tiempo, y ese día será su propia tabla.
+ */
+export const qrCodes = pgTable(
+  'qr_codes',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    eventId: uuid('event_id').references(() => events.id, { onDelete: 'cascade' }),
+    label: varchar('label', { length: 120 }).notNull(),
+    // 'registry' | 'store' | 'custom'
+    kind: varchar('kind', { length: 24 }).notNull().default('custom'),
+    target: text('target').notNull(),
+    active: boolean('active').notNull().default(true),
+    scanCount: integer('scan_count').notNull().default(0),
+    lastScanAt: timestamp('last_scan_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('qr_codes_event_idx').on(t.eventId, t.createdAt.desc())],
+)
+
+/**
  * Quién hizo qué y cuándo en la administración.
  *
  * `actorUserId` va con `set null` y `actorEmail` es **texto copiado**, no una unión:

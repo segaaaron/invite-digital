@@ -72,6 +72,7 @@ const VISTAS = [
   ['regalos · lista', '/regalos?vista=regalos'],
   ['mensajes', '/mensajes'],
   ['check-in', '/checkin'],
+  ['códigos qr', '/qr'],
   ['estadísticas', '/estadisticas'],
   ['configuración', '/configuracion'],
   ['plan', '/plan'],

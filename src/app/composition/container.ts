@@ -92,6 +92,14 @@ import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-a
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import type { Role } from '@/modules/identity/domain/access'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
+import {
+  createEventQrCode,
+  listEventQrCodes,
+  resolveQrCode,
+  toggleEventQrCode,
+  updateEventQrCode,
+} from '@/modules/qr/application/qr-use-cases'
+import { drizzleQrRepository } from '@/modules/qr/infrastructure/drizzle-qr-repository'
 import { env } from '@/shared/config/env'
 import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
 import { drizzleReminderRepository } from '@/modules/reminders/infrastructure/drizzle-reminder-repository'
@@ -411,6 +419,17 @@ export const admin = {
     newKey: () => crypto.randomUUID(),
   }),
   readFile: (key: string) => proofStorage.get(key),
+}
+
+const qrDeps = { qr: drizzleQrRepository, ids: () => crypto.randomUUID(), clock }
+
+export const qr = {
+  list: listEventQrCodes(qrDeps),
+  create: createEventQrCode(qrDeps),
+  update: updateEventQrCode(qrDeps),
+  toggle: toggleEventQrCode(qrDeps),
+  /** Lo usa la ruta pública `/r/<id>`: sin sesión, como el enlace del invitado. */
+  resolve: resolveQrCode(qrDeps),
 }
 
 export const reminders = {
