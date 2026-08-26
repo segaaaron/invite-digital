@@ -214,6 +214,8 @@ export const es = {
     trackNotFound: 'No encontramos ningún pedido con esa referencia. Revísala: son ocho caracteres.',
     refLabel: 'Referencia',
     payHeading: 'Cómo pagar',
+    payPending:
+      'Todavía estamos preparando los datos de transferencia. Escríbenos por WhatsApp y te los pasamos.',
     payIntro: 'Transfiere el importe del plan a esta cuenta y súbenos el comprobante aquí mismo.',
     bank: 'Banco',
     accountHolder: 'Titular',

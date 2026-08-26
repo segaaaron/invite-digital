@@ -12,8 +12,6 @@ export const PLACEHOLDERS = {
   whatsapp: '+59170012345',
   email: 'atelier@invitepremium.bo',
   domain: 'invitepremium.bo',
-  /** Los datos de transferencia del Plan B nacen así, y así no cobran a nadie. */
-  payment: ['BANCO PENDIENTE', 'TITULAR PENDIENTE', 'CUENTA PENDIENTE'] as readonly string[],
 } as const
 
 /** Contraseñas que aparecen en el repositorio o en la documentación. */
@@ -56,10 +54,12 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
     )
   }
 
+  // Ya no hay marcadores que buscar: los datos viven en la base y nacen vacíos. Lo que
+  // bloquea es que sigan vacíos, que es exactamente el mismo agujero con otra forma.
   const pago = [config.payment.bank, config.payment.accountHolder, config.payment.accountNumber]
-  if (pago.some((dato) => PLACEHOLDERS.payment.includes(dato.trim().toUpperCase())) || pago.some((d) => d.trim() === '')) {
+  if (pago.some((dato) => dato.trim() === '')) {
     blockers.push(
-      'Los datos de transferencia del Plan B siguen siendo marcadores: un pedido enseñaría un número de cuenta que no existe, y el cliente se entera cuando ya transfirió.',
+      'Faltan los datos de transferencia del Plan B: cárgalos en /panel/admin/pagos, o un pedido no podrá pagarse.',
     )
   }
 

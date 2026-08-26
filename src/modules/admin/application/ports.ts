@@ -40,6 +40,11 @@ export type AdminMetrics = {
   readonly porPlan: readonly { readonly plan: string; readonly total: number }[]
 }
 
+export interface SettingsRepository {
+  readAll(): Promise<Record<string, string>>
+  write(entries: Record<string, string>): Promise<void>
+}
+
 export interface AdminRepository {
   listUsers(): Promise<AdminUserRow[]>
   countAdmins(): Promise<number>
@@ -62,4 +67,14 @@ export interface AdminRepository {
     subject?: string | null
     detail?: string | null
   }): Promise<void>
+}
+
+/**
+ * Dónde vive la imagen del QR de cobro. Es el mismo puerto que usan los comprobantes del
+ * Plan B —disco hoy, S3 mañana— y por eso se declara aquí en vez de importarlo: el módulo
+ * de administración no conoce el de pedidos.
+ */
+export interface FileStore {
+  put(key: string, bytes: Uint8Array): Promise<void>
+  get(key: string): Promise<Uint8Array | null>
 }

@@ -72,29 +72,27 @@ describe('comprobación previa al despliegue', () => {
       siteDomain: PLACEHOLDERS.domain,
       postgresPassword: 'invite',
       trustBrands: ['Marca aliada 1'],
-      payment: { bank: 'BANCO PENDIENTE', accountHolder: 'TITULAR PENDIENTE', accountNumber: 'CUENTA PENDIENTE' },
+      payment: { bank: '', accountHolder: '', accountNumber: '' },
     })
     expect(blockers.length).toBeGreaterThanOrEqual(6)
   })
 })
 
 describe('los datos de transferencia del Plan B', () => {
-  it('detienen el despliegue mientras sigan siendo marcadores', () => {
+  it('detienen el despliegue mientras estén vacíos', () => {
+    // Ya no son marcadores en el código: viven en la base y nacen vacíos. Vacíos es el
+    // mismo agujero con otra forma, así que bloquean igual.
     const blockers = checkReleaseReadiness({
       ...REAL,
-      payment: { bank: 'BANCO PENDIENTE', accountHolder: 'TITULAR PENDIENTE', accountNumber: 'CUENTA PENDIENTE' },
+      payment: { bank: '', accountHolder: '', accountNumber: '' },
     })
 
     expect(blockers).toHaveLength(1)
     expect(blockers[0]).toContain('transferencia')
   })
 
-  it('y también si alguien los vacía en vez de rellenarlos', () => {
-    // Vaciar el marcador quita el aviso feo de la pantalla y deja el mismo agujero.
-    const blockers = checkReleaseReadiness({
-      ...REAL,
-      payment: { bank: '', accountHolder: '', accountNumber: '' },
-    })
+  it('media ficha bloquea igual que ninguna', () => {
+    const blockers = checkReleaseReadiness({ ...REAL, payment: { ...REAL.payment, accountNumber: '  ' } })
 
     expect(blockers).toHaveLength(1)
   })

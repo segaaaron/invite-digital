@@ -278,6 +278,8 @@ export interface OrdersDictionary {
   refLabel: string
   payHeading: string
   payIntro: string
+  /** Cuando aún no hay datos de cobro cargados: se dice la verdad y se remite a WhatsApp. */
+  payPending: string
   bank: string
   accountHolder: string
   accountNumber: string

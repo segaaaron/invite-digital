@@ -83,7 +83,13 @@ import {
   setEventPlan as setEventPlanUseCase,
   setUserRole as setUserRoleUseCase,
 } from '@/modules/admin/application/admin-use-cases'
+import {
+  readPaymentSettings,
+  savePaymentQr,
+  savePaymentSettings,
+} from '@/modules/admin/application/payment-use-cases'
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
+import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import type { Role } from '@/modules/identity/domain/access'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
 import { env } from '@/shared/config/env'
@@ -391,6 +397,20 @@ export const admin = {
     return drizzleUserRepository.create({ email: input.email, passwordHash, role: input.role })
   },
   findUserByEmail: (email: string) => drizzleUserRepository.findByEmail(email),
+  /**
+   * Los datos de cobro del Plan B. Comparten almacén con los comprobantes —el mismo
+   * volumen fuera de `public/`— pero la imagen del QR **sí** se sirve sin sesión: está
+   * hecha para que la vea quien va a pagar.
+   */
+  payment: readPaymentSettings({ settings: drizzleSettingsRepository }),
+  savePayment: savePaymentSettings({ settings: drizzleSettingsRepository, admin: drizzleAdminRepository }),
+  savePaymentQr: savePaymentQr({
+    settings: drizzleSettingsRepository,
+    admin: drizzleAdminRepository,
+    storage: proofStorage,
+    newKey: () => crypto.randomUUID(),
+  }),
+  readFile: (key: string) => proofStorage.get(key),
 }
 
 export const reminders = {

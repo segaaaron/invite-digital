@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
-import { orders } from '@/app/composition/container'
+import { admin, orders } from '@/app/composition/container'
 import { ProofUpload } from '@/modules/orders/ui/ProofUpload'
-import { BRAND } from '@/shared/config/brand'
+import { isPayable } from '@/modules/admin/domain/payment-settings'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isErr } from '@/shared/result'
@@ -34,7 +34,12 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
   }
 
   const { order, proofs } = encontrado.value
-  const pago = BRAND.payment
+
+  // Los datos de cobro salen de la base, no del código: cambiar un número de cuenta no
+  // puede exigir un despliegue.
+  const ajustes = await admin.payment()
+  const pago = isErr(ajustes) ? null : ajustes.value
+  const sePuedePagar = pago !== null && isPayable(pago)
 
   return (
     <main className="mx-auto flex w-full max-w-[640px] flex-col gap-7 px-6 py-16">
@@ -66,26 +71,37 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
         <>
           <section className="flex flex-col gap-3 rounded-[18px] border border-line bg-bg-top/60 p-6">
             <h2 className="font-display text-[22px] font-light text-ink">{dictionary.orders.payHeading}</h2>
-            <p className="text-[13px] leading-[1.7] text-ink-soft">{dictionary.orders.payIntro}</p>
-            <dl className="grid gap-1.5 text-[13px] text-ink">
-              <div className="flex gap-2">
-                <dt className="text-ink-mute">{dictionary.orders.bank}:</dt>
-                <dd>{pago.bank}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="text-ink-mute">{dictionary.orders.accountHolder}:</dt>
-                <dd>{pago.accountHolder}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="text-ink-mute">{dictionary.orders.accountNumber}:</dt>
-                <dd className="font-mono">{pago.accountNumber}</dd>
-              </div>
-            </dl>
-            {/* Sin QR cargado no se pinta un hueco con un icono roto: los datos escritos
-                bastan para transferir. */}
-            {pago.qrPath === '' ? null : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img alt={dictionary.orders.qrAlt} className="w-44 self-start rounded-xl" src={pago.qrPath} />
+
+            {/* Media ficha de transferencia es peor que ninguna: quien la ve cree que
+                puede pagar y lo descubre cuando ya escribió. Sin los tres datos, se dice
+                la verdad y se remite a WhatsApp. */}
+            {!sePuedePagar || pago === null ? (
+              <p className="text-[13px] leading-[1.7] text-ink-soft">{dictionary.orders.payPending}</p>
+            ) : (
+              <>
+                <p className="text-[13px] leading-[1.7] text-ink-soft">{dictionary.orders.payIntro}</p>
+                <dl className="grid gap-1.5 text-[13px] text-ink">
+                  <div className="flex gap-2">
+                    <dt className="text-ink-mute">{dictionary.orders.bank}:</dt>
+                    <dd>{pago.bank}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="text-ink-mute">{dictionary.orders.accountHolder}:</dt>
+                    <dd>{pago.accountHolder}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="text-ink-mute">{dictionary.orders.accountNumber}:</dt>
+                    <dd className="font-mono">{pago.accountNumber}</dd>
+                  </div>
+                </dl>
+                {pago.notes === '' ? null : <p className="text-[12px] text-ink-mute">{pago.notes}</p>}
+                {/* Sin QR cargado no se pinta un hueco con un icono roto: los datos
+                    escritos bastan para transferir. */}
+                {pago.hasQrImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img alt={dictionary.orders.qrAlt} className="w-44 self-start rounded-xl" src="/qr-de-cobro" />
+                ) : null}
+              </>
             )}
           </section>
 

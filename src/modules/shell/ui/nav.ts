@@ -62,6 +62,7 @@ export function panelNav(
             { href: '/panel/admin', label: 'Panorama', icon: 'panorama' },
             { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
             { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
+            { href: '/panel/admin/pagos', label: 'Cobros', icon: 'plan' },
             { href: '/panel/admin/auditoria', label: 'Auditoría', icon: 'auditoria' },
           ],
         },

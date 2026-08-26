@@ -444,6 +444,27 @@ correo, que necesita proveedor.
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
 
+### Notas de los datos de cobro
+
+- **El QR de cobro no lo generamos, y no es una limitación nuestra.** En Bolivia el QR de
+  pago es un instrumento regulado: el QR BCB es interoperable y los códigos de QR Simple
+  van cifrados y firmados por la entidad emisora. Se sube la imagen que exporta la
+  aplicación del banco. La pantalla lo dice, para que nadie busque el botón de generar.
+- **Viven en `app_settings`, no en `BRAND`.** Un número de cuenta cambia sin que cambie el
+  producto, y cambiarlo no puede exigir un despliegue.
+- **Son del admin, no de cada atelier.** Los pedidos del Plan B compran planes de
+  InvitePremium: ese dinero va a una sola cuenta. Si algún día un atelier cobrara por su
+  cuenta, sería otra tabla.
+- **Banco, titular y cuenta van juntos.** Con media ficha la página del pedido **no la
+  enseña** y remite a WhatsApp: media ficha hace creer que se puede pagar, y el cliente lo
+  descubre cuando ya escribió.
+- **La imagen se sirve sin sesión, y es la única del almacén que lo hace.** Un comprobante
+  lleva el nombre y la cuenta de un cliente; este QR está hecho para que lo escanee quien
+  va a pagar. Esconderlo lo volvería inútil.
+- **`pnpm preflight` lee la base**, no el código. Si la base no responde trata los datos
+  como vacíos, y vacíos bloquean: desplegar sin poder comprobarlo no es desplegar
+  comprobado.
+
 ### Notas del Plan B (`src/modules/orders/`)
 
 - **El tipo de un comprobante lo deciden sus primeros bytes**, nunca la extensión ni el
@@ -619,6 +640,10 @@ el aviso con `turbopack: {}` deja de generar el Service Worker sin decir nada. E
 de ficheros del `output: standalone` se queda sin memoria bajo webpack con el heap por
 defecto, de ahí el `NODE_OPTIONS` del script.
 
+**El heap del build sube solo.** 8 GB → 12 → **16384** el 25 de agosto, y las tres veces
+por lo mismo: el rastreo de ficheros del `output: standalone` bajo webpack crece con cada
+módulo nuevo. Si vuelve a morir, súbelo antes de buscar la causa en el código.
+
 **Si `pnpm build` muere con «Reached heap limit», borra `.next` antes de tocar nada.**
 Con el caché de una sesión larga el rastreo de ficheros se come el heap del script; con
 `.next` limpio compila. Pasó dos veces en la sesión del 22 de agosto. El 25 de agosto ya
@@ -723,9 +748,9 @@ visible, y esa es justo la razón de que exista la puerta.
 - [ ] **Dominio real** — ahora `invitepremium.bo`; define canonical, sitemap y el TLS de Caddy
 - [ ] **Email real** — ahora `atelier@invitepremium.bo`
 - [ ] **Contraseña de Postgres de producción** — `.env.production`, generada con `openssl rand -base64 24`
-- [ ] **Datos de transferencia y QR de pago** — `BRAND.payment`. El Plan B ya los enseña,
-      y `pnpm preflight` corta mientras sigan siendo marcadores: un pedido con un número
-      de cuenta inventado no cobra a nadie, y el cliente se entera cuando ya transfirió
+- [ ] **Datos de transferencia y QR de pago** — ya **no están en el código**: se cargan en
+      `/panel/admin/pagos`. `pnpm preflight` corta mientras estén vacíos. El QR **no se
+      genera**: en Bolivia lo emite el banco, cifrado y firmado; se sube la imagen
 - [ ] **Fotos de las plantillas `zafiro` y `onix`** — hoy usan marcadores generados
 - [x] **Testimonios** — hecho: quedó solo el real (Daniela Ortiz). Si algún día se añaden
       más, que sean auténticos; no se publican redactados de relleno.

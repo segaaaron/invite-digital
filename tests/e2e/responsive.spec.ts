@@ -140,6 +140,7 @@ const VISTAS_ADMIN = [
   ['admin · panorama', '/panel/admin'],
   ['admin · eventos', '/panel/admin/eventos'],
   ['admin · usuarios', '/panel/admin/usuarios'],
+  ['admin · cobros', '/panel/admin/pagos'],
   ['admin · auditoría', '/panel/admin/auditoria'],
 ] as const
 

@@ -177,6 +177,19 @@ export const eventStaff = pgTable(
 )
 
 /**
+ * Ajustes que el administrador cambia sin desplegar. Hoy, los datos de cobro del Plan B.
+ *
+ * Clave y valor, no una columna por ajuste: cada ajuste nuevo sería una migración, y son
+ * cadenas que solo lee la pantalla que las enseña. El día que haya que consultarlos por su
+ * contenido, ese ajuste merece su propia tabla.
+ */
+export const appSettings = pgTable('app_settings', {
+  key: varchar('key', { length: 64 }).primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+/**
  * Quién hizo qué y cuándo en la administración.
  *
  * `actorUserId` va con `set null` y `actorEmail` es **texto copiado**, no una unión:

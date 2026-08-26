@@ -214,6 +214,8 @@ export const en = {
     trackNotFound: 'We could not find an order with that reference. Check it: it is eight characters long.',
     refLabel: 'Reference',
     payHeading: 'How to pay',
+    payPending:
+      'We are still setting up the transfer details. Message us on WhatsApp and we will send them to you.',
     payIntro: 'Transfer the plan amount to this account and upload the receipt right here.',
     bank: 'Bank',
     accountHolder: 'Account holder',
