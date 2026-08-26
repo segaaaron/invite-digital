@@ -444,6 +444,20 @@ correo, que necesita proveedor.
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
 
+### Notas del pase a solas (`/i/[token]/pase`)
+
+- **Existe porque la puerta pasa de noche, con gente detrás y el teléfono al 4 %.** Buscar
+  el mensaje de WhatsApp, abrir la invitación y desplazarse hasta el final es lo que forma
+  la fila. Esta pantalla se guarda en la pantalla de inicio y se abre de un toque.
+- **Fondo claro y fijo, sin tema oscuro.** Un QR con poco contraste no lo lee ningún
+  escáner, y el brillo de un teléfono en un salón a media luz no da para compensarlo.
+- **Lleva la misma puerta que la invitación**: sin la contraseña del evento no enseña ni el
+  título.
+- **La mesa sale del manifiesto** y si esa lectura falla el pase sigue en pie sin ella: no
+  poder decir la mesa no puede impedir entrar.
+- **Apple y Google Wallet quedan fuera**: exigen cuenta de desarrollador y certificados.
+  Guardar la pantalla en el inicio cubre el caso sin depender de nadie.
+
 ### Notas del motor de QR (`src/modules/qr/`)
 
 - **Los códigos apuntan a nosotros, no al destino.** `/r/<id>` redirige. Es lo único que

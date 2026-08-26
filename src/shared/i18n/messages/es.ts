@@ -106,6 +106,10 @@ export const es = {
     closed: 'El plazo para confirmar ya cerró. Escríbenos por WhatsApp si necesitas avisar algo.',
     passTitle: 'Pase de entrada',
     passHint: 'Muéstralo en la entrada.',
+    passNoTable: 'Mesa por asignar',
+    passSaveHint: 'Guarda esta pantalla en tu teléfono: en la entrada solo tendrás que abrirla y mostrarla.',
+    passBack: 'Volver a la invitación',
+    passOpen: 'Abrir mi pase',
     passAlt: 'Pase de entrada de',
     errors: {
       invitation_not_found: 'Esta invitación no existe.',

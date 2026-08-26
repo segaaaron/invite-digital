@@ -212,6 +212,10 @@ export interface InvitationDictionary {
   passTitle: string
   passHint: string
   passAlt: string
+  passOpen: string
+  passBack: string
+  passSaveHint: string
+  passNoTable: string
   errors: Record<RsvpMessageKey, string>
 }
 

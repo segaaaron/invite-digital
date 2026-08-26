@@ -85,3 +85,26 @@ test('la página del invitado no se indexa', async ({ page, request }) => {
 
   await deleteEvent(eventSlug)
 })
+
+test('el pase vive a solas, a un toque de la invitación', async ({ page }) => {
+  const { token } = await seedInvitation({ slug: 'boda-pase-e2e' })
+
+  // En la puerta, de noche y con gente detrás, nadie se desplaza hasta el final de la
+  // invitación: se abre esta pantalla y se enseña.
+  await page.goto(`/i/${token}`)
+  await page.getByRole('link', { name: 'Abrir mi pase' }).click()
+
+  await expect(page).toHaveURL(new RegExp(`/i/${token}/pase$`))
+  await expect(page.getByRole('img')).toBeVisible()
+  await expect(page.getByText(/Mesa por asignar|Mesa \d+/)).toBeVisible()
+  await expect(page.getByText(/Guarda esta pantalla/)).toBeVisible()
+
+  // Y no se indexa: es de una persona y de una noche.
+  const html = await page.content()
+  expect(html).toContain('noindex')
+
+  await page.getByRole('link', { name: 'Volver a la invitación' }).click()
+  await expect(page).toHaveURL(new RegExp(`/i/${token}$`))
+
+  await deleteEvent('boda-pase-e2e')
+})

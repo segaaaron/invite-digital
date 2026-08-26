@@ -106,6 +106,10 @@ export const en = {
     closed: 'The confirmation window has closed. Message us on WhatsApp if you need to tell us anything.',
     passTitle: 'Entry pass',
     passHint: 'Show it at the door.',
+    passNoTable: 'Table to be assigned',
+    passSaveHint: 'Save this screen to your phone: at the door you will only need to open it and show it.',
+    passBack: 'Back to the invitation',
+    passOpen: 'Open my pass',
     passAlt: 'Entry pass for',
     errors: {
       invitation_not_found: 'This invitation does not exist.',

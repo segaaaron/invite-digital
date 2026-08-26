@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, qrCodes, users } from '@/shared/db/schema'
+import { events, users } from '@/shared/db/schema'
 import { drizzleQrRepository as repo } from './drizzle-qr-repository'
 
 const correo = `qr-e2e-${crypto.randomUUID().slice(0, 8)}@ejemplo.bo`

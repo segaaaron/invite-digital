@@ -88,6 +88,17 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
         label={group.label}
         labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
       />
+
+      {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás, nadie
+          se desplaza hasta el final de la invitación: se abre esta pantalla y se enseña. */}
+      <p className="mt-5 text-center">
+        <a
+          className="inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
+          href={`/i/${token}/pase`}
+        >
+          {dictionary.passOpen}
+        </a>
+      </p>
     </Theme>
   )
 }
