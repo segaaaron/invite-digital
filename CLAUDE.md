@@ -5,13 +5,16 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-25-handoff-plan-b.md`** — estado completo, decisiones tomadas
-y qué sigue. No empieces a trabajar sin leerlo. Cuenta el cierre de **todo lo que quedaba
-sin construir**: el QR de reparto, los recordatorios de RSVP y el Plan B entero. Lo
-primero que dice importa: la documentación daba por pendiente una rebanada que llevaba
-tres días en `main`.
+**`docs/superpowers/2026-08-25-handoff-multitenencia-y-qr.md`** — estado completo,
+decisiones tomadas y qué sigue. No empieces a trabajar sin leerlo.
 
-El anterior, **`docs/superpowers/2026-08-25-handoff.md`**, cuenta de dónde parte. Cuenta el cierre de la fidelidad del panel con
+Lo que más importa de esa sesión: **`events` no tenía dueño y `users` no tenía rol**, así
+que cada usuario veía y editaba las bodas de los demás. No era una funcionalidad que
+faltara, era una separación que nunca existió. El admin, el personal de puerta y el motor
+de QR se apoyan en lo que se construyó para cerrarla.
+
+Los anteriores, **`2026-08-25-handoff-plan-b.md`** y **`2026-08-25-handoff.md`**, cuentan
+de dónde parte. Cuenta el cierre de la fidelidad del panel con
 `Dashboard.html`: la piel, los modales, los anchos y las acciones de la fila de invitados.
 El anterior, `2026-08-23-handoff.md`, cuenta de dónde venía esa sesión;
 `2026-08-22-handoff.md`, el cierre del ciclo 4; `2026-08-19-handoff-ciclo3.md` sigue
@@ -86,7 +89,12 @@ estadísticas; el centro de ayuda; las zonas del salón, que el plano sabía dib
 podía crear; y las Server Actions que fallaban en silencio, que ahora cuentan el fallo en
 la pantalla.
 
-Sin ramas pendientes. No hay remoto configurado: el repositorio es local.
+Sin ramas pendientes. El repositorio es local por decisión del usuario: no preguntes por
+un remoto.
+
+**Hay multitenencia**: cada evento tiene dueño, cada usuario tiene rol —`admin`,
+`atelier` o `puerta`— y nadie entra en el evento de otro. Hay administración en
+`/panel/admin` y un motor de QR en cada evento.
 
 Falta para desplegar: los datos reales del usuario (abajo). `pnpm preflight` los exige.
 
