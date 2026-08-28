@@ -126,7 +126,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-natalia',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Encanto Marino',
     en: 'Sea Charm',

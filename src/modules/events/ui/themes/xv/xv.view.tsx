@@ -1,5 +1,4 @@
 import Image from 'next/image'
-import { THEME_ASSETS, themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
@@ -7,12 +6,10 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
-import { BubblesRise } from '../kit/backgrounds/BubblesRise'
 import { FloatingParticles } from '../kit/backgrounds/FloatingParticles'
-import { MarBackground } from '../kit/backgrounds/MarBackground'
 import { PremiumBubbles } from '../kit/backgrounds/PremiumBubbles'
-import { SofiaCover } from './SofiaCover'
-import { PALETA as P } from './xv.palette'
+import type { PielMarina } from './piel-marina'
+import { PIEL_XV } from './xv.skin'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const SANS = 'var(--font-dm-sans)'
@@ -21,44 +18,24 @@ const CINZEL = 'var(--font-cinzel)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 const SERIF = 'var(--font-cormorant)'
 
-/** El cristal esmerilado sobre el que se apoya cada bloque. Se repite doce veces. */
-const CRISTAL = {
-  background: P.vidrio,
-  backdropFilter: 'blur(14px)',
-  borderRadius: 16,
-  border: `1px solid ${P.bordeVidrio}`,
-  boxShadow: P.sombra,
-} as const
-
 /**
- * Los cuatro iconos del cronograma, por la clave que trae el itinerario.
+ * El esqueleto que comparten los dos diseños marinos, «Bajo el Mar» y «Encanto Marino».
  *
- * Tipados contra el manifiesto de imágenes: un nombre mal escrito aquí no compila, en vez
- * de dejar un hueco en el cronograma que solo se ve abriendo la invitación.
+ * Son la **misma composición con dos pieles**: uno en pasteles sobre fotografía de mar,
+ * otro en dorado sobre negro con partitura de fondo. Copiarlo dos veces serían seiscientas
+ * líneas duplicadas donde un arreglo hay que hacerlo dos veces y se hace una.
+ *
+ * Todo lo que cambia —colores, imágenes, portada— entra por `piel`. Todo lo que cambia por
+ * evento entra por `content`. Lo que queda aquí es la composición, que es lo mismo en los
+ * dos: cabecera, titular, dedicatoria, retrato, padres, fecha destacada, cuenta atrás,
+ * saludo, recepción, mapa, cronograma en zigzag, música, vestimenta, avisos y cierre.
+ *
+ * Todo el texto va sobre cristal esmerilado: es lo único que lo deja legible sobre una
+ * fotografía a sangre, sea clara con lila o negra con oro.
  */
-type ArchivoXv = (typeof THEME_ASSETS)['xv'][number]
-
-const ICONO_POR_DEFECTO: ArchivoXv = 'corona-icono1.avif'
-
-const ICONOS_XV: Record<string, ArchivoXv> = {
-  recepcion: 'invitacion-recepcion.avif',
-  corona: 'corona-icono1.avif',
-  fiesta: 'fiesta-icono.avif',
-  despedida: 'despedida-icono.avif',
-}
-
-/**
- * «Bajo el Mar» — Sofía, de `invites-1.jsx:343`.
- *
- * Fondo fotográfico de mar con burbujas subiendo por delante y por detrás, y **todo el
- * texto sobre cristal esmerilado**: es lo único que lo deja legible sobre una fotografía
- * clara con lila encima.
- *
- * El cronograma va en dos columnas con una línea vertical en medio y un orden cruzado
- * —1, 3 a la izquierda; 2, 4 a la derecha— que es como la maqueta lo compone: se lee en
- * zigzag, no en columna.
- */
-export function XvView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function XvSharedView({ content, dictionary, themes, slots, preview, piel }: ThemeProps & { piel: PielMarina }) {
+  const P = piel.paleta
+  const CRISTAL = piel.cristal
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, notes, gallery, closing } = content
   const retrato = gallery?.[0]
 
@@ -72,35 +49,28 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
     <article
       style={{
         position: 'relative',
-        background: `linear-gradient(160deg, ${P.cielo} 0%, ${P.lavanda} 45%, ${P.rosa} 100%)`,
+        background: piel.fondoBase,
         color: P.tinta,
         fontFamily: SANS,
         minHeight: '100dvh',
       }}
     >
       {preview === true ? null : (
-        <SofiaCover
-          bgAsset={themeAsset('xv', 'bajo-el-mar1.avif')}
-          crownAsset={themeAsset('xv', 'mar-corona-purple.avif')}
-          eyebrow={hero?.eyebrow ?? ''}
-          name={hero?.nameA ?? ''}
-          openLabel={themes.coverAria}
-          title={hero?.monogram ?? 'XV'}
-        />
+        piel.portada({ eyebrow: hero?.eyebrow ?? '', name: hero?.nameA ?? '', title: hero?.monogram ?? 'XV', openLabel: themes.coverAria })
       )}
 
-      <MarBackground opacity={1} theme="xv" variant="b" />
+      {piel.fondo}
       <div
         aria-hidden
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'rgba(252,250,255,.45)',
+          background: piel.velo,
           backdropFilter: 'blur(3px) saturate(0.8)',
           pointerEvents: 'none',
         }}
       />
-      <BubblesRise color="rgba(180,220,255,0.5)" count={24} seed={11} />
+      {piel.burbujas}
       <PremiumBubbles count={8} />
       <FloatingParticles char="✦" color={P.orquidea} count={18} seed={11} size={15} />
 
@@ -207,7 +177,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                   alt=""
                   aria-hidden
                   height={300}
-                  src={themeAsset('xv', 'mar-corona.avif')}
+                  src={piel.corona}
                   style={{
                     width: '78%',
                     height: 'auto',
@@ -251,7 +221,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                 label={retrato?.label ?? themes.portraitPlaceholder}
                 objectPosition="center 6%"
                 radius={0}
-                src={retrato?.imageId === undefined ? themeAsset('xv', 'xv3.avif') : `/media/${retrato.imageId}`}
+                src={retrato?.imageId === undefined ? piel.retrato : `/media/${retrato.imageId}`}
                 width="100%"
               />
             </div>
@@ -307,7 +277,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                 alt=""
                 aria-hidden
                 height={220}
-                src={themeAsset('xv', 'vestido-solo.avif')}
+                src={piel.reloj}
                 style={{ width: 160, height: 'auto', filter: 'drop-shadow(0 8px 20px rgba(0,0,0,.6))' }}
                 width={160}
               />
@@ -389,7 +359,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                   alt=""
                   aria-hidden
                   height={48}
-                  src={themeAsset('xv', 'castillo-purpura.avif')}
+                  src={piel.castillo}
                   style={{ width: 48, height: 'auto', flexShrink: 0 }}
                   width={48}
                 />
@@ -491,7 +461,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                           alt=""
                           aria-hidden
                           height={48}
-                          src={themeAsset('xv', ICONOS_XV[fila.imageId ?? ''] ?? ICONO_POR_DEFECTO)}
+                          src={piel.icono(fila.imageId)}
                           style={{ width: 48, height: 48, objectFit: 'contain' }}
                           width={48}
                         />
@@ -571,7 +541,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                 alt=""
                 aria-hidden
                 height={220}
-                src={themeAsset('xv', 'icono-vestimenta.avif')}
+                src={piel.vestimenta}
                 style={{
                   width: '70%',
                   maxWidth: 220,
@@ -679,7 +649,7 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
                 alt=""
                 aria-hidden
                 height={300}
-                src={themeAsset('xv', 'concha-recortada.avif')}
+                src={piel.cierre}
                 style={{ width: '100%', height: 'auto', display: 'block', filter: 'drop-shadow(0 10px 30px rgba(74,26,110,.28))' }}
                 width={400}
               />
@@ -706,4 +676,9 @@ export function XvView({ content, dictionary, themes, slots, preview }: ThemePro
       </ThemeColumn>
     </article>
   )
+}
+
+/** «Bajo el Mar» — Sofía, de `invites-1.jsx:343`. La composición marina con su piel pastel. */
+export function XvView(props: ThemeProps) {
+  return <XvSharedView {...props} piel={PIEL_XV} />
 }
