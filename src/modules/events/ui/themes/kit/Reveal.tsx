@@ -63,8 +63,25 @@ export function Reveal({ children, delay = 0, y = 24, scale = 1, duration = 800,
       { rootMargin: '0px 0px -10% 0px' },
     )
     observador.observe(elemento)
-    return () => observador.disconnect()
-  }, [reducido, visible])
+
+    // El seguro, que la maqueta ya llevaba y que hay que conservar: si el observador no
+    // dispara, el bloque se enseña igual.
+    //
+    // No es defensivo por costumbre. Se comprobó en el navegador: en una pestaña que no
+    // está al frente, el navegador estrangula el renderizado y el observador **no dispara
+    // nunca**, ni siquiera sobre un elemento a la vista. Sin este seguro, quien abre la
+    // invitación desde WhatsApp y cambia de aplicación mientras carga vuelve a una
+    // invitación en blanco, sin un solo error en consola.
+    const seguro = setTimeout(() => {
+      setVisible(true)
+      observador.disconnect()
+    }, 600 + delay)
+
+    return () => {
+      observador.disconnect()
+      clearTimeout(seguro)
+    }
+  }, [reducido, visible, delay])
 
   const transformaciones = [visible ? null : `translateY(${y}px)`, visible || scale === 1 ? null : `scale(${scale})`]
     .filter((t): t is string => t !== null)

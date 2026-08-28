@@ -6,6 +6,7 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoCollage } from '../kit/PhotoCollage'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
+import { ThemeColumn } from '../kit/ThemeColumn'
 import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
 import { FloatingParticles } from '../kit/backgrounds/FloatingParticles'
 import { Starfield } from '../kit/backgrounds/Starfield'
@@ -37,7 +38,10 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
         color: P.tinta,
         fontFamily: 'var(--font-space-grotesk)',
         minHeight: '100dvh',
-        overflowX: 'hidden',
+        // Sin `overflow-x: hidden` aquí a propósito: ponerlo hace que `overflow-y` pase a
+        // `auto` por especificación, el `<article>` se convierte en contenedor de scroll y
+        // los fondos `sticky` se anclan a él en vez de a la ventana. El recorte horizontal
+        // ya lo hace `body`, que es donde vive desde siempre.
       }}
     >
       {preview === true ? null : (
@@ -72,7 +76,7 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
       <Starfield color="rgba(245,230,200,0.85)" count={45} seed={9} />
       <FloatingParticles char="✦" color={P.oro} count={10} seed={3} size={10} />
 
-      <div style={{ position: 'relative', padding: '44px 30px 60px' }}>
+      <ThemeColumn style={{ padding: '44px 30px 60px' }}>
         <Reveal>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.35em', opacity: 0.6 }}>
@@ -374,7 +378,7 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
         )}
 
         <div style={{ marginTop: 28 }}>{slots.pass}</div>
-      </div>
+      </ThemeColumn>
     </article>
   )
 }

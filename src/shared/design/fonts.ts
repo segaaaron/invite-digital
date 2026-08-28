@@ -1,5 +1,5 @@
 import localFont from 'next/font/local'
-import { FONT_FALLBACKS, FONT_VARIABLES, type FontKey } from './font-manifest'
+import type { FontKey } from './font-manifest'
 
 export const display = localFont({
   variable: '--font-display-raw',
@@ -50,90 +50,86 @@ export const panelMono = localFont({
 // ─────────────────────────────────────────────────────────────────────────────
 // Las tipografías de los temas de invitación
 //
-// Doce familias las piden los dieciséis diseños de boda y XV años. Locales, no
-// enlazadas a Google: una invitación que depende de un tercero para verse bien no se ve
-// bien el día que ese tercero falla, y además le contaría a Google quién abre la
-// invitación de una boda.
+// Doce familias las piden los dieciséis diseños de boda y XV años. Locales, no enlazadas a
+// Google: una invitación que depende de un tercero para verse bien no se ve bien el día
+// que ese tercero falla, y además le contaría a Google quién abre la invitación de una
+// boda.
 //
-// **Cada tema declara las suyas** en su `ThemeDefinition` y el layout de invitado carga
-// solo esas. Las doce en toda invitación son medio megabyte de tipografía que ese diseño
-// no pinta.
-//
-// El dato —claves, variables, respaldos y nombres de fichero— vive en `font-manifest.ts`,
-// que no importa nada de Next y por eso sí se puede comprobar en una prueba. Aquí solo
-// está el cargador.
+// **Todo va escrito como literal, y no es estilo.** `next/font` es una macro que resuelve
+// al compilar: con `variable: FONT_VARIABLES.cinzel` o un `fallback: [...ALGO]` el
+// compilador aborta con «Font loader values must be explicitly written literals», y el
+// typecheck no dice nada porque son cadenas y arrays perfectamente válidos. Se descubre al
+// abrir la página. Que esto no se separe de `font-manifest.ts` lo comprueba una prueba.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const greatVibes = localFont({
-  variable: FONT_VARIABLES.greatVibes,
+  variable: '--font-great-vibes',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.greatVibes],
+  fallback: ['Snell Roundhand', 'Apple Chancery', 'cursive'],
   src: [
     { path: '../../../public/fonts/great-vibes-400.woff2', weight: '400', style: 'normal' },
   ],
 })
 
 export const alexBrush = localFont({
-  variable: FONT_VARIABLES.alexBrush,
+  variable: '--font-alex-brush',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.alexBrush],
+  fallback: ['Snell Roundhand', 'Apple Chancery', 'cursive'],
   src: [
     { path: '../../../public/fonts/alex-brush-400.woff2', weight: '400', style: 'normal' },
   ],
 })
 
 export const allura = localFont({
-  variable: FONT_VARIABLES.allura,
+  variable: '--font-allura',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.allura],
+  fallback: ['Snell Roundhand', 'Apple Chancery', 'cursive'],
   src: [
     { path: '../../../public/fonts/allura-400.woff2', weight: '400', style: 'normal' },
   ],
 })
 
 export const italiana = localFont({
-  variable: FONT_VARIABLES.italiana,
+  variable: '--font-italiana',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.italiana],
+  fallback: ['Didot', 'Bodoni MT', 'serif'],
   src: [
     { path: '../../../public/fonts/italiana-400.woff2', weight: '400', style: 'normal' },
   ],
 })
 
 export const marcellus = localFont({
-  variable: FONT_VARIABLES.marcellus,
+  variable: '--font-marcellus',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.marcellus],
+  fallback: ['Palatino', 'Book Antiqua', 'serif'],
   src: [
     { path: '../../../public/fonts/marcellus-400.woff2', weight: '400', style: 'normal' },
   ],
 })
 
-// Variables: un solo woff2 cubre todo el rango de pesos. Bajar cuatro pesos sueltos
-// descargaba cuatro veces el mismo archivo, que es la lección que ya dejaron las dos del
-// panel.
+// Variables: un solo woff2 cubre todo el rango de pesos.
 export const cinzel = localFont({
-  variable: FONT_VARIABLES.cinzel,
+  variable: '--font-cinzel',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.cinzel],
+  fallback: ['Optima', 'Palatino', 'serif'],
   src: [
     { path: '../../../public/fonts/cinzel-variable.woff2', weight: '400 700', style: 'normal' },
   ],
 })
 
 export const dmSans = localFont({
-  variable: FONT_VARIABLES.dmSans,
+  variable: '--font-dm-sans',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.dmSans],
+  fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
   src: [
     { path: '../../../public/fonts/dm-sans-variable.woff2', weight: '300 700', style: 'normal' },
   ],
 })
 
 export const newsreader = localFont({
-  variable: FONT_VARIABLES.newsreader,
+  variable: '--font-newsreader',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.newsreader],
+  fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/newsreader-variable.woff2', weight: '300 500', style: 'normal' },
   ],
@@ -142,9 +138,9 @@ export const newsreader = localFont({
 // Spectral no tiene eje variable en Google —se comprobó pidiéndolo—, así que van los
 // tres pesos que los diseños usan.
 export const spectral = localFont({
-  variable: FONT_VARIABLES.spectral,
+  variable: '--font-spectral',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.spectral],
+  fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/spectral-200.woff2', weight: '200', style: 'normal' },
     { path: '../../../public/fonts/spectral-300.woff2', weight: '300', style: 'normal' },
@@ -156,9 +152,9 @@ export const spectral = localFont({
 // se llaman por su nombre de familia, no por el papel que hacen en el panel o en la web
 // pública. `next/font` deduplica el mismo fichero, así que no se baja dos veces.
 export const cormorantTheme = localFont({
-  variable: FONT_VARIABLES.cormorant,
+  variable: '--font-cormorant',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.cormorant],
+  fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/cormorant-garamond-300.woff2', weight: '300', style: 'normal' },
     { path: '../../../public/fonts/cormorant-garamond-400.woff2', weight: '400', style: 'normal' },
@@ -168,26 +164,26 @@ export const cormorantTheme = localFont({
 })
 
 export const spaceGroteskTheme = localFont({
-  variable: FONT_VARIABLES.spaceGrotesk,
+  variable: '--font-space-grotesk',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.spaceGrotesk],
+  fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
   src: [
     { path: '../../../public/fonts/space-grotesk-variable.woff2', weight: '300 700', style: 'normal' },
   ],
 })
 
 export const jetbrainsMonoTheme = localFont({
-  variable: FONT_VARIABLES.jetbrainsMono,
+  variable: '--font-jetbrains-mono',
   display: 'swap',
-  fallback: [...FONT_FALLBACKS.jetbrainsMono],
+  fallback: ['SFMono-Regular', 'Menlo', 'monospace'],
   src: [
     { path: '../../../public/fonts/jetbrains-mono-variable.woff2', weight: '300 600', style: 'normal' },
   ],
 })
 
 /**
- * El cargador por clave. Lo usa el layout de invitado para componer la `className` con
- * las variables de **las fuentes que ese tema declara**, y nada más.
+ * El cargador por clave. Lo usan el layout de invitado y la vista previa del catálogo para
+ * componer la `className` con las variables de **las fuentes que ese tema declara**.
  */
 export const themeFonts = {
   cormorant: cormorantTheme,

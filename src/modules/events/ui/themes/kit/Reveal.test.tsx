@@ -1,5 +1,5 @@
-import { render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { act, render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { Reveal } from './Reveal'
 import { conMovimientoReducido, conObservadorQueNuncaDispara } from './test-helpers'
 
@@ -91,5 +91,30 @@ describe('Reveal', () => {
     await waitFor(() => {
       expect(contenedorDe('Camila & Mateo')).toHaveStyle({ opacity: '1' })
     })
+  })
+})
+
+describe('el seguro de Reveal', () => {
+  it('se enseña aunque el observador no dispare nunca', async () => {
+    // Se comprobó en el navegador: en una pestaña que no está al frente, el navegador
+    // estrangula el renderizado y el IntersectionObserver no dispara ni sobre un elemento
+    // a la vista. Sin seguro, quien abre la invitación desde WhatsApp y cambia de
+    // aplicación mientras carga vuelve a una invitación en blanco.
+    conMovimientoReducido(false)
+    vi.useFakeTimers()
+
+    render(
+      <Reveal delay={120}>
+        <p>Camila & Mateo</p>
+      </Reveal>,
+    )
+    expect(contenedorDe('Camila & Mateo')).toHaveStyle({ opacity: '0' })
+
+    await act(async () => {
+      vi.advanceTimersByTime(721)
+    })
+    expect(contenedorDe('Camila & Mateo')).toHaveStyle({ opacity: '1' })
+
+    vi.useRealTimers()
   })
 })
