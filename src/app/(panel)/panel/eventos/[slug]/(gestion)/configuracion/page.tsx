@@ -1,10 +1,12 @@
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
+import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
 import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { canManageStaff } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -33,6 +35,11 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     throw new Error(event.error.detail)
   }
 
+  // El contenido rico que pinta el diseño, y **qué secciones pinta**: pedirle un
+  // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.
+  const tema = themeFor(event.value.themeKey)
+  const contenido = await events.contentFor(event.value.id, tema.defaultContent)
+
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
 
@@ -46,6 +53,15 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
       <PanelHeader kicker="Cuenta" meta={event.value.title} title="Configuración del evento" />
 
       <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
+        <PanelCard title={`Contenido de la invitación · ${tema.label}`}>
+          <ContentBlockForms
+            content={contenido}
+            eventId={event.value.id}
+            eventSlug={event.value.slug}
+            sections={tema.sections}
+          />
+        </PanelCard>
+
         <PanelCard title="Detalles del evento">
           <div className="flex flex-col gap-6">
             <EventForm event={event.value} />
