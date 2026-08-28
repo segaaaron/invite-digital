@@ -60,7 +60,10 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
       />
       <div aria-hidden style={{ position: 'absolute', inset: 0, opacity: 0.08, pointerEvents: 'none', backgroundImage: GRANO }} />
 
-      {/* La banda superior, con los datos de rodaje. Es lo que hace que se lea como cine. */}
+      {/* La banda superior, con los datos de rodaje. Es lo que hace que se lea como cine.
+          Va dentro de la columna: la ficha de rodaje es contenido, y suelta se repartía de
+          un extremo a otro de la pantalla con la película en medio. */}
+      <ThemeColumn>
       <div aria-hidden style={{ position: 'sticky', top: 0, height: 36, background: P.banda, zIndex: 5 }} />
       <div
         style={{
@@ -81,6 +84,8 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
         <span>35MM · 1.85:1</span>
         <span>120 MIN</span>
       </div>
+
+      </ThemeColumn>
 
       {/* El cartel va **dentro de la columna**, como el resto. Suelto, en un portátil se
           estira a lo ancho de la pantalla mientras la ficha técnica de abajo se queda en

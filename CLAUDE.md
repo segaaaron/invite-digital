@@ -512,6 +512,13 @@ correo, que necesita proveedor.
   campo crema vacío con dos nombres flotando. En un teléfono se veía perfecta, que es por
   qué las pruebas de anchos no lo cazaban —miran desbordes, no el tope—. Lo vigila
   `tests/e2e/modelos.spec.ts` con los dieciséis a 1440 px.
+- **Esa prueba mira DÓNDE cae el contenido, no lo ancho que es.** La primera versión medía
+  anchos y daba verde con la ficha de rodaje de `boda-cin` repartida de un extremo a otro
+  de la pantalla: una fila de tres piezas con `space-between` son tres cajas estrechas que
+  ocupan la ventana entera. Ahora se comprueba que cada hoja —imagen o texto— caiga dentro
+  de la banda centrada de la columna.
+- **La mancheta de `boda-ed` es de tres piezas.** El centro —«SEP / 2026», el mes y el año
+  de la boda— faltaba, y una cabecera de revista con dos piezas se lee descolgada.
 - **Si un diseño trae papel pintado fijo detrás, su `<article>` va sin fondo propio.**
   `xv-isabelle` pinta el palacio griego en `position: fixed; zIndex: -2`, como la maqueta, y
   un `background` opaco en el artículo lo tapaba entero: la fotografía que le da nombre al

@@ -75,20 +75,30 @@ function cortados(): string[] {
  * ocupan el ancho de la página a propósito, y la decoración sangra a propósito.
  */
 function desbordanLaColumna(tope: number): string[] {
-  return [...document.querySelectorAll('article img, article h1, article h2, article h3, article p, article div')]
+  const centro = document.documentElement.clientWidth / 2
+  const izquierda = centro - tope / 2
+  const derecha = centro + tope / 2
+
+  return [...document.querySelectorAll('article *')]
     .filter((el) => el.closest('[aria-hidden="true"]') === null)
     .filter((el) => {
       const r = el.getBoundingClientRect()
-      if (r.width <= tope || r.height < 4) return false
+      if (r.width < 1 || r.height < 4) return false
+      // Se miran las hojas: una imagen, o un elemento con texto propio. Los contenedores
+      // ocupan el ancho de la página a propósito.
       const esHoja =
         el.tagName === 'IMG' ||
         [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '')
-      return esHoja
+      if (!esHoja) return false
+      // No es el ancho, es **dónde cae**: una fila de tres piezas repartidas de extremo a
+      // extremo tiene tres cajas estrechas y ocupa la pantalla entera.
+      return r.left < izquierda - 1 || r.right > derecha + 1
     })
     .slice(0, 5)
     .map((el) => {
+      const r = el.getBoundingClientRect()
       const texto = el.tagName === 'IMG' ? (el.getAttribute('src') ?? '') : (el.textContent ?? '')
-      return `${el.tagName.toLowerCase()} ${Math.round(el.getBoundingClientRect().width)}px «${texto.trim().slice(0, 30)}»`
+      return `${el.tagName.toLowerCase()} [${Math.round(r.left)}→${Math.round(r.right)}] «${texto.trim().slice(0, 26)}»`
     })
 }
 

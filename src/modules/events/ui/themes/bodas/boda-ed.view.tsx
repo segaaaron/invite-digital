@@ -21,7 +21,7 @@ const DISPLAY = 'var(--font-spectral)'
  * a mano. La maqueta lo tenía clavado, y un índice que anuncia «P.06 Dress code» en una
  * boda que no cargó código de vestimenta es una página que promete algo que no está.
  */
-export function BodaEdView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function BodaEdView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, schedule, reception, map, itinerary, dressCode, gallery, closing } = content
   const portada = gallery?.[0]
   const interior = gallery?.[1]
@@ -31,6 +31,20 @@ export function BodaEdView({ content, dictionary, themes, slots, preview }: Them
   const historia = parrafos.join('\n\n')
   const capitular = historia.slice(0, 1)
   const resto = historia.slice(1)
+
+  // La mancheta de la maqueta es de tres piezas —izquierda, centro en negrita, derecha—,
+  // y el centro es el mes y el año de la boda: «SEP / 2026». Faltaba, y una cabecera de
+  // revista con dos piezas se lee descolgada, que es justo lo que esta portada no puede
+  // permitirse.
+  const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
+  const mesCorto =
+    cuando === null
+      ? ''
+      : cuando
+          .toLocaleDateString(event.locale === 'en' ? 'en-US' : 'es-BO', { month: 'short' })
+          .replace('.', '')
+          .toUpperCase()
+  const edicion = cuando === null ? '' : `${mesCorto} / ${cuando.getFullYear()}`
 
   const indice = [
     quote === undefined ? null : { pagina: 'P.02', titulo: themes.ourStory },
@@ -76,6 +90,7 @@ export function BodaEdView({ content, dictionary, themes, slots, preview }: Them
             }}
           >
             <span>{hero?.monogram ?? ''}</span>
+            <span style={{ fontWeight: 600 }}>{edicion}</span>
             <span>$ ROMANTIC</span>
           </div>
           <div style={{ marginTop: 4, textAlign: 'center' }}>
