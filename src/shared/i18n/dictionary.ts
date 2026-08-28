@@ -72,6 +72,8 @@ export interface CollectionsDictionary {
   previous: string
   next: string
   backToHome: string
+  /** El botón que trae la siguiente tanda de ocho modelos. */
+  loadMore: string
   errorMessage: string
   /** Las nueve escenas de la maqueta, en su orden. */
   scenes: readonly CollectionScene[]

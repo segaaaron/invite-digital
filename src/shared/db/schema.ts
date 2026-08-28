@@ -89,6 +89,13 @@ export const templates = pgTable(
       .notNull()
       .references(() => eventCategories.id),
     coverImagePath: varchar('cover_image_path', { length: 255 }).notNull(),
+    /**
+     * Qué diseño pinta esta plantilla. Apunta al registro de temas de
+     * `events/ui/themes/registry.ts`, y `pnpm preflight` falla si una fila publicada
+     * apunta a una clave que el registro no conoce: vender un modelo que el motor no sabe
+     * pintar es la clase de fallo que no se descubre hasta el día de la boda.
+     */
+    themeKey: varchar('theme_key', { length: 64 }).notNull(),
     palette: jsonb('palette').$type<{ base: string; accent: string }>().notNull(),
     // Los datos de escaparate que la tarjeta de modelo dibuja: monograma, nombres, fecha
     // y lugar. Son del catálogo, no del código, porque cambian con el escaparate.

@@ -62,6 +62,7 @@ export const en = {
     previous: 'Previous',
     next: 'Next',
     backToHome: 'Back to home',
+    loadMore: 'Load more models',
     errorMessage: "We couldn't load the collections right now. Message us and we'll show you the available designs.",
     scenes: [
       { tag: 'Wedding', name: 'Classic Ceremony', alt: 'The couple leaving the floral arch' },

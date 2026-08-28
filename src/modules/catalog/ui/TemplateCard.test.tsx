@@ -28,7 +28,7 @@ describe('TemplateCard', () => {
   it('dibuja la invitación de muestra, no una fotografía', () => {
     // La maqueta compone la pieza: categoría, monograma, nombres, fecha y lugar. Una foto
     // de relleno no enseña el modelo, que es lo que el cliente viene a ver.
-    render(<TemplateCard dictionary={es} template={plantilla(MUESTRA)} />)
+    render(<TemplateCard dictionary={es} locale="es" template={plantilla(MUESTRA)} />)
 
     expect(screen.getByText('M & A')).toBeInTheDocument()
     expect(screen.getByText(/María/)).toBeInTheDocument()
@@ -39,7 +39,7 @@ describe('TemplateCard', () => {
   })
 
   it('mantiene el nombre del modelo como pie', () => {
-    render(<TemplateCard dictionary={es} template={plantilla(MUESTRA)} />)
+    render(<TemplateCard dictionary={es} locale="es" template={plantilla(MUESTRA)} />)
     expect(screen.getByText('Perla')).toBeInTheDocument()
   })
 
@@ -49,20 +49,22 @@ describe('TemplateCard', () => {
     render(
       <TemplateCard
         dictionary={es}
+        locale="es"
         template={plantilla({ ...MUESTRA, monogram: 'IP', names: 'Gala\nAnual' })}
       />,
     )
 
     // Sobre el texto compuesto: el «&» se pintaba en un nodo aparte y una consulta por
     // texto exacto no lo veía — la prueba pasaba con el fallo dentro.
-    const tarjeta = screen.getByRole('figure')
+    // La tarjeta pasó de `figure` a enlace: entera lleva a la invitación de verdad.
+    const tarjeta = screen.getByRole('link')
     expect(tarjeta.textContent).toContain('Gala')
     expect(tarjeta.textContent).toContain('Anual')
     expect(tarjeta.textContent).not.toContain('& Anual')
   })
 
   it('sin muestra cargada cae a la fotografía en vez de dibujar una tarjeta vacía', () => {
-    render(<TemplateCard dictionary={es} template={plantilla(null)} />)
+    render(<TemplateCard dictionary={es} locale="es" template={plantilla(null)} />)
     expect(screen.getByRole('img')).toBeInTheDocument()
   })
 })

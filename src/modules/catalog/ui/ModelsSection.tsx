@@ -22,7 +22,7 @@ export function ModelsSection({ templates, dictionary, locale }: Props) {
         <div className="mt-16 grid grid-cols-2 place-items-center gap-x-6 gap-y-14 md:grid-cols-4">
           {templates.map((template, index) => (
             <Reveal key={template.id} delay={(index % 4) * 0.08}>
-              <TemplateCard dictionary={dictionary} template={template} />
+              <TemplateCard dictionary={dictionary} locale={locale} template={template} />
             </Reveal>
           ))}
         </div>

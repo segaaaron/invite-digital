@@ -62,6 +62,7 @@ export const es = {
     previous: 'Anterior',
     next: 'Siguiente',
     backToHome: 'Volver al inicio',
+    loadMore: 'Ver más modelos',
     errorMessage: 'No pudimos cargar las colecciones en este momento. Escríbenos y te mostramos los modelos disponibles.',
     scenes: [
       { tag: 'Boda', name: 'Ceremonia Clásica', alt: 'Novios saliendo del arco floral' },

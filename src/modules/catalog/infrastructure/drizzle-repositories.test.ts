@@ -1,4 +1,5 @@
 import { eq } from 'drizzle-orm'
+import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '@/shared/db/client'
 import { eventCategories, planTranslations, plans, templateTranslations, templates } from '@/shared/db/schema'
@@ -35,11 +36,22 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
     expect(en[1]?.name).toBe('Signature 3D')
   })
 
-  it('lee las ocho plantillas publicadas', async () => {
+  it('publica exactamente los diseños portados, y ninguna de las de relleno', async () => {
+    // Las ocho de relleno —perla, mármol, laurel…— se despublicaron al entrar la colección.
+    // No se borraron: borrarlas rompería cualquier enlace repartido.
     const rows = await drizzleTemplateRepository.listPublished('es')
-    expect(rows).toHaveLength(8)
-    expect(rows[0]?.slug).toBe('perla')
-    expect(rows[0]?.categoryName).toBe('Boda')
+    expect(rows).toHaveLength(CATALOG_LISTOS.length)
+    expect(rows.map((fila) => fila.slug)).not.toContain('perla')
+  })
+
+  it('el slug de cada plantilla publicada es la clave de su tema', async () => {
+    // Es lo que impide que la web enseñe un modelo y el invitado reciba otro. Si algún día
+    // dejan de coincidir, el enlace de la tarjeta apunta a un diseño distinto del dibujado.
+    const rows = await drizzleTemplateRepository.listPublished('es')
+    const listos = CATALOG_LISTOS.map((entrada) => entrada.key)
+    for (const fila of rows) {
+      expect(listos, fila.slug).toContain(fila.slug)
+    }
   })
 
   describe('traducción faltante', () => {
@@ -66,6 +78,7 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
           .insert(templates)
           .values({
             slug: 'prueba-solo-es',
+            themeKey: 'clasico',
             categoryId: category.id,
             coverImagePath: '/templates/prueba.jpg',
             palette: { base: '#FFFFFF', accent: '#000000' },

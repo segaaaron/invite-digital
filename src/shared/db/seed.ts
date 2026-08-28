@@ -1,5 +1,6 @@
-import { sql } from 'drizzle-orm'
+import { inArray, sql } from 'drizzle-orm'
 import { db } from './client'
+import { CATALOG_ENTRIES, CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { eventCategories, eventCategoryTranslations, planTranslations, plans, templateTranslations, templates } from './schema'
 
 const CATEGORIES = [
@@ -99,16 +100,14 @@ const PLANS = [
   },
 ] as const
 
-const TEMPLATES = [
-  { sample: { monogram: 'M & A', names: 'María\n& Alejandro', dateLabel: '12 · 10 · 2026', venue: 'Jardín Botánico Luna' }, slug: 'perla', category: 'boda', order: 1, palette: { base: '#fdfaf4', accent: '#c19b4a' }, es: 'Perla', en: 'Pearl' },
-  { sample: { monogram: 'S & T', names: 'Sofía\n& Tomás', dateLabel: '04 · 07 · 2026', venue: 'Salón Mármol, Centro' }, slug: 'marmol', category: 'boda', order: 2, palette: { base: '#f4f1ec', accent: '#8d7a52' }, es: 'Mármol', en: 'Marble' },
-  { sample: { monogram: 'C & N', names: 'Camila\n& Nicolás', dateLabel: '21 · 03 · 2026', venue: 'Casona del Olivar' }, slug: 'laurel', category: 'boda-civil', order: 3, palette: { base: '#f2f4ef', accent: '#5f7350' }, es: 'Laurel', en: 'Laurel' },
-  { sample: { monogram: 'H & V', names: 'Helena\n& Víctor', dateLabel: '17 · 08 · 2026', venue: 'Hacienda La Vid' }, slug: 'carmesi', category: 'boda', order: 4, palette: { base: '#f7efec', accent: '#b3775f' }, es: 'Carmesí', en: 'Crimson' },
-  { sample: { monogram: 'V', names: 'Valentina', dateLabel: '09 · 05 · 2026', venue: 'Salón Imperial' }, slug: 'zafiro', category: 'xv-anos', order: 5, palette: { base: '#eef1f6', accent: '#7b8ea8' }, es: 'Zafiro', en: 'Sapphire' },
-  { sample: { monogram: 'I', names: 'Isabella', dateLabel: '28 · 06 · 2026', venue: 'Terraza Perla' }, slug: 'nacarado', category: 'xv-anos', order: 6, palette: { base: '#fbf6f2', accent: '#d7c08a' }, es: 'Nacarado', en: 'Nacre' },
-  { sample: { monogram: 'IP', names: 'Gala\nAnual', dateLabel: '30 · 11 · 2026', venue: 'Hotel Los Portales' }, slug: 'onix', category: 'corporativo', order: 7, palette: { base: '#eceae7', accent: '#4a443c' }, es: 'Ónix', en: 'Onyx' },
-  { sample: { monogram: 'N', names: 'Nora', dateLabel: '17 · 10 · 2026', venue: 'Iglesia Santa Teresa' }, slug: 'sobre', category: 'bautizo', order: 8, palette: { base: '#fbf9f4', accent: '#eed8a4' }, es: 'Sobre', en: 'Envelope' },
-] as const
+/**
+ * Las ocho plantillas de relleno que la web vendía antes de la colección de dieciséis.
+ *
+ * Se **despublican**, no se borran. Borrarlas rompería cualquier enlace repartido y la
+ * fila no estorba a nadie; además, una plantilla es lo que un evento antiguo puede tener
+ * apuntado.
+ */
+const PLANTILLAS_RETIRADAS = ['perla', 'marmol', 'laurel', 'carmesi', 'zafiro', 'nacarado', 'onix', 'sobre'] as const
 
 async function seed() {
   const categoryIds = new Map<string, string>()
@@ -178,41 +177,59 @@ async function seed() {
       })
   }
 
-  for (const t of TEMPLATES) {
-    const categoryId = categoryIds.get(t.category)
-    if (!categoryId) throw new Error(`Categoría desconocida: ${t.category}`)
+  // Las dieciséis reales, leídas del catálogo de temas: el `slug` **es** la clave del
+  // tema, así que la web y el motor no pueden separarse por un error de copia.
+  for (const [indice, entrada] of CATALOG_LISTOS.entries()) {
+    const categoryId = categoryIds.get(entrada.categorySlug)
+    if (!categoryId) throw new Error(`Categoría desconocida: ${entrada.categorySlug}`)
+    const orden = indice + 1
     const [row] = await db
       .insert(templates)
       .values({
-        slug: t.slug,
+        slug: entrada.key,
+        themeKey: entrada.key,
         categoryId,
-        coverImagePath: `/templates/${t.slug}.avif`,
-        palette: t.palette,
-        sortOrder: t.order,
-        sampleMonogram: t.sample.monogram,
-        sampleNames: t.sample.names,
-        sampleDateLabel: t.sample.dateLabel,
-        sampleVenue: t.sample.venue,
+        coverImagePath: `/templates/${entrada.key}.avif`,
+        palette: entrada.palette,
+        sortOrder: orden,
+        isPublished: true,
+        sampleMonogram: entrada.sample.monogram,
+        sampleNames: entrada.sample.names,
+        sampleDateLabel: entrada.sample.dateLabel,
+        sampleVenue: entrada.sample.venue,
       })
       .onConflictDoUpdate({
         target: templates.slug,
         set: {
+          themeKey: entrada.key,
           categoryId,
-          sortOrder: t.order,
-          palette: t.palette,
-          sampleMonogram: t.sample.monogram,
-          sampleNames: t.sample.names,
-          sampleDateLabel: t.sample.dateLabel,
-          sampleVenue: t.sample.venue,
+          sortOrder: orden,
+          isPublished: true,
+          palette: entrada.palette,
+          sampleMonogram: entrada.sample.monogram,
+          sampleNames: entrada.sample.names,
+          sampleDateLabel: entrada.sample.dateLabel,
+          sampleVenue: entrada.sample.venue,
         },
       })
       .returning({ id: templates.id })
-    if (!row) throw new Error(`No se pudo insertar la plantilla ${t.slug}`)
+    if (!row) throw new Error(`No se pudo insertar la plantilla ${entrada.key}`)
+
     await db
       .insert(templateTranslations)
       .values([
-        { templateId: row.id, locale: 'es', name: t.es, description: `Modelo ${t.es} del atelier InvitePremium.` },
-        { templateId: row.id, locale: 'en', name: t.en, description: `The ${t.en} model from the InvitePremium atelier.` },
+        {
+          templateId: row.id,
+          locale: 'es',
+          name: entrada.es,
+          description: `Modelo ${entrada.es} del atelier InvitePremium.`,
+        },
+        {
+          templateId: row.id,
+          locale: 'en',
+          name: entrada.en,
+          description: `The ${entrada.en} model from the InvitePremium atelier.`,
+        },
       ])
       .onConflictDoUpdate({
         target: [templateTranslations.templateId, templateTranslations.locale],
@@ -220,7 +237,22 @@ async function seed() {
       })
   }
 
-  console.log('Seed completo: %d categorías, %d planes, %d plantillas', CATEGORIES.length, PLANS.length, TEMPLATES.length)
+  // Las de relleno salen del escaparate, y con ellas cualquier diseño que todavía no esté
+  // portado. Idempotente y sin borrar nada: una tarjeta que lleva a un 404 es peor que una
+  // tarjeta que aún no está.
+  const aRetirar = [
+    ...PLANTILLAS_RETIRADAS,
+    ...CATALOG_ENTRIES.filter((entrada) => !entrada.listo).map((entrada) => entrada.key),
+  ]
+  await db.update(templates).set({ isPublished: false }).where(inArray(templates.slug, aRetirar))
+
+  console.log(
+    'Seed completo: %d categorías, %d planes, %d plantillas publicadas, %d retiradas',
+    CATEGORIES.length,
+    PLANS.length,
+    CATALOG_LISTOS.length,
+    CATALOG_ENTRIES.length - CATALOG_LISTOS.length + PLANTILLAS_RETIRADAS.length,
+  )
 }
 
 seed()

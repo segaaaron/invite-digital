@@ -1,5 +1,6 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeAll, describe, expect, it } from 'vitest'
+import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { db } from './client'
 import {
   arrivals,
@@ -52,7 +53,7 @@ describe('esquema', () => {
     expect(highlighted).toEqual([{ slug: 'firma-3d' }])
   })
 
-  it('las 8 plantillas están publicadas, ordenadas y apuntan a una categoría existente', async () => {
+  it('las plantillas publicadas son las de la colección, ordenadas y con categoría real', async () => {
     const rows = await db
       .select({
         slug: templates.slug,
@@ -65,9 +66,16 @@ describe('esquema', () => {
       .orderBy(templates.sortOrder)
     if (rows.length === 0) throw new Error('No hay plantillas en la base — ¿corriste `pnpm db:seed`?')
 
-    expect(rows.map((r) => r.slug)).toEqual(['perla', 'marmol', 'laurel', 'carmesi', 'zafiro', 'nacarado', 'onix', 'sobre'])
-    expect(rows.map((r) => r.sortOrder)).toEqual([1, 2, 3, 4, 5, 6, 7, 8])
-    expect(rows.every((r) => r.isPublished)).toBe(true)
+    // Las ocho de relleno siguen en la tabla pero **despublicadas**: borrarlas rompería
+    // cualquier enlace repartido, y una plantilla es lo que un evento antiguo puede tener
+    // apuntado. Lo que se enseña son los diseños de la colección que ya están portados.
+    const publicadas = rows.filter((r) => r.isPublished)
+    const esperadas = CATALOG_LISTOS.map((entrada) => entrada.key)
+    expect(publicadas.map((r) => r.slug).sort()).toEqual([...esperadas].sort())
+    expect(publicadas.map((r) => r.sortOrder)).toEqual(esperadas.map((_, indice) => indice + 1))
+    for (const retirada of ['perla', 'marmol', 'laurel', 'carmesi', 'zafiro', 'nacarado', 'onix', 'sobre']) {
+      expect(rows.find((r) => r.slug === retirada)?.isPublished, retirada).toBe(false)
+    }
     // El inner join contra event_categories ya exige que category_id resuelva a una fila real;
     // esta aserción confirma además que el slug resultante no está vacío.
     expect(rows.every((r) => r.categorySlug.length > 0)).toBe(true)
