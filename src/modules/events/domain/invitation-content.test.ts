@@ -59,6 +59,17 @@ describe('parseInvitationContent', () => {
     expect(parseInvitationContent({ gallery: doce }).gallery).toHaveLength(6)
   })
 
+  it('acepta una casilla de galería con rótulo y sin foto todavía', () => {
+    // Estos diseños pintan la galería como huecos con su pie desde el primer día; las
+    // fotos las sube el atelier después. Con la imagen obligatoria, la sección entera
+    // desaparecería hasta la primera subida y el diseño se quedaría con un salto en medio.
+    expect(parseInvitationContent({ gallery: [{ label: 'Italia' }] }).gallery).toEqual([{ label: 'Italia' }])
+  })
+
+  it('descarta una casilla de galería sin rótulo', () => {
+    expect(parseInvitationContent({ gallery: [{ imageId: 'abc' }] }).gallery).toBeUndefined()
+  })
+
   it('corta el itinerario en doce', () => {
     const veinte = Array.from({ length: 20 }, (_, i) => ({ time: `${i}:00`, label: `${i}` }))
     expect(parseInvitationContent({ itinerary: veinte })).toHaveProperty('itinerary.length', 12)

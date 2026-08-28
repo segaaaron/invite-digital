@@ -34,7 +34,15 @@ export type PlaceBlock = {
 }
 
 export type ItineraryRow = { readonly time: string; readonly label: string; readonly imageId?: string }
-export type GalleryRow = { readonly imageId: string; readonly label?: string }
+/**
+ * Una casilla de la galería.
+ *
+ * El rótulo manda y la imagen es opcional, no al revés: estos diseños pintan la galería
+ * como huecos con su pie —«2018», «Italia», «Propuesta»— desde el primer día, y las fotos
+ * las sube el atelier después. Con la imagen obligatoria, la sección entera desaparecería
+ * hasta que subiera la primera, y el diseño se quedaría con un salto en medio.
+ */
+export type GalleryRow = { readonly label: string; readonly imageId?: string }
 
 export type InvitationContent = {
   readonly hero?: HeroBlock
@@ -214,10 +222,10 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
 
   const galeria = lista<GalleryRow>(crudo.gallery, MAXIMOS.gallery, (fila) => {
     if (!esObjeto(fila)) return undefined
-    const imagen = texto(fila.imageId, LIMITES.corto)
-    if (imagen === undefined) return undefined
     const etiqueta = texto(fila.label, LIMITES.corto)
-    return etiqueta === undefined ? { imageId: imagen } : { imageId: imagen, label: etiqueta }
+    if (etiqueta === undefined) return undefined
+    const imagen = texto(fila.imageId, LIMITES.corto)
+    return imagen === undefined ? { label: etiqueta } : { label: etiqueta, imageId: imagen }
   })
   if (galeria !== undefined) salida.gallery = galeria
 
