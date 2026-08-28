@@ -2,7 +2,7 @@ import { THEME_ASSETS, themeAsset } from '../assets'
 import { BubblesRise } from '../kit/backgrounds/BubblesRise'
 import { MarBackground } from '../kit/backgrounds/MarBackground'
 import { SofiaCover } from './SofiaCover'
-import type { PielMarina } from './piel-marina'
+import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv.palette'
 
 type ArchivoXv = (typeof THEME_ASSETS)['xv'][number]
@@ -19,7 +19,7 @@ const ICONOS: Record<string, ArchivoXv> = {
 }
 
 /** La piel de «Bajo el Mar»: pasteles sobre fotografía de mar. */
-export const PIEL_XV: PielMarina = {
+export const PIEL_XV: PielXv = {
   fondoBase: `linear-gradient(160deg, ${P.cielo} 0%, ${P.lavanda} 45%, ${P.rosa} 100%)`,
   velo: 'rgba(252,250,255,.45)',
   fondo: <MarBackground opacity={1} theme="xv" variant="b" />,

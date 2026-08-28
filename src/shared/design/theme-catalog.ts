@@ -135,7 +135,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-valentina',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Mascarada',
     en: 'Masquerade',
@@ -144,7 +144,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-luciana',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Bosque Encantado',
     en: 'Enchanted Forest',
@@ -153,7 +153,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-fantasia',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Noche Estrellada',
     en: 'Starry Night',
@@ -162,7 +162,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-valeria',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Gala Real',
     en: 'Royal Gala',
@@ -171,7 +171,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-mariana',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Encanto Musical',
     en: 'Musical Charm',

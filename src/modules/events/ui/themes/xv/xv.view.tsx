@@ -8,7 +8,7 @@ import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { FloatingParticles } from '../kit/backgrounds/FloatingParticles'
 import { PremiumBubbles } from '../kit/backgrounds/PremiumBubbles'
-import type { PielMarina } from './piel-marina'
+import type { PielXv } from './piel-xv'
 import { PIEL_XV } from './xv.skin'
 
 const MONO = 'var(--font-jetbrains-mono)'
@@ -33,7 +33,7 @@ const SERIF = 'var(--font-cormorant)'
  * Todo el texto va sobre cristal esmerilado: es lo único que lo deja legible sobre una
  * fotografía a sangre, sea clara con lila o negra con oro.
  */
-export function XvSharedView({ content, dictionary, themes, slots, preview, piel }: ThemeProps & { piel: PielMarina }) {
+export function XvSharedView({ content, dictionary, themes, slots, preview, piel }: ThemeProps & { piel: PielXv }) {
   const P = piel.paleta
   const CRISTAL = piel.cristal
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, notes, gallery, closing } = content
@@ -245,6 +245,7 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
         {cuando === null ? null : (
           <Reveal>
             <div style={{ marginTop: 60, textAlign: 'center', padding: '20px', ...CRISTAL, position: 'relative' }}>
+              {piel.ornamento}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 18 }}>
                 <div>
                   <div style={{ fontFamily: DISPLAY, fontSize: 56, lineHeight: 1, color: P.violetaHondo, fontWeight: 700 }}>
@@ -266,6 +267,7 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
                   </div>
                 </div>
               </div>
+              {piel.ornamento}
             </div>
           </Reveal>
         )}
@@ -462,7 +464,11 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
                           aria-hidden
                           height={48}
                           src={piel.icono(fila.imageId)}
-                          style={{ width: 48, height: 48, objectFit: 'contain' }}
+                          style={
+                            piel.iconoRedondo === true
+                              ? { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }
+                              : { width: 48, height: 48, objectFit: 'contain' }
+                          }
                           width={48}
                         />
                       </div>

@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { NataliaCover } from './NataliaCover'
-import type { PielMarina } from './piel-marina'
+import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-natalia.palette'
 
 type ArchivoNatalia = (typeof THEME_ASSETS)['xv-natalia'][number]
@@ -20,7 +20,7 @@ const ICONOS: Record<string, ArchivoNatalia> = {
  * partitura dorada, un velo claro apaga el oro y deja el texto sin contraste por los dos
  * lados.
  */
-export const PIEL_NATALIA: PielMarina = {
+export const PIEL_NATALIA: PielXv = {
   fondoBase: '#120c06',
   velo: 'rgba(0,0,0,.25)',
   fondo: (

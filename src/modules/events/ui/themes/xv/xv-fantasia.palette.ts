@@ -1,0 +1,24 @@
+/**
+ * La paleta de «Noche Estrellada».
+ *
+ * Reutiliza los nombres de color de la piel marina para que las siete pieles de XV encajen
+ * en el mismo esqueleto sin condicionales: lo que allí es lila, aquí es #d4af5a.
+ */
+export const PALETA = {
+  tinta: '#f3edd8',
+  orquidea: '#d4af5a',
+  uva: '#d4af5a',
+  amatista: '#c9b78a',
+  violetaHondo: '#f7f0dc',
+  violeta: '#d4af5a',
+  malva: '#ded0ab',
+  bruma: '#c9b78a',
+  lila: '#d4af5a',
+  lilaFuerte: '#a98c45',
+  blanco: '#ffffff',
+  vidrio: 'rgba(12,24,48,.72)',
+  vidrioFuerte: 'rgba(12,24,48,.82)',
+  bordeVidrio: '#d4af5a',
+  sombra: '0 6px 24px rgba(0,0,0,.5)',
+  sombraFuerte: '0 6px 24px rgba(0,0,0,.6)',
+} as const
