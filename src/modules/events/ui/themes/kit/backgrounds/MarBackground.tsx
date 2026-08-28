@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { themeAsset } from '../../assets'
 
 type Props = {
@@ -19,19 +20,16 @@ type Props = {
 export function MarBackground({ variant = 'a', opacity = 0.92, theme }: Props) {
   return (
     <>
-      <img
+      {/* Va con `next/image`: es un archivo del repositorio, no una imagen del evento, así
+          que sí pasa por el optimizador. `priority` porque es lo primero que se ve. */}
+      <Image
         alt=""
         aria-hidden
+        fill
+        priority
+        sizes="100vw"
         src={themeAsset(theme, variant === 'a' ? 'mar-bg-a.avif' : 'mar-bg-b.avif')}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          width: '100%',
-          height: '100%',
-          objectFit: 'cover',
-          opacity,
-          pointerEvents: 'none',
-        }}
+        style={{ objectFit: 'cover', opacity, pointerEvents: 'none' }}
       />
       <div
         aria-hidden
