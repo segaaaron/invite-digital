@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1797 unitarias y 173 e2e en verde.**
+que lo vigila. **1819 unitarias y 175 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
@@ -71,7 +71,8 @@ la invitación de verdad en `/modelos/<idioma>/<clave>`, el atelier elige mirán
 rejilla de miniaturas, y el contenido rico —ceremonia, recepción, itinerario, galería,
 código de vestimenta, avisos— se edita bloque a bloque en Configuración. Las fotografías
 del evento se suben y se sirven fuera de `public/`, con la misma puerta de contraseña que
-la invitación.
+la invitación, y **se eligen desde el propio bloque**: cada bloque es un formulario con un
+campo por dato, no un JSON escrito a mano.
 
 **Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y el ciclo 4 entero —mesas y plano del
 salón, mesa de regalos y fondos, libro de firmas, y los límites por plan— cerrados y
@@ -543,6 +544,32 @@ correo, que necesita proveedor.
   impide vaciar las nuevas.
 - **`schedule.startsAt` vive aquí y no en `events`**: la fecha del evento es un día del
   calendario a propósito, y la cuenta atrás necesita la hora.
+- **El contenido se edita por campos, no como JSON.** Lo que se guarda sigue viajando como
+  JSON en un campo oculto —el itinerario y la galería son listas de longitud variable, y
+  componerlas desde campos planos con índices en el nombre es donde se pierden filas al
+  reordenar—, pero **lo compone `aValor`**, no el atelier. `content-shapes.ts` dice qué
+  campos tiene cada bloque y `content-form.ts` traduce entre pantalla y valor.
+- **Las claves de `content-shapes.ts` van tipadas contra el dominio.** `campos<HeroBlock>(…)`
+  no compila si alguien renombra `portraitImageId` y se olvida de la lista: sin eso el
+  editor seguiría preguntando por un campo que ya no existe y el dominio lo descartaría al
+  guardar, sin un solo error.
+- **El `imageId` del itinerario NO es una fotografía**, es la clave del dibujo que trae el
+  diseño —`church`, `flutes`, `cake`—. Por eso es un campo de texto y no el selector de
+  imágenes: ofrecer ahí las fotos de la boda pondría el retrato de la novia donde va la
+  campana. El selector es para la galería, el retrato, la portada, la despedida y el código
+  de vestimenta.
+- **La fotografía se elige desde el bloque, y ya no se copia su identificador.** La tarjeta
+  de fotografías dejó de enseñarlo: era un paso a mano entre dos tarjetas donde se
+  equivocaba la foto sin que nada lo dijera. Una imagen guardada que ya no está entre las
+  del evento **se conserva como opción propia**: descartarla al abrir el formulario
+  cambiaría la invitación por el mero hecho de mirarla.
+- **El editor no ofrece más filas de las que el dominio guarda.** El tope de `MAXIMOS` está
+  exportado y el botón de añadir se apaga al llegar: un formulario que admite la fila trece
+  y un dominio que la descarta al guardar deja al atelier viendo desaparecer lo que acaba de
+  escribir.
+- **Vaciar todos los campos de un bloque es como se quita una sección.** Sale `{}` —o `[]`
+  en las listas—, que es lo que el dominio lee como «esta sección ya no está». No sale
+  `null`.
 - **La galería es rótulo obligatorio e imagen opcional**, no al revés: estos diseños pintan
   los huecos con su pie desde el primer día y las fotos llegan después.
 

@@ -1,16 +1,14 @@
 'use client'
 
 import { useActionState, useId, useState } from 'react'
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { type ContentActionState, saveContentBlockAction } from '../actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
+import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
+import { type Campo, FORMAS, type FormaBloque } from './content-shapes'
+import type { MediaItem } from './EventMediaPanel'
 
 const INICIAL: ContentActionState = { status: 'idle' }
-
-const CAMPO =
-  'w-full rounded-[10px] border border-[var(--color-line-panel)] bg-bg-top px-3 py-2 text-[13px] text-ink outline-none transition-colors focus-visible:border-ink'
-
-const ROTULO = 'flex flex-col gap-1.5 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute'
 
 /** Cómo se llama cada bloque en la pantalla, y qué se le pide. */
 const TITULOS: Record<SectionKey, string> = {
@@ -41,10 +39,12 @@ type Props = {
   /** Las secciones que **este** diseño pinta. Las demás no se enseñan. */
   readonly sections: readonly SectionKey[]
   readonly content: InvitationContent
+  /** Las fotografías ya subidas del evento: lo que se ofrece en los campos de imagen. */
+  readonly media: readonly MediaItem[]
 }
 
 /**
- * El contenido de la invitación, un formulario por bloque.
+ * El contenido de la invitación, un formulario por bloque y un campo por dato.
  *
  * **Solo se enseñan las secciones que el diseño elegido pinta.** Pedirle un itinerario a
  * un diseño que no lo tiene es pedir trabajo que no se ve, y llenar la pantalla de
@@ -53,12 +53,13 @@ type Props = {
  * Cada bloque se guarda por separado porque es la unidad de sentido: cambiar la canción no
  * puede exigir volver a enviar el itinerario.
  *
- * El valor viaja como JSON en un campo oculto. No es pereza: el itinerario, la galería y
- * los anfitriones son listas de longitud variable, y componerlas desde campos planos con
- * índices en el nombre es exactamente donde se pierden filas al reordenar. Quien decide
- * qué es válido sigue siendo el dominio, en el servidor.
+ * El valor sigue viajando como JSON en un campo oculto —el itinerario y la galería son
+ * listas de longitud variable, y componerlas desde campos planos con índices en el nombre
+ * es exactamente donde se pierden filas al reordenar—, pero **el JSON ya no lo escribe
+ * nadie a mano**: lo compone `aValor` a partir de lo que hay en pantalla. Quien decide qué
+ * es válido sigue siendo el dominio, en el servidor.
  */
-export function ContentBlockForms({ eventId, eventSlug, sections, content }: Props) {
+export function ContentBlockForms({ eventId, eventSlug, sections, content, media }: Props) {
   if (sections.length === 0) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft">
@@ -75,6 +76,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, content }: Pro
           eventId={eventId}
           eventSlug={eventSlug}
           key={seccion}
+          media={media}
           section={seccion}
         />
       ))}
@@ -87,35 +89,63 @@ function BloqueDeContenido({
   eventSlug,
   section,
   content,
+  media,
 }: {
   eventId: string
   eventSlug: string
   section: SectionKey
   content: InvitationContent
+  media: readonly MediaItem[]
 }) {
+  const forma = FORMAS[section]
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
-  const [valor, setValor] = useState(() => JSON.stringify(content[section] ?? null, null, 2))
-  const campoId = useId()
+  const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
 
   const error = state.status === 'error' ? (ERRORES[state.message] ?? ERRORES.storage_failure) : null
 
+  const escribirCampo = (clave: string, valor: string) =>
+    setEstado((previo) => ({ ...previo, campos: { ...previo.campos, [clave]: valor } }))
+
   return (
-    <form action={formAction} className="flex flex-col gap-2.5 border-t border-[var(--color-line-panel)] pt-4">
+    <form action={formAction} className="flex flex-col gap-3.5 border-t border-[var(--color-line-panel)] pt-4">
       <input name="eventId" readOnly type="hidden" value={eventId} />
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="section" readOnly type="hidden" value={section} />
+      {/* Lo que se guarda. Se compone de lo que hay arriba; nadie lo teclea. */}
+      <input name="value" readOnly type="hidden" value={JSON.stringify(aValor(forma, estado))} />
 
-      <label className={ROTULO} htmlFor={campoId}>
-        {TITULOS[section]}
-        <textarea
-          className={`${CAMPO} font-mono text-[12px] leading-[1.6]`}
-          id={campoId}
-          name="value"
-          onChange={(evento) => setValor(evento.target.value)}
-          rows={valor.split('\n').length > 12 ? 12 : Math.max(3, valor.split('\n').length)}
-          value={valor}
+      <h3 className="font-display text-[17px] text-ink">{TITULOS[section]}</h3>
+
+      {forma.form === 'campos' ? (
+        <>
+          <div className="grid gap-3 min-[560px]:grid-cols-2">
+            {forma.fields.map((campo) => (
+              <CampoDeBloque
+                campo={campo}
+                key={campo.key}
+                media={media}
+                onChange={(valor) => escribirCampo(campo.key, valor)}
+                valor={estado.campos[campo.key] ?? ''}
+              />
+            ))}
+          </div>
+          {forma.list === undefined ? null : (
+            <ListaSueltaDeBloque
+              lista={forma.list}
+              media={media}
+              onChange={(valores) => setEstado((previo) => ({ ...previo, lista: valores }))}
+              valores={estado.lista}
+            />
+          )}
+        </>
+      ) : (
+        <FilasDeBloque
+          forma={forma}
+          media={media}
+          onChange={(filas) => setEstado((previo) => ({ ...previo, filas }))}
+          filas={estado.filas}
         />
-      </label>
+      )}
 
       {error === null ? null : (
         <p className="text-[12px] text-gold-deep" role="alert">
@@ -134,5 +164,243 @@ function BloqueDeContenido({
         </PanelButton>
       </div>
     </form>
+  )
+}
+
+/**
+ * Un dato del bloque.
+ *
+ * El rótulo va **fuera** del control, como en el resto del panel: un `<label>` que
+ * envuelve a su `<select>` mete el texto de todas las opciones en el nombre accesible del
+ * campo, y ni un lector de pantalla ni una prueba lo encuentran por su nombre.
+ */
+function CampoDeBloque({
+  campo,
+  valor,
+  onChange,
+  media,
+  etiqueta,
+}: {
+  campo: Campo
+  valor: string
+  onChange: (valor: string) => void
+  media: readonly MediaItem[]
+  /** El rótulo, cuando la fila necesita decir de qué fila se trata. */
+  etiqueta?: string
+}) {
+  const id = useId()
+  const pistaId = `${id}-pista`
+  const rotulo = etiqueta ?? campo.label
+
+  return (
+    <div className={`flex min-w-0 flex-col gap-2 ${campo.kind === 'parrafo' ? 'min-[560px]:col-span-2' : ''}`}>
+      <label className={LABEL_CLASS} htmlFor={id}>
+        {rotulo}
+      </label>
+
+      {campo.kind === 'imagen' ? (
+        <SelectorDeImagen id={id} media={media} onChange={onChange} valor={valor} />
+      ) : campo.kind === 'parrafo' ? (
+        <textarea
+          aria-describedby={campo.hint === undefined ? undefined : pistaId}
+          className={`${FIELD_CLASS} leading-[1.6]`}
+          id={id}
+          onChange={(evento) => onChange(evento.target.value)}
+          rows={3}
+          value={valor}
+        />
+      ) : (
+        <input
+          aria-describedby={campo.hint === undefined ? undefined : pistaId}
+          className={FIELD_CLASS}
+          id={id}
+          onChange={(evento) => onChange(evento.target.value)}
+          type={campo.kind === 'fecha' ? 'datetime-local' : 'text'}
+          value={valor}
+        />
+      )}
+
+      {campo.hint === undefined ? null : (
+        <p className="text-[11px] leading-[1.5] text-ink-mute" id={pistaId}>
+          {campo.hint}
+        </p>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Elegir una fotografía ya subida, en vez de copiar su identificador de una tarjeta y
+ * pegarlo en otra.
+ *
+ * Si lo guardado no está entre las fotografías del evento —una imagen borrada, o el
+ * contenido de muestra— se ofrece igual como opción propia: descartarlo en silencio
+ * cambiaría la invitación por el mero hecho de abrir el formulario.
+ */
+function SelectorDeImagen({
+  id,
+  valor,
+  onChange,
+  media,
+}: {
+  id: string
+  valor: string
+  onChange: (valor: string) => void
+  media: readonly MediaItem[]
+}) {
+  const conocida = media.some((imagen) => imagen.id === valor)
+
+  return (
+    <div className="flex items-start gap-2.5">
+      {valor === '' ? null : (
+        /* La sirve /media/[id], que no pasa por el optimizador: lleva la puerta de
+           contraseña del evento. */
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt=""
+          className="size-12 shrink-0 rounded-[10px] border border-[var(--color-line-panel)] object-cover"
+          loading="lazy"
+          src={`/media/${valor}`}
+        />
+      )}
+      <select
+        className={FIELD_CLASS}
+        id={id}
+        onChange={(evento) => onChange(evento.target.value)}
+        value={valor}
+      >
+        <option value="">Sin fotografía</option>
+        {media.map((imagen) => (
+          <option key={imagen.id} value={imagen.id}>
+            {imagen.originalName}
+          </option>
+        ))}
+        {valor === '' || conocida ? null : <option value={valor}>{valor}</option>}
+      </select>
+    </div>
+  )
+}
+
+/** Los nombres de los anfitriones, las telas del código de vestimenta: una lista de valores sueltos. */
+function ListaSueltaDeBloque({
+  lista,
+  valores,
+  onChange,
+  media,
+}: {
+  lista: NonNullable<Extract<FormaBloque, { form: 'campos' }>['list']>
+  valores: readonly string[]
+  onChange: (valores: readonly string[]) => void
+  media: readonly MediaItem[]
+}) {
+  const campo: Campo = { key: lista.key, label: lista.itemLabel, kind: lista.kind === 'imagen' ? 'imagen' : 'texto' }
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <p className={LABEL_CLASS}>{lista.label}</p>
+
+      {valores.length === 0 ? (
+        <p className="text-[12px] text-ink-soft">Todavía no hay ninguno.</p>
+      ) : (
+        valores.map((valor, indice) => (
+          <div className="flex items-end gap-2" key={indice}>
+            <div className="min-w-0 grow">
+              <CampoDeBloque
+                campo={campo}
+                etiqueta={`${lista.itemLabel} ${indice + 1}`}
+                media={media}
+                onChange={(nuevo) => onChange(valores.map((v, i) => (i === indice ? nuevo : v)))}
+                valor={valor}
+              />
+            </div>
+            <PanelButton onClick={() => onChange(valores.filter((_, i) => i !== indice))}>Quitar</PanelButton>
+          </div>
+        ))
+      )}
+
+      <div>
+        <PanelButton disabled={valores.length >= lista.max} onClick={() => onChange([...valores, ''])}>
+          {`Añadir ${lista.itemLabel}`}
+        </PanelButton>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * El itinerario, la galería y los avisos: una lista de filas con sus propios campos.
+ *
+ * El orden importa —el itinerario se lee de arriba abajo— y por eso hay que poder moverlas
+ * sin borrarlas y volver a escribirlas.
+ */
+function FilasDeBloque({
+  forma,
+  filas,
+  onChange,
+  media,
+}: {
+  forma: Extract<FormaBloque, { form: 'filas' }>
+  filas: readonly Readonly<Record<string, string>>[]
+  onChange: (filas: readonly Readonly<Record<string, string>>[]) => void
+  media: readonly MediaItem[]
+}) {
+  const mover = (desde: number, hasta: number) => {
+    if (hasta < 0 || hasta >= filas.length) return
+    const copia = [...filas]
+    const [movida] = copia.splice(desde, 1)
+    if (movida === undefined) return
+    copia.splice(hasta, 0, movida)
+    onChange(copia)
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {filas.length === 0 ? (
+        <p className="text-[12px] text-ink-soft">Todavía no hay ninguna. El diseño deja su sitio sin pintar.</p>
+      ) : (
+        filas.map((fila, indice) => (
+          <div
+            className="flex flex-col gap-3 rounded-[12px] border border-[var(--color-line-panel)] bg-bg-top p-3"
+            key={indice}
+          >
+            <div className="grid gap-3 min-[560px]:grid-cols-2">
+              {forma.fields.map((campo) => (
+                <CampoDeBloque
+                  campo={campo}
+                  etiqueta={`${campo.label} · ${forma.itemLabel} ${indice + 1}`}
+                  key={campo.key}
+                  media={media}
+                  onChange={(valor) =>
+                    onChange(filas.map((f, i) => (i === indice ? { ...f, [campo.key]: valor } : f)))
+                  }
+                  valor={fila[campo.key] ?? ''}
+                />
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <PanelButton disabled={indice === 0} onClick={() => mover(indice, indice - 1)}>
+                {`Subir ${forma.itemLabel} ${indice + 1}`}
+              </PanelButton>
+              <PanelButton disabled={indice === filas.length - 1} onClick={() => mover(indice, indice + 1)}>
+                {`Bajar ${forma.itemLabel} ${indice + 1}`}
+              </PanelButton>
+              <PanelButton onClick={() => onChange(filas.filter((_, i) => i !== indice))} variant="danger">
+                {`Quitar ${forma.itemLabel} ${indice + 1}`}
+              </PanelButton>
+            </div>
+          </div>
+        ))
+      )}
+
+      <div>
+        <PanelButton
+          disabled={filas.length >= forma.max}
+          onClick={() => onChange([...filas, filaVacia(forma.fields)])}
+        >
+          {`Añadir ${forma.itemLabel}`}
+        </PanelButton>
+      </div>
+    </div>
   )
 }

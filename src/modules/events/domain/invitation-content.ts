@@ -13,8 +13,14 @@
 /** Cuánto texto cabe en cada clase de campo. Nada impide pegar una novela en un textarea. */
 const LIMITES = { corto: 120, medio: 240, largo: 600 } as const
 
-/** Cuántas filas admite cada lista. El diseño reserva un sitio concreto para ellas. */
-const MAXIMOS = { itinerary: 12, gallery: 6, hosts: 12, notes: 4 } as const
+/**
+ * Cuántas filas admite cada lista. El diseño reserva un sitio concreto para ellas.
+ *
+ * Se exporta porque el editor del panel deja de ofrecer «añadir» al llegar al tope: un
+ * formulario que admite una fila trece y un dominio que la descarta al guardar es la peor
+ * de las dos cosas, porque el atelier ve su trabajo desaparecer sin que nadie se lo diga.
+ */
+export const MAXIMOS = { itinerary: 12, gallery: 6, hosts: 12, notes: 4 } as const
 
 export type HeroBlock = {
   readonly eyebrow?: string

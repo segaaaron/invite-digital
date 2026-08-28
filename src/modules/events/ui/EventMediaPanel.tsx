@@ -28,12 +28,12 @@ type Props = {
 const enKilobytes = (bytes: number): string => `${Math.max(1, Math.round(bytes / 1024))} KB`
 
 /**
- * Las fotografías de la invitación: se suben aquí y se usan por su identificador.
+ * Las fotografías de la invitación: se suben aquí y se eligen en el bloque donde salen.
  *
- * El identificador se enseña **a la vista y copiable** porque es lo que el atelier pega en
- * `hero.portraitImageId`, en una casilla de la galería o en un icono del itinerario. Sin
- * enseñarlo, subir una foto no serviría de nada: quedaría guardada y sin forma de
- * referirse a ella.
+ * Aquí se sube y se mira; **no se enseña el identificador**. Los campos de imagen del
+ * contenido ofrecen estas mismas fotografías por su nombre, así que copiar un
+ * identificador de una tarjeta para pegarlo en otra dejó de ser el camino: era un paso
+ * a mano entre dos tarjetas, y con él se equivocaba la foto sin que nada lo dijera.
  *
  * La vista previa usa la misma ruta que la invitación —`/media/<id>`—, así que si aquí se
  * ve, en la invitación también; y si el evento lleva contraseña, las dos responden igual.
@@ -65,7 +65,7 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         )}
         {state.status === 'success' ? (
           <p aria-live="polite" className="text-[12px] text-ink-soft" role="status">
-            Subida. Copia su identificador y pégalo en el bloque donde quieras que salga.
+            Subida. Ya puedes elegirla en el bloque donde quieras que salga.
           </p>
         ) : null}
 
@@ -95,14 +95,6 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
               <span className="truncate text-[11px] text-ink" title={imagen.originalName}>
                 {imagen.originalName}
               </span>
-              {/* El identificador, copiable: es lo que se pega en el bloque de contenido. */}
-              <input
-                aria-label={`Identificador de ${imagen.originalName}`}
-                className="w-full rounded-[8px] border border-[var(--color-line-panel)] bg-bg-top px-2 py-1 font-mono text-[10px] text-ink-soft"
-                onFocus={(evento) => evento.target.select()}
-                readOnly
-                value={imagen.id}
-              />
               <span className="font-mono text-[10px] text-ink-mute">{enKilobytes(imagen.byteSize)}</span>
             </li>
           ))}

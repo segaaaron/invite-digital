@@ -85,6 +85,62 @@ test.describe('cierre de sesión', () => {
   })
 })
 
+test.describe('contenido de la invitación', () => {
+  test.use({ storageState: AUTH_STATE })
+
+  const SLUG = 'boda-contenido-e2e'
+
+  test.beforeEach(async ({ page }) => {
+    await deleteEvent(SLUG)
+    await createEvent(page, { slug: SLUG, title: 'Boda contenido e2e' })
+  })
+
+  test.afterAll(async () => {
+    await deleteEvent(SLUG)
+  })
+
+  test('el contenido se edita campo a campo y lo guardado sobrevive a recargar', async ({ page }) => {
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+
+    // El diseño por defecto no lleva contenido editable: es el título, la fecha y el
+    // lugar. El itinerario y la canción llegan al elegir uno de los dieciséis.
+    // El radio va `sr-only`: la tarjeta que se ve es el papel del diseño, y el control
+    // de verdad está debajo para que el formulario funcione con teclado y sin JavaScript.
+    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
+    await page.getByRole('button', { name: 'Guardar cambios' }).click()
+    await expect(page.getByRole('heading', { name: 'Itinerario' })).toBeVisible()
+
+    // La canción, por su campo. El JSON lo compone la pantalla: nadie escribe una llave.
+    const cancion = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Canción' }) })
+    await cancion.getByLabel('Canción', { exact: true }).fill('Perfect')
+    await cancion.getByRole('button', { name: 'Guardar' }).click()
+    await expect(cancion.getByRole('status')).toContainText('Guardado')
+
+    await page.reload()
+    await expect(page.getByLabel('Canción', { exact: true })).toHaveValue('Perfect')
+  })
+
+  test('una fila quitada del itinerario no vuelve sola al recargar', async ({ page }) => {
+    // Es el fallo que encontró el QA de la colección: el contenido se fusionaba con la
+    // muestra del diseño en cada lectura, así que quitar algo no servía de nada.
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    // El radio va `sr-only`: la tarjeta que se ve es el papel del diseño, y el control
+    // de verdad está debajo para que el formulario funcione con teclado y sin JavaScript.
+    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
+    await page.getByRole('button', { name: 'Guardar cambios' }).click()
+
+    const itinerario = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Itinerario' }) })
+    const primera = await itinerario.getByLabel('Qué pasa · momento 1').inputValue()
+
+    await itinerario.getByRole('button', { name: 'Quitar momento 1' }).click()
+    await itinerario.getByRole('button', { name: 'Guardar' }).click()
+    await expect(itinerario.getByRole('status')).toContainText('Guardado')
+
+    await page.reload()
+    await expect(page.getByLabel('Qué pasa · momento 1')).not.toHaveValue(primera)
+  })
+})
+
 test.describe('invitados del evento', () => {
   test.use({ storageState: AUTH_STATE })
 

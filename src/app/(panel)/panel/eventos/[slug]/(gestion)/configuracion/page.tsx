@@ -41,9 +41,14 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const tema = themeFor(event.value.themeKey)
   const contenido = await events.contentFor(event.value.id, tema.defaultContent)
 
-  // Las fotografías que ya subió el atelier. Se enseñan con su identificador porque es lo
-  // que se pega en el bloque de contenido: sin él, subir una foto no serviría de nada.
-  const imagenes = await events.media.list(event.value.id)
+  // Las fotografías que ya subió el atelier. Van a las dos tarjetas: a la suya, para
+  // subirlas y verlas, y a la del contenido, donde se eligen desde el propio campo en vez
+  // de copiar un identificador de una tarjeta y pegarlo en otra.
+  const imagenes = (await events.media.list(event.value.id)).map((imagen) => ({
+    id: imagen.id,
+    originalName: imagen.originalName,
+    byteSize: imagen.byteSize,
+  }))
 
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
@@ -63,6 +68,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             content={contenido}
             eventId={event.value.id}
             eventSlug={event.value.slug}
+            media={imagenes}
             sections={tema.sections}
           />
         </PanelCard>
@@ -71,11 +77,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           <EventMediaPanel
             eventId={event.value.id}
             eventSlug={event.value.slug}
-            items={imagenes.map((imagen) => ({
-              id: imagen.id,
-              originalName: imagen.originalName,
-              byteSize: imagen.byteSize,
-            }))}
+            items={imagenes}
           />
         </PanelCard>
 
