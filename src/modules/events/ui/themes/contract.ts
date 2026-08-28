@@ -1,0 +1,79 @@
+import type { ComponentType, ReactNode } from 'react'
+import type { FontKey } from '@/shared/design/font-manifest'
+import type { InvitationDictionary } from '@/shared/i18n/dictionary'
+import type { Event } from '../../domain/event'
+import type { InvitationContent, SectionKey } from '../../domain/invitation-content'
+
+export type { SectionKey }
+
+/**
+ * Las ranuras, en vez de un `children` único.
+ *
+ * Estos dieciséis diseños **intercalan**: el RSVP va a dos tercios del scroll, entre el
+ * código de vestimenta y la despedida, y el libro de firmas va después del cierre. Un
+ * `children` solo puede ir en un sitio, y hasta ahora iba al final porque el único tema
+ * que había lo ponía ahí.
+ *
+ * Lo que entra por estas ranuras es **lo nuestro**: el RSVP que escribe en la base, la
+ * mesa de regalos que reserva de verdad y el libro de firmas que guarda el mensaje. Los
+ * de la maqueta solo hacían `useState` y no guardaban nada.
+ */
+export type ThemeSlots = {
+  readonly rsvp: ReactNode
+  readonly registry: ReactNode
+  readonly guestbook: ReactNode
+  readonly pass: ReactNode
+}
+
+export type ThemeProps = {
+  readonly event: Event
+  readonly content: InvitationContent
+  readonly dictionary: InvitationDictionary
+  readonly slots: ThemeSlots
+  /**
+   * En la vista previa del catálogo las ranuras se pintan inertes y con su aviso. Un
+   * formulario de muestra que parece funcionar y no guarda nada es peor que no tenerlo.
+   */
+  readonly preview?: boolean
+}
+
+/**
+ * La paleta de un diseño.
+ *
+ * **Es el único sitio donde viven sus hexadecimales.** `tokens.css` es la fuente de los
+ * colores de marca, y estos no lo son: son cientos, son de un solo diseño y no los decide
+ * el atelier. Es la misma excepción que ya tiene el acento que viene de los datos de una
+ * plantilla, ampliada con su motivo.
+ *
+ * El kit compartido no tiene ninguno: recibe todo color por prop, siempre. Un `#d4b483`
+ * dentro de `MapPreview` reaparecería en la boda botánica, que es verde, y en el bosque
+ * encantado, que también.
+ */
+export type ThemePalette = Readonly<Record<string, string>>
+
+/**
+ * Un tema no es solo un componente.
+ *
+ * `fonts` es lo que el layout de invitado consulta para no bajar doce familias cuando el
+ * diseño usa cinco. `sections` es lo que el panel consulta para no pedirle un itinerario a
+ * un diseño que no lo pinta. `defaultContent` es lo que hace que la invitación se vea
+ * terminada desde el primer segundo, que es la mitad de lo que se vende.
+ */
+export type ThemeDefinition = {
+  readonly key: string
+  readonly label: string
+  readonly categorySlug: 'boda' | 'boda-civil' | 'xv-anos'
+  readonly palette: ThemePalette
+  readonly fonts: readonly FontKey[]
+  readonly sections: readonly SectionKey[]
+  readonly defaultContent: InvitationContent
+  readonly Component: ComponentType<ThemeProps>
+}
+
+/**
+ * Las cuatro secciones que pinta todo diseño de esta colección.
+ *
+ * Quién es, cuándo, dónde y la despedida. Un diseño al que le falte una de las cuatro no
+ * es una invitación: es una tarjeta.
+ */
+export const SECCIONES_OBLIGATORIAS: readonly SectionKey[] = ['hero', 'schedule', 'reception', 'closing']
