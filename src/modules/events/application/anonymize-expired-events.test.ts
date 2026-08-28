@@ -30,7 +30,9 @@ describe('anonymizeExpiredEvents', () => {
       { id: 'e2', slug: 'xv-vieja', retentionDays: 30, eventDate: '2026-02-01' },
     ])
 
-    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0, clock: () => NOW })()
+    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0, clock: () => NOW })()
 
     expect(isOk(result) && result.value.eventsAnonymized).toEqual(['boda-vieja', 'xv-vieja'])
     expect(anonymized.map((a) => a.id)).toEqual(['e1', 'e2'])
@@ -38,7 +40,9 @@ describe('anonymizeExpiredEvents', () => {
 
   it('no toca nada cuando no hay vencidos', async () => {
     const { events, anonymized } = repo([])
-    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0, clock: () => NOW })()
+    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 0, deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0, clock: () => NOW })()
 
     expect(isOk(result) && result.value.eventsAnonymized).toEqual([])
     expect(anonymized).toHaveLength(0)
@@ -46,7 +50,9 @@ describe('anonymizeExpiredEvents', () => {
 
   it('barre las sesiones caducadas en el mismo pase', async () => {
     const { events } = repo([])
-    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 7, deleteViewsForEvent: async () => 0, clock: () => NOW })()
+    const result = await anonymizeExpiredEvents({ events, deleteExpiredSessions: async () => 7, deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0, clock: () => NOW })()
     expect(isOk(result) && result.value.sessionsDeleted).toBe(7)
   })
 
@@ -62,6 +68,8 @@ describe('anonymizeExpiredEvents', () => {
         borrados.push(eventId)
         return 4
       },
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0,
       clock: () => NOW,
     })()
 
@@ -77,8 +85,60 @@ describe('anonymizeExpiredEvents', () => {
         throw new Error('conexión rechazada')
       },
       deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async () => {},
+      purgeMediaForEvent: async () => 0,
       clock: () => NOW,
     })()
     expect(isErr(result) && result.error.kind).toBe('storage_failure')
+  })
+})
+
+describe('la retención de contenido e imágenes', () => {
+  it('vacía el contenido y borra las fotografías de cada evento vencido', async () => {
+    // Los nombres de los padres, la dedicatoria y la firma son datos personales escritos
+    // sobre personas reales, y un retrato de la novia ocupa megabytes. Hasta ahora no
+    // había nada que los barriera.
+    const { events } = repo([
+      { id: 'e1', slug: 'boda-vencida', retentionDays: 90, eventDate: '2026-01-01' },
+      { id: 'e2', slug: 'xv-vencidos', retentionDays: 90, eventDate: '2026-01-01' },
+    ])
+    const vaciados: string[] = []
+    const purgados: string[] = []
+
+    const result = await anonymizeExpiredEvents({
+      events,
+      deleteExpiredSessions: async () => 0,
+      deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async (eventId) => {
+        vaciados.push(eventId)
+      },
+      purgeMediaForEvent: async (eventId) => {
+        purgados.push(eventId)
+        return 3
+      },
+      clock: () => NOW,
+    })()
+
+    expect(vaciados).toEqual(['e1', 'e2'])
+    expect(purgados).toEqual(['e1', 'e2'])
+    expect(isOk(result) && result.value.mediaDeleted).toBe(6)
+  })
+
+  it('no toca el contenido de un evento que no ha vencido', async () => {
+    const { events } = repo([])
+    const vaciados: string[] = []
+
+    await anonymizeExpiredEvents({
+      events,
+      deleteExpiredSessions: async () => 0,
+      deleteViewsForEvent: async () => 0,
+      clearContentForEvent: async (eventId) => {
+        vaciados.push(eventId)
+      },
+      purgeMediaForEvent: async () => 0,
+      clock: () => NOW,
+    })()
+
+    expect(vaciados).toEqual([])
   })
 })

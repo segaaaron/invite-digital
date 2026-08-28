@@ -1,0 +1,154 @@
+/**
+ * Las imágenes que trae cada diseño.
+ *
+ * Son **el aspecto del tema**, como un SVG del kit: viven versionadas en `public/temas/`,
+ * no en el almacén de medios del evento, que es para lo que sube el atelier. Vienen de la
+ * maqueta, con el nombre normalizado y reencodeadas a AVIF —de 148 MB a 6,6 MB—; lo hacen
+ * `scripts/import-theme-assets.ts` y `scripts/optimize-theme-assets.ts`.
+ *
+ * El manifiesto está aquí y no se descubre leyendo el disco a propósito: así una imagen
+ * que se renombra o se pierde rompe una prueba, y no una invitación abierta el día de la
+ * boda. Seis diseños de boda no aparecen porque no usan ninguna: son SVG y CSS.
+ */
+export const THEME_ASSETS = {
+  'boda-bot': [
+    'boda-01-pareja.avif',
+    'boda-02-arreglo.avif',
+    'boda-03-anillos.avif',
+    'boda-04-pastel.avif',
+    'marmol-flores-optimized.avif',
+    'wedding-couple.avif',
+  ],
+  'flora': [
+    'orange-spray.avif',
+    'pink-corner-left.avif',
+    'pink-corner-right.avif',
+    'pink-spray.avif',
+    'red-corner-left.avif',
+    'red-corner-right.avif',
+    'violet-spray.avif',
+    'white-corner-left.avif',
+    'white-corner-right.avif',
+    'white-spray.avif',
+  ],
+  'xv': [
+    'bajo-el-mar1.avif',
+    'castillo-purpura.avif',
+    'concha-recortada.avif',
+    'corona-icono1.avif',
+    'despedida-icono.avif',
+    'fiesta-icono.avif',
+    'fondo-musical.avif',
+    'icono-vestimenta.avif',
+    'invitacion-recepcion.avif',
+    'mar-bg-a.avif',
+    'mar-bg-b.avif',
+    'mar-corona-purple.avif',
+    'mar-corona.avif',
+    'nota-sol-dorado-sf.avif',
+    'vestido-solo.avif',
+    'xv3.avif',
+  ],
+  'xv-fantasia': [
+    'borde.avif',
+    'flores-sin-fondo.avif',
+    'luna-estrella-opt.avif',
+    'noche-estrellada-bg.avif',
+    'noche-estrellada-portada.avif',
+    'reloj-dorado-opt.avif',
+    'sobre-corona-recortado.avif',
+    'tiara-vino-sf.avif',
+  ],
+  'xv-isabelle': [
+    'busto-marmol-optimized.avif',
+    'estilo-griego-bg.avif',
+    'isabelle-cover.avif',
+    'marmol-flores-optimized.avif',
+    'piramide-hoja-optimized.avif',
+    'portada-griega.avif',
+  ],
+  'xv-luciana': [
+    'borde.avif',
+    'bosque-verdee.avif',
+    'faro-verde.avif',
+    'quinceanera-verde.avif',
+    'reloj1.avif',
+    'traje1.avif',
+  ],
+  'xv-mariana': [
+    'auto-plata-opt.avif',
+    'baile-plata-opt.avif',
+    'bola-sola-opt.avif',
+    'borde-plata-sf.avif',
+    'castillo-guindo-opt.avif',
+    'corona-plata-opt.avif',
+    'fondo-disco-mariana-opt.avif',
+    'fondo-disco-tacones-opt.avif',
+    'menu-plata-opt.avif',
+    'micro-notas-opt.avif',
+    'reloj-plata-opt.avif',
+    'sobre-plata-opt.avif',
+    'traje-plata-opt.avif',
+  ],
+  'xv-natalia': [
+    'bajo-el-mar1.avif',
+    'castillo-purpura.avif',
+    'concha-recortada.avif',
+    'corona-icono1.avif',
+    'despedida-icono.avif',
+    'fiesta-icono.avif',
+    'fondo-musical.avif',
+    'fondo-notas-dorado.avif',
+    'guitarra-y-saxo-dorado-sf.avif',
+    'icono-vestimenta.avif',
+    'invitacion-recepcion.avif',
+    'mar-corona-purple.avif',
+    'nota-sol-dorado-sf.avif',
+    'nota-sol-sf.avif',
+  ],
+  'xv-valentina': [
+    'castillo2sf.avif',
+    'corona-icono1.avif',
+    'despedida-icono.avif',
+    'fiesta-icono.avif',
+    'icono-vestimenta.avif',
+    'invitacion-recepcion.avif',
+    'mascara-sin-fondo.avif',
+    'mascarada-morada.avif',
+    'xv3.avif',
+  ],
+  'xv-valeria': [
+    'baile-guindo-round.avif',
+    'bienvenida-guindo-round.avif',
+    'borde.avif',
+    'candelabro-guindo-sf.avif',
+    'castillo-guindo-opt.avif',
+    'cierre-guinda-round.avif',
+    'corona-plata-opt.avif',
+    'fondo-vino-guindo-bg.avif',
+    'marco-guindo-portada.avif',
+    'menu-guindo-round.avif',
+    'reloj-plata-opt.avif',
+    'tiara-vino-sf.avif',
+    'torta-guinda-round.avif',
+    'traje1-opt.avif',
+    'xv-guindo-photo.avif',
+  ],
+} as const satisfies Record<string, readonly string[]>
+
+export type ThemeAssetKey = keyof typeof THEME_ASSETS
+
+/**
+ * La ruta pública de una imagen del tema.
+ *
+ * Tipada contra el manifiesto: `themeAsset('xv-valeria', 'corona-plata-opt.avif')` compila
+ * y con el nombre mal escrito no. Un `<img>` con la ruta cambiada no falla al compilar ni
+ * en ninguna prueba de render — falla en el teléfono de un invitado, en silencio y con un
+ * hueco donde iba la corona.
+ */
+export function themeAsset<K extends ThemeAssetKey>(
+  tema: K,
+  archivo: (typeof THEME_ASSETS)[K][number],
+): string {
+  return `/temas/${tema}/${archivo}`
+}

@@ -1,0 +1,136 @@
+/*
+ * Las animaciones de los dieciséis diseños de invitación.
+ *
+ * Viven aquí y no en `tokens.css` porque no son tokens de marca: son el movimiento de
+ * estos diseños concretos, y `tokens.css` es la fuente de los colores y las medidas que
+ * comparten la web pública, el panel y la invitación.
+ *
+ * Todos los nombres llevan el prefijo `theme-`. Sin él, un `spin` o un `pulse` sueltos
+ * chocarían con los del sitio público o los del panel, y el que gane depende del orden en
+ * que el compilador junte las hojas: un fallo que aparece al añadir una hoja nueva, en un
+ * sitio que nadie tocó.
+ *
+ * **La preferencia de movimiento reducido no se resuelve aquí.** Cada pieza del kit la
+ * consulta en JavaScript y decide: las de contenido se enseñan sin animar, y los fondos de
+ * partículas no se pintan. Un `animation: none` global dejaría los `Reveal` congelados en
+ * su estado de partida, que es `opacity: 0` — la invitación entera en blanco.
+ *
+ * Las importa solo el layout de invitado, `src/app/(guest)/i/[token]/layout.tsx`.
+ */
+
+@keyframes theme-bubbleRise { 0% { transform: translateY(0) translateX(0); opacity: 0; } 10% { opacity: 1; } 50% { transform: translateY(-50vh) translateX(var(--sway)); } 90% { opacity: 0.8; } 100% { transform: translateY(-105vh) translateX(0); opacity: 0; } }
+
+@keyframes theme-confettiFly { 0% { transform: translate(0,0) rotate(0deg); opacity: 1; } 100% { transform: translate(var(--tx),var(--ty)) rotate(var(--rot)); opacity: 0; } }
+
+@keyframes theme-envelopeFlap { 0%,100% { transform: scaleY(1); } 50% { transform: scaleY(0.92); } }
+
+@keyframes theme-filmBurn { 0%,100% { opacity: 0; transform: translateX(0); } 10% { opacity: 0.6; } 50% { opacity: 0.3; transform: translateX(10px); } 90% { opacity: 0; } }
+
+@keyframes theme-haloPulse { 0%,100% { opacity: 0.06; transform: scale(1); } 50% { opacity: 0.18; transform: scale(1.15); } }
+
+@keyframes theme-introFade { from { opacity: 0; } to { opacity: 1; } }
+
+@keyframes theme-petalDrop {
+  0% { transform: translate3d(0, -15vh, 0) rotate(0deg); }
+  50% { transform: translate3d(calc(var(--sway, 30px) * 0.5), 50vh, 0) rotate(180deg); }
+  100% { transform: translate3d(var(--sway, 30px), 115vh, 0) rotate(var(--rotEnd, 360deg)); }
+  }
+
+@keyframes theme-petalFall { 0% { transform: translateY(-10vh) rotate(0deg); opacity: 0; } 10%,90% { opacity: 0.5; } 100% { transform: translateY(110vh) rotate(720deg); opacity: 0; } }
+
+@keyframes theme-pinBounce { 0%,100% { transform: translate(-50%,-100%); } 50% { transform: translate(-50%,-115%); } }
+
+@keyframes theme-premiumBubbleRise { 0% { transform: translateY(0) scale(0.85); opacity: 0; } 12% { opacity: 1; } 82% { opacity: 1; } 100% { transform: translateY(-115vh) scale(1.1); opacity: 0; } }
+
+@keyframes theme-premiumBubbleSway { 0%, 100% { transform: translateX(calc(var(--sway,20px) * -1)); } 50% { transform: translateX(var(--sway,20px)); } }
+
+@keyframes theme-radarPulse { 0% { transform: translate(-50%,-50%) scale(0.4); opacity: 0.7; } 100% { transform: translate(-50%,-50%) scale(1.4); opacity: 0; } }
+
+@keyframes theme-ringTilt { 0%,100% { transform: rotate3d(1,1,0, 35deg) rotate(0deg); } 50% { transform: rotate3d(1,1,0, 35deg) rotate(360deg); } }
+
+@keyframes theme-ringTilt2 { 0%,100% { transform: rotate3d(1,-1,0, -35deg) rotate(0deg); } 50% { transform: rotate3d(1,-1,0, -35deg) rotate(-360deg); } }
+
+@keyframes theme-sparkleFade { 0%,100% { opacity: 0.2; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1.2); } }
+
+@keyframes theme-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@keyframes theme-spinSlow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+@keyframes theme-stampDown { 0%,80%,100% { transform: scale(1); } 40% { transform: scale(1.08); } }
+
+@keyframes theme-stampWave { 0%,100% { opacity: 0; transform: scale(0.6); } 50% { opacity: 0.18; transform: scale(1.4); } }
+
+@keyframes theme-sunRise { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+@keyframes theme-twinkle { 0%, 100% { opacity: 0.8; } 50% { opacity: 0.2; } }
+
+@keyframes theme-waveScroll { 0%,100% { transform: translateX(0); } 50% { transform: translateX(-20px); } }
+
+@keyframes theme-wedGlowPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.05); }
+  }
+
+@keyframes theme-wedGradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  }
+
+@keyframes theme-drift-up { 0% { transform: translateY(0); opacity: 0; } 10%,90% { opacity: 0.6; } 100% { transform: translateY(-200%); opacity: 0; } }
+
+@keyframes theme-drift-down { 0% { transform: translateY(-30%); opacity: 0; } 10%,90% { opacity: 0.6; } 100% { transform: translateY(160%); opacity: 0; } }
+
+@keyframes theme-drift-side { 0% { transform: translateX(-30%); opacity: 0; } 10%,90% { opacity: 0.6; } 100% { transform: translateX(160%); opacity: 0; } }
+
+@keyframes theme-leafSway { 0%,100% { transform: rotate(-1.5deg) translateY(0); } 50% { transform: rotate(1.5deg) translateY(-3px); } }
+
+@keyframes theme-eq { 0%,100% { height: 25%; } 50% { height: 100%; } }
+
+@keyframes theme-petalFallL {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  8% { opacity: 0.8; }
+  50% { transform: translateY(50vh) translateX(-40px) rotate(360deg); }
+  92% { opacity: 0.8; }
+  100% { transform: translateY(115vh) translateX(-80px) rotate(720deg); opacity: 0; }
+  }
+
+@keyframes theme-petalFallR {
+  0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+  8% { opacity: 0.8; }
+  50% { transform: translateY(50vh) translateX(40px) rotate(-360deg); }
+  92% { opacity: 0.8; }
+  100% { transform: translateY(115vh) translateX(80px) rotate(-720deg); opacity: 0; }
+  }
+
+@keyframes theme-flicker { 0%,100% { opacity: 1; } 33% { opacity: 0.8; transform: scale(1.04); } 66% { opacity: 0.95; transform: scale(0.98); } }
+
+@keyframes theme-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+@keyframes theme-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+/*
+ * El balanceo de las acuarelas florales. Va por clase y no en línea para que la
+ * preferencia de movimiento reducido lo apague sin que cada pieza tenga que consultarla:
+ * aquí sí funciona un `animation: none`, porque lo que hay debajo es una imagen que se ve
+ * igual quieta. En los `Reveal` no funcionaría — los dejaría en `opacity: 0`.
+ */
+.theme-sway-slow { animation: theme-leafSway 8s ease-in-out infinite; }
+.theme-sway-slower { animation: theme-leafSway 10s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-sway-slow,
+  .theme-sway-slower { animation: none; }
+}
+
+/*
+ * Las ilustraciones de `themes/art/`: anillos, sello, sol de aniversario y atardecer.
+ *
+ * Se apagan enteras con movimiento reducido, y aquí sí vale el `animation: none` global:
+ * lo que queda es la misma ilustración, quieta. Es lo que permite que sigan siendo
+ * componentes de servidor, sin una isla de cliente por dibujo.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .theme-art *,
+  .theme-art {
+    animation: none !important;
+  }
+}

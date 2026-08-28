@@ -17,7 +17,11 @@ export default defineConfig({
         test: {
           name: 'node',
           environment: 'node',
-          include: ['src/**/*.test.ts'],
+          // `scripts/` entra aquí a propósito. Lo que vive ahí toca el disco, la base y
+          // el despliegue —sembrar, migrar, la puerta previa, importar el arte de los
+          // temas—, y hasta ahora no lo comprobaba nada: un fallo solo se veía
+          // ejecutándolo, que es tarde para un guion que escribe ficheros.
+          include: ['src/**/*.test.ts', 'scripts/**/*.test.ts'],
         },
       },
       {

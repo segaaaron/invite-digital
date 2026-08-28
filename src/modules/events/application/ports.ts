@@ -46,3 +46,48 @@ export interface StaffReader {
   isStaffOf(eventId: string, userId: string): Promise<boolean>
   eventIdsOf(userId: string): Promise<string[]>
 }
+
+/**
+ * El contenido rico de la invitación.
+ *
+ * Va en su propio puerto y no dentro de `EventRepository` por el mismo motivo que
+ * `StaffReader`: es otra tabla, con su propio ciclo de vida —se siembra al elegir tema, se
+ * edita bloque a bloque, se borra al vencer la retención— y la mayoría de las pantallas
+ * del panel no lo tocan.
+ *
+ * `blocks` entra y sale como `unknown` a propósito: es un `jsonb`, y quien decide qué es
+ * un contenido válido es `domain/invitation-content.ts`, no el repositorio.
+ */
+export interface ContentRepository {
+  find(eventId: string): Promise<unknown>
+  save(eventId: string, blocks: unknown): Promise<void>
+  clear(eventId: string): Promise<void>
+}
+
+/**
+ * Las imágenes de una invitación.
+ *
+ * El fichero y la fila van por separado a propósito: el fichero vive en disco —fuera de
+ * `public/`— y la fila en Postgres. Borrar el evento se lleva la fila por cascada; el
+ * fichero lo barre la retención, que es la única que sabe cuándo un evento venció.
+ */
+export interface MediaStorage {
+  put(key: string, bytes: Uint8Array): Promise<void>
+  get(key: string): Promise<Uint8Array | null>
+  remove(key: string): Promise<void>
+}
+
+export type MediaRow = {
+  readonly id: string
+  readonly eventId: string
+  readonly contentType: string
+  readonly originalName: string
+  readonly byteSize: number
+}
+
+export interface MediaRepository {
+  insert(row: MediaRow): Promise<void>
+  find(id: string): Promise<MediaRow | null>
+  listByEvent(eventId: string): Promise<readonly MediaRow[]>
+  remove(id: string): Promise<void>
+}

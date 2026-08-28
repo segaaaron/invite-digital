@@ -9,6 +9,8 @@ import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { guardedUnlock } from './application/guarded-unlock'
 import { isUnlockValid, unlockValue, UNLOCK_MS } from './domain/unlock-token'
 import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
+import { SECTION_KEYS, type SectionKey } from './domain/invitation-content'
+import { themeFor } from './ui/themes/registry'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { shareUrl } from './domain/client-share'
@@ -43,8 +45,31 @@ export async function createEventAction(_previous: EventActionState, formData: F
     return { status: 'error', message: result.error.kind }
   }
 
+  // El contenido del diseño se **escribe** al crear, no se fusiona al leer.
+  //
+  // Fusionarlo en cada lectura haría la invitación completa igual de bien, pero el atelier
+  // no podría **quitar** una sección: borrar la canción la devolvería en la siguiente
+  // apertura, porque la muestra volvería a asomar por debajo. Escribirla una vez la hace
+  // suya, y borrarla la borra.
+  await sembrarContenido(result.value.id, result.value.themeKey)
+
   revalidatePath('/panel')
   return { status: 'success', message: '' }
+}
+
+/**
+ * Escribe el contenido de muestra del diseño en los bloques que estén vacíos.
+ *
+ * Nunca pisa lo escrito. Falla en silencio a propósito: que el contenido de muestra no se
+ * haya podido sembrar no puede impedir crear el evento ni cambiarle el diseño, y la
+ * invitación se abre igual —con los huecos que el atelier rellene—.
+ */
+async function sembrarContenido(eventId: string, themeKey: string): Promise<void> {
+  try {
+    await eventUseCases.seedContent(eventId, themeFor(themeKey).defaultContent)
+  } catch (cause) {
+    console.error('No se pudo sembrar el contenido del evento %s:', eventId, cause)
+  }
 }
 
 export async function updateEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
@@ -53,10 +78,21 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   const eventId = String(formData.get('id') ?? '')
   await requireEventAccess(actor, { eventId })
 
+  // Qué diseño tenía antes, para saber si cambió. Se lee antes de guardar, que es la única
+  // forma de saberlo.
+  const anterior = await eventUseCases.getByIdFor(actor, eventId)
+  const temaAnterior = isErr(anterior) ? null : anterior.value.themeKey
+
   const result = await eventUseCases.update({ ...readForm(formData), id: eventId })
   if (isErr(result)) {
     console.error('edición de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
+  }
+
+  // Al cambiar de diseño se siembra lo que el nuevo trae y el evento no tiene. Nunca pisa
+  // lo escrito: probar otro diseño no puede llevarse por delante el itinerario de una boda.
+  if (temaAnterior !== null && temaAnterior !== result.value.themeKey) {
+    await sembrarContenido(result.value.id, result.value.themeKey)
   }
 
   revalidatePath('/panel')
@@ -290,3 +326,91 @@ export async function setEventCurrencyAction(input: {
   revalidatePath(`/panel/eventos/${input.eventSlug}/regalos`)
   return { status: 'success' }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// El contenido de la invitación y sus imágenes
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ContentActionState =
+  | { status: 'idle' }
+  | { status: 'success' }
+  | { status: 'error'; message: string }
+
+/**
+ * Guarda un bloque del contenido de la invitación.
+ *
+ * El bloque es la unidad de edición porque es la unidad de sentido: la pantalla enseña un
+ * formulario por bloque, y guardar «la canción» sin tocar «el itinerario» es lo que el
+ * atelier espera.
+ *
+ * El valor llega como JSON en un campo del formulario. No es pereza: el itinerario, la
+ * galería y los anfitriones son listas de longitud variable, y componerlas desde campos
+ * planos con índices en el nombre es exactamente donde se pierden filas al reordenar.
+ * Quien decide qué es válido es el dominio, que lo vuelve a parsear.
+ */
+export async function saveContentBlockAction(
+  _previo: ContentActionState,
+  formData: FormData,
+): Promise<ContentActionState> {
+  const actor = await requireSession()
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug })
+
+  const section = String(formData.get('section') ?? '')
+  if (!(SECTION_KEYS as readonly string[]).includes(section)) {
+    return { status: 'error', message: 'unknown_section' }
+  }
+
+  let valor: unknown
+  try {
+    valor = JSON.parse(String(formData.get('value') ?? 'null'))
+  } catch {
+    return { status: 'error', message: 'invalid_payload' }
+  }
+
+  try {
+    await eventUseCases.saveContentBlock(eventId, section as SectionKey, valor)
+  } catch (cause) {
+    console.error('No se pudo guardar el bloque %s del evento %s:', section, eventId, cause)
+    return { status: 'error', message: 'storage_failure' }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success' }
+}
+
+/**
+ * Sube una imagen de la invitación.
+ *
+ * El tope de tamaño se comprueba **antes** de leer el fichero a memoria, y el tipo lo
+ * deciden los primeros bytes: los dos son reglas del dominio, y aquí solo se traduce el
+ * resultado a algo que la pantalla pueda pintar.
+ */
+export async function uploadMediaAction(
+  _previo: ContentActionState,
+  formData: FormData,
+): Promise<ContentActionState> {
+  const actor = await requireSession()
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug })
+
+  const archivo = formData.get('file')
+  if (!(archivo instanceof File) || archivo.size === 0) {
+    return { status: 'error', message: 'no_file' }
+  }
+
+  const resultado = await eventUseCases.media.save(eventId, {
+    name: archivo.name,
+    size: archivo.size,
+    bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
+  })
+
+  if (!resultado.ok) return { status: 'error', message: resultado.error }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success' }
+}
+
+

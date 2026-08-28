@@ -20,10 +20,20 @@ import {
 } from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
+import {
+  clearContent,
+  contentFor,
+  saveContentBlock,
+  seedContentForTheme,
+} from '@/modules/events/application/content-use-cases'
+import { listMedia, purgeMedia, readMedia, saveMedia } from '@/modules/events/application/media-use-cases'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
+import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
+import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
+import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
@@ -174,6 +184,12 @@ export const identity = {
   actorOf: (userId: string) => drizzleUserRepository.findActor(userId),
 } as const
 
+const mediaDeps = {
+  media: drizzleMediaRepository,
+  storage: createDiskMediaStorage(env.EVENT_MEDIA_DIR),
+  ids: () => crypto.randomUUID(),
+}
+
 export const events = {
   create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
   update: updateEventUseCase({ events: drizzleEventRepository }),
@@ -189,6 +205,25 @@ export const events = {
   listFor: listEventsFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   canTouch: actorCanTouchEvent({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   setOwner: (eventId: string, userId: string) => drizzleEventRepository.setOwner(eventId, userId),
+  /**
+   * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
+   * guarda. `contentFor` no escribe —una invitación se abre cientos de veces—; quien
+   * escribe es `seedContent`, al crear el evento o al cambiar de diseño.
+   */
+  contentFor: contentFor(drizzleContentRepository),
+  saveContentBlock: saveContentBlock(drizzleContentRepository),
+  seedContent: seedContentForTheme(drizzleContentRepository),
+  clearContent: clearContent(drizzleContentRepository),
+  /**
+   * Las imágenes de la invitación. El fichero vive en disco fuera de `public/`; la fila,
+   * en Postgres. Las entrega `GET /media/[id]` con la puerta de contraseña del evento.
+   */
+  media: {
+    save: saveMedia(mediaDeps),
+    read: readMedia(mediaDeps),
+    list: listMedia(mediaDeps),
+    purge: purgeMedia(mediaDeps),
+  },
   /**
    * El personal de puerta de un evento. Vive aquí y no en un módulo propio porque es una
    * pertenencia del evento, no una entidad con vida propia.
@@ -228,6 +263,8 @@ export const events = {
     events: drizzleEventRepository,
     deleteExpiredSessions: (now) => drizzleSessionRepository.deleteExpired(now),
     deleteViewsForEvent: (eventId) => drizzleViewRepository.deleteForEvent(eventId),
+    clearContentForEvent: clearContent(drizzleContentRepository),
+    purgeMediaForEvent: purgeMedia(mediaDeps),
     clock,
   }),
 } as const

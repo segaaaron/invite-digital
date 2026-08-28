@@ -1,8 +1,10 @@
 import Image from 'next/image'
+import Link from 'next/link'
+import type { Locale } from '@/shared/i18n/locales'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Template } from '../domain/template'
 
-type Props = { template: Template; dictionary: Dictionary }
+type Props = { template: Template; dictionary: Dictionary; locale: Locale }
 
 /** El icono de código QR de la maqueta. */
 function QrIcon() {
@@ -35,15 +37,25 @@ function PlayIcon() {
  *
  * Sin muestra cargada cae a la fotografía de la plantilla: media tarjeta con el monograma
  * y sin nombres se leería como un fallo de carga.
+ *
+ * **La tarjeta entera es un enlace** a la invitación de verdad. Hasta que existió la vista
+ * previa, esto era un dibujo bonito que no llevaba a ninguna parte: el cliente elegía un
+ * modelo por una tarjeta de papel y el invitado acababa recibiendo otra cosa. El `slug` de
+ * la plantilla **es** la clave del tema, así que el enlace no puede apuntar a un diseño
+ * distinto del que se está enseñando.
  */
-export function TemplateCard({ template, dictionary }: Props) {
+export function TemplateCard({ template, dictionary, locale }: Props) {
   const { models } = dictionary
   const acento = template.palette.accent
 
   return (
-    <figure className="m-0 flex w-[238px] shrink-0 flex-col items-center gap-5">
+    <Link
+      aria-label={`${models.open} · ${template.name}`}
+      className="group m-0 flex w-[238px] shrink-0 flex-col items-center gap-5 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4"
+      href={`/modelos/${locale}/${template.slug}`}
+    >
       <div
-        className="relative aspect-5/7 w-full [transform:rotateY(-11deg)_rotateX(3deg)] [transform-style:preserve-3d] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] hover:[transform:rotateY(0deg)_rotateX(0deg)_translateY(-8px)] motion-reduce:transition-none"
+        className="relative aspect-5/7 w-full [transform:rotateY(-11deg)_rotateX(3deg)] [transform-style:preserve-3d] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] group-hover:[transform:rotateY(0deg)_rotateX(0deg)_translateY(-8px)] group-focus-visible:[transform:rotateY(0deg)_rotateX(0deg)_translateY(-8px)] motion-reduce:transition-none"
         style={{
           background: template.palette.base,
           boxShadow: '0 26px 50px -24px rgb(90 66 26 / 0.5), inset 0 0 0 1px rgb(255 255 255 / 0.3)',
@@ -119,7 +131,7 @@ export function TemplateCard({ template, dictionary }: Props) {
         )}
       </div>
 
-      <figcaption className="font-display text-[20px] font-light text-ink">{template.name}</figcaption>
-    </figure>
+      <span className="font-display text-[20px] font-light text-ink">{template.name}</span>
+    </Link>
   )
 }

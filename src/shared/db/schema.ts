@@ -89,6 +89,13 @@ export const templates = pgTable(
       .notNull()
       .references(() => eventCategories.id),
     coverImagePath: varchar('cover_image_path', { length: 255 }).notNull(),
+    /**
+     * Qué diseño pinta esta plantilla. Apunta al registro de temas de
+     * `events/ui/themes/registry.ts`, y `pnpm preflight` falla si una fila publicada
+     * apunta a una clave que el registro no conoce: vender un modelo que el motor no sabe
+     * pintar es la clase de fallo que no se descubre hasta el día de la boda.
+     */
+    themeKey: varchar('theme_key', { length: 64 }).notNull(),
     palette: jsonb('palette').$type<{ base: string; accent: string }>().notNull(),
     // Los datos de escaparate que la tarjeta de modelo dibuja: monograma, nombres, fecha
     // y lugar. Son del catálogo, no del código, porque cambian con el escaparate.
@@ -307,6 +314,51 @@ export const events = pgTable('events', {
   planId: uuid('plan_id').references(() => plans.id, { onDelete: 'set null' }),
   ...timestamps,
 })
+
+/**
+ * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
+ * guarda —ceremonia y recepción por separado, itinerario, galería, código de vestimenta,
+ * anfitriones, canción, y la hora del evento para la cuenta atrás—.
+ *
+ * Un solo `jsonb` y no diecinueve columnas: se lee entero, se edita entero y tres de los
+ * bloques son listas. La base garantiza que es JSON; que sea **este** JSON lo garantiza
+ * `domain/invitation-content.ts`, que lo valida al leer y al escribir.
+ *
+ * `CASCADE` porque el contenido no significa nada sin su evento, igual que `event_staff`.
+ */
+export const eventContent = pgTable('event_content', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  blocks: jsonb('blocks').$type<Record<string, unknown>>().notNull().default({}),
+  ...timestamps,
+})
+
+/**
+ * Las imágenes que el atelier sube para una invitación: retrato, portada, galería y los
+ * iconos del itinerario.
+ *
+ * El fichero vive en disco, **fuera de `public/`**, y esta tabla guarda de quién es y qué
+ * es. En `public/` estaría publicado en internet, y una foto de la novia no se sirve a
+ * quien adivine el nombre del archivo. Lo entrega `GET /media/[id]`, con la misma puerta
+ * de contraseña que la invitación.
+ */
+export const eventMedia = pgTable(
+  'event_media',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    /** Decidido por los primeros bytes, nunca por la extensión ni por el `Content-Type`. */
+    contentType: varchar('content_type', { length: 32 }).notNull(),
+    /** Solo para enseñarlo: el fichero en disco se llama por el `id`. */
+    originalName: varchar('original_name', { length: 255 }).notNull(),
+    byteSize: integer('byte_size').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('event_media_event_idx').on(t.eventId)],
+)
 
 /**
  * Una petición de cambio de plan que el atelier resuelve fuera del sistema. No hay cobro

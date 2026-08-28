@@ -6,6 +6,7 @@ export type MaintenanceReport = {
   readonly eventsAnonymized: readonly string[]
   readonly sessionsDeleted: number
   readonly viewsDeleted: number
+  readonly mediaDeleted: number
 }
 
 /**
@@ -25,6 +26,17 @@ export const anonymizeExpiredEvents =
      * nadie, pero sin el evento no sirven de nada y son la tabla que más crece.
      */
     deleteViewsForEvent: (eventId: string) => Promise<number>
+    /**
+     * El contenido de la invitación se **vacía**: los nombres de los padres, la
+     * dedicatoria y la firma son datos personales escritos por el atelier sobre personas
+     * reales, y hasta ahora no había nada que los barriera.
+     */
+    clearContentForEvent: (eventId: string) => Promise<void>
+    /**
+     * Y las fotografías se **borran del disco**. Un retrato de la novia no es un agregado
+     * que convenga conservar, y es lo único de todo esto que ocupa megabytes.
+     */
+    purgeMediaForEvent: (eventId: string) => Promise<number>
     clock: () => Date
   }) =>
   async (): Promise<Result<MaintenanceReport, EventError>> =>
@@ -35,9 +47,12 @@ export const anonymizeExpiredEvents =
 
         const anonymized: string[] = []
         let viewsDeleted = 0
+        let mediaDeleted = 0
         for (const event of pending) {
           await deps.events.anonymize(event.id, now)
           viewsDeleted += await deps.deleteViewsForEvent(event.id)
+          await deps.clearContentForEvent(event.id)
+          mediaDeleted += await deps.purgeMediaForEvent(event.id)
           anonymized.push(event.slug)
         }
 
@@ -45,6 +60,7 @@ export const anonymizeExpiredEvents =
           eventsAnonymized: anonymized,
           sessionsDeleted: await deps.deleteExpiredSessions(now),
           viewsDeleted,
+          mediaDeleted,
         })
       },
       (cause) => eventError('storage_failure', `Falló el mantenimiento: ${String(cause)}`),

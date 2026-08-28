@@ -4,7 +4,8 @@ import { useActionState, useId } from 'react'
 import { createEventAction, updateEventAction, type EventActionState } from '../actions'
 import type { Event } from '../domain/event'
 import type { EventErrorKind } from '../domain/errors'
-import { THEME_KEYS, themeFor } from './themes/registry'
+import { ThemePicker } from './ThemePicker'
+import { themeDefinitions } from './themes/registry'
 
 const INITIAL: EventActionState = { status: 'idle', message: '' }
 
@@ -35,7 +36,6 @@ export function EventForm({ event }: { event?: Event }) {
   const dateId = useId()
   const deadlineId = useId()
   const localeId = useId()
-  const themeId = useId()
   const statusId = useId()
   const retentionId = useId()
   const currencyId = useId()
@@ -79,17 +79,30 @@ export function EventForm({ event }: { event?: Event }) {
           </select>
         </label>
 
-        <label className={LABEL_CLASS} htmlFor={themeId}>
-          Plantilla
-          <select className={FIELD_CLASS} defaultValue={event?.themeKey ?? 'clasico'} id={themeId} name="themeKey">
-            {THEME_KEYS.map((key) => (
-              <option key={key} value={key}>
-                {themeFor(key).label}
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
+
+      {/* El diseño se elige mirándolo, no leyendo su nombre en un desplegable de
+          diecisiete claves. La rejilla pinta el papel con la paleta real de cada tema y
+          cada tarjeta enlaza a la invitación entera. */}
+      <ThemePicker
+        defaultValue={event?.themeKey ?? 'clasico'}
+        definitions={themeDefinitions().map((definicion) => ({
+          key: definicion.key,
+          label: definicion.label,
+          categorySlug: definicion.categorySlug,
+          palette: definicion.palette,
+          sample:
+            definicion.defaultContent.hero === undefined
+              ? null
+              : {
+                  monogram: definicion.defaultContent.hero.monogram ?? '·',
+                  names: [definicion.defaultContent.hero.nameA, definicion.defaultContent.hero.nameB]
+                    .filter((nombre): nombre is string => nombre !== undefined)
+                    .join('\n'),
+                },
+        }))}
+        locale={event?.locale ?? 'es'}
+      />
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={LABEL_CLASS} htmlFor={statusId}>
