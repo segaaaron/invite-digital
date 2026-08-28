@@ -61,7 +61,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'boda-cin',
-    listo: false,
+    listo: true,
     categorySlug: 'boda',
     es: 'Cinemática',
     en: 'Cinematic',

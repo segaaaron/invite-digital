@@ -33,7 +33,19 @@ export type PlaceBlock = {
   readonly time?: string
 }
 
-export type ItineraryRow = { readonly time: string; readonly label: string; readonly imageId?: string }
+/**
+ * Una fila del itinerario.
+ *
+ * `note` es la línea secundaria: varios diseños emparejan la hora con un encabezado y un
+ * detalle debajo —«SC.02 · INT. CAPILLA. NOCHE. · Ceremonia 19:00»—, y sin ella habría que
+ * meter las dos cosas en el mismo campo y perder el salto que el diseño compone.
+ */
+export type ItineraryRow = {
+  readonly time: string
+  readonly label: string
+  readonly note?: string
+  readonly imageId?: string
+}
 /**
  * Una casilla de la galería.
  *
@@ -196,7 +208,13 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
     const etiqueta = texto(fila.label, LIMITES.corto)
     if (hora === undefined || etiqueta === undefined) return undefined
     const imagen = texto(fila.imageId, LIMITES.corto)
-    return imagen === undefined ? { time: hora, label: etiqueta } : { time: hora, label: etiqueta, imageId: imagen }
+    const nota = texto(fila.note, LIMITES.corto)
+    return {
+      time: hora,
+      label: etiqueta,
+      ...(nota === undefined ? {} : { note: nota }),
+      ...(imagen === undefined ? {} : { imageId: imagen }),
+    }
   })
   if (itinerario !== undefined) salida.itinerary = itinerario
 

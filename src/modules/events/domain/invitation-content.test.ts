@@ -134,3 +134,20 @@ describe('mergeContent', () => {
     expect(mergeContent({ quote: { text: 'De muestra' } }, {})).toEqual({ quote: { text: 'De muestra' } })
   })
 })
+
+describe('la línea secundaria del itinerario', () => {
+  it('la conserva cuando viene', () => {
+    // Varios diseños emparejan la hora con un encabezado y un detalle debajo. Sin este
+    // campo habría que meter las dos cosas en el mismo texto y perder el salto.
+    expect(
+      parseInvitationContent({ itinerary: [{ time: 'SC.02', label: 'INT. CAPILLA. NOCHE.', note: 'Ceremonia · 19:00' }] })
+        .itinerary,
+    ).toEqual([{ time: 'SC.02', label: 'INT. CAPILLA. NOCHE.', note: 'Ceremonia · 19:00' }])
+  })
+
+  it('no la inventa cuando no viene', () => {
+    expect(parseInvitationContent({ itinerary: [{ time: '18:00', label: 'Recepción' }] }).itinerary).toEqual([
+      { time: '18:00', label: 'Recepción' },
+    ])
+  })
+})
