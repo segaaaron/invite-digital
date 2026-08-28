@@ -8,6 +8,7 @@ import { civilDefinition } from './bodas/civil'
 import { destDefinition } from './bodas/dest'
 import { engDefinition } from './bodas/eng'
 import { xvDefinition } from './xv/xv'
+import { xvIsabelleDefinition } from './xv/xv-isabelle'
 import { xvNataliaDefinition } from './xv/xv-natalia'
 import { xv_valentinaDefinition } from './xv/xv-valentina'
 import { xv_lucianaDefinition } from './xv/xv-luciana'
@@ -41,6 +42,7 @@ const THEMES = {
   'xv-fantasia': xv_fantasiaDefinition,
   'xv-valeria': xv_valeriaDefinition,
   'xv-mariana': xv_marianaDefinition,
+  'xv-isabelle': xvIsabelleDefinition,
 } as const satisfies Record<string, ThemeDefinition>
 
 export const THEME_KEYS: readonly string[] = Object.keys(THEMES)

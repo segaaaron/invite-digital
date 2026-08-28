@@ -180,7 +180,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'xv-isabelle',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Palacio Griego',
     en: 'Greek Palace',
