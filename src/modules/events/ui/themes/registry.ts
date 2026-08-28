@@ -3,6 +3,10 @@ import { bodaDefinition } from './bodas/boda'
 import { bodaBotDefinition } from './bodas/boda-bot'
 import { bodaCinDefinition } from './bodas/boda-cin'
 import { bodaEdDefinition } from './bodas/boda-ed'
+import { anivDefinition } from './bodas/aniv'
+import { civilDefinition } from './bodas/civil'
+import { destDefinition } from './bodas/dest'
+import { engDefinition } from './bodas/eng'
 import type { ThemeDefinition } from './contract'
 
 /**
@@ -19,6 +23,10 @@ const THEMES = {
   'boda-bot': bodaBotDefinition,
   'boda-cin': bodaCinDefinition,
   'boda-ed': bodaEdDefinition,
+  civil: civilDefinition,
+  aniv: anivDefinition,
+  eng: engDefinition,
+  dest: destDefinition,
 } as const satisfies Record<string, ThemeDefinition>
 
 export const THEME_KEYS: readonly string[] = Object.keys(THEMES)

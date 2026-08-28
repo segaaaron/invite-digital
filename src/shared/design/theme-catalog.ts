@@ -79,7 +79,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'civil',
-    listo: false,
+    listo: true,
     categorySlug: 'boda-civil',
     es: 'Civil',
     en: 'Civil',
@@ -88,7 +88,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'aniv',
-    listo: false,
+    listo: true,
     categorySlug: 'boda',
     es: 'Bodas de Oro',
     en: 'Golden Anniversary',
@@ -97,7 +97,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'eng',
-    listo: false,
+    listo: true,
     categorySlug: 'boda',
     es: 'Compromiso',
     en: 'Engagement',
@@ -106,7 +106,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'dest',
-    listo: false,
+    listo: true,
     categorySlug: 'boda',
     es: 'Destino',
     en: 'Destination',
