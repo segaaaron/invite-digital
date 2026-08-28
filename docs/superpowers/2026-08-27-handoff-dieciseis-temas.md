@@ -56,7 +56,7 @@ una mejora de comodidad, no un hueco: el atelier puede cargar una boda entera ho
 
 ## Comprobado
 
-- 1830 unitarias, 173 e2e, typecheck, lint, `verify:boundaries`, `verify:tenancy`.
+- 1782 unitarias, 173 e2e, typecheck, lint, `verify:boundaries`, `verify:tenancy`.
 - Los dieciséis a 390, 559, 820 y 1280 px, sin un solo desborde de contenido.
 - Migraciones `0026`–`0029` aplicadas dos veces sobre la base de desarrollo y una vez
   sobre una base vacía, con el esquema idéntico columna por columna.

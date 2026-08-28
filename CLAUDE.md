@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1830 unitarias y 173 e2e en verde.**
+que lo vigila. **1782 unitarias y 173 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
