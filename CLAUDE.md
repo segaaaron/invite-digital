@@ -5,8 +5,17 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-25-handoff-multitenencia-y-qr.md`** — estado completo,
+**`docs/superpowers/2026-08-27-handoff-dieciseis-temas.md`** — estado completo,
 decisiones tomadas y qué sigue. No empieces a trabajar sin leerlo.
+
+Lo que más importa de esa sesión: **la web vendía dieciséis modelos que no existían como
+piezas**. Lo que el cliente elegía en el catálogo y lo que el invitado acababa recibiendo
+no tenían nada que ver: el motor tenía un solo tema y el escaparate ocho filas dibujadas
+como una tarjeta de papel. Ahora hay dieciséis diseños reales —ocho bodas y ocho XV años,
+portados de `VallHallaWwepApp`—, cada tarjeta abre su invitación y el atelier elige
+mirándola.
+
+El anterior, **`2026-08-25-handoff-multitenencia-y-qr.md`**, cuenta de dónde parte.
 
 Lo que más importa de esa sesión: **`events` no tenía dueño y `users` no tenía rol**, así
 que cada usuario veía y editaba las bodas de los demás. No era una funcionalidad que
@@ -46,13 +55,23 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-25-recordatorios-design.md` | Entender los recordatorios de RSVP (ciclo 3, rebanada 4) |
 | `docs/superpowers/specs/2026-08-25-pedidos-design.md` | Entender el Plan B: pedidos, comprobantes y administración |
 | `docs/superpowers/specs/2026-08-25-multitenencia-y-admin-design.md` | Entender quién ve qué: dueño por evento, rol por usuario y el admin |
+| `docs/superpowers/specs/2026-08-27-catalogo-invitaciones-design.md` | Entender los dieciséis temas: motor, ranuras, contenido, imágenes y escaparate |
+| `docs/superpowers/plans/2026-08-27-catalogo-invitaciones.md` | Consultar cómo se construyeron los dieciséis: 35 tareas en 6 fases |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. 1396 unitarias y 54 e2e en verde.
+que lo vigila. **1830 unitarias y 173 e2e en verde.**
+
+**La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
+`VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
+la invitación de verdad en `/modelos/<idioma>/<clave>`, el atelier elige mirándola en una
+rejilla de miniaturas, y el contenido rico —ceremonia, recepción, itinerario, galería,
+código de vestimenta, avisos— se edita bloque a bloque en Configuración. Las fotografías
+del evento se suben y se sirven fuera de `public/`, con la misma puerta de contraseña que
+la invitación.
 
 **Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y el ciclo 4 entero —mesas y plano del
 salón, mesa de regalos y fondos, libro de firmas, y los límites por plan— cerrados y
@@ -452,6 +471,114 @@ correo, que necesita proveedor.
   protección —esa es `requireAdmin()`— pero enseñar enlaces que llevan a un 404 es enseñar
   que existe algo a lo que no se llega.
 
+### Notas de los dieciséis temas de invitación
+
+- **Un tema no es un componente: es una definición.** Declara sus tipografías —para que el
+  layout de invitado no baje doce familias cuando el diseño usa cinco—, sus secciones
+  —para que el panel no le pida un itinerario a un diseño que no lo pinta—, su paleta y el
+  contenido de muestra con el que se siembra.
+- **Ranuras, no `children`.** Estos diseños intercalan: el RSVP va a dos tercios del scroll
+  y el libro de firmas después del cierre. Son cinco: `guest`, `rsvp`, `registry`,
+  `guestbook`, `pass`. Un tema que se olvide de `slots.rsvp` es una invitación en la que
+  nadie puede confirmar **y todo lo demás se ve perfecto**; hay prueba en los dieciséis.
+- **La paleta de un tema es dato del tema.** Es la excepción al «ningún hexadecimal fuera
+  de `tokens.css`», ampliada con su motivo: son cientos, son de un solo diseño y no los
+  decide el atelier. **Cero hexadecimales en `themes/kit/`**, y hay prueba que dice en qué
+  archivo aparece uno. El kit recibe todo color por prop, **sin valor por defecto**: un
+  defecto es un hexadecimal escondido.
+- **`kit/` es mecanismo; `art/` son dibujos.** El oro de los anillos sigue siendo oro con
+  un acento verde al lado, y los azules del mar no pueden volverse dorados: son el material
+  de la escena, la excepción que ya existía. Por eso `art/` no pasa por la guardia y `kit/`
+  sí.
+- **Siete de los ocho XV son la misma composición repintada**, y en la maqueta también lo
+  son. Comparten `XvSharedView` y se diferencian por una `PielXv` tipada. Copiarlo serían
+  cuatro mil líneas donde un arreglo hay que hacerlo siete veces. `xv-isabelle` no comparte
+  esqueleto: duplicar entre dos es aceptable, entre siete no.
+- **`overflow-x: clip` en el artículo del tema, nunca `hidden`.** Los dos recortan lo que
+  sangra —las esquinas florales cuelgan 46 píxeles fuera del papel—, pero `hidden` hace que
+  `overflow-y` pase a `auto` por especificación: el elemento se vuelve contenedor de scroll
+  y los fondos `sticky` se anclan a él en vez de a la ventana.
+- **El tope de columna es parte del diseño.** Están dibujados para un ancho de teléfono;
+  sin `ThemeColumn` se despliegan a 1900 píxeles y la ceremonia y la recepción quedan a un
+  palmo la una de la otra.
+- **`Reveal` lleva un seguro y no se puede quitar.** Se comprobó en el navegador: en una
+  pestaña que no está al frente, el navegador estrangula el renderizado y el
+  `IntersectionObserver` **no dispara nunca**, ni sobre un elemento a la vista. Sin el
+  seguro, quien abre la invitación desde WhatsApp y cambia de aplicación vuelve a una
+  invitación en blanco, sin un solo error en consola.
+- **Con movimiento reducido, los fondos de partículas no se pintan**; el resto se enseña sin
+  animar. Catorce pétalos parados a media caída se leen como una imagen rota.
+- **El generador con semilla no es estético.** Estas piezas colocan decenas de estrellas y
+  pétalos en porcentajes calculados: con `Math.random` el servidor pinta unas posiciones y
+  el navegador otras, y React descarta el marcado del servidor en cada invitación.
+- **`next/font` exige literales.** `variable: FONT_VARIABLES.cinzel` aborta el build con
+  «Font loader values must be explicitly written literals» y el typecheck no dice nada. Los
+  literales están duplicados en `font-manifest.ts` por obligación, y una prueba impide que
+  los dos sitios se separen.
+- **Las fuentes se piden a Google por su subconjunto `latin`**, no por el primer
+  `@font-face` de la hoja, que es el cirílico: Great Vibes bajaba en 1,9 KB y sin una sola
+  tilde.
+- **La fecha se calcula, no se copia.** La maqueta tenía «SÁBADO» escrito a mano sobre un 18
+  de octubre de 2026 que cae en **domingo**.
+
+### Notas del contenido de la invitación (`event_content`)
+
+- **Un `jsonb` y no diecinueve columnas.** Se lee entero, se edita entero y tres bloques son
+  listas. La base garantiza que es JSON; que sea *este* JSON lo garantiza el dominio.
+- **El parser no lanza nunca.** Descarta la fila mal formada y conserva las buenas: una
+  invitación que revienta entera porque un bloque está mal es peor que una sin ese bloque.
+  Y descarta las claves que no reconoce, porque lo que entre por ahí acaba en un `<img src>`
+  si nadie lo filtra.
+- **`mergeContent` rellena lo vacío y no pisa lo escrito, y el bloque es la unidad.**
+  Mezclar la canción del atelier con el artista de la maqueta produce «Perfect, de Etta
+  James», una línea que no escribió nadie. Cambiar de diseño **nunca** se lleva por delante
+  el itinerario de una boda.
+- **`contentFor` no escribe.** Una invitación se abre cientos de veces; quien escribe es
+  `seedContent`, al crear el evento o al cambiar de diseño.
+- **`schedule.startsAt` vive aquí y no en `events`**: la fecha del evento es un día del
+  calendario a propósito, y la cuenta atrás necesita la hora.
+- **La galería es rótulo obligatorio e imagen opcional**, no al revés: estos diseños pintan
+  los huecos con su pie desde el primer día y las fotos llegan después.
+
+### Notas de las imágenes del evento (`event_media`)
+
+- **Fuera de `public/`**, como los comprobantes: ahí estarían publicadas en internet, y son
+  fotografías de la novia y de su familia. En producción es un **volumen**, no una carpeta
+  de la imagen.
+- **El tipo lo deciden los primeros bytes.** `RIFF` no basta para WEBP —lo comparten WAV y
+  AVI— y la caja `ftyp` no basta para AVIF: la comparten MP4, HEIC y MOV.
+- **El tope se comprueba antes de leer el fichero a memoria**, y el fichero se guarda con
+  nombre de identificador: componer una ruta con el nombre original sería dejar que quien
+  sube elija dónde se escribe.
+- **El fichero se escribe antes que la fila.** Al revés, un fallo de disco deja una fila
+  apuntando a una imagen que no existe y la invitación pinta un hueco roto.
+- **`GET /media/[id]` va sin sesión pero con la puerta del evento.** El invitado nunca va a
+  tener sesión; si el evento lleva contraseña y no está desbloqueado, 404. Un `<img>` no
+  puede ser el agujero por el que se rodea el candado. `Cache-Control: private`, nunca
+  `public`.
+
+### Notas del escaparate
+
+- **El `slug` de la plantilla ES la clave del tema.** Es lo que impide que la web enseñe un
+  modelo y el invitado reciba otro. `pnpm preflight` corta si una plantilla publicada
+  apunta a un diseño que el registro no conoce, y se comprobó que corta.
+- **Cada entrada del catálogo lleva una marca de si su diseño está portado**, y el seed
+  publica solo esos. Dos pruebas lo sujetan por los dos lados: marcar sin registrar y
+  registrar sin publicar fallan igual.
+- **Las ocho de relleno se despublicaron, no se borraron**: borrarlas rompería cualquier
+  enlace repartido.
+- **El catálogo carga de ocho en ocho, con el estado en la URL.** Dieciséis tarjetas de
+  papel con su sombra y su rotación son dieciséis composiciones pesadas en la primera
+  pantalla.
+- **`/modelos/<idioma>/<clave>` es raíz propia**, no cuelga del sitio público: con la
+  cabecera de la web encima, lo que se enseña no es el modelo. El segmento literal va
+  delante para no chocar con el `[locale]` del sitio.
+- **Las ranuras de la vista previa van inertes y lo dicen.** Un formulario de muestra que
+  parece funcionar y no guarda nada es peor que no tenerlo.
+- **La prueba de anchos excluye la decoración**, y no es una excusa: sangrar es lo que la
+  maqueta hace. La distinción ya está en el marcado —la decoración va `aria-hidden`—, así
+  que un texto o una fotografía que se salga sí se caza.
+
 ### Notas del pase a solas (`/i/[token]/pase`)
 
 - **Existe porque la puerta pasa de noche, con gente detrás y el teléfono al 4 %.** Buscar
@@ -686,6 +813,9 @@ pnpm preflight                                     # puerta previa al despliegue
 pnpm verify:boundaries                             # prueba que las fronteras cortan de verdad
 pnpm verify:tenancy                                # ninguna acción del panel sin guardia de dueño
 pnpm user:create <correo> --admin                  # alta de administrador
+pnpm tsx scripts/capture-theme-covers.ts           # portadas del catálogo; necesita el sitio servido
+pnpm tsx scripts/import-theme-assets.ts            # trae el arte de la maqueta (una vez)
+pnpm tsx scripts/optimize-theme-assets.ts          # lo reencodea; salta lo ya optimizado
 ```
 
 **El modo puerta se prueba contra la imagen, no contra `pnpm dev`.** Serwist va apagado
@@ -729,6 +859,10 @@ imagen cacheada y aplicaría un juego de migraciones viejo sin quejarse.
 
 Cualquier comando que toque la base o compile necesita:
 `DATABASE_URL=postgres://invite:invite@localhost:5434/invite SITE_URL=http://localhost:3000`
+
+`EVENT_MEDIA_DIR` tiene valor por defecto (`.data/eventos`, ignorado por git) y guarda las
+fotografías que el atelier sube para las invitaciones. En producción es un **volumen**,
+igual que `ORDERS_DIR` y por el mismo motivo.
 
 `ORDERS_DIR` tiene valor por defecto (`.data/comprobantes`, ignorado por git) y no hace
 falta ponerlo en desarrollo. En producción es un **volumen**, no una carpeta de la imagen:
@@ -809,7 +943,9 @@ visible, y esa es justo la razón de que exista la puerta.
 - [ ] **Datos de transferencia y QR de pago** — ya **no están en el código**: se cargan en
       `/panel/admin/pagos`. `pnpm preflight` corta mientras estén vacíos. El QR **no se
       genera**: en Bolivia lo emite el banco, cifrado y firmado; se sube la imagen
-- [ ] **Fotos de las plantillas `zafiro` y `onix`** — hoy usan marcadores generados
+- [x] **Fotos de las plantillas `zafiro` y `onix`** — ya no hace falta: esas dos se
+      despublicaron al entrar la colección de dieciséis, y las portadas del catálogo son
+      capturas reales de cada diseño (`pnpm tsx scripts/capture-theme-covers.ts`)
 - [x] **Testimonios** — hecho: quedó solo el real (Daniela Ortiz). Si algún día se añaden
       más, que sean auténticos; no se publican redactados de relleno.
 
@@ -828,6 +964,11 @@ visible, y esa es justo la razón de que exista la puerta.
   transferencia y el QR de pago.
 - **Ciclo 4**: cerrado. Quedan fuera el sitio concreto dentro de la mesa y el dashboard
   completo.
+- **La colección de invitaciones**: cerrada el 27 de agosto con los dieciséis. Quedan
+  fuera, por decisión del usuario, la sección **«XV Años V2»** de la maqueta (nueve
+  diseños) y las demás categorías —Sacramentos, Cumpleaños, Despedidas, Festejos, Hitos,
+  Profesional—. También quedan fuera el editor visual de la maqueta y el **audio real** en
+  el reproductor de música: la maqueta lo pinta y no suena, y aquí también.
 
 ## Estilo de trabajo con este usuario
 
