@@ -120,3 +120,17 @@
   .theme-sway-slow,
   .theme-sway-slower { animation: none; }
 }
+
+/*
+ * Las ilustraciones de `themes/art/`: anillos, sello, sol de aniversario y atardecer.
+ *
+ * Se apagan enteras con movimiento reducido, y aquí sí vale el `animation: none` global:
+ * lo que queda es la misma ilustración, quieta. Es lo que permite que sigan siendo
+ * componentes de servidor, sin una isla de cliente por dibujo.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .theme-art *,
+  .theme-art {
+    animation: none !important;
+  }
+}
