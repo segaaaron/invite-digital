@@ -58,6 +58,40 @@ function cortados(): string[] {
     .map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)}`)
 }
 
+/**
+ * Un elemento **de contenido** más ancho que la columna en la que está dibujado el diseño.
+ *
+ * `cortados` caza lo que se sale de la ventana en un teléfono. Esto caza lo contrario y
+ * pasó desapercibido tres días: en un portátil, un bloque que se quedó fuera de
+ * `ThemeColumn` se estira a lo ancho de la pantalla mientras el resto de la invitación
+ * sigue en su columna, y el diseño se parte en dos.
+ *
+ * No es una molestia estética. La portada de la boda botánica es una fotografía a sangre
+ * con `object-fit: cover`: estirada a 1900 píxeles de ancho y 540 de alto, lo que se ve
+ * de la pareja es el cielo que tenían detrás, y la invitación se abre en un campo crema
+ * vacío con dos nombres flotando.
+ *
+ * Se miran solo las hojas —una imagen, o un elemento con texto propio—: los contenedores
+ * ocupan el ancho de la página a propósito, y la decoración sangra a propósito.
+ */
+function desbordanLaColumna(tope: number): string[] {
+  return [...document.querySelectorAll('article img, article h1, article h2, article h3, article p, article div')]
+    .filter((el) => el.closest('[aria-hidden="true"]') === null)
+    .filter((el) => {
+      const r = el.getBoundingClientRect()
+      if (r.width <= tope || r.height < 4) return false
+      const esHoja =
+        el.tagName === 'IMG' ||
+        [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== '')
+      return esHoja
+    })
+    .slice(0, 5)
+    .map((el) => {
+      const texto = el.tagName === 'IMG' ? (el.getAttribute('src') ?? '') : (el.textContent ?? '')
+      return `${el.tagName.toLowerCase()} ${Math.round(el.getBoundingClientRect().width)}px «${texto.trim().slice(0, 30)}»`
+    })
+}
+
 test.describe('el escaparate de modelos', () => {
   test('lista los dieciséis diseños de la colección', () => {
     // Si algún día se publica uno sin portar, esta suite recorre uno más y falla al
@@ -119,6 +153,22 @@ test.describe('los modelos, ancho por ancho', () => {
         )
       })
     }
+  }
+})
+
+test.describe('los modelos, en un portátil', () => {
+  // `ThemeColumn` limita a 480. El margen es para el redondeo y para los bloques que se
+  // salen un pelo por su propio padding, no para un bloque suelto a pantalla completa.
+  const COLUMNA = 520
+
+  for (const clave of CLAVES) {
+    test(`«${clave}» se queda en su columna a 1440px`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await page.goto(`/modelos/es/${clave}`)
+      await page.waitForLoadState('networkidle')
+
+      expect(await page.evaluate(desbordanLaColumna, COLUMNA), clave).toEqual([])
+    })
   }
 })
 

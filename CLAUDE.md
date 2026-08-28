@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1834 unitarias y 177 e2e en verde.**
+que lo vigila. **1835 unitarias y 193 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
@@ -504,6 +504,27 @@ correo, que necesita proveedor.
 - **El tope de columna es parte del diseño.** Están dibujados para un ancho de teléfono;
   sin `ThemeColumn` se despliegan a 1900 píxeles y la ceremonia y la recepción quedan a un
   palmo la una de la otra.
+- **El tope de columna es de TODO el contenido, la portada incluida.** `boda-bot`,
+  `boda-cin` y `xv-isabelle` dejaron su portada a sangre fuera de `ThemeColumn`: en un
+  portátil se estiraba a lo ancho de la pantalla mientras el resto seguía en su columna, y
+  el diseño se partía en dos. Con `object-fit: cover`, una fotografía de 1088×1472 estirada
+  a 1900×540 enseña **el cielo que la pareja tenía detrás**: la invitación se abría en un
+  campo crema vacío con dos nombres flotando. En un teléfono se veía perfecta, que es por
+  qué las pruebas de anchos no lo cazaban —miran desbordes, no el tope—. Lo vigila
+  `tests/e2e/modelos.spec.ts` con los dieciséis a 1440 px.
+- **Si un diseño trae papel pintado fijo detrás, su `<article>` va sin fondo propio.**
+  `xv-isabelle` pinta el palacio griego en `position: fixed; zIndex: -2`, como la maqueta, y
+  un `background` opaco en el artículo lo tapaba entero: la fotografía que le da nombre al
+  diseño no se veía nunca, tampoco en un teléfono.
+- **La cuenta atrás lleva `suppressHydrationWarning`, y no es tapar un aviso.** Su primer
+  valor se calcula en el servidor para que la invitación abra con la cuenta puesta, así que
+  el segundo del servidor y el del navegador **nunca** coinciden: React descartaba el
+  marcado del servidor y **repintaba el árbol entero** en los dieciséis diseños. Un fallo de
+  hidratación **no se ve en producción** —React 19 se recupera en silencio y solo lo cuenta
+  por `onRecoverableError`—, así que la prueba de navegador contra la imagen pasaba verde
+  con el fallo dentro; se comprobó. Lo sujeta
+  `src/modules/events/ui/themes/kit/Countdown.hydration.test.tsx`, que hidrata con el reloj
+  movido tres segundos y falla al quitar el atributo.
 - **`Reveal` lleva un seguro y no se puede quitar.** Se comprobó en el navegador: en una
   pestaña que no está al frente, el navegador estrangula el renderizado y el
   `IntersectionObserver` **no dispara nunca**, ni sobre un elemento a la vista. Sin el

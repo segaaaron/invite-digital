@@ -13,9 +13,13 @@ export type CountdownUnit = (typeof UNIDADES)[number]
  * El cálculo vive en `countdownFrom`, que recibe el instante y se prueba sin tocar el
  * reloj del sistema. Aquí solo está lo que no se puede probar sin un reloj: el intervalo.
  *
- * El primer valor se calcula también en el servidor y se corrige al montar. Sin eso, el
- * marcado del servidor y el del navegador difieren en el segundo y React lo canta por
- * consola en cada invitación abierta.
+ * El primer valor se calcula también en el servidor, para que la invitación abra con la
+ * cuenta puesta y no con cuatro guiones. Eso hace que el segundo del servidor y el del
+ * navegador **nunca** coincidan —entre uno y otro pasa un viaje por la red—, y esa
+ * diferencia es un fallo de hidratación de los de verdad: React descarta el marcado del
+ * servidor y **vuelve a pintar el árbol entero** en el cliente. Por eso las casillas
+ * llevan `suppressHydrationWarning`: no es tapar un aviso, es decirle a React que ese
+ * texto va a cambiar y que no hay nada que reconciliar. El efecto lo corrige al montar.
  */
 export function useCountdown(targetISO: string): CountdownParts {
   const [partes, setPartes] = useState<CountdownParts>(() => countdownFrom(targetISO, new Date()))
@@ -62,7 +66,10 @@ export function Countdown({ targetISO, labels, cellStyle, valueStyle, labelStyle
     <div style={rowStyle}>
       {UNIDADES.map((unidad) => (
         <div key={unidad} style={cellStyle}>
-          <div style={valueStyle}>{pad(partes[unidad])}</div>
+          {/* El único texto que cambia entre el servidor y el navegador. */}
+          <div style={valueStyle} suppressHydrationWarning>
+            {pad(partes[unidad])}
+          </div>
           <div style={labelStyle}>{labels[unidad]}</div>
         </div>
       ))}

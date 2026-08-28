@@ -66,8 +66,14 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
         <FloralSpray flipX rotate={14} sway={false} tone="white" width={320} />
       </div>
 
-      {/* La portada: fotografía a sangre con los nombres encima. */}
-      <div style={{ position: 'relative', height: 540 }}>
+      {/* La portada va **dentro de la columna**, como todo lo demás. Suelta, en un
+          portátil se estira a lo ancho de la pantalla: la fotografía es `object-fit:
+          cover`, así que a 1900×540 lo que se ve de la pareja es el cielo que tenían
+          detrás, y la invitación se abre en un campo vacío con los nombres flotando. El
+          fondo ambiente sí ocupa la ventana entera; el contenido, nunca. */}
+      <ThemeColumn>
+        {/* La portada: fotografía a sangre con los nombres encima. */}
+        <div style={{ position: 'relative', height: 540 }}>
         <PhotoSlot
           bg="transparent"
           border="none"
@@ -128,8 +134,9 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           <div style={{ marginTop: 14, fontSize: 14, letterSpacing: '0.5em', fontWeight: 500 }}>
             {hero?.eyebrow ?? themes.saveTheDate}
           </div>
+          </div>
         </div>
-      </div>
+      </ThemeColumn>
 
       <ThemeColumn style={{ padding: '0 30px 60px' }}>
         {cuando === null ? null : (

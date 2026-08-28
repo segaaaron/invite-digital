@@ -45,7 +45,11 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
   const mes = cuando === null ? '' : cuando.toLocaleDateString(etiquetaLocal, { month: 'long' })
 
   return (
-    <article style={{ position: 'relative', background: P.marfil, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    // El artículo va **sin fondo propio**, como en la maqueta: detrás hay un papel pintado
+    // fijo —el palacio griego— en `zIndex: -2`, y un color opaco aquí lo tapaba por
+    // completo. El diseño se quedaba en un campo crema y la fotografía que le da nombre no
+    // se veía nunca, ni en un teléfono.
+    <article style={{ position: 'relative', color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
           accent={P.oroClaro}
@@ -78,7 +82,13 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
       </div>
       <FallingPetals count={10} palette={[P.marfil, P.panelSuave, P.oroClaro]} seed={31} />
 
-      <div style={{ position: 'relative', height: 540 }}>
+      {/* La portada va **dentro de la columna**, como todo lo demás. Suelta, en un
+          portátil se estira a lo ancho de la pantalla: la fotografía es `object-fit:
+          cover`, así que a 1900×540 lo que se ve de la pareja es el cielo que tenían
+          detrás, y la invitación se abre en un campo vacío con los nombres flotando. El
+          fondo ambiente sí ocupa la ventana entera; el contenido, nunca. */}
+      <ThemeColumn>
+        <div style={{ position: 'relative', height: 540 }}>
         <PhotoSlot
           bg="transparent"
           border="none"
@@ -119,7 +129,8 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
             {hero?.eyebrow ?? themes.saveTheDate}
           </div>
         </div>
-      </div>
+        </div>
+      </ThemeColumn>
 
       <ThemeColumn style={{ padding: '0 30px 60px' }}>
         {cuando === null ? null : (

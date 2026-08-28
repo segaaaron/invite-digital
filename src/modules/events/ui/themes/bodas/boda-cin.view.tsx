@@ -82,8 +82,13 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
         <span>120 MIN</span>
       </div>
 
-      {/* El cartel: fotografía a sangre con el título encima. */}
-      <div style={{ position: 'relative', height: 580 }}>
+      {/* El cartel va **dentro de la columna**, como el resto. Suelto, en un portátil se
+          estira a lo ancho de la pantalla mientras la ficha técnica de abajo se queda en
+          su columna, y el diseño se parte en dos. El grano, la banda y el fondo sí ocupan
+          la ventana entera: son ambiente, no contenido. */}
+      <ThemeColumn>
+        {/* El cartel: fotografía a sangre con el título encima. */}
+        <div style={{ position: 'relative', height: 580 }}>
         <PhotoSlot
           bg={`linear-gradient(180deg, ${P.sepia} 0%, ${P.tabaco} 60%, ${P.fondo} 100%)`}
           border="none"
@@ -156,7 +161,8 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
             {hero?.serial ?? ''}
           </div>
         </div>
-      </div>
+        </div>
+      </ThemeColumn>
 
       <ThemeColumn style={{ padding: '30px 26px 60px' }}>
         <Reveal>
