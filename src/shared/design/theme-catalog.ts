@@ -117,7 +117,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   // ─────────── XV AÑOS ───────────
   {
     key: 'xv',
-    listo: false,
+    listo: true,
     categorySlug: 'xv-anos',
     es: 'Bajo el Mar',
     en: 'Under the Sea',

@@ -7,6 +7,7 @@ import { anivDefinition } from './bodas/aniv'
 import { civilDefinition } from './bodas/civil'
 import { destDefinition } from './bodas/dest'
 import { engDefinition } from './bodas/eng'
+import { xvDefinition } from './xv/xv'
 import type { ThemeDefinition } from './contract'
 
 /**
@@ -27,6 +28,7 @@ const THEMES = {
   aniv: anivDefinition,
   eng: engDefinition,
   dest: destDefinition,
+  xv: xvDefinition,
 } as const satisfies Record<string, ThemeDefinition>
 
 export const THEME_KEYS: readonly string[] = Object.keys(THEMES)
