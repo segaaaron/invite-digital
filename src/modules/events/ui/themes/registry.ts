@@ -1,6 +1,7 @@
 import { clasicoDefinition } from './ClasicoTheme'
 import { bodaDefinition } from './bodas/boda'
 import { bodaCinDefinition } from './bodas/boda-cin'
+import { bodaEdDefinition } from './bodas/boda-ed'
 import type { ThemeDefinition } from './contract'
 
 /**
@@ -15,6 +16,7 @@ const THEMES = {
   clasico: clasicoDefinition,
   boda: bodaDefinition,
   'boda-cin': bodaCinDefinition,
+  'boda-ed': bodaEdDefinition,
 } as const satisfies Record<string, ThemeDefinition>
 
 export const THEME_KEYS: readonly string[] = Object.keys(THEMES)

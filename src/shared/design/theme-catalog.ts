@@ -52,7 +52,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },
   {
     key: 'boda-ed',
-    listo: false,
+    listo: true,
     categorySlug: 'boda',
     es: 'Editorial',
     en: 'Editorial',
