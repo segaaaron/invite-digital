@@ -9,21 +9,29 @@ import type { ContentRepository } from './ports'
 /**
  * El contenido con el que se pinta la invitación.
  *
- * **No escribe.** Lee lo guardado y lo fusiona con el de muestra del tema para pintar. Una
- * invitación popular se abre cientos de veces y ninguna de esas aperturas tiene por qué
- * dejar una escritura detrás; quien escribe es `seedContentForTheme`, cuando el atelier
- * crea el evento o cambia de diseño.
+ * **No escribe, y no fusiona.** Devuelve lo que el evento tiene guardado, tal cual.
  *
- * Si la lectura falla se pinta el contenido del diseño y ya está. Que la base no responda
- * no puede dejar en blanco una invitación que alguien está mirando: es la misma decisión
- * que ya toma la mesa de regalos en esta página.
+ * Fusionar en cada lectura dejaría la invitación igual de completa, pero el atelier **no
+ * podría quitar una sección**: borrar la canción la devolvería en la siguiente apertura,
+ * porque la muestra volvería a asomar por debajo. La muestra se escribe una vez —al crear
+ * el evento y al cambiar de diseño—, y desde ahí es suya.
+ *
+ * **Sin fila, la muestra; con fila vacía, vacío.** Son dos cosas distintas y el
+ * repositorio ya las distingue: `null` es un evento que nunca se sembró —los anteriores a
+ * esta tabla, los sembrados a mano, los de las pruebas—, y `{}` es un atelier que borró
+ * todo a propósito. Confundirlas dejaría en blanco las invitaciones viejas o impediría
+ * vaciar las nuevas.
+ *
+ * Si la lectura falla se pinta el contenido del diseño y ya está: que la base no responda
+ * no puede dejar en blanco una invitación que alguien está mirando, que es la misma
+ * decisión que ya toma la mesa de regalos en esa página.
  */
 export const contentFor =
   (repo: ContentRepository) =>
   async (eventId: string, defaultContent: InvitationContent): Promise<InvitationContent> => {
     try {
       const crudo = await repo.find(eventId)
-      return mergeContent(defaultContent, parseInvitationContent(crudo))
+      return crudo === null ? defaultContent : parseInvitationContent(crudo)
     } catch (cause) {
       console.error('No se pudo leer el contenido del evento %s:', eventId, cause)
       return defaultContent

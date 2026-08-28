@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
+import { EventMediaPanel } from '@/modules/events/ui/EventMediaPanel'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
 import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventForm } from '@/modules/events/ui/EventForm'
@@ -40,6 +41,10 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const tema = themeFor(event.value.themeKey)
   const contenido = await events.contentFor(event.value.id, tema.defaultContent)
 
+  // Las fotografías que ya subió el atelier. Se enseñan con su identificador porque es lo
+  // que se pega en el bloque de contenido: sin él, subir una foto no serviría de nada.
+  const imagenes = await events.media.list(event.value.id)
+
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
 
@@ -59,6 +64,18 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             eventId={event.value.id}
             eventSlug={event.value.slug}
             sections={tema.sections}
+          />
+        </PanelCard>
+
+        <PanelCard title="Fotografías de la invitación">
+          <EventMediaPanel
+            eventId={event.value.id}
+            eventSlug={event.value.slug}
+            items={imagenes.map((imagen) => ({
+              id: imagen.id,
+              originalName: imagen.originalName,
+              byteSize: imagen.byteSize,
+            }))}
           />
         </PanelCard>
 

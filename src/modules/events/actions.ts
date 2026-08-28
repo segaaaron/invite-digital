@@ -45,8 +45,31 @@ export async function createEventAction(_previous: EventActionState, formData: F
     return { status: 'error', message: result.error.kind }
   }
 
+  // El contenido del diseño se **escribe** al crear, no se fusiona al leer.
+  //
+  // Fusionarlo en cada lectura haría la invitación completa igual de bien, pero el atelier
+  // no podría **quitar** una sección: borrar la canción la devolvería en la siguiente
+  // apertura, porque la muestra volvería a asomar por debajo. Escribirla una vez la hace
+  // suya, y borrarla la borra.
+  await sembrarContenido(result.value.id, result.value.themeKey)
+
   revalidatePath('/panel')
   return { status: 'success', message: '' }
+}
+
+/**
+ * Escribe el contenido de muestra del diseño en los bloques que estén vacíos.
+ *
+ * Nunca pisa lo escrito. Falla en silencio a propósito: que el contenido de muestra no se
+ * haya podido sembrar no puede impedir crear el evento ni cambiarle el diseño, y la
+ * invitación se abre igual —con los huecos que el atelier rellene—.
+ */
+async function sembrarContenido(eventId: string, themeKey: string): Promise<void> {
+  try {
+    await eventUseCases.seedContent(eventId, themeFor(themeKey).defaultContent)
+  } catch (cause) {
+    console.error('No se pudo sembrar el contenido del evento %s:', eventId, cause)
+  }
 }
 
 export async function updateEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
@@ -55,10 +78,21 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   const eventId = String(formData.get('id') ?? '')
   await requireEventAccess(actor, { eventId })
 
+  // Qué diseño tenía antes, para saber si cambió. Se lee antes de guardar, que es la única
+  // forma de saberlo.
+  const anterior = await eventUseCases.getByIdFor(actor, eventId)
+  const temaAnterior = isErr(anterior) ? null : anterior.value.themeKey
+
   const result = await eventUseCases.update({ ...readForm(formData), id: eventId })
   if (isErr(result)) {
     console.error('edición de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
+  }
+
+  // Al cambiar de diseño se siembra lo que el nuevo trae y el evento no tiene. Nunca pisa
+  // lo escrito: probar otro diseño no puede llevarse por delante el itinerario de una boda.
+  if (temaAnterior !== null && temaAnterior !== result.value.themeKey) {
+    await sembrarContenido(result.value.id, result.value.themeKey)
   }
 
   revalidatePath('/panel')
@@ -379,29 +413,4 @@ export async function uploadMediaAction(
   return { status: 'success' }
 }
 
-/**
- * Siembra el contenido de muestra del tema elegido en lo que esté vacío.
- *
- * **Nunca pisa lo que el atelier escribió.** Cambiar de diseño para ver cómo queda no
- * puede llevarse por delante el itinerario de una boda.
- */
-export async function seedContentAction(input: {
-  eventId: string
-  eventSlug: string
-}): Promise<{ status: 'success' } | { status: 'error'; message: string }> {
-  const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
 
-  const evento = await eventUseCases.getByIdFor(actor, input.eventId)
-  if (isErr(evento)) return { status: 'error', message: evento.error.detail }
-
-  try {
-    await eventUseCases.seedContent(input.eventId, themeFor(evento.value.themeKey).defaultContent)
-  } catch (cause) {
-    console.error('No se pudo sembrar el contenido del evento %s:', input.eventId, cause)
-    return { status: 'error', message: 'storage_failure' }
-  }
-
-  revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
-  return { status: 'success' }
-}
