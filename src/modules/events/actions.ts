@@ -9,6 +9,8 @@ import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { guardedUnlock } from './application/guarded-unlock'
 import { isUnlockValid, unlockValue, UNLOCK_MS } from './domain/unlock-token'
 import { requireEventAccess, requireSession } from '@/modules/identity/session-cookie'
+import { SECTION_KEYS, type SectionKey } from './domain/invitation-content'
+import { themeFor } from './ui/themes/registry'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { shareUrl } from './domain/client-share'
@@ -288,5 +290,118 @@ export async function setEventCurrencyAction(input: {
   }
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/regalos`)
+  return { status: 'success' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// El contenido de la invitación y sus imágenes
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ContentActionState =
+  | { status: 'idle' }
+  | { status: 'success' }
+  | { status: 'error'; message: string }
+
+/**
+ * Guarda un bloque del contenido de la invitación.
+ *
+ * El bloque es la unidad de edición porque es la unidad de sentido: la pantalla enseña un
+ * formulario por bloque, y guardar «la canción» sin tocar «el itinerario» es lo que el
+ * atelier espera.
+ *
+ * El valor llega como JSON en un campo del formulario. No es pereza: el itinerario, la
+ * galería y los anfitriones son listas de longitud variable, y componerlas desde campos
+ * planos con índices en el nombre es exactamente donde se pierden filas al reordenar.
+ * Quien decide qué es válido es el dominio, que lo vuelve a parsear.
+ */
+export async function saveContentBlockAction(
+  _previo: ContentActionState,
+  formData: FormData,
+): Promise<ContentActionState> {
+  const actor = await requireSession()
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug })
+
+  const section = String(formData.get('section') ?? '')
+  if (!(SECTION_KEYS as readonly string[]).includes(section)) {
+    return { status: 'error', message: 'unknown_section' }
+  }
+
+  let valor: unknown
+  try {
+    valor = JSON.parse(String(formData.get('value') ?? 'null'))
+  } catch {
+    return { status: 'error', message: 'invalid_payload' }
+  }
+
+  try {
+    await eventUseCases.saveContentBlock(eventId, section as SectionKey, valor)
+  } catch (cause) {
+    console.error('No se pudo guardar el bloque %s del evento %s:', section, eventId, cause)
+    return { status: 'error', message: 'storage_failure' }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success' }
+}
+
+/**
+ * Sube una imagen de la invitación.
+ *
+ * El tope de tamaño se comprueba **antes** de leer el fichero a memoria, y el tipo lo
+ * deciden los primeros bytes: los dos son reglas del dominio, y aquí solo se traduce el
+ * resultado a algo que la pantalla pueda pintar.
+ */
+export async function uploadMediaAction(
+  _previo: ContentActionState,
+  formData: FormData,
+): Promise<ContentActionState> {
+  const actor = await requireSession()
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug })
+
+  const archivo = formData.get('file')
+  if (!(archivo instanceof File) || archivo.size === 0) {
+    return { status: 'error', message: 'no_file' }
+  }
+
+  const resultado = await eventUseCases.media.save(eventId, {
+    name: archivo.name,
+    size: archivo.size,
+    bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
+  })
+
+  if (!resultado.ok) return { status: 'error', message: resultado.error }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success' }
+}
+
+/**
+ * Siembra el contenido de muestra del tema elegido en lo que esté vacío.
+ *
+ * **Nunca pisa lo que el atelier escribió.** Cambiar de diseño para ver cómo queda no
+ * puede llevarse por delante el itinerario de una boda.
+ */
+export async function seedContentAction(input: {
+  eventId: string
+  eventSlug: string
+}): Promise<{ status: 'success' } | { status: 'error'; message: string }> {
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+
+  const evento = await eventUseCases.getByIdFor(actor, input.eventId)
+  if (isErr(evento)) return { status: 'error', message: evento.error.detail }
+
+  try {
+    await eventUseCases.seedContent(input.eventId, themeFor(evento.value.themeKey).defaultContent)
+  } catch (cause) {
+    console.error('No se pudo sembrar el contenido del evento %s:', input.eventId, cause)
+    return { status: 'error', message: 'storage_failure' }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
   return { status: 'success' }
 }

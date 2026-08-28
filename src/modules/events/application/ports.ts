@@ -63,3 +63,31 @@ export interface ContentRepository {
   save(eventId: string, blocks: unknown): Promise<void>
   clear(eventId: string): Promise<void>
 }
+
+/**
+ * Las imágenes de una invitación.
+ *
+ * El fichero y la fila van por separado a propósito: el fichero vive en disco —fuera de
+ * `public/`— y la fila en Postgres. Borrar el evento se lleva la fila por cascada; el
+ * fichero lo barre la retención, que es la única que sabe cuándo un evento venció.
+ */
+export interface MediaStorage {
+  put(key: string, bytes: Uint8Array): Promise<void>
+  get(key: string): Promise<Uint8Array | null>
+  remove(key: string): Promise<void>
+}
+
+export type MediaRow = {
+  readonly id: string
+  readonly eventId: string
+  readonly contentType: string
+  readonly originalName: string
+  readonly byteSize: number
+}
+
+export interface MediaRepository {
+  insert(row: MediaRow): Promise<void>
+  find(id: string): Promise<MediaRow | null>
+  listByEvent(eventId: string): Promise<readonly MediaRow[]>
+  remove(id: string): Promise<void>
+}

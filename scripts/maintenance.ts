@@ -15,11 +15,11 @@ async function runMaintenance(): Promise<number> {
     return 1
   }
 
-  const { eventsAnonymized, sessionsDeleted, viewsDeleted } = result.value
+  const { eventsAnonymized, sessionsDeleted, viewsDeleted, mediaDeleted } = result.value
   console.log(
     `Mantenimiento listo: ${eventsAnonymized.length} evento(s) anonimizado(s)${
       eventsAnonymized.length > 0 ? ` (${eventsAnonymized.join(', ')})` : ''
-    }, ${sessionsDeleted} sesión(es) caducada(s) borrada(s), ${viewsDeleted} visita(s) borrada(s)`,
+    }, ${sessionsDeleted} sesión(es) caducada(s) borrada(s), ${viewsDeleted} visita(s) borrada(s), ${mediaDeleted} imagen(es) borrada(s)`,
   )
   return 0
 }

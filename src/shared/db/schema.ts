@@ -335,6 +335,32 @@ export const eventContent = pgTable('event_content', {
 })
 
 /**
+ * Las imágenes que el atelier sube para una invitación: retrato, portada, galería y los
+ * iconos del itinerario.
+ *
+ * El fichero vive en disco, **fuera de `public/`**, y esta tabla guarda de quién es y qué
+ * es. En `public/` estaría publicado en internet, y una foto de la novia no se sirve a
+ * quien adivine el nombre del archivo. Lo entrega `GET /media/[id]`, con la misma puerta
+ * de contraseña que la invitación.
+ */
+export const eventMedia = pgTable(
+  'event_media',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    /** Decidido por los primeros bytes, nunca por la extensión ni por el `Content-Type`. */
+    contentType: varchar('content_type', { length: 32 }).notNull(),
+    /** Solo para enseñarlo: el fichero en disco se llama por el `id`. */
+    originalName: varchar('original_name', { length: 255 }).notNull(),
+    byteSize: integer('byte_size').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('event_media_event_idx').on(t.eventId)],
+)
+
+/**
  * Una petición de cambio de plan que el atelier resuelve fuera del sistema. No hay cobro
  * en línea en esta rebanada: la solicitud queda registrada y se aplica a mano.
  */
