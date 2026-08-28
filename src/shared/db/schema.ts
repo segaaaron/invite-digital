@@ -309,6 +309,25 @@ export const events = pgTable('events', {
 })
 
 /**
+ * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
+ * guarda —ceremonia y recepción por separado, itinerario, galería, código de vestimenta,
+ * anfitriones, canción, y la hora del evento para la cuenta atrás—.
+ *
+ * Un solo `jsonb` y no diecinueve columnas: se lee entero, se edita entero y tres de los
+ * bloques son listas. La base garantiza que es JSON; que sea **este** JSON lo garantiza
+ * `domain/invitation-content.ts`, que lo valida al leer y al escribir.
+ *
+ * `CASCADE` porque el contenido no significa nada sin su evento, igual que `event_staff`.
+ */
+export const eventContent = pgTable('event_content', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  blocks: jsonb('blocks').$type<Record<string, unknown>>().notNull().default({}),
+  ...timestamps,
+})
+
+/**
  * Una petición de cambio de plan que el atelier resuelve fuera del sistema. No hay cobro
  * en línea en esta rebanada: la solicitud queda registrada y se aplica a mano.
  */

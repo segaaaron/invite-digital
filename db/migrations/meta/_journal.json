@@ -183,6 +183,13 @@
       "when": 1787365885032,
       "tag": "0025_qr_creator_nullable",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1787365886032,
+      "tag": "0026_event_content",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,125 @@
+import { describe, expect, it } from 'vitest'
+import { mergeContent, parseInvitationContent } from './invitation-content'
+
+describe('parseInvitationContent', () => {
+  it('acepta un objeto vacío', () => {
+    expect(parseInvitationContent({})).toEqual({})
+  })
+
+  it('no revienta con basura dentro', () => {
+    // `blocks` es un jsonb: alguien pudo escribir cualquier cosa por SQL, y una migración
+    // futura puede dejar un bloque a medias. Una invitación que revienta entera porque un
+    // bloque está mal es peor que una invitación sin ese bloque.
+    expect(parseInvitationContent(null)).toEqual({})
+    expect(parseInvitationContent('texto')).toEqual({})
+    expect(parseInvitationContent(42)).toEqual({})
+    expect(parseInvitationContent([])).toEqual({})
+    expect(parseInvitationContent({ itinerary: 'no es una lista' })).toEqual({})
+    expect(parseInvitationContent({ hero: 'tampoco' })).toEqual({})
+  })
+
+  it('conserva los campos de texto que reconoce y descarta los que no', () => {
+    const salida = parseInvitationContent({
+      hero: { eyebrow: 'SAVE THE DATE', nameA: 'Camila', nameB: 'Mateo', inventado: 'fuera' },
+    })
+    expect(salida.hero).toEqual({ eyebrow: 'SAVE THE DATE', nameA: 'Camila', nameB: 'Mateo' })
+  })
+
+  it('recorta los espacios y descarta lo que queda vacío', () => {
+    expect(parseInvitationContent({ quote: { text: '   ' } }).quote).toBeUndefined()
+    expect(parseInvitationContent({ quote: { text: '  Que nunca dejes de soñar  ' } }).quote).toEqual({
+      text: 'Que nunca dejes de soñar',
+    })
+  })
+
+  it('descarta las filas mal formadas de una lista y conserva las buenas', () => {
+    const salida = parseInvitationContent({
+      itinerary: [
+        { time: '18:00', label: 'Recepción' },
+        { label: 'sin hora' },
+        42,
+        null,
+        { time: '21:00', label: 'Cena', imageId: 'abc' },
+      ],
+    })
+    expect(salida.itinerary).toEqual([
+      { time: '18:00', label: 'Recepción' },
+      { time: '21:00', label: 'Cena', imageId: 'abc' },
+    ])
+  })
+
+  it('descarta la lista entera si no queda ninguna fila buena', () => {
+    // Una lista vacía y una lista ausente son lo mismo para el diseño: no se pinta. Dejar
+    // `[]` obligaría a cada tema a distinguir dos casos que se ven igual.
+    expect(parseInvitationContent({ itinerary: [{ label: 'sin hora' }] }).itinerary).toBeUndefined()
+  })
+
+  it('corta la galería en seis', () => {
+    const doce = Array.from({ length: 12 }, (_, i) => ({ imageId: `id-${i}`, label: `${i}` }))
+    expect(parseInvitationContent({ gallery: doce }).gallery).toHaveLength(6)
+  })
+
+  it('corta el itinerario en doce', () => {
+    const veinte = Array.from({ length: 20 }, (_, i) => ({ time: `${i}:00`, label: `${i}` }))
+    expect(parseInvitationContent({ itinerary: veinte })).toHaveProperty('itinerary.length', 12)
+  })
+
+  it('lee los anfitriones con su lista de nombres', () => {
+    expect(
+      parseInvitationContent({ hosts: { label: 'Junto a mis padres', names: ['Juan Julio Pereira', '  ', 'Linzi Torrico'] } }),
+    ).toEqual({ hosts: { label: 'Junto a mis padres', names: ['Juan Julio Pereira', 'Linzi Torrico'] } })
+  })
+
+  it('descarta los anfitriones sin ningún nombre', () => {
+    expect(parseInvitationContent({ hosts: { label: 'Junto a mis padres', names: [] } }).hosts).toBeUndefined()
+  })
+
+  it('acepta la fecha y hora de la cuenta atrás solo si es legible', () => {
+    // `events.event_date` es un día del calendario a propósito. La cuenta atrás necesita
+    // la hora, y vive aquí porque es contenido de la invitación.
+    expect(parseInvitationContent({ schedule: { startsAt: '2026-09-12T19:00:00' } }).schedule).toEqual({
+      startsAt: '2026-09-12T19:00:00',
+    })
+    expect(parseInvitationContent({ schedule: { startsAt: 'el sábado' } }).schedule).toBeUndefined()
+  })
+
+  it('recorta un texto desmedido en vez de guardarlo entero', () => {
+    // Nada impide pegar una novela en un textarea. El corte protege el diseño, que reserva
+    // un sitio concreto para esa frase.
+    const largo = 'a'.repeat(5_000)
+    expect(parseInvitationContent({ quote: { text: largo } }).quote?.text.length).toBeLessThanOrEqual(600)
+  })
+})
+
+describe('mergeContent', () => {
+  it('rellena lo vacío y no pisa lo escrito', () => {
+    // La prueba que protege una boda de verdad: cambiar de diseño no puede llevarse por
+    // delante el itinerario que el atelier ya cargó.
+    const delDiseno = {
+      quote: { text: 'De muestra' },
+      music: { track: 'At Last', artist: 'Etta James' },
+    }
+    const delAtelier = { music: { track: 'Perfect', artist: 'Ed Sheeran' } }
+
+    expect(mergeContent(delDiseno, delAtelier)).toEqual({
+      quote: { text: 'De muestra' },
+      music: { track: 'Perfect', artist: 'Ed Sheeran' },
+    })
+  })
+
+  it('el bloque es la unidad, no el campo', () => {
+    // Mezclar la canción del atelier con el artista de la maqueta produce una línea que no
+    // escribió nadie: «Perfect, de Etta James».
+    expect(
+      mergeContent({ music: { track: 'At Last', artist: 'Etta James' } }, { music: { track: 'Perfect' } }),
+    ).toEqual({ music: { track: 'Perfect' } })
+  })
+
+  it('deja intacto lo que el diseño no trae', () => {
+    expect(mergeContent({}, { quote: { text: 'Del atelier' } })).toEqual({ quote: { text: 'Del atelier' } })
+  })
+
+  it('sin nada del atelier devuelve el del diseño', () => {
+    expect(mergeContent({ quote: { text: 'De muestra' } }, {})).toEqual({ quote: { text: 'De muestra' } })
+  })
+})
