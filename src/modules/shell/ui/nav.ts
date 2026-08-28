@@ -99,7 +99,10 @@ export function panelNav(
       label: 'Diseño',
       items: [
         { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
-        { href: en('/configuracion#vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+        // La invitación de esta boda, entera. Era un ancla —`#vista-previa`— que no
+        // existía en ninguna página: pulsarla dejaba al atelier en Configuración
+        // preguntándose qué había pasado.
+        { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
         { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
         { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],

@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1830 unitarias y 177 e2e en verde.**
+que lo vigila. **1834 unitarias y 177 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
@@ -647,6 +647,11 @@ correo, que necesita proveedor.
   regalos y el pase son de un grupo concreto, y aquí no hay ninguno.
 - **Lleva su enlace de vuelta.** En una pantalla sin carcasa, salir con el botón de atrás
   del navegador es adivinar.
+- **La barra la enlazaba desde el principio, y no llevaba a ninguna parte.** «Vista previa»
+  apuntaba a `/configuracion#vista-previa`, un ancla cuyo `id` no existía en ninguna
+  página: pulsarla dejaba al atelier en Configuración sin que pasara nada. Lo vigila
+  `src/modules/shell/ui/nav.test.ts`, que además comprueba que **cada enlace del evento
+  tiene su carpeta en `app/`**; se verificó que falla apuntando a una ruta inventada.
 
 ### Notas del pase a solas (`/i/[token]/pase`)
 
