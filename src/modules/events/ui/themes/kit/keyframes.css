@@ -153,18 +153,30 @@
  * ventana y se sale de la tarjeta por los cuatro lados.
  */
 .theme-phone-stage {
-  min-height: 100dvh;
+  /* Altura exacta de la ventana y sin desplazamiento propio: quien tiene que desplazarse
+     es la invitación **dentro** del marco, como en un teléfono. Con `min-height` y un
+     marco de 932, en una pantalla más baja la página entera se desplazaba y la tarjeta
+     quedaba cortada por abajo. */
+  height: 100dvh;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--color-shell-deep);
-  padding: clamp(0px, 2.5vh, 26px) 0;
+  padding: clamp(0px, 2vh, 22px);
+  box-sizing: border-box;
 }
 
 .theme-phone-frame {
   position: relative;
-  width: min(430px, 100vw);
-  height: min(932px, 100dvh);
+  /* Manda la altura, y el ancho sale de la proporción: así el aparato entra entero en
+     cualquier pantalla sin dejar de ser un teléfono. El ancho no baja de 360 porque estos
+     diseños están medidos en píxeles para esa columna. */
+  height: min(100%, 932px);
+  aspect-ratio: 43 / 93;
+  width: auto;
+  min-width: min(360px, 100%);
+  max-width: min(430px, 100%);
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: 26px;
@@ -178,7 +190,10 @@
   .theme-phone-stage { padding: 0; }
   .theme-phone-frame {
     width: 100vw;
+    min-width: 0;
+    max-width: none;
     height: 100dvh;
+    aspect-ratio: auto;
     border-radius: 0;
     box-shadow: none;
   }

@@ -511,6 +511,11 @@ correo, que necesita proveedor.
   a los bordes, así que a lo ancho de un portátil el fondo se derrama por los costados y lo
   que se ve deja de ser el modelo. Lo pone `PhonePreview`, y lo usan el escaparate y la
   vista previa del panel.
+- **El aparato entra entero en la pantalla y la página no se desplaza.** El escenario mide
+  exactamente `100dvh` y el marco sale de ahí —`height: min(100%, 932px)` con la proporción
+  del teléfono, y el ancho detrás—. Con una altura fija de 932 más el margen, en una
+  pantalla más baja se desplazaba la página y la tarjeta salía cortada por abajo: lo que
+  tiene que desplazarse es la invitación **dentro** del marco, como en un teléfono.
 - **El marco es el contenedor de scroll**, como el `overflow: hidden auto` del marco de la
   maqueta: eso ancla los fondos `sticky` a la tarjeta y recorta sus `100vh` en el borde.
   Y lleva `transform: translateZ(0)`, que no es un truco de rendimiento: sin él, el papel

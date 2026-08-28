@@ -184,12 +184,18 @@ test.describe('los modelos, dentro del teléfono', () => {
         const nodo = document.querySelector('.theme-phone-frame')
         if (nodo === null) return null
         const r = nodo.getBoundingClientRect()
+        const raiz = document.documentElement
         const articulo = document.querySelector('article')?.getBoundingClientRect() ?? null
         return {
           ancho: Math.round(r.width),
-          centrado: Math.abs(r.left + r.width / 2 - document.documentElement.clientWidth / 2) < 2,
+          centrado: Math.abs(r.left + r.width / 2 - raiz.clientWidth / 2) < 2,
           desplaza: getComputedStyle(nodo).overflowY,
           articuloDentro: articulo !== null && articulo.left >= r.left - 1 && articulo.right <= r.right + 1,
+          // El aparato entero tiene que verse: arriba, abajo y sin que la página se
+          // desplace. Con el marco más alto que la ventana, la tarjeta salía cortada por
+          // abajo y quien miraba tenía que desplazar la página para ver el borde.
+          entero: r.top >= -1 && r.bottom <= raiz.clientHeight + 1,
+          paginaDesplaza: raiz.scrollHeight > raiz.clientHeight + 1,
         }
       })
 
@@ -200,6 +206,8 @@ test.describe('los modelos, dentro del teléfono', () => {
       // tarjeta y recorta sus `100vh` en el borde, como el marco de la maqueta.
       expect(marco?.desplaza, clave).toBe('auto')
       expect(marco?.articuloDentro, clave).toBe(true)
+      expect(marco?.entero, clave).toBe(true)
+      expect(marco?.paginaDesplaza, clave).toBe(false)
     })
   }
 })
