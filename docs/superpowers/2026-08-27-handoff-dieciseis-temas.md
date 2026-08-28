@@ -37,6 +37,22 @@ redescubrir:
 5. **`mergeContent` nunca pisa lo escrito.** Cambiar de diseño no puede llevarse por
    delante el itinerario de una boda.
 
+## Lo que encontró el QA al final
+
+Dos cosas que había dado por hechas y no lo estaban. Las dos están arregladas, pero
+conviene saber cómo se escaparon:
+
+1. **`uploadMediaAction` no la llamaba ninguna pantalla.** Estaba escrita y probada, y el
+   atelier no podía subir una sola fotografía. Se detecta con un `grep` de referencias por
+   cada exportado nuevo de `actions.ts` — la regla del proyecto lo pide y vale la pena
+   correrlo antes de cerrar cualquier rebanada.
+2. **Un bloque de contenido borrado volvía solo.** `contentFor` fusionaba con la muestra
+   del diseño en cada lectura. La invitación se veía perfecta y el fallo solo aparece si
+   alguien intenta **quitar** una sección, que no es lo que se prueba primero.
+
+De ahí salió la regla que ahora está en `CLAUDE.md`: **sin fila, la muestra; con fila
+vacía, vacío.**
+
 ## Qué queda
 
 Nada a medias de lo que se empezó. Lo que **no** entra, y por qué:
@@ -49,14 +65,31 @@ Nada a medias de lo que se empezó. Lo que **no** entra, y por qué:
 - **Audio real** en el reproductor. La maqueta lo pinta y no suena; aquí también. Servir
   audio propio es su propio problema: almacén, formato y licencia de la grabación.
 
-Lo único que se podría afinar sin ser deuda: el formulario de contenido edita cada bloque
-como JSON. Funciona, valida en el servidor y no pierde filas al reordenar —que era el
-riesgo—, pero un editor por campos sería más cómodo para el itinerario y la galería. Es
-una mejora de comodidad, no un hueco: el atelier puede cargar una boda entera hoy.
+### Para la siguiente sesión
+
+Nada de esto bloquea usar la colección hoy. Por orden de valor:
+
+1. **Editor por campos para el contenido.** Hoy cada bloque se edita como JSON. Funciona,
+   valida en el servidor y no pierde filas al reordenar —que era el riesgo—, pero pedirle a
+   un atelier que escriba llaves y comas para cambiar la hora de la cena es pedir errores.
+   El itinerario y la galería son los que más lo piden.
+2. **Elegir la imagen desde el bloque.** Hoy se sube en una tarjeta, se copia el
+   identificador y se pega en otra. Un selector que enseñe las miniaturas del evento
+   dentro del propio bloque quitaría ese paso.
+3. **Vista previa del evento real desde el panel.** `/modelos/…` enseña el diseño con su
+   contenido de muestra; falta ver la invitación **de esta boda** sin repartir un enlace.
+4. **Recorte y redimensionado al subir.** Las fotos entran tal cual, con el tope de 8 MB.
+   Una de móvil moderna ronda los 4 MB y se sirve entera a un invitado con datos.
+
+### Fuera de alcance, por decisión
 
 ## Comprobado
 
-- 1782 unitarias, 173 e2e, typecheck, lint, `verify:boundaries`, `verify:tenancy`.
+- 1797 unitarias, 173 e2e, typecheck, lint, `verify:boundaries`, `verify:tenancy`.
+- La e2e `checkin › sin red la puerta sigue registrando` **falla de vez en cuando**: es
+  cronometraje del Service Worker al volver la red, no una regresión de esta rama —no toca
+  nada del check-in—. A la segunda pasada va en verde. Si vuelve a molestar, ahí está el
+  hilo del que tirar.
 - Los dieciséis a 390, 559, 820 y 1280 px, sin un solo desborde de contenido.
 - Migraciones `0026`–`0029` aplicadas dos veces sobre la base de desarrollo y una vez
   sobre una base vacía, con el esquema idéntico columna por columna.

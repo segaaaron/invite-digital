@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1782 unitarias y 173 e2e en verde.**
+que lo vigila. **1797 unitarias y 173 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
@@ -533,8 +533,14 @@ correo, que necesita proveedor.
   Mezclar la canción del atelier con el artista de la maqueta produce «Perfect, de Etta
   James», una línea que no escribió nadie. Cambiar de diseño **nunca** se lleva por delante
   el itinerario de una boda.
-- **`contentFor` no escribe.** Una invitación se abre cientos de veces; quien escribe es
-  `seedContent`, al crear el evento o al cambiar de diseño.
+- **`contentFor` no escribe y no fusiona.** Una invitación se abre cientos de veces; quien
+  escribe es `seedContent`, al crear el evento y al cambiar de diseño. Fusionar en la
+  lectura dejaba la invitación igual de completa **y hacía imposible quitar una sección**:
+  borrar la canción la devolvía en la siguiente apertura.
+- **Sin fila, la muestra; con fila vacía, vacío.** `null` es un evento que nunca se sembró
+  —los anteriores a la tabla, los sembrados a mano, los de las pruebas— y `{}` es un
+  atelier que borró todo a propósito. Confundirlas deja en blanco las invitaciones viejas o
+  impide vaciar las nuevas.
 - **`schedule.startsAt` vive aquí y no en `events`**: la fecha del evento es un día del
   calendario a propósito, y la cuenta atrás necesita la hora.
 - **La galería es rótulo obligatorio e imagen opcional**, no al revés: estos diseños pintan
