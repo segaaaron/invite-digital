@@ -271,6 +271,7 @@ export function EngView({ content, dictionary, themes, slots, preview }: ThemePr
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.rosa, marginBottom: 12 }}>
               {dictionary.title}
             </div>
+            {slots.guest}
             {preview === true ? (
               <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
             ) : (

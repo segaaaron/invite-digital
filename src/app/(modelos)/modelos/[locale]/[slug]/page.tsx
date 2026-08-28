@@ -88,7 +88,7 @@ export default async function ModelPreviewPage({
       dictionary={diccionario.invitation}
       event={eventoDeMuestra}
       preview
-      slots={{ rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
+      slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
       themes={diccionario.themes}
     />
   )

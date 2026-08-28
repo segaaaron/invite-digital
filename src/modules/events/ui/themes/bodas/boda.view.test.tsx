@@ -16,12 +16,12 @@ beforeEach(() => {
 const conMuestra = () => propsDePrueba({ content: CONTENIDO_DE_MUESTRA })
 
 describe('el tema Étoile', () => {
-  it('coloca las cuatro ranuras', () => {
+  it('coloca las cinco ranuras', () => {
     // Un diseño que se olvide de `slots.rsvp` es una invitación en la que nadie puede
     // confirmar, y todo lo demás se ve perfecto. Es el fallo que más caro sale.
     render(<BodaView {...conMuestra()} />)
 
-    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
   })

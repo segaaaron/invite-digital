@@ -151,3 +151,25 @@ describe('la línea secundaria del itinerario', () => {
     ])
   })
 })
+
+describe('los avisos sueltos', () => {
+  it('conserva los que traen título', () => {
+    // «Solo adultos», «Lluvia de sobres». Es una lista y no un campo por aviso porque cada
+    // boda tiene los suyos y no se pueden enumerar.
+    expect(
+      parseInvitationContent({
+        notes: [{ title: 'Solo adultos', text: 'Evento para adultos y adolescentes.' }, { title: 'Lluvia de sobres' }],
+      }).notes,
+    ).toEqual([{ title: 'Solo adultos', text: 'Evento para adultos y adolescentes.' }, { title: 'Lluvia de sobres' }])
+  })
+
+  it('descarta un aviso sin título', () => {
+    // Un cuerpo sin encabezado es un párrafo suelto en medio del diseño.
+    expect(parseInvitationContent({ notes: [{ text: 'sin título' }] }).notes).toBeUndefined()
+  })
+
+  it('corta en cuatro', () => {
+    const ocho = Array.from({ length: 8 }, (_, i) => ({ title: `Aviso ${i}` }))
+    expect(parseInvitationContent({ notes: ocho }).notes).toHaveLength(4)
+  })
+})

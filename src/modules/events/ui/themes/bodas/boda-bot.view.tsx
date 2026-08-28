@@ -321,6 +321,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
                 {dictionary.title}
               </div>
             </div>
+            {slots.guest}
             {preview === true ? (
               <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7, textAlign: 'center' }}>{themes.previewNotice}</p>
             ) : (

@@ -14,7 +14,7 @@
 const LIMITES = { corto: 120, medio: 240, largo: 600 } as const
 
 /** Cuántas filas admite cada lista. El diseño reserva un sitio concreto para ellas. */
-const MAXIMOS = { itinerary: 12, gallery: 6, hosts: 12 } as const
+const MAXIMOS = { itinerary: 12, gallery: 6, hosts: 12, notes: 4 } as const
 
 export type HeroBlock = {
   readonly eyebrow?: string
@@ -56,6 +56,9 @@ export type ItineraryRow = {
  */
 export type GalleryRow = { readonly label: string; readonly imageId?: string }
 
+/** Un aviso con su título y su explicación. */
+export type NoteCard = { readonly title: string; readonly text?: string }
+
 export type InvitationContent = {
   readonly hero?: HeroBlock
   readonly quote?: { readonly text: string }
@@ -73,6 +76,16 @@ export type InvitationContent = {
   }
   readonly music?: { readonly track?: string; readonly artist?: string }
   readonly gallery?: readonly GalleryRow[]
+  /**
+   * Los avisos sueltos que varios diseños pintan en su propia tarjeta: «Solo adultos»,
+   * «Lluvia de sobres», «Habrá transporte desde la plaza».
+   *
+   * Es una lista y no un campo por aviso porque cada boda tiene los suyos y no se pueden
+   * enumerar: la que pide no llevar niños, la que avisa del frío del salón, la que explica
+   * dónde aparcar. Un bloque por cada uno convertiría el modelo en la unión de dieciséis
+   * caprichos.
+   */
+  readonly notes?: readonly NoteCard[]
   readonly closing?: { readonly text?: string; readonly signature?: string; readonly imageId?: string }
 }
 
@@ -91,6 +104,7 @@ export const SECTION_KEYS: readonly SectionKey[] = [
   'dressCode',
   'music',
   'gallery',
+  'notes',
   'closing',
 ]
 
@@ -246,6 +260,15 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
     return imagen === undefined ? { label: etiqueta } : { label: etiqueta, imageId: imagen }
   })
   if (galeria !== undefined) salida.gallery = galeria
+
+  const avisos = lista<NoteCard>(crudo.notes, MAXIMOS.notes, (fila) => {
+    if (!esObjeto(fila)) return undefined
+    const titulo = texto(fila.title, LIMITES.corto)
+    if (titulo === undefined) return undefined
+    const cuerpo = texto(fila.text, LIMITES.largo)
+    return cuerpo === undefined ? { title: titulo } : { title: titulo, text: cuerpo }
+  })
+  if (avisos !== undefined) salida.notes = avisos
 
   if (esObjeto(crudo.closing)) {
     salida.closing = bloque<NonNullable<InvitationContent['closing']>>([

@@ -19,6 +19,16 @@ export type { SectionKey }
  * de la maqueta solo hacían `useState` y no guardaban nada.
  */
 export type ThemeSlots = {
+  /**
+   * El saludo personalizado: a quién va dirigida esta invitación y cuántos lugares se le
+   * reservaron.
+   *
+   * Va en su propia ranura y no dentro del RSVP porque varios diseños lo pintan en una
+   * tarjeta propia, arriba del todo —«Tu presencia hará este día más especial · Lucas
+   * Montaño · Reservamos 1 lugar para ti»—, y ahí es donde el invitado lo lee. Es dato
+   * nuestro: sale del grupo, no del contenido que escribe el atelier.
+   */
+  readonly guest: ReactNode
   readonly rsvp: ReactNode
   readonly registry: ReactNode
   readonly guestbook: ReactNode

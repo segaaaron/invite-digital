@@ -13,9 +13,9 @@ beforeEach(() => {
 const conMuestra = () => propsDePrueba({ content: CONTENIDO_DE_MUESTRA })
 
 describe('el tema Editorial', () => {
-  it('coloca las cuatro ranuras', () => {
+  it('coloca las cinco ranuras', () => {
     render(<BodaEdView {...conMuestra()} />)
-    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
   })

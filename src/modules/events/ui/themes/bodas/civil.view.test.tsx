@@ -11,11 +11,11 @@ beforeEach(() => {
 })
 
 describe('el tema Civil', () => {
-  it('coloca las cuatro ranuras', () => {
+  it('coloca las cinco ranuras', () => {
     // Un diseño que se olvide de slots.rsvp es una invitación en la que nadie puede
     // confirmar, y todo lo demás se ve perfecto.
     render(<CivilView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
   })

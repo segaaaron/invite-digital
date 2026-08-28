@@ -345,6 +345,7 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.oro, marginBottom: 12 }}>
               {dictionary.title}
             </div>
+            {slots.guest}
             {preview === true ? (
               <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
             ) : (

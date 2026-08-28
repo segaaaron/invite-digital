@@ -72,11 +72,14 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
         event={event}
         themes={temasDictionary}
         slots={{
+          // A quién va dirigida y cuántos lugares tiene. Es dato nuestro —sale del
+          // grupo—, y va en su propia ranura porque varios diseños lo pintan en una
+          // tarjeta arriba del todo, que es donde el invitado lo busca.
+          guest: (
+            <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
+          ),
           rsvp: abierto ? (
-            <>
-              <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
-              <RsvpForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
-            </>
+            <RsvpForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
           ) : (
             <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
           ),

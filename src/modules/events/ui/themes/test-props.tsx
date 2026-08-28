@@ -35,6 +35,7 @@ export function propsDePrueba(over: Partial<ThemeProps> = {}): ThemeProps {
     dictionary: diccionario.invitation,
     themes: diccionario.themes,
     slots: {
+      guest: <div>ranura-invitado</div>,
       rsvp: <div>ranura-rsvp</div>,
       registry: <div>ranura-regalos</div>,
       guestbook: <div>ranura-firmas</div>,

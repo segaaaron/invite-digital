@@ -28,6 +28,7 @@ export function ClasicoTheme({ event, slots }: ThemeProps) {
           invitado tenía que preguntarlo por WhatsApp. */}
       {event.venue === null ? null : <p className="text-[14px] text-ink-soft">{event.venue}</p>}
       <div className="h-px w-16 bg-[var(--color-line)]" />
+      {slots.guest}
       {slots.rsvp}
       {slots.registry}
       {slots.guestbook}

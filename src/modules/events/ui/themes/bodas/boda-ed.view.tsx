@@ -368,6 +368,7 @@ export function BodaEdView({ content, dictionary, themes, slots, preview }: Them
                 Reply, <span style={{ fontStyle: 'italic' }}>please.</span>
               </div>
               <div style={{ marginTop: 18 }}>
+                {slots.guest}
                 {preview === true ? (
                   <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
                 ) : (

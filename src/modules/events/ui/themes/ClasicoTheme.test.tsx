@@ -4,11 +4,11 @@ import { ClasicoTheme } from './ClasicoTheme'
 import { eventoDePrueba as evento, propsDePrueba } from './test-props'
 
 describe('ClasicoTheme', () => {
-  it('coloca las cuatro ranuras', () => {
+  it('coloca las cinco ranuras', () => {
     // Un tema que se olvide de slots.rsvp es una invitación en la que nadie puede
     // confirmar, y todo lo demás se ve perfecto.
     render(<ClasicoTheme {...propsDePrueba()} />)
-    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura)).toBeInTheDocument()
     }
   })
