@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
+import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { themeFonts } from '@/shared/design/fonts'
@@ -64,14 +65,18 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
         Volver al panel
       </Link>
 
-      <Tema
-        content={contenido}
-        dictionary={diccionario.invitation}
-        event={event.value}
-        preview
-        slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
-        themes={diccionario.themes}
-      />
+      {/* Dentro de un teléfono, como el escaparate y como la maqueta: es la pantalla para
+          la que están dibujados, y a lo ancho el fondo se derrama por los lados. */}
+      <PhonePreview>
+        <Tema
+          content={contenido}
+          dictionary={diccionario.invitation}
+          event={event.value}
+          preview
+          slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
+          themes={diccionario.themes}
+        />
+      </PhonePreview>
     </div>
   )
 }

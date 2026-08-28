@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import type { Event } from '@/modules/events/domain/event'
+import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
@@ -18,6 +19,10 @@ import { buildPageMetadata } from '@/shared/seo/metadata'
  *
  * Las ranuras van **inertes**, con su aviso. Un formulario de muestra que parece funcionar
  * y no guarda nada es peor que no tenerlo.
+ *
+ * Y se enseña **dentro de un teléfono**, como la maqueta: estos diseños están dibujados
+ * para esa pantalla, y a lo ancho de un portátil el fondo se derrama por los lados y lo
+ * que se ve deja de ser el modelo.
  */
 export const dynamic = 'force-dynamic'
 
@@ -83,13 +88,15 @@ export default async function ModelPreviewPage({
   const inerte = <p style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.6 }}>{diccionario.themes.previewNotice}</p>
 
   return (
-    <Tema
-      content={tema.defaultContent}
-      dictionary={diccionario.invitation}
-      event={eventoDeMuestra}
-      preview
-      slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
-      themes={diccionario.themes}
-    />
+    <PhonePreview>
+      <Tema
+        content={tema.defaultContent}
+        dictionary={diccionario.invitation}
+        event={eventoDeMuestra}
+        preview
+        slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
+        themes={diccionario.themes}
+      />
+    </PhonePreview>
   )
 }

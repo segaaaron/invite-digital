@@ -134,3 +134,52 @@
     animation: none !important;
   }
 }
+
+/*
+ * El marco de teléfono de la vista previa.
+ *
+ * La maqueta enseña cada invitación dentro de un aparato: una tarjeta de unos 430 puntos,
+ * con las esquinas redondeadas, centrada sobre un fondo oscuro y **sin nada a los lados**.
+ * Estos diseños están dibujados para eso —el fondo de pétalos, el papel pintado y los
+ * degradados son del teléfono, no de la pantalla—, así que servirlos a lo ancho de un
+ * portátil no es enseñar el modelo: es enseñar el modelo dentro de otra cosa.
+ *
+ * El marco es **el contenedor de scroll**, como el de la maqueta (`overflow: hidden auto`).
+ * Eso hace dos cosas a la vez: los fondos `sticky` se anclan a él, y los `100vh` de esos
+ * fondos se recortan por el borde de la tarjeta.
+ *
+ * `transform: translateZ(0)` no es un truco de rendimiento: convierte el marco en bloque
+ * contenedor, y sin él el papel pintado `position: fixed` del palacio griego se pega a la
+ * ventana y se sale de la tarjeta por los cuatro lados.
+ */
+.theme-phone-stage {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-shell-deep);
+  padding: clamp(0px, 2.5vh, 26px) 0;
+}
+
+.theme-phone-frame {
+  position: relative;
+  width: min(430px, 100vw);
+  height: min(932px, 100dvh);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: 26px;
+  background: var(--color-bg-top);
+  box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+  transform: translateZ(0);
+}
+
+/* En un teléfono el marco es la pantalla: ni tarjeta, ni sombra, ni esquinas. */
+@media (max-width: 480px) {
+  .theme-phone-stage { padding: 0; }
+  .theme-phone-frame {
+    width: 100vw;
+    height: 100dvh;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}

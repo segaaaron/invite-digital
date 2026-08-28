@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1835 unitarias y 193 e2e en verde.**
+que lo vigila. **1835 unitarias y 209 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
@@ -504,6 +504,22 @@ correo, que necesita proveedor.
 - **El tope de columna es parte del diseño.** Están dibujados para un ancho de teléfono;
   sin `ThemeColumn` se despliegan a 1900 píxeles y la ceremonia y la recepción quedan a un
   palmo la una de la otra.
+- **La vista previa va dentro de un marco de teléfono, y eso es parte del diseño.** La
+  maqueta enseña cada invitación en un aparato: tarjeta de 430 puntos, esquinas
+  redondeadas, centrada sobre fondo oscuro y **sin nada a los lados**. `ThemeColumn`
+  arregla el texto y no arregla esto: el papel pintado, los pétalos y los degradados llegan
+  a los bordes, así que a lo ancho de un portátil el fondo se derrama por los costados y lo
+  que se ve deja de ser el modelo. Lo pone `PhonePreview`, y lo usan el escaparate y la
+  vista previa del panel.
+- **El marco es el contenedor de scroll**, como el `overflow: hidden auto` del marco de la
+  maqueta: eso ancla los fondos `sticky` a la tarjeta y recorta sus `100vh` en el borde.
+  Y lleva `transform: translateZ(0)`, que no es un truco de rendimiento: sin él, el papel
+  pintado `position: fixed` del palacio griego se pega a la ventana y se sale de la tarjeta
+  por los cuatro lados.
+- **Las proporciones de `next/image` son las del fichero, no una inventada.** Las esquinas
+  florales son cuadradas y los ramos cuatro a tres; con `width * 1.1` y `width * 0.45` se
+  reservaba un hueco que no era el de la imagen, había un salto al cargar y salía un aviso
+  por consola en cada invitación abierta.
 - **El tope de columna es de TODO el contenido, la portada incluida.** `boda-bot`,
   `boda-cin` y `xv-isabelle` dejaron su portada a sangre fuera de `ThemeColumn`: en un
   portátil se estiraba a lo ancho de la pantalla mientras el resto seguía en su columna, y

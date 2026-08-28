@@ -166,6 +166,44 @@ test.describe('los modelos, ancho por ancho', () => {
   }
 })
 
+test.describe('los modelos, dentro del teléfono', () => {
+  /**
+   * La maqueta enseña cada invitación dentro de un aparato: una tarjeta de unos 430
+   * puntos, centrada, sobre fondo oscuro y sin nada a los lados. No es una decisión de
+   * presentación: estos diseños **están dibujados para esa pantalla** —el papel pintado,
+   * los pétalos y los degradados llegan a los bordes—, y servidos a lo ancho de un
+   * portátil el fondo se derrama y lo que se ve deja de ser el modelo.
+   */
+  for (const clave of CLAVES) {
+    test(`«${clave}» se enseña dentro del marco de teléfono`, async ({ page }) => {
+      await page.setViewportSize({ width: 1440, height: 900 })
+      await page.goto(`/modelos/es/${clave}`)
+      await page.waitForLoadState('networkidle')
+
+      const marco = await page.evaluate(() => {
+        const nodo = document.querySelector('.theme-phone-frame')
+        if (nodo === null) return null
+        const r = nodo.getBoundingClientRect()
+        const articulo = document.querySelector('article')?.getBoundingClientRect() ?? null
+        return {
+          ancho: Math.round(r.width),
+          centrado: Math.abs(r.left + r.width / 2 - document.documentElement.clientWidth / 2) < 2,
+          desplaza: getComputedStyle(nodo).overflowY,
+          articuloDentro: articulo !== null && articulo.left >= r.left - 1 && articulo.right <= r.right + 1,
+        }
+      })
+
+      expect(marco, clave).not.toBeNull()
+      expect(marco?.ancho, clave).toBeLessThanOrEqual(440)
+      expect(marco?.centrado, clave).toBe(true)
+      // El marco es el contenedor de scroll: es lo que ancla los fondos `sticky` a la
+      // tarjeta y recorta sus `100vh` en el borde, como el marco de la maqueta.
+      expect(marco?.desplaza, clave).toBe('auto')
+      expect(marco?.articuloDentro, clave).toBe(true)
+    })
+  }
+})
+
 test.describe('los modelos, en un portátil', () => {
   // `ThemeColumn` limita a 480. El margen es para el redondeo y para los bloques que se
   // salen un pelo por su propio padding, no para un bloque suelto a pantalla completa.

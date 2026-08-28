@@ -57,10 +57,13 @@ export function FloralCorner({
 }: CornerProps) {
   return (
     <div aria-hidden style={{ width, pointerEvents: 'none', ...style }}>
+      {/* La proporción es la del fichero: las esquinas son cuadradas —640×640 y 1024×1024—.
+          Con una inventada, `next/image` reserva un hueco que no es el de la imagen, avisa
+          por consola en cada invitación y deja un salto al cargar. */}
       <Image
         alt=""
         className={sway ? 'theme-sway-slow' : undefined}
-        height={Math.round(width * 1.1)}
+        height={width}
         src={themeAsset('flora', FLORA[tone][side])}
         style={{
           display: 'block',
@@ -101,10 +104,11 @@ export function FloralSpray({
 }: SprayProps) {
   return (
     <div aria-hidden style={{ width, pointerEvents: 'none', ...style }}>
+      {/* Los ramos son cuatro a tres —1400×1050 y 700×525—, no 0,45. */}
       <Image
         alt=""
         className={sway ? 'theme-sway-slower' : undefined}
-        height={Math.round(width * 0.45)}
+        height={Math.round(width * 0.75)}
         src={themeAsset('flora', FLORA[tone].spray)}
         style={{
           display: 'block',
