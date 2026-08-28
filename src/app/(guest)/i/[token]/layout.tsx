@@ -1,9 +1,11 @@
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
-import { display, sans } from '@/shared/design/fonts'
+import { themeFor } from '@/modules/events/ui/themes/registry'
+import { sans, themeFonts } from '@/shared/design/fonts'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
 import '../../../globals.css'
+import '@/modules/events/ui/themes/kit/keyframes.css'
 
 export const metadata = { robots: { index: false, follow: false } }
 
@@ -29,8 +31,17 @@ export default async function InvitationLayout({
     notFound()
   }
 
+  // Solo las tipografías que **este** diseño declara. Cargar las doce en toda invitación
+  // son cientos de kilobytes de fuente que ese diseño no pinta, en un teléfono con datos.
+  const tema = themeFor(invitation.value.event.themeKey)
+  const variables = tema.fonts.map((clave) => themeFonts[clave].variable).join(' ')
+
   return (
-    <html lang={invitation.value.event.locale} className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
+    <html
+      className={`${sans.variable} ${variables}`}
+      lang={invitation.value.event.locale}
+      suppressHydrationWarning
+    >
       <body>{children}</body>
     </html>
   )

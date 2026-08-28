@@ -1,19 +1,27 @@
-import type { ComponentType, ReactNode } from 'react'
-import type { Event } from '../../domain/event'
-import { ClasicoTheme } from './ClasicoTheme'
-
-export type ThemeProps = { event: Event; children: ReactNode }
-export type InvitationTheme = { readonly key: string; readonly label: string; readonly Component: ComponentType<ThemeProps> }
+import { clasicoDefinition } from './ClasicoTheme'
+import type { ThemeDefinition } from './contract'
 
 /**
- * La invitación se compone a mano (sección 11 del spec): cada pieza entra aquí con su
- * clave. `theme_key` en la base es solo texto, así que una clave borrada de este
- * registro dejaría la invitación en blanco; por eso hay respaldo.
+ * Los temas de invitación, por su clave.
+ *
+ * Cada archivo de tema exporta **su definición**, no solo su componente: sus tipografías
+ * —para que el layout de invitado no baje doce familias cuando el diseño usa cinco—, sus
+ * secciones —para que el panel no le pida un itinerario a un diseño que no lo pinta—, su
+ * paleta y el contenido de muestra con el que se siembra.
  */
 const THEMES = {
-  clasico: { key: 'clasico', label: 'Clásico marfil', Component: ClasicoTheme },
-} as const satisfies Record<string, InvitationTheme>
+  clasico: clasicoDefinition,
+} as const satisfies Record<string, ThemeDefinition>
 
 export const THEME_KEYS: readonly string[] = Object.keys(THEMES)
 
-export const themeFor = (key: string): InvitationTheme => (THEMES as Record<string, InvitationTheme>)[key] ?? THEMES.clasico
+export const themeDefinitions = (): readonly ThemeDefinition[] => Object.values(THEMES)
+
+/**
+ * Una clave que el registro no conoce cae al clásico, y sigue siendo a propósito:
+ * `theme_key` en la base es solo texto, así que una clave borrada de aquí —o escrita a
+ * mano en una migración— dejaría la invitación en blanco el día de la boda. El clásico es
+ * sobrio, pero es una invitación.
+ */
+export const themeFor = (key: string): ThemeDefinition =>
+  (THEMES as Record<string, ThemeDefinition>)[key] ?? THEMES.clasico

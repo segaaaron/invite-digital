@@ -46,3 +46,20 @@ export interface StaffReader {
   isStaffOf(eventId: string, userId: string): Promise<boolean>
   eventIdsOf(userId: string): Promise<string[]>
 }
+
+/**
+ * El contenido rico de la invitación.
+ *
+ * Va en su propio puerto y no dentro de `EventRepository` por el mismo motivo que
+ * `StaffReader`: es otra tabla, con su propio ciclo de vida —se siembra al elegir tema, se
+ * edita bloque a bloque, se borra al vencer la retención— y la mayoría de las pantallas
+ * del panel no lo tocan.
+ *
+ * `blocks` entra y sale como `unknown` a propósito: es un `jsonb`, y quien decide qué es
+ * un contenido válido es `domain/invitation-content.ts`, no el repositorio.
+ */
+export interface ContentRepository {
+  find(eventId: string): Promise<unknown>
+  save(eventId: string, blocks: unknown): Promise<void>
+  clear(eventId: string): Promise<void>
+}

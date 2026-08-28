@@ -20,10 +20,17 @@ import {
 } from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
+import {
+  clearContent,
+  contentFor,
+  saveContentBlock,
+  seedContentForTheme,
+} from '@/modules/events/application/content-use-cases'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
 import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
+import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
@@ -189,6 +196,15 @@ export const events = {
   listFor: listEventsFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   canTouch: actorCanTouchEvent({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   setOwner: (eventId: string, userId: string) => drizzleEventRepository.setOwner(eventId, userId),
+  /**
+   * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
+   * guarda. `contentFor` no escribe —una invitación se abre cientos de veces—; quien
+   * escribe es `seedContent`, al crear el evento o al cambiar de diseño.
+   */
+  contentFor: contentFor(drizzleContentRepository),
+  saveContentBlock: saveContentBlock(drizzleContentRepository),
+  seedContent: seedContentForTheme(drizzleContentRepository),
+  clearContent: clearContent(drizzleContentRepository),
   /**
    * El personal de puerta de un evento. Vive aquí y no en un módulo propio porque es una
    * pertenencia del evento, no una entidad con vida propia.

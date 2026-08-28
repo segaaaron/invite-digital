@@ -198,6 +198,43 @@ export type RsvpMessageKey =
   | 'storage_failure'
   | 'rate_limited'
 
+/**
+ * Los rótulos fijos de los dieciséis diseños de invitación.
+ *
+ * Van aparte de `InvitationDictionary` porque no son del formulario de RSVP: son las
+ * palabras que el propio diseño pinta —«Faltan», «Itinerario», «Código de vestimenta»— y
+ * las comparten los dieciséis. Lo que cambia de un evento a otro vive en `event_content`;
+ * esto es la carpintería.
+ *
+ * La invitación usa el idioma del **evento** (`events.locale`), no el del navegador.
+ */
+export interface ThemeDictionary {
+  /** La portada, antes de abrir. */
+  coverOpen: string
+  coverHint: string
+  /** El nombre accesible del botón de portada: quien usa lector de pantalla no ve el sobre. */
+  coverAria: string
+  countdownPrefix: string
+  countdownDays: string
+  countdownHours: string
+  countdownMins: string
+  countdownSecs: string
+  saveTheDate: string
+  ourStory: string
+  ceremony: string
+  reception: string
+  itinerary: string
+  dressCode: string
+  songOfTheNight: string
+  gifts: string
+  guestbook: string
+  /** Lo que dice un hueco de foto todavía sin imagen. */
+  photoPlaceholder: string
+  portraitPlaceholder: string
+  /** El aviso de la vista previa del catálogo, donde nada se guarda. */
+  previewNotice: string
+}
+
 export interface InvitationDictionary {
   title: string
   seatsLabel: string
@@ -306,6 +343,7 @@ export interface Dictionary {
   pricing: PricingDictionary
   models: ModelsDictionary
   invitation: InvitationDictionary
+  themes: ThemeDictionary
   registry: RegistryDictionary
   guestbook: GuestbookDictionary
   orders: OrdersDictionary

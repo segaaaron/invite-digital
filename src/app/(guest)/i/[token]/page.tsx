@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { guestbook, plans, registry } from '@/app/composition/container'
+import { events as eventos, guestbook, plans, registry } from '@/app/composition/container'
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
@@ -37,6 +37,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   const dictionary = getDictionary(event.locale).invitation
   const registryDictionary = getDictionary(event.locale).registry
   const guestbookDictionary = getDictionary(event.locale).guestbook
+  const temasDictionary = getDictionary(event.locale).themes
 
   // La mesa de regalos es opcional: si la lectura falla, la invitación sigue en pie sin
   // ella. Que la base de regalos no responda no puede impedir confirmar la asistencia.
@@ -51,54 +52,67 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   // arriba: sin respuesta y con la base caída se ven igual —sin nada—, y la invitación
   // se abre en los dos casos.
   const respuestaDelAtelier = await guestbook.replyForGroup(group.id)
-  const { Component: Theme } = themeFor(event.themeKey)
+  const definicion = themeFor(event.themeKey)
+  const { Component: Theme } = definicion
   const abierto = acceptsResponses(event, new Date().toISOString().slice(0, 10))
 
+  // El contenido rico que pinta el diseño, ya fusionado con el de muestra del tema: lo que
+  // el atelier no haya escrito se ve con lo que traía el diseño, en vez de dejar un hueco.
+  const contenido = await eventos.contentFor(event.id, definicion.defaultContent)
+
   return (
-    <Theme event={event}>
-      {/* Cuenta la visita. No pinta nada y no estorba a quien vino a ver la invitación. */}
+    <>
+      {/* Cuenta la visita. No pinta nada, y se queda **fuera** del tema: un diseño no tiene
+          por qué saber que la analítica existe. */}
       <ViewBeacon kind="guest" token={token} />
-      <p className="text-[13px] text-ink-soft">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
 
-      {abierto ? (
-        <>
-          <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{dictionary.title}</h2>
-          <RsvpForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
-        </>
-      ) : (
-        <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.closed}</p>
-      )}
-
-      {isErr(mesa) ? null : (
-        <GuestRegistry
-          currency={event.currency}
-          dictionary={registryDictionary}
-          funds={mesa.value.funds}
-          gifts={mesa.value.gifts}
-          groupId={group.id}
-          open={mesaAbierta}
-          token={token}
-        />
-      )}
-
-      <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
-
-      <PassQr
-        url={invitationUrl(token, env.SITE_URL)}
-        label={group.label}
-        labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
+      <Theme
+        content={contenido}
+        dictionary={dictionary}
+        event={event}
+        themes={temasDictionary}
+        slots={{
+          rsvp: abierto ? (
+            <>
+              <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
+              <RsvpForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
+            </>
+          ) : (
+            <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
+          ),
+          registry: isErr(mesa) ? null : (
+            <GuestRegistry
+              currency={event.currency}
+              dictionary={registryDictionary}
+              funds={mesa.value.funds}
+              gifts={mesa.value.gifts}
+              groupId={group.id}
+              open={mesaAbierta}
+              token={token}
+            />
+          ),
+          guestbook: <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />,
+          pass: (
+            <>
+              <PassQr
+                label={group.label}
+                labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
+                url={invitationUrl(token, env.SITE_URL)}
+              />
+              {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás,
+                  nadie se desplaza hasta el final de la invitación. */}
+              <p className="mt-5 text-center">
+                <a
+                  className="inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase"
+                  href={`/i/${token}/pase`}
+                >
+                  {dictionary.passOpen}
+                </a>
+              </p>
+            </>
+          ),
+        }}
       />
-
-      {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás, nadie
-          se desplaza hasta el final de la invitación: se abre esta pantalla y se enseña. */}
-      <p className="mt-5 text-center">
-        <a
-          className="inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
-          href={`/i/${token}/pase`}
-        >
-          {dictionary.passOpen}
-        </a>
-      </p>
-    </Theme>
+    </>
   )
 }

@@ -1,6 +1,6 @@
 import type { ComponentType, ReactNode } from 'react'
 import type { FontKey } from '@/shared/design/font-manifest'
-import type { InvitationDictionary } from '@/shared/i18n/dictionary'
+import type { InvitationDictionary, ThemeDictionary } from '@/shared/i18n/dictionary'
 import type { Event } from '../../domain/event'
 import type { InvitationContent, SectionKey } from '../../domain/invitation-content'
 
@@ -28,7 +28,10 @@ export type ThemeSlots = {
 export type ThemeProps = {
   readonly event: Event
   readonly content: InvitationContent
+  /** Los rótulos del formulario y del pase, que el tema pasa a las piezas del kit. */
   readonly dictionary: InvitationDictionary
+  /** Los rótulos que pinta el propio diseño: «Faltan», «Itinerario», «Código de vestimenta». */
+  readonly themes: ThemeDictionary
   readonly slots: ThemeSlots
   /**
    * En la vista previa del catálogo las ranuras se pintan inertes y con su aviso. Un
