@@ -98,7 +98,20 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           <FloralCorner flipY side="right" tone="white" width={260} />
         </div>
 
-        <div style={{ position: 'absolute', bottom: 70, left: 0, right: 0, textAlign: 'center' }}>
+        {/* Los nombres caen sobre la fotografía, donde el velo del degradado todavía no
+            es opaco. La sombra clara los sostiene: sin ella, un retrato oscuro se come el
+            nombre de la novia, y el nombre es lo primero que la invitación tiene que
+            decir. La maqueta no la lleva porque su foto de muestra es clara. */}
+        <div
+          style={{
+            position: 'absolute',
+            bottom: 70,
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            textShadow: '0 1px 12px rgba(250,250,246,0.9), 0 0 30px rgba(250,250,246,0.7)',
+          }}
+        >
           <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 64, lineHeight: 1, color: P.tinta, fontWeight: 400, margin: 0 }}>
             {hero?.nameA ?? ''}
           </h1>
