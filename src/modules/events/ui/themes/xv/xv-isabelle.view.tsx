@@ -45,7 +45,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
   const mes = cuando === null ? '' : cuando.toLocaleDateString(etiquetaLocal, { month: 'long' })
 
   return (
-    <article style={{ position: 'relative', background: P.marfil, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh' }}>
+    <article style={{ position: 'relative', background: P.marfil, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
           accent={P.oroClaro}

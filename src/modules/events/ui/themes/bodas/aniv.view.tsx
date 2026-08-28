@@ -31,7 +31,7 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
   const tira = (gallery ?? []).slice(1, 5)
 
   return (
-    <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh' }}>
+    <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
           accent={P.oro}

@@ -26,7 +26,7 @@ export function CivilView({ content, dictionary, themes, slots, preview }: Theme
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
 
   return (
-    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh' }}>
+    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
           accent={P.violeta}

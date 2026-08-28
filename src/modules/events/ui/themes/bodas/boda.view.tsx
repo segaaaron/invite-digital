@@ -38,6 +38,12 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
         color: P.tinta,
         fontFamily: 'var(--font-space-grotesk)',
         minHeight: '100dvh',
+        // `clip`, no `hidden`. Los dos recortan lo que sangra —las esquinas florales, los
+        // ramos de fondo, los círculos que se salen del papel—, pero `hidden` convierte el
+        // elemento en **contenedor de scroll**: `overflow-y` pasa a `auto` por
+        // especificación y los fondos `sticky` se anclan a él en vez de a la ventana.
+        // `clip` recorta sin crear ese contenedor, que es exactamente lo que hace falta.
+        overflowX: 'clip',
         // Sin `overflow-x: hidden` aquí a propósito: ponerlo hace que `overflow-y` pase a
         // `auto` por especificación, el `<article>` se convierte en contenedor de scroll y
         // los fondos `sticky` se anclan a él en vez de a la ventana. El recorte horizontal

@@ -41,7 +41,7 @@ export function BodaEdView({ content, dictionary, themes, slots, preview }: Them
   ].filter((fila): fila is { pagina: string; titulo: string } => fila !== null)
 
   return (
-    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh' }}>
+    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
           accent={P.terra}

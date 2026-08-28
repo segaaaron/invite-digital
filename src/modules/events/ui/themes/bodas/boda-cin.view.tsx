@@ -37,7 +37,7 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
   const reparto = (gallery ?? []).slice(1, 3)
 
   return (
-    <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh' }}>
+    <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
           accent={P.oro}

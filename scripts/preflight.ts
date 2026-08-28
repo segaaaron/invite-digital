@@ -4,7 +4,11 @@
  *
  *   set -a; . ./.env.production; set +a; pnpm preflight
  */
+import { eq } from 'drizzle-orm'
 import { admin } from '@/app/composition/container'
+import { themeFor } from '@/modules/events/ui/themes/registry'
+import { db } from '@/shared/db/client'
+import { templates } from '@/shared/db/schema'
 import { EMPTY_PAYMENT_SETTINGS } from '@/modules/admin/domain/payment-settings'
 import { BRAND } from '@/shared/config/brand'
 import { checkReleaseReadiness } from '@/shared/config/preflight'
@@ -16,7 +20,7 @@ async function runPreflight(): Promise<number> {
   // bloquean—, porque desplegar sin poder comprobarlo no es desplegar comprobado.
   const ajustes = await admin.payment()
   const payment = isErr(ajustes) ? EMPTY_PAYMENT_SETTINGS : ajustes.value
-  const blockers = checkReleaseReadiness({
+  const blockers: string[] = checkReleaseReadiness({
     whatsapp: BRAND.whatsapp,
     email: BRAND.email,
     siteUrl: process.env.SITE_URL ?? '',
@@ -25,6 +29,31 @@ async function runPreflight(): Promise<number> {
     trustBrands: BRAND.trustBrands,
     payment,
   })
+
+  // Toda plantilla publicada tiene que apuntar a un tema que el motor sepa pintar. Vender
+  // un modelo que no existe como pieza es la clase de fallo que no se descubre hasta que
+  // un invitado abre su invitación el día de la boda.
+  //
+  // Como el resto de esta comprobación: si la base no responde, bloquea. Desplegar sin
+  // poder comprobarlo no es desplegar comprobado.
+  try {
+    const plantillas = await db
+      .select({ slug: templates.slug, themeKey: templates.themeKey })
+      .from(templates)
+      .where(eq(templates.isPublished, true))
+
+    if (plantillas.length === 0) {
+      blockers.push('El catálogo no tiene ninguna plantilla publicada: la web no enseñaría ningún modelo')
+    }
+    for (const fila of plantillas) {
+      if (themeFor(fila.themeKey).key !== fila.themeKey) {
+        blockers.push(`La plantilla «${fila.slug}» apunta al diseño «${fila.themeKey}», que el motor no conoce`)
+      }
+    }
+  } catch (cause) {
+    console.error('No se pudo leer el catálogo de plantillas:', cause)
+    blockers.push('No se pudo leer el catálogo de plantillas para comprobar sus diseños')
+  }
 
   if (blockers.length === 0) {
     console.log('Comprobación previa superada: no queda ningún marcador de relleno.')

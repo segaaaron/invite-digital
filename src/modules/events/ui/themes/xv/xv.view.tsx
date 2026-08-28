@@ -53,6 +53,12 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
         color: P.tinta,
         fontFamily: SANS,
         minHeight: '100dvh',
+        // `clip`, no `hidden`. Los dos recortan lo que sangra —las esquinas florales, los
+        // ramos de fondo, los círculos que se salen del papel—, pero `hidden` convierte el
+        // elemento en **contenedor de scroll**: `overflow-y` pasa a `auto` por
+        // especificación y los fondos `sticky` se anclan a él en vez de a la ventana.
+        // `clip` recorta sin crear ese contenedor, que es exactamente lo que hace falta.
+        overflowX: 'clip',
       }}
     >
       {preview === true ? null : (
