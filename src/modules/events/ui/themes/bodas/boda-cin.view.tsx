@@ -212,7 +212,7 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
         {quote === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 44, textAlign: 'center' }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.oro }}>// SYNOPSIS</div>
+              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.oro }}>{'// SYNOPSIS'}</div>
               <p style={{ marginTop: 16, fontFamily: SERIF, fontStyle: 'italic', fontSize: 18, lineHeight: 1.65, color: P.tinta, opacity: 0.92 }}>
                 {quote.text}
               </p>
