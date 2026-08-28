@@ -35,6 +35,10 @@ const enKilobytes = (bytes: number): string => `${Math.max(1, Math.round(bytes /
  * identificador de una tarjeta para pegarlo en otra dejó de ser el camino: era un paso
  * a mano entre dos tarjetas, y con él se equivocaba la foto sin que nada lo dijera.
  *
+ * Lo que se enseña aquí es **lo que se guardó**, no lo que se subió: al subirla se reduce
+ * al lado largo del diseño y se reencoda, así que los kilobytes de la ficha son los que va
+ * a bajar el invitado.
+ *
  * La vista previa usa la misma ruta que la invitación —`/media/<id>`—, así que si aquí se
  * ve, en la invitación también; y si el evento lleva contraseña, las dos responden igual.
  */
@@ -57,6 +61,11 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
             type="file"
           />
         </label>
+
+        <p className="text-[11px] leading-[1.5] text-ink-mute">
+          Se reduce y se reencoda al subirla, así que la invitación no le sirve cuatro megabytes a un invitado con
+          datos. También se le quitan los metadatos, que en una fotografía dicen dónde y cuándo se tomó.
+        </p>
 
         {error === null ? null : (
           <p className="text-[12px] text-gold-deep" role="alert">

@@ -18,6 +18,19 @@ export type MediaType = 'image/png' | 'image/jpeg' | 'image/webp' | 'image/avif'
 export const MAX_MEDIA_BYTES = 8 * 1024 * 1024
 
 /**
+ * El lado más largo con el que se guarda una fotografía.
+ *
+ * Estos diseños están dibujados para una columna de teléfono —`ThemeColumn` la limita— y
+ * ninguna ranura pinta más de unos 720 píxeles CSS de ancho. Con 1600 sobra para una
+ * pantalla del doble de densidad, y una fotografía de móvil de cuatro megabytes baja a
+ * unos pocos cientos de kilobytes.
+ *
+ * Es el lado largo, no el ancho: un retrato vertical y una panorámica se miden por lo
+ * mismo, y así ninguna de las dos se estira.
+ */
+export const MAX_IMAGE_EDGE = 1600
+
+/**
  * El tipo real de un fichero, leído de sus primeros bytes.
  *
  * **Nunca la extensión ni el `Content-Type`**: los dos los escribe quien sube el fichero.

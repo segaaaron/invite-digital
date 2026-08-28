@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_MEDIA_BYTES } from '../domain/media'
 import { purgeMedia, readMedia, saveMedia } from './media-use-cases'
-import type { MediaRepository, MediaRow, MediaStorage } from './ports'
+import type { ImageProcessor, MediaRepository, MediaRow, MediaStorage } from './ports'
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
+/** Lo que devuelve el procesador: otra imagen, más pequeña y en otro formato. */
+const REENCODADA = new Uint8Array([0x52, 0x49, 0x46, 0x46, 9, 9, 9, 9, 0x57, 0x45, 0x42, 0x50])
 
 function dobles(filas: MediaRow[] = []) {
   const disco = new Map<string, Uint8Array>()
@@ -27,7 +29,11 @@ function dobles(filas: MediaRow[] = []) {
       disco.delete(key)
     }),
   }
-  return { media, storage, disco, filas, ids: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
+  // El procesador se comporta como el de verdad: devuelve otra imagen, en otro formato.
+  const images: ImageProcessor = {
+    normalize: vi.fn(async () => ({ bytes: REENCODADA, contentType: 'image/webp' as const })),
+  }
+  return { media, storage, images, disco, filas, ids: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
 }
 
 describe('saveMedia', () => {
@@ -64,7 +70,7 @@ describe('saveMedia', () => {
     })
 
     expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' })
-    expect([...deps.disco.keys()]).toEqual(['aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.png'])
+    expect([...deps.disco.keys()]).toEqual(['aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp'])
   })
 
   it('conserva el nombre original solo para enseñarlo', async () => {
@@ -72,7 +78,8 @@ describe('saveMedia', () => {
     await saveMedia(deps)('e1', { name: 'Retrato de Ana.png', size: PNG.byteLength, bytes: async () => PNG })
 
     expect(deps.filas[0]?.originalName).toBe('Retrato de Ana.png')
-    expect(deps.filas[0]?.contentType).toBe('image/png')
+    // El tipo es el de lo que se guardó, no el de lo que llegó: se reencodó por el camino.
+    expect(deps.filas[0]?.contentType).toBe('image/webp')
   })
 
   it('escribe el fichero antes que la fila', async () => {
@@ -90,6 +97,38 @@ describe('saveMedia', () => {
     await saveMedia(deps)('e1', { name: 'a.png', size: PNG.byteLength, bytes: async () => PNG })
 
     expect(orden).toEqual(['disco', 'fila'])
+  })
+
+  it('guarda lo que devuelve el procesador, no lo que llegó', async () => {
+    // Una fotografía de móvil ronda los cuatro megabytes y se sirve entera a un invitado
+    // con datos. Se reencoda **antes** de guardarse, así que no hay una versión pesada
+    // durmiendo en el disco a la espera de que alguien la pida.
+    const deps = dobles()
+
+    await saveMedia(deps)('e1', { name: 'foto.png', size: PNG.byteLength, bytes: async () => PNG })
+
+    expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp')).toEqual(REENCODADA)
+    expect(deps.filas[0]?.byteSize).toBe(REENCODADA.byteLength)
+  })
+
+  it('rechaza lo que el procesador no puede decodificar, aunque los primeros bytes cuadren', async () => {
+    // Unos bytes de cabecera correctos y un cuerpo que no es una imagen pasan la primera
+    // comprobación. Que no se pueda reencodar es la segunda, y la que decide.
+    const deps = dobles()
+    deps.images.normalize = vi.fn(async () => null)
+
+    const salida = await saveMedia(deps)('e1', { name: 'rota.png', size: PNG.byteLength, bytes: async () => PNG })
+
+    expect(salida).toEqual({ ok: false, error: 'unsupported_type' })
+    expect(deps.storage.put).not.toHaveBeenCalled()
+  })
+
+  it('no llama al procesador con un fichero que ya se rechazó por tamaño', async () => {
+    const deps = dobles()
+
+    await saveMedia(deps)('e1', { name: 'enorme.png', size: MAX_MEDIA_BYTES + 1, bytes: async () => PNG })
+
+    expect(deps.images.normalize).not.toHaveBeenCalled()
   })
 
   it('devuelve el fallo en vez de lanzarlo cuando el disco no responde', async () => {
@@ -115,7 +154,7 @@ describe('readMedia', () => {
     const salida = await readMedia(deps)('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee')
 
     expect(salida?.eventId).toBe('e1')
-    expect(salida?.contentType).toBe('image/png')
+    expect(salida?.contentType).toBe('image/webp')
   })
 
   it('un identificador desconocido devuelve nada, no revienta', async () => {

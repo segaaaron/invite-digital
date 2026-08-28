@@ -1,4 +1,5 @@
 import type { Event, EventInput } from '../domain/event'
+import type { MediaType } from '../domain/media'
 
 export type AnonymizationCandidate = { id: string; slug: string; retentionDays: number; eventDate: string }
 
@@ -75,6 +76,21 @@ export interface MediaStorage {
   put(key: string, bytes: Uint8Array): Promise<void>
   get(key: string): Promise<Uint8Array | null>
   remove(key: string): Promise<void>
+}
+
+/**
+ * Quien deja una fotografía lista para servirse: la reduce, la reencoda y le quita todo
+ * lo que no sea la imagen.
+ *
+ * Es un puerto y no una llamada directa a `sharp` porque `application` no habla con
+ * `infrastructure`, y porque reencodar de verdad en cada prueba del caso de uso sería
+ * medio segundo por prueba para comprobar una decisión que no es de imagen.
+ *
+ * Devuelve `null` cuando no puede decodificar lo que le dan. No lanza: un fichero roto es
+ * una respuesta, no una avería.
+ */
+export interface ImageProcessor {
+  normalize(bytes: Uint8Array): Promise<{ bytes: Uint8Array; contentType: MediaType } | null>
 }
 
 export type MediaRow = {

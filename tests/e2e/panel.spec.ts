@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import sharp from 'sharp'
 import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
 import { createEvent, signIn } from './helpers/panel'
@@ -118,6 +119,56 @@ test.describe('contenido de la invitación', () => {
 
     await page.reload()
     await expect(page.getByLabel('Canción', { exact: true })).toHaveValue('Perfect')
+  })
+
+  test('la vista previa enseña la invitación de esta boda, no la de muestra', async ({ page }) => {
+    // El escaparate enseña el diseño con el contenido de la maqueta. Esto enseña lo que el
+    // atelier acaba de escribir, sin repartir un enlace ni contar la visita de un invitado.
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
+    await page.getByRole('button', { name: 'Guardar cambios' }).click()
+
+    const portada = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Portada y nombres' }) })
+    await portada.getByLabel('Primer nombre').fill('Zulema')
+    await portada.getByRole('button', { name: 'Guardar' }).click()
+    await expect(portada.getByRole('status')).toContainText('Guardado')
+
+    await page.getByRole('link', { name: 'Ver esta invitación' }).click()
+    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/vista-previa$`))
+    await expect(page.getByText('Zulema').first()).toBeVisible()
+
+    // Y se vuelve: en una pantalla sin carcasa, salir con el botón de atrás es adivinar.
+    await page.getByRole('link', { name: 'Volver al panel' }).click()
+    await expect(page).toHaveURL(new RegExp(`/${SLUG}/configuracion$`))
+  })
+
+  test('la fotografía subida se guarda reducida y en webp, no tal cual llegó', async ({ page }) => {
+    // Una foto de móvil ronda los cuatro megabytes y se servía entera a un invitado con
+    // datos. Lo que llega al disco es ya lo que se va a servir.
+    const original = await sharp({
+      create: { width: 3000, height: 2000, channels: 3, background: { r: 200, g: 170, b: 120 } },
+    })
+      .jpeg({ quality: 100 })
+      .toBuffer()
+
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.getByLabel('Subir una fotografía').setInputFiles({
+      name: 'retrato.jpg',
+      mimeType: 'image/jpeg',
+      buffer: original,
+    })
+    await page.getByRole('button', { name: 'Subir', exact: true }).click()
+    await expect(page.getByRole('status')).toContainText('Ya puedes elegirla')
+
+    const fuente = await page.getByRole('img', { name: 'retrato.jpg' }).getAttribute('src')
+    const servida = await page.request.get(fuente!)
+    expect(servida.headers()['content-type']).toBe('image/webp')
+    expect((await servida.body()).byteLength).toBeLessThan(original.byteLength / 4)
+
+    // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno.
+    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
+    await page.getByRole('button', { name: 'Guardar cambios' }).click()
+    await expect(page.getByLabel('Fotografía · casilla 1')).toContainText('retrato.jpg')
   })
 
   test('una fila quitada del itinerario no vuelve sola al recargar', async ({ page }) => {

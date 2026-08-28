@@ -12,7 +12,7 @@ import { canManageStaff } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
-import { Pill } from '@/shared/design/ui/panel/PanelKit'
+import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Configuración' }
@@ -64,6 +64,12 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
       <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
         <PanelCard title={`Contenido de la invitación · ${tema.label}`}>
+          {/* Ver la invitación **de esta boda**, sin repartir un enlace ni contar una
+              visita ajena en la analítica. El escaparate enseña el diseño con el contenido
+              de muestra; esto enseña lo que se acaba de escribir. */}
+          <p className="mb-4">
+            <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver esta invitación</PanelButton>
+          </p>
           <ContentBlockForms
             content={contenido}
             eventId={event.value.id}

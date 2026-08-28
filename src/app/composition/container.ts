@@ -34,6 +34,7 @@ import { drizzleClientShareRepository } from '@/modules/events/infrastructure/dr
 import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
 import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
+import { sharpImageProcessor } from '@/modules/events/infrastructure/sharp-image-processor'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
@@ -187,6 +188,9 @@ export const identity = {
 const mediaDeps = {
   media: drizzleMediaRepository,
   storage: createDiskMediaStorage(env.EVENT_MEDIA_DIR),
+  // Lo que llega al disco es ya lo que se va a servir: reducido, reencodado y sin
+  // metadatos. No hay una versión pesada esperando a que alguien la pida.
+  images: sharpImageProcessor,
   ids: () => crypto.randomUUID(),
 }
 

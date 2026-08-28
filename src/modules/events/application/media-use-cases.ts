@@ -1,9 +1,9 @@
 import { MAX_MEDIA_BYTES, type MediaType, mediaTypeOf, storageKeyFor } from '../domain/media'
-import type { MediaRepository, MediaStorage } from './ports'
+import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 
 export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure'
 
-type Deps = { media: MediaRepository; storage: MediaStorage; ids: () => string }
+type Deps = { media: MediaRepository; storage: MediaStorage; images: ImageProcessor; ids: () => string }
 
 /**
  * Guarda una imagen de la invitación.
@@ -14,12 +14,17 @@ type Deps = { media: MediaRepository; storage: MediaStorage; ids: () => string }
  *    archivo de dos gigas se los trae enteros al servidor antes de que nadie lo rechace.
  * 2. **El tipo por los primeros bytes**, nunca por la extensión ni por el `Content-Type`:
  *    los dos los escribe quien sube el fichero.
- * 3. El fichero al disco con nombre de identificador, y **solo después** la fila. Al
+ * 3. **La imagen se reencoda antes de guardarse.** Una fotografía de móvil ronda los
+ *    cuatro megabytes y se servía entera a un invitado con datos; ahora lo que llega al
+ *    disco es ya lo que se va a servir, no hay una versión pesada esperando a que alguien
+ *    la pida. De paso se le quitan los metadatos —una foto de la novia lleva dentro dónde
+ *    y cuándo se tomó— y deja de haber bytes ajenos a la imagen dentro del fichero.
+ * 4. El fichero al disco con nombre de identificador, y **solo después** la fila. Al
  *    revés, un fallo de disco dejaría una fila apuntando a una imagen que no existe, y la
  *    invitación pintaría un hueco roto.
  */
 export const saveMedia =
-  ({ media, storage, ids }: Deps) =>
+  ({ media, storage, images, ids }: Deps) =>
   async (
     eventId: string,
     archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
@@ -27,18 +32,23 @@ export const saveMedia =
     if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
 
     const bytes = await archivo.bytes()
-    const tipo = mediaTypeOf(bytes)
-    if (tipo === null) return { ok: false, error: 'unsupported_type' }
+    if (mediaTypeOf(bytes) === null) return { ok: false, error: 'unsupported_type' }
+
+    // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
+    // decodificar. Una cabecera correcta con un cuerpo que no lo es pasa la primera
+    // comprobación y no pasa esta.
+    const listo = await images.normalize(bytes)
+    if (listo === null) return { ok: false, error: 'unsupported_type' }
 
     const id = ids()
     try {
-      await storage.put(storageKeyFor(id, tipo), bytes)
+      await storage.put(storageKeyFor(id, listo.contentType), listo.bytes)
       await media.insert({
         id,
         eventId,
-        contentType: tipo,
+        contentType: listo.contentType,
         originalName: archivo.name.trim().slice(0, 255) || 'imagen',
-        byteSize: bytes.byteLength,
+        byteSize: listo.bytes.byteLength,
       })
     } catch (cause) {
       console.error('No se pudo guardar la imagen del evento %s:', eventId, cause)

@@ -63,7 +63,7 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1819 unitarias y 175 e2e en verde.**
+que lo vigila. **1830 unitarias y 177 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
 `VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
@@ -72,7 +72,9 @@ rejilla de miniaturas, y el contenido rico —ceremonia, recepción, itinerario,
 código de vestimenta, avisos— se edita bloque a bloque en Configuración. Las fotografías
 del evento se suben y se sirven fuera de `public/`, con la misma puerta de contraseña que
 la invitación, y **se eligen desde el propio bloque**: cada bloque es un formulario con un
-campo por dato, no un JSON escrito a mano.
+campo por dato, no un JSON escrito a mano. Al subirlas se reducen y se reencodan, así que
+la invitación no le sirve cuatro megabytes a un invitado con datos. Y el atelier ve la
+invitación **de esa boda** desde el panel, sin repartir un enlace.
 
 **Ciclo 1, ciclo 3 (rebanada 1 y check-in por QR) y el ciclo 4 entero —mesas y plano del
 salón, mesa de regalos y fondos, libro de firmas, y los límites por plan— cerrados y
@@ -585,6 +587,24 @@ correo, que necesita proveedor.
   sube elija dónde se escribe.
 - **El fichero se escribe antes que la fila.** Al revés, un fallo de disco deja una fila
   apuntando a una imagen que no existe y la invitación pinta un hueco roto.
+- **La imagen se reencoda al subirla, y lo que llega al disco es lo que se va a servir.**
+  Se reduce a `MAX_IMAGE_EDGE` (1600, el lado largo: estos diseños pintan una columna de
+  teléfono), sale siempre WEBP y pierde los metadatos. Entraban tal cual: una foto de móvil
+  ronda los cuatro megabytes y se servía entera a un invitado con datos. No hay una versión
+  pesada durmiendo en el disco a la espera de que alguien la pida.
+- **`rotate()` va antes de tirar el EXIF, y no es opcional.** La orientación de una foto
+  tomada con el teléfono de lado vive en los metadatos: si se borran sin aplicarla, la
+  fotografía se queda tumbada para siempre. Hay prueba con orientación 6.
+- **Reencodar es también la segunda comprobación de tipo.** Los primeros bytes dicen que
+  *parece* una imagen; que se pueda decodificar lo dice `sharp`, y una cabecera correcta con
+  un cuerpo que no lo es se rechaza ahí. El procesador **devuelve `null`, no lanza**: un
+  fichero roto es una respuesta, no una avería.
+- **`sharp` entra por un puerto (`ImageProcessor`), no por un `import` en `application`.**
+  Aparte de la frontera, reencodar de verdad en cada prueba del caso de uso sería medio
+  segundo por prueba para comprobar una decisión que no es de imagen.
+- **El recorte a mano queda fuera, y es decisión.** Cada diseño recorta su ranura con
+  `object-fit: cover` y con una proporción distinta —cuadrada en la galería, vertical en el
+  retrato—: un recorte fijo elegido al subir dejaría bien una ranura y mal las otras tres.
 - **`GET /media/[id]` va sin sesión pero con la puerta del evento.** El invitado nunca va a
   tener sesión; si el evento lleva contraseña y no está desbloqueado, 404. Un `<img>` no
   puede ser el agujero por el que se rodea el candado. `Cache-Control: private`, nunca
@@ -611,6 +631,22 @@ correo, que necesita proveedor.
 - **La prueba de anchos excluye la decoración**, y no es una excusa: sangrar es lo que la
   maqueta hace. La distinción ya está en el marcado —la decoración va `aria-hidden`—, así
   que un texto o una fotografía que se salga sí se caza.
+
+### Notas de la vista previa del evento (`/panel/eventos/[slug]/vista-previa`)
+
+- **Enseña la invitación de *esta* boda, no la del escaparate.** `/modelos/<idioma>/<clave>`
+  pinta el diseño con el contenido de muestra y sirve para elegirlo. Ver la boda terminada
+  obligaba a darse de alta como invitado o a abrir el enlace de alguien, que además contaba
+  como visita suya en la analítica.
+- **Sin carcasa, como el modo puerta y el plan del banquete.** Con la barra lateral al lado,
+  lo que se ve no es la invitación.
+- **Las tipografías del tema van en un `div`, no en el `<html>`.** El `<html>` lo emite el
+  layout del panel; son variables CSS y heredan igual, así que no hace falta otra raíz de
+  layout para esto.
+- **Las ranuras van inertes y con su aviso**, como en el escaparate: el RSVP, la mesa de
+  regalos y el pase son de un grupo concreto, y aquí no hay ninguno.
+- **Lleva su enlace de vuelta.** En una pantalla sin carcasa, salir con el botón de atrás
+  del navegador es adivinar.
 
 ### Notas del pase a solas (`/i/[token]/pase`)
 
