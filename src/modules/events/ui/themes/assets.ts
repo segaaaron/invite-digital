@@ -19,6 +19,18 @@ export const THEME_ASSETS = {
     'marmol-flores-optimized.avif',
     'wedding-couple.avif',
   ],
+  'flora': [
+    'orange-spray.avif',
+    'pink-corner-left.avif',
+    'pink-corner-right.avif',
+    'pink-spray.avif',
+    'red-corner-left.avif',
+    'red-corner-right.avif',
+    'violet-spray.avif',
+    'white-corner-left.avif',
+    'white-corner-right.avif',
+    'white-spray.avif',
+  ],
   'xv': [
     'bajo-el-mar1.avif',
     'castillo-purpura.avif',

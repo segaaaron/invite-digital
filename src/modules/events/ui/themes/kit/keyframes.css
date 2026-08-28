@@ -107,3 +107,16 @@
 @keyframes theme-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 
 @keyframes theme-shimmer { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+/*
+ * El balanceo de las acuarelas florales. Va por clase y no en línea para que la
+ * preferencia de movimiento reducido lo apague sin que cada pieza tenga que consultarla:
+ * aquí sí funciona un `animation: none`, porque lo que hay debajo es una imagen que se ve
+ * igual quieta. En los `Reveal` no funcionaría — los dejaría en `opacity: 0`.
+ */
+.theme-sway-slow { animation: theme-leafSway 8s ease-in-out infinite; }
+.theme-sway-slower { animation: theme-leafSway 10s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-sway-slow,
+  .theme-sway-slower { animation: none; }
+}

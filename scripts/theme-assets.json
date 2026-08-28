@@ -168,5 +168,20 @@
    "uploads/piramide-hoja-optimized.png",
    "uploads/portada-griega.jpg"
   ]
+ ],
+ [
+  "flora",
+  [
+   "images/flora/white-corner-left.webp",
+   "images/flora/white-corner-right.webp",
+   "images/flora/white-spray.webp",
+   "images/flora/pink-corner-left.png",
+   "images/flora/pink-corner-right.png",
+   "images/flora/pink-spray.png",
+   "images/flora/red-corner-left.png",
+   "images/flora/red-corner-right.png",
+   "images/flora/violet-spray.png",
+   "images/flora/orange-spray.png"
+  ]
  ]
 ]

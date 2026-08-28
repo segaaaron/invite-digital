@@ -84,6 +84,10 @@ async function principal(): Promise<void> {
     const dir = join(RAIZ, tema)
     if (!(await stat(dir)).isDirectory()) continue
     for (const archivo of await readdir(dir)) {
+      // Lo ya optimizado se salta. Volver a codificar un AVIF a AVIF le quita calidad
+      // cada vez sin ganar un byte, y este guion se ejecuta de nuevo cada vez que entra
+      // una imagen nueva.
+      if (archivo.endsWith('.avif') || archivo.endsWith('.webp')) continue
       const resultado = await optimizar(join(dir, archivo))
       antes += resultado.antes
       despues += resultado.despues
