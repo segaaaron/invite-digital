@@ -43,7 +43,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   // ─────────── BODAS ───────────
   {
     key: 'boda-bot',
-    listo: false,
+    listo: true,
     categorySlug: 'boda',
     es: 'Botánica',
     en: 'Botanical',

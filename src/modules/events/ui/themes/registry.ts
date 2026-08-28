@@ -1,5 +1,6 @@
 import { clasicoDefinition } from './ClasicoTheme'
 import { bodaDefinition } from './bodas/boda'
+import { bodaBotDefinition } from './bodas/boda-bot'
 import { bodaCinDefinition } from './bodas/boda-cin'
 import { bodaEdDefinition } from './bodas/boda-ed'
 import type { ThemeDefinition } from './contract'
@@ -15,6 +16,7 @@ import type { ThemeDefinition } from './contract'
 const THEMES = {
   clasico: clasicoDefinition,
   boda: bodaDefinition,
+  'boda-bot': bodaBotDefinition,
   'boda-cin': bodaCinDefinition,
   'boda-ed': bodaEdDefinition,
 } as const satisfies Record<string, ThemeDefinition>
