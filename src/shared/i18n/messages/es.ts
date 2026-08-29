@@ -116,6 +116,12 @@ export const es = {
     portraitPlaceholder: 'RETRATO',
     previewNotice: 'Vista previa del modelo. Nada de lo que escribas aquí se guarda.',
     previewClose: 'Cerrar y volver a la colección',
+    countdownHoursLong: 'HORAS',
+    brideParents: 'PADRES DE LA NOVIA',
+    groomParents: 'PADRES DEL NOVIO',
+    godparents: 'PADRINOS',
+    viewLocation: 'VER UBICACIÓN',
+    venue: 'LUGAR',
   },
   invitation: {
     title: 'Confirma tu asistencia',

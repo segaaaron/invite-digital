@@ -482,6 +482,11 @@ correo, que necesita proveedor.
   tenía ninguna. Se detecta comparando las imágenes que usa cada componente de la maqueta con
   las de `public/temas/`: un diseño que estrena arte es un diseño que cambió. Los otros quince
   seguían igual — lo que difería de la copia de mayo ya estaba portado.
+- **La invitación de referencia manda sobre el `.jsx` de la maqueta.** Botánica en la
+  carpeta acaba en «con cariño»; la invitación que el usuario enseña tiene además el saludo
+  al invitado con sus pases, los padres y padrinos en tres parejas, dos tarjetas con icono y
+  botón de ubicación, el ramo grande, la tarjeta de solo adultos y la de «comparte tus
+  fotos». Cuando las dos fuentes no coinciden, la buena es la que se ve.
 - **Comparar el arte no basta: hay que comparar los bloques.** Editorial estrenaba doce
   imágenes y por eso saltó a la vista; Botánica no estrenaba ninguna y también estaba
   incompleta — le faltaban la fotografía grande con esquinas florales y «nuestra historia»,

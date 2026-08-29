@@ -237,6 +237,16 @@ export interface ThemeDictionary {
   previewNotice: string
   /** La cruz de salir de la vista previa: no hay cabecera que la enmarque. */
   previewClose: string
+  /** «HORAS» entera: algunos diseños no abrevian la casilla de la cuenta atrás. */
+  countdownHoursLong: string
+  /** Los tres rótulos de los anfitriones, en el orden en que el diseño los pinta. */
+  brideParents: string
+  groomParents: string
+  godparents: string
+  /** El botón que lleva al mapa del lugar. */
+  viewLocation: string
+  /** El rótulo del bloque del lugar: «LUGAR». */
+  venue: string
 }
 
 export interface InvitationDictionary {

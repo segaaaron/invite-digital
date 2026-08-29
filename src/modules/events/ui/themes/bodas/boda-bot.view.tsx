@@ -11,6 +11,7 @@ import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
 import { BotanicalTimeline } from '../kit/flora/BotanicalTimeline'
 import { FallingPetals } from '../kit/flora/FallingPetals'
 import { FloralCorner, FloralDivider, FloralSpray } from '../kit/flora/FloralArt'
+import { TIMELINE_ICONS } from '../kit/flora/TimelineIcons'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-bot.palette'
 
 /** Las tres del collage, en el orden en que las pone la maqueta. */
@@ -30,7 +31,8 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * `schedule`, así que una boda de verdad enseña la suya.
  */
 export function BodaBotView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
-  const { hero, quote, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing } = content
+  const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
+    content
   const retrato = gallery?.[0]
   const momento = gallery?.[1]
   const trio = (gallery ?? []).slice(2, 5)
@@ -40,6 +42,11 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
   // estructura que el diseño no tiene.
   const [frase = '', anos = '', ...parrafos] = (quote?.text ?? '').split('\n\n')
   const historia = parrafos.join('\n\n')
+
+  // Los tres textos que el diseño lleva escritos, en el orden en que los pinta.
+  const invitacion = notes?.[0]
+  const soloAdultos = notes?.[1]
+  const fotos = notes?.[2]
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const etiquetaLocal = event.locale === 'en' ? 'en-US' : 'es-BO'
@@ -285,6 +292,120 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           </Reveal>
         )}
 
+        <Reveal>
+          <div style={{ marginTop: 48, textAlign: 'center' }}>
+            {invitacion?.text === undefined ? null : (
+              <p style={{ fontSize: 15, lineHeight: 1.8, margin: '0 auto', maxWidth: '78%' }}>{invitacion.text}</p>
+            )}
+            <div style={{ marginTop: 18 }}>{slots.guest}</div>
+          </div>
+        </Reveal>
+
+        {hosts === undefined ? null : (
+          <Reveal>
+            <div style={{ marginTop: 44, textAlign: 'center' }}>
+              {hosts.label === undefined ? null : (
+                <p style={{ fontFamily: CALIGRAFIA, fontSize: 24, color: P.salvia, margin: 0 }}>{hosts.label}</p>
+              )}
+              {/* Tres parejas y tres rótulos, en el orden del diseño: los nombres van en una
+                  lista plana y quien los agrupa es la composición, no una estructura nueva
+                  en el contenido. */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 26 }}>
+                {[
+                  { rotulo: themes.brideParents, nombres: hosts.names.slice(0, 2) },
+                  { rotulo: themes.groomParents, nombres: hosts.names.slice(2, 4) },
+                ].map((grupo) =>
+                  grupo.nombres.length === 0 ? null : (
+                    <div key={grupo.rotulo}>
+                      <div style={{ fontSize: 10, letterSpacing: '0.3em', color: P.salvia, fontWeight: 500 }}>
+                        {grupo.rotulo}
+                      </div>
+                      {grupo.nombres.map((nombre) => (
+                        <div key={nombre} style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
+                          {nombre}
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                )}
+              </div>
+              {hosts.names.length <= 4 ? null : (
+                <div style={{ marginTop: 26 }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.3em', color: P.salvia, fontWeight: 500 }}>
+                    {themes.godparents}
+                  </div>
+                  {hosts.names.slice(4).map((nombre) => (
+                    <div key={nombre} style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
+                      {nombre}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </Reveal>
+        )}
+
+        {/* Las dos tarjetas con su icono y su enlace al mapa. */}
+        {ceremony === undefined && reception === undefined ? null : (
+          <Reveal>
+            <div style={{ marginTop: 40, display: 'flex', gap: 14, justifyContent: 'center' }}>
+              {[
+                { lugar: ceremony, Icono: TIMELINE_ICONS.church },
+                { lugar: reception, Icono: TIMELINE_ICONS.flutes },
+              ]
+                .filter((tarjeta) => tarjeta.lugar !== undefined)
+                .map((tarjeta, indice) => (
+                  <div
+                    key={indice}
+                    style={{
+                      flex: 1,
+                      // Sin esto, un rótulo largo empuja la tarjeta fuera de la columna: el
+                      // ancho mínimo de una caja flexible es el de su contenido.
+                      minWidth: 0,
+                      border: `1px solid ${P.fileteSuave}`,
+                      borderRadius: 14,
+                      padding: '24px 10px 20px',
+                      textAlign: 'center',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 12,
+                      background: 'rgba(255,255,255,0.35)',
+                    }}
+                  >
+                    <tarjeta.Icono color={P.salvia} size={34} />
+                    <div style={{ fontFamily: CALIGRAFIA, fontSize: 21, color: P.salvia, lineHeight: 1.15 }}>
+                      {tarjeta.lugar?.label ?? ''}
+                    </div>
+                    <div style={{ fontSize: 26 }}>{tarjeta.lugar?.time ?? ''}</div>
+                    <div style={{ fontSize: 10, letterSpacing: '0.2em', opacity: 0.75 }}>
+                      {(tarjeta.lugar?.place ?? '').toUpperCase()}
+                    </div>
+                    {map?.href === undefined ? null : (
+                      <a
+                        href={map.href}
+                        rel="noopener noreferrer"
+                        style={{
+                          marginTop: 4,
+                          border: `1px solid ${P.salvia}`,
+                          borderRadius: 20,
+                          padding: '9px 14px',
+                          fontSize: 9,
+                          letterSpacing: '0.15em',
+                          color: P.salvia,
+                          textDecoration: 'none',
+                        }}
+                        target="_blank"
+                      >
+                        {themes.viewLocation}
+                      </a>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </Reveal>
+        )}
+
         {itinerary === undefined ? null : (
           <>
             <Reveal>
@@ -297,6 +418,13 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
             <BotanicalTimeline accent={P.tinta} discBg={P.papel} items={itinerary} />
           </>
         )}
+
+        {/* El ramo grande que la maqueta pone entre el itinerario y el lugar. */}
+        <Reveal>
+          <div aria-hidden style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
+            <FloralSpray sway={false} tone="white" width={240} />
+          </div>
+        </Reveal>
 
         {ceremony === undefined && reception === undefined ? null : (
           <Reveal>
@@ -314,7 +442,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
                   color: P.salvia,
                 }}
               >
-                · {themes.reception} ·
+                · {themes.venue} ·
               </div>
               {[ceremony, reception].map((lugar, indice) =>
                 lugar === undefined ? null : (
@@ -323,8 +451,10 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
                       <div aria-hidden style={{ width: 40, height: 1, background: P.salvia, margin: '18px auto', opacity: 0.5 }} />
                     ) : null}
                     <div style={{ textAlign: 'center' }}>
+                      {/* En el bloque del lugar manda el rótulo del diccionario —CEREMONIA,
+                          RECEPCIÓN—; el nombre largo del acto va en su tarjeta, arriba. */}
                       <div style={{ fontSize: 11, letterSpacing: '0.35em', color: P.salvia, fontWeight: 500 }}>
-                        {lugar.label ?? (indice === 0 ? themes.ceremony : themes.reception)}
+                        {indice === 0 ? themes.ceremony : themes.reception}
                       </div>
                       <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 4 }}>{lugar.place ?? ''}</div>
                       <div style={{ fontSize: 12, marginTop: 4, opacity: 0.65 }}>{lugar.address ?? ''}</div>
@@ -359,7 +489,11 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 44, marginTop: 8, color: P.tinta }}>
                 {dressCode.title ?? ''}
               </div>
-              <div style={{ fontSize: 13, marginTop: 6, fontStyle: 'italic', opacity: 0.7 }}>{dressCode.detail ?? ''}</div>
+              <div aria-hidden style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
+                <TIMELINE_ICONS.attire color={P.tinta} size={86} />
+              </div>
+
+              <div style={{ fontSize: 13, marginTop: 16, fontStyle: 'italic', opacity: 0.7 }}>{dressCode.detail ?? ''}</div>
 
               <div aria-hidden style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 18 }}>
                 {CARTA_DE_COLOR.map((color) => (
@@ -374,6 +508,33 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
                     }}
                   />
                 ))}
+              </div>
+            </div>
+          </Reveal>
+        )}
+
+        {soloAdultos === undefined ? null : (
+          <Reveal>
+            <div
+              style={{
+                marginTop: 34,
+                padding: '30px 24px',
+                border: `1px solid ${P.fileteSuave}`,
+                borderRadius: 14,
+                textAlign: 'center',
+                background: 'rgba(255,255,255,0.35)',
+              }}
+            >
+              <div aria-hidden style={{ display: 'flex', justifyContent: 'center' }}>
+                <TIMELINE_ICONS.heels color={P.salvia} size={54} />
+              </div>
+              {soloAdultos.text === undefined ? null : (
+                <p style={{ fontSize: 14, fontStyle: 'italic', lineHeight: 1.7, marginTop: 20, opacity: 0.85 }}>
+                  {soloAdultos.text}
+                </p>
+              )}
+              <div style={{ fontSize: 10, letterSpacing: '0.3em', color: P.salvia, marginTop: 16, fontWeight: 500 }}>
+                {soloAdultos.title}
               </div>
             </div>
           </Reveal>
@@ -408,7 +569,6 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
                 {dictionary.title}
               </div>
             </div>
-            {slots.guest}
             {preview === true ? (
               <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7, textAlign: 'center' }}>{themes.previewNotice}</p>
             ) : (
@@ -425,6 +585,29 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
             {slots.guestbook}
           </div>
         </Reveal>
+
+        {fotos === undefined ? null : (
+          <Reveal>
+            <div
+              style={{
+                marginTop: 36,
+                padding: '30px 24px',
+                border: `1px solid ${P.fileteSuave}`,
+                borderRadius: 14,
+                textAlign: 'center',
+                background: 'rgba(255,255,255,0.35)',
+              }}
+            >
+              <div aria-hidden style={{ display: 'flex', justifyContent: 'center' }}>
+                <TIMELINE_ICONS.camera color={P.salvia} size={46} />
+              </div>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.salvia, marginTop: 14 }}>{fotos.title}</div>
+              {fotos.text === undefined ? null : (
+                <p style={{ fontSize: 14, lineHeight: 1.7, marginTop: 12, opacity: 0.85 }}>{fotos.text}</p>
+              )}
+            </div>
+          </Reveal>
+        )}
 
         <div style={{ marginTop: 32 }}>{slots.pass}</div>
 

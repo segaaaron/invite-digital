@@ -57,15 +57,18 @@ describe('el tema Botánica', () => {
 
   it('pinta el itinerario con sus seis hitos', () => {
     render(<BodaBotView {...conMuestra()} />)
+    // `getAllByText`: «Ceremonia Religiosa» y «Recepción Social» salen dos veces —en su
+    // tarjeta y en la fila del itinerario—, que es lo que hace el diseño.
     for (const fila of CONTENIDO_DE_MUESTRA.itinerary ?? []) {
-      expect(screen.getByText(fila.label), fila.label).toBeInTheDocument()
+      expect(screen.getAllByText(fila.label).length, fila.label).toBeGreaterThan(0)
     }
   })
 
   it('parte la frase por sus saltos de línea, como el diseño la compone', () => {
     render(<BodaBotView {...conMuestra()} />)
-    expect(screen.getByText('and they lived')).toBeInTheDocument()
-    expect(screen.getByText('happily ever after')).toBeInTheDocument()
+    // La frase lleva sus comillas, como en el diseño.
+    expect(screen.getByText('"and they lived')).toBeInTheDocument()
+    expect(screen.getByText('happily ever after"')).toBeInTheDocument()
   })
 
   it('sin contenido no revienta ni escribe «undefined»', () => {

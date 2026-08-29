@@ -124,7 +124,41 @@ function Cake({ color, size = 36 }: IconProps) {
   )
 }
 
+/**
+ * El traje y el vestido del código de vestimenta, y los zapatos con la pajarita del aviso
+ * de solo adultos.
+ *
+ * Estos dos van **de trazo** y no macizos: en la maqueta son dibujos de línea fina, y una
+ * silueta rellena a ese tamaño se lee como una mancha.
+ */
+function Attire({ color, size = 36 }: IconProps) {
+  return (
+    <svg aria-hidden fill="none" height={size} stroke={color} strokeLinejoin="round" strokeWidth={1.2} viewBox="0 0 64 48" width={size * 1.6}>
+      <path d="M14 6l8 3 8-3v36H14z" />
+      <path d="M22 9v33M14 6l-4 6 4 3M30 6l4 6-4 3" />
+      <path d="M44 6l5 3-3 6 4 27H40l4-27-3-6z" />
+      <path d="M44 6a5 5 0 0 0 5 3M44 6a5 5 0 0 1-5 3" />
+    </svg>
+  )
+}
+
+function Heels({ color, size = 36 }: IconProps) {
+  return (
+    <svg aria-hidden fill="none" height={size} stroke={color} strokeLinejoin="round" strokeWidth={1.2} viewBox="0 0 64 48" width={size * 1.6}>
+      {/* El tacón de perfil: empeine, puntera y el tacón que baja del talón. Dibujarlo de
+          frente lo convierte en un triángulo, que es lo que parecía. */}
+      <path d="M4 32h13c6 0 10-3 12-8l3-7h6v5l-4 1-2 5c-2 6-8 9-14 9H4z" />
+      <path d="M32 32v8" />
+      <path d="M42 20l8 5-8 5-2-5z" />
+      <path d="M58 20l-8 5 8 5 2-5z" />
+      <circle cx="50" cy="25" r="2.5" />
+    </svg>
+  )
+}
+
 export const TIMELINE_ICONS = {
+  attire: Attire,
+  heels: Heels,
   church: Church,
   envelope: Envelope,
   flutes: Flutes,

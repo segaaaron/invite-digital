@@ -116,6 +116,12 @@ export const en = {
     portraitPlaceholder: 'PORTRAIT',
     previewNotice: 'Model preview. Nothing you type here is saved.',
     previewClose: 'Close and go back to the collection',
+    countdownHoursLong: 'HOURS',
+    brideParents: "BRIDE'S PARENTS",
+    groomParents: "GROOM'S PARENTS",
+    godparents: 'GODPARENTS',
+    viewLocation: 'VIEW LOCATION',
+    venue: 'VENUE',
   },
   invitation: {
     title: 'Confirm your attendance',
