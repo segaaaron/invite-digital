@@ -123,6 +123,8 @@ export const en = {
     viewLocation: 'VIEW LOCATION',
     venue: 'VENUE',
     myStory: 'my story',
+    reservedForYou: 'WE SAVED FOR YOU',
+    passes: 'SEATS',
   },
   invitation: {
     title: 'Confirm your attendance',

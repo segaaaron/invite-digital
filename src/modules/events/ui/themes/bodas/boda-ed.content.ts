@@ -61,6 +61,10 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   gallery: [{ label: 'María y Alex' }, { label: 'Nosotros' }],
   notes: [
     {
+      title: 'Nuestro gran día',
+      text: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.',
+    },
+    {
       title: 'CELEBRACIÓN SOLO PARA ADULTOS',
       text: 'Los niños son alegría, pero esta noche queremos que ustedes también descansen.',
     },

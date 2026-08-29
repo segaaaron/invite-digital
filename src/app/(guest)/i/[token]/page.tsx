@@ -70,6 +70,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
         content={contenido}
         dictionary={dictionary}
         event={event}
+        guestInfo={{ label: group.label, seats: group.seats }}
         themes={temasDictionary}
         slots={{
           // A quién va dirigida y cuántos lugares tiene. Es dato nuestro —sale del

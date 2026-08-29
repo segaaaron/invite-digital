@@ -31,7 +31,7 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * es el número de casilla —`0` a `5`—, no una fotografía del evento; sin él manda el orden
  * de la fila.
  */
-export function BodaEdView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
+export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
     content
 
@@ -45,8 +45,9 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
 
   const portada = gallery?.[0]
   const nosotros = gallery?.[1]
-  const soloAdultos = notes?.[0]
-  const fotos = notes?.[1]
+  const invitacion = notes?.[0]
+  const soloAdultos = notes?.[1]
+  const fotos = notes?.[2]
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const fechaLarga =
@@ -241,10 +242,35 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
           )}
         </div>
 
-        {/* A quién va dirigida: la maqueta lo pinta en el centro del pliego, entre la
-            historia y los padrinos. */}
+        {/* A quién va dirigida, compuesto como en la maqueta: la línea de invitación, el
+            nombre en caligrafía, el rótulo, el número de pases y su palabra. Con la línea
+            ya hecha de la ranura no se puede componer así, por eso llega como dato. */}
         <Reveal>
-          <div style={{ padding: '56px 24px', textAlign: 'center' }}>{slots.guest}</div>
+          <div style={{ padding: '56px 24px', textAlign: 'center' }}>
+            {invitacion?.text === undefined ? null : (
+              <div style={{ fontFamily: DISPLAY, fontSize: 15, lineHeight: 1.8, maxWidth: '70%', margin: '0 auto' }}>
+                {invitacion.text}
+              </div>
+            )}
+            {guestInfo === undefined ? (
+              slots.guest
+            ) : (
+              <>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oro, marginTop: 30 }}>
+                  {guestInfo.label}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', marginTop: 14 }}>
+                  {themes.reservedForYou}
+                </div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 56, color: P.papel, marginTop: 14, lineHeight: 1 }}>
+                  {guestInfo.seats}
+                </div>
+                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', marginTop: 8 }}>
+                  {themes.passes}
+                </div>
+              </>
+            )}
+          </div>
         </Reveal>
 
         {hosts === undefined ? null : (
@@ -271,16 +297,39 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
                   {hosts.label}
                 </div>
               )}
+              {/* Tres parejas y tres rótulos, en el orden del diseño: los nombres van en una
+                  lista plana y quien los agrupa es la composición. */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 32 }}>
-                {hosts.names.map((nombre) => (
-                  <div
-                    key={nombre}
-                    style={{ fontFamily: DISPLAY, fontSize: 16, color: P.papel, textAlign: 'center', lineHeight: 1.6 }}
-                  >
-                    {nombre}
-                  </div>
-                ))}
+                {[
+                  { rotulo: themes.brideParents, nombres: hosts.names.slice(0, 2) },
+                  { rotulo: themes.groomParents, nombres: hosts.names.slice(2, 4) },
+                ].map((grupo) =>
+                  grupo.nombres.length === 0 ? null : (
+                    <div key={grupo.rotulo} style={{ textAlign: 'center' }}>
+                      <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.25em', color: P.oro }}>
+                        {grupo.rotulo}
+                      </div>
+                      {grupo.nombres.map((nombre) => (
+                        <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: 10, lineHeight: 1.6 }}>
+                          {nombre}
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                )}
               </div>
+              {hosts.names.length <= 4 ? null : (
+                <div style={{ textAlign: 'center', marginTop: 32 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.25em', color: P.oro }}>
+                    {themes.godparents}
+                  </div>
+                  {hosts.names.slice(4).map((nombre) => (
+                    <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: 10, lineHeight: 1.6 }}>
+                      {nombre}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Reveal>
         )}

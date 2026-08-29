@@ -85,6 +85,10 @@ export default async function ModelPreviewPage({
     venue: null,
   }
 
+  // El invitado de muestra: la maqueta enseña el saludo con un nombre y sus pases, y una
+  // portada sin ese bloque no enseña el modelo entero.
+  const MUESTRA_DE_INVITADO = { label: 'Pedro Zárate', seats: 2 }
+
   const inerte = <p style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.6 }}>{diccionario.themes.previewNotice}</p>
 
   return (
@@ -93,6 +97,7 @@ export default async function ModelPreviewPage({
         content={tema.defaultContent}
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}
+        guestInfo={MUESTRA_DE_INVITADO}
         preview
         slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
         themes={diccionario.themes}

@@ -31,7 +31,7 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * diseño la pinta como una hoja de calendario, no como una línea de texto. Sale de
  * `schedule`, así que una boda de verdad enseña la suya.
  */
-export function BodaBotView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
+export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   const retrato = gallery?.[0]
@@ -113,6 +113,22 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
             background: `linear-gradient(180deg, transparent 50%, rgba(250,250,246,0.65) 80%, ${P.papel} 100%)`,
           }}
         />
+        {/* El velo oscuro sobre el que caen los nombres. Sin él, un retrato claro se come
+            la caligrafía color crema, y con la fotografía de una boda de verdad ese riesgo
+            es la norma, no la excepción. */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: '34%',
+            height: '44%',
+            background:
+              'linear-gradient(180deg, transparent 0%, rgba(20,18,14,0.62) 30%, rgba(20,18,14,0.62) 78%, transparent 100%)',
+          }}
+        />
+
         <FallingPetals count={6} palette={[P.arena, P.oliva, P.durazno]} seed={5} />
 
         <div aria-hidden style={{ position: 'absolute', bottom: -34, left: -46, zIndex: 3 }}>
@@ -122,10 +138,27 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           <FloralCorner flipY side="right" tone="white" width={260} />
         </div>
 
-        {/* Los nombres caen sobre la fotografía, donde el velo del degradado todavía no
-            es opaco. La sombra clara los sostiene: sin ella, un retrato oscuro se come el
-            nombre de la novia, y el nombre es lo primero que la invitación tiene que
-            decir. La maqueta no la lleva porque su foto de muestra es clara. */}
+        {/* El antetítulo va **arriba del todo**, sobre la fotografía y no bajo los nombres:
+            es lo primero que se lee al abrir. */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 34,
+            left: 0,
+            right: 0,
+            textAlign: 'center',
+            fontSize: 15,
+            letterSpacing: '0.5em',
+            fontWeight: 500,
+            color: P.crema,
+            textShadow: '0 1px 10px rgba(20,18,14,0.55)',
+          }}
+        >
+          {hero?.eyebrow ?? themes.saveTheDate}
+        </div>
+
+        {/* Los nombres caen sobre el velo, en crema: es lo que los sostiene sobre una
+            fotografía cualquiera, clara u oscura. */}
         <div
           style={{
             position: 'absolute',
@@ -133,25 +166,22 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
             left: 0,
             right: 0,
             textAlign: 'center',
-            textShadow: '0 1px 12px rgba(250,250,246,0.9), 0 0 30px rgba(250,250,246,0.7)',
+            textShadow: '0 2px 14px rgba(20,18,14,0.5)',
           }}
         >
-          <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 64, lineHeight: 1, color: P.tinta, fontWeight: 400, margin: 0 }}>
+          <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 64, lineHeight: 1, color: P.crema, fontWeight: 400, margin: 0 }}>
             {hero?.nameA ?? ''}
           </h1>
           {hero?.nameB === undefined ? null : (
             <>
-              <div aria-hidden style={{ fontFamily: CALIGRAFIA, fontSize: 32, color: P.tinta, margin: '-4px 0' }}>
+              <div aria-hidden style={{ fontFamily: CALIGRAFIA, fontSize: 32, color: P.crema, margin: '-4px 0' }}>
                 &amp;
               </div>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 64, lineHeight: 1, color: P.tinta, fontWeight: 400 }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 64, lineHeight: 1, color: P.crema, fontWeight: 400 }}>
                 {hero.nameB}
               </div>
             </>
           )}
-          <div style={{ marginTop: 14, fontSize: 14, letterSpacing: '0.5em', fontWeight: 500 }}>
-            {hero?.eyebrow ?? themes.saveTheDate}
-          </div>
           </div>
         </div>
       </ThemeColumn>
@@ -299,7 +329,24 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
             {invitacion?.text === undefined ? null : (
               <p style={{ fontSize: 15, lineHeight: 1.8, margin: '0 auto', maxWidth: '78%' }}>{invitacion.text}</p>
             )}
-            <div style={{ marginTop: 18 }}>{slots.guest}</div>
+            {guestInfo === undefined ? (
+              <div style={{ marginTop: 18 }}>{slots.guest}</div>
+            ) : (
+              <>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 44, color: P.salvia, marginTop: 22 }}>
+                  {guestInfo.label}
+                </div>
+                <div style={{ fontSize: 10, letterSpacing: '0.3em', marginTop: 12, fontWeight: 500 }}>
+                  {themes.reservedForYou}
+                </div>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 52, color: P.tinta, marginTop: 8, lineHeight: 1 }}>
+                  {guestInfo.seats}
+                </div>
+                <div style={{ fontSize: 10, letterSpacing: '0.3em', marginTop: 6, fontWeight: 500 }}>
+                  {themes.passes}
+                </div>
+              </>
+            )}
           </div>
         </Reveal>
 

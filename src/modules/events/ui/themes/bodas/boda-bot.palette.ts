@@ -1,6 +1,8 @@
 /** La paleta de «Botánica», la boda de acuarelas y verde salvia. */
 export const PALETA = {
   papel: '#fafaf6',
+  /** El crema de la caligrafía sobre la fotografía: la tinta oscura se la come. */
+  crema: '#F5EFE0',
   tinta: '#2a2a26',
   salvia: '#5a705c',
   menta: '#e8efe2',

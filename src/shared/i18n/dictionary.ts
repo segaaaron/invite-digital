@@ -249,6 +249,10 @@ export interface ThemeDictionary {
   venue: string
   /** «mi historia»: la de unos XV es de una sola persona, no de una pareja. */
   myStory: string
+  /** «Hemos reservado para ti», encima del número de pases. */
+  reservedForYou: string
+  /** «Pases», debajo del número. */
+  passes: string
 }
 
 export interface InvitationDictionary {

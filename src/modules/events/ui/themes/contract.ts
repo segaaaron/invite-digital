@@ -44,6 +44,16 @@ export type ThemeProps = {
   readonly themes: ThemeDictionary
   readonly slots: ThemeSlots
   /**
+   * A quién va dirigida y cuántos pases tiene, **como dato**.
+   *
+   * La ranura `guest` trae una línea ya compuesta y sirve para los diseños que solo la
+   * colocan; estos otros la **componen**: el nombre en caligrafía grande, el rótulo
+   * «hemos reservado para ti», el número enorme y «pases». Con una cadena hecha no se
+   * puede, y con dato sí. Sin invitado —el escaparate, la vista previa del panel— viene
+   * la muestra del propio diseño.
+   */
+  readonly guestInfo?: { readonly label: string; readonly seats: number }
+  /**
    * En la vista previa del catálogo las ranuras se pintan inertes y con su aviso. Un
    * formulario de muestra que parece funcionar y no guarda nada es peor que no tenerlo.
    */
