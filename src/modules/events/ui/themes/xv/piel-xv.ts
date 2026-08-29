@@ -68,6 +68,14 @@ export type PielXv = {
   /** El filete ornamental que algunos diseños ponen encima y debajo de la fecha. */
   readonly ornamento?: ReactNode
   /**
+   * Lo que el diseño pinta **a sangre, antes de la barra de arriba**: el retrato de la
+   * quinceañera en Bosque Encantado y en Gala Real, la bola de espejos en Encanto Musical.
+   *
+   * No todos lo llevan —Bajo el Mar abre con el título— y por eso es opcional: quien no lo
+   * declare empieza por la barra, como hasta ahora.
+   */
+  readonly apertura?: ReactNode
+  /**
    * Cómo llama **este** diseño a sus secciones.
    *
    * No son traducciones —para eso está el diccionario—, son la voz del diseño: cuatro de

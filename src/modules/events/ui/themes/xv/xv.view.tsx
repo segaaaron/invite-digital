@@ -85,6 +85,9 @@ export function XvSharedView({
         }}
       />
       {piel.burbujas}
+
+      {/* Lo que el diseño abre a sangre, antes de la barra. */}
+      {piel.apertura}
       <PremiumBubbles count={8} />
       <FloatingParticles char="✦" color={P.orquidea} count={18} seed={11} size={15} />
 

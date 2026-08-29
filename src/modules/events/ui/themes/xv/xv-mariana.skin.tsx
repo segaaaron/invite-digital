@@ -16,6 +16,38 @@ const ICONOS: Record<string, Archivo> = {
 
 /** La piel de «Encanto Musical». */
 export const PIEL: PielXv = {
+  // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta.
+  apertura: (
+    <>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '42vh',
+          minHeight: 280,
+          overflow: 'hidden',
+          clipPath: 'polygon(0 0, 100% 0, 100% 94%, 75% 100%, 50% 94%, 25% 100%, 0 94%)',
+        }}
+      >
+        <Image
+          alt=""
+          fill
+          priority
+          sizes="480px"
+          src={themeAsset('xv-mariana', 'bola-sola-opt.avif')}
+          style={{ objectFit: 'cover', objectPosition: 'center top' }}
+        />
+      </div>
+      <Image
+        alt=""
+        aria-hidden
+        height={510}
+        src={themeAsset('xv-mariana', 'borde-plata-sf.avif')}
+        style={{ width: '60%', height: 'auto', display: 'block', margin: '18px auto 0', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
+        width={1400}
+      />
+    </>
+  ),
   fondoBase: '#0c1830',
   velo: 'rgba(10,14,26,.48)',
   fondo: (

@@ -12,6 +12,30 @@ const ICONOS: Record<string, Archivo> = {}
 
 /** La piel de «Bosque Encantado». */
 export const PIEL: PielXv = {
+  // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta.
+  apertura: (
+    <>
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '45vh',
+          minHeight: 280,
+          overflow: 'hidden',
+          clipPath: 'polygon(0 0, 100% 0, 100% 94%, 75% 100%, 50% 94%, 25% 100%, 0 94%)',
+        }}
+      >
+        <Image
+          alt=""
+          fill
+          priority
+          sizes="480px"
+          src={themeAsset('xv-luciana', 'quinceanera-verde.avif')}
+          style={{ objectFit: 'cover', objectPosition: 'center top' }}
+        />
+      </div>
+    </>
+  ),
   fondoBase: '#0f2a1f',
   velo: 'rgba(10,28,20,.55)',
   fondo: (
