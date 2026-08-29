@@ -482,6 +482,16 @@ correo, que necesita proveedor.
   tenía ninguna. Se detecta comparando las imágenes que usa cada componente de la maqueta con
   las de `public/temas/`: un diseño que estrena arte es un diseño que cambió. Los otros quince
   seguían igual — lo que difería de la copia de mayo ya estaba portado.
+- **Comparar el arte no basta: hay que comparar los bloques.** Editorial estrenaba doce
+  imágenes y por eso saltó a la vista; Botánica no estrenaba ninguna y también estaba
+  incompleta — le faltaban la fotografía grande con esquinas florales y «nuestra historia»,
+  y el collage salía con tres huecos grises porque las tres fotografías del diseño **estaban
+  en el repositorio y no se usaban de respaldo**. Un modelo terminado que enseña casillas
+  vacías parece a medias, y eso es lo que el cliente ve.
+- **Una fotografía de muestra del diseño se usa como respaldo; una casilla vacía es para lo
+  que el diseño deja en blanco a propósito.** Las bodas sin arte —Étoile, Civil, Bodas de
+  Oro, Compromiso, Destino, Cinemática— pintan el marcador porque la maqueta también lo
+  pinta: ahí no hay fotografía que poner.
 - **El itinerario de Editorial usa una lámina de seis iconos**, tres por dos, y cada fila
   enseña su casilla moviendo la imagen dentro de una ventana. Ahí `imageId` es el número de
   casilla, como en la boda botánica es la clave del dibujo: **nunca** una fotografía del

@@ -13,6 +13,9 @@ import { FallingPetals } from '../kit/flora/FallingPetals'
 import { FloralCorner, FloralDivider, FloralSpray } from '../kit/flora/FloralArt'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-bot.palette'
 
+/** Las tres del collage, en el orden en que las pone la maqueta. */
+const COLLAGE = ['boda-03-anillos.avif', 'boda-02-arreglo.avif', 'boda-04-pastel.avif'] as const
+
 const SERIF = 'var(--font-cormorant)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 
@@ -29,7 +32,14 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
 export function BodaBotView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing } = content
   const retrato = gallery?.[0]
-  const trio = (gallery ?? []).slice(1, 4)
+  const momento = gallery?.[1]
+  const trio = (gallery ?? []).slice(2, 5)
+
+  // La cita del diseño son tres piezas: la frase, los años y la historia. Es un solo bloque
+  // porque en la maqueta es un solo texto, y partirlo en tres campos sería inventar una
+  // estructura que el diseño no tiene.
+  const [frase = '', anos = '', ...parrafos] = (quote?.text ?? '').split('\n\n')
+  const historia = parrafos.join('\n\n')
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const etiquetaLocal = event.locale === 'en' ? 'en-US' : 'es-BO'
@@ -189,7 +199,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
             </div>
             <div style={{ marginTop: 18, textAlign: 'center' }}>
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 26, color: P.salvia, lineHeight: 1.5, margin: 0 }}>
-                {quote.text.split('\n').map((linea) => (
+                {frase.split('\n').map((linea) => (
                   <span key={linea} style={{ display: 'block' }}>
                     {linea}
                   </span>
@@ -199,10 +209,64 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           </Reveal>
         )}
 
+        {momento === undefined ? null : (
+          <Reveal>
+            <div style={{ marginTop: 40, position: 'relative' }}>
+              <PhotoSlot
+                bg="rgba(90,112,92,0.05)"
+                border="none"
+                color="rgba(90,112,92,0.5)"
+                height={340}
+                label={momento.label}
+                radius={4}
+                src={
+                  momento.imageId === undefined
+                    ? themeAsset('boda-bot', 'boda-01-pareja.avif')
+                    : `/media/${momento.imageId}`
+                }
+                width="100%"
+              />
+              <div aria-hidden style={{ position: 'absolute', top: -38, left: -38, zIndex: 3 }}>
+                <FloralCorner side="left" tone="white" width={150} />
+              </div>
+              <div aria-hidden style={{ position: 'absolute', bottom: -38, right: -38, zIndex: 3 }}>
+                <FloralCorner flipY side="right" tone="white" width={150} />
+              </div>
+            </div>
+          </Reveal>
+        )}
+
+        {historia === '' ? null : (
+          <Reveal>
+            <div style={{ marginTop: 44, textAlign: 'center' }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.salvia, lineHeight: 1 }}>
+                {themes.ourStory.toLowerCase()}
+              </div>
+              {anos === '' ? null : (
+                <div style={{ fontSize: 11, letterSpacing: '0.4em', marginTop: 6, opacity: 0.6, fontWeight: 500 }}>
+                  {anos}
+                </div>
+              )}
+              <p
+                style={{
+                  fontSize: 15,
+                  fontStyle: 'italic',
+                  lineHeight: 1.7,
+                  marginTop: 18,
+                  color: P.tinta,
+                  opacity: 0.85,
+                }}
+              >
+                {historia}
+              </p>
+            </div>
+          </Reveal>
+        )}
+
         {trio.length === 0 ? null : (
           <Reveal>
             <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-              {trio.map((foto) => (
+              {trio.map((foto, indice) => (
                 <PhotoSlot
                   bg="rgba(90,112,92,0.05)"
                   border="none"
@@ -211,7 +275,10 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
                   key={foto.label}
                   label={foto.label}
                   radius={4}
-                  src={foto.imageId === undefined ? undefined : `/media/${foto.imageId}`}
+                  // Sin fotografía propia se ve la del diseño, no una casilla vacía: la
+                  // maqueta enseña las tres desde el primer día, y un collage de tres huecos
+                  // grises es lo que hace que un modelo parezca sin terminar.
+                  src={foto.imageId === undefined ? themeAsset('boda-bot', COLLAGE[indice] ?? COLLAGE[0]) : `/media/${foto.imageId}`}
                 />
               ))}
             </div>

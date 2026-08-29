@@ -13,6 +13,23 @@ beforeEach(() => {
 const conMuestra = () => propsDePrueba({ content: CONTENIDO_DE_MUESTRA })
 
 describe('el tema Botánica', () => {
+  it('el collage y la fotografía grande caen al arte del diseño cuando no hay foto propia', () => {
+    // Tres huecos grises donde la maqueta enseña anillos, flores y pastel es lo que hace
+    // que un modelo terminado parezca a medias. Las fotografías del diseño están en el
+    // repositorio desde que se portó: lo que faltaba era usarlas de respaldo.
+    const { container } = render(<BodaBotView {...conMuestra()} />)
+    const fuentes = [...container.querySelectorAll('img')].map((img) => img.getAttribute('src') ?? '')
+    for (const archivo of ['boda-01-pareja', 'boda-03-anillos', 'boda-02-arreglo', 'boda-04-pastel']) {
+      expect(fuentes.some((fuente) => fuente.includes(archivo)), archivo).toBe(true)
+    }
+  })
+
+  it('cuenta la historia del diseño bajo su rótulo', () => {
+    render(<BodaBotView {...conMuestra()} />)
+    expect(screen.getByText('2019 — 2026')).toBeInTheDocument()
+    expect(screen.getByText(/un domingo de café/)).toBeInTheDocument()
+  })
+
   it('coloca las cinco ranuras', () => {
     render(<BodaBotView {...conMuestra()} />)
     for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
@@ -26,8 +43,11 @@ describe('el tema Botánica', () => {
     // tenía «SÁBADO» escrito a mano sobre un 18 de octubre de 2026 que cae en **domingo**.
     // Copiarlo habría heredado el error en todas las bodas que usen este diseño.
     render(<BodaBotView {...conMuestra()} />)
-    expect(screen.getByText(/domingo/i)).toBeInTheDocument()
-    expect(screen.getByText(/octubre/i)).toBeInTheDocument()
+    // Coincidencia exacta y no `/domingo/i`: la historia del diseño habla de «un domingo
+    // de café», así que la expresión regular casaba con dos elementos y la prueba fallaba
+    // por un texto de muestra.
+    expect(screen.getByText('domingo')).toBeInTheDocument()
+    expect(screen.getByText('octubre')).toBeInTheDocument()
     // El «18» aparece dos veces: el día del calendario y las horas de la cuenta atrás. Se
     // busca el del calendario por su tamaño, que es lo que lo distingue en el diseño.
     const dias = screen.getAllByText('18')

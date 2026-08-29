@@ -14,7 +14,11 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     nameB: 'Ricardo',
     monogram: 'M & R',
   },
-  quote: { text: 'and they lived\nhappily ever after' },
+  // Tres piezas y en este orden, como el diseño las compone: la frase, los años y la
+  // historia que va bajo «nuestra historia».
+  quote: {
+    text: 'and they lived\nhappily ever after\n\n2019 — 2026\n\nNos conocimos un domingo de café. Él pidió un americano, ella un capuccino con dos cucharadas de azúcar. Siete años después, todo lo que queremos es seguir despertando juntos cada domingo.',
+  },
   schedule: { startsAt: '2026-10-18T16:00:00' },
   ceremony: {
     label: 'CEREMONIA',
@@ -43,7 +47,11 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     note: 'CÓDIGO DE VESTIMENTA',
     detail: 'de etiqueta · paleta neutra · evita blanco',
   },
+  // La primera es la portada; la segunda, la fotografía grande que va bajo la frase; las
+  // tres últimas, el collage. Cada una cae en su sitio por orden, y sin fotografía propia
+  // se ve la del diseño.
   gallery: [
+    { label: 'MARCIA & RICARDO' },
     { label: 'MOMENTO ESPECIAL' },
     { label: 'ANILLOS' },
     { label: 'FLORES' },
