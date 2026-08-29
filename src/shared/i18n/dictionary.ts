@@ -235,6 +235,8 @@ export interface ThemeDictionary {
   portraitPlaceholder: string
   /** El aviso de la vista previa del catálogo, donde nada se guarda. */
   previewNotice: string
+  /** La cruz de salir de la vista previa: no hay cabecera que la enmarque. */
+  previewClose: string
 }
 
 export interface InvitationDictionary {

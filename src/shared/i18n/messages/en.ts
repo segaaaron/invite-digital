@@ -115,6 +115,7 @@ export const en = {
     photoPlaceholder: 'PHOTO',
     portraitPlaceholder: 'PORTRAIT',
     previewNotice: 'Model preview. Nothing you type here is saved.',
+    previewClose: 'Close and go back to the collection',
   },
   invitation: {
     title: 'Confirm your attendance',

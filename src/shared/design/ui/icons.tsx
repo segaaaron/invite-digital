@@ -291,3 +291,12 @@ export function QrIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** La cruz de cerrar. Un «×» tipográfico no casa con el trazo de 1,4 de los demás. */
+export function CloseIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}

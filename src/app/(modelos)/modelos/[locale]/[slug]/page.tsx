@@ -88,7 +88,7 @@ export default async function ModelPreviewPage({
   const inerte = <p style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.6 }}>{diccionario.themes.previewNotice}</p>
 
   return (
-    <PhonePreview>
+    <PhonePreview exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}>
       <Tema
         content={tema.defaultContent}
         dictionary={diccionario.invitation}

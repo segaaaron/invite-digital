@@ -516,6 +516,10 @@ correo, que necesita proveedor.
   del teléfono, y el ancho detrás—. Con una altura fija de 932 más el margen, en una
   pantalla más baja se desplazaba la página y la tarjeta salía cortada por abajo: lo que
   tiene que desplazarse es la invitación **dentro** del marco, como en un teléfono.
+- **La cruz de salir va fuera de la tarjeta, arriba a la derecha.** Esta pantalla no tiene
+  cabecera ni nada que la enmarque: sin ella, salir es adivinar cuál de los botones del
+  navegador toca. Dentro taparía la invitación, que es lo único que se viene a ver. En el
+  escaparate vuelve a la colección; en el panel, a Configuración.
 - **El marco es el contenedor de scroll**, como el `overflow: hidden auto` del marco de la
   maqueta: eso ancla los fondos `sticky` a la tarjeta y recorta sus `100vh` en el borde.
   Y lleva `transform: translateZ(0)`, que no es un truco de rendimiento: sin él, el papel

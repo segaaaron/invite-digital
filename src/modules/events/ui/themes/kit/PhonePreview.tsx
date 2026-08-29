@@ -1,4 +1,6 @@
+import Link from 'next/link'
 import type { ReactNode } from 'react'
+import { CloseIcon } from '@/shared/design/ui/icons'
 
 /**
  * La invitación dentro de un teléfono, centrada y sin nada a los lados.
@@ -12,11 +14,25 @@ import type { ReactNode } from 'react'
  * falta es el aparato: el marco es el contenedor de scroll, así que los fondos `sticky` se
  * anclan a él y los `100vh` se recortan en el borde de la tarjeta.
  *
- * Sin botones al lado, sin flechas y sin barra: lo único que se ve es la invitación.
+ * Sin flechas y sin barra: lo único que hay alrededor es la cruz de salir. Y esa sí hace
+ * falta —la maqueta la lleva—, porque esta pantalla no tiene cabecera ni nada que la
+ * enmarque: sin ella, salir es adivinar cuál de los botones del navegador toca.
  */
-export function PhonePreview({ children }: { readonly children: ReactNode }) {
+export function PhonePreview({
+  children,
+  exit,
+}: {
+  readonly children: ReactNode
+  /** A dónde se sale, y cómo se llama esa salida para quien no ve el dibujo. */
+  readonly exit?: { readonly href: string; readonly label: string }
+}) {
   return (
     <div className="theme-phone-stage">
+      {exit === undefined ? null : (
+        <Link aria-label={exit.label} className="theme-phone-exit" href={exit.href} title={exit.label}>
+          <CloseIcon />
+        </Link>
+      )}
       <div className="theme-phone-frame">{children}</div>
     </div>
   )

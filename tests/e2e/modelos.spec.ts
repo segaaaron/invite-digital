@@ -208,6 +208,14 @@ test.describe('los modelos, dentro del teléfono', () => {
       expect(marco?.articuloDentro, clave).toBe(true)
       expect(marco?.entero, clave).toBe(true)
       expect(marco?.paginaDesplaza, clave).toBe(false)
+
+      // La cruz de salir: esta pantalla no tiene cabecera ni nada que la enmarque, así que
+      // sin ella salir es adivinar cuál de los botones del navegador toca. Va **fuera** de
+      // la tarjeta, que es lo único que se viene a ver.
+      const salida = page.getByRole('link', { name: /cerrar y volver/i })
+      await expect(salida, clave).toBeVisible()
+      await salida.click()
+      await expect(page, clave).toHaveURL(/\/colecciones/)
     })
   }
 })

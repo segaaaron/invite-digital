@@ -167,6 +167,33 @@
   box-sizing: border-box;
 }
 
+/*
+ * La cruz de salir, arriba a la derecha y **fuera** de la tarjeta: dentro taparía la
+ * invitación, que es lo único que se viene a ver. En una pantalla estrecha no cabe al lado
+ * y se pone encima de la esquina del aparato, donde el diseño no pinta nada.
+ */
+.theme-phone-exit {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  background: rgb(255 255 255 / 0.08);
+  color: var(--color-shell-ink);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.theme-phone-exit:hover {
+  background: rgb(255 255 255 / 0.16);
+  border-color: rgb(255 255 255 / 0.4);
+}
+
 .theme-phone-frame {
   position: relative;
   /* Manda la altura, y el ancho sale de la proporción: así el aparato entra entero en

@@ -1,4 +1,3 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
@@ -55,19 +54,11 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
 
   return (
     <div className={variables}>
-      {/* La salida. Sin ella se sale con el botón de atrás del navegador, que en una
-          pantalla sin carcasa es adivinar. Va por encima del diseño y con la piel del
-          panel: es nuestra, no de la invitación. */}
-      <Link
-        className="fixed top-4 left-4 z-50 rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 font-mono text-[10px] tracking-[0.25em] text-ink uppercase shadow-[var(--shadow-card)]"
-        href={`/panel/eventos/${event.value.slug}/configuracion`}
-      >
-        Volver al panel
-      </Link>
-
       {/* Dentro de un teléfono, como el escaparate y como la maqueta: es la pantalla para
           la que están dibujados, y a lo ancho el fondo se derrama por los lados. */}
-      <PhonePreview>
+      <PhonePreview
+        exit={{ href: `/panel/eventos/${event.value.slug}/configuracion`, label: 'Volver al panel' }}
+      >
         <Tema
           content={contenido}
           dictionary={diccionario.invitation}

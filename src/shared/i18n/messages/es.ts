@@ -115,6 +115,7 @@ export const es = {
     photoPlaceholder: 'FOTO',
     portraitPlaceholder: 'RETRATO',
     previewNotice: 'Vista previa del modelo. Nada de lo que escribas aquí se guarda.',
+    previewClose: 'Cerrar y volver a la colección',
   },
   invitation: {
     title: 'Confirma tu asistencia',
