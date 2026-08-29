@@ -6,7 +6,7 @@ import { MapPreview } from '../kit/MapPreview'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
-import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
+import { OvalFrameCover } from './OvalFrameCover'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-ed.palette'
 
 const MONO = 'var(--font-jetbrains-mono)'
@@ -68,12 +68,16 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
   return (
     <article style={{ position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
-        <EnvelopeCover
+        <OvalFrameCover
           accent={P.oro}
           bg={P.fondo}
+          bgAsset={themeAsset('boda-ed', 'fondo-verde.avif')}
           hint={themes.coverHint}
-          label={hero?.monogram ?? themes.coverOpen}
+          initials={hero?.monogram ?? ''}
+          label={hero?.eyebrow ?? themes.coverOpen}
+          names={`${hero?.nameA ?? ''} ${hero?.nameB ?? ''}`.trim()}
           openLabel={themes.coverAria}
+          ringsAsset={themeAsset('boda-ed', 'aros-sf.avif')}
           textColor={P.papel}
         />
       )}

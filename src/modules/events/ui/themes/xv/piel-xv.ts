@@ -67,4 +67,18 @@ export type PielXv = {
   readonly iconoRedondo?: boolean
   /** El filete ornamental que algunos diseños ponen encima y debajo de la fecha. */
   readonly ornamento?: ReactNode
+  /**
+   * Cómo llama **este** diseño a sus secciones.
+   *
+   * No son traducciones —para eso está el diccionario—, son la voz del diseño: cuatro de
+   * los ocho XV dicen «Cronograma» y «Detalles que Abrazan» donde los otros dicen
+   * «Itinerario» y «Mesa de regalos». Lo que no se declare cae al diccionario, que es lo
+   * correcto para un diseño que no tenga voz propia.
+   */
+  readonly rotulos?: {
+    readonly itinerary?: string
+    readonly gifts?: string
+    readonly guestbook?: string
+    readonly dressCode?: string
+  }
 }

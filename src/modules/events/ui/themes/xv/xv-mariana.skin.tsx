@@ -51,6 +51,19 @@ export const PIEL: PielXv = {
     border: `1.5px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
   },
+  // El borde plateado que la maqueta pone encima y debajo de la fecha. Es de este diseño y
+  // no del esqueleto: los otros seis ponen un filete dibujado.
+  ornamento: (
+    <Image
+      alt=""
+      height={40}
+      src={themeAsset('xv-mariana', 'borde-plata-sf.avif')}
+      style={{ width: '60%', height: 'auto', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
+      width={240}
+    />
+  ),
+  // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
+  rotulos: { itinerary: 'Itinerario' },
   corona: themeAsset('xv-mariana', 'micro-notas-opt.avif'),
   retrato: themeAsset('xv-mariana', 'fondo-disco-tacones-opt.avif'),
   reloj: themeAsset('xv-mariana', 'reloj-plata-opt.avif'),

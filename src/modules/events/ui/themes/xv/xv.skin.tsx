@@ -20,6 +20,10 @@ const ICONOS: Record<string, ArchivoXv> = {
 
 /** La piel de «Bajo el Mar»: pasteles sobre fotografía de mar. */
 export const PIEL_XV: PielXv = {
+  // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
+  // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
+  // vive en el contenido de muestra, no como rótulo del libro de firmas.
+  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
   fondoBase: `linear-gradient(160deg, ${P.cielo} 0%, ${P.lavanda} 45%, ${P.rosa} 100%)`,
   velo: 'rgba(252,250,255,.45)',
   fondo: <MarBackground opacity={1} theme="xv" variant="b" />,

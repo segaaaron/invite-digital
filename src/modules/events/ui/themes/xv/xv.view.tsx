@@ -427,7 +427,7 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
                 marginBottom: 10,
               }}
             >
-              {themes.itinerary}
+              {piel.rotulos?.itinerary ?? themes.itinerary}
             </div>
             <div
               style={{
@@ -544,7 +544,7 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
               }}
             >
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.uva }}>
-                {dressCode.title ?? themes.dressCode}
+                {dressCode.title ?? piel.rotulos?.dressCode ?? themes.dressCode}
               </div>
               <div style={{ fontSize: 10, letterSpacing: '0.35em', opacity: 0.85, marginTop: 6, color: P.uva, fontWeight: 700 }}>
                 {dressCode.note ?? ''}
@@ -607,7 +607,7 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
         <Reveal>
           <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
             <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
-              {themes.gifts}
+              {piel.rotulos?.gifts ?? themes.gifts}
             </div>
             {slots.registry}
           </div>
@@ -629,7 +629,7 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
         <Reveal>
           <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
             <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
-              {themes.guestbook}
+              {piel.rotulos?.guestbook ?? themes.guestbook}
             </div>
             {slots.guestbook}
           </div>

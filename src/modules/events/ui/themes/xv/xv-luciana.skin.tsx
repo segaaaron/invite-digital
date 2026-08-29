@@ -47,6 +47,10 @@ export const PIEL: PielXv = {
     border: `1.5px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
   },
+  // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
+  // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
+  // vive en el contenido de muestra, no como rótulo del libro de firmas.
+  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
   corona: themeAsset('xv-luciana', 'faro-verde.avif'),
   retrato: themeAsset('xv-luciana', 'quinceanera-verde.avif'),
   reloj: themeAsset('xv-luciana', 'reloj1.avif'),

@@ -21,6 +21,10 @@ const ICONOS: Record<string, ArchivoNatalia> = {
  * lados.
  */
 export const PIEL_NATALIA: PielXv = {
+  // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
+  // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
+  // vive en el contenido de muestra, no como rótulo del libro de firmas.
+  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
   fondoBase: '#120c06',
   velo: 'rgba(0,0,0,.25)',
   fondo: (

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { Countdown } from '../kit/Countdown'
@@ -420,10 +421,16 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           </>
         )}
 
-        {/* El ramo grande que la maqueta pone entre el itinerario y el lugar. */}
+        {/* El florero de mármol que la maqueta pone entre el itinerario y el lugar. */}
         <Reveal>
-          <div aria-hidden style={{ marginTop: 30, display: 'flex', justifyContent: 'center' }}>
-            <FloralSpray sway={false} tone="white" width={240} />
+          <div aria-hidden style={{ marginTop: 40, position: 'relative' }}>
+            <Image
+              alt=""
+              height={260}
+              src={themeAsset('boda-bot', 'marmol-flores-optimized.avif')}
+              style={{ width: '100%', height: 260, objectFit: 'contain', display: 'block' }}
+              width={430}
+            />
           </div>
         </Reveal>
 

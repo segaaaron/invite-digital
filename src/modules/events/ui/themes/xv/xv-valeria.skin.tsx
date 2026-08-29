@@ -52,6 +52,8 @@ export const PIEL: PielXv = {
     border: `1.5px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
   },
+  // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
+  rotulos: { itinerary: 'Itinerario' },
   corona: themeAsset('xv-valeria', 'candelabro-guindo-sf.avif'),
   retrato: themeAsset('xv-valeria', 'xv-guindo-photo.avif'),
   reloj: themeAsset('xv-valeria', 'reloj-plata-opt.avif'),

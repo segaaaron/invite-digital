@@ -7,7 +7,7 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
-import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
+import { ImageOnlyCover } from './ImageOnlyCover'
 import { BotanicalTimeline } from '../kit/flora/BotanicalTimeline'
 import { FallingPetals } from '../kit/flora/FallingPetals'
 import { FloralCorner, FloralSpray } from '../kit/flora/FloralArt'
@@ -57,13 +57,13 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
     // se veía nunca, ni en un teléfono.
     <article style={{ position: 'relative', color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
-        <EnvelopeCover
+        <ImageOnlyCover
           accent={P.oroClaro}
-          bg={P.marfil}
+          bgAsset={themeAsset('xv-isabelle', 'portada-griega.avif')}
           hint={themes.coverHint}
           label={hero?.eyebrow ?? themes.coverOpen}
           openLabel={themes.coverAria}
-          textColor={P.tinta}
+          textColor={P.marfil}
         />
       )}
 
