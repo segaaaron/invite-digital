@@ -31,6 +31,15 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * diseño la pinta como una hoja de calendario, no como una línea de texto. Sale de
  * `schedule`, así que una boda de verdad enseña la suya.
  */
+/**
+ * Cómo llama **este** diseño a sus secciones: el libro de firmas es «déjanos un mensaje» y
+ * los regalos llevan su línea propia. Es la voz del diseño, no una traducción.
+ */
+const ROTULOS = {
+  guestbook: 'déjanos un mensaje',
+  giftsNote: 'Tu presencia es nuestro mejor regalo. Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
+} as const
+
 export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
@@ -598,6 +607,9 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
         <Reveal>
           <div style={{ marginTop: 40, padding: 22, background: 'rgba(90,112,92,0.04)', border: `1px solid ${P.fileteSuave}` }}>
             <div style={{ fontSize: 11, letterSpacing: '0.35em', fontWeight: 500, color: P.salvia }}>{themes.gifts}</div>
+            <p style={{ marginTop: 10, fontSize: 13, fontStyle: 'italic', lineHeight: 1.6, opacity: 0.8 }}>
+              {ROTULOS.giftsNote}
+            </p>
             <div style={{ marginTop: 12 }}>{slots.registry}</div>
           </div>
         </Reveal>
@@ -635,7 +647,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
         <Reveal>
           <div style={{ marginTop: 36 }}>
             <div style={{ textAlign: 'center', marginBottom: 14 }}>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.salvia }}>{themes.guestbook.toLowerCase()}</div>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.salvia }}>{ROTULOS.guestbook}</div>
             </div>
             {slots.guestbook}
           </div>

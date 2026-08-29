@@ -253,6 +253,16 @@ export interface ThemeDictionary {
   reservedForYou: string
   /** «Pases», debajo del número. */
   passes: string
+  /** «Reservamos», encima del número, en los XV. */
+  weSaved: string
+  /** «Lugar para ti», debajo del número, en los XV. */
+  seatForYou: string
+  /** «Tu presencia hará este día más especial», la línea que abre el saludo. */
+  yourPresence: string
+  /** «Escanea aquí», sobre el código del fondo de regalos. */
+  scanHere: string
+  /** «Mis XV Años»: el rótulo del cierre de los quince. */
+  myFifteen: string
 }
 
 export interface InvitationDictionary {

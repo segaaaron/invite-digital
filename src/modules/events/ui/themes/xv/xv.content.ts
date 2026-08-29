@@ -45,7 +45,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   ],
   gallery: [{ label: 'Retrato' }],
   closing: {
-    text: 'Que Dios guarde tu camino en bendición cada día, princesa amada, y que tu vida esté llena de alegría.',
+    text: 'Gracias por acompañarme, te espero para celebrar.',
     signature: 'Sofía',
   },
 }

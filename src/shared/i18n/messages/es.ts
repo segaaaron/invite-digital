@@ -125,6 +125,11 @@ export const es = {
     myStory: 'mi historia',
     reservedForYou: 'HEMOS RESERVADO PARA TI',
     passes: 'PASES',
+    weSaved: 'Reservamos',
+    seatForYou: 'Lugar para ti',
+    yourPresence: 'Tu presencia hará este día más especial',
+    scanHere: 'Escanea Aquí',
+    myFifteen: 'Mis XV Años',
   },
   invitation: {
     title: 'Confirma tu asistencia',

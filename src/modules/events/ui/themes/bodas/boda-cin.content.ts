@@ -18,6 +18,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
       'Padrinos · Patricio Vega & Lucía Saavedra',
       'Madrinas · Adriana Morales & Camila Núñez',
       'Damas & caballeros · 12 invitados de honor',
+      // La firma del reparto, que el diseño pinta bajo los nombres.
+      '· DIRECTOR · UNIVERSE ·',
     ],
   },
   schedule: { startsAt: '2026-12-12T19:00:00' },

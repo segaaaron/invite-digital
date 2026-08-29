@@ -31,7 +31,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   dressCode: {
     title: 'Código de Vestimenta',
     note: 'FORMAL — DE GALA',
-    detail: 'El morado y el dorado quedan reservados para la quinceañera',
+    detail: 'El dorado y el morado quedan reservados para la quinceañera',
   },
   notes: [
     { title: 'Lluvia de Sobres', text: 'Habrá un buzón esperando para tus deseos.' },
@@ -39,7 +39,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   ],
   gallery: [{ label: 'Retrato' }],
   closing: {
-    text: 'Te espero para celebrar esta noche de máscaras.',
+    text: 'Gracias por acompañarme, te espero para celebrar.',
     signature: 'Valentina',
   },
 }

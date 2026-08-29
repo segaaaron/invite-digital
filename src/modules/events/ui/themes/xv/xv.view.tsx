@@ -33,7 +33,15 @@ const SERIF = 'var(--font-cormorant)'
  * Todo el texto va sobre cristal esmerilado: es lo único que lo deja legible sobre una
  * fotografía a sangre, sea clara con lila o negra con oro.
  */
-export function XvSharedView({ content, dictionary, themes, slots, preview, piel }: ThemeProps & { piel: PielXv }) {
+export function XvSharedView({
+  content,
+  dictionary,
+  themes,
+  slots,
+  guestInfo,
+  preview,
+  piel,
+}: ThemeProps & { piel: PielXv }) {
   const P = piel.paleta
   const CRISTAL = piel.cristal
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, notes, gallery, closing } = content
@@ -335,7 +343,24 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
               border: `1.5px solid ${P.lila}`,
             }}
           >
-            {slots.guest}
+            {/* El saludo, compuesto como en la maqueta: la línea, el nombre en caligrafía,
+                «reservamos», el número y «lugar para ti». Con la línea ya hecha de la
+                ranura no se puede componer así, por eso el invitado llega como dato. */}
+            {guestInfo === undefined ? (
+              slots.guest
+            ) : (
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontFamily: SANS, fontSize: 15, color: P.tinta }}>{themes.yourPresence}</div>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 12, color: P.uva }}>
+                  {guestInfo.label}
+                </div>
+                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 16, color: P.bruma }}>{themes.weSaved}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 40, marginTop: 4, color: P.tinta, fontWeight: 700 }}>
+                  {guestInfo.seats}
+                </div>
+                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 4, color: P.bruma }}>{themes.seatForYou}</div>
+              </div>
+            )}
           </div>
         </Reveal>
 
@@ -609,6 +634,12 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
             <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
               {piel.rotulos?.gifts ?? themes.gifts}
             </div>
+            {/* «Escanea aquí»: el diseño lo pone encima del código del fondo. */}
+            <div
+              style={{ fontFamily: SANS, fontSize: 15, fontWeight: 700, textAlign: 'center', marginBottom: 12, color: P.tinta }}
+            >
+              {themes.scanHere}
+            </div>
             {slots.registry}
           </div>
         </Reveal>
@@ -648,8 +679,10 @@ export function XvSharedView({ content, dictionary, themes, slots, preview, piel
                 margin: '0 auto 34px',
               }}
             />
+            {/* El cierre lleva su propio rótulo —«Mis XV Años»—, no el antetítulo de la
+                cabecera: arriba pone «· MIS QUINCE ·» y aquí no. */}
             <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: P.uva, marginTop: 36 }}>
-              {hero?.eyebrow ?? ''}
+              {themes.myFifteen}
             </div>
             {closing?.signature === undefined ? null : (
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 56, color: P.violetaHondo, marginTop: 10 }}>

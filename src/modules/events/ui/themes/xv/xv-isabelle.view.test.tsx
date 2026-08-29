@@ -20,8 +20,8 @@ describe('el tema Palacio Griego', () => {
 
   it('pinta la ceremonia y la recepción, que este diseño sí separa', () => {
     render(<XvIsabelleView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    expect(screen.getByText('Iglesia de la Merced')).toBeInTheDocument()
-    expect(screen.getByText('Villa Helena')).toBeInTheDocument()
+    expect(screen.getByText('Parroquia Santa Isabel')).toBeInTheDocument()
+    expect(screen.getByText('Jardín Las Magnolias')).toBeInTheDocument()
   })
 
   it('compone la fecha como hoja de calendario', () => {

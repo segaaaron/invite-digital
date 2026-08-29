@@ -44,7 +44,12 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     address: '· KM 22 CARRETERA REAL · GTO ·',
     time: '15:00',
   },
-  map: { label: 'HACIENDA LOS SAUCES', coords: '20.51°N · 100.81°W' },
+  // Con enlace: es lo que enciende el botón «ver ubicación» de las dos tarjetas.
+  map: {
+    label: 'HACIENDA LOS SAUCES',
+    coords: '20.51°N · 100.81°W',
+    href: 'https://maps.google.com/?q=20.51,-100.81',
+  },
   itinerary: [
     { time: '13:45', label: 'CEREMONIA RELIGIOSA', imageId: '0' },
     { time: '16:00', label: 'RECEPCIÓN SOCIAL', imageId: '1' },
@@ -67,6 +72,10 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     {
       title: 'CELEBRACIÓN SOLO PARA ADULTOS',
       text: 'Los niños son alegría, pero esta noche queremos que ustedes también descansen.',
+    },
+    {
+      title: 'Hacienda Los Sauces',
+      text: 'Construida en 1879. Quince hectáreas. Un único roble en el patio.',
     },
     {
       title: 'Comparte tus fotos',

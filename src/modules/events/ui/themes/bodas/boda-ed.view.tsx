@@ -31,6 +31,12 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * es el número de casilla —`0` a `5`—, no una fotografía del evento; sin él manda el orden
  * de la fila.
  */
+/**
+ * La copia del diseño para su portada: una revista se abre por su número, no por un «abrir
+ * invitación». Es la voz del modelo, no una traducción.
+ */
+const ROTULOS = { cover: 'ISSUE · 09 / 2026' } as const
+
 export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
     content
@@ -47,7 +53,8 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
   const nosotros = gallery?.[1]
   const invitacion = notes?.[0]
   const soloAdultos = notes?.[1]
-  const fotos = notes?.[2]
+  const lugar = notes?.[2]
+  const fotos = notes?.[3]
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const fechaLarga =
@@ -75,7 +82,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
           bgAsset={themeAsset('boda-ed', 'fondo-verde.avif')}
           hint={themes.coverHint}
           initials={hero?.monogram ?? ''}
-          label={hero?.eyebrow ?? themes.coverOpen}
+          label={ROTULOS.cover}
           names={`${hero?.nameA ?? ''} ${hero?.nameB ?? ''}`.trim()}
           openLabel={themes.coverAria}
           ringsAsset={themeAsset('boda-ed', 'aros-sf.avif')}
@@ -365,6 +372,26 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.15em', color: P.papel, opacity: 0.85 }}>
                     {(tarjeta.lugar?.place ?? '').toUpperCase()}
                   </div>
+                  {map?.href === undefined ? null : (
+                    <a
+                      href={map.href}
+                      rel="noopener noreferrer"
+                      style={{
+                        background: P.oro,
+                        color: P.fondo,
+                        fontFamily: MONO,
+                        fontSize: 9,
+                        letterSpacing: '0.15em',
+                        fontWeight: 700,
+                        padding: '10px 14px',
+                        borderRadius: 20,
+                        textDecoration: 'none',
+                      }}
+                      target="_blank"
+                    >
+                      {themes.viewLocation}
+                    </a>
+                  )}
                 </div>
               ))}
             </div>
@@ -588,7 +615,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 <Countdown
                   labels={{
                     days: themes.countdownDays,
-                    hours: themes.countdownHours,
+                    hours: themes.countdownHoursLong,
                     mins: themes.countdownMins,
                     secs: themes.countdownSecs,
                   }}
@@ -607,6 +634,9 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 36, fontWeight: 200, marginTop: 8 }}>
                   {map.label ?? ''}
                 </div>
+                {lugar?.text === undefined ? null : (
+                  <div style={{ fontSize: 13, marginTop: 6, opacity: 0.75 }}>{lugar.text}</div>
+                )}
                 {reception?.address === undefined ? null : (
                   <div style={{ fontSize: 12, marginTop: 10, fontFamily: MONO, letterSpacing: '0.2em' }}>
                     {reception.address}

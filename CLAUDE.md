@@ -482,6 +482,14 @@ correo, que necesita proveedor.
   tenía ninguna. Se detecta comparando las imágenes que usa cada componente de la maqueta con
   las de `public/temas/`: un diseño que estrena arte es un diseño que cambió. Los otros quince
   seguían igual — lo que difería de la copia de mayo ya estaba portado.
+- **La comprobación buena es el texto renderizado contra el de la maqueta**, no el código
+  contra el código. `scripts/` no la lleva porque es de sesión, pero el método es: pedir
+  `/modelos/es/<clave>` al servidor, quitar etiquetas y comparar con los textos del
+  componente de la maqueta. Eso caza un bloque que falte —el saludo al invitado, la copia
+  de los regalos, el cierre— y no lo caza mirar qué imágenes usa cada uno. Sus falsos
+  positivos son siempre los mismos: los rótulos de portada y de pase, que en la vista
+  previa no se pintan; las claves de icono; y el contenido de muestra que nosotros
+  escribimos distinto a propósito.
 - **La invitación de referencia manda sobre el `.jsx` de la maqueta.** Botánica en la
   carpeta acaba en «con cariño»; la invitación que el usuario enseña tiene además el saludo
   al invitado con sus pases, los padres y padrinos en tres parejas, dos tarjetas con icono y

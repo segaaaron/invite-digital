@@ -8,7 +8,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     monogram: 'XV',
     serial: '2026',
   },
-  quote: { text: 'Que la vida te devuelva toda la luz que tú das. Brilla, que para eso naciste' },
+  quote: { text: 'Que la vida te devuelva toda la luz que tú das. Brilla, para eso naciste' },
   hosts: {
     label: 'Agradecida por el amor y cuidado de mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],
@@ -20,7 +20,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     address: 'Km 8, Carretera al Bosque',
     time: '18:00',
   },
-  map: { label: 'SALÓN ELIANNE', coords: '19.32°N · 99.18°W' },
+  map: { label: 'HACIENDA LAS ESTRELLAS', coords: '19.32°N · 99.18°W' },
   itinerary: [
     { time: '18:00', label: 'Recepción', imageId: 'recepcion' },
     { time: '20:30', label: 'Acto Central', imageId: 'corona' },

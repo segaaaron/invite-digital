@@ -35,8 +35,14 @@ const PANEL = {
  * Duplicar la composición entre **dos** temas es aceptable; entre siete no lo era, y por
  * eso aquellos comparten piel y este no.
  */
+/**
+ * Cómo llama **este** diseño a sus secciones. Es su voz, no una traducción: el itinerario
+ * es «Cronograma» y el libro de firmas, «déjanos un mensaje».
+ */
+const ROTULOS = { itinerary: 'Cronograma', guestbook: 'déjanos un mensaje', venue: '· LUGAR ·' } as const
+
 export function XvIsabelleView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
-  const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing } =
+  const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   const retrato = gallery?.[0]
 
@@ -274,7 +280,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
             <Reveal>
               <div style={{ marginTop: 44, textAlign: 'center' }}>
                 <div style={{ fontFamily: CINZEL, fontSize: 13, letterSpacing: '0.4em', fontWeight: 600, marginBottom: 18 }}>
-                  {themes.itinerary}
+                  {ROTULOS.itinerary}
                 </div>
               </div>
             </Reveal>
@@ -300,6 +306,22 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         {ceremony === undefined && reception === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 22, padding: 28, ...PANEL, position: 'relative' }}>
+              {/* La pestaña del bloque, como en la maqueta: «· LUGAR ·» sobre el borde. */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: -16,
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  padding: '0 14px',
+                  background: P.marfil,
+                  fontSize: 11,
+                  letterSpacing: '0.4em',
+                  color: P.tinta,
+                }}
+              >
+                {ROTULOS.venue}
+              </div>
               {[ceremony, reception].map((lugar, indice) =>
                 lugar === undefined ? null : (
                   <div key={indice}>
@@ -367,6 +389,16 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
             <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.oro, fontWeight: 600, marginBottom: 12 }}>
               {themes.gifts}
             </div>
+            {/* La copia del bloque de regalos: la trae el diseño escrita, y sin ella la
+                tarjeta se queda con el rótulo y la lista, que no es lo que se lee. */}
+            {notes?.[0] === undefined ? null : (
+              <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 26, color: P.oro }}>{notes[0].title}</div>
+                {notes[0].text === undefined ? null : (
+                  <p style={{ fontSize: 14, lineHeight: 1.6, marginTop: 8 }}>{notes[0].text}</p>
+                )}
+              </div>
+            )}
             {slots.registry}
           </div>
         </Reveal>
@@ -388,7 +420,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         <Reveal>
           <div style={{ marginTop: 28, padding: '22px 20px', ...PANEL }}>
             <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.oro, textAlign: 'center', marginBottom: 12 }}>
-              {themes.guestbook.toLowerCase()}
+              {ROTULOS.guestbook}
             </div>
             {slots.guestbook}
           </div>

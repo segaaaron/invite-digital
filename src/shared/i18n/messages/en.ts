@@ -125,6 +125,11 @@ export const en = {
     myStory: 'my story',
     reservedForYou: 'WE SAVED FOR YOU',
     passes: 'SEATS',
+    weSaved: 'We saved',
+    seatForYou: 'A seat for you',
+    yourPresence: 'Your presence will make this day special',
+    scanHere: 'Scan here',
+    myFifteen: 'My Fifteen',
   },
   invitation: {
     title: 'Confirm your attendance',
