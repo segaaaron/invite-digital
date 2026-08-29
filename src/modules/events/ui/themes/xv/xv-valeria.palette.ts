@@ -14,7 +14,7 @@ export const PALETA = {
   malva: '#ded0ab',
   bruma: '#c9b78a',
   lila: '#d9b85c',
-  lilaFuerte: '#c9a24a',
+  lilaFuerte: '#d9b85c',
   blanco: '#ffffff',
   vidrio: 'rgba(58,14,28,.62)',
   vidrioFuerte: 'rgba(58,14,28,.82)',
