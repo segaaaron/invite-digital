@@ -5,8 +5,18 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-29-handoff-fidelidad-y-herramientas.md`** — estado completo,
+**`docs/superpowers/2026-08-29-handoff-portadas-ranuras-y-fotos.md`** — estado completo,
 decisiones tomadas y qué sigue. No empieces a trabajar sin leerlo.
+
+Lo que más importa de esa sesión: **lo que la vista previa no pinta, nadie lo compara**. El
+escaparate no enseñaba la portada —apagada con `preview` desde el primer tema— y enseña las
+cuatro ranuras inertes, y detrás de esos dos huecos llevaban escondidas desde el principio
+diez imágenes del arte, seis portadas que no se parecían a su modelo, ocho diseños pintando
+tipografías que no declaraban y el formulario de RSVP entrando **marfil dentro de una
+invitación guinda**. Antes que el escaparate, **abre una invitación de verdad**: siembra la
+demo y baja hasta el final de `/i/<token>`.
+
+El anterior, **`2026-08-29-handoff-fidelidad-y-herramientas.md`**, cuenta de dónde parte.
 
 Lo que más importa de esa sesión: **fidelidad no se comprueba leyendo código**. Se
 intentaron cuatro métodos y solo sirve el último —comparar el texto renderizado y las
@@ -66,6 +76,7 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-27-catalogo-invitaciones-design.md` | Entender los dieciséis temas: motor, ranuras, contenido, imágenes y escaparate |
 | `docs/superpowers/plans/2026-08-27-catalogo-invitaciones.md` | Consultar cómo se construyeron los dieciséis: 35 tareas en 6 fases |
 | `docs/superpowers/2026-08-29-handoff-fidelidad-y-herramientas.md` | Verificar que un diseño está fiel, y con qué herramientas iterar rápido |
+| `docs/superpowers/2026-08-29-handoff-portadas-ranuras-y-fotos.md` | Las portadas, la piel de las ranuras, la animación cotejada y las fotos del invitado |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
