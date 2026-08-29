@@ -97,7 +97,9 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
 
         <Reveal>
           <div style={{ textAlign: 'center', fontFamily: MONO, fontSize: 10, letterSpacing: '0.5em' }}>
-            {hero?.eyebrow ?? themes.saveTheDate}
+            {/* La apertura del cuerpo. El `eyebrow` es el rótulo de la portada y no se
+                repite aquí: en la maqueta esta línea sale una sola vez. */}
+            {ROTULOS.apertura}
           </div>
         </Reveal>
 

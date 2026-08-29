@@ -139,8 +139,11 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
                 polaroidBg={P.tinta}
                 polaroidSlotBg="rgba(26,18,8,0.1)"
                 polaroidSlotColor="rgba(26,18,8,0.5)"
-                slotBg="rgba(224,184,90,0.06)"
-                slotColor="rgba(224,184,90,0.6)"
+                // La tira va sobre oro, así que sus casillas y sus años son blancos: en
+                // dorado sobre dorado no se lee ni la casilla ni el año, que es lo que
+                // pasaba —una barra amarilla lisa donde el diseño pone cuatro fotos—.
+                slotBg="rgba(255,255,255,0.05)"
+                slotColor="rgba(255,255,255,0.5)"
                 stripBg={P.oro}
                 variant="strip"
               />

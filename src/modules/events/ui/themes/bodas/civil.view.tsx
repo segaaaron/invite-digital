@@ -28,7 +28,7 @@ const DISPLAY = 'var(--font-spectral)'
  * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
  * viven con él. Lo que no esté aquí cae al diccionario.
  */
-const ROTULOS = { gifts: 'REGALO DE BODA' } as const
+const ROTULOS = { gifts: 'REGALO DE BODA', seal: '· UNIDOS ·' } as const
 
 export function CivilView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
@@ -87,7 +87,9 @@ export function CivilView({ content, dictionary, themes, slots, preview }: Theme
 
         <Reveal>
           <div style={{ margin: '24px -10px 0' }}>
-            <HeroSeal accent={P.violeta} label={hero?.eyebrow ?? ''} monogram={hero?.monogram ?? '&'} />
+            {/* El sello lleva «UNIDOS», no el rótulo de la cabecera: repetirlo lo pinta dos
+                veces en la misma pantalla, y en la maqueta no está. */}
+            <HeroSeal accent={P.violeta} label={ROTULOS.seal} monogram={hero?.monogram ?? '&'} />
           </div>
         </Reveal>
 
