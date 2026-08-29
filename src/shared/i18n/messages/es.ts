@@ -113,7 +113,7 @@ export const es = {
     reception: 'RECEPCIÓN',
     itinerary: 'ITINERARIO',
     dressCode: 'CÓDIGO DE VESTIMENTA',
-    songOfTheNight: 'LA CANCIÓN DE LA NOCHE',
+    songOfTheNight: 'SONG OF THE NIGHT',
     gifts: 'MESA DE REGALOS',
     guestbook: 'LIBRO DE FIRMAS',
     photoPlaceholder: 'FOTO',

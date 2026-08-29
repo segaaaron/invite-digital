@@ -491,17 +491,19 @@ export function XvSharedView({
                 boxShadow: P.sombraFuerte,
               }}
             >
+              {/*
+                Se lee **en orden**, por filas: recepción y acto central arriba, fiesta y
+                despedida abajo. El `.jsx` de la maqueta trae el arreglo cruzado —fiesta en
+                segundo lugar— y aquí se reprodujo con un `order`; la invitación de
+                referencia que enseña el usuario lo pinta cronológico, y cuando las dos
+                fuentes no coinciden manda la que se ve.
+              */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', position: 'relative' }}>
                 <div aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: P.lilaFuerte }} />
-                {itinerary.map((fila, indice) => (
+                {itinerary.map((fila) => (
                   <div
                     key={`${fila.time}-${fila.label}`}
-                    style={{
-                      textAlign: 'center',
-                      padding: '18px 14px',
-                      // El orden cruzado de la maqueta: se lee en zigzag, no en columna.
-                      order: indice < 2 ? indice * 2 : (indice - 2) * 2 + 1,
-                    }}
+                    style={{ textAlign: 'center', padding: '18px 14px' }}
                   >
                     <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div

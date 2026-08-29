@@ -237,6 +237,13 @@ export interface ThemeDictionary {
   reception: string
   itinerary: string
   dressCode: string
+  /**
+   * «SONG OF THE NIGHT», en inglés también en español.
+   *
+   * No es un descuido de traducción: la maqueta lo escribe así en los dieciséis diseños,
+   * como «SAVE THE DATE». Es un rótulo del diseño, no una frase que el invitado lea para
+   * entender algo.
+   */
   songOfTheNight: string
   gifts: string
   guestbook: string
