@@ -96,6 +96,17 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             />
           ),
           guestbook: <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />,
+          // El botón de «Comparte tus fotos». Lleva a su propia pantalla y no abre un campo
+          // aquí: subir fotos es volver varias veces a lo largo del día, y hacerlo desde
+          // media invitación obliga a desplazarse hasta el bloque cada vez.
+          photos: (
+            <a
+              className="inline-block rounded-[var(--radius-pill)] bg-gold px-5 py-3 font-mono text-[9px] font-bold tracking-[0.15em] text-[var(--color-on-gold)] uppercase"
+              href={`/i/${token}/fotos`}
+            >
+              {dictionary.photosPick}
+            </a>
+          ),
           pass: (
             <>
               <PassQr

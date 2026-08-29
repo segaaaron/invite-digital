@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
+import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { MusicPlayer } from '../kit/MusicPlayer'
@@ -63,8 +64,12 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
   const diaSemana = cuando === null ? '' : cuando.toLocaleDateString(etiquetaLocal, { weekday: 'long' })
   const mes = cuando === null ? '' : cuando.toLocaleDateString(etiquetaLocal, { month: 'long' })
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.papel, acento: P.salvia, display: SERIF, tinta: P.tinta }))
+
   return (
-    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.salvia}
         bg={P.papel}
@@ -670,6 +675,8 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
               {fotos.text === undefined ? null : (
                 <p style={{ fontSize: 14, lineHeight: 1.7, marginTop: 12, opacity: 0.85 }}>{fotos.text}</p>
               )}
+              {/* El botón que la maqueta dibuja y que no llevaba a ninguna parte. */}
+              <div style={{ marginTop: 20 }}>{slots.photos}</div>
             </div>
           </Reveal>
         )}

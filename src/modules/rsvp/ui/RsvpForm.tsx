@@ -1,6 +1,7 @@
 'use client'
 
 import { useId } from 'react'
+import { ConfettiBurst } from '@/shared/design/ui/ConfettiBurst'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
 import { useRsvp } from './use-rsvp'
 
@@ -31,7 +32,10 @@ export function RsvpForm({ dictionary, seats, token, previous }: Props) {
 
   if (rsvp.confirmed) {
     return (
-      <div aria-live="polite" className="flex flex-col items-center gap-4" role="status">
+      <div aria-live="polite" className="relative flex flex-col items-center gap-4" role="status">
+        {/* La celebración de la maqueta, que se había quedado fuera: el invitado confirmaba
+            y no pasaba nada. El color lo pone el diseño. */}
+        <ConfettiBurst active />
         <p className="font-display text-[24px] font-light text-ink">{dictionary.successTitle}</p>
         <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.successBody}</p>
         <button
@@ -72,7 +76,7 @@ export function RsvpForm({ dictionary, seats, token, previous }: Props) {
       )}
 
       <button
-        className="rounded-[var(--radius-pill)] bg-gold px-7 py-3.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised transition-transform duration-300 hover:-translate-y-0.5 hover:bg-gold-deep disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="rounded-[var(--radius-pill)] bg-gold px-7 py-3.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-[var(--color-on-gold)] transition-transform duration-300 hover:-translate-y-0.5 hover:bg-gold-deep disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         disabled={rsvp.isPending}
         type="submit"
       >

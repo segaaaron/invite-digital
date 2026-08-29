@@ -293,8 +293,29 @@ export interface InvitationDictionary {
   passBack: string
   passSaveHint: string
   passNoTable: string
+  /** La pantalla donde el invitado sube sus fotografías de la boda. */
+  photosTitle: string
+  photosIntro: string
+  photosPick: string
+  photosSending: string
+  photosMine: string
+  photosEmpty: string
+  photosBack: string
+  photosLeft: string
+  /** Lo que puede salir mal al subir, ya en la voz del invitado. */
+  photoErrors: Record<GuestPhotoMessageKey, string>
   errors: Record<RsvpMessageKey, string>
 }
+
+/** Lo que puede salir mal cuando un invitado sube una fotografía. */
+export type GuestPhotoMessageKey =
+  | 'too_large'
+  | 'unsupported_type'
+  | 'storage_failure'
+  | 'too_many'
+  | 'no_file'
+  | 'not_found'
+  | 'rate_limited'
 
 /** Lo que la reserva de un regalo puede responderle al invitado. */
 export type RegistryMessageKey =

@@ -1,4 +1,5 @@
 import type { ThemeProps } from '../contract'
+import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { MusicPlayer } from '../kit/MusicPlayer'
@@ -32,8 +33,12 @@ export function EngView({ content, dictionary, themes, slots, preview }: ThemePr
   const propuesta = gallery?.[0]
   const collage = (gallery ?? []).slice(1, 5)
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.blanco, acento: P.rosa, display: SERIF, tinta: P.tinta }))
+
   return (
-    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.rosa}
         bg={P.papel}

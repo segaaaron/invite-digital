@@ -146,7 +146,7 @@ describe('ContentBlockForms', () => {
         content={{ gallery: [{ label: 'ANILLOS' }] }}
         eventId="e1"
         eventSlug="b"
-        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048 }]}
+        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, fromGuest: false }]}
         sections={['gallery']}
       />,
     )
@@ -180,7 +180,7 @@ describe('ContentBlockForms', () => {
         content={{ itinerary: [{ time: '16:00 h', label: 'Ceremonia', imageId: 'church' }] }}
         eventId="e1"
         eventSlug="b"
-        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048 }]}
+        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, fromGuest: false }]}
         sections={['itinerary']}
       />,
     )

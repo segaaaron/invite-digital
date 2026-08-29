@@ -414,3 +414,65 @@ export async function uploadMediaAction(
 }
 
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Del invitado. **Sin sesión**: se autorizan con el token del enlace, igual que el RSVP y
+// que la mesa de regalos. Añadir aquí abajo una acción del atelier la dejaría sin sesión.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type GuestPhotoState = {
+  status: 'idle' | 'error' | 'success'
+  /** La clase del fallo, que la pantalla traduce. Nunca el detalle, que va al registro. */
+  message: 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'no_file' | 'not_found' | 'rate_limited' | ''
+}
+
+/**
+ * Cinco subidas por minuto y por IP.
+ *
+ * Es un extremo público que escribe en disco. Sin límite, un guion con el enlace en la mano
+ * llena el volumen del servidor a ocho megabytes por vez, y el tope por grupo no lo impide
+ * —sube, borra, vuelve a subir—: lo que el tope acota es cuánto se **queda**, no cuánto
+ * entra. Mismo motivo que el límite de `unlockEventAction`.
+ */
+const subirFoto = createRateLimiter({ windowMs: 60_000, max: 5 })
+
+/**
+ * La fotografía que el invitado sube desde su invitación.
+ *
+ * La maqueta pinta la tarjeta «Comparte tus fotos» con su botón y no hacía nada: la tarjeta
+ * estaba portada y el botón, no, porque no existía dónde dejar la fotografía.
+ *
+ * Se autoriza por token, como el RSVP, y **respeta el candado de la contraseña**: con el
+ * enlace en la mano se podía confirmar por POST en un evento «privado», y esa es la misma
+ * lección. Ocultar el formulario no cierra nada; cerrarlo aquí sí.
+ */
+export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData: FormData): Promise<GuestPhotoState> {
+  const token = String(formData.get('token') ?? '')
+
+  const grupo = await guests.resolveByToken(token)
+  // Un token desconocido responde lo mismo que uno revocado: 404 y ni una pista.
+  if (isErr(grupo)) return { status: 'error', message: 'not_found' }
+
+  if (!(await eventUnlocked(grupo.value.eventId))) return { status: 'error', message: 'not_found' }
+
+  const cabeceras = await headers()
+  const ip = clientIpFrom({
+    realIp: cabeceras.get('x-real-ip'),
+    forwardedFor: cabeceras.get('x-forwarded-for'),
+  })
+  if (subirFoto.isLimited(ip, Date.now())) return { status: 'error', message: 'rate_limited' }
+
+  const archivo = formData.get('file')
+  if (!(archivo instanceof File) || archivo.size === 0) return { status: 'error', message: 'no_file' }
+
+  const resultado = await eventUseCases.media.saveFromGuest(grupo.value.eventId, grupo.value.id, {
+    name: archivo.name,
+    size: archivo.size,
+    bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
+  })
+
+  if (!resultado.ok) return { status: 'error', message: resultado.error }
+
+  revalidatePath(`/i/${token}/fotos`)
+  return { status: 'success', message: '' }
+}

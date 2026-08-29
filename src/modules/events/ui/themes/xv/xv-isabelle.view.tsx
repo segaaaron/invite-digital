@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
+import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { MusicPlayer } from '../kit/MusicPlayer'
@@ -56,12 +57,28 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
   const diaSemana = cuando === null ? '' : cuando.toLocaleDateString(etiquetaLocal, { weekday: 'long' })
   const mes = cuando === null ? '' : cuando.toLocaleDateString(etiquetaLocal, { month: 'long' })
 
+  // Los cuatro bloques que no dibuja el diseño heredan su paleta por variables CSS: el
+  // panel de acuarela blanca del propio diseño, y su oro viejo de acento.
+  const RANURAS = variablesDeRanuras({
+    sobreAcento: P.marfil,
+    acento: P.oro,
+    acentoHondo: P.oroClaro,
+    campo: P.panelFuerte,
+    display: SERIF,
+    hueco: P.panelSuave,
+    linea: P.filete,
+    panel: P.panel,
+    tinta: P.tinta,
+    tintaSuave: P.tintaFuerte,
+    tintaTenue: P.arena,
+  })
+
   return (
     // El artículo va **sin fondo propio**, como en la maqueta: detrás hay un papel pintado
     // fijo —el palacio griego— en `zIndex: -2`, y un color opaco aquí lo tapaba por
     // completo. El diseño se quedaba en un campo crema y la fotografía que le da nombre no
     // se veía nunca, ni en un teléfono.
-    <article style={{ position: 'relative', color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       <ImageOnlyCover
         accent={P.oroPortada}
         badge={`▸ ${hero?.eyebrow ?? ''} · ${(hero?.nameA ?? '').toUpperCase()}`}

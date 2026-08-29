@@ -1,5 +1,6 @@
 import { HeroOcean } from '../art/HeroOcean'
 import type { ThemeProps } from '../contract'
+import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { PhotoCollage } from '../kit/PhotoCollage'
 import { PhotoSlot } from '../kit/PhotoSlot'
@@ -40,9 +41,30 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
   const pareja = gallery?.[0]
   const mosaico = (gallery ?? []).slice(1, 6)
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras({
+    // El acento y la tinta de este diseño son la arena y la espuma, que van sobre el azul
+    // del principio. Las ranuras caen al final, ya sobre la arena, así que ahí se invierte,
+    // como en la maqueta: tarjeta blanca al 92 % y tinta de mar profundo. Un formulario en
+    // color espuma sobre arena no se lee.
+    acento: P.mar,
+    acentoHondo: P.marProfundo,
+    campo: P.blanco,
+    display: SERIF,
+    hueco: 'rgba(6,40,61,0.12)',
+    linea: 'rgba(6,40,61,0.22)',
+    panel: P.veloFuerte,
+    sobreAcento: P.espuma,
+    tinta: P.marProfundo,
+    tintaSuave: 'rgba(6,40,61,0.82)',
+    tintaTenue: 'rgba(6,40,61,0.56)',
+  })
+
   return (
     <article
       style={{
+        ...RANURAS,
         position: 'relative',
         background: `linear-gradient(180deg, ${P.marProfundo} 0%, ${P.mar} 60%, ${P.arena} 100%)`,
         color: P.tinta,
@@ -251,7 +273,7 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
         {dressCode === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 24 }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena, marginBottom: 12 }}>
+              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.marProfundo, marginBottom: 12 }}>
                 {dressCode.title ?? themes.dressCode}
               </div>
               <div style={{ fontSize: 14, fontStyle: 'italic', opacity: 0.9 }}>{dressCode.detail ?? ''}</div>
@@ -261,7 +283,7 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
 
         <Reveal>
           <div style={{ marginTop: 24, padding: 18, background: P.velo, borderRadius: 10 }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena, marginBottom: 12 }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.marProfundo, marginBottom: 12 }}>
               {themes.gifts}
             </div>
             {slots.registry}
@@ -270,7 +292,7 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
 
         <Reveal>
           <div style={{ marginTop: 24 }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena, marginBottom: 12 }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.marProfundo, marginBottom: 12 }}>
               {dictionary.title}
             </div>
             {slots.guest}
@@ -284,7 +306,7 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
 
         <Reveal>
           <div style={{ marginTop: 24 }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena, marginBottom: 12 }}>
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.marProfundo, marginBottom: 12 }}>
               {themes.guestbook}
             </div>
             {slots.guestbook}

@@ -31,6 +31,19 @@ export const MAX_MEDIA_BYTES = 8 * 1024 * 1024
 export const MAX_IMAGE_EDGE = 1600
 
 /**
+ * Cuántas fotografías puede subir **un grupo de invitados** desde su invitación.
+ *
+ * Existe porque ese extremo no tiene sesión: se autoriza con el token del enlace, y el
+ * enlace circula por WhatsApp. Sin tope, quien lo tenga puede llenar el disco del servidor
+ * de la boda a ocho megabytes por vez. Veinte es más de lo que sube un invitado y menos de
+ * lo que hace daño.
+ *
+ * Es el tope **por grupo**, no por evento: contarlo por evento haría que el primer invitado
+ * que suba deje sin sitio a los demás.
+ */
+export const MAX_GUEST_PHOTOS = 20
+
+/**
  * El tipo real de un fichero, leído de sus primeros bytes.
  *
  * **Nunca la extensión ni el `Content-Type`**: los dos los escribe quien sube el fichero.

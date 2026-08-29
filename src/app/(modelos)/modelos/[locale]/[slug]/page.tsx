@@ -99,7 +99,7 @@ export default async function ModelPreviewPage({
         event={eventoDeMuestra}
         guestInfo={MUESTRA_DE_INVITADO}
         preview
-        slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
+        slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null, photos: inerte }}
         themes={diccionario.themes}
       />
     </PhonePreview>

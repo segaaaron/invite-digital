@@ -72,10 +72,14 @@ Después, según lo que vayas a hacer:
 
 El panel es **fiel a `Dashboard.html`** —piel, modales, anchos y las tres acciones de la
 fila de invitados— y responde a los cortes de la maqueta (860 · 900 · 560), con una e2e
-que lo vigila. **1835 unitarias y 209 e2e en verde.**
+que lo vigila. **1885 unitarias y 212 e2e en verde.**
 
 **La colección de dieciséis está completa**: ocho bodas y ocho XV años portados de
-`VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. Cada tarjeta abre
+`VallHallaWwepApp`, publicados en el catálogo y elegibles en el panel. **Con su portada**,
+que hasta el 29 de agosto no se pintaba en el escaparate y por eso nadie la había cotejado
+con la maqueta; y con **su propia paleta también en el formulario de RSVP, la mesa de
+regalos y el libro de firmas**, que entraban marfiles. El invitado ya puede **subir sus
+fotos** desde la invitación. Cada tarjeta abre
 la invitación de verdad en `/modelos/<idioma>/<clave>`, el atelier elige mirándola en una
 rejilla de miniaturas, y el contenido rico —ceremonia, recepción, itinerario, galería,
 código de vestimenta, avisos— se edita bloque a bloque en Configuración. Las fotografías
@@ -696,6 +700,80 @@ correo, que necesita proveedor.
   `null`.
 - **La galería es rótulo obligatorio e imagen opcional**, no al revés: estos diseños pintan
   los huecos con su pie desde el primer día y las fotos llegan después.
+
+### Notas de la piel de las ranuras (`themes/kit/slot-skin.ts`)
+
+- **El RSVP, la mesa de regalos, la respuesta del libro de firmas y el pase son nuestros,
+  no de la maqueta**: llevan lógica —una Server Action, una reserva que decide la base, un
+  QR— y por eso viven en su módulo y se colocan en ranuras. Estaban escritos con los colores
+  de la web pública, y entraban **tal cual** dentro de una invitación guinda, negra o verde:
+  un recuadro blanco con letra parda en mitad de «Gala Real». La maqueta no hace eso; ahí
+  cada diseño pinta su propio formulario.
+- **La solución no son dieciséis formularios: es que el diseño redefina los tokens.** El
+  `<article>` del tema escribe `--color-ink`, `--color-bg-raised`, `--color-line`… con su
+  paleta, y esas cuatro piezas —que ya se escriben contra esos tokens— heredan la del diseño
+  **sin tocar una sola de sus clases**. Lo vigila `slot-skin.test.ts` en los dieciséis.
+- **Los fondos salen del acento con alfa, no de un color nuevo.** Un hexadecimal más por
+  diseño serían dieciséis colores que no eligió nadie. Los ocho de boda usan
+  `pielDeRanuras`; los de XV pasan su vidrio esmerilado, que ya está en su paleta.
+- **`--color-on-gold` existe por el botón de confirmar.** Era `text-bg-raised` sobre
+  `bg-gold`: en la web pública eso es blanco sobre oro, y con el token redefinido a un
+  vidrio translúcido el botón quedaba escrito en tinta invisible. El contraste de un texto
+  sobre el acento no puede depender del color de las tarjetas.
+- **«Destino» invierte.** Su degradado va de azul de mar a arena, y las ranuras caen ya
+  sobre la arena: ahí la tarjeta es blanca al 92 % y la tinta, mar profundo. Es lo que hace
+  la maqueta en ese mismo bloque. Un solo juego de colores no puede servir a los dos
+  extremos de un degradado; cuando pase otra vez, se mira **dónde cae** la ranura.
+
+### Notas de la animación
+
+- **El confeti al confirmar existe.** La maqueta lo dispara al enviar el RSVP y era lo único
+  que quedaba sin portar de su animación: el invitado confirmaba y no pasaba nada. Vive en
+  `shared/design/ui/ConfettiBurst.tsx` —no en `themes/kit`, que el módulo `rsvp` no puede
+  importar— y **toma el color de los tokens del diseño**, así que el de la boda botánica es
+  verde salvia.
+- **Sus posiciones se calculan una vez, al cargar el módulo.** El componente se monta tras
+  una acción que revalida el árbol: con `Math.random` en el render, el estallido se
+  recolocaría a mitad de vuelo. Es la misma razón que el generador con semilla de los
+  pétalos.
+- **Ningún `@keyframes` sobra.** Había cinco traídos de diseños que este proyecto no porta y
+  que no disparaba nadie —dos pétalos laterales, un parpadeo, un latido y un brillo—. Una
+  animación declarada y sin uso no rompe nada y no sale en ninguna prueba: lo que se pierde
+  es que la hoja deje de decir qué se mueve en estas invitaciones. Lo vigila
+  `keyframes.test.ts`, que busca el nombre completo **y** el tronco —`theme-drift-${'{'}drift{'}'}`—
+  y se comprobó que falla al declarar uno de más.
+- **Cuatro fotogramas diferían de la maqueta y se corrigieron**: los tres `drift` no giraban
+  y llevaban la opacidad al 0,6 en vez de al 0,7; `twinkle` no escalaba; y `wedGlowPulse`
+  estaba **invertido** —empezaba encendido y bajaba— con un escalado que la maqueta no tiene.
+
+### Notas de las fotos del invitado (`/i/[token]/fotos`)
+
+- **El botón «SUBIR MIS FOTOS» ya existe.** La tarjeta estaba portada con su icono y su
+  texto y el botón no, porque no había dónde dejar la fotografía. Ahora hay pantalla, acción
+  y almacén.
+- **No es otra tabla: es `event_media` con la procedencia dentro.** Una fotografía de la
+  boda es una fotografía de la boda, la haya sacado la novia o su tío; separarlas obligaría
+  a unir en cada listado del panel y a duplicar el barrido de la retención, que es donde se
+  olvida una. `uploaded_by_group_id` nulo es lo que sube el atelier.
+- **`ON DELETE SET NULL`, no `CASCADE`.** Borrado el grupo —o anonimizado por la retención—,
+  la fotografía **se queda**: es de la pareja. Lo que se pierde es saber quién la trajo, que
+  es justo el dato personal.
+- **El tope es por grupo, no por evento.** Por evento, el primer invitado que suba deja sin
+  sitio a los demás. Y va **en el servidor**: el extremo se autoriza con el token del
+  enlace, y ese enlace circula por WhatsApp.
+- **Además del tope, límite de tasa por IP.** El tope acota cuánto se **queda**; no cuánto
+  entra. Sin límite, un guion con el enlace en la mano llena el volumen a ocho megabytes por
+  vez.
+- **Lleva el candado de la contraseña**, como `respondAction`: con el enlace en la mano se
+  podía escribir por POST en un evento «privado». Ocultar el formulario no cierra nada.
+- **Es pantalla propia, como el pase**, y no una tarjeta dentro de la invitación: subir
+  fotos es volver varias veces a lo largo del día, y desde media invitación obliga a
+  desplazarse hasta el bloque cada vez.
+- **La ranura `photos` es la única opcional del contrato.** Solo tres diseños pintan esa
+  tarjeta; obligar a los otros trece a colocar un botón que su maqueta no dibuja sería
+  inventarles una sección.
+- **El atelier las ve marcadas** («de un invitado») en Configuración: distinguir su retrato
+  de la novia de las treinta que trajo la fiesta importa sobre todo al elegir la portada.
 
 ### Notas de las imágenes del evento (`event_media`)
 

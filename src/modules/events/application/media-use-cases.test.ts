@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { MAX_MEDIA_BYTES } from '../domain/media'
-import { purgeMedia, readMedia, saveMedia } from './media-use-cases'
+import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES } from '../domain/media'
+import { listGuestPhotos, purgeMedia, readMedia, saveGuestPhoto, saveMedia } from './media-use-cases'
 import type { ImageProcessor, MediaRepository, MediaRow, MediaStorage } from './ports'
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
@@ -15,6 +15,8 @@ function dobles(filas: MediaRow[] = []) {
     }),
     find: vi.fn(async (id) => filas.find((fila) => fila.id === id) ?? null),
     listByEvent: vi.fn(async (eventId) => filas.filter((fila) => fila.eventId === eventId)),
+    countByGroup: vi.fn(async (groupId) => filas.filter((fila) => fila.uploadedByGroupId === groupId).length),
+    listByGroup: vi.fn(async (groupId) => filas.filter((fila) => fila.uploadedByGroupId === groupId)),
     remove: vi.fn(async (id) => {
       const indice = filas.findIndex((fila) => fila.id === id)
       if (indice >= 0) filas.splice(indice, 1)
@@ -164,7 +166,7 @@ describe('readMedia', () => {
   it('una fila sin fichero en disco devuelve nada', async () => {
     // Puede pasar si la retención barrió el disco antes que la base.
     const deps = dobles([
-      { id: 'x', eventId: 'e1', contentType: 'image/png', originalName: 'a.png', byteSize: 10 },
+      { id: 'x', eventId: 'e1', contentType: 'image/png', originalName: 'a.png', byteSize: 10, uploadedByGroupId: null },
     ])
     expect(await readMedia(deps)('x')).toBeNull()
   })
@@ -184,12 +186,51 @@ describe('purgeMedia', () => {
 
   it('no toca las imágenes de otro evento', async () => {
     const filas: MediaRow[] = [
-      { id: 'otra', eventId: 'e2', contentType: 'image/png', originalName: 'b.png', byteSize: 10 },
+      { id: 'otra', eventId: 'e2', contentType: 'image/png', originalName: 'b.png', byteSize: 10, uploadedByGroupId: null },
     ]
     const deps = dobles(filas)
 
     await purgeMedia(deps)('e1')
 
     expect(filas).toHaveLength(1)
+  })
+})
+
+describe('saveGuestPhoto', () => {
+  const foto = () => ({ name: 'boda.png', size: PNG.byteLength, bytes: async () => PNG })
+
+  it('deja la procedencia dentro, para poder contarla y distinguirla', async () => {
+    const deps = dobles()
+
+    const salida = await saveGuestPhoto(deps)('e1', 'g1', foto())
+
+    expect(salida).toEqual({ ok: true, id: expect.any(String) })
+    expect(deps.filas[0]?.uploadedByGroupId).toBe('g1')
+  })
+
+  it('corta en el tope del grupo, no en el del evento', async () => {
+    // El extremo no tiene sesión: se autoriza con el token del enlace, y ese enlace circula
+    // por WhatsApp. Sin tope, quien lo tenga llena el disco a ocho megabytes por vez.
+    const filas: MediaRow[] = Array.from({ length: MAX_GUEST_PHOTOS }, (_, i) => ({
+      id: `f${i}`,
+      eventId: 'e1',
+      contentType: 'image/webp',
+      originalName: 'x.webp',
+      byteSize: 10,
+      uploadedByGroupId: 'g1',
+    }))
+    const deps = dobles(filas)
+
+    expect(await saveGuestPhoto(deps)('e1', 'g1', foto())).toEqual({ ok: false, error: 'too_many' })
+    // Otro grupo sigue pudiendo: contarlo por evento dejaría al primero sin sitio para el resto.
+    expect(await saveGuestPhoto(deps)('e1', 'g2', foto())).toEqual({ ok: true, id: expect.any(String) })
+  })
+
+  it('el invitado ve solo las suyas', async () => {
+    const deps = dobles()
+    await saveGuestPhoto(deps)('e1', 'g1', foto())
+    await saveMedia(deps)('e1', foto())
+
+    expect(await listGuestPhotos(deps)('g1')).toHaveLength(1)
   })
 })

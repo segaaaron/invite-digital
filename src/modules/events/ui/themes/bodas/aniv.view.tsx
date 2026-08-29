@@ -1,5 +1,6 @@
 import { HeroAnniversary } from '../art/HeroAnniversary'
 import type { ThemeProps } from '../contract'
+import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { MusicPlayer } from '../kit/MusicPlayer'
@@ -48,8 +49,12 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
   const original = gallery?.[0]
   const tira = (gallery ?? []).slice(1, 5)
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.fondo, acento: P.oro, acentoHondo: P.oroOscuro, display: SERIF, tinta: P.tinta }))
+
   return (
-    <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.oro}
         bg={P.fondo}

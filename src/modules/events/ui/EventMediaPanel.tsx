@@ -17,6 +17,8 @@ export type MediaItem = {
   readonly id: string
   readonly originalName: string
   readonly byteSize: number
+  /** La trajo un invitado desde su invitación, no la subió el atelier. */
+  readonly fromGuest: boolean
 }
 
 type Props = {
@@ -104,7 +106,10 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
               <span className="truncate text-[11px] text-ink" title={imagen.originalName}>
                 {imagen.originalName}
               </span>
-              <span className="font-mono text-[10px] text-ink-mute">{enKilobytes(imagen.byteSize)}</span>
+              <span className="font-mono text-[10px] text-ink-mute">
+                {enKilobytes(imagen.byteSize)}
+                {imagen.fromGuest ? ' · de un invitado' : ''}
+              </span>
             </li>
           ))}
         </ul>

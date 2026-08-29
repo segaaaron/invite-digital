@@ -355,9 +355,16 @@ export const eventMedia = pgTable(
     /** Solo para enseñarlo: el fichero en disco se llama por el `id`. */
     originalName: varchar('original_name', { length: 255 }).notNull(),
     byteSize: integer('byte_size').notNull(),
+    /**
+     * Qué grupo de invitados la subió, o `null` si la subió el atelier.
+     *
+     * `set null` y no `cascade`: borrado el grupo, la fotografía **se queda** —es de la
+     * pareja— y lo que se pierde es saber quién la trajo, que es el dato personal.
+     */
+    uploadedByGroupId: uuid('uploaded_by_group_id').references(() => guestGroups.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('event_media_event_idx').on(t.eventId)],
+  (t) => [index('event_media_event_idx').on(t.eventId), index('event_media_group_idx').on(t.uploadedByGroupId)],
 )
 
 /**

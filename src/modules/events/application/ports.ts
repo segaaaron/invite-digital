@@ -99,11 +99,16 @@ export type MediaRow = {
   readonly contentType: string
   readonly originalName: string
   readonly byteSize: number
+  /** El grupo que la subió, o `null` si la subió el atelier. */
+  readonly uploadedByGroupId: string | null
 }
 
 export interface MediaRepository {
   insert(row: MediaRow): Promise<void>
   find(id: string): Promise<MediaRow | null>
   listByEvent(eventId: string): Promise<readonly MediaRow[]>
+  /** Lo que lleva subido un grupo: es lo que aplica el tope del extremo sin sesión. */
+  countByGroup(groupId: string): Promise<number>
+  listByGroup(groupId: string): Promise<readonly MediaRow[]>
   remove(id: string): Promise<void>
 }

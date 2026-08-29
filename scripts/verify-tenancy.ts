@@ -42,6 +42,8 @@ const EXENTAS: Record<string, string> = {
   respondAction: 'del invitado: se autoriza por el token de su enlace',
   claimGiftAction: 'del invitado: reserva un regalo desde su propia invitación',
   releaseGiftAction: 'del invitado: libera lo que él mismo había reservado',
+  uploadGuestPhotoAction:
+    'del invitado: sube una fotografía desde su propia invitación, autorizada por el token de su enlace, con el candado de la contraseña del evento y límite de tasa por IP',
 }
 
 const RAIZ = 'src/modules'

@@ -10,6 +10,12 @@
   --color-gold: #c19b4a;
   --color-gold-deep: #a8823a;
   --color-gold-light: #e2c584;
+  /* La tinta que va **encima** del acento: el texto de un botón dorado macizo.
+     Existe como token propio porque una invitación redefine el acento con su paleta —el
+     verde salvia de la botánica, el plata de la disco— y el contraste de ese texto no
+     puede quedar atado a `--color-bg-raised`, que en un diseño es un vidrio translúcido y
+     dejaba el botón «CONFIRMAR» escrito en tinta invisible. */
+  --color-on-gold: #fdfaf4;
   --color-gold-rgb: 193 155 74;
   --color-shadow-rgb: 90 66 26;
   --color-line: rgb(var(--color-gold-rgb) / 0.22);

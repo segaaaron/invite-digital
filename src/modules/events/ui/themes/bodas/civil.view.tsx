@@ -1,5 +1,6 @@
 import { HeroSeal } from '../art/HeroSeal'
 import type { ThemeProps } from '../contract'
+import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { PhotoCollage } from '../kit/PhotoCollage'
@@ -33,8 +34,12 @@ const ROTULOS = { gifts: 'REGALO DE BODA', seal: '· UNIDOS ·', cover: 'UNIÓN 
 export function CivilView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.blanco, acento: P.violeta, display: DISPLAY, tinta: P.tinta }))
+
   return (
-    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.violeta}
         bg={P.papel}

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { count, eq } from 'drizzle-orm'
 import { db } from '@/shared/db/client'
 import { eventMedia } from '@/shared/db/schema'
 import type { MediaRepository } from '../application/ports'
@@ -9,6 +9,7 @@ const COLUMNAS = {
   contentType: eventMedia.contentType,
   originalName: eventMedia.originalName,
   byteSize: eventMedia.byteSize,
+  uploadedByGroupId: eventMedia.uploadedByGroupId,
 }
 
 export const drizzleMediaRepository: MediaRepository = {
@@ -23,6 +24,15 @@ export const drizzleMediaRepository: MediaRepository = {
 
   async listByEvent(eventId) {
     return db.select(COLUMNAS).from(eventMedia).where(eq(eventMedia.eventId, eventId))
+  },
+
+  async countByGroup(groupId) {
+    const [fila] = await db.select({ n: count() }).from(eventMedia).where(eq(eventMedia.uploadedByGroupId, groupId))
+    return fila?.n ?? 0
+  },
+
+  async listByGroup(groupId) {
+    return db.select(COLUMNAS).from(eventMedia).where(eq(eventMedia.uploadedByGroupId, groupId))
   },
 
   async remove(id) {

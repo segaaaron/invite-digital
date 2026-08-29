@@ -65,7 +65,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
           event={event.value}
           guestInfo={{ label: 'Pedro Zárate', seats: 2 }}
           preview
-          slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null }}
+          slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null, photos: inerte }}
           themes={diccionario.themes}
         />
       </PhonePreview>

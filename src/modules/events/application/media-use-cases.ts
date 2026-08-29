@@ -1,7 +1,7 @@
-import { MAX_MEDIA_BYTES, type MediaType, mediaTypeOf, storageKeyFor } from '../domain/media'
+import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 
-export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure'
+export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many'
 
 type Deps = { media: MediaRepository; storage: MediaStorage; images: ImageProcessor; ids: () => string }
 
@@ -28,6 +28,8 @@ export const saveMedia =
   async (
     eventId: string,
     archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
+    /** Qué grupo la sube. Sin esto la sube el atelier, que es el caso de siempre. */
+    uploadedByGroupId: string | null = null,
   ): Promise<{ ok: true; id: string } | { ok: false; error: MediaError }> => {
     if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
 
@@ -49,6 +51,7 @@ export const saveMedia =
         contentType: listo.contentType,
         originalName: archivo.name.trim().slice(0, 255) || 'imagen',
         byteSize: listo.bytes.byteLength,
+        uploadedByGroupId,
       })
     } catch (cause) {
       console.error('No se pudo guardar la imagen del evento %s:', eventId, cause)
@@ -88,3 +91,28 @@ export const purgeMedia =
     }
     return filas.length
   }
+
+/**
+ * La fotografía que sube **un invitado** desde su invitación.
+ *
+ * Es `saveMedia` con el tope por grupo delante, y el tope va aquí y no en la pantalla
+ * porque la pantalla es cortesía: la acción es un extremo HTTP público que se autoriza con
+ * el token del enlace, y ese enlace circula por WhatsApp.
+ *
+ * La procedencia se guarda —`uploadedByGroupId`— para dos cosas: contar, y que el atelier
+ * distinga en su bandeja lo que trajeron los invitados de lo que subió él.
+ */
+export const saveGuestPhoto =
+  (deps: Deps) =>
+  async (
+    eventId: string,
+    groupId: string,
+    archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
+  ): Promise<{ ok: true; id: string } | { ok: false; error: MediaError }> => {
+    const ya = await deps.media.countByGroup(groupId)
+    if (ya >= MAX_GUEST_PHOTOS) return { ok: false, error: 'too_many' }
+    return saveMedia(deps)(eventId, archivo, groupId)
+  }
+
+/** Lo que este grupo lleva subido, para que el invitado vea sus propias fotografías. */
+export const listGuestPhotos = ({ media }: Deps) => (groupId: string) => media.listByGroup(groupId)

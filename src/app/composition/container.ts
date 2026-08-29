@@ -26,7 +26,14 @@ import {
   saveContentBlock,
   seedContentForTheme,
 } from '@/modules/events/application/content-use-cases'
-import { listMedia, purgeMedia, readMedia, saveMedia } from '@/modules/events/application/media-use-cases'
+import {
+  listGuestPhotos,
+  listMedia,
+  purgeMedia,
+  readMedia,
+  saveGuestPhoto,
+  saveMedia,
+} from '@/modules/events/application/media-use-cases'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
@@ -227,6 +234,9 @@ export const events = {
     read: readMedia(mediaDeps),
     list: listMedia(mediaDeps),
     purge: purgeMedia(mediaDeps),
+    /** Lo que sube el invitado desde su invitación, con el tope por grupo dentro. */
+    saveFromGuest: saveGuestPhoto(mediaDeps),
+    listOfGuest: listGuestPhotos(mediaDeps),
   },
   /**
    * El personal de puerta de un evento. Vive aquí y no en un módulo propio porque es una

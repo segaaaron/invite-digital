@@ -48,6 +48,10 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     id: imagen.id,
     originalName: imagen.originalName,
     byteSize: imagen.byteSize,
+    // De quién es: el atelier tiene que poder distinguir su retrato de la novia de las
+    // treinta fotos que trajeron los invitados durante la fiesta, sobre todo cuando elige
+    // cuál va en la portada.
+    fromGuest: imagen.uploadedByGroupId !== null,
   }))
 
   const share = await events.liveShare(event.value.id)

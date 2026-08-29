@@ -56,7 +56,10 @@ export type PielXv = {
     readonly lila: string
     readonly lilaFuerte: string
     readonly blanco: string
+    /** El vidrio esmerilado del diseño, que es lo que las ranuras usan de fondo. */
+    readonly vidrio: string
     readonly vidrioFuerte: string
+    readonly bordeVidrio: string
     readonly sombraFuerte: string
   }
   /** El cristal esmerilado sobre el que se apoya cada bloque. */

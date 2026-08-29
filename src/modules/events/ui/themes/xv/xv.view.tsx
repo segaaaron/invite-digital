@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import type { ThemeProps } from '../contract'
+import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { MusicPlayer } from '../kit/MusicPlayer'
@@ -53,9 +54,26 @@ export function XvSharedView({
   const horaEvento =
     cuando === null ? '' : `${String(cuando.getHours()).padStart(2, '0')}:${String(cuando.getMinutes()).padStart(2, '0')}`
 
+  // Los cuatro bloques que no dibuja el diseño —RSVP, mesa de regalos, respuesta del libro
+  // de firmas y pase— heredan su paleta por variables CSS. Aquí no hace falta el velo que
+  // se calcula para las bodas: estas pieles ya traen su vidrio esmerilado.
+  const RANURAS = variablesDeRanuras({
+    sobreAcento: P.blanco,
+    acento: P.lila,
+    acentoHondo: P.lilaFuerte,
+    campo: P.vidrioFuerte,
+    hueco: P.vidrioFuerte,
+    linea: P.bordeVidrio,
+    panel: P.vidrio,
+    tinta: P.tinta,
+    tintaSuave: P.malva,
+    tintaTenue: P.bruma,
+  })
+
   return (
     <article
       style={{
+        ...RANURAS,
         position: 'relative',
         background: piel.fondoBase,
         color: P.tinta,

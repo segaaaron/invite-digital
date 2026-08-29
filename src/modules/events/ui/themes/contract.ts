@@ -33,6 +33,15 @@ export type ThemeSlots = {
   readonly registry: ReactNode
   readonly guestbook: ReactNode
   readonly pass: ReactNode
+  /**
+   * El botón de «subir mis fotos» de la tarjeta «Comparte tus fotos».
+   *
+   * Es **opcional**, y es la única ranura que lo es: la tarjeta solo la pintan tres de los
+   * dieciséis diseños, y obligar a las otras trece a colocar un botón que su maqueta no
+   * dibuja sería inventarles una sección. Sin ranura, la tarjeta se queda con su icono y su
+   * texto, que es lo que la maqueta enseña.
+   */
+  readonly photos?: ReactNode
 }
 
 export type ThemeProps = {

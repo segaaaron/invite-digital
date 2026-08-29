@@ -1,5 +1,6 @@
 import { HeroRings } from '../art/HeroRings'
 import type { ThemeProps } from '../contract'
+import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { MusicPlayer } from '../kit/MusicPlayer'
@@ -73,9 +74,14 @@ export function BodaView({ content, event, dictionary, themes, slots, preview }:
   const romano = aRomano(new Date(`${event.eventDate}T00:00:00`).getFullYear())
   const { hero, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing , notes } = content
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras(pielDeRanuras({ acento: P.oro, sobreAcento: P.fondo, acentoHondo: P.oroApagado, display: DISPLAY, tinta: P.tinta }))
+
   return (
     <article
       style={{
+        ...RANURAS,
         position: 'relative',
         background: P.fondo,
         color: P.tinta,

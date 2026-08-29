@@ -1,5 +1,7 @@
 import { expect, test } from '@playwright/test'
-import { closeInvitationDb, countResponses, deleteEvent, seedInvitation } from './fixtures/invitation'
+import { invitationFixtures } from './fixtures/invitation'
+
+const { closeInvitationDb, countResponses, deleteEvent, seedInvitation } = invitationFixtures()
 
 // Las páginas de invitado no llevan sesión del atelier.
 test.use({ storageState: { cookies: [], origins: [] } })

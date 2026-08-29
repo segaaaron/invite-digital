@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
+import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { PhotoSlot } from '../kit/PhotoSlot'
@@ -73,8 +74,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
     { lugar: reception, icono: 'copas-doradas-sf.avif' as const },
   ].filter((tarjeta) => tarjeta.lugar !== undefined)
 
+  // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
+  // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
+  const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.fondo, acento: P.oro, acentoHondo: P.oroPalido, display: DISPLAY, tinta: P.papel }))
+
   return (
-    <article style={{ position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
       <OvalFrameCover
         accent={P.oro}
         bg={P.fondo}
@@ -781,6 +786,9 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                     {fotos.text}
                   </div>
                 )}
+                {/* El botón que la maqueta dibuja y que no llevaba a ninguna parte: ahora
+                    abre la pantalla donde el invitado deja sus fotografías. */}
+                <div style={{ marginTop: 22 }}>{slots.photos}</div>
               </div>
             </Reveal>
           )}
