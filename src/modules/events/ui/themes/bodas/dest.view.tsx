@@ -22,6 +22,13 @@ const SERIF = 'var(--font-cormorant)'
  * El itinerario son **cuatro días, no cuatro horas**: en una boda de destino el invitado
  * reserva vuelo, y lo que necesita saber es qué pasa cada jornada.
  */
+/**
+ * Cómo llama **este** diseño a sus secciones: una boda de destino dura cuatro días, y su
+ * itinerario lo dice. No es una traducción —para eso está el diccionario—, es la voz del
+ * diseño.
+ */
+const ROTULOS = { itinerary: '· ITINERARIO · 4 DÍAS ·', apertura: '· DESTINATION · WEDDING ·' } as const
+
 export function DestView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, schedule, reception, itinerary, dressCode, gallery, closing } = content
   const pareja = gallery?.[0]
@@ -73,6 +80,12 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
       <div aria-hidden style={{ position: 'absolute', top: '62%', left: 0, right: 0, height: 1, background: 'rgba(255,255,255,0.4)' }} />
 
       <ThemeColumn style={{ padding: '44px 30px 60px' }}>
+        <Reveal>
+          <div style={{ textAlign: 'center', fontFamily: MONO, fontSize: 10, letterSpacing: '0.5em' }}>
+            {ROTULOS.apertura}
+          </div>
+        </Reveal>
+
         <Reveal>
           <div style={{ textAlign: 'center', fontFamily: MONO, fontSize: 10, letterSpacing: '0.5em' }}>
             {hero?.eyebrow ?? themes.saveTheDate}
@@ -158,7 +171,7 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
           <Reveal>
             <div style={{ marginTop: 28, padding: 18, background: P.velo, borderRadius: 10 }}>
               <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena }}>
-                · {themes.itinerary} ·
+                {ROTULOS.itinerary}
               </div>
               <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {itinerary.map((jornada) => (

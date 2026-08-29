@@ -21,6 +21,12 @@ const SERIF = 'var(--font-newsreader)'
  * circular con un anillo dando vueltas alrededor. Es el único diseño de la colección cuyo
  * hito no es la boda sino el sí, así que la cuenta atrás apunta a la fiesta de compromiso.
  */
+/**
+ * La línea que abre el cuerpo, bajo la portada. Es copia del diseño y no del contenido: no
+ * la escribe el atelier, la trae el modelo.
+ */
+const ROTULOS = { apertura: '· SHE SAID YES ·' } as const
+
 export function EngView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, hosts, quote, schedule, reception, map, music, gallery, closing } = content
   const propuesta = gallery?.[0]
@@ -60,7 +66,7 @@ export function EngView({ content, dictionary, themes, slots, preview }: ThemePr
       <ThemeColumn style={{ padding: '48px 30px 60px' }}>
         <Reveal>
           <div style={{ textAlign: 'center', fontFamily: MONO, fontSize: 10, letterSpacing: '0.4em', color: P.rosa }}>
-            {hero?.eyebrow ?? themes.saveTheDate}
+            {ROTULOS.apertura}
           </div>
         </Reveal>
 

@@ -22,6 +22,14 @@ const DISPLAY = 'var(--font-spectral)'
  * brindis—, así que la ceremonia y la recepción van en dos columnas y no una debajo de la
  * otra.
  */
+/**
+ * Cómo llama **este** diseño a sus secciones.
+ *
+ * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
+ * viven con él. Lo que no esté aquí cae al diccionario.
+ */
+const ROTULOS = { gifts: 'REGALO DE BODA' } as const
+
 export function CivilView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
 
@@ -176,7 +184,7 @@ export function CivilView({ content, dictionary, themes, slots, preview }: Theme
         <Reveal>
           <div style={{ marginTop: 28, padding: 20, background: 'rgba(124,92,255,0.05)', border: `1px solid ${P.filete}` }}>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.violeta, marginBottom: 12 }}>
-              {themes.gifts}
+              {ROTULOS.gifts}
             </div>
             {slots.registry}
           </div>

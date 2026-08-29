@@ -3,7 +3,8 @@ import type { InvitationContent } from '../../../domain/invitation-content'
 /** El contenido de muestra de «Destino», copiado de la maqueta. */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: {
-    eyebrow: '· DESTINATION · WEDDING ·',
+    // El rótulo de la portada, el que se lee antes de abrir.
+    eyebrow: 'DESTINATION · TULUM',
     nameA: 'Alejandra',
     nameB: 'Pablo',
     monogram: 'TULUM · MÉXICO',

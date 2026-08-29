@@ -30,5 +30,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     { label: '2006' },
     { label: '2026' },
   ],
+  notes: [
+    { title: 'NUESTRO MEJOR REGALO', text: 'Tu presencia. Si deseas algo más, escanea para fondo de aniversario:' },
+  ],
   closing: { text: 'medio siglo, juntos', signature: 'C & E' },
 }

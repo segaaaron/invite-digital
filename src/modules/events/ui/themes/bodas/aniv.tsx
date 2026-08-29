@@ -10,7 +10,7 @@ export const anivDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['cormorant', 'jetbrainsMono'],
-  sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'closing'],
+  sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./aniv.view').then((modulo) => modulo.AnivView)),
 }

@@ -56,10 +56,10 @@ export const PIEL: PielXv = {
   ornamento: (
     <Image
       alt=""
-      height={40}
+      height={510}
       src={themeAsset('xv-mariana', 'borde-plata-sf.avif')}
       style={{ width: '60%', height: 'auto', display: 'block', margin: '0 auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
-      width={240}
+      width={1400}
     />
   ),
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.

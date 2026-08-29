@@ -25,8 +25,21 @@ const SERIF = 'var(--font-cormorant)'
  * Los años que se celebran salen del contenido, no del dibujo: no toda boda de oro son
  * cincuenta, y hay quien celebra las de plata con este mismo diseño.
  */
+/**
+ * Cómo llama **este** diseño a sus secciones.
+ *
+ * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
+ * viven con él. Lo que no esté aquí cae al diccionario.
+ */
+const ROTULOS = {
+  /** El rótulo de la portada, el que se lee antes de abrir. */
+  cover: '50 AÑOS DE AMOR',
+  gifts: 'NUESTRO MEJOR REGALO',
+  guestbook: 'DEDÍCALES UNAS PALABRAS',
+} as const
+
 export function AnivView({ content, dictionary, themes, slots, preview }: ThemeProps) {
-  const { hero, hosts, quote, schedule, reception, map, music, gallery, closing } = content
+  const { hero, hosts, quote, schedule, reception, map, music, gallery, notes, closing } = content
   const original = gallery?.[0]
   const tira = (gallery ?? []).slice(1, 5)
 
@@ -214,7 +227,10 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
 
         <Reveal>
           <div style={{ marginTop: 24, padding: 18, background: 'rgba(224,184,90,0.06)', borderRadius: 6 }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.oro }}>{themes.gifts}</div>
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.oro }}>{ROTULOS.gifts}</div>
+            {notes?.[0]?.text === undefined ? null : (
+              <p style={{ marginTop: 8, fontSize: 14, fontStyle: 'italic', lineHeight: 1.5 }}>{notes[0].text}</p>
+            )}
             <div style={{ marginTop: 12 }}>{slots.registry}</div>
           </div>
         </Reveal>
@@ -236,7 +252,7 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
         <Reveal>
           <div style={{ marginTop: 24 }}>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.oro, marginBottom: 10 }}>
-              {themes.guestbook}
+              {ROTULOS.guestbook}
             </div>
             {slots.guestbook}
           </div>

@@ -426,10 +426,10 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           <div aria-hidden style={{ marginTop: 40, position: 'relative' }}>
             <Image
               alt=""
-              height={260}
+              height={858}
               src={themeAsset('boda-bot', 'marmol-flores-optimized.avif')}
               style={{ width: '100%', height: 260, objectFit: 'contain', display: 'block' }}
-              width={430}
+              width={700}
             />
           </div>
         </Reveal>

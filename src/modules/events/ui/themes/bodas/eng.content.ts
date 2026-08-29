@@ -3,7 +3,8 @@ import type { InvitationContent } from '../../../domain/invitation-content'
 /** El contenido de muestra de «Compromiso», copiado de la maqueta. */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: {
-    eyebrow: '· SHE SAID YES ·',
+    // El rótulo de la portada, el que se lee antes de abrir.
+    eyebrow: 'ELLA DIJO QUE SÍ',
     // El titular del diseño va partido en dos tamaños: «Dijo» pequeño y «sí» enorme.
     nameA: 'Dijo',
     nameB: 'sí',

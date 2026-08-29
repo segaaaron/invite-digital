@@ -27,8 +27,51 @@ const DISPLAY = 'var(--font-cormorant)'
  * su libro de firmas— están sustituidas por las ranuras, que son las nuestras y sí
  * guardan.
  */
-export function BodaView({ content, dictionary, themes, slots, preview }: ThemeProps) {
-  const { hero, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing } = content
+/**
+ * Cómo llama **este** diseño a sus secciones.
+ *
+ * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
+ * viven con él. Lo que no esté aquí cae al diccionario.
+ */
+const ROTULOS = { guestbook: 'LIBRO DE FIRMAS DIGITAL' } as const
+
+
+/**
+ * El año en números romanos, que es como este diseño lo pinta en la barra de arriba.
+ *
+ * Se calcula del año del evento y no se escribe a mano: la maqueta tiene «MMXXVI» clavado,
+ * y una boda de 2027 con «MMXXVI» impreso arriba es un error que nadie ve hasta que lo ve
+ * un invitado.
+ */
+function aRomano(anio: number): string {
+  const tabla: readonly (readonly [number, string])[] = [
+    [1000, 'M'],
+    [900, 'CM'],
+    [500, 'D'],
+    [400, 'CD'],
+    [100, 'C'],
+    [90, 'XC'],
+    [50, 'L'],
+    [40, 'XL'],
+    [10, 'X'],
+    [9, 'IX'],
+    [5, 'V'],
+    [4, 'IV'],
+    [1, 'I'],
+  ]
+  let resto = anio
+  let salida = ''
+  for (const [valor, letra] of tabla) {
+    while (resto >= valor) {
+      salida += letra
+      resto -= valor
+    }
+  }
+  return salida
+}
+export function BodaView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
+  const romano = aRomano(new Date(`${event.eventDate}T00:00:00`).getFullYear())
+  const { hero, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing , notes } = content
 
   return (
     <article
@@ -86,7 +129,7 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
         <Reveal>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.35em', opacity: 0.6 }}>
-              {hero?.monogram ?? ''}
+              · {romano} ·
             </div>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.35em', opacity: 0.6 }}>
               {hero?.serial ?? ''}
@@ -363,7 +406,7 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
         <Reveal>
           <div style={{ marginTop: 28 }}>
             <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.oro, marginBottom: 12 }}>
-              {themes.guestbook}
+              {ROTULOS.guestbook}
             </div>
             {slots.guestbook}
           </div>
@@ -385,6 +428,14 @@ export function BodaView({ content, dictionary, themes, slots, preview }: ThemeP
         )}
 
         <div style={{ marginTop: 28 }}>{slots.pass}</div>
+        {notes?.[0]?.text === undefined ? null : (
+          <div
+            style={{ marginTop: 36, textAlign: 'center', fontStyle: 'italic', fontSize: 13, opacity: 0.55 }}
+          >
+            {notes[0].text}
+          </div>
+        )}
+
       </ThemeColumn>
     </article>
   )

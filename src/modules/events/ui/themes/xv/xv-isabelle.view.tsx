@@ -226,10 +226,10 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
           <div style={{ marginTop: 40, position: 'relative' }}>
             <Image
               alt=""
-              height={340}
+              height={674}
               src={themeAsset('xv-isabelle', 'busto-marmol-optimized.avif')}
               style={{ width: '100%', height: 340, objectFit: 'contain', display: 'block' }}
-              width={430}
+              width={700}
             />
             <div aria-hidden style={{ position: 'absolute', top: -38, left: -38, zIndex: 3 }}>
               <FloralCorner side="left" tone="white" width={150} />
@@ -289,10 +289,10 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
           <div aria-hidden style={{ marginTop: 40 }}>
             <Image
               alt=""
-              height={260}
+              height={858}
               src={themeAsset('xv-isabelle', 'marmol-flores-optimized.avif')}
               style={{ width: '100%', height: 260, objectFit: 'contain', display: 'block' }}
-              width={430}
+              width={700}
             />
           </div>
         </Reveal>
@@ -408,10 +408,10 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         <div aria-hidden style={{ position: 'relative', marginTop: 24, display: 'flex', justifyContent: 'center' }}>
           <Image
             alt=""
-            height={220}
+            height={495}
             src={themeAsset('xv-isabelle', 'piramide-hoja-optimized.avif')}
             style={{ width: 220, height: 'auto', display: 'block' }}
-            width={220}
+            width={500}
           />
         </div>
       </ThemeColumn>
