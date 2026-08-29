@@ -13,6 +13,18 @@ type Props = {
   readonly hint: string
   /** El nombre accesible del botón: quien usa lector de pantalla no ve el sobre. */
   readonly openLabel: string
+  /**
+   * Qué dibujo preside la portada.
+   *
+   * La maqueta tiene tres de línea —sobre, telón de cine y billete— y son el mismo
+   * mecanismo con otro dibujo: mismo botón, mismo color por prop, mismo comportamiento.
+   * Los que llevan fotografía propia no están aquí: viven con su tema.
+   */
+  readonly variant?: 'envelope' | 'curtain' | 'ticket'
+  /** El titular del telón y la palabra grande del billete. Copia del diseño, no del kit. */
+  readonly headline?: string
+  /** La línea pequeña de encima: «ESTÁS INVITADO», «YOUR ACCESS». */
+  readonly eyebrow?: string
 }
 
 /**
@@ -27,7 +39,17 @@ type Props = {
  * su tema. Traerlas al kit metería la paleta de un diseño en código que comparten los
  * dieciséis, que es justo lo que la guardia de hexadecimales impide.
  */
-export function EnvelopeCover({ accent, bg, textColor, label, hint, openLabel }: Props) {
+export function EnvelopeCover({
+  accent,
+  bg,
+  textColor,
+  label,
+  hint,
+  openLabel,
+  variant = 'envelope',
+  headline,
+  eyebrow,
+}: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -54,6 +76,7 @@ export function EnvelopeCover({ accent, bg, textColor, label, hint, openLabel }:
       type="button"
     >
       <span style={{ textAlign: 'center' }}>
+        {variant !== 'envelope' ? null : (
         <span
           aria-hidden
           style={{
@@ -104,6 +127,66 @@ export function EnvelopeCover({ accent, bg, textColor, label, hint, openLabel }:
             ✉
           </span>
         </span>
+        )}
+
+        {variant === 'curtain' && headline !== undefined ? (
+          <span style={{ display: 'block' }}>
+            <span
+              style={{
+                display: 'block',
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 9,
+                letterSpacing: '0.4em',
+                color: accent,
+              }}
+            >
+              {eyebrow ?? ''}
+            </span>
+            <span
+              style={{
+                display: 'block',
+                marginTop: 18,
+                fontFamily: 'var(--font-cormorant)',
+                fontStyle: 'italic',
+                fontSize: 56,
+                lineHeight: 1,
+                color: textColor,
+              }}
+            >
+              {headline}
+            </span>
+          </span>
+        ) : null}
+
+        {variant === 'ticket' && headline !== undefined ? (
+          <span style={{ display: 'block' }}>
+            <span
+              style={{
+                display: 'block',
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 9,
+                letterSpacing: '0.4em',
+                color: accent,
+              }}
+            >
+              {eyebrow ?? ''}
+            </span>
+            <span
+              style={{
+                display: 'block',
+                marginTop: 14,
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontWeight: 700,
+                fontSize: 64,
+                lineHeight: 0.9,
+                letterSpacing: '-0.04em',
+                color: textColor,
+              }}
+            >
+              {headline}
+            </span>
+          </span>
+        ) : null}
 
         <span
           style={{

@@ -27,7 +27,13 @@ const SERIF = 'var(--font-cormorant)'
  * itinerario lo dice. No es una traducción —para eso está el diccionario—, es la voz del
  * diseño.
  */
-const ROTULOS = { itinerary: '· ITINERARIO · 4 DÍAS ·', apertura: '· DESTINATION · WEDDING ·' } as const
+const ROTULOS = {
+  itinerary: '· ITINERARIO · 4 DÍAS ·',
+  apertura: '· DESTINATION · WEDDING ·',
+  /** La portada de este diseño es un billete: «tu acceso» y la clase, como un embarque. */
+  coverEyebrow: 'YOUR ACCESS',
+  coverHeadline: 'VIP',
+} as const
 
 export function DestView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, schedule, reception, itinerary, dressCode, gallery, closing } = content
@@ -54,10 +60,13 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
         <EnvelopeCover
           accent={P.arena}
           bg={P.marProfundo}
+          eyebrow={ROTULOS.coverEyebrow}
+          headline={ROTULOS.coverHeadline}
           hint={themes.coverHint}
           label={themes.coverOpen}
           openLabel={themes.coverAria}
           textColor={P.tinta}
+          variant="ticket"
         />
       )}
 

@@ -31,6 +31,13 @@ const GRANO =
  * inglés —CAST, SCENES, WARDROBE— son **parte del diseño**, no texto de interfaz: van en el
  * contenido, que el atelier puede cambiar, y no en el diccionario.
  */
+/**
+ * La copia del diseño para su portada: el telón de cine no dice «abrir invitación», dice
+ * «estás invitado» y «algo inolvidable». No es del diccionario porque no es una
+ * traducción: es el guion de este modelo.
+ */
+const ROTULOS = { coverEyebrow: 'ESTÁS INVITADO', coverHeadline: 'Algo inolvidable' } as const
+
 export function BodaCinView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, gallery, closing } = content
   const retrato = gallery?.[0]
@@ -42,10 +49,13 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
         <EnvelopeCover
           accent={P.oro}
           bg={P.fondo}
+          eyebrow={ROTULOS.coverEyebrow}
+          headline={ROTULOS.coverHeadline}
           hint={themes.coverHint}
           label={themes.coverOpen}
           openLabel={themes.coverAria}
           textColor={P.tinta}
+          variant="curtain"
         />
       )}
 
