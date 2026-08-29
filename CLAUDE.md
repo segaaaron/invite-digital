@@ -5,8 +5,16 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-27-handoff-dieciseis-temas.md`** — estado completo,
+**`docs/superpowers/2026-08-29-handoff-fidelidad-y-herramientas.md`** — estado completo,
 decisiones tomadas y qué sigue. No empieces a trabajar sin leerlo.
+
+Lo que más importa de esa sesión: **fidelidad no se comprueba leyendo código**. Se
+intentaron cuatro métodos y solo sirve el último —comparar el texto renderizado y las
+capturas lado a lado contra la maqueta—; los otros tres dejaron pasar diseños con la
+portada estirada fuera del teléfono, bloques enteros sin pintar y paletas aproximadas. Y
+si la captura del usuario no coincide con el `.jsx` de la maqueta, **manda la captura**.
+
+El anterior, **`2026-08-27-handoff-dieciseis-temas.md`**, cuenta de dónde parte.
 
 Lo que más importa de esa sesión: **la web vendía dieciséis modelos que no existían como
 piezas**. Lo que el cliente elegía en el catálogo y lo que el invitado acababa recibiendo
@@ -57,6 +65,7 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/specs/2026-08-25-multitenencia-y-admin-design.md` | Entender quién ve qué: dueño por evento, rol por usuario y el admin |
 | `docs/superpowers/specs/2026-08-27-catalogo-invitaciones-design.md` | Entender los dieciséis temas: motor, ranuras, contenido, imágenes y escaparate |
 | `docs/superpowers/plans/2026-08-27-catalogo-invitaciones.md` | Consultar cómo se construyeron los dieciséis: 35 tareas en 6 fases |
+| `docs/superpowers/2026-08-29-handoff-fidelidad-y-herramientas.md` | Verificar que un diseño está fiel, y con qué herramientas iterar rápido |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
