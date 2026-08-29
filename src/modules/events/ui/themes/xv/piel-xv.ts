@@ -48,6 +48,13 @@ export type PielXv = {
     readonly tinta: string
     readonly orquidea: string
     readonly uva: string
+    /**
+     * El morado más hondo con el que este diseño escribe la cita y el código de vestimenta.
+     *
+     * Opcional: solo «Bajo el Mar» lo distingue de `uva` en la maqueta, y los otros seis
+     * caen en `uva` en vez de inventarles un tono que nadie eligió.
+     */
+    readonly uvaHonda?: string
     readonly amatista: string
     readonly violetaHondo: string
     readonly violeta: string

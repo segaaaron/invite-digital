@@ -30,8 +30,19 @@ export type SlotSkin = {
   /** El acento: el oro, el plata o el lila de este diseño. */
   readonly acento: string
   readonly acentoHondo: string
-  /** La tinta que va **encima** del acento: el texto del botón de confirmar. */
+  /** La tinta que va **encima** del acento. */
   readonly sobreAcento: string
+  /**
+   * El fondo del botón de confirmar y la tinta que lleva encima.
+   *
+   * Aparte del acento porque un diseño usa un color para sus filetes y otro, más fuerte,
+   * para la llamada: en los XV el filete es lila y el «ENVIAR» es morado macizo. Sin esto,
+   * el botón salía del color de los bordes y se perdía dentro de su propia tarjeta.
+   */
+  readonly boton?: string
+  readonly sobreBoton?: string
+  /** El rótulo de un campo del formulario, que en varios diseños no es la tinta tenue. */
+  readonly etiqueta?: string
   /** El color del filete de las tarjetas y los botones. */
   readonly linea: string
   /** La tipografía de titular del diseño, si tiene una propia. */
@@ -65,6 +76,9 @@ export function variablesDeRanuras(skin: SlotSkin): CSSProperties {
     '--color-gold-deep': skin.acentoHondo,
     '--color-gold-light': skin.acento,
     '--color-on-gold': skin.sobreAcento,
+    ...(skin.boton === undefined ? {} : { '--color-cta': skin.boton }),
+    ...(skin.sobreBoton === undefined ? {} : { '--color-on-cta': skin.sobreBoton }),
+    ...(skin.etiqueta === undefined ? {} : { '--color-form-label': skin.etiqueta }),
     '--color-line': skin.linea,
     ...(skin.display === undefined ? {} : { '--font-display': skin.display }),
     ...(skin.caligrafia === undefined ? {} : { '--font-script': skin.caligrafia }),
@@ -103,10 +117,13 @@ export function pielDeRanuras(opciones: {
   readonly acentoHondo?: string
   /** La tinta sobre el acento. Por defecto, el papel del propio diseño. */
   readonly sobreAcento: string
+  readonly boton?: string
+  readonly sobreBoton?: string
+  readonly etiqueta?: string
   readonly display?: string
   readonly radio?: number
 }): SlotSkin {
-  const { tinta, acento, acentoHondo, sobreAcento, display, radio } = opciones
+  const { tinta, acento, acentoHondo, sobreAcento, boton, sobreBoton, etiqueta, display, radio } = opciones
   return {
     panel: conAlfa(acento, 0.07),
     campo: conAlfa(acento, 0.11),
@@ -117,6 +134,9 @@ export function pielDeRanuras(opciones: {
     acento,
     acentoHondo: acentoHondo ?? acento,
     sobreAcento,
+    ...(boton === undefined ? {} : { boton }),
+    ...(sobreBoton === undefined ? {} : { sobreBoton }),
+    ...(etiqueta === undefined ? {} : { etiqueta }),
     linea: conAlfa(acento, 0.3),
     ...(display === undefined ? {} : { display }),
     ...(radio === undefined ? {} : { radio }),

@@ -68,6 +68,10 @@ export function XvSharedView({
   // blanco; con uno solo, es la despedida y no hay bendición.
   const [despedida, bendicion] = (closing?.text ?? '').split('\n\n')
 
+  // El morado con el que la maqueta escribe la cita de portada y el código de vestimenta,
+  // más hondo que el de los demás rótulos. Los diseños que no lo distinguen caen en `uva`.
+  const UVA_HONDA = P.uvaHonda ?? P.uva
+
   // La fecha límite, en el idioma del evento. Sin plazo, la línea no se pinta: prometer
   // «confírmame antes del …» sin fecha detrás es peor que no decir nada.
   const plazo =
@@ -89,6 +93,10 @@ export function XvSharedView({
   // de firmas y pase— heredan su paleta por variables CSS. Aquí no hace falta el velo que
   // se calcula para las bodas: estas pieles ya traen su vidrio esmerilado.
   const RANURAS = variablesDeRanuras({
+    // El «ENVIAR» de la maqueta es morado macizo, no del lila de los filetes.
+    boton: P.violeta,
+    sobreBoton: P.blanco,
+    etiqueta: P.uva,
     caligrafia: CALIGRAFIA,
     sobreAcento: P.blanco,
     acento: P.lila,
@@ -129,17 +137,29 @@ export function XvSharedView({
         enter: themes.coverEnter,
       })}
 
-      {piel.fondo}
+      {/*
+        La fotografía de fondo y su velo **miden una pantalla**, no la invitación entera.
+        En la maqueta cuelgan del contenedor de scroll, que mide lo que la ventana: al bajar
+        se van con el contenido y lo que queda es el degradado del artículo. Aquí colgaban
+        del `<article>` —seis mil píxeles—, así que la foto se estiraba a lo largo de toda la
+        invitación y en mitad del cronograma aparecían las columnas del fondo del mar. Se
+        veía, y era lo primero que se veía.
+      */}
       <div
         aria-hidden
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: piel.velo,
-          backdropFilter: 'blur(3px) saturate(0.8)',
-          pointerEvents: 'none',
-        }}
-      />
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100dvh', overflow: 'hidden' }}
+      >
+        {piel.fondo}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: piel.velo,
+            backdropFilter: 'blur(3px) saturate(0.8)',
+            pointerEvents: 'none',
+          }}
+        />
+      </div>
       {piel.burbujas}
 
       {/* Lo que el diseño abre a sangre, antes de la barra. */}
@@ -228,7 +248,7 @@ export function XvSharedView({
                   letterSpacing: '0.18em',
                   marginBottom: 40,
                   textTransform: 'uppercase',
-                  color: P.uva,
+                  color: UVA_HONDA,
                   fontWeight: 900,
                   opacity: 0.78,
                   textShadow: '0 2px 10px rgba(255,255,255,0.95), 0 1px 2px rgba(255,255,255,0.9)',
@@ -629,10 +649,10 @@ export function XvSharedView({
                 boxShadow: P.sombraFuerte,
               }}
             >
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.uva }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: UVA_HONDA }}>
                 {dressCode.title ?? piel.rotulos?.dressCode ?? themes.dressCode}
               </div>
-              <div style={{ fontSize: 10, letterSpacing: '0.35em', opacity: 0.85, marginTop: 6, color: P.uva, fontWeight: 700 }}>
+              <div style={{ fontSize: 10, letterSpacing: '0.35em', opacity: 0.85, marginTop: 6, color: UVA_HONDA, fontWeight: 700 }}>
                 {dressCode.note ?? ''}
               </div>
               <Image
@@ -649,7 +669,7 @@ export function XvSharedView({
                 }}
                 width={220}
               />
-              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 10, color: P.uva, fontWeight: 600 }}>
+              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 10, color: UVA_HONDA, fontWeight: 600 }}>
                 {dressCode.detail ?? ''}
               </div>
             </div>

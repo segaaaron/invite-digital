@@ -8,7 +8,8 @@ import { useRsvp } from './use-rsvp'
 const FIELD_CLASS =
   'w-full rounded-[12px] border-[1.5px] border-[var(--color-line)] bg-bg-top/80 px-3.5 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-gold'
 
-const LABEL_CLASS = 'flex flex-col gap-1.5 text-left text-[12px] font-bold tracking-[0.08em] text-ink-mute'
+const LABEL_CLASS =
+  'flex flex-col gap-1.5 text-left text-[12px] font-bold tracking-[0.08em] text-[var(--color-form-label)]'
 
 type Props = {
   dictionary: InvitationDictionary
@@ -144,7 +145,7 @@ export function RsvpForm({ dictionary, seats, token, groupLabel, previous }: Pro
       )}
 
       <button
-        className="w-full rounded-[12px] bg-gold px-7 py-4 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--color-on-gold)] transition-transform duration-300 hover:-translate-y-0.5 hover:bg-gold-deep disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="w-full rounded-[12px] bg-[var(--color-cta)] px-7 py-4 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--color-on-cta)] transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         disabled={rsvp.isPending}
         type="submit"
       >

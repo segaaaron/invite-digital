@@ -16,6 +16,13 @@
      puede quedar atado a `--color-bg-raised`, que en un diseño es un vidrio translúcido y
      dejaba el botón «CONFIRMAR» escrito en tinta invisible. */
   --color-on-gold: #fdfaf4;
+  /* La llamada principal del formulario del invitado y la tinta que va encima. Existen
+     aparte del acento porque un diseño usa un color para sus filetes y otro, más fuerte,
+     para el botón: en los XV el filete es lila y el «ENVIAR», morado macizo. */
+  --color-cta: var(--color-gold);
+  --color-on-cta: var(--color-on-gold);
+  /* El rótulo de un campo del formulario del invitado. */
+  --color-form-label: var(--color-ink-mute);
   --color-gold-rgb: 193 155 74;
   --color-shadow-rgb: 90 66 26;
   --color-line: rgb(var(--color-gold-rgb) / 0.22);

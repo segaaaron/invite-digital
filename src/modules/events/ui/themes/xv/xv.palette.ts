@@ -6,6 +6,8 @@ export const PALETA = {
   tinta: '#4a3a5c',
   orquidea: '#c98ad0',
   uva: '#6b3a9e',
+  /** El morado de la cita de portada y del código de vestimenta. */
+  uvaHonda: '#5a189a',
   amatista: '#8b5fbf',
   violetaHondo: '#3d0f63',
   violeta: '#4a1a8a',
