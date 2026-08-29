@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { DividerOrnamental } from './DividerOrnamental'
-import { PanelCover } from './PanelCover'
+import { chapaDePortada } from './cover-copy'
+import { ValentinaCover } from './ValentinaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-valentina.palette'
 
@@ -36,16 +37,19 @@ export const PIEL: PielXv = {
   ),
   burbujas: null,
   portada: (datos) => (
-    <PanelCover
+    <ValentinaCover
       accent={P.lila}
-      bg="#2a1140"
+      badge={chapaDePortada(datos.eyebrow, datos.name)}
+      bg="#1c0a2d"
       bgAsset={themeAsset('xv-valentina', 'mascarada-morada.avif')}
-      emblemAsset={themeAsset('xv-valentina', 'mascara-sin-fondo.avif')}
-      eyebrow={datos.eyebrow}
+      hint={datos.enter}
+      line1={datos.line1}
+      line2={datos.line2}
+      maskAsset={themeAsset('xv-valentina', 'mascara-sin-fondo.avif')}
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      title={datos.title}
+      title={`${datos.title} AÑOS`}
     />
   ),
   paleta: P,

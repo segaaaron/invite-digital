@@ -9,7 +9,7 @@ export const bodaCinDefinition: ThemeDefinition = {
   label: 'Cinemática',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['italiana', 'cormorant', 'jetbrainsMono'],
+  fonts: ['italiana', 'cormorant', 'jetbrainsMono', 'cinzel'],
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-cin.view').then((modulo) => modulo.BodaCinView)),

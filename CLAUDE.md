@@ -547,6 +547,32 @@ correo, que necesita proveedor.
 - **El tope de columna es parte del diseño.** Están dibujados para un ancho de teléfono;
   sin `ThemeColumn` se despliegan a 1900 píxeles y la ceremonia y la recepción quedan a un
   palmo la una de la otra.
+- **La portada se pinta también en la vista previa.** Estuvo apagada con `preview` desde el
+  primer tema, y con ella se escondían **diez imágenes** —los sobres, las tiaras, la
+  máscara, los anillos, las fotografías a sangre— y, peor, la composición entera de cada
+  portada: nadie pudo cotejarla contra la maqueta porque en el escaparate no salía. Al
+  encenderla aparecieron seis portadas que no se parecían a su modelo —«Editorial» dibujaba
+  un óvalo de más sobre el que ya trae la fotografía y le faltaban el rótulo y las
+  iniciales; «Palacio Griego» no escribía ni «15 AÑOS» ni el nombre; y **las cinco de XV con
+  fotografía eran una sola pieza genérica** donde la maqueta tiene cinco componentes
+  distintos—. Lo vigila `boda.view.test.tsx`.
+- **Las cinco portadas de XV con fotografía son cinco, no una.** `CoverShell` guarda lo
+  único que comparten —el botón a pantalla completa, la fotografía y sus velos— y cada
+  diseño compone lo de dentro: la máscara preside en «Mascarada» y el faro cierra en
+  «Bosque Encantado»; «Noche Estrellada» escribe el nombre **dentro** del sobre, al 84 % de
+  su altura; «Encanto Musical» no lleva emblema y baja el texto al 83 % porque arriba está
+  la cara de la quinceañera.
+- **La llamada de la portada la dice cada diseño con su voz**: «¡NOS CASAMOS!», «UNIÓN
+  CIVIL», «NOW · SHOWING», «50 AÑOS DE AMOR», «DESTINATION · TULUM». Solo «Étoile» abre con
+  la genérica del diccionario, que es lo que hacían las siete. Y «Bodas de Oro» abre por
+  **telón**, no por sobre.
+- **Una tipografía que se pinta y no se declara no falla: se ve con otra letra.** El tema
+  declara las familias que baja —para no arrastrar doce—, así que un `var(--font-italiana)`
+  de un diseño que no la declaró cae a la de respaldo, sin un solo error y con el typecheck
+  en verde. Pasó en ocho de los dieciséis, escondido detrás de las portadas apagadas y de
+  `MapPreview`, que escribe su rótulo en Cinzel y ninguna de las siete bodas la declaraba.
+  Lo vigila `src/modules/events/ui/themes/fonts.test.ts`, que sigue los `import` de cada
+  vista y compara lo que pinta con lo que declara; se comprobó que falla al quitar una.
 - **La vista previa va dentro de un marco de teléfono, y eso es parte del diseño.** La
   maqueta enseña cada invitación en un aparato: tarjeta de 430 puntos, esquinas
   redondeadas, centrada sobre fondo oscuro y **sin nada a los lados**. `ThemeColumn`

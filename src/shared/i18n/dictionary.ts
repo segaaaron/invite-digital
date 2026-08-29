@@ -216,6 +216,16 @@ export interface ThemeDictionary {
   coverHint: string
   /** El nombre accesible del botón de portada: quien usa lector de pantalla no ve el sobre. */
   coverAria: string
+  /**
+   * Las dos líneas del convite de las portadas de XV. Van partidas porque el diseño las
+   * pinta en dos renglones con distinto interletrado, no porque quepan mal.
+   */
+  coverInviteLine1: string
+  coverInviteLine2: string
+  /** «INGRESA A MI INVITACIÓN»: la llamada de las portadas con fotografía de los XV. */
+  coverEnter: string
+  /** La misma llamada en boda, donde la invitación es de dos: «nuestra», no «mi». */
+  coverEnterShared: string
   countdownPrefix: string
   countdownDays: string
   countdownHours: string

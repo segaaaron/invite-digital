@@ -6,25 +6,32 @@ import { prefiereMenosMovimiento } from '../kit/motion'
 
 type Props = {
   readonly bgAsset: string
-  /** Los anillos que presiden el óvalo. */
+  /** Los anillos, debajo de los nombres. */
   readonly ringsAsset: string
   readonly accent: string
   readonly bg: string
+  /** El oro pálido de las iniciales. */
+  readonly initialsColor: string
   readonly textColor: string
+  /** «Nuestra Boda», del contenido del diseño. */
+  readonly eyebrow: string
   readonly names: string
   readonly initials: string
-  /** «Issue · 09 / 2026», del contenido del diseño. */
-  readonly label: string
   readonly hint: string
   readonly openLabel: string
 }
 
 /**
- * La portada de «Editorial»: fotografía de hojas, un óvalo dorado con los anillos dentro y
- * los nombres debajo.
+ * La portada de «Editorial»: la fotografía de hojas con su óvalo dorado, y dentro el
+ * rótulo, las iniciales, los nombres y los anillos.
  *
- * Vive con su tema y no en el kit, como las de los XV: el óvalo, los anillos y el verde
- * son de este diseño, y el kit lo comparten los dieciséis.
+ * **El óvalo lo trae la fotografía**, no se dibuja. Se dibujaba, y salían dos: el de la
+ * imagen y un `border-radius: 50%` encima, desalineados entre sí. Por eso el contenido va
+ * en una caja al 22 % y al 14 %, que son los márgenes con los que la maqueta lo mete
+ * dentro del óvalo que ya está pintado.
+ *
+ * Tampoco lleva velo oscuro: la fotografía viene con su propio degradado, y el velo que se
+ * le ponía apagaba el verde que es la mitad del diseño.
  *
  * Es un `<button>` a pantalla completa y no un `<div onClick>` como en la maqueta: con un
  * div, quien navega con teclado no puede abrirla y la invitación se acaba en la portada.
@@ -34,10 +41,11 @@ export function OvalFrameCover({
   ringsAsset,
   accent,
   bg,
+  initialsColor,
   textColor,
+  eyebrow,
   names,
   initials,
-  label,
   hint,
   openLabel,
 }: Props) {
@@ -58,50 +66,70 @@ export function OvalFrameCover({
         border: 'none',
         padding: 0,
         width: '100%',
+        overflow: 'hidden',
         background: bg,
         color: textColor,
         animation: reducido ? undefined : 'theme-introFade 800ms ease',
       }}
       type="button"
     >
-      <span aria-hidden style={{ position: 'absolute', inset: 0 }}>
-        <Image alt="" fill sizes="480px" src={bgAsset} style={{ objectFit: 'cover', objectPosition: 'center 30%' }} />
-        <span style={{ position: 'absolute', inset: 0, background: 'rgba(10,25,15,0.45)' }} />
-      </span>
+      <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'cover' }} />
 
       <span
         style={{
-          position: 'relative',
+          position: 'absolute',
+          left: '22%',
+          right: '22%',
+          top: '14%',
+          bottom: '14%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '100%',
-          gap: 18,
+          textAlign: 'center',
         }}
       >
         <span
-          aria-hidden
           style={{
-            width: 210,
-            height: 280,
-            borderRadius: '50%',
-            border: `1.5px solid ${accent}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(10,25,15,0.25)',
+            fontFamily: 'var(--font-cormorant)',
+            fontSize: 15,
+            letterSpacing: '0.25em',
+            color: accent,
+            textTransform: 'uppercase',
           }}
         >
-          <Image alt="" height={120} src={ringsAsset} style={{ width: 120, height: 'auto' }} width={120} />
+          {eyebrow}
         </span>
-
-        <span style={{ fontSize: 34, fontStyle: 'italic', fontWeight: 200 }}>{names}</span>
-        <span aria-hidden style={{ fontSize: 12, letterSpacing: '0.5em', color: accent }}>
+        <span style={{ fontFamily: 'var(--font-italiana)', fontSize: 64, lineHeight: 1, color: initialsColor, marginTop: 6 }}>
           {initials}
         </span>
-        <span style={{ fontSize: 10, letterSpacing: '0.35em' }}>{label}</span>
-        <span style={{ fontSize: 9, letterSpacing: '0.3em', opacity: 0.7 }}>{hint}</span>
+        <span
+          style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 39, color: textColor, lineHeight: 1, marginTop: 6 }}
+        >
+          {names}
+        </span>
+        <Image
+          alt=""
+          aria-hidden
+          height={140}
+          src={ringsAsset}
+          style={{ width: '45%', height: 'auto', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,.35))' }}
+          width={140}
+        />
+        <span
+          style={{
+            fontFamily: 'var(--font-dm-sans)',
+            fontWeight: 300,
+            fontSize: 9,
+            letterSpacing: '0.15em',
+            color: textColor,
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+            marginTop: 20,
+          }}
+        >
+          {hint}
+        </span>
       </span>
     </button>
   )

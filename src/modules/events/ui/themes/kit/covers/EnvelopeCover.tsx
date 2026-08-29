@@ -25,6 +25,14 @@ type Props = {
   readonly headline?: string
   /** La línea pequeña de encima: «ESTÁS INVITADO», «YOUR ACCESS». */
   readonly eyebrow?: string
+  /**
+   * La tipografía del titular del billete.
+   *
+   * Llega por prop y no escrita aquí porque el kit no sabe qué familias baja cada tema:
+   * una variable CSS que el diseño no haya declarado en sus `fonts` no existe, y el
+   * titular saldría con la de respaldo sin que nada lo avise.
+   */
+  readonly headlineFont?: string
 }
 
 /**
@@ -49,6 +57,7 @@ export function EnvelopeCover({
   variant = 'envelope',
   headline,
   eyebrow,
+  headlineFont,
 }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
@@ -155,6 +164,20 @@ export function EnvelopeCover({
             >
               {headline}
             </span>
+            <span
+              style={{
+                display: 'inline-block',
+                marginTop: 28,
+                padding: '12px 24px',
+                border: `1px solid ${accent}`,
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 10,
+                letterSpacing: '0.35em',
+                color: accent,
+              }}
+            >
+              ▸ {label}
+            </span>
           </span>
         ) : null}
 
@@ -175,7 +198,7 @@ export function EnvelopeCover({
               style={{
                 display: 'block',
                 marginTop: 14,
-                fontFamily: 'var(--font-jetbrains-mono)',
+                fontFamily: headlineFont ?? 'var(--font-jetbrains-mono)',
                 fontWeight: 700,
                 fontSize: 64,
                 lineHeight: 0.9,
@@ -185,33 +208,58 @@ export function EnvelopeCover({
             >
               {headline}
             </span>
+            <span
+              style={{
+                display: 'inline-block',
+                marginTop: 14,
+                padding: '10px 22px',
+                border: `1px solid ${accent}`,
+                background: accent,
+                color: bg,
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 10,
+                fontWeight: 600,
+                letterSpacing: '0.35em',
+              }}
+            >
+              {label} ▸
+            </span>
           </span>
         ) : null}
 
-        <span
-          style={{
-            display: 'block',
-            marginTop: 28,
-            fontFamily: 'var(--font-jetbrains-mono)',
-            fontSize: 10,
-            letterSpacing: '0.4em',
-            color: accent,
-          }}
-        >
-          {label}
-        </span>
-        <span
-          style={{
-            display: 'block',
-            marginTop: 6,
-            fontSize: 11,
-            opacity: 0.5,
-            letterSpacing: '0.2em',
-            fontFamily: 'var(--font-jetbrains-mono)',
-          }}
-        >
-          {hint}
-        </span>
+        {/*
+          «Abrir invitación» y «toca en cualquier lugar» son del sobre. El telón y el
+          billete llevan su llamada **dentro de su propia chapa** —con el triángulo delante
+          o detrás—, y repetirla aquí debajo la decía dos veces.
+        */}
+        {variant !== 'envelope' ? null : (
+          <>
+            <span
+              style={{
+                display: 'block',
+                marginTop: 28,
+                fontFamily: 'var(--font-jetbrains-mono)',
+                fontSize: 10,
+                letterSpacing: '0.4em',
+                color: accent,
+              }}
+            >
+              {label}
+            </span>
+            <span
+              style={{
+                display: 'block',
+                marginTop: 6,
+                fontSize: 11,
+                opacity: 0.5,
+                letterSpacing: '0.2em',
+                fontFamily: 'var(--font-jetbrains-mono)',
+              }}
+            >
+              {hint}
+            </span>
+          </>
+        )}
       </span>
     </button>
   )

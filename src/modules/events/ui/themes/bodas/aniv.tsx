@@ -9,7 +9,7 @@ export const anivDefinition: ThemeDefinition = {
   label: 'Bodas de Oro',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['cormorant', 'jetbrainsMono'],
+  fonts: ['cormorant', 'jetbrainsMono', 'cinzel'],
   sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./aniv.view').then((modulo) => modulo.AnivView)),

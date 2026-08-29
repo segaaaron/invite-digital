@@ -56,19 +56,18 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
         overflowX: 'clip',
       }}
     >
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.arena}
-          bg={P.marProfundo}
-          eyebrow={ROTULOS.coverEyebrow}
-          headline={ROTULOS.coverHeadline}
-          hint={themes.coverHint}
-          label={themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-          variant="ticket"
-        />
-      )}
+      <EnvelopeCover
+        accent={P.arena}
+        bg={P.marProfundo}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
+        hint={themes.coverHint}
+        label={hero?.eyebrow ?? themes.coverOpen}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+        headlineFont="var(--font-space-grotesk)"
+        variant="ticket"
+      />
 
       <FallingRosePetals count={18} darkEdges={[P.naranja, P.mar]} palette={[P.arena, P.espuma, P.sol]} seed={88} />
 

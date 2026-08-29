@@ -28,23 +28,21 @@ const DISPLAY = 'var(--font-spectral)'
  * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
  * viven con él. Lo que no esté aquí cae al diccionario.
  */
-const ROTULOS = { gifts: 'REGALO DE BODA', seal: '· UNIDOS ·' } as const
+const ROTULOS = { gifts: 'REGALO DE BODA', seal: '· UNIDOS ·', cover: 'UNIÓN CIVIL' } as const
 
 export function CivilView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
 
   return (
     <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.violeta}
-          bg={P.papel}
-          hint={themes.coverHint}
-          label={themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-        />
-      )}
+      <EnvelopeCover
+        accent={P.violeta}
+        bg={P.papel}
+        hint={themes.coverHint}
+        label={ROTULOS.cover}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+      />
 
       <WeddingMagicBg
         glowColors={[P.lavanda, P.lila, P.blanco]}

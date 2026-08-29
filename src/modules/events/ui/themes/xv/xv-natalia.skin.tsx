@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
+import { rotuloDePortada } from './cover-copy'
 import { NataliaCover } from './NataliaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-natalia.palette'
@@ -41,12 +42,15 @@ export const PIEL_NATALIA: PielXv = {
   burbujas: null,
   portada: (datos) => (
     <NataliaCover
+      badge={rotuloDePortada(datos.eyebrow, datos.name)}
       bgAsset={themeAsset('xv-natalia', 'fondo-musical.avif')}
-      eyebrow={datos.eyebrow}
+      hint={datos.enter}
+      line1={datos.line1}
+      line2={datos.line2}
       name={datos.name}
       noteAsset={themeAsset('xv-natalia', 'nota-sol-dorado-sf.avif')}
       openLabel={datos.openLabel}
-      title={datos.title}
+      title={`${datos.title} AÑOS`}
     />
   ),
   paleta: P,

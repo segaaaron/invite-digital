@@ -9,9 +9,15 @@ import { PALETA as P } from './xv.palette'
 type Props = {
   readonly bgAsset: string
   readonly crownAsset: string
-  readonly eyebrow: string
+  /** «Te invito», arriba del todo. */
+  readonly line1: string
+  readonly line2: string
   readonly title: string
   readonly name: string
+  /** «▸ MIS QUINCE · SOFÍA». */
+  readonly badge: string
+  /** «INGRESA A MI INVITACIÓN». */
+  readonly hint: string
   readonly openLabel: string
 }
 
@@ -25,7 +31,7 @@ type Props = {
  * con teclado no puede abrirla y quien usa lector de pantalla no oye que haya nada que
  * tocar, y la invitación se acaba aquí.
  */
-export function SofiaCover({ bgAsset, crownAsset, eyebrow, title, name, openLabel }: Props) {
+export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, badge, hint, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -75,9 +81,25 @@ export function SofiaCover({ bgAsset, crownAsset, eyebrow, title, name, openLabe
       <BubblesRise color="rgba(180,220,255,0.5)" count={20} seed={11} />
 
       <span style={{ textAlign: 'center', padding: '40px 30px', position: 'relative', zIndex: 1 }}>
+        {/*
+          El halo que la maqueta pone detrás del texto. No es decoración: el castillo tiene
+          torres claras justo donde caen «XV AÑOS» y el nombre, y sin él la letra blanca se
+          pierde encima. La sombra de texto sola no basta sobre un fondo tan claro.
+        */}
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: '4% -4%',
+            zIndex: -1,
+            background:
+              'radial-gradient(ellipse 72% 62% at 50% 50%, rgba(30,15,55,0.6) 0%, rgba(30,15,55,0.3) 55%, transparent 82%)',
+          }}
+        />
         <span
           style={{
             display: 'block',
+            position: 'relative',
             fontFamily: 'var(--font-cormorant)',
             fontSize: 20,
             fontWeight: 600,
@@ -87,7 +109,22 @@ export function SofiaCover({ bgAsset, crownAsset, eyebrow, title, name, openLabe
             textShadow: '0 0 30px rgba(15,8,40,.9), 0 0 12px rgba(15,8,40,.75), 0 2px 4px rgba(15,8,40,.85)',
           }}
         >
-          {eyebrow}
+          {line1}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            fontFamily: 'var(--font-cormorant)',
+            fontSize: 20,
+            fontWeight: 600,
+            letterSpacing: '0.2em',
+            color: '#f3e0ff',
+            textTransform: 'uppercase',
+            marginTop: 4,
+            textShadow: '0 0 30px rgba(15,8,40,.9), 0 0 12px rgba(15,8,40,.75), 0 2px 4px rgba(15,8,40,.85)',
+          }}
+        >
+          {line2}
         </span>
         <span aria-hidden style={{ display: 'block', width: 90, height: 2, background: '#FFFDF8', margin: '22px auto' }} />
         <Image
@@ -116,7 +153,7 @@ export function SofiaCover({ bgAsset, crownAsset, eyebrow, title, name, openLabe
             textShadow: '0 0 30px rgba(15,8,40,.9), 0 2px 4px rgba(15,8,40,.85)',
           }}
         >
-          {title} AÑOS
+          {title}
         </span>
         <span
           style={{
@@ -145,7 +182,20 @@ export function SofiaCover({ bgAsset, crownAsset, eyebrow, title, name, openLabe
             color: '#FFFDF8',
           }}
         >
-          ▸ {eyebrow}
+          {badge}
+        </span>
+        <span
+          style={{
+            display: 'block',
+            marginTop: 10,
+            fontSize: 10,
+            opacity: 0.9,
+            letterSpacing: '0.2em',
+            fontFamily: 'var(--font-jetbrains-mono)',
+            color: '#FFFDF8',
+          }}
+        >
+          {hint}
         </span>
       </span>
     </button>

@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { DividerOrnamental } from './DividerOrnamental'
-import { PanelCover } from './PanelCover'
+import { FantasiaCover } from './FantasiaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-fantasia.palette'
 
@@ -27,16 +27,17 @@ export const PIEL: PielXv = {
   ),
   burbujas: null,
   portada: (datos) => (
-    <PanelCover
+    <FantasiaCover
       accent={P.lila}
-      bg="#0c1830"
+      bg="#16223d"
       bgAsset={themeAsset('xv-fantasia', 'noche-estrellada-portada.avif')}
-      emblemAsset={themeAsset('xv-fantasia', 'luna-estrella-opt.avif')}
-      eyebrow={datos.eyebrow}
+      envelopeAsset={themeAsset('xv-fantasia', 'sobre-corona-recortado.avif')}
+      hint={datos.enter}
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      title={datos.title}
+      tiaraAsset={themeAsset('xv-fantasia', 'tiara-vino-sf.avif')}
+      title={`${datos.title} AÑOS`}
     />
   ),
   paleta: P,

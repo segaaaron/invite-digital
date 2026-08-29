@@ -1,7 +1,8 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { DividerOrnamental } from './DividerOrnamental'
-import { PanelCover } from './PanelCover'
+import { chapaDePortada } from './cover-copy'
+import { LucianaCover } from './LucianaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-luciana.palette'
 
@@ -51,16 +52,19 @@ export const PIEL: PielXv = {
   ),
   burbujas: null,
   portada: (datos) => (
-    <PanelCover
+    <LucianaCover
       accent={P.lila}
+      badge={chapaDePortada(datos.eyebrow, datos.name)}
       bg="#0f2a1f"
       bgAsset={themeAsset('xv-luciana', 'bosque-verdee.avif')}
-      emblemAsset={themeAsset('xv-luciana', 'faro-verde.avif')}
-      eyebrow={datos.eyebrow}
+      hint={datos.enter}
+      lanternAsset={themeAsset('xv-luciana', 'faro-verde.avif')}
+      line1={datos.line1}
+      line2={datos.line2}
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      title={datos.title}
+      title={`${datos.title} AÑOS`}
     />
   ),
   paleta: P,

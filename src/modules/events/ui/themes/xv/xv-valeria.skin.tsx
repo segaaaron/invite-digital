@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
-import { PanelCover } from './PanelCover'
+import { ValeriaCover } from './ValeriaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-valeria.palette'
 
@@ -56,16 +56,16 @@ export const PIEL: PielXv = {
   ),
   burbujas: null,
   portada: (datos) => (
-    <PanelCover
+    <ValeriaCover
       accent={P.lila}
-      bg="#2b050c"
+      bg="#3a0e1c"
       bgAsset={themeAsset('xv-valeria', 'marco-guindo-portada.avif')}
-      emblemAsset={themeAsset('xv-valeria', 'tiara-vino-sf.avif')}
-      eyebrow={datos.eyebrow}
+      hint={datos.enter}
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      title={datos.title}
+      tiaraAsset={themeAsset('xv-valeria', 'tiara-vino-sf.avif')}
+      title={`${datos.title} AÑOS`}
     />
   ),
   paleta: P,

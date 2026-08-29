@@ -32,8 +32,13 @@ const SERIF = 'var(--font-cormorant)'
  * viven con él. Lo que no esté aquí cae al diccionario.
  */
 const ROTULOS = {
-  /** El rótulo de la portada, el que se lee antes de abrir. */
+  /**
+   * La portada es un **telón**, no un sobre: la maqueta abre estas bodas de oro con la
+   * cortina y su titular, y el sobre es de las otras cuatro.
+   */
   cover: '50 AÑOS DE AMOR',
+  coverEyebrow: 'ESTÁS INVITADO',
+  coverHeadline: 'Algo inolvidable',
   gifts: 'NUESTRO MEJOR REGALO',
   guestbook: 'DEDÍCALES UNAS PALABRAS',
 } as const
@@ -45,16 +50,17 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
 
   return (
     <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.oro}
-          bg={P.fondo}
-          hint={themes.coverHint}
-          label={themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-        />
-      )}
+      <EnvelopeCover
+        accent={P.oro}
+        bg={P.fondo}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
+        hint={themes.coverHint}
+        label={ROTULOS.cover}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+        variant="curtain"
+      />
 
       <WeddingMagicBg
         dark

@@ -69,10 +69,14 @@ describe('el tema Étoile', () => {
     expect(screen.getByText(/nada de lo que escribas/i)).toBeInTheDocument()
   })
 
-  it('en vista previa tampoco pinta la portada, que taparía el diseño', () => {
+  it('en vista previa SÍ pinta la portada: es la primera pantalla del modelo', () => {
+    // Estuvo escondida, y con ella se escondían diez imágenes —los sobres, las tiaras, las
+    // máscaras, los fondos a sangre— y la composición entera de cada portada, que nadie
+    // pudo comparar contra la maqueta porque no se veía. El escaparate enseña lo que el
+    // invitado va a recibir, y lo primero que recibe es la portada.
     render(<BodaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, preview: true })} />)
 
-    expect(screen.queryByRole('button', { name: /abrir la invitación/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /abrir la invitación/i })).toBeInTheDocument()
   })
 
   it('emite un solo encabezado de nivel 1', () => {

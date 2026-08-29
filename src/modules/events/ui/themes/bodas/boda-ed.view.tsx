@@ -31,12 +31,6 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * es el número de casilla —`0` a `5`—, no una fotografía del evento; sin él manda el orden
  * de la fila.
  */
-/**
- * La copia del diseño para su portada: una revista se abre por su número, no por un «abrir
- * invitación». Es la voz del modelo, no una traducción.
- */
-const ROTULOS = { cover: 'ISSUE · 09 / 2026' } as const
-
 export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
     content
@@ -68,6 +62,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
           })
           .toUpperCase()
 
+  // Las iniciales de la portada se calculan, no se copian: la maqueta las pasa a mano
+  // («MA») y el `monogram` del contenido es otra cosa —«· MARÍA & ALEX ·», la mancheta—.
+  const iniciales = [hero?.nameA, hero?.nameB]
+    .map((nombre) => (nombre ?? '').replace(/[^\p{L}]/gu, '').slice(0, 1).toUpperCase())
+    .join('')
+
   const tarjetas = [
     { lugar: ceremony, icono: 'templo-dorado-sf.avif' as const },
     { lugar: reception, icono: 'copas-doradas-sf.avif' as const },
@@ -75,20 +75,19 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
 
   return (
     <article style={{ position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <OvalFrameCover
-          accent={P.oro}
-          bg={P.fondo}
-          bgAsset={themeAsset('boda-ed', 'fondo-verde.avif')}
-          hint={themes.coverHint}
-          initials={hero?.monogram ?? ''}
-          label={ROTULOS.cover}
-          names={`${hero?.nameA ?? ''} ${hero?.nameB ?? ''}`.trim()}
-          openLabel={themes.coverAria}
-          ringsAsset={themeAsset('boda-ed', 'aros-sf.avif')}
-          textColor={P.papel}
-        />
-      )}
+      <OvalFrameCover
+        accent={P.oro}
+        bg={P.fondo}
+        bgAsset={themeAsset('boda-ed', 'fondo-verde.avif')}
+        eyebrow={hero?.eyebrow ?? ''}
+        hint={themes.coverEnterShared}
+        initials={iniciales}
+        initialsColor={P.oroPalido}
+        names={`${hero?.nameA ?? ''} ${hero?.nameB ?? ''}`.trim()}
+        openLabel={themes.coverAria}
+        ringsAsset={themeAsset('boda-ed', 'aros-sf.avif')}
+        textColor={P.papel}
+      />
 
       {/* La fotografía de hojas, fija y detrás de todo. */}
       <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1 }}>

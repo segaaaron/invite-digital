@@ -39,7 +39,7 @@ const PANEL = {
  * Cómo llama **este** diseño a sus secciones. Es su voz, no una traducción: el itinerario
  * es «Cronograma» y el libro de firmas, «déjanos un mensaje».
  */
-const ROTULOS = { itinerary: 'Cronograma', guestbook: 'déjanos un mensaje', venue: '· LUGAR ·' } as const
+const ROTULOS = { itinerary: 'Cronograma', guestbook: 'déjanos un mensaje', venue: '· LUGAR ·', cover: '15 AÑOS' } as const
 
 export function XvIsabelleView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
@@ -62,16 +62,15 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
     // completo. El diseño se quedaba en un campo crema y la fotografía que le da nombre no
     // se veía nunca, ni en un teléfono.
     <article style={{ position: 'relative', color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <ImageOnlyCover
-          accent={P.oroClaro}
-          bgAsset={themeAsset('xv-isabelle', 'portada-griega.avif')}
-          hint={themes.coverHint}
-          label={hero?.eyebrow ?? themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.marfil}
-        />
-      )}
+      <ImageOnlyCover
+        accent={P.oroPortada}
+        badge={`▸ ${hero?.eyebrow ?? ''} · ${(hero?.nameA ?? '').toUpperCase()}`}
+        bgAsset={themeAsset('xv-isabelle', 'portada-griega.avif')}
+        hint={themes.coverEnter}
+        name={hero?.nameA ?? ''}
+        openLabel={themes.coverAria}
+        title={ROTULOS.cover}
+      />
 
       <div
         aria-hidden

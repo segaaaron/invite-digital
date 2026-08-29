@@ -9,7 +9,7 @@ export const civilDefinition: ThemeDefinition = {
   label: 'Civil',
   categorySlug: 'boda-civil',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono'],
+  fonts: ['spectral', 'jetbrainsMono', 'cormorant', 'cinzel'],
   sections: ['hero', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'gallery', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./civil.view').then((modulo) => modulo.CivilView)),

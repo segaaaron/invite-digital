@@ -69,9 +69,15 @@ export function XvSharedView({
         overflowX: 'clip',
       }}
     >
-      {preview === true ? null : (
-        piel.portada({ eyebrow: hero?.eyebrow ?? '', name: hero?.nameA ?? '', title: hero?.monogram ?? 'XV', openLabel: themes.coverAria })
-      )}
+      {piel.portada({
+        eyebrow: hero?.eyebrow ?? '',
+        name: hero?.nameA ?? '',
+        title: hero?.monogram ?? 'XV',
+        openLabel: themes.coverAria,
+        line1: themes.coverInviteLine1,
+        line2: themes.coverInviteLine2,
+        enter: themes.coverEnter,
+      })}
 
       {piel.fondo}
       <div

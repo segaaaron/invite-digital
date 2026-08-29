@@ -34,16 +34,14 @@ export function EngView({ content, dictionary, themes, slots, preview }: ThemePr
 
   return (
     <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.rosa}
-          bg={P.papel}
-          hint={themes.coverHint}
-          label={themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-        />
-      )}
+      <EnvelopeCover
+        accent={P.rosa}
+        bg={P.papel}
+        hint={themes.coverHint}
+        label={hero?.eyebrow ?? themes.coverOpen}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+      />
 
       <WeddingMagicBg
         glowColors={[P.petalo, P.concha, P.blanco]}

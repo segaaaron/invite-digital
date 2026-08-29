@@ -65,16 +65,14 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
 
   return (
     <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.salvia}
-          bg={P.papel}
-          hint={themes.coverHint}
-          label={hero?.eyebrow ?? themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-        />
-      )}
+      <EnvelopeCover
+        accent={P.salvia}
+        bg={P.papel}
+        hint={themes.coverHint}
+        label={hero?.eyebrow ?? themes.coverOpen}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+      />
 
       <WeddingMagicBg
         glowColors={[P.oliva, P.arena, P.papel]}

@@ -8,9 +8,14 @@ import { PALETA as P } from './xv-natalia.palette'
 type Props = {
   readonly bgAsset: string
   readonly noteAsset: string
-  readonly eyebrow: string
+  /** «Te invito a / celebrar mi fiesta», que aquí van en dos renglones de la misma línea. */
+  readonly line1: string
+  readonly line2: string
   readonly title: string
   readonly name: string
+  /** «MIS QUINCE · NATALIA», sin el triángulo: aquí no hay chapa con borde. */
+  readonly badge: string
+  readonly hint: string
   readonly openLabel: string
 }
 
@@ -21,7 +26,7 @@ type Props = {
  * del posicionamiento, que son los de la maqueta—: escribir encima de la partitura, fuera
  * de ese recuadro, deja el nombre ilegible.
  */
-export function NataliaCover({ bgAsset, noteAsset, eyebrow, title, name, openLabel }: Props) {
+export function NataliaCover({ bgAsset, noteAsset, line1, line2, title, name, badge, hint, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -72,7 +77,9 @@ export function NataliaCover({ bgAsset, noteAsset, eyebrow, title, name, openLab
               lineHeight: 1.5,
             }}
           >
-            {eyebrow}
+            {line1}
+            <br />
+            {line2}
           </span>
           <Image
             alt=""
@@ -92,7 +99,7 @@ export function NataliaCover({ bgAsset, noteAsset, eyebrow, title, name, openLab
               color: '#B8901F',
             }}
           >
-            {title} AÑOS
+            {title}
           </span>
           <span style={{ fontFamily: 'var(--font-alex-brush)', fontSize: 38, color: '#2A1D10', lineHeight: 1, marginTop: 4 }}>
             {name}
@@ -107,7 +114,19 @@ export function NataliaCover({ bgAsset, noteAsset, eyebrow, title, name, openLab
               marginTop: 14,
             }}
           >
-            {eyebrow}
+            {badge}
+          </span>
+          <span
+            style={{
+              fontFamily: 'var(--font-dm-sans)',
+              fontSize: 7,
+              letterSpacing: '0.15em',
+              color: '#6B4A2A',
+              fontWeight: 600,
+              marginTop: 6,
+            }}
+          >
+            {hint}
           </span>
         </span>
       </span>

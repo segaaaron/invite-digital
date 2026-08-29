@@ -1,6 +1,6 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
-import { PanelCover } from './PanelCover'
+import { MarianaCover } from './MarianaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-mariana.palette'
 
@@ -63,16 +63,16 @@ export const PIEL: PielXv = {
   ),
   burbujas: null,
   portada: (datos) => (
-    <PanelCover
+    <MarianaCover
       accent={P.lila}
-      bg="#0c1830"
-      bgAsset={themeAsset('xv-mariana', 'fondo-disco-tacones-opt.avif')}
-      emblemAsset={themeAsset('xv-mariana', 'bola-sola-opt.avif')}
-      eyebrow={datos.eyebrow}
+      bg="#050608"
+      bgAsset={themeAsset('xv-mariana', 'fondo-disco-mariana-opt.avif')}
+      hint={datos.enter}
       name={datos.name}
+      nameColor={P.blanco}
       openLabel={datos.openLabel}
-      textColor={P.tinta}
-      title={datos.title}
+      title={`${datos.title} AÑOS`}
+      titleGradient="linear-gradient(180deg, #FFFFFF 0%, #D8DDE3 60%)"
     />
   ),
   paleta: P,

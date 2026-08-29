@@ -9,7 +9,7 @@ export const xvIsabelleDefinition: ThemeDefinition = {
   label: 'Palacio Griego',
   categorySlug: 'xv-anos',
   palette: PALETA,
-  fonts: ['greatVibes', 'cormorant', 'cinzel', 'marcellus', 'allura'],
+  fonts: ['greatVibes', 'cormorant', 'cinzel', 'marcellus', 'allura', 'italiana', 'jetbrainsMono'],
   sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./xv-isabelle.view').then((modulo) => modulo.XvIsabelleView)),

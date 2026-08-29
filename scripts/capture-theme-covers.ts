@@ -57,6 +57,15 @@ async function principal(): Promise<void> {
     await pagina.evaluate(() => document.fonts.ready)
     await pagina.waitForTimeout(1200)
 
+    // La portada de apertura se abre antes de capturar. La tarjeta del catálogo tiene que
+    // enseñar **el diseño**, y con la portada puesta los ocho de sobre saldrían con la misma
+    // fotografía de un sobre y no habría forma de distinguirlos en la rejilla.
+    const portada = pagina.getByRole('button', { name: /abrir la invitaci/i })
+    if ((await portada.count()) > 0) {
+      await portada.first().click()
+      await pagina.waitForTimeout(600)
+    }
+
     // Se captura **el aparato**, no la ventana: la vista previa enseña la invitación dentro
     // de un marco de teléfono sobre fondo oscuro, y una portada con esa moldura y sus bandas
     // negras no es la portada del modelo.

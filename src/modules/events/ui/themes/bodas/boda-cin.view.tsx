@@ -36,7 +36,7 @@ const GRANO =
  * «estás invitado» y «algo inolvidable». No es del diccionario porque no es una
  * traducción: es el guion de este modelo.
  */
-const ROTULOS = { coverEyebrow: 'ESTÁS INVITADO', coverHeadline: 'Algo inolvidable' } as const
+const ROTULOS = { coverEyebrow: 'ESTÁS INVITADO', coverHeadline: 'Algo inolvidable', cover: 'NOW · SHOWING' } as const
 
 export function BodaCinView({ content, dictionary, themes, slots, preview }: ThemeProps) {
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, gallery, closing } = content
@@ -45,19 +45,17 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
 
   return (
     <article style={{ position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.oro}
-          bg={P.fondo}
-          eyebrow={ROTULOS.coverEyebrow}
-          headline={ROTULOS.coverHeadline}
-          hint={themes.coverHint}
-          label={themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-          variant="curtain"
-        />
-      )}
+      <EnvelopeCover
+        accent={P.oro}
+        bg={P.fondo}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
+        hint={themes.coverHint}
+        label={ROTULOS.cover}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+        variant="curtain"
+      />
 
       <WeddingMagicBg
         dark

@@ -9,7 +9,7 @@ export const engDefinition: ThemeDefinition = {
   label: 'Compromiso',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['newsreader', 'jetbrainsMono'],
+  fonts: ['newsreader', 'jetbrainsMono', 'cormorant', 'cinzel'],
   sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./eng.view').then((modulo) => modulo.EngView)),

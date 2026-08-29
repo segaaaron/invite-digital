@@ -25,12 +25,24 @@ export type PielXv = {
   readonly fondo: ReactNode
   /** Las burbujas, que solo tiene el de mar. */
   readonly burbujas: ReactNode
-  /** La portada a pantalla completa, ya construida con sus datos. */
+  /**
+   * La portada a pantalla completa, ya construida con sus datos.
+   *
+   * Recibe también las líneas del diccionario —el convite y la llamada a entrar— porque
+   * cada diseño las coloca de otra manera: dos renglones sueltos en «Mascarada», una sola
+   * línea al pie en «Gala Real». Pintarlas fuera obligaría a que todas las portadas
+   * tuvieran la misma forma, que es lo que las dejó siendo la misma.
+   */
   readonly portada: (datos: {
     eyebrow: string
     name: string
     title: string
     openLabel: string
+    /** «Te invito» y «a celebrar mi fiesta». */
+    line1: string
+    line2: string
+    /** «INGRESA A MI INVITACIÓN». */
+    enter: string
   }) => ReactNode
   readonly paleta: {
     readonly tinta: string

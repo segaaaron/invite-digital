@@ -93,16 +93,14 @@ export function BodaView({ content, event, dictionary, themes, slots, preview }:
         // ya lo hace `body`, que es donde vive desde siempre.
       }}
     >
-      {preview === true ? null : (
-        <EnvelopeCover
-          accent={P.oro}
-          bg={P.fondo}
-          hint={themes.coverHint}
-          label={themes.coverOpen}
-          openLabel={themes.coverAria}
-          textColor={P.tinta}
-        />
-      )}
+      <EnvelopeCover
+        accent={P.oro}
+        bg={P.fondo}
+        hint={themes.coverHint}
+        label={themes.coverOpen}
+        openLabel={themes.coverAria}
+        textColor={P.tinta}
+      />
 
       <WeddingMagicBg
         dark
