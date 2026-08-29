@@ -133,6 +133,7 @@ export const en = {
     seatForYou: 'A seat for you',
     yourPresence: 'Your presence will make this day special',
     scanHere: 'Scan here',
+    rsvpDeadlineLine: 'I would love to count on you. Let me know before {fecha}.',
     myFifteen: 'My Fifteen',
   },
   invitation: {

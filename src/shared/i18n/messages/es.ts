@@ -113,7 +113,7 @@ export const es = {
     reception: 'RECEPCIÓN',
     itinerary: 'ITINERARIO',
     dressCode: 'CÓDIGO DE VESTIMENTA',
-    songOfTheNight: 'SONG OF THE NIGHT',
+    songOfTheNight: 'LA CANCIÓN DE LA NOCHE',
     gifts: 'MESA DE REGALOS',
     guestbook: 'LIBRO DE FIRMAS',
     photoPlaceholder: 'FOTO',
@@ -133,6 +133,7 @@ export const es = {
     seatForYou: 'Lugar para ti',
     yourPresence: 'Tu presencia hará este día más especial',
     scanHere: 'Escanea Aquí',
+    rsvpDeadlineLine: 'Me encantaría contar contigo. Confírmame antes del {fecha}.',
     myFifteen: 'Mis XV Años',
   },
   invitation: {

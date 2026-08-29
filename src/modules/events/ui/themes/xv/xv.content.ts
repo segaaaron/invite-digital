@@ -36,7 +36,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   notes: [
     {
       title: 'Lluvia de Sobres',
-      text: 'Que estés ahí, celebrando conmigo, ya lo es todo. Si tu cariño quiere expresarse de otra forma, habrá un buzón esperando para tus deseos.',
+      // Dos párrafos: la intro de la tarjeta de regalos y la nota corta bajo el sobre.
+      text: 'Que estés ahí, celebrando conmigo, ya lo es todo. Si tu cariño quiere expresarse de otra forma, aquí tienes una opción.\n\nHabrá un buzón esperando para tus deseos',
     },
     {
       title: 'Solo Adultos',
@@ -45,7 +46,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   ],
   gallery: [{ label: 'Retrato' }],
   closing: {
-    text: 'Gracias por acompañarme, te espero para celebrar.',
+    // Dos párrafos: la despedida, sobre la firma, y la bendición del final.
+    text: 'Gracias por acompañarme, te espero para celebrar.\n\nQue Dios guarde tu camino en bendición cada día, princesa amada, y que tu vida esté llena de alegría.',
     signature: 'Sofía',
   },
 }

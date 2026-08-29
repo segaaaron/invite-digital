@@ -238,11 +238,9 @@ export interface ThemeDictionary {
   itinerary: string
   dressCode: string
   /**
-   * «SONG OF THE NIGHT», en inglés también en español.
-   *
-   * No es un descuido de traducción: la maqueta lo escribe así en los dieciséis diseños,
-   * como «SAVE THE DATE». Es un rótulo del diseño, no una frase que el invitado lea para
-   * entender algo.
+   * El rótulo del reproductor. La maqueta lo escribe en inglés en los dieciséis, pero es
+   * texto que el invitado lee, así que va **en el idioma del evento**: «LA CANCIÓN DE LA
+   * NOCHE» en español y «SONG OF THE NIGHT» en inglés.
    */
   songOfTheNight: string
   gifts: string
@@ -278,6 +276,13 @@ export interface ThemeDictionary {
   yourPresence: string
   /** «Escanea aquí», sobre el código del fondo de regalos. */
   scanHere: string
+  /**
+   * La línea que va bajo «Confirma tu asistencia», con la fecha límite dentro.
+   *
+   * `{fecha}` se sustituye con el plazo del evento ya formateado en su idioma. Va con
+   * marcador y no partida en dos porque en inglés la fecha no cae en el mismo sitio.
+   */
+  rsvpDeadlineLine: string
   /** «Mis XV Años»: el rótulo del cierre de los quince. */
   myFifteen: string
 }

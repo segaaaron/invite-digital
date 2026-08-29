@@ -9,6 +9,8 @@ import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { FloatingParticles } from '../kit/backgrounds/FloatingParticles'
 import { PremiumBubbles } from '../kit/backgrounds/PremiumBubbles'
+import { DividerOrnamental } from './DividerOrnamental'
+import { FileteDegradado, SobreDeLinea } from './PiezasXv'
 import type { PielXv } from './piel-xv'
 import { PIEL_XV } from './xv.skin'
 
@@ -36,6 +38,7 @@ const SERIF = 'var(--font-cormorant)'
  */
 export function XvSharedView({
   content,
+  event,
   dictionary,
   themes,
   slots,
@@ -47,6 +50,34 @@ export function XvSharedView({
   const CRISTAL = piel.cristal
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, notes, gallery, closing } = content
   const retrato = gallery?.[0]
+
+  // El primer aviso es el de los sobres, y va **dentro** de la tarjeta de regalos con su
+  // sobre de línea; los demás llevan tarjeta propia entre ornamentos. Es la composición de
+  // la maqueta, y el orden de `notes` lo fija el diseño, igual que «Editorial» indexa el
+  // suyo para la tarjeta de fotografías.
+  const [avisoDeSobres, ...avisosSueltos] = notes ?? []
+
+  // El texto del aviso puede traer dos párrafos: el primero es la intro de la tarjeta —«Que
+  // estés ahí, celebrando conmigo…»— y el segundo, la nota corta bajo el sobre. Con uno
+  // solo, todo es intro y el sobre se queda sin pie. Es el mismo reparto por línea en
+  // blanco que ya usa la cita de «Editorial».
+  const [introDeRegalos, notaDeSobres] = (avisoDeSobres?.text ?? '').split('\n\n')
+
+  // El cierre son dos textos, como en la maqueta: la despedida —arriba, sobre la firma— y
+  // la bendición del final, tras la concha. Van en un solo campo separados por una línea en
+  // blanco; con uno solo, es la despedida y no hay bendición.
+  const [despedida, bendicion] = (closing?.text ?? '').split('\n\n')
+
+  // La fecha límite, en el idioma del evento. Sin plazo, la línea no se pinta: prometer
+  // «confírmame antes del …» sin fecha detrás es peor que no decir nada.
+  const plazo =
+    event.rsvpDeadline === null
+      ? null
+      : new Intl.DateTimeFormat(event.locale === 'en' ? 'en-GB' : 'es-BO', {
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'UTC',
+        }).format(new Date(`${event.rsvpDeadline}T00:00:00Z`))
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const dia = cuando === null ? '' : String(cuando.getDate())
@@ -624,29 +655,89 @@ export function XvSharedView({
           </Reveal>
         )}
 
-        {(notes ?? []).map((aviso) => (
+        {/*
+          La tarjeta de regalos es la que la maqueta titula «Detalles que Abrazan», y lleva
+          dentro el primer aviso: la intro, el sobre de línea, «Lluvia de Sobres» y su nota,
+          y debajo la mesa de verdad. El aviso de los sobres no es una tarjeta aparte —lo
+          era, y quedaba un rótulo suelto encima de otra tarjeta con el mismo tema—.
+        */}
+        <Reveal>
+          <div
+            style={{
+              marginTop: 28,
+              textAlign: 'center',
+              padding: '34px 24px',
+              ...CRISTAL,
+              background: P.vidrioFuerte,
+              border: `1.5px solid ${P.lila}`,
+              boxShadow: P.sombraFuerte,
+            }}
+          >
+            <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.violetaHondo }}>
+              {piel.rotulos?.gifts ?? themes.gifts}
+            </div>
+
+            {introDeRegalos === undefined ? null : (
+              <p
+                style={{
+                  marginTop: 22,
+                  fontFamily: SERIF,
+                  fontStyle: 'italic',
+                  fontSize: 16,
+                  lineHeight: 1.8,
+                  color: P.violeta,
+                  maxWidth: '75%',
+                  marginInline: 'auto',
+                }}
+              >
+                {introDeRegalos}
+              </p>
+            )}
+
+            {avisoDeSobres === undefined ? null : (
+              <div style={{ marginTop: 40 }}>
+                <SobreDeLinea color={P.lila} />
+                <div style={{ marginTop: 16, fontFamily: SANS, fontSize: 15, color: P.violetaHondo, fontWeight: 700 }}>
+                  {avisoDeSobres.title}
+                </div>
+                {notaDeSobres === undefined ? null : (
+                  <div style={{ marginTop: 6, fontSize: 12, color: P.uva }}>{notaDeSobres}</div>
+                )}
+              </div>
+            )}
+
+            <FileteDegradado color={P.lilaFuerte} margin="36px auto" />
+
+            {slots.registry}
+          </div>
+        </Reveal>
+
+        {avisosSueltos.map((aviso) => (
           <Reveal key={aviso.title}>
             <div
               style={{
                 marginTop: 28,
                 textAlign: 'center',
-                padding: '34px 24px',
+                padding: '26px 20px',
                 ...CRISTAL,
                 background: P.vidrioFuerte,
                 border: `1.5px solid ${P.lila}`,
                 boxShadow: P.sombraFuerte,
               }}
             >
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.violetaHondo }}>{aviso.title}</div>
+              <DividerOrnamental color={P.amatista} />
+              <div style={{ marginTop: 22, fontFamily: CALIGRAFIA, fontSize: 44, color: P.violetaHondo }}>
+                {aviso.title}
+              </div>
               {aviso.text === undefined ? null : (
                 <p
                   style={{
-                    marginTop: 20,
+                    marginTop: 16,
                     fontFamily: SERIF,
-                    fontStyle: 'italic',
                     fontSize: 16,
-                    lineHeight: 1.8,
+                    lineHeight: 1.7,
                     color: P.violeta,
+                    textShadow: '0 1px 3px rgba(255,255,255,.9)',
                     maxWidth: '78%',
                     marginInline: 'auto',
                   }}
@@ -654,32 +745,42 @@ export function XvSharedView({
                   {aviso.text}
                 </p>
               )}
+              <div style={{ marginTop: 22 }}>
+                <DividerOrnamental color={P.amatista} />
+              </div>
             </div>
           </Reveal>
         ))}
 
+        {/*
+          El formulario no es un rótulo y una ranura: la maqueta lo presenta con su
+          ornamento, el título en caligrafía grande y la línea del plazo. Sin eso, el bloque
+          donde el invitado hace lo único que se le pide era el más soso de la invitación.
+        */}
         <Reveal>
-          <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
-            <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
-              {piel.rotulos?.gifts ?? themes.gifts}
-            </div>
-            {/* «Escanea aquí»: el diseño lo pone encima del código del fondo. */}
-            <div
-              style={{ fontFamily: SANS, fontSize: 15, fontWeight: 700, textAlign: 'center', marginBottom: 12, color: P.tinta }}
-            >
-              {themes.scanHere}
-            </div>
-            {slots.registry}
-          </div>
-        </Reveal>
-
-        <Reveal>
-          <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
-            <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
+          <div
+            style={{
+              marginTop: 28,
+              textAlign: 'center',
+              padding: '30px 22px',
+              ...CRISTAL,
+              background: P.vidrioFuerte,
+              border: `1.5px solid ${P.lila}`,
+              boxShadow: P.sombraFuerte,
+            }}
+          >
+            <DividerOrnamental color={P.amatista} />
+            <div style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 40, color: P.violetaHondo }}>
               {dictionary.title}
             </div>
+            {plazo === null ? null : (
+              <div style={{ marginTop: 10, fontFamily: SANS, fontSize: 14, color: P.violeta }}>
+                {themes.rsvpDeadlineLine.replace('{fecha}', plazo)}
+              </div>
+            )}
+            <FileteDegradado color={P.lilaFuerte} margin="22px auto" />
             {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.7, textAlign: 'center' }}>{themes.previewNotice}</p>
+              <p style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.7 }}>{themes.previewNotice}</p>
             ) : (
               slots.rsvp
             )}
@@ -699,15 +800,18 @@ export function XvSharedView({
 
         <Reveal>
           <div style={{ marginTop: 20, textAlign: 'center', padding: '20px 10px 40px' }}>
-            <div
-              aria-hidden
-              style={{
-                width: '40%',
-                height: 1.5,
-                background: `linear-gradient(90deg, transparent, ${P.lilaFuerte}, transparent)`,
-                margin: '0 auto 34px',
-              }}
-            />
+            <FileteDegradado color={P.lilaFuerte} margin="0 auto 34px" />
+            {/*
+              El agradecimiento va **antes** del rótulo y de la firma, que es donde la
+              maqueta lo pone: «gracias por acompañarme» cierra la invitación, y debajo
+              firma quien la manda. Estaba al final, detrás de la concha, leyéndose como un
+              pie de foto.
+            */}
+            {despedida === undefined ? null : (
+              <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: P.violeta, maxWidth: '70%', marginInline: 'auto' }}>
+                {despedida}
+              </p>
+            )}
             {/* El cierre lleva su propio rótulo —«Mis XV Años»—, no el antetítulo de la
                 cabecera: arriba pone «· MIS QUINCE ·» y aquí no. */}
             <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: P.uva, marginTop: 36 }}>
@@ -728,7 +832,7 @@ export function XvSharedView({
                 width={400}
               />
             </div>
-            {closing?.text === undefined ? null : (
+            {bendicion === undefined ? null : (
               <p
                 style={{
                   fontFamily: SERIF,
@@ -739,7 +843,7 @@ export function XvSharedView({
                   textShadow: '0 2px 8px rgba(255,255,255,.9)',
                 }}
               >
-                {closing.text}
+                {bendicion}
               </p>
             )}
             <div aria-hidden style={{ marginTop: 26, fontSize: 20, color: P.amatista, opacity: 0.7 }}>
