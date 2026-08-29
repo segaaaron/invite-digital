@@ -122,6 +122,7 @@ export const en = {
     godparents: 'GODPARENTS',
     viewLocation: 'VIEW LOCATION',
     venue: 'VENUE',
+    myStory: 'my story',
   },
   invitation: {
     title: 'Confirm your attendance',

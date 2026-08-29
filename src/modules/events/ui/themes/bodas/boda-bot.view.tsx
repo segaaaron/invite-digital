@@ -181,12 +181,13 @@ export function BodaBotView({ content, event, dictionary, themes, slots, preview
           <Reveal>
             <div style={{ marginTop: 36, padding: '22px 0', borderTop: `1px solid ${P.filete}`, borderBottom: `1px solid ${P.filete}` }}>
               <div style={{ textAlign: 'center', fontSize: 12, letterSpacing: '0.4em', color: P.salvia, marginBottom: 14 }}>
-                {themes.countdownPrefix.toUpperCase()}
+                · {themes.countdownPrefix.toUpperCase()} ·
               </div>
               <Countdown
                 labels={{
                   days: themes.countdownDays,
-                  hours: themes.countdownHours,
+                  // Este diseño no abrevia: «HORAS», como en la invitación de referencia.
+                  hours: themes.countdownHoursLong,
                   mins: themes.countdownMins,
                   secs: themes.countdownSecs,
                 }}

@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { Countdown } from '../kit/Countdown'
@@ -38,6 +39,11 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing } =
     content
   const retrato = gallery?.[0]
+
+  // La cita del diseño son tres piezas: la frase, los años y la historia que va bajo «mi
+  // historia». Un solo bloque de contenido, como en la boda botánica.
+  const [frase = '', anos = '', ...parrafos] = (quote?.text ?? '').split('\n\n')
+  const historia = parrafos.join('\n\n')
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const etiquetaLocal = event.locale === 'en' ? 'en-US' : 'es-BO'
@@ -207,10 +213,45 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
           </Reveal>
         )}
 
-        {quote === undefined ? null : (
+        {frase === '' ? null : (
           <Reveal>
             <div style={{ marginTop: 32, padding: '26px 22px', ...PANEL, textAlign: 'center' }}>
-              <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, lineHeight: 1.5, margin: 0 }}>{quote.text}</p>
+              <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, lineHeight: 1.5, margin: 0 }}>{frase}</p>
+            </div>
+          </Reveal>
+        )}
+
+        {/* El busto de mármol con las esquinas florales colgando, como la boda botánica. */}
+        <Reveal>
+          <div style={{ marginTop: 40, position: 'relative' }}>
+            <Image
+              alt=""
+              height={340}
+              src={themeAsset('xv-isabelle', 'busto-marmol-optimized.avif')}
+              style={{ width: '100%', height: 340, objectFit: 'contain', display: 'block' }}
+              width={430}
+            />
+            <div aria-hidden style={{ position: 'absolute', top: -38, left: -38, zIndex: 3 }}>
+              <FloralCorner side="left" tone="white" width={150} />
+            </div>
+            <div aria-hidden style={{ position: 'absolute', bottom: -38, right: -38, zIndex: 3 }}>
+              <FloralCorner flipY side="right" tone="white" width={150} />
+            </div>
+          </div>
+        </Reveal>
+
+        {historia === '' ? null : (
+          <Reveal>
+            <div style={{ marginTop: 44, padding: '22px 20px', ...PANEL, textAlign: 'center' }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, color: P.tinta, lineHeight: 1 }}>
+                {themes.myStory}
+              </div>
+              {anos === '' ? null : (
+                <div style={{ fontSize: 11, letterSpacing: '0.4em', marginTop: 6, opacity: 0.6, fontWeight: 500 }}>
+                  {anos}
+                </div>
+              )}
+              <p style={{ fontSize: 16, fontStyle: 'italic', lineHeight: 1.6, marginTop: 18 }}>{historia}</p>
             </div>
           </Reveal>
         )}
@@ -243,9 +284,22 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
           </>
         )}
 
+        {/* El florero de mármol, antes del lugar. */}
+        <Reveal>
+          <div aria-hidden style={{ marginTop: 40 }}>
+            <Image
+              alt=""
+              height={260}
+              src={themeAsset('xv-isabelle', 'marmol-flores-optimized.avif')}
+              style={{ width: '100%', height: 260, objectFit: 'contain', display: 'block' }}
+              width={430}
+            />
+          </div>
+        </Reveal>
+
         {ceremony === undefined && reception === undefined ? null : (
           <Reveal>
-            <div style={{ marginTop: 28, padding: 28, ...PANEL, position: 'relative' }}>
+            <div style={{ marginTop: 22, padding: 28, ...PANEL, position: 'relative' }}>
               {[ceremony, reception].map((lugar, indice) =>
                 lugar === undefined ? null : (
                   <div key={indice}>
@@ -352,7 +406,13 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         )}
 
         <div aria-hidden style={{ position: 'relative', marginTop: 24, display: 'flex', justifyContent: 'center' }}>
-          <FloralSpray tone="white" width={280} />
+          <Image
+            alt=""
+            height={220}
+            src={themeAsset('xv-isabelle', 'piramide-hoja-optimized.avif')}
+            style={{ width: 220, height: 'auto', display: 'block' }}
+            width={220}
+          />
         </div>
       </ThemeColumn>
     </article>

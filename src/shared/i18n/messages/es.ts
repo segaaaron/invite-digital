@@ -122,6 +122,7 @@ export const es = {
     godparents: 'PADRINOS',
     viewLocation: 'VER UBICACIÓN',
     venue: 'LUGAR',
+    myStory: 'mi historia',
   },
   invitation: {
     title: 'Confirma tu asistencia',

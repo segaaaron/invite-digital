@@ -247,6 +247,8 @@ export interface ThemeDictionary {
   viewLocation: string
   /** El rótulo del bloque del lugar: «LUGAR». */
   venue: string
+  /** «mi historia»: la de unos XV es de una sola persona, no de una pareja. */
+  myStory: string
 }
 
 export interface InvitationDictionary {

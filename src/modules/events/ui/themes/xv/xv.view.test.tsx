@@ -39,7 +39,10 @@ describe('el tema Bajo el Mar', () => {
     render(<XvView {...conMuestra()} />)
     // «19:00» sale dos veces: la fecha destacada y la hora de la recepción. Se busca la de
     // la fecha por su tamaño, que es lo que la distingue en el diseño.
-    expect(screen.getByText('12')).toBeInTheDocument()
+    // `getAllByText`: el «12» del día coincide con la cuenta atrás cuando el reloj deja
+    // doce horas o doce minutos para el evento, y esta prueba se caía sola según el día en
+    // que se corriera.
+    expect(screen.getAllByText('12').length).toBeGreaterThan(0)
     expect(screen.getByText(/septiembre/i)).toBeInTheDocument()
     const horas = screen.getAllByText('19:00')
     expect(horas.some((nodo) => nodo.style.fontSize === '56px')).toBe(true)

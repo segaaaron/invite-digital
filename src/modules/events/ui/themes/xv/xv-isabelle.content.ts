@@ -7,7 +7,11 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     nameA: 'Isabelle',
     monogram: 'I',
   },
-  quote: { text: 'Que cada paso te lleve donde el alma ya sabía que ibas.' },
+  // Tres piezas y en este orden, como el diseño las compone: la frase, los años y la
+  // historia que va bajo «mi historia».
+  quote: {
+    text: 'Que cada paso te lleve donde el alma ya sabía que ibas.\n\n2011 — 2026\n\nQuince años de risas, sueños y momentos que hoy se convierten en la celebración más especial. Gracias por ser parte de mi historia y por acompañarme en esta nueva etapa.',
+  },
   hosts: {
     label: 'Agradecida por el amor y cuidado de mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],
