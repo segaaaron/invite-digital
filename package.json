@@ -17,6 +17,9 @@
     "db:seed": "tsx --tsconfig tsconfig.json src/shared/db/seed.ts",
     "db:seed:demo": "tsx --tsconfig tsconfig.json scripts/seed-demo.ts",
     "test:e2e": "playwright test",
+    "test:e2e:dev": "E2E_DEV=1 playwright test",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm verify:boundaries && pnpm verify:tenancy",
+    "shots": "tsx --tsconfig tsconfig.json scripts/shots.ts",
     "user:create": "tsx --tsconfig tsconfig.json scripts/create-atelier-user.ts",
     "maintenance": "tsx --tsconfig tsconfig.json scripts/maintenance.ts",
     "preflight": "tsx --tsconfig tsconfig.json scripts/preflight.ts"

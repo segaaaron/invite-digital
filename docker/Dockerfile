@@ -16,6 +16,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ARG DATABASE_URL=postgres://build:build@127.0.0.1:5432/build
 ARG SITE_URL=http://localhost:3000
 ENV DATABASE_URL=$DATABASE_URL SITE_URL=$SITE_URL
+# `output: standalone` se activa por esta variable: en local sobra y cuesta dos minutos.
+ENV STANDALONE=1
 RUN pnpm build
 
 FROM base AS runtime

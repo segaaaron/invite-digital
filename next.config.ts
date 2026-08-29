@@ -4,7 +4,14 @@ import type { NextConfig } from 'next'
 const nextConfig: NextConfig = {
   // Standalone output ships a self-contained server.js, so the runtime image
   // carries no package manager and no dev dependencies.
-  output: 'standalone',
+  // Solo al construir la imagen. El rastreo de ficheros del `standalone` es lo que se come
+  // el heap y los dos minutos de cada build, y en local no sirve para nada: `next start`
+  // arranca del `.next` normal. El Dockerfile pone `STANDALONE=1`.
+  ...(process.env.STANDALONE === '1' ? { output: 'standalone' as const } : {}),
+  // Dos `next dev` no pueden compartir la misma carpeta de compilación: el segundo se
+  // niega a arrancar. Las e2e contra desarrollo usan la suya con `NEXT_DIST_DIR`, así que
+  // corren sin apagar el servidor que ya tengas abierto.
+  distDir: process.env.NEXT_DIST_DIR ?? '.next',
   poweredByHeader: false,
   // Next's SWC output requires @swc/helpers at runtime, but tracing only copies the
   // handful of files it sees imported, and misses the copy nested under next's own

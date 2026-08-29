@@ -72,3 +72,5 @@ tests/e2e/.auth
 # Los comprobantes de pago del Plan B en desarrollo. Nunca se versionan: son datos
 # personales de terceros —nombre, banco y cuenta— dentro de una imagen.
 .data/
+.shots/
+.next-e2e/

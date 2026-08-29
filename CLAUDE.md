@@ -926,6 +926,34 @@ correo, que necesita proveedor.
 - La posición es porcentaje `numeric(5,2)`, no píxeles, y el driver la entrega como
   cadena: el adaptador la convierte a número.
 
+## Cómo iterar rápido
+
+Un cambio de piel se comprobaba con `pnpm build` —**cinco minutos**— antes de cada pasada
+de e2e. Eso no lo vale ver si un botón se ve. Por orden de lo que ahorra:
+
+| Comando | Para qué | Coste |
+|---|---|---|
+| `pnpm shots` | Las dieciséis invitaciones a fichero en `.shots/`, de un tirón | ~17 s |
+| `pnpm test:e2e:dev` | Las e2e contra `next dev`, **sin build** | ~45 s en frío |
+| `E2E_WORKERS=4 pnpm test:e2e modelos.spec.ts` | En paralelo lo que no toca la base | ~15 s |
+| `pnpm check` | typecheck + lint + unitarias + fronteras + multitenencia | ~50 s |
+
+- **`pnpm shots` acepta rutas** (`--url /es/colecciones`), ancho (`--ancho 390`) y base
+  (`--base http://localhost:3100`). Va contra el servidor que ya esté levantado: **no
+  construye nada**. Espera a que las imágenes estén decodificadas y pone las `lazy` en
+  `eager`, porque sin eso las capturas salen con los huecos en blanco y parece un fallo que
+  no existe. Y navega con `domcontentloaded`: en desarrollo el canal de recarga en caliente
+  deja una conexión abierta y `networkidle` no termina nunca.
+- **`E2E_DEV=1` salta `checkin` y `puerta`**: en desarrollo Serwist va apagado y el modo
+  puerta sin red no existe ahí. **La pasada de cerrar va siempre contra la imagen**, sin esa
+  variable.
+- **Las e2e contra desarrollo usan su propia carpeta de compilación** (`.next-e2e`, por
+  `NEXT_DIST_DIR`): dos `next dev` sobre el mismo `.next` no arrancan, y así no hay que
+  apagar el servidor que ya tengas abierto.
+- **`output: standalone` solo se activa con `STANDALONE=1`**, que pone el Dockerfile. Baja
+  la memoria del build local; **no baja el tiempo**: se midió, y con o sin él son cinco
+  minutos. Lo que cuesta es compilar con webpack, no el rastreo de ficheros.
+
 ## Comandos
 
 ```bash
