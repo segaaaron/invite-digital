@@ -14,7 +14,12 @@ export const respondToInvitation =
     ids: () => string
     clock: () => Date
   }) =>
-  async (input: { token: string; attending: number; message: string | null }): Promise<Result<RsvpResponse, RsvpError>> =>
+  async (input: {
+    token: string
+    attending: number
+    responderName: string | null
+    message: string | null
+  }): Promise<Result<RsvpResponse, RsvpError>> =>
     attempt<RsvpResponse, RsvpError>(
       async () => {
         const group = await deps.resolveGroup(input.token)
@@ -42,6 +47,7 @@ export const respondToInvitation =
             id: deps.ids(),
             guestGroupId: group.value.id,
             attending: input.attending,
+            responderName: input.responderName,
             message: input.message,
             respondedAt: now,
           },

@@ -211,6 +211,13 @@
       "when": 1787365889032,
       "tag": "0030_guest_photos",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1787365890032,
+      "tag": "0031_rsvp_responder_name",
+      "breakpoints": true
     }
   ]
 }

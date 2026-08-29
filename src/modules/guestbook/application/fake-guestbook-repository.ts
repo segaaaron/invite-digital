@@ -14,6 +14,7 @@ export type FakeResponse = {
   eventId: string
   guestGroupId: string
   groupLabel: string
+  responderName?: string | null
   body: string | null
   writtenAt: Date
 }
@@ -57,6 +58,7 @@ export const fakeGuestbookRepository = (initial: {
             responseId: r.responseId,
             guestGroupId: r.guestGroupId,
             groupLabel: r.groupLabel,
+            responderName: r.responderName ?? null,
             body: r.body,
             writtenAt: r.writtenAt,
             readAt: note.readAt,

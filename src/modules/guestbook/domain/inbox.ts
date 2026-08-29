@@ -11,6 +11,8 @@ export type GuestMessage = {
   readonly responseId: string
   readonly guestGroupId: string
   readonly groupLabel: string
+  /** Quién de ese grupo escribió. El enlace es del grupo; el mensaje, de una persona. */
+  readonly responderName: string | null
   readonly body: string
   readonly writtenAt: Date
   readonly readAt: Date | null

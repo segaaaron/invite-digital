@@ -16,16 +16,22 @@ test('el invitado confirma 3 de 4 cupos y luego cambia a 2', async ({ page }) =>
   await page.goto(`/i/${token}`)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Evento boda-rsvp-e2e')
 
+  // El nombre llega prellenado con la etiqueta del grupo: el enlace es del grupo y quien
+  // contesta es una persona de dentro.
+  await expect(page.getByLabel('Nombre completo')).toHaveValue('Familia Rojas Peña')
+  await page.getByLabel('Nombre completo').fill('Jorge Rojas')
   await page.getByLabel('¿Cuántos asisten?').selectOption('3')
-  await page.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(page.getByRole('status')).toContainText('Confirmación recibida')
+  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  // El diseño saluda por su nombre a quien acaba de confirmar.
+  await expect(page.getByRole('status')).toContainText('¡Gracias, Jorge Rojas!')
 
   await page.getByRole('button', { name: 'Cambiar mi respuesta' }).click()
   await expect(page.getByLabel('¿Cuántos asisten?')).toHaveValue('3')
+  await expect(page.getByLabel('Nombre completo')).toHaveValue('Jorge Rojas')
 
   await page.getByLabel('¿Cuántos asisten?').selectOption('2')
-  await page.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(page.getByRole('status')).toContainText('Confirmación recibida')
+  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  await expect(page.getByRole('status')).toContainText('Gracias')
 
   // El histórico es de solo anexado: dos respuestas, no una actualizada.
   expect(await countResponses(groupId)).toBe(2)
@@ -57,7 +63,7 @@ test('pasado el plazo se muestra la invitación sin formulario', async ({ page }
 
   await page.goto(`/i/${token}`)
   await expect(page.getByText('El plazo para confirmar ya cerró')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Confirmar' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'ENVIAR' })).toHaveCount(0)
 
   await deleteEvent(eventSlug)
 })

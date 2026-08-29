@@ -64,6 +64,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
     acento: P.oro,
     acentoHondo: P.oroClaro,
     campo: P.panelFuerte,
+    caligrafia: CALIGRAFIA,
     display: SERIF,
     hueco: P.panelSuave,
     linea: P.filete,

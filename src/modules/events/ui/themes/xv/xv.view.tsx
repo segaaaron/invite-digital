@@ -89,6 +89,7 @@ export function XvSharedView({
   // de firmas y pase— heredan su paleta por variables CSS. Aquí no hace falta el velo que
   // se calcula para las bodas: estas pieles ya traen su vidrio esmerilado.
   const RANURAS = variablesDeRanuras({
+    caligrafia: CALIGRAFIA,
     sobreAcento: P.blanco,
     acento: P.lila,
     acentoHondo: P.lilaFuerte,

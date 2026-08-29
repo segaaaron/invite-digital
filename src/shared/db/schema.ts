@@ -483,6 +483,12 @@ export const rsvpResponses = pgTable(
       .notNull()
       .references(() => guestGroups.id, { onDelete: 'cascade' }),
     attending: integer('attending').notNull(),
+    /**
+     * Quién de la familia contesta. El enlace identifica **al grupo**, no a la persona.
+     *
+     * Es dato personal: la retención lo anonimiza junto con el mensaje.
+     */
+    responderName: varchar('responder_name', { length: 120 }),
     message: text('message'),
     respondedAt: timestamp('responded_at', { withTimezone: true }).defaultNow().notNull(),
   },

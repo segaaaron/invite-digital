@@ -75,7 +75,18 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
           >
             {message.groupLabel.slice(0, 1)}
           </span>
-          <h3 className="text-[13px] font-medium text-ink">{message.groupLabel}</h3>
+          {/*
+            Quién escribió, y de qué grupo. El enlace es del grupo —«Familia Rojas Peña»— y
+            el mensaje lo escribe una persona: sin el nombre, la pareja lee «qué ganas de
+            celebrar» sin saber cuál de los cuatro lo dijo. Sin nombre, la etiqueta sola,
+            que es lo que había y lo que tienen todas las respuestas anteriores.
+          */}
+          <h3 className="text-[13px] font-medium text-ink">
+            {message.responderName ?? message.groupLabel}
+            {message.responderName === null ? null : (
+              <span className="block text-[11px] font-normal text-ink-mute">{message.groupLabel}</span>
+            )}
+          </h3>
         </span>
         <div className="flex items-center gap-3">
           {sinLeer ? (

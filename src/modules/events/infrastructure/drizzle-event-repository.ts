@@ -70,9 +70,12 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where p.id = numerado.id
       `)
 
+      // El nombre de quien contestó se va con el mensaje: es la persona, no el grupo. El
+      // recuento —`attending`— se conserva, que es lo que hace la estadística del evento y
+      // no identifica a nadie.
       await tx.execute(sql`
         update rsvp_responses
-        set message = null
+        set message = null, responder_name = null
         where guest_group_id in (select id from guest_groups where event_id = ${eventId})
       `)
 

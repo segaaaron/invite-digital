@@ -8,7 +8,7 @@ const INICIAL: RsvpActionState = { status: 'idle' }
 
 type Entrada = {
   readonly dictionary: InvitationDictionary
-  readonly previous: { attending: number; message: string | null } | null
+  readonly previous: { attending: number; message: string | null; responderName: string | null } | null
   readonly seats: number
 }
 
@@ -25,6 +25,10 @@ export type RsvpControl = {
   readonly options: readonly number[]
   readonly defaultAttending: string
   readonly defaultMessage: string
+  /** El nombre con el que ya contestó, para no volver a escribirlo. */
+  readonly defaultName: string
+  /** Con quién saludar en el panel de gracias, o `null` si no dejó nombre. */
+  readonly confirmedName: string | null
 }
 
 /**
@@ -55,5 +59,9 @@ export function useRsvp({ dictionary, previous, seats }: Entrada): RsvpControl {
     options: Array.from({ length: seats + 1 }, (_, indice) => indice),
     defaultAttending: String(previous?.attending ?? seats),
     defaultMessage: previous?.message ?? '',
+    defaultName: previous?.responderName ?? '',
+    // El nombre del saludo sale de **la respuesta que acaba de guardarse**, no del campo:
+    // así dice el que quedó registrado y no el que se estuviera escribiendo.
+    confirmedName: state.status === 'success' ? state.responderName : null,
   }
 }

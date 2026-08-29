@@ -53,6 +53,7 @@ describe('repositorio de RSVP', () => {
         id: crypto.randomUUID(),
         guestGroupId: groupId,
         attending: 3,
+        responderName: null,
         message: null,
         respondedAt: new Date('2026-10-01T12:00:00Z'),
       })
@@ -60,6 +61,7 @@ describe('repositorio de RSVP', () => {
         id: crypto.randomUUID(),
         guestGroupId: groupId,
         attending: 2,
+        responderName: null,
         message: 'Al final somos dos',
         respondedAt: new Date('2026-10-05T12:00:00Z'),
       })
@@ -87,6 +89,7 @@ describe('repositorio de RSVP', () => {
         id: crypto.randomUUID(),
         guestGroupId: conRespuesta,
         attending: 3,
+        responderName: null,
         message: null,
         respondedAt: new Date('2026-10-01T12:00:00Z'),
       })
@@ -117,7 +120,7 @@ describe('respondedAtsFor', () => {
       const grupoB = await seedGroup(tx, eventoB, 2, 42)
 
       const responder = (guestGroupId: string, iso: string) =>
-        repo.append({ id: crypto.randomUUID(), guestGroupId, attending: 2, message: null, respondedAt: new Date(iso) })
+        repo.append({ id: crypto.randomUUID(), guestGroupId, attending: 2, responderName: null, message: null, respondedAt: new Date(iso) })
 
       await responder(grupoA, '2026-08-01T12:00:00Z')
       await responder(grupoA, '2026-08-20T12:00:00Z')
@@ -140,6 +143,7 @@ describe('respondedAtsFor', () => {
         id: crypto.randomUUID(),
         guestGroupId: grupoId,
         attending: 2,
+        responderName: null,
         message: null,
         respondedAt: new Date('2026-08-20T12:00:00Z'),
       })

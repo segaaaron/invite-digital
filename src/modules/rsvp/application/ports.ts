@@ -1,6 +1,11 @@
 import type { RsvpResponse } from '../domain/rsvp-response'
 
-export type LatestResponse = { readonly attending: number; readonly message: string | null; readonly respondedAt: Date }
+export type LatestResponse = {
+  readonly attending: number
+  readonly responderName: string | null
+  readonly message: string | null
+  readonly respondedAt: Date
+}
 
 export interface RsvpRepository {
   /** Solo anexa: responder otra vez crea una fila nueva, nunca actualiza la anterior. */

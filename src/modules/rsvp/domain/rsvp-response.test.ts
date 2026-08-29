@@ -6,6 +6,7 @@ const base = {
   id: 'r1',
   guestGroupId: 'g1',
   attending: 3,
+  responderName: null,
   message: null,
   respondedAt: new Date('2026-08-19T12:00:00Z'),
 }

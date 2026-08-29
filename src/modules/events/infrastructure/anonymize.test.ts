@@ -120,7 +120,12 @@ describe('anonimización', () => {
         .insert(guestGroups)
         .values({ eventId: evento.id, label: 'Daniela Ortiz', seats: 1, tokenHash: Buffer.alloc(32, 12) })
 
-      await tx.insert(rsvpResponses).values({ guestGroupId: primero!.id, attending: 3, message: 'Vamos tres, gracias' })
+      await tx.insert(rsvpResponses).values({
+        guestGroupId: primero!.id,
+        attending: 3,
+        responderName: 'Jorge Rojas',
+        message: 'Vamos tres, gracias',
+      })
 
       const antes = await rsvpRepo.tallyRowsFor(evento.id)
       await repo.anonymize(evento.id, NOW)
@@ -133,6 +138,9 @@ describe('anonimización', () => {
 
       const respuestas = await tx.select().from(rsvpResponses).where(eq(rsvpResponses.guestGroupId, primero!.id))
       expect(respuestas[0]?.message).toBeNull()
+      // El nombre de quien contestó se va con el mensaje: es la persona, no el grupo.
+      expect(respuestas[0]?.responderName).toBeNull()
+      // El recuento se conserva: es lo que hace la estadística y no identifica a nadie.
       expect(respuestas[0]?.attending).toBe(3)
 
       expect(await rsvpRepo.tallyRowsFor(evento.id)).toEqual(antes)

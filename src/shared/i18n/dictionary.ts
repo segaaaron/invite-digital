@@ -290,11 +290,24 @@ export interface ThemeDictionary {
 export interface InvitationDictionary {
   title: string
   seatsLabel: string
+  /** «Nombre completo»: el enlace sabe el grupo, no quién de la familia contesta. */
+  nameLabel: string
+  namePlaceholder: string
+  /** «¿Asistirás?», con sus dos respuestas. */
+  goingLabel: string
+  goingYes: string
+  goingNo: string
   attendingLabel: string
   messageLabel: string
+  messagePlaceholder: string
   submit: string
   sending: string
+  /**
+   * «¡Gracias, {nombre}!». Lleva marcador porque el diseño lo saluda por su nombre; sin
+   * nombre escrito, la pantalla usa el genérico de `successTitleAnon`.
+   */
   successTitle: string
+  successTitleAnon: string
   successBody: string
   change: string
   closed: string

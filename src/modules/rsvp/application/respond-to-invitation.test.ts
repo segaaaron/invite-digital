@@ -49,8 +49,8 @@ describe('respondToInvitation', () => {
     const store = repo()
     const responder = respondToInvitation(deps({ rsvp: store.rsvp }))
 
-    await responder({ token: 'tok', attending: 3, message: null })
-    await responder({ token: 'tok', attending: 2, message: 'Al final somos dos' })
+    await responder({ token: 'tok', attending: 3, responderName: null, message: null })
+    await responder({ token: 'tok', attending: 2, responderName: null, message: 'Al final somos dos' })
 
     expect(store.appended.map((r) => r.attending)).toEqual([3, 2])
   })
@@ -59,6 +59,7 @@ describe('respondToInvitation', () => {
     const result = await respondToInvitation(deps({ clock: () => new Date('2026-11-21T12:00:00Z') }))({
       token: 'tok',
       attending: 1,
+      responderName: null,
       message: null,
     })
     expect(isErr(result) && result.error.kind).toBe('rsvp_closed')
@@ -68,6 +69,7 @@ describe('respondToInvitation', () => {
     const result = await respondToInvitation(deps({ clock: () => new Date('2026-11-20T23:00:00Z') }))({
       token: 'tok',
       attending: 1,
+      responderName: null,
       message: null,
     })
     expect(isOk(result)).toBe(true)
@@ -77,6 +79,7 @@ describe('respondToInvitation', () => {
     const result = await respondToInvitation(deps({ findEventById: async () => ok({ ...evento, status: 'draft' }) }))({
       token: 'tok',
       attending: 1,
+      responderName: null,
       message: null,
     })
     expect(isErr(result) && result.error.kind).toBe('rsvp_closed')
@@ -86,6 +89,7 @@ describe('respondToInvitation', () => {
     const result = await respondToInvitation(deps({ resolveGroup: async () => err(guestError('revoked', 'revocada')) }))({
       token: 'tok',
       attending: 1,
+      responderName: null,
       message: null,
     })
     expect(isErr(result) && result.error.kind).toBe('invitation_revoked')
@@ -95,13 +99,14 @@ describe('respondToInvitation', () => {
     const result = await respondToInvitation(deps({ resolveGroup: async () => err(guestError('not_found', 'sin grupo')) }))({
       token: 'tok',
       attending: 1,
+      responderName: null,
       message: null,
     })
     expect(isErr(result) && result.error.kind).toBe('invitation_not_found')
   })
 
   it('rechaza más asistentes que cupos', async () => {
-    const result = await respondToInvitation(deps())({ token: 'tok', attending: 5, message: null })
+    const result = await respondToInvitation(deps())({ token: 'tok', attending: 5, responderName: null, message: null })
     expect(isErr(result) && result.error.kind).toBe('too_many_seats')
   })
 
@@ -115,13 +120,13 @@ describe('respondToInvitation', () => {
           return err(eventError('not_found', 'no debería llegar aquí'))
         },
       }),
-    )({ token: 'tok', attending: 1, message: null })
+    )({ token: 'tok', attending: 1, responderName: null, message: null })
     expect(consultas).toBe(0)
   })
 
   it('no anexa nada cuando el dominio rechaza la respuesta', async () => {
     const store = repo()
-    await respondToInvitation(deps({ rsvp: store.rsvp }))({ token: 'tok', attending: 9, message: null })
+    await respondToInvitation(deps({ rsvp: store.rsvp }))({ token: 'tok', attending: 9, responderName: null, message: null })
     expect(store.appended).toHaveLength(0)
   })
 })

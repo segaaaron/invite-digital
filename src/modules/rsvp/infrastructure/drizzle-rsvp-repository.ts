@@ -9,6 +9,7 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
       id: response.id,
       guestGroupId: response.guestGroupId,
       attending: response.attending,
+      responderName: response.responderName,
       message: response.message,
       respondedAt: response.respondedAt,
     })
@@ -18,6 +19,7 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
     const [row] = await database
       .select({
         attending: rsvpResponses.attending,
+        responderName: rsvpResponses.responderName,
         message: rsvpResponses.message,
         respondedAt: rsvpResponses.respondedAt,
       })
@@ -54,6 +56,7 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
       .selectDistinctOn([rsvpResponses.guestGroupId], {
         guestGroupId: rsvpResponses.guestGroupId,
         attending: rsvpResponses.attending,
+        responderName: rsvpResponses.responderName,
         message: rsvpResponses.message,
         respondedAt: rsvpResponses.respondedAt,
       })
@@ -63,7 +66,10 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
       .orderBy(rsvpResponses.guestGroupId, desc(rsvpResponses.respondedAt))
 
     return new Map(
-      filas.map((f) => [f.guestGroupId, { attending: f.attending, message: f.message, respondedAt: f.respondedAt }]),
+      filas.map((f) => [
+        f.guestGroupId,
+        { attending: f.attending, responderName: f.responderName, message: f.message, respondedAt: f.respondedAt },
+      ]),
     )
   },
 

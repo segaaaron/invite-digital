@@ -7,6 +7,7 @@ const mensaje = (over: Partial<GuestMessage> = {}): GuestMessage => ({
   responseId: 'r1',
   guestGroupId: 'g1',
   groupLabel: 'Familia Rojas',
+  responderName: null,
   body: 'Mensaje corriente',
   writtenAt: new Date('2026-08-20T15:30:00.000Z'),
   readAt: null,
@@ -20,6 +21,7 @@ const destacado = mensaje({
   responseId: 'c',
   body: 'Mensaje destacado',
   groupLabel: 'Familia Suárez',
+  responderName: null,
   featuredAt: new Date('2026-08-21T09:30:00.000Z'),
 })
 

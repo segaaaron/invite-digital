@@ -80,7 +80,13 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
           ),
           rsvp: abierto ? (
-            <RsvpForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
+            <RsvpForm
+              dictionary={dictionary}
+              groupLabel={group.label}
+              previous={latest}
+              seats={group.seats}
+              token={token}
+            />
           ) : (
             <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
           ),

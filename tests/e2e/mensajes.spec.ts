@@ -19,8 +19,8 @@ test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la r
   await page.goto(`/i/${token}`)
   await page.getByLabel('¿Cuántos asisten?').selectOption('3')
   await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Qué ganas de celebrar con ustedes.')
-  await page.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(page.getByRole('status')).toContainText('Confirmación recibida')
+  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  await expect(page.getByRole('status')).toContainText('Gracias')
 
   // 2. El evento anuncia el mensaje sin leer desde su propia página, sin entrar.
   await page.goto(`/panel/eventos/${SLUG}`)
@@ -64,8 +64,8 @@ test('lo destacado en el panel es lo que ve la pareja en su enlace de solo lectu
   await page.goto(`/i/${token}`)
   await page.getByLabel('¿Cuántos asisten?').selectOption('2')
   await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Un abrazo enorme para los dos.')
-  await page.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(page.getByRole('status')).toContainText('Confirmación recibida')
+  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  await expect(page.getByRole('status')).toContainText('Gracias')
 
   await page.goto(`/panel/eventos/${slug}/mensajes`)
   await page.getByRole('button', { name: 'Destacar' }).click()

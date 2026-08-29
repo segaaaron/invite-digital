@@ -10,6 +10,8 @@ export type MessageRow = {
   readonly responseId: string
   readonly guestGroupId: string
   readonly groupLabel: string
+  /** Quién de ese grupo escribió, si lo dijo al confirmar. */
+  readonly responderName: string | null
   readonly body: string | null
   readonly writtenAt: Date
   readonly readAt: Date | null

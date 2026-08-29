@@ -10,6 +10,7 @@ const respuesta = ok({
   id: 'r1',
   guestGroupId: 'g1',
   attending: 3,
+  responderName: null,
   message: null,
   respondedAt: new Date('2026-10-01T12:00:00Z'),
 })
@@ -39,7 +40,7 @@ describe('guardedRespond', () => {
       log: noop,
     })({ ip: '1.2.3.4', token: 'tok', payload: { attending: '0' } })
 
-    expect(result).toEqual({ status: 'success', attending: 0 })
+    expect(result).toEqual({ status: 'success', attending: 0, responderName: null })
   })
 
   it('rechaza el campo vacío, que no es lo mismo que un cero', async () => {

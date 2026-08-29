@@ -36,6 +36,13 @@ export type SlotSkin = {
   readonly linea: string
   /** La tipografía de titular del diseño, si tiene una propia. */
   readonly display?: string
+  /**
+   * La caligrafía del diseño, para el saludo de «¡Gracias, Jorge!».
+   *
+   * Va en su propio token y no en `--font-display` porque esa la usan también los nombres
+   * de la mesa de regalos, y «Juego de sábanas de lino» en letra inglesa no se lee.
+   */
+  readonly caligrafia?: string
   /** El redondeo de tarjeta del diseño, si no es el de la web pública. */
   readonly radio?: number
 }
@@ -60,6 +67,7 @@ export function variablesDeRanuras(skin: SlotSkin): CSSProperties {
     '--color-on-gold': skin.sobreAcento,
     '--color-line': skin.linea,
     ...(skin.display === undefined ? {} : { '--font-display': skin.display }),
+    ...(skin.caligrafia === undefined ? {} : { '--font-script': skin.caligrafia }),
     ...(skin.radio === undefined ? {} : { '--radius-card': `${skin.radio}px` }),
   } as CSSProperties
 }

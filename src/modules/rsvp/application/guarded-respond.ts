@@ -3,11 +3,13 @@ import type { RateLimiter } from '@/modules/leads/application/rate-limit'
 import type { RsvpError, RsvpErrorKind } from '../domain/errors'
 import type { RsvpResponse } from '../domain/rsvp-response'
 
-export type RsvpOutcome = { status: 'success'; attending: number } | { status: 'error'; message: RsvpErrorKind }
+export type RsvpOutcome =
+  | { status: 'success'; attending: number; responderName: string | null }
+  | { status: 'error'; message: RsvpErrorKind }
 
-const readAnswer = (payload: unknown): { attending: number; message: string | null } | null => {
+const readAnswer = (payload: unknown): { attending: number; responderName: string | null; message: string | null } | null => {
   if (typeof payload !== 'object' || payload === null) return null
-  const { attending, message } = payload as Record<string, unknown>
+  const { attending, message, name } = payload as Record<string, unknown>
 
   // El formulario llega como texto; `Number('')` daría 0, que es una respuesta válida
   // ("no vamos") y no un campo vacío. Por eso se comprueba antes de convertir.
@@ -15,13 +17,22 @@ const readAnswer = (payload: unknown): { attending: number; message: string | nu
   const parsed = Number(attending)
   if (!Number.isFinite(parsed)) return null
 
-  return { attending: parsed, message: typeof message === 'string' ? message : null }
+  return {
+    attending: parsed,
+    responderName: typeof name === 'string' ? name : null,
+    message: typeof message === 'string' ? message : null,
+  }
 }
 
 export const guardedRespond =
   (deps: {
     limiter: RateLimiter
-    respond: (input: { token: string; attending: number; message: string | null }) => Promise<Result<RsvpResponse, RsvpError>>
+    respond: (input: {
+      token: string
+      attending: number
+      responderName: string | null
+      message: string | null
+    }) => Promise<Result<RsvpResponse, RsvpError>>
     clock: () => number
     log: (message: string, kind: string, detail: string) => void
   }) =>
@@ -39,5 +50,5 @@ export const guardedRespond =
       return { status: 'error', message: result.error.kind }
     }
 
-    return { status: 'success', attending: result.value.attending }
+    return { status: 'success', attending: result.value.attending, responderName: result.value.responderName }
   }
