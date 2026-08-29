@@ -1,44 +1,73 @@
 import type { InvitationContent } from '../../../domain/invitation-content'
 
-/** El contenido de muestra de «Editorial», copiado de la maqueta. */
+/**
+ * El contenido de muestra de «Editorial», copiado de la maqueta rehecha.
+ *
+ * La cita del principio son tres párrafos y el orden importa: el primero es el titular, el
+ * segundo la firma de quien lo dice y el resto la columna con capitular. Es como lo compone
+ * el diseño, y por eso no son tres campos.
+ *
+ * En el itinerario, `imageId` es **la casilla del pliego de iconos** —`0` a `5`—, no una
+ * imagen del evento: el diseño trae los seis dibujos en una sola lámina dorada.
+ */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: {
-    eyebrow: '· INSIDE ·',
+    eyebrow: 'NUESTRA BODA',
+    monogram: '· MARÍA & ALEX ·',
     nameA: 'María',
     nameB: '& Alex',
-    monogram: 'VOL. I · NO. 09',
-    serial: '· TIE THE KNOT · 20.09.2026 ·',
+    serial: '· NOS CASAMOS · 20.09.2026 ·',
   },
-  // Dos párrafos separados por línea en blanco: el primero es la cita destacada que el
-  // diseño pone entre filetes, el resto es la columna con capitular.
   quote: {
-    text: 'Nos casamos un domingo, porque los domingos tienen ese aire de promesa cumplida.\n\nFue en una librería de viejo, una tarde de septiembre. María buscaba a Borges. Alex tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia.',
+    text: 'Te ví y supe que era todo lo que iba a querer.\n\n— ALEX, 28\n\nFue en una librería de viejo, una tarde de septiembre. María buscaba a Borges. Alex tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia. Siete años más tarde, María escribe poemas. Alex sigue dibujando. Y ambos firman la suya, en septiembre, igual que la primera vez.',
   },
-  schedule: { startsAt: '2026-09-20T18:00:00' },
+  hosts: {
+    label: 'Con la bendición de Dios y de nuestros padres',
+    names: [
+      'Carmen Robles de Vargas',
+      'Ricardo Vargas Núñez',
+      'Lucía Mendoza de Terán',
+      'Fernando Terán Castillo',
+      'Elena Sandoval de Quiroga',
+      'Andrés Quiroga Beltrán',
+    ],
+  },
+  schedule: { startsAt: '2026-09-20T13:00:00' },
+  ceremony: {
+    label: 'Ceremonia Religiosa',
+    place: 'Parroquia San Rafael',
+    time: '13:00',
+  },
   reception: {
-    label: 'THE PLACE',
-    place: 'Hacienda Los Sauces',
+    label: 'Recepción Social',
+    place: 'Salón Los Cedros',
     address: '· KM 22 CARRETERA REAL · GTO ·',
-    time: 'Construida en 1879. Quince hectáreas. Un único roble en el patio.',
+    time: '15:00',
   },
-  map: { label: 'LOS SAUCES', coords: '20.51°N · 100.81°W' },
+  map: { label: 'HACIENDA LOS SAUCES', coords: '20.51°N · 100.81°W' },
   itinerary: [
-    { time: '16:00', label: 'Welcome cocktail', note: 'Jardín de la entrada' },
-    { time: '17:30', label: 'Ceremonia civil', note: 'Bajo el roble centenario' },
-    { time: '18:30', label: 'Brindis & canapés', note: 'Terraza norte' },
-    { time: '20:00', label: 'Cena de gala', note: 'Salón Principal' },
-    { time: '22:00', label: 'Discurso & primer baile' },
-    { time: '23:00', label: 'DJ set · Frida Vega', note: 'Open bar' },
-    { time: '02:00', label: 'Vamos a casa', note: '(o no)' },
+    { time: '13:45', label: 'CEREMONIA RELIGIOSA', imageId: '0' },
+    { time: '16:00', label: 'RECEPCIÓN SOCIAL', imageId: '1' },
+    { time: '17:00', label: 'VALS DE LOS NOVIOS', imageId: '2' },
+    { time: '19:00', label: 'UNA DELICIOSA CENA', imageId: '3' },
+    { time: '21:00', label: 'PARTIMOS LA TORTA', imageId: '4' },
+    { time: '00:00', label: 'FELICES PARA SIEMPRE', imageId: '5' },
   ],
   dressCode: {
-    title: 'Dress, code.',
-    note: 'THE LOOK',
+    note: 'GALA ELEGANTE',
+    title: 'Código de vestimenta',
     detail: 'Formal · paleta tierra · tejidos naturales · sin blanco · sin nude · sin neón.',
   },
-  gallery: [
-    { label: 'EDITORIAL COVER · MARÍA & ALEX' },
-    { label: 'FIG. 02 · MARÍA, IN HER STUDIO · BY F. RIVERA' },
+  gallery: [{ label: 'María y Alex' }, { label: 'Nosotros' }],
+  notes: [
+    {
+      title: 'CELEBRACIÓN SOLO PARA ADULTOS',
+      text: 'Los niños son alegría, pero esta noche queremos que ustedes también descansen.',
+    },
+    {
+      title: 'Comparte tus fotos',
+      text: 'Sube aquí las fotos que tomes durante el día. Nos encantará ver la boda desde tus ojos.',
+    },
   ],
-  closing: { text: 'fin del volumen.', signature: 'VOWS · ISSUE 09 · 2026' },
+  closing: { text: 'Te esperamos.', signature: 'MARÍA & ALEX' },
 }

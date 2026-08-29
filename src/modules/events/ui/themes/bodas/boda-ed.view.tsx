@@ -1,149 +1,170 @@
+import Image from 'next/image'
+import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
-import { WeddingMagicBg } from '../kit/backgrounds/WeddingMagicBg'
 import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-ed.palette'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const DISPLAY = 'var(--font-spectral)'
+const CALIGRAFIA = 'var(--font-great-vibes)'
 
 /**
- * «Editorial» — la boda compuesta como un número de revista, de `wedding-variants.jsx:557`.
+ * «Editorial» — María & Alex, de `wedding-variants.jsx:558`.
  *
- * La cabecera es una mancheta, la foto es una portada, el itinerario es un sumario y el
- * código de vestimenta es un muestrario de color con su hexadecimal a la vista.
+ * **La maqueta lo rehízo entero.** Era una revista de papel crema con tinta negra y acento
+ * terracota; ahora es verde botánico con oro encima: fotografía de hojas de fondo, retrato
+ * enmarcado flotando sobre ella, dos tarjetas con iconos dorados, seis dibujos para el
+ * itinerario y un muestrario de color para la vestimenta. Se repintó aquí en vez de
+ * mantener las dos versiones, porque un diseño es uno.
  *
- * **El índice se compone de lo que la invitación trae de verdad**, no de una lista escrita
- * a mano. La maqueta lo tenía clavado, y un índice que anuncia «P.06 Dress code» en una
- * boda que no cargó código de vestimenta es una página que promete algo que no está.
+ * El fondo va **fijo y detrás de todo**, y por eso el artículo no lleva color propio: uno
+ * opaco taparía la fotografía entera. Dentro del marco de la vista previa se ancla a la
+ * tarjeta, que es lo que se quiere.
+ *
+ * Los seis iconos del itinerario vienen en **una sola lámina** de tres por dos, y cada fila
+ * enseña su casilla moviendo la imagen dentro de una ventana de 56 píxeles. Ahí `imageId`
+ * es el número de casilla —`0` a `5`—, no una fotografía del evento; sin él manda el orden
+ * de la fila.
  */
 export function BodaEdView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
-  const { hero, quote, schedule, reception, map, itinerary, dressCode, gallery, closing } = content
-  const portada = gallery?.[0]
-  const interior = gallery?.[1]
+  const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
+    content
 
-  // El primer párrafo es la cita destacada; el resto, la columna con capitular.
-  const [destacada = '', ...parrafos] = (quote?.text ?? '').split('\n\n')
+  // La cita del principio son tres piezas y el orden es del diseño: titular, firma de quien
+  // lo dice y la columna con capitular. Es un solo bloque porque en la maqueta es un solo
+  // texto, y partirlo en tres campos sería inventar una estructura que el diseño no tiene.
+  const [titular = '', firma = '', ...parrafos] = (quote?.text ?? '').split('\n\n')
   const historia = parrafos.join('\n\n')
   const capitular = historia.slice(0, 1)
-  const resto = historia.slice(1)
+  const cuerpo = historia.slice(1)
 
-  // La mancheta de la maqueta es de tres piezas —izquierda, centro en negrita, derecha—,
-  // y el centro es el mes y el año de la boda: «SEP / 2026». Faltaba, y una cabecera de
-  // revista con dos piezas se lee descolgada, que es justo lo que esta portada no puede
-  // permitirse.
+  const portada = gallery?.[0]
+  const nosotros = gallery?.[1]
+  const soloAdultos = notes?.[0]
+  const fotos = notes?.[1]
+
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
-  const mesCorto =
+  const fechaLarga =
     cuando === null
       ? ''
       : cuando
-          .toLocaleDateString(event.locale === 'en' ? 'en-US' : 'es-BO', { month: 'short' })
-          .replace('.', '')
+          .toLocaleDateString(event.locale === 'en' ? 'en-US' : 'es-BO', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          })
           .toUpperCase()
-  const edicion = cuando === null ? '' : `${mesCorto} / ${cuando.getFullYear()}`
 
-  const indice = [
-    quote === undefined ? null : { pagina: 'P.02', titulo: themes.ourStory },
-    itinerary === undefined ? null : { pagina: 'P.04', titulo: themes.itinerary },
-    dressCode === undefined ? null : { pagina: 'P.06', titulo: themes.dressCode },
-    reception === undefined ? null : { pagina: 'P.08', titulo: themes.reception },
-    { pagina: 'P.10', titulo: dictionary.title },
-  ].filter((fila): fila is { pagina: string; titulo: string } => fila !== null)
+  const tarjetas = [
+    { lugar: ceremony, icono: 'templo-dorado-sf.avif' as const },
+    { lugar: reception, icono: 'copas-doradas-sf.avif' as const },
+  ].filter((tarjeta) => tarjeta.lugar !== undefined)
 
   return (
-    <article style={{ position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
       {preview === true ? null : (
         <EnvelopeCover
-          accent={P.terra}
-          bg={P.papel}
+          accent={P.oro}
+          bg={P.fondo}
           hint={themes.coverHint}
-          label={themes.coverOpen}
+          label={hero?.monogram ?? themes.coverOpen}
           openLabel={themes.coverAria}
-          textColor={P.tinta}
+          textColor={P.papel}
         />
       )}
 
-      <WeddingMagicBg
-        glowColors={[P.durazno, P.terra, P.crema]}
-        intensity={0.6}
-        palette={[P.papel, P.arena, P.crema, P.arcilla, P.papel]}
-        petalColors={[P.crema, P.durazno, P.terra]}
-        petalEdges={[P.terra, P.arcilla]}
-        petals={22}
-      />
+      {/* La fotografía de hojas, fija y detrás de todo. */}
+      <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
+        <Image
+          alt=""
+          fill
+          sizes="480px"
+          src={themeAsset('boda-ed', 'fondo-verde-hojas.avif')}
+          style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
+        />
+        <div style={{ position: 'absolute', inset: 0, background: P.veloHoja }} />
+      </div>
 
       <ThemeColumn>
         {/* La mancheta. */}
-        <div style={{ padding: '28px 24px 12px', borderBottom: `1.5px solid ${P.tinta}` }}>
+        <div style={{ padding: '22px 24px', borderBottom: `1.5px solid ${P.oro}`, position: 'relative' }}>
           <div
+            aria-hidden
             style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'baseline',
-              fontFamily: MONO,
-              fontSize: 10,
-              letterSpacing: '0.3em',
+              position: 'absolute',
+              inset: '-10px -6px',
+              background: P.veloFuerte,
+              filter: 'blur(10px)',
+              zIndex: -1,
             }}
-          >
-            <span>{hero?.monogram ?? ''}</span>
-            <span style={{ fontWeight: 600 }}>{edicion}</span>
-            <span>$ ROMANTIC</span>
-          </div>
-          <div style={{ marginTop: 4, textAlign: 'center' }}>
+          />
+          <div style={{ textAlign: 'center' }}>
             <div style={{ fontFamily: DISPLAY, fontSize: 56, fontWeight: 200, letterSpacing: '0.04em', lineHeight: 0.95 }}>
-              VOWS
+              {hero?.eyebrow ?? ''}
             </div>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', marginTop: 2 }}>
-              · THE EDITORIAL ISSUE ·
+            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', marginTop: 2 }}>{hero?.monogram ?? ''}</div>
+            <div style={{ fontFamily: MONO, fontSize: 13.5, letterSpacing: '0.3em', marginTop: 8, fontWeight: 600 }}>
+              {fechaLarga}
             </div>
           </div>
         </div>
 
-        {/* La portada. */}
-        <div style={{ position: 'relative', height: 460, background: P.tinta, overflow: 'hidden' }}>
-          <PhotoSlot
-            bg="linear-gradient(135deg, #3a3530 0%, #6a5e50 100%)"
-            border="none"
-            color="rgba(241,237,228,0.5)"
-            height="100%"
-            label={portada?.label ?? themes.photoPlaceholder}
-            radius={0}
-            src={portada?.imageId === undefined ? undefined : `/media/${portada.imageId}`}
-            width="100%"
-          />
+        {/* La portada: el retrato enmarcado sobre las hojas. */}
+        <div style={{ position: 'relative', height: 460, overflow: 'hidden' }}>
           <div
             style={{
               position: 'absolute',
-              top: 14,
-              left: 18,
-              color: P.papel,
-              fontFamily: MONO,
-              fontSize: 9,
-              letterSpacing: '0.4em',
-              padding: '4px 10px',
-              border: `1px solid ${P.papel}`,
+              top: 24,
+              bottom: 76,
+              width: '72%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              borderRadius: 10,
+              border: `1.5px solid ${P.oro}`,
+              overflow: 'hidden',
             }}
           >
-            COVER STORY
+            <PhotoSlot
+              bg="transparent"
+              border="none"
+              color="rgba(245,239,224,0.5)"
+              height="100%"
+              label={portada?.label ?? themes.portraitPlaceholder}
+              radius={0}
+              src={
+                portada?.imageId === undefined ? themeAsset('boda-ed', 'novios-verde.avif') : `/media/${portada.imageId}`
+              }
+              width="100%"
+            />
           </div>
-          <div style={{ position: 'absolute', bottom: 20, left: 18, right: 18 }}>
-            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.4em', color: P.papel, opacity: 0.85 }}>
-              {hero?.eyebrow ?? themes.saveTheDate}
-            </div>
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 140,
+              background: `linear-gradient(180deg, transparent 0%, ${P.fondo} 90%)`,
+            }}
+          />
+          <div style={{ position: 'absolute', bottom: 20, left: 32, right: 32 }}>
             <h1
               style={{
                 fontFamily: DISPLAY,
                 fontStyle: 'italic',
                 fontWeight: 200,
                 fontSize: 64,
-                color: P.papel,
+                color: P.crema,
                 lineHeight: 0.9,
                 letterSpacing: '-0.01em',
-                marginTop: 6,
+                margin: 0,
+                textShadow: '0 2px 12px rgba(15,35,24,0.4)',
               }}
             >
               {hero?.nameA ?? ''}
@@ -154,56 +175,48 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
                 </>
               )}
             </h1>
-            <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.papel }}>
+            <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oroPalido }}>
               {hero?.serial ?? ''}
             </div>
           </div>
         </div>
 
-        {/* El sumario, compuesto de lo que la invitación trae de verdad. */}
-        <Reveal>
-          <div style={{ padding: '26px 24px', borderBottom: `1px solid ${P.fileteMedio}` }}>
-            <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.4em', marginBottom: 14, opacity: 0.7 }}>
-              FEATURED IN THIS ISSUE
-            </div>
-            {indice.map((fila) => (
-              <div
-                key={fila.pagina}
-                style={{ display: 'flex', gap: 14, padding: '8px 0', borderBottom: `1px dotted ${P.filete}` }}
-              >
-                <div style={{ fontFamily: MONO, fontSize: 11, fontWeight: 500, width: 38 }}>{fila.pagina}</div>
-                <div style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{fila.titulo}</div>
-              </div>
-            ))}
-          </div>
-        </Reveal>
-
         <div style={{ padding: '32px 24px 0', position: 'relative' }}>
-          {destacada === '' ? null : (
+          {titular === '' ? null : (
             <Reveal>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra }}>
-                P.02 — {themes.ourStory}
-              </div>
-              <p
+              <div
                 style={{
                   fontFamily: DISPLAY,
                   fontStyle: 'italic',
-                  fontSize: 40,
+                  fontSize: 32,
                   fontWeight: 200,
-                  lineHeight: 1.05,
-                  marginTop: 8,
+                  lineHeight: 1.25,
                   letterSpacing: '-0.01em',
+                  padding: '0 24px',
                 }}
               >
-                “{destacada}”
-              </p>
+                {titular}
+              </div>
+              {firma === '' ? null : (
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: '0 24px',
+                    fontFamily: MONO,
+                    fontSize: 9,
+                    letterSpacing: '0.3em',
+                    opacity: 0.7,
+                  }}
+                >
+                  {firma}
+                </div>
+              )}
             </Reveal>
           )}
 
           {historia === '' ? null : (
             <Reveal>
-              <div style={{ marginTop: 28, fontSize: 14, lineHeight: 1.65, color: P.tinta }}>
-                {/* La capitular, que es lo que hace que se lea como una revista. */}
+              <div style={{ marginTop: 28, fontSize: 14, lineHeight: 1.65, color: P.papelSuave }}>
                 <span
                   style={{
                     float: 'left',
@@ -213,102 +226,293 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
                     lineHeight: 0.85,
                     paddingRight: 8,
                     paddingTop: 4,
-                    color: P.terra,
+                    color: P.oro,
                   }}
                 >
                   {capitular}
                 </span>
-                {resto}
+                {cuerpo}
               </div>
             </Reveal>
           )}
         </div>
 
-        {interior === undefined ? null : (
+        {/* A quién va dirigida: la maqueta lo pinta en el centro del pliego, entre la
+            historia y los padrinos. */}
+        <Reveal>
+          <div style={{ padding: '56px 24px', textAlign: 'center' }}>{slots.guest}</div>
+        </Reveal>
+
+        {hosts === undefined ? null : (
           <Reveal>
-            <div style={{ marginTop: 32, padding: '0 24px' }}>
-              <PhotoSlot
-                bg="rgba(170,110,78,0.06)"
-                border="none"
-                color="rgba(170,110,78,0.5)"
-                height={360}
-                label={interior.label}
-                radius={0}
-                src={interior.imageId === undefined ? undefined : `/media/${interior.imageId}`}
-                width="100%"
-              />
-              <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', opacity: 0.65 }}>
-                {interior.label}
+            <div
+              style={{
+                padding: '40px 24px',
+                margin: '30px 0',
+                borderTop: `2px solid ${P.oro}`,
+                borderBottom: `2px solid ${P.oro}`,
+              }}
+            >
+              {hosts.label === undefined ? null : (
+                <div
+                  style={{
+                    fontFamily: DISPLAY,
+                    fontStyle: 'italic',
+                    fontSize: 26,
+                    fontWeight: 200,
+                    textAlign: 'center',
+                    color: P.papel,
+                  }}
+                >
+                  {hosts.label}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 32 }}>
+                {hosts.names.map((nombre) => (
+                  <div
+                    key={nombre}
+                    style={{ fontFamily: DISPLAY, fontSize: 16, color: P.papel, textAlign: 'center', lineHeight: 1.6 }}
+                  >
+                    {nombre}
+                  </div>
+                ))}
               </div>
             </div>
           </Reveal>
         )}
 
-        <div style={{ padding: '0 24px' }}>
-          {itinerary === undefined ? null : (
+        {tarjetas.length === 0 ? null : (
+          <Reveal>
+            <div style={{ padding: '36px 20px', display: 'flex', gap: 14, justifyContent: 'center' }}>
+              {tarjetas.map((tarjeta) => (
+                <div
+                  key={tarjeta.icono}
+                  style={{
+                    flex: 1,
+                    background: P.velo,
+                    border: `1.5px solid ${P.oro}`,
+                    borderRadius: 16,
+                    padding: '28px 8px 22px',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 16,
+                  }}
+                >
+                  <Image
+                    alt=""
+                    height={64}
+                    src={themeAsset('boda-ed', tarjeta.icono)}
+                    style={{ width: '62%', height: 64, objectFit: 'contain' }}
+                    width={64}
+                  />
+                  <div style={{ fontFamily: CALIGRAFIA, fontSize: 24, color: P.oro }}>{tarjeta.lugar?.label ?? ''}</div>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 30, color: P.papel }}>{tarjeta.lugar?.time ?? ''}</div>
+                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.15em', color: P.papel, opacity: 0.85 }}>
+                    {(tarjeta.lugar?.place ?? '').toUpperCase()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        )}
+
+        {itinerary === undefined ? null : (
+          <div style={{ padding: '0 24px', position: 'relative' }}>
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                top: 0,
+                bottom: 0,
+                left: '50%',
+                width: '60%',
+                transform: 'translateX(-50%)',
+                background: P.veloSuave,
+                zIndex: 0,
+                pointerEvents: 'none',
+              }}
+            />
             <Reveal>
-              <div style={{ marginTop: 40 }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra }}>
-                  P.04 — {themes.itinerary}
-                </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 200, lineHeight: 1, marginTop: 8 }}>
-                  The order of <span style={{ fontStyle: 'italic' }}>events.</span>
-                </div>
-                <div style={{ marginTop: 24 }}>
-                  {itinerary.map((fila, indiceFila) => (
-                    <div
-                      key={`${fila.time}-${fila.label}`}
-                      style={{
-                        display: 'grid',
-                        gridTemplateColumns: '56px 1fr',
-                        gap: 16,
-                        padding: '14px 0',
-                        borderBottom: indiceFila < itinerary.length - 1 ? `1px solid ${P.filete}` : 'none',
-                      }}
-                    >
-                      <div style={{ fontFamily: MONO, fontSize: 14, fontWeight: 500, color: P.terra }}>{fila.time}</div>
-                      <div>
-                        <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 18 }}>{fila.label}</div>
-                        {fila.note === undefined ? null : (
-                          <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>{fila.note}</div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div
+                style={{
+                  fontFamily: DISPLAY,
+                  fontSize: 44,
+                  fontWeight: 200,
+                  lineHeight: 1,
+                  marginTop: 8,
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                {themes.itinerary}
+                <span style={{ fontStyle: 'italic' }}>.</span>
               </div>
             </Reveal>
-          )}
 
+            <Reveal>
+              <div
+                style={{
+                  marginTop: 28,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  rowGap: 32,
+                  columnGap: 10,
+                  position: 'relative',
+                }}
+              >
+                {itinerary.map((fila, indice) => {
+                  const casilla = Number.parseInt(fila.imageId ?? '', 10)
+                  const posicion = Number.isNaN(casilla) ? indice : casilla
+                  const columna = posicion % 3
+                  const renglon = Math.floor(posicion / 3) % 2
+
+                  return (
+                    <div
+                      key={`${fila.time}-${fila.label}`}
+                      style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
+                    >
+                      <div aria-hidden style={{ width: 56, height: 56, overflow: 'hidden', position: 'relative' }}>
+                        <Image
+                          alt=""
+                          height={112}
+                          src={themeAsset('boda-ed', 'iconos-dorados-sf.avif')}
+                          style={{
+                            position: 'absolute',
+                            width: '300%',
+                            height: '200%',
+                            left: `${-columna * 100}%`,
+                            top: `${-renglon * 100}%`,
+                            objectFit: 'contain',
+                            filter: 'brightness(1.5) saturate(1.3) drop-shadow(0 1px 3px rgba(0,0,0,.5))',
+                          }}
+                          width={168}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: DISPLAY,
+                          fontSize: 22,
+                          color: P.hueso,
+                          marginTop: 10,
+                          textShadow: '0 1px 4px rgba(0,0,0,.4)',
+                        }}
+                      >
+                        {fila.time}
+                      </div>
+                      <div
+                        style={{
+                          fontFamily: MONO,
+                          fontSize: 8.5,
+                          letterSpacing: '0.12em',
+                          color: P.papelClaro,
+                          marginTop: 6,
+                          lineHeight: 1.5,
+                          textShadow: '0 1px 3px rgba(0,0,0,.4)',
+                        }}
+                      >
+                        {fila.label}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </Reveal>
+          </div>
+        )}
+
+        {nosotros === undefined ? null : (
+          <div style={{ padding: '44px 24px 0', textAlign: 'center' }}>
+            <Reveal>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oro }}>{nosotros.label}</div>
+            </Reveal>
+            <Reveal>
+              <div
+                style={{
+                  marginTop: 24,
+                  borderRadius: 12,
+                  overflow: 'hidden',
+                  border: `1.5px solid ${P.oro}`,
+                  aspectRatio: '1024 / 894',
+                }}
+              >
+                <PhotoSlot
+                  bg="transparent"
+                  border="none"
+                  color="rgba(245,239,224,0.5)"
+                  height="100%"
+                  label={nosotros.label}
+                  objectPosition="center bottom"
+                  radius={0}
+                  src={
+                    nosotros.imageId === undefined
+                      ? themeAsset('boda-ed', 'novios-fotos.avif')
+                      : `/media/${nosotros.imageId}`
+                  }
+                  width="100%"
+                />
+              </div>
+            </Reveal>
+          </div>
+        )}
+
+        <div style={{ padding: '0 24px' }}>
           {dressCode === undefined ? null : (
             <Reveal>
               <div style={{ marginTop: 40 }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra }}>
-                  P.06 — {dressCode.note ?? themes.dressCode}
+                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oro, textAlign: 'center' }}>
+                  {dressCode.note ?? themes.dressCode}
                 </div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 200, lineHeight: 1, marginTop: 8 }}>
+                <div
+                  style={{
+                    fontFamily: DISPLAY,
+                    fontSize: 44,
+                    fontWeight: 200,
+                    lineHeight: 1,
+                    marginTop: 8,
+                    textAlign: 'center',
+                  }}
+                >
                   {dressCode.title ?? ''}
+                  <span style={{ fontStyle: 'italic' }}>.</span>
                 </div>
 
-                <div style={{ marginTop: 22, display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 6 }}>
+                <Image
+                  alt=""
+                  height={260}
+                  src={themeAsset('boda-ed', 'trajes-dorados-sf.avif')}
+                  style={{ width: '70%', height: 'auto', display: 'block', margin: '26px auto' }}
+                  width={260}
+                />
+
+                <div style={{ display: 'flex', justifyContent: 'center', gap: 6, width: '58%', margin: '22px auto 0' }}>
                   {CARTA_DE_COLOR.map((muestra) => (
-                    <div key={muestra.nombre} style={{ textAlign: 'center' }}>
+                    <div key={muestra.nombre} style={{ textAlign: 'center', flex: 1 }}>
                       <div
                         style={{
                           width: '100%',
                           aspectRatio: '1/1',
                           background: muestra.color,
-                          border: `1px solid ${P.filete}`,
+                          border: `1px solid ${P.fileteSuave}`,
                         }}
                       />
-                      <div style={{ marginTop: 6, fontFamily: MONO, fontSize: 9, letterSpacing: '0.2em' }}>
+                      <div style={{ marginTop: 3, fontFamily: MONO, fontSize: 8, letterSpacing: '0.15em' }}>
                         {muestra.nombre.toUpperCase()}
                       </div>
-                      <div style={{ fontFamily: MONO, fontSize: 8, opacity: 0.6 }}>{muestra.color}</div>
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 14, fontSize: 12, fontStyle: 'italic', opacity: 0.75, lineHeight: 1.5 }}>
+                <div
+                  style={{
+                    marginTop: 14,
+                    fontSize: 12,
+                    fontStyle: 'italic',
+                    opacity: 0.75,
+                    lineHeight: 1.5,
+                    textAlign: 'center',
+                  }}
+                >
                   {dressCode.detail ?? ''}
                 </div>
               </div>
@@ -321,12 +525,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
                 style={{
                   marginTop: 40,
                   padding: '28px 0',
-                  borderTop: `1.5px solid ${P.tinta}`,
-                  borderBottom: `1.5px solid ${P.tinta}`,
+                  borderTop: `1.5px solid ${P.oro}`,
+                  borderBottom: `1.5px solid ${P.oro}`,
                 }}
               >
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.45em', textAlign: 'center', color: P.terra }}>
-                  · TIME LEFT IN ISSUE ·
+                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', textAlign: 'center', color: P.oro }}>
+                  · {themes.countdownPrefix.toUpperCase()} ·
                 </div>
                 <Countdown
                   labels={{
@@ -344,46 +548,99 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
             </Reveal>
           )}
 
-          {reception === undefined ? null : (
+          {map === undefined ? null : (
             <Reveal>
               <div style={{ marginTop: 36 }}>
-                <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra }}>
-                  P.08 — {reception.label ?? themes.reception}
-                </div>
                 <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 36, fontWeight: 200, marginTop: 8 }}>
-                  {reception.place ?? ''}
+                  {map.label ?? ''}
                 </div>
-                {reception.time === undefined ? null : (
-                  <div style={{ fontSize: 13, marginTop: 6, opacity: 0.75 }}>{reception.time}</div>
-                )}
-                <div style={{ fontSize: 12, marginTop: 10, fontFamily: MONO, letterSpacing: '0.2em' }}>
-                  {reception.address ?? ''}
-                </div>
-                {map === undefined ? null : (
-                  <div style={{ marginTop: 14 }}>
-                    <MapPreview
-                      accent={P.terra}
-                      border="rgba(170,110,78,0.3)"
-                      coords={map.coords ?? ''}
-                      label={map.label ?? ''}
-                      pinDot={P.papel}
-                    />
+                {reception?.address === undefined ? null : (
+                  <div style={{ fontSize: 12, marginTop: 10, fontFamily: MONO, letterSpacing: '0.2em' }}>
+                    {reception.address}
                   </div>
                 )}
+                <div style={{ marginTop: 14 }}>
+                  <MapPreview
+                    accent={P.oro}
+                    border={P.filete}
+                    coords={map.coords ?? ''}
+                    coordsColor={P.oro}
+                    label={map.label ?? ''}
+                    pinDot={P.papel}
+                    pinRing={P.fondo}
+                  />
+                </div>
               </div>
             </Reveal>
           )}
 
+          {soloAdultos === undefined ? null : (
+            <Reveal>
+              <div style={{ marginTop: 60, marginBottom: 20, textAlign: 'center' }}>
+                <Image
+                  alt=""
+                  height={160}
+                  src={themeAsset('boda-ed', 'taco-gato-sf.avif')}
+                  style={{ width: 160, height: 'auto', display: 'block', margin: '0 auto' }}
+                  width={160}
+                />
+                <div style={{ maxWidth: '78%', margin: '26px auto 0' }}>
+                  {soloAdultos.text === undefined ? null : (
+                    <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 18, lineHeight: 1.6 }}>
+                      {soloAdultos.text}
+                    </div>
+                  )}
+                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oro, marginTop: 16 }}>
+                    {soloAdultos.title}
+                  </div>
+                </div>
+              </div>
+            </Reveal>
+          )}
+
+          {/* La mesa de regalos: el dibujo y el rótulo son del diseño; la lista, nuestra. */}
+          <Reveal>
+            <div style={{ marginTop: 60, marginBottom: 20, textAlign: 'center' }}>
+              <Image
+                alt=""
+                height={160}
+                src={themeAsset('boda-ed', 'regalo-sf.avif')}
+                style={{
+                  width: 160,
+                  height: 'auto',
+                  display: 'block',
+                  margin: '0 auto',
+                  filter: 'brightness(1.15) saturate(1.15)',
+                }}
+                width={160}
+              />
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro, marginTop: 32 }}>{themes.gifts}</div>
+              <div style={{ marginTop: 18, textAlign: 'left' }}>
+                {preview === true ? (
+                  <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
+                ) : (
+                  slots.registry
+                )}
+              </div>
+            </div>
+          </Reveal>
+
           <Reveal>
             <div style={{ marginTop: 40 }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra }}>
-                P.10 — {dictionary.title}
-              </div>
-              <div style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 200, lineHeight: 1, marginTop: 8 }}>
-                Reply, <span style={{ fontStyle: 'italic' }}>please.</span>
+              <div
+                style={{
+                  fontFamily: DISPLAY,
+                  fontSize: 30,
+                  fontWeight: 200,
+                  lineHeight: 1,
+                  marginTop: 8,
+                  textAlign: 'center',
+                }}
+              >
+                {dictionary.title}
+                <span style={{ fontStyle: 'italic' }}>.</span>
               </div>
               <div style={{ marginTop: 18 }}>
-                {slots.guest}
                 {preview === true ? (
                   <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
                 ) : (
@@ -393,40 +650,107 @@ export function BodaEdView({ content, event, dictionary, themes, slots, preview 
             </div>
           </Reveal>
 
-          <Reveal>
-            <div style={{ marginTop: 32 }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra, marginBottom: 12 }}>
-                {themes.gifts}
-              </div>
-              {slots.registry}
-            </div>
-          </Reveal>
-
-          <Reveal>
-            <div style={{ marginTop: 32 }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', color: P.terra, marginBottom: 12 }}>
-                {themes.guestbook}
-              </div>
-              {slots.guestbook}
-            </div>
-          </Reveal>
-
-          <div style={{ marginTop: 32 }}>{slots.pass}</div>
-
-          {closing === undefined ? null : (
+          {fotos === undefined ? null : (
             <Reveal>
-              <div style={{ marginTop: 50, padding: '32px 0', borderTop: `2px solid ${P.tinta}`, textAlign: 'center' }}>
-                <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 28, fontWeight: 200 }}>
-                  {closing.text ?? ''}
+              <div
+                style={{
+                  marginTop: 50,
+                  padding: '32px 24px',
+                  borderTop: `1.5px solid ${P.oro}`,
+                  textAlign: 'center',
+                  position: 'relative',
+                }}
+              >
+                <Image
+                  alt=""
+                  height={150}
+                  src={themeAsset('boda-ed', 'camara-dorada-sf.avif')}
+                  style={{
+                    width: 150,
+                    height: 'auto',
+                    display: 'block',
+                    margin: '0 auto',
+                    filter: 'brightness(1.5) saturate(1.3) drop-shadow(0 1px 3px rgba(0,0,0,.5))',
+                  }}
+                  width={150}
+                />
+                <div
+                  style={{
+                    fontFamily: CALIGRAFIA,
+                    fontSize: 34,
+                    color: P.oroClaro,
+                    marginTop: 20,
+                    textShadow: '0 1px 4px rgba(0,0,0,.4)',
+                  }}
+                >
+                  {fotos.title}
                 </div>
-                {closing.signature === undefined ? null : (
-                  <div style={{ marginTop: 14, fontFamily: MONO, fontSize: 10, letterSpacing: '0.4em', opacity: 0.65 }}>
-                    {closing.signature}
+                {fotos.text === undefined ? null : (
+                  <div
+                    style={{
+                      fontFamily: DISPLAY,
+                      fontSize: 15,
+                      lineHeight: 1.7,
+                      maxWidth: '72%',
+                      margin: '18px auto 0',
+                      color: P.papelClaro,
+                    }}
+                  >
+                    {fotos.text}
                   </div>
                 )}
               </div>
             </Reveal>
           )}
+
+          <Reveal>
+            <div style={{ marginTop: 40 }}>{slots.guestbook}</div>
+          </Reveal>
+
+          <div style={{ marginTop: 28 }}>{slots.pass}</div>
+
+          {/* La contraportada. */}
+          <Reveal>
+            <div
+              style={{
+                marginTop: 50,
+                padding: '64px 24px',
+                borderTop: `2px solid ${P.oro}`,
+                textAlign: 'center',
+                position: 'relative',
+              }}
+            >
+              <div
+                aria-hidden
+                style={{ position: 'absolute', inset: '-6px 0', background: P.fondo, opacity: 0.75, zIndex: 0 }}
+              />
+              <div
+                style={{
+                  position: 'relative',
+                  fontFamily: DISPLAY,
+                  fontStyle: 'italic',
+                  fontSize: 28,
+                  fontWeight: 200,
+                  color: P.papel,
+                }}
+              >
+                {closing?.text ?? ''}
+              </div>
+              <div
+                style={{
+                  position: 'relative',
+                  marginTop: 20,
+                  fontFamily: MONO,
+                  fontSize: 15,
+                  letterSpacing: '0.35em',
+                  color: P.oroClaro,
+                  fontWeight: 700,
+                }}
+              >
+                {closing?.signature ?? ''}
+              </div>
+            </div>
+          </Reveal>
         </div>
       </ThemeColumn>
     </article>

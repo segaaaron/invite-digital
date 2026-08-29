@@ -20,31 +20,38 @@ describe('el tema Editorial', () => {
     }
   })
 
-  it('separa la cita destacada de la columna con capitular', () => {
-    // El primer párrafo va entre filetes en grande; el resto, en columna. Es la convención
-    // que evita inventar un bloque de contenido solo para este diseño.
+  it('parte la cita en titular, firma y columna con capitular', () => {
+    // El diseño la compone en tres piezas y en ese orden; es un solo bloque de contenido
+    // porque en la maqueta es un solo texto.
     render(<BodaEdView {...conMuestra()} />)
-    expect(screen.getByText(/promesa cumplida/)).toBeInTheDocument()
+    expect(screen.getByText(/todo lo que iba a querer/)).toBeInTheDocument()
+    expect(screen.getByText('— ALEX, 28')).toBeInTheDocument()
     expect(screen.getByText(/librería de viejo/)).toBeInTheDocument()
   })
 
-  it('el sumario lista solo las secciones que la invitación trae', () => {
-    // Un índice que anuncia «P.06 Código de vestimenta» en una boda que no lo cargó promete
-    // una página que no está. La maqueta lo tenía clavado.
-    render(<BodaEdView {...propsDePrueba({ content: { hero: { nameA: 'María' } } })} />)
-
-    expect(screen.queryByText('P.06')).not.toBeInTheDocument()
-    expect(screen.queryByText('P.04')).not.toBeInTheDocument()
-    // El RSVP siempre está: es lo único que la invitación pide de vuelta.
-    expect(screen.getByText('P.10')).toBeInTheDocument()
+  it('cada fila del itinerario enseña su casilla de la lámina de iconos', () => {
+    // Los seis dibujos vienen en una sola imagen de tres por dos: la fila cuatro está en la
+    // primera columna de la segunda hilera, y eso se consigue moviendo la lámina, no
+    // cambiando de fichero.
+    const { container } = render(<BodaEdView {...conMuestra()} />)
+    const laminas = [...container.querySelectorAll('img')].filter((img) =>
+      (img.getAttribute('src') ?? '').includes('iconos-dorados'),
+    )
+    expect(laminas).toHaveLength(6)
+    expect(laminas[3]?.style.left).toBe('0%')
+    expect(laminas[3]?.style.top).toBe('-100%')
   })
 
-  it('pinta la carta de color con su nombre y su hexadecimal', () => {
-    // El hexadecimal a la vista es lo que hace que se lea como una página de moda y no como
-    // cinco cuadrados de colores.
+  it('pinta el muestrario de color del código de vestimenta', () => {
     render(<BodaEdView {...conMuestra()} />)
-    expect(screen.getByText('TERRA')).toBeInTheDocument()
-    expect(screen.getByText('#aa6e4e')).toBeInTheDocument()
+    expect(screen.getByText('DORADO')).toBeInTheDocument()
+    expect(screen.getByText('VERDE SALVIA')).toBeInTheDocument()
+  })
+
+  it('enseña los avisos del diseño: solo adultos y las fotos de los invitados', () => {
+    render(<BodaEdView {...conMuestra()} />)
+    expect(screen.getByText('CELEBRACIÓN SOLO PARA ADULTOS')).toBeInTheDocument()
+    expect(screen.getByText('Comparte tus fotos')).toBeInTheDocument()
   })
 
   it('sin contenido no revienta ni escribe «undefined»', () => {

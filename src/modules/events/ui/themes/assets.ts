@@ -8,7 +8,7 @@
  *
  * El manifiesto está aquí y no se descubre leyendo el disco a propósito: así una imagen
  * que se renombra o se pierde rompe una prueba, y no una invitación abierta el día de la
- * boda. Seis diseños de boda no aparecen porque no usan ninguna: son SVG y CSS.
+ * boda. Cinco diseños de boda no aparecen porque no usan ninguna: son SVG y CSS.
  */
 export const THEME_ASSETS = {
   'boda-bot': [
@@ -18,6 +18,20 @@ export const THEME_ASSETS = {
     'boda-04-pastel.avif',
     'marmol-flores-optimized.avif',
     'wedding-couple.avif',
+  ],
+  'boda-ed': [
+    'aros-sf.avif',
+    'camara-dorada-sf.avif',
+    'copas-doradas-sf.avif',
+    'fondo-verde-hojas.avif',
+    'fondo-verde.avif',
+    'iconos-dorados-sf.avif',
+    'novios-fotos.avif',
+    'novios-verde.avif',
+    'regalo-sf.avif',
+    'taco-gato-sf.avif',
+    'templo-dorado-sf.avif',
+    'trajes-dorados-sf.avif',
   ],
   'flora': [
     'orange-spray.avif',

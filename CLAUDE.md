@@ -476,6 +476,17 @@ correo, que necesita proveedor.
 
 ### Notas de los dieciséis temas de invitación
 
+- **La maqueta se actualiza y hay que mirar qué cambió, no rehacerlo todo.** El 28 de agosto
+  llegó una copia nueva y el único diseño rehecho era **Editorial**: pasó de revista de papel
+  crema con tinta negra a verde botánico con oro, con doce imágenes propias donde antes no
+  tenía ninguna. Se detecta comparando las imágenes que usa cada componente de la maqueta con
+  las de `public/temas/`: un diseño que estrena arte es un diseño que cambió. Los otros quince
+  seguían igual — lo que difería de la copia de mayo ya estaba portado.
+- **El itinerario de Editorial usa una lámina de seis iconos**, tres por dos, y cada fila
+  enseña su casilla moviendo la imagen dentro de una ventana. Ahí `imageId` es el número de
+  casilla, como en la boda botánica es la clave del dibujo: **nunca** una fotografía del
+  evento.
+
 - **Un tema no es un componente: es una definición.** Declara sus tipografías —para que el
   layout de invitado no baje doce familias cuando el diseño usa cinco—, sus secciones
   —para que el panel no le pida un itinerario a un diseño que no lo pinta—, su paleta y el

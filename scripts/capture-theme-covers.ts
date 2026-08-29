@@ -42,15 +42,33 @@ async function principal(): Promise<void> {
 
   for (const entrada of CATALOG_LISTOS) {
     const pagina = await contexto.newPage()
-    await pagina.goto(`${BASE}/modelos/es/${entrada.key}`, { waitUntil: 'networkidle' })
+    // `domcontentloaded` y no `networkidle`: contra `next dev` el canal de recarga en
+    // caliente deja una conexión abierta y la espera no termina nunca.
+    await pagina.goto(`${BASE}/modelos/es/${entrada.key}`, { waitUntil: 'domcontentloaded' })
+    await pagina
+      .evaluate(async () => {
+        for (const imagen of document.images) imagen.loading = 'eager'
+        await Promise.all([...document.images].map((i) => (i.complete ? null : i.decode().catch(() => null))))
+      })
+      .catch(() => {})
 
     // Las tipografías tardan más que la red: capturar antes deja el diseño con la fuente
     // de respaldo, que es justo lo que la portada no puede enseñar.
     await pagina.evaluate(() => document.fonts.ready)
     await pagina.waitForTimeout(1200)
 
-    const captura = await pagina.screenshot({ type: 'png' })
-    await sharp(captura).avif({ quality: 62, effort: 6 }).toFile(`${DESTINO}/${entrada.key}.avif`)
+    // Se captura **el aparato**, no la ventana: la vista previa enseña la invitación dentro
+    // de un marco de teléfono sobre fondo oscuro, y una portada con esa moldura y sus bandas
+    // negras no es la portada del modelo.
+    const marco = pagina.locator('.theme-phone-frame')
+    const captura = await ((await marco.count()) > 0 ? marco.screenshot({ type: 'png' }) : pagina.screenshot({ type: 'png' }))
+
+    await sharp(captura)
+      // La tarjeta del catálogo es 5:7 y el teléfono es más alargado: se recorta por arriba,
+      // que es donde estos diseños ponen el nombre y la fotografía.
+      .resize({ width: ANCHO, height: ALTO, fit: 'cover', position: 'top' })
+      .avif({ quality: 62, effort: 6 })
+      .toFile(`${DESTINO}/${entrada.key}.avif`)
 
     console.log('· %s', entrada.key)
     await pagina.close()
