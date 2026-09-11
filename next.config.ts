@@ -13,11 +13,47 @@ const nextConfig: NextConfig = {
   // corren sin apagar el servidor que ya tengas abierto.
   distDir: process.env.NEXT_DIST_DIR ?? '.next',
   poweredByHeader: false,
+  // Los mapas de origen de la fase de prerenderizado se generan aunque nadie los use en
+  // producción, y cuestan memoria en el momento más caro del build.
+  enablePrerenderSourceMaps: false,
+  experimental: {
+    // **Esta línea es la que baja el heap.** Next compila webpack en un worker aparte
+    // para no cargar el proceso principal, pero lo apaga solo en cuanto detecta
+    // configuración de webpack propia:
+    //
+    //   next/dist/build/index.js:930
+    //   const useBuildWorker = config.experimental.webpackBuildWorker ||
+    //     (config.experimental.webpackBuildWorker === undefined && !config.webpack)
+    //
+    // Y `@serwist/next` inyecta la suya (`dist/index.mjs:121`) para meter el
+    // `InjectManifest` del Service Worker. Es decir: activar el modo puerta sin red
+    // apagó el aislamiento de memoria del build **sin que nada lo dijera**, y por eso
+    // el `--max-old-space-size` fue subiendo 8 → 12 → 16 GB en vez de arreglarse.
+    // Puesto a mano, el worker vuelve pese a la configuración de Serwist.
+    webpackBuildWorker: true,
+    // Documentado por Vercel como de bajo riesgo: menos memoria máxima a cambio de algo
+    // más de tiempo de compilación.
+    webpackMemoryOptimizations: true,
+    serverSourceMaps: false,
+  },
   // Next's SWC output requires @swc/helpers at runtime, but tracing only copies the
   // handful of files it sees imported, and misses the copy nested under next's own
   // pnpm directory — the standalone server then dies with MODULE_NOT_FOUND at boot.
+  // El comodín va **anclado al nombre del paquete en la raíz del almacén**, nunca
+  // `.pnpm/**`. Un `**` ahí obliga a recorrer los 584 paquetes del almacén y sus
+  // `node_modules` anidados —cerca de un gigabyte— reteniendo la lista entera en
+  // memoria: es lo que hacía morir al build en «Collecting build traces», y la razón
+  // real de que el `--max-old-space-size` fuera subiendo hasta 16 GB. La compilación de
+  // webpack tarda doce segundos; el que se comía los cuatro gigas era este glob.
+  //
+  // Sigue sin fijar la versión, que es lo que se quería: `@swc+helpers@*` y
+  // `@node-rs+argon2*` cubren cualquier actualización, y el segundo cubre también el
+  // binario nativo de Linux que se instala dentro de la imagen.
   outputFileTracingIncludes: {
-    '/**/*': ['./node_modules/.pnpm/**/@swc/helpers/**', './node_modules/.pnpm/**/@node-rs/argon2*/**'],
+    '/**/*': [
+      './node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**',
+      './node_modules/.pnpm/@node-rs+argon2*/node_modules/@node-rs/**',
+    ],
   },
   images: { formats: ['image/avif', 'image/webp'] },
   async headers() {

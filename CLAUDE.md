@@ -5,8 +5,43 @@ Mercado: bodas, XV años, despedidas, graduaciones, bautizos, corporativo.
 
 ## LEE ESTO PRIMERO
 
-**`docs/superpowers/2026-08-29-handoff-portadas-ranuras-y-fotos.md`** — estado completo,
+**`docs/superpowers/2026-08-30-handoff-build-marco-y-fidelidad-xv.md`** — estado completo,
 decisiones tomadas y qué sigue. No empieces a trabajar sin leerlo.
+
+Lo que más importa de esa sesión, y son tres cosas:
+
+**El build no necesitaba 16 GB.** El `--max-old-space-size` había subido 8 → 12 → 16 en tres
+sesiones dando por hecho que el culpable era la compilación. Webpack compila este proyecto
+en **doce segundos**; lo que se comía cuatro gigas era un glob del rastreo del `standalone`
+—`.pnpm/**`— que recorría los 584 paquetes del almacén. Acotado, el build son **29 segundos
+con 1,7 GB de pico y sin flag**. Un techo de heap que hay que subir es un síntoma: mira **en
+qué fase** muere el build antes de tocar el número.
+
+**Catorce desviaciones de fidelidad en los ocho XV**, y casi todas del mismo sitio: el
+esqueleto compartido reparte por defecto los valores de «Bajo el Mar». Las burbujas y las
+partículas se pintaban **en todos**, la tarjeta de regalos también, y los paneles iban más
+opacos que en la maqueta —con un `backdropFilter` inventado en dos—. Ahora esas tres se
+piden: quien no las declare no las pinta. **Si algo aparece en un diseño que no lo tiene en
+la maqueta, busca el `??` en la vista, no el diseño.**
+
+**Y dos avisos que costaron tiempo:** no borres `.next` con el `pnpm dev` del usuario
+abierto —el síntoma es el optimizador de imágenes colgado, no un fallo de código—, y no uses
+`git stash` con trabajo sin confirmar encima.
+
+El anterior, **`2026-08-30-handoff-los-siete-xv.md`**, cuenta de dónde parte.
+
+Lo que más importa de esa sesión: **el esqueleto compartido de los XV llevaba puesta la piel
+de «Bajo el Mar»**. Siete diseños comparten `XvSharedView`, y lo que no estaba en `PielXv`
+—la sombra blanca del texto, el halo del titular, el disco blanco del cronograma, el marco
+rosa del retrato, la cita en mayúsculas, el orden del reloj— estaba escrito a pelo en la
+vista con los valores de la marina: seis invitaciones oscuras escribiendo con sombra blanca
+sobre negro. **Si un valor sale distinto en dos maquetas, no es de la vista, es de la piel.**
+Y dos cosas que no se ven leyendo código: una pieza obligatoria en el tipo obliga a
+inventarle contenido a quien no la tiene —Mascarada pintaba su máscara dos veces—, y las
+partículas se reparten **por su contenedor**, así que con el `<article>` de seis mil píxeles
+detrás el efecto no existía en ninguno de los siete.
+
+El anterior, **`2026-08-29-handoff-portadas-ranuras-y-fotos.md`**, cuenta de dónde parte.
 
 Lo que más importa de esa sesión: **lo que la vista previa no pinta, nadie lo compara**. El
 escaparate no enseñaba la portada —apagada con `preview` desde el primer tema— y enseña las
@@ -77,6 +112,8 @@ Después, según lo que vayas a hacer:
 | `docs/superpowers/plans/2026-08-27-catalogo-invitaciones.md` | Consultar cómo se construyeron los dieciséis: 35 tareas en 6 fases |
 | `docs/superpowers/2026-08-29-handoff-fidelidad-y-herramientas.md` | Verificar que un diseño está fiel, y con qué herramientas iterar rápido |
 | `docs/superpowers/2026-08-29-handoff-portadas-ranuras-y-fotos.md` | Las portadas, la piel de las ranuras, la animación cotejada y las fotos del invitado |
+| `docs/superpowers/2026-08-30-handoff-los-siete-xv.md` | Tocar un diseño de XV: qué reparte `PielXv`, qué difería de cada maqueta y cómo se comparó |
+| `docs/superpowers/2026-08-30-handoff-build-marco-y-fidelidad-xv.md` | La memoria del build, el marco de la vista previa y las catorce desviaciones de fidelidad de los ocho XV |
 | `.superpowers/sdd/2026-08-18-marketing-site-plan-a/progress.md` | Ver el estado tarea por tarea y las decisiones con su motivo |
 
 ## Estado
@@ -712,6 +749,32 @@ correo, que necesita proveedor.
 - **La galería es rótulo obligatorio e imagen opcional**, no al revés: estos diseños pintan
   los huecos con su pie desde el primer día y las fotos llegan después.
 
+### Notas de los siete XV que comparten esqueleto
+
+- **Lo que la vista pone por defecto es la piel de «Bajo el Mar».** Cada `?? P.loQueSea` de
+  `xv.view.tsx` es un valor de la marina heredado por los otros seis. Cuando algo se ve raro
+  en un diseño y bien en Sofía, la causa está ahí: el valor tiene que subir a `piezas`.
+- **Una pieza obligatoria obliga a inventársela.** `corona`, `reloj` y `retrato` eran
+  requeridos, así que «Mascarada» pintaba su máscara **dos veces** —sobre el arco y sobre la
+  cuenta atrás— y «Gala Real» repetía dentro del arco la fotografía con la que ya abre. Los
+  tres son opcionales; quien no los declare no pinta nada.
+- **Las partículas se reparten por su contenedor.** `FloatingParticles` coloca sus dieciocho
+  chispas en porcentajes de quien las contiene; con el `<article>` de seis mil píxeles
+  detrás salían dos o tres por pantalla y el efecto no existía en ninguno de los siete. Van
+  en un `sticky` de `100dvh` con `margin-bottom: -100dvh`, como el fondo. **`fixed` no
+  vale**: dentro del marco de teléfono se ancla al marco, que lleva `translateZ(0)`.
+- **Solo la marina lleva el velo con desenfoque.** Los seis oscuros clavan la fotografía a
+  la ventana y ponen el velo liso; con el `blur(3px) saturate(0.8)` de Sofía el fondo salía
+  apagado y sucio.
+- **El código de la mesa de regalos se lee por contraste.** Iba con `violetaHondo`, que en
+  seis pieles es el marfil del texto: un dibujo beige sobre papel blanco. Es `piezas.qrTinta`
+  y es casi negro en las cuatro maquetas que lo pintan.
+- **Comparar por tramos, no por la primera pantalla.** Todo lo que estaba mal vivía entre
+  los mil y los cuatro mil píxeles de scroll: se captura con Playwright moviendo el
+  `scrollTop` del contenedor del marco de 820 en 820.
+- **La invitación de referencia manda sobre el `.jsx`, también aquí.** El `.jsx` dice que
+  «Mascarada» no pinta burbujas ni partículas; la que enseña el usuario sí. Se quedan.
+
 ### Notas de la piel de las ranuras (`themes/kit/slot-skin.ts`)
 
 - **El RSVP, la mesa de regalos, la respuesta del libro de firmas y el pase son nuestros,
@@ -1086,8 +1149,10 @@ correo, que necesita proveedor.
 
 ## Cómo iterar rápido
 
-Un cambio de piel se comprobaba con `pnpm build` —**cinco minutos**— antes de cada pasada
-de e2e. Eso no lo vale ver si un botón se ve. Por orden de lo que ahorra:
+Un cambio de piel se comprobaba con `pnpm build` —que **duraba cinco minutos**— antes de
+cada pasada de e2e. Eso no lo valía para ver si un botón se ve. Desde el 30 de agosto el
+build son **29 segundos** (era el glob del rastreo, no webpack: está contado abajo), así
+que la tabla pesa menos que antes; aun así, para mirar píxeles sigue sobrando con esto:
 
 | Comando | Para qué | Coste |
 |---|---|---|
@@ -1095,6 +1160,7 @@ de e2e. Eso no lo vale ver si un botón se ve. Por orden de lo que ahorra:
 | `pnpm test:e2e:dev` | Las e2e contra `next dev`, **sin build** | ~45 s en frío |
 | `E2E_WORKERS=4 pnpm test:e2e modelos.spec.ts` | En paralelo lo que no toca la base | ~15 s |
 | `pnpm check` | typecheck + lint + unitarias + fronteras + multitenencia | ~50 s |
+| `pnpm build` | Compilación de producción completa | ~29 s |
 
 - **`pnpm shots` acepta rutas** (`--url /es/colecciones`), ancho (`--ancho 390`) y base
   (`--base http://localhost:3100`). Va contra el servidor que ya esté levantado: **no
@@ -1108,9 +1174,12 @@ de e2e. Eso no lo vale ver si un botón se ve. Por orden de lo que ahorra:
 - **Las e2e contra desarrollo usan su propia carpeta de compilación** (`.next-e2e`, por
   `NEXT_DIST_DIR`): dos `next dev` sobre el mismo `.next` no arrancan, y así no hay que
   apagar el servidor que ya tengas abierto.
-- **`output: standalone` solo se activa con `STANDALONE=1`**, que pone el Dockerfile. Baja
-  la memoria del build local; **no baja el tiempo**: se midió, y con o sin él son cinco
-  minutos. Lo que cuesta es compilar con webpack, no el rastreo de ficheros.
+- **`output: standalone` solo se activa con `STANDALONE=1`**, que pone el Dockerfile, y en
+  local no hace falta: `next start` arranca del `.next` normal. La nota que había aquí
+  decía que «lo que cuesta es compilar con webpack, no el rastreo de ficheros» — era
+  justo al revés, y esa frase es la que hizo que nadie mirase el sitio correcto durante
+  tres sesiones. Compilar son 12 segundos; el rastreo, con su glob mal escrito, se comía
+  cuatro gigas y mataba el build.
 
 ## Comandos
 
@@ -1135,21 +1204,41 @@ pnpm tsx scripts/optimize-theme-assets.ts          # lo reencodea; salta lo ya o
 en desarrollo (`disable` en `next.config.ts`), así que el Service Worker y la instalación
 como aplicación no existen ahí. Es la misma lección que dejó `robots.txt`.
 
-`pnpm build` usa **webpack**, no Turbopack, y pide 8 GB de heap. Serwist inyecta
-configuración de webpack y Next 16 aborta el build al verla junto a Turbopack; silenciar
-el aviso con `turbopack: {}` deja de generar el Service Worker sin decir nada. El rastreo
-de ficheros del `output: standalone` se queda sin memoria bajo webpack con el heap por
-defecto, de ahí el `NODE_OPTIONS` del script.
+`pnpm build` usa **webpack**, no Turbopack. Serwist inyecta configuración de webpack y
+Next 16 aborta el build al verla junto a Turbopack; silenciar el aviso con `turbopack: {}`
+deja de generar el Service Worker sin decir nada.
 
-**El heap del build sube solo.** 8 GB → 12 → **16384** el 25 de agosto, y las tres veces
-por lo mismo: el rastreo de ficheros del `output: standalone` bajo webpack crece con cada
-módulo nuevo. Si vuelve a morir, súbelo antes de buscar la causa en el código.
+**El build NO necesita un heap gigante, y el `NODE_OPTIONS` se retiró el 30 de agosto.**
+Corre sin flag en **29 segundos** con un pico de **1,7 GB** de RSS entre todos los
+procesos. Se midió con `/usr/bin/time -l` y `STANDALONE=1`, y aguanta incluso con el techo
+puesto a 1024 MB.
+
+**Lo que se comía la memoria era un glob, no webpack.** Durante tres sesiones el
+`--max-old-space-size` subió 8 GB → 12 → 16384 dando por hecho que el culpable era la
+compilación. No lo era: **webpack compila este proyecto en 12 segundos**. El build moría
+después, en `Collecting build traces`, por el `outputFileTracingIncludes` escrito como
+`./node_modules/.pnpm/**/@swc/helpers/**`. Ese `**` sobre la raíz del almacén obliga a
+recorrer los 584 paquetes y sus `node_modules` anidados —casi un gigabyte— reteniendo la
+lista entera. Anclado al nombre del paquete
+(`.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**`) el problema desaparece.
+
+**La lección: un techo de heap que hay que subir es un síntoma, nunca el arreglo.** Antes
+de tocar ese número, mira **en qué fase** muere el build — el registro lo dice línea a
+línea— y `/usr/bin/time -l` para el pico real. Subirlo tres veces costó una sesión entera
+y una recomendación de VPS diez veces más cara de lo necesario.
+
+Van con él tres opciones de `next.config.ts`, todas documentadas por Vercel:
+`experimental.webpackBuildWorker` —que Next apaga solo en cuanto un plugin inyecta
+configuración de webpack, y Serwist inyecta la suya—,
+`experimental.webpackMemoryOptimizations` y los mapas de origen del prerenderizado.
+
+**El servidor en producción son 135 MB de RSS.** Medido sobre el `standalone` sirviendo la
+portada, el catálogo y dos invitaciones. Compilar y servir no tienen nada que ver: una VPS
+de 2 GB sobra para correr esto.
 
 **Si `pnpm build` muere con «Reached heap limit», borra `.next` antes de tocar nada.**
-Con el caché de una sesión larga el rastreo de ficheros se come el heap del script; con
-`.next` limpio compila. Pasó dos veces en la sesión del 22 de agosto. El 25 de agosto ya
-**no bastó**: con `.next` recién borrado seguía muriendo con 8 GB, y el script pasó a
-12288. Si vuelve a morir, súbelo antes de buscar la causa en el código.
+Con el caché de una sesión larga el rastreo de ficheros se come el heap; con `.next` limpio
+compila. Pasó dos veces en la sesión del 22 de agosto.
 
 **Si las e2e fallan en masa con «This page couldn't load», mata el 3100 antes de mirar el
 código**: `lsof -ti :3100 | xargs kill -9`. `reuseExistingServer` reaprovecha un

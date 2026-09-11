@@ -15,8 +15,15 @@ type Props = {
   dictionary: InvitationDictionary
   seats: number
   token: string
-  /** La etiqueta del grupo: prellena el nombre, que es lo que el invitado dejaría escrito. */
-  groupLabel: string
+  /**
+   * Cómo lo pinta el diseño.
+   *
+   * `campos` es el de los XV —nombre, «¿asistirás?», mensaje y un «ENVIAR» a todo lo
+   * ancho—. `botones` es el de las bodas: dos botones, «ASISTIRÉ» y «NO PUEDO», y con el
+   * sí un contador de invitados. Son dos formularios distintos en la maqueta, no uno con
+   * otra piel.
+   */
+  variant?: 'campos' | 'botones' | undefined
   previous: { attending: number; message: string | null; responderName: string | null } | null
 }
 
@@ -24,29 +31,32 @@ type Props = {
  * El formulario de RSVP, con la composición de la maqueta.
  *
  * Son cuatro piezas y en este orden: **nombre completo**, **¿asistirás?**, **mensaje** y un
- * botón a todo lo ancho. La piel la pone el diseño por variables CSS —aquí no hay ni un
+ * botón a todo lo ancho. Ni una más: lo que el diseño no pregunta, no se pregunta. La piel la pone el diseño por variables CSS —aquí no hay ni un
  * color de la web pública—, así que el mismo marcado sale guinda en «Gala Real» y verde
  * salvia en la boda botánica.
  *
  * **El nombre existe porque el enlace identifica al grupo, no a la persona.** En «Familia
- * Rojas Peña» contesta uno de cuatro, y la pareja leía el mensaje sin saber cuál. Llega
- * prellenado con la etiqueta del grupo: quien no lo toque deja lo de siempre.
+ * Rojas Peña» contesta uno de cuatro, y la pareja leía el mensaje sin saber cuál. Va vacío
+ * con su marcador, como en la maqueta: prellenarlo con la etiqueta del grupo hacía que la
+ * mayoría la dejara puesta, y entonces el campo no dice nada que no supiéramos.
  *
- * **Y el recuento se queda, aunque la maqueta no lo pinte.** Su formulario es de mentira y
- * sólo pregunta sí o no; el nuestro alimenta el catering, las mesas y la puerta, y sin el
- * número no hay ninguna de las tres. Va **debajo del «sí»** y desaparece con el «no», que
- * es donde no estorba: quien no viene no tiene cuántos.
+ * **El recuento viaja oculto.** El diseño pregunta sí o no, y eso es lo que se ve; lo que
+ * se manda son los cupos del grupo con el «sí» y cero con el «no», porque el catering, el
+ * reparto de mesas y la puerta se hacen con ese número.
  */
-export function RsvpForm({ dictionary, seats, token, groupLabel, previous }: Props) {
+export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos' }: Props) {
   const rsvp = useRsvp({ dictionary, previous, seats })
   const nameId = useId()
   const goingId = useId()
-  const attendingId = useId()
   const messageId = useId()
 
   // Quién viene se decide con un sí o un no, y cuántos es un detalle del sí. El estado es
   // del formulario, no del servidor: lo que se envía sigue siendo un número.
   const [viene, setViene] = useState(rsvp.defaultAttending !== '0')
+  // El contador del formulario de botones. Arranca en los cupos del grupo.
+  const [cuantos, setCuantos] = useState(Number(rsvp.defaultAttending) || seats)
+  // Con botones, nada se envía hasta que el invitado dice sí o no.
+  const [respondido, setRespondido] = useState(false)
 
   if (rsvp.confirmed) {
     return (
@@ -76,6 +86,83 @@ export function RsvpForm({ dictionary, seats, token, groupLabel, previous }: Pro
     )
   }
 
+  if (variant === 'botones') {
+    const BOTON =
+      'flex-1 rounded-[4px] border px-0 py-3.5 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200'
+    return (
+      <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
+        <input name="token" type="hidden" value={token} readOnly />
+        <input name="attending" type="hidden" value={viene ? String(cuantos) : '0'} readOnly />
+        <input name="name" type="hidden" value={rsvp.defaultName} readOnly />
+
+        <div className="flex gap-2">
+          <button
+            className={`${BOTON} ${viene && respondido ? 'border-transparent bg-[var(--color-cta)] font-bold text-[var(--color-on-cta)]' : 'border-[var(--color-line)] text-ink'}`}
+            onClick={() => {
+              setViene(true)
+              setRespondido(true)
+            }}
+            type="button"
+          >
+            {dictionary.goingYesShort}
+          </button>
+          <button
+            className={`${BOTON} ${!viene && respondido ? 'border-transparent bg-[var(--color-cta)] font-bold text-[var(--color-on-cta)]' : 'border-[var(--color-line)] text-ink'}`}
+            onClick={() => {
+              setViene(false)
+              setRespondido(true)
+            }}
+            type="button"
+          >
+            {dictionary.goingNoShort}
+          </button>
+        </div>
+
+        {/* Cuántos vienen: el contador de la maqueta, que solo aparece con el «sí». */}
+        {respondido && viene ? (
+          <div className="flex items-center justify-between gap-3">
+            <span className="font-mono text-[10px] tracking-[0.25em] opacity-70">{dictionary.guestsLabel}</span>
+            <span className="flex items-center gap-2">
+              <button
+                aria-label="−"
+                className="size-[30px] rounded-full border border-[var(--color-line)] text-ink"
+                onClick={() => setCuantos((n) => Math.max(1, n - 1))}
+                type="button"
+              >
+                −
+              </button>
+              <span className="min-w-6 text-center text-[16px]">{cuantos}</span>
+              <button
+                aria-label="+"
+                className="size-[30px] rounded-full border border-[var(--color-line)] text-ink"
+                onClick={() => setCuantos((n) => Math.min(seats, n + 1))}
+                type="button"
+              >
+                +
+              </button>
+            </span>
+          </div>
+        ) : null}
+
+        {rsvp.error === null ? null : (
+          <p className="text-[13px] text-danger" role="alert">
+            {rsvp.error}
+          </p>
+        )}
+
+        {respondido ? (
+          <button
+            className="rounded-[4px] bg-[var(--color-cta)] px-0 py-3.5 font-mono text-[10px] font-semibold tracking-[0.3em] text-[var(--color-on-cta)] disabled:opacity-60"
+            disabled={rsvp.isPending}
+            type="submit"
+          >
+            {rsvp.isPending ? dictionary.sending : dictionary.submitLong}
+          </button>
+        ) : null}
+      </form>
+    )
+  }
+
   return (
     <form action={rsvp.formAction} className="flex w-full flex-col gap-[18px] text-left">
       <input name="token" type="hidden" value={token} readOnly />
@@ -84,7 +171,7 @@ export function RsvpForm({ dictionary, seats, token, groupLabel, previous }: Pro
         {dictionary.nameLabel}
         <input
           className={FIELD_CLASS}
-          defaultValue={rsvp.defaultName || groupLabel}
+          defaultValue={rsvp.defaultName}
           id={nameId}
           maxLength={120}
           name="name"
@@ -106,24 +193,13 @@ export function RsvpForm({ dictionary, seats, token, groupLabel, previous }: Pro
         </select>
       </label>
 
-      {/* El número va con el «sí» y se envía siempre: con el «no», cero. Un campo oculto es
-          lo que impide que «no podré asistir» llegue al servidor sin cuántos. */}
-      {viene ? (
-        <label className={LABEL_CLASS} htmlFor={attendingId}>
-          {dictionary.attendingLabel}
-          <select className={FIELD_CLASS} defaultValue={rsvp.defaultAttending} id={attendingId} name="attending">
-            {rsvp.options
-              .filter((opcion) => opcion > 0)
-              .map((opcion) => (
-                <option key={opcion} value={opcion}>
-                  {opcion}
-                </option>
-              ))}
-          </select>
-        </label>
-      ) : (
-        <input name="attending" type="hidden" value="0" readOnly />
-      )}
+      {/*
+        Cuántos vienen **no se pregunta**: el diseño no lo pregunta. Va en un campo oculto
+        —los cupos del grupo con el «sí», cero con el «no»—, porque el recuento es lo que
+        alimenta el catering, el reparto de mesas y la puerta, y esas tres pantallas se
+        quedan sin dato si el formulario no lo manda.
+      */}
+      <input name="attending" type="hidden" value={viene ? String(seats) : '0'} readOnly />
 
       <label className={LABEL_CLASS} htmlFor={messageId}>
         {dictionary.messageLabel}

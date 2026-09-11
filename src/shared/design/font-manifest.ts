@@ -30,6 +30,7 @@ export type FontKey =
   | 'dmSans'
   | 'newsreader'
   | 'spectral'
+  | 'playfairDisplay'
 
 export const FONT_VARIABLES = {
   cormorant: '--font-cormorant',
@@ -44,6 +45,7 @@ export const FONT_VARIABLES = {
   dmSans: '--font-dm-sans',
   newsreader: '--font-newsreader',
   spectral: '--font-spectral',
+  playfairDisplay: '--font-playfair-display',
 } as const satisfies Record<FontKey, string>
 
 /**
@@ -64,6 +66,7 @@ export const FONT_FALLBACKS = {
   dmSans: ['Helvetica Neue', 'Arial', 'sans-serif'],
   newsreader: ['Georgia', 'Times New Roman', 'serif'],
   spectral: ['Georgia', 'Times New Roman', 'serif'],
+  playfairDisplay: ['Cormorant Garamond', 'Georgia', 'serif'],
 } as const satisfies Record<FontKey, readonly string[]>
 
 /**
@@ -90,4 +93,5 @@ export const FONT_FILES: readonly string[] = [
   'spectral-200.woff2',
   'spectral-300.woff2',
   'spectral-400.woff2',
+  'playfair-display-600-italic.woff2',
 ]

@@ -17,6 +17,8 @@ import { PALETA as P } from './xv-isabelle.palette'
 const SERIF = 'var(--font-cormorant)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 const CINZEL = 'var(--font-cinzel)'
+/** La romana en cursiva de este diseño: «mi historia», los lugares y el código de vestimenta. */
+const PLAYFAIR = 'var(--font-playfair-display)'
 
 /** El panel de mármol translúcido sobre el que se apoya cada bloque. */
 const PANEL = {
@@ -42,7 +44,7 @@ const PANEL = {
  */
 const ROTULOS = { itinerary: 'Cronograma', guestbook: 'déjanos un mensaje', venue: '· LUGAR ·', cover: '15 AÑOS' } as const
 
-export function XvIsabelleView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
+export function XvIsabelleView({ content, event, dictionary, themes, slots }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   const retrato = gallery?.[0]
@@ -239,7 +241,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         {frase === '' ? null : (
           <Reveal>
             <div style={{ marginTop: 32, padding: '26px 22px', ...PANEL, textAlign: 'center' }}>
-              <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, lineHeight: 1.5, margin: 0 }}>{frase}</p>
+              <p style={{ fontFamily: PLAYFAIR, fontStyle: 'italic', fontWeight: 600, fontSize: 26, color: P.tintaFuerte, lineHeight: 1.5, margin: 0 }}>{frase}</p>
             </div>
           </Reveal>
         )}
@@ -266,7 +268,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         {historia === '' ? null : (
           <Reveal>
             <div style={{ marginTop: 44, padding: '22px 20px', ...PANEL, textAlign: 'center' }}>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, color: P.tinta, lineHeight: 1 }}>
+              <div style={{ fontFamily: PLAYFAIR, fontStyle: 'italic', fontWeight: 600, fontSize: 38, color: P.tintaFuerte, lineHeight: 1 }}>
                 {themes.myStory}
               </div>
               {anos === '' ? null : (
@@ -346,12 +348,12 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
                       <div aria-hidden style={{ width: 40, height: 1, background: P.bronce, margin: '18px auto', opacity: 0.5 }} />
                     ) : null}
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.oro, fontWeight: 600 }}>
+                      <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.tintaRotulo, fontWeight: 600 }}>
                         {lugar.label ?? (indice === 0 ? themes.ceremony : themes.reception)}
                       </div>
-                      <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 4 }}>{lugar.place ?? ''}</div>
-                      <div style={{ fontSize: 12, marginTop: 4, opacity: 0.7 }}>{lugar.address ?? ''}</div>
-                      <div style={{ fontSize: 13, marginTop: 4, color: P.oro }}>{lugar.time ?? ''}</div>
+                      <div style={{ fontFamily: PLAYFAIR, fontStyle: 'italic', fontWeight: 600, fontSize: 28, marginTop: 4, color: P.tintaFuerte }}>{lugar.place ?? ''}</div>
+                      <div style={{ fontSize: 13, marginTop: 4, color: P.arenaTexto }}>{lugar.address ?? ''}</div>
+                      <div style={{ fontSize: 13, marginTop: 4, color: P.arenaTexto }}>{lugar.time ?? ''}</div>
                     </div>
                   </div>
                 ),
@@ -364,7 +366,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
           <Reveal>
             <div style={{ marginTop: 24, padding: 14, ...PANEL }}>
               <MapPreview
-                accent={P.oro}
+                accent={P.arenaTexto}
                 border={P.filete}
                 coords={map.coords ?? ''}
                 label={map.label ?? ''}
@@ -377,10 +379,10 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
         {dressCode === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 28, padding: '26px 20px', ...PANEL, textAlign: 'center' }}>
-              <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.35em', fontWeight: 600, color: P.oro }}>
+              <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.35em', fontWeight: 600, color: P.tintaRotulo }}>
                 {dressCode.note ?? themes.dressCode}
               </div>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 44, marginTop: 8 }}>{dressCode.title ?? ''}</div>
+              <div style={{ fontFamily: PLAYFAIR, fontStyle: 'italic', fontWeight: 600, fontSize: 40, marginTop: 8, color: P.tintaFuerte }}>{dressCode.title ?? ''}</div>
               <div style={{ fontSize: 13, marginTop: 6, fontStyle: 'italic', opacity: 0.75 }}>{dressCode.detail ?? ''}</div>
             </div>
           </Reveal>
@@ -403,7 +405,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
 
         <Reveal>
           <div style={{ marginTop: 28, padding: '22px 20px', ...PANEL }}>
-            <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.oro, fontWeight: 600, marginBottom: 12 }}>
+            <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.tintaRotulo, fontWeight: 600, marginBottom: 12 }}>
               {themes.gifts}
             </div>
             {/* La copia del bloque de regalos: la trae el diseño escrita, y sin ella la
@@ -422,15 +424,11 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, prev
 
         <Reveal>
           <div style={{ marginTop: 28, padding: '22px 20px', ...PANEL }}>
-            <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.oro, fontWeight: 600, marginBottom: 12 }}>
+            <div style={{ fontFamily: CINZEL, fontSize: 11, letterSpacing: '0.3em', color: P.tintaRotulo, fontWeight: 600, marginBottom: 12 }}>
               {dictionary.title}
             </div>
             {slots.guest}
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

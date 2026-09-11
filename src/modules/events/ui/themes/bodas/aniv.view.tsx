@@ -44,7 +44,7 @@ const ROTULOS = {
   guestbook: 'DEDÍCALES UNAS PALABRAS',
 } as const
 
-export function AnivView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function AnivView({ content, dictionary, themes, slots }: ThemeProps) {
   const { hero, hosts, quote, schedule, reception, map, music, gallery, notes, closing } = content
   const original = gallery?.[0]
   const tira = (gallery ?? []).slice(1, 5)
@@ -149,7 +149,7 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
                 }))}
                 polaroidBg={P.tinta}
                 polaroidSlotBg="rgba(26,18,8,0.1)"
-                polaroidSlotColor="rgba(26,18,8,0.5)"
+                polaroidSlotColor="#a99"
                 // La tira va sobre oro, así que sus casillas y sus años son blancos: en
                 // dorado sobre dorado no se lee ni la casilla ni el año, que es lo que
                 // pasaba —una barra amarilla lisa donde el diseño pone cuatro fotos—.
@@ -255,11 +255,7 @@ export function AnivView({ content, dictionary, themes, slots, preview }: ThemeP
               {dictionary.title}
             </div>
             {slots.guest}
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

@@ -137,6 +137,20 @@ export const newsreader = localFont({
 
 // Spectral no tiene eje variable en Google —se comprobó pidiéndolo—, así que van los
 // tres pesos que los diseños usan.
+/**
+ * La cursiva de «Palacio Griego»: sus lugares, «mi historia» y el código de vestimenta.
+ *
+ * Es la única familia de la maqueta que faltaba, y se veía: esos bloques salían en la
+ * caligrafía inglesa del diseño en vez de en una romana en cursiva. Un solo corte —600 en
+ * cursiva—, que es el único que su componente usa.
+ */
+export const playfairDisplay = localFont({
+  variable: '--font-playfair-display',
+  display: 'swap',
+  fallback: ['Cormorant Garamond', 'Georgia', 'serif'],
+  src: [{ path: '../../../public/fonts/playfair-display-600-italic.woff2', weight: '600', style: 'italic' }],
+})
+
 export const spectral = localFont({
   variable: '--font-spectral',
   display: 'swap',
@@ -198,4 +212,5 @@ export const themeFonts = {
   dmSans,
   newsreader,
   spectral,
+  playfairDisplay,
 } as const satisfies Record<FontKey, { variable: string }>

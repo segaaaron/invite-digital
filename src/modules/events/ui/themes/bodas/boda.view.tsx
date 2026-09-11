@@ -70,7 +70,7 @@ function aRomano(anio: number): string {
   }
   return salida
 }
-export function BodaView({ content, event, dictionary, themes, slots, preview }: ThemeProps) {
+export function BodaView({ content, event, dictionary, themes, slots }: ThemeProps) {
   const romano = aRomano(new Date(`${event.eventDate}T00:00:00`).getFullYear())
   const { hero, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing , notes } = content
 
@@ -275,9 +275,9 @@ export function BodaView({ content, event, dictionary, themes, slots, preview }:
                 }))}
                 polaroidBg={P.tinta}
                 polaroidSlotBg="rgba(58,36,16,0.10)"
-                polaroidSlotColor="rgba(58,36,16,0.55)"
+                polaroidSlotColor="#a99"
                 slotBg="rgba(212,180,131,0.04)"
-                slotColor="rgba(212,180,131,0.5)"
+                slotColor="rgba(255,255,255,0.5)"
                 stripBg={P.fondo}
                 variant="polaroid"
               />
@@ -399,11 +399,7 @@ export function BodaView({ content, event, dictionary, themes, slots, preview }:
               {dictionary.title}
             </div>
             {slots.guest}
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

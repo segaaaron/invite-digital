@@ -11,7 +11,6 @@ const pinta = (over: Partial<Parameters<typeof RsvpForm>[0]> = {}) =>
   render(
     <RsvpForm
       dictionary={invitation}
-      groupLabel="Familia Rojas Peña"
       previous={null}
       seats={4}
       token="tok"
@@ -20,56 +19,51 @@ const pinta = (over: Partial<Parameters<typeof RsvpForm>[0]> = {}) =>
   )
 
 describe('RsvpForm', () => {
-  it('pregunta el nombre, si asistirá, cuántos y el mensaje, en ese orden', () => {
+  it('pregunta el nombre, si asistirá y el mensaje: ni una casilla más que el diseño', () => {
     // Es la composición de la maqueta. El nombre va primero porque el enlace identifica
-    // **al grupo**: en «Familia Rojas Peña» contesta uno de cuatro.
+    // **al grupo**: en «Familia Rojas Peña» contesta uno de cuatro. Cuántos vienen no se
+    // pregunta, porque el diseño no lo pregunta.
     pinta()
 
     expect(screen.getByLabelText(invitation.nameLabel)).toBeInTheDocument()
     expect(screen.getByLabelText(invitation.goingLabel)).toBeInTheDocument()
-    expect(screen.getByLabelText(invitation.attendingLabel)).toBeInTheDocument()
     expect(screen.getByLabelText(invitation.messageLabel)).toBeInTheDocument()
+    expect(screen.queryByLabelText(invitation.attendingLabel)).not.toBeInTheDocument()
   })
 
-  it('prellena el nombre con la etiqueta del grupo: quien no lo toque deja lo de siempre', () => {
+  it('el nombre va vacío, con su marcador', () => {
+    // Prellenarlo con la etiqueta del grupo hacía que la mayoría dejara «Familia Rojas
+    // Peña» puesta, y entonces el campo no dice nada que no supiéramos.
     pinta()
-    expect(screen.getByLabelText(invitation.nameLabel)).toHaveValue('Familia Rojas Peña')
+    expect(screen.getByLabelText(invitation.nameLabel)).toHaveValue('')
+    expect(screen.getByPlaceholderText(invitation.namePlaceholder)).toBeInTheDocument()
   })
 
-  it('ofrece de uno al número de cupos: el cero es «no podré asistir», no una opción del desplegable', () => {
-    pinta()
-    const cuantos = screen.getByLabelText(invitation.attendingLabel)
-    expect([...cuantos.querySelectorAll('option')].map((o) => o.textContent)).toEqual(['1', '2', '3', '4'])
-  })
-
-  it('propone todos los cupos cuando aún no hay respuesta', () => {
-    pinta()
-    expect(screen.getByLabelText(invitation.attendingLabel)).toHaveValue('4')
+  it('con el «sí» manda los cupos del grupo, que es lo que el catering y las mesas usan', () => {
+    const { container } = pinta()
+    expect(container.querySelector('input[name="attending"]')).toHaveValue('4')
   })
 
   it('preselecciona la respuesta anterior, con su nombre', () => {
     pinta({ previous: { attending: 2, responderName: 'Jorge Rojas', message: 'Vamos dos' } })
 
     expect(screen.getByLabelText(invitation.nameLabel)).toHaveValue('Jorge Rojas')
-    expect(screen.getByLabelText(invitation.attendingLabel)).toHaveValue('2')
     expect(screen.getByLabelText(invitation.messageLabel)).toHaveValue('Vamos dos')
   })
 
-  it('con «no podré asistir» esconde el número y manda cero', () => {
-    // Quien no viene no tiene cuántos. Y el cero se sigue enviando: sin campo, el servidor
-    // recibiría una respuesta sin asistentes y la rechazaría como carga inválida.
+  it('con «no podré asistir» manda cero', () => {
     const { container } = pinta()
 
     fireEvent.change(screen.getByLabelText(invitation.goingLabel), { target: { value: 'no' } })
 
-    expect(screen.queryByLabelText(invitation.attendingLabel)).not.toBeInTheDocument()
     expect(container.querySelector('input[name="attending"]')).toHaveValue('0')
   })
 
   it('quien ya dijo que no vuelve a entrar con el «no» puesto', () => {
-    pinta({ previous: { attending: 0, responderName: null, message: null } })
+    const { container } = pinta({ previous: { attending: 0, responderName: null, message: null } })
 
-    expect(screen.queryByLabelText(invitation.attendingLabel)).not.toBeInTheDocument()
+    expect(screen.getByLabelText(invitation.goingLabel)).toHaveValue('no')
+    expect(container.querySelector('input[name="attending"]')).toHaveValue('0')
   })
 
   it('lleva el token en un campo oculto', () => {

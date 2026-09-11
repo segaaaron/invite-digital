@@ -4,6 +4,7 @@ import type { ThemeProps } from '../contract'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { MarcoQr } from '../kit/MarcoQr'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
@@ -38,12 +39,24 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  */
 const ROTULOS = {
   guestbook: 'déjanos un mensaje',
-  giftsNote: 'Tu presencia es nuestro mejor regalo. Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
+  /** Dos piezas: el titular en caligrafía y la línea pequeña de debajo. */
+  giftsTitle: 'Tu presencia es nuestro mejor regalo',
+  giftsNote: 'Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
 } as const
 
-export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
+export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
+  // La fecha límite, en el idioma del evento: la maqueta la pinta bajo el rótulo.
+  const plazo =
+    event.rsvpDeadline === null
+      ? null
+      : `${themes.rsvpBefore} ${new Intl.DateTimeFormat(event.locale === 'en' ? 'en-GB' : 'es-BO', {
+          day: 'numeric',
+          month: 'long',
+          timeZone: 'UTC',
+        }).format(new Date(`${event.rsvpDeadline}T00:00:00Z`))}`
+
   const retrato = gallery?.[0]
   const momento = gallery?.[1]
   const trio = (gallery ?? []).slice(2, 5)
@@ -556,9 +569,20 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 44, marginTop: 8, color: P.tinta }}>
                 {dressCode.title ?? ''}
               </div>
-              <div aria-hidden style={{ marginTop: 20, display: 'flex', justifyContent: 'center' }}>
-                <TIMELINE_ICONS.attire color={P.tinta} size={86} />
-              </div>
+              {/* El dibujo de la maqueta, no uno redibujado: es su fichero, teñido con el
+                  verde del diseño por máscara —el original viene en oro—. */}
+              <div
+                aria-hidden
+                style={{
+                  marginTop: 20,
+                  height: 96,
+                  background: P.salvia,
+                  maskImage: `url("${themeAsset('boda-bot', 'trajes-dorados-sf.avif')}")`,
+                  maskSize: 'contain',
+                  maskPosition: 'center',
+                  maskRepeat: 'no-repeat',
+                }}
+              />
 
               <div style={{ fontSize: 13, marginTop: 16, fontStyle: 'italic', opacity: 0.7 }}>{dressCode.detail ?? ''}</div>
 
@@ -592,9 +616,18 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
                 background: 'rgba(255,255,255,0.35)',
               }}
             >
-              <div aria-hidden style={{ display: 'flex', justifyContent: 'center' }}>
-                <TIMELINE_ICONS.heels color={P.salvia} size={54} />
-              </div>
+              {/* El dibujo de la maqueta, teñido con el verde del diseño. */}
+              <div
+                aria-hidden
+                style={{
+                  height: 78,
+                  background: P.salvia,
+                  maskImage: `url("${themeAsset('boda-bot', 'taco-gato-sf.avif')}")`,
+                  maskSize: 'contain',
+                  maskPosition: 'center',
+                  maskRepeat: 'no-repeat',
+                }}
+              />
               {soloAdultos.text === undefined ? null : (
                 <p style={{ fontSize: 14, fontStyle: 'italic', lineHeight: 1.7, marginTop: 20, opacity: 0.85 }}>
                   {soloAdultos.text}
@@ -609,10 +642,18 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
 
         <Reveal>
           <div style={{ marginTop: 40, padding: 22, background: 'rgba(90,112,92,0.04)', border: `1px solid ${P.fileteSuave}` }}>
-            <div style={{ fontSize: 11, letterSpacing: '0.35em', fontWeight: 500, color: P.salvia }}>{themes.gifts}</div>
-            <p style={{ marginTop: 10, fontSize: 13, fontStyle: 'italic', lineHeight: 1.6, opacity: 0.8 }}>
-              {ROTULOS.giftsNote}
-            </p>
+            {/* Texto a la izquierda y el código a la derecha, como en la maqueta: el titular
+                en caligrafía y la línea pequeña debajo, no un solo párrafo. */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, letterSpacing: '0.35em', fontWeight: 500, color: P.salvia }}>{themes.gifts}</div>
+                <div style={{ marginTop: 10, fontFamily: CALIGRAFIA, fontSize: 24, color: P.tinta }}>
+                  {ROTULOS.giftsTitle}
+                </div>
+                <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.6, opacity: 0.75 }}>{ROTULOS.giftsNote}</p>
+              </div>
+              <MarcoQr bg={P.papel} fg={P.tinta} size={88} />
+            </div>
             <div style={{ marginTop: 12 }}>{slots.registry}</div>
           </div>
         </Reveal>
@@ -634,16 +675,25 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
 
         <Reveal>
           <div style={{ marginTop: 40 }}>
+            {/* Dos piezas, como la maqueta: el rótulo en versalitas y el plazo en
+                caligrafía debajo. */}
             <div style={{ textAlign: 'center', marginBottom: 16 }}>
-              <div style={{ fontSize: 11, letterSpacing: '0.4em', fontWeight: 500, color: P.salvia }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  letterSpacing: '0.4em',
+                  fontWeight: 500,
+                  color: P.salvia,
+                  textTransform: 'uppercase',
+                }}
+              >
                 {dictionary.title}
               </div>
+              {plazo === null ? null : (
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 26, marginTop: 4, color: P.tinta }}>{plazo}</div>
+              )}
             </div>
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7, textAlign: 'center' }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

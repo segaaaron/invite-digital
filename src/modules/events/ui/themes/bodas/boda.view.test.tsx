@@ -60,21 +60,12 @@ describe('el tema Étoile', () => {
     expect(screen.getByText('ranura-rsvp')).toBeInTheDocument()
   })
 
-  it('en vista previa no pinta el RSVP de verdad, y lo dice', () => {
-    // Un formulario de muestra que parece funcionar y no guarda nada es peor que no
-    // tenerlo.
-    render(<BodaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, preview: true })} />)
-
-    expect(screen.queryByText('ranura-rsvp')).not.toBeInTheDocument()
-    expect(screen.getByText(/nada de lo que escribas/i)).toBeInTheDocument()
-  })
-
   it('en vista previa SÍ pinta la portada: es la primera pantalla del modelo', () => {
     // Estuvo escondida, y con ella se escondían diez imágenes —los sobres, las tiaras, las
     // máscaras, los fondos a sangre— y la composición entera de cada portada, que nadie
     // pudo comparar contra la maqueta porque no se veía. El escaparate enseña lo que el
     // invitado va a recibir, y lo primero que recibe es la portada.
-    render(<BodaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, preview: true })} />)
+    render(<BodaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
 
     expect(screen.getByRole('button', { name: /abrir la invitación/i })).toBeInTheDocument()
   })

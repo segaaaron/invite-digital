@@ -66,6 +66,26 @@ export type SlotSkin = {
  */
 export function variablesDeRanuras(skin: SlotSkin): CSSProperties {
   return {
+    /*
+     * El peso normal del texto de una invitación es **400**.
+     *
+     * La web pública fija `font-weight: 300` en el `body` —es Jost, y la maqueta marfil la
+     * quiere fina—, y las dieciséis invitaciones lo heredaban. La maqueta de las
+     * invitaciones no fija ninguno, así que su texto sale en 400: «Faltan», «AÑOS»,
+     * «Reservamos», «Tu presencia»… todo salía un grado más fino de la cuenta, en los
+     * dieciséis a la vez y sin que se notara comparando una pieza suelta.
+     */
+    fontWeight: 400,
+    /*
+     * La monoespaciada de una invitación es **JetBrains Mono**, la de la maqueta.
+     *
+     * Se redefine `--font-mono`, no `--font-mono-raw`: la hoja de tokens ya resolvió
+     * `--font-mono: var(--font-mono-raw, ui-monospace)` **en `:root`**, donde
+     * `--font-mono-raw` no existe, así que ese valor ya viene calculado a la del sistema y
+     * redefinir la de dentro no lo cambia. El botón «ENVIAR» salía en la monoespaciada de
+     * macOS en vez de en la del diseño.
+     */
+    '--font-mono': 'var(--font-jetbrains-mono)',
     '--color-bg-raised': skin.panel,
     '--color-bg-top': skin.campo,
     '--color-bg-sunken': skin.hueco,
@@ -76,9 +96,15 @@ export function variablesDeRanuras(skin: SlotSkin): CSSProperties {
     '--color-gold-deep': skin.acentoHondo,
     '--color-gold-light': skin.acento,
     '--color-on-gold': skin.sobreAcento,
-    ...(skin.boton === undefined ? {} : { '--color-cta': skin.boton }),
-    ...(skin.sobreBoton === undefined ? {} : { '--color-on-cta': skin.sobreBoton }),
-    ...(skin.etiqueta === undefined ? {} : { '--color-form-label': skin.etiqueta }),
+    /*
+     * Siempre, no solo cuando el diseño los declara: `tokens.css` los define como
+     * `var(--color-gold)`, y esa referencia **se resuelve en `:root`**, donde el oro sigue
+     * siendo el de la web pública. Dejarlos sin escribir aquí hacía que el botón de una
+     * boda verde salvia saliera dorado.
+     */
+    '--color-cta': skin.boton ?? skin.acento,
+    '--color-on-cta': skin.sobreBoton ?? skin.sobreAcento,
+    '--color-form-label': skin.etiqueta ?? skin.tintaTenue,
     '--color-line': skin.linea,
     ...(skin.display === undefined ? {} : { '--font-display': skin.display }),
     ...(skin.caligrafia === undefined ? {} : { '--font-script': skin.caligrafia }),

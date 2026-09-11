@@ -32,7 +32,7 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
  * es el número de casilla —`0` a `5`—, no una fotografía del evento; sin él manda el orden
  * de la fila.
  */
-export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo, preview }: ThemeProps) {
+export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
     content
 
@@ -703,11 +703,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
               />
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro, marginTop: 32 }}>{themes.gifts}</div>
               <div style={{ marginTop: 18, textAlign: 'left' }}>
-                {preview === true ? (
-                  <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-                ) : (
-                  slots.registry
-                )}
+                {slots.registry}
               </div>
             </div>
           </Reveal>
@@ -728,11 +724,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 <span style={{ fontStyle: 'italic' }}>.</span>
               </div>
               <div style={{ marginTop: 18 }}>
-                {preview === true ? (
-                  <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-                ) : (
-                  slots.rsvp
-                )}
+                {slots.rsvp}
               </div>
             </div>
           </Reveal>

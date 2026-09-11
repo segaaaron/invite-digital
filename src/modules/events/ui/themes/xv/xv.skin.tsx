@@ -25,10 +25,19 @@ export const PIEL_XV: PielXv = {
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.
   rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
+  // Su maqueta sí pinta «Detalles que Abrazan» con el sobre y el código.
+  regalos: true,
   fondoBase: `linear-gradient(160deg, ${P.cielo} 0%, ${P.lavanda} 45%, ${P.rosa} 100%)`,
   velo: 'rgba(252,250,255,.45)',
   fondo: <MarBackground opacity={1} theme="xv" variant="b" />,
   burbujas: <BubblesRise color="rgba(180,220,255,0.5)" count={24} seed={11} />,
+  // Las burbujas de la maqueta (`invites-1.jsx:351-352`) son de este diseño y de ninguno
+  // más: es el fondo del mar. Van pedidas a propósito, no heredadas.
+  burbujasPremium: true,
+  // Las chispas de su maqueta (`invites-1.jsx:353`): dieciocho, lilas. Van declaradas
+  // porque ya no hay valores por defecto — los que había eran estos, y se los quedaban
+  // los cinco diseños que en la maqueta no llevan ninguna.
+  particulas: { char: '✦', color: P.orquidea, count: 18 },
   portada: (datos) => (
     <SofiaCover
       bgAsset={themeAsset('xv', 'bajo-el-mar1.avif')}
@@ -42,10 +51,17 @@ export const PIEL_XV: PielXv = {
       title={`${datos.title} AÑOS`}
     />
   ),
+  // El código de la mesa de regalos, con el aro lila que le pone la maqueta.
+  piezas: {
+    qrTinta: P.violetaHondo,
+    qrAro: P.lila,
+    // Su tarjeta de la fecha va enmarcada por dos filetes, arriba y abajo.
+    fechaFiletes: true,
+  },
   paleta: P,
   cristal: {
     background: P.vidrio,
-    backdropFilter: 'blur(14px)',
+    backdropFilter: 'blur(12px)',
     borderRadius: 16,
     border: `1px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
@@ -57,4 +73,10 @@ export const PIEL_XV: PielXv = {
   vestimenta: themeAsset('xv', 'icono-vestimenta.avif'),
   cierre: themeAsset('xv', 'concha-recortada.avif'),
   icono: (clave) => themeAsset('xv', ICONOS[clave ?? ''] ?? 'corona-icono1.avif'),
+  iconoTam: (clave) => ({ recepcion: 48, corona: 55, fiesta: 50, despedida: 60 })[clave ?? ''] ?? 48,
+  // La corona llega en dorado y la maqueta la tiñe del morado del diseño.
+  iconoFiltro: (clave) =>
+    clave === 'corona'
+      ? 'brightness(0) saturate(100%) invert(24%) sepia(84%) saturate(2500%) hue-rotate(265deg) brightness(80%) contrast(105%) opacity(0.6)'
+      : undefined,
 }

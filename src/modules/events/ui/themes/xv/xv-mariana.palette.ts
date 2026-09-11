@@ -16,7 +16,7 @@ export const PALETA = {
   lila: '#b8bfc7',
   lilaFuerte: '#9aa2b1',
   blanco: '#ffffff',
-  vidrio: 'rgba(14,18,30,.70)',
+  vidrio: 'rgba(0,0,0,.65)',
   vidrioFuerte: 'rgba(14,18,30,.82)',
   bordeVidrio: '#9aa2b1',
   sombra: '0 6px 24px rgba(0,0,0,.5)',

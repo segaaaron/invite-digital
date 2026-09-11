@@ -79,7 +79,12 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
                 style={{ ...estilo, transitionDuration: reduceMotion ? '0ms' : undefined }}
               >
                 <button
-                  className="block h-full w-full text-left"
+                  // `relative` es requisito del `fill` de la imagen: `next/image` lo
+                  // resuelve contra su **padre directo**, y este botón era `static`, así
+                  // que el ancestro posicionado acababa siendo el `<li>` y la consola
+                  // avisaba en cada montaje. No mueve nada: el botón ocupa exactamente el
+                  // `<li>` (`h-full w-full`), que es contra lo que ya se resolvía.
+                  className="relative block h-full w-full text-left"
                   onClick={() => setIndex(i)}
                   tabIndex={i === index ? 0 : -1}
                   type="button"

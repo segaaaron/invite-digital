@@ -1,0 +1,38 @@
+
+### boda  (alto maqueta 2778 · nuestro 3114)
+  SIN PINTAR: 30 | SONG OF THE NIGHT | Apunta al QR con tu cámara | Liverpool | #5512874 | Sears | #902441 | Luna de miel | Banamex ··4419 | SCAN ME | CONFIRMA ANTES DEL 30 OCT | ASISTIRÉ
+
+### boda-bot  (alto maqueta 4612 · nuestro 6467)
+  SIN PINTAR: ¡NOS CASAMOS! | SÁBADO | OCTUBRE | FALTAN | HRS | 18 | Tu presencia es nuestro mejor regalo | Si deseas obsequiar algo, abrimos un fondo para  | SONG OF THE NIGHT | CONFIRMA TU ASISTENCIA | antes del 1 de octubre | ASISTIRÉ
+
+### boda-cin  (alto maqueta 3412 · nuestro 4125)
+  SIN PINTAR: DAYS | 07 | SEC | Sofía Eliana Vega | first feature | Diego R. Saavedra | from "7 años" | SONG OF THE NIGHT | 12.12.2026 · 19:00 | SECTION · A · ROW 02 · SEAT 14 | ASISTIRÉ | NO PUEDO
+
+### boda-ed  (alto maqueta 5545 · nuestro 6240)
+  SIN PINTAR: 12 DE SEPTIEMBRE DE 2026 | lo que iba a querer." | Pedro Zarate | vestimenta. | 22 | 02 | 56 | Hacienda Los Sauces | ● LOS SAUCES | Mesa de regalos | Su presencia es nuestro mejor regalo. Si además  | VER MESA DE REGALOS
+
+### civil  (alto maqueta 1808 · nuestro 2319)
+  SIN PINTAR: Escanea el código | Liverpool | #3344112 | Patagonia | viaje Bali | Cash fund | Wise ··0028 | SCAN ME | CONFIRMA TU ASISTENCIA | ASISTIRÉ | NO PUEDO
+
+### aniv  (alto maqueta 2058 · nuestro 2436)
+  SIN PINTAR: días | hrs | min | seg | SONG OF THE NIGHT | ASISTIRÉ | NO PUEDO | DEDICALES UNAS PALABRAS | FIRMAR LIBRO
+
+### eng  (alto maqueta 1747 · nuestro 2487)
+  SIN PINTAR: "sí" | días | hrs | min | seg | sí | SONG OF THE NIGHT | ASISTIRÉ | NO PUEDO
+
+### dest  (alto maqueta 2038 · nuestro 2690)
+  SIN PINTAR: días | hrs | min | 11 | seg | BODA-TULUM26 | Aeropuerto Cancún (CUN) → traslado disponible ·  | ASISTIRÉ | NO PUEDO
+  ≠ «DRESS CODE» maqueta 9px/400/jetbrainsmono/rgb(240, 211, 155) · nuestro 9px/400/jetbrainsmono/rgb(6, 40, 61)
+
+### xv  (alto maqueta 6250 · nuestro 6491)
+  SIN PINTAR: Septiembre | días | hrs | min | 59 | seg | Lucas Montaño | Acto Central | 20:30 | SONG OF THE NIGHT | Escanea Aquí | Nombre completo
+node:internal/process/promises:394
+    triggerUncaughtException(err, true /* fromPromise */);
+    ^
+
+page.waitForTimeout: Target page, context or browser has been closed
+    at main (/Users/miguelangelsaraviabelmonte/dev-web/luxurypremiuminvite-web/.cmp/todos.ts:74:13) {
+  log: []
+}
+
+Node.js v22.14.0

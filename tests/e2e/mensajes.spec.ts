@@ -17,7 +17,6 @@ test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la r
   // 1. El invitado confirma **con un mensaje**. El texto no vuelve a escribirse en
   //    ninguna tabla nueva: se queda en `rsvp_responses.message`, donde ya vivía.
   await page.goto(`/i/${token}`)
-  await page.getByLabel('¿Cuántos asisten?').selectOption('3')
   await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Qué ganas de celebrar con ustedes.')
   await page.getByRole('button', { name: 'ENVIAR' }).click()
   await expect(page.getByRole('status')).toContainText('Gracias')
@@ -62,7 +61,6 @@ test('lo destacado en el panel es lo que ve la pareja en su enlace de solo lectu
   const { token } = await seedGuestbookEvent(slug)
 
   await page.goto(`/i/${token}`)
-  await page.getByLabel('¿Cuántos asisten?').selectOption('2')
   await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Un abrazo enorme para los dos.')
   await page.getByRole('button', { name: 'ENVIAR' }).click()
   await expect(page.getByRole('status')).toContainText('Gracias')

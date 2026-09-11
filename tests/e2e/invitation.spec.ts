@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { invitationFixtures } from './fixtures/invitation'
 
-const { closeInvitationDb, countResponses, deleteEvent, seedInvitation } = invitationFixtures()
+const { attendingOf, closeInvitationDb, countResponses, deleteEvent, seedInvitation } = invitationFixtures()
 
 // Las páginas de invitado no llevan sesión del atelier.
 test.use({ storageState: { cookies: [], origins: [] } })
@@ -10,34 +10,31 @@ test.afterAll(async () => {
   await closeInvitationDb()
 })
 
-test('el invitado confirma 3 de 4 cupos y luego cambia a 2', async ({ page }) => {
+test('el invitado confirma con su nombre y vuelve a confirmar', async ({ page }) => {
   const { token, groupId, eventSlug } = await seedInvitation({ slug: 'boda-rsvp-e2e' })
 
   await page.goto(`/i/${token}`)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Evento boda-rsvp-e2e')
 
-  // El nombre llega prellenado con la etiqueta del grupo: el enlace es del grupo y quien
-  // contesta es una persona de dentro.
-  await expect(page.getByLabel('Nombre completo')).toHaveValue('Familia Rojas Peña')
+  // El nombre va vacío: el enlace es del grupo y quien contesta es una persona de dentro.
+  await expect(page.getByLabel('Nombre completo')).toHaveValue('')
   await page.getByLabel('Nombre completo').fill('Jorge Rojas')
-  await page.getByLabel('¿Cuántos asisten?').selectOption('3')
   await page.getByRole('button', { name: 'ENVIAR' }).click()
   // El diseño saluda por su nombre a quien acaba de confirmar.
   await expect(page.getByRole('status')).toContainText('¡Gracias, Jorge Rojas!')
 
   await page.getByRole('button', { name: 'Cambiar mi respuesta' }).click()
-  await expect(page.getByLabel('¿Cuántos asisten?')).toHaveValue('3')
   await expect(page.getByLabel('Nombre completo')).toHaveValue('Jorge Rojas')
 
-  await page.getByLabel('¿Cuántos asisten?').selectOption('2')
   await page.getByRole('button', { name: 'ENVIAR' }).click()
   await expect(page.getByRole('status')).toContainText('Gracias')
 
   // El histórico es de solo anexado: dos respuestas, no una actualizada.
   expect(await countResponses(groupId)).toBe(2)
 
-  await page.reload()
-  await expect(page.getByLabel('¿Cuántos asisten?')).toHaveValue('2')
+  // Cuántos vienen no se pregunta —el diseño no lo pregunta—, pero se manda: son los cupos
+  // del grupo, y con ellos se hacen el catering, las mesas y la puerta.
+  expect(await attendingOf(groupId)).toBe(4)
 
   await deleteEvent(eventSlug)
 })

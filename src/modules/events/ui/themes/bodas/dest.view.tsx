@@ -36,7 +36,7 @@ const ROTULOS = {
   coverHeadline: 'VIP',
 } as const
 
-export function DestView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
   const { hero, quote, schedule, reception, itinerary, dressCode, gallery, closing } = content
   const pareja = gallery?.[0]
   const mosaico = (gallery ?? []).slice(1, 6)
@@ -239,9 +239,9 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
                 }))}
                 polaroidBg={P.blanco}
                 polaroidSlotBg="rgba(6,40,61,0.08)"
-                polaroidSlotColor="rgba(6,40,61,0.5)"
+                polaroidSlotColor="#a99"
                 slotBg="rgba(255,255,255,0.08)"
-                slotColor="rgba(255,255,255,0.6)"
+                slotColor="rgba(255,255,255,0.5)"
                 stripBg={P.marProfundo}
                 variant="mosaic"
               />
@@ -296,11 +296,7 @@ export function DestView({ content, dictionary, themes, slots, preview }: ThemeP
               {dictionary.title}
             </div>
             {slots.guest}
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

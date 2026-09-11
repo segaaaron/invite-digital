@@ -22,7 +22,6 @@ export type RsvpControl = {
   /** Vuelve al formulario tras confirmar, para cambiar la respuesta. */
   readonly reopen: () => void
   /** Las opciones del desplegable: de cero hasta los cupos del grupo. */
-  readonly options: readonly number[]
   readonly defaultAttending: string
   readonly defaultMessage: string
   /** El nombre con el que ya contestó, para no volver a escribirlo. */
@@ -56,7 +55,6 @@ export function useRsvp({ dictionary, previous, seats }: Entrada): RsvpControl {
     error: state.status === 'error' ? dictionary.errors[state.message] : null,
     confirmed: state.status === 'success' && reconocido !== state,
     reopen: () => setReconocido(state),
-    options: Array.from({ length: seats + 1 }, (_, indice) => indice),
     defaultAttending: String(previous?.attending ?? seats),
     defaultMessage: previous?.message ?? '',
     defaultName: previous?.responderName ?? '',

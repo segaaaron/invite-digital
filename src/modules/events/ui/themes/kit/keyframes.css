@@ -141,7 +141,19 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-shell-deep);
+  /* No es un color plano: un foco cenital sobre el aparato y las esquinas cayendo a
+     negro. Con el fondo liso, el teléfono era un rectángulo pegado sobre una pared del
+     mismo tono y no había nada que dijera que está delante. Los dos tonos salen de los
+     tokens del escenario con `color-mix`, así que no entra ningún hexadecimal nuevo. */
+  background:
+    radial-gradient(
+      118% 74% at 50% 6%,
+      color-mix(in srgb, var(--color-shell) 82%, var(--color-shell-ink) 18%) 0%,
+      var(--color-shell) 34%,
+      var(--color-shell-deep) 72%,
+      color-mix(in srgb, var(--color-shell-deep) 80%, black 20%) 100%
+    ),
+    var(--color-shell-deep);
   padding: clamp(0px, 2vh, 22px);
   box-sizing: border-box;
 }
@@ -175,32 +187,56 @@
 
 .theme-phone-frame {
   position: relative;
-  /* Manda la altura, y el ancho sale de la proporción: así el aparato entra entero en
-     cualquier pantalla sin dejar de ser un teléfono. El ancho no baja de 360 porque estos
-     diseños están medidos en píxeles para esa columna. */
+  /* **Manda el ancho, no la altura.** Con la altura al mando y `aspect-ratio: 43/93`, el
+     ancho salía de lo alta que fuera la ventana: 399 px en un portátil de 900, y 360 —el
+     suelo— en cuanto la ventana bajaba de 780. La invitación se veía más estrecha de lo
+     que está dibujada sin que nada lo explicara, y encima cambiaba de ancho al
+     redimensionar. Fijado a 430, la columna es siempre la misma.
+
+     La altura sigue acotada a la ventana, que es lo que impedía que la página se
+     desplazara y la tarjeta saliera cortada por abajo: lo que se desplaza es la invitación
+     **dentro** del marco. En una ventana baja el marco deja de tener proporción de
+     teléfono y se queda más achatado; es lo correcto, porque es un visor, no un dibujo de
+     un aparato. */
+  width: min(430px, 100%);
   height: min(100%, 932px);
-  aspect-ratio: 43 / 93;
-  width: auto;
-  min-width: min(360px, 100%);
-  max-width: min(430px, 100%);
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: 26px;
   background: var(--color-bg-top);
-  box-shadow: 0 30px 80px rgb(0 0 0 / 0.55);
+  /* El relieve, en cuatro capas y en este orden: un filo de luz en el canto superior —lo
+     que hace que el borde se lea como un canto y no como una línea pintada—, un contorno
+     oscuro que lo despega del fondo, una sombra de contacto corta y pegada, y una sombra
+     larga y difusa que es la que da la altura. Con una sola sombra el aparato flotaba sin
+     apoyarse en ninguna parte. */
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 2px 6px rgb(0 0 0 / 0.4),
+    0 34px 90px rgb(0 0 0 / 0.62);
   transform: translateZ(0);
 }
 
-/* En un teléfono el marco es la pantalla: ni tarjeta, ni sombra, ni esquinas. */
+/*
+ * En un teléfono no hay medidas fijas: el marco toma el ancho y el alto que le deje el
+ * aparato, sea cual sea. No hace falta redeclararlos —los `min()` de la regla base ya
+ * resuelven a `100%` en cuanto el aparato es más estrecho que 430 y más bajo que 932—, y
+ * eso es justo lo que se quiere: aquí manda la pantalla.
+ *
+ * Lo único que cambia es el aire. A los costados es **sutil**, lo justo para que la
+ * invitación no muera contra el canto del cristal; arriba y abajo, algo más, que es donde
+ * el pulgar y la barra del navegador se comen píxeles. Los dos van en `clamp` contra el
+ * propio aparato, así que un teléfono pequeño no pierde ancho por un margen pensado para
+ * uno grande.
+ *
+ * Lo que NO puede ponerse aquí es `width: 100vw`: `100vw` ignora el relleno del escenario
+ * y saca la tarjeta fuera por los dos lados.
+ */
 @media (max-width: 480px) {
-  .theme-phone-stage { padding: 0; }
+  .theme-phone-stage {
+    padding: clamp(10px, 1.6vh, 16px) clamp(8px, 2.4vw, 12px);
+  }
   .theme-phone-frame {
-    width: 100vw;
-    min-width: 0;
-    max-width: none;
-    height: 100dvh;
-    aspect-ratio: auto;
-    border-radius: 0;
-    box-shadow: none;
+    border-radius: 20px;
   }
 }

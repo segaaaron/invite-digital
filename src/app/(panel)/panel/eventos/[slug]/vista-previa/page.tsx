@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
+import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { themeFonts } from '@/shared/design/fonts'
@@ -49,7 +50,6 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   const contenido = await events.contentFor(event.value.id, definicion.defaultContent)
 
   const diccionario = getDictionary(event.value.locale)
-  const inerte = <p style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.6 }}>{diccionario.themes.previewNotice}</p>
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')
 
   return (
@@ -63,9 +63,8 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
           content={contenido}
           dictionary={diccionario.invitation}
           event={event.value}
-          guestInfo={{ label: 'Pedro Zárate', seats: 2 }}
-          preview
-          slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null, photos: inerte }}
+          guestInfo={INVITADO_DE_MUESTRA}
+          slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp)}
           themes={diccionario.themes}
         />
       </PhonePreview>

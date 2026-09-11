@@ -39,7 +39,7 @@ const GRANO =
  */
 const ROTULOS = { coverEyebrow: 'ESTÁS INVITADO', coverHeadline: 'Algo inolvidable', cover: 'NOW · SHOWING' } as const
 
-export function BodaCinView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function BodaCinView({ content, dictionary, themes, slots }: ThemeProps) {
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, gallery, closing } = content
   const retrato = gallery?.[0]
   const reparto = (gallery ?? []).slice(1, 3)
@@ -281,8 +281,25 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
                 {hosts.label ?? ''}
               </div>
               <div style={{ fontFamily: SERIF, textAlign: 'center', fontSize: 14, lineHeight: 1.6, fontStyle: 'italic' }}>
-                {hosts.names.map((nombre) => (
-                  <span key={nombre} style={{ display: 'block' }}>
+                {/* La última línea del reparto es la firma del director, y la maqueta la
+                    pinta en monoespaciada pequeña y en oro, no como un nombre más. */}
+                {hosts.names.map((nombre, indice) => (
+                  <span
+                    key={nombre}
+                    style={
+                      indice === hosts.names.length - 1
+                        ? {
+                            display: 'block',
+                            marginTop: 8,
+                            fontFamily: MONO,
+                            fontStyle: 'normal',
+                            fontSize: 9,
+                            letterSpacing: '0.3em',
+                            color: P.oro,
+                          }
+                        : { display: 'block' }
+                    }
+                  >
                     {nombre}
                   </span>
                 ))}
@@ -410,11 +427,7 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
                 {dictionary.title}
               </div>
               {slots.guest}
-              {preview === true ? (
-                <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-              ) : (
-                slots.rsvp
-              )}
+              {slots.rsvp}
             </div>
           </div>
         </Reveal>
@@ -443,8 +456,18 @@ export function BodaCinView({ content, dictionary, themes, slots, preview }: The
               <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.45em', color: P.oro }}>· END CREDITS ·</div>
               {closing.text === undefined ? null : (
                 <div style={{ marginTop: 16, fontFamily: SERIF, fontStyle: 'italic', fontSize: 13, lineHeight: 1.8, opacity: 0.8 }}>
-                  {closing.text.split('\n').map((linea) => (
-                    <span key={linea} style={{ display: 'block' }}>
+                  {/* La última línea de los créditos —«Best Picture · this one.»— la
+                      maqueta la destaca: un punto más grande, en el claro del diseño y
+                      separada del resto. */}
+                  {closing.text.split('\n').map((linea, indice, todas) => (
+                    <span
+                      key={linea}
+                      style={
+                        indice === todas.length - 1
+                          ? { display: 'block', marginTop: 14, fontSize: 14, color: P.claro }
+                          : { display: 'block' }
+                      }
+                    >
                       {linea}
                     </span>
                   ))}

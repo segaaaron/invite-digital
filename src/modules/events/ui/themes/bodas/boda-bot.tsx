@@ -10,6 +10,7 @@ export const bodaBotDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['greatVibes', 'cormorant', 'jetbrainsMono', 'cinzel'],
+  rsvp: 'botones',
   sections: ['hero', 'quote', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-bot.view').then((modulo) => modulo.BodaBotView)),

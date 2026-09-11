@@ -3,6 +3,9 @@ export const PALETA = {
   marfil: '#fdf8f0',
   tinta: '#4a3520',
   tintaFuerte: '#4a3221',
+  /** El pardo con el que la maqueta escribe los rótulos en versalitas y las direcciones. */
+  tintaRotulo: '#4a3221',
+  arenaTexto: '#6b5442',
   oro: '#8c6a21',
   oroClaro: '#a8801f',
   /** El oro con el que se escribe **sobre la acuarela de la portada**: más oscuro que el

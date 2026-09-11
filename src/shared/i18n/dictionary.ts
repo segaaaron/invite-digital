@@ -283,6 +283,8 @@ export interface ThemeDictionary {
    * marcador y no partida en dos porque en inglés la fecha no cae en el mismo sitio.
    */
   rsvpDeadlineLine: string
+  /** «antes del», que precede a la fecha límite en los diseños de boda. */
+  rsvpBefore: string
   /** «Mis XV Años»: el rótulo del cierre de los quince. */
   myFifteen: string
 }
@@ -297,9 +299,20 @@ export interface InvitationDictionary {
   goingLabel: string
   goingYes: string
   goingNo: string
+  /** Los dos botones del RSVP de los diseños de boda: «ASISTIRÉ» y «NO PUEDO». */
+  goingYesShort: string
+  goingNoShort: string
+  /** «INVITADOS», sobre el contador de ese mismo formulario. */
+  guestsLabel: string
+  /** «ENVIAR RESPUESTA →», su botón de envío. */
+  submitLong: string
   attendingLabel: string
   messageLabel: string
   messagePlaceholder: string
+  /** «Deja unas palabras…», el marcador del formulario de las bodas. */
+  guestbookPlaceholder: string
+  /** «FIRMAR LIBRO», el botón de esa sección. */
+  signBook: string
   submit: string
   sending: string
   /**

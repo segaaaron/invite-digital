@@ -21,11 +21,14 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     time: '18:00',
   },
   map: { label: 'SALÓN ELIANNE', coords: '19.32°N · 99.18°W' },
+  // Las cinco filas de su maqueta (`invites-1.jsx:2325-2331`). Faltaba la torta, y la
+  // última se llamaba «Despedida» en vez de «Cierre».
   itinerary: [
     { time: '18:00', label: 'Recepción', imageId: 'recepcion' },
     { time: '21:00', label: 'Cena', imageId: 'cena' },
     { time: '23:00', label: 'Baile Sorpresa', imageId: 'baile' },
-    { time: '02:00', label: 'Despedida', imageId: 'despedida' },
+    { time: '00:00', label: 'Torta', imageId: 'torta' },
+    { time: '02:00', label: 'Cierre', imageId: 'cierre' },
   ],
   music: { track: 'Tiempo de Vals', artist: 'Chayanne · vals oficial' },
   dressCode: {

@@ -34,10 +34,12 @@ describe('el tema Civil', () => {
     expect(screen.getByText('ranura-rsvp')).toBeInTheDocument()
   })
 
-  it('en vista previa no pinta el RSVP de verdad, y lo dice', () => {
-    render(<CivilView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, preview: true })} />)
-    expect(screen.queryByText('ranura-rsvp')).not.toBeInTheDocument()
-    expect(screen.getByText(/nada de lo que escribas/i)).toBeInTheDocument()
+  it('coloca el RSVP también en la vista previa: es un tercio de lo que el cliente viene a ver', () => {
+    // Estuvo tapado con un aviso de texto, y en el escaparate faltaban el formulario, la
+    // mesa de regalos y el libro de firmas. Ahora la pieza va entera y **inerte**, que es
+    // lo que la maqueta enseña; el aviso lo pone la propia ranura, debajo.
+    render(<CivilView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
+    expect(screen.getByText('ranura-rsvp')).toBeInTheDocument()
   })
 
   it('emite un solo encabezado de nivel 1', () => {

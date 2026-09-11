@@ -17,7 +17,7 @@ export const PALETA = {
   lilaFuerte: '#9b6fc4',
   blanco: '#ffffff',
   /** El cristal esmerilado sobre el que se apoya todo el texto. */
-  vidrio: 'rgba(255,255,255,.42)',
+  vidrio: 'rgba(255,255,255,.55)',
   vidrioFuerte: 'rgba(255,255,255,.55)',
   bordeVidrio: 'rgba(255,255,255,.7)',
   sombra: '0 4px 20px rgba(74,26,110,.12)',

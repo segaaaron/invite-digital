@@ -3,6 +3,7 @@ import type { ThemeProps } from '../contract'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { MarcoQr } from '../kit/MarcoQr'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
@@ -43,7 +44,6 @@ export function XvSharedView({
   themes,
   slots,
   guestInfo,
-  preview,
   piel,
 }: ThemeProps & { piel: PielXv }) {
   const P = piel.paleta
@@ -72,6 +72,25 @@ export function XvSharedView({
   // más hondo que el de los demás rótulos. Los diseños que no lo distinguen caen en `uva`.
   const UVA_HONDA = P.uvaHonda ?? P.uva
 
+  // El color de cada pieza: el del diseño si lo declara, y si no el de «Bajo el Mar», que
+  // es de quien salió este esqueleto.
+  const Z = piel.piezas ?? {}
+  const SERIAL = Z.serial ?? P.orquidea
+  const MONOGRAMA = Z.monograma ?? P.uva
+  const ANIOS = Z.anios ?? P.amatista
+  const NOMBRE = Z.nombre ?? P.violeta
+  const FECHA = Z.fecha ?? P.violetaHondo
+  const ROTULO_TENUE = Z.rotuloTenue ?? P.bruma
+  const FALTAN = Z.faltan ?? P.uva
+  const TITULO = Z.tituloSeccion ?? P.violetaHondo
+  const LUGAR_NOMBRE = Z.lugarNombre ?? P.malva
+  const LUGAR_DIRECCION = Z.lugarDireccion ?? P.malva
+  const LUGAR_HORA = Z.lugarHora ?? P.uva
+  const MAPA = Z.mapa ?? P.violetaHondo
+  const ITIN_ROTULO = Z.itinerarioRotulo ?? P.violetaHondo
+  const ITIN_HORA = Z.itinerarioHora ?? P.uva
+  const INVITADO_TITULO = Z.invitadoTitulo ?? P.violetaHondo
+
   // La fecha límite, en el idioma del evento. Sin plazo, la línea no se pinta: prometer
   // «confírmame antes del …» sin fecha detrás es peor que no decir nada.
   const plazo =
@@ -95,7 +114,7 @@ export function XvSharedView({
   const RANURAS = variablesDeRanuras({
     // El «ENVIAR» de la maqueta es morado macizo, no del lila de los filetes.
     boton: P.violeta,
-    sobreBoton: P.blanco,
+    sobreBoton: Z.botonTinta ?? P.blanco,
     etiqueta: P.uva,
     caligrafia: CALIGRAFIA,
     sobreAcento: P.blanco,
@@ -105,7 +124,9 @@ export function XvSharedView({
     hueco: P.vidrioFuerte,
     linea: P.bordeVidrio,
     panel: P.vidrio,
-    tinta: P.tinta,
+    // La tinta de los campos del formulario es la fuerte del diseño, que es la que la
+    // maqueta usa ahí; `tinta` a secas es la del cuerpo, más clara.
+    tinta: P.violetaHondo,
     tintaSuave: P.malva,
     tintaTenue: P.bruma,
   })
@@ -138,65 +159,187 @@ export function XvSharedView({
       })}
 
       {/*
-        La fotografía de fondo y su velo **miden una pantalla**, no la invitación entera.
-        En la maqueta cuelgan del contenedor de scroll, que mide lo que la ventana: al bajar
-        se van con el contenido y lo que queda es el degradado del artículo. Aquí colgaban
-        del `<article>` —seis mil píxeles—, así que la foto se estiraba a lo largo de toda la
-        invitación y en mitad del cronograma aparecían las columnas del fondo del mar. Se
-        veía, y era lo primero que se veía.
+        La fotografía de fondo cubre **la invitación entera**, no la primera pantalla.
+        Se acortó una vez a una pantalla, tras renderizar la maqueta en un armazón propio
+        donde el fondo se iba con el scroll; la invitación de referencia que enseña el
+        usuario la lleva de arriba abajo —al final se ven los peces y los corales del pie de
+        la fotografía—, y cuando las dos fuentes no coinciden manda la que se ve. El velo la
+        acompaña: es lo que deja legible el texto sobre ella.
       */}
+      {/*
+        El fondo que acompaña al scroll va **`sticky`**, no `fixed`.
+        
+        `fixed` se ancla al elemento con `transform` más cercano, y el marco de teléfono
+        lleva `translateZ(0)`: dentro de él el fondo se desplazaba con el contenido y
+        desaparecía a la segunda pantalla, dejando la invitación negra. `sticky` con
+        `height: 100dvh` y `margin-bottom: -100dvh` se queda pegado arriba y no ocupa
+        espacio, que es el mismo truco que ya usan los fondos de las bodas.
+      */}
+      {piel.fondoFijo === true ? (
+        <div
+          aria-hidden
+          style={{ position: 'sticky', top: 0, height: '100dvh', marginBottom: '-100dvh', overflow: 'hidden' }}
+        >
+          {piel.fondo}
+        </div>
+      ) : (
+        piel.fondo
+      )}
       <div
         aria-hidden
-        style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '100dvh', overflow: 'hidden' }}
-      >
-        {piel.fondo}
+        style={{
+          position: piel.fondoFijo === true ? 'sticky' : 'absolute',
+          ...(piel.fondoFijo === true
+            ? { top: 0, height: '100dvh', marginBottom: '-100dvh' }
+            : { inset: 0 }),
+          background: piel.velo,
+          // Sin desenfoque cuando el fondo va fijo: sobre una partitura dorada, el velo
+          // borroso apaga el oro y deja el texto sin contraste por los dos lados.
+          backdropFilter: piel.fondoFijo === true ? undefined : 'blur(3px) saturate(0.8)',
+          pointerEvents: 'none',
+        }}
+      />
+      {piel.veloInferior === undefined ? null : (
         <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            background: piel.velo,
-            backdropFilter: 'blur(3px) saturate(0.8)',
-            pointerEvents: 'none',
-          }}
+          aria-hidden
+          style={
+            piel.fondoFijo === true
+              ? {
+                  position: 'sticky',
+                  top: 0,
+                  height: '100dvh',
+                  marginBottom: '-100dvh',
+                  background: `linear-gradient(180deg, transparent 55%, ${piel.veloInferior})`,
+                  pointerEvents: 'none',
+                }
+              : {
+                  position: 'absolute',
+                  inset: 0,
+                  background: `linear-gradient(180deg, transparent 55%, ${piel.veloInferior})`,
+                  pointerEvents: 'none',
+                }
+          }
         />
-      </div>
+      )}
       {piel.burbujas}
 
       {/* Lo que el diseño abre a sangre, antes de la barra. */}
       {piel.apertura}
-      <PremiumBubbles count={8} />
-      <FloatingParticles char="✦" color={P.orquidea} count={18} seed={11} size={15} />
+      {/*
+        Las burbujas **solo las trae «Bajo el Mar»**, que es el diseño del fondo del mar.
+        En la maqueta aparecen una vez, en `QuinceInvite` (`invites-1.jsx:351-352`), y en
+        ninguno de los otros seis.
+
+        Estaban **encendidas por defecto** y apagadas solo por Natalia, así que Mascarada,
+        Jardín Encantado, Fantasía, Gala Real y Noche Estrellada soltaban burbujas de mar
+        en mitad de un bosque, un salón y una máscara veneciana. Ahora se piden: quien no
+        lo declare no las pinta, y el olvido cae del lado que no inventa nada.
+      */}
+      {piel.burbujasPremium === true ? <PremiumBubbles count={8} /> : null}
+      {/*
+        Las partículas se reparten por **la pantalla**, no por los seis mil píxeles de la
+        invitación entera: `FloatingParticles` las coloca en porcentajes de su contenedor, y
+        con el artículo completo detrás salían dieciocho chispas repartidas por todo el
+        scroll —dos o tres por pantalla, prácticamente invisibles—. En la maqueta su
+        contenedor es la ventana, y por eso se ven. Va `sticky` y sin ocupar sitio, como el
+        fondo: dentro del marco de teléfono, un `fixed` se ancla al marco y no a la ventana.
+      */}
+      {/*
+        Y las chispas **solo las traen dos**: «Bajo el Mar» con 18 lilas
+        (`invites-1.jsx:353`) y «Encanto Marino» con 14 notas doradas (`:598`). Los otros
+        cinco no llevan ninguna en la maqueta.
+
+        Esto estaba con los valores de la marina por defecto —`'✦'`, `P.orquidea`, 18—, así
+        que quien no declarara nada heredaba las chispas lilas de una invitación del fondo
+        del mar. Sin defectos: el que no las declara no las pinta.
+      */}
+      {piel.particulas === undefined ? null : (
+        <div
+          aria-hidden
+          style={{ position: 'sticky', top: 0, height: '100dvh', marginBottom: '-100dvh', overflow: 'hidden', pointerEvents: 'none' }}
+        >
+          <FloatingParticles
+            char={piel.particulas.char}
+            color={piel.particulas.color}
+            count={piel.particulas.count}
+            seed={11}
+            size={15}
+          />
+        </div>
+      )}
 
       <ThemeColumn style={{ padding: '44px 30px 60px' }}>
+        {/*
+          El encabezado. Seis diseños usan el compartido —barra, «XV», «AÑOS» y nombre—; el
+          que trae `piel.encabezado` pinta el suyo y no ve ninguno de los dos bloques de
+          abajo. Es el caso de «Jardín Encantado», cuya maqueta no escribe ni el monograma
+          ni el año.
+        */}
+        {piel.encabezado === undefined ? null : (
+          <Reveal delay={150} scale={0.9}>
+            {piel.encabezado({
+              eyebrow: hero?.eyebrow ?? '',
+              name: hero?.nameA ?? '',
+              serial: hero?.serial ?? '',
+            })}
+          </Reveal>
+        )}
+
+        {piel.encabezado !== undefined ? null : (
         <Reveal>
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              fontFamily: MONO,
-              fontSize: 13,
-              letterSpacing: '0.3em',
-              opacity: 0.85,
-              color: P.orquidea,
-              fontWeight: 700,
-            }}
-          >
-            <span>{hero?.eyebrow ?? ''}</span>
-            <span>{hero?.serial ?? ''}</span>
+          {/* «Encanto Marino» pone un velo oscuro difuminado bajo esta barra: sobre las notas
+              doradas del fondo, el oro de la barra se perdía. */}
+          <div style={{ position: 'relative' }}>
+            {Z.veloTexto === undefined ? null : (
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  inset: '-10px -18px',
+                  background: Z.veloTexto,
+                  filter: 'blur(14px)',
+                  borderRadius: 20,
+                  zIndex: -1,
+                }}
+              />
+            )}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontFamily: MONO,
+                fontSize: 13,
+                letterSpacing: '0.3em',
+                opacity: 0.85,
+                color: SERIAL,
+                fontWeight: 700,
+              }}
+            >
+              <span>{hero?.eyebrow ?? ''}</span>
+              <span>{hero?.serial ?? ''}</span>
+            </div>
           </div>
         </Reveal>
+        )}
 
+        {piel.encabezado !== undefined ? null : (
         <Reveal delay={150} scale={0.9}>
           <div style={{ position: 'relative', marginTop: 30, textAlign: 'center', padding: '10px 0' }}>
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                inset: '-30px -20px',
-                background: 'radial-gradient(ellipse 65% 60% at 50% 40%, rgba(255,252,248,.5) 0%, transparent 75%)',
-                zIndex: -1,
-              }}
-            />
+            {/* El halo del titular: blanco en la marina, negro en la partitura, ninguno donde
+                el diseño escribe con sombra. */}
+            {Z.haloTitular === 'none' ? null : (
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  inset: '-30px -20px',
+                  background:
+                    Z.haloTitular ?? 'radial-gradient(ellipse 65% 60% at 50% 40%, rgba(255,252,248,.5) 0%, transparent 75%)',
+                  filter: Z.haloTitularFiltro,
+                  zIndex: -1,
+                }}
+              />
+            )}
             <div
               style={{
                 fontFamily: CINZEL,
@@ -204,7 +347,15 @@ export function XvSharedView({
                 fontSize: 92,
                 lineHeight: 0.85,
                 letterSpacing: '4px',
-                color: P.uva,
+                color: MONOGRAMA,
+                ...(Z.monogramaDegradado === undefined
+                  ? {}
+                  : {
+                      background: Z.monogramaDegradado,
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                    }),
                 filter: 'drop-shadow(0 3px 12px rgba(74,26,110,.18))',
               }}
             >
@@ -215,7 +366,7 @@ export function XvSharedView({
                 fontFamily: DISPLAY,
                 fontSize: 26,
                 marginTop: 2,
-                color: P.amatista,
+                color: ANIOS,
                 textTransform: 'uppercase',
                 letterSpacing: '9px',
               }}
@@ -228,8 +379,8 @@ export function XvSharedView({
                 fontSize: 75,
                 lineHeight: 1.45,
                 marginTop: 2,
-                color: P.violeta,
-                textShadow: '0 2px 10px rgba(255,255,255,.7)',
+                color: NOMBRE,
+                textShadow: Z.sombraNombre ?? Z.sombraTexto ?? '0 2px 10px rgba(255,255,255,.7)',
                 margin: 0,
               }}
             >
@@ -237,64 +388,154 @@ export function XvSharedView({
             </h1>
           </div>
         </Reveal>
+        )}
 
-        {quote === undefined ? null : (
+        {quote === undefined || piel.citaMarco === undefined ? null : (
           <Reveal>
-            <div style={{ margin: '70px -10px 0' }}>
-              <p
-                style={{
-                  textAlign: 'center',
-                  fontSize: 13,
-                  letterSpacing: '0.18em',
-                  marginBottom: 40,
-                  textTransform: 'uppercase',
-                  color: UVA_HONDA,
-                  fontWeight: 900,
-                  opacity: 0.78,
-                  textShadow: '0 2px 10px rgba(255,255,255,0.95), 0 1px 2px rgba(255,255,255,0.9)',
-                }}
-              >
-                {quote.text}
-              </p>
-              <div style={{ position: 'relative' }}>
+            <div style={{ marginTop: 50 }}>
+              {piel.citaMarco(
+                <p
+                  style={{
+                    textAlign: 'center',
+                    fontFamily: Z.cita?.fuente ?? SANS,
+                    fontSize: Z.cita?.size ?? 13,
+                    letterSpacing: Z.cita?.espaciado ?? '0.18em',
+                    lineHeight: Z.cita?.interlineado,
+                    textTransform: Z.cita?.mayusculas === false ? undefined : 'uppercase',
+                    color: Z.cita?.color ?? UVA_HONDA,
+                    fontWeight: Z.cita?.weight ?? 900,
+                    textShadow: Z.cita?.sombra,
+                    margin: 0,
+                  }}
+                >
+                  {quote.text}
+                </p>,
+              )}
+            </div>
+          </Reveal>
+        )}
+
+        {quote === undefined || piel.citaMarco !== undefined ? null : (
+          <Reveal>
+            {/*
+              La cita va suelta sobre el fondo en la marina y **dentro de un panel** en
+              «Mascarada», donde es texto claro sobre una fotografía: ahí no lleva ni la
+              opacidad ni la sombra blanca, que son de un fondo claro.
+            */}
+            <div
+              style={
+                Z.cita?.panel === true
+                  ? {
+                      marginTop: 50,
+                      padding: Z.cita.relleno ?? '26px 22px',
+                      maxWidth: Z.cita.maxAncho,
+                      marginInline: Z.cita.maxAncho === undefined ? undefined : 'auto',
+                      ...CRISTAL,
+                    }
+                  : { margin: '70px -10px 0', position: 'relative' }
+              }
+            >
+              {Z.veloTexto === undefined ? null : (
                 <div
                   aria-hidden
                   style={{
                     position: 'absolute',
-                    inset: -20,
-                    background: 'radial-gradient(ellipse 60% 70% at 50% 50%, rgba(90,70,130,.25) 0%, transparent 75%)',
+                    inset: '-14px -10px',
+                    background: Z.veloTexto,
+                    filter: 'blur(16px)',
+                    borderRadius: 24,
                     zIndex: -1,
                   }}
                 />
+              )}
+              <p
+                style={{
+                  textAlign: 'center',
+                  fontFamily: Z.cita?.fuente ?? SANS,
+                  fontStyle: Z.cita?.cursiva === true ? 'italic' : undefined,
+                  fontSize: Z.cita?.size ?? 13,
+                  letterSpacing: Z.cita?.espaciado ?? '0.18em',
+                  lineHeight: Z.cita?.interlineado,
+                  marginBottom: piel.corona === undefined ? 0 : 40,
+                  textTransform: Z.cita?.mayusculas === false ? undefined : 'uppercase',
+                  color: Z.cita?.color ?? UVA_HONDA,
+                  fontWeight: Z.cita?.weight ?? 900,
+                  opacity: Z.cita?.opacidad ?? 0.78,
+                  textShadow:
+                    Z.cita?.sombra ?? '0 2px 10px rgba(255,255,255,0.95), 0 1px 2px rgba(255,255,255,0.9)',
+                }}
+              >
+                {quote.text}
+              </p>
+              {/* La pieza va **fuera** del panel: los tres diseños de gala la ponen suelta
+                  entre la cita y los padres, no dentro del recuadro. */}
+              {piel.corona === undefined || Z.cita?.panel === true ? null : (
+                <div style={{ position: 'relative' }}>
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      inset: -20,
+                      background: 'radial-gradient(ellipse 60% 70% at 50% 50%, rgba(90,70,130,.25) 0%, transparent 75%)',
+                      zIndex: -1,
+                    }}
+                  />
+                  <Image
+                    alt=""
+                    aria-hidden
+                    height={300}
+                    src={piel.corona}
+                    style={{
+                      width: piel.arte?.coronaWidth ?? '78%',
+                      height: 'auto',
+                      display: 'block',
+                      margin: '0 auto',
+                      filter:
+                        piel.arte?.coronaFiltro ??
+                        'saturate(1.15) contrast(1.1) drop-shadow(0 8px 30px rgba(80,50,120,.35))',
+                    }}
+                    width={400}
+                  />
+                </div>
+              )}
+            </div>
+            {piel.corona === undefined || Z.cita?.panel !== true ? null : (
+              <div style={{ display: 'flex', justifyContent: 'center', margin: '40px auto 0' }}>
                 <Image
                   alt=""
                   aria-hidden
                   height={300}
                   src={piel.corona}
                   style={{
-                    width: '78%',
+                    width: piel.arte?.coronaWidth ?? 260,
                     height: 'auto',
-                    display: 'block',
-                    margin: '0 auto',
-                    filter: 'saturate(1.15) contrast(1.1) drop-shadow(0 8px 30px rgba(80,50,120,.35))',
+                    filter: piel.arte?.coronaFiltro ?? 'drop-shadow(0 10px 24px rgba(0,0,0,.5))',
                   }}
                   width={400}
                 />
               </div>
-            </div>
+            )}
           </Reveal>
         )}
 
+        {/*
+          El marco del retrato solo existe donde el diseño lo pone. «Encanto Marino»,
+          «Noche Estrellada» y «Encanto Musical» no lo tienen en la maqueta, y pintarlo
+          vacío dejaba un arco blanco con borde rosa —el de la marina— en mitad de una
+          invitación dorada o de plata.
+        */}
         <Reveal delay={150}>
-          <div style={{ position: 'relative', margin: '-30px auto 0', width: 190, height: 300 }}>
+          {/* El arco sube bajo la corona donde la hay; sin ella, la maqueta lo baja 40. */}
+          {piel.retrato === undefined && retrato?.imageId === undefined ? null : (
+          <div style={{ position: 'relative', margin: piel.corona === undefined ? '40px auto 0' : '-30px auto 0', width: 190, height: 300 }}>
             <div
               aria-hidden
               style={{
                 position: 'absolute',
                 inset: -6,
                 borderRadius: '50% 50% 20px 20px / 40% 40% 20px 20px',
-                background: 'linear-gradient(160deg, #f8d7c8, #e8b3d0, #c98ad0)',
-                filter: 'blur(1px)',
+                background: piel.arte?.marcoRetrato ?? 'linear-gradient(160deg, #f8d7c8, #e8b3d0, #c98ad0)',
+                filter: piel.arte?.marcoRetratoFiltro ?? (piel.arte?.marcoRetrato === undefined ? 'blur(1px)' : undefined),
               }}
             />
             <div
@@ -319,14 +560,15 @@ export function XvSharedView({
               />
             </div>
           </div>
+          )}
 
           {hosts === undefined ? null : (
             <div style={{ textAlign: 'center', marginTop: 46, padding: '26px 22px', ...CRISTAL }}>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva }}>{hosts.label ?? ''}</div>
+              <div style={{ fontFamily: Z.anfitriones?.font ?? CALIGRAFIA, fontSize: Z.anfitriones?.size ?? 30, fontWeight: Z.anfitriones?.weight ?? 400, color: Z.anfitriones?.color ?? P.uva }}>{hosts.label ?? ''}</div>
               {hosts.names.map((nombre) => (
                 <div
                   key={nombre}
-                  style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, color: P.violetaHondo, fontWeight: 700 }}
+                  style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, color: Z.anfitrionesNombres ?? P.violetaHondo, fontWeight: 700 }}
                 >
                   {nombre}
                 </div>
@@ -338,48 +580,87 @@ export function XvSharedView({
         {cuando === null ? null : (
           <Reveal>
             <div style={{ marginTop: 60, textAlign: 'center', padding: '20px', ...CRISTAL, position: 'relative' }}>
-              {piel.ornamento}
+              {/* «Bajo el Mar» y «Encanto Marino» enmarcan esta tarjeta con dos filetes por
+                  arriba y por abajo, cada uno doblado por una línea blanca. */}
+              {Z.fechaFiletes !== true ? null : (
+                <>
+                  <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 0, height: 1.5, background: `linear-gradient(90deg, transparent, ${P.lilaFuerte}, transparent)` }} />
+                  <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, top: 1.5, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent)' }} />
+                  <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 1.5, background: `linear-gradient(90deg, transparent, ${P.lilaFuerte}, transparent)` }} />
+                  <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: -1, height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,.5), transparent)' }} />
+                </>
+              )}
+              {Z.fechaOrnamento === false ? null : piel.ornamento}
               <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 18 }}>
                 <div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 56, lineHeight: 1, color: P.violetaHondo, fontWeight: 700 }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 56, lineHeight: 1, color: FECHA, fontWeight: 700 }}>
                     {dia}
                   </div>
-                  <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 4, color: P.uva, textTransform: 'capitalize' }}>
+                  <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 4, color: FECHA, textTransform: 'capitalize' }}>
                     {mes}
                   </div>
                 </div>
-                <div aria-hidden style={{ fontFamily: DISPLAY, fontSize: 42, opacity: 0.5, color: P.violetaHondo }}>
+                <div aria-hidden style={{ fontFamily: DISPLAY, fontSize: 42, opacity: 0.5, color: FECHA }}>
                   ·
                 </div>
                 <div>
-                  <div style={{ fontFamily: DISPLAY, fontSize: 56, lineHeight: 1, color: P.violetaHondo, fontWeight: 700 }}>
+                  <div style={{ fontFamily: DISPLAY, fontSize: 56, lineHeight: 1, color: FECHA, fontWeight: 700 }}>
                     {horaEvento}
                   </div>
-                  <div style={{ fontSize: 10, letterSpacing: '0.3em', marginTop: 4, color: P.bruma, fontWeight: 700 }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.3em', marginTop: 4, color: ROTULO_TENUE, fontWeight: 700 }}>
                     {themes.countdownHours}
                   </div>
                 </div>
               </div>
-              {piel.ornamento}
+              {Z.fechaOrnamento === false ? null : piel.ornamento}
             </div>
           </Reveal>
         )}
 
         {schedule === undefined ? null : (
           <Reveal>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 30 }}>
+            {/* La pieza va encima del «Faltan» en la marina y la partitura, y debajo en los
+                tres diseños de gala: es donde la pone cada maqueta. */}
+            {Z.relojDebajo === true || piel.reloj === undefined ? null : (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: 30 }}>
+                <Image
+                  alt=""
+                  aria-hidden
+                  height={220}
+                  src={piel.reloj}
+                  style={{ width: piel.arte?.relojWidth ?? 160, height: 'auto', filter: 'drop-shadow(0 8px 20px rgba(0,0,0,.6))' }}
+                  width={160}
+                />
+              </div>
+            )}
+            <div
+              style={{
+                marginTop: Z.relojDebajo === true ? 44 : 20,
+                textAlign: 'center',
+                fontFamily: CALIGRAFIA,
+                fontSize: 40,
+                color: FALTAN,
+                textShadow: Z.sombraTexto,
+              }}
+            >
+              {themes.countdownPrefix}
+            </div>
+            {Z.relojDebajo === undefined || piel.reloj === undefined ? null : (
               <Image
                 alt=""
                 aria-hidden
                 height={220}
                 src={piel.reloj}
-                style={{ width: 160, height: 'auto', filter: 'drop-shadow(0 8px 20px rgba(0,0,0,.6))' }}
+                style={{
+                  width: piel.arte?.relojWidth ?? 100,
+                  height: 'auto',
+                  display: 'block',
+                  margin: '10px auto 4px',
+                  filter: 'drop-shadow(0 4px 12px rgba(0,0,0,.5))',
+                }}
                 width={160}
               />
-            </div>
-            <div style={{ marginTop: 20, textAlign: 'center', fontFamily: CALIGRAFIA, fontSize: 40, color: P.uva }}>
-              {themes.countdownPrefix}
-            </div>
+            )}
             <Countdown
               cellStyle={{
                 textAlign: 'center',
@@ -401,12 +682,12 @@ export function XvSharedView({
                 marginTop: 6,
                 letterSpacing: '0.25em',
                 textTransform: 'uppercase',
-                color: P.bruma,
+                color: ROTULO_TENUE,
                 fontWeight: 700,
               }}
               rowStyle={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}
               targetISO={schedule.startsAt}
-              valueStyle={{ fontFamily: DISPLAY, fontSize: 30, lineHeight: 1, color: P.violetaHondo, fontWeight: 700 }}
+              valueStyle={{ fontFamily: DISPLAY, fontSize: 30, lineHeight: 1, color: FECHA, fontWeight: 700 }}
             />
           </Reveal>
         )}
@@ -429,15 +710,15 @@ export function XvSharedView({
               slots.guest
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: SANS, fontSize: 15, color: P.tinta }}>{themes.yourPresence}</div>
+                <div style={{ fontFamily: SANS, fontSize: 15, color: INVITADO_TITULO }}>{themes.yourPresence}</div>
                 <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 12, color: P.uva }}>
                   {guestInfo.label}
                 </div>
-                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 16, color: P.bruma }}>{themes.weSaved}</div>
+                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 16, color: ROTULO_TENUE }}>{themes.weSaved}</div>
                 <div style={{ fontFamily: DISPLAY, fontSize: 40, marginTop: 4, color: P.tinta, fontWeight: 700 }}>
                   {guestInfo.seats}
                 </div>
-                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 4, color: P.bruma }}>{themes.seatForYou}</div>
+                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 4, color: ROTULO_TENUE }}>{themes.seatForYou}</div>
               </div>
             )}
           </div>
@@ -455,41 +736,111 @@ export function XvSharedView({
                 boxShadow: P.sombraFuerte,
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <div
-                  style={{
-                    fontFamily: CALIGRAFIA,
-                    fontSize: 30,
-                    color: P.violetaHondo,
-                    fontWeight: 700,
-                    textShadow: '0 1px 3px rgba(255,255,255,.9)',
-                  }}
-                >
-                  {reception.label ?? themes.reception}
+              {/* «Bosque Encantado» la compone centrada —pieza arriba, hora al pie—; las
+                  demás en fila, con el título a la izquierda y la pieza a la derecha. */}
+              {Z.recepcionCentrada === true ? (
+                <div style={{ textAlign: 'center', padding: '10px 0 22px' }}>
+                  <Image
+                    alt=""
+                    aria-hidden
+                    height={62}
+                    src={piel.castillo}
+                    style={{
+                      width: piel.arte?.castilloWidth ?? 62,
+                      height: 'auto',
+                      display: 'block',
+                      margin: '0 auto 20px',
+                      filter: piel.arte?.castilloFiltro,
+                    }}
+                    width={62}
+                  />
+                  <div
+                    style={{
+                      fontFamily: CALIGRAFIA,
+                      fontSize: Z.tituloRecepcionSize ?? 32,
+                      color: TITULO,
+                      fontWeight: 700,
+                      textShadow: Z.sombraTexto,
+                    }}
+                  >
+                    {reception.label ?? themes.reception}
+                  </div>
+                  <div style={{ marginTop: 12, fontSize: 14, color: LUGAR_NOMBRE, fontWeight: 700, textShadow: Z.sombraTexto }}>
+                    {reception.place ?? ''}
+                  </div>
+                  <div style={{ fontSize: 11, marginTop: 6, color: LUGAR_DIRECCION, fontWeight: 600, textShadow: Z.sombraTexto }}>
+                    {reception.address ?? ''}
+                  </div>
+                  <div
+                    style={{
+                      fontFamily: MONO,
+                      fontSize: 20,
+                      letterSpacing: '0.15em',
+                      color: LUGAR_HORA,
+                      marginTop: 16,
+                      textShadow: Z.sombraTexto,
+                    }}
+                  >
+                    {reception.time ?? ''}
+                  </div>
+                  {piel.ornamento}
                 </div>
-                <Image
-                  alt=""
-                  aria-hidden
-                  height={48}
-                  src={piel.castillo}
-                  style={{ width: 48, height: 'auto', flexShrink: 0 }}
-                  width={48}
-                />
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginTop: 8,
-                  fontSize: 13,
-                  color: P.malva,
-                  fontWeight: 700,
-                }}
-              >
-                <span>{reception.place ?? ''}</span>
-                <span style={{ fontFamily: MONO, color: P.uva }}>{reception.time ?? ''}</span>
-              </div>
-              <div style={{ fontSize: 11, marginTop: 4, color: P.malva, fontWeight: 600 }}>{reception.address ?? ''}</div>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div
+                      style={{
+                        fontFamily: CALIGRAFIA,
+                        fontSize: Z.tituloRecepcionSize ?? 30,
+                        color: TITULO,
+                        fontWeight: 700,
+                        textShadow: Z.sombraTexto ?? '0 1px 3px rgba(255,255,255,.9)',
+                      }}
+                    >
+                      {reception.label ?? themes.reception}
+                    </div>
+                    <Image
+                      alt=""
+                      aria-hidden
+                      height={48}
+                      src={piel.castillo}
+                      style={{
+                        width: piel.arte?.castilloWidth ?? 48,
+                        height: 'auto',
+                        flexShrink: 0,
+                        filter: piel.arte?.castilloFiltro,
+                      }}
+                      width={48}
+                    />
+                  </div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginTop: 8,
+                      fontSize: 13,
+                      color: LUGAR_NOMBRE,
+                      fontWeight: 700,
+                      textShadow: Z.sombraTexto,
+                    }}
+                  >
+                    <span>{reception.place ?? ''}</span>
+                    <span
+                      style={{
+                        fontFamily: MONO,
+                        fontSize: Z.lugarHoraSize,
+                        fontWeight: Z.lugarHoraPeso,
+                        color: LUGAR_HORA,
+                      }}
+                    >
+                      {reception.time ?? ''}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 11, marginTop: 4, color: LUGAR_DIRECCION, fontWeight: 600, textShadow: Z.sombraTexto }}>
+                    {reception.address ?? ''}
+                  </div>
+                </>
+              )}
             </div>
           </Reveal>
         )}
@@ -507,7 +858,7 @@ export function XvSharedView({
               }}
             >
               <MapPreview
-                accent={P.violetaHondo}
+                accent={MAPA}
                 border={P.amatista}
                 coords={map.coords ?? ''}
                 label={map.label ?? ''}
@@ -526,7 +877,7 @@ export function XvSharedView({
                 fontFamily: CALIGRAFIA,
                 fontSize: 40,
                 textAlign: 'center',
-                color: P.violetaHondo,
+                color: TITULO,
                 marginTop: 28,
                 marginBottom: 10,
               }}
@@ -537,10 +888,15 @@ export function XvSharedView({
               style={{
                 padding: '30px 22px',
                 borderRadius: 20,
-                background: P.vidrioFuerte,
+                // El mismo fondo que las demás tarjetas del diseño, **no uno más opaco**.
+                // Estaba con `vidrioFuerte` y en la maqueta ninguno de los siete lo usa:
+                // todos los itinerarios se pintan con `...panel`, o con su valor exacto
+                // cuando el diseño lo escribe en línea. En «Noche Estrellada» eso es .82
+                // donde va .6, y la tarjeta se veía casi maciza sobre el fondo.
+                background: P.vidrio,
                 backdropFilter: 'blur(12px)',
                 border: `1.5px solid ${P.lila}`,
-                boxShadow: P.sombraFuerte,
+                boxShadow: P.sombra,
               }}
             >
               {/*
@@ -551,11 +907,29 @@ export function XvSharedView({
                 fuentes no coinciden manda la que se ve.
               */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', position: 'relative' }}>
-                <div aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: P.lilaFuerte }} />
-                {itinerary.map((fila) => (
+                {/* La divisoria la llevan todos menos «Gala Real», cuya rejilla la maqueta
+                    abre sin ella (`invites-1.jsx:2075`). */}
+                {piel.itinerarioDivisoria === false ? null : (
+                  <div aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: P.lilaFuerte }} />
+                )}
+                {itinerary.map((fila, i) => (
                   <div
                     key={`${fila.time}-${fila.label}`}
-                    style={{ textAlign: 'center', padding: '18px 14px' }}
+                    style={{
+                      textAlign: 'center',
+                      padding: '18px 14px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      // «Gala Real» estira la quinta fila a las dos columnas para que
+                      // «Cierre» quede centrado y no suelto a la izquierda.
+                      gridColumn:
+                        piel.itinerarioUltimaCentrada === true &&
+                        i === itinerary.length - 1 &&
+                        itinerary.length % 2 === 1
+                          ? '1 / -1'
+                          : 'auto',
+                    }}
                   >
                     <div style={{ height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <div
@@ -563,43 +937,75 @@ export function XvSharedView({
                           width: 64,
                           height: 64,
                           borderRadius: '50%',
-                          background: 'rgba(255,255,255,.85)',
-                          border: `1.5px solid ${P.lila}`,
+                          background: Z.discoItinerario ?? 'rgba(255,255,255,.85)',
+                          border: `1.5px solid ${Z.discoBorde ?? P.lila}`,
                           boxShadow: '0 2px 10px rgba(74,26,110,.2)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
+                        {/*
+                          El dibujo manda sobre la imagen, **fila a fila**. «Gala Real»
+                          trae cuatro iconos como PNG de plata y **dibuja** el quinto —la
+                          torta—, que es lo que hace su maqueta. Con la condición puesta
+                          sobre `iconoNodo` a secas, declararlo para una sola fila dejaba
+                          las otras cuatro sin icono: se preguntaba si el diseño tiene
+                          dibujos, no si tiene **este**.
+                        */}
+                        {piel.iconoNodo?.(fila.imageId) ?? (
                         <Image
                           alt=""
                           aria-hidden
-                          height={48}
+                          height={64}
                           src={piel.icono(fila.imageId)}
                           style={
                             piel.iconoRedondo === true
                               ? { width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }
-                              : { width: 48, height: 48, objectFit: 'contain' }
+                              : {
+                                  // Cada icono con la medida que le da la maqueta, y su filtro
+                                  // si lo lleva: a un tamaño único la corona se veía diminuta
+                                  // y el coche, gigante.
+                                  width: piel.iconoTam?.(fila.imageId) ?? 48,
+                                  height: piel.iconoTam?.(fila.imageId) ?? 48,
+                                  objectFit: 'contain',
+                                  filter: piel.iconoFiltro?.(fila.imageId),
+                                }
                           }
-                          width={48}
+                          width={64}
                         />
+                        )}
                       </div>
                     </div>
                     <div
                       style={{
-                        fontSize: 12,
-                        color: P.violetaHondo,
+                        fontSize: Z.itinerarioRotuloSize ?? 12,
+                        color: ITIN_ROTULO,
                         fontWeight: 700,
                         letterSpacing: '0.12em',
                         textTransform: 'uppercase',
                         marginTop: 10,
-                        paddingBottom: 10,
-                        borderBottom: `1.5px solid ${P.lilaFuerte}`,
+                        paddingBottom: Z.itinerarioSeparador === undefined || Z.itinerarioSeparador === 'linea' ? 10 : 0,
+                        borderBottom:
+                          Z.itinerarioSeparador === undefined || Z.itinerarioSeparador === 'linea'
+                            ? `1.5px solid ${P.lilaFuerte}`
+                            : undefined,
                       }}
                     >
                       {fila.label}
                     </div>
-                    <div style={{ fontFamily: DISPLAY, fontSize: 22, marginTop: 10, color: P.uva, fontWeight: 700 }}>
+                    {/* «Mascarada» y «Bosque Encantado» separan aquí con su ornamento, no con
+                        una línea; las tres de gala no separan. */}
+                    {Z.itinerarioSeparador === 'ornamento' ? piel.ornamento : null}
+                    <div
+                      style={{
+                        fontFamily: DISPLAY,
+                        fontSize: Z.itinerarioHoraSize ?? 22,
+                        marginTop: 10,
+                        color: ITIN_HORA,
+                        fontWeight: 700,
+                      }}
+                    >
                       {fila.time}
                     </div>
                   </div>
@@ -621,15 +1027,15 @@ export function XvSharedView({
                 }}
               >
                 <MusicPlayer
-                  accent={P.uva}
+                  accent={Z.musicaAcento ?? P.uva}
                   artist={music.artist ?? ''}
-                  artistColor={P.malva}
+                  artistColor={Z.musicaArtista ?? P.malva}
                   eyebrow={themes.songOfTheNight}
                   playBg={P.uva}
                   playIconColor={P.blanco}
                   textColor={P.tinta}
                   track={music.track ?? ''}
-                  trackColor={P.violetaHondo}
+                  trackColor={Z.musicaPista ?? P.violetaHondo}
                 />
               </div>
             </div>
@@ -652,24 +1058,35 @@ export function XvSharedView({
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: UVA_HONDA }}>
                 {dressCode.title ?? piel.rotulos?.dressCode ?? themes.dressCode}
               </div>
-              <div style={{ fontSize: 10, letterSpacing: '0.35em', opacity: 0.85, marginTop: 6, color: UVA_HONDA, fontWeight: 700 }}>
+              <div
+                style={{
+                  fontSize: 10,
+                  letterSpacing: '0.35em',
+                  opacity: 0.85,
+                  marginTop: 6,
+                  color: Z.vestimentaNota ?? UVA_HONDA,
+                  fontWeight: 700,
+                }}
+              >
                 {dressCode.note ?? ''}
               </div>
+              {piel.vestimentaNodo ?? (
               <Image
                 alt=""
                 aria-hidden
                 height={220}
                 src={piel.vestimenta}
                 style={{
-                  width: '70%',
+                  width: piel.arte?.vestimentaWidth ?? '70%',
                   maxWidth: 220,
                   height: 'auto',
-                  marginTop: 14,
+                  margin: '14px auto 0',
                   filter: 'contrast(1.12) drop-shadow(0 10px 28px rgba(74,26,110,.28))',
                 }}
                 width={220}
               />
-              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 10, color: UVA_HONDA, fontWeight: 600 }}>
+              )}
+              <div style={{ fontSize: 12, opacity: 0.85, marginTop: 10, color: Z.vestimentaDetalle ?? UVA_HONDA, fontWeight: 600 }}>
                 {dressCode.detail ?? ''}
               </div>
             </div>
@@ -682,6 +1099,7 @@ export function XvSharedView({
           y debajo la mesa de verdad. El aviso de los sobres no es una tarjeta aparte —lo
           era, y quedaba un rótulo suelto encima de otra tarjeta con el mismo tema—.
         */}
+        {piel.regalos !== true ? null : (
         <Reveal>
           <div
             style={{
@@ -689,12 +1107,14 @@ export function XvSharedView({
               textAlign: 'center',
               padding: '34px 24px',
               ...CRISTAL,
-              background: P.vidrioFuerte,
+              // El mismo panel que el resto, no uno reforzado: la maqueta la pinta con
+              // `...panel` en los cuatro diseños que la tienen.
+              background: P.vidrio,
               border: `1.5px solid ${P.lila}`,
-              boxShadow: P.sombraFuerte,
+              boxShadow: P.sombra,
             }}
           >
-            <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.violetaHondo }}>
+            <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: TITULO, textShadow: Z.sombraTexto }}>
               {piel.rotulos?.gifts ?? themes.gifts}
             </div>
 
@@ -706,7 +1126,8 @@ export function XvSharedView({
                   fontStyle: 'italic',
                   fontSize: 16,
                   lineHeight: 1.8,
-                  color: P.violeta,
+                  color: Z.regalosIntro ?? P.violeta,
+                  textShadow: Z.sombraTexto,
                   maxWidth: '75%',
                   marginInline: 'auto',
                 }}
@@ -717,21 +1138,51 @@ export function XvSharedView({
 
             {avisoDeSobres === undefined ? null : (
               <div style={{ marginTop: 40 }}>
-                <SobreDeLinea color={P.lila} />
-                <div style={{ marginTop: 16, fontFamily: SANS, fontSize: 15, color: P.violetaHondo, fontWeight: 700 }}>
+                <SobreDeLinea color={Z.sobreAcento ?? P.lila} />
+                <div
+                  style={{
+                    marginTop: 16,
+                    fontFamily: SANS,
+                    fontSize: 15,
+                    letterSpacing: '0.04em',
+                    color: Z.sobresRotulo ?? P.violetaHondo,
+                    textShadow: Z.sombraTexto,
+                    fontWeight: 700,
+                  }}
+                >
                   {avisoDeSobres.title}
                 </div>
                 {notaDeSobres === undefined ? null : (
-                  <div style={{ marginTop: 6, fontSize: 12, color: P.uva }}>{notaDeSobres}</div>
+                  <div style={{ marginTop: 6, fontSize: 12, color: Z.sobresNota ?? P.uva, textShadow: Z.sombraTexto }}>
+                    {notaDeSobres}
+                  </div>
                 )}
               </div>
             )}
 
-            <FileteDegradado color={P.lilaFuerte} margin="36px auto" />
+            {/* El separador de esta tarjeta no es el mismo en los cuatro: ver `separadorRegalos`. */}
+            {piel.separadorRegalos ?? <FileteDegradado color={P.lilaFuerte} margin="36px auto" />}
+
+            {/* El código y su pie, como en el diseño. */}
+            <MarcoQr aro={Z.qrAro} bg={P.blanco} fg={Z.qrTinta ?? P.violetaHondo} seed={42} size={110} />
+            <div
+              style={{
+                marginTop: 14,
+                fontFamily: SANS,
+                fontSize: 15,
+                letterSpacing: '0.04em',
+                color: Z.sobresRotulo ?? P.violetaHondo,
+                textShadow: Z.sombraTexto,
+                fontWeight: 700,
+              }}
+            >
+              {themes.scanHere}
+            </div>
 
             {slots.registry}
           </div>
         </Reveal>
+        )}
 
         {avisosSueltos.map((aviso) => (
           <Reveal key={aviso.title}>
@@ -746,8 +1197,8 @@ export function XvSharedView({
                 boxShadow: P.sombraFuerte,
               }}
             >
-              <DividerOrnamental color={P.amatista} />
-              <div style={{ marginTop: 22, fontFamily: CALIGRAFIA, fontSize: 44, color: P.violetaHondo }}>
+              {piel.ornamento ?? <DividerOrnamental color={P.amatista} />}
+              <div style={{ marginTop: 22, fontFamily: CALIGRAFIA, fontSize: 44, color: TITULO }}>
                 {aviso.title}
               </div>
               {aviso.text === undefined ? null : (
@@ -758,7 +1209,7 @@ export function XvSharedView({
                     fontSize: 16,
                     lineHeight: 1.7,
                     color: P.violeta,
-                    textShadow: '0 1px 3px rgba(255,255,255,.9)',
+                    textShadow: Z.sombraTexto ?? '0 1px 3px rgba(255,255,255,.9)',
                     maxWidth: '78%',
                     marginInline: 'auto',
                   }}
@@ -766,9 +1217,7 @@ export function XvSharedView({
                   {aviso.text}
                 </p>
               )}
-              <div style={{ marginTop: 22 }}>
-                <DividerOrnamental color={P.amatista} />
-              </div>
+              <div style={{ marginTop: 22 }}>{piel.ornamento ?? <DividerOrnamental color={P.amatista} />}</div>
             </div>
           </Reveal>
         ))}
@@ -790,38 +1239,36 @@ export function XvSharedView({
               boxShadow: P.sombraFuerte,
             }}
           >
-            <DividerOrnamental color={P.amatista} />
-            <div style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 40, color: P.violetaHondo }}>
+            {piel.ornamento ?? <DividerOrnamental color={P.amatista} />}
+            <div style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 40, color: Z.tituloFormulario ?? TITULO }}>
               {dictionary.title}
             </div>
             {plazo === null ? null : (
-              <div style={{ marginTop: 10, fontFamily: SANS, fontSize: 14, color: P.violeta }}>
+              <div style={{ marginTop: 10, fontFamily: SANS, fontSize: 14, color: Z.plazo ?? P.violeta }}>
                 {themes.rsvpDeadlineLine.replace('{fecha}', plazo)}
               </div>
             )}
-            <FileteDegradado color={P.lilaFuerte} margin="22px auto" />
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.7, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {piel.ornamento ?? <FileteDegradado color={P.lilaFuerte} margin="22px auto" />}
+            {slots.rsvp}
           </div>
         </Reveal>
 
-        <Reveal>
-          <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
-            <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
-              {piel.rotulos?.guestbook ?? themes.guestbook}
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
+                {piel.rotulos?.guestbook ?? themes.guestbook}
+              </div>
+              {slots.guestbook}
             </div>
-            {slots.guestbook}
-          </div>
-        </Reveal>
+          </Reveal>
+        )}
 
         <div style={{ marginTop: 28 }}>{slots.pass}</div>
 
         <Reveal>
           <div style={{ marginTop: 20, textAlign: 'center', padding: '20px 10px 40px' }}>
-            <FileteDegradado color={P.lilaFuerte} margin="0 auto 34px" />
+            {piel.ornamento ?? <FileteDegradado color={P.lilaFuerte} margin="0 auto 34px" />}
             {/*
               El agradecimiento va **antes** del rótulo y de la firma, que es donde la
               maqueta lo pone: «gracias por acompañarme» cierra la invitación, y debajo
@@ -839,11 +1286,11 @@ export function XvSharedView({
               {themes.myFifteen}
             </div>
             {closing?.signature === undefined ? null : (
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 56, color: P.violetaHondo, marginTop: 10 }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 56, color: Z.firma ?? P.violetaHondo, marginTop: 10, textShadow: Z.sombraTexto }}>
                 {closing.signature}
               </div>
             )}
-            <div style={{ width: '65%', margin: '36px auto 28px' }}>
+            <div style={{ width: piel.arte?.cierreWidth ?? '65%', margin: '36px auto 28px' }}>
               <Image
                 alt=""
                 aria-hidden
@@ -861,7 +1308,7 @@ export function XvSharedView({
                   fontSize: 21,
                   lineHeight: 1.8,
                   color: P.violeta,
-                  textShadow: '0 2px 8px rgba(255,255,255,.9)',
+                  textShadow: Z.sombraTexto ?? '0 2px 8px rgba(255,255,255,.9)',
                 }}
               >
                 {bendicion}

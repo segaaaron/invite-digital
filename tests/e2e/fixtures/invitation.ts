@@ -65,6 +65,14 @@ export function invitationFixtures() {
     return Number(rows[0]?.count ?? '0')
   }
 
+  /** Cuántos asistentes quedaron registrados en la última respuesta del grupo. */
+  async function attendingOf(groupId: string): Promise<number> {
+    const filas = await sql<{ attending: number }[]>`
+      select attending from rsvp_responses where guest_group_id = ${groupId} order by responded_at desc limit 1
+    `
+    return filas[0]?.attending ?? -1
+  }
+
   async function deleteEvent(slug: string): Promise<void> {
     await sql`delete from events where slug = ${slug}`
   }
@@ -73,5 +81,5 @@ export function invitationFixtures() {
     await sql.end({ timeout: 5 })
   }
 
-  return { seedInvitation, countResponses, deleteEvent, closeInvitationDb }
+  return { seedInvitation, countResponses, attendingOf, deleteEvent, closeInvitationDb }
 }

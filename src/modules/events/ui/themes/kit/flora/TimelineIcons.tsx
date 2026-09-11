@@ -101,11 +101,23 @@ function Rings({ color, size = 36 }: IconProps) {
 
 function Camera({ color, size = 36 }: IconProps) {
   return (
-    <svg aria-hidden fill={color} height={size} viewBox="0 0 48 48" width={size}>
-      <path d="M17 9l2-3h10l2 3h8q3 0 3 3v22q0 3-3 3H8q-3 0-3-3V12q0-3 3-3h9zm15 16q0-5-3.5-8.5T20 13q-5 0-8.5 3.5T8 25q0 5 3.5 8.5T20 37q5 0 8.5-3.5T32 25z" />
-      <circle cx="20" cy="25" fill={OJAL} r="5.5" />
-      <circle cx="20" cy="25" r="2.5" />
-      <circle cx="38" cy="14" r="1.5" />
+    <svg
+      aria-hidden
+      fill="none"
+      height={size}
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.1}
+      viewBox="0 0 48 48"
+      width={size * 1.15}
+    >
+      {/* De línea, como la maqueta: el cuerpo con su visor, el objetivo y el disparador.
+          Rellena de color era una mancha oscura en mitad de una tarjeta clara. */}
+      <path d="M17 12l2-4h10l2 4h8a3 3 0 013 3v20a3 3 0 01-3 3H9a3 3 0 01-3-3V15a3 3 0 013-3h8z" />
+      <circle cx="24" cy="25" r="9" />
+      <circle cx="24" cy="25" r="4" />
+      <circle cx="38" cy="17" r="1.4" />
     </svg>
   )
 }
@@ -133,25 +145,78 @@ function Cake({ color, size = 36 }: IconProps) {
  */
 function Attire({ color, size = 36 }: IconProps) {
   return (
-    <svg aria-hidden fill="none" height={size} stroke={color} strokeLinejoin="round" strokeWidth={1.2} viewBox="0 0 64 48" width={size * 1.6}>
-      <path d="M14 6l8 3 8-3v36H14z" />
-      <path d="M22 9v33M14 6l-4 6 4 3M30 6l4 6-4 3" />
-      <path d="M44 6l5 3-3 6 4 27H40l4-27-3-6z" />
-      <path d="M44 6a5 5 0 0 0 5 3M44 6a5 5 0 0 1-5 3" />
+    <svg
+      aria-hidden
+      fill="none"
+      height={size}
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1.1}
+      viewBox="0 0 126 104"
+      width={size * 2.4}
+    >
+      {/* El saco: hombros caídos, solapas en pico hasta el talle, faldón y dos botones. */}
+      <path d="M24 14C14 18 9 26 9 36l-2 58h50l-2-58c0-10-5-18-15-22" />
+      <path d="M24 14l8 30 8-30" />
+      <path d="M24 14l8 30-9 8z" />
+      <path d="M40 14l-8 30 9 8z" />
+      <path d="M32 44v50" />
+      <circle cx="32" cy="58" r="1.5" />
+      <circle cx="32" cy="72" r="1.5" />
+      {/* El vestido: tirantes finos en pico, escote, talle marcado y falda que se abre. */}
+      <path d="M82 14l10 14 10-14" />
+      <path d="M82 14c-3 6-5 12-5 19l-1 9-6 52h44l-6-52-1-9c0-7-2-13-5-19" />
+      <path d="M76 42h32" />
     </svg>
+  )
+}
+
+/**
+ * Un zapato de tacón de perfil, mirando a la derecha.
+ *
+ * Tres trazos abiertos y no una silueta cerrada: cerrada, la curva de la suela y la del
+ * empeine se juntaban en el talón y el dibujo se leía como una tumbona.
+ */
+function ZapatoDeTacon() {
+  return (
+    <>
+      {/* Empeine y caña. */}
+      <path d="M8 48c14 0 26-6 34-16l8-11c2-3 5-5 9-5h5" />
+      {/* Suela. */}
+      <path d="M8 48c0-5 4-8 10-9l20-5c8-2 14-7 17-14" />
+      {/* Talón y tacón. */}
+      <path d="M64 16v7c0 5-2 9-5 12" />
+      <path d="M58 36l3 14" />
+      <path d="M57 50h8" />
+    </>
   )
 }
 
 function Heels({ color, size = 36 }: IconProps) {
   return (
-    <svg aria-hidden fill="none" height={size} stroke={color} strokeLinejoin="round" strokeWidth={1.2} viewBox="0 0 64 48" width={size * 1.6}>
-      {/* El tacón de perfil: empeine, puntera y el tacón que baja del talón. Dibujarlo de
-          frente lo convierte en un triángulo, que es lo que parecía. */}
-      <path d="M4 32h13c6 0 10-3 12-8l3-7h6v5l-4 1-2 5c-2 6-8 9-14 9H4z" />
-      <path d="M32 32v8" />
-      <path d="M42 20l8 5-8 5-2-5z" />
-      <path d="M58 20l-8 5 8 5 2-5z" />
-      <circle cx="50" cy="25" r="2.5" />
+    <svg
+      aria-hidden
+      fill="none"
+      height={size}
+      stroke={color}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={1}
+      viewBox="0 0 172 66"
+      width={size * 2.5}
+    >
+      {/* El par: uno detrás del otro, como en el diseño. */}
+      <g opacity="0.85" transform="translate(16 -4) scale(0.86)">
+        <ZapatoDeTacon />
+      </g>
+      <g transform="translate(0 8)">
+        <ZapatoDeTacon />
+      </g>
+      {/* La pajarita. */}
+      <path d="M124 33 108 22v22l16-11z" />
+      <path d="M136 33l16-11v22l-16-11z" />
+      <rect height="13" rx="3" width="12" x="124" y="26.5" />
     </svg>
   )
 }

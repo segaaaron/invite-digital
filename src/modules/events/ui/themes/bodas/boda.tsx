@@ -16,6 +16,7 @@ export const bodaDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['cormorant', 'spaceGrotesk', 'jetbrainsMono', 'cinzel'],
+  rsvp: 'botones',
   sections: ['hero', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda.view').then((modulo) => modulo.BodaView)),

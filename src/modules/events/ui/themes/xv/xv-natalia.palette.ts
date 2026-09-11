@@ -15,7 +15,9 @@ export const PALETA = {
   malva: '#e0cfa8',
   bruma: '#c9b98a',
   lila: '#b8901f',
-  lilaFuerte: '#8c6a21',
+  // En la maqueta de «Encanto Marino» el filete, la línea del cronograma y su borde son
+  // el mismo oro del diseño, no uno más oscuro que nadie eligió.
+  lilaFuerte: '#b8901f',
   blanco: '#ffffff',
   vidrio: 'rgba(0,0,0,.55)',
   vidrioFuerte: 'rgba(0,0,0,.55)',

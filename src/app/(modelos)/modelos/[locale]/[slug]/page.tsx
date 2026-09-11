@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import type { Event } from '@/modules/events/domain/event'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
+import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
@@ -85,21 +86,14 @@ export default async function ModelPreviewPage({
     venue: null,
   }
 
-  // El invitado de muestra: la maqueta enseña el saludo con un nombre y sus pases, y una
-  // portada sin ese bloque no enseña el modelo entero.
-  const MUESTRA_DE_INVITADO = { label: 'Pedro Zárate', seats: 2 }
-
-  const inerte = <p style={{ fontSize: 12, lineHeight: 1.7, opacity: 0.6 }}>{diccionario.themes.previewNotice}</p>
-
   return (
     <PhonePreview exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}>
       <Tema
         content={tema.defaultContent}
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}
-        guestInfo={MUESTRA_DE_INVITADO}
-        preview
-        slots={{ guest: inerte, rsvp: inerte, registry: inerte, guestbook: inerte, pass: null, photos: inerte }}
+        guestInfo={INVITADO_DE_MUESTRA}
+        slots={ranurasDeVistaPrevia(diccionario, tema.rsvp)}
         themes={diccionario.themes}
       />
     </PhonePreview>

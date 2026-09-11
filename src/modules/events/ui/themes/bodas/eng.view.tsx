@@ -28,7 +28,7 @@ const SERIF = 'var(--font-newsreader)'
  */
 const ROTULOS = { apertura: '· SHE SAID YES ·' } as const
 
-export function EngView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function EngView({ content, dictionary, themes, slots }: ThemeProps) {
   const { hero, hosts, quote, schedule, reception, map, music, gallery, closing } = content
   const propuesta = gallery?.[0]
   const collage = (gallery ?? []).slice(1, 5)
@@ -172,9 +172,9 @@ export function EngView({ content, dictionary, themes, slots, preview }: ThemePr
                 }))}
                 polaroidBg={P.blanco}
                 polaroidSlotBg="rgba(212,86,108,0.08)"
-                polaroidSlotColor="rgba(212,86,108,0.6)"
+                polaroidSlotColor="#a99"
                 slotBg="rgba(212,86,108,0.05)"
-                slotColor="rgba(212,86,108,0.6)"
+                slotColor="rgba(255,255,255,0.5)"
                 stripBg={P.tinta}
                 variant="polaroid"
               />
@@ -281,11 +281,7 @@ export function EngView({ content, dictionary, themes, slots, preview }: ThemePr
               {dictionary.title}
             </div>
             {slots.guest}
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

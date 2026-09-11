@@ -62,12 +62,7 @@ export type ThemeProps = {
    * la muestra del propio diseño.
    */
   readonly guestInfo?: { readonly label: string; readonly seats: number }
-  /**
-   * En la vista previa del catálogo las ranuras se pintan inertes y con su aviso. Un
-   * formulario de muestra que parece funcionar y no guarda nada es peor que no tenerlo.
-   */
-  readonly preview?: boolean
-}
+  }
 
 /**
  * La paleta de un diseño.
@@ -97,6 +92,14 @@ export type ThemeDefinition = {
   readonly categorySlug: 'boda' | 'boda-civil' | 'xv-anos'
   readonly palette: ThemePalette
   readonly fonts: readonly FontKey[]
+  /**
+   * Cómo pinta este diseño el formulario de confirmación.
+   *
+   * En la maqueta son dos: las bodas usan dos botones —«ASISTIRÉ» y «NO PUEDO»— con un
+   * contador de invitados, y los XV un formulario de campos. No es una piel del mismo:
+   * son dos composiciones.
+   */
+  readonly rsvp?: 'campos' | 'botones'
   readonly sections: readonly SectionKey[]
   readonly defaultContent: InvitationContent
   readonly Component: ComponentType<ThemeProps>

@@ -6,6 +6,7 @@ import { themeFor } from '@/modules/events/ui/themes/registry'
 import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
+import { GuestbookForm } from '@/modules/rsvp/ui/GuestbookForm'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
 import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -82,10 +83,10 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           rsvp: abierto ? (
             <RsvpForm
               dictionary={dictionary}
-              groupLabel={group.label}
               previous={latest}
               seats={group.seats}
               token={token}
+              variant={definicion.rsvp}
             />
           ) : (
             <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
@@ -101,7 +102,16 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               token={token}
             />
           ),
-          guestbook: <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />,
+          // El libro de firmas: en los diseños de boda es su propia sección con su campo y
+          // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
+          guestbook: (
+            <>
+              {definicion.rsvp === 'botones' ? (
+                <GuestbookForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
+              ) : null}
+              <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
+            </>
+          ),
           // El botón de «Comparte tus fotos». Lleva a su propia pantalla y no abre un campo
           // aquí: subir fotos es volver varias veces a lo largo del día, y hacerlo desde
           // media invitación obliga a desplazarse hasta el bloque cada vez.

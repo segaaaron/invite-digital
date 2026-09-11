@@ -31,7 +31,7 @@ const DISPLAY = 'var(--font-spectral)'
  */
 const ROTULOS = { gifts: 'REGALO DE BODA', seal: '· UNIDOS ·', cover: 'UNIÓN CIVIL' } as const
 
-export function CivilView({ content, dictionary, themes, slots, preview }: ThemeProps) {
+export function CivilView({ content, dictionary, themes, slots }: ThemeProps) {
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
 
   // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
@@ -107,9 +107,9 @@ export function CivilView({ content, dictionary, themes, slots, preview }: Theme
                 }))}
                 polaroidBg={P.blanco}
                 polaroidSlotBg="rgba(29,29,31,0.06)"
-                polaroidSlotColor="rgba(29,29,31,0.5)"
+                polaroidSlotColor="#a99"
                 slotBg="rgba(124,92,255,0.05)"
-                slotColor="rgba(29,29,31,0.5)"
+                slotColor="rgba(255,255,255,0.5)"
                 stripBg={P.tinta}
                 variant="asymmetric"
               />
@@ -201,11 +201,7 @@ export function CivilView({ content, dictionary, themes, slots, preview }: Theme
               {dictionary.title}
             </div>
             {slots.guest}
-            {preview === true ? (
-              <p style={{ fontSize: 12, opacity: 0.6, lineHeight: 1.7 }}>{themes.previewNotice}</p>
-            ) : (
-              slots.rsvp
-            )}
+            {slots.rsvp}
           </div>
         </Reveal>
 

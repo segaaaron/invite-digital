@@ -17,6 +17,8 @@ export const THEME_ASSETS = {
     'boda-03-anillos.avif',
     'boda-04-pastel.avif',
     'marmol-flores-optimized.avif',
+    'taco-gato-sf.avif',
+    'trajes-dorados-sf.avif',
     'wedding-couple.avif',
   ],
   'boda-ed': [

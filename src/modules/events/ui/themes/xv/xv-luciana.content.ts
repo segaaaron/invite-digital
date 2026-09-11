@@ -36,7 +36,10 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   notes: [
     // Dos párrafos: la intro de la tarjeta de regalos y la nota corta bajo el sobre.
     { title: 'Lluvia de Sobres', text: 'Que estés ahí, celebrando conmigo, ya lo es todo. Si tu cariño quiere expresarse de otra forma, aquí tienes una opción.\n\nHabrá un buzón esperando para tus deseos' },
-    { title: 'Solo Adultos', text: 'Evento para adultos y adolescentes.' },
+    {
+      title: 'Solo Adultos',
+      text: 'Sabemos lo especiales que son tus pequeños, y por eso queremos que esta noche puedas disfrutarla sin preocupaciones. Evento para adultos y adolescentes.',
+    },
   ],
   gallery: [{ label: 'Retrato' }],
   closing: {
