@@ -120,11 +120,27 @@ test.describe('el escaparate de modelos', () => {
     })
 
     test(`«${clave}» no escribe nada desde la vista previa`, async ({ page }) => {
-      // Un formulario de muestra que parece funcionar y no guarda nada es peor que no
-      // tenerlo. En vista previa las ranuras van inertes y lo dicen.
+      // Las ranuras son las piezas de verdad y se rellenan, como en la maqueta; lo que
+      // `PreviewSlot` corta es el envío. Aquí el token está vacío y una confirmación de
+      // mentira acabaría en el panel de alguien. El `submit` se dispara a mano: por el
+      // botón, la validación del navegador pararía con el nombre vacío y daría verde sin
+      // probar nada.
       await page.goto(`/modelos/es/${clave}`)
-      await expect(page.getByText(/vista previa del modelo/i).first()).toBeVisible()
-      await expect(page.locator('article form')).toHaveCount(0)
+      await page.waitForLoadState('networkidle')
+      const formularios = page.locator('article form')
+      expect(await formularios.count(), clave).toBeGreaterThan(0)
+
+      const envios: string[] = []
+      page.on('request', (peticion) => {
+        if (peticion.method() === 'POST') envios.push(peticion.url())
+      })
+      await formularios.evaluateAll((lista) => {
+        for (const formulario of lista) {
+          formulario.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }))
+        }
+      })
+      await page.waitForTimeout(500)
+      expect(envios, clave).toEqual([])
     })
   }
 

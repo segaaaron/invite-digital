@@ -1,0 +1,138 @@
+# Pila de producción para Dokploy. Es `compose.yml` con tres diferencias, y las tres
+# salen de Dokploy:
+#
+# - **Sin Caddy.** Dokploy ya tiene Traefik en el 80 y el 443, y el certificado lo pide
+#   él desde la pestaña Domains (servicio `web`, puerto 3000).
+# - **El migrador no es un perfil.** Dokploy solo hace `docker compose up -d`, así que
+#   `migrate` corre en cada despliegue y `web` no arranca hasta que termina bien. Si una
+#   migración falla, la versión anterior sigue sirviendo.
+# - **Topes de memoria.** La VPS es compartida: un proceso desbocado no puede tumbar lo
+#   demás.
+#
+# Las variables se escriben en la pestaña Environment de Dokploy, que las guarda en un
+# `.env` junto a este fichero: POSTGRES_USER, POSTGRES_DB, POSTGRES_PASSWORD (en hex:
+# `openssl rand -hex 24`) y SITE_URL (https://dominio, sin barra final).
+
+x-logging: &logging
+  driver: json-file
+  options: { max-size: '10m', max-file: '3' }
+
+x-database-url: &database-url postgres://${POSTGRES_USER:?POSTGRES_USER es obligatorio}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD es obligatorio}@db:5432/${POSTGRES_DB:?POSTGRES_DB es obligatorio}
+
+# La etapa `build` conserva drizzle-kit y tsx: la usan el migrador y el mantenimiento.
+x-tools-build: &tools-build
+  context: ..
+  dockerfile: docker/Dockerfile
+  target: build
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits: { memory: 1g }
+
+  migrate:
+    build: *tools-build
+    restart: 'no'
+    environment:
+      DATABASE_URL: *database-url
+      SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
+    command: sh -c 'pnpm db:migrate && pnpm db:seed'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      DATABASE_URL: *database-url
+      SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
+      NODE_ENV: production
+      ORDERS_DIR: /var/lib/invitepremium/comprobantes
+      EVENT_MEDIA_DIR: /var/lib/invitepremium/eventos
+    volumes:
+      - proofs:/var/lib/invitepremium/comprobantes
+      - media:/var/lib/invitepremium/eventos
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    expose:
+      - '3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/es').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    deploy:
+      resources:
+        limits: { memory: 1g }
+
+  # También es la consola: `pnpm user:create`, `pnpm preflight` y un pase de
+  # mantenimiento a mano se lanzan con `docker exec` dentro de este contenedor.
+  maintenance:
+    build: *tools-build
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      DATABASE_URL: *database-url
+      SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
+      # Solo para `pnpm preflight`, que comprueba su longitud. Ya viaja dentro de
+      # DATABASE_URL: no expone nada que el contenedor no tuviera.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command: sh -c 'while true; do pnpm maintenance || echo "FALLO DE MANTENIMIENTO — se reintenta en 24 h" >&2; sleep 86400; done'
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    deploy:
+      resources:
+        limits: { memory: 512m }
+
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    logging: *logging
+    entrypoint: ['/bin/sh', '/backup.sh']
+    environment:
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      PGHOST: db
+    volumes:
+      - ./backup.sh:/backup.sh:ro
+      - backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  proofs:
+  media:
+  backups:

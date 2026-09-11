@@ -35,8 +35,12 @@ services:
       # vivieran en el sistema de ficheros del contenedor, cada despliegue borraría los
       # comprobantes de todos los pedidos en curso.
       ORDERS_DIR: /var/lib/invitepremium/comprobantes
+      # Las fotografías de las invitaciones. Mismo motivo: sin volumen, cada despliegue
+      # borraría las fotos de todas las bodas en curso.
+      EVENT_MEDIA_DIR: /var/lib/invitepremium/eventos
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
+      - media:/var/lib/invitepremium/eventos
     depends_on:
       db:
         condition: service_healthy
@@ -141,6 +145,8 @@ volumes:
   # Los comprobantes de pago. Llevan nombre, banco y cuenta de una persona: este volumen
   # entra en la copia de seguridad y no se sirve por HTTP en ninguna circunstancia.
   proofs:
+  # Las fotografías de la novia y de su familia. Tampoco entran en `pg_dump`.
+  media:
   backups:
   caddy_data:
   caddy_config:

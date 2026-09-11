@@ -17,6 +17,13 @@ const nextConfig: NextConfig = {
   // producción, y cuestan memoria en el momento más caro del build.
   enablePrerenderSourceMaps: false,
   experimental: {
+    // Las fotos del evento y los comprobantes suben por Server Action con un tope de 8 MB
+    // (`MAX_MEDIA_BYTES`, `MAX_PROOF_BYTES`), y Next corta el cuerpo en **1 MB** si nadie
+    // dice otra cosa: cualquier foto de teléfono respondía 413 antes de llegar a nuestra
+    // comprobación. Las e2e subían un PNG de un píxel y no lo veían; ahora sube uno de
+    // tres megas. 10 MB son los 8 del fichero más el sobre del multipart, y el mismo
+    // techo que Next ya pone por defecto al proxy.
+    serverActions: { bodySizeLimit: '10mb' },
     // **Esta línea es la que baja el heap.** Next compila webpack en un worker aparte
     // para no cargar el proceso principal, pero lo apaga solo en cuanto detecta
     // configuración de webpack propia:
@@ -62,6 +69,10 @@ const nextConfig: NextConfig = {
         source: '/:path*',
         headers: [
           { key: 'X-Content-Type-Options', value: 'nosniff' },
+          // La ponía Caddy; con Dokploy delante está Traefik, que no la pone. Un día, como
+          // en el Caddyfile: subirla a un año solo con el dominio estable semanas. Sobre
+          // http —desarrollo— el navegador la ignora por especificación.
+          { key: 'Strict-Transport-Security', value: 'max-age=86400' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },

@@ -72,7 +72,8 @@ test('la invitación se sirve en el idioma del evento, no en el del navegador', 
   const page = await context.newPage()
   await page.goto(`/i/${token}`)
 
-  await expect(page.getByLabel('How many are coming?')).toBeVisible()
+  // «How many are coming?» ya no existe: el formulario dejó de preguntarlo, como la maqueta.
+  await expect(page.getByLabel('Full name')).toBeVisible()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
 
   await context.close()

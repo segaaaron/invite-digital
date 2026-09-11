@@ -1099,7 +1099,14 @@ export function XvSharedView({
           y debajo la mesa de verdad. El aviso de los sobres no es una tarjeta aparte —lo
           era, y quedaba un rótulo suelto encima de otra tarjeta con el mismo tema—.
         */}
-        {piel.regalos !== true ? null : (
+        {/*
+          Sin tarjeta, la mesa de regalos va sola. La tarjeta es decoración de la maqueta y
+          se pide; la ranura es la mesa de verdad —reservar un regalo— y no se puede perder
+          con ella: lo hacía en «Noche Estrellada», «Encanto Musical» y «Gala Real».
+        */}
+        {piel.regalos !== true ? (
+          <div style={{ marginTop: 28 }}>{slots.registry}</div>
+        ) : (
         <Reveal>
           <div
             style={{

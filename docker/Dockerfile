@@ -30,6 +30,12 @@ COPY --from=build --chown=nextjs:nodejs /app/public ./public
 COPY --from=build --chown=nextjs:nodejs /app/db ./db
 # Next writes optimized images under .next/cache at runtime.
 RUN mkdir -p /app/.next/cache && chown -R nextjs:nodejs /app/.next
+# Los puntos de montaje de los volúmenes tienen que existir en la imagen y ser de
+# `nextjs`. Un volumen con nombre, vacío, copia el dueño de la carpeta de la imagen al
+# montarse la primera vez; si la carpeta no existe, Docker la crea como root y la
+# aplicación no puede escribir ni un comprobante ni una foto (EACCES al subir).
+RUN mkdir -p /var/lib/invitepremium/comprobantes /var/lib/invitepremium/eventos \
+  && chown -R nextjs:nodejs /var/lib/invitepremium
 USER nextjs
 ENV HOSTNAME=0.0.0.0 PORT=3000
 EXPOSE 3000

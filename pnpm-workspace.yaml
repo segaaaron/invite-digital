@@ -2,3 +2,9 @@ allowBuilds:
   esbuild: true
   sharp: false
   unrs-resolver: false
+
+# @serwist/utils fija browserslist 4.28.6 a mano, y esa versión tiene dos avisos altos
+# (GHSA-73wf-gq98-2v4g). Solo corre al compilar, pero no hay motivo para arrastrarla.
+# Quitar cuando Serwist suba la suya.
+overrides:
+  browserslist: ^4.28.7

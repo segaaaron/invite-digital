@@ -1,6 +1,7 @@
 /**
  * The reverse proxy overwrites `x-forwarded-for` and sets `x-real-ip` with the socket
- * address (see docker/Caddyfile), so both are trustworthy in production. If a header
+ * address (docker/Caddyfile; under Dokploy, Traefik does the same for untrusted clients),
+ * so both are trustworthy in production. If a header
  * ever arrives with a client-supplied chain, the value appended by the closest proxy
  * is the rightmost one — never the leftmost, which anyone can forge.
  */
