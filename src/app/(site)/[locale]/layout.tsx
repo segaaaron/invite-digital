@@ -6,7 +6,10 @@ import { LOCALES } from '@/shared/i18n/locales'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { SiteFooter } from '@/sections/SiteFooter'
 import { SiteHeader } from '@/sections/SiteHeader'
+import { SIN_ZOOM } from '@/shared/config/viewport'
 import '../../globals.css'
+
+export const viewport = SIN_ZOOM
 
 export function generateStaticParams() {
   return LOCALES.map((locale) => ({ locale }))

@@ -3,8 +3,11 @@ import type { ReactNode } from 'react'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { themeFonts } from '@/shared/design/fonts'
 import { parseLocaleParam } from '@/shared/i18n/server'
+import { SIN_ZOOM } from '@/shared/config/viewport'
 import '../../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
+
+export const viewport = SIN_ZOOM
 
 /**
  * La raíz de la vista previa de un modelo.

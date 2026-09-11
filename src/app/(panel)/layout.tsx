@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react'
 import { display, panelMono, panelSans } from '@/shared/design/fonts'
+import { SIN_ZOOM } from '@/shared/config/viewport'
 import '../globals.css'
+
+export const viewport = SIN_ZOOM
 
 // El panel no negocia idioma: lo usa el atelier y está en español.
 export const metadata = { title: 'Panel · InvitePremium', robots: { index: false, follow: false } }

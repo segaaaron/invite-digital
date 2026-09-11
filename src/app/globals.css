@@ -3,6 +3,14 @@
 
 html { scroll-behavior: smooth; }
 
+/*
+ * Sin zoom por pellizco ni por doble toque. Safari de iOS ignora `user-scalable=no` del
+ * viewport (ver `shared/config/viewport.ts`); `touch-action` sí lo respeta. En todos los
+ * elementos y no solo en `html`: la acción táctil se corta en cada contenedor de scroll, y
+ * el marco de teléfono de la vista previa lo es. Desplazarse sigue igual.
+ */
+* { touch-action: pan-x pan-y; }
+
 body {
   margin: 0;
   background: var(--page-gradient);
