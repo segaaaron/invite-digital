@@ -20,6 +20,19 @@ afterAll(async () => {
   await db.delete(consultationRequests).where(inArray(consultationRequests.id, ids))
 })
 
+describe('bandeja contra Postgres', () => {
+  it('filtra por estado en la base y cuenta todas, no solo las que caben en la lista', async () => {
+    const id = await sembrar('Filtro Bandeja', new Date())
+    const antes = await inbox.counts()
+
+    const perdidas = await inbox.list('lost')
+    expect(perdidas.every((c) => c.status === 'lost')).toBe(true)
+    expect(perdidas.some((c) => c.id === id)).toBe(true)
+    expect((await inbox.list('new')).some((c) => c.id === id)).toBe(false)
+    expect(antes.lost).toBeGreaterThanOrEqual(1)
+  })
+})
+
 describe('retención de consultas contra Postgres', () => {
   it('borra el dato personal de las viejas, conserva estado y fecha, y no toca las recientes', async () => {
     const corte = new Date('2020-01-01T00:00:00Z')

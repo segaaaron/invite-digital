@@ -41,6 +41,11 @@ const INTERRUPTORES = [
 export function PlanEditor({ plan }: { plan: PlanEditorView }) {
   const [estado, guardar, guardando] = useActionState(savePlanAction, INICIAL)
   const id = useId()
+  // Tras un error, lo enviado manda sobre lo guardado: React vacía el formulario al acabar la
+  // acción y lo devuelve a sus `defaultValue`, así que esos tienen que ser lo que se escribió.
+  const enviado = estado.status === 'error' ? estado.valores : undefined
+  const txt = (nombre: string, guardado: string) => (enviado ? (enviado[nombre] ?? '') : guardado)
+  const chk = (nombre: string, guardado: boolean) => (enviado ? enviado[nombre] === 'on' : guardado)
 
   return (
     <form action={guardar} className="flex flex-col gap-5">
@@ -62,12 +67,12 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
 
       <div className="grid gap-4 min-[560px]:grid-cols-2">
         <Field htmlFor={`${id}-precio`} label="Precio (Bs)">
-          <input className={FIELD_CLASS} defaultValue={plan.price} id={`${id}-precio`} inputMode="decimal" name="price" required />
+          <input className={FIELD_CLASS} defaultValue={txt('price', plan.price)} id={`${id}-precio`} inputMode="decimal" name="price" required />
         </Field>
         <Field htmlFor={`${id}-tope`} label="Tope de grupos · vacío = sin límite">
           <input
             className={FIELD_CLASS}
-            defaultValue={plan.maxGuestGroups ?? ''}
+            defaultValue={txt('maxGuestGroups', plan.maxGuestGroups === null ? '' : String(plan.maxGuestGroups))}
             id={`${id}-tope`}
             inputMode="numeric"
             name="maxGuestGroups"
@@ -83,7 +88,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
             key={interruptor.name}
             className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3.5 py-2 text-[12px] text-ink-soft transition-colors has-checked:border-ink has-checked:bg-ink has-checked:text-white"
           >
-            <input className="accent-current" defaultChecked={plan[interruptor.name]} name={interruptor.name} type="checkbox" />
+            <input className="accent-current" defaultChecked={chk(interruptor.name, plan[interruptor.name])} name={interruptor.name} type="checkbox" />
             {interruptor.label}
           </label>
         ))}
@@ -98,15 +103,15 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
                 {locale === 'es' ? 'Español' : 'Inglés'}
               </legend>
               <Field htmlFor={`${id}-${locale}-nombre`} label="Nombre">
-                <input className={FIELD_CLASS} defaultValue={t?.name ?? ''} id={`${id}-${locale}-nombre`} name={`${locale}.name`} required />
+                <input className={FIELD_CLASS} defaultValue={txt(`${locale}.name`, t?.name ?? '')} id={`${id}-${locale}-nombre`} name={`${locale}.name`} required />
               </Field>
               <Field htmlFor={`${id}-${locale}-lema`} label="Lema">
-                <input className={FIELD_CLASS} defaultValue={t?.tagline ?? ''} id={`${id}-${locale}-lema`} name={`${locale}.tagline`} />
+                <input className={FIELD_CLASS} defaultValue={txt(`${locale}.tagline`, t?.tagline ?? '')} id={`${id}-${locale}-lema`} name={`${locale}.tagline`} />
               </Field>
               <Field htmlFor={`${id}-${locale}-desc`} label="Descripción">
                 <textarea
                   className={`${FIELD_CLASS} min-h-[70px] resize-y`}
-                  defaultValue={t?.description ?? ''}
+                  defaultValue={txt(`${locale}.description`, t?.description ?? '')}
                   id={`${id}-${locale}-desc`}
                   name={`${locale}.description`}
                 />
@@ -114,7 +119,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
               <Field htmlFor={`${id}-${locale}-func`} label={`Funciones · una por línea, hasta ${MAX_FUNCIONES}`}>
                 <textarea
                   className={`${FIELD_CLASS} min-h-[140px] resize-y text-[13px] leading-[1.7]`}
-                  defaultValue={t?.features.join('\n') ?? ''}
+                  defaultValue={txt(`${locale}.features`, t?.features.join('\n') ?? '')}
                   id={`${id}-${locale}-func`}
                   name={`${locale}.features`}
                   required

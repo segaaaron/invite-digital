@@ -85,11 +85,16 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           publicRef: order.publicRef,
           // El plan se resuelve por su slug dentro del `insert`: leerlo antes dejaría
           // una ventana en la que el plan se retira entre la lectura y la escritura.
-          planId: sql`(select id from plans where slug = ${order.planSlug})`,
+          //
+          // **Solo un plan activo.** Desde que el admin retira planes desde el panel, la
+          // página del pedido da 404 a uno retirado, pero la Server Action es un extremo
+          // público: con un POST directo se compraba igual, al precio del plan retirado.
+          // Retirado se trata como inexistente —pedido sin plan, que no revienta el alta—.
+          planId: sql`(select id from plans where slug = ${order.planSlug} and is_active)`,
           // El precio se congela en el mismo `insert` y por la misma razón: leído antes, un
           // cambio de precio entre medias dejaría el pedido con el importe de otro momento.
-          amountCents: sql`(select price_cents from plans where slug = ${order.planSlug})`,
-          currency: sql`(select currency from plans where slug = ${order.planSlug})`,
+          amountCents: sql`(select price_cents from plans where slug = ${order.planSlug} and is_active)`,
+          currency: sql`(select currency from plans where slug = ${order.planSlug} and is_active)`,
           templateSlug: order.templateSlug,
           customerName: order.customerName,
           contact: order.contact,

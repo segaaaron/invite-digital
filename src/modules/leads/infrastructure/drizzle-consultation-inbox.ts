@@ -1,7 +1,7 @@
 import { and, count, desc, eq, lt, ne, or, isNotNull } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { consultationRequests, eventCategories, events } from '@/shared/db/schema'
-import { NOMBRE_ANONIMO, parseEstado } from '../domain/pipeline'
+import { ESTADOS_CONSULTA, NOMBRE_ANONIMO, parseEstado, type EstadoConsulta } from '../domain/pipeline'
 import type { ConsultationInbox, ConsultationRow } from '../application/ports'
 
 /** Tope de la bandeja. Una bandeja de quinientas consultas ya no se lee: se filtra. */
@@ -53,9 +53,22 @@ export const createDrizzleConsultationInbox = (database: DbExecutor): Consultati
       .leftJoin(events, eq(events.id, consultationRequests.eventId))
 
   return {
-    async list() {
-      const filas = await base().orderBy(desc(consultationRequests.createdAt)).limit(MAXIMO)
+    async list(estado) {
+      const consulta = base()
+      const filas = await (estado === null ? consulta : consulta.where(eq(consultationRequests.status, estado)))
+        .orderBy(desc(consultationRequests.createdAt))
+        .limit(MAXIMO)
       return filas.map(aFila)
+    },
+
+    async counts() {
+      const filas = await database
+        .select({ status: consultationRequests.status, total: count() })
+        .from(consultationRequests)
+        .groupBy(consultationRequests.status)
+      const conteo = Object.fromEntries(ESTADOS_CONSULTA.map((e) => [e, 0])) as Record<EstadoConsulta, number>
+      for (const fila of filas) conteo[parseEstado(fila.status)] += fila.total
+      return conteo
     },
 
     async find(id) {

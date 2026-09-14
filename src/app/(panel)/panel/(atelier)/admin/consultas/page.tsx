@@ -1,6 +1,6 @@
 import { admin, catalog, leads } from '@/app/composition/container'
 import { requireAdmin } from '@/modules/identity/session-cookie'
-import { ESTADOS_CONSULTA, tasaDeCierre, type EstadoConsulta } from '@/modules/leads/domain/pipeline'
+import { ESTADOS_CONSULTA, tasaDeCierre } from '@/modules/leads/domain/pipeline'
 import { ConsultationItem } from '@/modules/leads/ui/ConsultationItem'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
@@ -34,7 +34,11 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
   const { estado } = await searchParams
   const filtro = FILTROS.find((f) => f.key === estado)?.key ?? 'new'
 
-  const [consultas, eventos, categorias] = await Promise.all([leads.list(), admin.events(), catalog.listCategories('es')])
+  const [consultas, eventos, categorias] = await Promise.all([
+    leads.list(filtro === 'todas' ? null : filtro),
+    admin.events(),
+    catalog.listCategories('es'),
+  ])
 
   if (isErr(consultas)) {
     return (
@@ -49,12 +53,11 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
     )
   }
 
-  const conteo = Object.fromEntries(ESTADOS_CONSULTA.map((e) => [e, 0])) as Record<EstadoConsulta, number>
-  for (const c of consultas.value) conteo[c.status] += 1
+  const { filas: visibles, conteo } = consultas.value
+  const total = ESTADOS_CONSULTA.reduce((suma, e) => suma + conteo[e], 0)
   const tasa = tasaDeCierre(conteo)
 
   const nombreCategoria = new Map(isErr(categorias) ? [] : categorias.value.map((c) => [c.slug, c.name]))
-  const visibles = filtro === 'todas' ? consultas.value : consultas.value.filter((c) => c.status === filtro)
   const bodas = isErr(eventos) ? [] : eventos.value.map((e) => ({ id: e.id, title: e.title }))
 
   return (
@@ -84,7 +87,7 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
               key: f.key,
               label: f.label,
               href: f.key === 'new' ? '/panel/admin/consultas' : `/panel/admin/consultas?estado=${f.key}`,
-              count: f.key === 'todas' ? consultas.value.length : conteo[f.key],
+              count: f.key === 'todas' ? total : conteo[f.key],
             }))}
           />
         </div>

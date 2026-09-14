@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { BRAND } from '@/shared/config/brand'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, PanelAlert, PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { moveConsultationAction, type InboxActionState } from '../actions'
@@ -56,7 +57,7 @@ export function ConsultationItem({
 
   const whatsapp = whatsAppToCustomer(
     consulta.phone,
-    `Hola ${consulta.name.split(' ')[0] ?? ''}, te escribimos de InvitePremium por tu consulta en la web.`,
+    `Hola ${consulta.name.split(' ')[0] ?? ''}, te escribimos de ${BRAND.siteName} por tu consulta en la web.`,
   )
 
   return (

@@ -27,7 +27,13 @@ export type ConsultationRow = {
  * público solo guarda, y no tiene por qué arrastrar lecturas ni cambios de estado.
  */
 export interface ConsultationInbox {
-  list(): Promise<ConsultationRow[]>
+  /**
+   * Las de un estado, o todas con `null`. Filtra **en la base**: filtrar después de un tope
+   * dejaba fuera a las nuevas más antiguas en cuanto hubiera más consultas que el tope.
+   */
+  list(estado: EstadoConsulta | null): Promise<ConsultationRow[]>
+  /** Cuántas hay en cada estado, contadas en la base y no sobre la lista acotada. */
+  counts(): Promise<Record<EstadoConsulta, number>>
   find(id: string): Promise<ConsultationRow | null>
   /**
    * Escribe la transición **solo si sigue en `from`**, y dice si la escribió. Con dos

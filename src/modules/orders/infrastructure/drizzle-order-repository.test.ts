@@ -49,6 +49,18 @@ describe('drizzleOrderRepository', () => {
     }
   })
 
+  it('un plan retirado no se compra por POST: el pedido queda sin plan y sin importe', async () => {
+    await db.update(plans).set({ isActive: false }).where(eq(plans.slug, 'firma-3d'))
+    try {
+      const order = await nuevo()
+      const [fila] = await db.select({ importe: orders.amountCents }).from(orders).where(eq(orders.id, order.id))
+      expect(order.planSlug).toBeNull()
+      expect(fila?.importe).toBeNull()
+    } finally {
+      await db.update(plans).set({ isActive: true }).where(eq(plans.slug, 'firma-3d'))
+    }
+  })
+
   it('un plan que no existe deja el pedido sin plan, no revienta el alta', async () => {
     // El cliente ya rellenó el formulario: perder su pedido porque el catálogo cambió
     // entre que lo abrió y lo envió sería lo peor de los dos mundos.

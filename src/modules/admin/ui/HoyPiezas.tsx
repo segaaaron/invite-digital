@@ -37,23 +37,36 @@ export function HoyTile({ label, value, href, detail }: { label: string; value: 
   )
 }
 
-/** Cuántos avisos se enseñan por grupo antes de mandar a la bandeja completa. */
+/** Cuántos avisos se enseñan por grupo antes de plegar el resto. */
 const TOPE = 5
 
-export function AvisoGrupo({
-  titulo,
-  avisos,
-  vacio,
-  masHref,
-}: {
-  titulo: string
-  avisos: readonly Aviso[]
-  vacio: string
-  /** Adónde lleva «ver todos» cuando hay más de los que caben. */
-  masHref?: string
-}) {
+function FilaAviso({ aviso }: { aviso: Aviso }) {
+  return (
+    <li className="flex flex-col gap-2 border-t border-line-panel py-3.5 min-[560px]:flex-row min-[560px]:items-center min-[560px]:gap-4">
+      <span className="w-[118px] shrink-0">
+        <Pill tone={aviso.tono}>{aviso.etiqueta}</Pill>
+      </span>
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate text-[14px] text-ink">{aviso.titulo}</span>
+        <span className="text-[12px] text-ink-mute">{aviso.detalle}</span>
+      </span>
+      <PanelButton className="self-start min-[560px]:self-auto" href={aviso.href}>
+        {aviso.accion}
+      </PanelButton>
+    </li>
+  )
+}
+
+/**
+ * Un grupo de avisos. Los que pasan del tope **se despliegan aquí mismo**, no con un
+ * enlace: un grupo mezcla clases —comprobantes y cambios de plan, accesos y pedidos sin
+ * pago— y ningún enlace a una sola bandeja lleva a todos. La primera versión mandaba «Y N
+ * más» a las consultas aunque lo escondido fueran pedidos, y en «Bodas en riesgo», sin
+ * enlace, escondía la sexta boda sin decirlo.
+ */
+export function AvisoGrupo({ titulo, avisos, vacio }: { titulo: string; avisos: readonly Aviso[]; vacio: string }) {
   const visibles = avisos.slice(0, TOPE)
-  const resto = avisos.length - visibles.length
+  const resto = avisos.slice(TOPE)
 
   return (
     <section className="flex flex-col">
@@ -67,32 +80,23 @@ export function AvisoGrupo({
       ) : (
         <ul className="flex flex-col">
           {visibles.map((aviso) => (
-            <li
-              key={aviso.clave}
-              className="flex flex-col gap-2 border-t border-line-panel py-3.5 min-[560px]:flex-row min-[560px]:items-center min-[560px]:gap-4"
-            >
-              <span className="w-[118px] shrink-0">
-                <Pill tone={aviso.tono}>{aviso.etiqueta}</Pill>
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-[14px] text-ink">{aviso.titulo}</span>
-                <span className="text-[12px] text-ink-mute">{aviso.detalle}</span>
-              </span>
-              <PanelButton className="self-start min-[560px]:self-auto" href={aviso.href}>
-                {aviso.accion}
-              </PanelButton>
-            </li>
+            <FilaAviso key={aviso.clave} aviso={aviso} />
           ))}
         </ul>
       )}
 
-      {resto > 0 && masHref ? (
-        <Link
-          className="border-t border-line-panel pt-3 font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink"
-          href={masHref}
-        >
-          Y {resto} más →
-        </Link>
+      {resto.length > 0 ? (
+        <details className="group">
+          <summary className="cursor-pointer list-none border-t border-line-panel pt-3 font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
+            <span className="group-open:hidden">Ver {resto.length} más</span>
+            <span className="hidden group-open:inline">Ver menos</span>
+          </summary>
+          <ul className="flex flex-col">
+            {resto.map((aviso) => (
+              <FilaAviso key={aviso.clave} aviso={aviso} />
+            ))}
+          </ul>
+        </details>
       ) : null}
     </section>
   )

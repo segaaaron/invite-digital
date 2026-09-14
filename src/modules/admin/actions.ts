@@ -22,7 +22,15 @@ import { isErr } from '@/shared/result'
 // sobre eventos que no son suyos. Están apuntadas como exentas en `verify-tenancy.ts`.
 // ============================================================================
 
-export type AdminActionState = { status: 'idle' } | { status: 'success'; message?: string } | { status: 'error'; message: string }
+export type AdminActionState =
+  | { status: 'idle' }
+  | { status: 'success'; message?: string }
+  /**
+   * `valores` es lo que se envió. React 19 **vacía el formulario** al terminar la acción, y
+   * sin esto un error de validación devolvía cada campo a lo guardado: el admin perdía
+   * los textos que acababa de escribir por un tope mal puesto.
+   */
+  | { status: 'error'; message: string; valores?: Record<string, string> }
 
 const refrescar = () => {
   revalidatePath('/panel/admin')
@@ -494,8 +502,9 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   const actor = await requireAdmin()
 
   const slug = texto(formData, 'slug')
+  const valores = Object.fromEntries([...formData.entries()].filter((par): par is [string, string] => typeof par[1] === 'string'))
   const precio = parseAmount(texto(formData, 'price'))
-  if (isErr(precio)) return { status: 'error', message: precio.error.detail }
+  if (isErr(precio)) return { status: 'error', message: precio.error.detail, valores }
 
   const marcado = (clave: string) => formData.get(clave) === 'on'
   const textoDe = (locale: 'es' | 'en') => ({
@@ -519,9 +528,9 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   if (isErr(guardado)) {
     if (guardado.error.kind === 'storage_failure') {
       console.error('savePlanAction', guardado.error.detail)
-      return { status: 'error', message: 'No pudimos guardar el plan. Vuelve a intentarlo en un momento.' }
+      return { status: 'error', message: 'No pudimos guardar el plan. Vuelve a intentarlo en un momento.', valores }
     }
-    return { status: 'error', message: guardado.error.detail }
+    return { status: 'error', message: guardado.error.detail, valores }
   }
 
   revalidatePath('/panel/admin/planes')

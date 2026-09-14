@@ -67,7 +67,6 @@ export default async function AdminPage() {
             <div id="ventas" className="scroll-mt-6">
               <AvisoGrupo
                 avisos={h.ventas}
-                masHref="/panel/admin/consultas"
                 titulo="Ventas"
                 vacio="Ningún comprobante, consulta ni cambio de plan esperando."
               />
@@ -77,7 +76,6 @@ export default async function AdminPage() {
             </div>
             <AvisoGrupo
               avisos={h.atascados}
-              masHref="/panel/pedidos"
               titulo="Clientes atascados"
               vacio="Todos los clientes con acceso ya entraron, y ningún pedido lleva una semana sin pago."
             />
