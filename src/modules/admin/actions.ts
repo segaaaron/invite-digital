@@ -8,7 +8,7 @@ import { parseRole } from '@/modules/identity/domain/access'
 import { addEventClientAction } from '@/modules/events/staff-actions'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { ALFABETO_SUFIJO, slugDeBoda } from './domain/nueva-boda'
-import { MAX_SHOWCASE_MUSIC_BYTES } from './domain/showcase-music'
+import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
 import { parseAmount } from '@/modules/registry'
 import { isErr } from '@/shared/result'
 
@@ -320,12 +320,12 @@ export async function uploadShowcaseMusicAction(
   const themeKey = texto(formData, 'themeKey')
   const archivo = formData.get('musica')
   if (!(archivo instanceof File) || archivo.size === 0) {
-    return { status: 'error', message: 'Elige un MP3 antes de subirlo.' }
+    return { status: 'error', message: 'Elige una canción antes de subirla.' }
   }
   // El tope, antes de leer el fichero a memoria: un `arrayBuffer()` de un archivo enorme
   // se lo trae entero al servidor antes de que nadie lo rechace.
-  if (archivo.size > MAX_SHOWCASE_MUSIC_BYTES) {
-    return { status: 'error', message: 'El MP3 pasa de 3 MB. Súbelo recortado, de 30 a 60 segundos.' }
+  if (archivo.size > MAX_AUDIO_UPLOAD_BYTES) {
+    return { status: 'error', message: 'La canción pasa de 30 MB.' }
   }
 
   const bytes = new Uint8Array(await archivo.arrayBuffer())

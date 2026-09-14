@@ -43,6 +43,14 @@ export function ClockIcon({ className }: IconProps) {
   )
 }
 
+export function UploadIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>
+      <path d="M12 16V4M7 9l5-5 5 5M4.5 16.5v2a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-2" />
+    </svg>
+  )
+}
+
 export function CheckIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>

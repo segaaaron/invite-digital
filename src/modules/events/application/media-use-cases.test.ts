@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
 import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES } from '../domain/media'
 import { listGuestPhotos, purgeMedia, readMedia, saveGuestPhoto, saveMedia } from './media-use-cases'
 import type { ImageProcessor, MediaRepository, MediaRow, MediaStorage } from './ports'
@@ -8,6 +9,12 @@ const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2
 const MP3 = new Uint8Array([0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0, 0, 0x02, 0x01, 7, 7, 7])
 /** Lo que devuelve el procesador: otra imagen, más pequeña y en otro formato. */
 const REENCODADA = new Uint8Array([0x52, 0x49, 0x46, 0x46, 9, 9, 9, 9, 0x57, 0x45, 0x42, 0x50])
+/** Lo que devuelve `ffmpeg`: la canción convertida en un MP3 ajustado. */
+const AJUSTADO = new Uint8Array([0xff, 0xfb, 0x90, 0x00, 5, 5])
+/** Una M4A del iPhone: `ffmpeg` la lee, `mediaTypeOf` no la reconoce. */
+const M4A = new Uint8Array([0, 0, 0, 0x20, 0x66, 0x74, 0x79, 0x70, 0x4d, 0x34, 0x41, 0x20])
+/** Lo que no es audio ni imagen: `ffmpeg` no sabe leerlo. */
+const HTML = new Uint8Array([0x3c, 0x21, 0x44, 0x4f, 0x43])
 
 function dobles(filas: MediaRow[] = []) {
   const disco = new Map<string, Uint8Array>()
@@ -37,7 +44,8 @@ function dobles(filas: MediaRow[] = []) {
   const images: ImageProcessor = {
     normalize: vi.fn(async () => ({ bytes: REENCODADA, contentType: 'image/webp' as const })),
   }
-  return { media, storage, images, disco, filas, ids: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
+  const audio = { normalize: vi.fn(async (bytes: Uint8Array) => (bytes === HTML ? null : AJUSTADO)) }
+  return { media, storage, images, audio, disco, filas, ids: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
 }
 
 describe('saveMedia', () => {
@@ -47,29 +55,49 @@ describe('saveMedia', () => {
     const deps = dobles()
     const leer = vi.fn(async () => PNG)
 
-    const salida = await saveMedia(deps)('e1', { name: 'enorme.png', size: MAX_MEDIA_BYTES + 1, bytes: leer })
+    const salida = await saveMedia(deps)('e1', { name: 'enorme.png', size: MAX_AUDIO_UPLOAD_BYTES + 1, bytes: leer })
 
     expect(salida).toEqual({ ok: false, error: 'too_large' })
     expect(leer).not.toHaveBeenCalled()
     expect(deps.storage.put).not.toHaveBeenCalled()
   })
 
-  it('guarda un MP3 sin pasarlo por el reencodado', async () => {
-    // `normalize` es de imagen: a un MP3 le devolvería `null` y lo rechazaría entero, así
-    // que la música no puede compartir ese paso. Lo que llega al disco son **los bytes que
-    // subieron**, sin tocar: no hay nada que reducir en una canción.
+  it('una fotografía sigue topada en 8 MB aunque la puerta admita canciones de 30', async () => {
+    const deps = dobles()
+
+    const salida = await saveMedia(deps)('e1', { name: 'enorme.png', size: MAX_MEDIA_BYTES + 1, bytes: async () => PNG })
+
+    expect(salida).toEqual({ ok: false, error: 'too_large' })
+    expect(deps.images.normalize).not.toHaveBeenCalled()
+  })
+
+  it('la música se guarda ya ajustada por ffmpeg, no como llegó', async () => {
+    // Quien sube la canción no tiene que saber recortarla ni comprimirla.
     const deps = dobles()
 
     const salida = await saveMedia(deps)('e1', { name: 'nuestra-cancion.mp3', size: MP3.length, bytes: async () => MP3 })
 
-    expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' })
+    expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', contentType: 'audio/mpeg' })
     expect(deps.images.normalize).not.toHaveBeenCalled()
-    expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(MP3)
-    expect(deps.filas[0]).toMatchObject({
-      contentType: 'audio/mpeg',
-      originalName: 'nuestra-cancion.mp3',
-      byteSize: MP3.length,
-    })
+    expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(AJUSTADO)
+    expect(deps.filas[0]).toMatchObject({ contentType: 'audio/mpeg', originalName: 'nuestra-cancion.mp3', byteSize: AJUSTADO.length })
+  })
+
+  it('una M4A del iPhone también vale: sale convertida en MP3', async () => {
+    const deps = dobles()
+
+    const salida = await saveMedia(deps)('e1', { name: 'nota-de-voz.m4a', size: M4A.length, bytes: async () => M4A })
+
+    expect(salida).toMatchObject({ ok: true, contentType: 'audio/mpeg' })
+    expect(deps.audio.normalize).toHaveBeenCalledWith(M4A)
+  })
+
+  it('una canción pesada de más de 8 MB entra: el tope de la música es otro', async () => {
+    const deps = dobles()
+
+    const salida = await saveMedia(deps)('e1', { name: 'larga.wav', size: MAX_MEDIA_BYTES + 1, bytes: async () => MP3 })
+
+    expect(salida).toMatchObject({ ok: true, contentType: 'audio/mpeg' })
   })
 
   it('una segunda canción reemplaza a la primera: queda una sola', async () => {
@@ -115,21 +143,20 @@ describe('saveMedia', () => {
     expect(deps.storage.put).not.toHaveBeenCalled()
   })
 
-  it('sigue rechazando un MP3 que pasa del tope, antes de leerlo', async () => {
+  it('sigue rechazando una canción que pasa del tope, antes de leerla', async () => {
     const deps = dobles()
     const leer = vi.fn(async () => MP3)
 
-    const salida = await saveMedia(deps)('e1', { name: 'larga.mp3', size: MAX_MEDIA_BYTES + 1, bytes: leer })
+    const salida = await saveMedia(deps)('e1', { name: 'larga.mp3', size: MAX_AUDIO_UPLOAD_BYTES + 1, bytes: leer })
 
     expect(salida).toEqual({ ok: false, error: 'too_large' })
     expect(leer).not.toHaveBeenCalled()
   })
 
-  it('rechaza lo que no es una imagen, aunque se llame .png', async () => {
+  it('rechaza lo que no es una imagen ni un audio, aunque se llame .png', async () => {
     const deps = dobles()
-    const html = new Uint8Array([0x3c, 0x21, 0x44, 0x4f, 0x43])
 
-    const salida = await saveMedia(deps)('e1', { name: 'foto.png', size: 5, bytes: async () => html })
+    const salida = await saveMedia(deps)('e1', { name: 'foto.png', size: 5, bytes: async () => HTML })
 
     expect(salida).toEqual({ ok: false, error: 'unsupported_type' })
     expect(deps.storage.put).not.toHaveBeenCalled()
@@ -144,7 +171,7 @@ describe('saveMedia', () => {
       bytes: async () => PNG,
     })
 
-    expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' })
+    expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', contentType: 'image/webp' })
     expect([...deps.disco.keys()]).toEqual(['aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.webp'])
   })
 
@@ -277,7 +304,7 @@ describe('saveGuestPhoto', () => {
 
     const salida = await saveGuestPhoto(deps)('e1', 'g1', foto())
 
-    expect(salida).toEqual({ ok: true, id: expect.any(String) })
+    expect(salida).toEqual({ ok: true, id: expect.any(String), contentType: 'image/webp' })
     expect(deps.filas[0]?.uploadedByGroupId).toBe('g1')
   })
 
@@ -296,7 +323,7 @@ describe('saveGuestPhoto', () => {
 
     expect(await saveGuestPhoto(deps)('e1', 'g1', foto())).toEqual({ ok: false, error: 'too_many' })
     // Otro grupo sigue pudiendo: contarlo por evento dejaría al primero sin sitio para el resto.
-    expect(await saveGuestPhoto(deps)('e1', 'g2', foto())).toEqual({ ok: true, id: expect.any(String) })
+    expect(await saveGuestPhoto(deps)('e1', 'g2', foto())).toEqual({ ok: true, id: expect.any(String), contentType: 'image/webp' })
   })
 
   it('el invitado ve solo las suyas', async () => {

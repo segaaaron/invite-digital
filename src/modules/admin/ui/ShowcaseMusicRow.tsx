@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useActionState, useId } from 'react'
+import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import {
   removeShowcaseMusicAction,
@@ -94,19 +95,15 @@ export function ShowcaseMusicRow({
 
         <form action={subir} className="mt-auto flex flex-col gap-2.5">
           <input name="themeKey" type="hidden" value={themeKey} />
-          <label className="sr-only" htmlFor={id}>
-            MP3 para {label}
-          </label>
-          <input
-            accept="audio/mpeg,.mp3"
-            className="w-full text-[12px] text-ink-soft file:mr-3 file:cursor-pointer file:rounded-[var(--radius-pill)] file:border file:border-line-panel-strong file:bg-white file:px-3.5 file:py-2 file:font-mono file:text-[9px] file:tracking-[0.25em] file:text-ink file:uppercase"
-            id={id}
+          <FilePicker
+            accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"
+            hint="MP3, M4A o WAV · la ajustamos sola"
+            label={tieneMusica ? 'Elegir otra canción' : 'Elegir canción'}
             name="musica"
-            type="file"
           />
           <div className="flex flex-wrap gap-2">
             <PanelButton disabled={subiendo} type="submit" variant={tieneMusica ? 'default' : 'primary'}>
-              {subiendo ? 'Subiendo…' : tieneMusica ? 'Reemplazar' : 'Subir'}
+              {subiendo ? 'Subiendo y ajustando…' : tieneMusica ? 'Reemplazar' : 'Subir'}
             </PanelButton>
             {tieneMusica ? (
               // Va a su propio formulario por `form`: con `formAction` se reenviaría el MP3

@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
+import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { type ContentActionState, uploadMediaAction } from '../actions'
 
@@ -8,8 +9,8 @@ const INICIAL: ContentActionState = { status: 'idle' }
 
 const ERRORES: Record<string, string> = {
   no_file: 'Elige un archivo antes de subirlo.',
-  too_large: 'El archivo pesa más de 8 MB. Redúcelo y vuelve a intentarlo.',
-  unsupported_type: 'Ese archivo no vale. Se admiten PNG, JPG, WEBP y AVIF para las fotografías, y MP3 para la música.',
+  too_large: 'El archivo pesa demasiado: las fotografías hasta 8 MB y las canciones hasta 30 MB.',
+  unsupported_type: 'Ese archivo no vale. Se admiten PNG, JPG, WEBP y AVIF para las fotografías, y MP3, M4A o WAV para la música.',
   storage_failure: 'No se pudo guardar el archivo. Vuelve a intentarlo.',
 }
 
@@ -64,24 +65,21 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         <input name="eventId" readOnly type="hidden" value={eventId} />
         <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
 
-        <label className="flex flex-col gap-1.5 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-          Subir una fotografía o la música
-          <input
-            accept="image/png,image/jpeg,image/webp,image/avif,audio/mpeg,.mp3"
-            className="w-full rounded-[10px] border border-[var(--color-line-panel)] bg-bg-top px-3 py-2 text-[13px] text-ink file:mr-3 file:rounded-[var(--radius-pill)] file:border-0 file:bg-ink file:px-3 file:py-1.5 file:text-[11px] file:text-bg-raised"
-            name="file"
-            type="file"
-          />
-        </label>
+        <FilePicker
+          accept="image/png,image/jpeg,image/webp,image/avif,audio/*,.mp3,.m4a,.wav,.aac,.ogg"
+          hint="Fotografía (PNG, JPG, WEBP) o canción (MP3, M4A, WAV)"
+          label="Elegir fotografía o canción"
+          name="file"
+        />
 
         <p className="text-[11px] leading-[1.5] text-ink-mute">
           Las fotografías se reducen y se reencodan al subirlas, así que la invitación no le sirve cuatro megabytes a un
           invitado con datos. También se les quitan los metadatos, que dicen dónde y cuándo se tomó la foto.
         </p>
         <p className="text-[11px] leading-[1.5] text-ink-mute">
-          La música va en <strong className="font-medium text-ink-soft">MP3</strong>, que es el único formato que
-          reproducen todos los teléfonos. Se guarda tal cual: súbela ya recortada, de 30 a 60 segundos, que es lo que
-          suena bien en bucle.
+          La música <strong className="font-medium text-ink-soft">se ajusta sola</strong>: sube la canción entera, en
+          MP3, M4A o WAV. Se convierte en un MP3 ligero que suena en cualquier teléfono, se recorta a tres minutos con un
+          fundido al final y se repite en bucle hasta que quien mira la invitación la pausa.
         </p>
         <p className="text-[11px] leading-[1.5] text-ink-mute">
           <strong className="font-medium text-ink-soft">Subirla es elegirla</strong>, y una boda tiene una sola canción:

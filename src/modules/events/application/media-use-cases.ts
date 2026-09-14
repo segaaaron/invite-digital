@@ -1,9 +1,16 @@
+import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor } from '@/shared/audio/audio'
 import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 
 export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many'
 
-type Deps = { media: MediaRepository; storage: MediaStorage; images: ImageProcessor; ids: () => string }
+type Deps = {
+  media: MediaRepository
+  storage: MediaStorage
+  images: ImageProcessor
+  audio: AudioProcessor
+  ids: () => string
+}
 
 /**
  * Guarda una imagen de la invitación.
@@ -24,7 +31,7 @@ type Deps = { media: MediaRepository; storage: MediaStorage; images: ImageProces
  *    invitación pintaría un hueco roto.
  */
 export const saveMedia =
-  ({ media, storage, images, ids }: Deps) =>
+  ({ media, storage, images, audio, ids }: Deps) =>
   async (
     eventId: string,
     archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
@@ -37,24 +44,28 @@ export const saveMedia =
      * podría dejar sin música la boda de otro.
      */
     { permitirAudio = true }: { permitirAudio?: boolean } = {},
-  ): Promise<{ ok: true; id: string } | { ok: false; error: MediaError }> => {
-    if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
+  ): Promise<{ ok: true; id: string; contentType: MediaType } | { ok: false; error: MediaError }> => {
+    // El tope de la puerta es el de la música, que es el mayor: una canción en WAV ronda los
+    // 30 MB. Sin audio —el invitado— el tope es el de las fotografías desde el principio.
+    if (archivo.size > (permitirAudio ? MAX_AUDIO_UPLOAD_BYTES : MAX_MEDIA_BYTES)) return { ok: false, error: 'too_large' }
 
     const bytes = await archivo.bytes()
     const tipo = mediaTypeOf(bytes)
-    if (tipo === null) return { ok: false, error: 'unsupported_type' }
-    if (esAudio(tipo) && !permitirAudio) return { ok: false, error: 'unsupported_type' }
 
-    // **La música no pasa por el reencodado.** `normalize` es de imagen: a un MP3 le
-    // devolvería `null` y lo rechazaría entero. Y tampoco habría qué reducir — el tope de
-    // tamaño ya acota lo que entra, y recortar o normalizar volumen exigiría `ffmpeg`, que
-    // no está en la imagen de producción.
-    //
-    // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
-    // decodificar. Una cabecera correcta con un cuerpo que no lo es pasa la primera
-    // comprobación y no pasa esta. Con el audio esa segunda red no existe: lo que la
-    // sustituye es que solo se admite un formato y que se sirve con `nosniff`.
-    const listo = esAudio(tipo) ? { bytes, contentType: tipo } : await images.normalize(bytes)
+    let listo: { bytes: Uint8Array; contentType: MediaType } | null
+    if (tipo !== null && !esAudio(tipo)) {
+      if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
+      // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
+      // decodificar. Una cabecera correcta con un cuerpo que no lo es no pasa de aquí.
+      listo = await images.normalize(bytes)
+    } else {
+      if (!permitirAudio) return { ok: false, error: 'unsupported_type' }
+      // **La música se ajusta sola**, sea el formato que sea: quien sube la canción no tiene
+      // por qué saber recortarla ni comprimirla. Lo que no sea un audio legible —un PDF, un
+      // fichero roto— lo rechaza `ffmpeg` y vuelve `null`.
+      const mp3 = await audio.normalize(bytes)
+      listo = mp3 === null ? null : { bytes: mp3, contentType: 'audio/mpeg' }
+    }
     if (listo === null) return { ok: false, error: 'unsupported_type' }
 
     const id = ids()
@@ -93,7 +104,7 @@ export const saveMedia =
       return { ok: false, error: 'storage_failure' }
     }
 
-    return { ok: true, id }
+    return { ok: true, id, contentType: listo.contentType }
   }
 
 /** Lee una imagen por su identificador. Devuelve también a qué evento pertenece. */

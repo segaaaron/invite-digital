@@ -44,13 +44,13 @@ export default async function AdminModelosPage() {
         <div className="mb-5 flex flex-col gap-2.5">
           <p className="text-[13px] leading-[1.7] text-ink-soft">
             Cada modelo del catálogo pinta su reproductor desde el primer día. Sin un archivo detrás, el botón mueve las
-            barras y no suena. Sube aquí un <strong className="font-normal text-ink">MP3</strong> y ese modelo sonará en{' '}
+            barras y no suena. Sube aquí su canción y ese modelo sonará en{' '}
             <span className="font-mono text-[12px]">/modelos</span>.
           </p>
           <p className="text-[12px] leading-[1.7] text-ink-mute">
-            Súbelo <strong className="font-normal text-ink-soft">ya recortado, de 30 a 60 segundos</strong> y hasta 3 MB:
-            se guarda tal cual y es lo que va a descargar quien entre en la web. Y responde por lo que publiques — si la
-            grabación tiene dueño, publicarla es cosa del atelier.
+            Sube la canción entera, en <strong className="font-normal text-ink-soft">MP3, M4A o WAV</strong>: se ajusta
+            sola —un MP3 ligero, recortado a tres minutos con un fundido al final— y suena en bucle hasta que quien mira el
+            modelo la pausa. Y responde por lo que publiques — si la grabación tiene dueño, publicarla es cosa del atelier.
           </p>
         </div>
 

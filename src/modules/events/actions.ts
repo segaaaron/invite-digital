@@ -409,8 +409,6 @@ export async function uploadMediaAction(
     return { status: 'error', message: 'no_file' }
   }
 
-  const esMp3 = archivo.type === 'audio/mpeg' || archivo.name.toLowerCase().endsWith('.mp3')
-
   const resultado = await eventUseCases.media.save(eventId, {
     name: archivo.name,
     size: archivo.size,
@@ -429,12 +427,10 @@ export async function uploadMediaAction(
    * Se conserva el título y el artista que hubiera escritos: lo que cambia es el archivo,
    * no la canción que dice la invitación.
    *
-   * El tipo se mira aquí por el nombre y el `Content-Type` —los dos los escribe quien
-   * sube— y eso **basta para esto**: quien decide de verdad qué es el fichero son sus
-   * primeros bytes, ya comprobados arriba. Equivocarse aquí solo significa no apuntar el
-   * contenido a una foto, que es lo correcto de todos modos.
+   * El tipo lo dice lo que se guardó, no el nombre del fichero: una M4A del iPhone se
+   * guarda ya convertida en MP3.
    */
-  if (esMp3) {
+  if (resultado.contentType === 'audio/mpeg') {
     const actual = await eventUseCases.contentFor(eventId, {})
     await eventUseCases.saveContentBlock(eventId, 'music', { ...(actual.music ?? {}), audioMediaId: resultado.id })
   }

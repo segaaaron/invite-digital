@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+# Un push nuevo a la misma rama cancela la pasada anterior: solo importa la última.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DATABASE_URL: postgres://invite:invite@localhost:5434/invite
+  SITE_URL: http://localhost:3000
+
+jobs:
+  check:
+    name: Tipos, lint, unitarias y verificadores
+    runs-on: ubuntu-latest
+
+    # Las pruebas de repositorio escriben contra Postgres real: misma versión que en desarrollo.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: invite
+          POSTGRES_PASSWORD: invite
+          POSTGRES_DB: invite
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U invite"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # La prueba del procesador de audio usa `ffmpeg` de verdad, como la imagen de producción.
+      - run: sudo apt-get update && sudo apt-get install -y ffmpeg
+
+      # El registro de migraciones, antes de aplicarlas: es lo que corta producción.
+      - run: pnpm verify:migrations
+      - run: pnpm db:migrate
+      # Varias pruebas cuentan con los planes y las plantillas del catálogo.
+      - run: pnpm db:seed
+
+      - run: pnpm check
+
+  build:
+    name: Compilación de producción
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # Con `STANDALONE=1`, como el Dockerfile: es la compilación que se despliega.
+      - run: pnpm build
+        env:
+          STANDALONE: '1'
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: invite
+          POSTGRES_PASSWORD: invite
+          POSTGRES_DB: invite
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd "pg_isready -U invite"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+
+      - run: pnpm db:migrate
+      - run: pnpm db:seed
+
+      # El atelier de las pruebas (`tests/e2e/fixtures/atelier.ts`). `user:create` pide la
+      # contraseña por la entrada estándar, y la cuenta nace con contraseña provisional: sin
+      # apagar la marca, el setup aterriza en «cambia tu contraseña» y no corre ninguna suite.
+      - run: echo 'contrasena-de-prueba-1' | pnpm user:create atelier@invitepremium.bo
+      - run: psql "$DATABASE_URL" -c "update users set must_change_password = false where email = 'atelier@invitepremium.bo'"
+      # La boda de la demo, suya: `tenancy` y `puerta` la usan.
+      - run: pnpm db:seed:demo
+
+      # Con `CI` puesto, el `webServer` de Playwright compila y arranca en el 3100.
+      - run: pnpm test:e2e
+        env:
+          CI: 'true'
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7

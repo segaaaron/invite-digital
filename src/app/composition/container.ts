@@ -42,6 +42,7 @@ import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzl
 import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
 import { sharpImageProcessor } from '@/modules/events/infrastructure/sharp-image-processor'
+import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
 import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
@@ -266,6 +267,8 @@ const mediaDeps = {
   // Lo que llega al disco es ya lo que se va a servir: reducido, reencodado y sin
   // metadatos. No hay una versión pesada esperando a que alguien la pida.
   images: sharpImageProcessor,
+  // La música, igual: se convierte en un MP3 ligero y se recorta al subirla.
+  audio: ffmpegAudioProcessor,
   ids: () => crypto.randomUUID(),
 }
 
@@ -624,6 +627,7 @@ export const admin = {
     settings: drizzleSettingsRepository,
     storage: showcaseStorage,
     admin: drizzleAdminRepository,
+    audio: ffmpegAudioProcessor,
     newKey: () => crypto.randomUUID(),
   }),
   removeShowcaseMusic: removeShowcaseMusic({

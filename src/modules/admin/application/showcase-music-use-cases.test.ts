@@ -9,6 +9,8 @@ const ADMIN: Actor = { userId: 'u1', email: 'admin@invitepremium.bo', role: 'adm
 /** Un MP3 con su etiqueta ID3, que es como llega casi cualquiera. */
 const MP3 = new Uint8Array([0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0, 0, 0x02, 0x01, 7, 7, 7])
 const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3])
+/** Lo que devuelve `ffmpeg`: otro MP3, ya ajustado. */
+const AJUSTADO = new Uint8Array([0xff, 0xfb, 0x90, 0x00, 9, 9])
 
 function dobles(filas: Record<string, string> = {}) {
   const disco = new Map<string, Uint8Array>()
@@ -32,17 +34,21 @@ function dobles(filas: Record<string, string> = {}) {
 
   const admin = { record: vi.fn(async () => {}) } as unknown as AdminRepository
 
-  return { settings, storage, admin, disco, filas, newKey: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
+  // Se comporta como `ffmpeg`: lo que no es audio vuelve `null`, y el audio sale ajustado.
+  const audio = { normalize: vi.fn(async (bytes: Uint8Array) => (bytes === JPEG ? null : AJUSTADO)) }
+
+  return { settings, storage, admin, audio, disco, filas, newKey: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
 }
 
 describe('saveShowcaseMusic', () => {
-  it('guarda el MP3 y deja la fila apuntando al fichero', async () => {
+  it('guarda la canción ya ajustada y deja la fila apuntando al fichero', async () => {
     const deps = dobles()
 
     const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3 })
 
     expect(isOk(salida)).toBe(true)
-    expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(MP3)
+    // Lo que llega al disco es lo que devolvió `ffmpeg`, no lo que se subió.
+    expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(AJUSTADO)
     expect(deps.filas['showcase.music.boda-bot']).toBe('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')
   })
 
@@ -58,7 +64,7 @@ describe('saveShowcaseMusic', () => {
     expect(deps.storage.put).not.toHaveBeenCalled()
   })
 
-  it('rechaza un JPEG aunque se llame .mp3', async () => {
+  it('rechaza lo que no es audio, aunque se llame .mp3', async () => {
     const deps = dobles()
 
     const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: JPEG })

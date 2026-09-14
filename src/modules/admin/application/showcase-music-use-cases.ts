@@ -1,9 +1,8 @@
 import type { Actor } from '@/modules/identity/domain/access'
+import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor } from '@/shared/audio/audio'
 import { attempt, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import {
-  esMp3,
-  MAX_SHOWCASE_MUSIC_BYTES,
   showcaseMusicKey,
   SHOWCASE_MUSIC_PREFIX,
   themeOfShowcaseKey,
@@ -47,15 +46,15 @@ export const readShowcaseMusic =
  *    quien controle ese valor escribe en cualquier otra fila —la cuenta bancaria, por
  *    ejemplo—. Hay prueba.
  * 2. **El tamaño**, antes de mirar nada más.
- * 3. **El tipo por los primeros bytes**, nunca por la extensión ni por el `Content-Type`:
- *    los dos los escribe quien sube el fichero.
+ * 3. **El audio se ajusta solo**: `ffmpeg` lo convierte en un MP3 ligero y lo recorta, sea
+ *    el formato que sea. Lo que no es un audio legible vuelve `null` y se rechaza.
  * 4. **El fichero al disco y solo después la fila.** Al revés, un fallo de disco dejaría
  *    un ajuste apuntando a un audio que no existe y el escaparate serviría un 404.
  * 5. **El anterior se borra.** Reemplazar la canción de un modelo diez veces dejaría diez
  *    ficheros muertos en el volumen, y nadie sabría cuáles sobran.
  */
 export const saveShowcaseMusic =
-  (deps: Deps & { admin: AdminRepository; newKey: () => string }) =>
+  (deps: Deps & { admin: AdminRepository; audio: AudioProcessor; newKey: () => string }) =>
   async (
     actor: Actor,
     input: { themeKey: string; bytes: Uint8Array },
@@ -63,15 +62,13 @@ export const saveShowcaseMusic =
     const fila = showcaseMusicKey(input.themeKey)
     if (fila === null) return { ok: false, error: adminError('invalid_input', 'Ese modelo no existe.') }
 
-    if (input.bytes.byteLength > MAX_SHOWCASE_MUSIC_BYTES) {
-      return {
-        ok: false,
-        error: adminError('invalid_input', 'El MP3 pasa de 3 MB. Súbelo recortado, de 30 a 60 segundos.'),
-      }
+    if (input.bytes.byteLength > MAX_AUDIO_UPLOAD_BYTES) {
+      return { ok: false, error: adminError('invalid_input', 'La canción pasa de 30 MB.') }
     }
 
-    if (!esMp3(input.bytes)) {
-      return { ok: false, error: adminError('invalid_input', 'Ese archivo no es un MP3.') }
+    const mp3 = await deps.audio.normalize(input.bytes)
+    if (mp3 === null) {
+      return { ok: false, error: adminError('invalid_input', 'Ese archivo no es una canción que podamos leer.') }
     }
 
     return attempt(
@@ -79,7 +76,7 @@ export const saveShowcaseMusic =
         const anterior = (await deps.settings.readAll())[fila] ?? null
 
         const key = deps.newKey()
-        await deps.storage.put(`${key}.mp3`, input.bytes)
+        await deps.storage.put(`${key}.mp3`, mp3)
         await deps.settings.write({ [fila]: `${key}.mp3` })
 
         // Después de escribir la fila, nunca antes: si falla el borrado, lo que queda es un

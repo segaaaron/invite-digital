@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
     // comprobación. Las e2e subían un PNG de un píxel y no lo veían; ahora sube uno de
     // tres megas. 10 MB son los 8 del fichero más el sobre del multipart, y el mismo
     // techo que Next ya pone por defecto al proxy.
-    serverActions: { bodySizeLimit: '10mb' },
+    serverActions: { bodySizeLimit: '32mb' },
     // **Esta línea es la que baja el heap.** Next compila webpack en un worker aparte
     // para no cargar el proceso principal, pero lo apaga solo en cuanto detecta
     // configuración de webpack propia:

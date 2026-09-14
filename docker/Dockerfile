@@ -23,6 +23,8 @@ RUN pnpm build
 FROM base AS runtime
 ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+# `ffmpeg` convierte y recorta la música que se sube: quien la sube no tiene que saber cómo.
+RUN apk add --no-cache ffmpeg
 COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
