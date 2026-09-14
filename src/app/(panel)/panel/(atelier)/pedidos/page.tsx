@@ -37,7 +37,7 @@ export default async function PedidosPage() {
   if (isErr(lista)) {
     return (
       <>
-        <PanelHeader kicker="Plan B" title="Pedidos" />
+        <PanelHeader kicker="Administración" title="Pedidos" />
         <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
             No pudimos leer los pedidos. La base no responde; vuelve a intentarlo en un momento.
@@ -49,7 +49,7 @@ export default async function PedidosPage() {
 
   return (
     <>
-      <PanelHeader kicker="Plan B" title="Pedidos" />
+      <PanelHeader kicker="Administración" title="Pedidos" />
 
       {lista.value.length === 0 ? (
         <PanelCard>

@@ -17,7 +17,7 @@ export default async function AdminPagosPage() {
     <>
       <PanelHeader
         kicker="Administración"
-        meta="Lo que ve quien acaba de hacer un pedido del Plan B"
+        meta="Lo que ve quien acaba de hacer un pedido desde la web"
         title="Datos de cobro"
       />
 

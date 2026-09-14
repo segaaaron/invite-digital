@@ -1,5 +1,6 @@
 'use client'
 
+import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { savePaymentSettingsAction, uploadPaymentQrAction, type AdminActionState } from '../actions'
@@ -114,12 +115,7 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           <p className="text-[13px] text-ink-mute">Todavía no hay ninguno: la página del pedido enseña solo los datos escritos.</p>
         )}
 
-        <input
-          accept="image/png,image/jpeg,image/webp"
-          className="text-[13px] text-ink-soft file:mr-3 file:rounded-[var(--radius-pill)] file:border file:border-line-panel-strong file:bg-white file:px-4 file:py-2 file:font-mono file:text-[10px] file:tracking-[0.25em] file:text-ink file:uppercase"
-          name="qr"
-          type="file"
-        />
+        <FilePicker accept="image/png,image/jpeg,image/webp" hint="PNG, JPG o WEBP exportado de la app de tu banco" label="Elegir imagen del QR" name="qr" />
 
         {imagen.status === 'error' ? <PanelAlert tone="error">{imagen.message}</PanelAlert> : null}
         {imagen.status === 'success' && imagen.message !== undefined ? (

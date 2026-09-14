@@ -1,4 +1,5 @@
 import { admin } from '@/app/composition/container'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
@@ -14,14 +15,29 @@ const CUANDO = new Intl.DateTimeFormat('es-BO', {
   minute: '2-digit',
 })
 
+// Cada acción que se anota tiene su frase. Una sin traducir salía como su clave interna
+// —«pagos.datos»—, que no le dice nada a quien lee el registro.
 const NOMBRE: Record<string, string> = {
   'usuario.alta': 'Creó un usuario',
   'usuario.rol': 'Cambió un rol',
+  'usuario.plan': 'Cambió el plan de un usuario',
   'usuario.borrado': 'Borró un usuario',
   'evento.reasignado': 'Reasignó un evento',
   'evento.plan': 'Cambió el plan de un evento',
   'evento.borrado': 'Borró un evento',
+  'boda.alta': 'Creó una boda para un cliente',
+  'pagos.datos': 'Cambió los datos de cobro',
+  'pagos.qr': 'Subió el QR de cobro',
+  'plan.editado': 'Editó un plan',
+  'modelo.publicado': 'Publicó un modelo',
+  'modelo.retirado': 'Retiró un modelo',
+  'escaparate.musica': 'Subió la música de un modelo',
+  'escaparate.musica.quitar': 'Quitó la música de un modelo',
+  'consulta.estado': 'Movió una consulta',
 }
+
+/** De cuántas en cuántas filas se enseña el registro. */
+const PAGINA = 50
 
 /**
  * El registro de la administración.
@@ -29,9 +45,15 @@ const NOMBRE: Record<string, string> = {
  * Solo escrituras. **No se anota ninguna lectura**: eso sería un rastro de navegación del
  * atelier, y lo que no se escribe no se filtra.
  */
-export default async function AdminAuditoriaPage() {
+export default async function AdminAuditoriaPage({ searchParams }: { searchParams: Promise<{ n?: string }> }) {
   await requireAdmin()
-  const registro = await admin.audit()
+  // «Ver más» sube el tope en la dirección. Se pide una fila de más para saber si queda algo
+  // detrás sin contar la tabla entera.
+  const pedido = Number((await searchParams).n)
+  const tope = Number.isInteger(pedido) && pedido > 0 ? Math.min(pedido, 2000) : PAGINA
+  const leido = await admin.audit(tope + 1)
+  const registro = isErr(leido) ? leido : { ...leido, value: leido.value.slice(0, tope) }
+  const hayMas = !isErr(leido) && leido.value.length > tope
 
   return (
     <>
@@ -81,6 +103,11 @@ export default async function AdminAuditoriaPage() {
                 ))}
               </tbody>
             </table>
+            {hayMas ? (
+              <div className="mt-4 flex justify-center">
+                <PanelButton href={`/panel/admin/auditoria?n=${tope + PAGINA}`}>Ver más</PanelButton>
+              </div>
+            ) : null}
           </div>
         )}
       </PanelCard>

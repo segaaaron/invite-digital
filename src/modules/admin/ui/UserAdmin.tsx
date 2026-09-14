@@ -1,7 +1,7 @@
 'use client'
 
-import { useActionState, useId } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { useActionState, useId, useRef } from 'react'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import type { Role } from '@/modules/identity/domain/access'
 import { createUserAction, deleteUserAction, setUserPlanAction, setUserRoleAction, type AdminActionState } from '../actions'
 
@@ -14,14 +14,22 @@ export type UserView = {
   readonly eventos: number
   readonly esUnoMismo: boolean
   readonly planSlug: string | null
+  /** Ya formateada en la página. */
+  readonly alta: string
+}
+
+const ROL: Record<Role, { etiqueta: string; tono: 'ok' | 'maybe' | 'pending' | 'no' }> = {
+  admin: { etiqueta: 'Administrador', tono: 'ok' },
+  atelier: { etiqueta: 'Atelier', tono: 'pending' },
+  cliente: { etiqueta: 'Cliente', tono: 'maybe' },
+  puerta: { etiqueta: 'Puerta', tono: 'no' },
 }
 
 /**
- * El alta de usuario.
+ * El alta de usuario, dentro del modal que abre «+ Agregar usuario».
  *
- * **La contraseña inicial se enseña una sola vez**, aquí, y la escribe el admin: no hay
- * registro público ni recuperación por correo —no hay proveedor de correo—, así que
- * esta pantalla es la única puerta junto a `pnpm user:create`.
+ * **La contraseña inicial la escribe el admin** y le llega al usuario por correo; la primera
+ * vez que entra, el panel le obliga a elegir una suya.
  */
 export function NewUserForm({ planes }: { planes: readonly string[] }) {
   const [estado, accion, pendiente] = useActionState<AdminActionState, FormData>(createUserAction, INICIAL)
@@ -33,122 +41,136 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
     // `key` remonta el formulario tras un error: un `<select>` no toma un `defaultValue` nuevo
     // al volver a pintar, y el rol y el plan volvían a su valor inicial.
     <form key={enviado ? JSON.stringify(enviado) : 'alta'} action={accion} className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
+          Correo
+        </label>
+        <input
+          autoComplete="off"
+          className={FIELD_CLASS}
+          defaultValue={enviado?.email ?? ''}
+          id={`${id}-correo`}
+          name="email"
+          placeholder="nombre@correo.com"
+          required
+          type="email"
+        />
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
+          Contraseña inicial
+        </label>
+        <input
+          autoComplete="new-password"
+          className={FIELD_CLASS}
+          id={`${id}-clave`}
+          minLength={12}
+          name="password"
+          placeholder="Mínimo 12 caracteres"
+          required
+          type="text"
+        />
+      </div>
+
       <div className="grid gap-4 min-[560px]:grid-cols-2">
         <div className="flex flex-col gap-2">
-          <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
-            Correo
+          <label className={LABEL_CLASS} htmlFor={`${id}-rol`}>
+            Rol
           </label>
-          <input className={FIELD_CLASS} defaultValue={enviado?.email ?? ''} id={`${id}-correo`} name="email" required type="email" />
+          <select className={FIELD_CLASS} defaultValue={enviado?.role || 'cliente'} id={`${id}-rol`} name="role">
+            <option value="cliente">Cliente</option>
+            <option value="atelier">Atelier</option>
+            <option value="admin">Administrador</option>
+            {/* El personal de puerta se da de alta desde el propio evento, que es quien
+                sabe qué boda trabaja: un puerta sin evento asignado no puede hacer nada. */}
+          </select>
         </div>
 
         <div className="flex flex-col gap-2">
-          <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
-            Contraseña inicial
+          <label className={LABEL_CLASS} htmlFor={`${id}-plan`}>
+            Plan que compró
           </label>
-          <input
-            autoComplete="new-password"
-            className={FIELD_CLASS}
-            id={`${id}-clave`}
-            minLength={12}
-            name="password"
-            required
-            type="text"
-          />
+          <select className={FIELD_CLASS} defaultValue={enviado?.planSlug ?? ''} id={`${id}-plan`} name="planSlug">
+            <option value="">Sin plan</option>
+            {planes.map((plan) => (
+              <option key={plan} value={plan}>
+                {plan}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className={LABEL_CLASS} htmlFor={`${id}-rol`}>
-          Rol
-        </label>
-        <select className={FIELD_CLASS} defaultValue={enviado?.role || 'atelier'} id={`${id}-rol`} name="role">
-          <option value="atelier">Atelier — solo sus eventos</option>
-          <option value="cliente">Cliente — solo su boda</option>
-          <option value="admin">Administrador — todo el sistema</option>
-          {/* El personal de puerta se da de alta desde el propio evento, que es quien
-              sabe qué boda trabaja: aquí no aparece, porque un puerta sin evento
-              asignado no puede hacer nada. */}
-        </select>
-      </div>
-
-      <div className="flex flex-col gap-2">
-        <label className={LABEL_CLASS} htmlFor={`${id}-plan`}>
-          Plan que compró
-        </label>
-        <select className={FIELD_CLASS} defaultValue={enviado?.planSlug ?? ''} id={`${id}-plan`} name="planSlug">
-          <option value="">Sin plan</option>
-          {planes.map((plan) => (
-            <option key={plan} value={plan}>
-              {plan}
-            </option>
-          ))}
-        </select>
-        <p className="text-[11px] text-ink-mute">
-          Un cliente creado aquí no ve nada hasta tener acceso a su boda: dáselo en Todos los eventos → «Gestionar», o
-          crea boda y cliente de una vez con «+ Boda para un cliente».
-        </p>
-      </div>
-
-      <p className="text-[11px] leading-[1.7] text-ink-mute">
-        La contraseña se enseña aquí y no se vuelve a mostrar: en la base solo queda su hash. Cópiala antes de
-        enviarla.
+      <p className="text-[11px] leading-[1.6] text-ink-mute">
+        La contraseña no se vuelve a mostrar: cópiala antes de enviarla. Un cliente ve su boda cuando se le da acceso
+        desde Todos los eventos → «Gestionar».
       </p>
 
-      {estado.status === 'error' ? (
-        <p className="text-[13px] text-danger" role="alert">
-          {estado.message}
-        </p>
-      ) : null}
-      {estado.status === 'success' && estado.message !== undefined ? (
-        <p className="text-[13px] text-sage" role="status">
-          {estado.message}
-        </p>
-      ) : null}
+      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      {estado.status === 'success' && estado.message !== undefined ? <PanelAlert tone="ok">{estado.message}</PanelAlert> : null}
 
-      <PanelButton className="w-fit" disabled={pendiente} type="submit" variant="primary">
+      <PanelButton className="w-full" disabled={pendiente} type="submit" variant="primary">
         {pendiente ? 'Creando…' : 'Crear usuario'}
       </PanelButton>
     </form>
   )
 }
 
-/** Una fila de usuario con sus dos acciones. Cada una en su formulario, con su estado. */
+/**
+ * Una fila de la tabla de usuarios.
+ *
+ * **Lo que no se puede hacer no se enseña**, en vez de pintarse deshabilitado: tu propia
+ * cuenta no tiene «Quitar admin» ni «Borrar», y a un cliente o a un puerta no se le ofrece
+ * hacerse admin. Botones grises en cada fila son ruido que obliga a leer por qué están así.
+ *
+ * El plan **se guarda al elegirlo**: un botón «Guardar plan» por fila duplicaba el gesto y
+ * encajonaba la fila.
+ */
 export function UserRow({ user, planes }: { user: UserView; planes: readonly string[] }) {
   const [rol, cambiarRol, cambiando] = useActionState<AdminActionState, FormData>(setUserRoleAction, INICIAL)
   const [borrado, borrar, borrando] = useActionState<AdminActionState, FormData>(deleteUserAction, INICIAL)
   const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(setUserPlanAction, INICIAL)
+  const formularioPlan = useRef<HTMLFormElement>(null)
   const planId = useId()
-  const error =
-    rol.status === 'error'
-      ? rol.message
-      : borrado.status === 'error'
-        ? borrado.message
-        : plan.status === 'error'
-          ? plan.message
-          : null
+  const error = [rol, borrado, plan].find((e) => e.status === 'error')
+  const puedeSerAdmin = user.role === 'admin' || user.role === 'atelier'
+  const celda = 'border-b border-line-panel py-3.5 pr-4 align-middle'
 
   return (
-    <li className="flex flex-col gap-2.5 border-b border-line-panel py-3.5 last:border-none">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="min-w-0 flex-1">
-          <span className="block text-[14px] text-ink">{user.email}</span>
-          <span className="mt-1 block text-[11px] text-ink-mute">
-            {user.eventos} evento{user.eventos === 1 ? '' : 's'}
-            {user.esUnoMismo ? ' · eres tú' : ''}
-          </span>
+    <tr>
+      <td className={celda}>
+        <span className="flex items-center gap-2 text-[14px] text-ink">
+          {user.email}
+          {user.esUnoMismo ? <span className="font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase">· tú</span> : null}
         </span>
+        <span className="mt-0.5 block text-[11px] text-ink-mute">Alta {user.alta}</span>
+        {error && error.status === 'error' ? (
+          <span className="mt-1 block text-[12px] text-danger" role="alert">
+            {error.message}
+          </span>
+        ) : null}
+      </td>
 
-        <Pill tone={user.role === 'admin' ? 'ok' : user.role === 'puerta' ? 'maybe' : 'pending'}>
-          {user.role === 'admin' ? 'Administrador' : user.role === 'puerta' ? 'Puerta' : user.role === 'cliente' ? 'Cliente' : 'Atelier'}
-        </Pill>
+      <td className={celda}>
+        <Pill tone={ROL[user.role].tono}>{ROL[user.role].etiqueta}</Pill>
+      </td>
 
-        <form action={cambiarPlan} className="flex items-center gap-2">
+      <td className={celda}>
+        <form action={cambiarPlan} ref={formularioPlan}>
           <input name="userId" type="hidden" value={user.id} />
           <input name="email" type="hidden" value={user.email} />
           <label className="sr-only" htmlFor={planId}>
             Plan que compró {user.email}
           </label>
-          <select className={`${FIELD_CLASS} w-auto py-2 text-[13px]`} defaultValue={user.planSlug ?? ''} id={planId} name="planSlug">
+          <select
+            className={`${FIELD_CLASS} w-[150px] py-2 text-[13px]`}
+            defaultValue={user.planSlug ?? ''}
+            disabled={cambiandoPlan}
+            id={planId}
+            name="planSlug"
+            onChange={() => formularioPlan.current?.requestSubmit()}
+          >
             <option value="">Sin plan</option>
             {planes.map((slug) => (
               <option key={slug} value={slug}>
@@ -156,44 +178,40 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
               </option>
             ))}
           </select>
-          <PanelButton disabled={cambiandoPlan} type="submit">
-            {cambiandoPlan ? 'Guardando…' : 'Guardar plan'}
-          </PanelButton>
         </form>
+      </td>
 
-        {/* Cambiar el rol y borrar son dos formularios distintos: uno solo con dos
-            emisores obligaría a leer el `decision` para saber qué se pidió. */}
-        <form action={cambiarRol}>
-          <input name="userId" type="hidden" value={user.id} />
-          <input name="role" type="hidden" value={user.role === 'admin' ? 'atelier' : 'admin'} />
-          {/* Al personal de puerta no se le ofrece el ascenso desde aquí: su alta y su
-              baja las hace el dueño del evento en el que trabaja. **Ni al cliente**: el
-              botón le daba administración del sistema entero —todas las bodas, los cobros,
-              los usuarios— a un clic de distancia de guardar su plan. */}
-          <PanelButton disabled={cambiando || user.esUnoMismo || user.role === 'puerta' || user.role === 'cliente'} type="submit">
-            {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
-          </PanelButton>
-        </form>
+      <td className={`${celda} font-display text-[18px] text-ink [font-variant-numeric:lining-nums]`}>{user.eventos}</td>
 
-        <form action={borrar}>
-          <input name="userId" type="hidden" value={user.id} />
-          <PanelButton disabled={borrando || user.esUnoMismo || user.eventos > 0} type="submit" variant="danger">
-            Borrar
-          </PanelButton>
-        </form>
-      </div>
-
-      {error === null ? null : (
-        <p className="text-[12px] text-danger" role="alert">
-          {error}
-        </p>
-      )}
-
-      {user.eventos > 0 ? (
-        <p className="text-[11px] text-ink-mute">
-          No se puede borrar mientras gestione eventos: reasígnalos desde «Eventos» o bórralos.
-        </p>
-      ) : null}
-    </li>
+      <td className={`${celda} pr-0`}>
+        {user.esUnoMismo ? (
+          <span className="flex justify-end text-[12px] text-ink-mute">Tu cuenta</span>
+        ) : (
+          <span className="flex justify-end gap-2">
+            {puedeSerAdmin ? (
+              <form action={cambiarRol}>
+                <input name="userId" type="hidden" value={user.id} />
+                <input name="role" type="hidden" value={user.role === 'admin' ? 'atelier' : 'admin'} />
+                <PanelButton disabled={cambiando} type="submit">
+                  {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
+                </PanelButton>
+              </form>
+            ) : null}
+            {user.eventos === 0 ? (
+              <form action={borrar}>
+                <input name="userId" type="hidden" value={user.id} />
+                <PanelButton disabled={borrando} type="submit" variant="danger">
+                  Borrar
+                </PanelButton>
+              </form>
+            ) : (
+              <span className="self-center text-[11px] text-ink-mute" title="Reasígnale o borra sus eventos desde Todos los eventos">
+                Gestiona eventos
+              </span>
+            )}
+          </span>
+        )}
+      </td>
+    </tr>
   )
 }
