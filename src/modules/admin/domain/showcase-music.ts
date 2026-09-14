@@ -35,6 +35,30 @@ export function showcaseMusicKey(themeKey: string): string | null {
   return CLAVE_DE_TEMA.test(themeKey) ? `${SHOWCASE_MUSIC_PREFIX}${themeKey}` : null
 }
 
+/**
+ * La fila con el nombre que enseña el reproductor del modelo: `{"track","artist"}` en JSON.
+ *
+ * Aparte de la del fichero, y con otro prefijo, para que `readShowcaseMusic` —que recorre
+ * `showcase.music.*`— no la confunda con un archivo.
+ */
+export const SHOWCASE_SONG_PREFIX = 'showcase.song.'
+
+export function showcaseSongKey(themeKey: string): string | null {
+  return CLAVE_DE_TEMA.test(themeKey) ? `${SHOWCASE_SONG_PREFIX}${themeKey}` : null
+}
+
+/** El nombre guardado, o `null` si no hay o no tiene la forma esperada. */
+export function leerNombreDeCancion(crudo: string | undefined): { track: string; artist: string } | null {
+  if (crudo === undefined || crudo === '') return null
+  try {
+    const valor = JSON.parse(crudo) as { track?: unknown; artist?: unknown }
+    if (typeof valor.track !== 'string' || valor.track === '') return null
+    return { track: valor.track, artist: typeof valor.artist === 'string' ? valor.artist : '' }
+  } catch {
+    return null
+  }
+}
+
 /** De la fila al tema: `showcase.music.boda-bot` → `boda-bot`. */
 export function themeOfShowcaseKey(key: string): string | null {
   if (!key.startsWith(SHOWCASE_MUSIC_PREFIX)) return null

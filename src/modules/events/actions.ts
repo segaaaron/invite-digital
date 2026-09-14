@@ -424,15 +424,17 @@ export async function uploadMediaAction(
    * fila que el reemplazo acaba de borrar, y la invitación se quedaría muda señalando un
    * archivo que ya no existe.
    *
-   * Se conserva el título y el artista que hubiera escritos: lo que cambia es el archivo,
-   * no la canción que dice la invitación.
+   * **Y el nombre sale del archivo**: título y artista de sus etiquetas o de su nombre de
+   * fichero. Conservar los que hubiera escritos dejaba la invitación diciendo «Tiempo de
+   * Vals, Chayanne» —el texto de muestra— mientras sonaba otra canción. Se pueden corregir
+   * después en el bloque «Canción».
    *
    * El tipo lo dice lo que se guardó, no el nombre del fichero: una M4A del iPhone se
    * guarda ya convertida en MP3.
    */
   if (resultado.contentType === 'audio/mpeg') {
     const actual = await eventUseCases.contentFor(eventId, {})
-    await eventUseCases.saveContentBlock(eventId, 'music', { ...(actual.music ?? {}), audioMediaId: resultado.id })
+    await eventUseCases.saveContentBlock(eventId, 'music', { ...(actual.music ?? {}), ...resultado.cancion, audioMediaId: resultado.id })
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)

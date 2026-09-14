@@ -1,4 +1,4 @@
-import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor } from '@/shared/audio/audio'
+import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor, nombreDeCancion } from '@/shared/audio/audio'
 import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 
@@ -44,7 +44,7 @@ export const saveMedia =
      * podría dejar sin música la boda de otro.
      */
     { permitirAudio = true }: { permitirAudio?: boolean } = {},
-  ): Promise<{ ok: true; id: string; contentType: MediaType } | { ok: false; error: MediaError }> => {
+  ): Promise<{ ok: true; id: string; contentType: MediaType; cancion?: { track: string; artist: string } } | { ok: false; error: MediaError }> => {
     // El tope de la puerta es el de la música, que es el mayor: una canción en WAV ronda los
     // 30 MB. Sin audio —el invitado— el tope es el de las fotografías desde el principio.
     if (archivo.size > (permitirAudio ? MAX_AUDIO_UPLOAD_BYTES : MAX_MEDIA_BYTES)) return { ok: false, error: 'too_large' }
@@ -53,6 +53,7 @@ export const saveMedia =
     const tipo = mediaTypeOf(bytes)
 
     let listo: { bytes: Uint8Array; contentType: MediaType } | null
+    let cancion: { track: string; artist: string } | undefined
     if (tipo !== null && !esAudio(tipo)) {
       if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
       // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
@@ -63,8 +64,9 @@ export const saveMedia =
       // **La música se ajusta sola**, sea el formato que sea: quien sube la canción no tiene
       // por qué saber recortarla ni comprimirla. Lo que no sea un audio legible —un PDF, un
       // fichero roto— lo rechaza `ffmpeg` y vuelve `null`.
-      const mp3 = await audio.normalize(bytes)
-      listo = mp3 === null ? null : { bytes: mp3, contentType: 'audio/mpeg' }
+      const ajustado = await audio.normalize(bytes)
+      listo = ajustado === null ? null : { bytes: ajustado.mp3, contentType: 'audio/mpeg' }
+      if (ajustado !== null) cancion = nombreDeCancion(ajustado, archivo.name)
     }
     if (listo === null) return { ok: false, error: 'unsupported_type' }
 
@@ -104,7 +106,7 @@ export const saveMedia =
       return { ok: false, error: 'storage_failure' }
     }
 
-    return { ok: true, id, contentType: listo.contentType }
+    return { ok: true, id, contentType: listo.contentType, ...(cancion === undefined ? {} : { cancion }) }
   }
 
 /** Lee una imagen por su identificador. Devuelve también a qué evento pertenece. */

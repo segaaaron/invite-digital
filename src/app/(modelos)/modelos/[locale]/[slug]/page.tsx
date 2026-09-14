@@ -79,8 +79,14 @@ export default async function ModelPreviewPage({
    * devuelve un error porque no pudo averiguar si había música sería cambiar una canción
    * por una página en blanco, y lo que se viene a ver aquí es el diseño.
    */
-  const musica = await admin.showcaseMusic()
+  const [musica, cancion] = await Promise.all([admin.showcaseMusic(), admin.showcaseSong(slug)])
   const tieneMusica = isOk(musica) && (musica.value[slug] ?? '') !== ''
+  // Con canción subida, el reproductor dice la que suena y no la del contenido de muestra.
+  // Una subida anterior a guardar el nombre no lo tiene: sin él se deja en blanco, que es
+  // mejor que anunciar a Chayanne sonando otra cosa.
+  const contenido = tieneMusica
+    ? { ...tema.defaultContent, music: { ...tema.defaultContent.music, track: cancion?.track ?? '', artist: cancion?.artist ?? '' } }
+    : tema.defaultContent
 
   const eventoDeMuestra: Event = {
     id: 'muestra',
@@ -112,7 +118,7 @@ export default async function ModelPreviewPage({
         // ninguna boda: es de la web pública. Sin ella, el reproductor se queda como
         // nació: se ve, mueve las barras y no suena.
         audioSrc={tieneMusica ? `/modelos/musica/${slug}` : undefined}
-        content={tema.defaultContent}
+        content={contenido}
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}
         guestInfo={INVITADO_DE_MUESTRA}

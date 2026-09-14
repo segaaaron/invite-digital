@@ -16,7 +16,7 @@ const MP3_LIGERO_BPS = 192_000
 
 type Sonda = {
   streams?: { codec_type?: string; disposition?: { attached_pic?: number } }[]
-  format?: { format_name?: string; bit_rate?: string }
+  format?: { format_name?: string; bit_rate?: string; tags?: Record<string, string> }
 }
 
 /**
@@ -70,7 +70,12 @@ export const ffmpegAudioProcessor: AudioProcessor = {
       if (!bien) return null
 
       const mp3 = await readFile(salida)
-      return mp3.byteLength === 0 ? null : new Uint8Array(mp3)
+      if (mp3.byteLength === 0) return null
+      // Las etiquetas se leen de la sonda, antes de quitarlas: el nombre del reproductor
+      // tiene que ser el de la canción que suena. Sus claves cambian de caja según el
+      // formato (`title` en MP3, `TITLE` en WAV).
+      const tags = Object.fromEntries(Object.entries(sonda.format?.tags ?? {}).map(([k, v]) => [k.toLowerCase(), v]))
+      return { mp3: new Uint8Array(mp3), titulo: tags.title ?? null, artista: tags.artist ?? null }
     } catch {
       return null
     } finally {

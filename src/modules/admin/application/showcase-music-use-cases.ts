@@ -1,9 +1,11 @@
 import type { Actor } from '@/modules/identity/domain/access'
-import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor } from '@/shared/audio/audio'
+import { MAX_AUDIO_UPLOAD_BYTES, nombreDeCancion, type AudioProcessor } from '@/shared/audio/audio'
 import { attempt, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import {
+  leerNombreDeCancion,
   showcaseMusicKey,
+  showcaseSongKey,
   SHOWCASE_MUSIC_PREFIX,
   themeOfShowcaseKey,
 } from '../domain/showcase-music'
@@ -37,6 +39,20 @@ export const readShowcaseMusic =
       (cause) => adminError('storage_failure', `No se pudo leer la música del escaparate: ${String(cause)}`),
     )
 
+/** El nombre de la canción de un modelo, sacado del archivo al subirlo; `null` si no hay. */
+export const readShowcaseSong =
+  (deps: Deps) =>
+  async (themeKey: string): Promise<{ track: string; artist: string } | null> => {
+    const fila = showcaseSongKey(themeKey)
+    if (fila === null) return null
+    try {
+      return leerNombreDeCancion((await deps.settings.readAll())[fila])
+    } catch {
+      // El nombre es un adorno del reproductor: sin él, el modelo sigue sonando.
+      return null
+    }
+  }
+
 /**
  * Guarda el MP3 de un modelo.
  *
@@ -57,7 +73,7 @@ export const saveShowcaseMusic =
   (deps: Deps & { admin: AdminRepository; audio: AudioProcessor; newKey: () => string }) =>
   async (
     actor: Actor,
-    input: { themeKey: string; bytes: Uint8Array },
+    input: { themeKey: string; bytes: Uint8Array; nombreArchivo: string },
   ): Promise<Result<null, AdminError>> => {
     const fila = showcaseMusicKey(input.themeKey)
     if (fila === null) return { ok: false, error: adminError('invalid_input', 'Ese modelo no existe.') }
@@ -66,8 +82,8 @@ export const saveShowcaseMusic =
       return { ok: false, error: adminError('invalid_input', 'La canción pasa de 30 MB.') }
     }
 
-    const mp3 = await deps.audio.normalize(input.bytes)
-    if (mp3 === null) {
+    const ajustado = await deps.audio.normalize(input.bytes)
+    if (ajustado === null) {
       return { ok: false, error: adminError('invalid_input', 'Ese archivo no es una canción que podamos leer.') }
     }
 
@@ -76,8 +92,13 @@ export const saveShowcaseMusic =
         const anterior = (await deps.settings.readAll())[fila] ?? null
 
         const key = deps.newKey()
-        await deps.storage.put(`${key}.mp3`, mp3)
-        await deps.settings.write({ [fila]: `${key}.mp3` })
+        await deps.storage.put(`${key}.mp3`, ajustado.mp3)
+        // El fichero y su nombre en la misma escritura: el reproductor dice la canción que
+        // suena, no la del contenido de muestra del modelo.
+        await deps.settings.write({
+          [fila]: `${key}.mp3`,
+          [`${showcaseSongKey(input.themeKey)}`]: JSON.stringify(nombreDeCancion(ajustado, input.nombreArchivo)),
+        })
 
         // Después de escribir la fila, nunca antes: si falla el borrado, lo que queda es un
         // fichero de más —molesto— y no una canción que ya nadie puede servir.
@@ -112,7 +133,7 @@ export const removeShowcaseMusic =
     return attempt(
       async () => {
         const anterior = (await deps.settings.readAll())[fila] ?? null
-        await deps.settings.write({ [fila]: '' })
+        await deps.settings.write({ [fila]: '', [`${showcaseSongKey(themeKey)}`]: '' })
         if (anterior !== null && anterior !== '') await deps.storage.remove(anterior)
 
         await deps.admin.record({

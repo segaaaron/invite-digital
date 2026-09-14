@@ -44,7 +44,7 @@ function dobles(filas: MediaRow[] = []) {
   const images: ImageProcessor = {
     normalize: vi.fn(async () => ({ bytes: REENCODADA, contentType: 'image/webp' as const })),
   }
-  const audio = { normalize: vi.fn(async (bytes: Uint8Array) => (bytes === HTML ? null : AJUSTADO)) }
+  const audio = { normalize: vi.fn(async (bytes: Uint8Array) => (bytes === HTML ? null : { mp3: AJUSTADO, titulo: null, artista: null })) }
   return { media, storage, images, audio, disco, filas, ids: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
 }
 
@@ -77,7 +77,13 @@ describe('saveMedia', () => {
 
     const salida = await saveMedia(deps)('e1', { name: 'nuestra-cancion.mp3', size: MP3.length, bytes: async () => MP3 })
 
-    expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', contentType: 'audio/mpeg' })
+    // Sin etiquetas, el nombre sale del fichero.
+    expect(salida).toEqual({
+      ok: true,
+      id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
+      contentType: 'audio/mpeg',
+      cancion: { track: 'nuestra-cancion', artist: '' },
+    })
     expect(deps.images.normalize).not.toHaveBeenCalled()
     expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(AJUSTADO)
     expect(deps.filas[0]).toMatchObject({ contentType: 'audio/mpeg', originalName: 'nuestra-cancion.mp3', byteSize: AJUSTADO.length })

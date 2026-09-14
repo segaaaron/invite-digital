@@ -331,7 +331,7 @@ export async function uploadShowcaseMusicAction(
   }
 
   const bytes = new Uint8Array(await archivo.arrayBuffer())
-  const result = await admin.saveShowcaseMusic(actor, { themeKey, bytes })
+  const result = await admin.saveShowcaseMusic(actor, { themeKey, bytes, nombreArchivo: archivo.name })
   if (isErr(result)) {
     console.error('música del escaparate rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }

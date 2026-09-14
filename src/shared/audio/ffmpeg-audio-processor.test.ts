@@ -39,7 +39,7 @@ function sondear(bytes: Uint8Array): { duracion: number; bps: number; video: boo
 describe.skipIf(!hayFfmpeg)('ffmpegAudioProcessor', () => {
   it('un WAV sale en MP3 más ligero, entero y con calidad alta', async () => {
     const wav = generar('wav', tono)
-    const mp3 = await ffmpegAudioProcessor.normalize(wav)
+    const mp3 = (await ffmpegAudioProcessor.normalize(wav))?.mp3 ?? null
 
     expect(mp3).not.toBeNull()
     expect(mp3![0] === 0x49 || mp3![0] === 0xff).toBe(true)
@@ -47,9 +47,16 @@ describe.skipIf(!hayFfmpeg)('ffmpegAudioProcessor', () => {
     expect(sondear(mp3!).duracion).toBeGreaterThan(19.5)
   }, 60_000)
 
+  it('devuelve el título y el artista que traía el archivo, aunque el MP3 salga sin etiquetas', async () => {
+    const etiquetado = generar('mp3', [...tono, '-c:a', 'libmp3lame', '-b:a', '128k', '-metadata', 'title=Vals de Valeria', '-metadata', 'artist=Cuarteto Andino'])
+    const ajustado = await ffmpegAudioProcessor.normalize(etiquetado)
+
+    expect(ajustado).toMatchObject({ titulo: 'Vals de Valeria', artista: 'Cuarteto Andino' })
+  }, 60_000)
+
   it('un MP3 ya ligero no se recomprime: conserva su tasa', async () => {
     const ligero = generar('mp3', [...tono, '-c:a', 'libmp3lame', '-b:a', '128k'])
-    const mp3 = await ffmpegAudioProcessor.normalize(ligero)
+    const mp3 = (await ffmpegAudioProcessor.normalize(ligero))?.mp3 ?? null
 
     expect(mp3).not.toBeNull()
     expect(Math.abs(sondear(mp3!).bps - sondear(ligero).bps)).toBeLessThan(8_000)
@@ -57,7 +64,7 @@ describe.skipIf(!hayFfmpeg)('ffmpegAudioProcessor', () => {
 
   it('un MP3 pesado sí se comprime', async () => {
     const pesado = generar('mp3', [...tono, '-c:a', 'libmp3lame', '-b:a', '320k'])
-    const mp3 = await ffmpegAudioProcessor.normalize(pesado)
+    const mp3 = (await ffmpegAudioProcessor.normalize(pesado))?.mp3 ?? null
 
     expect(mp3).not.toBeNull()
     expect(mp3!.byteLength).toBeLessThan(pesado.byteLength)
@@ -86,7 +93,7 @@ describe.skipIf(!hayFfmpeg)('ffmpegAudioProcessor', () => {
     ])
     rmSync(carpeta, { recursive: true, force: true })
 
-    const mp3 = await ffmpegAudioProcessor.normalize(conCaratula)
+    const mp3 = (await ffmpegAudioProcessor.normalize(conCaratula))?.mp3 ?? null
 
     expect(mp3).not.toBeNull()
     expect(sondear(mp3!).video).toBe(false)

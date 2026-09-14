@@ -35,7 +35,9 @@ function dobles(filas: Record<string, string> = {}) {
   const admin = { record: vi.fn(async () => {}) } as unknown as AdminRepository
 
   // Se comporta como `ffmpeg`: lo que no es audio vuelve `null`, y el audio sale ajustado.
-  const audio = { normalize: vi.fn(async (bytes: Uint8Array) => (bytes === JPEG ? null : AJUSTADO)) }
+  const audio = {
+    normalize: vi.fn(async (bytes: Uint8Array) => (bytes === JPEG ? null : { mp3: AJUSTADO, titulo: 'Mi Vals', artista: 'Cuarteto Andino' })),
+  }
 
   return { settings, storage, admin, audio, disco, filas, newKey: () => 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' }
 }
@@ -44,12 +46,14 @@ describe('saveShowcaseMusic', () => {
   it('guarda la canción ya ajustada y deja la fila apuntando al fichero', async () => {
     const deps = dobles()
 
-    const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3 })
+    const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3, nombreArchivo: 'cancion.mp3' })
 
     expect(isOk(salida)).toBe(true)
     // Lo que llega al disco es lo que devolvió `ffmpeg`, no lo que se subió.
     expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(AJUSTADO)
     expect(deps.filas['showcase.music.boda-bot']).toBe('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')
+    // Y el nombre del reproductor, el del archivo que suena: no el del contenido de muestra.
+    expect(JSON.parse(deps.filas['showcase.song.boda-bot']!)).toEqual({ track: 'Mi Vals', artist: 'Cuarteto Andino' })
   })
 
   it('rechaza una clave que no es un modelo, y NO escribe nada', async () => {
@@ -57,7 +61,7 @@ describe('saveShowcaseMusic', () => {
     // `app_settings.key`: sin el corte, esto sobrescribiría la cuenta bancaria del atelier.
     const deps = dobles()
 
-    const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'payment.accountNumber', bytes: MP3 })
+    const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'payment.accountNumber', bytes: MP3, nombreArchivo: 'cancion.mp3' })
 
     expect(isErr(salida)).toBe(true)
     expect(deps.settings.write).not.toHaveBeenCalled()
@@ -67,7 +71,7 @@ describe('saveShowcaseMusic', () => {
   it('rechaza lo que no es audio, aunque se llame .mp3', async () => {
     const deps = dobles()
 
-    const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: JPEG })
+    const salida = await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: JPEG, nombreArchivo: 'cancion.mp3' })
 
     expect(isErr(salida)).toBe(true)
     expect(deps.storage.put).not.toHaveBeenCalled()
@@ -79,7 +83,7 @@ describe('saveShowcaseMusic', () => {
     const deps = dobles({ 'showcase.music.boda-bot': 'vieja.mp3' })
     deps.disco.set('vieja.mp3', new Uint8Array([1]))
 
-    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3 })
+    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3, nombreArchivo: 'cancion.mp3' })
 
     expect(deps.storage.remove).toHaveBeenCalledWith('vieja.mp3')
     expect(deps.disco.has('vieja.mp3')).toBe(false)
@@ -88,7 +92,7 @@ describe('saveShowcaseMusic', () => {
   it('lo anota en la auditoría', async () => {
     const deps = dobles()
 
-    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3 })
+    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'boda-bot', bytes: MP3, nombreArchivo: 'cancion.mp3' })
 
     expect(deps.admin.record).toHaveBeenCalledWith(
       expect.objectContaining({ actorEmail: ADMIN.email, action: 'escaparate.musica', subject: 'boda-bot' }),
