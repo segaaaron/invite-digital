@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import postgres from 'postgres'
-import { ATELIER, AUTH_STATE } from './fixtures/atelier'
+import { ADMIN_AUTH_STATE, ATELIER } from './fixtures/atelier'
 
 const SLUG = 'boda-puerta-e2e'
 const PUERTA = { email: 'puerta-e2e@invitepremium.bo', password: 'contrasena-de-puerta-1' } as const
@@ -20,7 +20,7 @@ async function entrar(page: Page, quien: { email: string; password: string }): P
   await page.getByRole('button', { name: 'Entrar' }).click()
 }
 
-test('el dueño da de alta a su gente de puerta, y esa gente solo ve el check-in', async ({ browser }) => {
+test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in', async ({ browser }) => {
   await sql`delete from events where slug = ${SLUG}`
   await sql`delete from users where email = ${PUERTA.email}`
   await sql`
@@ -30,11 +30,11 @@ test('el dueño da de alta a su gente de puerta, y esa gente solo ve el check-in
             (select id from plans where slug = 'alta-costura'))
   `
 
-  // --- El dueño la crea desde Configuración de su evento.
-  const dueño = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
-  await dueño.goto(`/panel/eventos/${SLUG}/configuracion`)
+  // --- El **admin** la da de alta desde Configuración del evento.
+  const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
+  await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
 
-  const tarjeta = dueño.locator('section', { has: dueño.getByRole('heading', { name: 'Personal de puerta' }) })
+  const tarjeta = gestor.locator('section', { has: gestor.getByRole('heading', { name: 'Personal de puerta' }) })
   await expect(tarjeta).toContainText('Todavía no hay nadie asignado')
   await tarjeta.getByLabel('Correo').fill(PUERTA.email)
   await tarjeta.getByLabel('Contraseña').fill(PUERTA.password)
@@ -62,8 +62,8 @@ test('el dueño da de alta a su gente de puerta, y esa gente solo ve el check-in
   expect((await puerta.goto('/panel/admin'))?.status()).toBe(404)
   expect((await puerta.goto('/panel/eventos/demo-boda/checkin'))?.status()).toBe(404)
 
-  // --- El dueño le quita el acceso y deja de entrar.
-  await dueño.goto(`/panel/eventos/${SLUG}/configuracion`)
+  // --- El admin le quita el acceso y deja de entrar.
+  await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
   await tarjeta.getByRole('button', { name: 'Quitar' }).click()
   await expect(tarjeta).toContainText('Todavía no hay nadie asignado')
 

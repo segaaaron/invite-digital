@@ -33,16 +33,18 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
   await deleteClienteFixture(slug)
 
   const [dueno] = await sql<{ id: string }[]>`
-    insert into users (email, password_hash, role)
-    values (${DUENO.email}, ${await argon2Hasher.hash(DUENO.password)}, 'atelier')
-    on conflict (email) do update set role = 'atelier'
+    -- Con la marca apagada: esta contraseña la pone el fixture, no ha viajado por correo.
+    -- Con ella puesta, entrar lleva a cambiarla y la prueba no llega a la boda.
+    insert into users (email, password_hash, role, must_change_password)
+    values (${DUENO.email}, ${await argon2Hasher.hash(DUENO.password)}, 'atelier', false)
+    on conflict (email) do update set role = 'atelier', must_change_password = false
     returning id
   `
 
   const [cliente] = await sql<{ id: string }[]>`
-    insert into users (email, password_hash, role)
-    values (${CLIENTE.email}, ${await argon2Hasher.hash(CLIENTE.password)}, 'cliente')
-    on conflict (email) do update set role = 'cliente'
+    insert into users (email, password_hash, role, must_change_password)
+    values (${CLIENTE.email}, ${await argon2Hasher.hash(CLIENTE.password)}, 'cliente', false)
+    on conflict (email) do update set role = 'cliente', must_change_password = false
     returning id
   `
 

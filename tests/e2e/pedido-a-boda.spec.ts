@@ -63,10 +63,25 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // tarjeta es un `h2` y es único.
     await expect(atelier.getByRole('heading', { name: 'Contenido de la invitación · Botánica' })).toBeVisible()
 
-    // 4. Y los novios entran a **su** boda con lo que les dieron.
+    // 4. Los novios entran con lo que les dieron... y lo primero es elegir su contraseña.
+    //
+    // La que escribió el admin viajó por correo, así que nace **provisional**: el panel no
+    // se abre hasta que la cambien. Aterrizar aquí y no en la boda es lo correcto.
     await page.goto('/panel/entrar')
     await page.getByLabel('Correo').fill(CORREO)
     await page.getByLabel('Contraseña').fill(CLAVE)
+    await page.getByRole('button', { name: 'Entrar' }).click()
+    await expect(page).toHaveURL(/\/panel\/cuenta$/)
+
+    const SUYA = 'la-que-eligen-los-novios-1'
+    await page.getByLabel('Contraseña actual').fill(CLAVE)
+    await page.getByLabel('Contraseña nueva').fill(SUYA)
+    await page.getByRole('button', { name: 'Cambiar la contraseña' }).click()
+
+    // Cambiarla cierra todas las sesiones, así que vuelven a entrar — ahora sí, a su boda.
+    await expect(page).toHaveURL(/\/panel\/entrar/)
+    await page.getByLabel('Correo').fill(CORREO)
+    await page.getByLabel('Contraseña').fill(SUYA)
     await page.getByRole('button', { name: 'Entrar' }).click()
     await expect(page).toHaveURL(new RegExp(`/panel/eventos/${slug}$`))
 

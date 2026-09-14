@@ -19,10 +19,16 @@ const hashDelOtro = (): Promise<string> => argon2Hasher.hash(OTRO.password)
 export async function seedOtroAtelier(slug: string): Promise<{ userId: string; eventId: string; token: string }> {
   await deleteTenancyFixture(slug)
 
+  // `must_change_password` explícito: la columna nace en `true` —la contraseña de una
+  // cuenta nueva la escribe el admin y viaja por correo—, pero esta la pone el fixture.
+  // Sin esto, al entrar se le manda a cambiarla y la prueba no llega a su evento.
+  //
+  // El comentario va **aquí y no dentro de la plantilla**: una comilla invertida dentro de
+  // un literal lo cierra, y eso fue exactamente lo que rompió el typecheck.
   const [usuario] = await sql<{ id: string }[]>`
-    insert into users (email, password_hash, role)
-    values (${OTRO.email}, ${await hashDelOtro()}, 'atelier')
-    on conflict (email) do update set role = 'atelier'
+    insert into users (email, password_hash, role, must_change_password)
+    values (${OTRO.email}, ${await hashDelOtro()}, 'atelier', false)
+    on conflict (email) do update set role = 'atelier', must_change_password = false
     returning id
   `
 
