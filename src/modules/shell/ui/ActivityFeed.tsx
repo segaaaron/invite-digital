@@ -1,3 +1,4 @@
+import { fecha } from '@/shared/format/fecha'
 import { avatarColor } from './avatar-color'
 
 export type ActivityItem = {
@@ -50,7 +51,7 @@ export function ActivityFeed({ items }: { items: readonly ActivityItem[] }) {
             <span className="block text-[12px] text-ink-soft">{item.action}</span>
           </span>
           <span className="font-mono text-[9px] tracking-[0.2em] whitespace-nowrap text-ink-mute uppercase">
-            {item.at.toLocaleDateString('es-BO', { day: 'numeric', month: 'long' })}
+            {fecha(item.at)}
           </span>
         </li>
       ))}

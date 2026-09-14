@@ -44,7 +44,7 @@ export default async function ClientSharePage({ params }: { params: Promise<{ to
       {/* Cuenta la visita del cliente. La vista de solo lectura no es de ningún grupo. */}
       <ViewBeacon kind="client" token={token} />
       <header className="flex flex-col gap-2">
-        <p className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{event.value.eventDate}</p>
+        <p className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{new Intl.DateTimeFormat(event.value.locale === 'en' ? 'en-US' : 'es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${event.value.eventDate}T00:00:00Z`))}</p>
         <h1 className="font-display text-[30px] font-light text-ink">{event.value.title}</h1>
       </header>
 

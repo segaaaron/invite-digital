@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { signOutAction } from '@/modules/identity/actions'
 import type { NavItem, NavSection } from './nav'
 import { NAV_ICONS } from './nav-icons'
@@ -52,9 +53,37 @@ export function PanelSidebar({
   user: PanelUser
 }) {
   const pathname = usePathname()
+  /**
+   * En el teléfono el menú va plegado. La maqueta lo reparte en filas encima de la página,
+   * pero la dibujó con doce entradas: con las del evento y las del admin eran más de veinte,
+   * y cada pantalla empezaba con medio teléfono de menú antes del contenido.
+   */
+  const [abierto, setAbierto] = useState(false)
+  const actual = sections.flatMap((s) => s.items).find((item) => item.href === pathname)
 
   return (
-    <aside className="sticky top-0 z-50 flex max-h-dvh flex-row flex-wrap items-center gap-x-4 gap-y-2 overflow-y-auto bg-linear-to-b from-shell to-shell-deep px-4 py-3.5 text-shell-ink shadow-[12px_0_40px_rgb(0_0_0/0.18)] min-[860px]:h-dvh min-[860px]:flex-col min-[860px]:flex-nowrap min-[860px]:items-stretch min-[860px]:gap-0 min-[860px]:px-5 min-[860px]:py-6.5">
+    <aside className="sticky top-0 z-50 flex max-h-dvh flex-col gap-y-2 overflow-y-auto bg-linear-to-b from-shell to-shell-deep px-4 py-3 text-shell-ink shadow-[12px_0_40px_rgb(0_0_0/0.18)] min-[860px]:h-dvh min-[860px]:flex-nowrap min-[860px]:items-stretch min-[860px]:gap-0 min-[860px]:px-5 min-[860px]:py-6.5">
+      {/* La barra del teléfono: marca, dónde estás y el botón que abre el menú. */}
+      <div className="flex items-center gap-3 min-[860px]:hidden">
+        <p className="font-display text-[18px] italic">
+          Invite<b className="font-medium not-italic">Premium</b>
+        </p>
+        {actual ? <span className="truncate font-mono text-[10px] tracking-[0.2em] uppercase opacity-60">· {actual.label}</span> : null}
+        <button
+          aria-controls="menu-panel"
+          aria-expanded={abierto}
+          className="ml-auto rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50"
+          onClick={() => setAbierto((a) => !a)}
+          type="button"
+        >
+          {abierto ? 'Cerrar' : 'Menú'}
+        </button>
+      </div>
+
+      <div
+        className={`${abierto ? 'flex' : 'hidden'} flex-col gap-3 pb-2 min-[860px]:flex min-[860px]:flex-1 min-[860px]:gap-0 min-[860px]:pb-0`}
+        id="menu-panel"
+      >
       <div className="hidden min-[860px]:block">
         <p className="font-display text-[22px] italic">
           Invite<b className="font-medium not-italic">Premium</b>
@@ -64,13 +93,14 @@ export function PanelSidebar({
 
       {sections.map((section) => (
         <nav key={section.label} aria-label={section.label} className="flex flex-wrap gap-1 min-[860px]:mb-5.5 min-[860px]:flex-col min-[860px]:gap-0">
-          <p className="mb-2 hidden font-mono text-[9px] tracking-[0.3em] uppercase opacity-45 min-[860px]:block">
+          <p className="mb-1 w-full font-mono text-[9px] tracking-[0.3em] uppercase opacity-45 min-[860px]:mb-2">
             {section.label}
           </p>
           {section.items.map((item) => (
             <Link
               key={item.href}
               href={item.href}
+              onClick={() => setAbierto(false)}
               aria-current={item.href === pathname ? 'page' : undefined}
               className={`${ITEM_BASE} ${
                 item.href === pathname
@@ -86,7 +116,7 @@ export function PanelSidebar({
         </nav>
       ))}
 
-      <div className="mt-0 ml-auto flex items-center gap-2.5 min-[860px]:mt-auto min-[860px]:ml-0 min-[860px]:flex-col min-[860px]:items-stretch">
+      <div className="flex items-center gap-2.5 min-[860px]:mt-auto min-[860px]:flex-col min-[860px]:items-stretch">
         <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-linear-to-br from-white/8 to-white/3 px-2.5 py-1.5 min-[860px]:px-3.5 min-[860px]:py-3.5">
           <span
             aria-hidden
@@ -108,6 +138,7 @@ export function PanelSidebar({
             Cerrar sesión
           </button>
         </form>
+      </div>
       </div>
     </aside>
   )

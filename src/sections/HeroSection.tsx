@@ -67,13 +67,13 @@ export function HeroSection({ dictionary, slot }: Props) {
       </div>
 
       {/* La franja de cifras que cierra el hero en la maqueta. */}
-      <Reveal className="mx-auto mt-20 grid max-w-[1180px] grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-px bg-gold/25" onMount>
+      <Reveal className="mx-auto mt-20 grid max-w-[1180px] grid-cols-2 gap-px bg-gold/25 min-[760px]:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]" onMount>
         {hero.metrics.map((metric) => {
           const Icono = METRIC_ICONS[metric.icon]
           return (
-            <div key={metric.label} className="bg-bg-raised/75 px-6.5 py-7.5">
-              <p className="font-display text-[44px] leading-none text-gold-deep">{metric.value}</p>
-              <p className="mt-3 flex items-center gap-2.5 text-[10.5px] tracking-[0.26em] text-ink-mute uppercase">
+            <div key={metric.label} className="bg-bg-raised/75 px-4 py-5 min-[760px]:px-6.5 min-[760px]:py-7.5">
+              <p className="font-display text-[34px] leading-none text-gold-deep min-[760px]:text-[44px]">{metric.value}</p>
+              <p className="mt-3 flex items-center gap-2 text-[9.5px] tracking-[0.2em] text-ink-mute uppercase min-[760px]:gap-2.5 min-[760px]:text-[10.5px] min-[760px]:tracking-[0.26em]">
                 <Icono className="text-gold-deep" />
                 {metric.label}
               </p>

@@ -1,5 +1,6 @@
 'use client'
 
+import { hora as horaBolivia } from '@/shared/format/fecha'
 import { MAX_EXTRA_ARRIVALS } from '../domain/arrival'
 import type { ScanGroupView, ScanOutcome } from '../application/check-in-by-scan'
 
@@ -31,7 +32,7 @@ const skin = {
   unknown: 'bg-danger',
 } as const
 
-const hora = (d: Date) => d.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })
+const hora = horaBolivia
 
 /**
  * El personal de puerta mira esta tarjeta de reojo, con poca luz y una fila detrás: el

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { events, plans } from '@/app/composition/container'
+import { catalog, events, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
 import type { Allowance } from '@/modules/plans'
 import { BillingToggle } from '@/modules/plans/ui/BillingToggle'
@@ -36,14 +36,19 @@ export default async function PlanPage({
   if (isErr(capacidad)) throw new Error(capacidad.error.detail)
 
   const catalogo = await plans.listActive()
+  // Los nombres comerciales salen del catálogo de la web; si no se leen, el `slug` sirve.
+  const comerciales = await catalog.listPlans('es')
+  const nombreDe = (slug: string) => (isErr(comerciales) ? slug : (comerciales.value.find((p) => p.slug === slug)?.name ?? slug))
   const pendiente = await plans.pendingChange(event.value.id)
 
   const tarjetas: Array<{
     id: string
+    name: string
     allowance: Allowance
     price?: { cents: number; annualCents: number | null; currency: string } | undefined
   }> = catalogo.map((plan) => ({
     id: plan.id,
+    name: nombreDe(plan.slug),
     price:
       plan.priceCents === undefined
         ? undefined
@@ -74,6 +79,7 @@ export default async function PlanPage({
             id: tarjeta.id,
             current: tarjeta.allowance.planSlug === actual,
             allowance: tarjeta.allowance,
+            name: tarjeta.name,
             price: tarjeta.price,
             changeHref: `/panel/eventos/${event.value.slug}/plan?plan=${tarjeta.allowance.planSlug}#cambio`,
           }))}
@@ -88,13 +94,13 @@ export default async function PlanPage({
               eventSlug={event.value.slug}
               options={tarjetas
                 .filter((t) => t.allowance.planSlug !== actual)
-                .map((t) => ({ id: t.id, slug: t.allowance.planSlug }))}
+                .map((t) => ({ id: t.id, slug: t.allowance.planSlug, name: t.name }))}
             />
           ) : (
             <div aria-label="Solicitud pendiente" className="flex flex-col gap-4">
               <p className="text-[14px] text-ink">
                 Solicitud sin resolver: pasar al plan{' '}
-                <strong className="font-normal">{pendiente.value.requestedPlanSlug}</strong>.
+                <strong className="font-normal">{nombreDe(pendiente.value.requestedPlanSlug)}</strong>.
               </p>
               {pendiente.value.note === null ? null : (
                 <p className="text-[13px] text-ink-mute">«{pendiente.value.note}»</p>

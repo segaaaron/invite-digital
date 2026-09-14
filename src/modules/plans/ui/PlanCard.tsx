@@ -45,12 +45,14 @@ export function hasAnnual(price: PlanPrice): boolean {
 
 export function PlanCard({
   plan,
+  name,
   current,
   price,
   billing = 'once',
   changeHref,
 }: {
   plan: Allowance
+  name: string
   current: boolean
   price?: PlanPrice | undefined
   /** `once` es el pago por evento; `annual` solo existe si el plan tiene precio anual. */
@@ -63,13 +65,13 @@ export function PlanCard({
       className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-6 shadow-card ${
         current ? 'border-gold' : 'border-line-panel'
       }`}
-      aria-label={`Plan ${plan.planSlug}`}
+      aria-label={`Plan ${name}`}
     >
       <header className="flex flex-col gap-1">
         {current ? (
           <p className="font-mono text-[9px] tracking-[0.35em] text-gold-deep uppercase">Plan actual</p>
         ) : null}
-        <h3 className="font-display text-[22px] font-light italic text-ink">{plan.planSlug}</h3>
+        <h3 className="font-display text-[22px] font-light italic text-ink">{name}</h3>
       </header>
 
       {price === undefined ? null : (
@@ -113,7 +115,7 @@ export function PlanCard({
           </p>
         ) : changeHref === undefined ? null : (
           <PanelButton className="w-full" href={changeHref} variant="primary">
-            Cambiar a {plan.planSlug}
+            Cambiar a {name}
           </PanelButton>
         )}
       </div>

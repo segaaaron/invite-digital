@@ -91,6 +91,9 @@ export function EventForm({ event }: { event?: Event }) {
           label: definicion.label,
           categorySlug: definicion.categorySlug,
           palette: definicion.palette,
+          // La portada real del catálogo (`pnpm tsx scripts/capture-theme-covers.ts`). El
+          // clásico no está en el catálogo y se queda con su papel dibujado.
+          cover: definicion.key === 'clasico' ? null : `/templates/${definicion.key}.avif`,
           sample:
             definicion.defaultContent.hero === undefined
               ? null

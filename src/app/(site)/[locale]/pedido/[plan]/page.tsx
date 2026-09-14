@@ -40,7 +40,7 @@ export default async function PedidoPage({
   if (plan === undefined) notFound()
 
   return (
-    <main className="mx-auto flex w-full max-w-[640px] flex-col gap-7 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[640px] flex-col gap-7 px-6 pt-32 pb-16">
       <header className="flex flex-col gap-3">
         <h1 className="font-display text-[34px] leading-tight font-light text-ink">{dictionary.orders.orderTitle}</h1>
         <p className="text-[14px] leading-[1.75] text-ink-soft">{dictionary.orders.orderIntro}</p>

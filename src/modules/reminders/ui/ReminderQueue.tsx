@@ -75,7 +75,7 @@ export function ReminderQueue({
               key={clave(fila)}
               className="flex flex-wrap items-center gap-3 rounded-2xl border border-line-panel bg-white p-3.5"
             >
-              <span className="min-w-0 flex-1">
+              <span className="min-w-[240px] flex-1">
                 <span className="flex flex-wrap items-center gap-2">
                   <span className="text-[14px] text-ink">{fila.label}</span>
                   <Pill tone={motivo.tono}>{motivo.texto}</Pill>

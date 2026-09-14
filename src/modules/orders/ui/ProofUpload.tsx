@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState, useId } from 'react'
+import { useActionState } from 'react'
+import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { uploadProofAction, type UploadProofState } from '../actions'
 import { ACCEPTED_MIMES, MAX_PROOF_BYTES } from '../domain/proof'
 
@@ -15,27 +16,19 @@ const INICIAL: UploadProofState = { status: 'idle' }
  */
 export function ProofUpload({ publicRef }: { publicRef: string }) {
   const [estado, accion, pendiente] = useActionState<UploadProofState, FormData>(uploadProofAction, INICIAL)
-  const id = useId()
 
   return (
     <form action={accion} className="flex flex-col gap-3">
       <input name="publicRef" type="hidden" value={publicRef} />
 
-      <label className="flex flex-col gap-2" htmlFor={id}>
-        <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-          Comprobante de la transferencia
-        </span>
-        <input
+      <div className="flex flex-col gap-2">
+        <FilePicker
           accept={ACCEPTED_MIMES.join(',')}
-          className="text-[13px] text-ink-soft file:mr-3 file:rounded-[var(--radius-pill)] file:border file:border-line file:bg-bg-top file:px-4 file:py-2 file:font-mono file:text-[10px] file:uppercase file:tracking-[0.25em] file:text-ink"
-          id={id}
+          hint={`Una foto o un PDF, hasta ${Math.round(MAX_PROOF_BYTES / 1024 / 1024)} MB`}
+          label="Comprobante de la transferencia"
           name="proof"
-          type="file"
         />
-        <span className="text-[11px] text-ink-mute">
-          Una foto o un PDF, hasta {Math.round(MAX_PROOF_BYTES / 1024 / 1024)} MB.
-        </span>
-      </label>
+      </div>
 
       {/* Con la piel de la web pública, no con la del panel: esta pantalla la ve el
           cliente desde el enlace de su pedido, y `PanelKit` es la tinta oscura del panel.

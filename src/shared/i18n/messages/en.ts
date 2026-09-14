@@ -93,7 +93,7 @@ export const en = {
     choose: 'Choose {plan}',
     bookCall: 'Book a call',
   },
-  models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Eight signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open', seeAll: 'See every model' },
+  models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Sixteen signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open', seeAll: 'See every model' },
   themes: {
     coverOpen: 'OPEN INVITATION',
     coverHint: 'TAP ANYWHERE',

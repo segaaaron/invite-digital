@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useId, useState } from 'react'
 import type { ThemeDefinition } from './themes/contract'
 
@@ -10,6 +11,11 @@ type Props = {
     categorySlug: ThemeDefinition['categorySlug']
     palette: Readonly<Record<string, string>>
     sample: { monogram: string; names: string } | null
+    /**
+     * La portada real del diseño. **Manda sobre el papel dibujado**: con la paleta sola, los
+     * XV de papel claro salían casi en blanco y no se distinguían entre ellos.
+     */
+    cover?: string | null
   }[]
   readonly defaultValue: string
   readonly locale: string
@@ -82,7 +88,12 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                     {...{ 'data-grupo': grupo }}
                   />
 
-                  {/* El papel del modelo, con la paleta real del diseño. */}
+                  {tema.cover ? (
+                    <span aria-hidden className="relative block aspect-5/7 overflow-hidden rounded-[8px] bg-bg-sunken">
+                      <Image alt="" className="object-cover object-top" fill sizes="160px" src={tema.cover} />
+                    </span>
+                  ) : (
+                  /* El papel del modelo, con la paleta real del diseño. */
                   <span
                     aria-hidden
                     className="relative flex aspect-5/7 flex-col items-center justify-center gap-1.5 rounded-[8px] text-center"
@@ -103,6 +114,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                       ))}
                     </span>
                   </span>
+                  )}
 
                   <span className="flex items-center justify-between gap-1 px-0.5">
                     <span className="text-[12px] text-ink">{tema.label}</span>

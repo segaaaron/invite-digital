@@ -144,7 +144,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
         <p className="text-[13px] text-ink-mute">Ningún invitado coincide.</p>
       ) : (
         <div className="relative min-w-0 overflow-x-auto">
-          <table className="w-full min-w-[720px] border-collapse text-left">
+          <table className="w-full min-w-[980px] border-collapse text-left">
             <thead>
               <tr>
                 {['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna) => (

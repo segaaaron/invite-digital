@@ -103,9 +103,11 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
         resaltada ? 'ring-4 ring-gold/50' : ''
       }`}
     >
-      <header className="flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-[20px] font-light text-ink">{table.label}</h3>
-        <p className="flex items-baseline gap-2">
+      {/* Con el estado y los dos iconos a la derecha, «Mesa 01» se partía en dos líneas en
+          tarjetas de 260 px. El título no se parte: si no cabe, lo que baja es la cola. */}
+      <header className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+        <h3 className="font-display text-[20px] font-light whitespace-nowrap text-ink">{table.label}</h3>
+        <p className="flex items-baseline gap-2 whitespace-nowrap">
           <span className="font-mono text-[13px] text-ink-soft">
             {table.taken} / {table.capacity}
           </span>

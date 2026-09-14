@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import type { Event } from '../domain/event'
 
-const STATUS_LABEL = { draft: 'Borrador', live: 'En marcha', closed: 'Cerrado' } as const
+const STATUS_LABEL = { draft: 'Borrador', live: 'Publicada', closed: 'Cerrada' } as const
+const FECHA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
 
 export function EventList({ events }: { events: readonly Event[] }) {
   if (events.length === 0) {
@@ -18,7 +19,7 @@ export function EventList({ events }: { events: readonly Event[] }) {
           >
             <span className="font-display text-[18px] font-light text-ink">{event.title}</span>
             <span className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-              {`${event.eventDate} · ${STATUS_LABEL[event.status]}`}
+              {`${FECHA.format(new Date(`${event.eventDate}T00:00:00Z`))} · ${STATUS_LABEL[event.status]}`}
             </span>
           </Link>
         </li>

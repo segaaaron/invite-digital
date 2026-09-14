@@ -93,7 +93,7 @@ export const es = {
     choose: 'Elegir {plan}',
     bookCall: 'Agendar llamada',
   },
-  models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Ocho diseños base · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir', seeAll: 'Ver todos los modelos' },
+  models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Dieciséis diseños · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir', seeAll: 'Ver todos los modelos' },
   themes: {
     coverOpen: 'ABRIR INVITACIÓN',
     coverHint: 'TOCA EN CUALQUIER LUGAR',

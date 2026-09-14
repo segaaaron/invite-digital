@@ -29,7 +29,7 @@ export function PlanChangeForm({
 }: {
   eventId: string
   eventSlug: string
-  options: ReadonlyArray<{ id: string; slug: string }>
+  options: ReadonlyArray<{ id: string; slug: string; name: string }>
   /** El plan que se pulsó en su tarjeta, ya elegido en el desplegable. */
   defaultPlanSlug?: string | null
 }) {
@@ -57,7 +57,7 @@ export function PlanChangeForm({
         >
           {options.map((option) => (
             <option key={option.id} value={option.id}>
-              {option.slug}
+              {option.name}
             </option>
           ))}
         </select>

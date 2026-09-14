@@ -15,7 +15,7 @@ describe('hasAnnual', () => {
 
 const tarjeta = (slug: string, cents: number, annualCents: number | null) => ({
   id: slug,
-  current: false,
+  name: 'Firma 3D', current: false,
   allowance: { planSlug: slug, maxGuestGroups: 30, seating: true, registry: true, checkin: true },
   price: { cents, annualCents, currency: 'BOB' },
 })

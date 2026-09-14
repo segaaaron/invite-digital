@@ -82,7 +82,7 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
 
   await page.goto(`/panel/eventos/${SLUG}/plan`)
 
-  await page.getByLabel('Plan que se quiere').selectOption({ label: 'alta-costura' })
+  await page.getByLabel('Plan que se quiere').selectOption({ label: 'Alta Costura' })
   await page.getByLabel('Nota para el atelier').fill('La lista creció.')
   await page.getByRole('button', { name: 'Solicitar cambio' }).click()
 
@@ -95,7 +95,7 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
 
   // El plan del evento cambió de verdad: el más caro no limita los grupos, así que el
   // aviso de tope desaparece de la página del evento.
-  await expect(page.getByLabel('Plan alta-costura')).toContainText('Plan actual')
+  await expect(page.getByLabel('Plan Alta Costura')).toContainText('Plan actual')
 
   // El alta vive en la vista de invitados, que es propia como en la maqueta.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)

@@ -42,7 +42,7 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
   const sePuedePagar = pago !== null && isPayable(pago)
 
   return (
-    <main className="mx-auto flex w-full max-w-[640px] flex-col gap-7 px-6 py-16">
+    <main className="mx-auto flex w-full max-w-[640px] flex-col gap-7 px-6 pt-32 pb-16">
       <header className="flex flex-col gap-2">
         <h1 className="font-display text-[34px] leading-tight font-light text-ink">{dictionary.orders.trackTitle}</h1>
         <p className="font-mono text-[11px] tracking-[0.25em] text-ink-mute uppercase">

@@ -8,13 +8,17 @@ type Props = { locale: Locale; dictionary: Dictionary }
 export function SiteHeader({ locale, dictionary }: Props) {
   // Las cinco entradas de la maqueta: dos a la izquierda del logotipo y dos a la derecha,
   // con el botón al final.
+  //
+  // Con la portada delante: la cabecera sale también en colecciones y en el pedido, y ahí
+  // un `#precios` a secas no llevaba a ninguna parte.
+  const inicio = `/${locale}`
   const izquierda = [
-    { href: '#colecciones', label: dictionary.nav.collections },
-    { href: '#experiencia', label: dictionary.nav.experience },
+    { href: `${inicio}#colecciones`, label: dictionary.nav.collections },
+    { href: `${inicio}#experiencia`, label: dictionary.nav.experience },
   ]
   const derecha = [
-    { href: '#diferencia', label: dictionary.nav.cases },
-    { href: '#precios', label: dictionary.nav.pricing },
+    { href: `${inicio}#diferencia`, label: dictionary.nav.cases },
+    { href: `${inicio}#precios`, label: dictionary.nav.pricing },
   ]
 
   return (
@@ -41,12 +45,12 @@ export function SiteHeader({ locale, dictionary }: Props) {
               {link.label}
             </a>
           ))}
-          <Button href="#contacto" className="ml-auto">
+          <Button href={`${inicio}#contacto`} className="ml-auto whitespace-nowrap">
             {dictionary.nav.contact}
           </Button>
         </nav>
 
-        <Button href="#contacto" className="ml-auto md:hidden">
+        <Button href={`${inicio}#contacto`} className="ml-auto px-4! whitespace-nowrap md:hidden">
           {dictionary.nav.contact}
         </Button>
       </div>

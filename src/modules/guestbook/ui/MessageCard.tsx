@@ -1,5 +1,6 @@
 'use client'
 
+import { fechaHora } from '@/shared/format/fecha'
 import { useState, useTransition } from 'react'
 import { markReadAction, replyAction, toggleFeaturedAction } from '../actions'
 import { createReply } from '../domain/message-note'
@@ -20,8 +21,7 @@ const PILL_ON =
   'cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40 px-4 py-2 text-[9px]'
 
 /** Panel en español: aquí no se negocia idioma, a diferencia de la página del invitado. */
-const cuando = (d: Date): string =>
-  d.toLocaleString('es-BO', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+const cuando = fechaHora
 
 /**
  * Una firma del libro. El borde dorado marca lo que está sin leer, **y además** lleva la
@@ -109,9 +109,10 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
         </div>
       )}
 
-      {/* La maqueta solo enseña «Marcar leído» y «Destacar»; responder es nuestro y se
-          pliega tras su botón para no dejar un campo abierto por mensaje. */}
-      <details className="group">
+      {/* Una sola fila de acciones: «Responder» se despliega debajo sin partir la fila en
+          dos, que era lo que ponía dos hileras de botones en cada mensaje. */}
+      <div className="flex flex-wrap items-start gap-2">
+      <details className="group open:order-last open:basis-full">
         <summary className={`${PILL} w-fit list-none cursor-pointer`}>
           {message.reply === null ? 'Responder' : 'Editar respuesta'}
         </summary>
@@ -137,7 +138,7 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
         </div>
       </details>
 
-      <footer className="flex flex-wrap items-center gap-2">
+
         {sinLeer ? (
           <button
             className={PILL}
@@ -157,7 +158,7 @@ export function MessageCard({ eventId, eventSlug, message }: Props) {
         >
           {destacado ? 'Quitar destacado' : 'Destacar'}
         </button>
-      </footer>
+            </div>
 
       {error === null ? null : (
         <p className="text-[12px] text-danger" role="alert">

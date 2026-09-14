@@ -8,6 +8,8 @@ export type PlanCardData = {
   readonly id: string
   readonly current: boolean
   readonly allowance: Allowance
+  /** El nombre comercial —«Firma 3D»—. Sin él la tarjeta enseñaba el `slug`: «firma-3d». */
+  readonly name: string
   readonly price?: PlanPrice | undefined
   /** Adónde lleva «Cambiar a…» desde esta tarjeta. */
   readonly changeHref?: string | undefined
@@ -39,6 +41,7 @@ export function BillingToggle({ plans }: { plans: readonly PlanCardData[] }) {
           changeHref={plan.changeHref}
           current={plan.current}
           key={plan.id}
+          name={plan.name}
           plan={plan.allowance}
           price={plan.price}
         />
