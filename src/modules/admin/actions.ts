@@ -404,13 +404,21 @@ export async function createWeddingForClientAction(
   }
 
   // --- 4. El plan. Sin esto cae al más barato, que no trae mesa de regalos ni modo puerta.
+  //
+  // Si falla **se dice en pantalla**, no solo en el registro: la boda ya existe y no se
+  // deshace, pero el admin creería que la vendió con el plan elegido y el cliente entraría
+  // sin mesa de regalos ni modo puerta.
+  let avisoDePlan = ''
   if (planSlug !== '') {
     const plan = await admin.setEventPlan(actor, {
       eventId: evento.value.id,
       eventSlug: evento.value.slug,
       planSlug,
     })
-    if (isErr(plan)) console.error('no se pudo asignar el plan', plan.error.kind, plan.error.detail)
+    if (isErr(plan)) {
+      console.error('no se pudo asignar el plan', plan.error.kind, plan.error.detail)
+      avisoDePlan = ` Ojo: no se pudo asignar el plan «${planSlug}» y quedó con el más barato; cámbialo en su fila, en «Gestionar».`
+    }
   }
 
   // --- 5. La cuenta del cliente. Si ya existía **no se toca su contraseña**: cambiarla
@@ -451,7 +459,7 @@ export async function createWeddingForClientAction(
   return {
     status: 'success',
     eventSlug: evento.value.slug,
-    message: `Boda creada con el diseño «${tema.label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+    message: `Boda creada con el diseño «${tema.label}».${avisoDePlan} ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
   }
 }
 

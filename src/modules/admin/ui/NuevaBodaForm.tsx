@@ -85,7 +85,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
             ))}
           </select>
           <p className="text-[11px] text-ink-mute">
-            Sin plan cae al más barato, que no trae mesa de regalos ni modo puerta.
+            Decide qué trae su panel —mesa de regalos, modo puerta, tope de invitados—. Se cambia después en su fila, en «Gestionar».
           </p>
         </div>
 
