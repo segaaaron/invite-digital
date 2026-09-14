@@ -152,7 +152,7 @@ test.describe('contenido de la invitación', () => {
       .toBuffer()
 
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-    await page.getByLabel('Subir una fotografía').setInputFiles({
+    await page.getByLabel('Elegir fotografía o canción').setInputFiles({
       name: 'retrato.jpg',
       mimeType: 'image/jpeg',
       buffer: original,

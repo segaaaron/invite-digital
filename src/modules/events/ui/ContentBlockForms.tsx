@@ -75,11 +75,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, content, media
           content={content}
           eventId={eventId}
           eventSlug={eventSlug}
-          // La clave lleva lo guardado: si el servidor lo cambia por otro camino —subir la
-          // canción escribe su archivo, título y artista—, el bloque se vuelve a montar con
-          // ello. Con solo la sección, el formulario seguía con el archivo ya borrado y el
-          // nombre de muestra, y guardarlo dejaba la invitación muda anunciando otra canción.
-          key={`${seccion}:${JSON.stringify(content[seccion] ?? null)}`}
+          key={seccion}
           media={media}
           section={seccion}
         />
@@ -104,6 +100,18 @@ function BloqueDeContenido({
   const forma = FORMAS[section]
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
   const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
+
+  // Si lo guardado cambia en el servidor por otro camino —subir la canción escribe su
+  // archivo, título y artista—, el formulario se pone al día. Sin esto seguía con el archivo
+  // ya borrado y el nombre de muestra, y guardarlo dejaba la invitación muda anunciando otra
+  // canción. Se ajusta durante el render y **no** remontando con una `key`: remontar borraba
+  // también el «Guardado» de la propia acción.
+  const firma = JSON.stringify(content[section] ?? null)
+  const [firmaVista, setFirmaVista] = useState(firma)
+  if (firmaVista !== firma) {
+    setFirmaVista(firma)
+    setEstado(estadoInicial(forma, content[section]))
+  }
 
   const error = state.status === 'error' ? (ERRORES[state.message] ?? ERRORES.storage_failure) : null
 

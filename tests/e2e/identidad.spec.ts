@@ -77,7 +77,9 @@ test.describe('la contraseña provisional', () => {
     await page.getByLabel('Correo').fill(PROVISIONAL.email)
     await page.getByLabel('Contraseña').fill(NUEVA_PASSWORD)
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+)?$/)
+    // Margen largo: entrar son dos argon2 (comprobar y, antes, el cambio) y en el runner del
+    // CI tardan más que los cinco segundos por defecto. En local pasaba; allí no.
+    await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+)?$/, { timeout: 20_000 })
   })
 })
 

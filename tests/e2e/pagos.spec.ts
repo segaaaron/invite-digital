@@ -28,7 +28,7 @@ test('los datos de cobro se editan sin desplegar y llegan a la página del pedid
 
   // --- El admin los carga.
   await page.goto('/panel/admin/pagos')
-  await page.getByLabel('Banco').fill('Banco de prueba')
+  await page.getByLabel('Banco', { exact: true }).fill('Banco de prueba')
   await page.getByLabel('Titular de la cuenta').fill('Atelier de prueba SRL')
   await page.getByLabel('Número de cuenta').fill('9876543210')
   await page.getByRole('button', { name: 'Guardar datos' }).click()

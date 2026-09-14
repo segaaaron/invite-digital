@@ -49,8 +49,8 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
           // En el teléfono cada usuario es una tarjeta, no una fila que desplazar: son pocos
           // registros y se leen de uno en uno, que es cuando las tarjetas funcionan mejor.
           <div className="relative min-[560px]:overflow-x-auto">
-            <table className="w-full border-collapse text-left max-[559px]:block min-[560px]:min-w-[760px]">
-              <thead className="max-[559px]:hidden">
+            <table className="w-full border-collapse text-left max-[560px]:block min-[560px]:min-w-[760px]">
+              <thead className="max-[560px]:hidden">
                 <tr>
                   {['Usuario', 'Rol', 'Plan que compró', 'Eventos', ''].map((titulo, i) => (
                     <th
@@ -62,7 +62,7 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
                   ))}
                 </tr>
               </thead>
-              <tbody className="max-[559px]:flex max-[559px]:flex-col max-[559px]:gap-3">
+              <tbody className="max-[560px]:flex max-[560px]:flex-col max-[560px]:gap-3">
                 {usuarios.value.map((usuario) => (
                   <UserRow
                     key={usuario.id}

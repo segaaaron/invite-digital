@@ -86,7 +86,7 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
   await page.getByLabel('Nota para el atelier').fill('La lista creció.')
   await page.getByRole('button', { name: 'Solicitar cambio' }).click()
 
-  await expect(page.getByLabel('Solicitud pendiente')).toContainText('alta-costura')
+  await expect(page.getByLabel('Solicitud pendiente')).toContainText('Alta Costura')
   // Una sola pendiente por evento: con la solicitud viva ya no hay formulario que
   // permita mandar otra.
   await expect(page.getByRole('button', { name: 'Solicitar cambio' })).toBeHidden()

@@ -152,7 +152,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     key={columna}
                     // La primera columna queda fija al desplazar la tabla en el teléfono: sin ella,
                     // a la tercera columna ya no se sabe de quién es la fila.
-                    className={`border-b border-line-panel py-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase ${i === 0 ? 'max-[859px]:sticky max-[859px]:left-0 max-[859px]:z-1 max-[859px]:bg-white max-[859px]:shadow-[1px_0_0_var(--color-line-panel)]' : ''}`}
+                    className={`border-b border-line-panel py-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase ${i === 0 ? 'max-[860px]:sticky max-[860px]:left-0 max-[860px]:z-1 max-[860px]:bg-white max-[860px]:shadow-[1px_0_0_var(--color-line-panel)]' : ''}`}
                     scope="col"
                   >
                     {columna}
@@ -166,7 +166,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             <tbody>
               {enPagina.map((fila) => (
                 <tr key={fila.id} className="hover:bg-bg-raised">
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[14px] text-ink max-[859px]:max-w-[140px] max-[859px]:sticky max-[859px]:left-0 max-[859px]:z-1 max-[859px]:bg-white max-[859px]:shadow-[1px_0_0_var(--color-line-panel)]">
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[14px] text-ink max-[860px]:max-w-[140px] max-[860px]:sticky max-[860px]:left-0 max-[860px]:z-1 max-[860px]:bg-white max-[860px]:shadow-[1px_0_0_var(--color-line-panel)]">
                     {fila.fullName}
                     {fila.vip ? (
                       <span aria-label="VIP" className="ml-1 text-gold" title="VIP">

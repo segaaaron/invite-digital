@@ -138,10 +138,10 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
   const puedeSerAdmin = user.role === 'admin' || user.role === 'atelier'
   // En el teléfono la fila es una tarjeta y cada celda un bloque: sin cabecera, así que la
   // celda del plan y la de eventos llevan su propio rótulo visible.
-  const celda = 'border-b border-line-panel py-3.5 pr-4 align-middle max-[559px]:block max-[559px]:border-0 max-[559px]:py-1.5 max-[559px]:pr-0'
+  const celda = 'border-b border-line-panel py-3.5 pr-4 align-middle max-[560px]:block max-[560px]:border-0 max-[560px]:py-1.5 max-[560px]:pr-0'
 
   return (
-    <tr className="max-[559px]:block max-[559px]:rounded-[14px] max-[559px]:border max-[559px]:border-line-panel max-[559px]:bg-white max-[559px]:p-4">
+    <tr className="max-[560px]:block max-[560px]:rounded-[14px] max-[560px]:border max-[560px]:border-line-panel max-[560px]:bg-white max-[560px]:p-4">
       <td className={celda}>
         <span className="flex items-center gap-2 text-[14px] text-ink">
           {user.email}
@@ -198,9 +198,9 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
 
       <td className={`${celda} pr-0`}>
         {user.esUnoMismo ? (
-          <span className="flex justify-end text-[12px] text-ink-mute max-[559px]:justify-start">Tu cuenta</span>
+          <span className="flex justify-end text-[12px] text-ink-mute max-[560px]:justify-start">Tu cuenta</span>
         ) : (
-          <span className="flex justify-end gap-2 max-[559px]:justify-start">
+          <span className="flex justify-end gap-2 max-[560px]:justify-start">
             {puedeSerAdmin ? (
               <form action={cambiarRol}>
                 <input name="userId" type="hidden" value={user.id} />
@@ -224,7 +224,7 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
           </span>
         )}
         {!user.esUnoMismo && user.eventos > 0 ? (
-          <span className="mt-1.5 block text-right text-[11px] text-ink-mute max-[559px]:text-left" id={`${planId}-borrar`}>
+          <span className="mt-1.5 block text-right text-[11px] text-ink-mute max-[560px]:text-left" id={`${planId}-borrar`}>
             Para borrarlo, reasigna o borra sus {user.eventos} evento{user.eventos === 1 ? '' : 's'} en Todos los eventos.
           </span>
         ) : null}

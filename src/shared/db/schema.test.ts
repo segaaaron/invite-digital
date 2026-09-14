@@ -73,8 +73,10 @@ describe('esquema', () => {
     const esperadas = CATALOG_LISTOS.map((entrada) => entrada.key)
     expect(publicadas.map((r) => r.slug).sort()).toEqual([...esperadas].sort())
     expect(publicadas.map((r) => r.sortOrder)).toEqual(esperadas.map((_, indice) => indice + 1))
+    // En una base que las tuvo siguen ahí despublicadas; en una base nueva —la del CI— nunca
+    // se sembraron. Lo que no puede pasar es que alguna esté publicada.
     for (const retirada of ['perla', 'marmol', 'laurel', 'carmesi', 'zafiro', 'nacarado', 'onix', 'sobre']) {
-      expect(rows.find((r) => r.slug === retirada)?.isPublished, retirada).toBe(false)
+      expect(rows.find((r) => r.slug === retirada)?.isPublished ?? false, retirada).toBe(false)
     }
     // El inner join contra event_categories ya exige que category_id resuelva a una fila real;
     // esta aserción confirma además que el slug resultante no está vacío.

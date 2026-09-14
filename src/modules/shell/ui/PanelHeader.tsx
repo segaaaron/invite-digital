@@ -29,7 +29,7 @@ export function PanelHeader({
         </h1>
         {meta ? <p className="mt-2 text-[12px] text-ink-soft">{meta}</p> : null}
       </div>
-      {actions ? <div className="flex w-full flex-wrap items-center gap-2.5 *:max-[559px]:flex-1 min-[560px]:w-auto">{actions}</div> : null}
+      {actions ? <div className="flex w-full flex-wrap items-center gap-2.5 *:max-[560px]:flex-1 min-[560px]:w-auto">{actions}</div> : null}
     </header>
   )
 }

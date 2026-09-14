@@ -84,7 +84,7 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         <p className="text-[11px] leading-[1.5] text-ink-mute">
           <strong className="font-medium text-ink-soft">Subirla es elegirla</strong>, y una boda tiene una sola canción:
           la nueva <strong className="font-medium text-ink-soft">reemplaza</strong> a la anterior y la anterior se borra,
-          para no ir dejando archivos sueltos. El título y el artista que hayas escrito se conservan.
+          para no ir dejando archivos sueltos. El título y el artista se toman del archivo; corrígelos en «Canción» si hace falta.
         </p>
 
         {error === null ? null : (
