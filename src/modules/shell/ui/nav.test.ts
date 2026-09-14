@@ -136,6 +136,18 @@ describe('panelNav', () => {
     }
   })
 
+  it('«Porteros» lo ven quien compró, el atelier y el admin; nunca el personal de puerta', () => {
+    const hrefs = (admin: boolean, puerta: boolean, cliente: boolean) =>
+      panelNav('boda', {}, admin, puerta, cliente)
+        .flatMap((seccion) => seccion.items)
+        .map((item) => item.href)
+    const ruta = '/panel/eventos/boda/porteros'
+    expect(hrefs(false, false, true)).toContain(ruta)
+    expect(hrefs(false, false, false)).toContain(ruta)
+    expect(hrefs(true, false, false)).toContain(ruta)
+    expect(hrefs(false, true, false)).not.toContain(ruta)
+  })
+
   it('la vista previa es su propia pantalla, no un trozo de Configuración', () => {
     const diseno = panelNav('boda').find((seccion) => seccion.label === 'Diseño')
     const previa = diseno?.items.find((item) => item.label === 'Vista previa')

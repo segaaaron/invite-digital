@@ -51,9 +51,16 @@ const ACCIONES_DEL_PANEL: DoorActions = {
 
 const ACCESO_CERRADO = 'Tu acceso a esta puerta se cerró. Pide a quien te sumó un enlace nuevo.'
 
-type Props = { eventId: string; eventSlug: string; manifest: DoorManifest; acciones?: DoorActions }
+type Props = {
+  eventId: string
+  eventSlug: string
+  manifest: DoorManifest
+  acciones?: DoorActions
+  /** Quién y dónde, para la puerta del portero: «XV de Valeria · Puerta 1 · Carlos». */
+  cabecera?: string
+}
 
-export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL_PANEL }: Props) {
+export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL_PANEL, cabecera }: Props) {
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
@@ -311,6 +318,9 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       <video ref={videoRef} playsInline muted className="absolute inset-0 size-full object-cover" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/15 to-black/85" />
 
+      {cabecera ? (
+        <p className="relative z-10 truncate px-4 pt-3 font-mono text-[10px] tracking-[0.2em] text-white/70 uppercase">{cabecera}</p>
+      ) : null}
       <header className="relative z-10 flex items-center gap-3 p-4 text-white">
         <span className="font-mono text-[11px] tracking-[var(--tracking-luxe)]">
           <b aria-label="Grupos que han llegado" className="font-mono text-[19px] font-semibold">

@@ -138,6 +138,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
           { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
           { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
+          // Su gente de la puerta: la suma él, con enlace y PIN, sin cuentas.
+          { href: en('/porteros'), label: 'Porteros', icon: 'checkin' },
         ],
       },
       {
@@ -168,6 +170,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
         { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
+        { href: en('/porteros'), label: 'Porteros', icon: 'usuarios' },
       ],
     },
     {
