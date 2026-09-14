@@ -40,3 +40,54 @@ export interface ArrivalRepository {
   adjust(scanId: string, arrivedCount: number): Promise<void>
   void(scanId: string, at: Date): Promise<void>
 }
+
+/**
+ * Un portero leído de la base, con los datos de su evento que necesita la puerta: la fecha
+ * para la ventana horaria y el título y el `slug` para la cabecera.
+ */
+export type PorterRow = {
+  readonly id: string
+  readonly eventId: string
+  readonly eventSlug: string
+  readonly eventTitle: string
+  readonly eventDate: string
+  readonly name: string
+  readonly phone: string | null
+  readonly gate: string | null
+  readonly tokenHash: Buffer
+  readonly pinHash: Buffer
+  readonly failedAttempts: number
+  readonly lockedUntil: Date | null
+  readonly opensHoursBefore: number
+  readonly closesHoursAfter: number
+  readonly revokedAt: Date | null
+  readonly createdAt: Date
+}
+
+export type NewPorter = {
+  readonly eventId: string
+  readonly name: string
+  readonly phone: string | null
+  readonly gate: string | null
+  readonly tokenHash: Buffer
+  readonly pinHash: Buffer
+  readonly opensHoursBefore: number
+  readonly closesHoursAfter: number
+  readonly createdByUserId: string | null
+}
+
+export interface PorterStore {
+  add(porter: NewPorter): Promise<string>
+  /** Los que no se han quitado, del más antiguo al más nuevo. */
+  listActive(eventId: string): Promise<PorterRow[]>
+  countActive(eventId: string): Promise<number>
+  findByTokenHash(hash: Buffer): Promise<PorterRow | null>
+  /**
+   * Suma un intento fallido **en la base** (`+ 1`) y, si llega al tope, bloquea hasta la
+   * fecha dada. Leer y reescribir perdería intentos con dos PIN a la vez.
+   */
+  registerFailure(id: string, lockUntilIfReached: Date, maxAttempts: number): Promise<void>
+  resetFailures(id: string): Promise<void>
+  /** `false` si no existía, ya estaba quitado o es de otro evento. */
+  revoke(id: string, eventId: string, at: Date): Promise<boolean>
+}
