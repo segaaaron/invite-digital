@@ -75,7 +75,11 @@ export function ContentBlockForms({ eventId, eventSlug, sections, content, media
           content={content}
           eventId={eventId}
           eventSlug={eventSlug}
-          key={seccion}
+          // La clave lleva lo guardado: si el servidor lo cambia por otro camino —subir la
+          // canción escribe su archivo, título y artista—, el bloque se vuelve a montar con
+          // ello. Con solo la sección, el formulario seguía con el archivo ya borrado y el
+          // nombre de muestra, y guardarlo dejaba la invitación muda anunciando otra canción.
+          key={`${seccion}:${JSON.stringify(content[seccion] ?? null)}`}
           media={media}
           section={seccion}
         />

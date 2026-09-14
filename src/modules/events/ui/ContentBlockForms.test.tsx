@@ -34,6 +34,14 @@ describe('ContentBlockForms', () => {
     expect(screen.queryByText('Código de vestimenta')).not.toBeInTheDocument()
   })
 
+  it('si el servidor cambia la canción —al subir el archivo—, el bloque enseña la nueva', () => {
+    // Sin esto el formulario seguía con el nombre de muestra, y guardarlo lo volvía a escribir.
+    const props = { eventId: 'e1', eventSlug: 'b', media: SIN_IMAGENES, sections: ['music'] as const }
+    const { container, rerender } = render(<ContentBlockForms {...props} content={{ music: { track: 'Tiempo de Vals', artist: 'Chayanne' } }} />)
+    rerender(<ContentBlockForms {...props} content={{ music: { track: 'Mi Vals', artist: 'Cuarteto Andino' } }} />)
+    expect(valorEnviado(container)).toMatchObject({ track: 'Mi Vals', artist: 'Cuarteto Andino' })
+  })
+
   it('un diseño sin contenido editable lo dice, en vez de dejar la tarjeta vacía', () => {
     render(<ContentBlockForms content={{}} eventId="e1" eventSlug="boda" media={SIN_IMAGENES} sections={[]} />)
     expect(screen.getByText(/no lleva contenido editable/i)).toBeInTheDocument()
