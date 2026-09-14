@@ -62,6 +62,8 @@ export const plans = pgTable('plans', {
   includesSeating: boolean('includes_seating').notNull().default(true),
   includesRegistry: boolean('includes_registry').notNull().default(true),
   includesCheckin: boolean('includes_checkin').notNull().default(true),
+  /** Cuántos porteros puede sumar quien compró. Cero: el plan no trae puerta. */
+  maxDoorPorters: integer('max_door_porters').notNull().default(0),
   ...timestamps,
 })
 
@@ -581,8 +583,40 @@ export const arrivals = pgTable(
     scannedAt: timestamp('scanned_at', { withTimezone: true }).notNull(),
     receivedAt: timestamp('received_at', { withTimezone: true }).defaultNow().notNull(),
     voidedAt: timestamp('voided_at', { withTimezone: true }),
+    /** `porter:<id>` o `user:<id>`: quién registró la llegada. Nulo en las anteriores a la 0040. */
+    recordedBy: varchar('recorded_by', { length: 120 }),
   },
   (t) => [index('arrivals_group_idx').on(t.guestGroupId, t.scannedAt.desc())],
+)
+
+/**
+ * Porteros: la gente de la puerta que suma quien compró el evento, **sin cuenta**.
+ *
+ * Entran con un enlace personal y un PIN, de los que solo se guarda el hash. Pertenecen a
+ * un evento y caen con él; solo pueden registrar llegadas de ese evento y en su ventana
+ * horaria, que el servidor comprueba en cada petición.
+ */
+export const doorPorters = pgTable(
+  'door_porters',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    name: varchar('name', { length: 80 }).notNull(),
+    phone: varchar('phone', { length: 32 }),
+    gate: varchar('gate', { length: 40 }),
+    tokenHash: bytea('token_hash').notNull().unique(),
+    pinHash: bytea('pin_hash').notNull(),
+    failedAttempts: integer('failed_attempts').notNull().default(0),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    opensHoursBefore: integer('opens_hours_before').notNull().default(6),
+    closesHoursAfter: integer('closes_hours_after').notNull().default(4),
+    createdByUserId: uuid('created_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+    revokedAt: timestamp('revoked_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('door_porters_event_idx').on(t.eventId)],
 )
 
 export const clientShares = pgTable('client_shares', {
