@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { admin, events } from '@/app/composition/container'
+import { admin, events, notifications } from '@/app/composition/container'
 import { canManageStaff } from '@/modules/identity/domain/access'
 import { createCredential } from '@/modules/identity/domain/credential'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -64,8 +64,13 @@ async function darDeAlta(
 
   if (existente !== null) {
     await events.staff.add(contexto.eventId, existente.id, membership)
+    // Ya tenía cuenta: se le avisa, pero **sin contraseña dentro** — no se le ha tocado.
+    const avisado = membership === 'cliente' ? await avisarPorCorreo(contexto.eventId, email, null) : false
     revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
-    return { status: 'success', message: `${email} ya tenía cuenta: se le dio acceso ${queVe}.` }
+    return {
+      status: 'success',
+      message: `${email} ya tenía cuenta: se le dio acceso ${queVe}.${avisado ? ' Le avisamos por correo.' : ''}`,
+    }
   }
 
   const credencial = createCredential({ email, password: texto(formData, 'password') })
@@ -78,10 +83,38 @@ async function darDeAlta(
   })
   await events.staff.add(contexto.eventId, id, membership)
 
+  // El correo con su acceso, solo al cliente: el personal de puerta trabaja una noche y se
+  // le da la contraseña en mano.
+  const avisado =
+    membership === 'cliente' ? await avisarPorCorreo(contexto.eventId, credencial.value.email, credencial.value.password) : false
+
   revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
   return {
     status: 'success',
-    message: `${credencial.value.email} puede entrar con la contraseña que escribiste. No se vuelve a mostrar.`,
+    message: avisado
+      ? `${credencial.value.email} puede entrar con la contraseña que escribiste. Se la mandamos por correo, y aquí no se vuelve a mostrar.`
+      : `${credencial.value.email} puede entrar con la contraseña que escribiste. No se vuelve a mostrar: cópiala antes de salir.`,
+  }
+}
+
+/**
+ * Le manda su acceso por correo.
+ *
+ * **Nunca falla hacia arriba.** El alta ya está hecha y la contraseña se enseña en
+ * pantalla; que el proveedor no responda no puede convertir un alta correcta en un error.
+ * Lo que cambia es el mensaje: si no salió, dice que la copie antes de salir.
+ */
+async function avisarPorCorreo(eventId: string, email: string, password: string | null): Promise<boolean> {
+  try {
+    // Devuelve un `Result`, no el evento pelado: sin desenvolverlo, `evento.title` es
+    // `undefined` en tiempo de ejecución y el correo saldría sin nombre de boda.
+    const evento = await events.getByIdUnscoped(eventId)
+    if (isErr(evento)) return false
+
+    return await notifications.sendClientAccess({ to: email, password, eventTitle: evento.value.title })
+  } catch (causa) {
+    console.error('no se pudo avisar por correo a %s:', email, causa)
+    return false
   }
 }
 

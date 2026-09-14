@@ -82,6 +82,9 @@ services:
       # Sin `:?`, al contrario que `SITE_URL`: hoy no hay nada que la use, y hacerla
       # obligatoria impediría arrancar a quien despliegue sin proveedor de correo.
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      # El remitente, en el subdominio verificado en Resend. Va por variable para poder
+      # cambiarlo sin desplegar; sin ella se usa el valor por defecto de `env.ts`.
+      EMAIL_FROM: ${EMAIL_FROM:-}
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos

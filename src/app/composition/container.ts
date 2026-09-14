@@ -109,6 +109,9 @@ import {
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import { changePassword } from '@/modules/identity/application/change-password'
+import { clientAccessEmail } from '@/modules/notifications'
+import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
+import { BRAND } from '@/shared/config/brand'
 import type { Role } from '@/modules/identity/domain/access'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
 import {
@@ -472,6 +475,30 @@ export const orders = {
   decide: decideOrder({ orders: drizzleOrderRepository, clock }),
   readProof: readProof({ orders: drizzleOrderRepository, storage: proofStorage, clock }),
 }
+
+/**
+ * El correo saliente.
+ *
+ * `sendClientAccess` compone y entrega de una vez: quien lo llama está dando de alta a un
+ * cliente y no tiene por qué saber cómo se redacta. **Devuelve un booleano y no lanza**,
+ * así que un fallo del proveedor no puede tumbar el alta — la cuenta ya está creada y la
+ * contraseña se sigue enseñando en pantalla, que es como se repartía antes de haber correo.
+ */
+const emailSender = createResendSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
+
+export const notifications = {
+  sendClientAccess: (input: { to: string; password: string | null; eventTitle: string }) =>
+    emailSender.send({
+      to: input.to,
+      ...clientAccessEmail({
+        email: input.to,
+        password: input.password,
+        eventTitle: input.eventTitle,
+        panelUrl: `${env.SITE_URL.replace(/\/+$/, '')}/panel/entrar`,
+        whatsapp: BRAND.whatsappDisplay,
+      }),
+    }),
+} as const
 
 export const admin = {
   users: listUsers({ admin: drizzleAdminRepository }),

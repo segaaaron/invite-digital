@@ -1,0 +1,11 @@
+/**
+ * El correo saliente.
+ *
+ * Vive en su propio módulo y no dentro de `identity` o `events` porque lo usan los dos:
+ * una cuenta de cliente nace tanto al darle acceso desde Configuración como al aprobar su
+ * pedido, y las dos veces hay que mandarle lo mismo.
+ *
+ * Cada módulo se importa por este fichero: es lo que vigila `pnpm verify:boundaries`.
+ */
+export { clientAccessEmail, type AccesoDeCliente, type CorreoCompuesto } from './domain/client-access-email'
+export type { EmailSender } from './application/ports'

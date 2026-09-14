@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, orders } from '@/app/composition/container'
+import { admin, events, identity, notifications, orders } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { parseRole, type Actor } from '@/modules/identity/domain/access'
 import { createCredential } from '@/modules/identity/domain/credential'
@@ -323,5 +323,18 @@ async function aprovisionar(
 
   await events.staff.add(evento.value.id, clienteId, 'cliente')
 
-  return { message: `Boda creada con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}`, eventSlug: evento.value.slug }
+  // Y se le manda su acceso. Como en el alta desde Configuración: si el correo no sale, el
+  // alta sigue siendo válida y la contraseña está en pantalla.
+  const avisado = await notifications.sendClientAccess({
+    to: correo,
+    // Solo si acabamos de crearla: a quien ya tenía cuenta no se le manda una contraseña
+    // que no funciona.
+    password: existente === null ? clave : null,
+    eventTitle: evento.value.title,
+  })
+
+  return {
+    message: `Boda creada con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+    eventSlug: evento.value.slug,
+  }
 }
