@@ -12,6 +12,8 @@ import type { AdminRepository, SettingsRepository, SiteVersionRow, SiteVersionSt
 
 type Deps = { settings: SettingsRepository }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 /** Un campo que no valida, con su nombre: la pantalla lo marca donde está. */
 export type SiteSaveError = AdminError | { kind: 'invalid_field'; campo: string; detail: string }
 
@@ -34,10 +36,14 @@ export const saveSiteSettings =
 
     return attempt<SiteSettings, SiteSaveError>(
       async () => {
-        const anterior = parseSiteSettings((await deps.settings.readAll())[SITE_SETTINGS_KEY])
+        const crudo = (await deps.settings.readAll())[SITE_SETTINGS_KEY]
+        const anterior = parseSiteSettings(crudo)
         const campos = camposCambiados(anterior, limpio.value)
         if (campos.length === 0 && accion === 'web.editada') return ok(limpio.value)
 
+        // El primer guardado deja antes la foto de partida: sin ella, la primera edición
+        // sería la única que no se puede deshacer desde el historial.
+        if (crudo === undefined) await deps.versions.add({ data: anterior, campos: [], actorEmail: 'Valores iniciales' })
         await deps.settings.write({ [SITE_SETTINGS_KEY]: JSON.stringify(limpio.value) })
         await deps.versions.add({ data: limpio.value, campos, actorEmail: actor.email })
         await deps.admin.record({
@@ -65,6 +71,9 @@ export const listSiteVersions =
 export const restoreSiteVersion =
   (deps: Deps & { versions: SiteVersionStore; admin: AdminRepository }) =>
   async (actor: Actor, id: string): Promise<Result<SiteSettings, SiteSaveError>> => {
+    // Un identificador que no es un UUID no existe: sin este corte llegaría a Postgres como
+    // error de sintaxis y se contaría como avería de la base.
+    if (!UUID.test(id)) return err(adminError('not_found', 'Esa versión ya no existe.'))
     const version = await attempt(
       async () => ok(await deps.versions.find(id)),
       (cause) => adminError('storage_failure', `No se pudo leer esa versión: ${String(cause)}`),

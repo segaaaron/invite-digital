@@ -523,7 +523,7 @@ function VersionRow({ version, actual }: { version: VersionView; actual: boolean
           </form>
         )}
       </div>
-      <span className="text-[12px] text-ink-soft">{bloques.length === 0 ? 'Restauración' : bloques.join(' · ')}</span>
+      <span className="text-[12px] text-ink-soft">{bloques.length > 0 ? bloques.join(' · ') : version.actorEmail === 'Valores iniciales' ? 'Punto de partida, antes del primer cambio' : 'Restauración'}</span>
       {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
     </li>
   )

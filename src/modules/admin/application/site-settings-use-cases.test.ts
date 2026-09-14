@@ -17,7 +17,7 @@ function dobles(inicial: Record<string, string> = {}) {
   }
   const versions: SiteVersionStore = {
     add: async ({ data, campos, actorEmail }) =>
-      void versiones.unshift({ id: `v${versiones.length + 1}`, createdAt: new Date(), data, campos, actorEmail }),
+      void versiones.unshift({ id: `00000000-0000-4000-8000-${String(versiones.length + 1).padStart(12, '0')}`, createdAt: new Date(), data, campos, actorEmail }),
     list: async (n) => versiones.slice(0, n),
     find: async (id) => versiones.find((v) => v.id === id) ?? null,
   }
@@ -40,6 +40,8 @@ describe('site settings', () => {
     expect(isOk(r)).toBe(true)
     expect(JSON.parse(filas[SITE_SETTINGS_KEY]!).whatsapp).toBe('+59170012345')
     expect(versiones[0]?.campos).toEqual(['ciudad', 'whatsapp'])
+    // Y debajo, la foto de partida: la primera edición también se puede deshacer.
+    expect(versiones[1]).toMatchObject({ data: DEFAULT_SITE_SETTINGS, campos: [] })
     expect(auditoria[0]).toMatchObject({ action: 'web.editada', detail: 'ciudad, whatsapp' })
   })
 
@@ -68,7 +70,13 @@ describe('site settings', () => {
 
     expect(isOk(r)).toBe(true)
     expect((versiones[0]?.data as SiteSettings).ciudad).toBe('La Paz')
-    expect(versiones).toHaveLength(3)
+    expect(versiones).toHaveLength(4) // partida, La Paz, Sucre y la restauración
     expect(auditoria.at(-1)?.action).toBe('web.restaurada')
+  })
+
+  it('un identificador que no es UUID responde «no existe», no avería', async () => {
+    const { deps } = dobles()
+    const r = await restoreSiteVersion(deps)(actor, 'abc')
+    expect(isErr(r) && r.error.kind).toBe('not_found')
   })
 })

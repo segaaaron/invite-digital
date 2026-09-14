@@ -28,7 +28,11 @@ export default async function AdminWebPage() {
           </p>
         </PanelCard>
       ) : (
+        // La clave es la última versión: tras guardar o restaurar, el formulario se vuelve a
+        // montar con lo que hay en la base. Sin ella seguiría enseñando lo de antes de
+        // restaurar, y un «Guardar» pisaría la restauración.
         <SiteSettingsForm
+          key={isErr(versiones) ? 'sin-historial' : (versiones.value[0]?.id ?? 'sin-versiones')}
           inicial={ajustes.value}
           versiones={
             isErr(versiones)

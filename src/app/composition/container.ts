@@ -557,6 +557,7 @@ export const orders = {
  * así que un fallo del proveedor no puede tumbar el alta — la cuenta ya está creada y la
  * contraseña se sigue enseñando en pantalla, que es como se repartía antes de haber correo.
  */
+const sitioPublicoUrl = env.SITE_URL.replace(/\/+$/, '')
 const emailSender = createResendSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
 
 const leerSitio = readSiteSettings({ settings: drizzleSettingsRepository })
@@ -579,7 +580,12 @@ export const notifications = {
   sendPasswordCode: async (input: { to: string; code: string }) =>
     emailSender.send({
       to: input.to,
-      ...passwordResetEmail({ code: input.code, minutos: 10, whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null }),
+      ...passwordResetEmail({
+        code: input.code,
+        minutos: 10,
+        whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
+        siteUrl: sitioPublicoUrl,
+      }),
     }),
   sendClientAccess: async (input: { to: string; password: string | null; eventTitle: string }) =>
     emailSender.send({
@@ -588,7 +594,8 @@ export const notifications = {
         email: input.to,
         password: input.password,
         eventTitle: input.eventTitle,
-        panelUrl: `${env.SITE_URL.replace(/\/+$/, '')}/panel/entrar`,
+        panelUrl: `${sitioPublicoUrl}/panel/entrar`,
+        siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
       }),
     }),

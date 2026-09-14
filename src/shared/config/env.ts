@@ -35,8 +35,9 @@ const envSchema = z.object({
     // distintas y el adaptador tendría que saberlo.
     .transform((valor) => (valor === '' ? undefined : valor)),
   /**
-   * El remitente. Va en el subdominio de envío verificado en Resend —el que tiene el MX,
-   * el SPF y la clave DKIM—, no en el dominio raíz.
+   * El remitente, en el dominio raíz: Resend verificó `luxuryatelier.net` (la clave DKIM
+   * vive en `resend._domainkey.luxuryatelier.net`). El subdominio `send` que aparece en el
+   * DNS es solo la dirección de rebotes (MX y SPF del Return-Path), **no** va en el From.
    *
    * `no-reply` porque este buzón no atiende respuestas: el correo lleva dentro a dónde
    * escribir de verdad.
@@ -47,7 +48,7 @@ const envSchema = z.object({
   // quedaría en blanco en producción y Resend rechazaría todos los envíos.
   EMAIL_FROM: z.preprocess(
     (valor) => (valor === '' ? undefined : valor),
-    z.string().min(1).default('Luxury Atelier <no-reply@send.luxuryatelier.net>'),
+    z.string().min(1).default('Luxury Atelier <no-reply@luxuryatelier.net>'),
   ),
 })
 

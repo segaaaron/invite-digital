@@ -1,3 +1,5 @@
+import { firmaHtml, firmaTexto } from './firma'
+
 /**
  * El correo que recibe el cliente cuando le dan acceso a su boda.
  *
@@ -20,6 +22,8 @@ export type AccesoDeCliente = {
   readonly panelUrl: string
   /** A dónde escribir de verdad: este buzón no atiende respuestas. */
   readonly whatsapp: string | null
+  /** La web, para la firma. */
+  readonly siteUrl: string
 }
 
 export type CorreoCompuesto = {
@@ -61,6 +65,8 @@ export function clientAccessEmail(input: AccesoDeCliente): CorreoCompuesto {
     aviso,
     '',
     'Este buzón no atiende respuestas.' + contacto,
+    '',
+    firmaTexto(input.siteUrl),
   ].join('\n')
 
   const html = [
@@ -70,6 +76,7 @@ export function clientAccessEmail(input: AccesoDeCliente): CorreoCompuesto {
     `<p>Usuario: <strong>${escapar(input.email)}</strong><br>${escapar(lineaClave)}</p>`,
     `<p>${escapar(aviso)}</p>`,
     `<p>Este buzón no atiende respuestas.${input.whatsapp === null ? '' : ` Dudas: ${escapar(input.whatsapp)}`}</p>`,
+    firmaHtml(input.siteUrl),
   ].join('')
 
   return {

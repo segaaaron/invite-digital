@@ -7,6 +7,7 @@ const BASE = {
   eventTitle: 'Boda de Ana y Beto',
   panelUrl: 'https://luxuryatelier.net/panel/entrar',
   whatsapp: '+59170000000',
+  siteUrl: 'https://luxuryatelier.net',
 }
 
 describe('clientAccessEmail', () => {
@@ -43,5 +44,13 @@ describe('clientAccessEmail', () => {
 
     expect(correo.html).not.toContain('<script>')
     expect(correo.html).toContain('&lt;script&gt;')
+  })
+
+  it('lleva la firma de la marca en texto y en HTML', () => {
+    const correo = clientAccessEmail(BASE)
+    expect(correo.text).toContain('Luxury Atelier')
+    expect(correo.html).toContain('Luxury Atelier')
+    expect(correo.html).toContain('luxuryatelier.net')
+    expect(correo.text).not.toMatch(/invitepremium/i)
   })
 })
