@@ -130,8 +130,13 @@ export type PlanAdminRow = {
  */
 export interface CatalogAdmin {
   listPlans(): Promise<PlanAdminRow[]>
-  /** `false` si el plan no existe. Plan y sus dos traducciones, en una transacción. */
-  savePlan(slug: string, plan: PlanLimpio): Promise<boolean>
+  /**
+   * Plan y sus dos traducciones, en una transacción. `ultimo_activo` si al guardarlo no
+   * quedaría ningún plan activo: se comprueba **dentro** de la transacción y con bloqueo,
+   * porque dos admins retirando dos planes distintos a la vez pasaban los dos la comprobación
+   * previa y dejaban la web sin precios.
+   */
+  savePlan(slug: string, plan: PlanLimpio): Promise<'ok' | 'no_existe' | 'ultimo_activo'>
   publication(): Promise<Record<string, boolean>>
   /** `false` si no hay plantilla con esa clave. */
   setPublished(slug: string, published: boolean): Promise<boolean>

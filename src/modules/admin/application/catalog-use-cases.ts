@@ -42,7 +42,11 @@ export const savePlan =
           return err(adminError('invalid_input', 'Es el único plan activo: sin él la web se queda sin precios.'))
         }
 
-        await deps.catalog.savePlan(slug, plan.value)
+        const guardado = await deps.catalog.savePlan(slug, plan.value)
+        if (guardado === 'no_existe') return err(adminError('not_found', `No existe el plan ${slug}`))
+        if (guardado === 'ultimo_activo') {
+          return err(adminError('invalid_input', 'Es el único plan activo: sin él la web se queda sin precios.'))
+        }
         await deps.admin.record({
           actorUserId: actor.userId,
           actorEmail: actor.email,

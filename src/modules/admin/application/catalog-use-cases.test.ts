@@ -25,7 +25,7 @@ function dobles(planes: PlanAdminRow[]) {
   const auditoria: string[] = []
   const catalog: CatalogAdmin = {
     listPlans: async () => planes,
-    savePlan: async (slug) => (guardados.push(slug), true),
+    savePlan: async (slug) => (guardados.push(slug), 'ok' as const),
     publication: async () => ({}),
     setPublished: async (slug) => slug !== 'fantasma',
   }

@@ -1,4 +1,4 @@
-import { asc, eq, sql } from 'drizzle-orm'
+import { TransactionRollbackError, asc, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { planTranslations, plans, templates } from '@/shared/db/schema'
 import type { CatalogAdmin, PlanAdminRow } from '../application/ports'
@@ -37,6 +37,9 @@ export const createDrizzleCatalogAdmin = (database: DbExecutor): CatalogAdmin =>
 
   async savePlan(slug, plan) {
     return database.transaction(async (tx) => {
+      // Bloquea las filas de planes: la segunda transacción que quiera retirar otro plan
+      // espera aquí a que la primera termine, y entonces ya ve el recuento de verdad.
+      await tx.execute(sql`select id from plans for update`)
       const [fila] = await tx
         .update(plans)
         .set({
@@ -51,7 +54,13 @@ export const createDrizzleCatalogAdmin = (database: DbExecutor): CatalogAdmin =>
         })
         .where(eq(plans.slug, slug))
         .returning({ id: plans.id })
-      if (fila === undefined) return false
+      if (fila === undefined) return 'no_existe'
+
+      const [activos] = await tx.execute<{ total: number }>(sql`select count(*)::int as total from plans where is_active`)
+      if ((activos?.total ?? 0) === 0) {
+        // Deshace el `update` de arriba: lanzar dentro de la transacción es cómo se revierte.
+        tx.rollback()
+      }
 
       for (const locale of ['es', 'en'] as const) {
         const texto = plan[locale]
@@ -63,7 +72,10 @@ export const createDrizzleCatalogAdmin = (database: DbExecutor): CatalogAdmin =>
             set: { name: texto.name, tagline: texto.tagline, description: texto.description, features: texto.features },
           })
       }
-      return true
+      return 'ok' as const
+    }).catch((causa: unknown) => {
+      if (causa instanceof TransactionRollbackError) return 'ultimo_activo' as const
+      throw causa
     })
   },
 
