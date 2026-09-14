@@ -89,4 +89,38 @@ describe('DoorMode', () => {
     render(<DoorMode eventId="e1" eventSlug="boda" manifest={manifest} />)
     await waitFor(() => expect(screen.getByText(/cámara/i)).toBeInTheDocument())
   })
+
+  it('usa las acciones que recibe: la puerta del portero no llama a las del panel', async () => {
+    const checkInByGroup = vi.fn(async ({ scanId }: { scanId: string }) => ({
+      scanId,
+      kind: 'welcome' as const,
+      group: { id: 'g1', label: 'Familia Rojas Peña', leadName: null, seats: 4, tableLabel: 'Mesa 03' },
+      arrivedCount: 4,
+    }))
+    const acciones = { recordScans: vi.fn(async () => []), checkInByGroup, adjust: vi.fn(), void: vi.fn() }
+    render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={manifest} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /buscar por nombre/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/ }))
+
+    await waitFor(() => expect(checkInByGroup).toHaveBeenCalled())
+  })
+
+  it('si el acceso del portero se cerró, la puerta lo dice en vez de seguir escaneando a ciegas', async () => {
+    const acciones = {
+      recordScans: vi.fn(async () => []),
+      checkInByGroup: vi.fn(async () => {
+        throw new Error('porter_denied')
+      }),
+      adjust: vi.fn(),
+      void: vi.fn(),
+      comprobarAcceso: vi.fn(async () => false),
+    }
+    render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={manifest} />)
+
+    fireEvent.click(screen.getByRole('button', { name: /buscar por nombre/i }))
+    fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/tu acceso a esta puerta se cerró/i)
+  })
 })

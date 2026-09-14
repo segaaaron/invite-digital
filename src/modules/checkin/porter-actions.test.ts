@@ -184,3 +184,12 @@ describe('acciones del portero en la puerta', () => {
     expect(voidArrival).toHaveBeenCalledWith({ eventId: 'e1', scanId: 's1' })
   })
 })
+
+describe('porterAccessOkAction', () => {
+  it('dice si el acceso del portero sigue abierto', async () => {
+    const { porterAccessOkAction } = await import('./porter-actions')
+    expect(await porterAccessOkAction()).toBe(true)
+    resolve.mockResolvedValue(err('fuera_de_horario'))
+    expect(await porterAccessOkAction()).toBe(false)
+  })
+})

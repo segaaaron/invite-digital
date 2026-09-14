@@ -141,6 +141,11 @@ async function porteroActual(): Promise<PorterSession | null> {
   return isErr(puerta) ? null : quien.value
 }
 
+/** Si el acceso del portero sigue abierto. La puerta lo pregunta cuando el servidor rechaza. */
+export async function porterAccessOkAction(): Promise<boolean> {
+  return (await porteroActual()) !== null
+}
+
 export async function recordScansAsPorterAction(input: { scans: ScanInput[] }): Promise<ScanOutcome[]> {
   const portero = await porteroActual()
   // Lanza, como las acciones de la puerta del panel: el dispositivo guarda el escaneo en su

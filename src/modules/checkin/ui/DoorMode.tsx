@@ -2,7 +2,7 @@
 
 import jsQR from 'jsqr'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction } from '../actions'
+import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction, type DoorActionState, type ScanInput } from '../actions'
 import type { ScanOutcome } from '../application/check-in-by-scan'
 import type { DoorManifest } from '../application/get-door-manifest'
 import type { ResolvedArrival } from '../domain/conflict'
@@ -21,9 +21,39 @@ const SCAN_MS = 110
 // cámara vuelve a leer el mismo QR que sigue delante y registra en bucle.
 const GRACE_MS = 2600
 
-type Props = { eventId: string; eventSlug: string; manifest: DoorManifest }
+/**
+ * Las acciones con las que la puerta habla con el servidor. Por defecto, las del panel —con
+ * sesión—; la puerta del portero pasa las suyas, que se autorizan con su enlace y sacan el
+ * evento del portero, no de lo que mande el navegador.
+ */
+export type DoorActions = {
+  recordScans: (input: { eventId: string; eventSlug: string; scans: ScanInput[] }) => Promise<ScanOutcome[]>
+  checkInByGroup: (input: {
+    eventId: string
+    eventSlug: string
+    groupId: string
+    scanId: string
+    arrivedCount: number | null
+    scannedAtMs: number
+  }) => Promise<ScanOutcome>
+  adjust: (input: { eventId: string; scanId: string; arrivedCount: number; eventSlug: string }) => Promise<DoorActionState>
+  void: (input: { eventId: string; scanId: string; eventSlug: string }) => Promise<DoorActionState>
+  /** Solo el portero: si su acceso sigue abierto. Se pregunta cuando el servidor rechaza. */
+  comprobarAcceso?: () => Promise<boolean>
+}
 
-export function DoorMode({ eventId, eventSlug, manifest }: Props) {
+const ACCIONES_DEL_PANEL: DoorActions = {
+  recordScans: recordScansAction,
+  checkInByGroup: checkInByGroupAction,
+  adjust: adjustArrivalAction,
+  void: voidArrivalAction,
+}
+
+const ACCESO_CERRADO = 'Tu acceso a esta puerta se cerró. Pide a quien te sumó un enlace nuevo.'
+
+type Props = { eventId: string; eventSlug: string; manifest: DoorManifest; acciones?: DoorActions }
+
+export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL_PANEL }: Props) {
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
@@ -105,7 +135,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
     if (batch.length === 0) return
 
     try {
-      const outcomes = await recordScansAction({
+      const outcomes = await acciones.recordScans({
         eventId,
         eventSlug,
         scans: batch.map((scan) => ({
@@ -118,9 +148,10 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
       await box.drop(outcomes.map((o) => o.scanId))
     } catch {
       await box.bumpTries(batch.map((s) => s.scanId))
+      if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
     }
     setPending(await box.count())
-  }, [eventId, eventSlug, getOutbox])
+  }, [acciones, eventId, eventSlug, getOutbox])
 
   useEffect(() => {
     const onOnline = () => void flush()
@@ -363,7 +394,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
                 outcome.kind !== 'unknown' && a.guestGroupId === outcome.group.id ? { ...a, arrivedCount } : a,
               ),
             )
-            void adjustArrivalAction({ eventId, scanId, arrivedCount, eventSlug }).then((r) => {
+            void acciones.adjust({ eventId, scanId, arrivedCount, eventSlug }).then((r) => {
               if (r.status === 'error') setDesajuste('No se pudo corregir la cantidad. El contador de arriba no es el del servidor.')
             })
           }}
@@ -375,7 +406,7 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
               setArrivals((prev) => prev.filter((a) => a.guestGroupId !== groupId))
             }
             setOutcome(null)
-            void voidArrivalAction({ eventId, scanId, eventSlug }).then((r) => {
+            void acciones.void({ eventId, scanId, eventSlug }).then((r) => {
               if (r.status === 'error') setDesajuste('No se pudo deshacer la llegada. Sigue registrada en el servidor.')
             })
           }}
@@ -393,14 +424,20 @@ export function DoorMode({ eventId, eventSlug, manifest }: Props) {
         onClose={() => setSheetOpen(false)}
         onPick={(groupId) => {
           setSheetOpen(false)
-          void checkInByGroupAction({
-            eventId,
-            eventSlug,
-            groupId,
-            scanId: crypto.randomUUID(),
-            arrivedCount: null,
-            scannedAtMs: Date.now(),
-          }).then(apply)
+          void acciones
+            .checkInByGroup({
+              eventId,
+              eventSlug,
+              groupId,
+              scanId: crypto.randomUUID(),
+              arrivedCount: null,
+              scannedAtMs: Date.now(),
+            })
+            .then(apply)
+            .catch(async () => {
+              if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
+              else setDesajuste('No se pudo registrar la llegada. Vuelve a intentarlo.')
+            })
         }}
       />
     </div>
