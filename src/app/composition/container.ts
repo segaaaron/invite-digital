@@ -453,6 +453,22 @@ export const orders = {
     newKey: () => crypto.randomUUID(),
   }),
   list: listOrders({ orders: drizzleOrderRepository, clock }),
+  /**
+   * Un pedido por su identificador, sin sus comprobantes.
+   *
+   * Va directo al repositorio —como `actorOf` y `passwordHashOf`— porque no hay ninguna
+   * decisión que tomar: lo usa la aprobación para leer el diseño, el plan y la fecha con
+   * los que nace la boda.
+   */
+  byId: (id: string) => drizzleOrderRepository.findById(id),
+  /**
+   * Ata el pedido a la boda que creó al aprobarse.
+   *
+   * Va a la base porque el mensaje de la acción **no sobrevive**: al aprobar, el pedido
+   * deja de estar «por revisar» y el formulario de decisión se desmonta con su estado
+   * dentro. Lo que la bandeja enseña después sale de aquí.
+   */
+  linkEvent: (orderId: string, eventId: string) => drizzleOrderRepository.linkEvent(orderId, eventId),
   decide: decideOrder({ orders: drizzleOrderRepository, clock }),
   readProof: readProof({ orders: drizzleOrderRepository, storage: proofStorage, clock }),
 }

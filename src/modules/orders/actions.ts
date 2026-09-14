@@ -2,8 +2,12 @@
 
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { orders } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { admin, events, identity, orders } from '@/app/composition/container'
+import { themeFor } from '@/modules/events/ui/themes/registry'
+import { parseRole, type Actor } from '@/modules/identity/domain/access'
+import { createCredential } from '@/modules/identity/domain/credential'
+import { requireAdmin } from '@/modules/identity/session-cookie'
+import { eventSlugFor, rsvpDeadlineFor } from './domain/provisioning'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { isErr } from '@/shared/result'
@@ -48,6 +52,9 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
 
   const result = await orders.place({
     planSlug: texto('planSlug'),
+    // Ya viene validado contra el registro de temas por la página que pinta el formulario:
+    // aquí solo viaja.
+    templateSlug: texto('templateSlug'),
     customerName: texto('customerName'),
     contact: texto('contact'),
     eventDate: fecha === '' ? null : fecha,
@@ -117,13 +124,26 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
 }
 
 // ============================================================================
-// A partir de aquí, el atelier. Con sesión.
+// A partir de aquí, **el admin**. No basta con tener sesión.
+//
+// Un pedido del Plan B compra un plan de InvitePremium, y ese dinero va a una sola
+// cuenta: decidir sobre él no es de cada atelier. Y desde que aprobar **crea la cuenta
+// del cliente y un evento cuyo dueño es quien aprueba**, un permiso flojo aquí dejaría
+// que cualquier atelier se adjudicara la boda de otro y diera de alta usuarios.
 // ============================================================================
 
-export type DecideOrderState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+/**
+ * El éxito no lleva mensaje, y es a propósito: al aprobar —y al rechazar— el pedido cambia
+ * de estado, `OrderDecision` deja de pintarse y cualquier texto se iría con él. Lo que
+ * salió de la decisión lo enseña la tarjeta, leyéndolo de la base.
+ */
+export type DecideOrderState =
+  | { status: 'idle' }
+  | { status: 'success' }
+  | { status: 'error'; message: string }
 
 export async function decideOrderAction(_previous: DecideOrderState, formData: FormData): Promise<DecideOrderState> {
-  await requireSession()
+  const actor = await requireAdmin()
 
   const orderId = formData.get('orderId')
   const decision = formData.get('decision')
@@ -152,6 +172,156 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
     }
   }
 
+  if (decision === 'rejected') {
+    revalidatePath('/panel/pedidos')
+    return { status: 'success' }
+  }
+
+  // El detalle va al registro del servidor, que es donde puede leerse entero. La pantalla
+  // lo cuenta con lo que quedó en la base: «boda creada» con su enlace, o el aviso de que
+  // se aprobó sin crearla.
+  const aprovisionado = await aprovisionar(actor, orderId, formData)
+  console.info('pedido %s aprobado — %s', orderId, aprovisionado.message)
+
   revalidatePath('/panel/pedidos')
+  revalidatePath('/panel')
   return { status: 'success' }
+}
+
+/**
+ * El pedido aprobado se convierte en una boda: cuenta del cliente, evento con **su**
+ * diseño, plan y acceso.
+ *
+ * Esto es lo que unía el escaparate con el panel y faltaba: el cliente elegía un modelo,
+ * pagaba, y alguien tenía que crear el evento a mano acordándose de qué diseño era.
+ *
+ * **Vive aquí y no en `decideOrder`** porque orquesta tres módulos —pedidos, identidad y
+ * eventos— y el de pedidos no puede importar a los otros dos sin romper las fronteras.
+ * La frontera es justo donde se habla con el contenedor.
+ *
+ * **Nada de esto deshace la aprobación.** El pago ya está cobrado y el estado ya está
+ * escrito: si falta la fecha o el correo, se aprueba igual y se dice qué falta, en vez de
+ * dejar al atelier con un pedido a medio aprobar.
+ */
+async function aprovisionar(
+  actor: Actor,
+  orderId: string,
+  formData: FormData,
+): Promise<{ message: string; eventSlug: string | null }> {
+  const order = await orders.byId(orderId)
+  if (order === null) return { message: 'Pedido aprobado. No pudimos releerlo para crear el evento.', eventSlug: null }
+
+  const correo = String(formData.get('clientEmail') ?? '').trim().toLowerCase()
+  const clave = String(formData.get('clientPassword') ?? '')
+
+  if (order.eventDate === null) {
+    return { message: 'Pedido aprobado. Sin fecha de evento no se puede crear la boda: créala a mano.', eventSlug: null }
+  }
+  if (correo === '') {
+    return { message: 'Pedido aprobado. Escribe el correo del cliente para crearle la boda y su acceso.', eventSlug: null }
+  }
+
+  // **El acceso del cliente se comprueba ANTES de crear nada.**
+  //
+  // Creando primero la boda, una contraseña corta o un correo que ya existe con otro rol
+  // dejaban el evento hecho y al cliente fuera — y la bandeja decía «boda creada», que es
+  // exactamente la mentira que hace que nadie lo arregle. Si el acceso no va a funcionar,
+  // no se crea la boda y se dice por qué.
+  const existente = await admin.findUserByEmail(correo)
+
+  if (existente === null) {
+    const credencial = createCredential({ email: correo, password: clave })
+    if (isErr(credencial)) {
+      return { message: `Pedido aprobado, sin crear la boda: ${credencial.error.detail}.`, eventSlug: null }
+    }
+  } else {
+    // Ya tiene cuenta. Si su rol no es `cliente` **no entraría**: el acceso se decide por
+    // el rol del usuario, no por la pertenencia, así que prometerle acceso sería mandarle
+    // a un 404.
+    const suyo = await identity.actorOf(existente.id)
+    if (suyo !== null && parseRole(suyo.role) !== 'cliente') {
+      return {
+        message: `Pedido aprobado, sin crear la boda: ${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`,
+        eventSlug: null,
+      }
+    }
+  }
+
+  // El diseño elegido se valida contra el registro: `themeFor` cae al clásico con una
+  // clave desconocida, y eso daría por bueno un modelo que nadie eligió.
+  const tema = order.templateSlug === null ? null : themeFor(order.templateSlug)
+  const themeKey = tema !== null && tema.key === order.templateSlug ? tema.key : 'clasico'
+
+  const evento = await events.create({
+    userId: actor.userId,
+    slug: eventSlugFor(order.publicRef),
+    title: order.customerName,
+    eventDate: order.eventDate,
+    rsvpDeadline: rsvpDeadlineFor(order.eventDate),
+    locale: 'es',
+    themeKey,
+    // Nace en borrador: el atelier escribe el contenido antes de repartir un solo enlace.
+    status: 'draft',
+    retentionDays: 90,
+  })
+
+  if (isErr(evento)) {
+    console.error('alta de evento desde pedido rechazada', evento.error.kind, evento.error.detail)
+    return {
+      message:
+        evento.error.kind === 'duplicate_slug'
+          ? 'Pedido aprobado. Su boda ya estaba creada.'
+          : 'Pedido aprobado, pero no pudimos crear la boda. Créala a mano desde el panel.',
+      eventSlug: null,
+    }
+  }
+
+  // El pedido recuerda **su** boda. Sin esto, lo único que decía que se había creado era
+  // el estado de la pantalla, y ese estado muere al aprobar: el formulario de decisión
+  // solo se pinta mientras el pedido está «por revisar», así que se desmonta con el
+  // mensaje dentro y el atelier no llega a ver ni el enlace ni el aviso.
+  try {
+    await orders.linkEvent(orderId, evento.value.id)
+  } catch (causa) {
+    console.error('no se pudo atar el pedido %s a su boda:', orderId, causa)
+  }
+
+  // El contenido de muestra del diseño, como en el alta normal: la invitación se ve
+  // terminada desde el primer segundo, que es la mitad de lo que se vende.
+  try {
+    await events.seedContent(evento.value.id, themeFor(themeKey).defaultContent)
+  } catch (causa) {
+    console.error('no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
+  }
+
+  // El plan que compró. Sin esto el evento cae al más barato, que no trae mesa de regalos
+  // ni modo puerta: el cliente pagaría el alto y recibiría el bajo.
+  if (order.planSlug !== null) {
+    const plan = await admin.setEventPlan(actor, {
+      eventId: evento.value.id,
+      eventSlug: evento.value.slug,
+      planSlug: order.planSlug,
+    })
+    if (isErr(plan)) console.error('no se pudo asignar el plan del pedido', plan.error.kind, plan.error.detail)
+  }
+
+  // La cuenta del cliente. Ya sabemos que se puede crear —se comprobó antes de tocar la
+  // base—, y si el correo ya existía **no se toca su contraseña**: cambiarla escribiendo
+  // su correo sería una forma de robarle la cuenta.
+  let clienteId = existente?.id ?? null
+  let avisoDeClave = `${correo} ya tenía cuenta: entra con su contraseña de siempre.`
+
+  if (clienteId === null) {
+    const credencial = createCredential({ email: correo, password: clave })
+    if (isErr(credencial)) {
+      return { message: `Boda creada, sin acceso del cliente: ${credencial.error.detail}.`, eventSlug: evento.value.slug }
+    }
+    const creado = await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role: 'cliente' })
+    clienteId = creado.id
+    avisoDeClave = `${correo} entra con la contraseña que escribiste. No se vuelve a mostrar.`
+  }
+
+  await events.staff.add(evento.value.id, clienteId, 'cliente')
+
+  return { message: `Boda creada con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}`, eventSlug: evento.value.slug }
 }

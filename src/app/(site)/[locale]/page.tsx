@@ -5,6 +5,7 @@ import { catalog } from '@/app/composition/container'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
@@ -54,10 +55,23 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   })
 }
 
-export default async function LandingPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function LandingPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ locale: string }>
+  searchParams: Promise<{ modelo?: string }>
+}) {
   const { locale: raw } = await params
+  const { modelo } = await searchParams
   const locale = parseLocaleParam(raw)
   if (!locale) notFound()
+
+  // El diseño con el que llega quien viene del escaparate, validado **aquí** contra el
+  // registro: `themeFor` cae al clásico con una clave desconocida, y propagar esa caída
+  // metería en el pedido un modelo que nadie eligió. Lo que no exista, no viaja.
+  const temaElegido = modelo === undefined ? null : themeFor(modelo)
+  const modeloElegido = temaElegido !== null && temaElegido.key === modelo ? temaElegido.key : null
 
   const dictionary = getDictionary(locale)
 
@@ -154,7 +168,9 @@ export default async function LandingPage({ params }: { params: Promise<{ locale
 
       <ComparisonSection dictionary={dictionary} />
 
-      {plans.length > 0 ? <PricingSection dictionary={dictionary} locale={locale} plans={plans} /> : null}
+      {plans.length > 0 ? (
+        <PricingSection dictionary={dictionary} locale={locale} modelo={modeloElegido} plans={plans} />
+      ) : null}
 
       {templates.length > 0 ? <ModelsSection dictionary={dictionary} locale={locale} templates={templates} /> : null}
 

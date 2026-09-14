@@ -127,17 +127,17 @@ test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', a
 
 /**
  * Las vistas del atelier que no cuelgan de un evento. Van aparte porque no llevan `slug`
- * en la ruta, no porque importen menos: la de pedidos enseña referencias en monoespaciada
- * y enlaces con el nombre del fichero que subió el cliente, que es exactamente la clase de
- * texto largo que estira un documento.
+ * en la ruta, no porque importen menos.
  */
-const VISTAS_ATELIER = [
-  ['ayuda', '/panel/ayuda'],
-  ['pedidos', '/panel/pedidos'],
-] as const
+const VISTAS_ATELIER = [['ayuda', '/panel/ayuda']] as const
 
 /** Las del administrador, que necesitan su propia sesión: a un atelier le dan 404. */
 const VISTAS_ADMIN = [
+  // Los pedidos están aquí y no con las del atelier desde que aprobar crea la cuenta del
+  // cliente y un evento: es del admin, y a un atelier le responde 404. La vista sigue
+  // siendo la que más estira el documento —referencias en monoespaciada y el nombre del
+  // fichero que subió el cliente—, así que se mide igual, solo que con la sesión correcta.
+  ['pedidos', '/panel/pedidos'],
   ['admin · panorama', '/panel/admin'],
   ['admin · eventos', '/panel/admin/eventos'],
   ['admin · usuarios', '/panel/admin/usuarios'],

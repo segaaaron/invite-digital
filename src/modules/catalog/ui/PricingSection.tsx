@@ -7,9 +7,20 @@ import { formatMoney } from '../domain/money'
 import type { Plan } from '../domain/plan'
 import { PlanCard } from './PlanCard'
 
-type Props = { plans: readonly Plan[]; locale: Locale; dictionary: Dictionary }
+type Props = {
+  plans: readonly Plan[]
+  locale: Locale
+  dictionary: Dictionary
+  /**
+   * El diseño que el cliente venía mirando, si llegó aquí desde el escaparate.
+   *
+   * Viaja hasta el pedido para que lo que eligió con los ojos sea lo que acabe recibiendo
+   * el invitado. Sin esto, el catálogo y la compra eran dos caminos que no se tocaban.
+   */
+  modelo?: string | null
+}
 
-export function PricingSection({ plans, locale, dictionary }: Props) {
+export function PricingSection({ plans, locale, dictionary, modelo = null }: Props) {
   const { pricing } = dictionary
 
   // El plan más caro no se compra de un clic: en la maqueta ese botón agenda una llamada.
@@ -39,7 +50,7 @@ export function PricingSection({ plans, locale, dictionary }: Props) {
                     ? buildWhatsAppLink({
                         message: whatsAppPlanMessage({ name: plan.name, price: formatMoney(plan.price, locale) }, locale),
                       })
-                    : `/${locale}/pedido/${plan.slug}`
+                    : `/${locale}/pedido/${plan.slug}${modelo === null ? '' : `?modelo=${encodeURIComponent(modelo)}`}`
                 }
                 ctaLabel={agendaLlamada ? pricing.bookCall : pricing.choose.replace('{plan}', plan.name)}
                 dictionary={dictionary}

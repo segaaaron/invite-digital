@@ -1,6 +1,6 @@
 import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
+import { events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
 import { ORDER_STATUSES, type Order, type OrderStatus } from '../domain/order'
 import type { NewOrder, OrderRepository, ProofRow } from '../application/ports'
 
@@ -11,6 +11,9 @@ type Fila = {
   publicRef: string
   planSlug: string | null
   planName: string | null
+  templateSlug: string | null
+  eventId: string | null
+  eventSlug: string | null
   customerName: string
   contact: string
   eventDate: string | null
@@ -39,6 +42,14 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
     publicRef: orders.publicRef,
     planSlug: plans.slug,
     planName: planTranslations.name,
+    // El diseño elegido vive en el propio pedido, no en `templates`: los temas están en el
+    // código y la tabla solo los publica.
+    templateSlug: orders.templateSlug,
+    eventId: orders.eventId,
+    // El `slug` viaja con el pedido para que la bandeja pueda enlazar a la boda. Derivarlo
+    // de la referencia funcionaría hoy y se rompería el día que el atelier renombre el
+    // evento, que es algo que la pantalla de Configuración permite.
+    eventSlug: events.slug,
     customerName: orders.customerName,
     contact: orders.contact,
     eventDate: orders.eventDate,
@@ -61,6 +72,10 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
         planTranslations,
         sql`${planTranslations.planId} = ${plans.id} and ${planTranslations.locale} = 'es'`,
       )
+      // `leftJoin` también aquí: la mayoría de los pedidos no tienen boda —no se han
+      // aprobado—, y con `innerJoin` desaparecerían de la bandeja justo los que esperan
+      // decisión.
+      .leftJoin(events, eq(events.id, orders.eventId))
 
   return {
     async create(order: NewOrder): Promise<Order> {
@@ -71,6 +86,7 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           // El plan se resuelve por su slug dentro del `insert`: leerlo antes dejaría
           // una ventana en la que el plan se retira entre la lectura y la escritura.
           planId: sql`(select id from plans where slug = ${order.planSlug})`,
+          templateSlug: order.templateSlug,
           customerName: order.customerName,
           contact: order.contact,
           eventDate: order.eventDate,
@@ -105,6 +121,10 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
         .update(orders)
         .set({ status: input.status, decisionNote: input.decisionNote, decidedAt: input.decidedAt })
         .where(eq(orders.id, input.id))
+    },
+
+    async linkEvent(orderId, eventId): Promise<void> {
+      await database.update(orders).set({ eventId }).where(eq(orders.id, orderId))
     },
 
     async addProof(input): Promise<void> {

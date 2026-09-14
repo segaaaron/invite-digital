@@ -12,6 +12,9 @@ export class FakeOrderRepository implements OrderRepository {
       publicRef: order.publicRef,
       planSlug: order.planSlug,
       planName: order.planSlug,
+      templateSlug: order.templateSlug,
+      eventId: null,
+      eventSlug: null,
       customerName: order.customerName,
       contact: order.contact,
       eventDate: order.eventDate,
@@ -51,6 +54,12 @@ export class FakeOrderRepository implements OrderRepository {
       decisionNote: input.decisionNote,
       decidedAt: input.decidedAt,
     }
+  }
+
+  async linkEvent(orderId: string, eventId: string): Promise<void> {
+    const indice = this.orders.findIndex((o) => o.id === orderId)
+    if (indice < 0) return
+    this.orders[indice] = { ...this.orders[indice]!, eventId }
   }
 
   async addProof(input: {

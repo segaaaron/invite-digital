@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server'
 import { orders } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/modules/identity/session-cookie'
 import { isErr } from '@/shared/result'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Sirve un comprobante de pago. **Tras la sesión del atelier, y solo así.**
+ * Sirve un comprobante de pago. **Solo al admin.**
  *
  * El fichero no vive en `public/` porque ahí estaría publicado en internet, y un
  * comprobante de transferencia lleva el nombre, el banco y el número de cuenta de una
- * persona.
+ * persona. Por eso tampoco basta con tener sesión: los pedidos del Plan B son del admin,
+ * y un atelier no tiene nada que hacer con los datos bancarios de los clientes de otro.
  *
  * Tres cabeceras, y las tres importan:
  *
@@ -26,7 +27,7 @@ export const dynamic = 'force-dynamic'
  * partirían en dos.
  */
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  await requireSession()
+  await requireAdmin()
 
   const { id } = await context.params
   const leido = await orders.readProof(id)

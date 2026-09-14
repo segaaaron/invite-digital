@@ -87,7 +87,13 @@ export default async function ModelPreviewPage({
   }
 
   return (
-    <PhonePreview exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}>
+    <PhonePreview
+      // Lo que cierra el círculo: de mirar el modelo a pedirlo, llevándose la clave del
+      // diseño hasta el pedido. Antes el escaparate y la compra eran dos caminos que no
+      // se tocaban, y quien aprobaba no sabía qué modelo había mirado el cliente.
+      action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#precios`, label: 'Elegir este diseño' }}
+      exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}
+    >
       <Tema
         content={tema.defaultContent}
         dictionary={diccionario.invitation}

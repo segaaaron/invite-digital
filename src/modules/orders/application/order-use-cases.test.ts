@@ -43,6 +43,37 @@ describe('placeOrder', () => {
     expect(orders.orders).toEqual([])
   })
 
+  it('guarda el diseño que eligió en el escaparate', async () => {
+    // Es lo que une el catálogo con el panel: sin esto, quien aprueba el pedido no sabe
+    // cuál de los dieciséis modelos miró el cliente.
+    const orders = new FakeOrderRepository()
+
+    const alta = await placeOrder({ orders, clock })({ ...ALTA, templateSlug: 'boda-bot' })
+
+    expect(isOk(alta) && alta.value.templateSlug).toBe('boda-bot')
+  })
+
+  it('sin diseño, el pedido se hace igual', async () => {
+    // Se puede comprar un plan sin pasar por el escaparate, y entonces el evento nacerá
+    // con el clásico y el atelier lo cambiará desde el panel.
+    const orders = new FakeOrderRepository()
+
+    const alta = await placeOrder({ orders, clock })({ ...ALTA, templateSlug: '  ' })
+
+    expect(isOk(alta) && alta.value.templateSlug).toBe(null)
+  })
+
+  it('un diseño que no cabe en la columna se descarta, pero el pedido NO se pierde', async () => {
+    // Un pedido es dinero. Tumbarlo por un parámetro raro de la URL sería la peor forma
+    // posible de validar: el cliente se queda sin comprar y sin saber por qué.
+    const orders = new FakeOrderRepository()
+
+    const alta = await placeOrder({ orders, clock })({ ...ALTA, templateSlug: 'x'.repeat(65) })
+
+    expect(isOk(alta)).toBe(true)
+    expect(isOk(alta) && alta.value.templateSlug).toBe(null)
+  })
+
   it('reintenta si la referencia ya existía', async () => {
     const orders = new FakeOrderRepository()
     let miradas = 0

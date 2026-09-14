@@ -38,11 +38,37 @@ export function OrderDecision({ orderId }: { orderId: string }) {
         />
       </label>
 
+      {/* Al aprobar se crea la boda con el diseño que eligió y el plan que pagó, y estos
+          dos campos le dan su acceso. Si el correo ya tiene cuenta, no se le toca la
+          contraseña: solo se le añade esta boda. */}
+      <div className="grid gap-3 min-[560px]:grid-cols-2">
+        <label className="flex flex-col gap-2" htmlFor={`${id}-correo`}>
+          <span className={LABEL_CLASS}>Correo del cliente · para crearle su acceso</span>
+          <input className={FIELD_CLASS} id={`${id}-correo`} maxLength={160} name="clientEmail" type="email" />
+        </label>
+
+        <label className="flex flex-col gap-2" htmlFor={`${id}-clave`}>
+          <span className={LABEL_CLASS}>Contraseña inicial · mínimo 12</span>
+          <input
+            autoComplete="new-password"
+            className={FIELD_CLASS}
+            id={`${id}-clave`}
+            minLength={12}
+            name="clientPassword"
+            type="text"
+          />
+        </label>
+      </div>
+
       {estado.status === 'error' ? (
         <p className="text-[13px] text-danger" role="alert">
           {estado.message}
         </p>
       ) : null}
+
+      {/* No hay bloque de éxito, y no es un olvido: al aprobar —y al rechazar— el pedido
+          cambia de estado, este formulario deja de pintarse y cualquier mensaje se iría
+          con él. Lo que salió de la decisión lo enseña la tarjeta, leyéndolo de la base. */}
 
       <div className="flex flex-wrap gap-2.5">
         <PanelButton disabled={pendiente} name="decision" type="submit" value="approved" variant="primary">

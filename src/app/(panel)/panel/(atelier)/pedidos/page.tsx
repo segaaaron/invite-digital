@@ -1,9 +1,9 @@
 import { orders } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/modules/identity/session-cookie'
 import { OrderDecision } from '@/modules/orders/ui/OrderDecision'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
-import { Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
+import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Pedidos' }
@@ -28,7 +28,9 @@ const ESTADO: Record<string, { texto: string; tono: PillTone }> = {
  * nombre, banco y número de cuenta de una persona.
  */
 export default async function PedidosPage() {
-  await requireSession()
+  // Del admin, no de cada atelier: aquí se ven los datos de contacto de todos los
+  // clientes del sistema y se decide sobre pagos. Un atelier recibe 404.
+  await requireAdmin()
 
   const lista = await orders.list()
 
@@ -92,6 +94,24 @@ export default async function PedidosPage() {
                 )}
 
                 {order.status === 'proof_submitted' ? <OrderDecision orderId={order.id} /> : null}
+
+                {/* Lo que salió de aprobar, leído **de la base**.
+                    No puede salir del estado de la acción: al aprobar, el pedido deja de
+                    estar «por revisar» y `OrderDecision` se desmonta con su mensaje
+                    dentro. Esto sobrevive a recargar, que es lo que el atelier hace. */}
+                {order.status === 'approved' && order.eventSlug !== null ? (
+                  <p className="flex flex-wrap items-center gap-2.5 text-[13px] text-ink-soft">
+                    Boda creada.
+                    <PanelButton href={`/panel/eventos/${order.eventSlug}/configuracion`}>Abrir la boda</PanelButton>
+                  </p>
+                ) : null}
+
+                {order.status === 'approved' && order.eventSlug === null ? (
+                  <p className="text-[12px] text-ink-mute">
+                    Aprobado sin crear la boda: hacía falta la fecha del evento y el correo del cliente. Créala desde
+                    «Nuevo evento» y dale acceso en su Configuración.
+                  </p>
+                ) : null}
 
                 {order.decisionNote === null ? null : (
                   <p className="text-[12px] text-ink-mute">Nota enviada al cliente: {order.decisionNote}</p>

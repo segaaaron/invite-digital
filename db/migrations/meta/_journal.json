@@ -225,6 +225,20 @@
       "when": 1787365891032,
       "tag": "0032_event_staff_membership",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1787365892032,
+      "tag": "0033_orders_template_slug",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1787365893032,
+      "tag": "0034_orders_event_id",
+      "breakpoints": true
     }
   ]
 }

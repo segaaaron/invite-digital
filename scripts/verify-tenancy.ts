@@ -28,7 +28,6 @@ const EXENTAS: Record<string, string> = {
   recordInvitationViewAction: 'la cuenta una visita del invitado, sin sesión',
   placeOrderAction: 'alta de pedido desde la web pública, sin sesión',
   uploadProofAction: 'subida del comprobante por el cliente, sin sesión',
-  decideOrderAction: 'del admin, y opera sobre un pedido, no sobre un evento',
   unlockEventAction: 'del invitado: se autoriza por token, no por sesión',
   eventUnlocked: 'solo lee la cookie de desbloqueo del invitado',
   createUserAction: 'del admin: crea un usuario, no toca un evento',

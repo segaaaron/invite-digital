@@ -240,3 +240,31 @@
     border-radius: 20px;
   }
 }
+
+/* La llamada del escaparate: «elegir este diseño».
+   Fuera de la tarjeta y centrada abajo, sobre el fondo oscuro del escenario. Dentro
+   taparía la invitación, que es lo único que se viene a ver aquí. */
+.theme-phone-cta {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgb(255 255 255 / 0.28);
+  background: rgb(255 255 255 / 0.1);
+  padding: 12px 26px;
+  font-family: var(--font-mono), monospace;
+  font-size: 10px;
+  letter-spacing: var(--tracking-luxe);
+  text-transform: uppercase;
+  color: var(--color-shell-ink);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.theme-phone-cta:hover {
+  background: rgb(255 255 255 / 0.18);
+  border-color: rgb(255 255 255 / 0.45);
+}

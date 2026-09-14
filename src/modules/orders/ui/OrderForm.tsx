@@ -14,7 +14,20 @@ const ROTULO = 'font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mu
  * El alta de pedido de la web pública. Es dorado y no tinta: esto lo ve un cliente, no el
  * atelier, y la piel del panel se queda en el panel.
  */
-export function OrderForm({ planSlug, planName, priceLabel }: { planSlug: string; planName: string; priceLabel: string }) {
+export function OrderForm({
+  planSlug,
+  planName,
+  priceLabel,
+  templateSlug = null,
+  templateName = null,
+}: {
+  planSlug: string
+  planName: string
+  priceLabel: string
+  /** El diseño que eligió en el escaparate, ya validado contra el registro de temas. */
+  templateSlug?: string | null
+  templateName?: string | null
+}) {
   const [estado, accion, pendiente] = useActionState<PlaceOrderState, FormData>(placeOrderAction, INICIAL)
   const id = useId()
 
@@ -39,10 +52,19 @@ export function OrderForm({ planSlug, planName, priceLabel }: { planSlug: string
   return (
     <form action={accion} className="flex flex-col gap-4">
       <input name="planSlug" type="hidden" value={planSlug} />
+      {/* El diseño viaja con el pedido. Sin esto, quien aprueba no sabe cuál de los
+          dieciséis miró el cliente, y el modelo se pasaba de boca a boca. */}
+      {templateSlug === null ? null : <input name="templateSlug" type="hidden" value={templateSlug} />}
 
       <p className="text-[14px] text-ink-soft">
         Plan <strong className="font-normal text-ink">{planName}</strong> · {priceLabel}
       </p>
+
+      {templateName === null ? null : (
+        <p className="text-[14px] text-ink-soft">
+          Diseño <strong className="font-normal text-ink">{templateName}</strong>
+        </p>
+      )}
 
       {estado.status === 'error' ? (
         <p className="text-[13px] text-gold-deep" role="alert">

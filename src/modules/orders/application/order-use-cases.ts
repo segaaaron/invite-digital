@@ -21,6 +21,12 @@ export const placeOrder =
   (deps: Deps) =>
   async (input: {
     planSlug: string
+    /**
+     * El diseño elegido en el escaparate. Llega ya validado desde la frontera: quién sabe
+     * qué temas existen es el registro, que vive en `events/ui`, y este módulo no puede
+     * importarlo sin romper las fronteras. Aquí solo se recorta y se acota.
+     */
+    templateSlug?: string | null
     customerName: string
     contact: string
     eventDate: string | null
@@ -40,6 +46,12 @@ export const placeOrder =
     const notas = input.notes?.trim() ?? ''
     if (notas.length > MAX_NOTES) return err(ordersError('invalid_input', 'Las notas no pueden pasar de 1000 caracteres.'))
 
+    // Un diseño que no cabe en la columna **no tumba el pedido**: se descarta y el evento
+    // nacerá con el clásico. Un pedido es dinero; perderlo por un parámetro raro de la URL
+    // sería la peor forma posible de validar.
+    const diseno = input.templateSlug?.trim() ?? ''
+    const templateSlug = diseno === '' || diseno.length > 64 ? null : diseno
+
     return attempt(
       async () => {
         for (let intento = 0; intento < 5; intento += 1) {
@@ -50,6 +62,7 @@ export const placeOrder =
             await deps.orders.create({
               publicRef,
               planSlug: input.planSlug.trim(),
+              templateSlug,
               customerName: nombre,
               contact: contacto,
               eventDate: input.eventDate,

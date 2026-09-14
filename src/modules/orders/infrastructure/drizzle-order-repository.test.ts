@@ -10,6 +10,9 @@ const nuevo = async (patch: Partial<Parameters<typeof repo.create>[0]> = {}) => 
   const order = await repo.create({
     publicRef: `T${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
     planSlug: 'firma-3d',
+    // Explícito y no opcional en el puerto: un pedido sin diseño es una decisión —llegó
+    // directo a los planes—, no un campo que se olvidó de poner quien escribe la llamada.
+    templateSlug: null,
     customerName: 'María Aguilar',
     contact: '+59170011122',
     eventDate: '2026-12-05',

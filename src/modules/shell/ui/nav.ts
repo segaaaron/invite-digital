@@ -64,6 +64,11 @@ export function panelNav(
             { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
             { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
             { href: '/panel/admin/pagos', label: 'Cobros', icon: 'plan' },
+            // Los pedidos del Plan B compran planes de InvitePremium: el dinero va a una
+            // sola cuenta y las decide el admin. Estaban en «Cuenta», a la vista de
+            // cualquier atelier, y ahora que aprobar crea cuentas y eventos eso era
+            // enseñar una puerta que además abría de más.
+            { href: '/panel/pedidos', label: 'Pedidos', icon: 'pedidos', count: counts.pedidos ?? null, countLabel: 'por revisar' },
             { href: '/panel/admin/auditoria', label: 'Auditoría', icon: 'auditoria' },
           ],
         },
@@ -148,10 +153,6 @@ export function panelNav(
         // viaja por WhatsApp: sin esta pantalla valdría para siempre.
         { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
         { href: '/panel', label: 'Todos los eventos', icon: 'eventos' },
-        // La maqueta no dibujó el Plan B, igual que no dibujó Reparto ni las Zonas del
-        // salón. Se queda: es funcionalidad construida, y un pedido que nadie mira es un
-        // cliente que transfirió y no recibió nada.
-        { href: '/panel/pedidos', label: 'Pedidos', icon: 'pedidos', count: counts.pedidos ?? null, countLabel: 'por revisar' },
         { href: '/panel/ayuda', label: 'Ayuda', icon: 'ayuda' },
       ],
     },

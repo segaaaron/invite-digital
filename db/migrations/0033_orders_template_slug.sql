@@ -1,0 +1,11 @@
+-- Qué diseño eligió el cliente al pedir.
+--
+-- Hasta hoy el pedido guardaba **solo el plan**, y el catálogo de los dieciséis modelos no
+-- llegaba a tocarlo: el cliente miraba «Botánica» en el escaparate, compraba un plan, y
+-- quien aprobaba el pedido no tenía forma de saber qué había elegido. El diseño se pasaba
+-- de boca a boca.
+--
+-- Anulable a propósito: los pedidos que ya existen no lo tienen, y alguien puede comprar
+-- un plan sin haber pasado por el escaparate. Sin diseño, el evento se crea con el clásico
+-- y el atelier lo cambia desde el panel.
+alter table "orders" add column if not exists "template_slug" varchar(64);

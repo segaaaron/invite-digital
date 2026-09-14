@@ -51,7 +51,12 @@ services:
     environment:
       DATABASE_URL: *database-url
       SITE_URL: ${SITE_URL:?SITE_URL es obligatorio}
-    command: sh -c 'pnpm db:migrate && pnpm db:seed'
+    # `verify:migrations` va **delante**, y no es ceremonia: `drizzle-kit migrate` solo
+    # aplica lo que está dado de alta en `meta/_journal.json`, así que una migración
+    # escrita y no registrada se ignora en silencio y el despliegue sale verde con la base
+    # a medias. Como `web` espera a que esto termine bien, un registro inconsistente
+    # detiene el despliegue y la versión anterior sigue sirviendo.
+    command: sh -c 'pnpm verify:migrations && pnpm db:migrate && pnpm db:seed'
     depends_on:
       db:
         condition: service_healthy

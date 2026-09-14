@@ -4,6 +4,8 @@ import type { ProofMime } from '../domain/proof'
 export type NewOrder = {
   readonly publicRef: string
   readonly planSlug: string
+  /** El diseño elegido en el escaparate, o `null` si llegó directo a los planes. */
+  readonly templateSlug: string | null
   readonly customerName: string
   readonly contact: string
   readonly eventDate: string | null
@@ -25,6 +27,8 @@ export interface OrderRepository {
   findById(id: string): Promise<Order | null>
   list(): Promise<Order[]>
   setStatus(input: { id: string; status: OrderStatus; decisionNote: string | null; decidedAt: Date | null }): Promise<void>
+  /** Ata el pedido a la boda que creó al aprobarse. */
+  linkEvent(orderId: string, eventId: string): Promise<void>
   addProof(input: {
     orderId: string
     storageKey: string

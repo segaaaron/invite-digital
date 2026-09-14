@@ -661,6 +661,24 @@ export const orders = pgTable(
     // Ocho caracteres sin 0/O/1/I/L: se dicta por teléfono.
     publicRef: varchar('public_ref', { length: 16 }).notNull().unique(),
     planId: uuid('plan_id').references(() => plans.id, { onDelete: 'set null' }),
+    /**
+     * El diseño que el cliente eligió en el escaparate, si pasó por él.
+     *
+     * Es la clave del tema, la misma que `templates.theme_key`. Anulable: quien compra un
+     * plan sin mirar modelos no elige ninguno, y entonces el evento nace con el clásico.
+     * No es una clave foránea porque los temas viven en el código, no en una tabla.
+     */
+    templateSlug: varchar('template_slug', { length: 64 }),
+    /**
+     * La boda que nació de este pedido al aprobarlo.
+     *
+     * Va en la base y no en el estado de la pantalla porque ese estado **se pierde al
+     * aprobar**: la acción revalida, el pedido deja de estar «por revisar» y el formulario
+     * de decisión se desmonta con su mensaje dentro.
+     *
+     * `SET NULL`: borrar la boda no borra el registro del pago.
+     */
+    eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
     customerName: varchar('customer_name', { length: 160 }).notNull(),
     contact: varchar('contact', { length: 160 }).notNull(),
     eventDate: date('event_date'),

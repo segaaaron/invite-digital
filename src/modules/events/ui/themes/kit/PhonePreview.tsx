@@ -21,10 +21,19 @@ import { CloseIcon } from '@/shared/design/ui/icons'
 export function PhonePreview({
   children,
   exit,
+  action,
 }: {
   readonly children: ReactNode
   /** A dónde se sale, y cómo se llama esa salida para quien no ve el dibujo. */
   readonly exit?: { readonly href: string; readonly label: string }
+  /**
+   * La llamada a la acción del escaparate: «elegir este diseño».
+   *
+   * Va **fuera** de la tarjeta, abajo y centrada sobre el fondo oscuro: dentro taparía la
+   * invitación, que es lo único que se viene a ver. Es opcional porque la vista previa del
+   * panel enseña una boda ya vendida y ahí no hay nada que elegir.
+   */
+  readonly action?: { readonly href: string; readonly label: string }
 }) {
   return (
     <div className="theme-phone-stage">
@@ -34,6 +43,11 @@ export function PhonePreview({
         </Link>
       )}
       <div className="theme-phone-frame">{children}</div>
+      {action === undefined ? null : (
+        <Link className="theme-phone-cta" href={action.href}>
+          {action.label}
+        </Link>
+      )}
     </div>
   )
 }

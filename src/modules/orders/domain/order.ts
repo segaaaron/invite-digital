@@ -55,6 +55,21 @@ export type Order = {
   readonly publicRef: string
   readonly planSlug: string | null
   readonly planName: string | null
+  /**
+   * El diseño que eligió en el escaparate. Es lo que hace que la invitación que vio sea
+   * la que acaba recibiendo: al aprobar el pedido, el evento nace con este tema.
+   */
+  readonly templateSlug: string | null
+  /**
+   * La boda que se creó al aprobarlo, si se creó.
+   *
+   * Es lo que permite que la bandeja siga diciendo «boda creada» después de recargar: el
+   * mensaje de la acción vive en un componente que se desmonta en cuanto el pedido deja de
+   * estar «por revisar».
+   */
+  readonly eventId: string | null
+  /** El `slug` de esa boda, para poder enlazarla desde la bandeja. */
+  readonly eventSlug: string | null
   readonly customerName: string
   readonly contact: string
   readonly eventDate: string | null
