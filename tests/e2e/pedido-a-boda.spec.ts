@@ -48,11 +48,11 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // revisar». Si esto dependiera de su estado, aquí no habría nada.
     const aprobada = atelier.locator('section', { hasText: REFERENCIA }).first()
     await expect(aprobada).toContainText('Aprobado')
-    await expect(aprobada).toContainText('Boda creada')
+    await expect(aprobada).toContainText('Evento creado')
 
     // Y sobrevive a recargar, que es lo que de verdad hace el atelier.
     await atelier.reload()
-    await expect(atelier.locator('section', { hasText: REFERENCIA }).first()).toContainText('Boda creada')
+    await expect(atelier.locator('section', { hasText: REFERENCIA }).first()).toContainText('Evento creado')
 
     // 3. La boda nació con el diseño que se eligió en el escaparate.
     const slug = `evento-${REFERENCIA.toLowerCase()}`
