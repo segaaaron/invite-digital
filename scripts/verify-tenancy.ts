@@ -43,6 +43,11 @@ const EXENTAS: Record<string, string> = {
   removeDoorStaffAction: 'igual que el alta: exige ser admin, no tener acceso a ese evento',
   // Públicas del invitado: se autorizan por el token de su enlace, no por sesión.
   respondAction: 'del invitado: se autoriza por el token de su enlace',
+  enterAsPorterAction: 'del portero: pública, comprueba su enlace y su PIN con límite de intentos',
+  recordScansAsPorterAction: 'del portero: se autoriza con su enlace en cada petición y el evento sale del portero',
+  checkInByGroupAsPorterAction: 'del portero: se autoriza con su enlace en cada petición y el evento sale del portero',
+  adjustArrivalAsPorterAction: 'del portero: se autoriza con su enlace en cada petición y el evento sale del portero',
+  voidArrivalAsPorterAction: 'del portero: se autoriza con su enlace en cada petición y el evento sale del portero',
   claimGiftAction: 'del invitado: reserva un regalo desde su propia invitación',
   releaseGiftAction: 'del invitado: libera lo que él mismo había reservado',
   uploadGuestPhotoAction:
