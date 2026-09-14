@@ -65,7 +65,7 @@ describe('panelNav', () => {
 
   it('el admin fuera de un evento ve la administración y su cuenta, sin repetir «Todos los eventos»', () => {
     const secciones = panelNav(null, {}, true)
-    expect(secciones.map((seccion) => seccion.label)).toEqual(['Administración', 'Negocio', 'Sistema', 'Cuenta'])
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Día a día', 'Negocio', 'Sistema', 'Cuenta'])
     const hrefs = secciones.flatMap((seccion) => seccion.items).map((item) => item.href)
     expect(hrefs).not.toContain('/panel')
     expect(hrefs).not.toContain('/panel/ayuda')
@@ -92,7 +92,7 @@ describe('panelNav', () => {
 
   it('el admin dentro de un evento ve el evento y además la administración', () => {
     const etiquetas = panelNav('boda', {}, true).map((seccion) => seccion.label)
-    expect(etiquetas).toEqual(['Evento activo', 'Diseño', 'Administración', 'Negocio', 'Sistema', 'Cuenta'])
+    expect(etiquetas).toEqual(['Evento activo', 'Diseño', 'Día a día', 'Negocio', 'Sistema', 'Cuenta'])
   })
 
   it('la barra del cliente no enseña lo que es del atelier', () => {

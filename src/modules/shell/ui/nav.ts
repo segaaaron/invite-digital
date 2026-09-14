@@ -69,7 +69,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   const administracion: Borrador[] = esAdmin
     ? [
         {
-          label: 'Administración',
+          label: 'Día a día',
           items: [
             // Lo que espera decisión hoy. Sustituyó a Panorama: las cifras siguen dentro.
             { href: '/panel/admin', label: 'Hoy', icon: 'hoy' },
