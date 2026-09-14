@@ -51,6 +51,7 @@ export async function recordScansAction(input: {
 
   const result = await checkin.record({
     eventId: input.eventId,
+    recordedBy: `user:${actor.userId}`,
     scans: input.scans.map((s) => ({
       scanId: s.scanId,
       scanned: s.scanned,
@@ -86,6 +87,7 @@ export async function checkInByGroupAction(input: {
 
   const result = await checkin.recordGroup({
     eventId: input.eventId,
+    recordedBy: `user:${actor.userId}`,
     scan: {
       scanId: input.scanId,
       groupId: input.groupId,
@@ -123,7 +125,7 @@ export async function adjustArrivalAction(input: {
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
   await exigirModoPuerta(input.eventId)
 
-  const result = await checkin.adjust({ scanId: input.scanId, arrivedCount: input.arrivedCount })
+  const result = await checkin.adjust({ eventId: input.eventId, scanId: input.scanId, arrivedCount: input.arrivedCount })
   if (isErr(result)) {
     console.error('corrección rechazada', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
@@ -142,7 +144,7 @@ export async function voidArrivalAction(input: {
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
   await exigirModoPuerta(input.eventId)
 
-  const result = await checkin.void({ scanId: input.scanId })
+  const result = await checkin.void({ eventId: input.eventId, scanId: input.scanId })
   if (isErr(result)) {
     console.error('deshacer rechazado', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }

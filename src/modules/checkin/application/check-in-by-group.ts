@@ -19,7 +19,7 @@ export type GroupScanRequest = {
  */
 export const checkInByGroup =
   (deps: { groups: DoorGroupReader; arrivals: ArrivalRepository }) =>
-  async (input: { eventId: string; scan: GroupScanRequest }): Promise<Result<ScanOutcome, CheckinError>> =>
+  async (input: { eventId: string; scan: GroupScanRequest; recordedBy?: string | null }): Promise<Result<ScanOutcome, CheckinError>> =>
     attempt<ScanOutcome, CheckinError>(
       async () => {
         const group = await deps.groups.findGroupById(input.scan.groupId)
@@ -27,7 +27,7 @@ export const checkInByGroup =
           return ok({ scanId: input.scan.scanId, kind: 'unknown' } as const)
         }
 
-        return ok(await registerArrival(deps.arrivals, input.eventId, group, input.scan))
+        return ok(await registerArrival(deps.arrivals, input.eventId, group, input.scan, input.recordedBy ?? null))
       },
       (cause) => checkinError('storage_failure', `No se pudo registrar la llegada: ${String(cause)}`),
     )

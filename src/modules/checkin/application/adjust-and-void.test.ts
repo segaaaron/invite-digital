@@ -62,14 +62,14 @@ const row: ArrivalRow = {
 describe('adjustArrival', () => {
   it('baja la cantidad cuando llegaron menos', async () => {
     const { arrivals, groups, rows } = fakes([row])
-    const r = await adjustArrival({ arrivals, groups })({ scanId: 's1', arrivedCount: 2 })
+    const r = await adjustArrival({ arrivals, groups })({ eventId: 'e1', scanId: 's1', arrivedCount: 2 })
     expect(isOk(r)).toBe(true)
     expect(rows[0]?.arrivedCount).toBe(2)
   })
 
   it('rechaza pasarse de los cupos del grupo', async () => {
     const { arrivals, groups, rows } = fakes([row])
-    const r = await adjustArrival({ arrivals, groups })({ scanId: 's1', arrivedCount: 9 })
+    const r = await adjustArrival({ arrivals, groups })({ eventId: 'e1', scanId: 's1', arrivedCount: 9 })
     expect(isErr(r) && r.error.kind).toBe('invalid_count')
     expect(rows[0]?.arrivedCount).toBe(4)
   })
@@ -81,36 +81,52 @@ describe('adjustArrival', () => {
       ...groups,
       findGroupById: async (id) => (pedidos.push(id), groups.findGroupById(id)),
     }
-    await adjustArrival({ arrivals, groups: espia })({ scanId: 's1', arrivedCount: 3 })
+    await adjustArrival({ arrivals, groups: espia })({ eventId: 'e1', scanId: 's1', arrivedCount: 3 })
     expect(pedidos).toEqual(['g1'])
     expect(rows[0]?.arrivedCount).toBe(3)
   })
 
   it('un escaneo que no existe da not_found', async () => {
     const { arrivals, groups } = fakes([])
-    const r = await adjustArrival({ arrivals, groups })({ scanId: 'nope', arrivedCount: 2 })
+    const r = await adjustArrival({ arrivals, groups })({ eventId: 'e1', scanId: 'nope', arrivedCount: 2 })
     expect(isErr(r) && r.error.kind).toBe('not_found')
   })
 })
 
 describe('voidArrival', () => {
   it('deshacer pone lápida, no borra', async () => {
-    const { arrivals, rows } = fakes([row])
-    const r = await voidArrival({ arrivals, clock: () => new Date('2026-10-18T22:00:00Z') })({ scanId: 's1' })
+    const { arrivals, groups, rows } = fakes([row])
+    const r = await voidArrival({ arrivals, groups, clock: () => new Date('2026-10-18T22:00:00Z') })({ eventId: 'e1', scanId: 's1' })
     expect(isOk(r)).toBe(true)
     expect(rows[0]?.voidedAt?.toISOString()).toBe('2026-10-18T22:00:00.000Z')
   })
 
   it('deshacer dos veces no falla', async () => {
-    const { arrivals } = fakes([row])
-    const run = voidArrival({ arrivals, clock: () => new Date() })
-    await run({ scanId: 's1' })
-    expect(isOk(await run({ scanId: 's1' }))).toBe(true)
+    const { arrivals, groups } = fakes([row])
+    const run = voidArrival({ arrivals, groups, clock: () => new Date() })
+    await run({ eventId: 'e1', scanId: 's1' })
+    expect(isOk(await run({ eventId: 'e1', scanId: 's1' }))).toBe(true)
   })
 
   it('un escaneo que no existe da not_found', async () => {
-    const { arrivals } = fakes([])
-    const r = await voidArrival({ arrivals, clock: () => new Date() })({ scanId: 'nope' })
+    const { arrivals, groups } = fakes([])
+    const r = await voidArrival({ arrivals, groups, clock: () => new Date() })({ eventId: 'e1', scanId: 'nope' })
     expect(isErr(r) && r.error.kind).toBe('not_found')
+  })
+})
+
+describe('una llegada solo se toca desde su evento', () => {
+  it('corregir desde otro evento responde «no existe» y no cambia nada', async () => {
+    const { arrivals, groups, rows } = fakes([row])
+    const r = await adjustArrival({ arrivals, groups })({ eventId: 'otro-evento', scanId: 's1', arrivedCount: 2 })
+    expect(isErr(r) && r.error.kind).toBe('not_found')
+    expect(rows[0]?.arrivedCount).toBe(4)
+  })
+
+  it('deshacer desde otro evento responde «no existe» y no la anula', async () => {
+    const { arrivals, groups, rows } = fakes([row])
+    const r = await voidArrival({ arrivals, groups, clock: () => new Date() })({ eventId: 'otro-evento', scanId: 's1' })
+    expect(isErr(r) && r.error.kind).toBe('not_found')
+    expect(rows[0]?.voidedAt).toBeNull()
   })
 })

@@ -1,6 +1,6 @@
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { checkinError, type CheckinError } from '../domain/errors'
-import type { ArrivalRepository } from './ports'
+import type { ArrivalRepository, DoorGroupReader } from './ports'
 
 /**
  * Deshacer no borra: escribe lápida. Queda auditoría de que alguien registró una
@@ -8,12 +8,16 @@ import type { ArrivalRepository } from './ports'
  * siguiente por qué el conteo no cuadra.
  */
 export const voidArrival =
-  (deps: { arrivals: ArrivalRepository; clock: () => Date }) =>
-  async (input: { scanId: string }): Promise<Result<void, CheckinError>> =>
+  (deps: { arrivals: ArrivalRepository; groups: DoorGroupReader; clock: () => Date }) =>
+  async (input: { eventId: string; scanId: string }): Promise<Result<void, CheckinError>> =>
     attempt<void, CheckinError>(
       async () => {
         const row = await deps.arrivals.findByScanId(input.scanId)
         if (!row) return err(checkinError('not_found', `No existe el escaneo ${input.scanId}`))
+
+        // Solo desde su evento, igual que corregir.
+        const group = await deps.groups.findGroupById(row.guestGroupId)
+        if (group === null || group.eventId !== input.eventId) return err(checkinError('not_found', `No existe el escaneo ${input.scanId}`))
 
         await deps.arrivals.void(input.scanId, deps.clock())
         return ok(undefined)

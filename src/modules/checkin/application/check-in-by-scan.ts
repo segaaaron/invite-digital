@@ -43,7 +43,7 @@ type Deps = { groups: DoorGroupReader; arrivals: ArrivalRepository; minter: Mint
  */
 export const checkInByScan =
   (deps: Deps) =>
-  async (input: { eventId: string; scans: readonly ScanRequest[] }): Promise<Result<ScanOutcome[], CheckinError>> =>
+  async (input: { eventId: string; scans: readonly ScanRequest[]; recordedBy?: string | null }): Promise<Result<ScanOutcome[], CheckinError>> =>
     attempt<ScanOutcome[], CheckinError>(
       async () => {
         const outcomes: ScanOutcome[] = []
@@ -64,7 +64,7 @@ export const checkInByScan =
             continue
           }
 
-          outcomes.push(await registerArrival(deps.arrivals, input.eventId, group, scan))
+          outcomes.push(await registerArrival(deps.arrivals, input.eventId, group, scan, input.recordedBy ?? null))
         }
 
         return ok(outcomes)

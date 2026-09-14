@@ -27,6 +27,7 @@ export async function registerArrival(
   eventId: string,
   group: DoorGroupRow,
   scan: { scanId: string; arrivedCount: number | null; scannedAt: Date },
+  recordedBy: string | null = null,
 ): Promise<ScanOutcome> {
   const arrival = createArrival(
     {
@@ -41,7 +42,7 @@ export async function registerArrival(
   if (isErr(arrival)) return { scanId: scan.scanId, kind: 'unknown' }
 
   const previous = (await arrivals.listByEvent(eventId)).filter((a) => a.guestGroupId === group.id)
-  const inserted = await arrivals.insertIfAbsent(arrival.value)
+  const inserted = await arrivals.insertIfAbsent({ ...arrival.value, recordedBy })
   const resolved = resolveArrival(inserted ? [...previous, arrival.value] : previous)
 
   if (!inserted || previous.some((a) => a.voidedAt === null)) {

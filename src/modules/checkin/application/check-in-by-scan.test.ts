@@ -145,3 +145,15 @@ describe('checkInByScan', () => {
     expect(isOk(r) && r.value.map((o) => o.kind)).toEqual(['welcome', 'unknown', 'unknown'])
   })
 })
+
+describe('quién registró la llegada', () => {
+  it('se guarda con la llegada', async () => {
+    const { groups, arrivals, rows } = fakes()
+    await checkInByScan({ groups, arrivals, minter })({
+      eventId: 'e1',
+      recordedBy: 'porter:p1',
+      scans: [{ scanId: 's-quien', scanned: TOKEN, arrivedCount: null, scannedAt: new Date() }],
+    })
+    expect(rows.find((r) => r.scanId === 's-quien')?.recordedBy).toBe('porter:p1')
+  })
+})

@@ -15,6 +15,7 @@ export const createDrizzleArrivalRepository = (database: DbExecutor): ArrivalRep
         arrivedCount: row.arrivedCount,
         scannedAt: row.scannedAt,
         voidedAt: row.voidedAt,
+        recordedBy: row.recordedBy ?? null,
       })
       .onConflictDoNothing({ target: arrivals.scanId })
       .returning({ scanId: arrivals.scanId })

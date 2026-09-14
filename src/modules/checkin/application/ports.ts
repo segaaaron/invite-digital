@@ -23,6 +23,8 @@ export type ArrivalRow = {
   readonly arrivedCount: number
   readonly scannedAt: Date
   readonly voidedAt: Date | null
+  /** `porter:<id>` o `user:<id>`. Opcional: las llegadas anteriores no lo guardaban. */
+  readonly recordedBy?: string | null
 }
 
 export interface DoorGroupReader {

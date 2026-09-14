@@ -459,7 +459,7 @@ export const checkin = {
   record: checkInByScan({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository, minter }),
   recordGroup: checkInByGroup({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   adjust: adjustArrival({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader }),
-  void: voidArrival({ arrivals: drizzleArrivalRepository, clock }),
+  void: voidArrival({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader, clock }),
   manifest: getDoorManifest({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   state: getDoorState({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
 } as const
