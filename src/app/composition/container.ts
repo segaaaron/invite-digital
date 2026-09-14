@@ -113,6 +113,7 @@ import {
   readShowcaseMusic,
   readShowcaseSongs,
   removeShowcaseMusic,
+  renameShowcaseSong,
   saveShowcaseMusic,
 } from '@/modules/admin/application/showcase-music-use-cases'
 import { createDiskShowcaseStorage } from '@/modules/admin/infrastructure/disk-showcase-storage'
@@ -660,6 +661,7 @@ export const admin = {
    */
   showcaseSongs: readShowcaseSongs({ settings: drizzleSettingsRepository, storage: showcaseStorage }),
   showcaseMusic: readShowcaseMusic({ settings: drizzleSettingsRepository, storage: showcaseStorage }),
+  renameShowcaseSong: renameShowcaseSong({ settings: drizzleSettingsRepository, storage: showcaseStorage, admin: drizzleAdminRepository }),
   saveShowcaseMusic: saveShowcaseMusic({
     settings: drizzleSettingsRepository,
     storage: showcaseStorage,

@@ -82,7 +82,13 @@ export const saveShowcaseMusic =
   (deps: Deps & { admin: AdminRepository; audio: AudioProcessor; newKey: () => string }) =>
   async (
     actor: Actor,
-    input: { themeKey: string; bytes: Uint8Array; nombreArchivo: string },
+    input: {
+      themeKey: string
+      bytes: Uint8Array
+      nombreArchivo: string
+      /** El nombre que escribe el admin. Vacío, se saca del archivo. */
+      nombre?: { track: string; artist: string }
+    },
   ): Promise<Result<null, AdminError>> => {
     const fila = showcaseMusicKey(input.themeKey)
     if (fila === null) return { ok: false, error: adminError('invalid_input', 'Ese modelo no existe.') }
@@ -106,7 +112,9 @@ export const saveShowcaseMusic =
         // suena, no la del contenido de muestra del modelo.
         await deps.settings.write({
           [fila]: `${key}.mp3`,
-          [`${showcaseSongKey(input.themeKey)}`]: JSON.stringify(nombreDeCancion(ajustado, input.nombreArchivo)),
+          [`${showcaseSongKey(input.themeKey)}`]: JSON.stringify(
+            nombreValido(input.nombre) ?? nombreDeCancion(ajustado, input.nombreArchivo),
+          ),
         })
 
         // Después de escribir la fila, nunca antes: si falla el borrado, lo que queda es un
@@ -125,6 +133,46 @@ export const saveShowcaseMusic =
       (cause) => adminError('storage_failure', `No se pudo guardar la música del modelo: ${String(cause)}`),
     )
   }
+
+/**
+ * Cambia el nombre que dice el reproductor de un modelo, sin volver a subir la canción.
+ * Solo si ese modelo tiene música: un nombre sin canción anunciaría algo que no suena.
+ */
+export const renameShowcaseSong =
+  (deps: Deps & { admin: AdminRepository }) =>
+  async (actor: Actor, themeKey: string, nombre: { track: string; artist: string }): Promise<Result<null, AdminError>> => {
+    const fila = showcaseSongKey(themeKey)
+    const filaMusica = showcaseMusicKey(themeKey)
+    if (fila === null || filaMusica === null) return { ok: false, error: adminError('invalid_input', 'Ese modelo no existe.') }
+    const limpio = nombreValido(nombre)
+    if (limpio === null) return { ok: false, error: adminError('invalid_input', 'Escribe el nombre de la canción.') }
+
+    return attempt(
+      async () => {
+        if (((await deps.settings.readAll())[filaMusica] ?? '') === '') {
+          return { ok: false, error: adminError('invalid_input', 'Primero sube la canción de este modelo.') }
+        }
+        await deps.settings.write({ [fila]: JSON.stringify(limpio) })
+        await deps.admin.record({
+          actorUserId: actor.userId,
+          actorEmail: actor.email,
+          action: 'escaparate.musica.nombre',
+          subject: themeKey,
+          detail: limpio.artist === '' ? limpio.track : `${limpio.track} · ${limpio.artist}`,
+        })
+        return ok(null)
+      },
+      (cause) => adminError('storage_failure', `No se pudo guardar el nombre de la canción: ${String(cause)}`),
+    )
+  }
+
+/** El nombre escrito, recortado; `null` si no hay título. */
+function nombreValido(nombre: { track: string; artist: string } | undefined): { track: string; artist: string } | null {
+  if (nombre === undefined) return null
+  const track = nombre.track.replace(/\s+/g, ' ').trim().slice(0, 120)
+  const artist = nombre.artist.replace(/\s+/g, ' ').trim().slice(0, 120)
+  return track === '' ? null : { track, artist }
+}
 
 /**
  * Quita la música de un modelo: vuelve a quedarse mudo, como nació.

@@ -3,9 +3,10 @@
 import Image from 'next/image'
 import { useActionState, useId } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
-import { PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import {
   removeShowcaseMusicAction,
+  renameShowcaseSongAction,
   setTemplatePublishedAction,
   uploadShowcaseMusicAction,
   type AdminActionState,
@@ -45,13 +46,14 @@ export function ShowcaseMusicRow({
 }) {
   const [alta, subir, subiendo] = useActionState<AdminActionState, FormData>(uploadShowcaseMusicAction, INICIAL)
   const [baja, quitar, quitando] = useActionState<AdminActionState, FormData>(removeShowcaseMusicAction, INICIAL)
+  const [renombre, renombrar, renombrando] = useActionState<AdminActionState, FormData>(renameShowcaseSongAction, INICIAL)
   const [publicacion, cambiarPublicacion, cambiando] = useActionState<AdminActionState, FormData>(
     setTemplatePublishedAction,
     INICIAL,
   )
   const id = useId()
 
-  const estado = alta.status !== 'idle' ? alta : baja.status !== 'idle' ? baja : publicacion
+  const estado = alta.status !== 'idle' ? alta : baja.status !== 'idle' ? baja : renombre.status !== 'idle' ? renombre : publicacion
 
   return (
     <li
@@ -89,20 +91,22 @@ export function ShowcaseMusicRow({
 
         {tieneMusica ? (
           // La sirve la misma ruta pública que el escaparate, así que si aquí suena, ahí
-          // también; y si aquí no, ahí tampoco. Sin subtítulos a propósito: es música
-          // instrumental de fondo, no habla.
+          // también; y si aquí no, ahí tampoco.
           <>
             <audio className="h-9 w-full" controls preload="none" src={`/modelos/musica/${themeKey}`} />
-            {cancion === null ? (
-              <p className="text-[12px] text-danger">
-                Subida antes de guardar su nombre: el reproductor sale sin título. Vuelve a subirla.
-              </p>
-            ) : (
-              <p className="text-[12px] text-ink-soft">
-                El reproductor dice: <strong className="font-medium text-ink">{cancion.track}</strong>
-                {cancion.artist === '' ? '' : ` · ${cancion.artist}`}
-              </p>
-            )}
+            {/* El nombre que dice el reproductor del modelo, editable sin volver a subir la
+                canción. La clave lo remonta cuando cambia en el servidor: React no refresca
+                un `defaultValue` ya pintado. */}
+            <form action={renombrar} className="flex flex-col gap-2" key={JSON.stringify(cancion)}>
+              <input name="themeKey" type="hidden" value={themeKey} />
+              {cancion === null ? (
+                <p className="text-[12px] text-danger">Sin nombre: el reproductor sale sin título. Escríbelo aquí.</p>
+              ) : null}
+              <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
+              <PanelButton disabled={renombrando} type="submit">
+                {renombrando ? 'Guardando…' : 'Guardar nombre'}
+              </PanelButton>
+            </form>
           </>
         ) : (
           <p className="text-[12px] text-ink-mute">El reproductor se ve pero no suena.</p>
@@ -116,6 +120,9 @@ export function ShowcaseMusicRow({
             label={tieneMusica ? 'Elegir otra canción' : 'Elegir canción'}
             name="musica"
           />
+          {/* Al subir una nueva, su nombre. Vacío, se toma de las etiquetas del archivo o de su
+              nombre de fichero. */}
+          {tieneMusica ? null : <NombreDeCancion cancion={null} id={`${id}-alta`} opcional />}
           <div className="flex flex-wrap gap-2">
             <PanelButton disabled={subiendo} type="submit" variant={tieneMusica ? 'default' : 'primary'}>
               {subiendo ? 'Subiendo y ajustando…' : tieneMusica ? 'Reemplazar' : 'Subir'}
@@ -147,5 +154,28 @@ export function ShowcaseMusicRow({
         ) : null}
       </div>
     </li>
+  )
+}
+
+function NombreDeCancion({ cancion, id, opcional = false }: { cancion: { track: string; artist: string } | null; id: string; opcional?: boolean }) {
+  return (
+    <div className="grid gap-2 min-[420px]:grid-cols-2">
+      <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-track`}>
+        <span className={LABEL_CLASS}>Canción{opcional ? ' (opcional)' : ''}</span>
+        <input
+          className={FIELD_CLASS}
+          defaultValue={cancion?.track ?? ''}
+          id={`${id}-track`}
+          maxLength={120}
+          name="track"
+          placeholder="Tiempo de Vals"
+          required={!opcional}
+        />
+      </label>
+      <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-artist`}>
+        <span className={LABEL_CLASS}>Artista</span>
+        <input className={FIELD_CLASS} defaultValue={cancion?.artist ?? ''} id={`${id}-artist`} maxLength={120} name="artist" placeholder="Chayanne" />
+      </label>
+    </div>
   )
 }

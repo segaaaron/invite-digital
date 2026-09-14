@@ -35,6 +35,7 @@ const NOMBRE: Record<string, string> = {
   'modelo.retirado': 'Retiró un modelo',
   'escaparate.musica': 'Subió la música de un modelo',
   'escaparate.musica.quitar': 'Quitó la música de un modelo',
+  'escaparate.musica.nombre': 'Cambió el nombre de la canción de un modelo',
   'consulta.estado': 'Movió una consulta',
 }
 

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Actor } from '@/modules/identity/domain/access'
 import { isErr, isOk } from '@/shared/result'
 import type { AdminRepository, FileStore, SettingsRepository } from './ports'
-import { readShowcaseMusic, removeShowcaseMusic, saveShowcaseMusic, readShowcaseSongs } from './showcase-music-use-cases'
+import { readShowcaseMusic, removeShowcaseMusic, saveShowcaseMusic, readShowcaseSongs, renameShowcaseSong } from './showcase-music-use-cases'
 
 const ADMIN: Actor = { userId: 'u1', email: 'admin@invitepremium.bo', role: 'admin', mustChangePassword: false }
 
@@ -138,5 +138,38 @@ describe('readShowcaseSongs', () => {
     const canciones = await readShowcaseSongs(deps)()
 
     expect(canciones).toEqual({ 'xv-valeria': { track: 'Mi Vals', artist: 'Cuarteto Andino' } })
+  })
+})
+
+describe('nombre de la canción', () => {
+  it('al subir manda el nombre que escribe el admin sobre el del archivo', async () => {
+    const deps = dobles()
+    await saveShowcaseMusic(deps)(ADMIN, {
+      themeKey: 'xv-valeria',
+      bytes: MP3,
+      nombreArchivo: 'x.mp3',
+      nombre: { track: ' Vals de Valeria ', artist: '' },
+    })
+    expect(JSON.parse(deps.filas['showcase.song.xv-valeria']!)).toEqual({ track: 'Vals de Valeria', artist: '' })
+  })
+
+  it('se cambia sin volver a subir, y solo en un modelo con canción', async () => {
+    const deps = dobles()
+    const sinCancion = await renameShowcaseSong(deps)(ADMIN, 'xv-valeria', { track: 'Vals', artist: '' })
+    expect(isOk(sinCancion)).toBe(false)
+    expect(deps.filas['showcase.song.xv-valeria']).toBeUndefined()
+
+    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'xv-valeria', bytes: MP3, nombreArchivo: 'x.mp3' })
+    const r = await renameShowcaseSong(deps)(ADMIN, 'xv-valeria', { track: 'Mi Vals', artist: 'Cuarteto' })
+    expect(isOk(r)).toBe(true)
+    expect(JSON.parse(deps.filas['showcase.song.xv-valeria']!)).toEqual({ track: 'Mi Vals', artist: 'Cuarteto' })
+  })
+
+  it('sin título no guarda, y una clave que no es modelo tampoco', async () => {
+    const deps = dobles()
+    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'xv-valeria', bytes: MP3, nombreArchivo: 'x.mp3' })
+    expect(isOk(await renameShowcaseSong(deps)(ADMIN, 'xv-valeria', { track: '  ', artist: 'x' }))).toBe(false)
+    expect(isOk(await renameShowcaseSong(deps)(ADMIN, 'payment.accountNumber', { track: 'x', artist: '' }))).toBe(false)
+    expect(deps.filas['showcase.song.payment.accountNumber']).toBeUndefined()
   })
 })

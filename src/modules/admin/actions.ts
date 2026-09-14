@@ -331,7 +331,12 @@ export async function uploadShowcaseMusicAction(
   }
 
   const bytes = new Uint8Array(await archivo.arrayBuffer())
-  const result = await admin.saveShowcaseMusic(actor, { themeKey, bytes, nombreArchivo: archivo.name })
+  const result = await admin.saveShowcaseMusic(actor, {
+    themeKey,
+    bytes,
+    nombreArchivo: archivo.name,
+    nombre: { track: texto(formData, 'track'), artist: texto(formData, 'artist') },
+  })
   if (isErr(result)) {
     console.error('música del escaparate rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
@@ -342,6 +347,24 @@ export async function uploadShowcaseMusicAction(
   // Sin esto el modelo seguiría mudo hasta que caducara la caché de su página.
   revalidatePath('/modelos', 'layout')
   return { status: 'success', message: 'Ese modelo ya suena en la web.' }
+}
+
+/** Cambia el nombre que dice el reproductor de un modelo, sin volver a subir la canción. */
+export async function renameShowcaseSongAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+
+  const result = await admin.renameShowcaseSong(actor, texto(formData, 'themeKey'), {
+    track: texto(formData, 'track'),
+    artist: texto(formData, 'artist'),
+  })
+  if (isErr(result)) {
+    if (result.error.kind === 'storage_failure') console.error('nombre de canción', result.error.detail)
+    return { status: 'error', message: result.error.kind === 'storage_failure' ? 'No pudimos guardar el nombre.' : result.error.detail }
+  }
+
+  revalidatePath('/panel/admin/modelos')
+  revalidatePath('/modelos', 'layout')
+  return { status: 'success', message: 'Nombre guardado. El reproductor del modelo ya lo dice.' }
 }
 
 /** Deja mudo un modelo: vuelve a como nació. */
