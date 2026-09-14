@@ -6,7 +6,7 @@ import '../globals.css'
 export const viewport = VIEWPORT
 
 // El panel no negocia idioma: lo usa el atelier y está en español.
-export const metadata = { title: 'Panel · InvitePremium', robots: { index: false, follow: false } }
+export const metadata = { title: 'Panel · Luxury Atelier', robots: { index: false, follow: false } }
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (

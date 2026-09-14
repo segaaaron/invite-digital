@@ -47,7 +47,7 @@ const envSchema = z.object({
   // quedaría en blanco en producción y Resend rechazaría todos los envíos.
   EMAIL_FROM: z.preprocess(
     (valor) => (valor === '' ? undefined : valor),
-    z.string().min(1).default('InvitePremium <no-reply@send.luxuryatelier.net>'),
+    z.string().min(1).default('Luxury Atelier <no-reply@send.luxuryatelier.net>'),
   ),
 })
 

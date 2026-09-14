@@ -66,7 +66,7 @@ export function PanelSidebar({
       {/* La barra del teléfono: marca, dónde estás y el botón que abre el menú. */}
       <div className="flex items-center gap-3 min-[860px]:hidden">
         <p className="font-display text-[18px] italic">
-          Invite<b className="font-medium not-italic">Premium</b>
+          Luxury <b className="font-medium not-italic">Atelier</b>
         </p>
         {actual ? <span className="truncate font-mono text-[10px] tracking-[0.2em] uppercase opacity-60">· {actual.label}</span> : null}
         <button
@@ -91,7 +91,7 @@ export function PanelSidebar({
       >
       <div className="hidden min-[860px]:block">
         <p className="font-display text-[22px] italic">
-          Invite<b className="font-medium not-italic">Premium</b>
+          Luxury <b className="font-medium not-italic">Atelier</b>
         </p>
         <p className="mt-1 mb-7 font-mono text-[9px] tracking-[0.3em] opacity-55">{brandSub}</p>
       </div>

@@ -1,6 +1,6 @@
 export const BRAND = {
-  siteName: 'InvitePremium',
-  tagline: 'LUXE · Atelier digital',
+  siteName: 'Luxury Atelier',
+  tagline: 'Atelier de invitaciones digitales',
   whatsapp: '+59170012345',
   whatsappDisplay: '+591 700 12345',
   email: 'atelier@invitepremium.bo',

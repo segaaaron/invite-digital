@@ -5,7 +5,7 @@
  * producto, y cambiarlo no puede exigir un despliegue.
  *
  * **No son datos de cada atelier.** Los pedidos del Plan B compran planes de
- * InvitePremium: ese dinero va a una sola cuenta, la del administrador. Si algún día un
+ * Luxury Atelier: ese dinero va a una sola cuenta, la del administrador. Si algún día un
  * atelier cobrara por su cuenta, sería otra cosa y otra tabla.
  */
 export type PaymentSettings = {

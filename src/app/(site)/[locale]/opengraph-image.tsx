@@ -70,7 +70,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
           fontFamily: 'Cormorant Garamond',
         }}
       >
-        <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 30, letterSpacing: 18, color: GOLD }}>LUXE</div>
+        <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 30, letterSpacing: 18, color: GOLD }}>LUXURY ATELIER</div>
         <div style={{ display: 'flex', width: 90, height: 1, background: GOLD, margin: '28px 0 36px' }} />
         <div
           style={{

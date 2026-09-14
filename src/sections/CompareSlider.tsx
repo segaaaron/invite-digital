@@ -14,7 +14,7 @@ type Props = {
 
 /**
  * El comparador de la maqueta: la suite del atelier al fondo y, encima, dos paneles que
- * se reparten el ancho —«Tradicional» a la izquierda, «LUXE» a la derecha— con el
+ * se reparten el ancho —«Tradicional» a la izquierda, «Luxury Atelier» a la derecha— con el
  * deslizador en medio.
  *
  * Los dos se recortan contra la misma posición, así que la invitación de verdad asoma

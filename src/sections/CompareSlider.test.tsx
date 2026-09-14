@@ -4,7 +4,7 @@ import { CompareSlider } from './CompareSlider'
 
 const props = {
   imageAlt: 'Suite botánica',
-  luxeLabel: 'LUXE',
+  luxeLabel: 'Luxury Atelier',
   luxe: ['Sobre 3D', 'Dominio propio'],
   traditionalLabel: 'Tradicional',
   traditional: ['Imagen estática', 'Plantilla con logo'],
@@ -30,7 +30,7 @@ describe('CompareSlider', () => {
 
   it('los dos paneles se recortan contra el deslizador, cada uno por su lado', () => {
     // La maqueta enseña la invitación de verdad en medio, con «Tradicional» a la
-    // izquierda y «LUXE» a la derecha: el deslizador reparte el ancho entre los dos, no
+    // izquierda y «Luxury Atelier» a la derecha: el deslizador reparte el ancho entre los dos, no
     // tapa uno con el otro.
     render(<CompareSlider {...props} />)
 

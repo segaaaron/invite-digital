@@ -4,7 +4,7 @@ import { es } from '@/shared/i18n/messages/es'
 import { ComparisonSection } from './ComparisonSection'
 
 describe('ComparisonSection', () => {
-  it('muestra las cinco ventajas LUXE y las cinco tradicionales', () => {
+  it('muestra las cinco ventajas de Luxury Atelier y las cinco tradicionales', () => {
     render(<ComparisonSection dictionary={es} />)
     for (const item of es.comparison.luxe) expect(screen.getByText(item)).toBeDefined()
     for (const item of es.comparison.traditional) expect(screen.getByText(item)).toBeDefined()

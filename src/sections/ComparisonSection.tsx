@@ -1,3 +1,4 @@
+import { BRAND } from '@/shared/config/brand'
 import { CompareSlider } from './CompareSlider'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
@@ -19,7 +20,7 @@ export function ComparisonSection({ dictionary }: { dictionary: Dictionary }) {
           <CompareSlider
             imageAlt={comparison.imageAlt}
             luxe={comparison.luxe}
-            luxeLabel="LUXE"
+            luxeLabel={BRAND.siteName}
             sliderLabel={comparison.sliderLabel}
             traditional={comparison.traditional}
             traditionalLabel={comparison.traditionalLabel}

@@ -75,7 +75,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
             { href: '/panel/admin', label: 'Hoy', icon: 'hoy' },
             // Lo que llega del formulario de la web. Se guardaba y nadie lo leía.
             { href: '/panel/admin/consultas', label: 'Consultas', icon: 'consultas', count: counts.consultas ?? null, countLabel: 'nuevas' },
-            // Los pedidos del Plan B compran planes de InvitePremium: el dinero va a una
+            // Los pedidos del Plan B compran planes de Luxury Atelier: el dinero va a una
             // sola cuenta y las decide el admin. Estaban en «Cuenta», a la vista de
             // cualquier atelier, y ahora que aprobar crea cuentas y eventos eso era
             // enseñar una puerta que además abría de más.

@@ -210,13 +210,13 @@ async function seed() {
           templateId: row.id,
           locale: 'es',
           name: entrada.es,
-          description: `Modelo ${entrada.es} del atelier InvitePremium.`,
+          description: `Modelo ${entrada.es} de Luxury Atelier.`,
         },
         {
           templateId: row.id,
           locale: 'en',
           name: entrada.en,
-          description: `The ${entrada.en} model from the InvitePremium atelier.`,
+          description: `The ${entrada.en} model from Luxury Atelier.`,
         },
       ])
       .onConflictDoUpdate({

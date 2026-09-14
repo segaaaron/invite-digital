@@ -77,7 +77,7 @@ describe('panelNav', () => {
   it('el admin llega a planes, ingresos y modelos desde la barra', () => {
     const hrefs = panelNav(null, {}, true).flatMap((seccion) => seccion.items).map((item) => item.href)
     for (const ruta of ['/panel/admin/planes', '/panel/admin/ingresos', '/panel/admin/modelos']) expect(hrefs).toContain(ruta)
-    // Y un atelier no: esas pantallas son del dinero de InvitePremium.
+    // Y un atelier no: esas pantallas son del dinero de Luxury Atelier.
     const delAtelier = panelNav('boda').flatMap((seccion) => seccion.items).map((item) => item.href)
     expect(delAtelier.some((href) => href.startsWith('/panel/admin'))).toBe(false)
   })

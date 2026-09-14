@@ -126,7 +126,7 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
 // ============================================================================
 // A partir de aquí, **el admin**. No basta con tener sesión.
 //
-// Un pedido del Plan B compra un plan de InvitePremium, y ese dinero va a una sola
+// Un pedido del Plan B compra un plan de Luxury Atelier, y ese dinero va a una sola
 // cuenta: decidir sobre él no es de cada atelier. Y desde que aprobar **crea la cuenta
 // del cliente y un evento cuyo dueño es quien aprueba**, un permiso flojo aquí dejaría
 // que cualquier atelier se adjudicara la boda de otro y diera de alta usuarios.

@@ -78,8 +78,8 @@ export const en = {
   },
   comparison: {
     eyebrow: 'Comparison',
-    title: 'The LUXE difference',
-    sliderLabel: 'Compare LUXE with a traditional invitation',
+    title: 'The Luxury Atelier difference',
+    sliderLabel: 'Compare Luxury Atelier with a traditional invitation',
     imageAlt: 'A botanical invitation suite by the atelier',
     hint: 'Drag the seal to compare',
     traditionalLabel: 'Traditional',
@@ -312,10 +312,10 @@ export const en = {
     keepRef: 'Keep this address: it is the only way back to your order.',
   },
   seo: {
-    homeTitle: 'Luxury 3D digital wedding invitations | InvitePremium',
+    homeTitle: 'Luxury 3D digital wedding invitations | Luxury Atelier',
     homeDescription:
       'Luxury 3D digital invitations for weddings, quinceañeras and events in Bolivia. Animated envelope, RSVP and your own domain, delivered in 72 hours.',
-    collectionsTitle: '3D digital invitation collections | InvitePremium',
+    collectionsTitle: '3D digital invitation collections | Luxury Atelier',
     collectionsDescription:
       'Eight digital invitation models for weddings, quinceañeras, graduations and corporate events in Bolivia. A 3D scene, RSVP, and delivery within 72 hours.',
     breadcrumbHome: 'Home',

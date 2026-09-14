@@ -40,7 +40,7 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
   await expect(page.getByRole('status')).toContainText('Comprobante recibido')
 
   // 3. El **admin** lo ve y lo aprueba: los pedidos del Plan B compran planes de
-  // InvitePremium, y aprobar crea cuentas y eventos. Un atelier recibe 404.
+  // Luxury Atelier, y aprobar crea cuentas y eventos. Un atelier recibe 404.
   const atelier = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
   await atelier.goto('/panel/pedidos')
   const tarjeta = atelier.locator('section', { hasText: referencia }).first()

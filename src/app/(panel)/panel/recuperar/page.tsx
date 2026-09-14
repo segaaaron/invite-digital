@@ -18,7 +18,7 @@ export default function RecuperarPage() {
     <main className="grid min-h-dvh place-items-center px-6 py-16">
       <div className="flex w-full max-w-[420px] flex-col gap-7">
         <header className="flex flex-col gap-2">
-          <p className="font-mono text-[10px] tracking-[0.35em] text-ink-mute uppercase">InvitePremium</p>
+          <p className="font-mono text-[10px] tracking-[0.35em] text-ink-mute uppercase">Luxury Atelier</p>
           <h1 className="font-display text-[30px] leading-tight font-light text-ink">Recuperar contraseña</h1>
           <p className="text-[13px] leading-[1.7] text-ink-soft">
             Te mandamos un código al correo. Con él eliges una contraseña nueva.

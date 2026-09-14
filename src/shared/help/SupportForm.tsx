@@ -12,7 +12,7 @@ export function supportMessage(input: { name: string; email: string; message: st
   const nombre = input.name.trim()
   const correo = input.email.trim()
   const cuerpo = input.message.trim()
-  return `Soporte InvitePremium\nDe: ${nombre || 'sin nombre'}${correo === '' ? '' : ` · ${correo}`}\n\n${cuerpo}`
+  return `Soporte Luxury Atelier\nDe: ${nombre || 'sin nombre'}${correo === '' ? '' : ` · ${correo}`}\n\n${cuerpo}`
 }
 
 /**
@@ -31,7 +31,7 @@ export function SupportForm() {
   const vacio = message.trim() === ''
   const texto = supportMessage({ name, email, message })
   const whatsapp = `${HELP_CONTACT.whatsappHref}?text=${encodeURIComponent(texto)}`
-  const correo = `${HELP_CONTACT.emailHref}?subject=${encodeURIComponent('Soporte InvitePremium')}&body=${encodeURIComponent(texto)}`
+  const correo = `${HELP_CONTACT.emailHref}?subject=${encodeURIComponent('Soporte Luxury Atelier')}&body=${encodeURIComponent(texto)}`
 
   return (
     <div className="flex flex-col gap-4">

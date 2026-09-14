@@ -11,7 +11,7 @@ export function SiteFooter({ dictionary }: { locale: Locale; dictionary: Diction
     // pesaba más que la sección de contacto que lo precede.
     <footer className="border-t border-[var(--color-line)] px-6 py-9">
       <div className="mx-auto flex max-w-[1320px] flex-wrap items-center justify-between gap-5 text-center">
-        <span className="font-display text-[19px] tracking-[0.12em] text-gold-deep">LUXE · {BRAND.siteName}</span>
+        <span className="font-display text-[19px] tracking-[0.12em] text-gold-deep">{BRAND.siteName}</span>
         <span className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
           {dictionary.footer.coverage}
         </span>

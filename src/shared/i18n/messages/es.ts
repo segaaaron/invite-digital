@@ -78,9 +78,9 @@ export const es = {
   },
   comparison: {
     eyebrow: 'Comparativa',
-    title: 'La diferencia LUXE',
+    title: 'La diferencia Luxury Atelier',
     hint: 'Arrastra el sello para comparar',
-    sliderLabel: 'Comparar LUXE con una invitación tradicional',
+    sliderLabel: 'Comparar Luxury Atelier con una invitación tradicional',
     imageAlt: 'Suite de invitación botánica del atelier',
     traditionalLabel: 'Tradicional',
     luxe: ['Sobre 3D con apertura animada y sello de cera', 'Dominio propio, sin marcas de terceros', 'RSVP con seguimiento de confirmaciones', 'Música, galería inmersiva y cuenta regresiva', 'Diseño compuesto a mano por el atelier'],
@@ -312,10 +312,10 @@ export const es = {
     keepRef: 'Guarda esta dirección: es la única forma de volver a tu pedido.',
   },
   seo: {
-    homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | InvitePremium',
+    homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | Luxury Atelier',
     homeDescription:
       'Invitaciones digitales 3D para bodas, XV años y eventos en Bolivia. Sobre animado, RSVP y dominio propio, entregado en 72 horas.',
-    collectionsTitle: 'Colecciones de invitaciones digitales 3D | InvitePremium',
+    collectionsTitle: 'Colecciones de invitaciones digitales 3D | Luxury Atelier',
     collectionsDescription:
       'Ocho modelos de invitación digital para bodas, XV años, graduaciones y eventos corporativos en Bolivia. Escena 3D, RSVP y entrega en 72 horas.',
     breadcrumbHome: 'Inicio',

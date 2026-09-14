@@ -60,7 +60,7 @@ export default function SignInPage() {
         />
 
         <p className="relative font-display text-[26px] leading-none italic min-[860px]:text-[30px]">
-          Invite<b className="font-medium not-italic">Premium</b>
+          Luxury <b className="font-medium not-italic">Atelier</b>
         </p>
 
         <div className="relative mt-10 hidden max-w-[34ch] flex-col gap-6 min-[860px]:flex">
