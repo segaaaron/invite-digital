@@ -23,6 +23,7 @@ const EXENTAS: Record<string, string> = {
   createEventAction: 'crea el evento; su dueño es el actor de la sesión',
   signInAction: 'abre la sesión; todavía no hay actor',
   signOutAction: 'la cierra',
+  changePasswordAction: 'cambia la contraseña del propio actor de la sesión; no toca ningún evento',
   submitConsultationAction: 'formulario público de la web, sin sesión',
   recordInvitationViewAction: 'la cuenta una visita del invitado, sin sesión',
   placeOrderAction: 'alta de pedido desde la web pública, sin sesión',
@@ -37,6 +38,7 @@ const EXENTAS: Record<string, string> = {
   deleteEventAsAdminAction: 'del admin: por definición opera sobre el evento de otro',
   setEventPlanAction: 'del admin: por definición opera sobre el evento de otro',
   addDoorStaffAction: 'comprueba algo más estricto: ser el dueño del evento, con canManageStaff',
+  addEventClientAction: 'igual que el alta de puerta: exige ser el dueño del evento, con canManageStaff',
   removeDoorStaffAction: 'igual que el alta: exige ser el dueño, no tener acceso',
   // Públicas del invitado: se autorizan por el token de su enlace, no por sesión.
   respondAction: 'del invitado: se autoriza por el token de su enlace',

@@ -38,14 +38,24 @@ export interface ClientShareRepository {
 }
 
 /**
- * Quién es personal de puerta de qué evento.
+ * De qué clase es una pertenencia a un evento.
+ *
+ * Son los dos roles que entran sin ser dueños. Coincide con el rol del usuario y aun así
+ * viaja explícito en cada consulta: dejar que el repositorio lo dedujera sería dejar que
+ * un cliente pasara por personal de puerta con un `if` mal escrito.
+ */
+export type Membership = 'puerta' | 'cliente'
+
+/**
+ * Quién pertenece a qué evento, y como qué.
  *
  * Va en su propio puerto y no dentro de `EventRepository` porque la pertenencia no es un
- * dato del evento: es un permiso, y se consulta **solo** cuando el actor es de puerta.
+ * dato del evento: es un permiso, y se consulta **solo** cuando el actor no es dueño ni
+ * admin.
  */
 export interface StaffReader {
-  isStaffOf(eventId: string, userId: string): Promise<boolean>
-  eventIdsOf(userId: string): Promise<string[]>
+  isStaffOf(eventId: string, userId: string, membership: Membership): Promise<boolean>
+  eventIdsOf(userId: string, membership: Membership): Promise<string[]>
 }
 
 /**

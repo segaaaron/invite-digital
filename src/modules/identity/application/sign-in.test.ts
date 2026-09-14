@@ -9,6 +9,7 @@ const users = (row: { id: string; email: string; passwordHash: string } | null):
   findByEmail: async () => row,
   findActor: async () => (row === null ? null : { id: row.id, email: row.email, role: 'atelier' }),
   create: async () => ({ id: 'nuevo' }),
+  updatePassword: async () => {},
 })
 
 const sessions = () => {
@@ -19,6 +20,7 @@ const sessions = () => {
     touch: async () => {},
     deleteByTokenHash: async () => {},
     deleteExpired: async () => 0,
+    deleteByUser: async () => {},
   }
   return { repo, created }
 }

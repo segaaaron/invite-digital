@@ -50,6 +50,7 @@ export function panelNav(
   counts: NavCounts = {},
   esAdmin = false,
   esPuerta = false,
+  esCliente = false,
 ): NavSection[] {
   const base = slug === null ? null : `/panel/eventos/${slug}`
   const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
@@ -83,6 +84,37 @@ export function panelNav(
     ]
   }
 
+  // El cliente —los novios, la quinceañera— ve su boda y reparte sus invitaciones. No ve
+  // Configuración, ni el plan, ni los códigos QR, ni el check-in: eso es del atelier que
+  // le vendió la invitación. Como con la puerta, esconder el enlace no es la protección
+  // —esa es la sección que pide cada página—, pero enseñar enlaces que devuelven 404 es
+  // enseñar que existe algo a lo que no se llega.
+  if (esCliente) {
+    return [
+      {
+        label: 'Mi evento',
+        items: [
+          { href: base, label: 'Resumen', icon: 'resumen' },
+          { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
+          { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
+          { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
+          { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
+        ],
+      },
+      {
+        label: 'Mi invitación',
+        items: [
+          { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+          { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
+        ],
+      },
+      {
+        label: 'Cuenta',
+        items: [{ href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' }],
+      },
+    ]
+  }
+
   return [
     {
       label: 'Evento activo',
@@ -112,6 +144,9 @@ export function panelNav(
       items: [
         { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
         { href: en('/plan'), label: 'Plan', icon: 'plan' },
+        // La propia contraseña. Las cuentas las da de alta el admin y la clave inicial
+        // viaja por WhatsApp: sin esta pantalla valdría para siempre.
+        { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
         { href: '/panel', label: 'Todos los eventos', icon: 'eventos' },
         // La maqueta no dibujó el Plan B, igual que no dibujó Reparto ni las Zonas del
         // salón. Se queda: es funcionalidad construida, y un pedido que nadie mira es un

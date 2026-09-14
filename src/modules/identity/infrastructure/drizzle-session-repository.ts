@@ -25,6 +25,10 @@ export const createDrizzleSessionRepository = (database: DbExecutor): SessionRep
     await database.delete(sessions).where(eq(sessions.tokenHash, tokenHash))
   },
 
+  async deleteByUser(userId) {
+    await database.delete(sessions).where(eq(sessions.userId, userId))
+  },
+
   async deleteExpired(now) {
     const borradas = await database.delete(sessions).where(lt(sessions.expiresAt, now)).returning({ id: sessions.id })
     return borradas.length

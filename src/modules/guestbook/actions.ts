@@ -30,7 +30,7 @@ const refrescar = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mensa
 
 export async function markReadAction(input: Target): Promise<GuestbookActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guestbook.markRead({ responseId: input.responseId, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -41,7 +41,7 @@ export async function markReadAction(input: Target): Promise<GuestbookActionResu
 
 export async function toggleFeaturedAction(input: Target): Promise<GuestbookActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guestbook.toggleFeatured({ responseId: input.responseId, eventId: input.eventId })
   if (isErr(result)) return fallo(result.error)
@@ -52,7 +52,7 @@ export async function toggleFeaturedAction(input: Target): Promise<GuestbookActi
 
 export async function replyAction(input: Target & { text: string }): Promise<GuestbookActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guestbook.reply({
     responseId: input.responseId,

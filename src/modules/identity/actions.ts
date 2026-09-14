@@ -8,7 +8,7 @@ import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { isErr } from '@/shared/result'
 import { guardedSignIn } from './application/guarded-sign-in'
 import { parseRole } from './domain/access'
-import { SESSION_COOKIE, sessionCookieOptions } from './session-cookie'
+import { SESSION_COOKIE, requireSession, sessionCookieOptions } from './session-cookie'
 
 export type SignInActionState = {
   status: 'idle' | 'error'
@@ -61,6 +61,48 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
         ? `/panel/eventos/${activo.slug}/checkin`
         : `/panel/eventos/${activo.slug}`,
   )
+}
+
+export type ChangePasswordState = { status: 'idle' | 'error'; message: string }
+
+/**
+ * Cambia la contraseña de **quien la pide**, nunca la de otro: el correo sale de la
+ * sesión y no del formulario.
+ *
+ * Al terminar, todas las sesiones de ese usuario están cerradas —la suya incluida—, así
+ * que redirige a la puerta para volver a entrar con la nueva. Es la mitad del trabajo:
+ * cambiar una contraseña filtrada sin echar al que la tiene no cierra nada.
+ */
+export async function changePasswordAction(
+  _previous: ChangePasswordState,
+  formData: FormData,
+): Promise<ChangePasswordState> {
+  const actor = await requireSession()
+
+  const result = await identity.changePassword({
+    userId: actor.userId,
+    email: actor.email,
+    current: String(formData.get('current') ?? ''),
+    next: String(formData.get('next') ?? ''),
+  })
+
+  if (isErr(result)) {
+    console.error('cambio de contraseña rechazado', result.error.kind, result.error.detail)
+    return {
+      status: 'error',
+      message:
+        result.error.kind === 'weak_password'
+          ? 'La contraseña nueva necesita al menos 12 caracteres.'
+          : result.error.kind === 'invalid_credentials'
+            ? 'La contraseña actual no es correcta.'
+            : 'No pudimos guardarla. Inténtalo en un momento.',
+    }
+  }
+
+  const jar = await cookies()
+  jar.delete(SESSION_COOKIE)
+  // `redirect` lanza para hacer su trabajo: va al final y nunca dentro de un try.
+  redirect('/panel/entrar')
 }
 
 export async function signOutAction(): Promise<void> {

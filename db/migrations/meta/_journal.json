@@ -218,6 +218,13 @@
       "when": 1787365890032,
       "tag": "0031_rsvp_responder_name",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1787365891032,
+      "tag": "0032_event_staff_membership",
+      "breakpoints": true
     }
   ]
 }

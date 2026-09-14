@@ -7,6 +7,8 @@ export interface UserRepository {
    */
   findActor(userId: string): Promise<{ id: string; email: string; role: string } | null>
   create(user: { email: string; passwordHash: string; role?: string }): Promise<{ id: string }>
+  /** Sustituye el hash. Lo usa el cambio de contraseña, que es la única forma de tocarlo. */
+  updatePassword(userId: string, passwordHash: string): Promise<void>
 }
 
 export interface SessionRepository {
@@ -15,6 +17,8 @@ export interface SessionRepository {
   touch(id: string, expiresAt: Date): Promise<void>
   deleteByTokenHash(tokenHash: Buffer): Promise<void>
   deleteExpired(now: Date): Promise<number>
+  /** Todas las de un usuario. Lo usa el cambio de contraseña: cambiarla echa a todo el mundo. */
+  deleteByUser(userId: string): Promise<void>
 }
 
 export interface PasswordHasher {

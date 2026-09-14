@@ -22,6 +22,10 @@ export const createDrizzleUserRepository = (database: DbExecutor): UserRepositor
     return row ?? null
   },
 
+  async updatePassword(userId, passwordHash) {
+    await database.update(users).set({ passwordHash }).where(eq(users.id, userId))
+  },
+
   async create(user) {
     const [row] = await database
       .insert(users)

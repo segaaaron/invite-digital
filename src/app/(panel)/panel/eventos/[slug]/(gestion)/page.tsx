@@ -18,7 +18,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug)
+  const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

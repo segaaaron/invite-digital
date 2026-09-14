@@ -44,7 +44,7 @@ export default async function InvitadosPage({
   const { slug } = await params
   const { panel, persona, vista } = await searchParams
 
-  const event = await events.getFor(actor, slug)
+  const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

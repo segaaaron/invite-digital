@@ -1,0 +1,13 @@
+-- La pertenencia a un evento deja de ser solo «personal de puerta».
+--
+-- `event_staff` ya era la forma correcta —(evento, usuario), CASCADE por los dos lados,
+-- índice por usuario— y el cliente de una boda necesita exactamente eso: entrar a **su**
+-- evento y a ninguno más. Una tabla nueva `event_clients` duplicaría el barrido de la
+-- retención y el repositorio entero para cambiar una palabra.
+--
+-- `puerta` por defecto: todas las filas que ya existen son personal de puerta, que es lo
+-- único que esta tabla guardaba hasta hoy.
+--
+-- El cliente **no** puede ser `events.user_id`: el dueño es el atelier que vendió la
+-- boda, y pasarle la propiedad al cliente dejaría al atelier fuera de su propio trabajo.
+alter table "event_staff" add column if not exists "membership" varchar(16) not null default 'puerta';

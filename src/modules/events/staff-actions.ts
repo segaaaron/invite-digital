@@ -44,13 +44,18 @@ async function dueñoDe(formData: FormData) {
 }
 
 /**
- * Da de alta a alguien de puerta.
+ * Da de alta una pertenencia a este evento.
  *
- * Si el correo ya existe **no se toca su cuenta**: se le añade la pertenencia y punto. Un
- * alta que cambiara la contraseña de un usuario existente sería una forma de robarle la
- * cuenta escribiendo su correo.
+ * Es la misma operación para la puerta y para el cliente —crear la cuenta si no la hay y
+ * atarla a **este** evento—, y por eso vive una sola vez: dos copias serían dos sitios
+ * donde olvidarse de que un alta sobre un correo existente **no toca su cuenta**. Cambiar
+ * la contraseña de alguien escribiendo su correo sería una forma de robársela.
  */
-export async function addDoorStaffAction(_previous: StaffActionState, formData: FormData): Promise<StaffActionState> {
+async function darDeAlta(
+  formData: FormData,
+  membership: 'puerta' | 'cliente',
+  queVe: string,
+): Promise<StaffActionState> {
   const contexto = await dueñoDe(formData)
   if ('error' in contexto) return { status: 'error', message: contexto.error }
 
@@ -58,9 +63,9 @@ export async function addDoorStaffAction(_previous: StaffActionState, formData: 
   const existente = await admin.findUserByEmail(email)
 
   if (existente !== null) {
-    await events.staff.add(contexto.eventId, existente.id)
+    await events.staff.add(contexto.eventId, existente.id, membership)
     revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
-    return { status: 'success', message: `${email} ya tenía cuenta: se le dio acceso a la puerta de este evento.` }
+    return { status: 'success', message: `${email} ya tenía cuenta: se le dio acceso ${queVe}.` }
   }
 
   const credencial = createCredential({ email, password: texto(formData, 'password') })
@@ -69,9 +74,9 @@ export async function addDoorStaffAction(_previous: StaffActionState, formData: 
   const { id } = await admin.createUser({
     email: credencial.value.email,
     password: credencial.value.password,
-    role: 'puerta',
+    role: membership,
   })
-  await events.staff.add(contexto.eventId, id)
+  await events.staff.add(contexto.eventId, id, membership)
 
   revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
   return {
@@ -80,8 +85,24 @@ export async function addDoorStaffAction(_previous: StaffActionState, formData: 
   }
 }
 
+export async function addDoorStaffAction(_previous: StaffActionState, formData: FormData): Promise<StaffActionState> {
+  return darDeAlta(formData, 'puerta', 'a la puerta de este evento')
+}
+
 /**
- * Le quita el acceso.
+ * Da de alta al cliente: los novios, la quinceañera.
+ *
+ * Entra a **su** evento y ve lo suyo —invitados, confirmaciones, mesas, regalos,
+ * mensajes—, reparte sus enlaces y nada más. No es el dueño del evento: el dueño sigue
+ * siendo el atelier que le vendió la invitación, y por eso esto es una pertenencia y no
+ * un cambio de `events.user_id`.
+ */
+export async function addEventClientAction(_previous: StaffActionState, formData: FormData): Promise<StaffActionState> {
+  return darDeAlta(formData, 'cliente', 'al panel de este evento')
+}
+
+/**
+ * Le quita el acceso, sea de la puerta o del cliente.
  *
  * Solo borra la **pertenencia**, nunca la cuenta: esa misma persona puede estar en la
  * puerta de otra boda tuya la semana que viene.

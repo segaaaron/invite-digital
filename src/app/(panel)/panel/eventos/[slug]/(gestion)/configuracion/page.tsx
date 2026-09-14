@@ -5,6 +5,7 @@ import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { EventMediaPanel } from '@/modules/events/ui/EventMediaPanel'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
 import { DoorStaff } from '@/modules/events/ui/DoorStaff'
+import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
 import { themeFor } from '@/modules/events/ui/themes/registry'
@@ -57,10 +58,12 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
 
-  // El personal de puerta solo lo gestiona el dueño del evento —y el admin—. Para
-  // cualquier otro, la tarjeta no se pinta: el corte de verdad está en la acción.
+  // El personal de puerta y el cliente solo los gestiona el dueño del evento —y el
+  // admin—. Para cualquier otro, la tarjeta no se pinta: el corte de verdad está en la
+  // acción.
   const puedeGestionarPersonal = canManageStaff(actor, event.value)
-  const personal = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id) : []
+  const personal = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id, 'puerta') : []
+  const clientes = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id, 'cliente') : []
 
   return (
     <>
@@ -98,6 +101,12 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
           </div>
         </PanelCard>
+
+        {puedeGestionarPersonal ? (
+          <PanelCard title="Acceso del cliente">
+            <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
+          </PanelCard>
+        ) : null}
 
         {puedeGestionarPersonal ? (
           <PanelCard title="Personal de puerta">

@@ -8,8 +8,14 @@
 /**
  * `puerta` es el personal de recepción: registra llegadas y **nada más**. No es un
  * atelier con menos permisos, es otro oficio.
+ *
+ * `cliente` es quien celebra la boda —los novios, la quinceañera—. Ve su evento y reparte
+ * sus invitaciones; no edita el diseño, no toca el plan y no borra nada. **No es el dueño
+ * del evento**: el dueño sigue siendo el atelier que lo vendió, porque pasarle la
+ * propiedad al cliente dejaría fuera a quien hace el trabajo. Entra por pertenencia, igual
+ * que el personal de puerta.
  */
-export const ROLES = ['admin', 'atelier', 'puerta'] as const
+export const ROLES = ['admin', 'atelier', 'puerta', 'cliente'] as const
 export type Role = (typeof ROLES)[number]
 
 export type Actor = {
@@ -34,15 +40,29 @@ export function isAdmin(actor: Actor): boolean {
 /**
  * Las secciones de un evento, a efectos de permisos.
  *
- * `full` es todo lo del atelier; `checkin` es la puerta. **`full` es lo que se hereda
- * cuando nadie dice nada**, y `full` deniega a un puerta: el olvido cae del lado seguro,
- * que es la única forma de que una regla de permisos sobreviva a la siguiente sesión.
+ * `full` es todo lo del atelier; `checkin` es la puerta; `cliente` es lo que ve quien
+ * celebra la boda. **`full` es lo que se hereda cuando nadie dice nada**, y `full` deniega
+ * tanto a un puerta como a un cliente: el olvido cae del lado seguro, que es la única
+ * forma de que una regla de permisos sobreviva a la siguiente sesión.
  */
-export type EventSection = 'full' | 'checkin'
+export type EventSection = 'full' | 'checkin' | 'cliente'
 
 /**
- * El evento es suyo, o es admin, o es personal de puerta de **ese** evento y va a la
- * sección de la puerta.
+ * La sección con la que cada rol entra a la **carcasa** de un evento.
+ *
+ * El layout de `(gestion)` envuelve al check-in, al panel del cliente y al del atelier.
+ * Pidiendo una sección fija dejaría fuera a dos de los tres antes de llegar a su propia
+ * pantalla; el corte fino lo hace cada página declarando la suya.
+ */
+export function sectionForRole(role: Role): EventSection {
+  if (role === 'puerta') return 'checkin'
+  if (role === 'cliente') return 'cliente'
+  return 'full'
+}
+
+/**
+ * El evento es suyo, o es admin, o entra por **pertenencia** a la sección de su oficio:
+ * el personal de puerta al check-in, el cliente a su panel.
  *
  * Un evento **sin dueño** solo lo ve el admin. No debería existir ninguno —la migración
  * `0021` los asignó todos—, pero la columna es anulable y «sin dueño» no puede
@@ -63,6 +83,14 @@ export function canAccessEvent(
     return section === 'checkin' && options.isStaff === true
   }
 
+  if (actor.role === 'cliente') {
+    // Igual que la puerta: pertenencia **y** sección. `full` es Configuración, el plan y
+    // el borrado —del atelier— y `checkin` es la puerta, que es otro oficio.
+    return section === 'cliente' && options.isStaff === true
+  }
+
+  // El atelier dueño entra a todo lo de su evento, la sección del cliente incluida: ve
+  // todo lo que ve su cliente, y al revés no.
   return event.userId !== null && event.userId === actor.userId
 }
 

@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { canAccessEvent, canDeleteUser, canDemote, canManageStaff, isAdmin, parseRole, type Actor } from './access'
+import {
+  canAccessEvent,
+  canDeleteUser,
+  canDemote,
+  canManageStaff,
+  isAdmin,
+  parseRole,
+  sectionForRole,
+  type Actor,
+} from './access'
 
 const atelier: Actor = { userId: 'u1', email: 'a@ejemplo.bo', role: 'atelier' }
 const otro: Actor = { userId: 'u2', email: 'b@ejemplo.bo', role: 'atelier' }
@@ -27,9 +36,11 @@ describe('canAccessEvent', () => {
 })
 
 describe('parseRole', () => {
-  it('reconoce los dos roles', () => {
+  it('reconoce los cuatro roles', () => {
     expect(parseRole('admin')).toBe('admin')
     expect(parseRole('atelier')).toBe('atelier')
+    expect(parseRole('puerta')).toBe('puerta')
+    expect(parseRole('cliente')).toBe('cliente')
   })
 
   it('cualquier otra cosa es el rol de menos poder, no un error', () => {
@@ -120,6 +131,61 @@ describe('canAccessEvent · el personal de puerta', () => {
   it('el dueño y el admin no se ven afectados por la sección', () => {
     expect(canAccessEvent(atelier, { userId: 'u1' }, { section: 'checkin' })).toBe(true)
     expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'full' })).toBe(true)
+  })
+})
+
+describe('canAccessEvent · el cliente', () => {
+  const cliente: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente' }
+  const evento = { userId: 'u1' }
+
+  it('entra en la sección del cliente del evento donde está dado de alta', () => {
+    expect(canAccessEvent(cliente, evento, { section: 'cliente', isStaff: true })).toBe(true)
+  })
+
+  it('no entra en el evento donde no lo está', () => {
+    // La pertenencia es por boda: ser cliente de una no abre la de otro.
+    expect(canAccessEvent(cliente, evento, { section: 'cliente', isStaff: false })).toBe(false)
+  })
+
+  it('no abre la sección completa, ni siendo de ese evento', () => {
+    // `full` es Configuración, el plan y el borrado del evento: eso es del atelier que
+    // vendió la boda, no de quien la celebra.
+    expect(canAccessEvent(cliente, evento, { section: 'full', isStaff: true })).toBe(false)
+  })
+
+  it('ni el check-in: la puerta es otro oficio', () => {
+    expect(canAccessEvent(cliente, evento, { section: 'checkin', isStaff: true })).toBe(false)
+  })
+
+  it('sin decir la sección, hereda «full» y queda fuera', () => {
+    // Una página nueva que no declare su sección deniega al cliente. El olvido cae del
+    // lado seguro, igual que con el personal de puerta.
+    expect(canAccessEvent(cliente, evento, { isStaff: true })).toBe(false)
+    expect(canAccessEvent(cliente, evento)).toBe(false)
+  })
+
+  it('el dueño del evento entra igual en la sección del cliente', () => {
+    // El atelier ve todo lo que ve su cliente; al revés no.
+    expect(canAccessEvent(atelier, { userId: 'u1' }, { section: 'cliente' })).toBe(true)
+    expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'cliente' })).toBe(true)
+  })
+
+  it('y otro cliente no entra por tener el rol', () => {
+    const ajeno: Actor = { userId: 'c2', email: 'otros@ejemplo.bo', role: 'cliente' }
+
+    expect(canAccessEvent(ajeno, evento, { section: 'cliente', isStaff: false })).toBe(false)
+  })
+})
+
+describe('sectionForRole', () => {
+  it('cada rol pide la sección con la que puede entrar a la carcasa del evento', () => {
+    // La carcasa de `(gestion)` envuelve al check-in, al cliente y al atelier. Pidiendo
+    // una sola sección fija dejaría fuera a dos de los tres antes de llegar a su propia
+    // pantalla; el corte fino lo hace cada página.
+    expect(sectionForRole('cliente')).toBe('cliente')
+    expect(sectionForRole('puerta')).toBe('checkin')
+    expect(sectionForRole('atelier')).toBe('full')
+    expect(sectionForRole('admin')).toBe('full')
   })
 })
 

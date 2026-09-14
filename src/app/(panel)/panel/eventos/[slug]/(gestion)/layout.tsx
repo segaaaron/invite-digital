@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { checkin, events, guestbook, guests, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
-import { isAdmin } from '@/modules/identity/domain/access'
+import { isAdmin, sectionForRole } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
@@ -26,10 +26,11 @@ export default async function EventoLayout({
   const actor = await requireSession()
   const { slug } = await params
 
-  // La carcasa envuelve también al check-in, así que pide la sección de la puerta: si
-  // pidiera `full`, el personal se quedaría fuera antes de llegar a su propia pantalla.
-  // El corte de las demás secciones lo hace cada página, no este layout.
-  const event = await events.getFor(actor, slug, { section: 'checkin' })
+  // La carcasa envuelve al check-in, al panel del cliente y al del atelier, así que pide
+  // **la sección del rol de quien entra**: con una fija, dos de los tres se quedarían
+  // fuera antes de llegar a su propia pantalla. El corte de cada sección lo hace cada
+  // página, no este layout.
+  const event = await events.getFor(actor, slug, { section: sectionForRole(actor.role) })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
@@ -57,7 +58,7 @@ export default async function EventoLayout({
         sinLeer: isErr(libro) ? null : unreadCount(libro.value),
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: porRevisar,
-      }, isAdmin(actor), actor.role === 'puerta')}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente')}
       user={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,

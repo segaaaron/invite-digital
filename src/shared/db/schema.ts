@@ -163,11 +163,15 @@ export const users = pgTable('users', {
 })
 
 /**
- * Quién puede registrar llegadas en qué evento.
+ * Quién entra en qué evento sin ser su dueño: el personal de puerta y el cliente.
  *
  * Es una **pertenencia**, no un dato, y por eso va con `cascade` por los dos lados:
  * borrado el evento o el usuario, el permiso no significa nada. Lo que nunca cae en
  * cascada son los datos — `events.user_id` va con `restrict`.
+ *
+ * `membership` dice de qué clase es. Una tabla por clase duplicaría el repositorio y el
+ * barrido de la retención para cambiar una palabra, y es donde se olvida uno de los dos.
+ * El cliente **no** es el dueño del evento: el dueño es el atelier que vendió la boda.
  */
 export const eventStaff = pgTable(
   'event_staff',
@@ -178,6 +182,8 @@ export const eventStaff = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
+    // 'puerta' por defecto: es lo único que esta tabla guardaba antes de la 0032.
+    membership: varchar('membership', { length: 16 }).notNull().default('puerta'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [primaryKey({ columns: [t.eventId, t.userId] }), index('event_staff_user_idx').on(t.userId)],

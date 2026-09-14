@@ -44,6 +44,31 @@ describe('panelNav', () => {
     expect(seccionDelEvento?.items.every((item) => item.href === null)).toBe(true)
   })
 
+  it('la barra del cliente no enseña lo que es del atelier', () => {
+    // Esconder el enlace no es la protección —esa es la sección que pide cada página—,
+    // pero enseñarle Configuración, el plan o el check-in sería enseñarle enlaces que le
+    // devuelven 404.
+    const delCliente = panelNav('boda', {}, false, false, true)
+      .flatMap((seccion) => seccion.items)
+      .map((item) => item.href)
+
+    for (const prohibido of ['/configuracion', '/plan', '/qr', '/checkin']) {
+      expect(delCliente).not.toContain(`/panel/eventos/boda${prohibido}`)
+    }
+    expect(delCliente).not.toContain('/panel/pedidos')
+    expect(delCliente).not.toContain('/panel')
+  })
+
+  it('y sí enseña lo suyo: invitados, mesas, regalos, mensajes y su invitación', () => {
+    const delCliente = panelNav('boda', {}, false, false, true)
+      .flatMap((seccion) => seccion.items)
+      .map((item) => item.href)
+
+    for (const suyo of ['/invitados', '/mesas', '/regalos', '/mensajes', '/vista-previa', '/estadisticas']) {
+      expect(delCliente).toContain(`/panel/eventos/boda${suyo}`)
+    }
+  })
+
   it('la vista previa es su propia pantalla, no un trozo de Configuración', () => {
     const diseno = panelNav('boda').find((seccion) => seccion.label === 'Diseño')
     const previa = diseno?.items.find((item) => item.label === 'Vista previa')

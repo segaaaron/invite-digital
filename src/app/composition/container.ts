@@ -108,6 +108,7 @@ import {
 } from '@/modules/admin/application/payment-use-cases'
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
+import { changePassword } from '@/modules/identity/application/change-password'
 import type { Role } from '@/modules/identity/domain/access'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
 import {
@@ -190,6 +191,15 @@ export const identity = {
   authenticateSession: authenticateSession({ sessions: drizzleSessionRepository, minter, clock }),
   /** Quién es y qué puede quien tiene esta sesión. Lo consume `requireSession()`. */
   actorOf: (userId: string) => drizzleUserRepository.findActor(userId),
+  /**
+   * Cambiar la propia contraseña. Las cuentas las da de alta otro y la clave inicial viaja
+   * por WhatsApp: sin esto, la que escribió otra persona vale para siempre.
+   */
+  changePassword: changePassword({
+    users: drizzleUserRepository,
+    sessions: drizzleSessionRepository,
+    hasher: argon2Hasher,
+  }),
 } as const
 
 const mediaDeps = {
@@ -239,14 +249,21 @@ export const events = {
     listOfGuest: listGuestPhotos(mediaDeps),
   },
   /**
-   * El personal de puerta de un evento. Vive aquí y no en un módulo propio porque es una
-   * pertenencia del evento, no una entidad con vida propia.
+   * Quién pertenece a un evento sin ser su dueño: el personal de puerta y el cliente.
+   * Vive aquí y no en un módulo propio porque es una pertenencia del evento, no una
+   * entidad con vida propia.
+   *
+   * La clase viaja explícita en cada llamada. Un valor por omisión aquí sería el sitio
+   * exacto donde un cliente acabaría con el check-in de una boda.
    */
   staff: {
-    add: (eventId: string, userId: string) => drizzleStaffRepository.add(eventId, userId),
+    add: (eventId: string, userId: string, membership: 'puerta' | 'cliente') =>
+      drizzleStaffRepository.add(eventId, userId, membership),
     remove: (eventId: string, userId: string) => drizzleStaffRepository.remove(eventId, userId),
+    /** Los dos tipos a la vez: lo usa el borrado del evento. */
     listUserIds: (eventId: string) => drizzleStaffRepository.listUserIds(eventId),
-    listWithEmail: (eventId: string) => drizzleStaffRepository.listWithEmail(eventId),
+    listWithEmail: (eventId: string, membership: 'puerta' | 'cliente') =>
+      drizzleStaffRepository.listWithEmail(eventId, membership),
   },
   remove: deleteEvent({ events: drizzleEventRepository }),
   setPassword: setEventPassword({

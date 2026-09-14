@@ -42,8 +42,12 @@ export const getEventFor =
     )
 
 /**
- * La pertenencia solo se consulta si el actor es de puerta: para un atelier o un admin la
- * respuesta no depende de ella, y sería un viaje más a la base en cada página del panel.
+ * La pertenencia solo se consulta si el actor entra por ella —puerta o cliente—: para un
+ * atelier o un admin la respuesta no depende de ella, y sería un viaje más a la base en
+ * cada página del panel.
+ *
+ * La clase que se consulta es **la de su rol**, nunca «cualquiera»: preguntar sin filtro
+ * dejaría al cliente entrando por la pertenencia de la puerta y al revés.
  */
 async function permitido(
   deps: { staff: StaffReader },
@@ -51,7 +55,8 @@ async function permitido(
   event: Event,
   opciones: Opciones,
 ): Promise<boolean> {
-  const isStaff = actor.role === 'puerta' ? await deps.staff.isStaffOf(event.id, actor.userId) : false
+  const porPertenencia = actor.role === 'puerta' || actor.role === 'cliente'
+  const isStaff = porPertenencia ? await deps.staff.isStaffOf(event.id, actor.userId, actor.role) : false
   return canAccessEvent(actor, event, { section: opciones.section, isStaff })
 }
 
@@ -89,11 +94,14 @@ export const listEventsFor =
       async () => {
         // El personal de puerta ve los eventos donde trabaja, y solo para llegar a su
         // check-in: la bandeja es su única forma de elegir boda cuando cubre dos la misma
-        // semana.
+        // semana. El cliente, la suya —casi siempre una—, por la misma vía.
+        //
+        // Ninguno de los dos aparece en `listByUser`: no son dueños de nada. El dueño
+        // sigue siendo el atelier que vendió la boda.
         const rows = isAdmin(actor)
           ? await deps.events.listAll()
-          : actor.role === 'puerta'
-            ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId))
+          : actor.role === 'puerta' || actor.role === 'cliente'
+            ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, actor.role))
             : await deps.events.listByUser(actor.userId)
         const built: Event[] = []
 

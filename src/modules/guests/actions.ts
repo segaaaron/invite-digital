@@ -20,7 +20,7 @@ export async function addGuestGroupAction(_previous: AddGuestGroupState, formDat
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
   const eventId = String(formData.get('eventId') ?? '')
-  await requireEventAccess(actor, { eventId, eventSlug })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
   // La acción vive en la frontera y puede hablar con el contenedor, así que es ella
   // quien resuelve la capacidad y se la pasa al caso de uso. `guests` no importa
@@ -78,7 +78,7 @@ export async function revokeInvitationAction(
   const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  await requireEventAccess(actor, { eventSlug })
+  await requireEventAccess(actor, { eventSlug, section: 'cliente' })
 
   const result = await guests.revoke(String(formData.get('groupId') ?? ''))
   if (isErr(result)) {
@@ -118,7 +118,7 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
   const eventId = String(formData.get('eventId') ?? '')
-  await requireEventAccess(actor, { eventId, eventSlug })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
   const capacidad = await plans.allowanceFor(eventId)
   const grupos = await guests.list(eventId)
@@ -176,7 +176,7 @@ export async function addPersonAction(_previous: PersonActionState, formData: Fo
   const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  await requireEventAccess(actor, { eventSlug })
+  await requireEventAccess(actor, { eventSlug, section: 'cliente' })
   const result = await guests.addPerson({
     guestGroupId: String(formData.get('guestGroupId') ?? ''),
     fullName: String(formData.get('fullName') ?? ''),
@@ -206,7 +206,7 @@ export async function updatePersonAction(input: {
   guestGroupId?: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const { eventSlug, ...patch } = input
   const result = await guests.updatePerson(patch)
@@ -222,7 +222,7 @@ export async function updatePersonAction(input: {
 
 export async function removePersonAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guests.removePerson(input.id)
   if (isErr(result)) {
@@ -245,7 +245,7 @@ export async function markInvitationSentAction(input: {
   sent: boolean
 }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await guests.markSent({ id: input.id, sent: input.sent })
   if (isErr(result)) {
@@ -274,7 +274,7 @@ export async function resendInvitationAction(_previous: ResendState, formData: F
   const actor = await requireSession()
 
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  await requireEventAccess(actor, { eventSlug })
+  await requireEventAccess(actor, { eventSlug, section: 'cliente' })
   const groupId = String(formData.get('groupId') ?? '')
   const result = await guests.resend({ id: groupId })
 
@@ -316,7 +316,7 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
 
   const eventId = String(formData.get('eventId') ?? '')
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  await requireEventAccess(actor, { eventId, eventSlug })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
   const capacidad = await plans.allowanceFor(eventId)
   const actuales = await guests.list(eventId)
@@ -367,7 +367,7 @@ export async function setGroupPhoneAction(input: {
   phone: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const limpio = input.phone.trim()
   try {

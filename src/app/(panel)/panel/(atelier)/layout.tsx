@@ -37,7 +37,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
         invitados: grupos === null || isErr(grupos) ? null : grupos.value.length,
         sinLeer: libro === null || isErr(libro) ? null : unreadCount(libro.value),
         pedidos: porRevisar,
-      }, isAdmin(actor), actor.role === 'puerta')}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente')}
       user={{
         title: activo?.title ?? 'Sin eventos todavía',
         planLabel:

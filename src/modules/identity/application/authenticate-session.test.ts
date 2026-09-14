@@ -15,6 +15,7 @@ const repo = (row: { id: string; userId: string; expiresAt: Date } | null) => {
     touch: async (id, expiresAt) => void touched.push({ id, expiresAt }),
     deleteByTokenHash: async () => {},
     deleteExpired: async () => 0,
+    deleteByUser: async () => {},
   }
   return { sessions, touched }
 }
