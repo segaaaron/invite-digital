@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { MAX_AUDIO_SEGUNDOS, type AudioProcessor } from './audio'
+import type { AudioProcessor } from './audio'
 
 /** Una canción de tres minutos se codifica en segundos; pasado esto, algo va mal. */
 const TIEMPO_MAXIMO_MS = 90_000
@@ -13,11 +13,11 @@ const TIEMPO_MAXIMO_MS = 90_000
  *
  * - **Fichero temporal y no tubería**: la M4A del iPhone guarda su índice al final y
  *   `ffmpeg` no la lee desde una entrada que no se puede rebobinar.
- * - **Recorta a `MAX_AUDIO_SEGUNDOS`** con un fundido de dos segundos al final, para que el
- *   bucle no corte la canción en seco al volver a empezar.
+ * - **La canción entera, sin recortar.** Suena en bucle hasta que quien mira la invitación la
+ *   pausa desde su reproductor: cuánto suena lo decide él, no la subida.
  * - **Sin metadatos**: la carátula incrustada pesa más que la canción recortada.
- * - 96 kbps en estéreo: tres minutos quedan en unos 2 MB, que es lo que baja un invitado con
- *   datos.
+ * - 96 kbps en estéreo: una canción de cuatro minutos queda en unos 3 MB, que es lo que baja
+ *   un invitado con datos.
  */
 export const ffmpegAudioProcessor: AudioProcessor = {
   async normalize(bytes) {
@@ -32,15 +32,11 @@ export const ffmpegAudioProcessor: AudioProcessor = {
         '-loglevel',
         'error',
         '-y',
-        '-t',
-        String(MAX_AUDIO_SEGUNDOS),
         '-i',
         entrada,
         '-vn',
         '-map_metadata',
         '-1',
-        '-af',
-        'afade=t=in:d=0.5,areverse,afade=t=in:d=2,areverse',
         '-ac',
         '2',
         '-ar',

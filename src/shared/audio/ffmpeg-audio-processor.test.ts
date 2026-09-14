@@ -3,7 +3,6 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { MAX_AUDIO_SEGUNDOS } from './audio'
 import { ffmpegAudioProcessor } from './ffmpeg-audio-processor'
 
 const hayFfmpeg = spawnSync('ffmpeg', ['-version']).status === 0
@@ -28,12 +27,14 @@ function duracion(bytes: Uint8Array): number {
 }
 
 describe.skipIf(!hayFfmpeg)('ffmpegAudioProcessor', () => {
-  it('convierte un WAV en MP3 y lo recorta a la duración máxima', async () => {
-    const mp3 = await ffmpegAudioProcessor.normalize(tono(MAX_AUDIO_SEGUNDOS + 20, 'wav'))
+  it('convierte un WAV en MP3 más ligero y sin recortarlo: el bucle lo controla quien escucha', async () => {
+    const wav = tono(240, 'wav')
+    const mp3 = await ffmpegAudioProcessor.normalize(wav)
     expect(mp3).not.toBeNull()
     // Empieza por ID3 o por una trama MP3.
     expect(mp3![0] === 0x49 || mp3![0] === 0xff).toBe(true)
-    expect(duracion(mp3!)).toBeLessThanOrEqual(MAX_AUDIO_SEGUNDOS + 0.5)
+    expect(mp3!.byteLength).toBeLessThan(wav.byteLength)
+    expect(duracion(mp3!)).toBeGreaterThan(239)
   }, 60_000)
 
   it('lo que no es audio devuelve null, no lanza', async () => {

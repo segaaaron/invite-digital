@@ -78,8 +78,8 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         </p>
         <p className="text-[11px] leading-[1.5] text-ink-mute">
           La música <strong className="font-medium text-ink-soft">se ajusta sola</strong>: sube la canción entera, en
-          MP3, M4A o WAV. Se convierte en un MP3 ligero que suena en cualquier teléfono, se recorta a tres minutos con un
-          fundido al final y se repite en bucle hasta que quien mira la invitación la pausa.
+          MP3, M4A o WAV. Se convierte en un MP3 ligero que suena en cualquier teléfono y se repite en bucle hasta que
+          quien mira la invitación la pausa desde su reproductor.
         </p>
         <p className="text-[11px] leading-[1.5] text-ink-mute">
           <strong className="font-medium text-ink-soft">Subirla es elegirla</strong>, y una boda tiene una sola canción:

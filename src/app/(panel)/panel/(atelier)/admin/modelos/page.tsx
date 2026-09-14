@@ -49,8 +49,7 @@ export default async function AdminModelosPage() {
           </p>
           <p className="text-[12px] leading-[1.7] text-ink-mute">
             Sube la canción entera, en <strong className="font-normal text-ink-soft">MP3, M4A o WAV</strong>: se ajusta
-            sola —un MP3 ligero, recortado a tres minutos con un fundido al final— y suena en bucle hasta que quien mira el
-            modelo la pausa. Y responde por lo que publiques — si la grabación tiene dueño, publicarla es cosa del atelier.
+            sola en un MP3 ligero y suena en bucle hasta que quien mira el modelo la pausa. Y responde por lo que publiques — si la grabación tiene dueño, publicarla es cosa del atelier.
           </p>
         </div>
 

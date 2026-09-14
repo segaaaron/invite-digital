@@ -9,9 +9,6 @@
 /** Lo que se acepta subir. Una canción entera en WAV ronda los 30 MB. */
 export const MAX_AUDIO_UPLOAD_BYTES = 30 * 1024 * 1024
 
-/** Hasta dónde se recorta. Suena en bucle, así que tres minutos sobran para no repetirse. */
-export const MAX_AUDIO_SEGUNDOS = 180
-
 export interface AudioProcessor {
   /**
    * Devuelve un MP3 listo para servir, o `null` si el fichero no es un audio legible.
