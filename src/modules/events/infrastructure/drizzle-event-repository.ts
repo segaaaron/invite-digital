@@ -103,6 +103,16 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where fund_id in (select id from gift_funds where event_id = ${eventId})
       `)
 
+      // Los porteros son personas con nombre y teléfono, y su acceso ya no abre nada: se
+      // borran. Las llegadas se quedan —son la estadística del evento— sin decir quién
+      // las registró.
+      await tx.execute(sql`delete from door_porters where event_id = ${eventId}`)
+      await tx.execute(sql`
+        update arrivals
+        set recorded_by = null
+        where guest_group_id in (select id from guest_groups where event_id = ${eventId})
+      `)
+
       await tx.update(events).set({ anonymizedAt: at }).where(eq(events.id, eventId))
     })
   },

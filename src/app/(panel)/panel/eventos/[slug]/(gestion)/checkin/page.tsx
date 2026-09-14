@@ -57,6 +57,14 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
       <DoorModeCard href={`/panel/eventos/${event.value.slug}/puerta`} />
 
+      <p className="mb-5.5 text-[13px] text-ink-soft">
+        ¿Recibe otra persona en la puerta?{' '}
+        <Link className="text-ink underline underline-offset-4" href={`/panel/eventos/${event.value.slug}/porteros`}>
+          Suma a tus porteros
+        </Link>{' '}
+        con un enlace y un PIN, sin crear cuentas.
+      </p>
+
       <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.3fr_1fr]">
         <PanelCard title="Buscar a mano">
           <div className="flex flex-col gap-4">

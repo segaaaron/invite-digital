@@ -2,6 +2,8 @@ import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import {
+  arrivals,
+  doorPorters,
   events,
   fundContributions,
   giftFunds,
@@ -273,6 +275,36 @@ describe('anonimización', () => {
       const [ajena] = await tx.select().from(fundContributions).where(eq(fundContributions.fundId, fondoAjeno!.id))
       expect(ajena?.displayName).toBe('Abuela Rosa Quiroga')
       expect(ajena?.message).toBe('Enhorabuena.')
+    })
+  })
+
+  it('al vencer, se borran sus porteros y las llegadas dejan de decir quién las registró', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+      const [portero] = await tx
+        .insert(doorPorters)
+        .values({ eventId: evento.id, name: 'Carlos Mendoza', phone: '+59170012345', tokenHash: Buffer.alloc(32, 1), pinHash: Buffer.alloc(32, 2) })
+        .returning({ id: doorPorters.id })
+      const [grupo] = await tx
+        .insert(guestGroups)
+        .values({ eventId: evento.id, label: 'Familia Rojas', seats: 2, tokenHash: Buffer.alloc(32, 3) })
+        .returning({ id: guestGroups.id })
+      await tx.insert(arrivals).values({
+        scanId: crypto.randomUUID(),
+        guestGroupId: grupo!.id,
+        arrivedCount: 2,
+        scannedAt: NOW,
+        recordedBy: `porter:${portero!.id}`,
+      })
+
+      await repo.anonymize(evento.id, NOW)
+
+      // El portero es una persona con nombre y teléfono, y su acceso ya no sirve de nada.
+      expect(await tx.select().from(doorPorters).where(eq(doorPorters.eventId, evento.id))).toEqual([])
+      // La llegada se conserva —cuenta para la estadística— sin decir quién la registró.
+      const [llegada] = await tx.select().from(arrivals).where(eq(arrivals.guestGroupId, grupo!.id))
+      expect(llegada).toMatchObject({ arrivedCount: 2, recordedBy: null })
     })
   })
 })
