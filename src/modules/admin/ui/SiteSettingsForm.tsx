@@ -381,6 +381,8 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
                 [
                   ['inicio', 'Portada'],
                   ['colecciones', 'Colecciones'],
+                  ['bodas', 'Bodas'],
+                  ['xv', 'XV años'],
                 ] as const
               ).map(([clave, nombre]) => {
                 const s = datos.seo[clave]

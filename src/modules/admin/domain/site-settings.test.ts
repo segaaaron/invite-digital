@@ -117,3 +117,21 @@ describe('legal', () => {
     expect(isErr(r) && r.error.campo).toBe('legal.privacidad')
   })
 })
+
+describe('seo de las páginas de cada fiesta', () => {
+  it('trae Bodas y XV, vacías por defecto, y valida su largo como las demás', () => {
+    expect(DEFAULT_SITE_SETTINGS.seo.bodas.titulo.es).toBe('')
+    expect(DEFAULT_SITE_SETTINGS.seo.xv.descripcion.en).toBe('')
+    const largo = conCambios({
+      seo: { ...DEFAULT_SITE_SETTINGS.seo, xv: { titulo: { es: 'x'.repeat(71), en: '' }, descripcion: { es: '', en: '' } } },
+    })
+    const r = leerSiteSettings(largo)
+    expect(isErr(r) && r.error.campo).toBe('seo.xv')
+  })
+
+  it('un JSON viejo sin esas páginas las completa vacías', () => {
+    const viejo = parseSiteSettings(JSON.stringify({ seo: { inicio: { titulo: { es: 'Hola', en: '' }, descripcion: { es: '', en: '' } } } }))
+    expect(viejo.seo.inicio.titulo.es).toBe('Hola')
+    expect(viejo.seo.bodas).toEqual(DEFAULT_SITE_SETTINGS.seo.bodas)
+  })
+})

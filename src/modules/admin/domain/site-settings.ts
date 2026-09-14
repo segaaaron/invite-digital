@@ -45,7 +45,14 @@ export type SiteSettings = {
   readonly testimonios: readonly Testimonio[]
   readonly legal: { readonly privacidad: TextoLegal; readonly terminos: TextoLegal }
   /** Vacío es «el título de siempre», el del diccionario. */
-  readonly seo: { readonly inicio: SeoPagina; readonly colecciones: SeoPagina }
+  readonly seo: {
+    readonly inicio: SeoPagina
+    readonly colecciones: SeoPagina
+    /** `/bodas`: la página del Wedding Planner. */
+    readonly bodas: SeoPagina
+    /** `/xv-anos`: la página del XV Planner. */
+    readonly xv: SeoPagina
+  }
 }
 
 export const SITE_SETTINGS_KEY = 'site.settings'
@@ -153,7 +160,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
       ].join('\n'),
     },
   },
-  seo: { inicio: SEO_VACIO, colecciones: SEO_VACIO },
+  seo: { inicio: SEO_VACIO, colecciones: SEO_VACIO, bodas: SEO_VACIO, xv: SEO_VACIO },
 }
 
 export type SiteSettingsError = { readonly campo: string; readonly mensaje: string }
@@ -276,8 +283,13 @@ export function leerSiteSettings(entrada: SiteSettings): Result<SiteSettings, Si
   }
 
   const seoDe = (p: SeoPagina): SeoPagina => ({ titulo: recortar(p.titulo), descripcion: recortar(p.descripcion) })
-  const seo = { inicio: seoDe(entrada.seo.inicio), colecciones: seoDe(entrada.seo.colecciones) }
-  for (const pagina of ['inicio', 'colecciones'] as const) {
+  const seo = {
+    inicio: seoDe(entrada.seo.inicio),
+    colecciones: seoDe(entrada.seo.colecciones),
+    bodas: seoDe(entrada.seo.bodas),
+    xv: seoDe(entrada.seo.xv),
+  }
+  for (const pagina of ['inicio', 'colecciones', 'bodas', 'xv'] as const) {
     const s = seo[pagina]
     // Lo que Google enseña sin cortar: unos 60 caracteres de título y 160 de descripción.
     if (s.titulo.es.length > 70 || s.titulo.en.length > 70) return fallo(`seo.${pagina}`, 'El título hasta 70 caracteres: Google corta lo demás.')
@@ -379,7 +391,12 @@ export function parseSiteSettings(crudo: string | undefined): SiteSettings {
         })
       : d.testimonios,
     legal: { privacidad: legalDe(legal.privacidad, d.legal.privacidad), terminos: legalDe(legal.terminos, d.legal.terminos) },
-    seo: { inicio: seoDe(seo.inicio, d.seo.inicio), colecciones: seoDe(seo.colecciones, d.seo.colecciones) },
+    seo: {
+      inicio: seoDe(seo.inicio, d.seo.inicio),
+      colecciones: seoDe(seo.colecciones, d.seo.colecciones),
+      bodas: seoDe(seo.bodas, d.seo.bodas),
+      xv: seoDe(seo.xv, d.seo.xv),
+    },
   }
 }
 
