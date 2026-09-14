@@ -270,7 +270,7 @@ async function aprovisionar(
     return {
       message:
         evento.error.kind === 'duplicate_slug'
-          ? 'Pedido aprobado. Su boda ya estaba creada.'
+          ? 'Pedido aprobado. Su evento ya estaba creado.'
           : 'Pedido aprobado, pero no pudimos crear el evento. Créalo a mano desde el panel.',
       eventSlug: null,
     }
