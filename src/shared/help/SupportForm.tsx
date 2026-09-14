@@ -1,18 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import { HELP_CONTACT } from './topics'
+import { enlaceWhatsapp } from '@/shared/whatsapp'
+import type { HelpContact } from './topics'
 
 const CAMPO =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
 const ROTULO = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
 
 /** El texto que se lleva el atelier, ya montado. */
-export function supportMessage(input: { name: string; email: string; message: string }): string {
+export function supportMessage(input: { name: string; email: string; message: string }, saludo = 'Soporte Luxury Atelier'): string {
   const nombre = input.name.trim()
   const correo = input.email.trim()
   const cuerpo = input.message.trim()
-  return `Soporte Luxury Atelier\nDe: ${nombre || 'sin nombre'}${correo === '' ? '' : ` · ${correo}`}\n\n${cuerpo}`
+  return `${saludo}\nDe: ${nombre || 'sin nombre'}${correo === '' ? '' : ` · ${correo}`}\n\n${cuerpo}`
 }
 
 /**
@@ -23,14 +24,14 @@ export function supportMessage(input: { name: string; email: string; message: st
  * exactamente la clase de mentira que deja a alguien esperando una respuesta que no va a
  * llegar. No hay alternativa por correo: el de la marca es no-reply y nadie lo lee.
  */
-export function SupportForm() {
+export function SupportForm({ contacto }: { contacto: HelpContact }) {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
 
   const vacio = message.trim() === ''
-  const texto = supportMessage({ name, email, message })
-  const whatsapp = `${HELP_CONTACT.whatsappHref}?text=${encodeURIComponent(texto)}`
+  const texto = supportMessage({ name, email, message }, contacto.saludo)
+  const whatsapp = enlaceWhatsapp(contacto.numero, texto)
 
   return (
     <div className="flex flex-col gap-4">
@@ -63,11 +64,11 @@ export function SupportForm() {
 
       <div className="flex flex-wrap items-center gap-3">
         <a
-          aria-disabled={vacio}
+          aria-disabled={vacio || whatsapp === null}
           className={`w-fit rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px ${
-            vacio ? 'pointer-events-none opacity-40' : ''
+            vacio || whatsapp === null ? 'pointer-events-none opacity-40' : ''
           }`}
-          href={whatsapp}
+          href={whatsapp ?? undefined}
           rel="noopener noreferrer"
           target="_blank"
         >

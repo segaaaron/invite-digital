@@ -1,14 +1,26 @@
 import type { ReactNode } from 'react'
-import { BRAND } from '@/shared/config/brand'
 import { Button } from '@/shared/design/ui/Button'
-import { ArrowRightIcon, METRIC_ICONS } from '@/shared/design/ui/icons'
+import { ArrowRightIcon, METRIC_ICONS, type MetricIcon } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { HeroEnvelope } from './HeroEnvelope'
 
-type Props = { dictionary: Dictionary; slot?: ReactNode }
+type Props = {
+  dictionary: Dictionary
+  slot?: ReactNode
+  /**
+   * Las cifras de la franja, de «La web». `null` —el admin no las ha confirmado— no pinta la
+   * franja: son afirmaciones de negocio y una cifra sin respaldo resta confianza.
+   */
+  cifras: readonly { valor: string; etiqueta: string }[] | null
+  /** Las marcas que confían, de «La web». Vacía no pinta la banda. */
+  marcas: readonly string[]
+}
 
-export function HeroSection({ dictionary, slot }: Props) {
+/** El icono de cada posición de la franja: entregas, plazo, confirmaciones, alcance. */
+const ICONOS: readonly MetricIcon[] = ['mail', 'clock', 'check', 'globe']
+
+export function HeroSection({ dictionary, slot, cifras, marcas }: Props) {
   const { hero } = dictionary
 
   return (
@@ -45,15 +57,15 @@ export function HeroSection({ dictionary, slot }: Props) {
             </Button>
           </div>
 
-          {/* La banda de confianza de la maqueta. Las marcas salen de `BRAND`, y con la
+          {/* La banda de confianza de la maqueta. Las marcas salen de «La web», y con la
               lista vacía **no se pinta nada**: publicar el nombre de una marca ajena
               afirmando que confía en el atelier es afirmar una relación que puede no
               existir. */}
-          {BRAND.trustBrands.length === 0 ? null : (
+          {marcas.length === 0 ? null : (
             <div className="mt-2 flex flex-col gap-4.5">
               <p className="text-[10px] tracking-[0.32em] text-ink-mute uppercase">{hero.trustLabel}</p>
               <ul className="flex flex-wrap items-center gap-8.5 opacity-80">
-                {BRAND.trustBrands.map((marca) => (
+                {marcas.map((marca) => (
                   <li key={marca} className="font-display text-[22px] tracking-[0.1em] text-ink-soft">
                     {marca}
                   </li>
@@ -67,20 +79,22 @@ export function HeroSection({ dictionary, slot }: Props) {
       </div>
 
       {/* La franja de cifras que cierra el hero en la maqueta. */}
+      {cifras === null ? null : (
       <Reveal className="mx-auto mt-20 grid max-w-[1180px] grid-cols-2 gap-px bg-gold/25 min-[760px]:grid-cols-[repeat(auto-fit,minmax(180px,1fr))]" onMount>
-        {hero.metrics.map((metric) => {
-          const Icono = METRIC_ICONS[metric.icon]
+        {cifras.map((metric, i) => {
+          const Icono = METRIC_ICONS[ICONOS[i] ?? 'check']
           return (
-            <div key={metric.label} className="bg-bg-raised/75 px-4 py-5 min-[760px]:px-6.5 min-[760px]:py-7.5">
-              <p className="font-display text-[34px] leading-none text-gold-deep min-[760px]:text-[44px]">{metric.value}</p>
+            <div key={metric.etiqueta} className="bg-bg-raised/75 px-4 py-5 min-[760px]:px-6.5 min-[760px]:py-7.5">
+              <p className="font-display text-[34px] leading-none text-gold-deep min-[760px]:text-[44px]">{metric.valor}</p>
               <p className="mt-3 flex items-center gap-2 text-[9.5px] tracking-[0.2em] text-ink-mute uppercase min-[760px]:gap-2.5 min-[760px]:text-[10.5px] min-[760px]:tracking-[0.26em]">
                 <Icono className="text-gold-deep" />
-                {metric.label}
+                {metric.etiqueta}
               </p>
             </div>
           )
         })}
       </Reveal>
+      )}
     </section>
   )
 }

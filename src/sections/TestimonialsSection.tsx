@@ -3,8 +3,19 @@ import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 
-export function TestimonialsSection({ dictionary }: { dictionary: Dictionary }) {
+/**
+ * Los testimonios **confirmados** en «La web». Sin ninguno la sección no se pinta: un bloque
+ * de testimonios vacío o de relleno dice lo contrario de lo que pretende.
+ */
+export function TestimonialsSection({
+  dictionary,
+  testimonios,
+}: {
+  dictionary: Dictionary
+  testimonios: readonly { autor: string; rol: string; cita: string; foto: string }[]
+}) {
   const { testimonials } = dictionary
+  if (testimonios.length === 0) return null
 
   return (
     <section className="px-6 py-24" id="testimonios">
@@ -14,23 +25,29 @@ export function TestimonialsSection({ dictionary }: { dictionary: Dictionary }) 
         {/* Retrato a la izquierda y cita a la derecha, como la maqueta: la persona que
             lo dice pesa tanto como lo dicho. */}
         <div className="mx-auto mt-14 flex max-w-[1180px] flex-col gap-6">
-          {testimonials.items.map((item, index) => (
-            <Reveal delay={index * 0.1} key={item.author}>
+          {testimonios.map((item, index) => (
+            <Reveal delay={index * 0.1} key={item.autor}>
               <figure className="m-0 flex flex-wrap items-center gap-10 rounded-[var(--radius-card)] bg-bg-raised px-12 py-11 shadow-[var(--shadow-float)]">
                 <div className="flex shrink-0 flex-col items-center gap-4 text-center">
-                  <span className="relative size-[132px] overflow-hidden rounded-full border border-[var(--color-line)]">
-                    <Image alt={item.author} className="object-cover" fill sizes="132px" src="/site/testimonios/daniela.avif" />
+                  <span className="relative grid size-[132px] place-items-center overflow-hidden rounded-full border border-[var(--color-line)] bg-bg-sunken">
+                    {item.foto === '' ? (
+                      <span aria-hidden className="font-display text-[48px] text-gold-deep italic">
+                        {item.autor.slice(0, 1)}
+                      </span>
+                    ) : (
+                      <Image alt={item.autor} className="object-cover" fill sizes="132px" src={item.foto} />
+                    )}
                   </span>
                   <span className="flex flex-col gap-1">
-                    <span className="font-display text-[19px] text-ink">{item.author}</span>
+                    <span className="font-display text-[19px] text-ink">{item.autor}</span>
                     <span className="text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-                      {item.role}
+                      {item.rol}
                     </span>
                   </span>
                 </div>
 
                 <blockquote className="min-w-[280px] flex-1 font-display text-[27px] leading-[1.45] font-light text-ink italic">
-                  “{item.quote}”
+                  “{item.cita}”
                 </blockquote>
               </figure>
             </Reveal>

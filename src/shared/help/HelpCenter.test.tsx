@@ -1,8 +1,9 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
-import { BRAND } from '@/shared/config/brand'
 import { HelpCenter } from './HelpCenter'
 import { HELP_TOPICS, type HelpTopic } from './topics'
+
+const contacto = { numero: '+59170012345', visible: '+591 700 12345', saludo: 'Hola, necesito ayuda.' }
 
 /** `noUncheckedIndexedAccess`: el índice puede no existir, y una prueba muda no vale. */
 const tema = (indice: number): HelpTopic => {
@@ -13,21 +14,21 @@ const tema = (indice: number): HelpTopic => {
 
 describe('HelpCenter', () => {
   it('lista todas las preguntas', () => {
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
     for (const topic of HELP_TOPICS) {
       expect(screen.getByRole('button', { name: topic.question })).toBeInTheDocument()
     }
   })
 
   it('las respuestas empiezan cerradas', () => {
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
     const primera = tema(0)
     expect(screen.getByRole('button', { name: primera.question })).toHaveAttribute('aria-expanded', 'false')
     expect(screen.queryByText(primera.answer)).not.toBeInTheDocument()
   })
 
   it('cada pregunta se abre y se vuelve a cerrar', () => {
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
 
     for (const topic of HELP_TOPICS) {
       const boton = screen.getByRole('button', { name: topic.question })
@@ -43,7 +44,7 @@ describe('HelpCenter', () => {
   })
 
   it('abrir una pregunta no cierra la anterior: se pueden leer dos a la vez', () => {
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
     const primera = tema(0)
     const segunda = tema(1)
 
@@ -54,16 +55,14 @@ describe('HelpCenter', () => {
     expect(screen.getByText(segunda.answer)).toBeInTheDocument()
   })
 
-  it('el WhatsApp de contacto sale de brand.ts, no escrito a mano', () => {
-    // Escribirlo a mano crearía una copia que `pnpm preflight` no puede ver, y el
-    // marcador se iría a producción sin que la puerta de despliegue se enterase.
-    render(<HelpCenter />)
-    const enlace = screen.getByRole('link', { name: new RegExp(BRAND.whatsappDisplay.replace(/\+/g, '\\+')) })
-    expect(enlace).toHaveAttribute('href', `https://wa.me/${BRAND.whatsapp.replace(/\D/g, '')}`)
+  it('el WhatsApp de contacto sale de «La web», con el saludo de soporte', () => {
+    render(<HelpCenter contacto={contacto} />)
+    const enlace = screen.getByRole('link', { name: /\+591 700 12345/ })
+    expect(enlace.getAttribute('href')).toMatch(/^https:\/\/wa\.me\/59170012345\?text=/)
   })
 
   it('no ofrece el correo como contacto: el de la marca es no-reply y nadie lo responde', () => {
-    const { container } = render(<HelpCenter />)
+    const { container } = render(<HelpCenter contacto={contacto} />)
     expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
   })
 })
@@ -85,7 +84,7 @@ describe('HELP_TOPICS', () => {
 
 describe('HelpCenter · buscador', () => {
   it('filtra las preguntas por lo que se escribe', () => {
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
     const antes = screen.getAllByRole('button', { expanded: false }).length
 
     fireEvent.change(screen.getByLabelText('Buscar en preguntas frecuentes'), { target: { value: 'zzzz' } })
@@ -94,7 +93,7 @@ describe('HelpCenter · buscador', () => {
   })
 
   it('sin coincidencias lo dice y no deja la lista muda', () => {
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
     fireEvent.change(screen.getByLabelText('Buscar en preguntas frecuentes'), { target: { value: 'zzzz' } })
     expect(screen.getByText(/ninguna pregunta coincide/i)).toBeInTheDocument()
   })
@@ -104,7 +103,7 @@ describe('HelpCenter · buscador', () => {
     const conLaPalabra = HELP_TOPICS.filter((t) => t.answer.toLocaleLowerCase().includes('cupo'))
     expect(conLaPalabra.length).toBeGreaterThan(0)
 
-    render(<HelpCenter />)
+    render(<HelpCenter contacto={contacto} />)
     fireEvent.change(screen.getByLabelText('Buscar en preguntas frecuentes'), { target: { value: 'cupo' } })
 
     const visibles = screen.getAllByRole('button', { expanded: false })

@@ -93,6 +93,9 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
             // Publicar o retirar cada modelo de la web, y su música de escaparate. No es la
             // música de una boda: esa la sube su atelier o su cliente desde Configuración.
             { href: '/panel/admin/modelos', label: 'Modelos', icon: 'editar' },
+            // WhatsApp, ubicación, redes, cifras, testimonios, textos legales y buscadores:
+            // lo que la web pública enseña del negocio, sin tocar código.
+            { href: '/panel/admin/web', label: 'La web', icon: 'web' },
             { href: '/panel/admin/pagos', label: 'Datos de cobro', icon: 'qr' },
           ],
         },

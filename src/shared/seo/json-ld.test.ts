@@ -38,10 +38,21 @@ describe('faqJsonLd', () => {
 })
 
 describe('organizationJsonLd', () => {
-  it('publica el nombre y la url de la marca', () => {
-    const organization = organizationJsonLd(SITE)
-    expect(organization['@type']).toBe('Organization')
+  const negocio = { whatsapp: '+59170012345', direccion: '', ciudad: 'Cochabamba', pais: 'Bolivia', redes: ['https://instagram.com/x', ''] }
+
+  it('publica el negocio con nombre, web, teléfono y dirección, los mismos del pie', () => {
+    const organization = organizationJsonLd(negocio, SITE)
+    expect(organization['@type']).toBe('LocalBusiness')
     expect(organization.url).toBe('https://invitepremium.bo')
+    expect(organization.telephone).toBe('+59170012345')
+    expect(organization.address).toEqual({ '@type': 'PostalAddress', addressLocality: 'Cochabamba', addressCountry: 'Bolivia' })
+    expect(organization.sameAs).toEqual(['https://instagram.com/x'])
+  })
+
+  it('lo que no está configurado no se publica', () => {
+    const organization = organizationJsonLd({ ...negocio, whatsapp: '', redes: [] }, SITE)
+    expect(organization).not.toHaveProperty('telephone')
+    expect(organization).not.toHaveProperty('sameAs')
   })
 })
 

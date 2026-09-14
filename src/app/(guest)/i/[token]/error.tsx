@@ -1,7 +1,5 @@
 'use client'
 
-import { BRAND } from '@/shared/config/brand'
-
 /**
  * Aquí no cabe degradar como en la landing: una invitación sin datos no es una
  * invitación. Se remite al WhatsApp del atelier, que es la vía que siempre funciona.
@@ -15,7 +13,7 @@ export default function InvitationError() {
       </p>
       <a
         className="rounded-[var(--radius-pill)] bg-gold px-7 py-3.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-bg-raised"
-        href={`https://wa.me/${BRAND.whatsapp.replace(/\D/g, '')}`}
+        href="/contacto/whatsapp"
         rel="noopener noreferrer"
         target="_blank"
       >

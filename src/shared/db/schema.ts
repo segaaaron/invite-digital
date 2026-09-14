@@ -240,6 +240,23 @@ export const eventStaff = pgTable(
  * cadenas que solo lee la pantalla que las enseña. El día que haya que consultarlos por su
  * contenido, ese ajuste merece su propia tabla.
  */
+/**
+ * El historial de «La web»: cada guardado deja la foto completa de los datos del negocio.
+ * Restaurar es volver a guardar una foto, que deja otra. `actor_email` copiado como texto,
+ * como la auditoría: borrar al admin no borra el rastro.
+ */
+export const siteSettingsVersions = pgTable(
+  'site_settings_versions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    data: jsonb('data').notNull(),
+    campos: text('campos').array().notNull().default(sql`'{}'`),
+    actorEmail: text('actor_email').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('site_settings_versions_created_idx').on(t.createdAt.desc())],
+)
+
 export const appSettings = pgTable('app_settings', {
   key: varchar('key', { length: 64 }).primaryKey(),
   value: text('value').notNull(),

@@ -119,6 +119,15 @@ import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-a
 import { drizzleTodayReader } from '@/modules/admin/infrastructure/drizzle-today-reader'
 import { drizzleCatalogAdmin } from '@/modules/admin/infrastructure/drizzle-catalog-admin'
 import { drizzleIncomeReader } from '@/modules/admin/infrastructure/drizzle-income-reader'
+import { drizzleSiteVersions } from '@/modules/admin/infrastructure/drizzle-site-versions'
+import {
+  listSiteVersions,
+  readSiteSettings,
+  restoreSiteVersion,
+  saveSiteSettings,
+} from '@/modules/admin/application/site-settings-use-cases'
+import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
+import { cache } from 'react'
 import {
   listPlansForAdmin,
   readPublication,
@@ -135,7 +144,6 @@ import {
 import { drizzlePasswordResetRepository } from '@/modules/identity/infrastructure/drizzle-password-reset-repository'
 import { clientAccessEmail, passwordResetEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
-import { BRAND } from '@/shared/config/brand'
 import type { Role } from '@/modules/identity/domain/access'
 import { drizzleOrderRepository } from '@/modules/orders/infrastructure/drizzle-order-repository'
 import {
@@ -551,14 +559,29 @@ export const orders = {
  */
 const emailSender = createResendSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
 
+const leerSitio = readSiteSettings({ settings: drizzleSettingsRepository })
+
+/**
+ * «La web» para quien la pinta: una lectura **por petición** —el pie, la portada y el
+ * marcado de Google la piden en la misma respuesta— y, si la base no responde, los valores
+ * por defecto. Un fallo de ajustes no puede tumbar la web: se registra y se sigue.
+ */
+export const site = {
+  settings: cache(async () => {
+    const leido = await leerSitio()
+    if (!leido.ok) console.error('«La web» no se pudo leer; se usan los valores por defecto:', leido.error.detail)
+    return leido.ok ? leido.value : DEFAULT_SITE_SETTINGS
+  }),
+}
+
 export const notifications = {
   /** El código de recuperación. Sin enlace dentro: se teclea donde ya se pidió el cambio. */
-  sendPasswordCode: (input: { to: string; code: string }) =>
+  sendPasswordCode: async (input: { to: string; code: string }) =>
     emailSender.send({
       to: input.to,
-      ...passwordResetEmail({ code: input.code, minutos: 10, whatsapp: BRAND.whatsappDisplay }),
+      ...passwordResetEmail({ code: input.code, minutos: 10, whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null }),
     }),
-  sendClientAccess: (input: { to: string; password: string | null; eventTitle: string }) =>
+  sendClientAccess: async (input: { to: string; password: string | null; eventTitle: string }) =>
     emailSender.send({
       to: input.to,
       ...clientAccessEmail({
@@ -566,7 +589,7 @@ export const notifications = {
         password: input.password,
         eventTitle: input.eventTitle,
         panelUrl: `${env.SITE_URL.replace(/\/+$/, '')}/panel/entrar`,
-        whatsapp: BRAND.whatsappDisplay,
+        whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
       }),
     }),
 } as const
@@ -577,6 +600,11 @@ export const admin = {
   metrics: readMetrics({ admin: drizzleAdminRepository }),
   today: readToday({ today: drizzleTodayReader, clock: () => new Date() }),
   income: readIncome({ income: drizzleIncomeReader, clock: () => new Date() }),
+  /** «La web»: datos del negocio, pruebas sociales, textos legales y SEO, con historial. */
+  siteSettings: leerSitio,
+  saveSite: saveSiteSettings({ settings: drizzleSettingsRepository, versions: drizzleSiteVersions, admin: drizzleAdminRepository }),
+  siteVersions: listSiteVersions({ versions: drizzleSiteVersions }),
+  restoreSite: restoreSiteVersion({ settings: drizzleSettingsRepository, versions: drizzleSiteVersions, admin: drizzleAdminRepository }),
   /** Lo comercial del catálogo: planes y qué modelos se publican. */
   plans: listPlansForAdmin({ catalog: drizzleCatalogAdmin }),
   savePlan: savePlanUseCase({ catalog: drizzleCatalogAdmin, admin: drizzleAdminRepository }),

@@ -1,4 +1,4 @@
-import { buildWhatsAppLink, whatsAppPlanMessage } from '@/modules/leads'
+import { buildWhatsAppLink, fillPlanMessage } from '@/modules/leads'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -18,9 +18,11 @@ type Props = {
    * el invitado. Sin esto, el catálogo y la compra eran dos caminos que no se tocaban.
    */
   modelo?: string | null
+  /** El WhatsApp y la plantilla del mensaje de plan, de «La web». */
+  contacto: { whatsapp: string; mensajePlan: string }
 }
 
-export function PricingSection({ plans, locale, dictionary, modelo = null }: Props) {
+export function PricingSection({ plans, locale, dictionary, modelo = null, contacto }: Props) {
   const { pricing } = dictionary
 
   // El plan más caro no se compra de un clic: en la maqueta ese botón agenda una llamada.
@@ -40,16 +42,18 @@ export function PricingSection({ plans, locale, dictionary, modelo = null }: Pro
             // compra de un clic. Los demás abren el pedido, que desde el Plan B existe:
             // dejarlos en WhatsApp sería tener el flujo construido y sin puerta.
             const agendaLlamada = plan.id === masCaro?.id
+            // Sin WhatsApp configurado, «agendar llamada» lleva al formulario de contacto.
+            const llamada = agendaLlamada
+              ? buildWhatsAppLink(contacto.whatsapp, fillPlanMessage(contacto.mensajePlan, { name: plan.name, price: formatMoney(plan.price, locale) }))
+              : null
 
             return (
             <Reveal key={plan.id} delay={index * 0.08}>
               <PlanCard
-                ctaExternal={agendaLlamada}
+                ctaExternal={llamada !== null}
                 ctaHref={
                   agendaLlamada
-                    ? buildWhatsAppLink({
-                        message: whatsAppPlanMessage({ name: plan.name, price: formatMoney(plan.price, locale) }, locale),
-                      })
+                    ? (llamada ?? `/${locale}#contacto`)
                     : `/${locale}/pedido/${plan.slug}${modelo === null ? '' : `?modelo=${encodeURIComponent(modelo)}`}`
                 }
                 ctaLabel={agendaLlamada ? pricing.bookCall : pricing.choose.replace('{plan}', plan.name)}

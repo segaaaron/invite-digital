@@ -37,6 +37,9 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
   if (config.whatsapp.trim() === PLACEHOLDERS.whatsapp) {
     blockers.push(`WhatsApp sigue siendo el marcador ${PLACEHOLDERS.whatsapp}: todos los botones de precio llevan a un número que no existe.`)
   }
+  if (config.whatsapp.trim() === '') {
+    blockers.push('No hay WhatsApp configurado en «La web» (/panel/admin/web): los botones de contacto remiten al formulario y la ayuda no tiene a quién escribir.')
+  }
 
   if (config.email.trim().toLowerCase() === PLACEHOLDERS.email) {
     blockers.push(`El correo sigue siendo el marcador ${PLACEHOLDERS.email}.`)

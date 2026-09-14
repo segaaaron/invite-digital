@@ -11,6 +11,8 @@ import { db } from '@/shared/db/client'
 import { templates } from '@/shared/db/schema'
 import { EMPTY_PAYMENT_SETTINGS } from '@/modules/admin/domain/payment-settings'
 import { BRAND } from '@/shared/config/brand'
+import { readSiteSettings } from '@/modules/admin/application/site-settings-use-cases'
+import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import { checkReleaseReadiness } from '@/shared/config/preflight'
 import { isErr } from '@/shared/result'
 
@@ -20,13 +22,16 @@ async function runPreflight(): Promise<number> {
   // bloquean—, porque desplegar sin poder comprobarlo no es desplegar comprobado.
   const ajustes = await admin.payment()
   const payment = isErr(ajustes) ? EMPTY_PAYMENT_SETTINGS : ajustes.value
+  // El WhatsApp y las marcas también viven en la base («La web»). Sin poder leerla, se
+  // tratan como vacíos: un WhatsApp vacío bloquea igual que el marcador.
+  const sitio = await readSiteSettings({ settings: drizzleSettingsRepository })()
   const blockers: string[] = checkReleaseReadiness({
-    whatsapp: BRAND.whatsapp,
+    whatsapp: isErr(sitio) ? '' : sitio.value.whatsapp,
     email: BRAND.email,
     siteUrl: process.env.SITE_URL ?? '',
     siteDomain: process.env.SITE_DOMAIN ?? '',
     postgresPassword: process.env.POSTGRES_PASSWORD ?? '',
-    trustBrands: BRAND.trustBrands,
+    trustBrands: isErr(sitio) ? [] : sitio.value.marcas,
     payment,
   })
 

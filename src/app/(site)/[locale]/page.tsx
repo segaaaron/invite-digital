@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { NONCE_HEADER } from '@/shared/config/headers'
 import { notFound } from 'next/navigation'
-import { catalog } from '@/app/composition/container'
+import { catalog, site } from '@/app/composition/container'
+import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
@@ -21,6 +22,7 @@ import { HeroStack } from '@/sections/HeroStack'
 import { MobileSection } from '@/sections/MobileSection'
 import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { ContactSection } from '@/modules/leads'
+import { PrivacyNotice } from '@/sections/LegalPage'
 import { HeroCanvas } from '@/three/HeroCanvas'
 
 // Rendered per request, not prerendered: the pages read Postgres and the image is
@@ -47,12 +49,14 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   if (!locale) return {}
 
   const dictionary = getDictionary(locale)
+  // El título y la descripción que escribió el admin en «La web»; vacíos, los de siempre.
+  const seo = (await site.settings()).seo.inicio
 
   return buildPageMetadata({
     locale,
     path: `/${locale}`,
-    title: dictionary.seo.homeTitle,
-    description: truncateDescription(dictionary.seo.homeDescription),
+    title: seo.titulo[locale] || dictionary.seo.homeTitle,
+    description: truncateDescription(seo.descripcion[locale] || dictionary.seo.homeDescription),
   })
 }
 
@@ -87,6 +91,9 @@ export default async function LandingPage({
     detail: cause instanceof Error ? cause.message : 'error desconocido',
   })
 
+  const ajustes = await site.settings()
+  const sitio = sitioPublico(ajustes, locale)
+
   const [plansResult, templatesResult, categoriesResult] = await Promise.all([
     attempt(() => catalog.listPlans(locale), asOutage),
     attempt(() => catalog.listTemplates(locale), asOutage),
@@ -110,7 +117,15 @@ export default async function LandingPage({
   return (
     <>
       <script
-        dangerouslySetInnerHTML={{ __html: jsonLdScript(organizationJsonLd()) }}
+        dangerouslySetInnerHTML={{ __html: jsonLdScript(
+          organizationJsonLd({
+            whatsapp: sitio.whatsapp,
+            direccion: sitio.direccion,
+            ciudad: sitio.ciudad,
+            pais: sitio.pais,
+            redes: [sitio.redes.instagram, sitio.redes.facebook, sitio.redes.tiktok],
+          }),
+        ) }}
         nonce={nonce}
         type="application/ld+json"
       />
@@ -126,7 +141,9 @@ export default async function LandingPage({
       />
 
       <HeroSection
+        cifras={sitio.cifras}
         dictionary={dictionary}
+        marcas={sitio.marcas}
         slot={
           <HeroCanvas
             alt={dictionary.hero.posterAlt}
@@ -170,14 +187,37 @@ export default async function LandingPage({
       <ComparisonSection dictionary={dictionary} />
 
       {plans.length > 0 ? (
-        <PricingSection dictionary={dictionary} locale={locale} modelo={modeloElegido} plans={plans} />
+        <PricingSection
+          contacto={{ whatsapp: sitio.whatsapp, mensajePlan: sitio.mensajePlan }}
+          dictionary={dictionary}
+          locale={locale}
+          modelo={modeloElegido}
+          plans={plans}
+        />
       ) : null}
 
       {templates.length > 0 ? <ModelsSection dictionary={dictionary} locale={locale} templates={templates} /> : null}
 
-      <TestimonialsSection dictionary={dictionary} />
+      <TestimonialsSection dictionary={dictionary} testimonios={sitio.testimonios} />
       <FaqSection dictionary={dictionary} />
-      <ContactSection categories={categories} dictionary={dictionary} locale={locale} />
+      <ContactSection
+        categories={categories}
+        contacto={{
+          whatsapp: sitio.whatsapp,
+          whatsappVisible: sitio.whatsappVisible,
+          horario: sitio.horario,
+          mensaje: sitio.mensajeGeneral,
+        }}
+        dictionary={dictionary}
+        locale={locale}
+        privacidad={
+          <PrivacyNotice
+            enlace={dictionary.legal.noticeLink}
+            href={sitio.privacidadPublicada ? `/${locale}/privacidad` : null}
+            texto={dictionary.legal.notice}
+          />
+        }
+      />
     </>
   )
 }

@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { BRAND } from '@/shared/config/brand'
+import { site } from '@/app/composition/container'
 import { SignInForm } from '@/modules/identity/ui/SignInForm'
 
 export const metadata = { title: 'Entrar · Panel' }
@@ -16,7 +16,8 @@ export const metadata = { title: 'Entrar · Panel' }
  * se convierte en una banda de cabecera: en un teléfono, media pantalla de decoración
  * dejaría el formulario por debajo del pliegue.
  */
-export default function SignInPage() {
+export default async function SignInPage() {
+  const ajustes = await site.settings()
   return (
     <main className="grid min-h-dvh grid-rows-[auto_1fr] min-[860px]:grid-cols-[1.05fr_1fr] min-[860px]:grid-rows-1">
       <section className="relative flex flex-col justify-between overflow-hidden bg-linear-to-b from-shell to-shell-deep px-8 py-10 text-shell-ink min-[860px]:px-14 min-[860px]:py-14">
@@ -74,7 +75,7 @@ export default function SignInPage() {
         </div>
 
         <p className="relative mt-8 hidden font-mono text-[9px] tracking-[0.3em] text-shell-ink/40 uppercase min-[860px]:block">
-          {BRAND.city}
+          {ajustes.ciudad}, {ajustes.pais}
         </p>
       </section>
 

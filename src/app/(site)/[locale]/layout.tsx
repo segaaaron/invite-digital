@@ -4,6 +4,8 @@ import { display, sans } from '@/shared/design/fonts'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { LOCALES } from '@/shared/i18n/locales'
 import { parseLocaleParam } from '@/shared/i18n/server'
+import { site } from '@/app/composition/container'
+import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { SiteFooter } from '@/sections/SiteFooter'
 import { SiteHeader } from '@/sections/SiteHeader'
 import { VIEWPORT } from '@/shared/config/viewport'
@@ -27,13 +29,14 @@ export default async function LocaleLayout({
   if (!locale) notFound()
 
   const dictionary = getDictionary(locale)
+  const sitio = sitioPublico(await site.settings(), locale)
 
   return (
     <html lang={locale} className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body>
         <SiteHeader locale={locale} dictionary={dictionary} />
         <main id="top">{children}</main>
-        <SiteFooter locale={locale} dictionary={dictionary} />
+        <SiteFooter dictionary={dictionary} locale={locale} sitio={sitio} />
       </body>
     </html>
   )

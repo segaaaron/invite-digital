@@ -77,6 +77,32 @@ export function PlayIcon({ className }: IconProps) {
   )
 }
 
+export function InstagramIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <rect height="16" rx="4.5" width="16" x="4" y="4" />
+      <circle cx="12" cy="12" r="3.6" />
+      <circle cx="16.8" cy="7.2" fill="currentColor" r="0.6" stroke="none" />
+    </svg>
+  )
+}
+
+export function FacebookIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M14 8.5h2V5.2h-2.4C11.2 5.2 10 6.8 10 9v2H8v3.2h2V20h3.3v-5.8h2.3l.4-3.2h-2.7V9.4c0-.6.3-.9.7-.9z" />
+    </svg>
+  )
+}
+
+export function TikTokIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M13.5 4v10.2a3.3 3.3 0 1 1-3.3-3.3M13.5 4c.4 2.4 2.1 4 4.5 4.2" />
+    </svg>
+  )
+}
+
 export function WhatsAppIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>

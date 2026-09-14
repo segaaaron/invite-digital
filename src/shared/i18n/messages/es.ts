@@ -11,12 +11,6 @@ export const es = {
     ctaPrimary: 'Crear invitación',
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
-    metrics: [
-      { value: '480', label: 'Eventos entregados', icon: 'mail' },
-      { value: '72h', label: 'Entrega promedio', icon: 'clock' },
-      { value: '94%', label: 'Confirmación RSVP', icon: 'check' },
-      { value: '16', label: 'Países alcanzados', icon: 'globe' },
-    ],
     posterAlt: 'Sobre de algodón con sello de cera dorado, cerrado sobre fondo marfil',
     envelopeOpen: 'Abrir el sobre',
     envelopeClose: 'Cerrar el sobre',
@@ -229,13 +223,6 @@ export const es = {
   testimonials: {
     eyebrow: 'Testimonios',
     title: 'Lo que dicen quienes ya lo vivieron',
-    items: [
-      {
-        quote: 'Mandamos el enlace un martes y el viernes ya teníamos el 90% de las confirmaciones. Ninguna novia había visto algo así en Bolivia.',
-        author: 'Daniela Ortiz',
-        role: 'Wedding planner · Cochabamba',
-      },
-    ],
   },
   faq: {
     eyebrow: 'Preguntas frecuentes',
@@ -320,5 +307,11 @@ export const es = {
       'Ocho modelos de invitación digital para bodas, XV años, graduaciones y eventos corporativos en Bolivia. Escena 3D, RSVP y entrega en 72 horas.',
     breadcrumbHome: 'Inicio',
   },
-  footer: { rights: 'Todos los derechos reservados', coverage: 'Cochabamba, Bolivia · Entregas a todo el país' },
+  footer: { rights: 'Todos los derechos reservados', privacy: 'Privacidad', terms: 'Términos', onNetwork: 'Luxury Atelier en {red}' },
+  legal: {
+    privacyTitle: 'Política de privacidad',
+    termsTitle: 'Términos del servicio',
+    notice: 'Al enviar, tratamos tus datos según nuestra',
+    noticeLink: 'política de privacidad',
+  },
 } satisfies Dictionary

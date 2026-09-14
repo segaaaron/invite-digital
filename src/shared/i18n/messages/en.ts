@@ -11,12 +11,6 @@ export const en = {
     ctaPrimary: 'Create your invitation',
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
-    metrics: [
-      { value: '480', label: 'Events delivered', icon: 'mail' },
-      { value: '72h', label: 'Average delivery', icon: 'clock' },
-      { value: '94%', label: 'RSVP completion', icon: 'check' },
-      { value: '16', label: 'Countries reached', icon: 'globe' },
-    ],
     posterAlt: 'Cotton envelope with a golden wax seal, closed on an ivory background',
     envelopeOpen: 'Open the envelope',
     envelopeClose: 'Close the envelope',
@@ -229,13 +223,6 @@ export const en = {
   testimonials: {
     eyebrow: 'Testimonials',
     title: 'What the people who lived it are saying',
-    items: [
-      {
-        quote: 'We sent the link on a Tuesday and by Friday we already had ninety percent of the confirmations. No bride in Bolivia had seen anything like it.',
-        author: 'Daniela Ortiz',
-        role: 'Wedding planner · Cochabamba',
-      },
-    ],
   },
   faq: {
     eyebrow: 'Frequently asked questions',
@@ -320,5 +307,11 @@ export const en = {
       'Eight digital invitation models for weddings, quinceañeras, graduations and corporate events in Bolivia. A 3D scene, RSVP, and delivery within 72 hours.',
     breadcrumbHome: 'Home',
   },
-  footer: { rights: 'All rights reserved', coverage: 'Cochabamba, Bolivia · Delivering nationwide' },
+  footer: { rights: 'All rights reserved', privacy: 'Privacy', terms: 'Terms', onNetwork: 'Luxury Atelier on {red}' },
+  legal: {
+    privacyTitle: 'Privacy policy',
+    termsTitle: 'Terms of service',
+    notice: 'By sending, we handle your data under our',
+    noticeLink: 'privacy policy',
+  },
 } satisfies Dictionary

@@ -22,6 +22,8 @@ const NOMBRE: Record<string, string> = {
   'usuario.rol': 'Cambió un rol',
   'usuario.plan': 'Cambió el plan de un usuario',
   'usuario.borrado': 'Borró un usuario',
+  'web.editada': 'Editó La web',
+  'web.restaurada': 'Restauró una versión de La web',
   'evento.reasignado': 'Reasignó un evento',
   'evento.plan': 'Cambió el plan de un evento',
   'evento.borrado': 'Borró un evento',

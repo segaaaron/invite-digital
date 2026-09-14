@@ -40,11 +40,23 @@ export type FaqJsonLd = {
 
 export type OrganizationJsonLd = {
   '@context': 'https://schema.org'
-  '@type': 'Organization'
+  '@type': 'LocalBusiness'
   name: string
   url: string
   areaServed: string
   slogan: string
+  telephone?: string
+  address: { '@type': 'PostalAddress'; streetAddress?: string; addressLocality: string; addressCountry: string }
+  sameAs?: string[]
+}
+
+/** Lo que Google cruza con los directorios y las redes: nombre, dirección, teléfono y web. */
+export type NegocioParaGoogle = {
+  readonly whatsapp: string
+  readonly direccion: string
+  readonly ciudad: string
+  readonly pais: string
+  readonly redes: readonly string[]
 }
 
 export type BreadcrumbJsonLd = {
@@ -90,14 +102,28 @@ export function faqJsonLd(dictionary: FaqSource): FaqJsonLd {
   }
 }
 
-export function organizationJsonLd(baseUrl: string = env.SITE_URL): OrganizationJsonLd {
+/**
+ * El negocio, marcado como `LocalBusiness`. Nombre, dirección, teléfono y web tienen que ser
+ * **los mismos** que en el pie y en las redes: es lo que Google compara para confiar en la
+ * ficha. Por eso salen de «La web», la misma fuente que el pie. Lo vacío no se publica.
+ */
+export function organizationJsonLd(negocio: NegocioParaGoogle, baseUrl: string = env.SITE_URL): OrganizationJsonLd {
+  const redes = negocio.redes.filter((r) => r !== '')
   return {
     '@context': 'https://schema.org',
-    '@type': 'Organization',
+    '@type': 'LocalBusiness',
     name: BRAND.siteName,
     url: baseUrl,
-    areaServed: BRAND.city,
+    areaServed: negocio.pais,
     slogan: BRAND.tagline,
+    ...(negocio.whatsapp === '' ? {} : { telephone: negocio.whatsapp }),
+    address: {
+      '@type': 'PostalAddress',
+      ...(negocio.direccion === '' ? {} : { streetAddress: negocio.direccion }),
+      addressLocality: negocio.ciudad,
+      addressCountry: negocio.pais,
+    },
+    ...(redes.length === 0 ? {} : { sameAs: redes }),
   }
 }
 

@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
-import { BRAND } from '../../src/shared/config/brand'
 
-// Built from BRAND so replacing the placeholder number does not turn this suite red.
-const WHATSAPP_DIGITS = BRAND.whatsapp.replace(/\D/g, '')
+// El WhatsApp vive en «La web» (app_settings). La prueba de precios siembra uno propio y
+// deja la fila como estaba: no depende de lo que el admin tenga configurado en la base.
+const WHATSAPP_DIGITS = '59170000001'
 
 test('redirige a español según la cabecera del navegador', async ({ browser }) => {
   const context = await browser.newContext({
@@ -33,6 +33,10 @@ test('muestra los tres planes con precios en bolivianos', async ({ page }) => {
 })
 
 test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada', async ({ page }) => {
+  const [previa] = await sql<{ value: string }[]>`select value from app_settings where key = 'site.settings'`
+  await sql`insert into app_settings (key, value) values ('site.settings', ${JSON.stringify({ whatsapp: `+${WHATSAPP_DIGITS}` })})
+    on conflict (key) do update set value = excluded.value`
+  try {
   await page.goto('/es')
 
   // Desde el Plan B, «Firma 3D» se compra: su botón abre el pedido. Dejarlo en WhatsApp
@@ -45,6 +49,10 @@ test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada'
     'href',
     new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=`),
   )
+  } finally {
+    if (previa) await sql`update app_settings set value = ${previa.value} where key = 'site.settings'`
+    else await sql`delete from app_settings where key = 'site.settings'`
+  }
 })
 
 test('el hero se ve aunque se llegue por un ancla y se suba después', async ({ page }) => {

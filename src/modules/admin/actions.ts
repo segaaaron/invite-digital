@@ -9,6 +9,7 @@ import { addEventClientAction } from '@/modules/events/staff-actions'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { ALFABETO_SUFIJO, slugDeBoda } from './domain/nueva-boda'
 import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
+import { parseSiteSettings } from './domain/site-settings'
 import { parseAmount } from '@/modules/registry'
 import { isErr } from '@/shared/result'
 
@@ -622,4 +623,52 @@ export async function setTemplatePublishedAction(_previous: AdminActionState, fo
 
   revalidatePath('/panel/admin/modelos')
   return { status: 'success', message: publicar ? 'Publicado en la web.' : 'Retirado de la web.' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// «La web»: datos del negocio, pruebas sociales, legal y SEO. El formulario viaja como un
+// solo JSON: son controles controlados con vista previa en vivo, y así React no vacía nada
+// al terminar la acción. Lo que llega se valida entero en el dominio.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type SiteActionState =
+  | { status: 'idle' }
+  | { status: 'success'; message: string }
+  | { status: 'error'; message: string; campo?: string }
+
+export async function saveSiteSettingsAction(_previous: SiteActionState, formData: FormData): Promise<SiteActionState> {
+  const actor = await requireAdmin()
+
+  let datos: unknown
+  try {
+    datos = JSON.parse(texto(formData, 'datos'))
+  } catch {
+    return { status: 'error', message: 'No pudimos leer el formulario. Recarga la página.' }
+  }
+  // Se pasa por el lector tolerante antes de validar: lo que no tenga la forma esperada cae
+  // a su valor por defecto en vez de reventar la validación.
+  const guardado = await admin.saveSite(actor, parseSiteSettings(JSON.stringify(datos)))
+  if (isErr(guardado)) {
+    if (guardado.error.kind === 'invalid_field') return { status: 'error', message: guardado.error.detail, campo: guardado.error.campo }
+    console.error('saveSiteSettingsAction', guardado.error.detail)
+    return { status: 'error', message: 'No pudimos guardar. Vuelve a intentarlo en un momento.' }
+  }
+
+  revalidatePath('/panel/admin/web')
+  revalidatePath('/', 'layout')
+  return { status: 'success', message: 'Guardado. La web ya enseña los cambios.' }
+}
+
+export async function restoreSiteVersionAction(_previous: SiteActionState, formData: FormData): Promise<SiteActionState> {
+  const actor = await requireAdmin()
+
+  const restaurado = await admin.restoreSite(actor, texto(formData, 'versionId'))
+  if (isErr(restaurado)) {
+    if (restaurado.error.kind === 'storage_failure') console.error('restoreSiteVersionAction', restaurado.error.detail)
+    return { status: 'error', message: restaurado.error.kind === 'storage_failure' ? 'No pudimos restaurar. Vuelve a intentarlo.' : restaurado.error.detail }
+  }
+
+  revalidatePath('/panel/admin/web')
+  revalidatePath('/', 'layout')
+  return { status: 'success', message: 'Versión restaurada. La web ya la enseña.' }
 }

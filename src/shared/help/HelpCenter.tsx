@@ -2,14 +2,16 @@
 
 import { useMemo, useState } from 'react'
 import { SearchField } from '@/shared/design/ui/panel/PanelKit'
-import { HELP_CONTACT, HELP_TOPICS } from './topics'
+import { enlaceWhatsapp } from '@/shared/whatsapp'
+import { HELP_TOPICS, type HelpContact } from './topics'
 
 /**
  * El centro de ayuda del panel. Cada pregunta se abre y se cierra por su cuenta: se
  * pueden leer dos a la vez, que es lo que hace falta cuando se está comparando lo que
  * trae un plan con lo que trae otro.
  */
-export function HelpCenter() {
+export function HelpCenter({ contacto }: { contacto: HelpContact }) {
+  const whatsapp = enlaceWhatsapp(contacto.numero, contacto.saludo)
   const [abiertas, setAbiertas] = useState<readonly string[]>([])
   const [busqueda, setBusqueda] = useState('')
 
@@ -71,18 +73,18 @@ export function HelpCenter() {
 
       <section className="flex flex-col gap-3 rounded-card border border-line p-6">
         <h2 className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">¿Sigues con la duda?</h2>
-        <p className="text-[13px] leading-[1.7] text-ink-soft">Escríbenos y lo vemos contigo.</p>
-        <div className="flex flex-wrap items-center gap-5">
-          <a
-            className="text-[13px] text-gold-deep underline underline-offset-4"
-            href={HELP_CONTACT.whatsappHref}
-            rel="noopener noreferrer"
-            target="_blank"
-          >
-            WhatsApp {HELP_CONTACT.whatsappLabel}
-          </a>
-          {/* Sin correo: el de la marca es no-reply. */}
-        </div>
+        {whatsapp === null ? (
+          <p className="text-[13px] leading-[1.7] text-ink-soft">El administrador todavía no ha configurado el WhatsApp de soporte.</p>
+        ) : (
+          <>
+            <p className="text-[13px] leading-[1.7] text-ink-soft">Escríbenos y lo vemos contigo.</p>
+            <div className="flex flex-wrap items-center gap-5">
+              <a className="text-[13px] text-gold-deep underline underline-offset-4" href={whatsapp} rel="noopener noreferrer" target="_blank">
+                WhatsApp {contacto.visible}
+              </a>
+            </div>
+          </>
+        )}
       </section>
     </div>
   )

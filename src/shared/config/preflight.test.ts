@@ -100,4 +100,9 @@ describe('los datos de transferencia del Plan B', () => {
   it('con datos de verdad no dicen nada', () => {
     expect(checkReleaseReadiness(REAL)).toEqual([])
   })
+
+  it('sin WhatsApp configurado en «La web» también bloquea', () => {
+    const blockers = checkReleaseReadiness({ ...REAL, whatsapp: '' })
+    expect(blockers.some((b) => b.includes('La web'))).toBe(true)
+  })
 })

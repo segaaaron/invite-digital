@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { catalog } from '@/app/composition/container'
+import { catalog, site } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
 import { attempt, isOk } from '@/shared/result'
@@ -10,6 +10,9 @@ export const dynamic = 'force-dynamic'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = []
+  // Las páginas legales solo existen publicadas: anunciar una que responde 404 resta
+  // confianza de rastreo a toda la web.
+  const { legal } = await site.settings()
 
   for (const locale of LOCALES) {
     entries.push({ url: `${env.SITE_URL}/${locale}`, changeFrequency: 'weekly', priority: 1 })
@@ -21,6 +24,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (templates.length > 0) {
       entries.push({ url: `${env.SITE_URL}/${locale}/colecciones`, changeFrequency: 'weekly', priority: 0.8 })
     }
+    if (legal.privacidad.publicada) entries.push({ url: `${env.SITE_URL}/${locale}/privacidad`, changeFrequency: 'yearly', priority: 0.2 })
+    if (legal.terminos.publicada) entries.push({ url: `${env.SITE_URL}/${locale}/terminos`, changeFrequency: 'yearly', priority: 0.2 })
   }
 
   return entries

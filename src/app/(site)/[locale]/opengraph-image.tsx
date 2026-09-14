@@ -87,7 +87,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
         <div
           style={{ display: 'flex', fontFamily: 'Jost', marginTop: 40, fontSize: 22, color: INK_SOFT, letterSpacing: 4 }}
         >
-          {BRAND.siteName} · {BRAND.city}
+          {BRAND.siteName} · {BRAND.tagline}
         </div>
       </div>
     ),

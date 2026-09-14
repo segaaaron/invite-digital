@@ -1,16 +1,10 @@
-import { BRAND } from '@/shared/config/brand'
-
 export type HelpTopic = { readonly question: string; readonly answer: string }
 
 /**
- * El contacto sale de `brand.ts` y **nunca escrito a mano**: hoy son marcadores que
- * `pnpm preflight` vigila y bloquea el despliegue si siguen puestos. Una copia a mano
- * quedaría fuera de esa puerta y se iría a producción sin que nadie se enterase.
+ * El contacto de soporte **no vive aquí**: el WhatsApp lo edita el admin en «La web» y llega
+ * a la ayuda por props desde la página, que es quien puede leer la base.
  */
-export const HELP_CONTACT = {
-  whatsappHref: `https://wa.me/${BRAND.whatsapp.replace(/\D/g, '')}`,
-  whatsappLabel: BRAND.whatsappDisplay,
-} as const
+export type HelpContact = { readonly numero: string; readonly visible: string; readonly saludo: string }
 
 /**
  * Las preguntas cubren lo que **este** panel hace de verdad. El FAQ de la maqueta no

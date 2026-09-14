@@ -153,3 +153,18 @@ export interface CatalogAdmin {
 export interface IncomeReader {
   pedidos(): Promise<PedidoCobro[]>
 }
+
+export type SiteVersionRow = {
+  readonly id: string
+  readonly createdAt: Date
+  readonly actorEmail: string
+  readonly campos: readonly string[]
+  readonly data: unknown
+}
+
+/** El historial de «La web». Cada guardado deja una foto; restaurar es guardar una foto vieja. */
+export interface SiteVersionStore {
+  add(entrada: { data: unknown; campos: readonly string[]; actorEmail: string }): Promise<void>
+  list(limit: number): Promise<SiteVersionRow[]>
+  find(id: string): Promise<SiteVersionRow | null>
+}

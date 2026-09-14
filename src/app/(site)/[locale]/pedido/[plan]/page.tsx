@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { catalog } from '@/app/composition/container'
+import { catalog, site } from '@/app/composition/container'
+import { PrivacyNotice } from '@/sections/LegalPage'
 import { formatMoney } from '@/modules/catalog/domain/money'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { OrderForm } from '@/modules/orders/ui/OrderForm'
@@ -52,6 +53,11 @@ export default async function PedidoPage({
         priceLabel={`${formatMoney(plan.price, locale)} ${plan.price.currency}`}
         templateName={disenoElegido?.label ?? null}
         templateSlug={disenoElegido?.key ?? null}
+      />
+      <PrivacyNotice
+        enlace={dictionary.legal.noticeLink}
+        href={(await site.settings()).legal.privacidad.publicada ? `/${locale}/privacidad` : null}
+        texto={dictionary.legal.notice}
       />
     </main>
   )

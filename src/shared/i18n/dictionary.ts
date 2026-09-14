@@ -16,18 +16,9 @@ export interface HeroDictionary {
   ctaPrimary: string
   ctaSecondary: string
   trustLabel: string
-  /** La franja de cifras bajo el sobre. */
-  metrics: readonly [HeroMetric, HeroMetric, HeroMetric, HeroMetric]
   posterAlt: string
   envelopeOpen: string
   envelopeClose: string
-}
-
-export interface HeroMetric {
-  value: string
-  label: string
-  /** Nombre del icono; el dibujo vive en `shared/design/ui/icons`. */
-  icon: 'mail' | 'clock' | 'check' | 'globe'
 }
 
 export interface ExperienceAct {
@@ -102,16 +93,9 @@ export interface FaqDictionary {
   items: readonly [FaqItem, FaqItem, FaqItem, FaqItem, FaqItem]
 }
 
-export interface TestimonialItem {
-  quote: string
-  author: string
-  role: string
-}
-
 export interface TestimonialsDictionary {
   eyebrow: string
   title: string
-  items: readonly [TestimonialItem]
 }
 
 export interface PricingDictionary {
@@ -188,7 +172,19 @@ export interface SeoDictionary {
 
 export interface FooterDictionary {
   rights: string
-  coverage: string
+  privacy: string
+  terms: string
+  /** El rótulo accesible de los iconos de redes: «Luxury Atelier en Instagram». */
+  onNetwork: string
+}
+
+/** Las páginas legales y el aviso bajo los formularios que piden datos. */
+export interface LegalDictionary {
+  privacyTitle: string
+  termsTitle: string
+  /** «Al enviar, tratamos tus datos según nuestra» + enlace. */
+  notice: string
+  noticeLink: string
 }
 
 export type RsvpMessageKey =
@@ -451,4 +447,5 @@ export interface Dictionary {
   contact: ContactDictionary
   seo: SeoDictionary
   footer: FooterDictionary
+  legal: LegalDictionary
 }
