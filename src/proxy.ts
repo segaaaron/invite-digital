@@ -1,19 +1,28 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { NONCE_HEADER, PATHNAME_HEADER } from '@/shared/config/headers'
 import { LOCALE_COOKIE, isLocale } from '@/shared/i18n/locales'
 import { negotiateLocale } from '@/shared/i18n/negotiate'
 import { buildContentSecurityPolicy, createNonce } from '@/shared/security/csp'
 
 const PUBLIC_FILE = /\.[^/]+$/
-const NONCE_HEADER = 'x-nonce'
 
 /**
  * The nonce travels to the render through a request header, which is how a Server
  * Component reads it (`headers()`); the response carries the policy that matches it.
+ *
+ * La ruta viaja por el mismo camino y por un motivo concreto: un Server Component no
+ * puede saber en qué dirección está, y el guard de sesión lo necesita para no mandar a
+ * cambiar la contraseña a quien **ya** está en esa pantalla. Sin ella, `/panel/cuenta` se
+ * redirigía a sí misma en bucle y las diez páginas de esa carcasa quedaban inalcanzables.
+ *
+ * Se pone aquí, en `withCsp`, porque es por donde pasan **todas** las rutas del panel: la
+ * rama de más abajo solo atiende la raíz sin idioma.
  */
 function withCsp(request: NextRequest): NextResponse {
   const nonce = createNonce()
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(NONCE_HEADER, nonce)
+  requestHeaders.set(PATHNAME_HEADER, request.nextUrl.pathname)
 
   const response = NextResponse.next({ request: { headers: requestHeaders } })
   response.headers.set(

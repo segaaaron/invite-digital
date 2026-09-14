@@ -1,6 +1,7 @@
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { notFound, redirect } from 'next/navigation'
 import { events, identity } from '@/app/composition/container'
+import { PATHNAME_HEADER } from '@/shared/config/headers'
 import { isErr } from '@/shared/result'
 import { type Actor, type EventSection, isAdmin, parseRole } from './domain/access'
 
@@ -23,7 +24,10 @@ export const sessionCookieOptions = (expiresAt: Date) =>
  * tocarla desde un Server Component. Con ventana de 30 días y renovación a los 15, la
  * siguiente acción del panel la refresca mucho antes de que nadie pierda la sesión.
  */
-export async function requireSession(opciones: { permitirProvisional?: boolean } = {}): Promise<Actor> {
+/** Adonde se manda a quien todavía usa la contraseña que le escribió otro. */
+const CAMBIAR_CONTRASENA = '/panel/cuenta'
+
+export async function requireSession(): Promise<Actor> {
   const jar = await cookies()
   const token = jar.get(SESSION_COOKIE)?.value ?? null
   const result = await identity.authenticateSession(token)
@@ -38,10 +42,13 @@ export async function requireSession(opciones: { permitirProvisional?: boolean }
   // Su contraseña la escribió otro y viajó por correo: hasta que elija una suya, el panel
   // no le deja hacer nada más que cambiarla. Quien la escribió podría entrar como él.
   //
-  // `permitirProvisional` lo pide **solo** la pantalla de cuenta, que es adonde se le
-  // manda: sin esa salida, redirigiría a una página que redirige, en bucle.
-  if (usuario.mustChangePassword && opciones.permitirProvisional !== true) {
-    redirect('/panel/cuenta')
+  // **La excepción la decide la ruta, no quien llama.** Antes había que pedirla página por
+  // página, y el layout de `(atelier)` —que se evalúa antes que la página de cuenta y no
+  // la pedía— redirigía a esa misma dirección: bucle infinito, y con él las diez páginas
+  // de esa carcasa inalcanzables. Leyendo la ruta, olvidarse deja de ser posible.
+  const ruta = (await headers()).get(PATHNAME_HEADER) ?? ''
+  if (usuario.mustChangePassword && !ruta.startsWith(CAMBIAR_CONTRASENA)) {
+    redirect(CAMBIAR_CONTRASENA)
   }
 
   return {

@@ -15,9 +15,11 @@ export const dynamic = 'force-dynamic'
  * WhatsApp. Sin esta pantalla, la contraseña que escribió otra persona valía para siempre.
  */
 export default async function CuentaPage() {
-  // **La única que lo pide.** El guard manda aquí a quien tiene una contraseña
-  // provisional; sin esta salida, esta página redirigiría a sí misma en bucle.
-  const actor = await requireSession({ permitirProvisional: true })
+  // Sin excepciones que pedir: el guard sabe qué ruta se está sirviendo y no redirige
+  // cuando ya se está aquí. Pedir la salida página por página fue justo lo que rompió
+  // esto — el layout de `(atelier)` se evalúa antes y no la pedía, así que redirigía a
+  // esta misma dirección en bucle.
+  const actor = await requireSession()
 
   return (
     <>

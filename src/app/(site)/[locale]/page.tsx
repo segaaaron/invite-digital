@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { NONCE_HEADER } from '@/shared/config/headers'
 import { notFound } from 'next/navigation'
 import { catalog } from '@/app/composition/container'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
@@ -77,7 +78,7 @@ export default async function LandingPage({
 
   // The proxy puts the CSP nonce on the request; without it these inline blocks would
   // be refused by the policy.
-  const nonce = (await headers()).get('x-nonce') ?? undefined
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
 
   // The repositories throw when Postgres is unreachable, so each read is wrapped:
   // a database outage degrades the page section by section instead of returning a 500.

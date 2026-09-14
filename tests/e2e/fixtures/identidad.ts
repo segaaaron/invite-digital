@@ -10,6 +10,19 @@ export const PROVISIONAL = {
   password: 'la-que-puso-el-admin-1',
 } as const
 
+/**
+ * Una **segunda cuenta**, solo para la recuperación por código.
+ *
+ * No es cosmética: el limitador admite **tres intentos por cuenta y minuto**, y con una
+ * sola cuenta esta suite hacía cuatro. El cuarto se rechazaba y la prueba se quedaba en la
+ * puerta, como si la contraseña recuperada no sirviera — cuando lo que fallaba era la
+ * prueba gastando el cupo.
+ */
+export const RECUPERA = {
+  email: 'recupera-e2e@invitepremium.bo',
+  password: 'la-que-puso-el-admin-2',
+} as const
+
 export const NUEVA_PASSWORD = 'la-que-elige-el-cliente-1'
 
 /**
@@ -19,12 +32,18 @@ export const NUEVA_PASSWORD = 'la-que-elige-el-cliente-1'
  * el correo, y lo que esta suite prueba empieza después — qué le pasa a quien entra con
  * una contraseña que escribió otro.
  */
-export async function seedProvisional(): Promise<void> {
-  await borrar()
+export async function seedProvisional(quien: { email: string; password: string } = PROVISIONAL): Promise<void> {
+  await sql`delete from users where email = ${quien.email}`
   await sql`
     insert into users (email, password_hash, role, must_change_password)
-    values (${PROVISIONAL.email}, ${await argon2Hasher.hash(PROVISIONAL.password)}, 'atelier', true)
+    values (${quien.email}, ${await argon2Hasher.hash(quien.password)}, 'atelier', true)
   `
+}
+
+/** La contraseña guardada, para comprobar que un intento fallido **no** la cambió. */
+export async function hashActualDe(email: string): Promise<string | null> {
+  const [fila] = await sql<{ h: string }[]>`select password_hash as h from users where email = ${email}`
+  return fila?.h ?? null
 }
 
 /**
@@ -34,8 +53,8 @@ export async function seedProvisional(): Promise<void> {
  * «leer el código»: lo elige ella y siembra su hash, que es el mismo que calcula
  * `createTokenMinter().hashOf`. Es la única forma de recorrer el canje sin abrir un buzón.
  */
-export async function seedCodigo(code: string): Promise<void> {
-  const [usuario] = await sql<{ id: string }[]>`select id from users where email = ${PROVISIONAL.email}`
+export async function seedCodigo(code: string, email: string = PROVISIONAL.email): Promise<void> {
+  const [usuario] = await sql<{ id: string }[]>`select id from users where email = ${email}`
   if (usuario === undefined) throw new Error('siembra primero la cuenta')
 
   await sql`delete from password_resets where user_id = ${usuario.id}`
@@ -54,7 +73,7 @@ export async function debeCambiarla(): Promise<boolean> {
 }
 
 export async function borrar(): Promise<void> {
-  await sql`delete from users where email = ${PROVISIONAL.email}`
+  await sql`delete from users where email in (${PROVISIONAL.email}, ${RECUPERA.email})`
 }
 
 export async function cerrarDb(): Promise<void> {

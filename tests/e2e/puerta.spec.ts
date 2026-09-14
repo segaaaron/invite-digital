@@ -42,6 +42,13 @@ test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in'
   // En la lista, no en el aviso de éxito: el correo sale en los dos sitios.
   await expect(tarjeta.getByRole('listitem').filter({ hasText: PUERTA.email })).toBeVisible()
 
+  // Su contraseña nace **provisional**: la escribió el admin, así que al entrar el panel
+  // la mandaría a cambiarla y no al check-in. Se apaga la marca aquí porque lo que esta
+  // prueba demuestra son los permisos del personal de puerta; el flujo de contraseñas
+  // tiene su propia suite (`identidad.spec.ts`) y duplicarlo aquí solo gastaría dos
+  // inicios de sesión más, que es justo lo que agota el limitador.
+  await sql`update users set must_change_password = false where email = ${PUERTA.email}`
+
   // --- Esa persona entra y cae en el check-in, no en el resumen.
   const puerta = await (await browser.newContext()).newPage()
   await entrar(puerta, PUERTA)

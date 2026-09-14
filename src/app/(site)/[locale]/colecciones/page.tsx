@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { headers } from 'next/headers'
+import { NONCE_HEADER } from '@/shared/config/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { catalog } from '@/app/composition/container'
@@ -53,7 +54,7 @@ export default async function CollectionsPage({
   if (!locale) notFound()
 
   const dictionary = getDictionary(locale)
-  const nonce = (await headers()).get('x-nonce') ?? undefined
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
   // Cuántas se enseñan va **en la URL** y no en `useState`: así el catálogo es enlazable,
   // sobrevive a recargar y a volver atrás desde una vista previa, y la página sigue siendo
   // de servidor. Es la misma regla que el resto del proyecto.
