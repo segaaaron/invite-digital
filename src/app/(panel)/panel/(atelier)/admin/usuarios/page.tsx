@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic'
 
 export default async function AdminUsuariosPage() {
   const actor = await requireAdmin()
-  const usuarios = await admin.users()
+  const [usuarios, planes] = await Promise.all([admin.users(), admin.planSlugs()])
 
   return (
     <>
@@ -18,7 +18,7 @@ export default async function AdminUsuariosPage() {
 
       <div className="flex flex-col gap-4.5">
         <PanelCard title="Nuevo usuario">
-          <NewUserForm />
+          <NewUserForm planes={planes} />
         </PanelCard>
 
         <PanelCard title="Usuarios">
@@ -37,7 +37,9 @@ export default async function AdminUsuariosPage() {
                     role: usuario.role,
                     eventos: usuario.eventos,
                     esUnoMismo: usuario.id === actor.userId,
+                    planSlug: usuario.planSlug,
                   }}
+                  planes={planes}
                 />
               ))}
             </ul>

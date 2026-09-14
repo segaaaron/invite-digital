@@ -176,6 +176,9 @@ export const users = pgTable('users', {
    * correo no puede ser la definitiva.
    */
   mustChangePassword: boolean('must_change_password').notNull().default(true),
+  // El plan que compró. Lo asigna el admin al darlo de alta. `set null`: retirar un plan no
+  // borra la cuenta.
+  planId: uuid('plan_id').references(() => plans.id, { onDelete: 'set null' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

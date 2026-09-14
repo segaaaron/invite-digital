@@ -62,6 +62,15 @@ describe('drizzleAdminRepository · los recuentos correlacionados', () => {
     expect(uno?.eventos).toBe(1)
   })
 
+  it('asigna, lee y quita el plan que compró el usuario', async () => {
+    await repo.setUserPlan(userId, 'firma-3d')
+    expect((await repo.findUserById(userId))?.planSlug).toBe('firma-3d')
+    expect((await repo.listUsers()).find((u) => u.id === userId)?.planSlug).toBe('firma-3d')
+
+    await repo.setUserPlan(userId, null)
+    expect((await repo.findUserById(userId))?.planSlug).toBeNull()
+  })
+
   it('cuenta los grupos de cada evento, no cero', async () => {
     const eventos = await repo.listEvents()
     const mio = eventos.find((e) => e.slug === slug)

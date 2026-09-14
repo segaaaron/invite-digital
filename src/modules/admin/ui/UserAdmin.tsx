@@ -3,7 +3,7 @@
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import type { Role } from '@/modules/identity/domain/access'
-import { createUserAction, deleteUserAction, setUserRoleAction, type AdminActionState } from '../actions'
+import { createUserAction, deleteUserAction, setUserPlanAction, setUserRoleAction, type AdminActionState } from '../actions'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -13,6 +13,7 @@ export type UserView = {
   readonly role: Role
   readonly eventos: number
   readonly esUnoMismo: boolean
+  readonly planSlug: string | null
 }
 
 /**
@@ -22,7 +23,7 @@ export type UserView = {
  * registro público ni recuperación por correo —no hay proveedor de correo—, así que
  * esta pantalla es la única puerta junto a `pnpm user:create`.
  */
-export function NewUserForm() {
+export function NewUserForm({ planes }: { planes: readonly string[] }) {
   const [estado, accion, pendiente] = useActionState<AdminActionState, FormData>(createUserAction, INICIAL)
   const id = useId()
 
@@ -58,10 +59,25 @@ export function NewUserForm() {
         </label>
         <select className={FIELD_CLASS} defaultValue="atelier" id={`${id}-rol`} name="role">
           <option value="atelier">Atelier — solo sus eventos</option>
+          <option value="cliente">Cliente — solo su boda</option>
           <option value="admin">Administrador — todo el sistema</option>
           {/* El personal de puerta se da de alta desde el propio evento, que es quien
               sabe qué boda trabaja: aquí no aparece, porque un puerta sin evento
               asignado no puede hacer nada. */}
+        </select>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <label className={LABEL_CLASS} htmlFor={`${id}-plan`}>
+          Plan que compró
+        </label>
+        <select className={FIELD_CLASS} defaultValue="" id={`${id}-plan`} name="planSlug">
+          <option value="">Sin plan</option>
+          {planes.map((plan) => (
+            <option key={plan} value={plan}>
+              {plan}
+            </option>
+          ))}
         </select>
       </div>
 
@@ -89,10 +105,19 @@ export function NewUserForm() {
 }
 
 /** Una fila de usuario con sus dos acciones. Cada una en su formulario, con su estado. */
-export function UserRow({ user }: { user: UserView }) {
+export function UserRow({ user, planes }: { user: UserView; planes: readonly string[] }) {
   const [rol, cambiarRol, cambiando] = useActionState<AdminActionState, FormData>(setUserRoleAction, INICIAL)
   const [borrado, borrar, borrando] = useActionState<AdminActionState, FormData>(deleteUserAction, INICIAL)
-  const error = rol.status === 'error' ? rol.message : borrado.status === 'error' ? borrado.message : null
+  const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(setUserPlanAction, INICIAL)
+  const planId = useId()
+  const error =
+    rol.status === 'error'
+      ? rol.message
+      : borrado.status === 'error'
+        ? borrado.message
+        : plan.status === 'error'
+          ? plan.message
+          : null
 
   return (
     <li className="flex flex-col gap-2.5 border-b border-line-panel py-3.5 last:border-none">
@@ -106,8 +131,27 @@ export function UserRow({ user }: { user: UserView }) {
         </span>
 
         <Pill tone={user.role === 'admin' ? 'ok' : user.role === 'puerta' ? 'maybe' : 'pending'}>
-          {user.role === 'admin' ? 'Administrador' : user.role === 'puerta' ? 'Puerta' : 'Atelier'}
+          {user.role === 'admin' ? 'Administrador' : user.role === 'puerta' ? 'Puerta' : user.role === 'cliente' ? 'Cliente' : 'Atelier'}
         </Pill>
+
+        <form action={cambiarPlan} className="flex items-center gap-2">
+          <input name="userId" type="hidden" value={user.id} />
+          <input name="email" type="hidden" value={user.email} />
+          <label className="sr-only" htmlFor={planId}>
+            Plan que compró {user.email}
+          </label>
+          <select className={`${FIELD_CLASS} w-auto py-2 text-[13px]`} defaultValue={user.planSlug ?? ''} id={planId} name="planSlug">
+            <option value="">Sin plan</option>
+            {planes.map((slug) => (
+              <option key={slug} value={slug}>
+                {slug}
+              </option>
+            ))}
+          </select>
+          <PanelButton disabled={cambiandoPlan} type="submit">
+            {cambiandoPlan ? 'Guardando…' : 'Guardar plan'}
+          </PanelButton>
+        </form>
 
         {/* Cambiar el rol y borrar son dos formularios distintos: uno solo con dos
             emisores obligaría a leer el `decision` para saber qué se pidió. */}

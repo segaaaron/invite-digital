@@ -61,11 +61,47 @@ export async function createUserAction(_previous: AdminActionState, formData: Fo
   }
 
   const role = parseRole(texto(formData, 'role'))
-  await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role })
-  await admin.record(actor, { action: 'usuario.alta', subject: credencial.value.email, detail: role })
+  // El plan que compró. Se valida **antes** de crear la cuenta: un plan inventado no puede
+  // dejar un usuario a medias.
+  const planSlug = texto(formData, 'planSlug')
+  if (planSlug !== '' && !(await admin.planSlugs()).includes(planSlug)) {
+    return { status: 'error', message: `No existe el plan ${planSlug}.` }
+  }
+
+  const creado = await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role })
+  if (planSlug !== '') await admin.setUserPlan(creado.id, planSlug)
+  await admin.record(actor, {
+    action: 'usuario.alta',
+    subject: credencial.value.email,
+    detail: planSlug === '' ? role : `${role} · plan ${planSlug}`,
+  })
 
   refrescar()
-  return { status: 'success', message: `Usuario ${credencial.value.email} creado como ${role}.` }
+  return {
+    status: 'success',
+    message: `Usuario ${credencial.value.email} creado como ${role}${planSlug === '' ? ', sin plan' : ` con el plan ${planSlug}`}.`,
+  }
+}
+
+/** Cambia el plan que compró un usuario. Vacío se lo quita. */
+export async function setUserPlanAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+
+  const userId = texto(formData, 'userId')
+  const planSlug = texto(formData, 'planSlug')
+  if (planSlug !== '' && !(await admin.planSlugs()).includes(planSlug)) {
+    return { status: 'error', message: `No existe el plan ${planSlug}.` }
+  }
+
+  await admin.setUserPlan(userId, planSlug === '' ? null : planSlug)
+  await admin.record(actor, {
+    action: 'usuario.plan',
+    subject: texto(formData, 'email') || userId,
+    detail: planSlug === '' ? 'sin plan' : planSlug,
+  })
+
+  refrescar()
+  return { status: 'success', message: planSlug === '' ? 'Plan quitado.' : `Plan cambiado a ${planSlug}.` }
 }
 
 export async function setUserRoleAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {

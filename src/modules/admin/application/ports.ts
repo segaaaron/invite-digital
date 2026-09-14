@@ -10,6 +10,8 @@ export type AdminUserRow = {
   readonly createdAt: Date
   /** Cuántos eventos gestiona. Es lo que decide si se puede borrar. */
   readonly eventos: number
+  /** El plan que compró; `null` sin plan asignado. */
+  readonly planSlug: string | null
 }
 
 export type AdminEventRow = {
@@ -58,6 +60,8 @@ export interface AdminRepository {
   countAdmins(): Promise<number>
   findUserById(id: string): Promise<AdminUserRow | null>
   setRole(userId: string, role: Role): Promise<void>
+  /** `null` le quita el plan. El `slug` ya viene validado contra `listPlanSlugs`. */
+  setUserPlan(userId: string, planSlug: string | null): Promise<void>
   deleteUser(userId: string): Promise<void>
   listEvents(): Promise<AdminEventRow[]>
   setEventPlan(eventId: string, planSlug: string): Promise<void>

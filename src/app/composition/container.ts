@@ -589,6 +589,7 @@ export const admin = {
   setEventPlan: setEventPlanUseCase({ admin: drizzleAdminRepository }),
   record: recordAdminAction({ admin: drizzleAdminRepository }),
   planSlugs: () => drizzleAdminRepository.listPlanSlugs(),
+  setUserPlan: (userId: string, planSlug: string | null) => drizzleAdminRepository.setUserPlan(userId, planSlug),
   /** El alta la hace el admin: no hay registro público. */
   createUser: async (input: { email: string; password: string; role: Role }) => {
     const passwordHash = await argon2Hasher.hash(input.password)
