@@ -73,6 +73,15 @@ services:
       NODE_ENV: production
       ORDERS_DIR: /var/lib/invitepremium/comprobantes
       EVENT_MEDIA_DIR: /var/lib/invitepremium/eventos
+      # La clave de Resend, para el correo saliente.
+      #
+      # Tenerla en la pestaña Environment de Dokploy **no basta**: eso la deja disponible
+      # para interpolarla aquí, y el contenedor solo recibe lo que este bloque declara.
+      # Sin esta línea, `process.env.RESEND_API_KEY` es `undefined` dentro de `web`.
+      #
+      # Sin `:?`, al contrario que `SITE_URL`: hoy no hay nada que la use, y hacerla
+      # obligatoria impediría arrancar a quien despliegue sin proveedor de correo.
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos
