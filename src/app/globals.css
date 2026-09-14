@@ -4,12 +4,27 @@
 html { scroll-behavior: smooth; }
 
 /*
- * Sin zoom por pellizco ni por doble toque. Safari de iOS ignora `user-scalable=no` del
- * viewport (ver `shared/config/viewport.ts`); `touch-action` sí lo respeta. En todos los
- * elementos y no solo en `html`: la acción táctil se corta en cada contenedor de scroll, y
- * el marco de teléfono de la vista previa lo es. Desplazarse sigue igual.
+ * **El recorte lateral va en la raíz, y en las dos.**
+ *
+ * Estaba solo en `body`, y por eso no contenía nada: `html` seguía desplazándose y la
+ * portada medía **1077 píxeles de ancho en un teléfono de 390**. El desbordamiento lo
+ * provocan piezas colocadas en absoluto desde el centro —las tarjetas del carrusel salen
+ * hasta −400 px— y el documento crecía con ellas.
+ *
+ * `clip` y no `hidden`: los dos recortan, pero `hidden` convierte el elemento en
+ * contenedor de scroll, y eso ancla a la raíz los fondos `sticky` de las dieciséis
+ * invitaciones. Es la misma razón por la que los temas usan `overflow-x: clip` en su
+ * artículo.
+ *
+ * Aquí vivía además `* { touch-action: pan-x pan-y; }`, que servía para matar el zoom por
+ * pellizco en iOS. Se quitó: bloquear la ampliación es un fallo de accesibilidad y, entre
+ * eso y el `user-scalable=no` que iOS ignora, el gesto quedaba a medias y se comportaba de
+ * forma errática. Ver `shared/config/viewport.ts`.
  */
-* { touch-action: pan-x pan-y; }
+html,
+body {
+  overflow-x: clip;
+}
 
 body {
   margin: 0;
@@ -17,7 +32,6 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-weight: 300;
-  overflow-x: hidden;
 }
 
 ::selection { background: rgb(var(--color-gold-rgb) / 0.24); color: var(--color-ink-selection); }

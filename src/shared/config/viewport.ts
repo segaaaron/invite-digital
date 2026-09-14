@@ -1,16 +1,22 @@
 import type { Viewport } from 'next'
 
 /**
- * Sin zoom, en las cinco raíces de layout. Decisión del usuario: la web, el panel y la
- * invitación se comportan como una aplicación, no como un documento que se amplía.
+ * El viewport de las cinco raíces de layout.
  *
- * Este meta lo respeta Android. **Safari de iPad y iPhone lo ignora desde iOS 10**, a
- * propósito; allí lo corta `touch-action: pan-x pan-y` en `globals.css`, que quita el
- * pellizco y el doble toque sin quitar el desplazamiento. Hacen falta los dos.
+ * **Se puede ampliar, y es un cambio deliberado.** Antes esto fijaba `maximumScale: 1` y
+ * `userScalable: false` para que el sitio se comportara «como una aplicación». El
+ * resultado en la mano era el contrario del buscado: Safari de iPhone y iPad **ignora**
+ * `user-scalable=no` desde iOS 10, así que el pellizco seguía ampliando pero a saltos y
+ * sin poder volver atrás — el «comportamiento raro» que se ve al tocar la pantalla.
+ *
+ * Y bloquearlo tampoco es gratis: impedir ampliar es un fallo de accesibilidad
+ * reconocido (WCAG 2.1, criterio 1.4.4), y esto lo abre gente mayor leyendo la
+ * invitación de una boda en un teléfono.
+ *
+ * Lo que sí arregla el desplazamiento lateral es recortar en la raíz —`html, body` con
+ * `overflow-x: clip` en `globals.css`—, no quitarle el zoom al usuario.
  */
-export const SIN_ZOOM: Viewport = {
+export const VIEWPORT: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 }

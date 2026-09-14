@@ -52,7 +52,11 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
   return (
     <div className="relative">
       <div
-        className="relative h-[clamp(430px,64vw,560px)] [perspective:1700px]"
+        // `clip` propio, además del de la raíz: las tarjetas se colocan en absoluto desde
+        // el centro con `-ml-[165px]`, así que en un teléfono de 390 sobresalen hasta
+        // −400 px y empujaban el ancho del documento. Recortar aquí las detiene donde
+        // nacen, en vez de dejar que la raíz tape el problema.
+        className="relative h-[clamp(430px,64vw,560px)] [perspective:1700px] [overflow-x:clip]"
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') go(1)
           if (e.key === 'ArrowLeft') go(-1)

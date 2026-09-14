@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react'
 import { display, sans } from '@/shared/design/fonts'
-import { SIN_ZOOM } from '@/shared/config/viewport'
+import { VIEWPORT } from '@/shared/config/viewport'
 import '../../../globals.css'
 
-export const viewport = SIN_ZOOM
+export const viewport = VIEWPORT
 
 export const metadata = { robots: { index: false, follow: false } }
 

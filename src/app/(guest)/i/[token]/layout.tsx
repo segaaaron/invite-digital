@@ -4,11 +4,11 @@ import { themeFor } from '@/modules/events/ui/themes/registry'
 import { sans, themeFonts } from '@/shared/design/fonts'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
-import { SIN_ZOOM } from '@/shared/config/viewport'
+import { VIEWPORT } from '@/shared/config/viewport'
 import '../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
 
-export const viewport = SIN_ZOOM
+export const viewport = VIEWPORT
 
 export const metadata = { robots: { index: false, follow: false } }
 
