@@ -119,7 +119,7 @@ import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-a
 import { drizzleTodayReader } from '@/modules/admin/infrastructure/drizzle-today-reader'
 import { drizzleCatalogAdmin } from '@/modules/admin/infrastructure/drizzle-catalog-admin'
 import { drizzleIncomeReader } from '@/modules/admin/infrastructure/drizzle-income-reader'
-import { drizzleSiteVersions } from '@/modules/admin/infrastructure/drizzle-site-versions'
+import { drizzleSiteSettingsStore } from '@/modules/admin/infrastructure/drizzle-site-settings-store'
 import {
   listSiteVersions,
   readSiteSettings,
@@ -609,9 +609,9 @@ export const admin = {
   income: readIncome({ income: drizzleIncomeReader, clock: () => new Date() }),
   /** «La web»: datos del negocio, pruebas sociales, textos legales y SEO, con historial. */
   siteSettings: leerSitio,
-  saveSite: saveSiteSettings({ settings: drizzleSettingsRepository, versions: drizzleSiteVersions, admin: drizzleAdminRepository }),
-  siteVersions: listSiteVersions({ versions: drizzleSiteVersions }),
-  restoreSite: restoreSiteVersion({ settings: drizzleSettingsRepository, versions: drizzleSiteVersions, admin: drizzleAdminRepository }),
+  saveSite: saveSiteSettings({ store: drizzleSiteSettingsStore }),
+  siteVersions: listSiteVersions({ store: drizzleSiteSettingsStore }),
+  restoreSite: restoreSiteVersion({ store: drizzleSiteSettingsStore }),
   /** Lo comercial del catálogo: planes y qué modelos se publican. */
   plans: listPlansForAdmin({ catalog: drizzleCatalogAdmin }),
   savePlan: savePlanUseCase({ catalog: drizzleCatalogAdmin, admin: drizzleAdminRepository }),

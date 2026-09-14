@@ -1,58 +1,63 @@
 import type { Actor } from '@/modules/identity/domain/access'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
-import {
-  camposCambiados,
-  leerSiteSettings,
-  parseSiteSettings,
-  SITE_SETTINGS_KEY,
-  type SiteSettings,
-} from '../domain/site-settings'
-import type { AdminRepository, SettingsRepository, SiteVersionRow, SiteVersionStore } from './ports'
-
-type Deps = { settings: SettingsRepository }
+import { camposCambiados, leerSiteSettings, parseSiteSettings, SITE_SETTINGS_KEY, type SiteSettings } from '../domain/site-settings'
+import type { SettingsRepository, SiteSettingsStore, SiteVersionRow } from './ports'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-/** Un campo que no valida, con su nombre: la pantalla lo marca donde está. */
-export type SiteSaveError = AdminError | { kind: 'invalid_field'; campo: string; detail: string }
+export type SiteSaveError =
+  | AdminError
+  /** Un campo que no valida, con su nombre: la pantalla lo marca donde está. */
+  | { kind: 'invalid_field'; campo: string; detail: string }
+  /** Otro admin guardó después de que se abriera el formulario. No se escribió nada. */
+  | { kind: 'conflict'; detail: string; por: string; en: Date }
 
-export const readSiteSettings = (deps: Deps) => async (): Promise<Result<SiteSettings, AdminError>> =>
+export const readSiteSettings = (deps: { settings: SettingsRepository }) => async (): Promise<Result<SiteSettings, AdminError>> =>
   attempt(
     async () => ok(parseSiteSettings((await deps.settings.readAll())[SITE_SETTINGS_KEY])),
     (cause) => adminError('storage_failure', `No se pudieron leer los datos de la web: ${String(cause)}`),
   )
 
+type Accion = 'web.editada' | 'web.restaurada'
+
 /**
- * Guarda «La web». Valida entero, escribe entero y deja **una versión y una entrada de
- * auditoría con los bloques que cambiaron**. Guardar sin cambios no deja rastro: una
- * versión idéntica a la anterior solo ensucia el historial.
+ * Guarda «La web» sobre la versión `base` que vio quien editaba.
+ *
+ * Valida entero y deja la escritura al almacén, que guarda valor, versión y auditoría **en
+ * una sola transacción** y rechaza si la base ya no es la última. Guardar sin cambios no
+ * deja rastro: una versión idéntica a la anterior solo ensucia el historial.
  */
 export const saveSiteSettings =
-  (deps: Deps & { versions: SiteVersionStore; admin: AdminRepository }) =>
-  async (actor: Actor, entrada: SiteSettings, accion: 'web.editada' | 'web.restaurada' = 'web.editada'): Promise<Result<SiteSettings, SiteSaveError>> => {
+  (deps: { store: SiteSettingsStore }) =>
+  async (actor: Actor, entrada: SiteSettings, base: string | null, accion: Accion = 'web.editada'): Promise<Result<SiteSettings, SiteSaveError>> => {
     const limpio = leerSiteSettings(entrada)
     if (!limpio.ok) return err({ kind: 'invalid_field', campo: limpio.error.campo, detail: limpio.error.mensaje })
 
     return attempt<SiteSettings, SiteSaveError>(
       async () => {
-        const crudo = (await deps.settings.readAll())[SITE_SETTINGS_KEY]
+        const { crudo } = await deps.store.current()
         const anterior = parseSiteSettings(crudo)
         const campos = camposCambiados(anterior, limpio.value)
         if (campos.length === 0 && accion === 'web.editada') return ok(limpio.value)
 
-        // El primer guardado deja antes la foto de partida: sin ella, la primera edición
-        // sería la única que no se puede deshacer desde el historial.
-        if (crudo === undefined) await deps.versions.add({ data: anterior, campos: [], actorEmail: 'Valores iniciales' })
-        await deps.settings.write({ [SITE_SETTINGS_KEY]: JSON.stringify(limpio.value) })
-        await deps.versions.add({ data: limpio.value, campos, actorEmail: actor.email })
-        await deps.admin.record({
+        const hecho = await deps.store.commit({
+          base,
+          data: limpio.value,
+          partida: anterior,
+          campos,
           actorUserId: actor.userId,
           actorEmail: actor.email,
-          action: accion,
-          subject: 'La web',
-          detail: campos.join(', ') || null,
+          accion,
         })
+        if (!hecho.ok) {
+          return err({
+            kind: 'conflict',
+            detail: 'Otro admin cambió La web mientras editabas.',
+            por: hecho.ultima.actorEmail,
+            en: hecho.ultima.createdAt,
+          })
+        }
         return ok(limpio.value)
       },
       (cause) => adminError('storage_failure', `No se pudieron guardar los datos de la web: ${String(cause)}`),
@@ -60,25 +65,25 @@ export const saveSiteSettings =
   }
 
 export const listSiteVersions =
-  (deps: { versions: SiteVersionStore }) =>
+  (deps: { store: SiteSettingsStore }) =>
   async (limit = 20): Promise<Result<SiteVersionRow[], AdminError>> =>
     attempt(
-      async () => ok(await deps.versions.list(limit)),
+      async () => ok(await deps.store.list(limit)),
       (cause) => adminError('storage_failure', `No se pudo leer el historial: ${String(cause)}`),
     )
 
 /** Restaura una foto del historial guardándola otra vez: deja su propia versión. */
 export const restoreSiteVersion =
-  (deps: Deps & { versions: SiteVersionStore; admin: AdminRepository }) =>
-  async (actor: Actor, id: string): Promise<Result<SiteSettings, SiteSaveError>> => {
+  (deps: { store: SiteSettingsStore }) =>
+  async (actor: Actor, id: string, base: string | null): Promise<Result<SiteSettings, SiteSaveError>> => {
     // Un identificador que no es un UUID no existe: sin este corte llegaría a Postgres como
     // error de sintaxis y se contaría como avería de la base.
     if (!UUID.test(id)) return err(adminError('not_found', 'Esa versión ya no existe.'))
     const version = await attempt(
-      async () => ok(await deps.versions.find(id)),
+      async () => ok(await deps.store.find(id)),
       (cause) => adminError('storage_failure', `No se pudo leer esa versión: ${String(cause)}`),
     )
     if (!version.ok) return version
     if (version.value === null) return err(adminError('not_found', 'Esa versión ya no existe.'))
-    return saveSiteSettings(deps)(actor, parseSiteSettings(JSON.stringify(version.value.data)), 'web.restaurada')
+    return saveSiteSettings(deps)(actor, parseSiteSettings(JSON.stringify(version.value.data)), base, 'web.restaurada')
   }

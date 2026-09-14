@@ -63,6 +63,8 @@ const bloqueDe = (campo: string | undefined) => (campo === undefined ? undefined
  *   que React no vacía nada al terminar la acción.
  */
 export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings; versiones: readonly VersionView[] }) {
+  // La versión sobre la que se edita: el servidor rechaza el guardado si ya no es la última.
+  const base = versiones[0]?.id ?? ''
   const [datos, setDatos] = useState<SiteSettings>(inicial)
   const [idioma, setIdioma] = useState<Idioma>('es')
   const [estado, guardar, guardando] = useActionState(saveSiteSettingsAction, INICIAL)
@@ -135,12 +137,18 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
         <PanelAlert tone="error">
           {errorBloque ? <strong className="font-medium">{errorBloque.titulo}: </strong> : null}
           {estado.message}
+          {estado.conflicto ? (
+            <button className="ml-2 cursor-pointer font-medium underline" onClick={() => window.location.reload()} type="button">
+              Recargar
+            </button>
+          ) : null}
         </PanelAlert>
       ) : null}
 
       <div className="grid items-start gap-4.5 min-[1200px]:grid-cols-[minmax(0,1fr)_360px]">
         <form action={guardar} className="flex min-w-0 flex-col gap-4.5" id="form-web">
           <input name="datos" type="hidden" value={actual} />
+          <input name="base" type="hidden" value={base} />
 
           {tarjeta(
             'contacto',
@@ -457,7 +465,7 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
               ) : (
                 <ul className="flex flex-col">
                   {versiones.map((v, i) => (
-                    <VersionRow actual={i === 0} key={v.id} version={v} />
+                    <VersionRow actual={i === 0} base={base} key={v.id} version={v} />
                   ))}
                 </ul>
               )}
@@ -502,7 +510,7 @@ function Campo({ etiqueta, ayuda, contador, children }: { etiqueta: string; ayud
   )
 }
 
-function VersionRow({ version, actual }: { version: VersionView; actual: boolean }) {
+function VersionRow({ version, actual, base }: { version: VersionView; actual: boolean; base: string }) {
   const [estado, restaurar, restaurando] = useActionState(restoreSiteVersionAction, INICIAL)
   const bloques = [...new Set(version.campos.map((c) => BLOQUES[c]?.titulo ?? c))]
   return (
@@ -517,6 +525,7 @@ function VersionRow({ version, actual }: { version: VersionView; actual: boolean
         ) : (
           <form action={restaurar}>
             <input name="versionId" type="hidden" value={version.id} />
+            <input name="base" type="hidden" value={base} />
             <PanelButton disabled={restaurando} type="submit">
               {restaurando ? 'Restaurando…' : 'Restaurar'}
             </PanelButton>
@@ -524,7 +533,16 @@ function VersionRow({ version, actual }: { version: VersionView; actual: boolean
         )}
       </div>
       <span className="text-[12px] text-ink-soft">{bloques.length > 0 ? bloques.join(' · ') : version.actorEmail === 'Valores iniciales' ? 'Punto de partida, antes del primer cambio' : 'Restauración'}</span>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      {estado.status === 'error' ? (
+        <PanelAlert tone="error">
+          {estado.message}
+          {estado.conflicto ? (
+            <button className="ml-2 cursor-pointer font-medium underline" onClick={() => window.location.reload()} type="button">
+              Recargar
+            </button>
+          ) : null}
+        </PanelAlert>
+      ) : null}
     </li>
   )
 }

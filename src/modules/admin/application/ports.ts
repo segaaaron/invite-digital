@@ -163,8 +163,27 @@ export type SiteVersionRow = {
 }
 
 /** El historial de «La web». Cada guardado deja una foto; restaurar es guardar una foto vieja. */
-export interface SiteVersionStore {
-  add(entrada: { data: unknown; campos: readonly string[]; actorEmail: string }): Promise<void>
+/**
+ * El almacén de «La web»: lo vigente, su historial y **una sola escritura atómica**.
+ *
+ * `commit` guarda el valor, su versión y la entrada de auditoría en una transacción: o
+ * entran las tres o ninguna. Y compara `base` —la última versión que vio quien editaba— con
+ * la última guardada bajo candado: si otro admin guardó entre medias, no escribe nada y
+ * devuelve esa versión. Sin eso, el segundo guardado pisaría al primero sin avisar.
+ */
+export interface SiteSettingsStore {
+  /** Lo guardado tal cual (sin fila, `undefined`) y el id de la última versión. */
+  current(): Promise<{ crudo: string | undefined; ultimaVersion: string | null }>
+  commit(entrada: {
+    base: string | null
+    data: unknown
+    /** La foto de partida: se guarda como primera versión si todavía no hay ninguna. */
+    partida: unknown
+    campos: readonly string[]
+    actorUserId: string
+    actorEmail: string
+    accion: string
+  }): Promise<{ ok: true } | { ok: false; ultima: SiteVersionRow }>
   list(limit: number): Promise<SiteVersionRow[]>
   find(id: string): Promise<SiteVersionRow | null>
 }

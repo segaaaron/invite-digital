@@ -10,6 +10,7 @@ import { requireAdmin } from '@/modules/identity/session-cookie'
 import { ALFABETO_SUFIJO, slugDeBoda } from './domain/nueva-boda'
 import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
 import { parseSiteSettings } from './domain/site-settings'
+import { fechaHora } from '@/shared/format/fecha'
 import { parseAmount } from '@/modules/registry'
 import { isErr } from '@/shared/result'
 
@@ -634,7 +635,20 @@ export async function setTemplatePublishedAction(_previous: AdminActionState, fo
 export type SiteActionState =
   | { status: 'idle' }
   | { status: 'success'; message: string }
-  | { status: 'error'; message: string; campo?: string }
+  | { status: 'error'; message: string; campo?: string; conflicto?: true }
+
+/** La versión sobre la que se editó; vacía es «todavía no había ninguna». */
+const baseDe = (formData: FormData): string | null => texto(formData, 'base') || null
+
+/**
+ * Otro admin guardó entre medias: no se escribió nada. Se dice quién y cuándo, y **no se
+ * revalida**, para que lo escrito siga en el formulario hasta que se decida recargar.
+ */
+const conflicto = (e: { por: string; en: Date }): SiteActionState => ({
+  status: 'error',
+  message: `${e.por} guardó La web el ${fechaHora(e.en)}, mientras editabas. No se guardó nada tuyo: recarga para ver sus cambios y vuelve a aplicar los tuyos.`,
+  conflicto: true,
+})
 
 export async function saveSiteSettingsAction(_previous: SiteActionState, formData: FormData): Promise<SiteActionState> {
   const actor = await requireAdmin()
@@ -647,8 +661,9 @@ export async function saveSiteSettingsAction(_previous: SiteActionState, formDat
   }
   // Se pasa por el lector tolerante antes de validar: lo que no tenga la forma esperada cae
   // a su valor por defecto en vez de reventar la validación.
-  const guardado = await admin.saveSite(actor, parseSiteSettings(JSON.stringify(datos)))
+  const guardado = await admin.saveSite(actor, parseSiteSettings(JSON.stringify(datos)), baseDe(formData))
   if (isErr(guardado)) {
+    if (guardado.error.kind === 'conflict') return conflicto(guardado.error)
     if (guardado.error.kind === 'invalid_field') return { status: 'error', message: guardado.error.detail, campo: guardado.error.campo }
     console.error('saveSiteSettingsAction', guardado.error.detail)
     return { status: 'error', message: 'No pudimos guardar. Vuelve a intentarlo en un momento.' }
@@ -662,8 +677,9 @@ export async function saveSiteSettingsAction(_previous: SiteActionState, formDat
 export async function restoreSiteVersionAction(_previous: SiteActionState, formData: FormData): Promise<SiteActionState> {
   const actor = await requireAdmin()
 
-  const restaurado = await admin.restoreSite(actor, texto(formData, 'versionId'))
+  const restaurado = await admin.restoreSite(actor, texto(formData, 'versionId'), baseDe(formData))
   if (isErr(restaurado)) {
+    if (restaurado.error.kind === 'conflict') return conflicto(restaurado.error)
     if (restaurado.error.kind === 'storage_failure') console.error('restoreSiteVersionAction', restaurado.error.detail)
     return { status: 'error', message: restaurado.error.kind === 'storage_failure' ? 'No pudimos restaurar. Vuelve a intentarlo.' : restaurado.error.detail }
   }
