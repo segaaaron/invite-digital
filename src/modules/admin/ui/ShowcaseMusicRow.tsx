@@ -1,7 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import { useActionState, useId } from 'react'
+import { useActionState, useId, useState } from 'react'
+import { nombreDeCancion } from '@/shared/audio/audio'
+import { leerEtiquetasId3 } from '@/shared/audio/id3'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import {
@@ -52,6 +54,21 @@ export function ShowcaseMusicRow({
     INICIAL,
   )
   const id = useId()
+  // El nombre de la canción elegida, leído del propio archivo al elegirlo: sus etiquetas
+  // ID3 o, si no trae, su nombre de fichero. Queda editable antes de subir.
+  const [nombreNuevo, setNombreNuevo] = useState<{ track: string; artist: string } | null>(null)
+  // Subida correcta: los campos del nombre se van con el archivo que ya se subió.
+  const [altaVista, setAltaVista] = useState(alta)
+  if (altaVista !== alta) {
+    setAltaVista(alta)
+    if (alta.status === 'success') setNombreNuevo(null)
+  }
+  const alElegir = async (archivo: File | null) => {
+    if (archivo === null) return setNombreNuevo(null)
+    // Con los primeros 512 KB basta: la etiqueta va al principio del MP3.
+    const cabeza = new Uint8Array(await archivo.slice(0, 512 * 1024).arrayBuffer())
+    setNombreNuevo(nombreDeCancion(leerEtiquetasId3(cabeza), archivo.name))
+  }
 
   const estado = alta.status !== 'idle' ? alta : baja.status !== 'idle' ? baja : renombre.status !== 'idle' ? renombre : publicacion
 
@@ -119,10 +136,34 @@ export function ShowcaseMusicRow({
             hint="MP3, M4A o WAV · la ajustamos sola"
             label={tieneMusica ? 'Elegir otra canción' : 'Elegir canción'}
             name="musica"
+            onElegir={(archivo) => void alElegir(archivo)}
           />
-          {/* Al subir una nueva, su nombre. Vacío, se toma de las etiquetas del archivo o de su
-              nombre de fichero. */}
-          {tieneMusica ? null : <NombreDeCancion cancion={null} id={`${id}-alta`} opcional />}
+          {nombreNuevo === null ? null : (
+            <div className="grid gap-2 min-[420px]:grid-cols-2">
+              <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-track`}>
+                <span className={LABEL_CLASS}>Canción</span>
+                <input
+                  className={FIELD_CLASS}
+                  id={`${id}-alta-track`}
+                  maxLength={120}
+                  name="track"
+                  onChange={(e) => setNombreNuevo({ ...nombreNuevo, track: e.target.value })}
+                  value={nombreNuevo.track}
+                />
+              </label>
+              <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-artist`}>
+                <span className={LABEL_CLASS}>Artista (opcional)</span>
+                <input
+                  className={FIELD_CLASS}
+                  id={`${id}-alta-artist`}
+                  maxLength={120}
+                  name="artist"
+                  onChange={(e) => setNombreNuevo({ ...nombreNuevo, artist: e.target.value })}
+                  value={nombreNuevo.artist}
+                />
+              </label>
+            </div>
+          )}
           <div className="flex flex-wrap gap-2">
             <PanelButton disabled={subiendo} type="submit" variant={tieneMusica ? 'default' : 'primary'}>
               {subiendo ? 'Subiendo y ajustando…' : tieneMusica ? 'Reemplazar' : 'Subir'}
@@ -157,11 +198,11 @@ export function ShowcaseMusicRow({
   )
 }
 
-function NombreDeCancion({ cancion, id, opcional = false }: { cancion: { track: string; artist: string } | null; id: string; opcional?: boolean }) {
+function NombreDeCancion({ cancion, id }: { cancion: { track: string; artist: string } | null; id: string }) {
   return (
     <div className="grid gap-2 min-[420px]:grid-cols-2">
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-track`}>
-        <span className={LABEL_CLASS}>Canción{opcional ? ' (opcional)' : ''}</span>
+        <span className={LABEL_CLASS}>Canción</span>
         <input
           className={FIELD_CLASS}
           defaultValue={cancion?.track ?? ''}
@@ -169,11 +210,11 @@ function NombreDeCancion({ cancion, id, opcional = false }: { cancion: { track: 
           maxLength={120}
           name="track"
           placeholder="Tiempo de Vals"
-          required={!opcional}
+          required
         />
       </label>
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-artist`}>
-        <span className={LABEL_CLASS}>Artista</span>
+        <span className={LABEL_CLASS}>Artista (opcional)</span>
         <input className={FIELD_CLASS} defaultValue={cancion?.artist ?? ''} id={`${id}-artist`} maxLength={120} name="artist" placeholder="Chayanne" />
       </label>
     </div>

@@ -22,12 +22,15 @@ export function FilePicker({
   accept,
   label,
   hint,
+  onElegir,
 }: {
   name: string
   accept: string
   /** Lo que se elige: «Elegir canción», «Elegir fotografía o canción». */
   label: string
   hint?: string
+  /** Para quien quiera leer el archivo al elegirlo —el nombre de una canción, por ejemplo—. */
+  onElegir?: (archivo: File | null) => void
 }) {
   const id = useId()
   const [elegido, setElegido] = useState<{ nombre: string; bytes: number } | null>(null)
@@ -63,6 +66,7 @@ export function FilePicker({
         onChange={(evento) => {
           const archivo = evento.currentTarget.files?.[0]
           setElegido(archivo ? { nombre: archivo.name, bytes: archivo.size } : null)
+          onElegir?.(archivo ?? null)
         }}
         type="file"
       />
@@ -75,6 +79,7 @@ export function FilePicker({
           onClick={() => {
             if (campo.current) campo.current.value = ''
             setElegido(null)
+            onElegir?.(null)
           }}
           type="button"
         >
