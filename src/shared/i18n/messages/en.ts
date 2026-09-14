@@ -304,7 +304,7 @@ export const en = {
       'Digital invitations for weddings and quinceañeras in Bolivia. Animated envelope, live RSVP, seating, gift registry and QR passes.',
     collectionsTitle: '3D digital invitation collections | Luxury Atelier',
     collectionsDescription:
-      'Eight digital invitation models for weddings, quinceañeras, graduations and corporate events in Bolivia. A 3D scene, RSVP, and delivery within 72 hours.',
+      'Sixteen digital invitation models for weddings and quinceañeras in Bolivia, with live RSVP.',
     breadcrumbHome: 'Home',
   },
   footer: { rights: 'All rights reserved', privacy: 'Privacy', terms: 'Terms', onNetwork: 'Luxury Atelier on {red}' },

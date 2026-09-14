@@ -304,7 +304,7 @@ export const es = {
       'Invitaciones digitales para bodas y XV años en Bolivia. Sobre animado, confirmación de asistencia en vivo, mesas, regalos y pases con QR.',
     collectionsTitle: 'Colecciones de invitaciones digitales 3D | Luxury Atelier',
     collectionsDescription:
-      'Ocho modelos de invitación digital para bodas, XV años, graduaciones y eventos corporativos en Bolivia. Escena 3D, RSVP y entrega en 72 horas.',
+      'Dieciséis modelos de invitación digital para bodas y XV años en Bolivia, con confirmación de asistencia en vivo.',
     breadcrumbHome: 'Inicio',
   },
   footer: { rights: 'Todos los derechos reservados', privacy: 'Privacidad', terms: 'Términos', onNetwork: 'Luxury Atelier en {red}' },
