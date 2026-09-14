@@ -56,7 +56,7 @@ export function clientAccessEmail(input: AccesoDeCliente): CorreoCompuesto {
     `Ya puedes seguir tu invitación: ${input.eventTitle}`,
     '',
     'Desde tu panel ves quién ha confirmado, tu lista de invitados, las mesas, la mesa de',
-    'regalos y los mensajes que os dejan. Y repartes los enlaces de la invitación.',
+    'regalos y los mensajes que les dejan. Y repartes los enlaces de la invitación.',
     '',
     `Entra en: ${input.panelUrl}`,
     `Usuario: ${input.email}`,
@@ -71,7 +71,7 @@ export function clientAccessEmail(input: AccesoDeCliente): CorreoCompuesto {
 
   const html = [
     `<p>Ya puedes seguir tu invitación: <strong>${escapar(input.eventTitle)}</strong>.</p>`,
-    '<p>Desde tu panel ves quién ha confirmado, tu lista de invitados, las mesas, la mesa de regalos y los mensajes que os dejan. Y repartes los enlaces de la invitación.</p>',
+    '<p>Desde tu panel ves quién ha confirmado, tu lista de invitados, las mesas, la mesa de regalos y los mensajes que les dejan. Y repartes los enlaces de la invitación.</p>',
     `<p><a href="${escapar(input.panelUrl)}">Entrar a mi panel</a></p>`,
     `<p>Usuario: <strong>${escapar(input.email)}</strong><br>${escapar(lineaClave)}</p>`,
     `<p>${escapar(aviso)}</p>`,

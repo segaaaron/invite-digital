@@ -11,6 +11,8 @@ import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
 import { SeatingSearchProvider } from '@/modules/venue/ui/SeatingSearchContext'
 import { TableDialog } from '@/modules/venue/ui/TableDialog'
+import { fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { ZoneDialog } from '@/modules/venue/ui/ZoneDialog'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
 import { TableCard } from '@/modules/venue/ui/TableCard'
@@ -61,6 +63,9 @@ export default async function MesasPage({
   const comensalesMaximos = menus.reduce((max, linea) => Math.max(max, linea.count), 0)
   const enTarjetas = vista === 'tarjetas'
 
+  // La mesa principal se llama según la fiesta: en unos XV no hay novios.
+  const vocabulario = VOCABULARIO[fiestaDeCategoria(themeFor(event.value.themeKey).categorySlug)]
+
   return (
     <>
       <PanelHeader
@@ -78,7 +83,7 @@ export default async function MesasPage({
       />
 
       {/* Las altas son los diálogos de la maqueta, no paneles desplegados en la página. */}
-      {panel === 'mesa' ? <TableDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} /> : null}
+      {panel === 'mesa' ? <TableDialog closeHref={base} eventId={event.value.id} eventSlug={event.value.slug} mesaPrincipal={vocabulario.mesaPrincipal} /> : null}
       {panel === 'zona' ? (
         <ZoneDialog
           closeHref={base}
@@ -162,6 +167,7 @@ export default async function MesasPage({
                 key={table.id}
                 eventId={event.value.id}
                 eventSlug={event.value.slug}
+                mesaPrincipal={vocabulario.mesaPrincipal}
                 table={table}
                 unseated={unseated}
               />

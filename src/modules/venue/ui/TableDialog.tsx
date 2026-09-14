@@ -28,10 +28,13 @@ export function TableDialog({
   eventId,
   eventSlug,
   closeHref,
+  mesaPrincipal = 'De los novios',
 }: {
   eventId: string
   eventSlug: string
   closeHref: string
+  /** Cómo se llama la mesa principal en esta fiesta: «De los novios» o «De la quinceañera». */
+  mesaPrincipal?: string
 }) {
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
@@ -139,7 +142,7 @@ export function TableDialog({
             >
               {TABLE_SHAPES.map((s) => (
                 <option key={s} value={s}>
-                  {NOMBRE_FORMA[s]}
+                  {s === 'sweetheart' ? mesaPrincipal : NOMBRE_FORMA[s]}
                 </option>
               ))}
             </select>

@@ -23,6 +23,8 @@ type Props = {
   table: SeatedTable
   /** Los grupos sin mesa del evento; la tarjeta filtra los que caben en esta. */
   unseated: readonly SeatedGroupRow[]
+  /** Cómo se llama la mesa principal en esta fiesta: «De los novios» o «De la quinceañera». */
+  mesaPrincipal?: string
 }
 
 /**
@@ -36,7 +38,7 @@ const estado = (table: SeatedTable): { clase: string; texto: string } => {
   return { clase: 'border-gold text-gold-deep', texto: 'A medias' }
 }
 
-export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
+export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal = 'De los novios' }: Props) {
   const [elegido, setElegido] = useState('')
   const [editando, setEditando] = useState(false)
   const [label, setLabel] = useState(table.label)
@@ -283,7 +285,7 @@ export function TableCard({ eventId, eventSlug, table, unseated }: Props) {
               >
                 {TABLE_SHAPES.map((s) => (
                   <option key={s} value={s}>
-                    {NOMBRE_FORMA[s]}
+                    {s === 'sweetheart' ? mesaPrincipal : NOMBRE_FORMA[s]}
                   </option>
                 ))}
               </select>

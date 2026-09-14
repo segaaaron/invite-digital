@@ -215,10 +215,10 @@ async function aprovisionar(
   const clave = String(formData.get('clientPassword') ?? '')
 
   if (order.eventDate === null) {
-    return { message: 'Pedido aprobado. Sin fecha de evento no se puede crear la boda: créala a mano.', eventSlug: null }
+    return { message: 'Pedido aprobado. Sin fecha de evento no se puede crear el evento: créalo a mano.', eventSlug: null }
   }
   if (correo === '') {
-    return { message: 'Pedido aprobado. Escribe el correo del cliente para crearle la boda y su acceso.', eventSlug: null }
+    return { message: 'Pedido aprobado. Escribe el correo del cliente para crearle el evento y su acceso.', eventSlug: null }
   }
 
   // **El acceso del cliente se comprueba ANTES de crear nada.**
@@ -232,7 +232,7 @@ async function aprovisionar(
   if (existente === null) {
     const credencial = createCredential({ email: correo, password: clave })
     if (isErr(credencial)) {
-      return { message: `Pedido aprobado, sin crear la boda: ${credencial.error.detail}.`, eventSlug: null }
+      return { message: `Pedido aprobado, sin crear el evento: ${credencial.error.detail}.`, eventSlug: null }
     }
   } else {
     // Ya tiene cuenta. Si su rol no es `cliente` **no entraría**: el acceso se decide por
@@ -241,7 +241,7 @@ async function aprovisionar(
     const suyo = await identity.actorOf(existente.id)
     if (suyo !== null && parseRole(suyo.role) !== 'cliente') {
       return {
-        message: `Pedido aprobado, sin crear la boda: ${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`,
+        message: `Pedido aprobado, sin crear el evento: ${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`,
         eventSlug: null,
       }
     }
@@ -271,7 +271,7 @@ async function aprovisionar(
       message:
         evento.error.kind === 'duplicate_slug'
           ? 'Pedido aprobado. Su boda ya estaba creada.'
-          : 'Pedido aprobado, pero no pudimos crear la boda. Créala a mano desde el panel.',
+          : 'Pedido aprobado, pero no pudimos crear el evento. Créalo a mano desde el panel.',
       eventSlug: null,
     }
   }
@@ -314,7 +314,7 @@ async function aprovisionar(
   if (clienteId === null) {
     const credencial = createCredential({ email: correo, password: clave })
     if (isErr(credencial)) {
-      return { message: `Boda creada, sin acceso del cliente: ${credencial.error.detail}.`, eventSlug: evento.value.slug }
+      return { message: `Evento creado, sin acceso del cliente: ${credencial.error.detail}.`, eventSlug: evento.value.slug }
     }
     const creado = await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role: 'cliente' })
     clienteId = creado.id
@@ -334,7 +334,7 @@ async function aprovisionar(
   })
 
   return {
-    message: `Boda creada con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+    message: `Evento creado con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
     eventSlug: evento.value.slug,
   }
 }

@@ -58,7 +58,7 @@ export default async function AdminPage() {
         <HoyTile detail="Transfirieron y esperan" href="/panel/pedidos" label="Comprobantes" value={h.totales.pedidos} />
         <HoyTile detail="Sin contactar" href="/panel/admin/consultas" label="Consultas nuevas" value={h.totales.consultas} />
         <HoyTile detail="Por decidir" href="#ventas" label="Cambios de plan" value={h.totales.cambios} />
-        <HoyTile detail="A 30 días o menos" href="#riesgos" label="Bodas en riesgo" value={h.totales.riesgos} />
+        <HoyTile detail="A 30 días o menos" href="#riesgos" label="Eventos en riesgo" value={h.totales.riesgos} />
       </div>
 
       <div className="mt-4.5 grid items-start gap-4.5 min-[900px]:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
@@ -72,7 +72,7 @@ export default async function AdminPage() {
               />
             </div>
             <div id="riesgos" className="scroll-mt-6">
-              <AvisoGrupo avisos={h.riesgos} titulo="Bodas en riesgo" vacio="Ninguna boda cercana en borrador ni sin invitados." />
+              <AvisoGrupo avisos={h.riesgos} titulo="Eventos en riesgo" vacio="Ningún evento cercano en borrador ni sin invitados." />
             </div>
             <AvisoGrupo
               avisos={h.atascados}
@@ -82,10 +82,10 @@ export default async function AdminPage() {
           </div>
         </PanelCard>
 
-        <PanelCard title="Próximas bodas">
+        <PanelCard title="Próximos eventos">
           <p className="-mt-2 mb-3 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Los próximos 14 días</p>
           {h.proximas.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-ink-mute">Ninguna boda en los próximos 14 días.</p>
+            <p className="py-6 text-center text-[13px] text-ink-mute">Ningún evento en los próximos 14 días.</p>
           ) : (
             <ul className="flex flex-col">
               {h.proximas.map((boda) => (

@@ -148,7 +148,7 @@ export function ConsultationItem({
                 que casi siempre es la nota que falta al perderla. */}
             <details className="group" open={estado.status === 'error'}>
               <summary className="cursor-pointer list-none font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
-                <span className="group-open:hidden">+ Nota{destinos.includes('won') && eventos.length > 0 ? ' · enlazar boda' : ''}</span>
+                <span className="group-open:hidden">+ Nota{destinos.includes('won') && eventos.length > 0 ? ' · enlazar evento' : ''}</span>
                 <span className="hidden group-open:inline">− Ocultar</span>
               </summary>
               <div className="mt-2.5 flex flex-col gap-2">
@@ -167,7 +167,7 @@ export function ConsultationItem({
                       Boda que salió de esta consulta
                     </label>
                     <select className={`${FIELD_CLASS} text-[13px]`} defaultValue="" id={`${id}-boda`} name="eventId">
-                      <option value="">Al ganarla, enlazar boda (opcional)</option>
+                      <option value="">Al ganarla, enlazar evento (opcional)</option>
                       {eventos.map((evento) => (
                         <option key={evento.id} value={evento.id}>
                           {evento.title}

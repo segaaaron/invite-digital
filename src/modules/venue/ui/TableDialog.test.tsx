@@ -94,4 +94,10 @@ describe('TableDialog', () => {
     expect(addTableAction).not.toHaveBeenCalled()
     expect(push).toHaveBeenCalledWith('/panel/eventos/boda/mesas')
   })
+
+  it('la mesa principal se llama según la fiesta: en unos XV es de la quinceañera', () => {
+    render(<TableDialog {...props} mesaPrincipal="De la quinceañera" />)
+    expect(screen.getByRole('option', { name: 'De la quinceañera' })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: 'De los novios' })).not.toBeInTheDocument()
+  })
 })

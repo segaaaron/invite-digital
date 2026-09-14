@@ -33,7 +33,7 @@ export function EventClients({
   return (
     <div className="flex flex-col gap-4.5">
       <p className="text-[12px] leading-[1.7] text-ink-soft">
-        Quien esté aquí entra al panel y ve <strong className="font-normal text-ink">solo esta boda</strong>: sus
+        Quien esté aquí entra al panel y ve <strong className="font-normal text-ink">solo este evento</strong>: sus
         invitados, las confirmaciones, las mesas, la mesa de regalos y los mensajes, y reparte sus enlaces. No edita el
         diseño ni el contenido, no toca el plan y no puede borrar el evento.
       </p>
