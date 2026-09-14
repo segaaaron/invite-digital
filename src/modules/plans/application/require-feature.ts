@@ -16,6 +16,7 @@ const desdeFila = (row: PlanRow): Allowance => ({
   seating: row.includesSeating,
   registry: row.includesRegistry,
   checkin: row.includesCheckin,
+  maxDoorPorters: row.maxDoorPorters,
 })
 
 /**

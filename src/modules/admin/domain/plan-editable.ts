@@ -13,6 +13,8 @@ export type TextoPlan = { name: string; tagline: string; description: string; fe
 export type PlanCrudo = {
   priceCents: number
   maxGuestGroups: string
+  /** Cuántos porteros puede sumar quien compró. Texto del formulario; cero es sin puerta. */
+  maxDoorPorters: string
   includesSeating: boolean
   includesRegistry: boolean
   includesCheckin: boolean
@@ -24,8 +26,9 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'es' | 'en'> & {
   maxGuestGroups: number | null
+  maxDoorPorters: number
   es: TextoPlanLimpio
   en: TextoPlanLimpio
 }
@@ -70,10 +73,16 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     maxGuestGroups = Number(tope)
   }
 
+  // Porteros siempre con número: la puerta no se vende sin tope, y cero es un plan sin ella.
+  const porteros = crudo.maxDoorPorters.trim()
+  if (!/^\d+$/.test(porteros) || Number(porteros) > 100) {
+    return err(adminError('invalid_input', 'Los porteros son un número entero de 0 a 100.'))
+  }
+
   const es = leerTexto(crudo.es, 'es')
   if (!es.ok) return es
   const en = leerTexto(crudo.en, 'en')
   if (!en.ok) return en
 
-  return ok({ ...crudo, maxGuestGroups, es: es.value, en: en.value })
+  return ok({ ...crudo, maxGuestGroups, maxDoorPorters: Number(porteros), es: es.value, en: en.value })
 }

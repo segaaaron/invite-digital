@@ -11,6 +11,7 @@ const atelier: PlanRow = {
   includesSeating: true,
   includesRegistry: false,
   includesCheckin: false,
+  maxDoorPorters: 0,
 }
 
 const altaCostura: PlanRow = {
@@ -20,6 +21,7 @@ const altaCostura: PlanRow = {
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,
+  maxDoorPorters: 10,
 }
 
 // El catálogo llega ordenado por precio: el primero es el más barato.
@@ -42,6 +44,7 @@ describe('getEventAllowance', () => {
       seating: true,
       registry: true,
       checkin: true,
+      maxDoorPorters: 10,
     })
   })
 
@@ -55,6 +58,7 @@ describe('getEventAllowance', () => {
     expect(isOk(result) && result.value.planSlug).toBe('atelier')
     expect(isOk(result) && result.value.maxGuestGroups).toBe(30)
     expect(isOk(result) && result.value.registry).toBe(false)
+    expect(isOk(result) && result.value.maxDoorPorters).toBe(0)
   })
 
   it('sin ningún plan activo la capacidad es permisiva y queda registrado', async () => {
@@ -71,6 +75,7 @@ describe('getEventAllowance', () => {
       seating: true,
       registry: true,
       checkin: true,
+      maxDoorPorters: 10,
     })
     expect(aviso).toHaveBeenCalled()
   })

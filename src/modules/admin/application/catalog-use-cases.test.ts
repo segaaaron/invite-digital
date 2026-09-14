@@ -10,6 +10,7 @@ const texto = { name: 'P', tagline: '', description: '', features: 'RSVP' }
 const crudo = (isActive: boolean): PlanCrudo => ({
   priceCents: 1000,
   maxGuestGroups: '',
+  maxDoorPorters: '0',
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,

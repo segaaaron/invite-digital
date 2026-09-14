@@ -59,6 +59,7 @@ export default async function PlanPage({
       seating: plan.includesSeating,
       registry: plan.includesRegistry,
       checkin: plan.includesCheckin,
+      maxDoorPorters: plan.maxDoorPorters,
     },
   }))
 

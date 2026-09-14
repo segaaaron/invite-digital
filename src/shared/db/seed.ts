@@ -21,7 +21,7 @@ const PLANS = [
     order: 1,
     // El plan de entrada: la lista de invitados va limitada y el salón es lo único
     // avanzado que trae. Mesa de regalos y modo puerta son de los planes de arriba.
-    limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false },
+    limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false, doorPorters: 0 },
     // Solo lo que el sistema entrega de verdad: nada de «3D real», dominio propio ni
     // papelería, que se prometían y no existían.
     es: {
@@ -42,7 +42,7 @@ const PLANS = [
     priceCents: 145000,
     highlighted: true,
     order: 2,
-    limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true },
+    limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true, doorPorters: 3 },
     es: {
       name: 'Firma 3D',
       tagline: 'Organiza todo el día',
@@ -62,7 +62,7 @@ const PLANS = [
     highlighted: false,
     order: 3,
     // `null` es sin límite. No es cero.
-    limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true },
+    limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true, doorPorters: 10 },
     es: {
       name: 'Alta Costura',
       tagline: 'Lo hacemos contigo',
@@ -123,6 +123,7 @@ async function seed() {
         includesSeating: p.limits.seating,
         includesRegistry: p.limits.registry,
         includesCheckin: p.limits.checkin,
+        maxDoorPorters: p.limits.doorPorters,
       })
       // **Solo siembra lo que falta.** Precio, límites y funciones se editan desde
       // `/panel/admin/planes`, y este seed corre en cada despliegue: con el `update` de

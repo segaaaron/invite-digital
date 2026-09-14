@@ -10,6 +10,8 @@ export type Allowance = {
   readonly seating: boolean
   readonly registry: boolean
   readonly checkin: boolean
+  /** Cuántos porteros caben. Cero: ninguno. Siempre un número: la puerta no se vende sin tope. */
+  readonly maxDoorPorters: number
 }
 
 /** Las funciones que un plan puede incluir o no. */

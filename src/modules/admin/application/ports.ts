@@ -126,6 +126,7 @@ export type PlanAdminRow = {
   readonly includesSeating: boolean
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
+  readonly maxDoorPorters: number
   readonly highlighted: boolean
   readonly isActive: boolean
   /** Cuántos eventos lo tienen: es lo que pesa antes de cambiarle el tope. */

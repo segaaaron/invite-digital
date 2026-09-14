@@ -613,6 +613,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   const guardado = await admin.savePlan(actor, slug, {
     priceCents: precio.value,
     maxGuestGroups: texto(formData, 'maxGuestGroups'),
+    maxDoorPorters: texto(formData, 'maxDoorPorters'),
     includesSeating: marcado('includesSeating'),
     includesRegistry: marcado('includesRegistry'),
     includesCheckin: marcado('includesCheckin'),

@@ -14,6 +14,7 @@ const SIN_PLAN: Allowance = {
   seating: true,
   registry: true,
   checkin: true,
+  maxDoorPorters: 10,
 }
 
 const desdeFila = (row: PlanRow): Allowance => ({
@@ -22,6 +23,7 @@ const desdeFila = (row: PlanRow): Allowance => ({
   seating: row.includesSeating,
   registry: row.includesRegistry,
   checkin: row.includesCheckin,
+  maxDoorPorters: row.maxDoorPorters,
 })
 
 /**

@@ -6,6 +6,8 @@ export type PlanRow = {
   readonly includesSeating: boolean
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
+  /** Cuántos porteros puede sumar quien compró. Cero: el plan no trae puerta. */
+  readonly maxDoorPorters: number
   /** Precio de una vez, por evento. Es como se vende hoy. */
   readonly priceCents?: number
   /**

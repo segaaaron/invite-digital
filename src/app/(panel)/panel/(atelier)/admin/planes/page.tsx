@@ -42,6 +42,7 @@ export default async function AdminPlanesPage() {
                   price: aCampo(plan.priceCents),
                   priceLabel: formatAmount(plan.priceCents, plan.currency),
                   maxGuestGroups: plan.maxGuestGroups,
+                  maxDoorPorters: plan.maxDoorPorters,
                   includesSeating: plan.includesSeating,
                   includesRegistry: plan.includesRegistry,
                   includesCheckin: plan.includesCheckin,

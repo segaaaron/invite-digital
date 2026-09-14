@@ -10,6 +10,7 @@ const columnas = {
   includesSeating: plans.includesSeating,
   includesRegistry: plans.includesRegistry,
   includesCheckin: plans.includesCheckin,
+  maxDoorPorters: plans.maxDoorPorters,
   priceCents: plans.priceCents,
   priceAnnualCents: plans.priceAnnualCents,
 }

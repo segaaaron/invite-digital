@@ -11,6 +11,7 @@ const atelier: PlanRow = {
   includesSeating: true,
   includesRegistry: false,
   includesCheckin: false,
+  maxDoorPorters: 0,
 }
 
 const firma: PlanRow = {
@@ -20,6 +21,7 @@ const firma: PlanRow = {
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,
+  maxDoorPorters: 10,
 }
 
 const NOW = new Date('2026-08-21T12:00:00.000Z')

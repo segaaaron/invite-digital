@@ -6,6 +6,7 @@ const texto = { name: 'x', tagline: '', description: '', features: ['x'] }
 const plan: PlanLimpio = {
   priceCents: 100,
   maxGuestGroups: null,
+  maxDoorPorters: 0,
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,

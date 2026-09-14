@@ -6,6 +6,7 @@ const texto = { name: 'Atelier', tagline: 'Lo esencial', description: 'Para boda
 const crudo: PlanCrudo = {
   priceCents: 69000,
   maxGuestGroups: '',
+  maxDoorPorters: '3',
   includesSeating: true,
   includesRegistry: false,
   includesCheckin: false,
@@ -32,6 +33,16 @@ describe('leerPlan', () => {
     for (const malo of ['0', '-3', '2.5', 'muchos']) {
       const r = leerPlan({ ...crudo, maxGuestGroups: malo })
       expect(isErr(r) && r.error.kind).toBe('invalid_input')
+    }
+  })
+
+  it('los porteros son un entero de 0 a 100: cero es un plan sin puerta', () => {
+    expect(isOk(leerPlan(crudo)) && leerPlan(crudo)).toMatchObject({ value: { maxDoorPorters: 3 } })
+    const sinPuerta = leerPlan({ ...crudo, maxDoorPorters: '0' })
+    expect(isOk(sinPuerta) && sinPuerta.value.maxDoorPorters).toBe(0)
+    for (const malo of ['', '-1', '2.5', '101', 'muchos']) {
+      const r = leerPlan({ ...crudo, maxDoorPorters: malo })
+      expect(isErr(r) && r.error.detail).toContain('porteros')
     }
   })
 

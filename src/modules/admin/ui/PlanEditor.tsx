@@ -16,6 +16,7 @@ export type PlanEditorView = {
   readonly includesSeating: boolean
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
+  readonly maxDoorPorters: number
   readonly highlighted: boolean
   readonly isActive: boolean
   readonly eventos: number
@@ -67,7 +68,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
         </div>
       </div>
 
-      <div className="grid gap-4 min-[560px]:grid-cols-2">
+      <div className="grid gap-4 min-[560px]:grid-cols-3">
         <Field htmlFor={`${id}-precio`} label="Precio (Bs)">
           <input className={FIELD_CLASS} defaultValue={txt('price', plan.price)} id={`${id}-precio`} inputMode="decimal" name="price" required />
         </Field>
@@ -79,6 +80,16 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
             inputMode="numeric"
             name="maxGuestGroups"
             placeholder="Sin límite"
+          />
+        </Field>
+        <Field htmlFor={`${id}-porteros`} label="Porteros · 0 = sin puerta">
+          <input
+            className={FIELD_CLASS}
+            defaultValue={txt('maxDoorPorters', String(plan.maxDoorPorters))}
+            id={`${id}-porteros`}
+            inputMode="numeric"
+            name="maxDoorPorters"
+            required
           />
         </Field>
       </div>

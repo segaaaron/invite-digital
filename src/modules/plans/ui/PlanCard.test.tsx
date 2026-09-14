@@ -9,6 +9,7 @@ const atelier: Allowance = {
   seating: true,
   registry: false,
   checkin: false,
+  maxDoorPorters: 0,
 }
 
 const alta: Allowance = {
@@ -17,6 +18,7 @@ const alta: Allowance = {
   seating: true,
   registry: true,
   checkin: true,
+  maxDoorPorters: 10,
 }
 
 describe('PlanCard', () => {
