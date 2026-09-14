@@ -46,7 +46,7 @@ test.describe('con sesión', () => {
     await page.goto('/panel/eventos/nuevo')
 
     await page.getByLabel('Título').fill('Boda e2e')
-    await page.getByLabel('Identificador').fill(SLUG)
+    await page.getByLabel('Enlace del evento').fill(SLUG)
     await page.getByLabel('Fecha del evento').fill('2027-05-15')
     await page.getByLabel('Fecha límite de confirmación').fill('2027-05-01')
     await page.getByRole('button', { name: 'Crear evento' }).click()
@@ -60,7 +60,7 @@ test.describe('con sesión', () => {
     await page.goto('/panel/eventos/nuevo')
 
     await page.getByLabel('Título').fill('Boda inválida')
-    await page.getByLabel('Identificador').fill(SLUG)
+    await page.getByLabel('Enlace del evento').fill(SLUG)
     await page.getByLabel('Fecha del evento').fill('2027-05-15')
     await page.getByLabel('Fecha límite de confirmación').fill('2027-06-01')
     await page.getByRole('button', { name: 'Crear evento' }).click()

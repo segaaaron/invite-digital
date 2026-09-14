@@ -28,7 +28,7 @@ type EventInput = {
 export async function createEvent(page: Page, input: EventInput): Promise<void> {
   await page.goto('/panel/eventos/nuevo')
   await page.getByLabel('Título').fill(input.title)
-  await page.getByLabel('Identificador').fill(input.slug)
+  await page.getByLabel('Enlace del evento').fill(input.slug)
   await page.getByLabel('Fecha del evento').fill(input.eventDate ?? '2027-05-15')
   await page.getByLabel('Fecha límite de confirmación').fill(input.rsvpDeadline ?? '2027-05-01')
   if (input.diseno !== undefined) await page.getByRole('radio', { name: new RegExp(input.diseno) }).check({ force: true })
