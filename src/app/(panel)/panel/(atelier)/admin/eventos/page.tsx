@@ -4,10 +4,10 @@ import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { NuevaBodaForm } from '@/modules/admin'
 import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
-import { CATALOG_ENTRIES } from '@/shared/design/theme-catalog'
+import { CATALOG_ENTRIES, CATALOG_KEYS } from '@/shared/design/theme-catalog'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
 import { FIELD_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
@@ -59,6 +59,21 @@ export default async function AdminEventosPage({
       (busqueda === '' || [e.title, e.slug, e.ownerEmail ?? ''].some((campo) => campo.toLowerCase().includes(busqueda))),
   )
   const mostrarAlta = panel === 'nueva' || cartera.length === 0
+
+  // Lo primero que se lee: qué pide atención ahora, no el total de filas.
+  const proximos30 = cartera.filter((e) => {
+    const dias = diasEntre(hoy, e.eventDate)
+    return dias >= 0 && dias <= 30
+  }).length
+  const enCurso = cartera.filter((e) => e.etapa === 'repartiendo' || e.etapa === 'confirmando').length
+  const borradores = cartera.filter((e) => e.etapa === 'borrador' || e.etapa === 'sin_invitados').length
+  const celebrados = cartera.filter((e) => e.etapa === 'celebrada').length
+
+  const BS = new Intl.NumberFormat('es-BO', { style: 'currency', currency: 'BOB', maximumFractionDigits: 0 })
+  const opcionesDePlan = planes.map((p) => ({ slug: p.slug, nombre: p.nombre, precio: BS.format(p.priceCents / 100) }))
+  const nombreDePlan = new Map(planes.map((p) => [p.slug, p.nombre]))
+  const temas = themeDefinitions()
+  const nombreDeModelo = new Map(temas.map((t) => [t.key, t.label]))
   const enlace = (clave: string) => {
     const params = new URLSearchParams()
     if (clave !== 'todas') params.set('etapa', clave)
@@ -85,6 +100,15 @@ export default async function AdminEventosPage({
         title="Eventos"
       />
 
+      {cartera.length === 0 ? null : (
+        <div className="mb-4.5 grid grid-cols-2 gap-3 min-[900px]:grid-cols-4">
+          <StatCard detail="Con fecha en el próximo mes" label="Próximos 30 días" value={proximos30} />
+          <StatCard detail="Repartiendo o confirmando" label="En curso" value={enCurso} />
+          <StatCard detail="Borrador o sin invitados" label="Por preparar" value={borradores} />
+          <StatCard detail="Ya pasó la fecha" label="Celebrados" value={celebrados} />
+        </div>
+      )}
+
       {/* El alta se abre con `?panel=nueva`, como los paneles de Invitados: abierta siempre
           ocupaba la primera pantalla entera y la cartera quedaba debajo del pliegue. Va
           **antes** de la lista cuando se abre, y abierta sin pedirla si no hay ninguna boda. */}
@@ -93,14 +117,14 @@ export default async function AdminEventosPage({
         <NuevaBodaForm
           // El clásico no se ofrece: no se publica en el catálogo, es el respaldo de una
           // clave desconocida. Nadie lo elige mirando la web.
-          modelos={themeDefinitions()
+          modelos={temas
             .filter((tema) => tema.key !== 'clasico')
             .map((tema) => ({
               key: tema.key,
               label: tema.label,
               categoria: CATALOG_ENTRIES.find((entrada) => entrada.key === tema.key)?.categorySlug === 'xv-anos' ? 'XV años' : 'Bodas',
             }))}
-          planes={planes}
+          planes={opcionesDePlan}
         />
       </PanelCard>
       ) : null}
@@ -146,7 +170,7 @@ export default async function AdminEventosPage({
             {cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema.' : 'Ningún evento con ese filtro.'}
           </p>
         ) : (
-          <ul className="flex flex-col">
+          <ul className="mt-2 flex flex-col gap-3.5">
             {visibles.map((evento) => (
               <EventAdminRow
                 key={evento.id}
@@ -158,6 +182,9 @@ export default async function AdminEventosPage({
                   ownerEmail: evento.ownerEmail,
                   ownerId: evento.ownerId,
                   planSlug: evento.planSlug,
+                  planNombre: evento.planSlug === null ? null : (nombreDePlan.get(evento.planSlug) ?? evento.planSlug),
+                  portada: CATALOG_KEYS.includes(evento.themeKey) ? `/templates/${evento.themeKey}.avif` : null,
+                  modelo: nombreDeModelo.get(evento.themeKey) ?? 'diseño anterior',
                   grupos: evento.grupos,
                   enviados: evento.enviados,
                   respondidos: evento.respondidos,

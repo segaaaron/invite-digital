@@ -23,6 +23,8 @@ export type AdminEventRow = {
   readonly ownerId: string | null
   readonly ownerEmail: string | null
   readonly planSlug: string | null
+  /** El diseño: la cartera pinta su portada. */
+  readonly themeKey: string
   /** Grupos con enlace vigente: los revocados no cuentan. */
   readonly grupos: number
   /** De esos, cuántos tienen el enlace marcado como repartido. */
@@ -70,7 +72,7 @@ export interface AdminRepository {
   setEventPlan(eventId: string, planSlug: string): Promise<void>
   listPlanSlugs(): Promise<string[]>
   /** Los planes para un selector: su clave y el nombre que se lee, en orden de venta. */
-  listPlanOptions(): Promise<{ slug: string; nombre: string }[]>
+  listPlanOptions(): Promise<{ slug: string; nombre: string; priceCents: number }[]>
   metrics(): Promise<AdminMetrics>
   listAudit(limit: number): Promise<AuditRow[]>
   /**

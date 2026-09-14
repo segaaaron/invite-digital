@@ -79,6 +79,7 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         ownerId: events.userId,
         ownerEmail: users.email,
         planSlug: plans.slug,
+        themeKey: events.themeKey,
         grupos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null)`,
         enviados: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null and guest_groups.invitation_sent_at is not null)`,
         respondidos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null and exists (select 1 from rsvp_responses where rsvp_responses.guest_group_id = guest_groups.id))`,
@@ -100,11 +101,11 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
 
   async listPlanOptions() {
     const filas = await database
-      .select({ slug: plans.slug, nombre: planTranslations.name })
+      .select({ slug: plans.slug, nombre: planTranslations.name, priceCents: plans.priceCents })
       .from(plans)
       .leftJoin(planTranslations, and(eq(planTranslations.planId, plans.id), eq(planTranslations.locale, 'es')))
       .orderBy(plans.sortOrder)
-    return filas.map((f) => ({ slug: f.slug, nombre: f.nombre ?? f.slug }))
+    return filas.map((f) => ({ slug: f.slug, nombre: f.nombre ?? f.slug, priceCents: f.priceCents }))
   },
 
   async listPlanSlugs(): Promise<string[]> {

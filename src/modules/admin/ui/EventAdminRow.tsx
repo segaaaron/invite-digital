@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
@@ -25,6 +26,11 @@ export type EventAdminView = {
   readonly ownerEmail: string | null
   readonly ownerId: string | null
   readonly planSlug: string | null
+  readonly planNombre: string | null
+  /** La portada del diseño, o `null` si es un tema antiguo sin portada en el catálogo. */
+  readonly portada: string | null
+  /** El nombre del modelo: «Botánica», «Mascarada». */
+  readonly modelo: string
   readonly grupos: number
   readonly enviados: number
   readonly respondidos: number
@@ -73,68 +79,95 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           : null
 
   return (
-    <li className="flex flex-col gap-3.5 border-b border-line-panel py-5 last:border-none">
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
-        <span className="flex w-13 shrink-0 flex-col items-center rounded-xl border border-line-panel bg-white py-1.5 shadow-card">
-          <span className="font-display text-[24px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
-          <span className="font-mono text-[8px] tracking-[0.2em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
-        </span>
+    <li className="flex flex-col overflow-hidden rounded-[18px] border border-line-panel bg-white shadow-card transition-shadow hover:shadow-float">
+      <div className="flex flex-col min-[700px]:flex-row">
+        {/* La portada del diseño: por el título no se reconoce una invitación, por su
+            portada sí. Lleva a la vista previa de ese evento. */}
+        <Link
+          aria-label={`Ver la invitación de ${event.title}`}
+          className="relative block aspect-[16/9] shrink-0 overflow-hidden bg-bg-sunken min-[700px]:aspect-auto min-[700px]:w-[168px]"
+          href={`/panel/eventos/${event.slug}/vista-previa`}
+        >
+          {event.portada === null ? (
+            <span aria-hidden className="absolute inset-0 bg-linear-to-br from-shell to-shell-deep" />
+          ) : (
+            <Image alt="" className="object-cover object-top transition-transform duration-300 hover:scale-[1.04] motion-reduce:transition-none" fill sizes="(max-width: 700px) 100vw, 168px" src={event.portada} />
+          )}
+          <span className="absolute top-2.5 left-2.5 flex flex-col items-center rounded-xl bg-white/95 px-2.5 py-1 shadow-card">
+            <span className="font-display text-[22px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
+            <span className="font-mono text-[8px] tracking-[0.2em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
+          </span>
+        </Link>
 
-        <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="flex flex-wrap items-center gap-2.5">
-            <Link className="font-display text-[20px] leading-tight text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${event.slug}`}>
-              {event.title}
-            </Link>
-            <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
-          </span>
-          <span className="font-mono text-[10px] tracking-[0.15em] text-ink-mute uppercase">
-            {event.cuando} · {event.slug} · plan {event.planSlug ?? 'sin plan'}
-          </span>
-          {/* Un evento sin dueño no debería existir; si aparece uno, la fila lo canta en
-              vez de enseñar un hueco. */}
-          {event.ownerEmail === null ? (
-            <span>
-              <Pill tone="no">Sin dueño</Pill>
+        <div className="flex min-w-0 flex-1 flex-col gap-3.5 p-4 min-[700px]:p-5">
+          <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+            <span className="flex min-w-0 flex-col gap-1">
+              <span className="flex flex-wrap items-center gap-2.5">
+                <Link className="font-display text-[22px] leading-tight text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${event.slug}`}>
+                  {event.title}
+                </Link>
+                <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
+              </span>
+              <span className="text-[12px] text-ink-soft first-letter:uppercase">
+                {event.cuando} · {event.modelo} · plan {event.planNombre ?? 'sin plan'}
+              </span>
             </span>
-          ) : (
-            <span className="text-[12px] text-ink-soft">{event.ownerEmail}</span>
-          )}
-        </span>
+            <span className="flex gap-2">
+              <PanelButton href={`/panel/eventos/${event.slug}`} variant="primary">
+                Abrir
+              </PanelButton>
+              <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Ver</PanelButton>
+            </span>
+          </div>
 
-        <span className="flex w-full flex-col gap-1.5 min-[900px]:w-[260px]">
-          {event.grupos === 0 ? (
-            <span className="text-[12px] text-ink-mute">Sin grupos de invitados</span>
-          ) : (
-            <>
-              <span
-                aria-label={`${event.enviados} de ${event.grupos} enlaces repartidos, ${event.respondidos} respondieron`}
-                className="relative h-2 overflow-hidden rounded-full bg-bg-sunken"
-                role="img"
-              >
-                <span className="absolute inset-y-0 left-0 rounded-full bg-gold/35" style={{ width: `${(event.enviados / event.grupos) * 100}%` }} />
-                <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(event.respondidos / event.grupos) * 100}%` }} />
+          <div className="grid gap-3 min-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
+            {/* Un evento sin dueño no debería existir; si aparece uno, la tarjeta lo canta. */}
+            <span className="flex min-w-0 items-center gap-2.5">
+              <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-bg-sunken font-display text-[14px] text-ink-soft uppercase">
+                {(event.ownerEmail ?? '?').slice(0, 1)}
               </span>
-              <span className="flex justify-between font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
-                <span>{event.grupos} grupos</span>
-                <span>{event.enviados} enviados</span>
-                <span>{event.respondidos} RSVP</span>
+              <span className="flex min-w-0 flex-col">
+                <span className={LABEL_CLASS}>Dueño</span>
+                {event.ownerEmail === null ? <Pill tone="no">Sin dueño</Pill> : <span className="truncate text-[13px] text-ink">{event.ownerEmail}</span>}
               </span>
-            </>
-          )}
-        </span>
+            </span>
 
-        <span className="flex gap-2">
-          <PanelButton href={`/panel/eventos/${event.slug}`}>Abrir</PanelButton>
-          <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Ver</PanelButton>
-        </span>
-      </div>
+            {event.grupos === 0 ? (
+              <span className="flex flex-col justify-center">
+                <span className={LABEL_CLASS}>Invitados</span>
+                <span className="text-[13px] text-ink-mute">Todavía sin grupos de invitados</span>
+              </span>
+            ) : (
+              <span className="flex flex-col gap-1.5">
+                <span className="flex items-baseline justify-between">
+                  <span className={LABEL_CLASS}>Confirmaciones</span>
+                  <span className="font-display text-[16px] text-ink [font-variant-numeric:lining-nums]">
+                    {Math.round((event.respondidos / event.grupos) * 100)}%
+                  </span>
+                </span>
+                <span
+                  aria-label={`${event.enviados} de ${event.grupos} enlaces repartidos, ${event.respondidos} respondieron`}
+                  className="relative h-2 overflow-hidden rounded-full bg-bg-sunken"
+                  role="img"
+                >
+                  <span className="absolute inset-y-0 left-0 rounded-full bg-gold/35" style={{ width: `${(event.enviados / event.grupos) * 100}%` }} />
+                  <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(event.respondidos / event.grupos) * 100}%` }} />
+                </span>
+                <span className="flex justify-between font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
+                  <span>{event.grupos} grupos</span>
+                  <span>{event.enviados} enviados</span>
+                  <span>{event.respondidos} respondieron</span>
+                </span>
+              </span>
+            )}
+          </div>
 
       {/* Los mandos plegados: se viene a mirar la cartera, y cuatro formularios abiertos por
           fila convertían veinte bodas en una pared de campos. Plegados siguen en el DOM —la
           e2e de multitenencia lee el dueño preseleccionado igual— y se abren solos si algo
           falla. */}
       <details className="group" open={error !== null || acceso.status !== 'idle' || confirmando}>
-        <summary className="w-fit cursor-pointer list-none font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
+        <summary className="w-fit cursor-pointer list-none border-t border-line-panel pt-3 font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
           <span className="group-open:hidden">+ Gestionar: dueño, plan, acceso, borrar</span>
           <span className="hidden group-open:inline">− Cerrar</span>
         </summary>
@@ -191,7 +224,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
               className={`${FIELD_CLASS} py-2`}
               id={`${id}-cliente`}
               name="email"
-              placeholder="novios@correo.com"
+              placeholder="cliente@correo.com"
               required
               type="email"
             />
@@ -239,6 +272,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
         </div>
       </details>
 
+
       {error === null ? null : (
         <p className="text-[12px] text-danger" role="alert">
           {error}
@@ -258,6 +292,8 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           {acceso.message}
         </p>
       ) : null}
+        </div>
+      </div>
     </li>
   )
 }
