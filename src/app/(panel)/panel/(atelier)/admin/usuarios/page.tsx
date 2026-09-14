@@ -19,7 +19,7 @@ const ALTA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short', 
 export default async function AdminUsuariosPage({ searchParams }: { searchParams: Promise<{ panel?: string }> }) {
   const actor = await requireAdmin()
   const { panel } = await searchParams
-  const [usuarios, planes] = await Promise.all([admin.users(), admin.planSlugs()])
+  const [usuarios, planes] = await Promise.all([admin.users(), admin.planOptions()])
 
   return (
     <>

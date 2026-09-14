@@ -7,7 +7,8 @@ import { createWeddingForClientAction, type NuevaBodaState } from '../actions'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
 
-export type ModeloElegible = { readonly key: string; readonly label: string }
+export type ModeloElegible = { readonly key: string; readonly label: string; readonly categoria: string }
+export type PlanElegible = { readonly slug: string; readonly nombre: string }
 
 /**
  * Crear la boda de un cliente: su modelo, su evento y su acceso, en un solo paso.
@@ -22,15 +23,21 @@ export type ModeloElegible = { readonly key: string; readonly label: string }
  * La contraseña **se escribe aquí y no se vuelve a mostrar**: de ella solo queda su argon2,
  * como los enlaces de invitado. Se la mandamos por correo al cliente en cuanto se crea.
  */
-export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloElegible[]; planes: readonly string[] }) {
+export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloElegible[]; planes: readonly PlanElegible[] }) {
+  // Agrupados por tipo de evento: una lista plana mezclaba bodas y XV y no decía que aquí
+  // se crea cualquiera de los dos.
+  const grupos = [...new Set(modelos.map((m) => m.categoria))].map((categoria) => ({
+    categoria,
+    modelos: modelos.filter((m) => m.categoria === categoria),
+  }))
   const [estado, crear, creando] = useActionState<NuevaBodaState, FormData>(createWeddingForClientAction, INICIAL)
   const id = useId()
 
   return (
     <form action={crear} className="flex flex-col gap-4.5">
       <p className="text-[12px] leading-[1.7] text-ink-soft">
-        Crea la boda con el diseño que el cliente eligió y dale acceso al panel de una vez. Entrará y verá{' '}
-        <strong className="font-normal text-ink">solo su boda</strong>: sus invitados, las confirmaciones, las mesas, la
+        Crea el evento —una boda, unos XV años— con el diseño que el cliente eligió y dale acceso al panel de una vez.
+        El tipo lo decide el modelo. Entrará y verá <strong className="font-normal text-ink">solo su evento</strong>: sus invitados, las confirmaciones, las mesas, la
         mesa de regalos y los mensajes, y podrá escribir su invitación y subir su canción. Nada de administración.
       </p>
 
@@ -40,10 +47,14 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
             Modelo que eligió
           </label>
           <select className={FIELD_CLASS} id={`${id}-modelo`} name="themeKey" required>
-            {modelos.map((modelo) => (
-              <option key={modelo.key} value={modelo.key}>
-                {modelo.label}
-              </option>
+            {grupos.map((grupo) => (
+              <optgroup key={grupo.categoria} label={grupo.categoria}>
+                {grupo.modelos.map((modelo) => (
+                  <option key={modelo.key} value={modelo.key}>
+                    {modelo.label}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </select>
           <p className="text-[11px] text-ink-mute">
@@ -53,14 +64,14 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
 
         <div className="flex flex-col gap-2">
           <label className={LABEL_CLASS} htmlFor={`${id}-titulo`}>
-            Nombre de la boda
+            Nombre del evento
           </label>
           <input
             className={FIELD_CLASS}
             id={`${id}-titulo`}
             maxLength={160}
             name="title"
-            placeholder="Ana y Luis"
+            placeholder="Boda de Ana y Luis · XV de Valeria"
             required
             type="text"
           />
@@ -79,8 +90,8 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
           </label>
           <select className={FIELD_CLASS} id={`${id}-plan`} name="planSlug">
             {planes.map((plan) => (
-              <option key={plan} value={plan}>
-                {plan}
+              <option key={plan.slug} value={plan.slug}>
+                {plan.nombre}
               </option>
             ))}
           </select>
@@ -98,7 +109,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
             className={FIELD_CLASS}
             id={`${id}-correo`}
             name="clientEmail"
-            placeholder="novios@correo.com"
+            placeholder="cliente@correo.com"
             required
             type="email"
           />
@@ -129,7 +140,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
 
       <div>
         <PanelButton disabled={creando} type="submit" variant="primary">
-          {creando ? 'Creando…' : 'Crear la boda y su acceso'}
+          {creando ? 'Creando…' : 'Crear el evento y su acceso'}
         </PanelButton>
       </div>
     </form>

@@ -4,6 +4,7 @@ import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { NuevaBodaForm } from '@/modules/admin'
 import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
+import { CATALOG_ENTRIES } from '@/shared/design/theme-catalog'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
@@ -38,7 +39,7 @@ export default async function AdminEventosPage({
   await requireAdmin()
 
   const { etapa: etapaPedida, q = '', panel } = await searchParams
-  const [eventos, usuarios, planes] = await Promise.all([admin.events(), admin.users(), admin.planSlugs()])
+  const [eventos, usuarios, planes] = await Promise.all([admin.events(), admin.users(), admin.planOptions()])
   const hoy = fechaEnBolivia(new Date())
   const filtro: Etapa | 'todas' = ETAPAS.find((e) => e.clave === etapaPedida)?.clave ?? 'todas'
   const busqueda = q.trim().toLowerCase()
@@ -71,10 +72,12 @@ export default async function AdminEventosPage({
       <PanelHeader
         actions={
           <>
-            <PanelButton href="/panel/eventos/nuevo">Evento sin cliente</PanelButton>
+            {/* Lo habitual es con cliente —boda, XV años…—, y va primero y en negro. Sin cliente
+                es un evento que lleva el atelier sin dar acceso a nadie. */}
             <PanelButton href="/panel/admin/eventos?panel=nueva" variant="primary">
-              + Boda para un cliente
+              + Evento para un cliente
             </PanelButton>
+            <PanelButton href="/panel/eventos/nuevo">Evento sin acceso de cliente</PanelButton>
           </>
         }
         kicker="Administración"
@@ -86,13 +89,17 @@ export default async function AdminEventosPage({
           ocupaba la primera pantalla entera y la cartera quedaba debajo del pliegue. Va
           **antes** de la lista cuando se abre, y abierta sin pedirla si no hay ninguna boda. */}
       {mostrarAlta ? (
-      <PanelCard action={<PanelButton href="/panel/admin/eventos">Cerrar</PanelButton>} className="mb-4.5" title="Nueva boda para un cliente">
+      <PanelCard action={<PanelButton href="/panel/admin/eventos">Cerrar</PanelButton>} className="mb-4.5" title="Nuevo evento para un cliente">
         <NuevaBodaForm
           // El clásico no se ofrece: no se publica en el catálogo, es el respaldo de una
           // clave desconocida. Nadie lo elige mirando la web.
           modelos={themeDefinitions()
             .filter((tema) => tema.key !== 'clasico')
-            .map((tema) => ({ key: tema.key, label: tema.label }))}
+            .map((tema) => ({
+              key: tema.key,
+              label: tema.label,
+              categoria: CATALOG_ENTRIES.find((entrada) => entrada.key === tema.key)?.categorySlug === 'xv-anos' ? 'XV años' : 'Bodas',
+            }))}
           planes={planes}
         />
       </PanelCard>
@@ -103,7 +110,7 @@ export default async function AdminEventosPage({
           <form action="/panel/admin/eventos" className="flex w-full gap-2 min-[560px]:w-auto" method="get" role="search">
             {filtro === 'todas' ? null : <input name="etapa" type="hidden" value={filtro} />}
             <label className="sr-only" htmlFor="buscar-boda">
-              Buscar boda por nombre, slug o dueño
+              Buscar evento por nombre, slug o dueño
             </label>
             <input
               className={`${FIELD_CLASS} py-2 text-[13px] min-[560px]:w-[260px]`}
@@ -122,7 +129,7 @@ export default async function AdminEventosPage({
         <div className="-mx-1 mb-2 overflow-x-auto px-1 pb-1">
           <SegmentedTabs
             current={filtro}
-            label="Filtrar bodas por etapa"
+            label="Filtrar eventos por etapa"
             segments={[
               { key: 'todas', label: 'Todas', href: enlace('todas'), count: cartera.length },
               ...ETAPAS.map((e) => ({ key: e.clave, label: e.etiqueta, href: enlace(e.clave), count: conteo.get(e.clave) ?? 0 })),
@@ -136,7 +143,7 @@ export default async function AdminEventosPage({
           </p>
         ) : visibles.length === 0 ? (
           <p className="py-10 text-center text-[13px] text-ink-mute">
-            {cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema.' : 'Ninguna boda con ese filtro.'}
+            {cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema.' : 'Ningún evento con ese filtro.'}
           </p>
         ) : (
           <ul className="flex flex-col">

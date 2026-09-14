@@ -69,6 +69,8 @@ export interface AdminRepository {
   listEvents(): Promise<AdminEventRow[]>
   setEventPlan(eventId: string, planSlug: string): Promise<void>
   listPlanSlugs(): Promise<string[]>
+  /** Los planes para un selector: su clave y el nombre que se lee, en orden de venta. */
+  listPlanOptions(): Promise<{ slug: string; nombre: string }[]>
   metrics(): Promise<AdminMetrics>
   listAudit(limit: number): Promise<AuditRow[]>
   /**

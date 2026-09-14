@@ -42,7 +42,7 @@ export type OwnerChoice = { readonly id: string; readonly email: string }
  * delante invitados, mesas, regalos y mensajes, y no se deshace. Un botón suelto para eso
  * en una lista de veinte filas es un accidente esperando a pasar.
  */
-export function EventAdminRow({ event, owners, plans }: { event: EventAdminView; owners: readonly OwnerChoice[]; plans: readonly string[] }) {
+export function EventAdminRow({ event, owners, plans }: { event: EventAdminView; owners: readonly OwnerChoice[]; plans: readonly { slug: string; nombre: string }[] }) {
   const [reasignado, reasignar, reasignando] = useActionState<AdminActionState, FormData>(reassignEventAction, INICIAL)
   const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(setEventPlanAction, INICIAL)
   const [borrado, borrar, borrando] = useActionState<AdminActionState, FormData>(deleteEventAsAdminAction, INICIAL)
@@ -167,9 +167,9 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
               Plan
             </label>
             <select className={`${FIELD_CLASS} py-2`} defaultValue={event.planSlug ?? ''} id={`${id}-plan`} name="planSlug">
-              {plans.map((slug) => (
-                <option key={slug} value={slug}>
-                  {slug}
+              {plans.map((plan) => (
+                <option key={plan.slug} value={plan.slug}>
+                  {plan.nombre}
                 </option>
               ))}
             </select>

@@ -1,6 +1,6 @@
-import { count, desc, eq, sql } from 'drizzle-orm'
+import { and, count, desc, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { auditLog, events, guestPeople, orders, plans, users } from '@/shared/db/schema'
+import { auditLog, events, guestPeople, orders, plans, planTranslations, users } from '@/shared/db/schema'
 import { parseRole } from '@/modules/identity/domain/access'
 import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
 
@@ -96,6 +96,15 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
       .update(events)
       .set({ planId: sql`(select id from plans where slug = ${planSlug})` })
       .where(eq(events.id, eventId))
+  },
+
+  async listPlanOptions() {
+    const filas = await database
+      .select({ slug: plans.slug, nombre: planTranslations.name })
+      .from(plans)
+      .leftJoin(planTranslations, and(eq(planTranslations.planId, plans.id), eq(planTranslations.locale, 'es')))
+      .orderBy(plans.sortOrder)
+    return filas.map((f) => ({ slug: f.slug, nombre: f.nombre ?? f.slug }))
   },
 
   async listPlanSlugs(): Promise<string[]> {

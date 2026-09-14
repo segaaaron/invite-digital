@@ -31,7 +31,7 @@ const ROL: Record<Role, { etiqueta: string; tono: 'ok' | 'maybe' | 'pending' | '
  * **La contraseña inicial la escribe el admin** y le llega al usuario por correo; la primera
  * vez que entra, el panel le obliga a elegir una suya.
  */
-export function NewUserForm({ planes }: { planes: readonly string[] }) {
+export function NewUserForm({ planes }: { planes: readonly { slug: string; nombre: string }[] }) {
   const [estado, accion, pendiente] = useActionState<AdminActionState, FormData>(createUserAction, INICIAL)
   const id = useId()
   // Tras un error vuelve lo enviado: React vacía el formulario al acabar la acción.
@@ -94,8 +94,8 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
           <select className={FIELD_CLASS} defaultValue={enviado?.planSlug ?? ''} id={`${id}-plan`} name="planSlug">
             <option value="">Sin plan</option>
             {planes.map((plan) => (
-              <option key={plan} value={plan}>
-                {plan}
+              <option key={plan.slug} value={plan.slug}>
+                {plan.nombre}
               </option>
             ))}
           </select>
@@ -128,7 +128,7 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
  * El plan **se guarda al elegirlo** y lo confirma en la fila: un guardado automático sin
  * confirmación deja al admin sin saber si se guardó.
  */
-export function UserRow({ user, planes }: { user: UserView; planes: readonly string[] }) {
+export function UserRow({ user, planes }: { user: UserView; planes: readonly { slug: string; nombre: string }[] }) {
   const [rol, cambiarRol, cambiando] = useActionState<AdminActionState, FormData>(setUserRoleAction, INICIAL)
   const [borrado, borrar, borrando] = useActionState<AdminActionState, FormData>(deleteUserAction, INICIAL)
   const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(setUserPlanAction, INICIAL)
@@ -179,9 +179,9 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
             onChange={() => formularioPlan.current?.requestSubmit()}
           >
             <option value="">Sin plan</option>
-            {planes.map((slug) => (
-              <option key={slug} value={slug}>
-                {slug}
+            {planes.map((plan) => (
+              <option key={plan.slug} value={plan.slug}>
+                {plan.nombre}
               </option>
             ))}
           </select>

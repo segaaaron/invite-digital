@@ -435,7 +435,7 @@ export async function createWeddingForClientAction(
   const correo = texto(formData, 'clientEmail').trim().toLowerCase()
   const clave = texto(formData, 'clientPassword')
 
-  if (titulo === '') return { status: 'error', message: 'Escribe el nombre de la boda.' }
+  if (titulo === '') return { status: 'error', message: 'Escribe el nombre del evento.' }
   if (fecha === '') return { status: 'error', message: 'Escribe la fecha del evento.' }
   if (correo === '') return { status: 'error', message: 'Escribe el correo del cliente.' }
 
@@ -480,7 +480,7 @@ export async function createWeddingForClientAction(
 
   if (isErr(evento)) {
     console.error('alta de boda desde administración rechazada', evento.error.kind, evento.error.detail)
-    return { status: 'error', message: `No se pudo crear la boda: ${evento.error.detail}` }
+    return { status: 'error', message: `No se pudo crear el evento: ${evento.error.detail}` }
   }
 
   // --- 3. El contenido de muestra del diseño: la invitación se ve terminada desde el
@@ -517,7 +517,7 @@ export async function createWeddingForClientAction(
   if (clienteId === null) {
     const credencial = createCredential({ email: correo, password: clave })
     if (isErr(credencial)) {
-      return { status: 'error', message: `Boda creada, sin acceso del cliente: ${credencial.error.detail}` }
+      return { status: 'error', message: `Evento creado, sin acceso del cliente: ${credencial.error.detail}` }
     }
     const creado = await admin.createUser({
       email: credencial.value.email,
@@ -547,7 +547,7 @@ export async function createWeddingForClientAction(
   return {
     status: 'success',
     eventSlug: evento.value.slug,
-    message: `Boda creada con el diseño «${tema.label}».${avisoDePlan} ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+    message: `Evento creado con el diseño «${tema.label}».${avisoDePlan} ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
   }
 }
 
