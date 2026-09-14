@@ -74,6 +74,19 @@ export const createDrizzlePorterStore = (database: DbExecutor): PorterStore => (
     await database.update(doorPorters).set({ failedAttempts: 0, lockedUntil: null }).where(eq(doorPorters.id, id))
   },
 
+  async arrivalsByPorter(eventId) {
+    const filas = await database.execute<{ recorded_by: string; registradas: number; ultima: string | Date }>(sql`
+      select a.recorded_by, count(*)::int as registradas, max(a.scanned_at) as ultima
+      from arrivals a
+      join guest_groups g on g.id = a.guest_group_id
+      where g.event_id = ${eventId} and a.voided_at is null and a.recorded_by like 'porter:%'
+      group by a.recorded_by
+    `)
+    return Object.fromEntries(
+      [...filas].map((f) => [f.recorded_by.slice('porter:'.length), { registradas: f.registradas, ultima: new Date(f.ultima) }]),
+    )
+  },
+
   async revoke(id, eventId, at) {
     const filas = await database
       .update(doorPorters)

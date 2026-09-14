@@ -5,7 +5,7 @@ import { requireSession } from '@/modules/identity/session-cookie'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
-import { fecha } from '@/shared/format/fecha'
+import { fecha, hora } from '@/shared/format/fecha'
 import { formatoWhatsapp } from '@/shared/whatsapp'
 import { isErr } from '@/shared/result'
 
@@ -31,7 +31,11 @@ export default async function PorterosPage({ params }: { params: Promise<{ slug:
     return <FeatureLocked eventSlug={event.value.slug} reason="Tu plan no incluye pases con QR ni porteros." title="Porteros" />
   }
 
-  const [capacidad, lista] = await Promise.all([plans.allowanceFor(event.value.id), porters.list(event.value.id)])
+  const [capacidad, lista, actividad] = await Promise.all([
+    plans.allowanceFor(event.value.id),
+    porters.list(event.value.id),
+    porters.activity(event.value.id),
+  ])
   if (isErr(capacidad)) throw new Error(capacidad.error.detail)
 
   return (
@@ -48,6 +52,8 @@ export default async function PorterosPage({ params }: { params: Promise<{ slug:
             gate: p.gate,
             phone: p.phone === null ? null : formatoWhatsapp(p.phone),
             createdAt: fecha(p.createdAt),
+            registradas: actividad[p.id]?.registradas ?? 0,
+            ultima: actividad[p.id] === undefined ? null : hora(actividad[p.id]!.ultima),
           }))}
         />
       </PanelCard>

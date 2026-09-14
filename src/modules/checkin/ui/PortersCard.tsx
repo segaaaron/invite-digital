@@ -13,6 +13,10 @@ export type PorteroVista = {
   readonly phone: string | null
   /** Ya formateada por la página, con la zona de Bolivia. */
   readonly createdAt: string
+  /** Llegadas que registró, sin las deshechas: quién dejó entrar a quién. */
+  readonly registradas: number
+  /** Hora de la última, ya formateada; `null` si todavía no registró ninguna. */
+  readonly ultima: string | null
 }
 
 /**
@@ -134,6 +138,11 @@ function FilaPortero({ eventId, eventSlug, portero }: { eventId: string; eventSl
         <span className="text-[14px] text-ink">{portero.name}</span>
         <span className="text-[12px] text-ink-mute">
           {[portero.gate, portero.phone, `sumado el ${portero.createdAt}`].filter(Boolean).join(' · ')}
+        </span>
+        <span className="text-[12px] text-ink-soft">
+          {portero.registradas === 0
+            ? 'Todavía no registró llegadas'
+            : `${portero.registradas} grupo${portero.registradas === 1 ? '' : 's'} registrado${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : ` · el último a las ${portero.ultima}`}`}
         </span>
         {baja.status === 'error' ? <span className="text-[12px] text-danger">{baja.message}</span> : null}
       </span>

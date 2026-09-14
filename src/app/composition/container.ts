@@ -49,7 +49,7 @@ import { adjustArrival } from '@/modules/checkin/application/adjust-arrival'
 import { checkInByGroup } from '@/modules/checkin/application/check-in-by-group'
 import { checkInByScan } from '@/modules/checkin/application/check-in-by-scan'
 import { getDoorManifest } from '@/modules/checkin/application/get-door-manifest'
-import { addPorter, enterWithPin, listPorters, resolvePorter, revokePorter } from '@/modules/checkin/application/porter-use-cases'
+import { addPorter, enterWithPin, listPorters, porterActivity, resolvePorter, revokePorter } from '@/modules/checkin/application/porter-use-cases'
 import { drizzlePorterStore } from '@/modules/checkin/infrastructure/drizzle-porter-store'
 import { getDoorState } from '@/modules/checkin/application/get-door-state'
 import { voidArrival } from '@/modules/checkin/application/void-arrival'
@@ -472,6 +472,7 @@ const aleatorio = (n: number) => crypto.getRandomValues(new Uint8Array(n))
 export const porters = {
   add: addPorter({ porters: drizzlePorterStore, minter, clock, random: aleatorio }),
   list: listPorters({ porters: drizzlePorterStore }),
+  activity: porterActivity({ porters: drizzlePorterStore }),
   revoke: revokePorter({ porters: drizzlePorterStore, clock }),
   enter: enterWithPin({ porters: drizzlePorterStore, minter, clock, random: aleatorio }),
   resolve: resolvePorter({ porters: drizzlePorterStore, minter, clock }),

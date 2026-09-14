@@ -81,6 +81,9 @@ export const addPorter =
 
 export const listPorters = (deps: Pick<Deps, 'porters'>) => (eventId: string) => deps.porters.listActive(eventId)
 
+/** Cuántas llegadas registró cada portero del evento: el anfitrión ve quién dejó entrar a quién. */
+export const porterActivity = (deps: Pick<Deps, 'porters'>) => (eventId: string) => deps.porters.arrivalsByPorter(eventId)
+
 export const revokePorter = (deps: Pick<Deps, 'porters' | 'clock'>) => (eventId: string, porterId: string) =>
   deps.porters.revoke(porterId, eventId, deps.clock())
 

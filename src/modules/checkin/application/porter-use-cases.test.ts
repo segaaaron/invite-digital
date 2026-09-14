@@ -37,6 +37,9 @@ function dobles(ahora = DENTRO) {
       const i = filas.findIndex((f) => f.id === id)
       filas[i] = { ...filas[i]!, failedAttempts: 0, lockedUntil: null }
     },
+    async arrivalsByPorter() {
+      return {}
+    },
     async revoke(id, eventId, at) {
       const i = filas.findIndex((f) => f.id === id && f.eventId === eventId && f.revokedAt === null)
       if (i === -1) return false

@@ -92,4 +92,6 @@ export interface PorterStore {
   resetFailures(id: string): Promise<void>
   /** `false` si no existía, ya estaba quitado o es de otro evento. */
   revoke(id: string, eventId: string, at: Date): Promise<boolean>
+  /** Por portero: cuántas llegadas registró (sin las deshechas) y cuándo la última. */
+  arrivalsByPorter(eventId: string): Promise<Record<string, { registradas: number; ultima: Date }>>
 }

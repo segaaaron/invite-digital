@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { doorPorters, events } from '@/shared/db/schema'
+import { arrivals, doorPorters, events, guestGroups } from '@/shared/db/schema'
 import { drizzlePorterStore as store } from './drizzle-porter-store'
 
 const eventId = crypto.randomUUID()
@@ -74,5 +74,25 @@ describe('porteros contra Postgres', () => {
     await store.resetFailures(id)
     const [limpia] = await db.select().from(doorPorters).where(eq(doorPorters.id, id))
     expect(limpia).toMatchObject({ failedAttempts: 0, lockedUntil: null })
+  })
+
+  it('cuenta las llegadas que registró cada portero, sin las deshechas, con la última', async () => {
+    const id = await store.add(nuevo())
+    const [grupo] = await db
+      .insert(guestGroups)
+      .values({ eventId, label: 'Familia Rojas', seats: 4, tokenHash: hash() })
+      .returning({ id: guestGroups.id })
+    const primera = new Date('2026-10-17T23:00:00Z')
+    const ultima = new Date('2026-10-17T23:40:00Z')
+    await db.insert(arrivals).values([
+      { scanId: crypto.randomUUID(), guestGroupId: grupo!.id, arrivedCount: 2, scannedAt: primera, recordedBy: `porter:${id}` },
+      { scanId: crypto.randomUUID(), guestGroupId: grupo!.id, arrivedCount: 2, scannedAt: ultima, recordedBy: `porter:${id}` },
+      { scanId: crypto.randomUUID(), guestGroupId: grupo!.id, arrivedCount: 2, scannedAt: ultima, recordedBy: `porter:${id}`, voidedAt: ultima },
+      { scanId: crypto.randomUUID(), guestGroupId: grupo!.id, arrivedCount: 1, scannedAt: ultima, recordedBy: 'user:alguien' },
+    ])
+
+    const resumen = await store.arrivalsByPorter(eventId)
+
+    expect(resumen[id]).toEqual({ registradas: 2, ultima })
   })
 })

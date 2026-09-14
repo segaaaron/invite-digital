@@ -10,7 +10,7 @@ vi.mock('react', async (original) => {
 vi.mock('../porter-actions', () => ({ addPorterAction: vi.fn(), removePorterAction: vi.fn() }))
 
 const base = { eventId: 'e1', eventSlug: 'xv-valeria', limite: 3 }
-const portero = { id: 'p1', name: 'Carlos', gate: 'Puerta 1', phone: '+59170012345', createdAt: '14 sep 2026' }
+const portero = { id: 'p1', name: 'Carlos', gate: 'Puerta 1', phone: '+59170012345', createdAt: '14 sep 2026', registradas: 0, ultima: null }
 
 beforeEach(() => {
   estado.valor = { status: 'idle' }
@@ -49,5 +49,10 @@ describe('PortersCard', () => {
     render(<PortersCard {...base} porteros={[portero]} />)
     fireEvent.click(screen.getByRole('button', { name: 'Quitar a Carlos' }))
     expect(screen.getByRole('button', { name: /sí, quitar/i })).toBeInTheDocument()
+  })
+
+  it('dice cuántos grupos registró cada portero y a qué hora el último', () => {
+    render(<PortersCard {...base} porteros={[{ ...portero, registradas: 12, ultima: '23:40' }]} />)
+    expect(screen.getByText(/12 grupos registrados · el último a las 23:40/)).toBeInTheDocument()
   })
 })
