@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { orderProofs, orders } from '@/shared/db/schema'
+import { orderProofs, orders, plans } from '@/shared/db/schema'
 import { drizzleOrderRepository as repo } from './drizzle-order-repository'
 
 const creados: string[] = []
@@ -34,6 +34,19 @@ describe('drizzleOrderRepository', () => {
     expect(order.status).toBe('pending_payment')
     expect(order.planSlug).toBe('firma-3d')
     expect(order.planName).toBe('Firma 3D')
+  })
+
+  it('congela el importe del plan al pedir: cambiar el precio después no lo mueve', async () => {
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const order = await nuevo()
+
+    await db.update(plans).set({ priceCents: plan!.precio + 12345 }).where(eq(plans.slug, 'firma-3d'))
+    try {
+      const [fila] = await db.select({ importe: orders.amountCents, moneda: orders.currency }).from(orders).where(eq(orders.id, order.id))
+      expect(fila).toEqual({ importe: plan!.precio, moneda: 'BOB' })
+    } finally {
+      await db.update(plans).set({ priceCents: plan!.precio }).where(eq(plans.slug, 'firma-3d'))
+    }
   })
 
   it('un plan que no existe deja el pedido sin plan, no revienta el alta', async () => {

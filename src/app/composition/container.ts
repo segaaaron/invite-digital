@@ -97,6 +97,8 @@ import {
   listUsers,
   readAudit,
   readMetrics,
+  readIncome,
+  readToday,
   recordAdminAction,
   setEventPlan as setEventPlanUseCase,
   setUserRole as setUserRoleUseCase,
@@ -113,6 +115,16 @@ import {
 } from '@/modules/admin/application/showcase-music-use-cases'
 import { createDiskShowcaseStorage } from '@/modules/admin/infrastructure/disk-showcase-storage'
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
+import { drizzleTodayReader } from '@/modules/admin/infrastructure/drizzle-today-reader'
+import { drizzleCatalogAdmin } from '@/modules/admin/infrastructure/drizzle-catalog-admin'
+import { drizzleIncomeReader } from '@/modules/admin/infrastructure/drizzle-income-reader'
+import {
+  listPlansForAdmin,
+  readPublication,
+  savePlan as savePlanUseCase,
+  setTemplatePublished as setTemplatePublishedUseCase,
+} from '@/modules/admin/application/catalog-use-cases'
+import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import { changePassword } from '@/modules/identity/application/change-password'
 import {
@@ -183,6 +195,13 @@ import { drizzlePlanRepository } from '@/modules/catalog/infrastructure/drizzle-
 import { drizzleTemplateRepository } from '@/modules/catalog/infrastructure/drizzle-template-repository'
 import { submitConsultation } from '@/modules/leads/application/submit-consultation'
 import { drizzleConsultationRepository } from '@/modules/leads/infrastructure/drizzle-consultation-repository'
+import {
+  anonymizeExpiredConsultations,
+  countNewConsultations,
+  listConsultations,
+  moveConsultation,
+} from '@/modules/leads/application/inbox-use-cases'
+import { drizzleConsultationInbox } from '@/modules/leads/infrastructure/drizzle-consultation-inbox'
 
 export const catalog = {
   listPlans: listPlans({ plans: drizzlePlanRepository }),
@@ -192,6 +211,11 @@ export const catalog = {
 
 export const leads = {
   submitConsultation: submitConsultation({ requests: drizzleConsultationRepository, clock: () => new Date() }),
+  /** La bandeja del admin: lo que llega del formulario de la web. */
+  list: listConsultations({ inbox: drizzleConsultationInbox }),
+  countNew: countNewConsultations({ inbox: drizzleConsultationInbox }),
+  move: moveConsultation({ inbox: drizzleConsultationInbox, clock: () => new Date() }),
+  anonymizeExpired: anonymizeExpiredConsultations({ inbox: drizzleConsultationInbox, clock: () => new Date() }),
 } as const
 
 // Un solo acuñador para todo el proceso: no guarda estado, solo aleatoriedad del
@@ -548,6 +572,17 @@ export const admin = {
   users: listUsers({ admin: drizzleAdminRepository }),
   events: listAllEvents({ admin: drizzleAdminRepository }),
   metrics: readMetrics({ admin: drizzleAdminRepository }),
+  today: readToday({ today: drizzleTodayReader, clock: () => new Date() }),
+  income: readIncome({ income: drizzleIncomeReader, clock: () => new Date() }),
+  /** Lo comercial del catálogo: planes y qué modelos se publican. */
+  plans: listPlansForAdmin({ catalog: drizzleCatalogAdmin }),
+  savePlan: savePlanUseCase({ catalog: drizzleCatalogAdmin, admin: drizzleAdminRepository }),
+  publication: readPublication({ catalog: drizzleCatalogAdmin }),
+  setPublished: setTemplatePublishedUseCase({
+    catalog: drizzleCatalogAdmin,
+    admin: drizzleAdminRepository,
+    conocidos: () => CATALOG_LISTOS.map((entrada) => entrada.key),
+  }),
   audit: readAudit({ admin: drizzleAdminRepository }),
   setRole: setUserRoleUseCase({ admin: drizzleAdminRepository }),
   deleteUser: deleteUserUseCase({ admin: drizzleAdminRepository }),

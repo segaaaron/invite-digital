@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { ETAPAS, type Etapa } from '../domain/cartera'
 import {
   deleteEventAsAdminAction,
   grantClientAccessAction,
@@ -13,6 +14,9 @@ import {
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
+const DIA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', timeZone: 'UTC' })
+const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', year: '2-digit', timeZone: 'UTC' })
+
 export type EventAdminView = {
   readonly id: string
   readonly slug: string
@@ -22,6 +26,11 @@ export type EventAdminView = {
   readonly ownerId: string | null
   readonly planSlug: string | null
   readonly grupos: number
+  readonly enviados: number
+  readonly respondidos: number
+  readonly etapa: Etapa
+  /** «en 12 días», «hoy», «hace 3 meses». Lo compone la página con la fecha de Bolivia. */
+  readonly cuando: string
 }
 
 export type OwnerChoice = { readonly id: string; readonly email: string }
@@ -51,6 +60,8 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
   const [acceso, darAcceso, dandoAcceso] = useActionState<AdminActionState, FormData>(grantClientAccessAction, INICIAL)
   const [confirmando, setConfirmando] = useState(false)
   const id = useId()
+  const etapa = ETAPAS.find((e) => e.clave === event.etapa) ?? ETAPAS[0]
+  const fecha = new Date(`${event.eventDate}T00:00:00Z`)
 
   const error =
     reasignado.status === 'error'
@@ -62,26 +73,72 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           : null
 
   return (
-    <li className="flex flex-col gap-3 border-b border-line-panel py-4 last:border-none">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="min-w-0 flex-1">
-          <Link className="text-[14px] text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${event.slug}`}>
-            {event.title}
-          </Link>
-          <span className="mt-1 block text-[11px] text-ink-mute">
-            {event.slug} · {event.eventDate} · {event.grupos} grupo{event.grupos === 1 ? '' : 's'}
-          </span>
+    <li className="flex flex-col gap-3.5 border-b border-line-panel py-5 last:border-none">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+        <span className="flex w-13 shrink-0 flex-col items-center rounded-xl border border-line-panel bg-white py-1.5 shadow-card">
+          <span className="font-display text-[24px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
+          <span className="font-mono text-[8px] tracking-[0.2em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
         </span>
 
-        {/* Un evento sin dueño no debería existir; si aparece uno, la fila lo canta en
-            vez de enseñar un hueco. */}
-        {event.ownerEmail === null ? (
-          <Pill tone="no">Sin dueño</Pill>
-        ) : (
-          <span className="text-[12px] text-ink-soft">{event.ownerEmail}</span>
-        )}
+        <span className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="flex flex-wrap items-center gap-2.5">
+            <Link className="font-display text-[20px] leading-tight text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${event.slug}`}>
+              {event.title}
+            </Link>
+            <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
+          </span>
+          <span className="font-mono text-[10px] tracking-[0.15em] text-ink-mute uppercase">
+            {event.cuando} · {event.slug} · plan {event.planSlug ?? 'sin plan'}
+          </span>
+          {/* Un evento sin dueño no debería existir; si aparece uno, la fila lo canta en
+              vez de enseñar un hueco. */}
+          {event.ownerEmail === null ? (
+            <span>
+              <Pill tone="no">Sin dueño</Pill>
+            </span>
+          ) : (
+            <span className="text-[12px] text-ink-soft">{event.ownerEmail}</span>
+          )}
+        </span>
+
+        <span className="flex w-full flex-col gap-1.5 min-[900px]:w-[260px]">
+          {event.grupos === 0 ? (
+            <span className="text-[12px] text-ink-mute">Sin grupos de invitados</span>
+          ) : (
+            <>
+              <span
+                aria-label={`${event.enviados} de ${event.grupos} enlaces repartidos, ${event.respondidos} respondieron`}
+                className="relative h-2 overflow-hidden rounded-full bg-bg-sunken"
+                role="img"
+              >
+                <span className="absolute inset-y-0 left-0 rounded-full bg-gold/35" style={{ width: `${(event.enviados / event.grupos) * 100}%` }} />
+                <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(event.respondidos / event.grupos) * 100}%` }} />
+              </span>
+              <span className="flex justify-between font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
+                <span>{event.grupos} grupos</span>
+                <span>{event.enviados} enviados</span>
+                <span>{event.respondidos} RSVP</span>
+              </span>
+            </>
+          )}
+        </span>
+
+        <span className="flex gap-2">
+          <PanelButton href={`/panel/eventos/${event.slug}`}>Abrir</PanelButton>
+          <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Ver</PanelButton>
+        </span>
       </div>
 
+      {/* Los mandos plegados: se viene a mirar la cartera, y cuatro formularios abiertos por
+          fila convertían veinte bodas en una pared de campos. Plegados siguen en el DOM —la
+          e2e de multitenencia lee el dueño preseleccionado igual— y se abren solos si algo
+          falla. */}
+      <details className="group" open={error !== null || acceso.status !== 'idle' || confirmando}>
+        <summary className="w-fit cursor-pointer list-none font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
+          <span className="group-open:hidden">+ Gestionar: dueño, plan, acceso, borrar</span>
+          <span className="hidden group-open:inline">− Cerrar</span>
+        </summary>
+        <div className="mt-3.5">
       <div className="flex flex-wrap items-end gap-3">
         <form action={reasignar} className="flex items-end gap-2">
           <input name="eventId" type="hidden" value={event.id} />
@@ -179,6 +236,8 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           </PanelButton>
         )}
       </div>
+        </div>
+      </details>
 
       {error === null ? null : (
         <p className="text-[12px] text-danger" role="alert">

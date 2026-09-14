@@ -135,9 +135,18 @@ export const consultationRequests = pgTable(
     message: text('message'),
     locale: varchar('locale', { length: 5 }).notNull(),
     utm: jsonb('utm').$type<Record<string, string>>(),
+    // 'new' | 'contacted' | 'won' | 'lost'. Lo decide `leads/domain/pipeline.ts`.
+    status: varchar('status', { length: 16 }).notNull().default('new'),
+    note: text('note'),
+    statusChangedAt: timestamp('status_changed_at', { withTimezone: true }),
+    // La boda que salió de la consulta. `set null`: borrar la boda no borra que hubo venta.
+    eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('consultation_requests_created_idx').on(t.createdAt)],
+  (t) => [
+    index('consultation_requests_created_idx').on(t.createdAt),
+    index('consultation_requests_status_idx').on(t.status, t.createdAt.desc()),
+  ],
 )
 
 export const plansRelations = relations(plans, ({ many }) => ({ translations: many(planTranslations) }))
@@ -713,6 +722,12 @@ export const orders = pgTable(
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
     customerName: varchar('customer_name', { length: 160 }).notNull(),
     contact: varchar('contact', { length: 160 }).notNull(),
+    /**
+     * Lo que costaba el plan **cuando se pidió**. Anulable solo por los pedidos anteriores
+     * a la `0037` sin plan. Sin esta columna, editar un precio reescribiría lo ya cobrado.
+     */
+    amountCents: integer('amount_cents'),
+    currency: char('currency', { length: 3 }),
     eventDate: date('event_date'),
     notes: text('notes'),
     // 'pending_payment' | 'proof_submitted' | 'approved' | 'rejected'
@@ -721,7 +736,7 @@ export const orders = pgTable(
     decidedAt: timestamp('decided_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('orders_status_idx').on(t.status, t.createdAt.desc())],
+  (t) => [index('orders_status_idx').on(t.status, t.createdAt.desc()), index('orders_decided_idx').on(t.status, t.decidedAt)],
 )
 
 /**

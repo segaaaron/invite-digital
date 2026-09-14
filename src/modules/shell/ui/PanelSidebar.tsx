@@ -67,36 +67,22 @@ export function PanelSidebar({
           <p className="mb-2 hidden font-mono text-[9px] tracking-[0.3em] uppercase opacity-45 min-[860px]:block">
             {section.label}
           </p>
-          {section.items.map((item) =>
-            item.href === null ? (
-              // Sin evento creado no hay adónde ir. Se pinta apagado y se dice por qué,
-              // en vez de desaparecer: una barra que encoge desorienta.
-              <span
-                key={item.label}
-                aria-disabled
-                title="Crea un evento para usar esta sección"
-                className={`${ITEM_BASE} cursor-not-allowed opacity-35`}
-              >
-                <Icono icon={item.icon} />
-                {item.label}
-              </span>
-            ) : (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={item.href === pathname ? 'page' : undefined}
-                className={`${ITEM_BASE} ${
-                  item.href === pathname
-                    ? 'bg-linear-to-r from-gold/20 to-white/5 shadow-[inset_2px_0_0_var(--color-gold)]'
-                    : 'hover:bg-white/7'
-                }`}
-              >
-                <Icono icon={item.icon} />
-                {item.label}
-                <Insignia item={item} />
-              </Link>
-            ),
-          )}
+          {section.items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={item.href === pathname ? 'page' : undefined}
+              className={`${ITEM_BASE} ${
+                item.href === pathname
+                  ? 'bg-linear-to-r from-gold/20 to-white/5 shadow-[inset_2px_0_0_var(--color-gold)]'
+                  : 'hover:bg-white/7'
+              }`}
+            >
+              <Icono icon={item.icon} />
+              {item.label}
+              <Insignia item={item} />
+            </Link>
+          ))}
         </nav>
       ))}
 

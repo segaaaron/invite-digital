@@ -26,7 +26,7 @@ test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browse
   expect((await suyo.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(200)
 
   // Y no ve la administración: ni el rótulo de la barra, ni la ruta.
-  await expect(suyo.getByRole('link', { name: 'Panorama' })).toHaveCount(0)
+  await expect(suyo.getByRole('link', { name: 'Hoy', exact: true })).toHaveCount(0)
   // **404, no 403.** Un 403 confirmaría que la sección existe.
   expect((await suyo.goto('/panel/admin'))?.status()).toBe(404)
   expect((await suyo.goto('/panel/admin/usuarios'))?.status()).toBe(404)
@@ -48,7 +48,7 @@ test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browse
   const admin = await (await browser.newContext()).newPage()
   await entrar(admin, ADMIN)
   expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(200)
-  await expect(admin.getByRole('link', { name: 'Panorama' })).toBeVisible()
+  await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toBeVisible()
 
   // La bandeja del admin trae el evento del otro con su dueño. El correo sale varias
   // veces —también en cada selector de dueño—, así que se busca en la fila.

@@ -67,6 +67,9 @@ describe('drizzleAdminRepository · los recuentos correlacionados', () => {
     const mio = eventos.find((e) => e.slug === slug)
 
     expect(mio?.grupos).toBe(2)
+    // Ninguno repartido ni contestado todavía: la cartera los pinta como «Repartiendo».
+    expect(mio?.enviados).toBe(0)
+    expect(mio?.respondidos).toBe(0)
     expect(mio?.ownerEmail).toBe(correo)
   })
 })

@@ -306,9 +306,12 @@ export function BarRow({
   value,
   ratio,
   tone = 'sage',
+  wide = false,
 }: {
   label: string
   value: string
+  /** Para importes: `Bs 1.450,00` no cabe en la columna de un recuento y se partía. */
+  wide?: boolean
   /** 0..1. Se recorta: una barra al 140 % se sale de su carril. */
   ratio: number
   tone?: 'sage' | 'gold' | 'device'
@@ -327,7 +330,7 @@ export function BarRow({
           style={{ width: `${ancho}%` }}
         />
       </span>
-      <span className="w-10 shrink-0 text-right font-mono text-[11px] text-ink-soft">{value}</span>
+      <span className={`${wide ? 'w-24' : 'w-10'} shrink-0 text-right font-mono text-[11px] whitespace-nowrap text-ink-soft`}>{value}</span>
     </div>
   )
 }

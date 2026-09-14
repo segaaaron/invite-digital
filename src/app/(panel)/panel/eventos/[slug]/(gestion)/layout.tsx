@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, guests, orders, plans } from '@/app/composition/container'
+import { checkin, events, guestbook, guests, leads, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { isAdmin, sectionForRole } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -49,6 +49,8 @@ export default async function EventoLayout({
   // alguien que transfirió y no ha recibido nada.
   const pedidos = await orders.list()
   const porRevisar = isErr(pedidos) ? null : pedidos.value.filter((p) => p.order.status === 'proof_submitted').length
+  // Solo para el admin: es el único que ve la bandeja de consultas.
+  const consultasNuevas = isAdmin(actor) ? await leads.countNew() : null
 
   return (
     <PanelFrame
@@ -58,6 +60,7 @@ export default async function EventoLayout({
         sinLeer: isErr(libro) ? null : unreadCount(libro.value),
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: porRevisar,
+        consultas: consultasNuevas,
       }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente')}
       user={{
         title: event.value.title,

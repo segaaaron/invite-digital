@@ -1,7 +1,7 @@
 import type { NavIcon } from './nav-icons'
 
 export type NavItem = {
-  readonly href: string | null
+  readonly href: string
   readonly label: string
   /**
    * La clave del icono, no el dibujo. Este fichero es un `.ts` sin JSX; el SVG lo pone
@@ -19,30 +19,33 @@ export type NavSection = {
   readonly items: readonly NavItem[]
 }
 
+/** Lo que se compone antes de quitar los enlaces que no llevan a ninguna parte. */
+type Borrador = { readonly label: string; readonly items: readonly (Omit<NavItem, 'href'> & { readonly href: string | null })[] }
+
 export type NavCounts = {
   readonly invitados?: number | null
   readonly sinLeer?: number | null
   readonly llegadas?: number | null
+  /** Consultas de la web sin contactar. Solo la calcula la carcasa para un admin. */
+  readonly consultas?: number | null
   /** Pedidos del Plan B con comprobante por revisar. */
   readonly pedidos?: number | null
 }
 
 /**
- * La navegación del panel, portada de `docs/design-reference/dashboard/Dashboard.html`:
- * tres secciones —EVENTO ACTIVO, DISEÑO, CUENTA— que son **siempre las mismas**.
+ * La navegación del panel, portada de `docs/design-reference/dashboard/Dashboard.html`.
  *
- * La maqueta no tiene una versión reducida para cuando no estás dentro de un evento, y
- * por eso esto tampoco la tiene: la bandeja, el evento nuevo y la ayuda enseñan la barra
- * entera, apuntando al evento activo —el de fecha más próxima—. Una barra que cambia de
- * tamaño al cambiar de página es justo lo que había que quitar.
+ * **Cada rol ve solo lo suyo, y nada se pinta apagado.** La barra tenía que ser siempre la
+ * misma y, sin evento, enseñaba las secciones del evento apagadas; en la administración
+ * eso eran diez filas grises que el admin no iba a usar. Lo pidió el usuario el 14 de
+ * septiembre: una opción que no lleva a ninguna parte no sale.
  *
- * Sin ningún evento creado, los enlaces del evento van a `null`: se pintan apagados y no
- * llevan a ninguna parte, en vez de desaparecer.
- */
-/**
- * La administración es una sección **más** de la misma barra, y solo se pinta para un
- * admin: un atelier no ve ni el rótulo. Ocultarla no es la protección —esa vive en
- * `requireAdmin()`, que devuelve 404— pero enseñar enlaces que llevan a un 404 es
+ * - **Atelier**: EVENTO ACTIVO y DISEÑO si tiene evento, y CUENTA.
+ * - **Admin**: ADMINISTRACIÓN y CUENTA; dentro de un evento, además, las del evento.
+ * - **Cliente** y **puerta**: sus barras propias, más abajo.
+ *
+ * Ocultar no es la protección —esa vive en la sección que pide cada página y en
+ * `requireAdmin()`, que devuelven 404—, pero enseñar enlaces que llevan a un 404 es
  * enseñar que existe algo a lo que no se llega.
  */
 export function panelNav(
@@ -52,26 +55,51 @@ export function panelNav(
   esPuerta = false,
   esCliente = false,
 ): NavSection[] {
+  return componer(slug, counts, esAdmin, esPuerta, esCliente)
+    .map((seccion) => ({ label: seccion.label, items: seccion.items.filter((item): item is NavItem => item.href !== null) }))
+    .filter((seccion) => seccion.items.length > 0)
+}
+
+function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPuerta: boolean, esCliente: boolean): Borrador[] {
   const base = slug === null ? null : `/panel/eventos/${slug}`
   const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
 
-  const administracion: NavSection[] = esAdmin
+  // Tres secciones y no una de diez: lo del día, lo del negocio y lo del sistema. Una
+  // lista plana ponía «Auditoría» al mismo nivel que «Hoy».
+  const administracion: Borrador[] = esAdmin
     ? [
         {
           label: 'Administración',
           items: [
-            { href: '/panel/admin', label: 'Panorama', icon: 'panorama' },
-            { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
-            { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
-            // La música de los dieciséis modelos de la web. No es la de una boda: esa la
-            // sube su atelier o su cliente desde Configuración de ese evento.
-            { href: '/panel/admin/modelos', label: 'Música de los modelos', icon: 'editar' },
-            { href: '/panel/admin/pagos', label: 'Cobros', icon: 'plan' },
+            // Lo que espera decisión hoy. Sustituyó a Panorama: las cifras siguen dentro.
+            { href: '/panel/admin', label: 'Hoy', icon: 'hoy' },
+            // Lo que llega del formulario de la web. Se guardaba y nadie lo leía.
+            { href: '/panel/admin/consultas', label: 'Consultas', icon: 'consultas', count: counts.consultas ?? null, countLabel: 'nuevas' },
             // Los pedidos del Plan B compran planes de InvitePremium: el dinero va a una
             // sola cuenta y las decide el admin. Estaban en «Cuenta», a la vista de
             // cualquier atelier, y ahora que aprobar crea cuentas y eventos eso era
             // enseñar una puerta que además abría de más.
             { href: '/panel/pedidos', label: 'Pedidos', icon: 'pedidos', count: counts.pedidos ?? null, countLabel: 'por revisar' },
+            { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
+          ],
+        },
+        {
+          label: 'Negocio',
+          items: [
+            // Lo cobrado por mes y por plan, con el importe congelado de cada pedido.
+            { href: '/panel/admin/ingresos', label: 'Ingresos', icon: 'estadisticas' },
+            // Precio, tope y funciones de cada plan, sin SQL ni despliegue.
+            { href: '/panel/admin/planes', label: 'Planes', icon: 'plan' },
+            // Publicar o retirar cada modelo de la web, y su música de escaparate. No es la
+            // música de una boda: esa la sube su atelier o su cliente desde Configuración.
+            { href: '/panel/admin/modelos', label: 'Modelos', icon: 'editar' },
+            { href: '/panel/admin/pagos', label: 'Datos de cobro', icon: 'qr' },
+          ],
+        },
+        {
+          label: 'Sistema',
+          items: [
+            { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
             { href: '/panel/admin/auditoria', label: 'Auditoría', icon: 'auditoria' },
           ],
         },
@@ -151,6 +179,7 @@ export function panelNav(
         { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],
     },
+    ...administracion,
     {
       label: 'Cuenta',
       items: [
@@ -159,10 +188,11 @@ export function panelNav(
         // La propia contraseña. Las cuentas las da de alta el admin y la clave inicial
         // viaja por WhatsApp: sin esta pantalla valdría para siempre.
         { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
-        { href: '/panel', label: 'Todos los eventos', icon: 'eventos' },
-        { href: '/panel/ayuda', label: 'Ayuda', icon: 'ayuda' },
+        // El admin ya tiene «Todos los eventos» en su sección, con todos los ateliers.
+        { href: esAdmin ? null : '/panel', label: 'Todos los eventos', icon: 'eventos' },
+        // La ayuda es para quien recibe su cuenta del admin; el admin es quien la escribe.
+        { href: esAdmin ? null : '/panel/ayuda', label: 'Ayuda', icon: 'ayuda' },
       ],
     },
-    ...administracion,
   ]
 }

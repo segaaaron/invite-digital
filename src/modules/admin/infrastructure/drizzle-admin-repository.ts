@@ -68,7 +68,9 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         ownerId: events.userId,
         ownerEmail: users.email,
         planSlug: plans.slug,
-        grupos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id)`,
+        grupos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null)`,
+        enviados: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null and guest_groups.invitation_sent_at is not null)`,
+        respondidos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null and exists (select 1 from rsvp_responses where rsvp_responses.guest_group_id = guest_groups.id))`,
       })
       .from(events)
       // `leftJoin` en los dos: un evento sin dueño o sin plan tiene que salir igual en la

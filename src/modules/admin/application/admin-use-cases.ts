@@ -1,7 +1,9 @@
 import { canDeleteUser, canDemote, type Actor, type Role } from '@/modules/identity/domain/access'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
-import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from './ports'
+import { componerHoy, fechaEnBolivia, HORIZONTE_RIESGO, type Hoy } from '../domain/hoy'
+import { resumirIngresos, type Ingresos } from '../domain/ingresos'
+import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow, IncomeReader, TodayReader } from './ports'
 
 type Deps = { admin: AdminRepository }
 
@@ -158,3 +160,25 @@ export const recordAdminAction =
       detail: entry.detail ?? null,
     })
   }
+
+/** «Hoy» del admin: la foto de la base compuesta con las reglas de `domain/hoy.ts`. */
+export const readToday =
+  (deps: { today: TodayReader; clock: () => Date }) =>
+  async (): Promise<Result<{ fecha: string; hoy: Hoy }, AdminError>> =>
+    attempt(
+      async () => {
+        const fecha = fechaEnBolivia(deps.clock())
+        const crudo = await deps.today.snapshot(fecha, HORIZONTE_RIESGO)
+        return ok({ fecha, hoy: componerHoy(crudo, fecha) })
+      },
+      (cause) => adminError('storage_failure', `No se pudo leer «Hoy»: ${String(cause)}`),
+    )
+
+/** Lo cobrado, con la fecha de Bolivia. */
+export const readIncome =
+  (deps: { income: IncomeReader; clock: () => Date }) =>
+  async (): Promise<Result<Ingresos, AdminError>> =>
+    attempt(
+      async () => ok(resumirIngresos(await deps.income.pedidos(), fechaEnBolivia(deps.clock()))),
+      (cause) => adminError('storage_failure', `No se pudieron leer los ingresos: ${String(cause)}`),
+    )

@@ -1,10 +1,18 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { leads } from '@/app/composition/container'
+import { admin, leads } from '@/app/composition/container'
+import { requireAdmin } from '@/modules/identity/session-cookie'
+import { isErr } from '@/shared/result'
+import { ETIQUETA_ESTADO, parseEstado } from './domain/pipeline'
 import { clientIpFrom } from './application/client-ip'
 import { guardedSubmit, type ConsultationOutcome } from './application/guarded-submit'
 import { createRateLimiter } from './application/rate-limit'
+
+// ============================================================================
+// PÚBLICA: el formulario de contacto de la web, sin sesión y con límite de tasa por IP.
+// ============================================================================
 
 export type ConsultationActionState = ConsultationOutcome | { status: 'idle'; message: '' }
 
@@ -26,4 +34,52 @@ export async function submitConsultationAction(
   })
 
   return submitGuarded({ ip, payload: Object.fromEntries(formData) })
+}
+
+// ============================================================================
+// DEL ADMIN: la bandeja de consultas. Todas empiezan por `await requireAdmin()`, que
+// devuelve 404 a quien no lo es. Una consulta no es de ningún evento todavía, así que no
+// hay guardia de dueño que pedir.
+// ============================================================================
+
+export type InboxActionState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
+
+const texto = (formData: FormData, clave: string): string => {
+  const valor = formData.get(clave)
+  return typeof valor === 'string' ? valor : ''
+}
+
+/**
+ * Mueve una consulta por el embudo. El estado de destino viaja **en el botón pulsado**
+ * (`name="to"`), no en un campo que actualiza un `onClick`: ese `setState` no ha corrido
+ * cuando el formulario sale, y «Perdida» habría marcado otra cosa.
+ */
+export async function moveConsultationAction(_previous: InboxActionState, formData: FormData): Promise<InboxActionState> {
+  const actor = await requireAdmin()
+
+  const hacia = parseEstado(texto(formData, 'to'))
+  const movida = await leads.move({
+    id: texto(formData, 'id'),
+    to: texto(formData, 'to'),
+    note: texto(formData, 'note'),
+    eventId: texto(formData, 'eventId'),
+  })
+
+  if (isErr(movida)) {
+    if (movida.error.kind === 'storage_failure') {
+      console.error('moveConsultationAction', movida.error.detail)
+      return { status: 'error', message: 'No pudimos guardar el cambio. Vuelve a intentarlo en un momento.' }
+    }
+    return { status: 'error', message: movida.error.detail }
+  }
+
+  await admin.record(actor, {
+    action: 'consulta.estado',
+    subject: movida.value.name,
+    detail: `${ETIQUETA_ESTADO[movida.value.status]} → ${ETIQUETA_ESTADO[hacia]}`,
+  })
+
+  revalidatePath('/panel/admin')
+  revalidatePath('/panel/admin/consultas')
+  return { status: 'success', message: `${movida.value.name}: ${ETIQUETA_ESTADO[hacia].toLowerCase()}.` }
 }

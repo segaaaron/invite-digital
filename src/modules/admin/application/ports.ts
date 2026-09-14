@@ -1,4 +1,7 @@
 import type { Role } from '@/modules/identity/domain/access'
+import type { HoyCrudo } from '../domain/hoy'
+import type { PedidoCobro } from '../domain/ingresos'
+import type { PlanLimpio, TextoPlanLimpio } from '../domain/plan-editable'
 
 export type AdminUserRow = {
   readonly id: string
@@ -18,7 +21,12 @@ export type AdminEventRow = {
   readonly ownerId: string | null
   readonly ownerEmail: string | null
   readonly planSlug: string | null
+  /** Grupos con enlace vigente: los revocados no cuentan. */
   readonly grupos: number
+  /** De esos, cuántos tienen el enlace marcado como repartido. */
+  readonly enviados: number
+  /** Y cuántos contestaron, sí o no. */
+  readonly respondidos: number
 }
 
 export type AuditRow = {
@@ -85,4 +93,51 @@ export interface FileStore {
    * después cuáles sobran.
    */
   remove(key: string): Promise<void>
+}
+
+/**
+ * La lectura de «Hoy». Un puerto aparte de `AdminRepository` porque es una sola foto de
+ * solo lectura, y porque los dobles de prueba del repositorio no tienen por qué fingirla.
+ *
+ * Trae filas **crudas**: qué es un aviso lo decide `domain/hoy.ts`, con la fecha como
+ * argumento.
+ */
+export interface TodayReader {
+  snapshot(hoy: string, horizonteDias: number): Promise<HoyCrudo>
+}
+
+export type PlanAdminRow = {
+  readonly id: string
+  readonly slug: string
+  readonly priceCents: number
+  readonly currency: string
+  readonly maxGuestGroups: number | null
+  readonly includesSeating: boolean
+  readonly includesRegistry: boolean
+  readonly includesCheckin: boolean
+  readonly highlighted: boolean
+  readonly isActive: boolean
+  /** Cuántos eventos lo tienen: es lo que pesa antes de cambiarle el tope. */
+  readonly eventos: number
+  readonly es: TextoPlanLimpio | null
+  readonly en: TextoPlanLimpio | null
+}
+
+/**
+ * Lo comercial del catálogo que el admin edita sin desplegar: los planes y qué modelos se
+ * publican. Puerto aparte, como `TodayReader`, para no obligar a los dobles de
+ * `AdminRepository` a fingirlo.
+ */
+export interface CatalogAdmin {
+  listPlans(): Promise<PlanAdminRow[]>
+  /** `false` si el plan no existe. Plan y sus dos traducciones, en una transacción. */
+  savePlan(slug: string, plan: PlanLimpio): Promise<boolean>
+  publication(): Promise<Record<string, boolean>>
+  /** `false` si no hay plantilla con esa clave. */
+  setPublished(slug: string, published: boolean): Promise<boolean>
+}
+
+/** Los pedidos tal como los necesita la pantalla de ingresos. Solo lectura. */
+export interface IncomeReader {
+  pedidos(): Promise<PedidoCobro[]>
 }

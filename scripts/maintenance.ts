@@ -4,7 +4,7 @@
  *
  *   DATABASE_URL=… SITE_URL=… pnpm maintenance
  */
-import { events } from '@/app/composition/container'
+import { events, leads } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
 
 async function runMaintenance(): Promise<number> {
@@ -21,6 +21,15 @@ async function runMaintenance(): Promise<number> {
       eventsAnonymized.length > 0 ? ` (${eventsAnonymized.join(', ')})` : ''
     }, ${sessionsDeleted} sesión(es) caducada(s) borrada(s), ${viewsDeleted} visita(s) borrada(s), ${mediaDeleted} imagen(es) borrada(s)`,
   )
+
+  // Las consultas de la web van aparte: no son de ningún evento. Un fallo aquí no deshace
+  // lo de arriba, pero sí deja el pase en rojo para que se vea en el registro.
+  const consultas = await leads.anonymizeExpired()
+  if (isErr(consultas)) {
+    console.error(`Retención de consultas fallida — ${consultas.error.detail}`)
+    return 1
+  }
+  console.log(`Retención de consultas: ${consultas.value} anonimizada(s)`)
   return 0
 }
 

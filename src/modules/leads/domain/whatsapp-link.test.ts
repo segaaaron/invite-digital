@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildWhatsAppLink, whatsAppPlanMessage } from './whatsapp-link'
+import { buildWhatsAppLink, whatsAppPlanMessage, whatsAppToCustomer } from './whatsapp-link'
 
 describe('buildWhatsAppLink', () => {
   it('usa el número de marca sin signos', () => {
@@ -22,5 +22,20 @@ describe('whatsAppPlanMessage', () => {
 
   it('cambia el idioma del mensaje', () => {
     expect(whatsAppPlanMessage({ name: 'Signature 3D', price: 'Bs 1,450' }, 'en')).toMatch(/^Hello/)
+  })
+})
+
+describe('whatsAppToCustomer', () => {
+  it('usa el número con su prefijo tal cual', () => {
+    expect(whatsAppToCustomer('+59170011223', 'hola')).toBe('https://wa.me/59170011223?text=hola')
+  })
+
+  it('completa con 591 un celular boliviano escrito sin prefijo', () => {
+    expect(whatsAppToCustomer('700 11223', 'hola')).toBe('https://wa.me/59170011223?text=hola')
+  })
+
+  it('sin teléfono no hay enlace', () => {
+    expect(whatsAppToCustomer(null, 'hola')).toBe(null)
+    expect(whatsAppToCustomer('--', 'hola')).toBe(null)
   })
 })

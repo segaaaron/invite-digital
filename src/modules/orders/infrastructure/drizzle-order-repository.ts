@@ -86,6 +86,10 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           // El plan se resuelve por su slug dentro del `insert`: leerlo antes dejaría
           // una ventana en la que el plan se retira entre la lectura y la escritura.
           planId: sql`(select id from plans where slug = ${order.planSlug})`,
+          // El precio se congela en el mismo `insert` y por la misma razón: leído antes, un
+          // cambio de precio entre medias dejaría el pedido con el importe de otro momento.
+          amountCents: sql`(select price_cents from plans where slug = ${order.planSlug})`,
+          currency: sql`(select currency from plans where slug = ${order.planSlug})`,
           templateSlug: order.templateSlug,
           customerName: order.customerName,
           contact: order.contact,

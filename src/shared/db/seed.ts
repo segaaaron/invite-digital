@@ -146,18 +146,12 @@ async function seed() {
         includesRegistry: p.limits.registry,
         includesCheckin: p.limits.checkin,
       })
-      .onConflictDoUpdate({
-        target: plans.slug,
-        set: {
-          priceCents: p.priceCents,
-          highlighted: p.highlighted,
-          sortOrder: p.order,
-          maxGuestGroups: p.limits.maxGuestGroups,
-          includesSeating: p.limits.seating,
-          includesRegistry: p.limits.registry,
-          includesCheckin: p.limits.checkin,
-        },
-      })
+      // **Solo siembra lo que falta.** Precio, límites y funciones se editan desde
+      // `/panel/admin/planes`, y este seed corre en cada despliegue: con el `update` de
+      // antes, cada push devolvía los precios a los del código sin que nadie lo notara.
+      // El `set` sobre el propio `slug` es un no-op que existe solo para que `returning`
+      // devuelva la fila también cuando ya estaba.
+      .onConflictDoUpdate({ target: plans.slug, set: { slug: sql`excluded.slug` } })
       .returning({ id: plans.id })
     if (!row) throw new Error(`No se pudo insertar el plan ${p.slug}`)
     await db
@@ -166,15 +160,8 @@ async function seed() {
         { planId: row.id, locale: 'es', ...p.es, features: [...p.es.features] },
         { planId: row.id, locale: 'en', ...p.en, features: [...p.en.features] },
       ])
-      .onConflictDoUpdate({
-        target: [planTranslations.planId, planTranslations.locale],
-        set: {
-          name: sql`excluded.name`,
-          tagline: sql`excluded.tagline`,
-          description: sql`excluded.description`,
-          features: sql`excluded.features`,
-        },
-      })
+      // Nombre, lema, descripción y funciones también se editan desde el panel.
+      .onConflictDoNothing()
   }
 
   // Las dieciséis reales, leídas del catálogo de temas: el `slug` **es** la clave del
@@ -204,7 +191,8 @@ async function seed() {
           themeKey: entrada.key,
           categoryId,
           sortOrder: orden,
-          isPublished: true,
+          // `isPublished` NO se toca al actualizar: el admin publica y retira modelos
+          // desde `/panel/admin/modelos`, y este seed corre en cada despliegue.
           palette: entrada.palette,
           sampleMonogram: entrada.sample.monogram,
           sampleNames: entrada.sample.names,

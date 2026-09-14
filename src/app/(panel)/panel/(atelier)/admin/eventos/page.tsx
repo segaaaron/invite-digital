@@ -1,38 +1,92 @@
 import { admin } from '@/app/composition/container'
+import { ETAPAS, etapaDe, ordenarCartera, type Etapa } from '@/modules/admin/domain/cartera'
+import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { NuevaBodaForm } from '@/modules/admin'
 import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Eventos · Administración' }
 export const dynamic = 'force-dynamic'
 
-export default async function AdminEventosPage() {
+/** «en 12 días», «hoy», «hace 3 meses»: lo que se lee de un vistazo, no una fecha ISO. */
+function cuando(dias: number): string {
+  if (dias === 0) return 'hoy'
+  if (dias === 1) return 'mañana'
+  if (dias === -1) return 'ayer'
+  const n = Math.abs(dias)
+  const texto = n < 45 ? `${n} días` : n < 365 ? `${Math.round(n / 30)} meses` : `${Math.round(n / 365)} año${Math.round(n / 365) === 1 ? '' : 's'}`
+  return dias > 0 ? `en ${texto}` : `hace ${texto}`
+}
+
+/**
+ * La cartera: todas las bodas del sistema, de cualquier atelier, con su etapa.
+ *
+ * Filtro y búsqueda viven en la URL (`?etapa=`, `?q=`). La búsqueda es un formulario `GET`
+ * normal, sin JavaScript: una lista de bodas no necesita filtrar a cada tecla.
+ */
+export default async function AdminEventosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ etapa?: string; q?: string; panel?: string }>
+}) {
   await requireAdmin()
 
+  const { etapa: etapaPedida, q = '', panel } = await searchParams
   const [eventos, usuarios, planes] = await Promise.all([admin.events(), admin.users(), admin.planSlugs()])
+  const hoy = fechaEnBolivia(new Date())
+  const filtro: Etapa | 'todas' = ETAPAS.find((e) => e.clave === etapaPedida)?.clave ?? 'todas'
+  const busqueda = q.trim().toLowerCase()
+
+  const cartera = isErr(eventos)
+    ? []
+    : ordenarCartera(
+        eventos.value.map((e) => ({ ...e, etapa: etapaDe(e, hoy) })),
+        hoy,
+      )
+  const conteo = new Map<string, number>()
+  for (const e of cartera) conteo.set(e.etapa, (conteo.get(e.etapa) ?? 0) + 1)
+
+  const visibles = cartera.filter(
+    (e) =>
+      (filtro === 'todas' || e.etapa === filtro) &&
+      (busqueda === '' || [e.title, e.slug, e.ownerEmail ?? ''].some((campo) => campo.toLowerCase().includes(busqueda))),
+  )
+  const mostrarAlta = panel === 'nueva' || cartera.length === 0
+  const enlace = (clave: string) => {
+    const params = new URLSearchParams()
+    if (clave !== 'todas') params.set('etapa', clave)
+    if (q.trim() !== '') params.set('q', q.trim())
+    const cadena = params.toString()
+    return cadena === '' ? '/panel/admin/eventos' : `/panel/admin/eventos?${cadena}`
+  }
 
   return (
     <>
       <PanelHeader
         actions={
-          <PanelButton href="/panel/eventos/nuevo" variant="primary">
-            + Nuevo evento
-          </PanelButton>
+          <>
+            <PanelButton href="/panel/eventos/nuevo">Evento sin cliente</PanelButton>
+            <PanelButton href="/panel/admin/eventos?panel=nueva" variant="primary">
+              + Boda para un cliente
+            </PanelButton>
+          </>
         }
         kicker="Administración"
         meta="Todos los eventos del sistema, de cualquier atelier"
         title="Eventos"
       />
 
-      {/* Crear va **antes** de la lista: es lo que se viene a hacer aquí cuando llega un
-          cliente nuevo, y tenerlo debajo de todas las bodas del sistema obligaba a
-          desplazarse hasta el final para empezar. */}
-      <PanelCard className="mb-4.5" title="Nueva boda para un cliente">
+      {/* El alta se abre con `?panel=nueva`, como los paneles de Invitados: abierta siempre
+          ocupaba la primera pantalla entera y la cartera quedaba debajo del pliegue. Va
+          **antes** de la lista cuando se abre, y abierta sin pedirla si no hay ninguna boda. */}
+      {mostrarAlta ? (
+      <PanelCard action={<PanelButton href="/panel/admin/eventos">Cerrar</PanelButton>} className="mb-4.5" title="Nueva boda para un cliente">
         <NuevaBodaForm
           // El clásico no se ofrece: no se publica en el catálogo, es el respaldo de una
           // clave desconocida. Nadie lo elige mirando la web.
@@ -42,17 +96,51 @@ export default async function AdminEventosPage() {
           planes={planes}
         />
       </PanelCard>
+      ) : null}
 
-      <PanelCard>
+      <PanelCard
+        action={
+          <form action="/panel/admin/eventos" className="flex w-full gap-2 min-[560px]:w-auto" method="get" role="search">
+            {filtro === 'todas' ? null : <input name="etapa" type="hidden" value={filtro} />}
+            <label className="sr-only" htmlFor="buscar-boda">
+              Buscar boda por nombre, slug o dueño
+            </label>
+            <input
+              className={`${FIELD_CLASS} py-2 text-[13px] min-[560px]:w-[260px]`}
+              defaultValue={q}
+              id="buscar-boda"
+              name="q"
+              placeholder="Buscar por nombre, slug o dueño"
+              type="search"
+            />
+            <PanelButton type="submit">Buscar</PanelButton>
+          </form>
+        }
+        title="Cartera"
+      >
+        {/* Seis etapas no caben en un teléfono: el carril se desplaza en vez de partirse. */}
+        <div className="-mx-1 mb-2 overflow-x-auto px-1 pb-1">
+          <SegmentedTabs
+            current={filtro}
+            label="Filtrar bodas por etapa"
+            segments={[
+              { key: 'todas', label: 'Todas', href: enlace('todas'), count: cartera.length },
+              ...ETAPAS.map((e) => ({ key: e.clave, label: e.etiqueta, href: enlace(e.clave), count: conteo.get(e.clave) ?? 0 })),
+            ]}
+          />
+        </div>
+
         {isErr(eventos) || isErr(usuarios) ? (
           <p className="text-[13px] text-danger" role="alert">
             No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
           </p>
-        ) : eventos.value.length === 0 ? (
-          <p className="text-[13px] text-ink-mute">Todavía no hay ningún evento en el sistema.</p>
+        ) : visibles.length === 0 ? (
+          <p className="py-10 text-center text-[13px] text-ink-mute">
+            {cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema.' : 'Ninguna boda con ese filtro.'}
+          </p>
         ) : (
           <ul className="flex flex-col">
-            {eventos.value.map((evento) => (
+            {visibles.map((evento) => (
               <EventAdminRow
                 key={evento.id}
                 event={{
@@ -64,6 +152,10 @@ export default async function AdminEventosPage() {
                   ownerId: evento.ownerId,
                   planSlug: evento.planSlug,
                   grupos: evento.grupos,
+                  enviados: evento.enviados,
+                  respondidos: evento.respondidos,
+                  etapa: evento.etapa,
+                  cuando: cuando(diasEntre(hoy, evento.eventDate)),
                 }}
                 owners={usuarios.value.map((u) => ({ id: u.id, email: u.email }))}
                 plans={planes}

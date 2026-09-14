@@ -138,8 +138,14 @@ const VISTAS_ADMIN = [
   // siendo la que más estira el documento —referencias en monoespaciada y el nombre del
   // fichero que subió el cliente—, así que se mide igual, solo que con la sesión correcta.
   ['pedidos', '/panel/pedidos'],
-  ['admin · panorama', '/panel/admin'],
+  ['admin · hoy', '/panel/admin'],
+  ['admin · consultas', '/panel/admin/consultas'],
   ['admin · eventos', '/panel/admin/eventos'],
+  // El alta abierta: cinco campos en dos columnas que en un teléfono tienen que apilarse.
+  ['admin · eventos · alta', '/panel/admin/eventos?panel=nueva'],
+  ['admin · ingresos', '/panel/admin/ingresos'],
+  ['admin · planes', '/panel/admin/planes'],
+  ['admin · modelos', '/panel/admin/modelos'],
   ['admin · usuarios', '/panel/admin/usuarios'],
   ['admin · cobros', '/panel/admin/pagos'],
   ['admin · auditoría', '/panel/admin/auditoria'],
@@ -191,6 +197,10 @@ test('las vistas del atelier tampoco desbordan', async ({ page }) => {
 })
 
 test('las vistas del administrador tampoco desbordan', async ({ browser }) => {
+  // Trece pantallas por cinco anchos son sesenta y cinco cargas con `networkidle`: no caben
+  // en los 30 s por defecto desde que el admin tiene Hoy, Consultas, Ingresos, Planes y
+  // Modelos. Partirla en una prueba por pantalla repetiría el contexto de sesión trece veces.
+  test.setTimeout(150_000)
   const sesion = await browser.newContext({ storageState: ADMIN_AUTH_STATE })
   const page = await sesion.newPage()
 

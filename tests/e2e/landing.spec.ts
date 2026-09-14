@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import postgres from 'postgres'
 import { BRAND } from '../../src/shared/config/brand'
 
 // Built from BRAND so replacing the placeholder number does not turn this suite red.
@@ -66,6 +67,18 @@ test('el hero se ve aunque se llegue por un ancla y se suba después', async ({ 
 test('un idioma desconocido en la ruta da 404', async ({ page }) => {
   const response = await page.goto('/fr')
   expect(response?.status()).toBe(404)
+})
+
+// Su propia conexión, como el resto de suites que escriben: compartir el pool deja a la
+// otra escribiendo contra una conexión cerrada.
+const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
+
+// La consulta que envía esta prueba **se queda en la base**, y desde que el admin tiene
+// bandeja de consultas cada pasada le dejaba una «María Rojas E2E» más: 174 en la de
+// desarrollo antes de que alguien las viera.
+test.afterAll(async () => {
+  await sql`delete from consultation_requests where email = 'e2e@example.com' and name = 'María Rojas E2E'`
+  await sql.end({ timeout: 5 })
 })
 
 test('envía una consulta y muestra la confirmación', async ({ page }) => {

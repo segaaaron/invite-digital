@@ -39,9 +39,60 @@ describe('panelNav', () => {
     }
   })
 
-  it('sin ningún evento, los enlaces del evento se apagan en vez de desaparecer', () => {
-    const seccionDelEvento = panelNav(null)[0]
-    expect(seccionDelEvento?.items.every((item) => item.href === null)).toBe(true)
+  it('nunca pinta un enlace apagado: lo que no lleva a ninguna parte no sale', () => {
+    // Cada rol ve solo lo suyo. Una fila apagada es una opción que ese rol no tiene,
+    // enseñada igual.
+    for (const [slug, admin, puerta, cliente] of [
+      [null, false, false, false],
+      [null, true, false, false],
+      [null, false, false, true],
+      [null, false, true, false],
+      ['boda', true, false, false],
+    ] as const) {
+      const secciones = panelNav(slug, {}, admin, puerta, cliente)
+      for (const seccion of secciones) {
+        expect(seccion.items.length).toBeGreaterThan(0)
+        for (const item of seccion.items) expect(item.href).not.toBeNull()
+      }
+    }
+  })
+
+  it('el atelier sin evento ve su cuenta, no las secciones del evento', () => {
+    const secciones = panelNav(null)
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Cuenta'])
+    expect(secciones[0]?.items.map((item) => item.href)).toEqual(['/panel/cuenta', '/panel', '/panel/ayuda'])
+  })
+
+  it('el admin fuera de un evento ve la administración y su cuenta, sin repetir «Todos los eventos»', () => {
+    const secciones = panelNav(null, {}, true)
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Administración', 'Negocio', 'Sistema', 'Cuenta'])
+    const hrefs = secciones.flatMap((seccion) => seccion.items).map((item) => item.href)
+    expect(hrefs).not.toContain('/panel')
+    expect(hrefs).not.toContain('/panel/ayuda')
+    expect(hrefs).toContain('/panel/admin/eventos')
+    // «Hoy» abre la administración y «Consultas» va justo detrás: son lo que se mira cada día.
+    expect(hrefs.slice(0, 2)).toEqual(['/panel/admin', '/panel/admin/consultas'])
+  })
+
+  it('el admin llega a planes, ingresos y modelos desde la barra', () => {
+    const hrefs = panelNav(null, {}, true).flatMap((seccion) => seccion.items).map((item) => item.href)
+    for (const ruta of ['/panel/admin/planes', '/panel/admin/ingresos', '/panel/admin/modelos']) expect(hrefs).toContain(ruta)
+    // Y un atelier no: esas pantallas son del dinero de InvitePremium.
+    const delAtelier = panelNav('boda').flatMap((seccion) => seccion.items).map((item) => item.href)
+    expect(delAtelier.some((href) => href.startsWith('/panel/admin'))).toBe(false)
+  })
+
+  it('la insignia de consultas cuenta las nuevas', () => {
+    const consultas = panelNav(null, { consultas: 3 }, true)
+      .flatMap((seccion) => seccion.items)
+      .find((item) => item.href === '/panel/admin/consultas')
+    expect(consultas?.count).toBe(3)
+    expect(consultas?.countLabel).toBe('nuevas')
+  })
+
+  it('el admin dentro de un evento ve el evento y además la administración', () => {
+    const etiquetas = panelNav('boda', {}, true).map((seccion) => seccion.label)
+    expect(etiquetas).toEqual(['Evento activo', 'Diseño', 'Administración', 'Negocio', 'Sistema', 'Cuenta'])
   })
 
   it('la barra del cliente no enseña lo que es del atelier', () => {

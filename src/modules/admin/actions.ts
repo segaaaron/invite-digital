@@ -9,6 +9,7 @@ import { addEventClientAction } from '@/modules/events/staff-actions'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { ALFABETO_SUFIJO, slugDeBoda } from './domain/nueva-boda'
 import { MAX_SHOWCASE_MUSIC_BYTES } from './domain/showcase-music'
+import { parseAmount } from '@/modules/registry'
 import { isErr } from '@/shared/result'
 
 // ============================================================================
@@ -478,4 +479,67 @@ export async function grantClientAccessAction(
   const resultado = await addEventClientAction({ status: 'idle' }, formData)
   refrescar()
   return resultado
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Catálogo: planes y publicación de modelos. La web pública es `force-dynamic`, así que
+// lo guardado se ve en la siguiente visita sin revalidar nada fuera del panel.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Guarda un plan. El importe se parsea **aquí**, con `parseAmount` de la mesa de regalos:
+ * el dominio no puede importar otro módulo y el dinero se convierte en un solo sitio.
+ */
+export async function savePlanAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+
+  const slug = texto(formData, 'slug')
+  const precio = parseAmount(texto(formData, 'price'))
+  if (isErr(precio)) return { status: 'error', message: precio.error.detail }
+
+  const marcado = (clave: string) => formData.get(clave) === 'on'
+  const textoDe = (locale: 'es' | 'en') => ({
+    name: texto(formData, `${locale}.name`),
+    tagline: texto(formData, `${locale}.tagline`),
+    description: texto(formData, `${locale}.description`),
+    features: texto(formData, `${locale}.features`),
+  })
+
+  const guardado = await admin.savePlan(actor, slug, {
+    priceCents: precio.value,
+    maxGuestGroups: texto(formData, 'maxGuestGroups'),
+    includesSeating: marcado('includesSeating'),
+    includesRegistry: marcado('includesRegistry'),
+    includesCheckin: marcado('includesCheckin'),
+    highlighted: marcado('highlighted'),
+    isActive: marcado('isActive'),
+    es: textoDe('es'),
+    en: textoDe('en'),
+  })
+  if (isErr(guardado)) {
+    if (guardado.error.kind === 'storage_failure') {
+      console.error('savePlanAction', guardado.error.detail)
+      return { status: 'error', message: 'No pudimos guardar el plan. Vuelve a intentarlo en un momento.' }
+    }
+    return { status: 'error', message: guardado.error.detail }
+  }
+
+  revalidatePath('/panel/admin/planes')
+  refrescar()
+  return { status: 'success', message: 'Plan guardado. La web ya enseña los cambios.' }
+}
+
+/** Publica o retira un modelo del escaparate. Retirar no borra: los enlaces siguen vivos. */
+export async function setTemplatePublishedAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+
+  const publicar = texto(formData, 'publicar') === 'si'
+  const hecho = await admin.setPublished(actor, texto(formData, 'themeKey'), publicar)
+  if (isErr(hecho)) {
+    if (hecho.error.kind === 'storage_failure') console.error('setTemplatePublishedAction', hecho.error.detail)
+    return { status: 'error', message: hecho.error.kind === 'storage_failure' ? 'No pudimos cambiarlo. Vuelve a intentarlo.' : hecho.error.detail }
+  }
+
+  revalidatePath('/panel/admin/modelos')
+  return { status: 'success', message: publicar ? 'Publicado en la web.' : 'Retirado de la web.' }
 }
