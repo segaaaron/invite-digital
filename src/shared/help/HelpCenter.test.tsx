@@ -62,10 +62,9 @@ describe('HelpCenter', () => {
     expect(enlace).toHaveAttribute('href', `https://wa.me/${BRAND.whatsapp.replace(/\D/g, '')}`)
   })
 
-  it('el correo de contacto también sale de brand.ts', () => {
-    render(<HelpCenter />)
-    const enlace = screen.getByRole('link', { name: BRAND.email })
-    expect(enlace).toHaveAttribute('href', `mailto:${BRAND.email}`)
+  it('no ofrece el correo como contacto: el de la marca es no-reply y nadie lo responde', () => {
+    const { container } = render(<HelpCenter />)
+    expect(container.querySelector('a[href^="mailto:"]')).toBeNull()
   })
 })
 

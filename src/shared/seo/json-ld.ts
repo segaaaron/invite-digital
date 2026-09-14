@@ -43,7 +43,6 @@ export type OrganizationJsonLd = {
   '@type': 'Organization'
   name: string
   url: string
-  email: string
   areaServed: string
   slogan: string
 }
@@ -97,7 +96,6 @@ export function organizationJsonLd(baseUrl: string = env.SITE_URL): Organization
     '@type': 'Organization',
     name: BRAND.siteName,
     url: baseUrl,
-    email: BRAND.email,
     areaServed: BRAND.city,
     slogan: BRAND.tagline,
   }

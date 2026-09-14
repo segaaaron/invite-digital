@@ -3,7 +3,11 @@ export const BRAND = {
   tagline: 'Atelier de invitaciones digitales',
   whatsapp: '+59170012345',
   whatsappDisplay: '+591 700 12345',
-  email: 'atelier@invitepremium.bo',
+  /**
+   * **Nadie lo lee.** Es el remitente de los correos del sistema (accesos y códigos): no se
+   * enseña en ninguna parte como forma de contacto. El contacto es el WhatsApp.
+   */
+  email: 'no-reply@send.luxuryatelier.net',
   city: 'Cochabamba, Bolivia',
   /**
    * Los sellos de «organizadores que confían en nosotros» del hero.

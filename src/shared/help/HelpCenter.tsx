@@ -81,9 +81,7 @@ export function HelpCenter() {
           >
             WhatsApp {HELP_CONTACT.whatsappLabel}
           </a>
-          <a className="text-[13px] text-gold-deep underline underline-offset-4" href={HELP_CONTACT.emailHref}>
-            {HELP_CONTACT.emailLabel}
-          </a>
+          {/* Sin correo: el de la marca es no-reply. */}
         </div>
       </section>
     </div>

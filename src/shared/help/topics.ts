@@ -10,8 +10,6 @@ export type HelpTopic = { readonly question: string; readonly answer: string }
 export const HELP_CONTACT = {
   whatsappHref: `https://wa.me/${BRAND.whatsapp.replace(/\D/g, '')}`,
   whatsappLabel: BRAND.whatsappDisplay,
-  emailHref: `mailto:${BRAND.email}`,
-  emailLabel: BRAND.email,
 } as const
 
 /**

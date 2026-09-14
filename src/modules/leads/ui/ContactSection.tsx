@@ -2,7 +2,7 @@ import Image from 'next/image'
 import type { Category } from '@/modules/catalog'
 import { BRAND } from '@/shared/config/brand'
 import { GlassPanel } from '@/shared/design/ui/GlassPanel'
-import { MailIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { WhatsAppIcon } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -52,16 +52,7 @@ export function ContactSection({ categories, dictionary, locale }: Props) {
                 WhatsApp {BRAND.whatsappDisplay}
               </a>
             </li>
-            <li>
-              <a
-                className="flex items-center gap-2.5 text-[15px] text-ink transition-colors hover:text-gold-deep"
-                href={`mailto:${BRAND.email}`}
-              >
-                <MailIcon className="text-gold-deep" />
-                <span className="sr-only">{contact.emailLabel}: </span>
-                {BRAND.email}
-              </a>
-            </li>
+            {/* Sin correo: el de la marca es no-reply y nadie lo responde. El contacto es WhatsApp. */}
           </ul>
 
           {/* La fotografía del taller que la maqueta pone bajo los datos de contacto. */}

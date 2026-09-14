@@ -21,7 +21,7 @@ export function supportMessage(input: { name: string; email: string; message: st
  * **Abre WhatsApp con el mensaje ya escrito; no lo manda por su cuenta.** No hay servidor
  * de correo en este proyecto, y un botón que dijera «Enviado» sin haber enviado nada es
  * exactamente la clase de mentira que deja a alguien esperando una respuesta que no va a
- * llegar. El correo queda como alternativa, con el mismo texto.
+ * llegar. No hay alternativa por correo: el de la marca es no-reply y nadie lo lee.
  */
 export function SupportForm() {
   const [name, setName] = useState('')
@@ -31,7 +31,6 @@ export function SupportForm() {
   const vacio = message.trim() === ''
   const texto = supportMessage({ name, email, message })
   const whatsapp = `${HELP_CONTACT.whatsappHref}?text=${encodeURIComponent(texto)}`
-  const correo = `${HELP_CONTACT.emailHref}?subject=${encodeURIComponent('Soporte Luxury Atelier')}&body=${encodeURIComponent(texto)}`
 
   return (
     <div className="flex flex-col gap-4">
@@ -73,9 +72,6 @@ export function SupportForm() {
           target="_blank"
         >
           Enviar por WhatsApp
-        </a>
-        <a className="text-[13px] text-gold-deep underline-offset-4 hover:underline" href={correo}>
-          o por correo
         </a>
       </div>
 
