@@ -14,6 +14,7 @@ import { themeFor } from './ui/themes/registry'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { shareUrl } from './domain/client-share'
+import { mismaFiesta } from './domain/fiesta'
 import type { EventErrorKind } from './domain/errors'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
@@ -85,8 +86,7 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   if (isErr(anterior)) return { status: 'error', message: anterior.error.kind }
   const temaAnterior = anterior.value.themeKey
   const pedido = themeFor(String(formData.get('themeKey') ?? temaAnterior))
-  const tipoDe = (clave: string) => (themeFor(clave).categorySlug === 'xv-anos' ? 'xv' : 'boda')
-  const themeKey = tipoDe(pedido.key) === tipoDe(temaAnterior) ? pedido.key : temaAnterior
+  const themeKey = mismaFiesta(pedido.categorySlug, themeFor(temaAnterior).categorySlug) ? pedido.key : temaAnterior
 
   const result = await eventUseCases.update({ ...readForm(formData), themeKey, id: eventId })
   if (isErr(result)) {

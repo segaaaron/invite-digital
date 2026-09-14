@@ -4,7 +4,8 @@ import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { NuevaBodaForm } from '@/modules/admin'
 import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
-import { CATALOG_ENTRIES, CATALOG_KEYS } from '@/shared/design/theme-catalog'
+import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
+import { fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
@@ -122,7 +123,7 @@ export default async function AdminEventosPage({
             .map((tema) => ({
               key: tema.key,
               label: tema.label,
-              categoria: CATALOG_ENTRIES.find((entrada) => entrada.key === tema.key)?.categorySlug === 'xv-anos' ? 'XV años' : 'Bodas',
+              categoria: VOCABULARIO[fiestaDeCategoria(tema.categorySlug)].plural,
             }))}
           planes={opcionesDePlan}
         />

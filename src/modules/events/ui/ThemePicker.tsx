@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useId, useState } from 'react'
+import { fiestaDeCategoria, VOCABULARIO, type Fiesta } from '../domain/fiesta'
 import type { ThemeDefinition } from './themes/contract'
 
 type Props = {
@@ -21,16 +22,6 @@ type Props = {
   readonly locale: string
 }
 
-/**
- * El tipo de fiesta de cada diseño. **Bodas y XV años no se mezclan nunca**: son dos fiestas
- * distintas y a nadie que organiza unos XV le sirve ver una boda civil. La civil es una
- * boda.
- */
-export const TIPO: Record<ThemeDefinition['categorySlug'], 'Bodas' | 'XV años'> = {
-  boda: 'Bodas',
-  'boda-civil': 'Bodas',
-  'xv-anos': 'XV años',
-}
 
 /**
  * La rejilla de diseños de la Configuración del evento.
@@ -52,10 +43,10 @@ export const TIPO: Record<ThemeDefinition['categorySlug'], 'Bodas' | 'XV años'>
 export function ThemePicker({ definitions, defaultValue, locale }: Props) {
   const grupo = useId()
   const inicial = definitions.find((d) => d.key === defaultValue) ?? definitions[0]
-  const [tipo, setTipo] = useState<'Bodas' | 'XV años'>(inicial === undefined ? 'Bodas' : TIPO[inicial.categorySlug])
+  const [tipo, setTipo] = useState<Fiesta>(inicial === undefined ? 'boda' : fiestaDeCategoria(inicial.categorySlug))
   const [elegido, setElegido] = useState(inicial?.key ?? '')
-  const tipos = (['Bodas', 'XV años'] as const).filter((t) => definitions.some((d) => TIPO[d.categorySlug] === t))
-  const porCategoria = { [tipo]: definitions.filter((d) => TIPO[d.categorySlug] === tipo) }
+  const tipos = (['boda', 'xv'] as const).filter((t) => definitions.some((d) => fiestaDeCategoria(d.categorySlug) === t))
+  const porCategoria = { [tipo]: definitions.filter((d) => fiestaDeCategoria(d.categorySlug) === tipo) }
 
   return (
     <fieldset className="flex flex-col gap-6 border-0 p-0">
@@ -74,12 +65,12 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
             key={t}
             onClick={() => {
               setTipo(t)
-              const primero = definitions.find((d) => TIPO[d.categorySlug] === t)
+              const primero = definitions.find((d) => fiestaDeCategoria(d.categorySlug) === t)
               if (primero !== undefined) setElegido(primero.key)
             }}
             type="button"
           >
-            {t}
+            {VOCABULARIO[t].plural}
           </button>
         ))}
       </div>

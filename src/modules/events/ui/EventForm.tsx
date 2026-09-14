@@ -6,7 +6,8 @@ import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
 import { createEventAction, updateEventAction, type EventActionState } from '../actions'
 import type { Event } from '../domain/event'
 import type { EventErrorKind } from '../domain/errors'
-import { ThemePicker, TIPO } from './ThemePicker'
+import { mismaFiesta } from '../domain/fiesta'
+import { ThemePicker } from './ThemePicker'
 import type { ThemeDefinition } from './themes/contract'
 import { themeDefinitions, themeFor } from './themes/registry'
 
@@ -117,7 +118,7 @@ export function EventForm({ event }: { event?: Event }) {
           // `updateEventAction` lo rechaza también en el servidor.
           <ThemePicker
             defaultValue={event.themeKey}
-            definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => TIPO[definicion.categorySlug] === TIPO[themeFor(event.themeKey).categorySlug]))}
+            definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => mismaFiesta(definicion.categorySlug, themeFor(event.themeKey).categorySlug)))}
             locale={event.locale}
           />
         ) : (

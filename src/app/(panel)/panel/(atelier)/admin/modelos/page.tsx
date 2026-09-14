@@ -1,5 +1,6 @@
 import { admin } from '@/app/composition/container'
 import { ShowcaseMusicRow } from '@/modules/admin'
+import { fiestaDeCategoria } from '@/modules/events'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
 import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { requireAdmin } from '@/modules/identity/session-cookie'
@@ -26,7 +27,7 @@ export default async function AdminModelosPage() {
 
   const [musica, publicacion, canciones] = await Promise.all([admin.showcaseMusic(), admin.publication(), admin.showcaseSongs()])
   const modelos = themeDefinitions().filter((tema) => tema.key !== 'clasico')
-  const esXv = (clave: string) => CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug === 'xv-anos'
+  const esXv = (clave: string) => fiestaDeCategoria(CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug ?? '') === 'xv'
   const grupos = [
     { titulo: 'Bodas', temas: modelos.filter((tema) => !esXv(tema.key)) },
     { titulo: 'XV años', temas: modelos.filter((tema) => esXv(tema.key)) },
