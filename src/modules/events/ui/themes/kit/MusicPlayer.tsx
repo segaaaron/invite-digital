@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { prefiereMenosMovimiento } from './motion'
 
 type Props = {
@@ -37,11 +37,23 @@ type Props = {
 /**
  * La canción del evento, con su ecualizador.
  *
- * **Suena solo si hay `src`**, y nunca sola: hace falta que alguien pulse. Los navegadores
- * bloquean la reproducción automática con sonido, y con razón — una invitación que arranca
- * a sonar al abrirse en una oficina o en un velatorio es exactamente lo que esa política
- * evita. Si `play()` se rechaza igualmente, el botón vuelve a su sitio en vez de quedarse
- * diciendo que suena.
+ * **Suena sola al abrir la invitación y solo la para quien la escucha** (pedido por el
+ * usuario el 14 de septiembre). Pero ningún navegador deja sonar audio sin un gesto: Safari
+ * en iOS lo exige siempre y Chrome solo lo concede en escritorio a sitios con historial de
+ * reproducción (Media Engagement Index). Así que se hace en dos tiempos:
+ *
+ * 1. Al montar se intenta `play()`. Donde el navegador lo permite, suena ya.
+ * 2. Si lo rechaza (`NotAllowedError`), arranca con **el primer toque, clic o tecla en
+ *    cualquier parte de la página** —abrir el sobre de la portada ya lo es—. `play()` se
+ *    llama dentro del propio manejador: tras un `await` el navegador deja de contarlo
+ *    como gesto.
+ *
+ * Ese primer gesto **no** cuenta si cae sobre el propio botón: el botón ya lo arranca con su
+ * clic, y dejar pasar los dos lo encendería y lo apagaría en el mismo toque.
+ *
+ * **Pausar es definitivo**: tras una pausa del usuario no hay nada que vuelva a arrancarla.
+ * Si la pausa la hace el navegador —una llamada, otra pestaña con audio— tampoco se reanuda
+ * sola: no se distingue de fuera y sonar por sorpresa es peor que quedarse callada.
  *
  * **Es `<audio>` y no la Web Audio API, y esa es la decisión que hace que se oiga.** En
  * iOS el interruptor físico de silencio calla a Web Audio —va por el canal ambiental— y
@@ -66,6 +78,32 @@ export function MusicPlayer({
   const [sonando, setSonando] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
   const audio = useRef<HTMLAudioElement | null>(null)
+  const boton = useRef<HTMLButtonElement | null>(null)
+
+  useEffect(() => {
+    const elemento = audio.current
+    if (elemento === null) return
+
+    // Los eventos que el navegador cuenta como gesto para reproducir con sonido.
+    // Son los de la especificación HTML: en táctil el gesto cuenta al levantar el dedo
+    // (`pointerup`, `touchend`), no al apoyarlo.
+    const GESTOS = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const
+    const quitar = () => GESTOS.forEach((tipo) => document.removeEventListener(tipo, alGesto, true))
+    function alGesto(evento: Event) {
+      if (boton.current?.contains(evento.target as Node)) return quitar()
+      quitar()
+      if (elemento!.paused) void elemento!.play().catch(() => setSonando(false))
+    }
+
+    let vigente = true
+    elemento.play().catch(() => {
+      if (vigente) GESTOS.forEach((tipo) => document.addEventListener(tipo, alGesto, { capture: true }))
+    })
+    return () => {
+      vigente = false
+      quitar()
+    }
+  }, [audioSrc])
 
   const alternar = () => {
     const elemento = audio.current
@@ -105,9 +143,9 @@ export function MusicPlayer({
           onPause={() => setSonando(false)}
           onPlay={() => setSonando(true)}
           playsInline
-          // `none`: una invitación se abre en el teléfono del invitado, muchas veces con
-          // datos. La canción se baja cuando la pide, no por si acaso.
-          preload="none"
+          // `auto`: va a sonar en cuanto se abra o se toque la invitación, así que se baja
+          // ya y arranca sin esperar a la red en ese primer toque.
+          preload="auto"
           ref={audio}
           // Quien la compone sabe de dónde sale: `/media/<id>` en una boda —con la puerta
           // de contraseña del evento— y `/modelos/musica/<modelo>` en el escaparate. Las
@@ -121,6 +159,7 @@ export function MusicPlayer({
         aria-label={sonando ? `Pausar ${track}` : `Reproducir ${track}`}
         aria-pressed={sonando}
         onClick={alternar}
+        ref={boton}
         style={{
           width: 36,
           height: 36,
