@@ -22,7 +22,9 @@ export function PanelFrame({
   children: ReactNode
 }) {
   return (
-    <div className="grid min-h-dvh grid-cols-1 min-[860px]:grid-cols-[240px_1fr]">
+    // `grid-rows-[auto_1fr]` en el teléfono: con `min-h-dvh` y una página corta, la rejilla
+    // repartía el alto sobrante también a la fila del menú y la barra salía el doble de alta.
+    <div className="grid min-h-dvh grid-cols-1 grid-rows-[auto_1fr] min-[860px]:grid-cols-[240px_1fr] min-[860px]:grid-rows-1">
       {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
           la ventana y en una página larga dejaba una franja blanca por debajo. */}
       <div className="bg-shell-deep">

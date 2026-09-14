@@ -72,10 +72,15 @@ export function PanelSidebar({
         <button
           aria-controls="menu-panel"
           aria-expanded={abierto}
-          className="ml-auto rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50"
+          className="ml-auto flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50"
           onClick={() => setAbierto((a) => !a)}
           type="button"
         >
+          {/* Icono **y** palabra: según NN/g, la palabra «Menú» junto al icono es lo que
+              compensa la encontrabilidad que se pierde al plegar la navegación. */}
+          <svg aria-hidden className="size-3.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
+            {abierto ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
           {abierto ? 'Cerrar' : 'Menú'}
         </button>
       </div>

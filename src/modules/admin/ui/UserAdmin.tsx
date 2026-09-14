@@ -120,12 +120,13 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
 /**
  * Una fila de la tabla de usuarios.
  *
- * **Lo que no se puede hacer no se enseña**, en vez de pintarse deshabilitado: tu propia
- * cuenta no tiene «Quitar admin» ni «Borrar», y a un cliente o a un puerta no se le ofrece
- * hacerse admin. Botones grises en cada fila son ruido que obliga a leer por qué están así.
+ * Ocultar o deshabilitar sigue la pauta de Smashing/NN/g: **se oculta lo que no se tiene por
+ * permiso** —tus propias acciones, «Hacer admin» a un cliente o a un puerta— y **se
+ * deshabilita, explicando cómo habilitarlo, lo que está bloqueado por una condición que
+ * puede cambiar**: «Borrar» mientras el usuario gestione eventos.
  *
- * El plan **se guarda al elegirlo**: un botón «Guardar plan» por fila duplicaba el gesto y
- * encajonaba la fila.
+ * El plan **se guarda al elegirlo** y lo confirma en la fila: un guardado automático sin
+ * confirmación deja al admin sin saber si se guardó.
  */
 export function UserRow({ user, planes }: { user: UserView; planes: readonly string[] }) {
   const [rol, cambiarRol, cambiando] = useActionState<AdminActionState, FormData>(setUserRoleAction, INICIAL)
@@ -135,10 +136,12 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
   const planId = useId()
   const error = [rol, borrado, plan].find((e) => e.status === 'error')
   const puedeSerAdmin = user.role === 'admin' || user.role === 'atelier'
-  const celda = 'border-b border-line-panel py-3.5 pr-4 align-middle'
+  // En el teléfono la fila es una tarjeta y cada celda un bloque: sin cabecera, así que la
+  // celda del plan y la de eventos llevan su propio rótulo visible.
+  const celda = 'border-b border-line-panel py-3.5 pr-4 align-middle max-[559px]:block max-[559px]:border-0 max-[559px]:py-1.5 max-[559px]:pr-0'
 
   return (
-    <tr>
+    <tr className="max-[559px]:block max-[559px]:rounded-[14px] max-[559px]:border max-[559px]:border-line-panel max-[559px]:bg-white max-[559px]:p-4">
       <td className={celda}>
         <span className="flex items-center gap-2 text-[14px] text-ink">
           {user.email}
@@ -157,7 +160,11 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
       </td>
 
       <td className={celda}>
-        <form action={cambiarPlan} ref={formularioPlan}>
+        {/* `key` con el plan guardado: tras la acción React devuelve el formulario a su valor
+            inicial, y un `<select>` no toma el `defaultValue` nuevo al volver a pintar —se
+            veía «Sin plan» con el plan ya guardado—. Remontarlo lo pinta de verdad. El estado
+            «Guardado» vive en la fila, no en el formulario, y sobrevive al remontaje. */}
+        <form action={cambiarPlan} key={user.planSlug ?? 'sin-plan'} ref={formularioPlan}>
           <input name="userId" type="hidden" value={user.id} />
           <input name="email" type="hidden" value={user.email} />
           <label className="sr-only" htmlFor={planId}>
@@ -178,16 +185,22 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
               </option>
             ))}
           </select>
+          <span aria-live="polite" className="mt-1 block h-4 text-[11px] text-ink-mute">
+            {cambiandoPlan ? 'Guardando…' : plan.status === 'success' ? 'Guardado' : ''}
+          </span>
         </form>
       </td>
 
-      <td className={`${celda} font-display text-[18px] text-ink [font-variant-numeric:lining-nums]`}>{user.eventos}</td>
+      <td className={`${celda} font-display text-[18px] text-ink [font-variant-numeric:lining-nums]`}>
+        {user.eventos}
+        <span className="ml-1.5 font-sans text-[12px] text-ink-mute min-[560px]:hidden">evento{user.eventos === 1 ? '' : 's'}</span>
+      </td>
 
       <td className={`${celda} pr-0`}>
         {user.esUnoMismo ? (
-          <span className="flex justify-end text-[12px] text-ink-mute">Tu cuenta</span>
+          <span className="flex justify-end text-[12px] text-ink-mute max-[559px]:justify-start">Tu cuenta</span>
         ) : (
-          <span className="flex justify-end gap-2">
+          <span className="flex justify-end gap-2 max-[559px]:justify-start">
             {puedeSerAdmin ? (
               <form action={cambiarRol}>
                 <input name="userId" type="hidden" value={user.id} />
@@ -197,20 +210,24 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
                 </PanelButton>
               </form>
             ) : null}
-            {user.eventos === 0 ? (
-              <form action={borrar}>
-                <input name="userId" type="hidden" value={user.id} />
-                <PanelButton disabled={borrando} type="submit" variant="danger">
-                  Borrar
-                </PanelButton>
-              </form>
-            ) : (
-              <span className="self-center text-[11px] text-ink-mute" title="Reasígnale o borra sus eventos desde Todos los eventos">
-                Gestiona eventos
-              </span>
-            )}
+            <form action={borrar}>
+              <input name="userId" type="hidden" value={user.id} />
+              <PanelButton
+                aria-describedby={user.eventos > 0 ? `${planId}-borrar` : undefined}
+                disabled={borrando || user.eventos > 0}
+                type="submit"
+                variant="danger"
+              >
+                Borrar
+              </PanelButton>
+            </form>
           </span>
         )}
+        {!user.esUnoMismo && user.eventos > 0 ? (
+          <span className="mt-1.5 block text-right text-[11px] text-ink-mute max-[559px]:text-left" id={`${planId}-borrar`}>
+            Para borrarlo, reasigna o borra sus {user.eventos} evento{user.eventos === 1 ? '' : 's'} en Todos los eventos.
+          </span>
+        ) : null}
       </td>
     </tr>
   )

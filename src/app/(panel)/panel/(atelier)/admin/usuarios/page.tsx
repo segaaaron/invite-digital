@@ -46,21 +46,23 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
             No pudimos leer los usuarios. La base no responde; vuelve a intentarlo en un momento.
           </p>
         ) : (
-          <div className="relative overflow-x-auto">
-            <table className="w-full min-w-[760px] border-collapse text-left">
-              <thead>
+          // En el teléfono cada usuario es una tarjeta, no una fila que desplazar: son pocos
+          // registros y se leen de uno en uno, que es cuando las tarjetas funcionan mejor.
+          <div className="relative min-[560px]:overflow-x-auto">
+            <table className="w-full border-collapse text-left max-[559px]:block min-[560px]:min-w-[760px]">
+              <thead className="max-[559px]:hidden">
                 <tr>
                   {['Usuario', 'Rol', 'Plan que compró', 'Eventos', ''].map((titulo, i) => (
                     <th
                       key={titulo || i}
-                      className="border-b border-line-panel pb-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
+                      className={`border-b border-line-panel pb-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase `}
                     >
                       {titulo}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="max-[559px]:flex max-[559px]:flex-col max-[559px]:gap-3">
                 {usuarios.value.map((usuario) => (
                   <UserRow
                     key={usuario.id}

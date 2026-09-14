@@ -1,7 +1,7 @@
 'use client'
 
-import { useId, useState } from 'react'
-import { CheckIcon, UploadIcon } from '../icons'
+import { useId, useRef, useState } from 'react'
+import { CheckIcon, CloseIcon, UploadIcon } from '../icons'
 
 const tamano = (bytes: number): string =>
   bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -31,8 +31,10 @@ export function FilePicker({
 }) {
   const id = useId()
   const [elegido, setElegido] = useState<{ nombre: string; bytes: number } | null>(null)
+  const campo = useRef<HTMLInputElement>(null)
 
   return (
+    <div className="relative">
     <label
       className={`flex cursor-pointer items-center gap-3 rounded-[14px] border border-dashed px-4 py-3 transition-colors focus-within:border-ink hover:border-ink ${
         elegido ? 'border-sage bg-sage/8' : 'border-line-panel-strong bg-white'
@@ -46,13 +48,17 @@ export function FilePicker({
         {elegido ? <CheckIcon className="size-4" /> : <UploadIcon className="size-4" />}
       </span>
       <span className="flex min-w-0 flex-col">
-        <span className="truncate text-[13px] text-ink">{elegido ? elegido.nombre : label}</span>
+        {/* `aria-live`: quien usa lector de pantalla oye qué archivo quedó elegido. */}
+        <span aria-live="polite" className="truncate pr-8 text-[13px] text-ink">
+          {elegido ? elegido.nombre : label}
+        </span>
         <span className="text-[11px] text-ink-mute">{elegido ? `${tamano(elegido.bytes)} · pulsa para cambiarlo` : hint}</span>
       </span>
       <input
         accept={accept}
         className="sr-only"
         id={id}
+        ref={campo}
         name={name}
         onChange={(evento) => {
           const archivo = evento.currentTarget.files?.[0]
@@ -61,5 +67,20 @@ export function FilePicker({
         type="file"
       />
     </label>
+      {/* Quitar lo elegido: sin esto, equivocarse de archivo obligaba a elegir otro encima. */}
+      {elegido ? (
+        <button
+          aria-label={`Quitar ${elegido.nombre}`}
+          className="absolute top-1/2 right-3 grid size-7 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-line-panel bg-white text-ink-soft hover:border-ink hover:text-ink"
+          onClick={() => {
+            if (campo.current) campo.current.value = ''
+            setElegido(null)
+          }}
+          type="button"
+        >
+          <CloseIcon className="size-3" />
+        </button>
+      ) : null}
+    </div>
   )
 }
