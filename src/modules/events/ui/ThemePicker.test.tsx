@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { ThemePicker } from './ThemePicker'
 
@@ -20,10 +20,20 @@ const TEMAS = [
 ]
 
 describe('ThemePicker', () => {
-  it('agrupa los diseños por categoría', () => {
+  it('bodas y XV no se mezclan: se ve un tipo de fiesta a la vez', () => {
     render(<ThemePicker defaultValue="boda" definitions={TEMAS} locale="es" />)
-    expect(screen.getByText('Bodas')).toBeInTheDocument()
-    expect(screen.getByText('XV años')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Bodas' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText('Bajo el Mar')).not.toBeInTheDocument()
+
+    // Cambiar de tipo elige el primero del nuevo: no queda elegida una boda fuera de la vista.
+    fireEvent.click(screen.getByRole('button', { name: 'XV años' }))
+    expect(screen.queryByText('Étoile')).not.toBeInTheDocument()
+    expect(screen.getByRole('radio', { checked: true })).toHaveAttribute('value', 'xv')
+  })
+
+  it('con diseños de una sola fiesta —editar un evento— no ofrece cambiar de tipo', () => {
+    render(<ThemePicker defaultValue="xv" definitions={TEMAS.filter((t) => t.key === 'xv')} locale="es" />)
+    expect(screen.queryByRole('button', { name: 'Bodas' })).not.toBeInTheDocument()
   })
 
   it('la selección va en un radio de verdad, con el nombre que el formulario espera', () => {
@@ -31,7 +41,7 @@ describe('ThemePicker', () => {
     // JavaScript. El formulario del evento espera `themeKey`.
     render(<ThemePicker defaultValue="boda" definitions={TEMAS} locale="es" />)
     const radios = screen.getAllByRole('radio')
-    expect(radios).toHaveLength(2)
+    expect(radios).toHaveLength(1)
     expect(radios.every((radio) => radio.getAttribute('name') === 'themeKey')).toBe(true)
   })
 

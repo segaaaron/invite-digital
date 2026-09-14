@@ -78,20 +78,25 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   const eventId = String(formData.get('id') ?? '')
   await requireEventAccess(actor, { eventId })
 
-  // Qué diseño tenía antes, para saber si cambió. Se lee antes de guardar, que es la única
-  // forma de saberlo.
+  // **El diseño solo cambia por otro de la misma fiesta**: unos XV por otros XV, una boda
+  // por otra boda. De XV a boda no: son dos fiestas distintas. La pantalla ya solo ofrece los
+  // del mismo tipo; esto cierra el POST manipulado, que conserva el diseño que tenía.
   const anterior = await eventUseCases.getByIdFor(actor, eventId)
-  const temaAnterior = isErr(anterior) ? null : anterior.value.themeKey
+  if (isErr(anterior)) return { status: 'error', message: anterior.error.kind }
+  const temaAnterior = anterior.value.themeKey
+  const pedido = themeFor(String(formData.get('themeKey') ?? temaAnterior))
+  const tipoDe = (clave: string) => (themeFor(clave).categorySlug === 'xv-anos' ? 'xv' : 'boda')
+  const themeKey = tipoDe(pedido.key) === tipoDe(temaAnterior) ? pedido.key : temaAnterior
 
-  const result = await eventUseCases.update({ ...readForm(formData), id: eventId })
+  const result = await eventUseCases.update({ ...readForm(formData), themeKey, id: eventId })
   if (isErr(result)) {
     console.error('edición de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
   }
 
   // Al cambiar de diseño se siembra lo que el nuevo trae y el evento no tiene. Nunca pisa
-  // lo escrito: probar otro diseño no puede llevarse por delante el itinerario de una boda.
-  if (temaAnterior !== null && temaAnterior !== result.value.themeKey) {
+  // lo escrito: cambiar de diseño no puede llevarse por delante el itinerario.
+  if (temaAnterior !== result.value.themeKey) {
     await sembrarContenido(result.value.id, result.value.themeKey)
   }
 

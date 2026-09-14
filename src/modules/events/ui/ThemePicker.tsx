@@ -21,11 +21,15 @@ type Props = {
   readonly locale: string
 }
 
-const CATEGORIAS: Record<ThemeDefinition['categorySlug'] | 'otros', string> = {
+/**
+ * El tipo de fiesta de cada diseño. **Bodas y XV años no se mezclan nunca**: son dos fiestas
+ * distintas y a nadie que organiza unos XV le sirve ver una boda civil. La civil es una
+ * boda.
+ */
+export const TIPO: Record<ThemeDefinition['categorySlug'], 'Bodas' | 'XV años'> = {
   boda: 'Bodas',
-  'boda-civil': 'Boda civil',
+  'boda-civil': 'Bodas',
   'xv-anos': 'XV años',
-  otros: 'Otros',
 }
 
 /**
@@ -47,22 +51,42 @@ const CATEGORIAS: Record<ThemeDefinition['categorySlug'] | 'otros', string> = {
  */
 export function ThemePicker({ definitions, defaultValue, locale }: Props) {
   const grupo = useId()
-  const [elegido, setElegido] = useState(defaultValue)
-
-  const porCategoria = definitions.reduce<Record<string, Props['definitions'][number][]>>((acumulado, definicion) => {
-    const clave = definicion.categorySlug
-    return { ...acumulado, [clave]: [...(acumulado[clave] ?? []), definicion] }
-  }, {})
+  const inicial = definitions.find((d) => d.key === defaultValue) ?? definitions[0]
+  const [tipo, setTipo] = useState<'Bodas' | 'XV años'>(inicial === undefined ? 'Bodas' : TIPO[inicial.categorySlug])
+  const [elegido, setElegido] = useState(inicial?.key ?? '')
+  const tipos = (['Bodas', 'XV años'] as const).filter((t) => definitions.some((d) => TIPO[d.categorySlug] === t))
+  const porCategoria = { [tipo]: definitions.filter((d) => TIPO[d.categorySlug] === tipo) }
 
   return (
     <fieldset className="flex flex-col gap-6 border-0 p-0">
       <legend className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">Diseño</legend>
 
+      {/* Primero el tipo de fiesta, y solo sus diseños. Cambiar de tipo elige el primero del
+          nuevo: un diseño de la otra fiesta no puede quedar elegido fuera de la vista. */}
+      {tipos.length < 2 ? null : (
+      <div aria-label="Tipo de fiesta" className="flex flex-wrap gap-1.5" role="group">
+        {tipos.map((t) => (
+          <button
+            aria-pressed={tipo === t}
+            className={`cursor-pointer rounded-[var(--radius-pill)] border px-4 py-2 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors ${
+              tipo === t ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'
+            }`}
+            key={t}
+            onClick={() => {
+              setTipo(t)
+              const primero = definitions.find((d) => TIPO[d.categorySlug] === t)
+              if (primero !== undefined) setElegido(primero.key)
+            }}
+            type="button"
+          >
+            {t}
+          </button>
+        ))}
+      </div>
+      )}
+
       {Object.entries(porCategoria).map(([categoria, temas]) => (
         <div className="flex flex-col gap-3" key={categoria}>
-          <p className="font-mono text-[10px] tracking-[0.2em] text-ink-mute uppercase">
-            {CATEGORIAS[categoria as ThemeDefinition['categorySlug']] ?? CATEGORIAS.otros}
-          </p>
 
           {/* `auto-fill minmax`, no breakpoints: es la regla de las rejillas del panel. */}
           <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">

@@ -1,11 +1,13 @@
 'use client'
 
 import { useActionState, useId } from 'react'
+import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
 import { createEventAction, updateEventAction, type EventActionState } from '../actions'
 import type { Event } from '../domain/event'
 import type { EventErrorKind } from '../domain/errors'
-import { ThemePicker } from './ThemePicker'
-import { themeDefinitions } from './themes/registry'
+import { ThemePicker, TIPO } from './ThemePicker'
+import type { ThemeDefinition } from './themes/contract'
+import { themeDefinitions, themeFor } from './themes/registry'
 
 const INITIAL: EventActionState = { status: 'idle', message: '' }
 
@@ -81,31 +83,29 @@ export function EventForm({ event }: { event?: Event }) {
 
       </div>
 
+      {event ? (
+        // **En un evento creado, el diseño solo cambia por otro de la misma fiesta**: unos XV
+        // por otros XV, una boda por otra boda. Pasar de XV a boda no tiene sentido, así que
+        // la otra fiesta ni se ofrece, y `updateEventAction` lo rechaza también en el servidor.
+        <ThemePicker
+          defaultValue={event.themeKey}
+          definitions={opcionesDeDiseno(themeDefinitions().filter((definicion) => TIPO[definicion.categorySlug] === TIPO[themeFor(event.themeKey).categorySlug]))}
+          locale={event.locale}
+        />
+      ) : (
+        <>
       {/* El diseño se elige mirándolo, no leyendo su nombre en un desplegable de
           diecisiete claves. La rejilla pinta el papel con la paleta real de cada tema y
           cada tarjeta enlaza a la invitación entera. */}
       <ThemePicker
-        defaultValue={event?.themeKey ?? 'clasico'}
-        definitions={themeDefinitions().map((definicion) => ({
-          key: definicion.key,
-          label: definicion.label,
-          categorySlug: definicion.categorySlug,
-          palette: definicion.palette,
-          // La portada real del catálogo (`pnpm tsx scripts/capture-theme-covers.ts`). El
-          // clásico no está en el catálogo y se queda con su papel dibujado.
-          cover: definicion.key === 'clasico' ? null : `/templates/${definicion.key}.avif`,
-          sample:
-            definicion.defaultContent.hero === undefined
-              ? null
-              : {
-                  monogram: definicion.defaultContent.hero.monogram ?? '·',
-                  names: [definicion.defaultContent.hero.nameA, definicion.defaultContent.hero.nameB]
-                    .filter((nombre): nombre is string => nombre !== undefined)
-                    .join('\n'),
-                },
-        }))}
-        locale={event?.locale ?? 'es'}
+        defaultValue=""
+        // El clásico no se ofrece: no está en el catálogo, es el respaldo de una clave
+        // desconocida. Nadie lo elige mirando la web.
+        definitions={opcionesDeDiseno(themeDefinitions())}
+        locale="es"
       />
+        </>
+      )}
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={LABEL_CLASS} htmlFor={statusId}>
@@ -183,4 +183,29 @@ export function EventForm({ event }: { event?: Event }) {
       </button>
     </form>
   )
+}
+
+/**
+ * Los diseños que se ofrecen, con su portada. El clásico no: no está en el catálogo, es el
+ * respaldo de una clave desconocida y nadie lo elige mirando la web.
+ */
+function opcionesDeDiseno(definiciones: readonly ThemeDefinition[]) {
+  return definiciones
+    .filter((definicion) => definicion.key !== 'clasico')
+    .map((definicion) => ({
+      key: definicion.key,
+      label: definicion.label,
+      categorySlug: definicion.categorySlug,
+      palette: definicion.palette,
+      cover: CATALOG_KEYS.includes(definicion.key) ? `/templates/${definicion.key}.avif` : null,
+      sample:
+        definicion.defaultContent.hero === undefined
+          ? null
+          : {
+              monogram: definicion.defaultContent.hero.monogram ?? '·',
+              names: [definicion.defaultContent.hero.nameA, definicion.defaultContent.hero.nameB]
+                .filter((nombre): nombre is string => nombre !== undefined)
+                .join('\n'),
+            },
+    }))
 }

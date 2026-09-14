@@ -93,7 +93,8 @@ test.describe('contenido de la invitación', () => {
 
   test.beforeEach(async ({ page }) => {
     await deleteEvent(SLUG)
-    await createEvent(page, { slug: SLUG, title: 'Boda contenido e2e' })
+    // Con diseño desde el alta: después de crear, el diseño ya no se cambia.
+    await createEvent(page, { slug: SLUG, title: 'Boda contenido e2e', diseno: 'Botánica' })
   })
 
   test.afterAll(async () => {
@@ -103,12 +104,6 @@ test.describe('contenido de la invitación', () => {
   test('el contenido se edita campo a campo y lo guardado sobrevive a recargar', async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
 
-    // El diseño por defecto no lleva contenido editable: es el título, la fecha y el
-    // lugar. El itinerario y la canción llegan al elegir uno de los dieciséis.
-    // El radio va `sr-only`: la tarjeta que se ve es el papel del diseño, y el control
-    // de verdad está debajo para que el formulario funcione con teclado y sin JavaScript.
-    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
-    await page.getByRole('button', { name: 'Guardar cambios' }).click()
     await expect(page.getByRole('heading', { name: 'Itinerario' })).toBeVisible()
 
     // La canción, por su campo. El JSON lo compone la pantalla: nadie escribe una llave.
@@ -125,8 +120,6 @@ test.describe('contenido de la invitación', () => {
     // El escaparate enseña el diseño con el contenido de la maqueta. Esto enseña lo que el
     // atelier acaba de escribir, sin repartir un enlace ni contar la visita de un invitado.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
-    await page.getByRole('button', { name: 'Guardar cambios' }).click()
 
     const portada = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Portada y nombres' }) })
     await portada.getByLabel('Primer nombre').fill('Zulema')
@@ -166,8 +159,7 @@ test.describe('contenido de la invitación', () => {
     expect((await servida.body()).byteLength).toBeLessThan(original.byteLength / 4)
 
     // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno.
-    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
-    await page.getByRole('button', { name: 'Guardar cambios' }).click()
+    await page.reload()
     await expect(page.getByLabel('Fotografía · casilla 1')).toContainText('retrato.jpg')
   })
 
@@ -175,10 +167,6 @@ test.describe('contenido de la invitación', () => {
     // Es el fallo que encontró el QA de la colección: el contenido se fusionaba con la
     // muestra del diseño en cada lectura, así que quitar algo no servía de nada.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-    // El radio va `sr-only`: la tarjeta que se ve es el papel del diseño, y el control
-    // de verdad está debajo para que el formulario funcione con teclado y sin JavaScript.
-    await page.getByRole('radio', { name: /Botánica/ }).check({ force: true })
-    await page.getByRole('button', { name: 'Guardar cambios' }).click()
 
     const itinerario = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Itinerario' }) })
     const primera = await itinerario.getByLabel('Qué pasa · momento 1').inputValue()

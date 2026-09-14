@@ -20,6 +20,8 @@ type EventInput = {
   title: string
   eventDate?: string
   rsvpDeadline?: string
+  /** El nombre del diseño a elegir al crearlo («Botánica»). Después ya no se cambia. */
+  diseno?: string
 }
 
 /** Crea un evento por el formulario del panel y espera su confirmación. */
@@ -29,6 +31,7 @@ export async function createEvent(page: Page, input: EventInput): Promise<void> 
   await page.getByLabel('Identificador').fill(input.slug)
   await page.getByLabel('Fecha del evento').fill(input.eventDate ?? '2027-05-15')
   await page.getByLabel('Fecha límite de confirmación').fill(input.rsvpDeadline ?? '2027-05-01')
+  if (input.diseno !== undefined) await page.getByRole('radio', { name: new RegExp(input.diseno) }).check({ force: true })
   await page.getByRole('button', { name: 'Crear evento' }).click()
   await expect(page.getByRole('status')).toContainText('Evento guardado')
 }
