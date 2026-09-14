@@ -46,13 +46,17 @@ describe('panelNav', () => {
 
   it('la barra del cliente no enseña lo que es del atelier', () => {
     // Esconder el enlace no es la protección —esa es la sección que pide cada página—,
-    // pero enseñarle Configuración, el plan o el check-in sería enseñarle enlaces que le
-    // devuelven 404.
+    // pero enseñarle el plan o el check-in sería enseñarle enlaces que le devuelven 404.
+    //
+    // **`/configuracion` salió de esta lista a propósito.** Es la pantalla donde escribe
+    // su invitación —los textos y la canción que sube—, y para eso el admin le da acceso.
+    // Lo que sigue siendo del atelier son las tarjetas de dentro —diseño, `slug`,
+    // contraseña y borrado—, que esa página no le pinta y cuyas acciones piden `full`.
     const delCliente = panelNav('boda', {}, false, false, true)
       .flatMap((seccion) => seccion.items)
       .map((item) => item.href)
 
-    for (const prohibido of ['/configuracion', '/plan', '/qr', '/checkin']) {
+    for (const prohibido of ['/plan', '/qr', '/checkin']) {
       expect(delCliente).not.toContain(`/panel/eventos/boda${prohibido}`)
     }
     expect(delCliente).not.toContain('/panel/pedidos')
@@ -64,7 +68,19 @@ describe('panelNav', () => {
       .flatMap((seccion) => seccion.items)
       .map((item) => item.href)
 
-    for (const suyo of ['/invitados', '/mesas', '/regalos', '/mensajes', '/vista-previa', '/estadisticas']) {
+    // `/configuracion` está aquí desde que el cliente escribe su propia invitación: es la
+    // pantalla donde cambia sus textos y elige la canción que sube. Se fija por los dos
+    // lados —lo prohibido arriba, lo suyo aquí— porque un corte vigilado solo por un lado
+    // se afloja sin que ninguna prueba lo diga.
+    for (const suyo of [
+      '/invitados',
+      '/mesas',
+      '/regalos',
+      '/mensajes',
+      '/configuracion',
+      '/vista-previa',
+      '/estadisticas',
+    ]) {
       expect(delCliente).toContain(`/panel/eventos/boda${suyo}`)
     }
   })

@@ -353,6 +353,7 @@ export function BodaView({ content, event, dictionary, themes, slots }: ThemePro
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
+                audioMediaId={music.audioMediaId}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.fondo}
                 textColor={P.tinta}

@@ -30,7 +30,7 @@ import {
  * dibujo que trae el diseño —`church`, `flutes`, `cake`—, no una fotografía del evento.
  * Ofrecer ahí las fotos de la boda pondría el retrato de la novia donde va la campana.
  */
-export type ClaseDeCampo = 'texto' | 'parrafo' | 'fecha' | 'imagen' | 'icono'
+export type ClaseDeCampo = 'texto' | 'parrafo' | 'fecha' | 'imagen' | 'icono' | 'audio'
 
 export type Campo = {
   readonly key: string
@@ -137,6 +137,12 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
     fields: campos<NonNullable<InvitationContent['music']>>(
       { key: 'track', label: 'Canción', kind: 'texto' },
       { key: 'artist', label: 'Artista', kind: 'texto' },
+      {
+        key: 'audioMediaId',
+        label: 'Archivo que suena',
+        kind: 'audio',
+        hint: 'El MP3 que subiste arriba. Sin él, el reproductor se ve pero no suena — que es como están los dieciséis diseños.',
+      },
     ),
   },
   gallery: {

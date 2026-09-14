@@ -257,6 +257,7 @@ export function EngView({ content, dictionary, themes, slots }: ThemeProps) {
               <MusicPlayer
                 accent={P.rosa}
                 artist={music.artist ?? ''}
+                audioMediaId={music.audioMediaId}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.blanco}
                 textColor={P.tinta}

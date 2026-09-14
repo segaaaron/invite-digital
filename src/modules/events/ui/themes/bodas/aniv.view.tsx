@@ -230,6 +230,7 @@ export function AnivView({ content, dictionary, themes, slots }: ThemeProps) {
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
+                audioMediaId={music.audioMediaId}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.fondo}
                 textColor={P.tinta}

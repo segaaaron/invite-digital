@@ -80,7 +80,14 @@ export type InvitationContent = {
     readonly detail?: string
     readonly imageIds?: readonly string[]
   }
-  readonly music?: { readonly track?: string; readonly artist?: string }
+  /**
+   * La canción del evento: lo que se lee y, si el atelier subió un MP3, lo que suena.
+   *
+   * `audioMediaId` apunta a una fila de `event_media` del propio evento, igual que las
+   * fotografías. Es opcional y los dieciséis diseños viven sin él: traen su canción escrita
+   * desde el primer día y el reproductor solo mueve sus barras.
+   */
+  readonly music?: { readonly track?: string; readonly artist?: string; readonly audioMediaId?: string }
   readonly gallery?: readonly GalleryRow[]
   /**
    * Los avisos sueltos que varios diseños pintan en su propia tarjeta: «Solo adultos»,
@@ -255,6 +262,7 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
     salida.music = bloque<NonNullable<InvitationContent['music']>>([
       ['track', texto(crudo.music.track, LIMITES.corto)],
       ['artist', texto(crudo.music.artist, LIMITES.corto)],
+      ['audioMediaId', texto(crudo.music.audioMediaId, LIMITES.corto)],
     ])
   }
 

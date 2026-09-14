@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { prefiereMenosMovimiento } from './motion'
 
 type Props = {
@@ -9,6 +9,22 @@ type Props = {
   readonly artist: string
   /** El rótulo sobre el título. Del diccionario: la invitación va en el idioma del evento. */
   readonly eyebrow: string
+  /**
+   * El MP3 que el atelier subió a este evento — `music.audioMediaId` del contenido.
+   *
+   * Llega el identificador y no la dirección para que **dónde vive el audio se escriba una
+   * sola vez**: son siete vistas las que colocan este reproductor, y componer ahí la ruta
+   * sería repetir siete veces la misma condición.
+   *
+   * **Opcional, y sin él el reproductor es el de siempre**: enseña la canción y mueve las
+   * barras sin sonar. Así están los dieciséis modelos del escaparate, que llevan su
+   * canción escrita desde el primer día y ningún archivo detrás.
+   */
+  // `| undefined` explícito: con `exactOptionalPropertyTypes`, pasar `undefined` a una
+  // opcional no vale si el tipo no lo admite, y eso es justo lo que hacen las siete vistas
+  // —`music.audioMediaId` es opcional en el contenido, así que llega `undefined` cuando el
+  // atelier no subió nada—.
+  readonly audioMediaId?: string | undefined
   readonly textColor?: string
   readonly playBg?: string
   readonly playIconColor: string
@@ -19,18 +35,26 @@ type Props = {
 /**
  * La canción del evento, con su ecualizador.
  *
- * **No suena, y es a propósito.** Servir audio propio es su propio problema —almacén,
- * formato, licencia de la grabación— y no entra en esta rebanada. La maqueta tampoco
- * sonaba. Lo que hace el botón es lo que hace en el diseño: mover las barras.
+ * **Suena solo si hay `src`**, y nunca sola: hace falta que alguien pulse. Los navegadores
+ * bloquean la reproducción automática con sonido, y con razón — una invitación que arranca
+ * a sonar al abrirse en una oficina o en un velatorio es exactamente lo que esa política
+ * evita. Si `play()` se rechaza igualmente, el botón vuelve a su sitio en vez de quedarse
+ * diciendo que suena.
  *
- * No lleva `<audio>` ni autoplay. Una invitación que empieza a sonar sola al abrirse en
- * una oficina o en un velatorio es la razón por la que los navegadores lo bloquean.
+ * **Es `<audio>` y no la Web Audio API, y esa es la decisión que hace que se oiga.** En
+ * iOS el interruptor físico de silencio calla a Web Audio —va por el canal ambiental— y
+ * **no** calla a un elemento `<audio>`, que va por el canal de medios. Con media boda
+ * mirando la invitación desde un teléfono en silencio, cualquier otra opción no suena.
+ *
+ * El estado del dibujo lo marcan los eventos del propio elemento, no el clic: si la
+ * canción termina, el navegador la pausa o falla la red, las barras tienen que pararse.
  */
 export function MusicPlayer({
   accent,
   track,
   artist,
   eyebrow,
+  audioMediaId,
   textColor = 'currentColor',
   playBg,
   playIconColor,
@@ -39,6 +63,25 @@ export function MusicPlayer({
 }: Props) {
   const [sonando, setSonando] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
+  const audio = useRef<HTMLAudioElement | null>(null)
+
+  const alternar = () => {
+    const elemento = audio.current
+    // Sin archivo, el botón hace lo que hacía en la maqueta: mover las barras.
+    if (elemento === null) {
+      setSonando((anterior) => !anterior)
+      return
+    }
+
+    if (elemento.paused) {
+      // `play()` devuelve una promesa que se rechaza si la política del navegador lo
+      // impide. Sin este `catch` quedaría una promesa sin atender en consola y, peor, el
+      // dibujo diría que suena algo que nadie está oyendo.
+      void elemento.play().catch(() => setSonando(false))
+      return
+    }
+    elemento.pause()
+  }
 
   return (
     <div
@@ -53,9 +96,27 @@ export function MusicPlayer({
         color: textColor,
       }}
     >
+      {audioMediaId === undefined || audioMediaId === '' ? null : (
+        <audio
+          loop
+          onEnded={() => setSonando(false)}
+          onPause={() => setSonando(false)}
+          onPlay={() => setSonando(true)}
+          playsInline
+          // `none`: una invitación se abre en el teléfono del invitado, muchas veces con
+          // datos. La canción se baja cuando la pide, no por si acaso.
+          preload="none"
+          ref={audio}
+          // La misma ruta que las fotografías: lleva la puerta de contraseña del evento y
+          // responde a peticiones por rango, que es lo que Safari exige para reproducir.
+          src={`/media/${audioMediaId}`}
+        />
+      )}
+
       <button
+        aria-label={sonando ? `Pausar ${track}` : `Reproducir ${track}`}
         aria-pressed={sonando}
-        onClick={() => setSonando((anterior) => !anterior)}
+        onClick={alternar}
         style={{
           width: 36,
           height: 36,
@@ -73,7 +134,6 @@ export function MusicPlayer({
         type="button"
       >
         <span aria-hidden>{sonando ? '❚❚' : '▶'}</span>
-        <span className="sr-only">{track}</span>
       </button>
 
       <div style={{ flex: 1, minWidth: 0 }}>

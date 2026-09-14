@@ -31,24 +31,53 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug)
+  /**
+   * `'cliente'` fijo, **nunca `sectionForRole(actor.role)`**.
+   *
+   * La sección es una propiedad de **la página**, no de quien llama. Derivarla del actor
+   * significa «seas lo que seas, esta es tu sección, adelante», y con eso el personal de
+   * puerta —cuya sección es `checkin`— pasó a abrir esta pantalla: los datos del evento,
+   * la contraseña de privacidad y el botón de borrar. Lo cazó `puerta.spec.ts`, no el
+   * typecheck.
+   *
+   * Pidiéndola fija, cada quien entra por su propio motivo: el admin por ser admin, el
+   * atelier por ser dueño, el cliente por su pertenencia, y la puerta rebota.
+   */
+  const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
   }
+
+  /**
+   * Qué tarjetas son del atelier y no del cliente.
+   *
+   * `EventForm` lleva dentro el selector de **diseño**, el `slug` y el estado: cambiarlos
+   * es cambiarle el modelo que se le vendió, romper los enlaces ya repartidos o devolver la
+   * boda a borrador. `PrivacyForm` abre y cierra la invitación entera, y `DangerZone` la
+   * borra.
+   *
+   * Esconderlas es cortesía; el corte de verdad son las guardas de sus acciones, que siguen
+   * pidiendo `full`. Pero enseñar un botón que va a rebotar es peor que no enseñarlo.
+   */
+  const esDelAtelier = actor.role !== 'cliente'
 
   // El contenido rico que pinta el diseño, y **qué secciones pinta**: pedirle un
   // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.
   const tema = themeFor(event.value.themeKey)
   const contenido = await events.contentFor(event.value.id, tema.defaultContent)
 
-  // Las fotografías que ya subió el atelier. Van a las dos tarjetas: a la suya, para
-  // subirlas y verlas, y a la del contenido, donde se eligen desde el propio campo en vez
-  // de copiar un identificador de una tarjeta y pegarlo en otra.
+  // Lo que ya subió el atelier: las fotografías y, desde que la invitación puede sonar,
+  // también el MP3. Va a las dos tarjetas: a la suya, para subirlo y verlo, y a la del
+  // contenido, donde se elige desde el propio campo en vez de copiar un identificador de
+  // una tarjeta y pegarlo en otra.
   const imagenes = (await events.media.list(event.value.id)).map((imagen) => ({
     id: imagen.id,
     originalName: imagen.originalName,
     byteSize: imagen.byteSize,
+    // Qué es. Sin esto el campo de música ofrecería fotografías y los de imagen, la
+    // canción: las dos cosas viven en la misma tabla.
+    contentType: imagen.contentType,
     // De quién es: el atelier tiene que poder distinguir su retrato de la novia de las
     // treinta fotos que trajeron los invitados durante la fiesta, sobre todo cuando elige
     // cuál va en la portada.
@@ -94,13 +123,15 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           />
         </PanelCard>
 
-        <PanelCard title="Detalles del evento">
-          <div className="flex flex-col gap-6">
-            <EventForm event={event.value} />
-            <PrivacyForm eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
-            <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
-          </div>
-        </PanelCard>
+        {esDelAtelier ? (
+          <PanelCard title="Detalles del evento">
+            <div className="flex flex-col gap-6">
+              <EventForm event={event.value} />
+              <PrivacyForm eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
+              <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
+            </div>
+          </PanelCard>
+        ) : null}
 
         {puedeGestionarPersonal ? (
           <PanelCard title="Acceso del cliente">

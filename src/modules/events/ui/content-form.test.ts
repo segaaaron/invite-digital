@@ -6,7 +6,9 @@ import { FORMAS } from './content-shapes'
 describe('estadoInicial', () => {
   it('reparte el bloque guardado por campos, con el texto tal cual', () => {
     const estado = estadoInicial(FORMAS.music, { track: 'At Last', artist: 'Etta James' })
-    expect(estado.campos).toEqual({ track: 'At Last', artist: 'Etta James' })
+    // `audioMediaId` vacío y no ausente: el formulario tiene una casilla por campo del
+    // bloque, y el del audio existe aunque este evento no tenga música subida todavía.
+    expect(estado.campos).toEqual({ track: 'At Last', artist: 'Etta James', audioMediaId: '' })
   })
 
   it('deja en blanco lo que el bloque no traía, para que el formulario se pinte entero', () => {
@@ -33,7 +35,7 @@ describe('estadoInicial', () => {
   })
 
   it('un bloque que no existe todavía arranca vacío en vez de reventar', () => {
-    expect(estadoInicial(FORMAS.music, undefined).campos).toEqual({ track: '', artist: '' })
+    expect(estadoInicial(FORMAS.music, undefined).campos).toEqual({ track: '', artist: '', audioMediaId: '' })
     expect(estadoInicial(FORMAS.itinerary, null).filas).toEqual([])
     expect(estadoInicial(FORMAS.itinerary, { no: 'es una lista' }).filas).toEqual([])
   })

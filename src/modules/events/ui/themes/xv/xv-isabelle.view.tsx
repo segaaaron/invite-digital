@@ -394,6 +394,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots }: Th
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
+                audioMediaId={music.audioMediaId}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.marfil}
                 textColor={P.tinta}

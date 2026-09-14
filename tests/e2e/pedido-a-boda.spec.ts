@@ -90,7 +90,14 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // Con el nivel: «Invitados» es el `h1` de la cabecera **y** el `h2` de la tarjeta, y
     // sin acotarlo el locator casa con los dos.
     await expect(page.getByRole('heading', { name: 'Invitados', level: 1 })).toBeVisible()
-    expect((await page.goto(`/panel/eventos/${slug}/configuracion`))?.status()).toBe(404)
+    // Su invitación **sí** se abre: es donde escribe sus textos y elige la canción que
+    // sube. Esta línea exigía 404 hasta que el acceso del cliente pasó a incluirla; lo que
+    // sigue siendo del atelier son las tarjetas de dentro, no la pantalla.
+    expect((await page.goto(`/panel/eventos/${slug}/configuracion`))?.status()).toBe(200)
+    await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toHaveCount(0)
+
+    // Y el plan sigue fuera, que es lo que de verdad es del atelier.
+    expect((await page.goto(`/panel/eventos/${slug}/plan`))?.status()).toBe(404)
   } finally {
     // Se limpia aunque falle: si no, la siguiente ejecución encuentra la boda ya creada y
     // la aprobación respondería «ya estaba creada» — verde por el motivo equivocado.

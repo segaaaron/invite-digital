@@ -109,6 +109,10 @@ export function panelNav(
       {
         label: 'Mi invitación',
         items: [
+          // Su invitación la escribe él: textos, canción e itinerario. La pantalla es la
+          // misma del atelier, con las tarjetas del evento —diseño, contraseña, borrado—
+          // fuera: esas son de quien le vendió la boda.
+          { href: en('/configuracion'), label: 'Mi invitación', icon: 'configuracion' },
           { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
           { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
         ],

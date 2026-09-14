@@ -1,5 +1,5 @@
 import type { Event, EventInput } from '../domain/event'
-import type { MediaType } from '../domain/media'
+import type { ImageType } from '../domain/media'
 
 export type AnonymizationCandidate = { id: string; slug: string; retentionDays: number; eventDate: string }
 
@@ -100,7 +100,9 @@ export interface MediaStorage {
  * una respuesta, no una avería.
  */
 export interface ImageProcessor {
-  normalize(bytes: Uint8Array): Promise<{ bytes: Uint8Array; contentType: MediaType } | null>
+  // `ImageType` y no `MediaType`: desde que el audio vive en esta misma tabla, un
+  // reencodador podría afirmar por tipos que devolvió un MP3. Reencodar es de imagen.
+  normalize(bytes: Uint8Array): Promise<{ bytes: Uint8Array; contentType: ImageType } | null>
 }
 
 export type MediaRow = {

@@ -6,7 +6,7 @@ import { type ContentActionState, saveContentBlockAction } from '../actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
 import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
 import { type Campo, FORMAS, type FormaBloque } from './content-shapes'
-import type { MediaItem } from './EventMediaPanel'
+import { type MediaItem, esPista } from './EventMediaPanel'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -200,6 +200,8 @@ function CampoDeBloque({
 
       {campo.kind === 'imagen' ? (
         <SelectorDeImagen id={id} media={media} onChange={onChange} valor={valor} />
+      ) : campo.kind === 'audio' ? (
+        <SelectorDeAudio id={id} media={media} onChange={onChange} valor={valor} />
       ) : campo.kind === 'parrafo' ? (
         <textarea
           aria-describedby={campo.hint === undefined ? undefined : pistaId}
@@ -277,6 +279,58 @@ function SelectorDeImagen({
         ))}
         {valor === '' || conocida ? null : <option value={valor}>{valor}</option>}
       </select>
+    </div>
+  )
+}
+
+/**
+ * Elegir la música de la invitación entre los MP3 que ya se subieron.
+ *
+ * Ofrece **solo audio**: fotografías y música viven en la misma tabla, y sin filtrar aquí
+ * el atelier acabaría eligiendo un retrato como canción.
+ *
+ * Y la deja escuchar con los controles del navegador. Es la única forma de saber que el
+ * archivo elegido es el bueno antes de repartir la invitación: por el nombre no se
+ * distingue una toma de otra, y el reproductor del diseño no se ve desde aquí.
+ */
+function SelectorDeAudio({
+  id,
+  valor,
+  onChange,
+  media,
+}: {
+  id: string
+  valor: string
+  onChange: (valor: string) => void
+  media: readonly MediaItem[]
+}) {
+  const pistas = media.filter(esPista)
+  const conocida = pistas.some((pista) => pista.id === valor)
+
+  return (
+    <div className="flex flex-col gap-2">
+      <select className={FIELD_CLASS} id={id} onChange={(evento) => onChange(evento.target.value)} value={valor}>
+        <option value="">Sin música</option>
+        {pistas.map((pista) => (
+          <option key={pista.id} value={pista.id}>
+            {pista.originalName}
+          </option>
+        ))}
+        {valor === '' || conocida ? null : <option value={valor}>{valor}</option>}
+      </select>
+
+      {valor === '' ? null : (
+        // La sirve /media/[id], con la puerta de contraseña del evento y con soporte de
+        // rangos: sin él, esto no sonaría en iPhone. Sin subtítulos a propósito: es música
+        // instrumental de fondo, no habla.
+        <audio className="w-full" controls preload="none" src={`/media/${valor}`} />
+      )}
+
+      {pistas.length === 0 ? (
+        <p className="text-[11px] leading-[1.5] text-ink-mute">
+          Todavía no subiste ninguna. Sube un MP3 en «Fotografías y música» y vuelve aquí.
+        </p>
+      ) : null}
     </div>
   )
 }

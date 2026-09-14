@@ -102,6 +102,30 @@ describe('parseInvitationContent', () => {
   })
 })
 
+describe('la música de la invitación', () => {
+  it('guarda qué audio del evento suena, además del título y el artista', () => {
+    expect(
+      parseInvitationContent({
+        music: { track: 'At Last', artist: 'Etta James', audioMediaId: '11111111-2222-3333-4444-555555555555' },
+      }).music,
+    ).toEqual({ track: 'At Last', artist: 'Etta James', audioMediaId: '11111111-2222-3333-4444-555555555555' })
+  })
+
+  it('el título y el artista siguen valiendo sin audio, que es como están las dieciséis', () => {
+    // Los diseños llevan su canción escrita desde el principio y ninguno suena todavía.
+    // Quitar el audio no puede vaciar el bloque ni borrar lo que ya se pintaba.
+    expect(parseInvitationContent({ music: { track: 'Tiempo de Vals' } }).music).toEqual({ track: 'Tiempo de Vals' })
+  })
+
+  it('descarta un identificador vacío en vez de guardarlo', () => {
+    // Es como se quita la música: se deja el selector en «sin música» y sale `undefined`,
+    // no una cadena vacía que la vista tomaría por una dirección.
+    expect(parseInvitationContent({ music: { track: 'At Last', audioMediaId: '   ' } }).music).toEqual({
+      track: 'At Last',
+    })
+  })
+})
+
 describe('mergeContent', () => {
   it('rellena lo vacío y no pisa lo escrito', () => {
     // La prueba que protege una boda de verdad: cambiar de diseño no puede llevarse por

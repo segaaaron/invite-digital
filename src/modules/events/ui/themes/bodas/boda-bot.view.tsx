@@ -664,6 +664,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
               <MusicPlayer
                 accent={P.salvia}
                 artist={music.artist ?? ''}
+                audioMediaId={music.audioMediaId}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.papel}
                 textColor={P.tinta}

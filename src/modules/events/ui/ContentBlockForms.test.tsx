@@ -146,7 +146,7 @@ describe('ContentBlockForms', () => {
         content={{ gallery: [{ label: 'ANILLOS' }] }}
         eventId="e1"
         eventSlug="b"
-        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, fromGuest: false }]}
+        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, contentType: 'image/jpeg', fromGuest: false }]}
         sections={['gallery']}
       />,
     )
@@ -172,6 +172,30 @@ describe('ContentBlockForms', () => {
     expect(valorEnviado(container)).toEqual([{ label: 'ANILLOS', imageId: 'borrada' }])
   })
 
+  it('la música se elige entre los MP3 subidos, y no ofrece las fotografías', () => {
+    // El fallo silencioso de esta rebanada: fotografías y música viven en la misma tabla,
+    // así que sin filtrar por tipo el selector ofrece un retrato como canción. Compila,
+    // se guarda, y lo que suena en la invitación es un JPEG — o sea, nada.
+    render(
+      <ContentBlockForms
+        content={{ music: { track: 'At Last' } }}
+        eventId="e1"
+        eventSlug="b"
+        media={[
+          { id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, contentType: 'image/jpeg', fromGuest: false },
+          { id: 'mp3-1', originalName: 'nuestra-cancion.mp3', byteSize: 900_000, contentType: 'audio/mpeg', fromGuest: false },
+        ]}
+        sections={['music']}
+      />,
+    )
+
+    const campo = screen.getByLabelText('Archivo que suena')
+    const opciones = [...campo.querySelectorAll('option')].map((opcion) => opcion.textContent)
+
+    expect(opciones).toContain('nuestra-cancion.mp3')
+    expect(opciones).not.toContain('anillos.jpg')
+  })
+
   it('el icono del itinerario no ofrece las fotografías del evento', () => {
     // `imageId` es ahí la clave del dibujo que trae el diseño —`church`, `flutes`—, no una
     // fotografía: ofrecerlas pondría el retrato de la novia donde va la campana.
@@ -180,7 +204,7 @@ describe('ContentBlockForms', () => {
         content={{ itinerary: [{ time: '16:00 h', label: 'Ceremonia', imageId: 'church' }] }}
         eventId="e1"
         eventSlug="b"
-        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, fromGuest: false }]}
+        media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, contentType: 'image/jpeg', fromGuest: false }]}
         sections={['itinerary']}
       />,
     )

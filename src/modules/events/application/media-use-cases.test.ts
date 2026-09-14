@@ -4,6 +4,8 @@ import { listGuestPhotos, purgeMedia, readMedia, saveGuestPhoto, saveMedia } fro
 import type { ImageProcessor, MediaRepository, MediaRow, MediaStorage } from './ports'
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
+/** Un MP3 con su etiqueta ID3 delante, que es como llega casi cualquiera. */
+const MP3 = new Uint8Array([0x49, 0x44, 0x33, 0x03, 0x00, 0x00, 0, 0, 0x02, 0x01, 7, 7, 7])
 /** Lo que devuelve el procesador: otra imagen, más pequeña y en otro formato. */
 const REENCODADA = new Uint8Array([0x52, 0x49, 0x46, 0x46, 9, 9, 9, 9, 0x57, 0x45, 0x42, 0x50])
 
@@ -50,6 +52,34 @@ describe('saveMedia', () => {
     expect(salida).toEqual({ ok: false, error: 'too_large' })
     expect(leer).not.toHaveBeenCalled()
     expect(deps.storage.put).not.toHaveBeenCalled()
+  })
+
+  it('guarda un MP3 sin pasarlo por el reencodado', async () => {
+    // `normalize` es de imagen: a un MP3 le devolvería `null` y lo rechazaría entero, así
+    // que la música no puede compartir ese paso. Lo que llega al disco son **los bytes que
+    // subieron**, sin tocar: no hay nada que reducir en una canción.
+    const deps = dobles()
+
+    const salida = await saveMedia(deps)('e1', { name: 'nuestra-cancion.mp3', size: MP3.length, bytes: async () => MP3 })
+
+    expect(salida).toEqual({ ok: true, id: 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' })
+    expect(deps.images.normalize).not.toHaveBeenCalled()
+    expect(deps.disco.get('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(MP3)
+    expect(deps.filas[0]).toMatchObject({
+      contentType: 'audio/mpeg',
+      originalName: 'nuestra-cancion.mp3',
+      byteSize: MP3.length,
+    })
+  })
+
+  it('sigue rechazando un MP3 que pasa del tope, antes de leerlo', async () => {
+    const deps = dobles()
+    const leer = vi.fn(async () => MP3)
+
+    const salida = await saveMedia(deps)('e1', { name: 'larga.mp3', size: MAX_MEDIA_BYTES + 1, bytes: leer })
+
+    expect(salida).toEqual({ ok: false, error: 'too_large' })
+    expect(leer).not.toHaveBeenCalled()
   })
 
   it('rechaza lo que no es una imagen, aunque se llame .png', async () => {

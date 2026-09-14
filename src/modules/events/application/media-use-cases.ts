@@ -1,4 +1,4 @@
-import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, mediaTypeOf, storageKeyFor } from '../domain/media'
+import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 
 export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many'
@@ -34,12 +34,19 @@ export const saveMedia =
     if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
 
     const bytes = await archivo.bytes()
-    if (mediaTypeOf(bytes) === null) return { ok: false, error: 'unsupported_type' }
+    const tipo = mediaTypeOf(bytes)
+    if (tipo === null) return { ok: false, error: 'unsupported_type' }
 
+    // **La música no pasa por el reencodado.** `normalize` es de imagen: a un MP3 le
+    // devolvería `null` y lo rechazaría entero. Y tampoco habría qué reducir — el tope de
+    // tamaño ya acota lo que entra, y recortar o normalizar volumen exigiría `ffmpeg`, que
+    // no está en la imagen de producción.
+    //
     // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
     // decodificar. Una cabecera correcta con un cuerpo que no lo es pasa la primera
-    // comprobación y no pasa esta.
-    const listo = await images.normalize(bytes)
+    // comprobación y no pasa esta. Con el audio esa segunda red no existe: lo que la
+    // sustituye es que solo se admite un formato y que se sirve con `nosniff`.
+    const listo = esAudio(tipo) ? { bytes, contentType: tipo } : await images.normalize(bytes)
     if (listo === null) return { ok: false, error: 'unsupported_type' }
 
     const id = ids()
@@ -49,7 +56,7 @@ export const saveMedia =
         id,
         eventId,
         contentType: listo.contentType,
-        originalName: archivo.name.trim().slice(0, 255) || 'imagen',
+        originalName: archivo.name.trim().slice(0, 255) || (esAudio(listo.contentType) ? 'audio' : 'imagen'),
         byteSize: listo.bytes.byteLength,
         uploadedByGroupId,
       })

@@ -6,9 +6,13 @@ const SLUG = 'boda-acceso-cliente-e2e'
 /**
  * El panel del cliente: los novios entran, ven **su** boda y reparten sus enlaces.
  *
- * Lo que esta suite vigila es el corte **en el servidor**. Que la barra no enseñe
- * Configuración es cortesía; lo que importa es que escribir la dirección a mano devuelva
- * 404, porque una página del panel es un extremo HTTP y el enlace no es la puerta.
+ * Lo que esta suite vigila es el corte **en el servidor**, por los dos lados: que lo suyo
+ * se abra y que lo del atelier devuelva 404 aunque se escriba la dirección a mano, porque
+ * una página del panel es un extremo HTTP y el enlace no es la puerta.
+ *
+ * **Dónde cae la raya**: su invitación —textos, canción, fotografías— es suya; el evento
+ * —diseño, `slug`, contraseña, borrado, plan, QR, check-in y los accesos— es del atelier
+ * que se la vendió.
  *
  * **Inicia sesión una sola vez, en `beforeAll`, y comparte contexto.** Con el login en un
  * `beforeEach` eran siete intentos de la misma cuenta en un minuto, y el limitador
@@ -60,12 +64,52 @@ test.describe('el panel del cliente', () => {
     await expect(page.getByText('1 grupos · 3 cupos')).toBeVisible()
   })
 
-  test('Configuración le responde 404: el diseño y el plan son del atelier', async () => {
-    // El corte de verdad. Si esto se pintara, el cliente podría cambiar el diseño de la
-    // invitación que le vendieron —o borrar el evento entero.
+  test('entra a su invitación y puede escribirla', async () => {
+    // **Esta regla cambió a propósito.** Antes esta prueba exigía un 404: el cliente no
+    // tocaba nada. Ahora el admin le da acceso justo para que ajuste su invitación —los
+    // textos y su canción—, así que la pantalla se abre. Lo que sigue cerrado es el evento,
+    // y eso lo vigilan las dos pruebas de abajo.
     const respuesta = await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    expect(respuesta?.status()).toBe(200)
 
-    expect(respuesta?.status()).toBe(404)
+    await expect(page.getByRole('heading', { name: 'Configuración del evento' })).toBeVisible()
+
+    // Y escribe de verdad: no basta con que la página pinte. Si la guarda de
+    // `saveContentBlockAction` siguiera pidiendo `full`, esto reventaría al guardar.
+    //
+    // El bloque se titula **«Canción»**, no «Música»: el rótulo de la pantalla lo reparte
+    // `TITULOS` y no tiene por qué coincidir con la clave del dominio. Y es un `h3` suelto
+    // dentro del formulario, así que se acota por el formulario que lo contiene.
+    const cancion = page.locator('form', { has: page.getByRole('heading', { name: 'Canción', exact: true }) })
+    await cancion.getByLabel('Canción', { exact: true }).fill('Nuestra canción')
+    await cancion.getByRole('button', { name: 'Guardar' }).click()
+
+    // **Se espera el «Guardado.» antes de recargar, y no es adorno.** Recargar en el mismo
+    // aliento que el clic aborta la Server Action en vuelo: la página vuelve a pintar el
+    // contenido de muestra del diseño —«At Last»— y la prueba parece decir que el cliente
+    // no puede escribir, cuando lo que pasó es que nunca llegó a guardarse. Pasó.
+    await expect(cancion.getByText('Guardado.')).toBeVisible()
+
+    await page.reload()
+    await expect(cancion.getByLabel('Canción', { exact: true })).toHaveValue('Nuestra canción')
+  })
+
+  test('y el selector de su música está ahí, que es para lo que sube el MP3', async () => {
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+
+    const cancion = page.locator('form', { has: page.getByRole('heading', { name: 'Canción', exact: true }) })
+    await expect(cancion.getByLabel('Archivo que suena')).toBeVisible()
+  })
+
+  test('pero los detalles del evento no son suyos: ni el diseño, ni la contraseña, ni el borrado', async () => {
+    // El corte que queda. `EventForm` lleva dentro el selector de **diseño**, el `slug` y
+    // el estado: cambiarlos sería cambiarse el modelo que le vendieron, romper los enlaces
+    // ya repartidos o devolver la boda a borrador.
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+
+    await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Acceso del cliente' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Personal de puerta' })).toHaveCount(0)
   })
 
   test('y el plan y los códigos QR, también', async () => {
@@ -82,8 +126,11 @@ test.describe('el panel del cliente', () => {
 
     const barra = page.getByRole('navigation')
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
-    await expect(barra.getByRole('link', { name: 'Configuración' })).toHaveCount(0)
+    // Su invitación sí: es la pantalla donde escribe sus textos y elige su canción.
+    await expect(barra.getByRole('link', { name: 'Mi invitación' })).toBeVisible()
+    // Lo del atelier, no.
     await expect(barra.getByRole('link', { name: 'Plan', exact: true })).toHaveCount(0)
+    await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)
   })
 
   test('puede cambiar su propia contraseña', async () => {

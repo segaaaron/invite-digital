@@ -7,19 +7,29 @@ import { type ContentActionState, uploadMediaAction } from '../actions'
 const INICIAL: ContentActionState = { status: 'idle' }
 
 const ERRORES: Record<string, string> = {
-  no_file: 'Elige una imagen antes de subirla.',
-  too_large: 'La imagen pesa más de 8 MB. Redúcela y vuelve a intentarlo.',
-  unsupported_type: 'Ese archivo no es una imagen. Se admiten PNG, JPG, WEBP y AVIF.',
-  storage_failure: 'No se pudo guardar la imagen. Vuelve a intentarlo.',
+  no_file: 'Elige un archivo antes de subirlo.',
+  too_large: 'El archivo pesa más de 8 MB. Redúcelo y vuelve a intentarlo.',
+  unsupported_type: 'Ese archivo no vale. Se admiten PNG, JPG, WEBP y AVIF para las fotografías, y MP3 para la música.',
+  storage_failure: 'No se pudo guardar el archivo. Vuelve a intentarlo.',
 }
 
 export type MediaItem = {
   readonly id: string
   readonly originalName: string
   readonly byteSize: number
+  /**
+   * Qué es: una fotografía o la música.
+   *
+   * Desde que el MP3 vive en esta misma tabla hace falta distinguirlos, o el campo de
+   * música ofrecería fotografías y los de imagen ofrecerían la canción.
+   */
+  readonly contentType: string
   /** La trajo un invitado desde su invitación, no la subió el atelier. */
   readonly fromGuest: boolean
 }
+
+/** Si esta fila es la música y no una fotografía. */
+export const esPista = (item: MediaItem): boolean => item.contentType.startsWith('audio/')
 
 type Props = {
   readonly eventId: string
@@ -55,9 +65,9 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
 
         <label className="flex flex-col gap-1.5 text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
-          Subir una fotografía
+          Subir una fotografía o la música
           <input
-            accept="image/png,image/jpeg,image/webp,image/avif"
+            accept="image/png,image/jpeg,image/webp,image/avif,audio/mpeg,.mp3"
             className="w-full rounded-[10px] border border-[var(--color-line-panel)] bg-bg-top px-3 py-2 text-[13px] text-ink file:mr-3 file:rounded-[var(--radius-pill)] file:border-0 file:bg-ink file:px-3 file:py-1.5 file:text-[11px] file:text-bg-raised"
             name="file"
             type="file"
@@ -65,8 +75,14 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         </label>
 
         <p className="text-[11px] leading-[1.5] text-ink-mute">
-          Se reduce y se reencoda al subirla, así que la invitación no le sirve cuatro megabytes a un invitado con
-          datos. También se le quitan los metadatos, que en una fotografía dicen dónde y cuándo se tomó.
+          Las fotografías se reducen y se reencodan al subirlas, así que la invitación no le sirve cuatro megabytes a un
+          invitado con datos. También se les quitan los metadatos, que dicen dónde y cuándo se tomó la foto.
+        </p>
+        <p className="text-[11px] leading-[1.5] text-ink-mute">
+          La música va en <strong className="font-medium text-ink-soft">MP3</strong>, que es el único formato que
+          reproducen todos los teléfonos. Se guarda tal cual: súbela ya recortada, de 30 a 60 segundos, que es lo que
+          suena bien en bucle. Después elígela en el bloque <strong className="font-medium text-ink-soft">Música</strong>
+          .
         </p>
 
         {error === null ? null : (

@@ -355,7 +355,12 @@ export async function saveContentBlockAction(
   const actor = await requireSession()
   const eventId = String(formData.get('eventId') ?? '')
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  await requireEventAccess(actor, { eventId, eventSlug })
+  // **`cliente` y no `full`**: los novios y la quinceañera escriben el contenido de su
+  // propia invitación —los textos, la canción, el itinerario—, que es para lo que el admin
+  // les dio acceso. Lo que sigue cerrado es el evento en sí: el diseño, el `slug`, la
+  // contraseña y el borrado. La pertenencia se comprueba igual, así que esto no abre nada
+  // de la boda de otro.
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
   const section = String(formData.get('section') ?? '')
   if (!(SECTION_KEYS as readonly string[]).includes(section)) {
@@ -394,7 +399,10 @@ export async function uploadMediaAction(
   const actor = await requireSession()
   const eventId = String(formData.get('eventId') ?? '')
   const eventSlug = String(formData.get('eventSlug') ?? '')
-  await requireEventAccess(actor, { eventId, eventSlug })
+  // `cliente`, como el contenido: el MP3 de su primer baile y sus fotografías las sube
+  // quien celebra la boda. El tope de tamaño y la comprobación por bytes son los mismos
+  // para todos.
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
   const archivo = formData.get('file')
   if (!(archivo instanceof File) || archivo.size === 0) {

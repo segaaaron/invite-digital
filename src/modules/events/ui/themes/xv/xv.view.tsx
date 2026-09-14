@@ -1030,6 +1030,7 @@ export function XvSharedView({
                   accent={Z.musicaAcento ?? P.uva}
                   artist={music.artist ?? ''}
                   artistColor={Z.musicaArtista ?? P.malva}
+                  audioMediaId={music.audioMediaId}
                   eyebrow={themes.songOfTheNight}
                   playBg={P.uva}
                   playIconColor={P.blanco}
