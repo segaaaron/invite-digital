@@ -26,15 +26,19 @@ export type UserView = {
 export function NewUserForm({ planes }: { planes: readonly string[] }) {
   const [estado, accion, pendiente] = useActionState<AdminActionState, FormData>(createUserAction, INICIAL)
   const id = useId()
+  // Tras un error vuelve lo enviado: React vacía el formulario al acabar la acción.
+  const enviado = estado.status === 'error' ? estado.valores : undefined
 
   return (
-    <form action={accion} className="flex flex-col gap-4">
+    // `key` remonta el formulario tras un error: un `<select>` no toma un `defaultValue` nuevo
+    // al volver a pintar, y el rol y el plan volvían a su valor inicial.
+    <form key={enviado ? JSON.stringify(enviado) : 'alta'} action={accion} className="flex flex-col gap-4">
       <div className="grid gap-4 min-[560px]:grid-cols-2">
         <div className="flex flex-col gap-2">
           <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
             Correo
           </label>
-          <input className={FIELD_CLASS} id={`${id}-correo`} name="email" required type="email" />
+          <input className={FIELD_CLASS} defaultValue={enviado?.email ?? ''} id={`${id}-correo`} name="email" required type="email" />
         </div>
 
         <div className="flex flex-col gap-2">
@@ -57,7 +61,7 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
         <label className={LABEL_CLASS} htmlFor={`${id}-rol`}>
           Rol
         </label>
-        <select className={FIELD_CLASS} defaultValue="atelier" id={`${id}-rol`} name="role">
+        <select className={FIELD_CLASS} defaultValue={enviado?.role || 'atelier'} id={`${id}-rol`} name="role">
           <option value="atelier">Atelier — solo sus eventos</option>
           <option value="cliente">Cliente — solo su boda</option>
           <option value="admin">Administrador — todo el sistema</option>
@@ -71,7 +75,7 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
         <label className={LABEL_CLASS} htmlFor={`${id}-plan`}>
           Plan que compró
         </label>
-        <select className={FIELD_CLASS} defaultValue="" id={`${id}-plan`} name="planSlug">
+        <select className={FIELD_CLASS} defaultValue={enviado?.planSlug ?? ''} id={`${id}-plan`} name="planSlug">
           <option value="">Sin plan</option>
           {planes.map((plan) => (
             <option key={plan} value={plan}>
@@ -79,6 +83,10 @@ export function NewUserForm({ planes }: { planes: readonly string[] }) {
             </option>
           ))}
         </select>
+        <p className="text-[11px] text-ink-mute">
+          Un cliente creado aquí no ve nada hasta tener acceso a su boda: dáselo en Todos los eventos → «Gestionar», o
+          crea boda y cliente de una vez con «+ Boda para un cliente».
+        </p>
       </div>
 
       <p className="text-[11px] leading-[1.7] text-ink-mute">
@@ -159,8 +167,10 @@ export function UserRow({ user, planes }: { user: UserView; planes: readonly str
           <input name="userId" type="hidden" value={user.id} />
           <input name="role" type="hidden" value={user.role === 'admin' ? 'atelier' : 'admin'} />
           {/* Al personal de puerta no se le ofrece el ascenso desde aquí: su alta y su
-              baja las hace el dueño del evento en el que trabaja. */}
-          <PanelButton disabled={cambiando || user.esUnoMismo || user.role === 'puerta'} type="submit">
+              baja las hace el dueño del evento en el que trabaja. **Ni al cliente**: el
+              botón le daba administración del sistema entero —todas las bodas, los cobros,
+              los usuarios— a un clic de distancia de guardar su plan. */}
+          <PanelButton disabled={cambiando || user.esUnoMismo || user.role === 'puerta' || user.role === 'cliente'} type="submit">
             {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
           </PanelButton>
         </form>

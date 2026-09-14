@@ -48,7 +48,9 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
   const chk = (nombre: string, guardado: boolean) => (enviado ? enviado[nombre] === 'on' : guardado)
 
   return (
-    <form action={guardar} className="flex flex-col gap-5">
+    // `key` remonta tras un error: las casillas no toman un `defaultChecked` nuevo al volver a
+    // pintar, y un interruptor cambiado volvía a lo guardado.
+    <form key={enviado ? JSON.stringify(enviado) : plan.slug} action={guardar} className="flex flex-col gap-5">
       <input name="slug" type="hidden" value={plan.slug} />
 
       <div className="flex flex-wrap items-start justify-between gap-3">

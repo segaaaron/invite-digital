@@ -63,12 +63,15 @@ describe('drizzleAdminRepository · los recuentos correlacionados', () => {
   })
 
   it('asigna, lee y quita el plan que compró el usuario', async () => {
-    await repo.setUserPlan(userId, 'firma-3d')
+    expect(await repo.setUserPlan(userId, 'firma-3d')).toBe(true)
     expect((await repo.findUserById(userId))?.planSlug).toBe('firma-3d')
     expect((await repo.listUsers()).find((u) => u.id === userId)?.planSlug).toBe('firma-3d')
 
     await repo.setUserPlan(userId, null)
     expect((await repo.findUserById(userId))?.planSlug).toBeNull()
+
+    // Un usuario que ya no existe no se da por guardado.
+    expect(await repo.setUserPlan('00000000-0000-4000-8000-000000000000', 'firma-3d')).toBe(false)
   })
 
   it('cuenta los grupos de cada evento, no cero', async () => {

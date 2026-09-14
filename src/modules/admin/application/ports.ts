@@ -60,8 +60,11 @@ export interface AdminRepository {
   countAdmins(): Promise<number>
   findUserById(id: string): Promise<AdminUserRow | null>
   setRole(userId: string, role: Role): Promise<void>
-  /** `null` le quita el plan. El `slug` ya viene validado contra `listPlanSlugs`. */
-  setUserPlan(userId: string, planSlug: string | null): Promise<void>
+  /**
+   * `null` le quita el plan. El `slug` ya viene validado contra `listPlanSlugs`. Devuelve si
+   * existía el usuario: sin eso, guardar el plan de alguien borrado decía «cambiado».
+   */
+  setUserPlan(userId: string, planSlug: string | null): Promise<boolean>
   deleteUser(userId: string): Promise<void>
   listEvents(): Promise<AdminEventRow[]>
   setEventPlan(eventId: string, planSlug: string): Promise<void>

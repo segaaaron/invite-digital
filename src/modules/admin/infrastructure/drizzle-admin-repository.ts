@@ -51,11 +51,13 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
     return fila === undefined ? null : { ...fila, role: parseRole(fila.role) }
   },
 
-  async setUserPlan(userId, planSlug): Promise<void> {
-    await database
+  async setUserPlan(userId, planSlug): Promise<boolean> {
+    const filas = await database
       .update(users)
       .set({ planId: planSlug === null ? null : sql`(select id from plans where slug = ${planSlug})` })
       .where(eq(users.id, userId))
+      .returning({ id: users.id })
+    return filas.length > 0
   },
 
   async setRole(userId, role): Promise<void> {

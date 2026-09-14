@@ -53,11 +53,15 @@ const texto = (formData: FormData, clave: string): string => {
 export async function createUserAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
   const actor = await requireAdmin()
 
+  // Lo enviado vuelve con el error —sin la contraseña—: React vacía el formulario al acabar
+  // la acción, y un correo repetido obligaba a escribir otra vez correo, rol y plan.
+  const valores = { email: texto(formData, 'email'), role: texto(formData, 'role'), planSlug: texto(formData, 'planSlug') }
+
   const credencial = createCredential({ email: texto(formData, 'email'), password: texto(formData, 'password') })
-  if (isErr(credencial)) return { status: 'error', message: credencial.error.detail }
+  if (isErr(credencial)) return { status: 'error', message: credencial.error.detail, valores }
 
   if (await admin.findUserByEmail(credencial.value.email)) {
-    return { status: 'error', message: `Ya existe un usuario con el correo ${credencial.value.email}.` }
+    return { status: 'error', message: `Ya existe un usuario con el correo ${credencial.value.email}.`, valores }
   }
 
   const role = parseRole(texto(formData, 'role'))
@@ -65,11 +69,23 @@ export async function createUserAction(_previous: AdminActionState, formData: Fo
   // dejar un usuario a medias.
   const planSlug = texto(formData, 'planSlug')
   if (planSlug !== '' && !(await admin.planSlugs()).includes(planSlug)) {
-    return { status: 'error', message: `No existe el plan ${planSlug}.` }
+    return { status: 'error', message: `No existe el plan ${planSlug}.`, valores }
   }
 
   const creado = await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role })
-  if (planSlug !== '') await admin.setUserPlan(creado.id, planSlug)
+
+  // Son dos escrituras. Si la del plan falla, la cuenta ya existe y no se deshace: se dice,
+  // en vez de reventar la pantalla y dejar al admin creyendo que no se creó nada.
+  let avisoDePlan = planSlug === '' ? ', sin plan' : ` con el plan ${planSlug}`
+  if (planSlug !== '') {
+    try {
+      await admin.setUserPlan(creado.id, planSlug)
+    } catch (causa) {
+      console.error('alta de usuario sin plan', causa)
+      avisoDePlan = `, pero sin plan: no se pudo asignar ${planSlug}; asígnalo en su fila`
+    }
+  }
+
   await admin.record(actor, {
     action: 'usuario.alta',
     subject: credencial.value.email,
@@ -77,11 +93,10 @@ export async function createUserAction(_previous: AdminActionState, formData: Fo
   })
 
   refrescar()
-  return {
-    status: 'success',
-    message: `Usuario ${credencial.value.email} creado como ${role}${planSlug === '' ? ', sin plan' : ` con el plan ${planSlug}`}.`,
-  }
+  return { status: 'success', message: `Usuario ${credencial.value.email} creado como ${role}${avisoDePlan}.` }
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 /** Cambia el plan que compró un usuario. Vacío se lo quita. */
 export async function setUserPlanAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
@@ -89,11 +104,23 @@ export async function setUserPlanAction(_previous: AdminActionState, formData: F
 
   const userId = texto(formData, 'userId')
   const planSlug = texto(formData, 'planSlug')
+  // Un id que no es UUID lo rechazaría Postgres con un error de sintaxis, y la acción
+  // reventaría con la pantalla de error en vez de decir que ese usuario no existe.
+  if (!UUID.test(userId)) return { status: 'error', message: 'Ese usuario no existe.' }
   if (planSlug !== '' && !(await admin.planSlugs()).includes(planSlug)) {
     return { status: 'error', message: `No existe el plan ${planSlug}.` }
   }
 
-  await admin.setUserPlan(userId, planSlug === '' ? null : planSlug)
+  let existia: boolean
+  try {
+    existia = await admin.setUserPlan(userId, planSlug === '' ? null : planSlug)
+  } catch (causa) {
+    console.error('setUserPlanAction', causa)
+    return { status: 'error', message: 'No pudimos guardar el plan. Vuelve a intentarlo en un momento.' }
+  }
+  // Sin esto, el plan de un usuario ya borrado decía «cambiado» y quedaba en la auditoría.
+  if (!existia) return { status: 'error', message: 'Ese usuario ya no existe.' }
+
   await admin.record(actor, {
     action: 'usuario.plan',
     subject: texto(formData, 'email') || userId,
