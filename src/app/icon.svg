@@ -1,42 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="InvitePremium">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Luxury Atelier">
   <!--
-    El icono del sitio: un sobre de invitación, en la paleta de la marca.
+    El monograma LA de la marca, redibujado en trazos a partir de su ficha técnica: negro
+    mate (C10 M5 Y5 K90), dorado satinado (C0 M15 Y65 K30) y aro en dorado cepillado.
 
-    Se juzga a 16 píxeles, no en el editor, y eso decide el dibujo entero. Un monograma en
-    Cormorant —que es como se escribe la marca— a ese tamaño es una mancha: las astas finas
-    de una romana desaparecen antes que la forma. Un sobre no: se reconoce por silueta, y
-    además dice qué se vende aquí.
-
-    Por el mismo motivo el sobre va **relleno** de papel y no perfilado en oro. Un trazo de
-    2 sobre 64 son 0,5 píxeles a tamaño de pestaña, o sea nada; el oro se queda en el borde
-    y en el sello, que son detalle, y la legibilidad la sostiene el contraste papel/tinta.
-
-    Sin variante para tema oscuro a propósito: el fondo es la tinta de la marca, que ya
-    contrasta contra las dos barras de pestañas.
+    Es un dibujo y no la imagen de la ficha porque la ficha trae encima las líneas de cota y
+    los rótulos de color. Y va en trazos, sin fuente: un favicon no carga tipografías, y un
+    SVG con texto se pintaría con la de respaldo del sistema.
   -->
-  <rect width="64" height="64" rx="14" fill="#2b2723" />
-
-  <!-- El papel. Es lo único que se ve a 16 px, así que ocupa lo que puede sin tocar el borde. -->
-  <rect x="12" y="19" width="40" height="27" rx="3" fill="#f6f1e9" stroke="#c19b4a" stroke-width="2" />
-
-  <!-- La solapa: la uve que convierte un rectángulo en un sobre. -->
-  <path
-    d="M13.5 21.5 L32 34 L50.5 21.5"
-    fill="none"
-    stroke="#2b2723"
-    stroke-width="3"
-    stroke-linecap="round"
-    stroke-linejoin="round"
-  />
-
-  <!--
-    El sello de lacre, en oro profundo.
-
-    Empezó en r=4.5 centrado en y=41 y a 16 píxeles era una mancha parda sobre el papel:
-    con la solapa encima, el sobre se leía sucio en vez de leerse cerrado. Bajado al borde
-    inferior y reducido, a 16 se funde con la línea del papel —que es lo que tiene que
-    pasar— y a 32 y a 180 vuelve a ser un sello, que es lo que separa este sobre del icono
-    de correo de cualquier otra aplicación.
-  -->
-  <circle cx="32" cy="43" r="3.5" fill="#a8823a" />
+  <defs>
+    <linearGradient id="aro" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e6c97d" />
+      <stop offset="0.45" stop-color="#9c7a35" />
+      <stop offset="0.7" stop-color="#d9b86a" />
+      <stop offset="1" stop-color="#7d5f26" />
+    </linearGradient>
+    <linearGradient id="oro" x1="0" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#e3c77f" />
+      <stop offset="0.5" stop-color="#b3983e" />
+      <stop offset="1" stop-color="#8c6f2c" />
+    </linearGradient>
+    <radialGradient id="negro" cx="0.4" cy="0.35" r="0.8">
+      <stop offset="0" stop-color="#262727" />
+      <stop offset="1" stop-color="#121313" />
+    </radialGradient>
+  </defs>
+  <circle cx="32" cy="32" r="31.5" fill="url(#aro)" />
+  <circle cx="32" cy="32" r="28" fill="url(#negro)" />
+  <path fill="url(#oro)" d="M15 16 H26 V17.6 H23.6 V43.4 H32 L34.8 39.2 H36 L34.6 46 H15 V44.4 H17.4 V17.6 H15 Z" />
+  <path fill="url(#oro)" d="M36.6 15.4 H40.4 L49.6 44.4 H51.4 V46 H41.4 V44.4 H43.8 Z" />
+  <path fill="url(#oro)" d="M37.6 15.4 L39.2 18.8 L32.6 43 H30.8 Z" />
+  <path fill="url(#oro)" d="M24 40.6 C33.5 40 44 34.6 52 23.5 C47.8 34.6 37.2 42.6 24 44.2 Z" />
 </svg>
