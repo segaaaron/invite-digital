@@ -7,7 +7,7 @@ export const en = {
     titleLine1: 'DIGITAL',
     titleLine2: 'INVITATIONS',
     titleAccent: 'haute couture',
-    body: 'Envelopes that open in 3D, wax seals that break at your touch, and an immersive scene for every celebration. We design the piece, build it, and deliver it on its own domain within 72 hours.',
+    body: 'Animated envelope covers, background music and a design you see before you choose. You write your invitation, share it on WhatsApp and follow every RSVP live.',
     ctaPrimary: 'Create your invitation',
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
@@ -77,7 +77,7 @@ export const en = {
     imageAlt: 'A botanical invitation suite by the atelier',
     hint: 'Drag the seal to compare',
     traditionalLabel: 'Traditional',
-    luxe: ['A 3D envelope with animated opening and wax seal', 'Your own domain, free of third-party branding', 'RSVP with confirmation tracking', 'Music, an immersive gallery, and a countdown', 'A design composed by hand at the atelier'],
+    luxe: ['An animated envelope cover', 'One link per family, with their name and seats', 'Live RSVPs in your dashboard', 'Music, a gallery and a countdown', 'Sixteen designs you see before you choose'],
     traditional: ['A static image sent over chat', 'A template carrying the platform’s logo', 'Confirmations tallied by hand', 'No gallery, no music, no map', 'The same design shared with a thousand other events'],
   },
   pricing: {
@@ -301,7 +301,7 @@ export const en = {
   seo: {
     homeTitle: 'Luxury 3D digital wedding invitations | Luxury Atelier',
     homeDescription:
-      'Luxury 3D digital invitations for weddings, quinceañeras and events in Bolivia. Animated envelope, RSVP and your own domain, delivered in 72 hours.',
+      'Digital invitations for weddings and quinceañeras in Bolivia. Animated envelope, live RSVP, seating, gift registry and QR passes.',
     collectionsTitle: '3D digital invitation collections | Luxury Atelier',
     collectionsDescription:
       'Eight digital invitation models for weddings, quinceañeras, graduations and corporate events in Bolivia. A 3D scene, RSVP, and delivery within 72 hours.',

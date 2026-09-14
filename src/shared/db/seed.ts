@@ -22,17 +22,19 @@ const PLANS = [
     // El plan de entrada: la lista de invitados va limitada y el salón es lo único
     // avanzado que trae. Mesa de regalos y modo puerta son de los planes de arriba.
     limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false },
+    // Solo lo que el sistema entrega de verdad: nada de «3D real», dominio propio ni
+    // papelería, que se prometían y no existían.
     es: {
       name: 'Atelier',
-      tagline: 'Esencia elegante',
-      description: 'Una escena, tarjeta animada y RSVP simple. Entrega en 72 horas.',
-      features: ['Sobre animado y sello de cera', 'Galería de 8 fotografías', 'Cuenta regresiva y mapa', 'RSVP a WhatsApp'],
+      tagline: 'Tu invitación, lista',
+      description: 'Tu invitación digital con confirmación de asistencia y panel en vivo.',
+      features: ['Portada con sobre animado', 'Galería de fotos', 'Cuenta regresiva, mapa e itinerario', 'Confirmación de asistencia con panel en vivo', 'Mesas y plano del salón'],
     },
     en: {
       name: 'Atelier',
-      tagline: 'Elegant essence',
-      description: 'One scene, an animated card and simple RSVP. Delivered in 72 hours.',
-      features: ['Animated envelope and wax seal', 'Eight-photograph gallery', 'Countdown and map', 'RSVP straight to WhatsApp'],
+      tagline: 'Your invitation, ready',
+      description: 'Your digital invitation with RSVP and a live dashboard.',
+      features: ['Animated envelope cover', 'Photo gallery', 'Countdown, map and itinerary', 'RSVP with a live dashboard', 'Tables and floor plan'],
     },
   },
   {
@@ -43,27 +45,15 @@ const PLANS = [
     limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true },
     es: {
       name: 'Firma 3D',
-      tagline: 'La experiencia completa',
-      description: 'Unboxing 3D completo, música, panel de invitados y dominio propio por un año.',
-      features: [
-        'Todo lo de Atelier',
-        'Apertura de sobre en 3D real',
-        'Música y transiciones cinemáticas',
-        'Panel de RSVP en vivo + mesas',
-        'Dominio propio 12 meses',
-      ],
+      tagline: 'Organiza todo el día',
+      description: 'Invitados, mesas, regalos y la puerta con pases QR, en un solo panel.',
+      features: ['Todo lo de Atelier', 'Mesa de regalos y fondos', 'Pases con QR y modo puerta sin conexión', 'Música de fondo'],
     },
     en: {
       name: 'Signature 3D',
-      tagline: 'The complete experience',
-      description: 'Full 3D unboxing, music, guest panel and your own domain for a year.',
-      features: [
-        'Everything in Atelier',
-        'True 3D envelope opening',
-        'Music and cinematic transitions',
-        'Live RSVP panel and seating',
-        'Your own domain for 12 months',
-      ],
+      tagline: 'Run the whole day',
+      description: 'Guests, tables, registry and the door with QR passes, in one dashboard.',
+      features: ['Everything in Atelier', 'Gift registry and cash funds', 'QR passes and offline door mode', 'Background music'],
     },
   },
   {
@@ -75,27 +65,15 @@ const PLANS = [
     limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true },
     es: {
       name: 'Alta Costura',
-      tagline: 'Hecho a medida',
-      description: 'Concepto original, ilustración propia y dirección de arte para la boda completa.',
-      features: [
-        'Todo lo de Firma 3D',
-        'Monograma e ilustración a mano',
-        'Save the date + agradecimiento',
-        'Papelería imprimible coordinada',
-        'Concierge dedicado',
-      ],
+      tagline: 'Lo hacemos contigo',
+      description: 'Todo lo de Firma 3D, sin límite de invitados y con una persona asignada.',
+      features: ['Todo lo de Firma 3D', 'Invitados sin límite', 'Atención de una persona asignada'],
     },
     en: {
       name: 'Haute Couture',
-      tagline: 'Made to measure',
-      description: 'Original concept, bespoke illustration and art direction for the whole wedding.',
-      features: [
-        'Everything in Signature 3D',
-        'Hand-drawn monogram and illustration',
-        'Save the date and thank-you piece',
-        'Coordinated printable stationery',
-        'Dedicated concierge',
-      ],
+      tagline: 'We do it with you',
+      description: 'Everything in Signature 3D, unlimited guests and a dedicated person.',
+      features: ['Everything in Signature 3D', 'Unlimited guests', 'A dedicated person'],
     },
   },
 ] as const

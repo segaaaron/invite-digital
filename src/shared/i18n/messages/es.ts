@@ -7,7 +7,7 @@ export const es = {
     titleLine1: 'INVITACIONES',
     titleLine2: 'DIGITALES DE',
     titleAccent: 'alta costura',
-    body: 'Sobres que se abren en 3D, sellos de cera que se rompen al tacto y una escena inmersiva por cada evento. Diseñamos la pieza, la programamos y la entregamos con dominio propio en 72 horas.',
+    body: 'Portadas con sobre animado, música de fondo y un diseño que se mira antes de elegir. Tú escribes tu invitación, la repartes por WhatsApp y sigues cada confirmación en vivo.',
     ctaPrimary: 'Crear invitación',
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
@@ -77,7 +77,7 @@ export const es = {
     sliderLabel: 'Comparar Luxury Atelier con una invitación tradicional',
     imageAlt: 'Suite de invitación botánica del atelier',
     traditionalLabel: 'Tradicional',
-    luxe: ['Sobre 3D con apertura animada y sello de cera', 'Dominio propio, sin marcas de terceros', 'RSVP con seguimiento de confirmaciones', 'Música, galería inmersiva y cuenta regresiva', 'Diseño compuesto a mano por el atelier'],
+    luxe: ['Portada con sobre animado', 'Un enlace por familia, con su nombre y sus pases', 'Confirmaciones en vivo en tu panel', 'Música, galería y cuenta regresiva', 'Dieciséis diseños que ves antes de elegir'],
     traditional: ['Imagen estática enviada por chat', 'Plantilla con logo de la plataforma', 'Confirmaciones contadas a mano', 'Sin galería, sin música, sin mapa', 'Mismo diseño que otros mil eventos'],
   },
   pricing: {
@@ -301,7 +301,7 @@ export const es = {
   seo: {
     homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | Luxury Atelier',
     homeDescription:
-      'Invitaciones digitales 3D para bodas, XV años y eventos en Bolivia. Sobre animado, RSVP y dominio propio, entregado en 72 horas.',
+      'Invitaciones digitales para bodas y XV años en Bolivia. Sobre animado, confirmación de asistencia en vivo, mesas, regalos y pases con QR.',
     collectionsTitle: 'Colecciones de invitaciones digitales 3D | Luxury Atelier',
     collectionsDescription:
       'Ocho modelos de invitación digital para bodas, XV años, graduaciones y eventos corporativos en Bolivia. Escena 3D, RSVP y entrega en 72 horas.',
