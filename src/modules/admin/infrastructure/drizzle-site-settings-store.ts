@@ -29,7 +29,9 @@ export const createDrizzleSiteSettingsStore = (database: DbExecutor): SiteSettin
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${SITE_SETTINGS_KEY}))`)
 
       const [ultima] = await tx.select().from(siteSettingsVersions).orderBy(desc(siteSettingsVersions.createdAt)).limit(1)
-      if ((ultima?.id ?? null) !== base) return { ok: false as const, ultima: ultima! }
+      // Sin ninguna versión no hay nada que pisar, aunque el formulario traiga una base (un
+      // historial vaciado a mano): se guarda. Con versiones, la base tiene que ser la última.
+      if (ultima !== undefined && ultima.id !== base) return { ok: false as const, ultima }
 
       if (ultima === undefined) {
         // La partida se fecha un milisegundo antes para que ordene detrás de su guardado.
