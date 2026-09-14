@@ -77,4 +77,12 @@ export interface AdminRepository {
 export interface FileStore {
   put(key: string, bytes: Uint8Array): Promise<void>
   get(key: string): Promise<Uint8Array | null>
+  /**
+   * Borra un fichero. **Borrar lo que ya no está no es un fallo**: al reemplazar la música
+   * de un modelo se borra la anterior, y esa operación puede repetirse.
+   *
+   * Existe porque sin ella cada reemplazo deja un huérfano en el volumen y nadie sabe
+   * después cuáles sobran.
+   */
+  remove(key: string): Promise<void>
 }

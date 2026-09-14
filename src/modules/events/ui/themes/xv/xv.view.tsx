@@ -44,6 +44,7 @@ export function XvSharedView({
   themes,
   slots,
   guestInfo,
+  audioSrc,
   piel,
 }: ThemeProps & { piel: PielXv }) {
   const P = piel.paleta
@@ -1030,7 +1031,7 @@ export function XvSharedView({
                   accent={Z.musicaAcento ?? P.uva}
                   artist={music.artist ?? ''}
                   artistColor={Z.musicaArtista ?? P.malva}
-                  audioMediaId={music.audioMediaId}
+                  audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                   eyebrow={themes.songOfTheNight}
                   playBg={P.uva}
                   playIconColor={P.blanco}

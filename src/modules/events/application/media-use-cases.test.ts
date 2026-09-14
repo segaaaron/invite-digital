@@ -72,6 +72,49 @@ describe('saveMedia', () => {
     })
   })
 
+  it('una segunda canción reemplaza a la primera: queda una sola', async () => {
+    // Una boda tiene UNA canción. Sin esto, cada cambio deja un MP3 muerto en el volumen y
+    // una opción más en el selector, todas con nombres parecidos.
+    const filas: MediaRow[] = []
+    const deps = dobles(filas)
+    await saveMedia(deps)('e1', { name: 'primera.mp3', size: MP3.length, bytes: async () => MP3 })
+
+    const segundos = { ...deps, ids: () => 'ffffffff-1111-2222-3333-444444444444' }
+    await saveMedia(segundos)('e1', { name: 'segunda.mp3', size: MP3.length, bytes: async () => MP3 })
+
+    const audios = filas.filter((fila) => fila.contentType === 'audio/mpeg')
+    expect(audios).toHaveLength(1)
+    expect(audios[0]?.originalName).toBe('segunda.mp3')
+    expect(deps.disco.has('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee.mp3')).toBe(false)
+  })
+
+  it('pero las fotografías no se reemplazan entre sí', async () => {
+    // De fotos una boda tiene muchas; de canción, una. Confundirlo borraría el álbum.
+    const filas: MediaRow[] = []
+    const deps = dobles(filas)
+    await saveMedia(deps)('e1', { name: 'una.png', size: PNG.length, bytes: async () => PNG })
+
+    const segunda = { ...deps, ids: () => 'ffffffff-1111-2222-3333-444444444444' }
+    await saveMedia(segunda)('e1', { name: 'otra.png', size: PNG.length, bytes: async () => PNG })
+
+    expect(filas).toHaveLength(2)
+  })
+
+  it('un invitado NO puede subir audio, aunque el formulario diga otra cosa', async () => {
+    // El `accept` se cambia desde el navegador en dos segundos. Y como el audio reemplaza,
+    // sin este corte cualquiera con el enlace dejaría muda la boda de otro.
+    const deps = dobles()
+
+    const salida = await saveGuestPhoto(deps)('e1', 'g1', {
+      name: 'mi-cancion.mp3',
+      size: MP3.length,
+      bytes: async () => MP3,
+    })
+
+    expect(salida).toEqual({ ok: false, error: 'unsupported_type' })
+    expect(deps.storage.put).not.toHaveBeenCalled()
+  })
+
   it('sigue rechazando un MP3 que pasa del tope, antes de leerlo', async () => {
     const deps = dobles()
     const leer = vi.fn(async () => MP3)

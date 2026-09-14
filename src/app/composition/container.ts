@@ -106,6 +106,12 @@ import {
   savePaymentQr,
   savePaymentSettings,
 } from '@/modules/admin/application/payment-use-cases'
+import {
+  readShowcaseMusic,
+  removeShowcaseMusic,
+  saveShowcaseMusic,
+} from '@/modules/admin/application/showcase-music-use-cases'
+import { createDiskShowcaseStorage } from '@/modules/admin/infrastructure/disk-showcase-storage'
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import { changePassword } from '@/modules/identity/application/change-password'
@@ -471,6 +477,13 @@ export const registry = {
  */
 const proofStorage = createDiskFileStorage(env.ORDERS_DIR)
 
+/**
+ * La música de los modelos del escaparate, en su propia carpeta dentro del volumen de
+ * medios. Separada de los comprobantes a propósito: son datos de distinta naturaleza y con
+ * distinta vida, y limpiar lo uno no puede llevarse lo otro.
+ */
+const showcaseStorage = createDiskShowcaseStorage(`${env.EVENT_MEDIA_DIR}/escaparate`)
+
 export const orders = {
   place: placeOrder({ orders: drizzleOrderRepository, clock }),
   byRef: findOrderByRef({ orders: drizzleOrderRepository, clock }),
@@ -561,6 +574,29 @@ export const admin = {
     newKey: () => crypto.randomUUID(),
   }),
   readFile: (key: string) => proofStorage.get(key),
+
+  /**
+   * La música de los dieciséis modelos del escaparate.
+   *
+   * **Almacén propio**, sobre el volumen de los medios del evento y no sobre el de los
+   * comprobantes: un comprobante lleva datos de una persona y se barre cuando su pedido
+   * vence; esto es la música de la web pública y dura lo que dure el modelo. Compartir
+   * carpeta significaría que limpiar lo uno pueda llevarse lo otro.
+   */
+  showcaseMusic: readShowcaseMusic({ settings: drizzleSettingsRepository, storage: showcaseStorage }),
+  saveShowcaseMusic: saveShowcaseMusic({
+    settings: drizzleSettingsRepository,
+    storage: showcaseStorage,
+    admin: drizzleAdminRepository,
+    newKey: () => crypto.randomUUID(),
+  }),
+  removeShowcaseMusic: removeShowcaseMusic({
+    settings: drizzleSettingsRepository,
+    storage: showcaseStorage,
+    admin: drizzleAdminRepository,
+  }),
+  /** Lo lee la ruta pública `/modelos/musica/<tema>`, que sirve sin sesión. */
+  readShowcaseFile: (key: string) => showcaseStorage.get(key),
 }
 
 const qrDeps = { qr: drizzleQrRepository, ids: () => crypto.randomUUID(), clock }

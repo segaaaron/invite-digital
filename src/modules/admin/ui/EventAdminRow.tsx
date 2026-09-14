@@ -5,6 +5,7 @@ import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import {
   deleteEventAsAdminAction,
+  grantClientAccessAction,
   reassignEventAction,
   setEventPlanAction,
   type AdminActionState,
@@ -36,6 +37,18 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
   const [reasignado, reasignar, reasignando] = useActionState<AdminActionState, FormData>(reassignEventAction, INICIAL)
   const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(setEventPlanAction, INICIAL)
   const [borrado, borrar, borrando] = useActionState<AdminActionState, FormData>(deleteEventAsAdminAction, INICIAL)
+  /**
+   * Dar acceso a esta boda **ya creada**.
+   *
+   * Es la otra mitad del alta de un paso: aquella crea boda y cliente de una vez, y esta
+   * cubre la boda que ya existe —la que se creó antes de saber el correo del cliente, o a
+   * la que hay que sumar a la otra parte de la pareja—.
+   *
+   * Es **la misma acción** que usa Configuración del evento, traída por el índice del
+   * módulo y no reescrita aquí: una copia sería un segundo sitio donde olvidarse de que un
+   * alta sobre un correo existente no toca su cuenta.
+   */
+  const [acceso, darAcceso, dandoAcceso] = useActionState<AdminActionState, FormData>(grantClientAccessAction, INICIAL)
   const [confirmando, setConfirmando] = useState(false)
   const id = useId()
 
@@ -109,6 +122,43 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           </PanelButton>
         </form>
 
+        <form action={darAcceso} className="flex flex-wrap items-end gap-2">
+          <input name="eventId" type="hidden" value={event.id} />
+          <input name="eventSlug" type="hidden" value={event.slug} />
+          <span className="flex flex-col gap-1.5">
+            <label className={LABEL_CLASS} htmlFor={`${id}-cliente`}>
+              Acceso del cliente
+            </label>
+            <input
+              autoComplete="off"
+              className={`${FIELD_CLASS} py-2`}
+              id={`${id}-cliente`}
+              name="email"
+              placeholder="novios@correo.com"
+              required
+              type="email"
+            />
+          </span>
+          <span className="flex flex-col gap-1.5">
+            {/* «Contraseña inicial» y no «Contraseña» a secas: en esta misma pantalla hay
+                otros campos con ese nombre, y un `getByLabel('Contraseña')` sin acotar
+                casaría con dos. Es lo que acaba de tumbar el inicio de sesión del setup. */}
+            <label className={LABEL_CLASS} htmlFor={`${id}-clave-cliente`}>
+              Contraseña inicial
+            </label>
+            <input
+              autoComplete="new-password"
+              className={`${FIELD_CLASS} py-2`}
+              id={`${id}-clave-cliente`}
+              name="password"
+              type="text"
+            />
+          </span>
+          <PanelButton disabled={dandoAcceso} type="submit">
+            {dandoAcceso ? 'Dando…' : 'Dar acceso'}
+          </PanelButton>
+        </form>
+
         {confirmando ? (
           <form action={borrar} className="flex items-end gap-2">
             <input name="eventId" type="hidden" value={event.id} />
@@ -135,6 +185,20 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           {error}
         </p>
       )}
+
+      {/* El acceso lleva su propio aviso y no entra en el `error` de arriba: su acierto
+          trae texto —la contraseña no se vuelve a mostrar, y si el correo ya tenía cuenta
+          lo dice—, y eso hay que enseñarlo, no solo el fallo. */}
+      {acceso.status === 'error' ? (
+        <p className="text-[12px] text-danger" role="alert">
+          {acceso.message}
+        </p>
+      ) : null}
+      {acceso.status === 'success' && acceso.message !== undefined ? (
+        <p className="text-[12px] text-sage-deep" role="status">
+          {acceso.message}
+        </p>
+      ) : null}
     </li>
   )
 }

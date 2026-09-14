@@ -44,7 +44,7 @@ const PANEL = {
  */
 const ROTULOS = { itinerary: 'Cronograma', guestbook: 'déjanos un mensaje', venue: '· LUGAR ·', cover: '15 AÑOS' } as const
 
-export function XvIsabelleView({ content, event, dictionary, themes, slots }: ThemeProps) {
+export function XvIsabelleView({ content, event, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   const retrato = gallery?.[0]
@@ -394,7 +394,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots }: Th
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
-                audioMediaId={music.audioMediaId}
+                audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.marfil}
                 textColor={P.tinta}

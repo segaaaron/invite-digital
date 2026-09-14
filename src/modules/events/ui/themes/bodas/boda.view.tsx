@@ -70,7 +70,7 @@ function aRomano(anio: number): string {
   }
   return salida
 }
-export function BodaView({ content, event, dictionary, themes, slots }: ThemeProps) {
+export function BodaView({ content, event, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const romano = aRomano(new Date(`${event.eventDate}T00:00:00`).getFullYear())
   const { hero, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing , notes } = content
 
@@ -353,7 +353,7 @@ export function BodaView({ content, event, dictionary, themes, slots }: ThemePro
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
-                audioMediaId={music.audioMediaId}
+                audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.fondo}
                 textColor={P.tinta}

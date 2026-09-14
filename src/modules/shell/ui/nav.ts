@@ -63,6 +63,9 @@ export function panelNav(
             { href: '/panel/admin', label: 'Panorama', icon: 'panorama' },
             { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
             { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
+            // La música de los dieciséis modelos de la web. No es la de una boda: esa la
+            // sube su atelier o su cliente desde Configuración de ese evento.
+            { href: '/panel/admin/modelos', label: 'Música de los modelos', icon: 'editar' },
             { href: '/panel/admin/pagos', label: 'Cobros', icon: 'plan' },
             // Los pedidos del Plan B compran planes de InvitePremium: el dinero va a una
             // sola cuenta y las decide el admin. Estaban en «Cuenta», a la vista de

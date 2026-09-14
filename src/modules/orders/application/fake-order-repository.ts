@@ -109,4 +109,9 @@ export class FakeFileStorage implements FileStorage {
   async get(key: string): Promise<Uint8Array | null> {
     return this.files.get(key) ?? null
   }
+
+  /** Como el de disco: borrar lo que ya no está no es un fallo. */
+  async remove(key: string): Promise<void> {
+    this.files.delete(key)
+  }
 }

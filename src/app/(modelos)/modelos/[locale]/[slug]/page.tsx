@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { admin } from '@/app/composition/container'
 import type { Event } from '@/modules/events/domain/event'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
+import { isOk } from '@/shared/result'
 import { buildPageMetadata } from '@/shared/seo/metadata'
 
 /**
@@ -70,6 +72,16 @@ export default async function ModelPreviewPage({
   const diccionario = getDictionary(locale)
   const { Component: Tema } = tema
 
+  /**
+   * Si este modelo tiene canción, de las que el admin sube en la administración.
+   *
+   * **Si la base no responde, el modelo se enseña mudo y no roto.** Un escaparate que
+   * devuelve un error porque no pudo averiguar si había música sería cambiar una canción
+   * por una página en blanco, y lo que se viene a ver aquí es el diseño.
+   */
+  const musica = await admin.showcaseMusic()
+  const tieneMusica = isOk(musica) && (musica.value[slug] ?? '') !== ''
+
   const eventoDeMuestra: Event = {
     id: 'muestra',
     userId: null,
@@ -95,6 +107,11 @@ export default async function ModelPreviewPage({
       exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}
     >
       <Tema
+        // La canción de **este modelo**, la que el admin subió desde la administración.
+        // No sale del contenido —el de muestra no tiene archivo detrás— porque no es de
+        // ninguna boda: es de la web pública. Sin ella, el reproductor se queda como
+        // nació: se ve, mueve las barras y no suena.
+        audioSrc={tieneMusica ? `/modelos/musica/${slug}` : undefined}
         content={tema.defaultContent}
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}

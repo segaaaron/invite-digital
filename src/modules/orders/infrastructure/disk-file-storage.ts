@@ -1,4 +1,4 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import type { FileStorage } from '../application/ports'
 
@@ -37,5 +37,10 @@ export const createDiskFileStorage = (raiz: string): FileStorage => ({
       if ((cause as NodeJS.ErrnoException).code === 'ENOENT') return null
       throw cause
     }
+  },
+
+  /** `force`: borrar lo que ya no está no es un fallo, y quien limpia puede pasar dos veces. */
+  async remove(key): Promise<void> {
+    await rm(rutaDe(raiz, key), { force: true })
   },
 })

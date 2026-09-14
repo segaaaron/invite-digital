@@ -30,12 +30,20 @@ export const saveMedia =
     archivo: { size: number; name: string; bytes: () => Promise<Uint8Array> },
     /** Qué grupo la sube. Sin esto la sube el atelier, que es el caso de siempre. */
     uploadedByGroupId: string | null = null,
+    /**
+     * Si este camino admite audio. **El del invitado no**, y es una defensa, no una
+     * preferencia: el `accept` del formulario se cambia desde el navegador en dos
+     * segundos, y como subir audio **reemplaza** la canción del evento, un invitado
+     * podría dejar sin música la boda de otro.
+     */
+    { permitirAudio = true }: { permitirAudio?: boolean } = {},
   ): Promise<{ ok: true; id: string } | { ok: false; error: MediaError }> => {
     if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
 
     const bytes = await archivo.bytes()
     const tipo = mediaTypeOf(bytes)
     if (tipo === null) return { ok: false, error: 'unsupported_type' }
+    if (esAudio(tipo) && !permitirAudio) return { ok: false, error: 'unsupported_type' }
 
     // **La música no pasa por el reencodado.** `normalize` es de imagen: a un MP3 le
     // devolvería `null` y lo rechazaría entero. Y tampoco habría qué reducir — el tope de
@@ -60,8 +68,28 @@ export const saveMedia =
         byteSize: listo.bytes.byteLength,
         uploadedByGroupId,
       })
+
+      /**
+       * **Una boda tiene UNA canción.** Subir otra reemplaza la anterior: se borra su fila
+       * y su fichero.
+       *
+       * Sin esto, cada cambio de canción dejaba un MP3 muerto en el volumen y una opción
+       * más en el selector, todas con nombres parecidos — y ahí es donde se elige la
+       * equivocada sin que nada lo diga.
+       *
+       * Va **después** de escribir la nueva, nunca antes: si falla el borrado, lo que
+       * queda es un fichero de más, no una invitación apuntando a una canción que ya no
+       * existe. Y las fotografías no entran aquí: de esas una boda tiene muchas.
+       */
+      if (esAudio(listo.contentType)) {
+        for (const fila of await media.listByEvent(eventId)) {
+          if (fila.id === id || !esAudio(fila.contentType as MediaType)) continue
+          await storage.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
+          await media.remove(fila.id)
+        }
+      }
     } catch (cause) {
-      console.error('No se pudo guardar la imagen del evento %s:', eventId, cause)
+      console.error('No se pudo guardar el archivo del evento %s:', eventId, cause)
       return { ok: false, error: 'storage_failure' }
     }
 
@@ -118,7 +146,10 @@ export const saveGuestPhoto =
   ): Promise<{ ok: true; id: string } | { ok: false; error: MediaError }> => {
     const ya = await deps.media.countByGroup(groupId)
     if (ya >= MAX_GUEST_PHOTOS) return { ok: false, error: 'too_many' }
-    return saveMedia(deps)(eventId, archivo, groupId)
+    // **Fotografías y nada más.** Este extremo se autoriza con el token del enlace, que
+    // circula por WhatsApp; admitir audio aquí dejaría que cualquiera con ese enlace
+    // reemplazara la canción de la boda.
+    return saveMedia(deps)(eventId, archivo, groupId, { permitirAudio: false })
   }
 
 /** Lo que este grupo lleva subido, para que el invitado vea sus propias fotografías. */

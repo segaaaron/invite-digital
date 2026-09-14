@@ -39,7 +39,7 @@ const GRANO =
  */
 const ROTULOS = { coverEyebrow: 'ESTÁS INVITADO', coverHeadline: 'Algo inolvidable', cover: 'NOW · SHOWING' } as const
 
-export function BodaCinView({ content, dictionary, themes, slots }: ThemeProps) {
+export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, gallery, closing } = content
   const retrato = gallery?.[0]
   const reparto = (gallery ?? []).slice(1, 3)
@@ -372,7 +372,7 @@ export function BodaCinView({ content, dictionary, themes, slots }: ThemeProps) 
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
-                audioMediaId={music.audioMediaId}
+                audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.fondo}
                 textColor={P.tinta}

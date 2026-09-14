@@ -44,7 +44,7 @@ const ROTULOS = {
   giftsNote: 'Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
 } as const
 
-export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo }: ThemeProps) {
+export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   // La fecha límite, en el idioma del evento: la maqueta la pinta bajo el rótulo.
@@ -664,7 +664,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
               <MusicPlayer
                 accent={P.salvia}
                 artist={music.artist ?? ''}
-                audioMediaId={music.audioMediaId}
+                audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.papel}
                 textColor={P.tinta}

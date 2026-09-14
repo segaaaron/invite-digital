@@ -115,7 +115,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           />
         </PanelCard>
 
-        <PanelCard title="Fotografías de la invitación">
+        {/* «y música» en el título, y no solo en el texto de dentro: la tarjeta se llamaba
+            «Fotografías de la invitación» y nadie iba a buscar ahí dónde subir el MP3. */}
+        <PanelCard title="Fotografías y música">
           <EventMediaPanel
             eventId={event.value.id}
             eventSlug={event.value.slug}

@@ -44,7 +44,7 @@ const ROTULOS = {
   guestbook: 'DEDÍCALES UNAS PALABRAS',
 } as const
 
-export function AnivView({ content, dictionary, themes, slots }: ThemeProps) {
+export function AnivView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const { hero, hosts, quote, schedule, reception, map, music, gallery, notes, closing } = content
   const original = gallery?.[0]
   const tira = (gallery ?? []).slice(1, 5)
@@ -230,7 +230,7 @@ export function AnivView({ content, dictionary, themes, slots }: ThemeProps) {
               <MusicPlayer
                 accent={P.oro}
                 artist={music.artist ?? ''}
-                audioMediaId={music.audioMediaId}
+                audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.fondo}
                 textColor={P.tinta}

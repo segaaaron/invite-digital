@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { savePaymentSettingsAction, uploadPaymentQrAction, type AdminActionState } from '../actions'
 import type { PaymentSettings } from '../domain/payment-settings'
 
@@ -118,19 +118,12 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           accept="image/png,image/jpeg,image/webp"
           className="text-[13px] text-ink-soft file:mr-3 file:rounded-[var(--radius-pill)] file:border file:border-line-panel-strong file:bg-white file:px-4 file:py-2 file:font-mono file:text-[10px] file:tracking-[0.25em] file:text-ink file:uppercase"
           name="qr"
-          required
           type="file"
         />
 
-        {imagen.status === 'error' ? (
-          <p className="text-[13px] text-danger" role="alert">
-            {imagen.message}
-          </p>
-        ) : null}
+        {imagen.status === 'error' ? <PanelAlert tone="error">{imagen.message}</PanelAlert> : null}
         {imagen.status === 'success' && imagen.message !== undefined ? (
-          <p className="text-[13px] text-sage" role="status">
-            {imagen.message}
-          </p>
+          <PanelAlert tone="ok">{imagen.message}</PanelAlert>
         ) : null}
 
         <PanelButton className="w-fit" disabled={subiendo} type="submit">

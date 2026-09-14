@@ -81,8 +81,12 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         <p className="text-[11px] leading-[1.5] text-ink-mute">
           La música va en <strong className="font-medium text-ink-soft">MP3</strong>, que es el único formato que
           reproducen todos los teléfonos. Se guarda tal cual: súbela ya recortada, de 30 a 60 segundos, que es lo que
-          suena bien en bucle. Después elígela en el bloque <strong className="font-medium text-ink-soft">Música</strong>
-          .
+          suena bien en bucle.
+        </p>
+        <p className="text-[11px] leading-[1.5] text-ink-mute">
+          <strong className="font-medium text-ink-soft">Subirla es elegirla</strong>, y una boda tiene una sola canción:
+          la nueva <strong className="font-medium text-ink-soft">reemplaza</strong> a la anterior y la anterior se borra,
+          para no ir dejando archivos sueltos. El título y el artista que hayas escrito se conservan.
         </p>
 
         {error === null ? null : (

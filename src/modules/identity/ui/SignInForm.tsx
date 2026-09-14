@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { useActionState, useId } from 'react'
+import { useActionState, useId, useState } from 'react'
+import { EyeIcon, EyeOffIcon } from '@/shared/design/ui/icons'
 import { signInAction, type SignInActionState } from '../actions'
 
 const INITIAL: SignInActionState = { status: 'idle', message: '' }
@@ -27,6 +28,8 @@ export function SignInForm() {
   const emailId = useId()
   const passwordId = useId()
   const errorId = useId()
+  // Arranca oculta: enseñarla por defecto la dejaría a la vista de quien pasa por detrás.
+  const [verContrasena, setVerContrasena] = useState(false)
   const error = state.status === 'error' && state.message !== '' ? MESSAGES[state.message] : null
 
   return (
@@ -55,17 +58,40 @@ export function SignInForm() {
         <label className={LABEL_CLASS} htmlFor={passwordId}>
           Contraseña
         </label>
-        <input
-          aria-describedby={error ? errorId : undefined}
-          aria-invalid={error !== null}
-          autoComplete="current-password"
-          className={FIELD_CLASS}
-          id={passwordId}
-          name="password"
-          placeholder="••••••••"
-          required
-          type="password"
-        />
+        {/*
+          El ojo va **dentro** del campo, no al lado: fuera empuja el ancho del input y en
+          un teléfono deja la contraseña en un cajón más estrecho que el correo.
+
+          `type="button"` y no el que hereda: dentro de un formulario, un botón sin tipo
+          es `submit`, así que enseñar la contraseña habría intentado entrar.
+        */}
+        <div className="relative">
+          <input
+            aria-describedby={error ? errorId : undefined}
+            aria-invalid={error !== null}
+            autoComplete="current-password"
+            className={`${FIELD_CLASS} pr-12`}
+            id={passwordId}
+            name="password"
+            placeholder="••••••••"
+            required
+            type={verContrasena ? 'text' : 'password'}
+          />
+          <button
+            // **Sin la palabra «Contraseña» dentro, y no es capricho.** Con
+            // `aria-label="Ver la contraseña"`, un `getByLabel('Contraseña')` casaba con el
+            // campo **y** con este botón, y Playwright en modo estricto se niega a elegir:
+            // el inicio de sesión del setup murió ahí y con él 224 pruebas que ni
+            // arrancaron. Es la misma lección que los iconos de la fila de invitados.
+            aria-label={verContrasena ? 'Ocultar' : 'Mostrar'}
+            aria-pressed={verContrasena}
+            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer rounded-[10px] p-2 text-ink-mute transition-colors hover:text-ink focus-visible:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            onClick={() => setVerContrasena((antes) => !antes)}
+            type="button"
+          >
+            {verContrasena ? <EyeOffIcon /> : <EyeIcon />}
+          </button>
+        </div>
       </div>
 
       {error ? (

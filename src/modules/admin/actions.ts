@@ -1,10 +1,14 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { admin, events } from '@/app/composition/container'
+import { admin, events, identity, notifications } from '@/app/composition/container'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { createCredential } from '@/modules/identity/domain/credential'
 import { parseRole } from '@/modules/identity/domain/access'
+import { addEventClientAction } from '@/modules/events/staff-actions'
 import { requireAdmin } from '@/modules/identity/session-cookie'
+import { ALFABETO_SUFIJO, slugDeBoda } from './domain/nueva-boda'
+import { MAX_SHOWCASE_MUSIC_BYTES } from './domain/showcase-music'
 import { isErr } from '@/shared/result'
 
 // ============================================================================
@@ -224,4 +228,254 @@ function sniffImage(bytes: Uint8Array): string | null {
     if (marca === 'WEBP') return QR_MIMES[2]!
   }
   return null
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// La música de los modelos del escaparate.
+//
+// Es la web pública: los dieciséis que cualquiera mira antes de comprar. Lo que suena en
+// una invitación de verdad es otra cosa, vive en `event_media` y lo sube el atelier o su
+// cliente desde Configuración de esa boda.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Sube el MP3 de un modelo. */
+export async function uploadShowcaseMusicAction(
+  _previous: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+
+  const themeKey = texto(formData, 'themeKey')
+  const archivo = formData.get('musica')
+  if (!(archivo instanceof File) || archivo.size === 0) {
+    return { status: 'error', message: 'Elige un MP3 antes de subirlo.' }
+  }
+  // El tope, antes de leer el fichero a memoria: un `arrayBuffer()` de un archivo enorme
+  // se lo trae entero al servidor antes de que nadie lo rechace.
+  if (archivo.size > MAX_SHOWCASE_MUSIC_BYTES) {
+    return { status: 'error', message: 'El MP3 pasa de 3 MB. Súbelo recortado, de 30 a 60 segundos.' }
+  }
+
+  const bytes = new Uint8Array(await archivo.arrayBuffer())
+  const result = await admin.saveShowcaseMusic(actor, { themeKey, bytes })
+  if (isErr(result)) {
+    console.error('música del escaparate rechazada', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  refrescar()
+  revalidatePath('/panel/admin/modelos')
+  // Sin esto el modelo seguiría mudo hasta que caducara la caché de su página.
+  revalidatePath('/modelos', 'layout')
+  return { status: 'success', message: 'Ese modelo ya suena en la web.' }
+}
+
+/** Deja mudo un modelo: vuelve a como nació. */
+export async function removeShowcaseMusicAction(
+  _previous: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+
+  const result = await admin.removeShowcaseMusic(actor, texto(formData, 'themeKey'))
+  if (isErr(result)) {
+    console.error('no se pudo quitar la música', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+
+  refrescar()
+  revalidatePath('/panel/admin/modelos')
+  revalidatePath('/modelos', 'layout')
+  return { status: 'success', message: 'Ese modelo se quedó sin música.' }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Crear la boda de un cliente: el modelo que eligió, su evento y su acceso, de una vez.
+//
+// Es el mismo camino que recorre aprobar un pedido, pero **sin pedido**: el cliente llegó
+// por WhatsApp, eligió una tarjeta y el admin se la monta. Comparte el orden con
+// `aprovisionar` porque comparte las lecciones, y la primera es que el acceso se comprueba
+// **antes** de crear nada.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Cuatro caracteres del alfabeto sin `0`, `O`, `1`, `I` ni `L`: estos slug se dictan. */
+function sufijoDeSlug(): string {
+  const valores = crypto.getRandomValues(new Uint8Array(4))
+  return Array.from(valores, (n) => ALFABETO_SUFIJO[n % ALFABETO_SUFIJO.length]).join('')
+}
+
+export type NuevaBodaState =
+  | { status: 'idle' }
+  | { status: 'error'; message: string }
+  | { status: 'success'; message: string; eventSlug: string }
+
+/**
+ * Crea la boda con el diseño elegido y le da acceso a su cliente.
+ *
+ * **El orden no es estético, y cada paso está donde está por algo:**
+ *
+ * 1. **El acceso del cliente se comprueba antes de tocar la base.** Creando primero la
+ *    boda, una contraseña corta o un correo que ya existe con otro rol dejaban el evento
+ *    hecho y al cliente fuera — y la pantalla decía «creada», que es la mentira que hace
+ *    que nadie lo arregle.
+ * 2. **El diseño se valida contra el registro.** `themeFor` cae al clásico con una clave
+ *    desconocida: sin comparar, se colaría un modelo que nadie eligió.
+ * 3. **El `slug` lleva sufijo.** Dos bodas «Familia García» chocarían, y chocarían después
+ *    de haber comprobado el acceso.
+ * 4. **La boda nace en borrador**, para escribir el contenido antes de repartir un enlace.
+ * 5. **Nada de lo que viene después deshace lo anterior.** Si el correo no sale, el alta
+ *    sigue siendo válida y la contraseña está en pantalla.
+ */
+export async function createWeddingForClientAction(
+  _previous: NuevaBodaState,
+  formData: FormData,
+): Promise<NuevaBodaState> {
+  const actor = await requireAdmin()
+
+  const titulo = texto(formData, 'title').trim()
+  const fecha = texto(formData, 'eventDate')
+  const planSlug = texto(formData, 'planSlug')
+  const correo = texto(formData, 'clientEmail').trim().toLowerCase()
+  const clave = texto(formData, 'clientPassword')
+
+  if (titulo === '') return { status: 'error', message: 'Escribe el nombre de la boda.' }
+  if (fecha === '') return { status: 'error', message: 'Escribe la fecha del evento.' }
+  if (correo === '') return { status: 'error', message: 'Escribe el correo del cliente.' }
+
+  // El diseño, validado contra el registro: comparar la clave es lo único que impide que
+  // entre un modelo que nadie eligió.
+  const pedido = texto(formData, 'themeKey')
+  const tema = themeFor(pedido)
+  if (tema.key !== pedido) return { status: 'error', message: 'Ese modelo no existe.' }
+
+  // --- 1. El acceso, antes de crear nada.
+  const existente = await admin.findUserByEmail(correo)
+
+  if (existente === null) {
+    const credencial = createCredential({ email: correo, password: clave })
+    if (isErr(credencial)) return { status: 'error', message: credencial.error.detail }
+  } else {
+    // Ya tiene cuenta. Si su rol no es `cliente` **no entraría**: el acceso lo decide el
+    // rol, no la pertenencia, así que prometerle acceso sería mandarle a un 404.
+    const suyo = await identity.actorOf(existente.id)
+    if (suyo !== null && parseRole(suyo.role) !== 'cliente') {
+      return {
+        status: 'error',
+        message: `${correo} ya tiene cuenta con rol «${parseRole(suyo.role)}» y no entraría como cliente. Usa otro correo.`,
+      }
+    }
+  }
+
+  // --- 2. La boda.
+  const evento = await events.create({
+    // El dueño es el atelier, nunca el cliente: pasarle la propiedad dejaría fuera a quien
+    // hace el trabajo. El cliente entra por pertenencia.
+    userId: actor.userId,
+    slug: slugDeBoda(titulo, sufijoDeSlug()),
+    title: titulo,
+    eventDate: fecha,
+    rsvpDeadline: fecha,
+    locale: 'es',
+    themeKey: tema.key,
+    status: 'draft',
+    retentionDays: 90,
+  })
+
+  if (isErr(evento)) {
+    console.error('alta de boda desde administración rechazada', evento.error.kind, evento.error.detail)
+    return { status: 'error', message: `No se pudo crear la boda: ${evento.error.detail}` }
+  }
+
+  // --- 3. El contenido de muestra del diseño: la invitación se ve terminada desde el
+  // primer segundo, que es la mitad de lo que se vende.
+  try {
+    await events.seedContent(evento.value.id, tema.defaultContent)
+  } catch (causa) {
+    console.error('no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
+  }
+
+  // --- 4. El plan. Sin esto cae al más barato, que no trae mesa de regalos ni modo puerta.
+  if (planSlug !== '') {
+    const plan = await admin.setEventPlan(actor, {
+      eventId: evento.value.id,
+      eventSlug: evento.value.slug,
+      planSlug,
+    })
+    if (isErr(plan)) console.error('no se pudo asignar el plan', plan.error.kind, plan.error.detail)
+  }
+
+  // --- 5. La cuenta del cliente. Si ya existía **no se toca su contraseña**: cambiarla
+  // escribiendo su correo sería una forma de robarle la cuenta.
+  let clienteId = existente?.id ?? null
+  let avisoDeClave = `${correo} ya tenía cuenta: entra con su contraseña de siempre.`
+
+  if (clienteId === null) {
+    const credencial = createCredential({ email: correo, password: clave })
+    if (isErr(credencial)) {
+      return { status: 'error', message: `Boda creada, sin acceso del cliente: ${credencial.error.detail}` }
+    }
+    const creado = await admin.createUser({
+      email: credencial.value.email,
+      password: credencial.value.password,
+      role: 'cliente',
+    })
+    clienteId = creado.id
+    avisoDeClave = `${correo} entra con la contraseña que escribiste. No se vuelve a mostrar: cópiala antes de salir.`
+  }
+
+  await events.staff.add(evento.value.id, clienteId, 'cliente')
+
+  // --- 6. Su acceso por correo. Nunca falla hacia arriba: el alta ya está hecha.
+  const avisado = await notifications.sendClientAccess({
+    to: correo,
+    // Solo si acabamos de crearla: a quien ya tenía cuenta no se le manda una contraseña
+    // que no funciona.
+    password: existente === null ? clave : null,
+    eventTitle: evento.value.title,
+  })
+
+  // Dos argumentos: el contenedor compone el actor. La forma de un solo objeto es la del
+  // repositorio, y vive dentro de los casos de uso, no aquí.
+  await admin.record(actor, { action: 'boda.alta', subject: evento.value.slug, detail: `${tema.label} · ${correo}` })
+
+  refrescar()
+  return {
+    status: 'success',
+    eventSlug: evento.value.slug,
+    message: `Boda creada con el diseño «${tema.label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
+  }
+}
+
+/**
+ * Dar acceso al cliente de una boda **que ya existe**.
+ *
+ * Es la otra mitad del alta de un paso: aquella crea boda y cliente de una vez; esta cubre
+ * la boda creada antes de saber el correo, o la segunda persona de la pareja.
+ *
+ * **Delega en la acción del módulo de eventos, no la reescribe.** Una copia sería un
+ * segundo sitio donde olvidarse de que un alta sobre un correo que ya existe **no toca su
+ * cuenta** — cambiar la contraseña de alguien escribiendo su correo sería una forma de
+ * robársela.
+ *
+ * Y se importa por su ruta concreta, **no por el índice del módulo**: exponerla allí hizo
+ * que todo el que importa `@/modules/events` arrastrara el contenedor entero, y `rsvp`
+ * —que solo quería el tipo `Event`— murió con una dependencia circular. Aquí no añade
+ * nada: este fichero ya carga el contenedor.
+ *
+ * Sin `requireAdmin()` propio a propósito: la guardia vive dentro, y es `canManageStaff`,
+ * que comprueba el rol **antes** de tocar la base. Duplicarla aquí sería tener dos sitios
+ * donde relajarla.
+ */
+export async function grantClientAccessAction(
+  _previous: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  // La guardia va **en este cuerpo** aunque la acción de dentro también compruebe el rol.
+  // `verify:tenancy` lo exige por un motivo que ya costó una vez: delegarla en un ayudante
+  // la esconde del verificador, y entonces nadie ve que falta el día que alguien la quita.
+  await requireAdmin()
+
+  const resultado = await addEventClientAction({ status: 'idle' }, formData)
+  refrescar()
+  return resultado
 }

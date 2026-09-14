@@ -1,5 +1,7 @@
 import { admin } from '@/app/composition/container'
+import { NuevaBodaForm } from '@/modules/admin'
 import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
+import { themeDefinitions } from '@/modules/events/ui/themes/registry'
 import { requireAdmin } from '@/modules/identity/session-cookie'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/modules/shell/ui/cards'
@@ -26,6 +28,20 @@ export default async function AdminEventosPage() {
         meta="Todos los eventos del sistema, de cualquier atelier"
         title="Eventos"
       />
+
+      {/* Crear va **antes** de la lista: es lo que se viene a hacer aquí cuando llega un
+          cliente nuevo, y tenerlo debajo de todas las bodas del sistema obligaba a
+          desplazarse hasta el final para empezar. */}
+      <PanelCard className="mb-4.5" title="Nueva boda para un cliente">
+        <NuevaBodaForm
+          // El clásico no se ofrece: no se publica en el catálogo, es el respaldo de una
+          // clave desconocida. Nadie lo elige mirando la web.
+          modelos={themeDefinitions()
+            .filter((tema) => tema.key !== 'clasico')
+            .map((tema) => ({ key: tema.key, label: tema.label }))}
+          planes={planes}
+        />
+      </PanelCard>
 
       <PanelCard>
         {isErr(eventos) || isErr(usuarios) ? (

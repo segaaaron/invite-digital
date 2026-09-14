@@ -30,7 +30,6 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
           className="text-[13px] text-ink-soft file:mr-3 file:rounded-[var(--radius-pill)] file:border file:border-line file:bg-bg-top file:px-4 file:py-2 file:font-mono file:text-[10px] file:uppercase file:tracking-[0.25em] file:text-ink"
           id={id}
           name="proof"
-          required
           type="file"
         />
         <span className="text-[11px] text-ink-mute">
@@ -38,14 +37,31 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
         </span>
       </label>
 
+      {/* Con la piel de la web pública, no con la del panel: esta pantalla la ve el
+          cliente desde el enlace de su pedido, y `PanelKit` es la tinta oscura del panel.
+          Mismo aviso, misma forma, los colores de aquí. */}
       {estado.status === 'error' ? (
-        <p className="text-[13px] text-gold-deep" role="alert">
-          {estado.message}
+        <p
+          aria-live="assertive"
+          className="flex items-start gap-2.5 rounded-[12px] border border-danger/30 bg-danger/8 px-3.5 py-2.5 text-[13px] leading-[1.6] text-danger-deep"
+          role="alert"
+        >
+          <span aria-hidden className="mt-px font-mono text-[11px]">
+            !
+          </span>
+          <span>{estado.message}</span>
         </p>
       ) : null}
       {estado.status === 'success' ? (
-        <p className="text-[13px] text-sage" role="status">
-          Comprobante recibido. Lo revisamos y te avisamos por WhatsApp.
+        <p
+          aria-live="polite"
+          className="flex items-start gap-2.5 rounded-[12px] border border-sage/35 bg-sage/10 px-3.5 py-2.5 text-[13px] leading-[1.6] text-sage-deep"
+          role="status"
+        >
+          <span aria-hidden className="mt-px font-mono text-[11px]">
+            ✓
+          </span>
+          <span>Comprobante recibido. Lo revisamos y te avisamos por WhatsApp.</span>
         </p>
       ) : null}
 

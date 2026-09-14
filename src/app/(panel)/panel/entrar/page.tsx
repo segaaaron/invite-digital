@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { BRAND } from '@/shared/config/brand'
 import { SignInForm } from '@/modules/identity/ui/SignInForm'
 
@@ -19,6 +20,36 @@ export default function SignInPage() {
   return (
     <main className="grid min-h-dvh grid-rows-[auto_1fr] min-[860px]:grid-cols-[1.05fr_1fr] min-[860px]:grid-rows-1">
       <section className="relative flex flex-col justify-between overflow-hidden bg-linear-to-b from-shell to-shell-deep px-8 py-10 text-shell-ink min-[860px]:px-14 min-[860px]:py-14">
+        {/*
+          La fotografía, y **solo de 860 para arriba**: por debajo esta mitad es una banda
+          de cabecera de unos pocos centímetros, y una foto ahí empuja el formulario por
+          debajo del pliegue — que es justo lo que esta pantalla no se puede permitir.
+
+          Es la boda de noche del catálogo, elegida entre las nueve por una razón concreta:
+          ya es oscura, así que el velo que necesita para que el titular se lea encima
+          apenas la apaga, y sus guirnaldas cálidas conversan con el oro de la marca. El
+          jardín a plena luz dejaba el vestido blanco justo donde va el titular.
+
+          `priority` porque es lo primero que se ve del producto cada mañana; sin él entra
+          después del texto y la mitad oscura parpadea de negro a fotografía.
+        */}
+        <Image
+          alt=""
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden size-full object-cover object-[62%_center] min-[860px]:block"
+          height={1760}
+          priority
+          src="/site/colecciones/bodas-2.avif"
+          width={1320}
+        />
+
+        {/* El velo. Sin él la fotografía se come el titular y la marca: lo que esta mitad
+            tiene que comunicar es el atelier, no la boda de otros. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 hidden bg-linear-to-b from-shell/88 via-shell/82 to-shell-deep/94 min-[860px]:block"
+        />
+
         {/* El halo dorado va **dentro** de los límites del bloque, con el centro del
             degradado desplazado, y no en un círculo que asome por el borde: un absoluto
             que se sale no lo recorta el `overflow-hidden` de aquí si su bloque contenedor

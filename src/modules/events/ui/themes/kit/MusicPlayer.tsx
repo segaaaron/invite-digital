@@ -10,21 +10,23 @@ type Props = {
   /** El rótulo sobre el título. Del diccionario: la invitación va en el idioma del evento. */
   readonly eyebrow: string
   /**
-   * El MP3 que el atelier subió a este evento — `music.audioMediaId` del contenido.
+   * La dirección del MP3 que suena, o nada.
    *
-   * Llega el identificador y no la dirección para que **dónde vive el audio se escriba una
-   * sola vez**: son siete vistas las que colocan este reproductor, y componer ahí la ruta
-   * sería repetir siete veces la misma condición.
+   * **Llega la dirección hecha y no un identificador, y eso cambió por una razón.** Al
+   * principio había un solo origen —el archivo que el atelier sube a su boda, servido en
+   * `/media/<id>`— y este componente componía la ruta. Ahora hay dos: esa, y la del
+   * escaparate (`/modelos/musica/<modelo>`), que es de la web pública y no pertenece a
+   * ningún evento. Con dos formas distintas, componerla aquí dentro obligaría a pasar
+   * además de cuál se trata, que es un dato que este reproductor no tiene por qué conocer.
    *
-   * **Opcional, y sin él el reproductor es el de siempre**: enseña la canción y mueve las
-   * barras sin sonar. Así están los dieciséis modelos del escaparate, que llevan su
-   * canción escrita desde el primer día y ningún archivo detrás.
+   * **Opcional, y sin ella el reproductor es el de siempre**: enseña la canción y mueve las
+   * barras sin sonar, que es como nacieron los dieciséis diseños.
+   *
+   * `| undefined` explícito: con `exactOptionalPropertyTypes`, pasar `undefined` a una
+   * opcional no vale si el tipo no lo admite, y es justo lo que hacen las siete vistas
+   * cuando esa boda no tiene música.
    */
-  // `| undefined` explícito: con `exactOptionalPropertyTypes`, pasar `undefined` a una
-  // opcional no vale si el tipo no lo admite, y eso es justo lo que hacen las siete vistas
-  // —`music.audioMediaId` es opcional en el contenido, así que llega `undefined` cuando el
-  // atelier no subió nada—.
-  readonly audioMediaId?: string | undefined
+  readonly audioSrc?: string | undefined
   readonly textColor?: string
   readonly playBg?: string
   readonly playIconColor: string
@@ -54,7 +56,7 @@ export function MusicPlayer({
   track,
   artist,
   eyebrow,
-  audioMediaId,
+  audioSrc,
   textColor = 'currentColor',
   playBg,
   playIconColor,
@@ -96,7 +98,7 @@ export function MusicPlayer({
         color: textColor,
       }}
     >
-      {audioMediaId === undefined || audioMediaId === '' ? null : (
+      {audioSrc === undefined || audioSrc === '' ? null : (
         <audio
           loop
           onEnded={() => setSonando(false)}
@@ -107,9 +109,11 @@ export function MusicPlayer({
           // datos. La canción se baja cuando la pide, no por si acaso.
           preload="none"
           ref={audio}
-          // La misma ruta que las fotografías: lleva la puerta de contraseña del evento y
-          // responde a peticiones por rango, que es lo que Safari exige para reproducir.
-          src={`/media/${audioMediaId}`}
+          // Quien la compone sabe de dónde sale: `/media/<id>` en una boda —con la puerta
+          // de contraseña del evento— y `/modelos/musica/<modelo>` en el escaparate. Las
+          // dos responden a peticiones por rango, que es lo que Safari exige para
+          // reproducir.
+          src={audioSrc}
         />
       )}
 

@@ -62,6 +62,18 @@ export type ThemeProps = {
    * la muestra del propio diseño.
    */
   readonly guestInfo?: { readonly label: string; readonly seats: number }
+  /**
+   * La música que suena, **cuando no sale del contenido del evento**.
+   *
+   * Una boda pone la suya en `content.music.audioMediaId` y la vista compone `/media/<id>`.
+   * El escaparate no tiene evento: sus dieciséis modelos suenan con lo que el admin subió
+   * desde la administración, servido en `/modelos/musica/<modelo>`. Esa dirección entra por
+   * aquí y la vista la prefiere.
+   *
+   * Meterla dentro de `content.music` habría sido ensuciar el contenido de una invitación
+   * con un ajuste que no es de ninguna.
+   */
+  readonly audioSrc?: string | undefined
   }
 
 /**

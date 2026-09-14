@@ -58,4 +58,12 @@ export interface OrderRepository {
 export interface FileStorage {
   put(key: string, bytes: Uint8Array): Promise<void>
   get(key: string): Promise<Uint8Array | null>
+  /**
+   * Borra un fichero. **Borrar lo que ya no está no es un fallo**: quien limpia puede
+   * pasar dos veces, igual que la retención de las fotografías del evento.
+   *
+   * Nació sin él, y eso dejaba un hueco real: el almacén no sabía borrar, así que un
+   * comprobante vencido no podía irse del disco aunque su pedido ya no existiera.
+   */
+  remove(key: string): Promise<void>
 }

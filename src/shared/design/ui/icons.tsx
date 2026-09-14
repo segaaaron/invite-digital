@@ -182,6 +182,22 @@ export function EyeIcon({ className }: IconProps) {
   )
 }
 
+/**
+ * El ojo tachado: la contraseña está oculta y el botón la va a enseñar.
+ *
+ * Es el mismo dibujo que `EyeIcon` con una barra diagonal, y no otro icono distinto: lo
+ * que cambia es el estado, no la acción.
+ */
+export function EyeOffIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M2.5 12S6 6 12 6c1.6 0 3 .42 4.2 1.05M21.5 12s-1.3 2.23-3.7 4" />
+      <path d="M9.9 9.9a2.6 2.6 0 003.67 3.67" />
+      <path d="M4 20L20 4" />
+    </svg>
+  )
+}
+
 export function ChartIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>

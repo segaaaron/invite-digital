@@ -77,6 +77,95 @@ export function PanelButton({
  * su `<select>` mete el texto de todas las opciones en el nombre accesible del campo, y
  * ni un lector de pantalla ni una prueba lo encuentran por su nombre.
  */
+/**
+ * Un hueco de carga: la silueta de lo que va a llegar, no un disco girando.
+ *
+ * Existe aquí y no escrito a mano en cada pantalla por la misma razón que `Pill` o
+ * `Field`: repartir rectángulos grises por las vistas es repartir catorce sitios donde
+ * desviarse del gris de la casa.
+ *
+ * Es `bg-sunken`, el mismo relleno hundido del panel, y late despacio. Con movimiento
+ * reducido se queda quieto —lo apaga el bloque de `globals.css`—: un pulso perpetuo en
+ * media pantalla es exactamente lo que esa preferencia pide que no ocurra.
+ *
+ * Lleva `aria-hidden`: quien usa lector de pantalla no necesita que le describan cinco
+ * rectángulos. Lo que anuncia la espera es el `role="status"` de quien lo coloca.
+ */
+export function SkeletonBlock({ className = '' }: { className?: string }) {
+  return <div aria-hidden className={`animate-latido rounded-[10px] bg-bg-sunken ${className}`.trim()} />
+}
+
+/**
+ * El esqueleto de una pantalla del panel: su cabecera y sus tarjetas.
+ *
+ * Tiene **la forma de lo que viene** —el rótulo mono, el título grande, las tarjetas con
+ * su borde y su radio— porque un bloque gris genérico no dice que esté cargando *esto*;
+ * dice que algo se rompió. `cards` es cuántas tarjetas esperar.
+ */
+export function PanelSkeleton({ cards = 2 }: { cards?: number }) {
+  return (
+    <div aria-busy="true" aria-live="polite" role="status">
+      <span className="sr-only">Cargando…</span>
+
+      <header className="mb-6.5 flex flex-col gap-2.5">
+        <SkeletonBlock className="h-2.5 w-24" />
+        <SkeletonBlock className="h-8 w-64 max-w-full" />
+      </header>
+
+      <div className="grid gap-4.5 min-[900px]:grid-cols-2">
+        {Array.from({ length: cards }, (_, i) => (
+          <div
+            className="min-w-0 rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-5.5 shadow-card"
+            key={i}
+          >
+            <SkeletonBlock className="mb-4.5 h-3 w-32" />
+            <div className="flex flex-col gap-2.5">
+              <SkeletonBlock className="h-3.5 w-full" />
+              <SkeletonBlock className="h-3.5 w-[88%]" />
+              <SkeletonBlock className="h-3.5 w-[64%]" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+/**
+ * El aviso de un formulario: lo que salió mal, o que salió bien.
+ *
+ * Existe porque cada pantalla lo pintaba a mano y con su propio color —`text-danger` en
+ * una, `text-gold-deep` en otra, un `text-sage` suelto para los aciertos—, así que el
+ * mismo suceso se veía distinto según dónde ocurriera.
+ *
+ * **No es un toast flotante, y es decisión.** Un aviso que aparece en una esquina y se va
+ * solo se pierde justo cuando importa: el que dice por qué no se guardó algo. Este vive
+ * pegado a su formulario, donde está la mirada, y se queda hasta que se vuelve a intentar.
+ *
+ * `role="alert"` para el fallo —interrumpe al lector de pantalla, que es lo que toca
+ * cuando algo no se hizo— y `role="status"` para el acierto, que no debe interrumpir.
+ */
+export function PanelAlert({ tone, children }: { tone: 'error' | 'ok'; children: ReactNode }) {
+  const piel =
+    tone === 'error'
+      ? 'border-danger/30 bg-danger/8 text-danger-deep'
+      : 'border-sage/35 bg-sage/10 text-sage-deep'
+
+  return (
+    <p
+      aria-live={tone === 'error' ? 'assertive' : 'polite'}
+      className={`flex items-start gap-2.5 rounded-[12px] border px-3.5 py-2.5 text-[13px] leading-[1.6] ${piel}`}
+      role={tone === 'error' ? 'alert' : 'status'}
+    >
+      {/* El símbolo acompaña; quien no distingue el color lee la palabra igual. */}
+      <span aria-hidden className="mt-px font-mono text-[11px]">
+        {tone === 'error' ? '!' : '✓'}
+      </span>
+      <span>{children}</span>
+    </p>
+  )
+}
+
 export const FIELD_CLASS =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
 

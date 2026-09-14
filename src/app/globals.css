@@ -42,6 +42,22 @@ body {
  * decorativas y no dependen de estado: así el bloque de `prefers-reduced-motion` de más
  * abajo las apaga todas de una vez.
  */
+/* El latido de los huecos de carga. Va de opacidad y no de color: un gris que cambia de
+   tono se lee como dos grises distintos, y aquí todos son el mismo relleno hundido. */
+@keyframes latido {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.animate-latido {
+  animation: latido 1.6s ease-in-out infinite;
+}
+
 @keyframes flotar {
   0%,
   100% {

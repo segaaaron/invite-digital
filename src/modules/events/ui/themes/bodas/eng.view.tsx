@@ -28,7 +28,7 @@ const SERIF = 'var(--font-newsreader)'
  */
 const ROTULOS = { apertura: '· SHE SAID YES ·' } as const
 
-export function EngView({ content, dictionary, themes, slots }: ThemeProps) {
+export function EngView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const { hero, hosts, quote, schedule, reception, map, music, gallery, closing } = content
   const propuesta = gallery?.[0]
   const collage = (gallery ?? []).slice(1, 5)
@@ -257,7 +257,7 @@ export function EngView({ content, dictionary, themes, slots }: ThemeProps) {
               <MusicPlayer
                 accent={P.rosa}
                 artist={music.artist ?? ''}
-                audioMediaId={music.audioMediaId}
+                audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                 eyebrow={themes.songOfTheNight}
                 playIconColor={P.blanco}
                 textColor={P.tinta}
