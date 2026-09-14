@@ -239,6 +239,13 @@
       "when": 1787365893032,
       "tag": "0034_orders_event_id",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1787365894032,
+      "tag": "0035_password_reset",
+      "breakpoints": true
     }
   ]
 }

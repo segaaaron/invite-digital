@@ -109,7 +109,12 @@ import {
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
 import { changePassword } from '@/modules/identity/application/change-password'
-import { clientAccessEmail } from '@/modules/notifications'
+import {
+  confirmPasswordReset,
+  requestPasswordReset,
+} from '@/modules/identity/application/password-reset-use-cases'
+import { drizzlePasswordResetRepository } from '@/modules/identity/infrastructure/drizzle-password-reset-repository'
+import { clientAccessEmail, passwordResetEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { BRAND } from '@/shared/config/brand'
 import type { Role } from '@/modules/identity/domain/access'
@@ -202,6 +207,26 @@ export const identity = {
     users: drizzleUserRepository,
     sessions: drizzleSessionRepository,
     hasher: argon2Hasher,
+  }),
+  /**
+   * La recuperación por código.
+   *
+   * `request` devuelve el código en claro **una sola vez**, para que la acción lo mande
+   * por correo: en la base solo queda su SHA-256, igual que los tokens de sesión.
+   */
+  requestPasswordReset: requestPasswordReset({
+    users: drizzleUserRepository,
+    resets: drizzlePasswordResetRepository,
+    minter,
+    clock,
+  }),
+  confirmPasswordReset: confirmPasswordReset({
+    users: drizzleUserRepository,
+    resets: drizzlePasswordResetRepository,
+    sessions: drizzleSessionRepository,
+    hasher: argon2Hasher,
+    minter,
+    clock,
   }),
 } as const
 
@@ -487,6 +512,12 @@ export const orders = {
 const emailSender = createResendSender({ apiKey: env.RESEND_API_KEY, from: env.EMAIL_FROM })
 
 export const notifications = {
+  /** El código de recuperación. Sin enlace dentro: se teclea donde ya se pidió el cambio. */
+  sendPasswordCode: (input: { to: string; code: string }) =>
+    emailSender.send({
+      to: input.to,
+      ...passwordResetEmail({ code: input.code, minutos: 10, whatsapp: BRAND.whatsappDisplay }),
+    }),
   sendClientAccess: (input: { to: string; password: string | null; eventTitle: string }) =>
     emailSender.send({
       to: input.to,

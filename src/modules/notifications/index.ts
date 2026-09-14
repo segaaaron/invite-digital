@@ -8,4 +8,5 @@
  * Cada módulo se importa por este fichero: es lo que vigila `pnpm verify:boundaries`.
  */
 export { clientAccessEmail, type AccesoDeCliente, type CorreoCompuesto } from './domain/client-access-email'
+export { passwordResetEmail } from './domain/password-reset-email'
 export type { EmailSender } from './application/ports'

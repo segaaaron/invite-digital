@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useId } from 'react'
 import { signInAction, type SignInActionState } from '../actions'
 
@@ -85,11 +86,15 @@ export function SignInForm() {
         {isPending ? 'Entrando…' : 'Entrar'}
       </button>
 
-      {/* No hay «crear cuenta» ni «olvidé mi contraseña», y no es un descuido: las altas
-          se hacen con `pnpm user:create` desde el servidor. Un enlace de recuperación
-          exigiría el canal de correo, que este proyecto todavía no tiene. */}
+      {/* Sigue sin haber «crear cuenta», y eso no es un descuido: las altas las hace el
+          admin. Lo que sí hay ya es recuperación — antes no, porque no había proveedor de
+          correo, y este texto decía justamente eso. */}
       <p className="text-[11px] leading-[1.7] text-ink-mute">
-        Las cuentas se dan de alta desde el servidor. Si perdiste la contraseña, hay que reemitirla ahí.
+        <Link className="underline underline-offset-4 hover:text-ink" href="/panel/recuperar">
+          ¿Olvidaste tu contraseña?
+        </Link>
+        <br />
+        Las cuentas las da de alta el administrador.
       </p>
     </form>
   )

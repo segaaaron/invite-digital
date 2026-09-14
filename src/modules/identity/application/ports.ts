@@ -5,10 +5,35 @@ export interface UserRepository {
    * página del panel, y por eso devuelve el rol en la misma consulta: resolverlo aparte
    * sería un viaje más por página para un dato de dieciséis caracteres.
    */
-  findActor(userId: string): Promise<{ id: string; email: string; role: string } | null>
+  findActor(userId: string): Promise<{ id: string; email: string; role: string; mustChangePassword: boolean } | null>
   create(user: { email: string; passwordHash: string; role?: string }): Promise<{ id: string }>
-  /** Sustituye el hash. Lo usa el cambio de contraseña, que es la única forma de tocarlo. */
+  /**
+   * Sustituye el hash y **apaga la marca de provisional**: quien acaba de elegir su
+   * contraseña ya no tiene una que escribió otro. Van juntos a propósito — dejarlo en dos
+   * llamadas es dejar la puerta a cambiarla y seguir con la marca puesta, o al revés.
+   */
   updatePassword(userId: string, passwordHash: string): Promise<void>
+  /** Por correo, para la recuperación: quien la pide escribe su correo, no su id. */
+  findIdByEmail(email: string): Promise<string | null>
+}
+
+/**
+ * Los códigos de un solo uso para recuperar la contraseña.
+ *
+ * Va en su propio puerto y no dentro de `UserRepository` porque es otra tabla con su
+ * propio ciclo de vida: nace al pedir el código, se gasta al usarlo y la caduca el reloj.
+ */
+export interface PasswordResetRepository {
+  /** Invalida los anteriores del usuario y guarda el nuevo. Del código solo el SHA-256. */
+  issue(input: { userId: string; codeHash: Buffer; expiresAt: Date }): Promise<void>
+  /** El último código vivo de ese usuario, con lo que hace falta para juzgarlo. */
+  findLive(userId: string): Promise<{ id: string; codeHash: Buffer; expiresAt: Date; consumedAt: Date | null; attempts: number } | null>
+  /** Un intento fallido más. Es lo que corta la fuerza bruta sobre seis dígitos. */
+  countAttempt(id: string): Promise<void>
+  /** Lo gasta: un código vale una vez. */
+  consume(id: string, at: Date): Promise<void>
+  /** Barrido de los caducados, como el de sesiones. */
+  deleteExpired(now: Date): Promise<number>
 }
 
 export interface SessionRepository {

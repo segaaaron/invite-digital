@@ -58,10 +58,10 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
 
-  // El personal de puerta y el cliente solo los gestiona el dueño del evento —y el
-  // admin—. Para cualquier otro, la tarjeta no se pinta: el corte de verdad está en la
-  // acción.
-  const puedeGestionarPersonal = canManageStaff(actor, event.value)
+  // El personal de puerta y el cliente los gestiona **solo el admin**: dar de alta crea
+  // una cuenta y le manda credenciales. Para cualquier otro, las dos tarjetas no se
+  // pintan — y esconderlas no es la protección, que vive en la acción.
+  const puedeGestionarPersonal = canManageStaff(actor)
   const personal = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id, 'puerta') : []
   const clientes = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id, 'cliente') : []
 

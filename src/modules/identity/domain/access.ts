@@ -22,6 +22,13 @@ export type Actor = {
   readonly userId: string
   readonly email: string
   readonly role: Role
+  /**
+   * Su contraseña la escribió otro y viajó por correo.
+   *
+   * Mientras esté puesta, el panel no deja hacer nada más que cambiarla: quien la escribió
+   * podría entrar como él.
+   */
+  readonly mustChangePassword: boolean
 }
 
 /**
@@ -94,10 +101,18 @@ export function canAccessEvent(
   return event.userId !== null && event.userId === actor.userId
 }
 
-/** Quién puede dar de alta al personal de puerta de un evento: su dueño, y el admin. */
-export function canManageStaff(actor: Actor, event: { userId: string | null }): boolean {
-  if (isAdmin(actor)) return true
-  return actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId
+/**
+ * Quién da de alta a alguien en un evento: **solo el admin**.
+ *
+ * Lo hacía también el dueño del evento, y se cerró a propósito: dar de alta **crea una
+ * cuenta de usuario** en el sistema y le manda credenciales por correo. Eso no es
+ * administrar una boda, es administrar el acceso, y va en un solo sitio.
+ *
+ * El precio hay que saberlo: la edecán que se contrata la semana de la boda también la
+ * da de alta el admin, no el atelier que está en el salón.
+ */
+export function canManageStaff(actor: Actor): boolean {
+  return isAdmin(actor)
 }
 
 /**

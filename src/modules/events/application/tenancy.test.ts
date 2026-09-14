@@ -50,10 +50,10 @@ const repo = (): EventRepository => ({
   remove: async () => {},
 })
 
-const ana: Actor = { userId: 'u1', email: 'ana@ejemplo.bo', role: 'atelier' }
-const beto: Actor = { userId: 'u2', email: 'beto@ejemplo.bo', role: 'atelier' }
-const jefa: Actor = { userId: 'u9', email: 'jefa@ejemplo.bo', role: 'admin' }
-const cliente: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente' }
+const ana: Actor = { userId: 'u1', email: 'ana@ejemplo.bo', role: 'atelier', mustChangePassword: false }
+const beto: Actor = { userId: 'u2', email: 'beto@ejemplo.bo', role: 'atelier', mustChangePassword: false }
+const jefa: Actor = { userId: 'u9', email: 'jefa@ejemplo.bo', role: 'admin', mustChangePassword: false }
+const cliente: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: false }
 
 describe('getEventFor', () => {
   it('el dueño lo abre', async () => {

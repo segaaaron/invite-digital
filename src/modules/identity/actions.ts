@@ -2,7 +2,7 @@
 
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { events, identity } from '@/app/composition/container'
+import { events, identity, notifications } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { isErr } from '@/shared/result'
@@ -46,7 +46,12 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   const listados =
     usuario === null
       ? null
-      : await events.listFor({ userId: usuario.id, email: usuario.email, role: parseRole(usuario.role) })
+      : await events.listFor({
+          userId: usuario.id,
+          email: usuario.email,
+          role: parseRole(usuario.role),
+          mustChangePassword: usuario.mustChangePassword,
+        })
   const activo = listados === null || isErr(listados) ? null : (listados.value[0] ?? null)
 
   // `redirect` lanza para hacer su trabajo: va después de escribir la cookie y nunca
@@ -54,6 +59,12 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   // El personal de puerta cae directamente en su check-in: el resumen del evento le
   // daría 404, que es lo correcto pero una bienvenida pésima.
   const esPuerta = usuario !== null && parseRole(usuario.role) === 'puerta'
+
+  // Con la contraseña provisional se va **directo** a cambiarla. El guard lo rebotaría
+  // igual desde cualquier página, pero mandarlo primero a su evento para devolverlo acto
+  // seguido es un parpadeo que no explica nada.
+  if (usuario !== null && usuario.mustChangePassword) redirect('/panel/cuenta')
+
   redirect(
     activo === null
       ? '/panel'
@@ -103,6 +114,77 @@ export async function changePasswordAction(
   jar.delete(SESSION_COOKIE)
   // `redirect` lanza para hacer su trabajo: va al final y nunca dentro de un try.
   redirect('/panel/entrar')
+}
+
+// ============================================================================
+// La recuperación de contraseña. **Públicas**: quien las llama no tiene sesión —la ha
+// perdido, de eso se trata—, así que van con límite de tasa por IP y no dicen nunca si un
+// correo existe.
+// ============================================================================
+
+/** Tres códigos por minuto y por IP: cada uno manda un correo. */
+const limiteCodigo = createRateLimiter({ windowMs: 60_000, max: 3 })
+/** Y diez intentos de confirmación: el tope por código lo lleva la propia tabla. */
+const limiteConfirmacion = createRateLimiter({ windowMs: 60_000, max: 10 })
+
+export type ResetState = { status: 'idle' | 'sent' | 'done' | 'error'; message: string }
+
+async function ipActual(): Promise<string> {
+  const bolsa = await headers()
+  return clientIpFrom({ realIp: bolsa.get('x-real-ip'), forwardedFor: bolsa.get('x-forwarded-for') })
+}
+
+/**
+ * Pide el código.
+ *
+ * **Responde igual exista o no la cuenta.** Decir «ese correo no está registrado»
+ * convertiría esta pantalla en una forma de averiguar quién es cliente del atelier.
+ */
+export async function requestPasswordResetAction(_previo: ResetState, formData: FormData): Promise<ResetState> {
+  if (limiteCodigo.isLimited(await ipActual(), Date.now())) {
+    return { status: 'error', message: 'Demasiados códigos seguidos. Espera un minuto.' }
+  }
+
+  const email = String(formData.get('email') ?? '')
+  const emitido = await identity.requestPasswordReset(email)
+
+  if (isErr(emitido)) {
+    console.error('no se pudo emitir el código', emitido.error.kind, emitido.error.detail)
+    return { status: 'error', message: 'No pudimos enviarte el código. Inténtalo en un momento.' }
+  }
+
+  // `null` es «ese correo no tiene cuenta», y no se distingue del caso bueno.
+  if (emitido.value !== null) {
+    await notifications.sendPasswordCode({ to: email.trim().toLowerCase(), code: emitido.value.code })
+  }
+
+  return { status: 'sent', message: 'Si ese correo tiene cuenta, le acabamos de enviar un código.' }
+}
+
+/** Confirma el código y escribe la contraseña nueva. */
+export async function confirmPasswordResetAction(_previo: ResetState, formData: FormData): Promise<ResetState> {
+  if (limiteConfirmacion.isLimited(await ipActual(), Date.now())) {
+    return { status: 'error', message: 'Demasiados intentos. Espera un minuto.' }
+  }
+
+  const result = await identity.confirmPasswordReset({
+    email: String(formData.get('email') ?? ''),
+    code: String(formData.get('code') ?? ''),
+    password: String(formData.get('password') ?? ''),
+  })
+
+  if (isErr(result)) {
+    console.error('recuperación rechazada', result.error.kind, result.error.detail)
+    return {
+      status: 'error',
+      message:
+        result.error.kind === 'weak_password'
+          ? 'La contraseña nueva necesita al menos 12 caracteres.'
+          : 'El código no es válido, ya se usó o caducó. Pide uno nuevo.',
+    }
+  }
+
+  return { status: 'done', message: 'Contraseña cambiada. Ya puedes entrar con ella.' }
 }
 
 export async function signOutAction(): Promise<void> {

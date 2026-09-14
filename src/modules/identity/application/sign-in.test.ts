@@ -7,9 +7,11 @@ const HASH = '$argon2id$v=19$fake'
 
 const users = (row: { id: string; email: string; passwordHash: string } | null): UserRepository => ({
   findByEmail: async () => row,
-  findActor: async () => (row === null ? null : { id: row.id, email: row.email, role: 'atelier' }),
+  findActor: async () =>
+    row === null ? null : { id: row.id, email: row.email, role: 'atelier', mustChangePassword: false },
   create: async () => ({ id: 'nuevo' }),
   updatePassword: async () => {},
+  findIdByEmail: async () => row?.id ?? null,
 })
 
 const sessions = () => {

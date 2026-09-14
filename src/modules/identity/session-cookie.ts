@@ -23,7 +23,7 @@ export const sessionCookieOptions = (expiresAt: Date) =>
  * tocarla desde un Server Component. Con ventana de 30 días y renovación a los 15, la
  * siguiente acción del panel la refresca mucho antes de que nadie pierda la sesión.
  */
-export async function requireSession(): Promise<Actor> {
+export async function requireSession(opciones: { permitirProvisional?: boolean } = {}): Promise<Actor> {
   const jar = await cookies()
   const token = jar.get(SESSION_COOKIE)?.value ?? null
   const result = await identity.authenticateSession(token)
@@ -35,7 +35,21 @@ export async function requireSession(): Promise<Actor> {
   // la puerta en vez de seguir con un actor a medias.
   if (usuario === null) redirect('/panel/entrar')
 
-  return { userId: usuario.id, email: usuario.email, role: parseRole(usuario.role) }
+  // Su contraseña la escribió otro y viajó por correo: hasta que elija una suya, el panel
+  // no le deja hacer nada más que cambiarla. Quien la escribió podría entrar como él.
+  //
+  // `permitirProvisional` lo pide **solo** la pantalla de cuenta, que es adonde se le
+  // manda: sin esa salida, redirigiría a una página que redirige, en bucle.
+  if (usuario.mustChangePassword && opciones.permitirProvisional !== true) {
+    redirect('/panel/cuenta')
+  }
+
+  return {
+    userId: usuario.id,
+    email: usuario.email,
+    role: parseRole(usuario.role),
+    mustChangePassword: usuario.mustChangePassword,
+  }
 }
 
 /**

@@ -12,11 +12,12 @@ function dobles(existe = true) {
 
   const users: UserRepository = {
     findByEmail: async (email) => (existe ? { id: 'u1', email, passwordHash: HASH_ACTUAL } : null),
-    findActor: async () => ({ id: 'u1', email: 'novios@ejemplo.bo', role: 'cliente' }),
+    findActor: async () => ({ id: 'u1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: false }),
     create: async () => ({ id: 'u1' }),
     updatePassword: async (userId, passwordHash) => {
       escrito.push({ userId, passwordHash })
     },
+    findIdByEmail: async () => (existe ? 'u1' : null),
   }
 
   const sessions: SessionRepository = {

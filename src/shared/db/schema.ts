@@ -159,8 +159,40 @@ export const users = pgTable('users', {
   // 'admin' | 'atelier'. Por defecto el de menos poder: un rol que se otorga por olvido
   // no es un rol.
   role: varchar('role', { length: 16 }).notNull().default('atelier'),
+  /**
+   * La contraseña actual la escribió otro y viaja por correo.
+   *
+   * Mientras esté en `true`, el panel no deja hacer nada más que cambiarla: quien la
+   * escribió —el admin— podría entrar como el cliente, y una clave que ha viajado por
+   * correo no puede ser la definitiva.
+   */
+  mustChangePassword: boolean('must_change_password').notNull().default(true),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+/**
+ * Los códigos de un solo uso para recuperar la contraseña.
+ *
+ * Del código solo vive aquí su SHA-256, como los tokens de invitado y los de sesión: de
+ * la base no se puede sacar ninguno. `consumedAt` lo gasta —vale una vez— y `attempts`
+ * corta la fuerza bruta sobre seis dígitos, que son un millón de combinaciones y se
+ * prueban solas si nadie cuenta los intentos.
+ */
+export const passwordResets = pgTable(
+  'password_resets',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    codeHash: bytea('code_hash').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+    consumedAt: timestamp('consumed_at', { withTimezone: true }),
+    attempts: integer('attempts').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('password_resets_user_idx').on(t.userId), index('password_resets_expires_idx').on(t.expiresAt)],
+)
 
 /**
  * Quién entra en qué evento sin ser su dueño: el personal de puerta y el cliente.

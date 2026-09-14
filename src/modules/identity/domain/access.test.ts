@@ -10,9 +10,9 @@ import {
   type Actor,
 } from './access'
 
-const atelier: Actor = { userId: 'u1', email: 'a@ejemplo.bo', role: 'atelier' }
-const otro: Actor = { userId: 'u2', email: 'b@ejemplo.bo', role: 'atelier' }
-const admin: Actor = { userId: 'u3', email: 'jefe@ejemplo.bo', role: 'admin' }
+const atelier: Actor = { userId: 'u1', email: 'a@ejemplo.bo', role: 'atelier', mustChangePassword: false }
+const otro: Actor = { userId: 'u2', email: 'b@ejemplo.bo', role: 'atelier', mustChangePassword: false }
+const admin: Actor = { userId: 'u3', email: 'jefe@ejemplo.bo', role: 'admin', mustChangePassword: false }
 
 describe('canAccessEvent', () => {
   it('el dueño entra en su evento', () => {
@@ -106,7 +106,7 @@ describe('canDeleteUser', () => {
 })
 
 describe('canAccessEvent · el personal de puerta', () => {
-  const puerta: Actor = { userId: 'p1', email: 'puerta@ejemplo.bo', role: 'puerta' }
+  const puerta: Actor = { userId: 'p1', email: 'puerta@ejemplo.bo', role: 'puerta', mustChangePassword: false }
   const evento = { userId: 'u1' }
 
   it('abre el check-in del evento donde es personal', () => {
@@ -135,7 +135,7 @@ describe('canAccessEvent · el personal de puerta', () => {
 })
 
 describe('canAccessEvent · el cliente', () => {
-  const cliente: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente' }
+  const cliente: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: false }
   const evento = { userId: 'u1' }
 
   it('entra en la sección del cliente del evento donde está dado de alta', () => {
@@ -171,7 +171,7 @@ describe('canAccessEvent · el cliente', () => {
   })
 
   it('y otro cliente no entra por tener el rol', () => {
-    const ajeno: Actor = { userId: 'c2', email: 'otros@ejemplo.bo', role: 'cliente' }
+    const ajeno: Actor = { userId: 'c2', email: 'otros@ejemplo.bo', role: 'cliente', mustChangePassword: false }
 
     expect(canAccessEvent(ajeno, evento, { section: 'cliente', isStaff: false })).toBe(false)
   })
@@ -190,21 +190,24 @@ describe('sectionForRole', () => {
 })
 
 describe('canManageStaff', () => {
-  it('el dueño del evento da de alta a su gente de puerta', () => {
-    expect(canManageStaff(atelier, { userId: 'u1' })).toBe(true)
+  it('solo el admin da de alta a alguien en un evento', () => {
+    expect(canManageStaff(admin)).toBe(true)
   })
 
-  it('otro atelier no', () => {
-    expect(canManageStaff(otro, { userId: 'u1' })).toBe(false)
+  it('ni siquiera el dueño del evento', () => {
+    // Esta prueba decía lo contrario. Se le dio la vuelta a propósito: dar de alta **crea
+    // una cuenta** y le manda credenciales por correo, y eso es administrar el acceso al
+    // sistema, no administrar una boda.
+    expect(canManageStaff(atelier)).toBe(false)
   })
 
-  it('el admin sí, porque puede todo', () => {
-    expect(canManageStaff(admin, { userId: 'u1' })).toBe(true)
+  it('otro atelier tampoco', () => {
+    expect(canManageStaff(otro)).toBe(false)
   })
 
   it('y el propio personal de puerta no se añade compañeros', () => {
-    const puerta: Actor = { userId: 'p1', email: 'p@ejemplo.bo', role: 'puerta' }
+    const puerta: Actor = { userId: 'p1', email: 'p@ejemplo.bo', role: 'puerta', mustChangePassword: false }
 
-    expect(canManageStaff(puerta, { userId: 'p1' })).toBe(false)
+    expect(canManageStaff(puerta)).toBe(false)
   })
 })

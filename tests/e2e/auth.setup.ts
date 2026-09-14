@@ -32,10 +32,14 @@ setup('sesión del atelier', async ({ page }) => {
  * ata las pruebas a un dato que se cambia desde el propio panel.
  */
 setup('sesión del administrador', async ({ page }) => {
+  // `must_change_password` **explícito**: la columna nace en `true` —la contraseña de una
+  // cuenta nueva la escribe el admin y viaja por correo—, pero esta la pone el fixture y
+  // no ha viajado a ninguna parte. Sin esto, el propio setup aterriza en la pantalla de
+  // cambiar contraseña y **ninguna suite llega a correr**.
   await sql`
-    insert into users (email, password_hash, role)
-    values (${ADMIN.email}, ${await argon2Hasher.hash(ADMIN.password)}, 'admin')
-    on conflict (email) do update set role = 'admin'
+    insert into users (email, password_hash, role, must_change_password)
+    values (${ADMIN.email}, ${await argon2Hasher.hash(ADMIN.password)}, 'admin', false)
+    on conflict (email) do update set role = 'admin', must_change_password = false
   `
   await sql.end({ timeout: 5 })
 

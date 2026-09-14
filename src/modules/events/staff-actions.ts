@@ -13,14 +13,19 @@ export type StaffActionState =
   | { status: 'error'; message: string }
 
 // ============================================================================
-// El alta y la baja del personal de puerta de un evento.
+// El alta y la baja de quien entra a un evento sin ser su dueño: el cliente y el personal
+// de puerta.
 //
-// Las hace **el dueño del evento**, no solo el admin: es quien contrata a su gente y
-// quien sabe quién estará esa noche en la puerta. `canManageStaff` lo decide, y se
-// comprueba en el servidor.
+// **Las hace solo el admin.** Lo hacía también el dueño del evento y se cerró a propósito:
+// dar de alta **crea una cuenta de usuario** y le manda credenciales por correo, y eso es
+// administrar el acceso al sistema, no administrar una boda. `canManageStaff` lo decide y
+// se comprueba en el servidor, no escondiendo la tarjeta.
 //
-// No llevan `requireEventAccess` porque comprueban algo más estricto —ser el **dueño**,
-// no tener acceso—, y están apuntadas como exentas en `verify-tenancy.ts` con ese motivo.
+// El precio hay que saberlo: la edecán que se contrata la semana de la boda también la da
+// de alta el admin, no el atelier que está en el salón.
+//
+// No llevan `requireEventAccess` porque comprueban algo distinto —ser admin, no tener
+// acceso a ese evento—, y están apuntadas como exentas en `verify-tenancy.ts`.
 // ============================================================================
 
 const texto = (formData: FormData, clave: string): string => {
@@ -28,17 +33,20 @@ const texto = (formData: FormData, clave: string): string => {
   return typeof valor === 'string' ? valor : ''
 }
 
-async function dueñoDe(formData: FormData) {
+async function adminSobre(formData: FormData) {
   const actor = await requireSession()
   const eventId = texto(formData, 'eventId')
   const eventSlug = texto(formData, 'eventSlug')
 
+  // El rol **antes** de tocar la base: a quien no puede gestionar accesos no se le confirma
+  // siquiera si ese evento existe.
+  if (!canManageStaff(actor)) {
+    console.error('alta de acceso denegada', actor.email, eventSlug)
+    return { error: 'Solo el administrador da de alta accesos.' as const }
+  }
+
   const evento = await events.getByIdFor(actor, eventId)
   if (isErr(evento)) return { error: 'Ese evento ya no existe. Vuelve a cargar la página.' as const }
-  if (!canManageStaff(actor, evento.value)) {
-    console.error('alta de personal denegada', actor.email, eventSlug)
-    return { error: 'No puedes gestionar el personal de este evento.' as const }
-  }
 
   return { actor, eventId, eventSlug }
 }
@@ -56,7 +64,7 @@ async function darDeAlta(
   membership: 'puerta' | 'cliente',
   queVe: string,
 ): Promise<StaffActionState> {
-  const contexto = await dueñoDe(formData)
+  const contexto = await adminSobre(formData)
   if ('error' in contexto) return { status: 'error', message: contexto.error }
 
   const email = texto(formData, 'email').trim().toLowerCase()
@@ -141,7 +149,7 @@ export async function addEventClientAction(_previous: StaffActionState, formData
  * puerta de otra boda tuya la semana que viene.
  */
 export async function removeDoorStaffAction(_previous: StaffActionState, formData: FormData): Promise<StaffActionState> {
-  const contexto = await dueñoDe(formData)
+  const contexto = await adminSobre(formData)
   if ('error' in contexto) return { status: 'error', message: contexto.error }
 
   await events.staff.remove(contexto.eventId, texto(formData, 'userId'))
