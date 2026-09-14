@@ -4,6 +4,10 @@ import { SignInForm } from '@/modules/identity/ui/SignInForm'
 
 export const metadata = { title: 'Entrar · Panel' }
 
+// Lee «La web» (ciudad y país): prerenderizada en el build no habría base y quedaría el
+// valor por defecto horneado en la imagen, ajeno a lo que edite el admin.
+export const dynamic = 'force-dynamic'
+
 /**
  * La puerta del panel.
  *
