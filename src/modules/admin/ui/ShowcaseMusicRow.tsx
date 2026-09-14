@@ -31,12 +31,15 @@ export function ShowcaseMusicRow({
   label,
   coverSrc,
   tieneMusica,
+  cancion,
   publicado,
 }: {
   themeKey: string
   label: string
   coverSrc: string
   tieneMusica: boolean
+  /** El nombre que dice el reproductor del modelo; `null` en canciones subidas antes de guardarlo. */
+  cancion: { track: string; artist: string } | null
   /** Si sale en el catálogo de la web. Retirado no borra: sus enlaces siguen abriendo. */
   publicado: boolean
 }) {
@@ -88,7 +91,19 @@ export function ShowcaseMusicRow({
           // La sirve la misma ruta pública que el escaparate, así que si aquí suena, ahí
           // también; y si aquí no, ahí tampoco. Sin subtítulos a propósito: es música
           // instrumental de fondo, no habla.
-          <audio className="h-9 w-full" controls preload="none" src={`/modelos/musica/${themeKey}`} />
+          <>
+            <audio className="h-9 w-full" controls preload="none" src={`/modelos/musica/${themeKey}`} />
+            {cancion === null ? (
+              <p className="text-[12px] text-danger">
+                Subida antes de guardar su nombre: el reproductor sale sin título. Vuelve a subirla.
+              </p>
+            ) : (
+              <p className="text-[12px] text-ink-soft">
+                El reproductor dice: <strong className="font-medium text-ink">{cancion.track}</strong>
+                {cancion.artist === '' ? '' : ` · ${cancion.artist}`}
+              </p>
+            )}
+          </>
         ) : (
           <p className="text-[12px] text-ink-mute">El reproductor se ve pero no suena.</p>
         )}

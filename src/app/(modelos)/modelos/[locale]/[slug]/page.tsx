@@ -79,7 +79,8 @@ export default async function ModelPreviewPage({
    * devuelve un error porque no pudo averiguar si había música sería cambiar una canción
    * por una página en blanco, y lo que se viene a ver aquí es el diseño.
    */
-  const [musica, cancion] = await Promise.all([admin.showcaseMusic(), admin.showcaseSong(slug)])
+  const [musica, canciones] = await Promise.all([admin.showcaseMusic(), admin.showcaseSongs()])
+  const cancion = canciones[slug]
   const tieneMusica = isOk(musica) && (musica.value[slug] ?? '') !== ''
   // Con canción subida, el reproductor dice la que suena y no la del contenido de muestra.
   // Una subida anterior a guardar el nombre no lo tiene: sin él se deja en blanco, que es

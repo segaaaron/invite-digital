@@ -7,6 +7,7 @@ import {
   showcaseMusicKey,
   showcaseSongKey,
   SHOWCASE_MUSIC_PREFIX,
+  SHOWCASE_SONG_PREFIX,
   themeOfShowcaseKey,
 } from '../domain/showcase-music'
 import type { AdminRepository, FileStore, SettingsRepository } from './ports'
@@ -39,17 +40,25 @@ export const readShowcaseMusic =
       (cause) => adminError('storage_failure', `No se pudo leer la música del escaparate: ${String(cause)}`),
     )
 
-/** El nombre de la canción de un modelo, sacado del archivo al subirlo; `null` si no hay. */
-export const readShowcaseSong =
+/**
+ * El nombre de la canción de cada modelo, sacado del archivo al subirlo, en una lectura.
+ * Si la base falla devuelve vacío: el nombre es un adorno y el modelo sigue sonando.
+ */
+export const readShowcaseSongs =
   (deps: Deps) =>
-  async (themeKey: string): Promise<{ track: string; artist: string } | null> => {
-    const fila = showcaseSongKey(themeKey)
-    if (fila === null) return null
+  async (): Promise<Record<string, { track: string; artist: string }>> => {
     try {
-      return leerNombreDeCancion((await deps.settings.readAll())[fila])
+      const filas = await deps.settings.readAll()
+      const salida: Record<string, { track: string; artist: string }> = {}
+      for (const [clave, valor] of Object.entries(filas)) {
+        if (!clave.startsWith(SHOWCASE_SONG_PREFIX)) continue
+        const nombre = leerNombreDeCancion(valor)
+        const tema = clave.slice(SHOWCASE_SONG_PREFIX.length)
+        if (nombre !== null && showcaseSongKey(tema) !== null) salida[tema] = nombre
+      }
+      return salida
     } catch {
-      // El nombre es un adorno del reproductor: sin él, el modelo sigue sonando.
-      return null
+      return {}
     }
   }
 

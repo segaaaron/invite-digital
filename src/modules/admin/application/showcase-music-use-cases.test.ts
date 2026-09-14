@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Actor } from '@/modules/identity/domain/access'
 import { isErr, isOk } from '@/shared/result'
 import type { AdminRepository, FileStore, SettingsRepository } from './ports'
-import { readShowcaseMusic, removeShowcaseMusic, saveShowcaseMusic } from './showcase-music-use-cases'
+import { readShowcaseMusic, removeShowcaseMusic, saveShowcaseMusic, readShowcaseSongs } from './showcase-music-use-cases'
 
 const ADMIN: Actor = { userId: 'u1', email: 'admin@invitepremium.bo', role: 'admin', mustChangePassword: false }
 
@@ -126,5 +126,17 @@ describe('removeShowcaseMusic', () => {
     expect(isOk(salida)).toBe(true)
     expect(deps.filas['showcase.music.boda-bot']).toBe('')
     expect(deps.disco.has('uno.mp3')).toBe(false)
+  })
+})
+
+describe('readShowcaseSongs', () => {
+  it('devuelve el nombre de cada modelo guardado al subir, y descarta filas rotas', async () => {
+    const deps = dobles()
+    await saveShowcaseMusic(deps)(ADMIN, { themeKey: 'xv-valeria', bytes: MP3, nombreArchivo: 'cancion.mp3' })
+    deps.filas['showcase.song.boda-bot'] = '{roto'
+
+    const canciones = await readShowcaseSongs(deps)()
+
+    expect(canciones).toEqual({ 'xv-valeria': { track: 'Mi Vals', artist: 'Cuarteto Andino' } })
   })
 })

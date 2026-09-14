@@ -24,7 +24,7 @@ export const dynamic = 'force-dynamic'
 export default async function AdminModelosPage() {
   await requireAdmin()
 
-  const [musica, publicacion] = await Promise.all([admin.showcaseMusic(), admin.publication()])
+  const [musica, publicacion, canciones] = await Promise.all([admin.showcaseMusic(), admin.publication(), admin.showcaseSongs()])
   const modelos = themeDefinitions().filter((tema) => tema.key !== 'clasico')
   const esXv = (clave: string) => CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug === 'xv-anos'
   const grupos = [
@@ -76,6 +76,7 @@ export default async function AdminModelosPage() {
                         coverSrc={`/templates/${tema.key}.avif`}
                         label={tema.label}
                         themeKey={tema.key}
+                        cancion={canciones[tema.key] ?? null}
                         tieneMusica={(musica.value[tema.key] ?? '') !== ''}
                         // Sin fila en la base no sale en el catálogo: se lee como retirado.
                         publicado={publicacion.value[tema.key] ?? false}

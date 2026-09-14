@@ -111,7 +111,7 @@ import {
 } from '@/modules/admin/application/payment-use-cases'
 import {
   readShowcaseMusic,
-  readShowcaseSong,
+  readShowcaseSongs,
   removeShowcaseMusic,
   saveShowcaseMusic,
 } from '@/modules/admin/application/showcase-music-use-cases'
@@ -658,7 +658,7 @@ export const admin = {
    * vence; esto es la música de la web pública y dura lo que dure el modelo. Compartir
    * carpeta significaría que limpiar lo uno pueda llevarse lo otro.
    */
-  showcaseSong: readShowcaseSong({ settings: drizzleSettingsRepository, storage: showcaseStorage }),
+  showcaseSongs: readShowcaseSongs({ settings: drizzleSettingsRepository, storage: showcaseStorage }),
   showcaseMusic: readShowcaseMusic({ settings: drizzleSettingsRepository, storage: showcaseStorage }),
   saveShowcaseMusic: saveShowcaseMusic({
     settings: drizzleSettingsRepository,
