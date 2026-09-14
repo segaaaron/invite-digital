@@ -171,12 +171,26 @@ export function MusicPlayer({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: 14,
+          padding: 0,
+          lineHeight: 0,
           flexShrink: 0,
         }}
         type="button"
       >
-        <span aria-hidden>{sonando ? '❚❚' : '▶'}</span>
+        {/* SVG y no los caracteres `▶` y `❚❚`: cada diseño hereda su tipografía y cada una
+            dibuja esos glifos con otra caja y otra línea base, así que el icono salía
+            centrado en unos y descolgado en otros. El triángulo va con su centro óptico —su
+            masa—, no el de la caja, en el centro del círculo. */}
+        <svg aria-hidden fill="currentColor" height="14" style={{ display: 'block' }} viewBox="0 0 14 14" width="14">
+          {sonando ? (
+            <>
+              <rect height="10" rx="0.8" width="3.2" x="2.6" y="2" />
+              <rect height="10" rx="0.8" width="3.2" x="8.2" y="2" />
+            </>
+          ) : (
+            <path d="M4.2 1.9v10.2a.6.6 0 0 0 .9.5l8-5.1a.6.6 0 0 0 0-1l-8-5.1a.6.6 0 0 0-.9.5z" />
+          )}
+        </svg>
       </button>
 
       <div style={{ flex: 1, minWidth: 0 }}>
