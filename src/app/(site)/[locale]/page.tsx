@@ -7,6 +7,7 @@ import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
+import { comparativaDePlanes } from './fiesta-page'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -190,6 +191,7 @@ export default async function LandingPage({
 
       {plans.length > 0 ? (
         <PricingSection
+          comparativa={await comparativaDePlanes(plans, dictionary)}
           contacto={{ whatsapp: sitio.whatsapp, mensajePlan: sitio.mensajePlan }}
           dictionary={dictionary}
           locale={locale}

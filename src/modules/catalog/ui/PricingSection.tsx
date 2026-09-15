@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { buildWhatsAppLink, fillPlanMessage } from '@/modules/leads'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
@@ -20,9 +21,11 @@ type Props = {
   modelo?: string | null
   /** El WhatsApp y la plantilla del mensaje de plan, de «La web». */
   contacto: { whatsapp: string; mensajePlan: string }
+  /** La tabla comparativa, debajo de las tarjetas. La compone quien lee los límites. */
+  comparativa?: ReactNode
 }
 
-export function PricingSection({ plans, locale, dictionary, modelo = null, contacto }: Props) {
+export function PricingSection({ plans, locale, dictionary, modelo = null, contacto, comparativa = null }: Props) {
   const { pricing } = dictionary
 
   // El plan más caro no se compra de un clic: en la maqueta ese botón agenda una llamada.
@@ -65,6 +68,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, conta
             )
           })}
         </div>
+        {comparativa}
       </div>
     </section>
   )

@@ -1,9 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { catalog, site } from '@/app/composition/container'
+import { catalog, plans, site } from '@/app/composition/container'
 import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
+import type { Plan } from '@/modules/catalog'
 import type { Fiesta } from '@/modules/events'
+import { capacidadDePlan } from '@/modules/plans'
+import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
+import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { FiestaLanding } from '@/sections/FiestaLanding'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
@@ -25,6 +29,22 @@ export async function metadataDeFiesta(raw: string, fiesta: Fiesta): Promise<Met
     title: seo.titulo[locale] || textos.seoTitle,
     description: truncateDescription(seo.descripcion[locale] || textos.seoDescription),
   })
+}
+
+/**
+ * La tabla que compara los planes, con los límites de la base en el orden de las tarjetas.
+ * Si los límites no se leen, no hay tabla: mejor sin ella que con una que invente.
+ */
+export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary) {
+  const filas = await plans.listActive().catch((cause: unknown) => {
+    console.error('Precios sin tabla comparativa:', cause)
+    return []
+  })
+  const columnas = planes.flatMap((plan) => {
+    const fila = filas.find((f) => f.slug === plan.slug)
+    return fila === undefined ? [] : [{ nombre: plan.name, limites: capacidadDePlan(fila) }]
+  })
+  return columnas.length === 0 ? null : <PlanComparison planes={columnas} textos={dictionary.pricing.comparison} />
 }
 
 /**
@@ -53,6 +73,7 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
       pricing={
         isOk(planes) && planes.value.length > 0 ? (
           <PricingSection
+            comparativa={await comparativaDePlanes(planes.value, dictionary)}
             contacto={{ whatsapp: sitio.whatsapp, mensajePlan: sitio.mensajePlan }}
             dictionary={dictionary}
             locale={locale}

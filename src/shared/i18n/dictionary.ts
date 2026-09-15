@@ -133,6 +133,35 @@ export interface PricingDictionary {
   choose: string
   /** El plan más caro no se elige de un clic: se agenda una llamada. */
   bookCall: string
+  /** La tabla que compara los planes. Sus filas salen de los límites de la base. */
+  comparison: PlanComparisonDictionary
+}
+
+export interface PlanComparisonDictionary {
+  title: string
+  /** Cabecera de la primera columna. */
+  feature: string
+  si: string
+  no: string
+  sinLimite: string
+  /** «Hasta {n}». */
+  hasta: string
+  /** «{n} días». */
+  dias: string
+  filas: {
+    grupos: string
+    fotos: string
+    fotosInvitados: string
+    contrasena: string
+    csv: string
+    mesas: string
+    regalos: string
+    puerta: string
+    porteros: string
+    enLinea: string
+    modelo: string
+  }
+  modelo: { ninguno: string; antes_de_repartir: string; siempre: string }
 }
 
 export interface ModelsDictionary {

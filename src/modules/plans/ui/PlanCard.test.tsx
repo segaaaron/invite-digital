@@ -75,12 +75,21 @@ describe('PlanCard', () => {
   it('sin límite de grupos lo dice con palabras, no con un número enorme', () => {
     render(<PlanCard name="Firma 3D" current={false} plan={alta} />)
 
-    expect(screen.getByText(/sin límite/i)).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem', { name: /grupos de invitados/i })).getByText(/sin límite/i)).toBeInTheDocument()
   })
 
   it('con límite enseña el número', () => {
     render(<PlanCard name="Firma 3D" current plan={atelier} />)
 
-    expect(screen.getByText(/30/)).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem', { name: /grupos de invitados/i })).getByText(/30/)).toBeInTheDocument()
+  })
+
+  it('lista también fotos, porteros, días en línea y cambio de modelo, sacados del plan', () => {
+    render(<PlanCard name="Atelier" current={false} plan={atelier} />)
+
+    expect(within(screen.getByRole('listitem', { name: /fotos del evento/i })).getByText('Hasta 8')).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem', { name: /porteros/i })).getByText('No')).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem', { name: /en línea/i })).getByText('60 días')).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem', { name: /cambiar de modelo/i })).getByText('No')).toBeInTheDocument()
   })
 })

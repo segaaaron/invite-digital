@@ -1,16 +1,33 @@
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import type { Allowance, PlanFeature } from '../domain/allowance'
-import { hasFeature } from '../domain/allowance'
+import type { Allowance } from '../domain/allowance'
+import { filasComparativas, type TextosComparativa } from '../domain/comparativa'
 
-const NOMBRES: ReadonlyArray<{ feature: PlanFeature; label: string }> = [
-  { feature: 'seating', label: 'Mesas y plano del salón' },
-  { feature: 'registry', label: 'Mesa de regalos y fondos' },
-  { feature: 'checkin', label: 'Modo puerta con QR' },
-]
+/** Los textos del panel, que es solo español. La web usa los de su diccionario. */
+export const TEXTOS_DEL_PANEL: TextosComparativa = {
+  si: 'Sí',
+  no: 'No',
+  sinLimite: 'Sin límite',
+  hasta: 'Hasta {n}',
+  dias: '{n} días',
+  filas: {
+    grupos: 'Grupos de invitados',
+    fotos: 'Fotos del evento',
+    fotosInvitados: 'Fotos de los invitados',
+    contrasena: 'Invitación con contraseña',
+    csv: 'Importar la lista de un CSV',
+    mesas: 'Mesas y plano del salón',
+    regalos: 'Mesa de regalos y fondos',
+    puerta: 'Modo puerta con QR',
+    porteros: 'Porteros',
+    enLinea: 'En línea tras el evento',
+    modelo: 'Cambiar de modelo',
+  },
+  modelo: { ninguno: 'No', antes_de_repartir: 'Hasta repartir enlaces', siempre: 'Siempre' },
+}
 
 /**
- * Una tarjeta por plan, con las tres funciones **siempre** listadas y su respuesta al
- * lado. Enseñar solo lo incluido obligaría a comparar tarjetas para deducir lo que
+ * Una tarjeta por plan, con **cada límite** listado y su respuesta al lado, generado desde
+ * el plan. Enseñar solo lo incluido obligaría a comparar tarjetas para deducir lo que
  * falta, que es justo lo que hay que decidir aquí.
  */
 /**
@@ -85,26 +102,20 @@ export function PlanCard({
         </p>
       )}
 
-      <p className="text-[13px] text-ink-mute">
-        Grupos de invitados:{' '}
-        <strong className="font-normal text-ink">
-          {plan.maxGuestGroups === null ? 'sin límite' : `hasta ${plan.maxGuestGroups}`}
-        </strong>
-      </p>
-
       <ul className="flex flex-col">
-        {NOMBRES.map(({ feature, label }) => (
-          <li
-            aria-label={label}
-            className="flex items-center justify-between gap-3 border-b border-line-panel py-2.5 text-[13px] text-ink-mute last:border-none"
-            key={feature}
-          >
-            <span>{label}</span>
-            <span className={hasFeature(plan, feature) ? 'text-ink' : 'text-ink-mute/60'}>
-              {hasFeature(plan, feature) ? 'Sí' : 'No'}
-            </span>
-          </li>
-        ))}
+        {filasComparativas([plan], TEXTOS_DEL_PANEL).map((fila) => {
+          const celda = fila.valores[0]!
+          return (
+            <li
+              aria-label={fila.etiqueta}
+              className="flex items-center justify-between gap-3 border-b border-line-panel py-2.5 text-[13px] text-ink-mute last:border-none"
+              key={fila.clave}
+            >
+              <span>{fila.etiqueta}</span>
+              <span className={celda.incluido ? 'text-ink' : 'text-ink-mute/60'}>{celda.texto}</span>
+            </li>
+          )
+        })}
       </ul>
 
       {/* El pie de la maqueta: una llamada por tarjeta, y la actual sin nada que pulsar. */}
