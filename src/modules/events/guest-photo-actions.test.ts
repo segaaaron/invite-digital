@@ -5,6 +5,7 @@ import { eventError } from './domain/errors'
 const resolveByToken = vi.fn()
 const saveFromGuest = vi.fn()
 const passwordHashOf = vi.fn()
+const requireFeature = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }))
@@ -14,6 +15,7 @@ vi.mock('next/headers', () => ({
 }))
 vi.mock('@/app/composition/container', () => ({
   guests: { resolveByToken: (...args: unknown[]) => resolveByToken(...args) },
+  plans: { requireFeature: (...args: unknown[]) => requireFeature(...args) },
   events: {
     media: { saveFromGuest: (...args: unknown[]) => saveFromGuest(...args) },
     passwordHashOf: (...args: unknown[]) => passwordHashOf(...args),
@@ -39,6 +41,7 @@ beforeEach(() => {
   // Sin contraseña no hay puerta que abrir: el evento es público con el enlace.
   passwordHashOf.mockResolvedValue(null)
   saveFromGuest.mockResolvedValue({ ok: true, id: 'm1' })
+  requireFeature.mockResolvedValue(ok({}))
 })
 
 describe('uploadGuestPhotoAction', () => {
@@ -109,5 +112,14 @@ describe('uploadGuestPhotoAction', () => {
       status: 'error',
       message: 'too_many',
     })
+  })
+
+  it('si el plan no trae fotos de invitados, no escribe aunque llegue por POST', async () => {
+    requireFeature.mockResolvedValue(err({ kind: 'feature_not_included', detail: 'no' }))
+    const { uploadGuestPhotoAction } = await import('./actions')
+
+    expect(await uploadGuestPhotoAction({ status: 'idle', message: '' }, form())).toEqual({ status: 'error', message: 'not_included' })
+    expect(requireFeature).toHaveBeenCalledWith('e1', 'guestPhotos')
+    expect(saveFromGuest).not.toHaveBeenCalled()
   })
 })

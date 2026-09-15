@@ -22,6 +22,7 @@ vi.mock('@/modules/identity/session-cookie', () => ({
 const importCsv = vi.fn()
 const listGroups = vi.fn()
 const allowanceFor = vi.fn()
+const requireFeature = vi.fn()
 
 vi.mock('@/app/composition/container', () => ({
   guests: {
@@ -30,7 +31,7 @@ vi.mock('@/app/composition/container', () => ({
     add: vi.fn(),
     importCsv: (...args: unknown[]) => importCsv(...args),
   },
-  plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: vi.fn() },
+  plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: (...args: unknown[]) => requireFeature(...args) },
 }))
 
 const form = (): FormData => {
@@ -43,6 +44,7 @@ const form = (): FormData => {
 beforeEach(() => {
   vi.clearAllMocks()
   requireSession.mockResolvedValue({ userId: 'u1' })
+  requireFeature.mockResolvedValue(ok({}))
 })
 
 describe('revokeInvitationAction', () => {
@@ -130,5 +132,18 @@ describe('importGuestsAction y el tope del plan', () => {
     expect(importCsv).toHaveBeenCalledWith(
       expect.objectContaining({ allowance: { maxGuestGroups: 2 }, currentGroups: 1 }),
     )
+  })
+
+  it('si el plan no trae importar la lista, no importa aunque llegue por POST', async () => {
+    requireFeature.mockResolvedValue(err({ kind: 'feature_not_included', detail: 'Tu plan no incluye importar la lista de invitados.' }))
+    allowanceFor.mockResolvedValue(ok({ planSlug: 'atelier', maxGuestGroups: 2 }))
+    listGroups.mockResolvedValue(ok([]))
+    const { importGuestsAction } = await import('./actions')
+
+    const estado = await importGuestsAction({ status: 'idle' }, csvForm())
+
+    expect(estado.status).toBe('error')
+    expect(requireFeature).toHaveBeenCalledWith('e1', 'csvImport')
+    expect(importCsv).not.toHaveBeenCalled()
   })
 })

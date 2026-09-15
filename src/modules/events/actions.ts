@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { events as eventUseCases, guests } from '@/app/composition/container'
+import { events as eventUseCases, guests, plans } from '@/app/composition/container'
 import { clientIpFrom } from '@/modules/leads/application/client-ip'
 import { createRateLimiter } from '@/modules/leads/application/rate-limit'
 import { guardedUnlock } from './application/guarded-unlock'
@@ -294,6 +294,12 @@ export async function setEventPrivacyAction(_previous: PrivacyState, formData: F
   const publica = formData.get('privacy') !== 'password'
   const password = String(formData.get('password') ?? '')
 
+  // Poner contraseña es de algunos planes; quitarla —dejar la invitación pública— siempre.
+  if (!publica) {
+    const incluida = await plans.requireFeature(eventId, 'eventPassword')
+    if (isErr(incluida)) return { status: 'error', message: incluida.error.detail }
+  }
+
   const result = await eventUseCases.setPassword({ eventId, password: publica ? null : password })
   if (isErr(result)) {
     console.error('privacidad rechazada', result.error.kind, result.error.detail)
@@ -456,7 +462,7 @@ export async function uploadMediaAction(
 export type GuestPhotoState = {
   status: 'idle' | 'error' | 'success'
   /** La clase del fallo, que la pantalla traduce. Nunca el detalle, que va al registro. */
-  message: 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'no_file' | 'not_found' | 'rate_limited' | ''
+  message: 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'no_file' | 'not_found' | 'rate_limited' | 'not_included' | ''
 }
 
 /**
@@ -487,6 +493,10 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
   if (isErr(grupo)) return { status: 'error', message: 'not_found' }
 
   if (!(await eventUnlocked(grupo.value.eventId))) return { status: 'error', message: 'not_found' }
+
+  // Las fotos de invitados son de algunos planes, y el enlace del invitado circula por
+  // WhatsApp: el corte va aquí, no solo en la tarjeta que ofrece subirlas.
+  if (isErr(await plans.requireFeature(grupo.value.eventId, 'guestPhotos'))) return { status: 'error', message: 'not_included' }
 
   const cabeceras = await headers()
   const ip = clientIpFrom({

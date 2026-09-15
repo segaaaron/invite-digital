@@ -216,6 +216,7 @@ export const en = {
       no_file: 'Pick a photo before uploading.',
       not_found: "We couldn't open the invitation with that link.",
       rate_limited: 'Too fast. Wait a minute and keep uploading.',
+      not_included: 'This invitation does not take guest photos.',
     },
     passAlt: 'Entry pass for',
     errors: {

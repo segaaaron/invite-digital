@@ -3,6 +3,8 @@ import { err, ok } from '@/shared/result'
 import { eventError } from './domain/errors'
 
 const revokeShare = vi.fn()
+const setPassword = vi.fn()
+const requireFeature = vi.fn()
 const requireSession = vi.fn().mockResolvedValue({ userId: 'u1' })
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
@@ -19,7 +21,10 @@ vi.mock('@/app/composition/container', () => ({
     create: vi.fn(),
     update: vi.fn(),
     createShare: vi.fn(),
+    setPassword: (...args: unknown[]) => setPassword(...args),
   },
+  plans: { requireFeature: (...args: unknown[]) => requireFeature(...args) },
+  guests: {},
 }))
 
 const form = (): FormData => {
@@ -59,5 +64,35 @@ describe('revokeClientShareAction', () => {
 
     await revokeClientShareAction({ status: 'idle' }, form())
     expect(requireSession).toHaveBeenCalled()
+  })
+})
+
+describe('setEventPrivacyAction y el plan', () => {
+  const privacidad = (tipo: 'password' | 'public'): FormData => {
+    const fd = new FormData()
+    fd.set('eventId', 'e1')
+    fd.set('eventSlug', 'boda')
+    fd.set('privacy', tipo)
+    fd.set('password', 'clave-de-la-boda')
+    return fd
+  }
+
+  it('sin la contraseña en el plan no la pone, aunque llegue por POST', async () => {
+    requireFeature.mockResolvedValue(err({ kind: 'feature_not_included', detail: 'Tu plan no incluye la invitación con contraseña.' }))
+    const { setEventPrivacyAction } = await import('./actions')
+
+    const r = await setEventPrivacyAction({ status: 'idle' }, privacidad('password'))
+
+    expect(r).toEqual({ status: 'error', message: 'Tu plan no incluye la invitación con contraseña.' })
+    expect(setPassword).not.toHaveBeenCalled()
+  })
+
+  it('quitarla siempre se puede: dejar la invitación pública no es una función de pago', async () => {
+    requireFeature.mockResolvedValue(err({ kind: 'feature_not_included', detail: 'no' }))
+    setPassword.mockResolvedValue(ok(undefined))
+    const { setEventPrivacyAction } = await import('./actions')
+
+    expect(await setEventPrivacyAction({ status: 'idle' }, privacidad('public'))).toEqual({ status: 'success' })
+    expect(setPassword).toHaveBeenCalledWith({ eventId: 'e1', password: null })
   })
 })

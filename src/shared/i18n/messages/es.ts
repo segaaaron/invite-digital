@@ -216,6 +216,7 @@ export const es = {
       no_file: 'Elige una foto antes de subir.',
       not_found: 'No pudimos abrir la invitación con ese enlace.',
       rate_limited: 'Vas muy rápido. Espera un minuto y sigue subiendo.',
+      not_included: 'Esta invitación no recibe fotos de los invitados.',
     },
     passAlt: 'Pase de entrada de',
     errors: {

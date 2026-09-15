@@ -376,6 +376,7 @@ export type GuestPhotoMessageKey =
   | 'too_many'
   | 'no_file'
   | 'not_found'
+  | 'not_included'
   | 'rate_limited'
 
 /** Lo que la reserva de un regalo puede responderle al invitado. */

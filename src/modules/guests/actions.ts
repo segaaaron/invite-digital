@@ -318,6 +318,11 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
   const eventSlug = String(formData.get('eventSlug') ?? '')
   await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
+  // Importar la lista es de algunos planes. Esconder el botón no protege: la acción es un
+  // extremo HTTP público.
+  const incluida = await plans.requireFeature(eventId, 'csvImport')
+  if (isErr(incluida)) return { status: 'error', message: incluida.error.detail }
+
   const capacidad = await plans.allowanceFor(eventId)
   const actuales = await guests.list(eventId)
 
