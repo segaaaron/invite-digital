@@ -64,6 +64,10 @@ export const plans = pgTable('plans', {
   includesCheckin: boolean('includes_checkin').notNull().default(true),
   /** Cuántos porteros puede sumar quien compró. Cero: el plan no trae puerta. */
   maxDoorPorters: integer('max_door_porters').notNull().default(0),
+  /** Co-anfitriones que suma el anfitrión. `NULL` es sin límite. */
+  maxCohosts: integer('max_cohosts').default(1),
+  /** Planners contratados que suma. `NULL` es sin límite; cero, ninguno. */
+  maxHiredPlanners: integer('max_hired_planners').default(0),
   /** Fotos de la galería de la invitación. `NULL` es sin límite. */
   maxGalleryPhotos: integer('max_gallery_photos'),
   guestPhotos: boolean('guest_photos').notNull().default(true),

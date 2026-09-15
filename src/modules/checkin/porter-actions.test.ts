@@ -64,13 +64,13 @@ beforeEach(() => {
 })
 
 describe('addPorterAction', () => {
-  it('exige la sección del anfitrión y pasa el tope del plan', async () => {
+  it('exige la sección de porteros y pasa el tope del plan', async () => {
     add.mockResolvedValue(ok({ id: 'p1', token: 'TOKEN', pin: '123456' }))
     const { addPorterAction } = await import('./porter-actions')
 
     const r = await addPorterAction({ status: 'idle' }, formulario({ eventId: 'e1', eventSlug: 'xv-valeria', name: 'Carlos', phone: '70012345', gate: '' }))
 
-    expect(requireEventAccess).toHaveBeenCalledWith(expect.anything(), { eventId: 'e1', eventSlug: 'xv-valeria', section: 'cliente' })
+    expect(requireEventAccess).toHaveBeenCalledWith(expect.anything(), { eventId: 'e1', eventSlug: 'xv-valeria', section: 'porteros' })
     expect(add).toHaveBeenCalledWith(expect.objectContaining({ eventId: 'e1', limit: 3, createdByUserId: 'u1', name: 'Carlos' }))
     expect(r).toMatchObject({ status: 'created', nombre: 'Carlos', enlace: 'https://luxuryatelier.net/p/TOKEN', pin: '123456' })
   })
@@ -109,13 +109,13 @@ describe('addPorterAction', () => {
 })
 
 describe('removePorterAction', () => {
-  it('quita solo desde su evento, con la sección del anfitrión', async () => {
+  it('quita solo desde su evento, con la sección de porteros', async () => {
     revoke.mockResolvedValue(true)
     const { removePorterAction } = await import('./porter-actions')
 
     const r = await removePorterAction({ status: 'idle' }, formulario({ eventId: 'e1', eventSlug: 'x', porterId: 'p1' }))
 
-    expect(requireEventAccess).toHaveBeenCalledWith(expect.anything(), { eventId: 'e1', eventSlug: 'x', section: 'cliente' })
+    expect(requireEventAccess).toHaveBeenCalledWith(expect.anything(), { eventId: 'e1', eventSlug: 'x', section: 'porteros' })
     expect(revoke).toHaveBeenCalledWith('e1', 'p1')
     expect(r).toEqual({ status: 'removed' })
   })

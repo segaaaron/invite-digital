@@ -19,6 +19,8 @@ export const TEXTOS_DEL_PANEL: TextosComparativa = {
     regalos: 'Mesa de regalos y fondos',
     puerta: 'Modo puerta con QR',
     porteros: 'Porteros',
+    coanfitriones: 'Co-anfitriones',
+    planners: 'Planner contratado',
     enLinea: 'En línea tras el evento',
     modelo: 'Cambiar de modelo',
   },

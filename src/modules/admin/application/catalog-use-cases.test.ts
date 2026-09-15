@@ -11,6 +11,8 @@ const crudo = (isActive: boolean): PlanCrudo => ({
   priceCents: 1000,
   maxGuestGroups: '',
   maxDoorPorters: '0',
+  maxCohosts: '',
+  maxHiredPlanners: '',
   maxGalleryPhotos: '',
   guestPhotos: true,
   eventPassword: true,

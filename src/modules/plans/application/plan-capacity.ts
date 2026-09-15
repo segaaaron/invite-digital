@@ -15,6 +15,8 @@ export const capacidadDePlan = (row: PlanRow): Allowance => ({
   registry: row.includesRegistry,
   checkin: row.includesCheckin,
   maxDoorPorters: row.maxDoorPorters,
+  maxCohosts: row.maxCohosts,
+  maxHiredPlanners: row.maxHiredPlanners,
   maxGalleryPhotos: row.maxGalleryPhotos,
   guestPhotos: row.guestPhotos,
   eventPassword: row.eventPassword,

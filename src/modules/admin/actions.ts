@@ -614,6 +614,8 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
     priceCents: precio.value,
     maxGuestGroups: texto(formData, 'maxGuestGroups'),
     maxDoorPorters: texto(formData, 'maxDoorPorters'),
+    maxCohosts: texto(formData, 'maxCohosts'),
+    maxHiredPlanners: texto(formData, 'maxHiredPlanners'),
     maxGalleryPhotos: texto(formData, 'maxGalleryPhotos'),
     guestPhotos: marcado('guestPhotos'),
     eventPassword: marcado('eventPassword'),

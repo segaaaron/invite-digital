@@ -15,6 +15,8 @@ export type PlanCrudo = {
   maxGuestGroups: string
   /** Cuántos porteros puede sumar quien compró. Texto del formulario; cero es sin puerta. */
   maxDoorPorters: string
+  maxCohosts: string
+  maxHiredPlanners: string
   /** Fotos de la galería. Vacío es sin límite. */
   maxGalleryPhotos: string
   guestPhotos: boolean
@@ -35,9 +37,11 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'es' | 'en'> & {
   maxGuestGroups: number | null
   maxDoorPorters: number
+  maxCohosts: number | null
+  maxHiredPlanners: number | null
   maxGalleryPhotos: number | null
   onlineDays: number
   designChange: 'ninguno' | 'antes_de_repartir' | 'siempre'
@@ -91,6 +95,17 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     return err(adminError('invalid_input', 'Los porteros son un número entero de 0 a 100.'))
   }
 
+  // El equipo: vacío es sin límite; cero, ninguno.
+  const equipo = (valor: string, nombre: string) => {
+    const v = valor.trim()
+    if (v === '') return ok(null)
+    return /^\d+$/.test(v) && Number(v) <= 100 ? ok(Number(v)) : err(adminError('invalid_input', `${nombre} son un número de 0 a 100, o vacío para sin límite.`))
+  }
+  const coanfitriones = equipo(crudo.maxCohosts, 'Los co-anfitriones')
+  if (!coanfitriones.ok) return coanfitriones
+  const planners = equipo(crudo.maxHiredPlanners, 'Los planners')
+  if (!planners.ok) return planners
+
   const fotos = crudo.maxGalleryPhotos.trim()
   if (fotos !== '' && (!/^\d+$/.test(fotos) || Number(fotos) < 1 || Number(fotos) > 200)) {
     return err(adminError('invalid_input', 'Las fotos de la galería son un número de 1 a 200, o vacío para sin límite.'))
@@ -113,6 +128,8 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     ...crudo,
     maxGuestGroups,
     maxDoorPorters: Number(porteros),
+    maxCohosts: coanfitriones.value,
+    maxHiredPlanners: planners.value,
     maxGalleryPhotos: fotos === '' ? null : Number(fotos),
     onlineDays: Number(dias),
     designChange: regla,

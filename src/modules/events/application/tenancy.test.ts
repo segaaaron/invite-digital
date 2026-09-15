@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor, Membership } from '@/modules/identity/domain/access'
 import { isErr, isOk } from '@/shared/result'
 import type { EventInput } from '../domain/event'
 import type { EventRepository } from './ports'
@@ -7,7 +7,7 @@ import type { StaffReader } from './ports'
 import { getEventByIdFor, getEventFor, listEventsFor } from './tenancy'
 
 /** Nadie pertenece a nada salvo donde la prueba lo diga. */
-const sinPersonal: StaffReader = { isStaffOf: async () => false, eventIdsOf: async () => [] }
+const sinPersonal: StaffReader = { membershipsOf: async () => [], eventIdsOf: async () => [] }
 
 /**
  * Una pertenencia concreta: este usuario, en este evento, **con esta clase**.
@@ -16,9 +16,9 @@ const sinPersonal: StaffReader = { isStaffOf: async () => false, eventIdsOf: asy
  * que tampoco la mirase, y entonces el cliente de una boda entraría por la pertenencia de
  * la puerta — que es justo lo que no puede pasar teniendo las dos en la misma tabla.
  */
-const perteneceA = (eventId: string, userId: string, membership: 'puerta' | 'cliente'): StaffReader => ({
-  isStaffOf: async (e, u, m) => e === eventId && u === userId && m === membership,
-  eventIdsOf: async (u, m) => (u === userId && m === membership ? [eventId] : []),
+const perteneceA = (eventId: string, userId: string, membership: Membership): StaffReader => ({
+  membershipsOf: async (e, u) => (e === eventId && u === userId ? [membership] : []),
+  eventIdsOf: async (u, ms) => (u === userId && ms.includes(membership) ? [eventId] : []),
 })
 
 const fila = (id: string, slug: string, userId: string | null): EventInput => ({
@@ -173,3 +173,21 @@ describe('la pertenencia del cliente y la de la puerta no se cruzan', () => {
     expect(isErr(ajena) && ajena.error.kind).toBe('not_found')
   })
 })
+
+describe('el equipo del evento', () => {
+  it('una planner con cuenta de atelier ve sus eventos y aquel donde la sumaron, y entra como planner', async () => {
+    const deps = { events: repo(), staff: perteneceA('e1', 'u2', 'planner') }
+    const lista = await listEventsFor(deps)(beto)
+    expect(isOk(lista) && lista.value.map((e) => e.id).sort()).toEqual(['e1', 'e2'])
+    expect(isOk(await getEventFor(deps)(beto, 'boda-de-ana', { section: 'cliente' }))).toBe(true)
+    expect(isErr(await getEventFor(deps)(beto, 'boda-de-ana'))).toBe(true)
+  })
+
+  it('un co-anfitrión ve la boda en su bandeja pero no el equipo', async () => {
+    const deps = { events: repo(), staff: perteneceA('e1', 'c1', 'coanfitrion') }
+    const lista = await listEventsFor(deps)(cliente)
+    expect(isOk(lista) && lista.value.map((e) => e.id)).toEqual(['e1'])
+    expect(isErr(await getEventFor(deps)(cliente, 'boda-de-ana', { section: 'equipo' }))).toBe(true)
+  })
+})
+

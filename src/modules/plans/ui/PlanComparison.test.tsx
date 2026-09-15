@@ -11,6 +11,8 @@ const base: Allowance = {
   registry: false,
   checkin: false,
   maxDoorPorters: 0,
+  maxCohosts: 1,
+  maxHiredPlanners: 0,
   maxGalleryPhotos: 8,
   guestPhotos: false,
   eventPassword: false,
@@ -25,7 +27,7 @@ describe('PlanComparison', () => {
       <PlanComparison
         planes={[
           { nombre: 'Atelier', limites: base },
-          { nombre: 'Alta Costura', limites: { ...base, planSlug: 'alta', maxDoorPorters: 10, checkin: true } },
+          { nombre: 'Alta Costura', limites: { ...base, planSlug: 'alta', maxDoorPorters: 10, maxCohosts: 1, maxHiredPlanners: 0, checkin: true } },
         ]}
         textos={es.pricing.comparison}
       />,

@@ -17,6 +17,8 @@ export type PlanEditorView = {
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
   readonly maxDoorPorters: number
+  readonly maxCohosts: number | null
+  readonly maxHiredPlanners: number | null
   readonly maxGalleryPhotos: number | null
   readonly guestPhotos: boolean
   readonly eventPassword: boolean
@@ -99,6 +101,29 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
             inputMode="numeric"
             name="maxDoorPorters"
             required
+          />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 min-[560px]:grid-cols-2">
+        <Field htmlFor={`${id}-coanfitriones`} label="Co-anfitriones · vacío = sin límite">
+          <input
+            className={FIELD_CLASS}
+            defaultValue={txt('maxCohosts', plan.maxCohosts === null ? '' : String(plan.maxCohosts))}
+            id={`${id}-coanfitriones`}
+            inputMode="numeric"
+            name="maxCohosts"
+            placeholder="Sin límite"
+          />
+        </Field>
+        <Field htmlFor={`${id}-planners`} label="Planners contratados · 0 = ninguno">
+          <input
+            className={FIELD_CLASS}
+            defaultValue={txt('maxHiredPlanners', plan.maxHiredPlanners === null ? '' : String(plan.maxHiredPlanners))}
+            id={`${id}-planners`}
+            inputMode="numeric"
+            name="maxHiredPlanners"
+            placeholder="Sin límite"
           />
         </Field>
       </div>

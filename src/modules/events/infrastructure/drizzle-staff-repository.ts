@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, inArray } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { eventStaff, users } from '@/shared/db/schema'
 import type { Membership, StaffReader } from '../application/ports'
@@ -6,34 +6,25 @@ import type { Membership, StaffReader } from '../application/ports'
 export type StaffRow = { readonly userId: string; readonly email: string }
 
 /**
- * La clase de pertenencia va en **todas** las consultas, nunca por omisión.
- *
- * Sin ella, `isStaffOf` diría que sí para un cliente preguntando por la puerta y al revés:
- * las dos clases viven en la misma tabla, que es justo lo que hace barato tenerlas juntas
- * y lo que obliga a no olvidarse del filtro.
+ * La clase de pertenencia viaja siempre: `membershipsOf` la devuelve y quien decide qué abre
+ * es `canAccessEvent`, y `eventIdsOf` la exige. Sin ella, un cliente entraría por la
+ * pertenencia de la puerta y al revés: las clases viven en la misma tabla.
  */
 export const createDrizzleStaffRepository = (database: DbExecutor) => ({
-  async isStaffOf(eventId: string, userId: string, membership: Membership): Promise<boolean> {
-    const [fila] = await database
-      .select({ userId: eventStaff.userId })
+  async membershipsOf(eventId: string, userId: string): Promise<Membership[]> {
+    const filas = await database
+      .select({ membership: eventStaff.membership })
       .from(eventStaff)
-      .where(
-        and(
-          eq(eventStaff.eventId, eventId),
-          eq(eventStaff.userId, userId),
-          eq(eventStaff.membership, membership),
-        ),
-      )
-      .limit(1)
-
-    return fila !== undefined
+      .where(and(eq(eventStaff.eventId, eventId), eq(eventStaff.userId, userId)))
+    return filas.map((f) => f.membership as Membership)
   },
 
-  async eventIdsOf(userId: string, membership: Membership): Promise<string[]> {
+  async eventIdsOf(userId: string, memberships: readonly Membership[]): Promise<string[]> {
+    if (memberships.length === 0) return []
     const filas = await database
       .select({ eventId: eventStaff.eventId })
       .from(eventStaff)
-      .where(and(eq(eventStaff.userId, userId), eq(eventStaff.membership, membership)))
+      .where(and(eq(eventStaff.userId, userId), inArray(eventStaff.membership, [...memberships])))
 
     return filas.map((f) => f.eventId)
   },

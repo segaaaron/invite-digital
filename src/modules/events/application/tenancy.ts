@@ -55,9 +55,10 @@ async function permitido(
   event: Event,
   opciones: Opciones,
 ): Promise<boolean> {
-  const porPertenencia = actor.role === 'puerta' || actor.role === 'cliente'
-  const isStaff = porPertenencia ? await deps.staff.isStaffOf(event.id, actor.userId, actor.role) : false
-  return canAccessEvent(actor, event, { section: opciones.section, isStaff })
+  // Sin viaje a la base cuando la respuesta no depende de la pertenencia.
+  if (isAdmin(actor) || (actor.role === 'atelier' && event.userId === actor.userId)) return true
+  const memberships = await deps.staff.membershipsOf(event.id, actor.userId)
+  return canAccessEvent(actor, event, { section: opciones.section, memberships })
 }
 
 /** Lo mismo por identificador, para las acciones que reciben `eventId` de un formulario. */
@@ -98,11 +99,19 @@ export const listEventsFor =
         //
         // Ninguno de los dos aparece en `listByUser`: no son dueños de nada. El dueño
         // sigue siendo el atelier que vendió la boda.
+        // El atelier ve los suyos **y** aquellos donde lo sumaron como planner: una planner
+        // puede tener cuenta de atelier propia.
+        const EQUIPO = ['cliente', 'coanfitrion', 'planner'] as const
         const rows = isAdmin(actor)
           ? await deps.events.listAll()
-          : actor.role === 'puerta' || actor.role === 'cliente'
-            ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, actor.role))
-            : await deps.events.listByUser(actor.userId)
+          : actor.role === 'puerta'
+            ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, ['puerta']))
+            : actor.role === 'cliente'
+              ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, EQUIPO))
+              : [
+                  ...(await deps.events.listByUser(actor.userId)),
+                  ...(await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, EQUIPO))).filter((r) => r.userId !== actor.userId),
+                ]
         const built: Event[] = []
 
         for (const row of rows) {

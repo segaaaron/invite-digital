@@ -43,6 +43,8 @@ export default async function AdminPlanesPage() {
                   priceLabel: formatAmount(plan.priceCents, plan.currency),
                   maxGuestGroups: plan.maxGuestGroups,
                   maxDoorPorters: plan.maxDoorPorters,
+                  maxCohosts: plan.maxCohosts,
+                  maxHiredPlanners: plan.maxHiredPlanners,
                   maxGalleryPhotos: plan.maxGalleryPhotos,
                   guestPhotos: plan.guestPhotos,
                   eventPassword: plan.eventPassword,

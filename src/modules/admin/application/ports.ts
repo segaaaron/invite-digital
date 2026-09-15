@@ -127,6 +127,8 @@ export type PlanAdminRow = {
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
   readonly maxDoorPorters: number
+  readonly maxCohosts: number | null
+  readonly maxHiredPlanners: number | null
   readonly maxGalleryPhotos: number | null
   readonly guestPhotos: boolean
   readonly eventPassword: boolean

@@ -12,6 +12,10 @@ export type Allowance = {
   readonly checkin: boolean
   /** Cuántos porteros caben. Cero: ninguno. Siempre un número: la puerta no se vende sin tope. */
   readonly maxDoorPorters: number
+  /** Co-anfitriones que suma el anfitrión. `null` es sin límite. */
+  readonly maxCohosts: number | null
+  /** Planners contratados que suma. `null` es sin límite; cero, ninguno. */
+  readonly maxHiredPlanners: number | null
   /** Fotos de la galería de la invitación. `null` es sin límite. */
   readonly maxGalleryPhotos: number | null
   /** Si los invitados pueden subir sus fotos desde su invitación. */

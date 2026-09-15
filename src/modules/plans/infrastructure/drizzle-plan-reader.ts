@@ -11,6 +11,8 @@ const columnas = {
   includesRegistry: plans.includesRegistry,
   includesCheckin: plans.includesCheckin,
   maxDoorPorters: plans.maxDoorPorters,
+  maxCohosts: plans.maxCohosts,
+  maxHiredPlanners: plans.maxHiredPlanners,
   maxGalleryPhotos: plans.maxGalleryPhotos,
   guestPhotos: plans.guestPhotos,
   eventPassword: plans.eventPassword,

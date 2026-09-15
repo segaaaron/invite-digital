@@ -7,6 +7,8 @@ const crudo: PlanCrudo = {
   priceCents: 69000,
   maxGuestGroups: '',
   maxDoorPorters: '3',
+  maxCohosts: '',
+  maxHiredPlanners: '',
   maxGalleryPhotos: '20',
   guestPhotos: true,
   eventPassword: true,

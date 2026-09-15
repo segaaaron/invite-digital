@@ -143,6 +143,8 @@ export const en = {
         regalos: 'Gift registry and cash funds',
         puerta: 'QR check-in',
         porteros: 'Door staff',
+        coanfitriones: 'Co-hosts in the dashboard',
+        planners: 'Add your hired planner',
         enLinea: 'Online after the party',
         modelo: 'Switch design',
       },

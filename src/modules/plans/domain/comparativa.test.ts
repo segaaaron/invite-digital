@@ -18,6 +18,8 @@ const TEXTOS: TextosComparativa = {
     regalos: 'Mesa de regalos',
     puerta: 'Puerta con QR',
     porteros: 'Porteros',
+    coanfitriones: 'Co-anfitriones',
+    planners: 'Planner contratado',
     enLinea: 'En línea tras el evento',
     modelo: 'Cambiar de modelo',
   },
@@ -31,6 +33,8 @@ const atelier: Allowance = {
   registry: false,
   checkin: false,
   maxDoorPorters: 0,
+  maxCohosts: 1,
+  maxHiredPlanners: 0,
   maxGalleryPhotos: 8,
   guestPhotos: false,
   eventPassword: false,
@@ -39,7 +43,7 @@ const atelier: Allowance = {
   designChange: 'ninguno',
 }
 
-const alta: Allowance = { ...atelier, planSlug: 'alta', maxGuestGroups: null, maxGalleryPhotos: null, checkin: true, maxDoorPorters: 10, onlineDays: 365, designChange: 'siempre' }
+const alta: Allowance = { ...atelier, planSlug: 'alta', maxGuestGroups: null, maxGalleryPhotos: null, checkin: true, maxDoorPorters: 10, maxCohosts: null, maxHiredPlanners: null, onlineDays: 365, designChange: 'siempre' }
 
 describe('filasComparativas', () => {
   it('cada fila dice el valor de cada plan, en el orden de los planes', () => {
@@ -50,6 +54,7 @@ describe('filasComparativas', () => {
     expect(de('Fotos del evento')).toEqual(['Hasta 8', 'Sin límite'])
     expect(de('Puerta con QR')).toEqual(['No', 'Sí'])
     expect(de('Porteros')).toEqual(['No', 'Hasta 10'])
+    expect(de('Planner contratado')).toEqual(['No', 'Sin límite'])
     expect(de('En línea tras el evento')).toEqual(['60 días', '365 días'])
     expect(de('Cambiar de modelo')).toEqual(['No', 'Siempre'])
   })

@@ -158,6 +158,8 @@ export interface PlanComparisonDictionary {
     regalos: string
     puerta: string
     porteros: string
+    coanfitriones: string
+    planners: string
     enLinea: string
     modelo: string
   }

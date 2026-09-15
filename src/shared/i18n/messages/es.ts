@@ -143,6 +143,8 @@ export const es = {
         regalos: 'Mesa de regalos y fondos',
         puerta: 'Entrada con QR',
         porteros: 'Porteros en la puerta',
+        coanfitriones: 'Co-anfitriones en el panel',
+        planners: 'Sumar a tu planner contratado',
         enLinea: 'En línea tras la fiesta',
         modelo: 'Cambiar de modelo',
       },

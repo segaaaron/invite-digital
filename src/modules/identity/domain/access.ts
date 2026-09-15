@@ -47,12 +47,34 @@ export function isAdmin(actor: Actor): boolean {
 /**
  * Las secciones de un evento, a efectos de permisos.
  *
- * `full` es todo lo del atelier; `checkin` es la puerta; `cliente` es lo que ve quien
- * celebra la boda. **`full` es lo que se hereda cuando nadie dice nada**, y `full` deniega
- * tanto a un puerta como a un cliente: el olvido cae del lado seguro, que es la única
- * forma de que una regla de permisos sobreviva a la siguiente sesión.
+ * `full` es todo lo del atelier; `checkin` es la puerta; `cliente` es lo que ve el equipo
+ * de quien celebra —planificación, invitados, invitación—; `porteros` es sumar gente a la
+ * puerta; `equipo` es sumar personas al evento. **`full` es lo que se hereda cuando nadie
+ * dice nada**, y `full` deniega a todo el que entra por pertenencia: el olvido cae del lado
+ * seguro, que es la única forma de que una regla de permisos sobreviva a la siguiente sesión.
  */
-export type EventSection = 'full' | 'checkin' | 'cliente'
+export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'equipo'
+
+/**
+ * Cómo pertenece alguien a un evento que no es suyo.
+ *
+ * `cliente` es **el anfitrión**: quien compró —los novios, la quinceañera o sus padres—. La
+ * clave se quedó así porque es la de la columna desde `0032`; la pantalla dice «Anfitrión».
+ * `coanfitrion` es la otra mitad, una mamá, una hermana; `planner`, la profesional que
+ * contrataron; `puerta`, el personal de recepción con cuenta.
+ */
+export type Membership = 'puerta' | 'cliente' | 'coanfitrion' | 'planner'
+export const MEMBERSHIPS: readonly Membership[] = ['puerta', 'cliente', 'coanfitrion', 'planner']
+
+/** Las pertenencias que abren cada sección. Nadie da más permisos de los que tiene. */
+const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> = {
+  checkin: ['puerta'],
+  cliente: ['cliente', 'coanfitrion', 'planner'],
+  // El anfitrión y su planner suman porteros; el co-anfitrión no.
+  porteros: ['cliente', 'planner'],
+  // Solo el anfitrión suma personas al evento.
+  equipo: ['cliente'],
+}
 
 /**
  * La sección con la que cada rol entra a la **carcasa** de un evento.
@@ -68,8 +90,11 @@ export function sectionForRole(role: Role): EventSection {
 }
 
 /**
- * El evento es suyo, o es admin, o entra por **pertenencia** a la sección de su oficio:
- * el personal de puerta al check-in, el cliente a su panel.
+ * El evento es suyo, o es admin, o entra por **pertenencia** a lo que su pertenencia abre.
+ *
+ * El rol `puerta` solo entra al check-in, diga lo que diga la pertenencia: es otro oficio.
+ * Cualquier otro rol que no sea dueño entra por su pertenencia —una planner puede tener
+ * cuenta de atelier propia y entrar al evento de otro como planner, nunca como dueña—.
  *
  * Un evento **sin dueño** solo lo ve el admin. No debería existir ninguno —la migración
  * `0021` los asignó todos—, pero la columna es anulable y «sin dueño» no puede
@@ -78,27 +103,29 @@ export function sectionForRole(role: Role): EventSection {
 export function canAccessEvent(
   actor: Actor,
   event: { userId: string | null },
-  options: { section?: EventSection | undefined; isStaff?: boolean | undefined } = {},
+  options: { section?: EventSection | undefined; memberships?: readonly Membership[] | undefined } = {},
 ): boolean {
   const section = options.section ?? 'full'
+  const memberships = options.memberships ?? []
 
   if (isAdmin(actor)) return true
 
-  if (actor.role === 'puerta') {
-    // La pertenencia y la sección, las dos. Ser personal de una boda no abre la lista de
-    // invitados de esa boda, y serlo de una no abre la puerta de otra.
-    return section === 'checkin' && options.isStaff === true
-  }
+  if (actor.role === 'puerta') return section === 'checkin' && memberships.includes('puerta')
 
-  if (actor.role === 'cliente') {
-    // Igual que la puerta: pertenencia **y** sección. `full` es Configuración, el plan y
-    // el borrado —del atelier— y `checkin` es la puerta, que es otro oficio.
-    return section === 'cliente' && options.isStaff === true
-  }
+  // El atelier dueño entra a todo lo de su evento: ve todo lo que ve su equipo, y al revés no.
+  if (actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId) return true
 
-  // El atelier dueño entra a todo lo de su evento, la sección del cliente incluida: ve
-  // todo lo que ve su cliente, y al revés no.
-  return event.userId !== null && event.userId === actor.userId
+  if (section === 'full' || section === 'checkin') return false
+  return QUIEN_ENTRA[section].some((m) => memberships.includes(m))
+}
+
+/** El papel en el equipo de quien entra por pertenencia, para lo que la pantalla le enseña. */
+export type RolEnEquipo = 'anfitrion' | 'coanfitrion' | 'planner'
+export function rolEnEquipo(memberships: readonly Membership[]): RolEnEquipo | null {
+  if (memberships.includes('cliente')) return 'anfitrion'
+  if (memberships.includes('planner')) return 'planner'
+  if (memberships.includes('coanfitrion')) return 'coanfitrion'
+  return null
 }
 
 /**

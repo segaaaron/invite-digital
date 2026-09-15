@@ -20,7 +20,7 @@ export default async function PorterosPage({ params }: { params: Promise<{ slug:
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug, { section: 'cliente' })
+  const event = await events.getFor(actor, slug, { section: 'porteros' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

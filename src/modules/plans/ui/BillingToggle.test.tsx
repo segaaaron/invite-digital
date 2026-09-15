@@ -16,7 +16,7 @@ describe('hasAnnual', () => {
 const tarjeta = (slug: string, cents: number, annualCents: number | null) => ({
   id: slug,
   name: 'Firma 3D', current: false,
-  allowance: { planSlug: slug, maxGuestGroups: 30, seating: true, registry: true, checkin: true, maxDoorPorters: 3, maxGalleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'antes_de_repartir' as const },
+  allowance: { planSlug: slug, maxGuestGroups: 30, seating: true, registry: true, checkin: true, maxDoorPorters: 3, maxCohosts: 1, maxHiredPlanners: 0, maxGalleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'antes_de_repartir' as const },
   price: { cents, annualCents, currency: 'BOB' },
 })
 

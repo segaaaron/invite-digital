@@ -34,7 +34,7 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
   const actor = await requireSession()
   const eventId = texto(formData, 'eventId')
   const eventSlug = texto(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'porteros' })
 
   // Los porteros solo existen con puerta: sin el modo puerta en el plan no hay a qué entrar.
   const puerta = await plans.requireFeature(eventId, 'checkin')
@@ -79,7 +79,7 @@ export async function removePorterAction(_previous: PorterActionState, formData:
   const actor = await requireSession()
   const eventId = texto(formData, 'eventId')
   const eventSlug = texto(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'porteros' })
 
   const quitado = await porters.revoke(eventId, texto(formData, 'porterId'))
   if (!quitado) return { status: 'error', message: 'Ese portero ya no estaba en la puerta.' }

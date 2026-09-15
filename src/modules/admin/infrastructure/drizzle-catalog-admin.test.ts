@@ -7,6 +7,8 @@ const plan: PlanLimpio = {
   priceCents: 100,
   maxGuestGroups: null,
   maxDoorPorters: 0,
+  maxCohosts: 1,
+  maxHiredPlanners: 0,
   maxGalleryPhotos: null,
   guestPhotos: true,
   eventPassword: true,

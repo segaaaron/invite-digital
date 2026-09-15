@@ -21,7 +21,7 @@ const PLANS = [
     order: 1,
     // El plan de entrada: la lista de invitados va limitada y el salón es lo único
     // avanzado que trae. Mesa de regalos y modo puerta son de los planes de arriba.
-    limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false, doorPorters: 0, galleryPhotos: 8, guestPhotos: false, eventPassword: false, csvImport: false, onlineDays: 60, designChange: 'ninguno' },
+    limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false, doorPorters: 0, cohosts: 1, hiredPlanners: 0, galleryPhotos: 8, guestPhotos: false, eventPassword: false, csvImport: false, onlineDays: 60, designChange: 'ninguno' },
     // Solo lo que el sistema entrega de verdad: nada de «3D real», dominio propio ni
     // papelería, que se prometían y no existían.
     es: {
@@ -42,7 +42,7 @@ const PLANS = [
     priceCents: 145000,
     highlighted: true,
     order: 2,
-    limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true, doorPorters: 3, galleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'antes_de_repartir' },
+    limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true, doorPorters: 3, cohosts: 3, hiredPlanners: 1, galleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'antes_de_repartir' },
     es: {
       name: 'Firma 3D',
       tagline: 'Organiza todo el día',
@@ -62,7 +62,7 @@ const PLANS = [
     highlighted: false,
     order: 3,
     // `null` es sin límite. No es cero.
-    limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true, doorPorters: 10, galleryPhotos: null, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 365, designChange: 'siempre' },
+    limits: { maxGuestGroups: null, seating: true, registry: true, checkin: true, doorPorters: 10, cohosts: null, hiredPlanners: null, galleryPhotos: null, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 365, designChange: 'siempre' },
     es: {
       name: 'Alta Costura',
       tagline: 'Lo hacemos contigo',
@@ -124,6 +124,8 @@ async function seed() {
         includesRegistry: p.limits.registry,
         includesCheckin: p.limits.checkin,
         maxDoorPorters: p.limits.doorPorters,
+        maxCohosts: p.limits.cohosts,
+        maxHiredPlanners: p.limits.hiredPlanners,
         maxGalleryPhotos: p.limits.galleryPhotos,
         guestPhotos: p.limits.guestPhotos,
         eventPassword: p.limits.eventPassword,

@@ -16,6 +16,8 @@ const SIN_PLAN: Allowance = {
   registry: true,
   checkin: true,
   maxDoorPorters: 10,
+  maxCohosts: null,
+  maxHiredPlanners: null,
   maxGalleryPhotos: null,
   guestPhotos: true,
   eventPassword: true,

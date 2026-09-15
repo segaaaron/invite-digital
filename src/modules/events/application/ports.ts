@@ -1,3 +1,4 @@
+import type { Membership } from '@/modules/identity/domain/access'
 import type { Event, EventInput } from '../domain/event'
 import type { ImageType } from '../domain/media'
 
@@ -37,14 +38,8 @@ export interface ClientShareRepository {
   revoke(id: string, at: Date): Promise<void>
 }
 
-/**
- * De qué clase es una pertenencia a un evento.
- *
- * Son los dos roles que entran sin ser dueños. Coincide con el rol del usuario y aun así
- * viaja explícito en cada consulta: dejar que el repositorio lo dedujera sería dejar que
- * un cliente pasara por personal de puerta con un `if` mal escrito.
- */
-export type Membership = 'puerta' | 'cliente'
+export type { Membership } from '@/modules/identity/domain/access'
+
 
 /**
  * Quién pertenece a qué evento, y como qué.
@@ -54,8 +49,10 @@ export type Membership = 'puerta' | 'cliente'
  * admin.
  */
 export interface StaffReader {
-  isStaffOf(eventId: string, userId: string, membership: Membership): Promise<boolean>
-  eventIdsOf(userId: string, membership: Membership): Promise<string[]>
+  /** Cómo pertenece este usuario a este evento. Vacía si no pertenece. */
+  membershipsOf(eventId: string, userId: string): Promise<Membership[]>
+  /** Los eventos donde pertenece con alguna de estas clases. */
+  eventIdsOf(userId: string, memberships: readonly Membership[]): Promise<string[]>
 }
 
 /**

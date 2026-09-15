@@ -23,6 +23,8 @@ export type TextosComparativa = {
     regalos: string
     puerta: string
     porteros: string
+    coanfitriones: string
+    planners: string
     enLinea: string
     modelo: string
   }
@@ -48,6 +50,8 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     regalos: (a) => siNo(a.registry),
     puerta: (a) => siNo(a.checkin),
     porteros: (a) => tope(a.maxDoorPorters),
+    coanfitriones: (a) => tope(a.maxCohosts),
+    planners: (a) => tope(a.maxHiredPlanners),
     enLinea: (a) => ({ texto: t.dias.replace('{n}', String(a.onlineDays)), incluido: true }),
     modelo: (a) => ({ texto: t.modelo[a.designChange], incluido: a.designChange !== 'ninguno' }),
   }
