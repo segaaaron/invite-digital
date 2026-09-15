@@ -15,6 +15,7 @@ import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { shareUrl } from './domain/client-share'
 import { mismaFiesta } from './domain/fiesta'
+import { puedeCambiarDiseno } from '@/modules/plans'
 import type { EventErrorKind } from './domain/errors'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
@@ -73,6 +74,20 @@ async function sembrarContenido(eventId: string, themeKey: string): Promise<void
   }
 }
 
+/**
+ * Si el plan deja cambiar el modelo ahora. El admin siempre: corrige ventas mal cargadas.
+ * Si no se puede leer el plan o los grupos, no: el fallo cae del lado de lo vendido.
+ */
+async function planDejaCambiarDiseno(role: string, eventId: string): Promise<boolean> {
+  if (role === 'admin') return true
+  const capacidad = await plans.allowanceFor(eventId)
+  if (isErr(capacidad)) return false
+  if (capacidad.value.designChange !== 'antes_de_repartir') return puedeCambiarDiseno(capacidad.value.designChange, { enlacesRepartidos: false })
+  const grupos = await guests.list(eventId)
+  if (isErr(grupos)) return false
+  return puedeCambiarDiseno('antes_de_repartir', { enlacesRepartidos: grupos.value.some((g) => g.invitationSentAt !== null) })
+}
+
 export async function updateEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
   const actor = await requireSession()
 
@@ -86,7 +101,8 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   if (isErr(anterior)) return { status: 'error', message: anterior.error.kind }
   const temaAnterior = anterior.value.themeKey
   const pedido = themeFor(String(formData.get('themeKey') ?? temaAnterior))
-  const themeKey = mismaFiesta(pedido.categorySlug, themeFor(temaAnterior).categorySlug) ? pedido.key : temaAnterior
+  const cambia = pedido.key !== temaAnterior && mismaFiesta(pedido.categorySlug, themeFor(temaAnterior).categorySlug)
+  const themeKey = cambia && (await planDejaCambiarDiseno(actor.role, eventId)) ? pedido.key : temaAnterior
 
   const result = await eventUseCases.update({ ...readForm(formData), themeKey, id: eventId })
   if (isErr(result)) {

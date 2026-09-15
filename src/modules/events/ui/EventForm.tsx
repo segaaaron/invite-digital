@@ -31,7 +31,14 @@ const MESSAGES: Record<EventErrorKind, string> = {
  * Crear o editar un evento, con la piel del panel y en tres bloques: el evento, su diseño y
  * cómo se reparte. Los nombres de los campos del formulario no cambian: la acción es la misma.
  */
-export function EventForm({ event }: { event?: Event }) {
+export function EventForm({
+  event,
+  diseno,
+}: {
+  event?: Event
+  /** Si el plan fija el modelo, el motivo. Sin esto se ofrecen los de su misma fiesta. */
+  diseno?: { fijo: string } | undefined
+}) {
   const [state, formAction, isPending] = useActionState(event ? updateEventAction : createEventAction, INITIAL)
   const slugId = useId()
   const titleId = useId()
@@ -112,7 +119,15 @@ export function EventForm({ event }: { event?: Event }) {
       </Bloque>
 
       <Bloque titulo="Diseño">
-        {event ? (
+        {event && diseno ? (
+          // El plan no deja cambiarlo: se enseña cuál es y por qué. El servidor lo conserva
+          // igual aunque llegue otro por POST.
+          <div className="flex flex-col gap-1">
+            <input name="themeKey" readOnly type="hidden" value={event.themeKey} />
+            <p className="text-[14px] text-ink">{themeFor(event.themeKey).label}</p>
+            <p className="text-[12px] text-ink-mute">{diseno.fijo}</p>
+          </div>
+        ) : event ? (
           // **En un evento creado, el diseño solo cambia por otro de la misma fiesta**: unos XV
           // por otros XV, una boda por otra boda. La otra fiesta ni se ofrece, y
           // `updateEventAction` lo rechaza también en el servidor.

@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { events, plans } from '@/app/composition/container'
+import { events, guests, plans } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { EventMediaPanel } from '@/modules/events/ui/EventMediaPanel'
@@ -89,6 +89,18 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   // Si el plan trae la contraseña. Una lectura fallida no la concede.
   const capacidad = await plans.allowanceFor(event.value.id)
   const contrasenaIncluida = !isErr(capacidad) && capacidad.value.eventPassword
+  // El modelo lo cambia el plan; el admin, siempre. La misma regla la aplica `updateEventAction`.
+  const diseno = await (async (): Promise<{ fijo: string } | undefined> => {
+    if (actor.role === 'admin') return undefined
+    if (isErr(capacidad)) return { fijo: 'No pudimos leer tu plan: el modelo se queda como está.' }
+    if (capacidad.value.designChange === 'ninguno') return { fijo: 'Tu plan no incluye cambiar de modelo.' }
+    if (capacidad.value.designChange === 'siempre') return undefined
+    const grupos = await guests.list(event.value.id)
+    if (isErr(grupos) || grupos.value.some((g) => g.invitationSentAt !== null)) {
+      return { fijo: 'El modelo ya no cambia: ya salieron invitaciones. Cambiarlo ahora confundiría a quien ya la vio.' }
+    }
+    return undefined
+  })()
 
   // El personal de puerta y el cliente los gestiona **solo el admin**: dar de alta crea
   // una cuenta y le manda credenciales. Para cualquier otro, las dos tarjetas no se
@@ -131,7 +143,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
         {esDelAtelier ? (
           <PanelCard title="Detalles del evento">
             <div className="flex flex-col gap-6">
-              <EventForm event={event.value} />
+              <EventForm diseno={diseno} event={event.value} />
               <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
               <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
             </div>
