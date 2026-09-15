@@ -12,7 +12,7 @@ const seedContent = vi.fn()
 const allowanceFor = vi.fn()
 const listGroups = vi.fn()
 const create = vi.fn()
-const listActive = vi.fn()
+const cheapestActive = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 // La guardia de multitenencia se deja pasar en estas pruebas: lo que comprueban es el
@@ -35,7 +35,7 @@ vi.mock('@/app/composition/container', () => ({
   plans: {
     requireFeature: (...args: unknown[]) => requireFeature(...args),
     allowanceFor: (...args: unknown[]) => allowanceFor(...args),
-    listActive: (...args: unknown[]) => listActive(...args),
+    cheapestActive: (...args: unknown[]) => cheapestActive(...args),
   },
   guests: { list: (...args: unknown[]) => listGroups(...args) },
 }))
@@ -179,9 +179,11 @@ describe('la retención la fija el plan, no el formulario', () => {
     return fd
   }
 
+  // El más barato por precio, el mismo que `getEventAllowance` aplica a un evento sin plan:
+  // el primero del escaparate puede ser otro.
   it('al crear, el evento sin plan toma los días en línea del plan más barato', async () => {
     requireSession.mockResolvedValue({ userId: 'u1', role: 'atelier' })
-    listActive.mockResolvedValue([{ onlineDays: 60 }, { onlineDays: 365 }])
+    cheapestActive.mockResolvedValue({ onlineDays: 60 })
     create.mockResolvedValue(ok({ id: 'e1', themeKey: 'boda-bot' }))
     const { createEventAction } = await import('./actions')
 

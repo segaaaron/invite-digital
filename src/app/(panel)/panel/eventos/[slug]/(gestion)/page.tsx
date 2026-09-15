@@ -156,6 +156,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
       .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
       .map(({ t, estado }) => ({ id: t.id, title: t.title, vence: dia(t.dueDate!), atrasada: estado === 'atrasada' })),
+    marcaPagos: llevaProveedores,
     sinConfirmar: proveedoresSinConfirmar(proveedores).map((v) => ({ id: v.id, service: v.service, whatsappHref: v.whatsapp ? buildWhatsAppLink(v.whatsapp, `Hola, ¿nos confirmas para ${event.value.title}?`) : null })),
     pagos: pagosQueVencen(partidas, hoyBolivia).map((g) => ({ id: g.id, concepto: g.concepto, importe: bs(g.amountCents), vence: dia(g.dueDate!), atrasado: g.dueDate! < hoyBolivia })),
   }

@@ -40,6 +40,9 @@ export default async function PresupuestoPage({ params, searchParams }: { params
   }
 
   const fiesta = fiestaDeTema(event.value.themeKey)
+  // El dinero lo llevan el anfitrión y su planner; el co-anfitrión lo ve sin tocarlo.
+  const dueno = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const editable = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).some((m) => m === 'cliente' || m === 'planner')
   const hoy = fechaEnBolivia(new Date())
   const partidas = await planner.listBudget(event.value.id)
   const totales = totalesDelPresupuesto(partidas)
@@ -81,9 +84,11 @@ export default async function PresupuestoPage({ params, searchParams }: { params
         actions={
           <>
             {partidas.length > 0 ? <BudgetCsvButton csv={presupuestoACsv(partidas, fiesta)} nombre={`presupuesto-${event.value.slug}.csv`} /> : null}
-            <PanelButton href={`${base}?panel=partida`} variant="primary">
-              Sumar partida
-            </PanelButton>
+            {editable ? (
+              <PanelButton href={`${base}?panel=partida`} variant="primary">
+                Sumar partida
+              </PanelButton>
+            ) : null}
           </>
         }
         kicker="Planner"
@@ -92,7 +97,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
       />
 
       <div className="flex flex-col gap-4.5">
-        {panel === 'partida' ? (
+        {panel === 'partida' && editable ? (
           <PanelCard title="Partida nueva">
             <ItemForm evento={evento} opciones={opciones} />
           </PanelCard>
@@ -137,7 +142,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
           </div>
         )}
 
-        <BudgetBoard evento={evento} opciones={opciones} partidas={vistas} />
+        <BudgetBoard editable={editable} evento={evento} opciones={opciones} partidas={vistas} />
       </div>
     </>
   )

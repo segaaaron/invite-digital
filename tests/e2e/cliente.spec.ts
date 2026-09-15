@@ -102,6 +102,9 @@ test.describe('el panel del cliente', () => {
     await expect(mama).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`), { timeout: 20_000 })
 
     expect((await mama.goto(`/panel/eventos/${SLUG}/planner/tareas`))?.status()).toBe(200)
+    // Ve el presupuesto, pero no lo edita: el dinero lo llevan el anfitrión y su planner.
+    expect((await mama.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
+    await expect(mama.getByRole('link', { name: 'Sumar partida' })).toHaveCount(0)
     for (const ruta of ['/equipo', '/porteros', '/plan', '/checkin']) {
       expect((await mama.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), ruta).toBe(404)
     }

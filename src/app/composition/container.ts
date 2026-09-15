@@ -440,7 +440,10 @@ export const events = {
     remove: removeTeamMember({ staff: drizzleStaffRepository }),
     list: (eventId: string) => drizzleStaffRepository.listTeam(eventId),
   },
-  remove: deleteEvent({ events: drizzleEventRepository }),
+  remove: deleteEvent({
+    events: drizzleEventRepository,
+    purgeFiles: async (eventId) => (await purgeMedia(mediaDeps)(eventId)) + (await planner.dia.purgeDocuments(eventId)),
+  }),
   setPassword: setEventPassword({
     events: drizzleEventRepository,
     access: drizzleAccessRepository,
@@ -485,6 +488,8 @@ export const plans = {
   allowanceFor: getEventAllowance({ plans: drizzlePlansRepository }),
   requireFeature: requireFeature({ plans: drizzlePlansRepository }),
   listActive: () => drizzlePlansRepository.listActivePlans(),
+  /** El activo más barato por precio: el que se aplica a un evento sin plan. */
+  cheapestActive: () => drizzlePlansRepository.findCheapestActivePlan(),
   requestChange: requestPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
   applyChange: applyPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
   rejectChange: rejectPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),

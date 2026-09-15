@@ -152,7 +152,7 @@ function NuevoPago({ evento, itemId, concepto }: { evento: Evento; itemId: strin
 }
 
 /** Las partidas, cada una con sus cuentas, sus pagos y su edición plegada. */
-export function BudgetBoard({ evento, opciones, partidas }: { evento: Evento; opciones: Opciones; partidas: readonly PartidaVista[] }) {
+export function BudgetBoard({ evento, opciones, partidas, editable = true }: { evento: Evento; opciones: Opciones; partidas: readonly PartidaVista[]; /** El co-anfitrión lo ve sin tocarlo. */ editable?: boolean }) {
   if (partidas.length === 0) {
     return <p className="rounded-[14px] border border-dashed border-line-panel-strong px-4 py-6 text-center text-[13px] text-ink-mute">Todavía no hay partidas. Empieza por el salón: suele ser la más grande.</p>
   }
@@ -192,18 +192,23 @@ export function BudgetBoard({ evento, opciones, partidas }: { evento: Evento; op
                   </span>
                   <span className="flex flex-wrap items-center gap-2">
                     <Pill tone={g.pagado ? 'ok' : g.atrasado ? 'no' : 'pending'}>{g.pagado ? 'Pagado' : g.atrasado ? 'Vencido' : 'Por pagar'}</Pill>
+                    {editable ? (
+                      <>
                     <Accion action={setPaymentPaidAction} evento={evento} extra={{ paymentId: g.id, paid: String(!g.pagado) }} label={g.pagado ? `Desmarcar pago de ${g.importe}` : `Marcar pagado ${g.importe}`}>
                       {g.pagado ? 'Desmarcar' : 'Pagado'}
                     </Accion>
                     <Accion action={removePaymentAction} evento={evento} extra={{ paymentId: g.id }} label={`Quitar pago de ${g.importe}`} variant="danger">
                       Quitar
                     </Accion>
+                      </>
+                    ) : null}
                   </span>
                 </li>
               ))}
             </ul>
           )}
 
+          {editable ? (
           <details>
             <summary className="cursor-pointer text-[11px] text-ink-soft underline underline-offset-2">Pagos, editar o quitar</summary>
             <div className="mt-3 flex flex-col gap-4">
@@ -216,6 +221,7 @@ export function BudgetBoard({ evento, opciones, partidas }: { evento: Evento; op
               </div>
             </div>
           </details>
+          ) : null}
         </li>
       ))}
     </ul>

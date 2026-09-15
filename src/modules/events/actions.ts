@@ -42,7 +42,7 @@ export async function createEventAction(_previous: EventActionState, formData: F
   // dejaría un evento huérfano que solo vería el admin.
   // Sin plan, el evento usa el más barato activo, y sus datos duran lo que ese plan dice.
   // Asignarle otro plan después arrastra sus días (`setEventPlan`, `applyRequest`).
-  const retentionDays = (await plans.listActive())[0]?.onlineDays ?? 90
+  const retentionDays = (await plans.cheapestActive())?.onlineDays ?? 90
   const result = await eventUseCases.create({ ...readForm(formData), retentionDays, userId: actor.userId })
   if (isErr(result)) {
     console.error('alta de evento rechazada', result.error.kind, result.error.detail)

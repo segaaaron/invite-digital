@@ -14,6 +14,8 @@ export type SemanaVista = {
   readonly pagos: ReadonlyArray<{ id: string; concepto: string; importe: string; vence: string; atrasado: boolean }>
   /** Contratados o reservados que no confirmaron. Vacío si el plan no trae proveedores. */
   readonly sinConfirmar: ReadonlyArray<{ id: string; service: string; whatsappHref: string | null }>
+  /** Si quien mira puede marcar pagos: el anfitrión y su planner, no el co-anfitrión. */
+  readonly marcaPagos: boolean
 }
 
 /**
@@ -62,9 +64,11 @@ export function ThisWeekCard({ evento, semana }: { evento: Evento; semana: Seman
               </span>
               <span className="flex items-center gap-2">
                 <Pill tone={g.atrasado ? 'no' : 'maybe'}>{g.atrasado ? 'Vencido' : 'Esta semana'}</Pill>
-                <Accion action={setPaymentPaidAction} evento={evento} extra={{ paymentId: g.id, paid: 'true' }} label={`Marcar pagado ${g.concepto} ${g.importe}`}>
-                  Pagado
-                </Accion>
+                {semana.marcaPagos ? (
+                  <Accion action={setPaymentPaidAction} evento={evento} extra={{ paymentId: g.id, paid: 'true' }} label={`Marcar pagado ${g.concepto} ${g.importe}`}>
+                    Pagado
+                  </Accion>
+                ) : null}
               </span>
             </li>
           ))}

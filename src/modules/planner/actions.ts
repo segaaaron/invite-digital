@@ -15,9 +15,9 @@ import type { PlannerResult } from './application/planner-use-cases'
 export type PlannerActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string; valores?: Record<string, string> }
 
 // ============================================================================
-// Todas son del panel y empiezan por `requireSession()`. El planner es de quien celebra y
-// de quien lleva el evento: sección `cliente`, como invitados y mensajes. La portería no
-// entra.
+// Todas son del panel y empiezan por `requireSession()`. Las tareas son de todo el equipo
+// —sección `cliente`, como invitados y mensajes—; el presupuesto, del anfitrión y su planner
+// —sección `planner`—. La portería no entra.
 // ============================================================================
 
 const texto = (fd: FormData, campo: string) => String(fd.get(campo) ?? '')
@@ -105,10 +105,12 @@ export async function removeTaskAction(_previo: PlannerActionState, fd: FormData
 }
 
 // ─── Presupuesto ─────────────────────────────────────────────────────────────
+// El dinero lo llevan el anfitrión y su planner (sección `planner`). El co-anfitrión lo ve
+// en la pantalla, pero no escribe ni marca pagos.
 
 export async function saveItemAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
+  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'planner' })
   const { eventId, eventSlug, fiesta } = await eventoDe(actor, fd)
 
   const previsto = centavos(texto(fd, 'estimated'), false)
@@ -131,13 +133,13 @@ export async function saveItemAction(_previo: PlannerActionState, fd: FormData):
 
 export async function removeItemAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
+  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'planner' })
   return responder(await planner.removeItem(texto(fd, 'eventId'), texto(fd, 'itemId')), texto(fd, 'eventSlug'))
 }
 
 export async function addPaymentAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
+  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'planner' })
   const importe = centavos(texto(fd, 'amount'), false)
   if (!importe.ok) return { status: 'error', message: importe.message, valores: valoresDe(fd) }
   const resultado = await planner.addPayment(texto(fd, 'eventId'), texto(fd, 'itemId'), { amountCents: importe.cents ?? 0, dueDate: texto(fd, 'dueDate'), label: texto(fd, 'label') })
@@ -146,13 +148,13 @@ export async function addPaymentAction(_previo: PlannerActionState, fd: FormData
 
 export async function setPaymentPaidAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
+  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'planner' })
   const resultado = await planner.setPaymentPaid(texto(fd, 'eventId'), texto(fd, 'paymentId'), texto(fd, 'paid') === 'true')
   return responder(resultado, texto(fd, 'eventSlug'))
 }
 
 export async function removePaymentAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
+  await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'planner' })
   return responder(await planner.removePayment(texto(fd, 'eventId'), texto(fd, 'paymentId')), texto(fd, 'eventSlug'))
 }

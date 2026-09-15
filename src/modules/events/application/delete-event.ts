@@ -14,7 +14,15 @@ import type { EventRepository } from './ports'
  * HTTP público y un `fetch` a mano se salta cualquier diálogo.
  */
 export const deleteEvent =
-  (deps: { events: EventRepository }) =>
+  (deps: {
+    events: EventRepository
+    /**
+     * Borra del disco los ficheros del evento —fotos, canción y documentos privados— y sus
+     * filas. Va antes que el evento: la cascada se llevaría las filas y dejaría los ficheros
+     * sin nadie que sepa que existen.
+     */
+    purgeFiles: (eventId: string) => Promise<number>
+  }) =>
   async (input: { eventId: string; confirmation: string }): Promise<Result<null, EventError>> =>
     attempt<null, EventError>(
       async () => {
@@ -30,6 +38,7 @@ export const deleteEvent =
           )
         }
 
+        await deps.purgeFiles(input.eventId)
         await deps.events.remove(input.eventId)
         return ok(null)
       },
