@@ -173,6 +173,9 @@ describe('panelNav', () => {
     expect(rutas('coanfitrion')).toContain('/panel/eventos/boda/planner/cortejo')
     expect(rutas('coanfitrion')).not.toContain('/panel/eventos/boda/planner/proveedores')
     expect(rutas('planner')).toContain('/panel/eventos/boda/planner/cronograma')
+    expect(rutas('planner')).toContain('/panel/eventos/boda/dia-d')
+    expect(rutas('coanfitrion')).not.toContain('/panel/eventos/boda/dia-d')
+    expect(rutas('coanfitrion')).toContain('/panel/eventos/boda/planner/documentos')
   })
 
   it('quien es planner en algún evento llega a su mesa desde la cuenta', () => {

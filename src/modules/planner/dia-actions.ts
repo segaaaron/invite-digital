@@ -224,3 +224,40 @@ export async function removeRehearsalAction(_previo: DiaActionState, fd: FormDat
   await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
   return responder(await planner.dia.removeRehearsal(eventId, texto(fd, 'rehearsalId')), eventSlug)
 }
+
+// ─── Día D y documentos ──────────────────────────────────────────────────────
+
+export async function setVendorArrivedAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
+  const actor = await requireSession()
+  const eventId = texto(fd, 'eventId')
+  const eventSlug = texto(fd, 'eventSlug')
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'planner' })
+  const corte = await incluido(eventId, 'plannerTotal')
+  if (corte) return corte
+  return responder(await planner.dia.setVendorArrived(eventId, texto(fd, 'vendorId'), texto(fd, 'arrived') === 'true'), eventSlug)
+}
+
+export async function uploadDocumentAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
+  const actor = await requireSession()
+  const eventId = texto(fd, 'eventId')
+  const eventSlug = texto(fd, 'eventSlug')
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  const corte = await incluido(eventId, 'plannerCompleto')
+  if (corte) return corte
+  const archivo = fd.get('file')
+  if (!(archivo instanceof File) || archivo.size === 0) return { status: 'error', message: 'Elige un archivo.' }
+  const resultado = await planner.dia.saveDocument(
+    eventId,
+    { kind: texto(fd, 'kind'), topic: texto(fd, 'topic'), vendorId: texto(fd, 'vendorId'), budgetItemId: texto(fd, 'budgetItemId') },
+    { name: archivo.name, size: archivo.size, bytes: async () => new Uint8Array(await archivo.arrayBuffer()) },
+  )
+  return responder(resultado, eventSlug)
+}
+
+export async function removeDocumentAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
+  const actor = await requireSession()
+  const eventId = texto(fd, 'eventId')
+  const eventSlug = texto(fd, 'eventSlug')
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  return responder(await planner.dia.removeDocument(eventId, texto(fd, 'documentId')), eventSlug)
+}

@@ -57,6 +57,7 @@ export const NAV_ICONS = {
   presupuesto: <ReceiptIcon />,
   proveedores: <BuildingIcon />,
   cortejo: <UsersIcon />,
+  documentos: <PenIcon />,
 } as const satisfies Record<string, ReactNode>
 
 export type NavIcon = keyof typeof NAV_ICONS

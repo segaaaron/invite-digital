@@ -163,6 +163,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: equipo === 'coanfitrion' ? null : en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
           { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
           { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
+          { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
+          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'checkin' },
         ],
       },
       {
@@ -208,6 +210,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
         { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
         { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
+        { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
+        { href: en('/dia-d'), label: 'Día D', icon: 'checkin' },
       ],
     },
     {
