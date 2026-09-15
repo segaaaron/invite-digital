@@ -100,6 +100,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
             { href: '/panel/admin/ingresos', label: 'Ingresos', icon: 'estadisticas' },
             // Precio, tope y funciones de cada plan, sin SQL ni despliegue.
             { href: '/panel/admin/planes', label: 'Planes', icon: 'plan' },
+            // Lo que un evento suma sin cambiar de plan. Nacen apagados.
+            { href: '/panel/admin/extras', label: 'Extras', icon: 'presupuesto' },
             // Publicar o retirar cada modelo de la web, y su música de escaparate. No es la
             // música de una boda: esa la sube su atelier o su cliente desde Configuración.
             { href: '/panel/admin/modelos', label: 'Modelos', icon: 'editar' },
@@ -152,6 +154,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: equipo === 'coanfitrion' ? null : en('/porteros'), label: 'Porteros', icon: 'checkin' },
           // Solo el anfitrión suma personas: nadie da más permisos de los que tiene.
           { href: equipo === 'anfitrion' ? en('/equipo') : null, label: 'Equipo', icon: 'usuarios' },
+          // Comprar es del anfitrión.
+          { href: equipo === 'anfitrion' ? en('/extras') : null, label: 'Extras', icon: 'plan' },
         ],
       },
       {
@@ -232,6 +236,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       items: [
         { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
         { href: en('/plan'), label: 'Plan', icon: 'plan' },
+        { href: en('/extras'), label: 'Extras', icon: 'presupuesto' },
         { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
         // La propia contraseña. Las cuentas las da de alta el admin y la clave inicial
         // viaja por WhatsApp: sin esta pantalla valdría para siempre.

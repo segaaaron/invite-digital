@@ -38,4 +38,13 @@ describe('PlanComparison', () => {
     const porteros = screen.getByRole('row', { name: /porteros/i })
     expect(within(porteros).getAllByRole('cell').map((c) => c.textContent)).toEqual(['No', 'Hasta 10'])
   })
+
+  it('los extras a la venta salen debajo con su precio; sin extras, no hay bloque', () => {
+    const { rerender } = render(<PlanComparison extras={[{ name: '+3 porteros', precio: 'Bs 80,00' }]} planes={[{ nombre: 'Atelier', limites: base }]} textos={es.pricing.comparison} />)
+    expect(screen.getByRole('heading', { name: es.pricing.comparison.extrasTitle })).toBeInTheDocument()
+    expect(screen.getByRole('listitem')).toHaveTextContent('+3 porteros · Bs 80,00')
+    rerender(<PlanComparison planes={[{ nombre: 'Atelier', limites: base }]} textos={es.pricing.comparison} />)
+    expect(screen.queryByRole('heading', { name: es.pricing.comparison.extrasTitle })).not.toBeInTheDocument()
+  })
 })
+

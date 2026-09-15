@@ -7,6 +7,7 @@ import type { Plan } from '@/modules/catalog'
 import type { Fiesta } from '@/modules/events'
 import { capacidadDePlan } from '@/modules/plans'
 import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
+import { formatAmount } from '@/modules/registry'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { FiestaLanding } from '@/sections/FiestaLanding'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -44,7 +45,10 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
     const fila = filas.find((f) => f.slug === plan.slug)
     return fila === undefined ? [] : [{ nombre: plan.name, limites: capacidadDePlan(fila) }]
   })
-  return columnas.length === 0 ? null : <PlanComparison planes={columnas} textos={dictionary.pricing.comparison} />
+  const extras = await plans.listActiveExtras().catch(() => [])
+  return columnas.length === 0 ? null : (
+    <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: formatAmount(x.priceCents, x.currency) }))} planes={columnas} textos={dictionary.pricing.comparison} />
+  )
 }
 
 /**

@@ -38,4 +38,10 @@ describe('OrderDecision', () => {
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/sin motivo/i))
   })
+
+  it('un pedido de extra no pide el acceso del cliente: no crea boda', () => {
+    render(<OrderDecision esExtra orderId="o1" />)
+    expect(screen.queryByLabelText(/correo del cliente/i)).not.toBeInTheDocument()
+  })
 })
+

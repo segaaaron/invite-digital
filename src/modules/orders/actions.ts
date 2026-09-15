@@ -2,7 +2,7 @@
 
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, notifications, orders } from '@/app/composition/container'
+import { admin, events, identity, notifications, orders, plans } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { parseRole, type Actor } from '@/modules/identity/domain/access'
 import { createCredential } from '@/modules/identity/domain/credential'
@@ -210,6 +210,14 @@ async function aprovisionar(
 ): Promise<{ message: string; eventSlug: string | null }> {
   const order = await orders.byId(orderId)
   if (order === null) return { message: 'Pedido aprobado. No pudimos releerlo para crear el evento.', eventSlug: null }
+
+  // **Un pedido de extra no crea boda**: sube la capacidad del evento que lo compró, una sola
+  // vez aunque se apruebe dos veces.
+  if (order.addonSlug !== null) {
+    const aplicado = await plans.applyExtra(order.id)
+    await admin.record(actor, { action: 'extra.aplicado', subject: order.eventSlug ?? order.publicRef, detail: order.addonName ?? order.addonSlug })
+    return { message: aplicado ? `Extra «${order.addonName ?? order.addonSlug}» aplicado.` : 'El extra ya estaba aplicado.', eventSlug: order.eventSlug }
+  }
 
   const correo = String(formData.get('clientEmail') ?? '').trim().toLowerCase()
   const clave = String(formData.get('clientPassword') ?? '')

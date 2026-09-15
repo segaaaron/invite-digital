@@ -1,7 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, notifications } from '@/app/composition/container'
+import { admin, events, identity, notifications, plans } from '@/app/composition/container'
+import { leerExtra } from '@/modules/plans'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { createCredential } from '@/modules/identity/domain/credential'
 import { parseRole } from '@/modules/identity/domain/access'
@@ -642,6 +643,28 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   revalidatePath('/panel/admin/planes')
   refrescar()
   return { status: 'success', message: 'Plan guardado. La web ya enseña los cambios.' }
+}
+
+/**
+ * Edita un extra del catálogo: nombre, precio, qué hace y si está a la venta. Venderlo es una
+ * decisión comercial y va aquí, no en una migración. Lo ya vendido no cambia: el pedido
+ * congeló su importe y el evento copió el efecto.
+ */
+export async function saveExtraAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
+  const actor = await requireAdmin()
+  const slug = texto(formData, 'slug')
+  const valores = Object.fromEntries([...formData.entries()].filter((par): par is [string, string] => typeof par[1] === 'string'))
+  const precio = parseAmount(texto(formData, 'price'))
+  if (isErr(precio)) return { status: 'error', message: precio.error.detail, valores }
+
+  const leido = leerExtra({ name: texto(formData, 'name'), priceCents: precio.value, effect: texto(formData, 'effect'), amount: texto(formData, 'amount'), isActive: formData.get('isActive') === 'on' })
+  if (!leido.ok) return { status: 'error', message: leido.mensaje, valores }
+  if (!(await plans.updateExtra(slug, leido.valor))) return { status: 'error', message: 'Ese extra ya no existe.', valores }
+
+  await admin.record(actor, { action: 'extra.editado', subject: slug, detail: `${leido.valor.name} · ${leido.valor.priceCents / 100} · ${leido.valor.isActive ? 'a la venta' : 'apagado'}` })
+  revalidatePath('/panel/admin/extras')
+  refrescar()
+  return { status: 'success', message: 'Extra guardado.' }
 }
 
 /** Publica o retira un modelo del escaparate. Retirar no borra: los enlaces siguen vivos. */

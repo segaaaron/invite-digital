@@ -18,7 +18,7 @@ const INICIAL: DecideOrderState = { status: 'idle' }
  * al cliente sin saber si transfirió de menos, a otra cuenta o subió la foto equivocada,
  * y la única salida que le queda es llamar por teléfono.
  */
-export function OrderDecision({ orderId }: { orderId: string }) {
+export function OrderDecision({ orderId, esExtra = false }: { orderId: string; /** Un extra no crea boda: no pide acceso. */ esExtra?: boolean }) {
   const [estado, accion, pendiente] = useActionState<DecideOrderState, FormData>(decideOrderAction, INICIAL)
   const id = useId()
 
@@ -41,6 +41,7 @@ export function OrderDecision({ orderId }: { orderId: string }) {
       {/* Al aprobar se crea la boda con el diseño que eligió y el plan que pagó, y estos
           dos campos le dan su acceso. Si el correo ya tiene cuenta, no se le toca la
           contraseña: solo se le añade esta boda. */}
+      {esExtra ? null : (
       <div className="grid gap-3 min-[560px]:grid-cols-2">
         <label className="flex flex-col gap-2" htmlFor={`${id}-correo`}>
           <span className={LABEL_CLASS}>Correo del cliente · para crearle su acceso</span>
@@ -59,6 +60,7 @@ export function OrderDecision({ orderId }: { orderId: string }) {
           />
         </label>
       </div>
+      )}
 
       {estado.status === 'error' ? (
         <p className="text-[13px] text-danger" role="alert">

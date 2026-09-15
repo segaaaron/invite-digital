@@ -3,7 +3,9 @@ import { filasComparativas, type TextosComparativa } from '../domain/comparativa
 
 type Props = {
   planes: ReadonlyArray<{ nombre: string; limites: Allowance }>
-  textos: TextosComparativa & { title: string; feature: string }
+  textos: TextosComparativa & { title: string; feature: string; extrasTitle: string }
+  /** Los extras a la venta, ya con su precio en palabras. Sin ninguno, no hay bloque. */
+  extras?: ReadonlyArray<{ name: string; precio: string }>
 }
 
 /**
@@ -11,7 +13,7 @@ type Props = {
  * los mismos que corta el servidor: un texto escrito a mano acaba prometiendo lo que el
  * plan no trae, y eso ya pasó con «3D real» y «dominio propio».
  */
-export function PlanComparison({ planes, textos }: Props) {
+export function PlanComparison({ planes, textos, extras = [] }: Props) {
   const filas = filasComparativas(
     planes.map((p) => p.limites),
     textos,
@@ -53,6 +55,18 @@ export function PlanComparison({ planes, textos }: Props) {
           </tbody>
         </table>
       </div>
+      {extras.length === 0 ? null : (
+        <div className="mt-10 flex flex-col items-center gap-4">
+          <h3 className="font-display text-[22px] font-light text-ink">{textos.extrasTitle}</h3>
+          <ul className="flex flex-wrap justify-center gap-2.5">
+            {extras.map((x) => (
+              <li className="rounded-[var(--radius-pill)] border border-line px-4 py-2 text-[13px] text-ink-soft" key={x.name}>
+                {x.name} · <span className="text-ink [font-variant-numeric:lining-nums]">{x.precio}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }

@@ -143,6 +143,8 @@ export interface PricingDictionary {
 
 export interface PlanComparisonDictionary {
   title: string
+  /** Los extras sueltos a la venta, debajo de la tabla. */
+  extrasTitle: string
   /** Cabecera de la primera columna. */
   feature: string
   si: string

@@ -28,6 +28,12 @@ export const createFakePlansRepository = (input: {
     async findCheapestActivePlan() {
       return plans[0] ?? null
     },
+    async updateExtra() {
+      return false
+    },
+    async listExtras() {
+      return []
+    },
     async applyExtra() {
       return false
     },

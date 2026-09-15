@@ -1,6 +1,6 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { events, orders, planTranslations } from '@/shared/db/schema'
+import { addons, events, orders, planTranslations } from '@/shared/db/schema'
 import type { IncomeReader } from '../application/ports'
 
 export const createDrizzleIncomeReader = (database: DbExecutor): IncomeReader => ({
@@ -13,7 +13,8 @@ export const createDrizzleIncomeReader = (database: DbExecutor): IncomeReader =>
         status: orders.status,
         amountCents: orders.amountCents,
         currency: orders.currency,
-        planName: planTranslations.name,
+        // Un extra suma como su propio renglón, con su nombre.
+        planName: sql<string | null>`coalesce(${planTranslations.name}, ${addons.name})`,
         decidedAt: orders.decidedAt,
         createdAt: orders.createdAt,
         eventSlug: events.slug,
@@ -21,6 +22,7 @@ export const createDrizzleIncomeReader = (database: DbExecutor): IncomeReader =>
       .from(orders)
       .leftJoin(planTranslations, and(eq(planTranslations.planId, orders.planId), eq(planTranslations.locale, 'es')))
       .leftJoin(events, eq(events.id, orders.eventId))
+      .leftJoin(addons, eq(addons.slug, orders.addonSlug))
   },
 })
 

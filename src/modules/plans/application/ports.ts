@@ -1,4 +1,4 @@
-import type { ExtraAplicado } from '../domain/extras'
+import type { Extra, ExtraAplicado } from '../domain/extras'
 /** Un plan del catálogo con sus límites, tal y como sale de la base. */
 export type PlanRow = {
   readonly id: string
@@ -83,4 +83,8 @@ export interface PlansRepository extends PlanReader, PlanChangeRequests {
    * Aplica el extra de un pedido aprobado a su evento. **Una sola vez por pedido**: aprobar dos
    * veces no lo suma dos veces. `false` si ya estaba o el pedido no es de un extra.
    */
-  applyExtra(orderId: string): Promise<boolean>}
+  applyExtra(orderId: string): Promise<boolean>
+  /** El catálogo de extras; con `soloActivos`, los que están a la venta. */
+  listExtras(soloActivos: boolean): Promise<Extra[]>
+  /** Edita un extra. `false` si no existe. */
+  updateExtra(slug: string, extra: Omit<Extra, 'slug' | 'currency'>): Promise<boolean>}

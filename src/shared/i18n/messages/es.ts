@@ -135,6 +135,7 @@ export const es = {
     bookCall: 'Agendar llamada',
     comparison: {
       title: 'Qué trae cada plan',
+      extrasTitle: 'Extras sueltos, sin cambiar de plan',
       feature: 'Incluye',
       si: 'Sí',
       no: 'No',

@@ -1,6 +1,7 @@
-import { and, eq, sql } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { events, planChangeRequests } from '@/shared/db/schema'
+import { addons, events, planChangeRequests } from '@/shared/db/schema'
+import { EFECTOS_DE_EXTRA, type EfectoDeExtra } from '../domain/extras'
 import type { PlanChangeRequestRow, PlanChangeStatus, PlansRepository } from '../application/ports'
 import { createDrizzlePlanReader } from './drizzle-plan-reader'
 
@@ -59,6 +60,24 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
    * Que la condición viaje dentro del propio UPDATE es lo que hace que la segunda no
    * encuentre nada que actualizar en vez de aplicar el cambio dos veces.
    */
+  async listExtras(soloActivos) {
+    const filas = await database
+      .select()
+      .from(addons)
+      .where(soloActivos ? eq(addons.isActive, true) : undefined)
+      .orderBy(asc(addons.sortOrder))
+    return filas.flatMap((f) =>
+      (EFECTOS_DE_EXTRA as readonly string[]).includes(f.effect)
+        ? [{ slug: f.slug, name: f.name, priceCents: f.priceCents, currency: f.currency, effect: f.effect as EfectoDeExtra, amount: f.amount, isActive: f.isActive }]
+        : [],
+    )
+  },
+
+  async updateExtra(slug, extra) {
+    const filas = await database.update(addons).set(extra).where(eq(addons.slug, slug)).returning({ slug: addons.slug })
+    return filas.length > 0
+  },
+
   async applyExtra(orderId): Promise<boolean> {
     return database.transaction(async (tx) => {
       // El efecto y la cantidad se **copian** del extra: editarlo después no reescribe lo vendido.

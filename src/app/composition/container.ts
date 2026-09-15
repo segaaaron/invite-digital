@@ -99,6 +99,7 @@ import {
   decideOrder,
   findOrderByRef,
   listOrders,
+  placeAddonOrder,
   placeOrder,
   readProof,
 } from '@/modules/orders/application/order-use-cases'
@@ -488,6 +489,15 @@ export const plans = {
   applyChange: applyPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
   rejectChange: rejectPlanChange({ plans: drizzlePlansRepository, ids: () => crypto.randomUUID(), clock }),
   pendingChange: getPendingRequest({ plans: drizzlePlansRepository }),
+  /** Aplica el extra de un pedido aprobado. Una sola vez por pedido. */
+  applyExtra: (orderId: string) => drizzlePlansRepository.applyExtra(orderId),
+  /** Los extras a la venta, del más barato de orden. */
+  listActiveExtras: () => drizzlePlansRepository.listExtras(true),
+  /** Todo el catálogo de extras, para el admin. */
+  listAllExtras: () => drizzlePlansRepository.listExtras(false),
+  updateExtra: (slug: string, extra: Parameters<typeof drizzlePlansRepository.updateExtra>[1]) => drizzlePlansRepository.updateExtra(slug, extra),
+  /** Los que compró el evento, para enseñarlos en su plan. */
+  eventExtras: (eventId: string) => drizzlePlansRepository.listEventExtras(eventId),
 } as const
 
 // Fuera del objeto: `addGuest` los compone, y un objeto que se referencia a sí mismo
@@ -641,6 +651,8 @@ const showcaseStorage = createDiskShowcaseStorage(`${env.EVENT_MEDIA_DIR}/escapa
 
 export const orders = {
   place: placeOrder({ orders: drizzleOrderRepository, clock }),
+  /** El pedido de un extra desde el panel del evento. */
+  placeAddon: placeAddonOrder({ orders: drizzleOrderRepository, clock }),
   byRef: findOrderByRef({ orders: drizzleOrderRepository, clock }),
   attachProof: attachProof({
     orders: drizzleOrderRepository,

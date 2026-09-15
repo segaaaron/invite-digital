@@ -177,9 +177,19 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
                       </div>
 
                       <dl className="grid gap-3 text-[13px] min-[560px]:grid-cols-4">
-                        <Dato etiqueta="Plan">{order.planName ?? 'Plan retirado del catálogo'}</Dato>
-                        <Dato etiqueta="Diseño">{order.templateSlug === null ? 'Sin elegir' : themeFor(order.templateSlug).label}</Dato>
-                        <Dato etiqueta="Fecha del evento">{order.eventDate ?? 'Sin fecha'}</Dato>
+                        {order.addonSlug !== null ? (
+                          <>
+                            <Dato etiqueta="Extra">{order.addonName ?? order.addonSlug}</Dato>
+                            <Dato etiqueta="Para el evento">{order.eventSlug ?? '—'}</Dato>
+                            <Dato etiqueta="Al aprobar">Se aplica al evento</Dato>
+                          </>
+                        ) : (
+                          <>
+                            <Dato etiqueta="Plan">{order.planName ?? 'Plan retirado del catálogo'}</Dato>
+                            <Dato etiqueta="Diseño">{order.templateSlug === null ? 'Sin elegir' : themeFor(order.templateSlug).label}</Dato>
+                            <Dato etiqueta="Fecha del evento">{order.eventDate ?? 'Sin fecha'}</Dato>
+                          </>
+                        )}
                         <Dato etiqueta="Contacto">{order.contact}</Dato>
                       </dl>
 
@@ -220,7 +230,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
 
                       {order.status === 'proof_submitted' ? (
                         <div className="border-t border-line-panel pt-4">
-                          <OrderDecision orderId={order.id} />
+                          <OrderDecision esExtra={order.addonSlug !== null} orderId={order.id} />
                         </div>
                       ) : null}
 

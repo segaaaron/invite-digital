@@ -135,6 +135,7 @@ export const en = {
     bookCall: 'Book a call',
     comparison: {
       title: 'What each plan includes',
+      extrasTitle: 'Add-ons, without changing plans',
       feature: 'Includes',
       si: 'Yes',
       no: 'No',

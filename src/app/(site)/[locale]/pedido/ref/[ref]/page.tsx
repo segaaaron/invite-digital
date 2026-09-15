@@ -56,7 +56,7 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
           {dictionary.orders.statusHeading}
         </h2>
         <p className="text-[16px] text-ink">{dictionary.orders.status[order.status]}</p>
-        {order.planName === null ? null : <p className="text-[13px] text-ink-soft">{order.planName}</p>}
+        {(order.planName ?? order.addonName) === null ? null : <p className="text-[13px] text-ink-soft">{order.planName ?? order.addonName}</p>}
         {order.decisionNote === null ? null : (
           <p className="mt-2 text-[13px] text-ink-soft">
             <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
