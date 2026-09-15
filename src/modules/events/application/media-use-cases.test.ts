@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
 import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES } from '../domain/media'
-import { listGuestPhotos, purgeMedia, readMedia, saveGuestPhoto, saveMedia } from './media-use-cases'
+import { listGuestPhotos, purgeMedia, readMedia, removeMedia, saveGuestPhoto, saveMedia } from './media-use-cases'
 import type { ImageProcessor, MediaRepository, MediaRow, MediaStorage } from './ports'
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3])
@@ -132,6 +132,33 @@ describe('saveMedia', () => {
     await saveMedia(segunda)('e1', { name: 'otra.png', size: PNG.length, bytes: async () => PNG })
 
     expect(filas).toHaveLength(2)
+  })
+
+  it('con el tope de fotos del plan lleno no guarda otra, pero la canción sí entra', async () => {
+    const filas: MediaRow[] = []
+    const deps = dobles(filas)
+    let n = 0
+    const conId = { ...deps, ids: () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}` }
+    await saveMedia(conId)('e1', { name: 'una.png', size: PNG.length, bytes: async () => PNG }, null, { maxFotos: 2 })
+    await saveMedia(conId)('e1', { name: 'dos.png', size: PNG.length, bytes: async () => PNG }, null, { maxFotos: 2 })
+
+    const tercera = await saveMedia(conId)('e1', { name: 'tres.png', size: PNG.length, bytes: async () => PNG }, null, { maxFotos: 2 })
+    const cancion = await saveMedia(conId)('e1', { name: 'vals.mp3', size: MP3.length, bytes: async () => MP3 }, null, { maxFotos: 2 })
+
+    expect(tercera).toEqual({ ok: false, error: 'photo_limit' })
+    expect(cancion).toMatchObject({ ok: true, contentType: 'audio/mpeg' })
+    expect(filas.filter((f) => f.contentType.startsWith('image/'))).toHaveLength(2)
+  })
+
+  it('sin tope (`null`) no limita las fotos', async () => {
+    const filas: MediaRow[] = []
+    const deps = dobles(filas)
+    let n = 0
+    const conId = { ...deps, ids: () => `00000000-0000-4000-8000-${String(++n).padStart(12, '0')}` }
+    for (const nombre of ['a.png', 'b.png', 'c.png']) {
+      await saveMedia(conId)('e1', { name: nombre, size: PNG.length, bytes: async () => PNG }, null, { maxFotos: null })
+    }
+    expect(filas).toHaveLength(3)
   })
 
   it('un invitado NO puede subir audio, aunque el formulario diga otra cosa', async () => {
@@ -338,5 +365,39 @@ describe('saveGuestPhoto', () => {
     await saveMedia(deps)('e1', foto())
 
     expect(await listGuestPhotos(deps)('g1')).toHaveLength(1)
+  })
+})
+
+describe('removeMedia', () => {
+  const foto = (id: string, eventId = 'e1'): MediaRow => ({
+    id,
+    eventId,
+    contentType: 'image/webp',
+    originalName: `${id}.webp`,
+    byteSize: 10,
+    uploadedByGroupId: null,
+  })
+  const ID = '11111111-1111-4111-8111-111111111111'
+
+  it('quita la foto: fila y fichero', async () => {
+    const deps = dobles([foto(ID)])
+    deps.disco.set(`${ID}.webp`, PNG)
+
+    expect(await removeMedia(deps)('e1', ID, [])).toEqual({ ok: true })
+    expect(deps.filas).toHaveLength(0)
+    expect(deps.storage.remove).toHaveBeenCalled()
+  })
+
+  it('una foto de otro evento no existe para este', async () => {
+    const deps = dobles([foto(ID, 'otro')])
+    expect(await removeMedia(deps)('e1', ID, [])).toEqual({ ok: false, error: 'not_found' })
+    expect(deps.filas).toHaveLength(1)
+  })
+
+  // Quitar una foto que la invitación pinta dejaría un hueco roto delante de los invitados.
+  it('no quita la que usa algún bloque del contenido', async () => {
+    const deps = dobles([foto(ID)])
+    expect(await removeMedia(deps)('e1', ID, [ID])).toEqual({ ok: false, error: 'in_use' })
+    expect(deps.filas).toHaveLength(1)
   })
 })

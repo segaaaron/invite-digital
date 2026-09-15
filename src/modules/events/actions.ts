@@ -420,11 +420,17 @@ export async function uploadMediaAction(
     return { status: 'error', message: 'no_file' }
   }
 
-  const resultado = await eventUseCases.media.save(eventId, {
-    name: archivo.name,
-    size: archivo.size,
-    bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
-  })
+  // El tope de fotos es del plan. Si no se puede leer, no se sube: tratar el fallo como
+  // «sin límite» regalaría el tope por un error transitorio.
+  const capacidad = await plans.allowanceFor(eventId)
+  if (isErr(capacidad)) return { status: 'error', message: 'storage_failure' }
+
+  const resultado = await eventUseCases.media.save(
+    eventId,
+    { name: archivo.name, size: archivo.size, bytes: async () => new Uint8Array(await archivo.arrayBuffer()) },
+    null,
+    { maxFotos: capacidad.value.maxGalleryPhotos },
+  )
 
   if (!resultado.ok) return { status: 'error', message: resultado.error }
 
@@ -453,6 +459,29 @@ export async function uploadMediaAction(
 }
 
 
+/**
+ * Quita una fotografía o la canción del evento.
+ *
+ * Existe porque las fotos tienen tope por plan: sin poder quitar una, quien llega al tope
+ * se queda sin salida. Lo que el contenido pinta no se quita —dejaría un hueco roto en la
+ * invitación—; se cambia primero en su bloque.
+ */
+export async function removeMediaAction(_previo: ContentActionState, formData: FormData): Promise<ContentActionState> {
+  const actor = await requireSession()
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+
+  // Los identificadores son UUID: que aparezca dentro del contenido es que algún bloque lo usa.
+  const contenido = JSON.stringify(await eventUseCases.contentFor(eventId, {}))
+  const enUso = (await eventUseCases.media.list(eventId)).map((fila) => fila.id).filter((id) => contenido.includes(id))
+
+  const resultado = await eventUseCases.media.remove(eventId, String(formData.get('mediaId') ?? ''), enUso)
+  if (!resultado.ok) return { status: 'error', message: resultado.error }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success' }
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Del invitado. **Sin sesión**: se autorizan con el token del enlace, igual que el RSVP y
@@ -514,7 +543,8 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
     bytes: async () => new Uint8Array(await archivo.arrayBuffer()),
   })
 
-  if (!resultado.ok) return { status: 'error', message: resultado.error }
+  // `photo_limit` es el tope de las fotos del atelier; el invitado no lo pasa y no llega aquí.
+  if (!resultado.ok) return { status: 'error', message: resultado.error === 'photo_limit' ? 'too_many' : resultado.error }
 
   revalidatePath(`/i/${token}/fotos`)
   return { status: 'success', message: '' }

@@ -2,7 +2,7 @@ import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor, nombreDeCancion } from '@/
 import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
 
-export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many'
+export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'photo_limit'
 
 type Deps = {
   media: MediaRepository
@@ -43,7 +43,17 @@ export const saveMedia =
      * segundos, y como subir audio **reemplaza** la canción del evento, un invitado
      * podría dejar sin música la boda de otro.
      */
-    { permitirAudio = true }: { permitirAudio?: boolean } = {},
+    {
+      permitirAudio = true,
+      maxFotos = null,
+    }: {
+      permitirAudio?: boolean
+      /**
+       * Fotos del evento que admite el plan, sin contar las de los invitados —esas tienen su
+       * tope por grupo— ni la canción. `null` es sin límite.
+       */
+      maxFotos?: number | null
+    } = {},
   ): Promise<{ ok: true; id: string; contentType: MediaType; cancion?: { track: string; artist: string } } | { ok: false; error: MediaError }> => {
     // El tope de la puerta es el de la música, que es el mayor: una canción en WAV ronda los
     // 30 MB. Sin audio —el invitado— el tope es el de las fotografías desde el principio.
@@ -56,6 +66,12 @@ export const saveMedia =
     let cancion: { track: string; artist: string } | undefined
     if (tipo !== null && !esAudio(tipo)) {
       if (archivo.size > MAX_MEDIA_BYTES) return { ok: false, error: 'too_large' }
+      if (maxFotos !== null) {
+        const fotos = (await media.listByEvent(eventId)).filter(
+          (fila) => fila.uploadedByGroupId === null && !esAudio(fila.contentType as MediaType),
+        )
+        if (fotos.length >= maxFotos) return { ok: false, error: 'photo_limit' }
+      }
       // Los primeros bytes dicen que **parece** una imagen; que lo sea lo dice que se pueda
       // decodificar. Una cabecera correcta con un cuerpo que no lo es no pasa de aquí.
       listo = await images.normalize(bytes)
@@ -122,6 +138,33 @@ export const readMedia =
 
 /** Las imágenes de un evento, para la pantalla del panel. */
 export const listMedia = ({ media }: Deps) => (eventId: string) => media.listByEvent(eventId)
+
+/**
+ * Quita un archivo del evento.
+ *
+ * `enUso` son los identificadores que el contenido pinta: quitar uno de esos dejaría un
+ * hueco roto en la invitación, así que primero se cambia en su bloque. El fichero se borra
+ * antes que la fila, como en la retención: si falla, la fila sigue y se puede reintentar.
+ */
+export const removeMedia =
+  ({ media, storage }: Deps) =>
+  async (
+    eventId: string,
+    id: string,
+    enUso: readonly string[],
+  ): Promise<{ ok: true } | { ok: false; error: 'not_found' | 'in_use' | 'storage_failure' }> => {
+    const fila = await media.find(id)
+    if (fila === null || fila.eventId !== eventId) return { ok: false, error: 'not_found' }
+    if (enUso.includes(id)) return { ok: false, error: 'in_use' }
+    try {
+      await storage.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
+      await media.remove(fila.id)
+    } catch (cause) {
+      console.error('No se pudo quitar el archivo %s del evento %s:', id, eventId, cause)
+      return { ok: false, error: 'storage_failure' }
+    }
+    return { ok: true }
+  }
 
 /**
  * Borra las imágenes de un evento, del disco y de la base.

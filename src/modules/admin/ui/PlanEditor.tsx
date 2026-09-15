@@ -104,7 +104,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
       </div>
 
       <div className="grid gap-4 min-[560px]:grid-cols-3">
-        <Field htmlFor={`${id}-fotos`} label="Fotos de galería · vacío = sin límite">
+        <Field htmlFor={`${id}-fotos`} label="Fotos del evento · vacío = sin límite">
           <input
             className={FIELD_CLASS}
             defaultValue={txt('maxGalleryPhotos', plan.maxGalleryPhotos === null ? '' : String(plan.maxGalleryPhotos))}

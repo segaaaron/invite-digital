@@ -3,7 +3,7 @@
 import { useActionState } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { type ContentActionState, uploadMediaAction } from '../actions'
+import { type ContentActionState, removeMediaAction, uploadMediaAction } from '../actions'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -12,6 +12,7 @@ const ERRORES: Record<string, string> = {
   too_large: 'El archivo pesa demasiado: las fotografías hasta 8 MB y las canciones hasta 30 MB.',
   unsupported_type: 'Ese archivo no vale. Se admiten PNG, JPG, WEBP y AVIF para las fotografías, y MP3, M4A o WAV para la música.',
   storage_failure: 'No se pudo guardar el archivo. Vuelve a intentarlo.',
+  photo_limit: 'Ya subiste todas las fotos que incluye tu plan. Quita una para subir otra, o cambia de plan.',
 }
 
 export type MediaItem = {
@@ -36,6 +37,36 @@ type Props = {
   readonly eventId: string
   readonly eventSlug: string
   readonly items: readonly MediaItem[]
+}
+
+const ERRORES_AL_QUITAR: Record<string, string> = {
+  in_use: 'La usa un bloque de la invitación. Cámbiala allí primero.',
+  not_found: 'Ya no está.',
+}
+
+/** Quitar un archivo. Cada fila lleva su propio estado: el error se dice junto a su foto. */
+function QuitarArchivo({ eventId, eventSlug, item }: { eventId: string; eventSlug: string; item: MediaItem }) {
+  const [state, formAction, isPending] = useActionState(removeMediaAction, INICIAL)
+  return (
+    <form action={formAction} className="flex flex-col gap-1">
+      <input name="eventId" readOnly type="hidden" value={eventId} />
+      <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
+      <input name="mediaId" readOnly type="hidden" value={item.id} />
+      <button
+        aria-label={`Quitar ${item.originalName}`}
+        className="self-start text-[11px] text-ink-soft underline underline-offset-2 hover:text-ink disabled:opacity-50"
+        disabled={isPending}
+        type="submit"
+      >
+        {isPending ? 'Quitando…' : 'Quitar'}
+      </button>
+      {state.status === 'error' ? (
+        <span className="text-[11px] text-gold-deep" role="alert">
+          {ERRORES_AL_QUITAR[state.message] ?? ERRORES.storage_failure}
+        </span>
+      ) : null}
+    </form>
+  )
 }
 
 const enKilobytes = (bytes: number): string => `${Math.max(1, Math.round(bytes / 1024))} KB`
@@ -128,6 +159,7 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
                 {enKilobytes(imagen.byteSize)}
                 {imagen.fromGuest ? ' · de un invitado' : ''}
               </span>
+              <QuitarArchivo eventId={eventId} eventSlug={eventSlug} item={imagen} />
             </li>
           ))}
         </ul>

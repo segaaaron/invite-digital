@@ -31,6 +31,7 @@ import {
   listMedia,
   purgeMedia,
   readMedia,
+  removeMedia,
   saveGuestPhoto,
   saveMedia,
 } from '@/modules/events/application/media-use-cases'
@@ -317,6 +318,7 @@ export const events = {
     read: readMedia(mediaDeps),
     list: listMedia(mediaDeps),
     purge: purgeMedia(mediaDeps),
+    remove: removeMedia(mediaDeps),
     /** Lo que sube el invitado desde su invitación, con el tope por grupo dentro. */
     saveFromGuest: saveGuestPhoto(mediaDeps),
     listOfGuest: listGuestPhotos(mediaDeps),
