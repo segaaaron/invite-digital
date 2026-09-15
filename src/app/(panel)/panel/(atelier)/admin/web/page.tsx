@@ -5,6 +5,20 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
+import { getDictionary } from '@/shared/i18n/dictionaries'
+
+/** Lo que Google enseña de cada página cuando «Buscadores» está vacío: los textos del diccionario. */
+function seoPorDefecto() {
+  const es = getDictionary('es')
+  const en = getDictionary('en')
+  const par = (a: string, b: string) => ({ es: a, en: b })
+  return {
+    inicio: { titulo: par(es.seo.homeTitle, en.seo.homeTitle), descripcion: par(es.seo.homeDescription, en.seo.homeDescription) },
+    colecciones: { titulo: par(es.seo.collectionsTitle, en.seo.collectionsTitle), descripcion: par(es.seo.collectionsDescription, en.seo.collectionsDescription) },
+    bodas: { titulo: par(es.fiestas.boda.seoTitle, en.fiestas.boda.seoTitle), descripcion: par(es.fiestas.boda.seoDescription, en.fiestas.boda.seoDescription) },
+    xv: { titulo: par(es.fiestas.xv.seoTitle, en.fiestas.xv.seoTitle), descripcion: par(es.fiestas.xv.seoDescription, en.fiestas.xv.seoDescription) },
+  }
+}
 
 export const metadata = { title: 'La web · Administración' }
 export const dynamic = 'force-dynamic'
@@ -34,6 +48,7 @@ export default async function AdminWebPage() {
         <SiteSettingsForm
           key={isErr(versiones) ? 'sin-historial' : (versiones.value[0]?.id ?? 'sin-versiones')}
           inicial={ajustes.value}
+          seoPorDefecto={seoPorDefecto()}
           versiones={
             isErr(versiones)
               ? []

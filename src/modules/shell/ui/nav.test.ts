@@ -91,16 +91,18 @@ describe('panelNav', () => {
     expect(consultas?.countLabel).toBe('nuevas')
   })
 
-  it('el admin dentro de una boda ve solo su ficha —configuración, plan y vista previa— y la administración', () => {
+  it('el admin dentro de una boda ve solo el menú de esa boda, sin la administración mezclada', () => {
     const secciones = panelNav('boda', {}, true)
-    expect(secciones.map((seccion) => seccion.label)).toEqual(['Esta boda', 'Día a día', 'Negocio', 'Sistema', 'Cuenta'])
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Esta boda'])
     expect(secciones[0]?.items.map((item) => item.href)).toEqual([
       '/panel/eventos/boda/configuracion',
       '/panel/eventos/boda/plan',
       '/panel/eventos/boda/vista-previa',
     ])
-    // Los datos de la boda son del cliente: para verlos entra como el cliente.
     const todas = secciones.flatMap((seccion) => seccion.items.map((item) => item.href))
+    // Nada de la administración: se sale del evento con «← Volver», no por un enlace suelto.
+    expect(todas.some((href) => href.startsWith('/panel/admin'))).toBe(false)
+    // Los datos de la boda son del cliente: para verlos entra como el cliente.
     for (const ruta of ['/invitados', '/mensajes', '/mesas', '/planner/tareas', '/extras', '/porteros']) {
       expect(todas).not.toContain(`/panel/eventos/boda${ruta}`)
     }

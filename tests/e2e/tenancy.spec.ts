@@ -50,17 +50,19 @@ test('un atelier no ve ni toca el evento de otro; el admin solo su ficha', async
   await entrar(admin, ADMIN)
   expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(404)
   expect((await admin.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
-  await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toBeVisible()
+  // Dentro del evento, solo su menú: la administración queda detrás de «← Volver».
+  await expect(admin.getByRole('link', { name: 'Volver a la administración' })).toBeVisible()
+  await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toHaveCount(0)
 
-  // La bandeja del admin trae el evento del otro con su dueño. El correo sale varias
-  // veces —también en cada selector de dueño—, así que se busca en la fila.
+  // La bandeja del admin trae el evento del otro con su responsable. El correo sale varias
+  // veces —también en cada selector de responsable—, así que se busca en la fila.
   await admin.goto('/panel/admin/eventos')
   const fila = admin.getByRole('listitem').filter({ hasText: 'Boda del otro atelier' })
   await expect(fila).toBeVisible()
   await expect(fila).toContainText(OTRO.email)
-  // Y el selector de dueño viene preseleccionado con él, que es lo que hace que
+  // Y el selector de responsable viene preseleccionado con él, que es lo que hace que
   // reasignar sea un cambio y no una elección a ciegas.
-  await expect(fila.getByLabel('Dueño')).toHaveValue(userId)
+  await expect(fila.getByLabel('Atelier responsable')).toHaveValue(userId)
 
   expect(eventId).toMatch(/^[0-9a-f-]{36}$/)
 })

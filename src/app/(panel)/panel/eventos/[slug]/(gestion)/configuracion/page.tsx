@@ -114,7 +114,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <PanelHeader kicker="Cuenta" meta={event.value.title} title="Configuración del evento" />
+      <PanelHeader kicker="Evento" title="Configuración del evento" />
 
       <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
         {/* El contenido y las fotografías son del cliente: el admin no los ve aquí. Para

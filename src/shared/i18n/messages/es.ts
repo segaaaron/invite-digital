@@ -76,13 +76,13 @@ export const es = {
         label: 'Acto II',
         title: 'Detalles inmersivos',
         body: 'Foil dorado que reacciona a la luz del cursor, texturas de algodón, tipografía compuesta a mano para cada nombre.',
-        imageAlt: 'Mesa del taller con sellos, lacre y tarjetas doradas',
+        imageAlt: 'Novia frente al arco floral',
       },
       {
         label: 'Acto III',
         title: 'Demo interactiva en vivo',
         body: 'Galería en movimiento, mapa, cuenta regresiva y botón de RSVP que abre el WhatsApp de los novios.',
-        imageAlt: 'Novia frente al arco floral',
+        imageAlt: 'Mesa del taller con sellos, lacre y tarjetas doradas',
       },
     ],
   },
@@ -114,7 +114,6 @@ export const es = {
       { tag: 'Despedida de soltera', name: 'Terraza al Atardecer', alt: 'Amigas brindando en terraza al atardecer' },
       { tag: 'Despedida de soltero', name: 'Última Ronda', alt: 'Despedida de soltero en bar' },
       { tag: 'Despedida de soltero', name: 'Terraza Nocturna', alt: 'Amigos brindando en rooftop de noche' },
-      { tag: 'Graduación', name: 'Laurel Azul', alt: 'Entrega de diploma en la ceremonia de graduación' },
     ],
   },
   comparison: {
@@ -163,7 +162,7 @@ export const es = {
       modelo: { ninguno: 'No', antes_de_repartir: 'Hasta repartir', siempre: 'Siempre' },
     },
   },
-  models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Dieciséis diseños · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir', seeAll: 'Ver todos los modelos' },
+  models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Dieciséis diseños · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir' },
   themes: {
     coverOpen: 'ABRIR INVITACIÓN',
     coverHint: 'TOCA EN CUALQUIER LUGAR',
@@ -384,7 +383,7 @@ export const es = {
       'Dieciséis modelos de invitación digital para bodas y XV años en Bolivia, con confirmación de asistencia en vivo.',
     breadcrumbHome: 'Inicio',
   },
-  footer: { rights: 'Todos los derechos reservados', privacy: 'Privacidad', terms: 'Términos', onNetwork: 'Luxury Atelier en {red}' },
+  footer: { rights: 'Todos los derechos reservados', privacy: 'Privacidad', terms: 'Términos', onNetwork: 'Luxury Atelier en {red}', builtBy: 'Desarrollado por', whatsappFloat: 'Escríbenos por WhatsApp' },
   legal: {
     privacyTitle: 'Política de privacidad',
     termsTitle: 'Términos del servicio',

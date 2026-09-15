@@ -8,6 +8,7 @@ import { enlaceWhatsapp, formatoWhatsapp } from '@/shared/whatsapp'
 import { restoreSiteVersionAction, saveSiteSettingsAction, type SiteActionState } from '@/app/_acciones/admin/web-actions'
 import type { Bilingue, SiteSettings } from '../domain/site-settings'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { LegalText } from '@/shared/design/ui/LegalText'
 
 const INICIAL: SiteActionState = { status: 'idle' }
 
@@ -63,7 +64,10 @@ const bloqueDe = (campo: string | undefined) => (campo === undefined ? undefined
  * - El formulario viaja como un JSON de un campo oculto: los controles son controlados, así
  *   que React no vacía nada al terminar la acción.
  */
-export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings; versiones: readonly VersionView[] }) {
+/** Lo que Google enseña de cada página si «Buscadores» está vacío. */
+export type SeoPorDefecto = Record<'inicio' | 'colecciones' | 'bodas' | 'xv', { titulo: Bilingue; descripcion: Bilingue }>
+
+export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicial: SiteSettings; versiones: readonly VersionView[]; seoPorDefecto: SeoPorDefecto }) {
   // La versión sobre la que se edita: el servidor rechaza el guardado si ya no es la última.
   const base = versiones[0]?.id ?? ''
   const [datos, setDatos] = useState<SiteSettings>(inicial)
@@ -340,35 +344,26 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
             'legal',
             'Textos legales',
             <>
-              <p className="text-[12px] leading-[1.6] text-ink-mute">
-                Una línea que empieza por <code className="font-mono">## </code> es un título; los párrafos van separados por una línea en blanco. El texto de partida es un borrador:
-                revísalo antes de publicarlo. Publicada, la política se enlaza en el pie y bajo cada formulario que pide datos.
+              <p className="max-w-[70ch] text-[13px] leading-[1.6] text-ink-soft">
+                Las dos páginas que la ley pide cuando recoges datos de clientes e invitados. Publicadas, se enlazan en el pie de la web y bajo
+                cada formulario. El texto de partida es un borrador: léelo antes de publicarlo.
               </p>
               {(
                 [
-                  ['privacidad', 'Política de privacidad'],
-                  ['terminos', 'Términos del servicio'],
+                  ['privacidad', 'Política de privacidad', 'privacidad'],
+                  ['terminos', 'Términos del servicio', 'terminos'],
                 ] as const
-              ).map(([clave, nombre]) => (
-                <div className="flex flex-col gap-2.5" key={clave}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="text-[14px] text-ink">{nombre}</span>
-                    <label className="flex cursor-pointer items-center gap-2 text-[12px] text-ink-soft">
-                      <input
-                        checked={datos.legal[clave].publicada}
-                        onChange={(e) => cambiar('legal', { ...datos.legal, [clave]: { ...datos.legal[clave], publicada: e.target.checked } })}
-                        type="checkbox"
-                      />
-                      Publicada
-                    </label>
-                  </div>
-                  <textarea
-                    aria-label={`${nombre} (${idioma})`}
-                    className={`${FIELD_CLASS} min-h-[220px] font-mono text-[12.5px] leading-[1.7]`}
-                    onChange={(e) => cambiar('legal', { ...datos.legal, [clave]: { ...datos.legal[clave], [idioma]: e.target.value } })}
-                    value={datos.legal[clave][idioma]}
-                  />
-                </div>
+              ).map(([clave, nombre, ruta]) => (
+                <DocumentoLegal
+                  idioma={idioma}
+                  key={clave}
+                  nombre={nombre}
+                  onPublicar={(publicada) => cambiar('legal', { ...datos.legal, [clave]: { ...datos.legal[clave], publicada } })}
+                  onTexto={(texto) => cambiar('legal', { ...datos.legal, [clave]: { ...datos.legal[clave], [idioma]: texto } })}
+                  publicada={datos.legal[clave].publicada}
+                  ruta={`/${idioma}/${ruta}`}
+                  texto={datos.legal[clave][idioma]}
+                />
               ))}
             </>,
           )}
@@ -377,27 +372,60 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
             'buscadores',
             'Buscadores',
             <>
-              <p className="text-[12px] leading-[1.6] text-ink-mute">Cómo aparece la web en Google. Vacío usa el texto de siempre.</p>
+              <p className="max-w-[70ch] text-[13px] leading-[1.6] text-ink-soft">
+                Es lo que sale en Google cuando alguien busca la web: el título en azul y el texto de debajo. Cada página ya trae uno escrito;
+                cámbialo solo si quieres probar otro. Si lo vacías, vuelve el de siempre.
+              </p>
               {(
                 [
-                  ['inicio', 'Portada'],
-                  ['colecciones', 'Colecciones'],
-                  ['bodas', 'Bodas'],
-                  ['xv', 'XV años'],
+                  ['inicio', 'Portada', ''],
+                  ['colecciones', 'Colecciones', '/colecciones'],
+                  ['bodas', 'Bodas', '/bodas'],
+                  ['xv', 'XV años', '/xv-anos'],
                 ] as const
-              ).map(([clave, nombre]) => {
+              ).map(([clave, nombre, ruta]) => {
                 const s = datos.seo[clave]
+                const defecto = seoPorDefecto[clave]
                 const poner = (cambio: Partial<typeof s>) => cambiar('seo', { ...datos.seo, [clave]: { ...s, ...cambio } })
+                const titulo = s.titulo[idioma] || defecto.titulo[idioma]
+                const descripcion = s.descripcion[idioma] || defecto.descripcion[idioma]
+                const propio = s.titulo[idioma] !== '' || s.descripcion[idioma] !== ''
                 return (
-                  <div className="flex flex-col gap-2.5" key={clave}>
-                    <span className="text-[14px] text-ink">{nombre}</span>
-                    <Campo contador={`${s.titulo[idioma].length}/70`} etiqueta="Título">
-                      <input className={FIELD_CLASS} onChange={(e) => poner({ titulo: bil(s.titulo, e.target.value) })} value={s.titulo[idioma]} />
-                    </Campo>
-                    <Campo contador={`${s.descripcion[idioma].length}/170`} etiqueta="Descripción">
-                      <textarea className={`${FIELD_CLASS} min-h-[72px]`} onChange={(e) => poner({ descripcion: bil(s.descripcion, e.target.value) })} value={s.descripcion[idioma]} />
-                    </Campo>
-                  </div>
+                  <details className="group rounded-[14px] border border-line-panel bg-white" key={clave} open={errorBloque?.ancla === 'buscadores'}>
+                    <summary className="flex cursor-pointer list-none flex-col gap-3 p-4">
+                      <span className="flex items-center justify-between gap-3">
+                        <span className="text-[13.5px] text-ink">{nombre}</span>
+                        <span className="flex items-center gap-2">
+                          <Pill tone={propio ? 'ok' : 'pending'}>{propio ? 'Texto propio' : 'Texto de siempre'}</Pill>
+                          <span className="text-[12px] text-ink-mute group-open:hidden">Cambiar</span>
+                          <span className="hidden text-[12px] text-ink-mute group-open:inline">Cerrar</span>
+                        </span>
+                      </span>
+                      {/* Así lo enseña Google: nombre del sitio, dirección, título y descripción. */}
+                      <span aria-hidden className="flex flex-col gap-0.5 rounded-[10px] bg-bg-top/50 px-3.5 py-3">
+                        <span className="text-[11.5px] text-ink-mute">luxuryatelier.net › {idioma}{ruta}</span>
+                        <span className="line-clamp-1 text-[16px] leading-snug text-link">{titulo}</span>
+                        <span className="line-clamp-2 text-[12.5px] leading-[1.5] text-ink-soft">{descripcion}</span>
+                      </span>
+                    </summary>
+                    <div className="flex flex-col gap-3 border-t border-line-panel p-4">
+                      <Campo
+                        ayuda={s.titulo[idioma].length > 60 ? 'Google corta los títulos de más de unos 60 caracteres.' : undefined}
+                        contador={`${s.titulo[idioma].length}/70`}
+                        etiqueta="Título"
+                      >
+                        <input className={FIELD_CLASS} onChange={(e) => poner({ titulo: bil(s.titulo, e.target.value) })} placeholder={defecto.titulo[idioma]} value={s.titulo[idioma]} />
+                      </Campo>
+                      <Campo contador={`${s.descripcion[idioma].length}/170`} etiqueta="Descripción">
+                        <textarea
+                          className={`${FIELD_CLASS} min-h-[72px]`}
+                          onChange={(e) => poner({ descripcion: bil(s.descripcion, e.target.value) })}
+                          placeholder={defecto.descripcion[idioma]}
+                          value={s.descripcion[idioma]}
+                        />
+                      </Campo>
+                    </div>
+                  </details>
                 )
               })}
             </>,
@@ -496,7 +524,7 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
   )
 }
 
-function Campo({ etiqueta, ayuda, contador, children }: { etiqueta: string; ayuda?: string; contador?: string; children: ReactNode }) {
+function Campo({ etiqueta, ayuda, contador, children }: { etiqueta: string; ayuda?: string | undefined; contador?: string; children: ReactNode }) {
   // El rótulo envuelve al control: así casa por su nombre sin inventar ids para cada campo
   // de una lista que crece y encoge.
   return (
@@ -543,5 +571,90 @@ function VersionRow({ version, actual, base }: { version: VersionView; actual: b
         </PanelAlert>
       ) : null}
     </li>
+  )
+}
+
+/**
+ * Un documento legal: si está publicado, dónde se ve, y el texto con su vista previa. Escribir
+ * `## ` a mano sin ver el resultado obligaba a publicar para comprobarlo.
+ */
+function DocumentoLegal({
+  nombre,
+  ruta,
+  idioma,
+  texto,
+  publicada,
+  onTexto,
+  onPublicar,
+}: {
+  nombre: string
+  ruta: string
+  idioma: Idioma
+  texto: string
+  publicada: boolean
+  onTexto: (texto: string) => void
+  onPublicar: (publicada: boolean) => void
+}) {
+  const [vista, setVista] = useState<'editar' | 'previa'>('editar')
+  return (
+    <div className="flex flex-col rounded-[14px] border border-line-panel bg-white">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line-panel px-4 py-3">
+        <span className="flex items-center gap-2.5">
+          <span className="text-[14px] text-ink">{nombre}</span>
+          <Pill tone={publicada ? 'ok' : 'pending'}>{publicada ? 'Publicada' : 'Borrador'}</Pill>
+          {publicada ? (
+            <a className="text-[12px] text-gold-deep underline-offset-4 hover:underline" href={ruta} rel="noopener noreferrer" target="_blank">
+              Ver en la web
+            </a>
+          ) : null}
+        </span>
+        <label className="flex cursor-pointer items-center gap-2.5 text-[12.5px] text-ink-soft">
+          Publicar en la web
+          <span className="relative inline-flex h-6 w-11">
+            <input checked={publicada} className="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0" onChange={(e) => onPublicar(e.target.checked)} role="switch" type="checkbox" />
+            <span aria-hidden className="h-6 w-11 rounded-full bg-line-panel-strong transition-colors peer-checked:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold" />
+            <span aria-hidden className="absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-sm transition-transform peer-checked:translate-x-5 motion-reduce:transition-none" />
+          </span>
+        </label>
+      </div>
+      <div className="flex gap-1 px-4 pt-3" role="tablist">
+        {(
+          [
+            ['editar', 'Editar'],
+            ['previa', 'Vista previa'],
+          ] as const
+        ).map(([clave, rotulo]) => (
+          <button
+            aria-selected={vista === clave}
+            className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[12px] transition-colors ${vista === clave ? 'bg-ink text-white' : 'text-ink-soft hover:bg-bg-top'}`}
+            key={clave}
+            onClick={() => setVista(clave)}
+            role="tab"
+            type="button"
+          >
+            {rotulo}
+          </button>
+        ))}
+      </div>
+      <div className="p-4">
+        {vista === 'editar' ? (
+          <>
+            <textarea
+              aria-label={`${nombre} (${idioma})`}
+              className={`${FIELD_CLASS} min-h-[260px] text-[13.5px] leading-[1.7]`}
+              onChange={(e) => onTexto(e.target.value)}
+              value={texto}
+            />
+            <p className="mt-2 text-[12px] text-ink-mute">
+              Una línea que empieza por <code className="font-mono">## </code> es un título. Deja una línea en blanco entre párrafos.
+            </p>
+          </>
+        ) : (
+          <div className="max-h-[420px] overflow-y-auto rounded-[12px] bg-bg-top/50 px-5 py-4">
+            {texto.trim() === '' ? <p className="text-[13px] text-ink-mute">Sin texto todavía.</p> : <LegalText texto={texto} />}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }

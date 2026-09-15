@@ -58,10 +58,14 @@ export default async function AdminEventosPage({
   const conteo = new Map<string, number>()
   for (const e of cartera) conteo.set(e.etapa, (conteo.get(e.etapa) ?? 0) + 1)
 
+  // Los anfitriones de todas, en una sola consulta: se enseñan en cada fila y se buscan por su
+  // correo, que es por lo que el admin recuerda a un cliente.
+  const anfitriones = await events.staff.hostsOf(cartera.map((e) => e.id))
   const visibles = cartera.filter(
     (e) =>
       (filtro === 'todas' || e.etapa === filtro) &&
-      (busqueda === '' || [e.title, e.slug, e.ownerEmail ?? ''].some((campo) => campo.toLowerCase().includes(busqueda))),
+      (busqueda === '' ||
+        [e.title, e.slug, e.ownerEmail ?? '', ...(anfitriones.get(e.id) ?? []).map((a) => a.email)].some((campo) => campo.toLowerCase().includes(busqueda))),
   )
   const mostrarAlta = panel === 'nueva' || cartera.length === 0
   // **Se pinta una página**, no la cartera entera: cada fila es un componente cliente con cuatro
@@ -70,8 +74,6 @@ export default async function AdminEventosPage({
   const pedidoTope = Number(n)
   const tope = Number.isInteger(pedidoTope) && pedidoTope > 0 ? Math.min(pedidoTope, 1000) : PAGINA
   const pagina = visibles.slice(0, tope)
-  // Los anfitriones de las que se pintan, en una sola consulta: para el soporte de cada fila.
-  const anfitriones = await events.staff.hostsOf(pagina.map((e) => e.id))
 
   // Lo primero que se lee: qué pide atención ahora, no el total de filas.
   const proximos30 = cartera.filter((e) => {
@@ -148,14 +150,14 @@ export default async function AdminEventosPage({
           <form action="/panel/admin/eventos" className="flex w-full gap-2 min-[560px]:w-auto" method="get" role="search">
             {filtro === 'todas' ? null : <input name="etapa" type="hidden" value={filtro} />}
             <label className="sr-only" htmlFor="buscar-boda">
-              Buscar evento por nombre, slug o dueño
+              Buscar evento por nombre, slug o correo del cliente
             </label>
             <input
               className={`${FIELD_CLASS} py-2 text-[13px] min-[560px]:w-[260px]`}
               defaultValue={q}
               id="buscar-boda"
               name="q"
-              placeholder="Buscar por nombre, slug o dueño"
+              placeholder="Nombre, slug o correo del cliente"
               type="search"
             />
             <PanelButton type="submit">Buscar</PanelButton>

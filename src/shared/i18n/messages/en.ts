@@ -76,13 +76,13 @@ export const en = {
         label: 'Act II',
         title: 'Immersive details',
         body: 'Gold foil that catches the light as the cursor moves, cotton-paper textures, and hand-composed typography for every name.',
-        imageAlt: 'A studio table with seals, sealing wax and gilded cards',
+        imageAlt: 'A bride in front of the floral arch',
       },
       {
         label: 'Act III',
         title: 'A live interactive demo',
         body: 'A gallery in motion, a map, a countdown, and an RSVP button that opens the couple’s WhatsApp.',
-        imageAlt: 'A bride in front of the floral arch',
+        imageAlt: 'A studio table with seals, sealing wax and gilded cards',
       },
     ],
   },
@@ -114,7 +114,6 @@ export const en = {
       { tag: 'Hen party', name: 'Terrace at Dusk', alt: 'Friends toasting on a terrace at dusk' },
       { tag: 'Stag party', name: 'Last Round', alt: 'A stag party at a bar' },
       { tag: 'Stag party', name: 'Night Rooftop', alt: 'Friends toasting on a rooftop at night' },
-      { tag: 'Graduation', name: 'Blue Laurel', alt: 'A diploma handed over at the graduation ceremony' },
     ],
   },
   comparison: {
@@ -163,7 +162,7 @@ export const en = {
       modelo: { ninguno: 'No', antes_de_repartir: 'Until links are sent', siempre: 'Anytime' },
     },
   },
-  models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Sixteen signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open', seeAll: 'See every model' },
+  models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Sixteen signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open' },
   themes: {
     coverOpen: 'OPEN INVITATION',
     coverHint: 'TAP ANYWHERE',
@@ -384,7 +383,7 @@ export const en = {
       'Sixteen digital invitation models for weddings and quinceañeras in Bolivia, with live RSVP.',
     breadcrumbHome: 'Home',
   },
-  footer: { rights: 'All rights reserved', privacy: 'Privacy', terms: 'Terms', onNetwork: 'Luxury Atelier on {red}' },
+  footer: { rights: 'All rights reserved', privacy: 'Privacy', terms: 'Terms', onNetwork: 'Luxury Atelier on {red}', builtBy: 'Built by', whatsappFloat: 'Message us on WhatsApp' },
   legal: {
     privacyTitle: 'Privacy policy',
     termsTitle: 'Terms of service',

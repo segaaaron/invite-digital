@@ -181,7 +181,6 @@ export interface ModelsDictionary {
   subtitle: string
   qr: string
   open: string
-  seeAll: string
 }
 
 export interface ContactFieldsDictionary {
@@ -243,6 +242,10 @@ export interface FooterDictionary {
   terms: string
   /** El rótulo accesible de los iconos de redes: «Luxury Atelier en Instagram». */
   onNetwork: string
+  /** «Desarrollado por»: el crédito al estudio que hizo la web. */
+  builtBy: string
+  /** El rótulo accesible del botón flotante de WhatsApp. */
+  whatsappFloat: string
 }
 
 /** Las páginas legales y el aviso bajo los formularios que piden datos. */

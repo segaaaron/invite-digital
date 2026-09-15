@@ -2,6 +2,7 @@
 
 import { useActionState, useId } from 'react'
 import { Field, FIELD_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { ChoiceCards, SettingsSection, SwitchRow, UnitField } from '@/shared/design/ui/panel/ajustes'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { savePlanAction } from '@/app/_acciones/admin/planes-actions'
 import { MAX_FUNCIONES, type TextoPlanLimpio } from '../domain/plan-editable'
@@ -35,23 +36,21 @@ export type PlanEditorView = {
   readonly en: TextoPlanLimpio | null
 }
 
-const INTERRUPTORES = [
-  { name: 'includesSeating', label: 'Mesas y plano' },
-  { name: 'includesRegistry', label: 'Mesa de regalos' },
-  { name: 'includesCheckin', label: 'Modo puerta y porteros' },
-  { name: 'guestPhotos', label: 'Fotos de invitados' },
-  { name: 'eventPassword', label: 'Invitación con contraseña' },
-  { name: 'csvImport', label: 'Importar lista (CSV)' },
-  { name: 'highlighted', label: 'Destacado en la web' },
-  { name: 'isActive', label: 'Activo (se vende)' },
+const FUNCIONES = [
+  { name: 'includesSeating', label: 'Mesas y plano del salón', description: 'Sentar a cada grupo y dibujar el salón.' },
+  { name: 'includesRegistry', label: 'Mesa de regalos y fondos', description: 'Regalos que se reservan y fondos en efectivo con meta.' },
+  { name: 'includesCheckin', label: 'Modo puerta', description: 'Pases QR en la entrada. Los porteros se topan arriba.' },
+  { name: 'guestPhotos', label: 'Fotos de los invitados', description: 'Cada invitado sube sus fotos desde su invitación.' },
+  { name: 'eventPassword', label: 'Invitación con contraseña', description: 'La invitación pide una contraseña antes de abrirse.' },
+  { name: 'csvImport', label: 'Importar la lista desde Excel (CSV)', description: 'Cargar todos los grupos de una vez.' },
 ] as const
 
+const vacioSiNulo = (n: number | null) => (n === null ? '' : String(n))
+
 /**
- * Un plan, editable entero. Un formulario por plan y **su propio estado**: guardar uno no
- * pinta el acierto en los otros dos.
- *
- * Los interruptores son `checkbox` nativos con piel de píldora: marcado se envía `on`, y
- * desmarcado no se envía, que es justo lo que lee la acción.
+ * Un plan, editable entero, en secciones con su explicación al lado (patrón de ajustes de
+ * Polaris). Un formulario por plan y **su propio estado**: guardar uno no pinta el acierto en
+ * los otros. Los nombres de los campos son los que lee `savePlanAction`.
  */
 export function PlanEditor({ plan }: { plan: PlanEditorView }) {
   const [estado, guardar, guardando] = useActionState(savePlanAction, INICIAL)
@@ -61,165 +60,142 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
   const enviado = estado.status === 'error' ? estado.valores : undefined
   const txt = (nombre: string, guardado: string) => (enviado ? (enviado[nombre] ?? '') : guardado)
   const chk = (nombre: string, guardado: boolean) => (enviado ? enviado[nombre] === 'on' : guardado)
+  const nombre = plan.es?.name ?? plan.slug
 
   return (
-    // `key` remonta tras un error: las casillas no toman un `defaultChecked` nuevo al volver a
-    // pintar, y un interruptor cambiado volvía a lo guardado.
-    <form key={enviado ? JSON.stringify(enviado) : plan.slug} action={guardar} className="flex flex-col gap-5">
+    // `key` remonta tras un error: las casillas no toman un `defaultChecked` nuevo al volver a pintar.
+    <form key={enviado ? JSON.stringify(enviado) : plan.slug} action={guardar} aria-label={`Plan ${nombre}`} className="flex flex-col">
       <input name="slug" type="hidden" value={plan.slug} />
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="font-mono text-[9px] tracking-[0.35em] text-ink-mute uppercase">{plan.slug}</p>
-          <p className="mt-1 font-display text-[30px] leading-none text-ink">{plan.es?.name ?? plan.slug}</p>
-          <p className="mt-2 font-display text-[22px] text-ink-soft [font-variant-numeric:lining-nums]">{plan.priceLabel}</p>
+      <header className="flex flex-wrap items-end justify-between gap-4 pb-6">
+        <div className="flex flex-col gap-1">
+          <p className="font-display text-[30px] leading-none text-ink">{nombre}</p>
+          <p className="text-[13px] text-ink-mute">
+            <span className="text-ink [font-variant-numeric:lining-nums]">{plan.priceLabel}</span> por evento ·{' '}
+            {plan.eventos} evento{plan.eventos === 1 ? '' : 's'} con este plan
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Pill tone={plan.isActive ? 'ok' : 'no'}>{plan.isActive ? 'Se vende' : 'Retirado'}</Pill>
-          <Pill tone="pending">
-            {plan.eventos} evento{plan.eventos === 1 ? '' : 's'}
-          </Pill>
+          {plan.highlighted ? <Pill tone="pending">Destacado</Pill> : null}
         </div>
-      </div>
+      </header>
 
-      <div className="grid gap-4 min-[560px]:grid-cols-3">
-        <Field htmlFor={`${id}-precio`} label="Precio (Bs)">
-          <input className={FIELD_CLASS} defaultValue={txt('price', plan.price)} id={`${id}-precio`} inputMode="decimal" name="price" required />
-        </Field>
-        <Field htmlFor={`${id}-tope`} label="Tope de grupos · vacío = sin límite">
-          <input
-            className={FIELD_CLASS}
-            defaultValue={txt('maxGuestGroups', plan.maxGuestGroups === null ? '' : String(plan.maxGuestGroups))}
-            id={`${id}-tope`}
-            inputMode="numeric"
-            name="maxGuestGroups"
-            placeholder="Sin límite"
-          />
-        </Field>
-        <Field htmlFor={`${id}-porteros`} label="Porteros · 0 = sin puerta">
-          <input
-            className={FIELD_CLASS}
-            defaultValue={txt('maxDoorPorters', String(plan.maxDoorPorters))}
-            id={`${id}-porteros`}
-            inputMode="numeric"
-            name="maxDoorPorters"
-            required
-          />
-        </Field>
-      </div>
+      <SettingsSection description="Lo que paga el cliente y si el plan aparece en la web." title="Precio y venta">
+        <div className="max-w-[260px]">
+          <UnitField decimal defaultValue={txt('price', plan.price)} id={`${id}-precio`} label="Precio" name="price" prefix="Bs" required />
+        </div>
+        <div className="flex flex-col divide-y divide-line-panel">
+          <SwitchRow defaultChecked={chk('isActive', plan.isActive)} description="Apagado, deja de venderse. Los eventos que ya lo tienen lo conservan." label="A la venta" name="isActive" />
+          <SwitchRow defaultChecked={chk('highlighted', plan.highlighted)} description="La tarjeta oscura con «Más elegido» en los precios." label="Destacado en la web" name="highlighted" />
+        </div>
+      </SettingsSection>
 
-      <div className="grid gap-4 min-[560px]:grid-cols-2">
-        <Field htmlFor={`${id}-coanfitriones`} label="Co-anfitriones · vacío = sin límite">
-          <input
-            className={FIELD_CLASS}
-            defaultValue={txt('maxCohosts', plan.maxCohosts === null ? '' : String(plan.maxCohosts))}
-            id={`${id}-coanfitriones`}
-            inputMode="numeric"
-            name="maxCohosts"
-            placeholder="Sin límite"
-          />
-        </Field>
-        <Field htmlFor={`${id}-planners`} label="Planners contratados · 0 = ninguno">
-          <input
-            className={FIELD_CLASS}
-            defaultValue={txt('maxHiredPlanners', plan.maxHiredPlanners === null ? '' : String(plan.maxHiredPlanners))}
+      <SettingsSection description="Deja vacío lo que no tiene tope. El servidor corta al llegar al límite." title="Límites">
+        <div className="grid gap-4 min-[560px]:grid-cols-2 min-[1200px]:grid-cols-3">
+          <UnitField defaultValue={txt('maxGuestGroups', vacioSiNulo(plan.maxGuestGroups))} id={`${id}-tope`} label="Grupos de invitados" name="maxGuestGroups" placeholder="Sin límite" unit="grupos" />
+          <UnitField defaultValue={txt('maxGalleryPhotos', vacioSiNulo(plan.maxGalleryPhotos))} id={`${id}-fotos`} label="Fotos del evento" name="maxGalleryPhotos" placeholder="Sin límite" unit="fotos" />
+          <UnitField defaultValue={txt('onlineDays', String(plan.onlineDays))} id={`${id}-dias`} label="En línea tras la fiesta" name="onlineDays" required unit="días" />
+          <UnitField defaultValue={txt('maxCohosts', vacioSiNulo(plan.maxCohosts))} id={`${id}-coanfitriones`} label="Co-anfitriones" name="maxCohosts" placeholder="Sin límite" unit="personas" />
+          <UnitField
+            defaultValue={txt('maxHiredPlanners', vacioSiNulo(plan.maxHiredPlanners))}
+            hint="0 si no se puede sumar planner."
             id={`${id}-planners`}
-            inputMode="numeric"
+            label="Planners contratados"
             name="maxHiredPlanners"
             placeholder="Sin límite"
+            unit="personas"
           />
-        </Field>
-      </div>
+          <UnitField defaultValue={txt('maxDoorPorters', String(plan.maxDoorPorters))} hint="0 si no trae porteros." id={`${id}-porteros`} label="Porteros" name="maxDoorPorters" required unit="porteros" />
+        </div>
+      </SettingsSection>
 
-      <div className="grid gap-4 min-[560px]:grid-cols-3">
-        <Field htmlFor={`${id}-fotos`} label="Fotos del evento · vacío = sin límite">
-          <input
-            className={FIELD_CLASS}
-            defaultValue={txt('maxGalleryPhotos', plan.maxGalleryPhotos === null ? '' : String(plan.maxGalleryPhotos))}
-            id={`${id}-fotos`}
-            inputMode="numeric"
-            name="maxGalleryPhotos"
-            placeholder="Sin límite"
-          />
-        </Field>
-        <Field htmlFor={`${id}-dias`} label="Días en línea tras el evento">
-          <input className={FIELD_CLASS} defaultValue={txt('onlineDays', String(plan.onlineDays))} id={`${id}-dias`} inputMode="numeric" name="onlineDays" required />
-        </Field>
-        <Field htmlFor={`${id}-modelo`} label="Cambiar de modelo (misma fiesta)">
-          <select className={FIELD_CLASS} defaultValue={txt('designChange', plan.designChange)} id={`${id}-modelo`} name="designChange">
-            <option value="ninguno">Nunca</option>
-            <option value="antes_de_repartir">Hasta repartir los enlaces</option>
-            <option value="siempre">Siempre</option>
-          </select>
-        </Field>
-        <Field htmlFor={`${id}-suite`} label="Planner">
-          <select className={FIELD_CLASS} defaultValue={txt('plannerSuite', plan.plannerSuite)} id={`${id}-suite`} name="plannerSuite">
-            <option value="esencial">Esencial · tareas y presupuesto</option>
-            <option value="completo">Completo · + proveedores, cronograma y cortejo</option>
-            <option value="total">Total · + Día D y enlaces para proveedores</option>
-          </select>
-        </Field>
-      </div>
+      <SettingsSection description="Lo que se abre en el panel del evento. Apagado, la pantalla enseña que el plan no lo incluye." title="Funciones incluidas">
+        <div className="flex flex-col divide-y divide-line-panel">
+          {FUNCIONES.map((f) => (
+            <SwitchRow defaultChecked={chk(f.name, plan[f.name])} description={f.description} key={f.name} label={f.label} name={f.name} />
+          ))}
+        </div>
+      </SettingsSection>
 
-      <fieldset className="flex flex-wrap gap-2">
-        <legend className="mb-2 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Incluye</legend>
-        {INTERRUPTORES.map((interruptor) => (
-          <label
-            key={interruptor.name}
-            className="flex cursor-pointer items-center gap-2 rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3.5 py-2 text-[12px] text-ink-soft transition-colors has-checked:border-ink has-checked:bg-ink has-checked:text-white"
-          >
-            <input className="accent-current" defaultChecked={chk(interruptor.name, plan[interruptor.name])} name={interruptor.name} type="checkbox" />
-            {interruptor.label}
-          </label>
-        ))}
-      </fieldset>
+      <SettingsSection description="Hasta dónde llega el planner del evento y cuándo se puede cambiar de diseño." title="Planner y diseño">
+        <ChoiceCards
+          defaultValue={txt('plannerSuite', plan.plannerSuite)}
+          legend="Planner"
+          name="plannerSuite"
+          options={[
+            { value: 'esencial', label: 'Esencial', description: 'Tareas y presupuesto.' },
+            { value: 'completo', label: 'Completo', description: 'Más proveedores, cronograma, cortejo y documentos.' },
+            { value: 'total', label: 'Total', description: 'Más el Día D y los enlaces para proveedores.' },
+          ]}
+        />
+        <ChoiceCards
+          defaultValue={txt('designChange', plan.designChange)}
+          legend="Cambiar de modelo"
+          name="designChange"
+          options={[
+            { value: 'ninguno', label: 'Nunca', description: 'El modelo elegido se queda.' },
+            { value: 'antes_de_repartir', label: 'Hasta repartir', description: 'Mientras no haya salido ningún enlace.' },
+            { value: 'siempre', label: 'Siempre', description: 'En cualquier momento, dentro de la misma fiesta.' },
+          ]}
+        />
+      </SettingsSection>
 
-      <div className="grid gap-5 min-[900px]:grid-cols-2">
-        {(['es', 'en'] as const).map((locale) => {
-          const t = plan[locale]
-          return (
-            <fieldset key={locale} className="flex flex-col gap-3 rounded-[14px] border border-line-panel bg-bg-top/60 p-4">
-              <legend className="px-1 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">
-                {locale === 'es' ? 'Español' : 'Inglés'}
-              </legend>
-              <Field htmlFor={`${id}-${locale}-nombre`} label="Nombre">
-                <input className={FIELD_CLASS} defaultValue={txt(`${locale}.name`, t?.name ?? '')} id={`${id}-${locale}-nombre`} name={`${locale}.name`} required />
-              </Field>
-              <Field htmlFor={`${id}-${locale}-lema`} label="Lema">
-                <input className={FIELD_CLASS} defaultValue={txt(`${locale}.tagline`, t?.tagline ?? '')} id={`${id}-${locale}-lema`} name={`${locale}.tagline`} />
-              </Field>
-              <Field htmlFor={`${id}-${locale}-desc`} label="Descripción">
-                <textarea
-                  className={`${FIELD_CLASS} min-h-[70px] resize-y`}
-                  defaultValue={txt(`${locale}.description`, t?.description ?? '')}
-                  id={`${id}-${locale}-desc`}
-                  name={`${locale}.description`}
-                />
-              </Field>
-              <Field htmlFor={`${id}-${locale}-func`} label={`Funciones · una por línea, hasta ${MAX_FUNCIONES}`}>
-                <textarea
-                  className={`${FIELD_CLASS} min-h-[140px] resize-y text-[13px] leading-[1.7]`}
-                  defaultValue={txt(`${locale}.features`, t?.features.join('\n') ?? '')}
-                  id={`${id}-${locale}-func`}
-                  name={`${locale}.features`}
-                  required
-                />
-              </Field>
-            </fieldset>
-          )
-        })}
-      </div>
+      <SettingsSection description="Nombre, lema y la lista de la tarjeta de precios, en cada idioma." title="Textos de la web">
+        {/* Abierto tras un error: un campo con fallo no puede quedar escondido. */}
+        <details className="group rounded-[14px] border border-line-panel bg-bg-top/40" open={enviado !== undefined}>
+          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-[13px] text-ink">
+            <span>
+              {plan.es?.tagline ? <>«{plan.es.tagline}» · </> : null}
+              <span className="text-ink-mute">{plan.es?.features.length ?? 0} funciones en la tarjeta</span>
+            </span>
+            <span className="text-[12px] text-ink-mute group-open:hidden">Editar textos</span>
+            <span className="hidden text-[12px] text-ink-mute group-open:inline">Cerrar</span>
+          </summary>
+          <div className="grid gap-5 border-t border-line-panel p-4 min-[900px]:grid-cols-2">
+            {(['es', 'en'] as const).map((locale) => {
+              const t = plan[locale]
+              return (
+                <fieldset className="flex flex-col gap-3" key={locale}>
+                  <legend className="mb-1 text-[13px] font-medium text-ink">{locale === 'es' ? 'Español' : 'Inglés'}</legend>
+                  <Field htmlFor={`${id}-${locale}-nombre`} label="Nombre">
+                    <input className={FIELD_CLASS} defaultValue={txt(`${locale}.name`, t?.name ?? '')} id={`${id}-${locale}-nombre`} name={`${locale}.name`} required />
+                  </Field>
+                  <Field htmlFor={`${id}-${locale}-lema`} label="Lema">
+                    <input className={FIELD_CLASS} defaultValue={txt(`${locale}.tagline`, t?.tagline ?? '')} id={`${id}-${locale}-lema`} name={`${locale}.tagline`} />
+                  </Field>
+                  <Field htmlFor={`${id}-${locale}-desc`} label="Descripción">
+                    <textarea className={`${FIELD_CLASS} min-h-[70px] resize-y`} defaultValue={txt(`${locale}.description`, t?.description ?? '')} id={`${id}-${locale}-desc`} name={`${locale}.description`} />
+                  </Field>
+                  <Field hint={`Una por línea, hasta ${MAX_FUNCIONES}.`} htmlFor={`${id}-${locale}-func`} label="Funciones de la tarjeta">
+                    <textarea
+                      className={`${FIELD_CLASS} min-h-[160px] resize-y text-[13px] leading-[1.7]`}
+                      defaultValue={txt(`${locale}.features`, t?.features.join('\n') ?? '')}
+                      id={`${id}-${locale}-func`}
+                      name={`${locale}.features`}
+                      required
+                    />
+                  </Field>
+                </fieldset>
+              )
+            })}
+          </div>
+        </details>
+      </SettingsSection>
 
-      <div className="flex flex-wrap items-center gap-3">
-        <SubmitButton variant="primary" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar plan'}</SubmitButton>
+      <footer className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-3 border-t border-line-panel bg-bg-raised/95 px-1 py-4 backdrop-blur">
+        <SubmitButton pending={guardando} pendingLabel="Guardando…" variant="primary">
+          Guardar plan
+        </SubmitButton>
         {plan.eventos > 0 ? (
           <span className="text-[12px] text-ink-mute">
-            Cambiar el tope o las funciones afecta ya a sus {plan.eventos} evento{plan.eventos === 1 ? '' : 's'}.
+            Los límites y funciones se aplican ya a sus {plan.eventos} evento{plan.eventos === 1 ? '' : 's'}.
           </span>
         ) : null}
-      </div>
-
-      <ActionFeedback state={estado} />
+        <div className="w-full">
+          <ActionFeedback state={estado} />
+        </div>
+      </footer>
     </form>
   )
 }

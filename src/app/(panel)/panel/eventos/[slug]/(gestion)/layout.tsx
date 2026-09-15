@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, guestbook, guests, plans } from '@/app/composition/container'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { panelNav } from '@/modules/shell/ui/nav'
+import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { hasFeature } from '@/modules/plans'
@@ -59,7 +60,7 @@ export default async function EventoLayout({
 
   return (
     <PanelFrame
-      brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
+      brandSub={isAdmin(actor) ? 'ADMINISTRACIÓN' : 'PANEL'}
       sections={panelNav(event.value.slug, {
         invitados: grupos,
         sinLeer: libro,
@@ -67,12 +68,27 @@ export default async function EventoLayout({
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
       }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner })}
-      user={{
+      evento={{
         title: event.value.title,
-        planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,
+        planLabel: isErr(capacidad) ? 'Plan —' : `Plan ${capacidad.value.planSlug}`,
+        // A dónde vuelve cada uno: el admin a la cartera, el atelier a su bandeja. El cliente y
+        // la puerta no tienen «fuera»: su panel es este evento.
+        salirHref: isAdmin(actor) ? '/panel/admin/eventos' : actor.role === 'atelier' ? '/panel' : null,
+        salirLabel: isAdmin(actor) ? 'Volver a la administración' : 'Volver a mis eventos',
       }}
+      user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
+      {isAdmin(actor) ? (
+        // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
+        <nav aria-label="Ruta" className="mb-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-ink-mute">
+          <Link className="hover:text-ink hover:underline" href="/panel/admin/eventos">
+            Todos los eventos
+          </Link>
+          <span aria-hidden>›</span>
+          <span className="text-ink-soft">{event.value.title}</span>
+        </nav>
+      ) : null}
       {children}
     </PanelFrame>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useId } from 'react'
+import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { changePasswordAction, type ChangePasswordState } from '@/app/_acciones/identity/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
@@ -17,6 +17,9 @@ const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
 export function ChangePasswordForm() {
   const [estado, accion, pendiente] = useActionState<ChangePasswordState, FormData>(changePasswordAction, INICIAL)
   const id = useId()
+  // Mostrar lo escrito evita el error más común: una letra de más en una clave que no se ve.
+  const [visible, setVisible] = useState(false)
+  const tipo = visible ? 'text' : 'password'
 
   return (
     <form action={accion} className="flex max-w-[420px] flex-col gap-4">
@@ -30,7 +33,7 @@ export function ChangePasswordForm() {
           id={`${id}-actual`}
           name="current"
           required
-          type="password"
+          type={tipo}
         />
       </div>
 
@@ -42,16 +45,24 @@ export function ChangePasswordForm() {
           autoComplete="new-password"
           className={FIELD_CLASS}
           id={`${id}-nueva`}
+          aria-describedby={`${id}-requisito`}
           minLength={12}
           name="next"
           required
-          type="password"
+          type={tipo}
         />
+        <p className="text-[12px] leading-[1.5] text-ink-mute" id={`${id}-requisito`}>
+          Al menos 12 caracteres.
+        </p>
       </div>
 
-      <p className="text-[11px] leading-[1.7] text-ink-mute">
-        Al menos 12 caracteres. Al guardar se cierran todas las sesiones —también esta—, así que tendrás que volver a
-        entrar con la nueva.
+      <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink-soft">
+        <input checked={visible} className="accent-ink" onChange={(e) => setVisible(e.target.checked)} type="checkbox" />
+        Mostrar las contraseñas
+      </label>
+
+      <p className="rounded-[12px] bg-bg-top px-3.5 py-2.5 text-[12px] leading-[1.6] text-ink-soft">
+        Al guardar se cierran todas tus sesiones, también esta: vuelves a entrar con la nueva.
       </p>
 
       <SubmitButton variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Cambiar la contraseña'}</SubmitButton>

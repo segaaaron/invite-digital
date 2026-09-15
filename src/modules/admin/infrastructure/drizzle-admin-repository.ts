@@ -21,7 +21,6 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         role: users.role,
         createdAt: users.createdAt,
         eventos: sql<number>`(select count(*)::int from events where events.user_id = users.id)`,
-        planSlug: sql<string | null>`(select plans.slug from plans where plans.id = users.plan_id)`,
       })
       .from(users)
       .orderBy(users.createdAt)
@@ -42,22 +41,12 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         role: users.role,
         createdAt: users.createdAt,
         eventos: sql<number>`(select count(*)::int from events where events.user_id = users.id)`,
-        planSlug: sql<string | null>`(select plans.slug from plans where plans.id = users.plan_id)`,
       })
       .from(users)
       .where(eq(users.id, id))
       .limit(1)
 
     return fila === undefined ? null : { ...fila, role: parseRole(fila.role) }
-  },
-
-  async setUserPlan(userId, planSlug): Promise<boolean> {
-    const filas = await database
-      .update(users)
-      .set({ planId: planSlug === null ? null : sql`(select id from plans where slug = ${planSlug})` })
-      .where(eq(users.id, userId))
-      .returning({ id: users.id })
-    return filas.length > 0
   },
 
   async setRole(userId, role): Promise<void> {

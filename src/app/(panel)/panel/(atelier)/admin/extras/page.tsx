@@ -20,9 +20,15 @@ export default async function AdminExtrasPage() {
     <>
       <PanelHeader kicker="Administración" meta={`${extras.filter((x) => x.isActive).length} de ${extras.length} a la venta`} title="Extras" />
       <PanelCard title="Catálogo de extras">
+        <p className="mb-5 max-w-[70ch] text-[13px] leading-[1.6] text-ink-mute">
+          Lo que un evento compra suelto sin cambiar de plan. Se paga como un pedido y, al aprobarlo, se aplica a ese evento. Cambiar el
+          precio o el efecto no toca lo que ya se vendió.
+        </p>
+        <div className="flex flex-col gap-3">
         {extras.map((x) => (
           <ExtraEditor extra={{ slug: x.slug, name: x.name, precio: aCampo(x.priceCents), effect: x.effect, amount: x.amount, isActive: x.isActive }} key={x.slug} />
         ))}
+        </div>
       </PanelCard>
     </>
   )

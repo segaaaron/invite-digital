@@ -63,7 +63,7 @@ export default async function PlanPage({
 
   return (
     <>
-      <PanelHeader kicker="Cuenta" meta={event.value.title} title="Tu plan" />
+      <PanelHeader kicker="Evento" title="Plan" />
 
       <div className="flex flex-col gap-4.5">
         {/* Las tarjetas van sueltas sobre el marfil, como en la maqueta: meterlas dentro

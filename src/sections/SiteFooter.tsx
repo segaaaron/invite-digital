@@ -76,6 +76,17 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
           </span>
         </span>
       </div>
+      <p className="mx-auto mt-6 max-w-[1320px] text-center text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+        {dictionary.footer.builtBy}{' '}
+        <a
+          className="text-gold-deep underline-offset-4 transition-colors hover:text-ink hover:underline"
+          href="https://www.ms-tech-stack.cloud/"
+          rel="noopener"
+          target="_blank"
+        >
+          MS Tech Stack
+        </a>
+      </p>
     </footer>
   )
 }

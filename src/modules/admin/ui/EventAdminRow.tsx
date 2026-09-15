@@ -120,14 +120,25 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           </div>
 
           <div className="grid gap-3 min-[560px]:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)]">
-            {/* Un evento sin dueño no debería existir; si aparece uno, la tarjeta lo canta. */}
+            {/* Lo primero es **de quién es la boda**: el cliente que entra a su panel. Quien la
+                lleva (el atelier o el admin) va debajo, más pequeño: es un dato de gestión. */}
             <span className="flex min-w-0 items-center gap-2.5">
               <span aria-hidden className="grid size-8 shrink-0 place-items-center rounded-full bg-bg-sunken font-display text-[14px] text-ink-soft uppercase">
-                {(event.ownerEmail ?? '?').slice(0, 1)}
+                {(event.anfitriones[0]?.email ?? '?').slice(0, 1)}
               </span>
-              <span className="flex min-w-0 flex-col">
-                <span className={LABEL_CLASS}>Dueño</span>
-                {event.ownerEmail === null ? <Pill tone="no">Sin dueño</Pill> : <span className="truncate text-[13px] text-ink">{event.ownerEmail}</span>}
+              <span className="flex min-w-0 flex-col gap-0.5">
+                <span className={LABEL_CLASS}>Cliente</span>
+                {event.anfitriones.length === 0 ? (
+                  <span className="text-[13px] text-ink-mute">Sin acceso de cliente todavía</span>
+                ) : (
+                  <span className="truncate text-[13px] text-ink" title={event.anfitriones.map((a) => a.email).join(', ')}>
+                    {event.anfitriones[0]?.email}
+                    {event.anfitriones.length > 1 ? <span className="text-ink-mute"> y {event.anfitriones.length - 1} más</span> : null}
+                  </span>
+                )}
+                <span className="truncate text-[11.5px] text-ink-mute">
+                  {event.ownerEmail === null ? <Pill tone="no">Sin responsable</Pill> : <>Lo lleva {event.ownerEmail}</>}
+                </span>
               </span>
             </span>
 
@@ -167,7 +178,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           falla. */}
       <details className="group" open={error !== null || acceso.status !== 'idle' || confirmando}>
         <summary className="w-fit cursor-pointer list-none border-t border-line-panel pt-3 font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
-          <span className="group-open:hidden">+ Gestionar: dueño, plan, acceso, soporte, borrar</span>
+          <span className="group-open:hidden">+ Gestionar: responsable, plan, acceso, soporte, borrar</span>
           <span className="hidden group-open:inline">− Cerrar</span>
         </summary>
         <div className="mt-3.5">
@@ -176,7 +187,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           <input name="eventId" type="hidden" value={event.id} />
           <span className="flex flex-col gap-1.5">
             <label className={LABEL_CLASS} htmlFor={`${id}-dueno`}>
-              Dueño
+              Atelier responsable
             </label>
             <select className={`${FIELD_CLASS} py-2`} defaultValue={event.ownerId ?? ''} id={`${id}-dueno`} name="userId">
               {owners.map((owner) => (

@@ -34,8 +34,17 @@ export default async function AdminPlanesPage() {
         </PanelCard>
       ) : (
         <div className="flex flex-col gap-4.5">
+          {/* Tres planes largos: saltar al que se quiere editar sin desplazarse por los otros. */}
+          <nav aria-label="Ir a un plan" className="flex flex-wrap gap-2">
+            {planes.value.map((plan) => (
+              <a className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 text-[12.5px] text-ink transition-colors hover:border-ink" href={`#plan-${plan.slug}`} key={plan.slug}>
+                {plan.es?.name ?? plan.slug} · <span className="text-ink-mute">{formatAmount(plan.priceCents, plan.currency)}</span>
+              </a>
+            ))}
+          </nav>
           {planes.value.map((plan) => (
-            <PanelCard key={plan.slug} className={plan.highlighted ? 'border-gold/50' : ''}>
+            <div className="scroll-mt-6" id={`plan-${plan.slug}`} key={plan.slug}>
+            <PanelCard className={plan.highlighted ? 'border-gold/50' : ''}>
               <PlanEditor
                 plan={{
                   slug: plan.slug,
@@ -63,6 +72,7 @@ export default async function AdminPlanesPage() {
                 }}
               />
             </PanelCard>
+            </div>
           ))}
         </div>
       )}

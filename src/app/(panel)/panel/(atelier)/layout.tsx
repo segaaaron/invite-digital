@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { events, guestbook, guests, plans } from '@/app/composition/container'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { panelNav } from '@/modules/shell/ui/nav'
+import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { insigniasDeAdmin } from '../_carcasa/insignias-de-admin'
@@ -35,21 +35,24 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
 
   return (
     <PanelFrame
-      brandSub={admin ? 'ADMINISTRACIÓN' : activo === null ? 'ATELIER' : `EVENTO · ${activo.slug.toUpperCase()}`}
+      brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
       sections={panelNav(activo?.slug ?? null, {
         invitados: grupos,
         sinLeer: libro,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
       }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner })}
-      user={{
-        title: admin ? 'Administración' : (activo?.title ?? 'Sin eventos todavía'),
-        planLabel: admin
-          ? 'ADMIN'
-          : capacidad === null || isErr(capacidad)
-            ? 'CREA EL PRIMERO'
-            : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,
-      }}
+      evento={
+        activo === null
+          ? null
+          : {
+              title: activo.title,
+              planLabel: capacidad === null || isErr(capacidad) ? 'Plan —' : `Plan ${capacidad.value.planSlug}`,
+              salirHref: null,
+              salirLabel: '',
+            }
+      }
+      user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
       {children}

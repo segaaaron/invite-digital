@@ -24,7 +24,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
     await page.getByLabel('Nombre de la mesa').fill(nombre)
     await page.getByLabel('Capacidad (asientos)').fill(cupo)
     await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
-    await expect(page.locator('dialog')).toHaveCount(0)
+    await expect(page.locator('dialog[open]')).toHaveCount(0)
   }
 
   await crearMesa('Mesa 01', '8')
@@ -77,7 +77,7 @@ test('el plano no guarda hasta que se pulsa Guardar', async ({ page }) => {
   await page.goto(`/panel/eventos/${SLUG}-plano/mesas?panel=mesa`)
   await page.getByLabel('Nombre de la mesa').fill('Mesa 01')
   await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
-  await expect(page.locator('dialog')).toHaveCount(0)
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
 
   const plano = page.getByLabel('Plano del salón')
   const marca = plano.getByRole('button', { name: /Mesa 01/ })

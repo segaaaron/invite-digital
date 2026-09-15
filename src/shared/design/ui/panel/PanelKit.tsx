@@ -25,6 +25,9 @@ const BOTON_VARIANTES = {
   danger: 'border border-danger/40 bg-white text-danger-deep hover:-translate-y-px hover:bg-danger-deep hover:text-white',
 } as const
 
+/** Las clases de un botón del panel, para un control que no es `PanelButton` (el que abre un diálogo). */
+export const botonClases = (variant: keyof typeof BOTON_VARIANTES = 'default') => `${BOTON_BASE} ${BOTON_VARIANTES[variant]}`
+
 type PanelButtonProps = {
   children: ReactNode
   variant?: keyof typeof BOTON_VARIANTES

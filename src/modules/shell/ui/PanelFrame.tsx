@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { PanelSidebar, type PanelUser } from './PanelSidebar'
+import { PanelSidebar, type PanelEvento, type PanelUser } from './PanelSidebar'
 import type { NavSection } from './nav'
 
 /**
@@ -14,11 +14,13 @@ export function PanelFrame({
   sections,
   brandSub,
   user,
+  evento,
   children,
 }: {
   sections: readonly NavSection[]
   brandSub: string
   user: PanelUser
+  evento: PanelEvento | null
   children: ReactNode
 }) {
   return (
@@ -28,7 +30,7 @@ export function PanelFrame({
       {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
           la ventana y en una página larga dejaba una franja blanca por debajo. */}
       <div className="bg-shell-deep">
-        <PanelSidebar brandSub={brandSub} sections={sections} user={user} />
+        <PanelSidebar brandSub={brandSub} evento={evento} sections={sections} user={user} />
       </div>
       {/* Los tres focos de la maqueta, fijos al viewport: el tercero es el que sostiene
           el pie de una página larga, que sin él se quedaba en marfil plano. */}

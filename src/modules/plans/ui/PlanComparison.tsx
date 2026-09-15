@@ -26,7 +26,7 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
         <table className="w-full min-w-[600px] border-collapse text-left text-[14px]">
           <thead>
             <tr className="border-b border-line">
-              <th className="sticky left-0 bg-bg py-3 pr-4 font-mono text-[10px] font-normal tracking-[var(--tracking-luxe)] text-ink-mute uppercase" scope="col">
+              <th className="sticky left-0 bg-bg py-3 pr-4 pl-5 font-mono text-[10px] font-normal tracking-[var(--tracking-luxe)] text-ink-mute uppercase" scope="col">
                 {textos.feature}
               </th>
               {planes.map((p) => (
@@ -39,7 +39,7 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
           <tbody>
             {filas.map((fila) => (
               <tr className="border-b border-line last:border-none" key={fila.clave}>
-                <th className="sticky left-0 max-w-[42vw] bg-bg py-3 pr-4 font-normal text-ink-soft" scope="row">
+                <th className="sticky left-0 max-w-[42vw] bg-bg py-3 pr-4 pl-5 font-normal text-ink-soft" scope="row">
                   {fila.etiqueta}
                 </th>
                 {fila.valores.map((celda, i) => (

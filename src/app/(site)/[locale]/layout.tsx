@@ -5,9 +5,10 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { LOCALES } from '@/shared/i18n/locales'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { site } from '@/app/composition/container'
-import { sitioPublico } from '@/modules/admin/domain/site-settings'
+import { enlaceWhatsapp, sitioPublico } from '@/modules/admin/domain/site-settings'
 import { SiteFooter } from '@/sections/SiteFooter'
 import { SiteHeader } from '@/sections/SiteHeader'
+import { WhatsAppFloat } from '@/sections/WhatsAppFloat'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../../globals.css'
 
@@ -29,7 +30,8 @@ export default async function LocaleLayout({
   if (!locale) notFound()
 
   const dictionary = getDictionary(locale)
-  const sitio = sitioPublico(await site.settings(), locale)
+  const ajustes = await site.settings()
+  const sitio = sitioPublico(ajustes, locale)
 
   return (
     <html lang={locale} className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
@@ -37,6 +39,7 @@ export default async function LocaleLayout({
         <SiteHeader locale={locale} dictionary={dictionary} />
         <main id="top">{children}</main>
         <SiteFooter dictionary={dictionary} locale={locale} sitio={sitio} />
+        <WhatsAppFloat href={enlaceWhatsapp(ajustes.whatsapp, ajustes.mensajes.general[locale])} label={dictionary.footer.whatsappFloat} />
       </body>
     </html>
   )

@@ -113,7 +113,9 @@ export function ShowcaseMusicRow({
             <form action={renombrar} className="flex flex-col gap-2" key={JSON.stringify(cancion)}>
               <input name="themeKey" type="hidden" value={themeKey} />
               {cancion === null ? (
-                <p className="text-[12px] text-danger">Sin nombre: el reproductor sale sin título. Escríbelo aquí.</p>
+                <p className="text-[12px] leading-[1.5] text-ink-mute">
+                  Esta canción se subió antes de que guardáramos su nombre. Escríbelo, o vuelve a subirla y lo tomamos del archivo.
+                </p>
               ) : null}
               <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
               <SubmitButton variant="default" pending={renombrando} pendingLabel={'Guardando…'}>{'Guardar nombre'}</SubmitButton>
@@ -197,13 +199,12 @@ function NombreDeCancion({ cancion, id }: { cancion: { track: string; artist: st
           id={`${id}-track`}
           maxLength={120}
           name="track"
-          placeholder="Tiempo de Vals"
           required
         />
       </label>
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-artist`}>
         <span className={LABEL_CLASS}>Artista (opcional)</span>
-        <input className={FIELD_CLASS} defaultValue={cancion?.artist ?? ''} id={`${id}-artist`} maxLength={120} name="artist" placeholder="Chayanne" />
+        <input className={FIELD_CLASS} defaultValue={cancion?.artist ?? ''} id={`${id}-artist`} maxLength={120} name="artist" />
       </label>
     </div>
   )

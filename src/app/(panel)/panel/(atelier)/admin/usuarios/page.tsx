@@ -19,7 +19,7 @@ const ALTA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short', 
 export default async function AdminUsuariosPage({ searchParams }: { searchParams: Promise<{ panel?: string }> }) {
   const actor = await requireAdmin()
   const { panel } = await searchParams
-  const [usuarios, planes] = await Promise.all([admin.users(), admin.planOptions()])
+  const usuarios = await admin.users()
 
   return (
     <>
@@ -30,13 +30,13 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
           </PanelButton>
         }
         kicker="Administración"
-        meta={isErr(usuarios) ? 'No hay registro público: las altas se hacen aquí' : `${usuarios.value.length} usuarios · las altas se hacen aquí`}
+        meta={isErr(usuarios) ? 'Quién puede entrar al panel' : `${usuarios.value.length} usuario${usuarios.value.length === 1 ? '' : 's'} con acceso al panel`}
         title="Usuarios"
       />
 
       {panel === 'alta' ? (
         <PanelDialog closeHref="/panel/admin/usuarios" title="Agregar usuario" width={520}>
-          <NewUserForm planes={planes} />
+          <NewUserForm />
         </PanelDialog>
       ) : null}
 
@@ -46,41 +46,21 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
             No pudimos leer los usuarios. La base no responde; vuelve a intentarlo en un momento.
           </p>
         ) : (
-          // En el teléfono cada usuario es una tarjeta, no una fila que desplazar: son pocos
-          // registros y se leen de uno en uno, que es cuando las tarjetas funcionan mejor.
-          <div className="relative min-[560px]:overflow-x-auto">
-            <table className="w-full border-collapse text-left max-[560px]:block min-[560px]:min-w-[760px]">
-              <thead className="max-[560px]:hidden">
-                <tr>
-                  {['Usuario', 'Rol', 'Plan que compró', 'Eventos', ''].map((titulo, i) => (
-                    <th
-                      key={titulo || i}
-                      className={`border-b border-line-panel pb-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase `}
-                    >
-                      {titulo}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody className="max-[560px]:flex max-[560px]:flex-col max-[560px]:gap-3">
-                {usuarios.value.map((usuario) => (
-                  <UserRow
-                    key={usuario.id}
-                    planes={planes}
-                    user={{
-                      id: usuario.id,
-                      email: usuario.email,
-                      role: usuario.role,
-                      eventos: usuario.eventos,
-                      esUnoMismo: usuario.id === actor.userId,
-                      planSlug: usuario.planSlug,
-                      alta: ALTA.format(usuario.createdAt),
-                    }}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ul className="flex flex-col">
+            {usuarios.value.map((usuario) => (
+              <UserRow
+                key={usuario.id}
+                user={{
+                  id: usuario.id,
+                  email: usuario.email,
+                  role: usuario.role,
+                  eventos: usuario.eventos,
+                  esUnoMismo: usuario.id === actor.userId,
+                  alta: ALTA.format(usuario.createdAt),
+                }}
+              />
+            ))}
+          </ul>
         )}
       </PanelCard>
     </>

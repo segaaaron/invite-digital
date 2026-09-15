@@ -26,7 +26,7 @@ export function FiestaChooser({ dictionary, locale }: { dictionary: Dictionary; 
               href={href}
               key={href}
             >
-              <Image alt="" className="object-cover transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" fill sizes="(max-width: 768px) 100vw, 540px" src={imagen} />
+              <Image alt="" className="object-cover object-[center_15%] transition-transform duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" fill sizes="(max-width: 768px) 100vw, 540px" src={imagen} />
               <span aria-hidden className="absolute inset-0 bg-linear-to-t from-shell-deep/85 via-shell-deep/30 to-transparent" />
               <span className="relative flex flex-col gap-2">
                 <span className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-gold-light">{textos.eyebrow}</span>

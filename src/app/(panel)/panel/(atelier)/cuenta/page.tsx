@@ -2,6 +2,12 @@ import { ChangePasswordForm } from '@/modules/identity/ui/ChangePasswordForm'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { SettingsSection } from '@/shared/design/ui/panel/ajustes'
+import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
+import { botonClases } from '@/shared/design/ui/panel/PanelKit'
+import { signOutAction } from '@/app/_acciones/identity/actions'
+
+const ROL = { admin: 'Administrador', atelier: 'Atelier', cliente: 'Cliente', puerta: 'Personal de puerta' } as const
 
 export const metadata = { title: 'Mi cuenta' }
 
@@ -22,8 +28,8 @@ export default async function CuentaPage() {
   const actor = await requireSession()
 
   return (
-    <>
-      <PanelHeader kicker="Cuenta" meta={actor.email} title="Mi cuenta" />
+    <div className="flex max-w-[980px] flex-col gap-4.5">
+      <PanelHeader kicker="Cuenta" meta="Tus datos de acceso al panel" title="Mi cuenta" />
 
       {actor.mustChangePassword ? (
         <PanelCard>
@@ -35,9 +41,37 @@ export default async function CuentaPage() {
         </PanelCard>
       ) : null}
 
-      <PanelCard title="Contraseña">
-        <ChangePasswordForm />
+      <PanelCard>
+        <SettingsSection description="Con este correo entras al panel y te llegan los avisos. Si hay que cambiarlo, lo hace un administrador." title="Perfil">
+          <dl className="grid gap-4 min-[560px]:grid-cols-2">
+            <div className="flex flex-col gap-1">
+              <dt className="text-[12px] text-ink-mute">Correo</dt>
+              <dd className="text-[14px] text-ink">{actor.email}</dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="text-[12px] text-ink-mute">Rol</dt>
+              <dd className="text-[14px] text-ink">{ROL[actor.role]}</dd>
+            </div>
+          </dl>
+        </SettingsSection>
+
+        <SettingsSection description="Pide la actual para que una sesión abierta en un ordenador ajeno no baste para quedarse con la cuenta." title="Contraseña">
+          <ChangePasswordForm />
+        </SettingsSection>
+
+        <SettingsSection description="Sal del panel en este dispositivo." title="Sesión">
+          <div>
+            <ConfirmAction
+              action={signOutAction}
+              confirmLabel="Cerrar sesión"
+              description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
+              title="Cerrar sesión"
+              trigger="Cerrar sesión"
+              triggerClassName={botonClases('default')}
+            />
+          </div>
+        </SettingsSection>
       </PanelCard>
-    </>
+    </div>
   )
 }

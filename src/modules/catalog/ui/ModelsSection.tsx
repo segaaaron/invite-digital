@@ -1,12 +1,15 @@
-import Link from 'next/link'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 import type { Template } from '../domain/template'
+import { MasModelos } from './MasModelos'
 import { TemplateCard } from './TemplateCard'
 
 type Props = { templates: readonly Template[]; dictionary: Dictionary; locale: Locale }
+
+/** De cuántos en cuántos modelos se enseñan: dos filas de cuatro. */
+const TANDA = 8
 
 export function ModelsSection({ templates, dictionary, locale }: Props) {
   const { models } = dictionary
@@ -19,22 +22,13 @@ export function ModelsSection({ templates, dictionary, locale }: Props) {
           <p className="max-w-[46ch] text-[15px] text-ink-soft">{models.subtitle}</p>
         </div>
 
-        <div className="mt-16 grid grid-cols-2 place-items-center gap-x-6 gap-y-14 md:grid-cols-4">
+        <MasModelos etiqueta={dictionary.collections.loadMore} tanda={TANDA}>
           {templates.map((template, index) => (
             <Reveal key={template.id} delay={(index % 4) * 0.08}>
               <TemplateCard dictionary={dictionary} locale={locale} template={template} />
             </Reveal>
           ))}
-        </div>
-
-        <div className="mt-14 flex justify-center">
-          <Link
-            className="rounded-[var(--radius-pill)] border border-[var(--color-line)] px-7 py-3 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink transition-colors hover:border-gold"
-            href={`/${locale}/colecciones`}
-          >
-            {models.seeAll}
-          </Link>
-        </div>
+        </MasModelos>
       </div>
     </section>
   )

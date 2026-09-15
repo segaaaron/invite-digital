@@ -9,6 +9,8 @@ import type { Dictionary } from '@/shared/i18n/dictionaries'
  * acto va en oscuro con el disco de reproducción encima, porque es la demo.
  */
 const FOTOS = ['/site/experiencia/acto-1.avif', '/site/experiencia/acto-2.avif', '/site/experiencia/acto-3.avif'] as const
+// La novia es vertical: centrada, el recorte 4:3 le cortaba la cara.
+const ENCUADRE = ['object-center', 'object-[center_20%]', 'object-center'] as const
 
 export function ExperienceSection({ dictionary }: { dictionary: Dictionary }) {
   const { experience } = dictionary
@@ -32,7 +34,7 @@ export function ExperienceSection({ dictionary }: { dictionary: Dictionary }) {
                   <div className="relative aspect-4/3">
                     <Image
                       alt={act.imageAlt}
-                      className="object-cover"
+                      className={`object-cover ${ENCUADRE[index] ?? 'object-center'}`}
                       fill
                       sizes="(min-width: 768px) 33vw, 100vw"
                       src={FOTOS[index] ?? FOTOS[0]}

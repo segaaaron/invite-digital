@@ -32,7 +32,7 @@ import { HeroCanvas } from '@/three/HeroCanvas'
 // hit a database in the same compose network, so the cost is a couple of milliseconds.
 export const dynamic = 'force-dynamic'
 
-/** Las nueve escenas de la maqueta, en el mismo orden que el diccionario. */
+/** Las escenas de bodas, XV y despedidas, en el mismo orden que el diccionario. */
 const ESCENAS = [
   '/site/colecciones/bodas-1.avif',
   '/site/colecciones/bodas-2.avif',
@@ -42,7 +42,6 @@ const ESCENAS = [
   '/site/colecciones/despedida-ella-2.avif',
   '/site/colecciones/despedida-el-1.avif',
   '/site/colecciones/despedida-el-2.avif',
-  '/site/colecciones/graduacion-1.avif',
 ] as const
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {

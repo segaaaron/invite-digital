@@ -84,6 +84,8 @@ test.describe('soporte como el cliente', () => {
     expect((await page.goto('/panel/cuenta'))?.status()).toBe(404)
 
     await page.goto(`/panel/eventos/${SLUG}`)
+    // La salida está en dos sitios a la vista: la franja de arriba y lo primero de la barra.
+    await expect(page.getByRole('button', { name: 'Regresar al panel de admin' })).toBeVisible()
     await page.getByRole('button', { name: 'Regresar como admin' }).click()
     await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
     expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
@@ -101,6 +103,9 @@ test.describe('soporte como el cliente', () => {
     await suya.getByRole('button', { name: 'Entrar' }).click()
     await expect(suya).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`))
     await expect(suya.getByRole('button', { name: 'Regresar como admin' })).toHaveCount(0)
+    // Ni rastro de la administración en su barra.
+    for (const enlace of ['Hoy', 'Usuarios', 'Planes', 'Auditoría']) await expect(suya.getByRole('link', { name: enlace, exact: true })).toHaveCount(0)
+    await expect(suya.getByText('Cliente', { exact: true })).toBeVisible()
     for (const ruta of ['/panel/admin', '/panel/admin/eventos', '/panel/admin/auditoria']) {
       expect((await suya.goto(ruta))?.status(), ruta).toBe(404)
     }

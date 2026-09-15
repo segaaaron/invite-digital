@@ -10,6 +10,8 @@
   --color-gold: #c19b4a;
   --color-gold-deep: #a8823a;
   --color-gold-light: #e2c584;
+  /* El azul de los títulos de Google, solo para la vista previa de «Buscadores». */
+  --color-link: #1a0dab;
   /* La tinta que va **encima** del acento: el texto de un botón dorado macizo.
      Existe como token propio porque una invitación redefine el acento con su paleta —el
      verde salvia de la botánica, el plata de la disco— y el contraste de ese texto no

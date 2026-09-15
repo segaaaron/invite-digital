@@ -193,8 +193,10 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
     ]
   }
 
-  // El admin dentro de una boda: solo su ficha. Invitados, mensajes, mesas, regalos y planner
-  // son datos del cliente; para verlos entra como el cliente, con motivo y registro.
+  // El admin dentro de una boda: **solo el menú de esa boda**, como al entrar en un proyecto.
+  // Con la administración debajo, pulsar «Hoy» sacaba del evento sin avisar y no se sabía
+  // dónde se estaba; la salida es el «← Volver» de arriba de la barra. Invitados, mensajes,
+  // mesas, regalos y planner son datos del cliente: para verlos entra como el cliente.
   if (esAdmin && base !== null) {
     return [
       {
@@ -205,8 +207,6 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
         ],
       },
-      ...administracion,
-      { label: 'Cuenta', items: [{ href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' }] },
     ]
   }
 
@@ -266,4 +266,12 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       ],
     },
   ]
+}
+
+/** Cómo se llama cada rol en la tarjeta de quien ha entrado. */
+export const ROTULO_DE_ROL: Record<'admin' | 'atelier' | 'cliente' | 'puerta', string> = {
+  admin: 'Administrador',
+  atelier: 'Atelier',
+  cliente: 'Cliente',
+  puerta: 'Personal de puerta',
 }

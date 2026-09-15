@@ -82,6 +82,8 @@ test.describe('cierre de sesión', () => {
     await signIn(page)
 
     await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+    // Pide confirmación: el botón de dentro del diálogo es el que cierra la sesión.
+    await page.getByRole('dialog', { name: 'Cerrar sesión' }).getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page).toHaveURL(/\/panel\/entrar$/)
 
     await page.goto('/panel')
