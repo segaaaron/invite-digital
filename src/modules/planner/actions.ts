@@ -8,7 +8,11 @@ import { parseAmount } from '@/modules/registry'
 import { isErr } from '@/shared/result'
 import type { PlannerResult } from './application/planner-use-cases'
 
-export type PlannerActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+/**
+ * `valores` vuelve con el error: React vacía el formulario al terminar la acción, también
+ * cuando falla, y quien escribió una partida entera la perdería por un importe mal puesto.
+ */
+export type PlannerActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string; valores?: Record<string, string> }
 
 // ============================================================================
 // Todas son del panel y empiezan por `requireSession()`. El planner es de quien celebra y
@@ -28,8 +32,11 @@ async function eventoDe(actor: Awaited<ReturnType<typeof requireSession>>, fd: F
   return { eventId: evento.value.id, eventSlug: texto(fd, 'eventSlug'), fiesta: fiestaDeTema(evento.value.themeKey), eventDate: evento.value.eventDate }
 }
 
-function responder(resultado: PlannerResult, eventSlug: string): PlannerActionState {
-  if (!resultado.ok) return { status: 'error', message: resultado.mensaje }
+const valoresDe = (fd: FormData): Record<string, string> =>
+  Object.fromEntries([...fd.entries()].filter(([, v]) => typeof v === 'string') as [string, string][])
+
+function responder(resultado: PlannerResult, eventSlug: string, fd?: FormData): PlannerActionState {
+  if (!resultado.ok) return { status: 'error', message: resultado.mensaje, ...(fd ? { valores: valoresDe(fd) } : {}) }
   revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
   return { status: 'success' }
 }
@@ -61,7 +68,7 @@ export async function addTaskAction(_previo: PlannerActionState, fd: FormData): 
     dueDate: texto(fd, 'dueDate'),
     assignee: texto(fd, 'assignee'),
   })
-  return responder(resultado, eventSlug)
+  return responder(resultado, eventSlug, fd)
 }
 
 export async function editTaskAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
@@ -75,7 +82,7 @@ export async function editTaskAction(_previo: PlannerActionState, fd: FormData):
     assignee: texto(fd, 'assignee'),
     notes: texto(fd, 'notes'),
   })
-  return responder(resultado, eventSlug)
+  return responder(resultado, eventSlug, fd)
 }
 
 export async function toggleTaskAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
@@ -105,9 +112,9 @@ export async function saveItemAction(_previo: PlannerActionState, fd: FormData):
   const { eventId, eventSlug, fiesta } = await eventoDe(actor, fd)
 
   const previsto = centavos(texto(fd, 'estimated'), false)
-  if (!previsto.ok) return { status: 'error', message: previsto.message }
+  if (!previsto.ok) return { status: 'error', message: previsto.message, valores: valoresDe(fd) }
   const contratado = centavos(texto(fd, 'contracted'), true)
-  if (!contratado.ok) return { status: 'error', message: contratado.message }
+  if (!contratado.ok) return { status: 'error', message: contratado.message, valores: valoresDe(fd) }
 
   const itemId = texto(fd, 'itemId')
   const resultado = await planner.saveItem(eventId, fiesta, itemId === '' ? null : itemId, {
@@ -119,7 +126,7 @@ export async function saveItemAction(_previo: PlannerActionState, fd: FormData):
     padrinoLabel: texto(fd, 'padrinoLabel'),
     notes: texto(fd, 'notes'),
   })
-  return responder(resultado, eventSlug)
+  return responder(resultado, eventSlug, fd)
 }
 
 export async function removeItemAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
@@ -132,9 +139,9 @@ export async function addPaymentAction(_previo: PlannerActionState, fd: FormData
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
   const importe = centavos(texto(fd, 'amount'), false)
-  if (!importe.ok) return { status: 'error', message: importe.message }
+  if (!importe.ok) return { status: 'error', message: importe.message, valores: valoresDe(fd) }
   const resultado = await planner.addPayment(texto(fd, 'eventId'), texto(fd, 'itemId'), { amountCents: importe.cents ?? 0, dueDate: texto(fd, 'dueDate') })
-  return responder(resultado, texto(fd, 'eventSlug'))
+  return responder(resultado, texto(fd, 'eventSlug'), fd)
 }
 
 export async function setPaymentPaidAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {

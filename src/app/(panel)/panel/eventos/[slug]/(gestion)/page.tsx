@@ -1,6 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { analytics, checkin, events, guestbook, guests, plans, registry, rsvp, venue } from '@/app/composition/container'
+import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
+import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
+import { avanceDeTareas, estadoDeTarea, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
+import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
+import { DEFAULT_CURRENCY, formatAmount } from '@/modules/registry'
+import { fecha as diaCorto } from '@/shared/format/fecha'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
 import { requireSession } from '@/modules/identity/session-cookie'
@@ -131,6 +136,23 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     ? 0
     : historial.value.slice(-7).reduce((suma, barra) => suma + barra.count, 0)
 
+  // «Esta semana» del planner: tareas y pagos que vencen en siete días o ya vencieron.
+  const hoyBolivia = fechaEnBolivia(hoy)
+  const tareas = await planner.listTasks(event.value.id)
+  const partidas = await planner.listBudget(event.value.id)
+  const totales = totalesDelPresupuesto(partidas)
+  const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
+  const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
+  const semana = {
+    avance: avanceDeTareas(tareas),
+    presupuesto: partidas.length === 0 ? null : { previsto: bs(totales.previsto), comprometido: bs(totales.comprometido), pagado: bs(totales.pagado) },
+    tareas: tareas
+      .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
+      .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
+      .map(({ t, estado }) => ({ id: t.id, title: t.title, vence: dia(t.dueDate!), atrasada: estado === 'atrasada' })),
+    pagos: pagosQueVencen(partidas, hoyBolivia).map((g) => ({ id: g.id, concepto: g.concepto, importe: bs(g.amountCents), vence: dia(g.dueDate!), atrasado: g.dueDate! < hoyBolivia })),
+  }
+
   const cuentaAtras =
     diasQueFaltan > 1 ? `faltan ${diasQueFaltan} días` : diasQueFaltan === 1 ? 'falta un día' : diasQueFaltan === 0 ? 'es hoy' : null
 
@@ -185,6 +207,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           icon="👁"
         />
       </div>
+
+      <PanelCard className="mb-5.5" title="Esta semana">
+        <ThisWeekCard evento={{ eventId: event.value.id, eventSlug: event.value.slug }} semana={semana} />
+      </PanelCard>
 
       {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
       <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">

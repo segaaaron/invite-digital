@@ -92,7 +92,7 @@ describe('panelNav', () => {
 
   it('el admin dentro de un evento ve el evento y además la administración', () => {
     const etiquetas = panelNav('boda', {}, true).map((seccion) => seccion.label)
-    expect(etiquetas).toEqual(['Evento activo', 'Diseño', 'Día a día', 'Negocio', 'Sistema', 'Cuenta'])
+    expect(etiquetas).toEqual(['Evento activo', 'Planner', 'Diseño', 'Día a día', 'Negocio', 'Sistema', 'Cuenta'])
   })
 
   it('la barra del cliente no enseña lo que es del atelier', () => {
@@ -153,4 +153,12 @@ describe('panelNav', () => {
     const previa = diseno?.items.find((item) => item.label === 'Vista previa')
     expect(previa?.href).toBe('/panel/eventos/boda/vista-previa')
   })
+
+  it('el planner sale para quien celebra y para quien lleva el evento, no para la puerta', () => {
+    const rutas = (secciones: ReturnType<typeof panelNav>) => secciones.flatMap((s) => s.items.map((i) => i.href))
+    expect(rutas(panelNav('boda', {}, false, false, true))).toContain('/panel/eventos/boda/planner/tareas')
+    expect(rutas(panelNav('boda'))).toContain('/panel/eventos/boda/planner/presupuesto')
+    expect(rutas(panelNav('boda', {}, false, true))).not.toContain('/panel/eventos/boda/planner/tareas')
+  })
 })
+

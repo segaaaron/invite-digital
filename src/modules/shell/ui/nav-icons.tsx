@@ -3,6 +3,7 @@ import {
   BuildingIcon,
   CalendarIcon,
   CardIcon,
+  CheckIcon,
   ChartIcon,
   ClockIcon,
   GlobeIcon,
@@ -52,6 +53,8 @@ export const NAV_ICONS = {
   todosLosEventos: <BuildingIcon />,
   auditoria: <ShieldIcon />,
   qr: <QrIcon />,
+  tareas: <CheckIcon />,
+  presupuesto: <ReceiptIcon />,
 } as const satisfies Record<string, ReactNode>
 
 export type NavIcon = keyof typeof NAV_ICONS

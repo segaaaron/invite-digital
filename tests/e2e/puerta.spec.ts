@@ -61,7 +61,7 @@ test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in'
   await expect(puerta.getByRole('link', { name: 'Mesa de regalos' })).toHaveCount(0)
 
   // Y el resto del evento **no existe** para ella. 404, no 403.
-  for (const ruta of ['', '/invitados', '/mesas', '/regalos', '/mensajes', '/configuracion', '/plan']) {
+  for (const ruta of ['', '/invitados', '/mesas', '/regalos', '/mensajes', '/configuracion', '/plan', '/planner/tareas', '/planner/presupuesto']) {
     expect((await puerta.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), `sección ${ruta || 'resumen'}`).toBe(404)
   }
 

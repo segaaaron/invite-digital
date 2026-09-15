@@ -143,6 +143,13 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         ],
       },
       {
+        label: 'Planner',
+        items: [
+          { href: en('/planner/tareas'), label: 'Plan de tareas', icon: 'tareas' },
+          { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
+        ],
+      },
+      {
         label: 'Mi invitación',
         items: [
           // Su invitación la escribe él: textos, canción e itinerario. La pantalla es la
@@ -171,6 +178,13 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
         { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
         { href: en('/porteros'), label: 'Porteros', icon: 'usuarios' },
+      ],
+    },
+    {
+      label: 'Planner',
+      items: [
+        { href: en('/planner/tareas'), label: 'Plan de tareas', icon: 'tareas' },
+        { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
       ],
     },
     {

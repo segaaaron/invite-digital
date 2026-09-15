@@ -228,6 +228,21 @@ export function FilterChip({
   )
 }
 
+/** El mismo chip, cuando el filtro vive en la URL: un enlace, no un botón. */
+export function FilterChipLink({ active = false, href, children }: { active?: boolean; href: string; children: ReactNode }) {
+  return (
+    <Link
+      aria-current={active ? 'page' : undefined}
+      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors ${
+        active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
+      }`}
+      href={href}
+    >
+      {children}
+    </Link>
+  )
+}
+
 /**
  * El buscador de la maqueta: píldora ancha sobre marfil. La etiqueta va oculta pero
  * existe, porque un `placeholder` desaparece al escribir y deja el campo sin nombre.

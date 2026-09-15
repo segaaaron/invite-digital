@@ -64,6 +64,15 @@ test.describe('el panel del cliente', () => {
     await expect(page.getByText('1 grupos · 3 cupos')).toBeVisible()
   })
 
+  test('abre su planner y suma una tarea propia', async () => {
+    expect((await page.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
+    await page.goto(`/panel/eventos/${SLUG}/planner/tareas?panel=tarea`)
+    await page.getByLabel('Tarea').fill('Probar el peinado')
+    await page.getByLabel('Etapa').selectOption('propias')
+    await page.getByRole('button', { name: 'Sumar tarea' }).last().click()
+    await expect(page.getByRole('listitem', { name: 'Probar el peinado' })).toBeVisible({ timeout: 15_000 })
+  })
+
   test('entra a su invitación y puede escribirla', async () => {
     // **Esta regla cambió a propósito.** Antes esta prueba exigía un 404: el cliente no
     // tocaba nada. Ahora el admin le da acceso justo para que ajuste su invitación —los
