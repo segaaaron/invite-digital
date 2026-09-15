@@ -135,7 +135,7 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
 
 /**
  * El plan de tareas: etapas plegables con sus tareas. Las etapas con algo atrasado o de esta
- * semana se abren solas; las demás, plegadas, para que la pantalla diga qué toca ahora.
+ * semana se abren solas, y las propias también —se acaban de escribir—; las demás, plegadas.
  */
 export function TaskBoard({
   eventId,
@@ -159,7 +159,7 @@ export function TaskBoard({
         const hechas = g.tareas.filter((t) => t.estado === 'hecha').length
         const urgente = g.tareas.some((t) => t.estado === 'atrasada' || t.estado === 'semana')
         return (
-          <details className="rounded-[18px] border border-line-panel bg-white px-5 py-3 shadow-card" key={g.clave} open={filtrando || urgente}>
+          <details className="rounded-[18px] border border-line-panel bg-white px-5 py-3 shadow-card" key={g.clave} open={filtrando || urgente || g.clave === 'propias'}>
             <summary className="flex cursor-pointer flex-wrap items-baseline justify-between gap-2 py-1">
               <span className="font-display text-[20px] font-light text-ink">{g.nombre}</span>
               <span className="font-mono text-[10px] tracking-[0.2em] text-ink-mute uppercase [font-variant-numeric:tabular-nums]">
