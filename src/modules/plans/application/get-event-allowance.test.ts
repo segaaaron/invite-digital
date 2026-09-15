@@ -12,6 +12,12 @@ const atelier: PlanRow = {
   includesRegistry: false,
   includesCheckin: false,
   maxDoorPorters: 0,
+  maxGalleryPhotos: 8,
+  guestPhotos: false,
+  eventPassword: false,
+  csvImport: false,
+  onlineDays: 60,
+  designChange: 'ninguno',
 }
 
 const altaCostura: PlanRow = {
@@ -22,6 +28,12 @@ const altaCostura: PlanRow = {
   includesRegistry: true,
   includesCheckin: true,
   maxDoorPorters: 10,
+  maxGalleryPhotos: null,
+  guestPhotos: true,
+  eventPassword: true,
+  csvImport: true,
+  onlineDays: 365,
+  designChange: 'siempre',
 }
 
 // El catálogo llega ordenado por precio: el primero es el más barato.
@@ -45,6 +57,12 @@ describe('getEventAllowance', () => {
       registry: true,
       checkin: true,
       maxDoorPorters: 10,
+      maxGalleryPhotos: null,
+      guestPhotos: true,
+      eventPassword: true,
+      csvImport: true,
+      onlineDays: 365,
+      designChange: 'siempre',
     })
   })
 
@@ -76,6 +94,12 @@ describe('getEventAllowance', () => {
       registry: true,
       checkin: true,
       maxDoorPorters: 10,
+      maxGalleryPhotos: null,
+      guestPhotos: true,
+      eventPassword: true,
+      csvImport: true,
+      onlineDays: 365,
+      designChange: 'siempre',
     })
     expect(aviso).toHaveBeenCalled()
   })

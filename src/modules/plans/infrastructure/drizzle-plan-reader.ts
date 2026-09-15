@@ -11,6 +11,12 @@ const columnas = {
   includesRegistry: plans.includesRegistry,
   includesCheckin: plans.includesCheckin,
   maxDoorPorters: plans.maxDoorPorters,
+  maxGalleryPhotos: plans.maxGalleryPhotos,
+  guestPhotos: plans.guestPhotos,
+  eventPassword: plans.eventPassword,
+  csvImport: plans.csvImport,
+  onlineDays: plans.onlineDays,
+  designChange: plans.designChange,
   priceCents: plans.priceCents,
   priceAnnualCents: plans.priceAnnualCents,
 }

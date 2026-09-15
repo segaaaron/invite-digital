@@ -15,6 +15,15 @@ export type PlanCrudo = {
   maxGuestGroups: string
   /** Cuántos porteros puede sumar quien compró. Texto del formulario; cero es sin puerta. */
   maxDoorPorters: string
+  /** Fotos de la galería. Vacío es sin límite. */
+  maxGalleryPhotos: string
+  guestPhotos: boolean
+  eventPassword: boolean
+  csvImport: boolean
+  /** Días en línea tras el evento. */
+  onlineDays: string
+  /** `ninguno` · `antes_de_repartir` · `siempre`. */
+  designChange: string
   includesSeating: boolean
   includesRegistry: boolean
   includesCheckin: boolean
@@ -26,9 +35,12 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'es' | 'en'> & {
   maxGuestGroups: number | null
   maxDoorPorters: number
+  maxGalleryPhotos: number | null
+  onlineDays: number
+  designChange: 'ninguno' | 'antes_de_repartir' | 'siempre'
   es: TextoPlanLimpio
   en: TextoPlanLimpio
 }
@@ -79,10 +91,32 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     return err(adminError('invalid_input', 'Los porteros son un número entero de 0 a 100.'))
   }
 
+  const fotos = crudo.maxGalleryPhotos.trim()
+  if (fotos !== '' && (!/^\d+$/.test(fotos) || Number(fotos) < 1 || Number(fotos) > 200)) {
+    return err(adminError('invalid_input', 'Las fotos de la galería son un número de 1 a 200, o vacío para sin límite.'))
+  }
+  const dias = crudo.onlineDays.trim()
+  if (!/^\d+$/.test(dias) || Number(dias) < 1 || Number(dias) > 3650) {
+    return err(adminError('invalid_input', 'Los días en línea son un número entero de 1 a 3650.'))
+  }
+  const regla = crudo.designChange
+  if (regla !== 'ninguno' && regla !== 'antes_de_repartir' && regla !== 'siempre') {
+    return err(adminError('invalid_input', 'Elige cuándo se puede cambiar el modelo.'))
+  }
+
   const es = leerTexto(crudo.es, 'es')
   if (!es.ok) return es
   const en = leerTexto(crudo.en, 'en')
   if (!en.ok) return en
 
-  return ok({ ...crudo, maxGuestGroups, maxDoorPorters: Number(porteros), es: es.value, en: en.value })
+  return ok({
+    ...crudo,
+    maxGuestGroups,
+    maxDoorPorters: Number(porteros),
+    maxGalleryPhotos: fotos === '' ? null : Number(fotos),
+    onlineDays: Number(dias),
+    designChange: regla,
+    es: es.value,
+    en: en.value,
+  })
 }

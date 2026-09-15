@@ -12,10 +12,33 @@ export type Allowance = {
   readonly checkin: boolean
   /** Cuántos porteros caben. Cero: ninguno. Siempre un número: la puerta no se vende sin tope. */
   readonly maxDoorPorters: number
+  /** Fotos de la galería de la invitación. `null` es sin límite. */
+  readonly maxGalleryPhotos: number | null
+  /** Si los invitados pueden subir sus fotos desde su invitación. */
+  readonly guestPhotos: boolean
+  /** Si la invitación puede llevar contraseña. */
+  readonly eventPassword: boolean
+  /** Si la lista de invitados se puede importar de un CSV. */
+  readonly csvImport: boolean
+  /** Días que la invitación sigue en línea tras el evento: es la retención del evento. */
+  readonly onlineDays: number
+  /** Cuándo se puede cambiar el modelo por otro de la misma fiesta. */
+  readonly designChange: DesignChange
 }
 
+/**
+ * Cuándo se cambia el modelo comprado por otro de **su misma fiesta** (de fiesta a fiesta,
+ * nunca). «Antes de repartir» cierra en cuanto sale el primer enlace: cambiarle la
+ * invitación a quien ya la vio confunde.
+ */
+export type DesignChange = 'ninguno' | 'antes_de_repartir' | 'siempre'
+export const DESIGN_CHANGES: readonly DesignChange[] = ['ninguno', 'antes_de_repartir', 'siempre']
+
+export const puedeCambiarDiseno = (regla: DesignChange, estado: { enlacesRepartidos: boolean }): boolean =>
+  regla === 'siempre' || (regla === 'antes_de_repartir' && !estado.enlacesRepartidos)
+
 /** Las funciones que un plan puede incluir o no. */
-export type PlanFeature = 'seating' | 'registry' | 'checkin'
+export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport'
 
 /** Umbral del aviso: por debajo no se dice nada, chocar sin verlo venir es peor. */
 export const WARNING_RATIO = 0.8

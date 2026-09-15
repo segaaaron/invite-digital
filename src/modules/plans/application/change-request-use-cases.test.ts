@@ -12,6 +12,12 @@ const atelier: PlanRow = {
   includesRegistry: false,
   includesCheckin: false,
   maxDoorPorters: 0,
+  maxGalleryPhotos: 8,
+  guestPhotos: false,
+  eventPassword: false,
+  csvImport: false,
+  onlineDays: 60,
+  designChange: 'ninguno',
 }
 
 const firma: PlanRow = {
@@ -22,6 +28,12 @@ const firma: PlanRow = {
   includesRegistry: true,
   includesCheckin: true,
   maxDoorPorters: 10,
+  maxGalleryPhotos: null,
+  guestPhotos: true,
+  eventPassword: true,
+  csvImport: true,
+  onlineDays: 365,
+  designChange: 'siempre',
 }
 
 const NOW = new Date('2026-08-21T12:00:00.000Z')

@@ -17,6 +17,12 @@ export type PlanEditorView = {
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
   readonly maxDoorPorters: number
+  readonly maxGalleryPhotos: number | null
+  readonly guestPhotos: boolean
+  readonly eventPassword: boolean
+  readonly csvImport: boolean
+  readonly onlineDays: number
+  readonly designChange: string
   readonly highlighted: boolean
   readonly isActive: boolean
   readonly eventos: number
@@ -27,7 +33,10 @@ export type PlanEditorView = {
 const INTERRUPTORES = [
   { name: 'includesSeating', label: 'Mesas y plano' },
   { name: 'includesRegistry', label: 'Mesa de regalos' },
-  { name: 'includesCheckin', label: 'Modo puerta' },
+  { name: 'includesCheckin', label: 'Modo puerta y porteros' },
+  { name: 'guestPhotos', label: 'Fotos de invitados' },
+  { name: 'eventPassword', label: 'Invitación con contraseña' },
+  { name: 'csvImport', label: 'Importar lista (CSV)' },
   { name: 'highlighted', label: 'Destacado en la web' },
   { name: 'isActive', label: 'Activo (se vende)' },
 ] as const
@@ -91,6 +100,29 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
             name="maxDoorPorters"
             required
           />
+        </Field>
+      </div>
+
+      <div className="grid gap-4 min-[560px]:grid-cols-3">
+        <Field htmlFor={`${id}-fotos`} label="Fotos de galería · vacío = sin límite">
+          <input
+            className={FIELD_CLASS}
+            defaultValue={txt('maxGalleryPhotos', plan.maxGalleryPhotos === null ? '' : String(plan.maxGalleryPhotos))}
+            id={`${id}-fotos`}
+            inputMode="numeric"
+            name="maxGalleryPhotos"
+            placeholder="Sin límite"
+          />
+        </Field>
+        <Field htmlFor={`${id}-dias`} label="Días en línea tras el evento">
+          <input className={FIELD_CLASS} defaultValue={txt('onlineDays', String(plan.onlineDays))} id={`${id}-dias`} inputMode="numeric" name="onlineDays" required />
+        </Field>
+        <Field htmlFor={`${id}-modelo`} label="Cambiar de modelo (misma fiesta)">
+          <select className={FIELD_CLASS} defaultValue={txt('designChange', plan.designChange)} id={`${id}-modelo`} name="designChange">
+            <option value="ninguno">Nunca</option>
+            <option value="antes_de_repartir">Hasta repartir los enlaces</option>
+            <option value="siempre">Siempre</option>
+          </select>
         </Field>
       </div>
 

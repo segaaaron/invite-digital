@@ -1,5 +1,6 @@
-export type { Allowance, PlanFeature } from './domain/allowance'
-export { WARNING_RATIO, canAddGroup, hasFeature, planThatIncludes, remainingGroups, usageRatio } from './domain/allowance'
+export type { Allowance, DesignChange, PlanFeature } from './domain/allowance'
+export { capacidadDePlan } from './application/plan-capacity'
+export { DESIGN_CHANGES, WARNING_RATIO, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, usageRatio } from './domain/allowance'
 export type { PlansError, PlansErrorKind } from './domain/errors'
 export type { PendingRequest } from './application/change-request-use-cases'
 export type { PlanChangeRequestRow, PlanChangeStatus, PlanReader, PlanRow, PlansRepository } from './application/ports'

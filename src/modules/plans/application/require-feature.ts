@@ -2,22 +2,19 @@ import { attempt, err, isErr, ok, type Result } from '@/shared/result'
 import { type Allowance, hasFeature, type PlanFeature, planThatIncludes } from '../domain/allowance'
 import { plansError, type PlansError } from '../domain/errors'
 import { getEventAllowance } from './get-event-allowance'
-import type { PlanReader, PlanRow } from './ports'
+import { capacidadDePlan } from './plan-capacity'
+import type { PlanReader } from './ports'
 
 const NOMBRE: Record<PlanFeature, string> = {
   seating: 'el plano del salón',
   registry: 'la mesa de regalos',
   checkin: 'el modo puerta',
+  guestPhotos: 'las fotos de los invitados',
+  eventPassword: 'la invitación con contraseña',
+  csvImport: 'importar la lista de invitados',
 }
 
-const desdeFila = (row: PlanRow): Allowance => ({
-  planSlug: row.slug,
-  maxGuestGroups: row.maxGuestGroups,
-  seating: row.includesSeating,
-  registry: row.includesRegistry,
-  checkin: row.includesCheckin,
-  maxDoorPorters: row.maxDoorPorters,
-})
+const desdeFila = capacidadDePlan
 
 /**
  * Puerta de las funciones que un plan incluye o no. Devuelve la capacidad si la trae y

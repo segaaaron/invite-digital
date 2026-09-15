@@ -10,6 +10,12 @@ const atelier: Allowance = {
   registry: false,
   checkin: false,
   maxDoorPorters: 0,
+  maxGalleryPhotos: 8,
+  guestPhotos: false,
+  eventPassword: false,
+  csvImport: false,
+  onlineDays: 60,
+  designChange: 'ninguno',
 }
 
 const alta: Allowance = {
@@ -19,6 +25,12 @@ const alta: Allowance = {
   registry: true,
   checkin: true,
   maxDoorPorters: 10,
+  maxGalleryPhotos: null,
+  guestPhotos: true,
+  eventPassword: true,
+  csvImport: true,
+  onlineDays: 365,
+  designChange: 'siempre',
 }
 
 describe('PlanCard', () => {

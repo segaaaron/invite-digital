@@ -64,6 +64,15 @@ export const plans = pgTable('plans', {
   includesCheckin: boolean('includes_checkin').notNull().default(true),
   /** Cuántos porteros puede sumar quien compró. Cero: el plan no trae puerta. */
   maxDoorPorters: integer('max_door_porters').notNull().default(0),
+  /** Fotos de la galería de la invitación. `NULL` es sin límite. */
+  maxGalleryPhotos: integer('max_gallery_photos'),
+  guestPhotos: boolean('guest_photos').notNull().default(true),
+  eventPassword: boolean('event_password').notNull().default(true),
+  csvImport: boolean('csv_import').notNull().default(true),
+  /** Días en línea tras el evento: se copia a la retención del evento al asignar el plan. */
+  onlineDays: integer('online_days').notNull().default(90),
+  /** `ninguno` · `antes_de_repartir` · `siempre`: cuándo se cambia el modelo dentro de su fiesta. */
+  designChange: varchar('design_change', { length: 24 }).notNull().default('antes_de_repartir'),
   ...timestamps,
 })
 

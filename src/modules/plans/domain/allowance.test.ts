@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type Allowance, canAddGroup, hasFeature, planThatIncludes, remainingGroups, usageRatio } from './allowance'
+import { type Allowance, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, usageRatio } from './allowance'
 
 const atelier: Allowance = {
   planSlug: 'atelier',
@@ -8,6 +8,12 @@ const atelier: Allowance = {
   registry: false,
   checkin: false,
   maxDoorPorters: 0,
+  maxGalleryPhotos: 8,
+  guestPhotos: false,
+  eventPassword: false,
+  csvImport: false,
+  onlineDays: 60,
+  designChange: 'ninguno',
 }
 
 const altaCostura: Allowance = {
@@ -17,6 +23,12 @@ const altaCostura: Allowance = {
   registry: true,
   checkin: true,
   maxDoorPorters: 10,
+  maxGalleryPhotos: null,
+  guestPhotos: true,
+  eventPassword: true,
+  csvImport: true,
+  onlineDays: 365,
+  designChange: 'siempre',
 }
 
 describe('canAddGroup', () => {
@@ -76,5 +88,26 @@ describe('planThatIncludes', () => {
 
   it('si no la trae ninguno devuelve null, no un plan inventado', () => {
     expect(planThatIncludes('registry', [atelier])).toBeNull()
+  })
+})
+
+describe('funciones nuevas del plan', () => {
+  it('fotos de invitados, contraseña e importar CSV se piden como cualquier función', () => {
+    expect(hasFeature(atelier, 'guestPhotos')).toBe(false)
+    expect(hasFeature(altaCostura, 'eventPassword')).toBe(true)
+    expect(planThatIncludes('csvImport', [atelier, altaCostura])).toBe('alta-costura')
+  })
+})
+
+describe('puedeCambiarDiseno', () => {
+  it('«ninguno» nunca deja cambiar el modelo', () => {
+    expect(puedeCambiarDiseno('ninguno', { enlacesRepartidos: false })).toBe(false)
+  })
+  it('«antes de repartir» deja cambiarlo mientras no haya salido ningún enlace', () => {
+    expect(puedeCambiarDiseno('antes_de_repartir', { enlacesRepartidos: false })).toBe(true)
+    expect(puedeCambiarDiseno('antes_de_repartir', { enlacesRepartidos: true })).toBe(false)
+  })
+  it('«siempre» lo deja cambiar aunque ya se hayan repartido', () => {
+    expect(puedeCambiarDiseno('siempre', { enlacesRepartidos: true })).toBe(true)
   })
 })

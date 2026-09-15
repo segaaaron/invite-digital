@@ -7,6 +7,12 @@ const crudo: PlanCrudo = {
   priceCents: 69000,
   maxGuestGroups: '',
   maxDoorPorters: '3',
+  maxGalleryPhotos: '20',
+  guestPhotos: true,
+  eventPassword: true,
+  csvImport: false,
+  onlineDays: '180',
+  designChange: 'antes_de_repartir',
   includesSeating: true,
   includesRegistry: false,
   includesCheckin: false,
@@ -65,5 +71,38 @@ describe('leerPlan', () => {
     const muchas = Array.from({ length: MAX_FUNCIONES + 1 }, (_, i) => `f${i}`).join('\n')
     const r = leerPlan({ ...crudo, es: { ...texto, features: muchas } })
     expect(isErr(r)).toBe(true)
+  })
+})
+
+describe('límites nuevos del plan', () => {
+  it('fotos de galería: vacío es sin límite, un número va de 1 a 200', () => {
+    expect(isOk(leerPlan({ ...crudo, maxGalleryPhotos: '' })) && leerPlan({ ...crudo, maxGalleryPhotos: '' })).toMatchObject({ value: { maxGalleryPhotos: null } })
+    const r = leerPlan(crudo)
+    expect(isOk(r) && r.value.maxGalleryPhotos).toBe(20)
+    for (const malo of ['0', '201', 'x']) {
+      const f = leerPlan({ ...crudo, maxGalleryPhotos: malo })
+      expect(isErr(f) && f.error.detail).toContain('fotos')
+    }
+  })
+
+  it('días en línea: entero de 1 a 3650', () => {
+    const r = leerPlan(crudo)
+    expect(isOk(r) && r.value.onlineDays).toBe(180)
+    for (const malo of ['', '0', '3651', '1.5']) {
+      const f = leerPlan({ ...crudo, onlineDays: malo })
+      expect(isErr(f) && f.error.detail).toContain('días')
+    }
+  })
+
+  it('el cambio de modelo solo admite las tres reglas conocidas', () => {
+    const f = leerPlan({ ...crudo, designChange: 'cuando-quiera' })
+    expect(isErr(f) && f.error.detail).toContain('modelo')
+    const r = leerPlan({ ...crudo, designChange: 'siempre' })
+    expect(isOk(r) && r.value.designChange).toBe('siempre')
+  })
+
+  it('las funciones sí/no pasan tal cual', () => {
+    const r = leerPlan(crudo)
+    expect(isOk(r) && r.value).toMatchObject({ guestPhotos: true, eventPassword: true, csvImport: false })
   })
 })

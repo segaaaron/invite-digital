@@ -1,7 +1,8 @@
 import { attempt, ok, type Result } from '@/shared/result'
 import type { Allowance } from '../domain/allowance'
 import { plansError, type PlansError } from '../domain/errors'
-import type { PlanReader, PlanRow } from './ports'
+import { capacidadDePlan } from './plan-capacity'
+import type { PlanReader } from './ports'
 
 /**
  * Lo que se aplica cuando el catálogo no tiene ni un plan activo. Es permisiva a
@@ -15,16 +16,15 @@ const SIN_PLAN: Allowance = {
   registry: true,
   checkin: true,
   maxDoorPorters: 10,
+  maxGalleryPhotos: null,
+  guestPhotos: true,
+  eventPassword: true,
+  csvImport: true,
+  onlineDays: 365,
+  designChange: 'siempre',
 }
 
-const desdeFila = (row: PlanRow): Allowance => ({
-  planSlug: row.slug,
-  maxGuestGroups: row.maxGuestGroups,
-  seating: row.includesSeating,
-  registry: row.includesRegistry,
-  checkin: row.includesCheckin,
-  maxDoorPorters: row.maxDoorPorters,
-})
+const desdeFila = capacidadDePlan
 
 /**
  * La capacidad de un evento, ya resuelta. Quien aplica un límite recibe esto y no sabe

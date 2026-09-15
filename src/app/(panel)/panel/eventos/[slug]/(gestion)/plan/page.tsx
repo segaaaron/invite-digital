@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { catalog, events, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
-import type { Allowance } from '@/modules/plans'
+import { capacidadDePlan, type Allowance } from '@/modules/plans'
 import { BillingToggle } from '@/modules/plans/ui/BillingToggle'
 import { PlanChangeForm } from '@/modules/plans/ui/PlanChangeForm'
 import { PlanDecisionForms } from '@/modules/plans/ui/PlanDecisionForms'
@@ -53,14 +53,7 @@ export default async function PlanPage({
       plan.priceCents === undefined
         ? undefined
         : { cents: plan.priceCents, annualCents: plan.priceAnnualCents ?? null, currency: 'BOB' },
-    allowance: {
-      planSlug: plan.slug,
-      maxGuestGroups: plan.maxGuestGroups,
-      seating: plan.includesSeating,
-      registry: plan.includesRegistry,
-      checkin: plan.includesCheckin,
-      maxDoorPorters: plan.maxDoorPorters,
-    },
+    allowance: capacidadDePlan(plan),
   }))
 
   const actual = capacidad.value.planSlug
