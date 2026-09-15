@@ -7,6 +7,7 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { hasFeature } from '@/modules/plans'
 import { insigniasDeAdmin } from '../../../_carcasa/insignias-de-admin'
 import { isErr } from '@/shared/result'
@@ -56,11 +57,12 @@ export default async function EventoLayout({
     actor.role === 'puerta' ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
   ])
   // La capacidad ya leída dice si trae puerta: `requireFeature` la volvía a calcular entera.
+  const anfitriones = isAdmin(actor) ? ((await events.staff.hostsOf([id])).get(id) ?? []) : []
   const puerta = !isErr(capacidad) && hasFeature(capacidad.value, 'checkin') ? await checkin.state(id) : null
 
   return (
     <PanelFrame
-      brandSub={isAdmin(actor) ? 'ADMINISTRACIÓN' : 'PANEL'}
+      brandSub={isAdmin(actor) ? 'FICHA DEL EVENTO · ADMIN' : 'PANEL'}
       sections={panelNav(event.value.slug, {
         invitados: grupos,
         sinLeer: libro,
@@ -81,13 +83,17 @@ export default async function EventoLayout({
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
-        <nav aria-label="Ruta" className="mb-3 flex flex-wrap items-center gap-1.5 text-[12.5px] text-ink-mute">
-          <Link className="hover:text-ink hover:underline" href="/panel/admin/eventos">
-            Todos los eventos
-          </Link>
-          <span aria-hidden>›</span>
-          <span className="text-ink-soft">{event.value.title}</span>
-        </nav>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-ink-mute">
+            <Link className="hover:text-ink hover:underline" href="/panel/admin/eventos">
+              Todos los eventos
+            </Link>
+            <span aria-hidden>›</span>
+            <span className="text-ink-soft">{event.value.title}</span>
+          </nav>
+          {/* Invitados, envíos y planner son del cliente: se llega entrando como él, desde aquí. */}
+          <EntrarComoCliente anfitriones={anfitriones} eventId={id} variant="primary" />
+        </div>
       ) : null}
       {children}
     </PanelFrame>

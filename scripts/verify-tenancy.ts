@@ -37,7 +37,6 @@ const EXENTAS: Record<string, string> = {
   deleteUserAction: 'del admin: borra un usuario',
   setUserRoleAction: 'del admin: cambia un rol',
   reassignEventAction: 'del admin: por definición opera sobre el evento de otro',
-  deleteEventAsAdminAction: 'del admin: por definición opera sobre el evento de otro',
   setEventPlanAction: 'del admin: por definición opera sobre el evento de otro',
   addDoorStaffAction: 'comprueba algo distinto: ser admin, con canManageStaff. Dar de alta crea una cuenta',
   addEventClientAction: 'igual que el alta de puerta: exige ser admin, con canManageStaff',

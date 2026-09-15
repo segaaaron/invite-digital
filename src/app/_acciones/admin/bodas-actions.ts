@@ -1,9 +1,9 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { admin, events, identity, notifications } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { createCredential, parseRole } from '@/modules/identity'
-import { addEventClientAction } from '@/app/_acciones/events/staff-actions'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { ALFABETO_SUFIJO, slugDeBoda } from '@/modules/admin/domain/nueva-boda'
 import { isErr } from '@/shared/result'
@@ -25,7 +25,9 @@ export async function reassignEventAction(_previous: AdminActionState, formData:
   await admin.record(actor, { action: 'evento.reasignado', subject: evento.value.slug, detail: userId })
 
   refrescar()
-  return { status: 'success' }
+  // La ficha del evento también lo enseña: sin revalidarla seguía diciendo el responsable viejo.
+  revalidatePath(`/panel/eventos/${evento.value.slug}`, 'layout')
+  return { status: 'success', message: 'Responsable cambiado.' }
 }
 
 export async function setEventPlanAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
@@ -42,45 +44,9 @@ export async function setEventPlanAction(_previous: AdminActionState, formData: 
   }
 
   refrescar()
-  return { status: 'success' }
+  revalidatePath(`/panel/eventos/${texto(formData, 'eventSlug')}`, 'layout')
+  return { status: 'success', message: 'Plan cambiado.' }
 }
-
-/**
- * Borrar el evento de cualquiera.
- *
- * Pide escribir el `slug` como confirmación, igual que la zona de peligro del propio
- * evento: se lleva por delante invitados, mesas, regalos y mensajes, y no se deshace.
- */
-export async function deleteEventAsAdminAction(
-  _previous: AdminActionState,
-  formData: FormData,
-): Promise<AdminActionState> {
-  const actor = await requireAdmin()
-
-  const eventId = texto(formData, 'eventId')
-  const evento = await events.getByIdFor(actor, eventId, { section: 'ficha' })
-  if (isErr(evento)) return { status: 'error', message: 'Ese evento ya no existe. Vuelve a cargar la página.' }
-
-  const result = await events.remove({ eventId, confirmation: texto(formData, 'confirmation') })
-  if (isErr(result)) {
-    console.error('borrado de evento por admin rechazado', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
-  }
-
-  await admin.record(actor, { action: 'evento.borrado', subject: evento.value.slug, detail: evento.value.title })
-
-  refrescar()
-  return { status: 'success' }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Crear la boda de un cliente: el modelo que eligió, su evento y su acceso, de una vez.
-//
-// Es el mismo camino que recorre aprobar un pedido, pero **sin pedido**: el cliente llegó
-// por WhatsApp, eligió una tarjeta y el admin se la monta. Comparte el orden con
-// `aprovisionar` porque comparte las lecciones, y la primera es que el acceso se comprueba
-// **antes** de crear nada.
-// ─────────────────────────────────────────────────────────────────────────────
 
 /** Cuatro caracteres del alfabeto sin `0`, `O`, `1`, `I` ni `L`: estos slug se dictan. */
 function sufijoDeSlug(): string {
@@ -236,38 +202,4 @@ export async function createWeddingForClientAction(
     eventSlug: evento.value.slug,
     message: `Evento creado con el diseño «${tema.label}».${avisoDePlan} ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,
   }
-}
-
-/**
- * Dar acceso al cliente de una boda **que ya existe**.
- *
- * Es la otra mitad del alta de un paso: aquella crea boda y cliente de una vez; esta cubre
- * la boda creada antes de saber el correo, o la segunda persona de la pareja.
- *
- * **Delega en la acción del módulo de eventos, no la reescribe.** Una copia sería un
- * segundo sitio donde olvidarse de que un alta sobre un correo que ya existe **no toca su
- * cuenta** — cambiar la contraseña de alguien escribiendo su correo sería una forma de
- * robársela.
- *
- * Y se importa por su ruta concreta, **no por el índice del módulo**: exponerla allí hizo
- * que todo el que importa `@/modules/events` arrastrara el contenedor entero, y `rsvp`
- * —que solo quería el tipo `Event`— murió con una dependencia circular. Aquí no añade
- * nada: este fichero ya carga el contenedor.
- *
- * Sin `requireAdmin()` propio a propósito: la guardia vive dentro, y es `canManageStaff`,
- * que comprueba el rol **antes** de tocar la base. Duplicarla aquí sería tener dos sitios
- * donde relajarla.
- */
-export async function grantClientAccessAction(
-  _previous: AdminActionState,
-  formData: FormData,
-): Promise<AdminActionState> {
-  // La guardia va **en este cuerpo** aunque la acción de dentro también compruebe el rol.
-  // `verify:tenancy` lo exige por un motivo que ya costó una vez: delegarla en un ayudante
-  // la esconde del verificador, y entonces nadie ve que falta el día que alguien la quita.
-  await requireAdmin()
-
-  const resultado = await addEventClientAction({ status: 'idle' }, formData)
-  refrescar()
-  return resultado
 }

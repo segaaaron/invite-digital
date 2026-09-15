@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
-import { events, guests, plans } from '@/app/composition/container'
+import { admin, events, guests, plans } from '@/app/composition/container'
+import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
+import { SoporteDeBoda } from '@/modules/admin/ui/SoporteDeBoda'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { EventMediaPanel } from '@/modules/events/ui/EventMediaPanel'
@@ -111,10 +113,16 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   const puedeGestionarPersonal = canManageStaff(actor)
   const personal = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id, 'puerta') : []
   const clientes = puedeGestionarPersonal ? await events.staff.listWithEmail(event.value.id, 'cliente') : []
+  // Lo que solo cambia el admin: responsable, plan y restablecer el acceso del cliente. Vivían
+  // plegados en la cartera, repetidos con lo de aquí; la ficha es el único sitio.
+  const [usuarios, opcionesDePlan, anfitriones] = esAdmin
+    ? await Promise.all([admin.users(), admin.planOptions(), events.staff.hostsOf([event.value.id])])
+    : [null, [], null]
+  const responsables = usuarios === null || isErr(usuarios) ? [] : usuarios.value.filter((u) => u.role === 'atelier' || u.role === 'admin')
 
   return (
     <>
-      <PanelHeader kicker="Evento" title="Configuración del evento" />
+      <PanelHeader kicker="Evento" title={esAdmin ? 'Ficha del evento' : 'Configuración del evento'} />
 
       <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
         {/* El contenido y las fotografías son del cliente: el admin no los ve aquí. Para
@@ -161,7 +169,27 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
         {puedeGestionarPersonal ? (
           <PanelCard title="Acceso del cliente">
-            <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
+            <div className="flex flex-col gap-5">
+              <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
+              {esAdmin ? (
+                <div className="border-t border-line-panel pt-4">
+                  <SoporteDeBoda anfitriones={anfitriones?.get(event.value.id) ?? []} eventId={event.value.id} />
+                </div>
+              ) : null}
+            </div>
+          </PanelCard>
+        ) : null}
+
+        {esAdmin ? (
+          <PanelCard title="Plan y responsable">
+            <ResponsableYPlan
+              eventId={event.value.id}
+              eventSlug={event.value.slug}
+              ownerId={event.value.userId}
+              owners={responsables.map((u) => ({ id: u.id, email: u.email }))}
+              planSlug={isErr(capacidad) ? null : capacidad.value.planSlug}
+              plans={opcionesDePlan.map((p) => ({ slug: p.slug, nombre: p.nombre }))}
+            />
           </PanelCard>
         ) : null}
 

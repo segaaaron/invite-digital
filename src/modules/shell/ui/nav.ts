@@ -200,11 +200,12 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   if (esAdmin && base !== null) {
     return [
       {
-        label: 'Esta boda',
+        label: 'Este evento',
         items: [
-          { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
-          { href: en('/plan'), label: 'Plan', icon: 'plan' },
-          { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+          // El plan, el responsable y el acceso del cliente se cambian en la ficha: «Plan» es la
+          // página donde un atelier *solicita* un cambio, y el admin no solicita, aplica.
+          { href: en('/configuracion'), label: 'Ficha del evento', icon: 'configuracion' },
+          { href: en('/vista-previa'), label: 'Ver invitación', icon: 'vistaPrevia' },
         ],
       },
     ]

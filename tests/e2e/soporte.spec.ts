@@ -60,9 +60,11 @@ test.describe('soporte como el cliente', () => {
   test('entra como el cliente con motivo, cambia algo firmado a su nombre y regresa', async () => {
     await page.goto(`/panel/admin/eventos?q=${SLUG}`)
     const fila = page.getByRole('listitem').filter({ has: page.locator(`a[href="/panel/eventos/${SLUG}/configuracion"]`) }).first()
-    await fila.locator('summary').click()
-    await fila.getByLabel('Motivo (se le envía al cliente)').fill('La canción no suena en la invitación')
+    // A la vista en la fila, no plegado en «Gestionar».
     await fila.getByRole('button', { name: 'Entrar como el cliente' }).click()
+    const dialogo = page.getByRole('dialog', { name: 'Entrar como el cliente' })
+    await dialogo.getByLabel('Motivo (se le envía al cliente)').fill('La canción no suena en la invitación')
+    await dialogo.getByRole('button', { name: 'Entrar', exact: true }).click()
 
     await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`), { timeout: 30_000 })
     await expect(page.getByRole('status').filter({ hasText: CLIENTE.email })).toBeVisible()

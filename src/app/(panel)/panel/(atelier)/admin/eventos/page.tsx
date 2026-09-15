@@ -44,7 +44,7 @@ export default async function AdminEventosPage({
   await requireAdmin()
 
   const { etapa: etapaPedida, q = '', panel, n } = await searchParams
-  const [eventos, usuarios, planes] = await Promise.all([admin.events(), admin.users(), admin.planOptions()])
+  const [eventos, planes] = await Promise.all([admin.events(), admin.planOptions()])
   const hoy = fechaEnBolivia(new Date())
   const filtro: Etapa | 'todas' = ETAPAS.find((e) => e.clave === etapaPedida)?.clave ?? 'todas'
   const busqueda = q.trim().toLowerCase()
@@ -177,7 +177,7 @@ export default async function AdminEventosPage({
           />
         </div>
 
-        {isErr(eventos) || isErr(usuarios) ? (
+        {isErr(eventos) ? (
           <p className="text-[13px] text-danger" role="alert">
             No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
           </p>
@@ -206,8 +206,6 @@ export default async function AdminEventosPage({
                   cuando: cuando(diasEntre(hoy, evento.eventDate)),
                   anfitriones: anfitriones.get(evento.id) ?? [],
                 }}
-                owners={usuarios.value.map((u) => ({ id: u.id, email: u.email }))}
-                plans={planes}
               />
             ))}
           </ul>
