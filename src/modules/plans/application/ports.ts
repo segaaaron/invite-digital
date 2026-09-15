@@ -1,3 +1,4 @@
+import type { ExtraAplicado } from '../domain/extras'
 /** Un plan del catálogo con sus límites, tal y como sale de la base. */
 export type PlanRow = {
   readonly id: string
@@ -51,6 +52,8 @@ export interface PlanReader {
   findCheapestActivePlan(): Promise<PlanRow | null>
   listActivePlans(): Promise<PlanRow[]>
   findPlanById(planId: string): Promise<PlanRow | null>
+  /** Los extras que compró el evento, ya aprobados. */
+  listEventExtras(eventId: string): Promise<ExtraAplicado[]>
 }
 
 export interface PlanChangeRequests {
@@ -75,4 +78,9 @@ export interface PlanChangeRequests {
   rejectRequest(requestId: string, at: Date): Promise<boolean>
 }
 
-export interface PlansRepository extends PlanReader, PlanChangeRequests {}
+export interface PlansRepository extends PlanReader, PlanChangeRequests {
+  /**
+   * Aplica el extra de un pedido aprobado a su evento. **Una sola vez por pedido**: aprobar dos
+   * veces no lo suma dos veces. `false` si ya estaba o el pedido no es de un extra.
+   */
+  applyExtra(orderId: string): Promise<boolean>}

@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, planChangeRequests, plans } from '@/shared/db/schema'
+import { eventAddons, events, orders, planChangeRequests, plans } from '@/shared/db/schema'
 import { drizzlePlansRepository } from './drizzle-plans-repository'
 
 const eventId = crypto.randomUUID()
@@ -176,3 +176,24 @@ describe('borrar el evento', () => {
     expect(quedan).toHaveLength(0)
   })
 })
+
+describe('aplicar un extra aprobado', () => {
+  it('lo suma a la capacidad del evento una sola vez y los días en línea alargan la retención', async () => {
+    const [antes] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
+    const [pedido] = await db
+      .insert(orders)
+      .values({ publicRef: `A${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`, addonSlug: 'mas-6-meses', eventId, customerName: 'Ana', contact: 'ana@x.bo', status: 'approved' })
+      .returning({ id: orders.id })
+
+    expect(await drizzlePlansRepository.applyExtra(pedido!.id)).toBe(true)
+    expect(await drizzlePlansRepository.applyExtra(pedido!.id)).toBe(false)
+
+    expect(await drizzlePlansRepository.listEventExtras(eventId)).toEqual([{ effect: 'mas_dias', amount: 180 }])
+    const [despues] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
+    expect(despues!.dias).toBe(antes!.dias + 180)
+
+    await db.delete(orders).where(eq(orders.id, pedido!.id))
+    await db.delete(eventAddons).where(eq(eventAddons.eventId, eventId))
+  })
+})
+

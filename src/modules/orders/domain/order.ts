@@ -60,6 +60,9 @@ export type Order = {
    * la que acaba recibiendo: al aprobar el pedido, el evento nace con este tema.
    */
   readonly templateSlug: string | null
+  /** El extra que compra, si es un pedido de extra. Entonces no hay plan. */
+  readonly addonSlug: string | null
+  readonly addonName: string | null
   /**
    * La boda que se creó al aprobarlo, si se creó.
    *

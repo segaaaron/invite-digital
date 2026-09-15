@@ -13,12 +13,42 @@ export class FakeOrderRepository implements OrderRepository {
       planSlug: order.planSlug,
       planName: order.planSlug,
       templateSlug: order.templateSlug,
+      addonSlug: null,
+      addonName: null,
       eventId: null,
       eventSlug: null,
       customerName: order.customerName,
       contact: order.contact,
       eventDate: order.eventDate,
       notes: order.notes,
+      status: 'pending_payment',
+      decisionNote: null,
+      decidedAt: null,
+      createdAt: new Date('2026-08-25T00:00:00Z'),
+    }
+    this.orders.push(fila)
+    return fila
+  }
+
+  /** Los extras a la venta en esta prueba. */
+  readonly extrasALaVenta = new Set<string>(['mas-40-grupos'])
+
+  async createForAddon(order: { publicRef: string; addonSlug: string; eventId: string; customerName: string; contact: string }): Promise<Order | null> {
+    if (!this.extrasALaVenta.has(order.addonSlug)) return null
+    const fila: Order = {
+      id: `o${this.orders.length + 1}`,
+      publicRef: order.publicRef,
+      planSlug: null,
+      planName: null,
+      templateSlug: null,
+      addonSlug: order.addonSlug,
+      addonName: order.addonSlug,
+      eventId: order.eventId,
+      eventSlug: null,
+      customerName: order.customerName,
+      contact: order.contact,
+      eventDate: null,
+      notes: null,
       status: 'pending_payment',
       decisionNote: null,
       decidedAt: null,

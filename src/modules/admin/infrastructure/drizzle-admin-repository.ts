@@ -98,7 +98,7 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
       // Los días en línea son del plan, y cambian con él en la misma escritura.
       .set({
         planId: sql`(select id from plans where slug = ${planSlug})`,
-        retentionDays: sql`coalesce((select online_days from plans where slug = ${planSlug}), ${events.retentionDays})`,
+        retentionDays: sql`coalesce((select online_days from plans where slug = ${planSlug}) + (select coalesce(sum(amount), 0) from event_addons where event_addons.event_id = ${eventId} and effect = 'mas_dias'), ${events.retentionDays})`,
       })
       .where(eq(events.id, eventId))
   },

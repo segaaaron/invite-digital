@@ -59,6 +59,27 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
    * Que la condición viaje dentro del propio UPDATE es lo que hace que la segunda no
    * encuentre nada que actualizar en vez de aplicar el cambio dos veces.
    */
+  async applyExtra(orderId): Promise<boolean> {
+    return database.transaction(async (tx) => {
+      // El efecto y la cantidad se **copian** del extra: editarlo después no reescribe lo vendido.
+      const aplicado = await tx.execute<{ event_id: string; effect: string; amount: number }>(sql`
+        insert into event_addons (event_id, addon_slug, effect, amount, order_id)
+        select o.event_id, a.slug, a.effect, a.amount, o.id
+        from orders o join addons a on a.slug = o.addon_slug
+        where o.id = ${orderId} and o.event_id is not null
+        on conflict (order_id) do nothing
+        returning event_id, effect, amount
+      `)
+      const fila = (aplicado as unknown as Array<{ event_id: string; effect: string; amount: number }>)[0]
+      if (fila === undefined) return false
+      // Más días en línea son más días antes de anonimizar.
+      if (fila.effect === 'mas_dias') {
+        await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${fila.amount}` }).where(eq(events.id, fila.event_id))
+      }
+      return true
+    })
+  },
+
   async applyRequest(requestId, at): Promise<boolean> {
     return database.transaction(async (tx) => {
       const [marcada] = await tx
@@ -74,7 +95,7 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
         .update(events)
         .set({
           planId: marcada.requestedPlanId,
-          retentionDays: sql`coalesce((select online_days from plans where id = ${marcada.requestedPlanId}), ${events.retentionDays})`,
+          retentionDays: sql`coalesce((select online_days from plans where id = ${marcada.requestedPlanId}) + (select coalesce(sum(amount), 0) from event_addons where event_addons.event_id = ${marcada.eventId} and effect = 'mas_dias'), ${events.retentionDays})`,
         })
         .where(eq(events.id, marcada.eventId))
       return true

@@ -788,6 +788,8 @@ export const orders = pgTable(
      *
      * `SET NULL`: borrar la boda no borra el registro del pago.
      */
+    /** El extra que compra, si el pedido es de un extra y no de un plan. */
+    addonSlug: varchar('addon_slug', { length: 32 }).references(() => addons.slug, { onDelete: 'set null' }),
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
     customerName: varchar('customer_name', { length: 160 }).notNull(),
     contact: varchar('contact', { length: 160 }).notNull(),
@@ -1099,4 +1101,43 @@ export const eventDocuments = pgTable(
     index('event_documents_event_idx').on(t.eventId),
     check('event_documents_kind_check', sql`${t.kind} in ('contrato', 'cotizacion', 'factura', 'referencia')`),
   ],
+)
+
+/**
+ * Los extras sueltos. Se compran como pedido y, aprobados, suben un límite del evento. El
+ * efecto guarda qué hace; la cantidad, cuánto. Nacen apagados: venderlos lo decide el admin.
+ */
+export const addons = pgTable(
+  'addons',
+  {
+    slug: varchar('slug', { length: 32 }).primaryKey(),
+    name: varchar('name', { length: 80 }).notNull(),
+    priceCents: integer('price_cents').notNull(),
+    currency: char('currency', { length: 3 }).notNull().default('BOB'),
+    effect: varchar('effect', { length: 24 }).notNull(),
+    amount: integer('amount').notNull().default(0),
+    isActive: boolean('is_active').notNull().default(false),
+    sortOrder: integer('sort_order').notNull().default(0),
+  },
+  (t) => [
+    check('addons_effect_check', sql`${t.effect} in ('cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'servicio')`),
+    check('addons_price_check', sql`${t.priceCents} >= 0 and ${t.amount} >= 0`),
+  ],
+)
+
+/** Lo que compró cada evento. El efecto y la cantidad se copian: editar el extra no reescribe lo vendido. */
+export const eventAddons = pgTable(
+  'event_addons',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    addonSlug: varchar('addon_slug', { length: 32 }).references(() => addons.slug, { onDelete: 'set null' }),
+    effect: varchar('effect', { length: 24 }).notNull(),
+    amount: integer('amount').notNull().default(0),
+    orderId: uuid('order_id').references(() => orders.id, { onDelete: 'set null' }),
+    appliedAt: timestamp('applied_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('event_addons_event_idx').on(t.eventId), uniqueIndex('event_addons_order_idx').on(t.orderId)],
 )

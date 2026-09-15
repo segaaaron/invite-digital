@@ -23,6 +23,8 @@ export type ProofRow = {
 
 export interface OrderRepository {
   create(order: NewOrder): Promise<Order>
+  /** Un pedido de extra para un evento. `null` si el extra no existe o no está a la venta. */
+  createForAddon(order: { publicRef: string; addonSlug: string; eventId: string; customerName: string; contact: string }): Promise<Order | null>
   findByRef(publicRef: string): Promise<Order | null>
   findById(id: string): Promise<Order | null>
   list(): Promise<Order[]>

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import { FakeFileStorage, FakeOrderRepository } from './fake-order-repository'
-import { attachProof, decideOrder, findOrderByRef, listOrders, placeOrder, readProof } from './order-use-cases'
+import { attachProof, decideOrder, findOrderByRef, listOrders, placeAddonOrder, placeOrder, readProof } from './order-use-cases'
 
 const AHORA = new Date('2026-08-25T12:00:00Z')
 const clock = () => AHORA
@@ -268,3 +268,19 @@ describe('listOrders y readProof', () => {
     expect(isErr(leido) && leido.error.kind).toBe('not_found')
   })
 })
+
+describe('placeAddonOrder', () => {
+  it('crea el pedido del extra para el evento, con referencia pública', async () => {
+    const repo = new FakeOrderRepository()
+    const r = await placeAddonOrder({ orders: repo, clock: () => new Date() })({ addonSlug: 'mas-40-grupos', eventId: 'e1', customerName: 'Ana', contact: 'ana@x.bo' })
+    expect(isOk(r) && r.value).toMatchObject({ addonSlug: 'mas-40-grupos', eventId: 'e1', status: 'pending_payment' })
+  })
+
+  it('un extra que no está a la venta no se pide', async () => {
+    const repo = new FakeOrderRepository()
+    const r = await placeAddonOrder({ orders: repo, clock: () => new Date() })({ addonSlug: 'dia-d', eventId: 'e1', customerName: 'Ana', contact: 'ana@x.bo' })
+    expect(isErr(r) && r.error.kind).toBe('invalid_input')
+    expect(repo.orders).toHaveLength(0)
+  })
+})
+

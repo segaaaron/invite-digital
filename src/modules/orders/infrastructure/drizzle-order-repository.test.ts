@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { orderProofs, orders, plans } from '@/shared/db/schema'
+import { addons, events, orderProofs, orders, plans } from '@/shared/db/schema'
 import { drizzleOrderRepository as repo } from './drizzle-order-repository'
 
 const creados: string[] = []
@@ -122,4 +122,29 @@ describe('drizzleOrderRepository', () => {
 
     expect(await db.select().from(orderProofs).where(eq(orderProofs.orderId, order.id))).toEqual([])
   })
+
+  it('un pedido de extra congela el precio del extra, va atado a su evento y no tiene plan', async () => {
+    const [evento] = await db
+      .insert(events)
+      .values({ slug: `extra-${crypto.randomUUID().slice(0, 8)}`, title: 'Boda del extra', eventDate: '2027-05-15', rsvpDeadline: '2027-04-30', locale: 'es', themeKey: 'boda-bot', status: 'draft' })
+      .returning({ id: events.id })
+    await db.update(addons).set({ isActive: true, priceCents: 150_00 }).where(eq(addons.slug, 'mas-40-grupos'))
+    try {
+      const order = await repo.createForAddon({ publicRef: `X${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`, addonSlug: 'mas-40-grupos', eventId: evento!.id, customerName: 'Ana', contact: 'ana@x.bo' })
+      expect(order).not.toBeNull()
+      creados.push(order!.id)
+      expect(order).toMatchObject({ planSlug: null, addonSlug: 'mas-40-grupos', addonName: '+40 grupos de invitados', eventId: evento!.id })
+      const [fila] = await db.select({ amount: orders.amountCents }).from(orders).where(eq(orders.id, order!.id))
+      expect(fila?.amount).toBe(150_00)
+
+      // Apagado, no se vende: ni por POST.
+      await db.update(addons).set({ isActive: false }).where(eq(addons.slug, 'mas-40-grupos'))
+      expect(await repo.createForAddon({ publicRef: 'ZZZZZZZZ', addonSlug: 'mas-40-grupos', eventId: evento!.id, customerName: 'Ana', contact: 'ana@x.bo' })).toBeNull()
+    } finally {
+      await db.update(addons).set({ isActive: false, priceCents: 15000 }).where(eq(addons.slug, 'mas-40-grupos'))
+      await db.delete(orders).where(eq(orders.eventId, evento!.id))
+      await db.delete(events).where(eq(events.id, evento!.id))
+    }
+  })
 })
+

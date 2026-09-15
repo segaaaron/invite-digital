@@ -1,6 +1,7 @@
 import { and, asc, eq } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { events, plans } from '@/shared/db/schema'
+import { eventAddons, events, plans } from '@/shared/db/schema'
+import { EFECTOS_DE_EXTRA, type EfectoDeExtra } from '../domain/extras'
 import type { PlanReader, PlanRow } from '../application/ports'
 
 const columnas = {
@@ -31,6 +32,11 @@ export const createDrizzlePlanReader = (database: DbExecutor): PlanReader => ({
    * plan más barato—. Un `leftJoin` devolvería una fila con todo a nulo, que no es un
    * plan y habría que descartar igual una línea más abajo.
    */
+  async listEventExtras(eventId) {
+    const filas = await database.select({ effect: eventAddons.effect, amount: eventAddons.amount }).from(eventAddons).where(eq(eventAddons.eventId, eventId))
+    return filas.flatMap((f) => ((EFECTOS_DE_EXTRA as readonly string[]).includes(f.effect) ? [{ effect: f.effect as EfectoDeExtra, amount: f.amount }] : []))
+  },
+
   async findEventPlan(eventId): Promise<PlanRow | null> {
     const [row] = await database
       .select(columnas)

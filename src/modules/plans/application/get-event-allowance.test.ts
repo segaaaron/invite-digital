@@ -128,3 +128,18 @@ describe('getEventAllowance', () => {
     expect(isErr(result) && result.error.kind).toBe('storage_failure')
   })
 })
+
+describe('los extras que compró el evento', () => {
+  it('suben la capacidad del plan del evento', async () => {
+    const { repository: repo } = createFakePlansRepository({ plans: [atelier], eventPlans: { e1: 'plan-atelier' }, extras: { e1: [{ effect: 'mas_grupos', amount: 40 }, { effect: 'fotos_invitados', amount: 0 }] } })
+    const r = await getEventAllowance({ plans: repo })('e1')
+    expect(isOk(r) && r.value).toMatchObject({ maxGuestGroups: 70, guestPhotos: true })
+  })
+
+  it('también sobre el plan más barato de un evento sin plan', async () => {
+    const { repository: repo } = createFakePlansRepository({ plans: [atelier], extras: { e2: [{ effect: 'mas_porteros', amount: 3 }] } })
+    const r = await getEventAllowance({ plans: repo })('e2')
+    expect(isOk(r) && r.value).toMatchObject({ maxDoorPorters: 3, checkin: true })
+  })
+})
+

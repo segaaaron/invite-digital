@@ -77,6 +77,32 @@ export const placeOrder =
     )
   }
 
+/**
+ * El pedido de un extra desde el panel del evento. Quien lo pide ya tiene cuenta y evento:
+ * no hay fecha ni diseño. El precio lo congela el repositorio desde el extra **activo**.
+ */
+export const placeAddonOrder =
+  (deps: Deps) =>
+  async (input: { addonSlug: string; eventId: string; customerName: string; contact: string }): Promise<Result<Order, OrdersError>> =>
+    attempt(
+      async () => {
+        for (let intento = 0; intento < 5; intento += 1) {
+          const publicRef = newPublicRef()
+          if ((await deps.orders.findByRef(publicRef)) !== null) continue
+          const creado = await deps.orders.createForAddon({
+            publicRef,
+            addonSlug: input.addonSlug,
+            eventId: input.eventId,
+            customerName: input.customerName.trim().slice(0, MAX_NAME) || input.contact,
+            contact: input.contact.trim().slice(0, MAX_NAME),
+          })
+          return creado === null ? err(ordersError('invalid_input', 'Ese extra no está a la venta.')) : ok(creado)
+        }
+        return err(ordersError('storage_failure', 'No se pudo acuñar una referencia libre.'))
+      },
+      (cause) => ordersError('storage_failure', `No se pudo crear el pedido del extra: ${String(cause)}`),
+    )
+
 /** El pedido que hay detrás de una referencia. Una referencia desconocida es `not_found`, nunca «prohibido». */
 export const findOrderByRef =
   (deps: Deps) =>

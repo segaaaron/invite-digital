@@ -1,3 +1,4 @@
+import type { ExtraAplicado } from '../domain/extras'
 import type { PlanChangeRequestRow, PlanRow, PlansRepository } from './ports'
 
 /**
@@ -11,6 +12,8 @@ export const createFakePlansRepository = (input: {
   /** Plan de cada evento, por id de evento. */
   eventPlans?: Record<string, string>
   requests?: PlanChangeRequestRow[]
+  /** Extras comprados, por id de evento. */
+  extras?: Record<string, ExtraAplicado[]>
 }) => {
   const plans = [...(input.plans ?? [])]
   const eventPlans = new Map(Object.entries(input.eventPlans ?? {}))
@@ -24,6 +27,12 @@ export const createFakePlansRepository = (input: {
     // El orden de `plans` es el del catálogo: el primero es el más barato.
     async findCheapestActivePlan() {
       return plans[0] ?? null
+    },
+    async applyExtra() {
+      return false
+    },
+    async listEventExtras(eventId) {
+      return input.extras?.[eventId] ?? []
     },
     async listActivePlans() {
       return [...plans]

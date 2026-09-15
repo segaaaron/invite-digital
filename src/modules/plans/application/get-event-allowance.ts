@@ -1,3 +1,4 @@
+import { aplicarExtras } from '../domain/extras'
 import { attempt, ok, type Result } from '@/shared/result'
 import type { Allowance } from '../domain/allowance'
 import { plansError, type PlansError } from '../domain/errors'
@@ -39,14 +40,16 @@ export const getEventAllowance =
   async (eventId: string): Promise<Result<Allowance, PlansError>> =>
     attempt<Allowance, PlansError>(
       async () => {
+        // Los extras que compró el evento se suman a su plan, sea el suyo o el más barato.
+        const extras = await deps.plans.listEventExtras(eventId)
         const propio = await deps.plans.findEventPlan(eventId)
-        if (propio) return ok(desdeFila(propio))
+        if (propio) return ok(aplicarExtras(desdeFila(propio), extras))
 
         // Un evento sin plan se trata como el más barato activo. Los creados antes de
         // esta rebanada no tienen ninguno y no pueden quedar en un limbo donde todo
         // esté prohibido.
         const masBarato = await deps.plans.findCheapestActivePlan()
-        if (masBarato) return ok(desdeFila(masBarato))
+        if (masBarato) return ok(aplicarExtras(desdeFila(masBarato), extras))
 
         console.warn('no hay ningún plan activo en el catálogo; se aplica capacidad permisiva', eventId)
         return ok(SIN_PLAN)

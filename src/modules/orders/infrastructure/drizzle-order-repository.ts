@@ -1,6 +1,6 @@
 import { desc, eq, inArray, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
+import { addons, events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
 import { ORDER_STATUSES, type Order, type OrderStatus } from '../domain/order'
 import type { NewOrder, OrderRepository, ProofRow } from '../application/ports'
 
@@ -12,6 +12,8 @@ type Fila = {
   planSlug: string | null
   planName: string | null
   templateSlug: string | null
+  addonSlug: string | null
+  addonName: string | null
   eventId: string | null
   eventSlug: string | null
   customerName: string
@@ -45,6 +47,8 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
     // El diseño elegido vive en el propio pedido, no en `templates`: los temas están en el
     // código y la tabla solo los publica.
     templateSlug: orders.templateSlug,
+    addonSlug: orders.addonSlug,
+    addonName: addons.name,
     eventId: orders.eventId,
     // El `slug` viaja con el pedido para que la bandeja pueda enlazar a la boda. Derivarlo
     // de la referencia funcionaría hoy y se rompería el día que el atelier renombre el
@@ -76,6 +80,7 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
       // aprobado—, y con `innerJoin` desaparecerían de la bandeja justo los que esperan
       // decisión.
       .leftJoin(events, eq(events.id, orders.eventId))
+      .leftJoin(addons, eq(addons.slug, orders.addonSlug))
 
   return {
     async create(order: NewOrder): Promise<Order> {
@@ -108,6 +113,19 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
       const creado = await this.findById(fila.id)
       if (creado === null) throw new Error('El pedido recién creado no se pudo releer.')
       return creado
+    },
+
+    async createForAddon(order) {
+      // El precio se congela desde el extra **activo** en la misma escritura: apagado, no hay
+      // fila que insertar, y un POST directo no compra un extra que ya no se vende.
+      const filas = await database.execute<{ id: string }>(sql`
+        insert into orders (public_ref, addon_slug, event_id, customer_name, contact, amount_cents, currency)
+        select ${order.publicRef}, a.slug, ${order.eventId}, ${order.customerName}, ${order.contact}, a.price_cents, a.currency
+        from addons a where a.slug = ${order.addonSlug} and a.is_active
+        returning id
+      `)
+      const id = (filas as unknown as Array<{ id: string }>)[0]?.id
+      return id === undefined ? null : this.findById(id)
     },
 
     async findByRef(publicRef): Promise<Order | null> {
