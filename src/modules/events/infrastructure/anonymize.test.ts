@@ -4,6 +4,10 @@ import { db } from '@/shared/db/client'
 import {
   arrivals,
   budgetItems,
+  courtMembers,
+  rehearsals,
+  runOfShow,
+  vendors,
   doorPorters,
   events,
   fundContributions,
@@ -325,4 +329,27 @@ describe('anonimización', () => {
       expect(partida).toMatchObject({ estimatedCents: 800_00, padrinoLabel: null, notes: null })
     })
   })
+
+  it('al vencer, proveedores, cortejo, cronograma y ensayos pierden lo que identifica a alguien', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+      await tx.insert(vendors).values({ eventId: evento.id, service: 'DJ', company: 'Beat', contactName: 'Carlos', whatsapp: '70012345', email: 'dj@beat.bo', setupNotes: 'Entra por la cocina', accessTokenHash: Buffer.alloc(32, 9) })
+      await tx.insert(courtMembers).values({ eventId: evento.id, kind: 'chambelan', name: 'Diego Rojas', whatsapp: '70000000', size: 'M', sponsors: 'Vals' })
+      await tx.insert(runOfShow).values({ eventId: evento.id, startsAt: '20:00', title: 'Vals', owner: 'Tía Rosa', notes: 'Llamarla antes' })
+      await tx.insert(rehearsals).values({ eventId: evento.id, date: NOW, place: 'Casa de Diego', notes: 'Traer zapatos' })
+
+      await repo.anonymize(evento.id, NOW)
+
+      const [dj] = await tx.select().from(vendors).where(eq(vendors.eventId, evento.id))
+      expect(dj).toMatchObject({ service: 'DJ', contactName: null, whatsapp: null, email: null, setupNotes: null, accessTokenHash: null })
+      const [diego] = await tx.select().from(courtMembers).where(eq(courtMembers.eventId, evento.id))
+      expect(diego).toMatchObject({ kind: 'chambelan', name: 'Anónimo', whatsapp: null, size: null })
+      const [vals] = await tx.select().from(runOfShow).where(eq(runOfShow.eventId, evento.id))
+      expect(vals).toMatchObject({ title: 'Vals', owner: null, notes: null })
+      const [ensayo] = await tx.select().from(rehearsals).where(eq(rehearsals.eventId, evento.id))
+      expect(ensayo).toMatchObject({ place: null, notes: null })
+    })
+  })
 })
+

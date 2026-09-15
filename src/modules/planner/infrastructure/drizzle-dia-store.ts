@@ -1,7 +1,8 @@
 import { and, asc, eq, inArray } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { courtMembers, rehearsalAttendees, rehearsals, runOfShow, vendors } from '@/shared/db/schema'
+import { courtMembers, eventDocuments, rehearsalAttendees, rehearsals, runOfShow, vendors } from '@/shared/db/schema'
 import type { DiaStore } from '../application/dia-ports'
+import type { TipoDeDocumento } from '../domain/dia-d'
 import type { EstadoDeProveedor, TipoDeCortejo } from '../domain/equipo-del-dia'
 
 type FilaProveedor = typeof vendors.$inferSelect
@@ -18,6 +19,7 @@ const proveedor = (f: FilaProveedor) => ({
   setupNotes: f.setupNotes,
   budgetItemId: f.budgetItemId,
   conEnlace: f.accessTokenHash !== null,
+  arrivedAt: f.arrivedAt,
 })
 
 export function createDrizzleDiaStore(database: DbExecutor = db): DiaStore {
@@ -41,6 +43,10 @@ export function createDrizzleDiaStore(database: DbExecutor = db): DiaStore {
     },
     async setVendorToken(eventId, id, hash) {
       const filas = await database.update(vendors).set({ accessTokenHash: hash }).where(and(eq(vendors.id, id), eq(vendors.eventId, eventId))).returning({ id: vendors.id })
+      return filas.length > 0
+    },
+    async setVendorArrived(eventId, id, at) {
+      const filas = await database.update(vendors).set({ arrivedAt: at }).where(and(eq(vendors.id, id), eq(vendors.eventId, eventId))).returning({ id: vendors.id })
       return filas.length > 0
     },
     async findVendorByTokenHash(hash) {
@@ -128,6 +134,27 @@ export function createDrizzleDiaStore(database: DbExecutor = db): DiaStore {
           .where(and(eq(courtMembers.eventId, eventId), inArray(courtMembers.id, [...ensayo.asistentes])))
         if (validos.length > 0) await tx.insert(rehearsalAttendees).values(validos.map((v) => ({ rehearsalId: fila!.id, courtMemberId: v.id })))
       })
+    },
+    async listDocuments(eventId) {
+      const filas = await database.select().from(eventDocuments).where(eq(eventDocuments.eventId, eventId)).orderBy(asc(eventDocuments.createdAt))
+      return filas.map((f) => ({
+        id: f.id,
+        kind: f.kind as TipoDeDocumento,
+        topic: f.topic,
+        originalName: f.originalName,
+        contentType: f.contentType,
+        byteSize: f.byteSize,
+        vendorId: f.vendorId,
+        budgetItemId: f.budgetItemId,
+        createdAt: f.createdAt,
+      }))
+    },
+    async insertDocument(eventId, doc) {
+      await database.insert(eventDocuments).values({ ...doc, eventId })
+    },
+    async removeDocument(eventId, id) {
+      const filas = await database.delete(eventDocuments).where(and(eq(eventDocuments.id, id), eq(eventDocuments.eventId, eventId))).returning({ id: eventDocuments.id })
+      return filas.length > 0
     },
     async removeRehearsal(eventId, id) {
       const filas = await database.delete(rehearsals).where(and(eq(rehearsals.id, id), eq(rehearsals.eventId, eventId))).returning({ id: rehearsals.id })

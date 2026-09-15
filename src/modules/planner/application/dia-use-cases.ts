@@ -1,4 +1,5 @@
 import type { Fiesta } from '@/modules/events'
+import { extensionDeDocumento, leerDocumento } from '../domain/dia-d'
 import { horaValida, plantillaDeCronograma } from '../domain/cronograma'
 import { leerProveedor, type ProveedorInput, TIPOS_DE_CORTEJO, type TipoDeCortejo } from '../domain/equipo-del-dia'
 import { categoriasDe } from '../domain/presupuesto'
@@ -10,6 +11,12 @@ type Deps = {
   dia: DiaStore
   store: PlannerStore
   minter: { hashOf(token: string): Buffer; mint(): { token: string; hash: Buffer } }
+  /** Los ficheros de los documentos, fuera de `public/`. */
+  archivos: { put(key: string, bytes: Uint8Array): Promise<void>; get(key: string): Promise<Uint8Array | null>; remove(key: string): Promise<void> }
+  /** El tipo por los primeros bytes: PDF, JPEG, PNG o WEBP. Nunca por el nombre. */
+  sniff: (bytes: Uint8Array) => 'application/pdf' | 'image/jpeg' | 'image/png' | 'image/webp' | null
+  ids: () => string
+  clock: () => Date
 }
 
 const fallo = (mensaje: string): PlannerResult => ({ ok: false, mensaje })
@@ -215,3 +222,78 @@ export const removeRehearsal =
   ({ dia }: Deps) =>
   async (eventId: string, id: string): Promise<PlannerResult> =>
     (await dia.removeRehearsal(eventId, id)) ? { ok: true } : fallo(NO_ESTA)
+
+// ─── Día D y documentos ──────────────────────────────────────────────────────
+
+export const setVendorArrived =
+  ({ dia, clock }: Deps) =>
+  async (eventId: string, id: string, llego: boolean): Promise<PlannerResult> =>
+    (await dia.setVendorArrived(eventId, id, llego ? clock() : null)) ? { ok: true } : fallo(NO_ESTA)
+
+const claveDe = (id: string, mime: string) => `${id}.${extensionDeDocumento(mime)}`
+
+/**
+ * Sube un documento privado. El tope se mira **antes** de leer el fichero a memoria, el tipo
+ * lo deciden sus primeros bytes y el fichero se escribe **antes** que la fila: al revés, un
+ * fallo de disco dejaría una fila apuntando a nada.
+ */
+export const saveDocument =
+  ({ dia, store, archivos, sniff, ids }: Deps) =>
+  async (
+    eventId: string,
+    input: { kind: string; topic: string; vendorId: string; budgetItemId: string },
+    archivo: { name: string; size: number; bytes: () => Promise<Uint8Array> },
+  ): Promise<PlannerResult> => {
+    const leido = leerDocumento({ kind: input.kind, topic: input.topic, size: archivo.size })
+    if (!leido.ok) return fallo(leido.mensaje)
+    const bytes = await archivo.bytes()
+    const mime = sniff(bytes)
+    if (mime === null) return fallo('Ese archivo no vale: sube un PDF o una imagen (JPG, PNG, WEBP).')
+
+    const vendorId = input.vendorId !== '' && (await dia.listVendors(eventId)).some((v) => v.id === input.vendorId) ? input.vendorId : null
+    const budgetItemId = input.budgetItemId !== '' && (await store.listBudget(eventId)).some((p) => p.id === input.budgetItemId) ? input.budgetItemId : null
+
+    const id = ids()
+    await archivos.put(claveDe(id, mime), bytes)
+    await dia.insertDocument(eventId, {
+      id,
+      kind: leido.kind,
+      topic: leido.topic,
+      originalName: archivo.name.trim().slice(0, 255) || 'documento',
+      contentType: mime,
+      byteSize: bytes.byteLength,
+      vendorId,
+      budgetItemId,
+    })
+    return { ok: true }
+  }
+
+/** El documento de **este** evento, con sus bytes. De otro evento no existe. */
+export const readDocument =
+  ({ dia, archivos }: Deps) =>
+  async (eventId: string, id: string) => {
+    const doc = (await dia.listDocuments(eventId)).find((d) => d.id === id)
+    if (!doc) return null
+    const bytes = await archivos.get(claveDe(doc.id, doc.contentType))
+    return bytes === null ? null : { ...doc, bytes }
+  }
+
+/** Borra el fichero primero: si falla, la fila queda y se puede reintentar. */
+export const removeDocument =
+  ({ dia, archivos }: Deps) =>
+  async (eventId: string, id: string): Promise<PlannerResult> => {
+    const doc = (await dia.listDocuments(eventId)).find((d) => d.id === id)
+    if (!doc) return fallo(NO_ESTA)
+    await archivos.remove(claveDe(doc.id, doc.contentType))
+    await dia.removeDocument(eventId, id)
+    return { ok: true }
+  }
+
+/** La retención: todos los documentos del evento, del disco y de la base. */
+export const purgeDocuments =
+  (deps: Deps) =>
+  async (eventId: string): Promise<number> => {
+    const docs = await deps.dia.listDocuments(eventId)
+    for (const doc of docs) await removeDocument(deps)(eventId, doc.id)
+    return docs.length
+  }

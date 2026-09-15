@@ -19,7 +19,7 @@ async function runMaintenance(): Promise<number> {
   console.log(
     `Mantenimiento listo: ${eventsAnonymized.length} evento(s) anonimizado(s)${
       eventsAnonymized.length > 0 ? ` (${eventsAnonymized.join(', ')})` : ''
-    }, ${sessionsDeleted} sesión(es) caducada(s) borrada(s), ${viewsDeleted} visita(s) borrada(s), ${mediaDeleted} imagen(es) borrada(s)`,
+    }, ${sessionsDeleted} sesión(es) caducada(s) borrada(s), ${viewsDeleted} visita(s) borrada(s), ${mediaDeleted} archivo(s) borrado(s)`,
   )
 
   // Las consultas de la web van aparte: no son de ningún evento. Un fallo aquí no deshace

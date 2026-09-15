@@ -117,6 +117,15 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
       // tarea también. Las tareas y los importes se quedan: no son de nadie.
       await tx.execute(sql`update planner_tasks set notes = null, done_by = null where event_id = ${eventId}`)
       await tx.execute(sql`update budget_items set padrino_label = null, notes = null where event_id = ${eventId}`)
+      // Proveedores: el servicio y su dinero se quedan; el contacto, las notas y el enlace, no.
+      await tx.execute(sql`
+        update vendors set contact_name = null, whatsapp = null, email = null, setup_notes = null, access_token_hash = null
+        where event_id = ${eventId}
+      `)
+      // El cortejo son personas con nombre y teléfono; el papel se queda para los recuentos.
+      await tx.execute(sql`update court_members set name = 'Anónimo', whatsapp = null, size = null where event_id = ${eventId}`)
+      await tx.execute(sql`update run_of_show set owner = null, notes = null where event_id = ${eventId}`)
+      await tx.execute(sql`update rehearsals set place = null, notes = null where event_id = ${eventId}`)
 
       await tx.update(events).set({ anonymizedAt: at }).where(eq(events.id, eventId))
     })

@@ -992,6 +992,8 @@ export const vendors = pgTable(
     setupNotes: text('setup_notes'),
     budgetItemId: uuid('budget_item_id').references(() => budgetItems.id, { onDelete: 'set null' }),
     accessTokenHash: bytea('access_token_hash').unique(),
+    /** Cuándo llegó el día del evento. Lo marca el Día D. */
+    arrivedAt: timestamp('arrived_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
@@ -1071,4 +1073,30 @@ export const rehearsalAttendees = pgTable(
       .references(() => courtMembers.id, { onDelete: 'cascade' }),
   },
   (t) => [primaryKey({ columns: [t.rehearsalId, t.courtMemberId] })],
+)
+
+/**
+ * Documentos privados del evento: contratos, cotizaciones, facturas y fotos de referencia.
+ * Tabla propia y no `event_media`, que `/media/[id]` sirve a quien tenga la invitación.
+ */
+export const eventDocuments = pgTable(
+  'event_documents',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    kind: varchar('kind', { length: 16 }).notNull(),
+    topic: varchar('topic', { length: 80 }),
+    originalName: varchar('original_name', { length: 255 }).notNull(),
+    contentType: varchar('content_type', { length: 32 }).notNull(),
+    byteSize: integer('byte_size').notNull(),
+    vendorId: uuid('vendor_id').references(() => vendors.id, { onDelete: 'set null' }),
+    budgetItemId: uuid('budget_item_id').references(() => budgetItems.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('event_documents_event_idx').on(t.eventId),
+    check('event_documents_kind_check', sql`${t.kind} in ('contrato', 'cotizacion', 'factura', 'referencia')`),
+  ],
 )

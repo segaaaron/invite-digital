@@ -103,6 +103,7 @@ import {
   readProof,
 } from '@/modules/orders/application/order-use-cases'
 import { createDiskFileStorage } from '@/modules/orders/infrastructure/disk-file-storage'
+import { sniffMime } from '@/modules/orders/domain/proof'
 import {
   deleteUser as deleteUserUseCase,
   listAllEvents,
@@ -295,7 +296,16 @@ const mediaDeps = {
 
 /** El planner de cada evento: plan de tareas y presupuesto. */
 const plannerDeps = { store: drizzlePlannerStore, clock }
-const diaDeps = { dia: drizzleDiaStore, store: drizzlePlannerStore, minter }
+const diaDeps = {
+  dia: drizzleDiaStore,
+  store: drizzlePlannerStore,
+  minter,
+  // Los documentos del planner, en su carpeta del mismo volumen privado que las fotografías.
+  archivos: createDiskMediaStorage(`${env.EVENT_MEDIA_DIR}/documentos`),
+  sniff: sniffMime,
+  ids: () => crypto.randomUUID(),
+  clock,
+}
 export const planner = {
   listTasks: (eventId: string) => drizzlePlannerStore.listTasks(eventId),
   seedTasks: plannerUseCases.seedTasks(plannerDeps),
@@ -330,6 +340,12 @@ export const planner = {
     listRehearsals: (eventId: string) => drizzleDiaStore.listRehearsals(eventId),
     saveRehearsal: diaUseCases.saveRehearsal(diaDeps),
     removeRehearsal: diaUseCases.removeRehearsal(diaDeps),
+    setVendorArrived: diaUseCases.setVendorArrived(diaDeps),
+    listDocuments: (eventId: string) => drizzleDiaStore.listDocuments(eventId),
+    saveDocument: diaUseCases.saveDocument(diaDeps),
+    readDocument: diaUseCases.readDocument(diaDeps),
+    removeDocument: diaUseCases.removeDocument(diaDeps),
+    purgeDocuments: diaUseCases.purgeDocuments(diaDeps),
   },
 } as const
 
@@ -453,7 +469,8 @@ export const events = {
     deleteExpiredSessions: (now) => drizzleSessionRepository.deleteExpired(now),
     deleteViewsForEvent: (eventId) => drizzleViewRepository.deleteForEvent(eventId),
     clearContentForEvent: clearContent(drizzleContentRepository),
-    purgeMediaForEvent: purgeMedia(mediaDeps),
+    // Las fotografías y los documentos privados del planner: los dos son ficheros del evento.
+    purgeMediaForEvent: async (eventId) => (await purgeMedia(mediaDeps)(eventId)) + (await planner.dia.purgeDocuments(eventId)),
     clock,
   }),
 } as const

@@ -20,10 +20,12 @@ export type Proveedor = {
   readonly budgetItemId: string | null
   /** Si tiene enlace de solo lectura activo. El token nunca vuelve de la base. */
   readonly conEnlace: boolean
+  /** Cuándo llegó el día del evento. */
+  readonly arrivedAt: Date | null
 }
 
 export type ProveedorInput = { service: string; company: string; contactName: string; whatsapp: string; email: string; status: string; arrivalTime: string; setupNotes: string }
-export type ProveedorLimpio = Omit<Proveedor, 'id' | 'budgetItemId' | 'conEnlace'>
+export type ProveedorLimpio = Omit<Proveedor, 'id' | 'budgetItemId' | 'conEnlace' | 'arrivedAt'>
 
 const opcional = (v: string, max: number) => v.trim().slice(0, max) || null
 
