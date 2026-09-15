@@ -14,7 +14,9 @@ import { randomBytes } from 'node:crypto'
 import { fiestaDeTema } from '@/modules/events/domain/fiesta'
 import { addTeamMember, removeTeamMember } from '@/modules/events/application/team-use-cases'
 import type { Membership } from '@/modules/identity/domain/access'
+import * as diaUseCases from '@/modules/planner/application/dia-use-cases'
 import * as plannerUseCases from '@/modules/planner/application/planner-use-cases'
+import { drizzleDiaStore } from '@/modules/planner/infrastructure/drizzle-dia-store'
 import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
@@ -293,6 +295,7 @@ const mediaDeps = {
 
 /** El planner de cada evento: plan de tareas y presupuesto. */
 const plannerDeps = { store: drizzlePlannerStore, clock }
+const diaDeps = { dia: drizzleDiaStore, store: drizzlePlannerStore, minter }
 export const planner = {
   listTasks: (eventId: string) => drizzlePlannerStore.listTasks(eventId),
   seedTasks: plannerUseCases.seedTasks(plannerDeps),
@@ -307,6 +310,27 @@ export const planner = {
   addPayment: plannerUseCases.addPayment(plannerDeps),
   setPaymentPaid: plannerUseCases.setPaymentPaid(plannerDeps),
   removePayment: plannerUseCases.removePayment(plannerDeps),
+  /** El día del evento: proveedores, cronograma, cortejo y ensayos. */
+  dia: {
+    listVendors: (eventId: string) => drizzleDiaStore.listVendors(eventId),
+    saveVendor: diaUseCases.saveVendor(diaDeps),
+    setVendorStatus: diaUseCases.setVendorStatus(diaDeps),
+    removeVendor: diaUseCases.removeVendor(diaDeps),
+    emitVendorLink: diaUseCases.emitirEnlaceDeProveedor(diaDeps),
+    revokeVendorLink: diaUseCases.quitarEnlaceDeProveedor(diaDeps),
+    viewAsVendor: diaUseCases.verComoProveedor(diaDeps),
+    listMoments: (eventId: string) => drizzleDiaStore.listMoments(eventId),
+    seedMoments: diaUseCases.seedMoments(diaDeps),
+    saveMoment: diaUseCases.saveMoment(diaDeps),
+    removeMoment: diaUseCases.removeMoment(diaDeps),
+    listCourt: (eventId: string) => drizzleDiaStore.listCourt(eventId),
+    saveCourtMember: diaUseCases.saveCourtMember(diaDeps),
+    setCourtConfirmed: diaUseCases.setCourtConfirmed(diaDeps),
+    removeCourtMember: diaUseCases.removeCourtMember(diaDeps),
+    listRehearsals: (eventId: string) => drizzleDiaStore.listRehearsals(eventId),
+    saveRehearsal: diaUseCases.saveRehearsal(diaDeps),
+    removeRehearsal: diaUseCases.removeRehearsal(diaDeps),
+  },
 } as const
 
 export const events = {

@@ -53,7 +53,7 @@ export function isAdmin(actor: Actor): boolean {
  * dice nada**, y `full` deniega a todo el que entra por pertenencia: el olvido cae del lado
  * seguro, que es la única forma de que una regla de permisos sobreviva a la siguiente sesión.
  */
-export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'equipo'
+export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planner' | 'equipo'
 
 /**
  * Cómo pertenece alguien a un evento que no es suyo.
@@ -72,6 +72,8 @@ const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> 
   cliente: ['cliente', 'coanfitrion', 'planner'],
   // El anfitrión y su planner suman porteros; el co-anfitrión no.
   porteros: ['cliente', 'planner'],
+  // Proveedores, cronograma y Día D: lo lleva quien organiza el día.
+  planner: ['cliente', 'planner'],
   // Solo el anfitrión suma personas al evento.
   equipo: ['cliente'],
 }

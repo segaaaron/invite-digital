@@ -230,6 +230,12 @@ describe('el equipo del evento: anfitrión, co-anfitrión y planner', () => {
     expect(puede(['coanfitrion'], 'porteros')).toBe(false)
   })
 
+  it('proveedores, cronograma y Día D son del anfitrión y su planner', () => {
+    expect(puede(['cliente'], 'planner')).toBe(true)
+    expect(puede(['planner'], 'planner')).toBe(true)
+    expect(puede(['coanfitrion'], 'planner')).toBe(false)
+  })
+
   it('al equipo solo suma gente el anfitrión: nadie da más permisos de los que tiene', () => {
     expect(puede(['cliente'], 'equipo')).toBe(true)
     expect(puede(['planner'], 'equipo')).toBe(false)
