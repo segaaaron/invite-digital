@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { catalog, events, plans } from '@/app/composition/container'
 import { requireSession } from '@/modules/identity/session-cookie'
-import { capacidadDePlan, type Allowance } from '@/modules/plans'
+import { capacidadDePlan, NOMBRE_DE_EFECTO, type Allowance } from '@/modules/plans'
 import { BillingToggle } from '@/modules/plans/ui/BillingToggle'
 import { PlanChangeForm } from '@/modules/plans/ui/PlanChangeForm'
 import { PlanDecisionForms } from '@/modules/plans/ui/PlanDecisionForms'
@@ -57,6 +57,8 @@ export default async function PlanPage({
   }))
 
   const actual = capacidad.value.planSlug
+  // Los extras comprados ya están sumados en la capacidad; aquí se dicen por su nombre.
+  const extras = await plans.eventExtras(event.value.id)
 
   return (
     <>
@@ -78,6 +80,19 @@ export default async function PlanPage({
             changeHref: `/panel/eventos/${event.value.slug}/plan?plan=${tarjeta.allowance.planSlug}#cambio`,
           }))}
         />
+
+        {extras.length === 0 ? null : (
+          <PanelCard title="Extras activos en este evento">
+            <ul className="flex flex-col">
+              {extras.map((x, i) => (
+                <li className="border-b border-line-panel py-2 text-[13px] text-ink last:border-none" key={`${x.effect}-${i}`}>
+                  {NOMBRE_DE_EFECTO[x.effect]}
+                  {x.amount > 0 ? ` · +${x.amount}` : ''}
+                </li>
+              ))}
+            </ul>
+          </PanelCard>
+        )}
 
         <PanelCard id="cambio" title="Cambio de plan">
           {isErr(pendiente) || pendiente.value === null ? (

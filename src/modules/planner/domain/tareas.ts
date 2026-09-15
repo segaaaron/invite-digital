@@ -116,10 +116,6 @@ const PLANTILLAS: Record<Fiesta, readonly Etapa[]> = {
 
 export const etapasDe = (fiesta: Fiesta): readonly Etapa[] => PLANTILLAS[fiesta]
 
-/** El nombre de una etapa, o el de «Tareas propias» si no es de la plantilla. */
-export const nombreDeEtapa = (fiesta: Fiesta, clave: string): string =>
-  PLANTILLAS[fiesta].find((e) => e.clave === clave)?.nombre ?? 'Tareas propias'
-
 const iso = (d: Date): string => d.toISOString().slice(0, 10)
 const utc = (fecha: string): Date => new Date(`${fecha}T00:00:00.000Z`)
 

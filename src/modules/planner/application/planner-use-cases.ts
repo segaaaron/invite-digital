@@ -12,7 +12,7 @@ const fallo = (mensaje: string): PlannerResult => ({ ok: false, mensaje })
 const NO_ESTA = 'Ya no está. Recarga la página.'
 
 /** La clave de las tareas que no son de la plantilla. */
-export const ETAPA_PROPIA = 'propias'
+const ETAPA_PROPIA = 'propias'
 
 /** `''` es sin fecha. Una fecha que el calendario no tiene —30 de febrero— no pasa. */
 function leerFecha(valor: string): { ok: true; fecha: string | null } | { ok: false } {

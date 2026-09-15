@@ -64,7 +64,6 @@ export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planne
  * contrataron; `puerta`, el personal de recepción con cuenta.
  */
 export type Membership = 'puerta' | 'cliente' | 'coanfitrion' | 'planner'
-export const MEMBERSHIPS: readonly Membership[] = ['puerta', 'cliente', 'coanfitrion', 'planner']
 
 /** Las pertenencias que abren cada sección. Nadie da más permisos de los que tiene. */
 const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> = {
