@@ -60,6 +60,9 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   // El contenido rico que pinta el diseño, ya fusionado con el de muestra del tema: lo que
   // el atelier no haya escrito se ve con lo que traía el diseño, en vez de dejar un hueco.
   const contenido = await eventos.contentFor(event.id, definicion.defaultContent)
+  // «Comparte tus fotos» solo si el plan lo trae: un botón que lleva a un rechazo no se ofrece.
+  const capacidadDelPlan = await plans.allowanceFor(event.id)
+  const fotosDeInvitados = !isErr(capacidadDelPlan) && capacidadDelPlan.value.guestPhotos
 
   return (
     <>
@@ -115,7 +118,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           // El botón de «Comparte tus fotos». Lleva a su propia pantalla y no abre un campo
           // aquí: subir fotos es volver varias veces a lo largo del día, y hacerlo desde
           // media invitación obliga a desplazarse hasta el bloque cada vez.
-          photos: (
+          photos: !fotosDeInvitados ? undefined : (
             <a
               className="inline-block rounded-[var(--radius-pill)] bg-gold px-5 py-3 font-mono text-[9px] font-bold tracking-[0.15em] text-[var(--color-on-gold)] uppercase"
               href={`/i/${token}/fotos`}

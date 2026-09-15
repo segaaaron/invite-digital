@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { events } from '@/app/composition/container'
+import { events, plans } from '@/app/composition/container'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { EventMediaPanel } from '@/modules/events/ui/EventMediaPanel'
@@ -86,6 +86,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
   const share = await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
+  // Si el plan trae la contraseña. Una lectura fallida no la concede.
+  const capacidad = await plans.allowanceFor(event.value.id)
+  const contrasenaIncluida = !isErr(capacidad) && capacidad.value.eventPassword
 
   // El personal de puerta y el cliente los gestiona **solo el admin**: dar de alta crea
   // una cuenta y le manda credenciales. Para cualquier otro, las dos tarjetas no se
@@ -129,7 +132,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           <PanelCard title="Detalles del evento">
             <div className="flex flex-col gap-6">
               <EventForm event={event.value} />
-              <PrivacyForm eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
+              <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
               <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
             </div>
           </PanelCard>

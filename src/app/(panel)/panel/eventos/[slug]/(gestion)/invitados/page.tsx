@@ -242,7 +242,16 @@ export default async function InvitadosPage({
             }
             title="Importar desde CSV"
           >
-            <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
+            {/* Importar es de algunos planes. Se ofrece igual y dice por qué no: es algo que se
+                consigue subiendo de plan, y la acción lo corta también en el servidor. */}
+            {isErr(capacidad) || !capacidad.value.csvImport ? (
+              <p className="text-[13px] leading-[1.7] text-ink-soft">
+                Tu plan no incluye importar la lista de invitados. Puedes cargarlos uno a uno, o subir a un plan que
+                lo incluya.
+              </p>
+            ) : (
+              <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
+            )}
           </PanelCard>
         ) : null}
 

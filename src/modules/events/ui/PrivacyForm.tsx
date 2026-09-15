@@ -15,10 +15,13 @@ export function PrivacyForm({
   eventId,
   eventSlug,
   hasPassword,
+  contrasenaIncluida = true,
 }: {
   eventId: string
   eventSlug: string
   hasPassword: boolean
+  /** Si el plan trae la contraseña. Sin ella la opción se ve apagada y dice por qué: se puede subir de plan. */
+  contrasenaIncluida?: boolean
 }) {
   const [state, action, pending] = useActionState<PrivacyState, FormData>(setEventPrivacyAction, { status: 'idle' })
   const [modo, setModo] = useState<'public' | 'password'>(hasPassword ? 'password' : 'public')
@@ -39,12 +42,14 @@ export function PrivacyForm({
       <label className="flex items-center gap-2.5 text-[13px] text-ink">
         <input
           checked={modo === 'password'}
+          disabled={!contrasenaIncluida && !hasPassword}
           name="privacy"
           onChange={() => setModo('password')}
           type="radio"
           value="password"
         />
         Protegida con contraseña
+        {!contrasenaIncluida && !hasPassword ? <span className="text-[12px] text-ink-mute">· tu plan no la incluye</span> : null}
       </label>
 
       {modo === 'password' ? (

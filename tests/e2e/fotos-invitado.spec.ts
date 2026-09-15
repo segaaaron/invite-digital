@@ -19,7 +19,7 @@ const PNG = Buffer.from(
 )
 
 test('el invitado sube una foto desde su invitación y la ve entre las suyas', async ({ page }) => {
-  const { token, eventSlug } = await seedInvitation({ slug: 'boda-fotos-e2e' })
+  const { token, eventSlug } = await seedInvitation({ slug: 'boda-fotos-e2e', plan: 'firma-3d' })
 
   await page.goto(`/i/${token}/fotos`)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Comparte tus fotos')
@@ -46,7 +46,7 @@ test('una foto del tamaño de las de un teléfono también sube', async ({ page 
     .toBuffer()
   expect(foto.byteLength).toBeGreaterThan(2 * 1024 * 1024)
 
-  const { token, eventSlug } = await seedInvitation({ slug: 'boda-fotos-grande-e2e' })
+  const { token, eventSlug } = await seedInvitation({ slug: 'boda-fotos-grande-e2e', plan: 'firma-3d' })
   await page.goto(`/i/${token}/fotos`)
   await page.setInputFiles('input[type=file]', { name: 'telefono.png', mimeType: 'image/png', buffer: foto })
 
@@ -63,4 +63,11 @@ test('una invitación revocada tampoco', async ({ page }) => {
   const { token, eventSlug } = await seedInvitation({ slug: 'boda-fotos-revocada-e2e', revoked: true })
   expect((await page.goto(`/i/${token}/fotos`))?.status()).toBe(404)
   await deleteEvent(eventSlug)
+})
+
+test('con un plan sin fotos de invitados, la pantalla de fotos no existe', async ({ page }) => {
+  const { token } = await seedInvitation({ slug: 'boda-sin-fotos-e2e', plan: 'atelier' })
+  const respuesta = await page.goto(`/i/${token}/fotos`)
+  expect(respuesta?.status()).toBe(404)
+  await deleteEvent('boda-sin-fotos-e2e')
 })

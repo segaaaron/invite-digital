@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events } from '@/app/composition/container'
+import { events, plans } from '@/app/composition/container'
 import { eventUnlocked } from '@/modules/events/actions'
 import { MAX_GUEST_PHOTOS } from '@/modules/events/domain/media'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
@@ -39,6 +39,9 @@ export default async function FotosPage({ params }: { params: Promise<{ token: s
   const { group, event } = invitation.value
 
   if (!(await eventUnlocked(event.id))) return <EventPasswordGate token={token} />
+
+  // Sin fotos de invitados en el plan, esta pantalla no existe: 404, como un enlace inválido.
+  if (isErr(await plans.requireFeature(event.id, 'guestPhotos'))) notFound()
 
   const dictionary = getDictionary(event.locale).invitation
   const mias = await events.media.listOfGuest(group.id)
