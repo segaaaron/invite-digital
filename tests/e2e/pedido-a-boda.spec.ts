@@ -63,6 +63,11 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // tarjeta es un `h2` y es único.
     await expect(atelier.getByRole('heading', { name: 'Contenido de la invitación · Botánica' })).toBeVisible()
 
+    // Y con su plan de tareas ya sembrado: el pedido aprobado no deja un evento sin planner.
+    await atelier.goto(`/panel/eventos/${slug}/planner/tareas`)
+    await expect(atelier.getByRole('button', { name: 'Crear el plan con la plantilla' })).toHaveCount(0)
+    await expect(atelier.locator('summary', { hasText: '12 meses antes' })).toBeVisible()
+
     // 4. Los novios entran con lo que les dieron... y lo primero es elegir su contraseña.
     //
     // La que escribió el admin viajó por correo, así que nace **provisional**: el panel no
