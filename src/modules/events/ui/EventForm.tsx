@@ -47,7 +47,6 @@ export function EventForm({
   const deadlineId = useId()
   const localeId = useId()
   const statusId = useId()
-  const retentionId = useId()
   const currencyId = useId()
   const templateId = useId()
   const errorId = useId()
@@ -151,9 +150,13 @@ export function EventForm({
               <option value="closed">Cerrado · enlaces válidos, respuestas cerradas</option>
             </select>
           </Campo>
-          <Campo ayuda="Pasado ese tiempo tras el evento, los datos de los invitados se anonimizan." etiqueta="Días que se guardan los datos" htmlFor={retentionId}>
-            <input className={FIELD_CLASS} defaultValue={event?.retentionDays ?? 90} id={retentionId} min={1} name="retentionDays" required type="number" />
-          </Campo>
+          <div className="flex flex-col gap-1">
+            <span className={LABEL_CLASS}>Tiempo en línea</span>
+            <p className="text-[13px] text-ink">
+              {event ? `${event.retentionDays} días tras el evento` : 'Lo que diga el plan'}
+            </p>
+            <p className="text-[11px] text-ink-mute">Lo fija el plan. Pasado ese tiempo, los datos de los invitados se anonimizan.</p>
+          </div>
         </div>
 
         <Campo ayuda="{grupo} y {enlace} se sustituyen al enviar. El enlace nunca se guarda aquí." etiqueta="Mensaje para repartir la invitación" htmlFor={templateId}>

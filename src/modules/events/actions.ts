@@ -28,7 +28,6 @@ const readForm = (formData: FormData) => ({
   locale: String(formData.get('locale') ?? 'es'),
   themeKey: String(formData.get('themeKey') ?? 'clasico'),
   status: String(formData.get('status') ?? 'draft'),
-  retentionDays: Number(formData.get('retentionDays') ?? 90),
   currency: String(formData.get('currency') ?? 'BOB'),
   messageTemplate: String(formData.get('messageTemplate') ?? ''),
   venue: String(formData.get('venue') ?? ''),
@@ -41,7 +40,10 @@ export async function createEventAction(_previous: EventActionState, formData: F
 
   // El evento nace con dueño. Sin esta línea la multitenencia sería un adorno: cada alta
   // dejaría un evento huérfano que solo vería el admin.
-  const result = await eventUseCases.create({ ...readForm(formData), userId: actor.userId })
+  // Sin plan, el evento usa el más barato activo, y sus datos duran lo que ese plan dice.
+  // Asignarle otro plan después arrastra sus días (`setEventPlan`, `applyRequest`).
+  const retentionDays = (await plans.listActive())[0]?.onlineDays ?? 90
+  const result = await eventUseCases.create({ ...readForm(formData), retentionDays, userId: actor.userId })
   if (isErr(result)) {
     console.error('alta de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
@@ -104,7 +106,8 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   const cambia = pedido.key !== temaAnterior && mismaFiesta(pedido.categorySlug, themeFor(temaAnterior).categorySlug)
   const themeKey = cambia && (await planDejaCambiarDiseno(actor.role, eventId)) ? pedido.key : temaAnterior
 
-  const result = await eventUseCases.update({ ...readForm(formData), themeKey, id: eventId })
+  // La retención no se edita aquí: la fija el plan del evento.
+  const result = await eventUseCases.update({ ...readForm(formData), themeKey, retentionDays: anterior.value.retentionDays, id: eventId })
   if (isErr(result)) {
     console.error('edición de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }

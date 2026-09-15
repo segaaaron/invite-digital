@@ -108,6 +108,10 @@ describe('aplicar una solicitud', () => {
 
     expect(aplicada).toBe(true)
     expect((await drizzlePlansRepository.findEventPlan(eventId))?.slug).toBe('alta-costura')
+    // Los días en línea viajan con el plan: la retención del evento pasa a ser la del nuevo.
+    const [evento] = await db.select({ retentionDays: events.retentionDays }).from(events).where(eq(events.id, eventId))
+    const [plan] = await db.select({ onlineDays: plans.onlineDays }).from(plans).where(eq(plans.id, alta))
+    expect(evento?.retentionDays).toBe(plan?.onlineDays)
 
     const solicitud = await drizzlePlansRepository.findRequest(id)
     expect(solicitud?.status).toBe('applied')

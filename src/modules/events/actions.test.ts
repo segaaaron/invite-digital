@@ -11,6 +11,8 @@ const update = vi.fn()
 const seedContent = vi.fn()
 const allowanceFor = vi.fn()
 const listGroups = vi.fn()
+const create = vi.fn()
+const listActive = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 // La guardia de multitenencia se deja pasar en estas pruebas: lo que comprueban es el
@@ -23,7 +25,7 @@ vi.mock('@/modules/identity/session-cookie', () => ({
 vi.mock('@/app/composition/container', () => ({
   events: {
     revokeShare: (...args: unknown[]) => revokeShare(...args),
-    create: vi.fn(),
+    create: (...args: unknown[]) => create(...args),
     update: (...args: unknown[]) => update(...args),
     getByIdFor: (...args: unknown[]) => getByIdFor(...args),
     seedContent: (...args: unknown[]) => seedContent(...args),
@@ -33,6 +35,7 @@ vi.mock('@/app/composition/container', () => ({
   plans: {
     requireFeature: (...args: unknown[]) => requireFeature(...args),
     allowanceFor: (...args: unknown[]) => allowanceFor(...args),
+    listActive: (...args: unknown[]) => listActive(...args),
   },
   guests: { list: (...args: unknown[]) => listGroups(...args) },
 }))
@@ -164,5 +167,35 @@ describe('updateEventAction y el cambio de modelo según el plan', () => {
     const { updateEventAction } = await import('./actions')
     await updateEventAction({ status: 'idle', message: '' }, edicion('boda-ed'))
     expect(temaGuardado()).toBe('boda-ed')
+  })
+})
+
+describe('la retención la fija el plan, no el formulario', () => {
+  const formulario = (): FormData => {
+    const fd = new FormData()
+    fd.set('id', 'e1')
+    fd.set('themeKey', 'boda-bot')
+    fd.set('retentionDays', '9999')
+    return fd
+  }
+
+  it('al crear, el evento sin plan toma los días en línea del plan más barato', async () => {
+    requireSession.mockResolvedValue({ userId: 'u1', role: 'atelier' })
+    listActive.mockResolvedValue([{ onlineDays: 60 }, { onlineDays: 365 }])
+    create.mockResolvedValue(ok({ id: 'e1', themeKey: 'boda-bot' }))
+    const { createEventAction } = await import('./actions')
+
+    await createEventAction({ status: 'idle', message: '' }, formulario())
+    expect((create.mock.calls[0]?.[0] as { retentionDays: number }).retentionDays).toBe(60)
+  })
+
+  it('al editar, conserva la que tiene aunque el POST mande otra', async () => {
+    requireSession.mockResolvedValue({ userId: 'u1', role: 'admin' })
+    getByIdFor.mockResolvedValue(ok({ id: 'e1', themeKey: 'boda-bot', retentionDays: 180 }))
+    update.mockImplementation(async (input: { themeKey: string }) => ok({ id: 'e1', slug: 'boda-ana', themeKey: input.themeKey }))
+    const { updateEventAction } = await import('./actions')
+
+    await updateEventAction({ status: 'idle', message: '' }, formulario())
+    expect((update.mock.calls[0]?.[0] as { retentionDays: number }).retentionDays).toBe(180)
   })
 })

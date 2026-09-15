@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm'
+import { and, eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { events, planChangeRequests } from '@/shared/db/schema'
 import type { PlanChangeRequestRow, PlanChangeStatus, PlansRepository } from '../application/ports'
@@ -69,7 +69,14 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
 
       if (!marcada) return false
 
-      await tx.update(events).set({ planId: marcada.requestedPlanId }).where(eq(events.id, marcada.eventId))
+      // Los días en línea viajan con el plan: la retención del evento pasa a ser la del nuevo.
+      await tx
+        .update(events)
+        .set({
+          planId: marcada.requestedPlanId,
+          retentionDays: sql`coalesce((select online_days from plans where id = ${marcada.requestedPlanId}), ${events.retentionDays})`,
+        })
+        .where(eq(events.id, marcada.eventId))
       return true
     })
   },

@@ -95,7 +95,11 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
   async setEventPlan(eventId, planSlug): Promise<void> {
     await database
       .update(events)
-      .set({ planId: sql`(select id from plans where slug = ${planSlug})` })
+      // Los días en línea son del plan, y cambian con él en la misma escritura.
+      .set({
+        planId: sql`(select id from plans where slug = ${planSlug})`,
+        retentionDays: sql`coalesce((select online_days from plans where slug = ${planSlug}), ${events.retentionDays})`,
+      })
       .where(eq(events.id, eventId))
   },
 

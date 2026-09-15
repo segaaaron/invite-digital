@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, guestGroups, users } from '@/shared/db/schema'
+import { events, guestGroups, plans, users } from '@/shared/db/schema'
 import { drizzleAdminRepository as repo } from './drizzle-admin-repository'
 
 const correo = `admin-e2e-${crypto.randomUUID().slice(0, 8)}@ejemplo.bo`
@@ -83,5 +83,18 @@ describe('drizzleAdminRepository · los recuentos correlacionados', () => {
     expect(mio?.enviados).toBe(0)
     expect(mio?.respondidos).toBe(0)
     expect(mio?.ownerEmail).toBe(correo)
+  })
+})
+
+describe('drizzleAdminRepository · el plan del evento', () => {
+  // Los días en línea son del plan: asignar uno deja la retención del evento en lo que trae,
+  // o un evento de Alta Costura se anonimizaría a los días del plan más barato.
+  it('asignar el plan fija la retención del evento en sus días en línea', async () => {
+    const [evento] = await db.select({ id: events.id }).from(events).where(eq(events.slug, slug))
+    await repo.setEventPlan(evento!.id, 'alta-costura')
+
+    const [fila] = await db.select({ retentionDays: events.retentionDays }).from(events).where(eq(events.slug, slug))
+    const [plan] = await db.select({ onlineDays: plans.onlineDays }).from(plans).where(eq(plans.slug, 'alta-costura'))
+    expect(fila?.retentionDays).toBe(plan?.onlineDays)
   })
 })
