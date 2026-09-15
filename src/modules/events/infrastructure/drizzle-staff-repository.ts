@@ -29,6 +29,25 @@ export const createDrizzleStaffRepository = (database: DbExecutor) => ({
     return filas.map((f) => f.eventId)
   },
 
+  /** El equipo de quien celebra, con su correo: anfitrión, co-anfitriones y planner. */
+  async listTeam(eventId: string): Promise<Array<StaffRow & { membership: Membership }>> {
+    const filas = await database
+      .select({ userId: eventStaff.userId, email: users.email, membership: eventStaff.membership })
+      .from(eventStaff)
+      .innerJoin(users, eq(users.id, eventStaff.userId))
+      .where(and(eq(eventStaff.eventId, eventId), inArray(eventStaff.membership, ['cliente', 'coanfitrion', 'planner'])))
+      .orderBy(users.email)
+    return filas.map((f) => ({ ...f, membership: f.membership as Membership }))
+  },
+
+  async countOf(eventId: string, membership: Membership): Promise<number> {
+    const filas = await database
+      .select({ userId: eventStaff.userId })
+      .from(eventStaff)
+      .where(and(eq(eventStaff.eventId, eventId), eq(eventStaff.membership, membership)))
+    return filas.length
+  },
+
   async add(eventId: string, userId: string, membership: Membership): Promise<void> {
     // Añadir dos veces al mismo no es un error: es pulsar dos veces. Y si ya estaba con
     // otra clase, la nueva manda: es lo que acaba de pedir quien lo da de alta.

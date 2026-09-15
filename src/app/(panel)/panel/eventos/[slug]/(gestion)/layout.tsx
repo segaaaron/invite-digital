@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
 import { checkin, events, guestbook, guests, leads, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
-import { isAdmin, sectionForRole } from '@/modules/identity/domain/access'
+import { isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
@@ -30,7 +30,10 @@ export default async function EventoLayout({
   // **la sección del rol de quien entra**: con una fija, dos de los tres se quedarían
   // fuera antes de llegar a su propia pantalla. El corte de cada sección lo hace cada
   // página, no este layout.
-  const event = await events.getFor(actor, slug, { section: sectionForRole(actor.role) })
+  //
+  // Un atelier que no es dueño puede ser la planner de ese evento: entra por su pertenencia.
+  const primero = await events.getFor(actor, slug, { section: sectionForRole(actor.role) })
+  const event = isErr(primero) && actor.role === 'atelier' ? await events.getFor(actor, slug, { section: 'cliente' }) : primero
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
@@ -52,6 +55,11 @@ export default async function EventoLayout({
   // Solo para el admin: es el único que ve la bandeja de consultas.
   const consultasNuevas = isAdmin(actor) ? await leads.countNew() : null
 
+  // Quien entra por pertenencia ve la barra de su papel en el equipo.
+  const dueno = isAdmin(actor) || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const equipo = dueno || actor.role === 'puerta' ? null : rolEnEquipo(await events.staff.membershipsOf(event.value.id, actor.userId))
+  const mesaPlanner = actor.role === 'puerta' ? false : (await events.staff.eventIdsOf(actor.userId, ['planner'])).length > 0
+
   return (
     <PanelFrame
       brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
@@ -61,7 +69,7 @@ export default async function EventoLayout({
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: porRevisar,
         consultas: consultasNuevas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente')}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner })}
       user={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,

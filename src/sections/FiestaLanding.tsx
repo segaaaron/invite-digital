@@ -85,6 +85,16 @@ export function FiestaLanding({
         </div>
       </section>
 
+      <section aria-labelledby="para-planners" className="px-6 py-20">
+        <div className="mx-auto flex max-w-[860px] flex-col items-center gap-5 rounded-[28px] border border-[var(--color-line)] bg-bg-raised px-6 py-14 text-center">
+          <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{textos.plannerEyebrow}</p>
+          <h2 className="font-display text-[clamp(28px,4vw,40px)] leading-tight text-ink [text-wrap:balance]" id="para-planners">
+            {textos.plannerTitle}
+          </h2>
+          <p className="max-w-[58ch] text-[15px] leading-[1.7] text-ink-soft">{textos.plannerBody}</p>
+        </div>
+      </section>
+
       {pricing}
     </>
   )

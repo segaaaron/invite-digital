@@ -20,6 +20,10 @@ export interface FiestaPageDictionary {
   cardBody: string
   seoTitle: string
   seoDescription: string
+  /** El bloque para las planners profesionales: entran gratis cuando el anfitrión las suma. */
+  plannerEyebrow: string
+  plannerTitle: string
+  plannerBody: string
 }
 
 export interface FiestasDictionary {

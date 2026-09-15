@@ -10,7 +10,10 @@ import {
   revokeClientShare,
 } from '@/modules/events/application/client-share-use-cases'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
+import { randomBytes } from 'node:crypto'
 import { fiestaDeTema } from '@/modules/events/domain/fiesta'
+import { addTeamMember, removeTeamMember } from '@/modules/events/application/team-use-cases'
+import type { Membership } from '@/modules/identity/domain/access'
 import * as plannerUseCases from '@/modules/planner/application/planner-use-cases'
 import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
@@ -372,8 +375,29 @@ export const events = {
     remove: (eventId: string, userId: string) => drizzleStaffRepository.remove(eventId, userId),
     /** Los dos tipos a la vez: lo usa el borrado del evento. */
     listUserIds: (eventId: string) => drizzleStaffRepository.listUserIds(eventId),
-    listWithEmail: (eventId: string, membership: 'puerta' | 'cliente') =>
-      drizzleStaffRepository.listWithEmail(eventId, membership),
+    listWithEmail: (eventId: string, membership: Membership) => drizzleStaffRepository.listWithEmail(eventId, membership),
+    membershipsOf: (eventId: string, userId: string) => drizzleStaffRepository.membershipsOf(eventId, userId),
+    eventIdsOf: (userId: string, memberships: readonly Membership[]) => drizzleStaffRepository.eventIdsOf(userId, memberships),
+  },
+  /**
+   * El equipo que suma el anfitrión: co-anfitriones y planner. Una cuenta nueva nace de
+   * cliente con contraseña provisional; una que ya existe no se toca.
+   */
+  team: {
+    add: addTeamMember({
+      staff: drizzleStaffRepository,
+      users: {
+        findByEmail: async (email) => {
+          const usuario = await drizzleUserRepository.findByEmail(email)
+          if (usuario === null) return null
+          return { id: usuario.id, role: (await drizzleUserRepository.findActor(usuario.id))?.role ?? 'atelier' }
+        },
+        create: async ({ email, password, role }) => drizzleUserRepository.create({ email, passwordHash: await argon2Hasher.hash(password), role }),
+      },
+      password: () => randomBytes(12).toString('base64url'),
+    }),
+    remove: removeTeamMember({ staff: drizzleStaffRepository }),
+    list: (eventId: string) => drizzleStaffRepository.listTeam(eventId),
   },
   remove: deleteEvent({ events: drizzleEventRepository }),
   setPassword: setEventPassword({

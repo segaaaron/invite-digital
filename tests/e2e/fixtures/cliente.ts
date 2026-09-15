@@ -10,6 +10,9 @@ const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@local
 export const CLIENTE = { email: 'novios-e2e@invitepremium.bo', password: 'contrasena-del-cliente-1' } as const
 
 /** El atelier dueño del evento, que es quien le da el acceso. */
+/** Quienes el anfitrión suma a su equipo en la prueba. Nacen por la pantalla, no por el fixture. */
+export const EQUIPO = { planner: 'planner-equipo-e2e@invitepremium.bo', coanfitriona: 'mama-equipo-e2e@invitepremium.bo' } as const
+
 export const DUENO = { email: 'atelier-cliente-e2e@invitepremium.bo', password: 'contrasena-del-dueno-1' } as const
 
 export type ClienteFixture = {
@@ -72,7 +75,19 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
 
 export async function deleteClienteFixture(slug: string): Promise<void> {
   await sql`delete from events where slug = ${slug}`
-  await sql`delete from users where email in (${CLIENTE.email}, ${DUENO.email})`
+  await sql`delete from users where email in (${CLIENTE.email}, ${DUENO.email}, ${EQUIPO.planner}, ${EQUIPO.coanfitriona})`
+}
+
+/** Le pone una contraseña conocida y sin marca de provisional, para entrar en la prueba. */
+export async function fijarClave(email: string, password: string): Promise<void> {
+  await sql`update users set password_hash = ${await argon2Hasher.hash(password)}, must_change_password = false where email = ${email}`
+}
+
+export async function membresiaDe(slug: string, email: string): Promise<string | null> {
+  const [fila] = await sql<{ membership: string }[]>`
+    select s.membership from event_staff s join events e on e.id = s.event_id join users u on u.id = s.user_id
+    where e.slug = ${slug} and u.email = ${email}`
+  return fila?.membership ?? null
 }
 
 export async function closeClienteDb(): Promise<void> {

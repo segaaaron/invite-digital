@@ -40,8 +40,9 @@ export default async function TareasPage({
   const hoy = fechaEnBolivia(new Date())
   const todas = await planner.listTasks(event.value.id)
   const filtro = (FILTROS_DE_TAREAS as readonly string[]).includes(pedido ?? '') ? (pedido as FiltroDeTareas) : 'todas'
-  // «Mías»: quien celebra ve las de los anfitriones; quien lleva el evento, las del planner.
-  const mias = actor.role === 'cliente' ? 'anfitrion' : 'planner'
+  // «Mías»: quien celebra ve las de los anfitriones; su planner y quien lleva el evento, las del planner.
+  const dueno = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const mias = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).includes('planner') ? 'planner' : 'anfitrion'
   const visibles = filtrarTareas(todas, filtro, { hoy, mias }).map((t) => ({
     ...t,
     estado: estadoDeTarea(t, hoy),

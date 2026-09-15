@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { events, guestbook, guests, leads, orders, plans } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
-import { isAdmin } from '@/modules/identity/domain/access'
+import { isAdmin, rolEnEquipo } from '@/modules/identity/domain/access'
 import { requireSession } from '@/modules/identity/session-cookie'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
@@ -32,6 +32,8 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   const porRevisar = isErr(pedidos) ? null : pedidos.value.filter((p) => p.order.status === 'proof_submitted').length
   // Solo para el admin: es el único que ve la bandeja de consultas.
   const consultasNuevas = admin ? await leads.countNew() : null
+  const rolEquipo = actor.role === 'cliente' && activo !== null ? rolEnEquipo(await events.staff.membershipsOf(activo.id, actor.userId)) : null
+  const mesaPlanner = actor.role === 'puerta' || admin ? false : (await events.staff.eventIdsOf(actor.userId, ['planner'])).length > 0
 
   return (
     <PanelFrame
@@ -41,7 +43,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
         sinLeer: libro === null || isErr(libro) ? null : unreadCount(libro.value),
         pedidos: porRevisar,
         consultas: consultasNuevas,
-      }, admin, actor.role === 'puerta', actor.role === 'cliente')}
+      }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner })}
       user={{
         title: admin ? 'Administración' : (activo?.title ?? 'Sin eventos todavía'),
         planLabel: admin

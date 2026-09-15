@@ -60,7 +60,8 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
    * Esconderlas es cortesía; el corte de verdad son las guardas de sus acciones, que siguen
    * pidiendo `full`. Pero enseñar un botón que va a rebotar es peor que no enseñarlo.
    */
-  const esDelAtelier = actor.role !== 'cliente'
+  // Dueño o admin: quien entra por pertenencia —anfitrión, co-anfitrión, planner— no.
+  const esDelAtelier = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
 
   // El contenido rico que pinta el diseño, y **qué secciones pinta**: pedirle un
   // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.

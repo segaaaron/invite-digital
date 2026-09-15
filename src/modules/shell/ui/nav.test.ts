@@ -160,5 +160,23 @@ describe('panelNav', () => {
     expect(rutas(panelNav('boda'))).toContain('/panel/eventos/boda/planner/presupuesto')
     expect(rutas(panelNav('boda', {}, false, true))).not.toContain('/panel/eventos/boda/planner/tareas')
   })
+
+  it('en el equipo cada uno ve lo suyo: el anfitrión suma gente, el planner porteros, el co-anfitrión ninguno', () => {
+    const rutas = (equipo: 'anfitrion' | 'coanfitrion' | 'planner') =>
+      panelNav('boda', {}, false, false, true, { equipo }).flatMap((s) => s.items.map((i) => i.href))
+    expect(rutas('anfitrion')).toEqual(expect.arrayContaining(['/panel/eventos/boda/equipo', '/panel/eventos/boda/porteros']))
+    expect(rutas('planner')).toContain('/panel/eventos/boda/porteros')
+    expect(rutas('planner')).not.toContain('/panel/eventos/boda/equipo')
+    expect(rutas('coanfitrion')).not.toContain('/panel/eventos/boda/porteros')
+    expect(rutas('coanfitrion')).not.toContain('/panel/eventos/boda/equipo')
+    expect(rutas('coanfitrion')).toContain('/panel/eventos/boda/planner/tareas')
+  })
+
+  it('quien es planner en algún evento llega a su mesa desde la cuenta', () => {
+    const rutas = (secciones: ReturnType<typeof panelNav>) => secciones.flatMap((s) => s.items.map((i) => i.href))
+    expect(rutas(panelNav(null, {}, false, false, false, { mesaPlanner: true }))).toContain('/panel/planner')
+    expect(rutas(panelNav(null))).not.toContain('/panel/planner')
+    expect(rutas(panelNav('boda'))).toContain('/panel/eventos/boda/equipo')
+  })
 })
 

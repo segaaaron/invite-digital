@@ -46,4 +46,13 @@ describe('FiestaLanding', () => {
     for (const herramienta of dictionary.fiestas.tools) expect(screen.getByText(herramienta.title)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: dictionary.fiestas.boda.cta })).toHaveAttribute('href', '#precios')
   })
+
+  it('cada fiesta invita a su planner: entra gratis cuando el anfitrión la suma', () => {
+    const dictionary = getDictionary('es')
+    render(<FiestaLanding dictionary={dictionary} fiesta="xv" locale="es" pricing={null} templates={catalogo} />)
+
+    expect(screen.getByRole('heading', { name: dictionary.fiestas.xv.plannerTitle })).toBeInTheDocument()
+    expect(screen.getByText(dictionary.fiestas.xv.plannerBody)).toBeInTheDocument()
+  })
 })
+

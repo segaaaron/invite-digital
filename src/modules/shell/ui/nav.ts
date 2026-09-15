@@ -54,13 +54,23 @@ export function panelNav(
   esAdmin = false,
   esPuerta = false,
   esCliente = false,
+  extra: NavExtra = {},
 ): NavSection[] {
-  return componer(slug, counts, esAdmin, esPuerta, esCliente)
+  return componer(slug, counts, esAdmin, esPuerta, esCliente, extra)
     .map((seccion) => ({ label: seccion.label, items: seccion.items.filter((item): item is NavItem => item.href !== null) }))
     .filter((seccion) => seccion.items.length > 0)
 }
 
-function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPuerta: boolean, esCliente: boolean): Borrador[] {
+export type NavExtra = {
+  /** Su papel en el equipo del evento, si entra por pertenencia. Sin decirlo, anfitrión. */
+  readonly equipo?: 'anfitrion' | 'coanfitrion' | 'planner' | null
+  /** Es planner en algún evento: llega a su mesa desde la cuenta. */
+  readonly mesaPlanner?: boolean
+}
+
+function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPuerta: boolean, esCliente: boolean, extra: NavExtra): Borrador[] {
+  const equipo = extra.equipo ?? 'anfitrion'
+  const mesa = extra.mesaPlanner ? '/panel/planner' : null
   const base = slug === null ? null : `/panel/eventos/${slug}`
   const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
 
@@ -138,8 +148,10 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
           { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
           { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-          // Su gente de la puerta: la suma él, con enlace y PIN, sin cuentas.
-          { href: en('/porteros'), label: 'Porteros', icon: 'checkin' },
+          // Su gente de la puerta: la suman el anfitrión y su planner, con enlace y PIN.
+          { href: equipo === 'coanfitrion' ? null : en('/porteros'), label: 'Porteros', icon: 'checkin' },
+          // Solo el anfitrión suma personas: nadie da más permisos de los que tiene.
+          { href: equipo === 'anfitrion' ? en('/equipo') : null, label: 'Equipo', icon: 'usuarios' },
         ],
       },
       {
@@ -162,7 +174,10 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       },
       {
         label: 'Cuenta',
-        items: [{ href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' }],
+        items: [
+          { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
+          { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
+        ],
       },
     ]
   }
@@ -178,6 +193,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
         { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
         { href: en('/porteros'), label: 'Porteros', icon: 'usuarios' },
+        { href: en('/equipo'), label: 'Equipo', icon: 'usuarios' },
       ],
     },
     {
@@ -205,6 +221,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       items: [
         { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
         { href: en('/plan'), label: 'Plan', icon: 'plan' },
+        { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
         // La propia contraseña. Las cuentas las da de alta el admin y la clave inicial
         // viaja por WhatsApp: sin esta pantalla valdría para siempre.
         { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },

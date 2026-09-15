@@ -1,5 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
-import { CLIENTE, closeClienteDb, deleteClienteFixture, seedCliente } from './fixtures/cliente'
+import { CLIENTE, closeClienteDb, deleteClienteFixture, EQUIPO, fijarClave, membresiaDe, seedCliente } from './fixtures/cliente'
 
 const SLUG = 'boda-acceso-cliente-e2e'
 
@@ -71,6 +71,41 @@ test.describe('el panel del cliente', () => {
     await page.getByLabel('Etapa').selectOption('propias')
     await page.getByRole('button', { name: 'Sumar tarea' }).last().click()
     await expect(page.getByRole('listitem', { name: 'Probar el peinado' })).toBeVisible({ timeout: 15_000 })
+  })
+
+  test('suma a su planner y a una co-anfitriona desde Equipo', async () => {
+    await page.goto(`/panel/eventos/${SLUG}/equipo`)
+    for (const [email, kind] of [
+      [EQUIPO.planner, 'planner'],
+      [EQUIPO.coanfitriona, 'coanfitrion'],
+    ] as const) {
+      await page.getByLabel('Correo').fill(email)
+      await page.getByLabel('Entra como').selectOption(kind)
+      await page.getByRole('button', { name: 'Sumar al equipo' }).click()
+      await expect(page.getByRole('status').filter({ hasText: email })).toBeVisible({ timeout: 15_000 })
+      // Sin proveedor de correo, la contraseña provisional se enseña una vez.
+      await expect(page.getByLabel('Contraseña provisional')).toBeVisible()
+    }
+    expect(await membresiaDe(SLUG, EQUIPO.planner)).toBe('planner')
+    expect(await membresiaDe(SLUG, EQUIPO.coanfitriona)).toBe('coanfitrion')
+    await expect(page.getByRole('listitem').filter({ hasText: EQUIPO.coanfitriona })).toContainText('Co-anfitrión')
+  })
+
+  test('la co-anfitriona organiza, pero no suma gente ni porteros', async ({ browser }) => {
+    await fijarClave(EQUIPO.coanfitriona, 'clave-de-la-mama-1')
+    const suyo = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const mama = await suyo.newPage()
+    await mama.goto('/panel/entrar')
+    await mama.getByLabel('Correo').fill(EQUIPO.coanfitriona)
+    await mama.getByLabel('Contraseña').fill('clave-de-la-mama-1')
+    await mama.getByRole('button', { name: 'Entrar' }).click()
+    await expect(mama).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`), { timeout: 20_000 })
+
+    expect((await mama.goto(`/panel/eventos/${SLUG}/planner/tareas`))?.status()).toBe(200)
+    for (const ruta of ['/equipo', '/porteros', '/plan', '/checkin']) {
+      expect((await mama.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), ruta).toBe(404)
+    }
+    await suyo.close()
   })
 
   test('entra a su invitación y puede escribirla', async () => {
