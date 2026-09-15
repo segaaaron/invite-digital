@@ -9,7 +9,7 @@ const unassignGroupAction = vi.fn(async () => ({ ok: true as const }))
 const removeTableAction = vi.fn(async () => ({ ok: true as const }))
 const updateTableAction = vi.fn(async () => ({ ok: true as const }))
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/venue/actions', () => ({
   assignGroupAction: (...args: unknown[]) => assignGroupAction(...(args as [])),
   unassignGroupAction: (...args: unknown[]) => unassignGroupAction(...(args as [])),
   removeTableAction: (...args: unknown[]) => removeTableAction(...(args as [])),

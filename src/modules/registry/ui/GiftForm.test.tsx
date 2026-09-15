@@ -9,7 +9,7 @@ const addGiftAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionRe
 const updateGiftAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/registry/actions', () => ({
   addGiftAction: (...args: unknown[]) => addGiftAction(...(args as [Record<string, unknown>])),
   updateGiftAction: (...args: unknown[]) => updateGiftAction(...(args as [Record<string, unknown>])),
 }))

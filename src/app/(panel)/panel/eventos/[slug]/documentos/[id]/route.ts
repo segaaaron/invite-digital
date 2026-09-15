@@ -1,5 +1,5 @@
 import { events, planner, plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 
 /**

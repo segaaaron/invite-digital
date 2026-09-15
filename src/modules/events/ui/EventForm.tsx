@@ -1,15 +1,16 @@
 'use client'
 
 import { useActionState, useId, type ReactNode } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
-import { createEventAction, updateEventAction, type EventActionState } from '../actions'
+import { createEventAction, updateEventAction, type EventActionState } from '@/app/_acciones/events/actions'
 import type { Event } from '../domain/event'
 import type { EventErrorKind } from '../domain/errors'
 import { mismaFiesta } from '../domain/fiesta'
 import { ThemePicker } from './ThemePicker'
 import type { ThemeDefinition } from './themes/contract'
 import { themeDefinitions, themeFor } from './themes/registry'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INITIAL: EventActionState = { status: 'idle', message: '' }
 
@@ -193,9 +194,7 @@ export function EventForm({
         </p>
       ) : null}
 
-      <PanelButton disabled={isPending} type="submit" variant="primary">
-        {isPending ? 'Guardando…' : event ? 'Guardar cambios' : 'Crear evento'}
-      </PanelButton>
+      <SubmitButton variant="primary" pending={isPending} pendingLabel={'Guardando…'}>{event ? 'Guardar cambios' : 'Crear evento'}</SubmitButton>
     </form>
   )
 }

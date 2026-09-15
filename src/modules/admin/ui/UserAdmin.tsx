@@ -1,9 +1,11 @@
 'use client'
 
 import { useActionState, useId, useRef } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import type { Role } from '@/modules/identity/domain/access'
-import { createUserAction, deleteUserAction, setUserPlanAction, setUserRoleAction, type AdminActionState } from '../actions'
+import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import type { Role } from '@/modules/identity'
+import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import { createUserAction, deleteUserAction, setUserPlanAction, setUserRoleAction } from '@/app/_acciones/admin/usuarios-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -107,12 +109,9 @@ export function NewUserForm({ planes }: { planes: readonly { slug: string; nombr
         desde Todos los eventos → «Gestionar».
       </p>
 
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
-      {estado.status === 'success' && estado.message !== undefined ? <PanelAlert tone="ok">{estado.message}</PanelAlert> : null}
+      <ActionFeedback state={estado} />
 
-      <PanelButton className="w-full" disabled={pendiente} type="submit" variant="primary">
-        {pendiente ? 'Creando…' : 'Crear usuario'}
-      </PanelButton>
+      <SubmitButton className="w-full" variant="primary" pending={pendiente} pendingLabel={'Creando…'}>{'Crear usuario'}</SubmitButton>
     </form>
   )
 }

@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { autoAssignAction } from '../actions'
+import { autoAssignAction } from '@/app/_acciones/venue/actions'
 
 /**
  * Las acciones de cabecera de la maqueta: auto-asignar, imprimir el plan y añadir mesa.

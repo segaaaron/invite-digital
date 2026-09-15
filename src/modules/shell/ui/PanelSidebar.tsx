@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
-import { signOutAction } from '@/modules/identity/actions'
+import { signOutAction } from '@/app/_acciones/identity/actions'
 import type { NavItem, NavSection } from './nav'
 import { NAV_ICONS } from './nav-icons'
 

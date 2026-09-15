@@ -1,7 +1,7 @@
 import { ChangePasswordForm } from '@/modules/identity/ui/ChangePasswordForm'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 
 export const metadata = { title: 'Mi cuenta' }
 

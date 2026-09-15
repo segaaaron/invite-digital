@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
+import { ADMIN_AUTH_STATE } from './fixtures/atelier'
 
 // El WhatsApp vive en «La web» (app_settings). La prueba de precios siembra uno propio y
 // deja la fila como estaba: no depende de lo que el admin tenga configurado en la base.
@@ -28,30 +29,47 @@ test('cae a inglés con un idioma no soportado', async ({ browser }) => {
 test('muestra los tres planes con precios en bolivianos', async ({ page }) => {
   await page.goto('/es')
   await expect(page.getByText('Bs 690')).toBeVisible()
-  await expect(page.getByText('Bs 1.450')).toBeVisible()
-  await expect(page.getByText('Bs 2.900')).toBeVisible()
+  await expect(page.getByText('Bs 1.190')).toBeVisible()
+  await expect(page.getByText('Bs 1.990')).toBeVisible()
 })
 
-test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada', async ({ page }) => {
-  const [previa] = await sql<{ value: string }[]>`select value from app_settings where key = 'site.settings'`
-  await sql`insert into app_settings (key, value) values ('site.settings', ${JSON.stringify({ whatsapp: `+${WHATSAPP_DIGITS}` })})
-    on conflict (key) do update set value = excluded.value`
+test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada', async ({ browser, page }) => {
+  // El WhatsApp se cambia **desde «La web» del admin**, no con SQL: la web pública cachea sus
+  // datos y es guardar en el admin lo que la invalida. Con SQL la portada seguiría enseñando
+  // el número de antes, que es justo el comportamiento correcto.
+  const admin = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
+  const guardarWhatsapp = async (numero: string) => {
+    await admin.goto('/panel/admin/web')
+    const campo = admin.getByLabel('WhatsApp del negocio')
+    if ((await campo.inputValue()) === numero) return
+    await campo.fill(numero)
+    await admin.getByRole('button', { name: 'Guardar cambios' }).click()
+    // Se comprueba lo guardado recargando, no el aviso: la acción revalida el árbol y remonta
+    // el formulario, y «Guardado.» puede desaparecer antes de que la prueba lo mire.
+    await expect(async () => {
+      await admin.goto('/panel/admin/web')
+      await expect(admin.getByLabel('WhatsApp del negocio')).toHaveValue(numero, { timeout: 1_000 })
+    }).toPass({ timeout: 15_000 })
+  }
+  await admin.goto('/panel/admin/web')
+  const previo = await admin.getByLabel('WhatsApp del negocio').inputValue()
+  await guardarWhatsapp(`+${WHATSAPP_DIGITS}`)
   try {
-  await page.goto('/es')
+    await page.goto('/es')
 
-  // Desde el Plan B, «Firma 3D» se compra: su botón abre el pedido. Dejarlo en WhatsApp
-  // sería tener el flujo construido y sin ninguna puerta que lo alcance.
-  await expect(page.getByRole('link', { name: 'Firma 3D' }).first()).toHaveAttribute('href', '/es/pedido/firma-3d')
+    // Desde el Plan B, «Firma 3D» se compra: su botón abre el pedido. Dejarlo en WhatsApp
+    // sería tener el flujo construido y sin ninguna puerta que lo alcance.
+    await expect(page.getByRole('link', { name: 'Firma 3D' }).first()).toHaveAttribute('href', '/es/pedido/firma-3d')
 
-  // El más caro se cotiza, no se compra de un clic: sigue agendando la llamada, como en
-  // la maqueta.
-  await expect(page.getByRole('link', { name: 'Agendar llamada' }).first()).toHaveAttribute(
-    'href',
-    new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=`),
-  )
+    // El más caro se cotiza, no se compra de un clic: sigue agendando la llamada, como en
+    // la maqueta.
+    await expect(page.getByRole('link', { name: 'Agendar llamada' }).first()).toHaveAttribute(
+      'href',
+      new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=`),
+    )
   } finally {
-    if (previa) await sql`update app_settings set value = ${previa.value} where key = 'site.settings'`
-    else await sql`delete from app_settings where key = 'site.settings'`
+    await guardarWhatsapp(previo)
+    await admin.context().close()
   }
 })
 

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useActionState, useId } from 'react'
-import { placeOrderAction, type PlaceOrderState } from '../actions'
+import { placeOrderAction, type PlaceOrderState } from '@/app/_acciones/orders/actions'
 
 const INICIAL: PlaceOrderState = { status: 'idle' }
 
@@ -95,8 +95,7 @@ export function OrderForm({
       <button
         className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
         disabled={pendiente}
-        type="submit"
-      >
+        type="submit" aria-busy={(pendiente) || undefined}>
         {pendiente ? 'Registrando…' : 'Registrar pedido'}
       </button>
     </form>

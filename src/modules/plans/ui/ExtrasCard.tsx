@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState } from 'react'
-import { PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { type ExtraActionState, orderExtraAction } from '../extra-actions'
+import { Pill } from '@/shared/design/ui/panel/PanelKit'
+import { type ExtraActionState, orderExtraAction } from '@/app/_acciones/plans/extra-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ExtraActionState = { status: 'idle' }
 
@@ -16,10 +17,8 @@ function Pedir({ eventId, eventSlug, extra }: { eventId: string; eventSlug: stri
       <input name="eventId" readOnly type="hidden" value={eventId} />
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="addonSlug" readOnly type="hidden" value={extra.slug} />
-      <PanelButton aria-label={`Pedir ${extra.name}`} disabled={pidiendo} type="submit" variant="primary">
-        {pidiendo ? 'Creando pedido…' : 'Pedir'}
-      </PanelButton>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <SubmitButton aria-label={`Pedir ${extra.name}`} variant="primary" pending={pidiendo} pendingLabel={'Creando pedido…'}>{'Pedir'}</SubmitButton>
+      <ActionFeedback errorsOnly state={estado} />
     </form>
   )
 }

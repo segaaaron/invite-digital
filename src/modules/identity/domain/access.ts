@@ -29,6 +29,11 @@ export type Actor = {
    * podría entrar como él.
    */
   readonly mustChangePassword: boolean
+  /**
+   * Presente solo cuando **el admin** actúa como este cliente (modo soporte). Lo pone
+   * `actorDeSesion` y nadie más; lo usan la franja «Regresar como admin» y el registro.
+   */
+  readonly soporte?: { readonly id: string; readonly adminUserId: string; readonly adminEmail: string }
 }
 
 /**
@@ -53,7 +58,16 @@ export function isAdmin(actor: Actor): boolean {
  * dice nada**, y `full` deniega a todo el que entra por pertenencia: el olvido cae del lado
  * seguro, que es la única forma de que una regla de permisos sobreviva a la siguiente sesión.
  */
-export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planner' | 'equipo'
+export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planner' | 'equipo' | 'ficha' | 'configuracion' | 'vistaPrevia'
+
+/**
+ * Lo único del evento que abre el admin: la **ficha** —publicar, fecha, diseño, contraseña,
+ * accesos, borrar— y las dos pantallas donde vive, Configuración (solo sus tarjetas
+ * administrativas) y la vista previa (lo que ve cualquier invitado). Invitados, mensajes,
+ * mesas, regalos y planner son datos del cliente: para verlos entra **como el cliente**, con
+ * motivo y registro (decisión del usuario, 15 de septiembre de 2026).
+ */
+const SECCIONES_DEL_ADMIN: readonly EventSection[] = ['ficha', 'configuracion', 'vistaPrevia']
 
 /**
  * Cómo pertenece alguien a un evento que no es suyo.
@@ -69,6 +83,10 @@ export type Membership = 'puerta' | 'cliente' | 'coanfitrion' | 'planner'
 const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> = {
   checkin: ['puerta'],
   cliente: ['cliente', 'coanfitrion', 'planner'],
+  configuracion: ['cliente', 'coanfitrion', 'planner'],
+  vistaPrevia: ['cliente', 'coanfitrion', 'planner'],
+  // La ficha no se abre por pertenencia: es del admin y del atelier dueño.
+  ficha: [],
   // El anfitrión y su planner suman porteros; el co-anfitrión no.
   porteros: ['cliente', 'planner'],
   // Proveedores, cronograma y Día D: lo lleva quien organiza el día.
@@ -87,7 +105,19 @@ const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> 
 export function sectionForRole(role: Role): EventSection {
   if (role === 'puerta') return 'checkin'
   if (role === 'cliente') return 'cliente'
+  if (role === 'admin') return 'ficha'
   return 'full'
+}
+
+/**
+ * Quien **gestiona la ficha** del evento: el admin, o el atelier que es su dueño. Decide qué
+ * tarjetas administrativas se pintan; **no** es permiso para entrar a los datos: eso lo dice
+ * `canAccessEvent`, que al admin solo le abre sus secciones. Es la única definición: estaba copiada en seis sitios —la carcasa, el
+ * resumen, tareas, presupuesto, configuración y la guardia—, y una regla de permisos copiada
+ * se desvía en cuanto alguien toca una.
+ */
+export function gestionaElEvento(actor: Actor, event: { userId: string | null }): boolean {
+  return isAdmin(actor) || (actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId)
 }
 
 /**
@@ -109,12 +139,12 @@ export function canAccessEvent(
   const section = options.section ?? 'full'
   const memberships = options.memberships ?? []
 
-  if (isAdmin(actor)) return true
+  if (isAdmin(actor)) return SECCIONES_DEL_ADMIN.includes(section)
+
+  // El atelier dueño entra a todo: ve lo que ve su equipo, y al revés no.
+  if (actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId) return true
 
   if (actor.role === 'puerta') return section === 'checkin' && memberships.includes('puerta')
-
-  // El atelier dueño entra a todo lo de su evento: ve todo lo que ve su equipo, y al revés no.
-  if (actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId) return true
 
   if (section === 'full' || section === 'checkin') return false
   return QUIEN_ENTRA[section].some((m) => memberships.includes(m))

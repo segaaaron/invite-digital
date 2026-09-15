@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { CurrencyPicker } from './CurrencyPicker'
 
 const cambiar = vi.hoisted(() => vi.fn())
-vi.mock('../actions', () => ({ setEventCurrencyAction: cambiar }))
+vi.mock('@/app/_acciones/events/actions', () => ({ setEventCurrencyAction: cambiar }))
 
 describe('CurrencyPicker', () => {
   it('si el servidor rechaza el cambio, lo dice y vuelve a la moneda anterior', async () => {

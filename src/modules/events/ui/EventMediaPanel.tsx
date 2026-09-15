@@ -2,8 +2,8 @@
 
 import { useActionState } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { type ContentActionState, removeMediaAction, uploadMediaAction } from '../actions'
+import { type ContentActionState, removeMediaAction, uploadMediaAction } from '@/app/_acciones/events/actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -56,8 +56,7 @@ function QuitarArchivo({ eventId, eventSlug, item }: { eventId: string; eventSlu
         aria-label={`Quitar ${item.originalName}`}
         className="self-start text-[11px] text-ink-soft underline underline-offset-2 hover:text-ink disabled:opacity-50"
         disabled={isPending}
-        type="submit"
-      >
+        type="submit" aria-busy={(isPending) || undefined}>
         {isPending ? 'Quitando…' : 'Quitar'}
       </button>
       {state.status === 'error' ? (
@@ -130,9 +129,7 @@ export function EventMediaPanel({ eventId, eventSlug, items }: Props) {
         ) : null}
 
         <div>
-          <PanelButton disabled={isPending} type="submit">
-            {isPending ? 'Subiendo…' : 'Subir'}
-          </PanelButton>
+          <SubmitButton variant="default" pending={isPending} pendingLabel={'Subiendo…'}>{'Subir'}</SubmitButton>
         </div>
       </form>
 

@@ -110,6 +110,41 @@ describe('drizzleOrderRepository', () => {
     expect(porPedido.get(dos.id)?.map((p) => p.originalName)).toEqual(['b.pdf'])
   })
 
+  it('cuenta los pedidos de un estado sin traerlos: la insignia de la barra se pinta en cada página', async () => {
+    const antes = await repo.countByStatus('proof_submitted')
+    const uno = await nuevo()
+    await nuevo()
+    await repo.setStatus({ id: uno.id, status: 'proof_submitted', decisionNote: null, decidedAt: null })
+    expect(await repo.countByStatus('proof_submitted')).toBe(antes + 1)
+  })
+
+  it('pagina en la base: por estado, con la prioridad que pide la bandeja y sin traer el resto', async () => {
+    const cliente = `Pagina ${crypto.randomUUID().slice(0, 6)}`
+    const alta = async (status: 'pending_payment' | 'proof_submitted' | 'approved', minutos: number) => {
+      const o = await nuevo({ customerName: cliente })
+      await db.update(orders).set({ status, createdAt: new Date(Date.now() - minutos * 60_000) }).where(eq(orders.id, o.id))
+      return o.id
+    }
+    const aprobadoNuevo = await alta('approved', 1)
+    const revisarViejo = await alta('proof_submitted', 30)
+    const revisarNuevo = await alta('proof_submitted', 2)
+    const sinPago = await alta('pending_payment', 3)
+    const prioridad = ['proof_submitted', 'pending_payment', 'rejected', 'approved'] as const
+
+    const conteo = await repo.countByStatusAll()
+    expect(conteo.proof_submitted).toBeGreaterThanOrEqual(2)
+    expect(Object.keys(conteo).sort()).toEqual(['approved', 'pending_payment', 'proof_submitted', 'rejected'])
+
+    // Todos: primero lo que pide acción y lo más nuevo dentro; el tope se aplica en la base.
+    const mios = (await repo.listPage({ status: null, limit: 5000, prioridad })).filter((o) => o.customerName === cliente).map((o) => o.id)
+    expect(mios).toEqual([revisarNuevo, revisarViejo, sinPago, aprobadoNuevo])
+    expect(await repo.listPage({ status: null, limit: 2, prioridad })).toHaveLength(2)
+
+    // Filtrado: solo ese estado.
+    const porRevisar = await repo.listPage({ status: 'proof_submitted', limit: 5000, prioridad })
+    expect(porRevisar.every((o) => o.status === 'proof_submitted')).toBe(true)
+  })
+
   it('la lista vacía no genera un «in ()», que Postgres rechaza', async () => {
     expect(await repo.listProofsFor([])).toEqual(new Map())
   })
@@ -136,6 +171,26 @@ describe('drizzleOrderRepository', () => {
       expect(order).toMatchObject({ planSlug: null, addonSlug: 'mas-40-grupos', addonName: '+40 grupos de invitados', eventId: evento!.id })
       const [fila] = await db.select({ amount: orders.amountCents }).from(orders).where(eq(orders.id, order!.id))
       expect(fila?.amount).toBe(150_00)
+
+      // Un segundo «Pedir» —doble clic, otra pestaña, a la vez— devuelve el pedido abierto, no otro.
+      const ref = () => `X${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`
+      const alta = { addonSlug: 'mas-40-grupos', eventId: evento!.id, customerName: 'Ana', contact: 'ana@x.bo' }
+      const [uno, dos] = await Promise.all([repo.createForAddon({ ...alta, publicRef: ref() }), repo.createForAddon({ ...alta, publicRef: ref() })])
+      expect(uno?.id).toBe(order!.id)
+      expect(dos?.id).toBe(order!.id)
+      await db.update(orders).set({ status: 'rejected' }).where(eq(orders.id, order!.id))
+      expect((await repo.createForAddon({ ...alta, publicRef: ref() }))?.id).toBe(order!.id)
+      // Aprobado, lo que suma se puede volver a comprar.
+      await db.update(orders).set({ status: 'approved' }).where(eq(orders.id, order!.id))
+      const otra = await repo.createForAddon({ ...alta, publicRef: ref() })
+      expect(otra?.id).not.toBe(order!.id)
+      creados.push(otra!.id)
+      await db.update(orders).set({ status: 'approved' }).where(eq(orders.id, otra!.id))
+
+      // Los pedidos de extras de un evento, sin traer la bandeja entera.
+      const delEvento = await repo.listAddonOrdersOf(evento!.id)
+      expect(delEvento.map((o) => o.id).sort()).toEqual([order!.id, otra!.id].sort())
+      expect(await repo.listAddonOrdersOf(crypto.randomUUID())).toEqual([])
 
       // Apagado, no se vende: ni por POST.
       await db.update(addons).set({ isActive: false }).where(eq(addons.slug, 'mas-40-grupos'))

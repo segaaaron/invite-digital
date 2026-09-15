@@ -13,7 +13,7 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
 import { ViewBeacon } from '@/modules/analytics/ui/ViewBeacon'
-import { eventUnlocked } from '@/modules/events/actions'
+import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.

@@ -14,10 +14,10 @@ async function entrar(page: Page, quien: { email: string; password: string }): P
   await page.getByLabel('Correo').fill(quien.email)
   await page.getByLabel('Contraseña').fill(quien.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+)?$/)
+  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+|\/admin)?$/)
 }
 
-test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browser }) => {
+test('un atelier no ve ni toca el evento de otro; el admin solo su ficha', async ({ browser }) => {
   const { eventId, userId } = await seedOtroAtelier(SLUG)
 
   // --- El otro atelier: es suyo, lo ve.
@@ -44,10 +44,12 @@ test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browse
   await expect(bandeja.getByRole('link', { name: /Boda del otro atelier/ })).toBeVisible()
   await expect(bandeja.getByText('María & Alejandro')).toHaveCount(0)
 
-  // --- El admin entra en el evento del otro y ve la administración.
+  // --- El admin abre la ficha del evento del otro, no sus datos (15 de septiembre): esos
+  // los ve entrando como el cliente, con motivo y registro.
   const admin = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.6' } })).newPage()
   await entrar(admin, ADMIN)
-  expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(200)
+  expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(404)
+  expect((await admin.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
   await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toBeVisible()
 
   // La bandeja del admin trae el evento del otro con su dueño. El correo sale varias

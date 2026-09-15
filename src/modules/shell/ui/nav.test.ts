@@ -3,8 +3,9 @@ import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { panelNav } from './nav'
 
+// El atelier dueño y el admin juntos: entre los dos pintan todos los enlaces que existen.
 const enlaces = (slug: string | null): string[] =>
-  panelNav(slug, {}, true)
+  [...panelNav(slug, {}, true), ...panelNav(slug, {}, false)]
     .flatMap((seccion) => seccion.items)
     .map((item) => item.href)
     .filter((href): href is string => href !== null)
@@ -90,9 +91,19 @@ describe('panelNav', () => {
     expect(consultas?.countLabel).toBe('nuevas')
   })
 
-  it('el admin dentro de un evento ve el evento y además la administración', () => {
-    const etiquetas = panelNav('boda', {}, true).map((seccion) => seccion.label)
-    expect(etiquetas).toEqual(['Evento activo', 'Planner', 'Diseño', 'Día a día', 'Negocio', 'Sistema', 'Cuenta'])
+  it('el admin dentro de una boda ve solo su ficha —configuración, plan y vista previa— y la administración', () => {
+    const secciones = panelNav('boda', {}, true)
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Esta boda', 'Día a día', 'Negocio', 'Sistema', 'Cuenta'])
+    expect(secciones[0]?.items.map((item) => item.href)).toEqual([
+      '/panel/eventos/boda/configuracion',
+      '/panel/eventos/boda/plan',
+      '/panel/eventos/boda/vista-previa',
+    ])
+    // Los datos de la boda son del cliente: para verlos entra como el cliente.
+    const todas = secciones.flatMap((seccion) => seccion.items.map((item) => item.href))
+    for (const ruta of ['/invitados', '/mensajes', '/mesas', '/planner/tareas', '/extras', '/porteros']) {
+      expect(todas).not.toContain(`/panel/eventos/boda${ruta}`)
+    }
   })
 
   it('la barra del cliente no enseña lo que es del atelier', () => {
@@ -136,7 +147,7 @@ describe('panelNav', () => {
     }
   })
 
-  it('«Porteros» lo ven quien compró, el atelier y el admin; nunca el personal de puerta', () => {
+  it('«Porteros» lo ven quien compró y el atelier; ni el admin ni el personal de puerta', () => {
     const hrefs = (admin: boolean, puerta: boolean, cliente: boolean) =>
       panelNav('boda', {}, admin, puerta, cliente)
         .flatMap((seccion) => seccion.items)
@@ -144,7 +155,7 @@ describe('panelNav', () => {
     const ruta = '/panel/eventos/boda/porteros'
     expect(hrefs(false, false, true)).toContain(ruta)
     expect(hrefs(false, false, false)).toContain(ruta)
-    expect(hrefs(true, false, false)).toContain(ruta)
+    expect(hrefs(true, false, false)).not.toContain(ruta)
     expect(hrefs(false, true, false)).not.toContain(ruta)
   })
 

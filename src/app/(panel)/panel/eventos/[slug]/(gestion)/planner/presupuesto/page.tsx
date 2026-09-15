@@ -2,7 +2,8 @@ import { notFound } from 'next/navigation'
 import { events, planner } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { fiestaDeTema } from '@/modules/events'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { gestionaElEvento } from '@/modules/identity'
+import { requireSession } from '@/app/_acciones/sesion'
 import {
   categoriasDe,
   cuentasDePartida,
@@ -14,9 +15,9 @@ import {
   totalesDelPresupuesto,
 } from '@/modules/planner'
 import { BudgetBoard, BudgetCsvButton, ItemForm } from '@/modules/planner/ui/BudgetBoard'
-import { DEFAULT_CURRENCY, formatAmount } from '@/modules/registry'
+import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fecha } from '@/shared/format/fecha'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
@@ -41,7 +42,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
 
   const fiesta = fiestaDeTema(event.value.themeKey)
   // El dinero lo llevan el anfitrión y su planner; el co-anfitrión lo ve sin tocarlo.
-  const dueno = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const dueno = gestionaElEvento(actor, event.value)
   const editable = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).some((m) => m === 'cliente' || m === 'planner')
   const hoy = fechaEnBolivia(new Date())
   const partidas = await planner.listBudget(event.value.id)

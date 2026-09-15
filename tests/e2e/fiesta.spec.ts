@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
-import { ADMIN_AUTH_STATE, ATELIER } from './fixtures/atelier'
+import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 
 /**
  * Bodas y XV son dos fiestas: el panel de unos XV no puede hablar de novios ni de bodas en
@@ -9,7 +9,8 @@ import { ADMIN_AUTH_STATE, ATELIER } from './fixtures/atelier'
 const SLUG = 'xv-fiesta-e2e'
 const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
 
-test.use({ storageState: ADMIN_AUTH_STATE })
+// El atelier dueño: el admin ya no abre los datos de un evento (solo su ficha).
+test.use({ storageState: AUTH_STATE })
 
 test.beforeAll(async () => {
   await sql`delete from events where slug = ${SLUG}`

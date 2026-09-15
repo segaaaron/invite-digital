@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import { events } from '@/shared/db/schema'
 import { createTokenMinter } from '@/shared/security/tokens'
-import { createDrizzleGuestGroupRepository } from './drizzle-guest-group-repository'
+import { countGroupsByEvent, createDrizzleGuestGroupRepository } from './drizzle-guest-group-repository'
 
 class RollbackForTest extends Error {}
 
@@ -46,6 +46,8 @@ describe('repositorio de grupos', () => {
       await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Daniela Ortiz', seats: 1, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, segundo.hash)
 
       expect((await repo.listByEvent(eventId)).map((row) => row.label)).toEqual(['Familia Rojas', 'Daniela Ortiz'])
+      // La insignia de la barra: el mismo número que la lista, sin traerla.
+      expect(await countGroupsByEvent(tx, eventId)).toBe(2)
       expect((await repo.findByTokenHash(minter.hashOf(primero.token)))?.label).toBe('Familia Rojas')
       expect(await repo.findByTokenHash(Buffer.alloc(32, 255))).toBeNull()
     })

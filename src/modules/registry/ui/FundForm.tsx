@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { useId, useState, useTransition } from 'react'
 import type { Fund } from '../domain/fund'
-import { addFundAction, updateFundAction } from '../actions'
+import { addFundAction, updateFundAction } from '@/app/_acciones/registry/actions'
 import {
   centsOrMessage,
   centsToInput,
@@ -147,7 +147,7 @@ export function FundForm({
       )}
 
       <div className="flex flex-wrap items-center gap-4">
-        <button className={enviarClase} disabled={pendiente} onClick={enviar} type="button">
+        <button className={enviarClase} disabled={pendiente} onClick={enviar} type="button" aria-busy={(pendiente) || undefined}>
           {editando ? (pendiente ? 'Guardando…' : 'Guardar cambios') : pendiente ? 'Abriendo…' : 'Abrir fondo'}
         </button>
 

@@ -7,7 +7,7 @@ import type { SessionRepository, TokenMinter } from './ports'
 const NOW = new Date('2026-08-19T12:00:00Z')
 const minter: TokenMinter = { mint: () => ({ token: 't', hash: Buffer.alloc(32, 1) }), hashOf: () => Buffer.alloc(32, 1) }
 
-const repo = (row: { id: string; userId: string; expiresAt: Date } | null) => {
+const repo = (row: { id: string; userId: string; expiresAt: Date; supportSessionId?: string | null } | null) => {
   const touched: Array<{ id: string; expiresAt: Date }> = []
   const sessions: SessionRepository = {
     create: async () => {},
@@ -39,7 +39,17 @@ describe('authenticateSession', () => {
     const { sessions, touched } = repo({ id: 's1', userId: 'u1', expiresAt: new Date(NOW.getTime() + SESSION_TTL_MS - 1000) })
     const result = await authenticateSession({ sessions, minter, clock: () => NOW })('token')
     expect(isOk(result) && result.value.renewedUntil).toBeNull()
+    // El id de la sesión viaja: el modo soporte vive en ella.
+    expect(isOk(result) && result.value.sessionId).toBe('s1')
     expect(touched).toHaveLength(0)
+  })
+
+  it('dice si la sesión está en modo soporte, sin otra consulta', async () => {
+    const { sessions } = repo({ id: 's1', userId: 'u1', expiresAt: new Date(NOW.getTime() + SESSION_TTL_MS - 1000), supportSessionId: 'sp1' })
+    const result = await authenticateSession({ sessions, minter, clock: () => NOW })('token')
+    expect(isOk(result) && result.value.supportSessionId).toBe('sp1')
+    const sinSoporte = await authenticateSession({ sessions: repo({ id: 's2', userId: 'u1', expiresAt: new Date(NOW.getTime() + SESSION_TTL_MS - 1000) }).sessions, minter, clock: () => NOW })('token')
+    expect(isOk(sinSoporte) && sinSoporte.value.supportSessionId).toBeNull()
   })
 
   it('rechaza una sesión caducada', async () => {

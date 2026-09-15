@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { type PlanChangeState, requestPlanChangeAction } from '../actions'
+import { type PlanChangeState, requestPlanChangeAction } from '@/app/_acciones/plans/actions'
 import type { PlansErrorKind } from '../domain/errors'
 
 const INITIAL: PlanChangeState = { status: 'idle' }
@@ -83,8 +83,7 @@ export function PlanChangeForm({
       <button
         className="self-start cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
         disabled={isPending}
-        type="submit"
-      >
+        type="submit" aria-busy={(isPending) || undefined}>
         {isPending ? 'Enviando…' : 'Solicitar cambio'}
       </button>
     </form>

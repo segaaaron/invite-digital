@@ -3,7 +3,13 @@ import { identityError, type IdentityError } from '../domain/errors'
 import { isSessionExpired, nextExpiry, shouldRenew } from '../domain/session'
 import type { SessionRepository, TokenMinter } from './ports'
 
-export type AuthenticatedSession = { readonly userId: string; readonly renewedUntil: Date | null }
+export type AuthenticatedSession = {
+  readonly sessionId: string
+  readonly userId: string
+  readonly renewedUntil: Date | null
+  /** El modo soporte abierto, leído en la misma consulta: sin él no hace falta otra. */
+  readonly supportSessionId: string | null
+}
 
 export const authenticateSession =
   (deps: { sessions: SessionRepository; minter: TokenMinter; clock: () => Date }) =>
@@ -21,11 +27,11 @@ export const authenticateSession =
           return err(identityError('session_expired', 'Sesión inexistente o caducada'))
         }
 
-        if (!shouldRenew(session, now)) return ok({ userId: session.userId, renewedUntil: null })
+        if (!shouldRenew(session, now)) return ok({ sessionId: session.id, userId: session.userId, renewedUntil: null, supportSessionId: session.supportSessionId ?? null })
 
         const renewedUntil = nextExpiry(now)
         await deps.sessions.touch(session.id, renewedUntil)
-        return ok({ userId: session.userId, renewedUntil })
+        return ok({ sessionId: session.id, userId: session.userId, renewedUntil, supportSessionId: session.supportSessionId ?? null })
       },
       (cause) => identityError('storage_failure', `No se pudo validar la sesión: ${String(cause)}`),
     )

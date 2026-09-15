@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm'
+import { eq, inArray } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, guestGroups, plans, users } from '@/shared/db/schema'
+import { events, guestGroups, plans, rsvpResponses, users } from '@/shared/db/schema'
 import { drizzleAdminRepository as repo } from './drizzle-admin-repository'
 
 const correo = `admin-e2e-${crypto.randomUUID().slice(0, 8)}@ejemplo.bo`
@@ -72,6 +72,30 @@ describe('drizzleAdminRepository · los recuentos correlacionados', () => {
 
     // Un usuario que ya no existe no se da por guardado.
     expect(await repo.setUserPlan('00000000-0000-4000-8000-000000000000', 'firma-3d')).toBe(false)
+  })
+
+  it('cuenta grupos, enviados y respondidos sin los revocados, en una sola pasada', async () => {
+    const [evento] = await db.select({ id: events.id }).from(events).where(eq(events.slug, slug))
+    const token = () => Buffer.from(crypto.randomUUID().replaceAll('-', ''), 'hex')
+    const [enviado, revocado] = await db
+      .insert(guestGroups)
+      .values([
+        { eventId: evento!.id, label: 'Enviado y contestado', seats: 2, tokenHash: token(), invitationSentAt: new Date() },
+        { eventId: evento!.id, label: 'Revocado', seats: 2, tokenHash: token(), invitationSentAt: new Date(), revokedAt: new Date() },
+      ])
+      .returning({ id: guestGroups.id })
+    await db.insert(rsvpResponses).values([
+      { guestGroupId: enviado!.id, attending: 2 },
+      // Dos respuestas del mismo grupo cuentan un grupo respondido, no dos.
+      { guestGroupId: enviado!.id, attending: 1 },
+      { guestGroupId: revocado!.id, attending: 2 },
+    ])
+    try {
+      const mio = (await repo.listEvents()).find((e) => e.slug === slug)
+      expect(mio).toMatchObject({ grupos: 3, enviados: 1, respondidos: 1 })
+    } finally {
+      await db.delete(guestGroups).where(inArray(guestGroups.id, [enviado!.id, revocado!.id]))
+    }
   })
 
   it('cuenta los grupos de cada evento, no cero', async () => {

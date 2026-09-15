@@ -32,7 +32,7 @@ export type CorreoCompuesto = {
   readonly html: string
 }
 
-const escapar = (valor: string): string =>
+export const escapar = (valor: string): string =>
   valor
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')

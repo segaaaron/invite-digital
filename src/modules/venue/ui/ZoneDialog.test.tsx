@@ -8,7 +8,7 @@ const { addZoneAction, push } = vi.hoisted(() => ({
   })),
   push: vi.fn(),
 }))
-vi.mock('../actions', () => ({ addZoneAction }))
+vi.mock('@/app/_acciones/venue/actions', () => ({ addZoneAction }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push }) }))
 
 beforeEach(() => {

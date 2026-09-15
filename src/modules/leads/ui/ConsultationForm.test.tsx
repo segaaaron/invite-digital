@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { getDictionary } from '@/shared/i18n/dictionaries'
-import type { ConsultationActionState } from '../actions'
+import type { ConsultationActionState } from '@/app/_acciones/leads/actions'
 import { ConsultationForm } from './ConsultationForm'
 
 const dictionary = getDictionary('es')

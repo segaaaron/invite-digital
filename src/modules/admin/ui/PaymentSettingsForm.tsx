@@ -2,9 +2,11 @@
 
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { savePaymentSettingsAction, uploadPaymentQrAction, type AdminActionState } from '../actions'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
+import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import { savePaymentSettingsAction, uploadPaymentQrAction } from '@/app/_acciones/admin/cobro-actions'
 import type { PaymentSettings } from '../domain/payment-settings'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -91,9 +93,7 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           </p>
         ) : null}
 
-        <PanelButton className="w-fit" disabled={guardando} type="submit" variant="primary">
-          {guardando ? 'Guardando…' : 'Guardar datos'}
-        </PanelButton>
+        <SubmitButton className="w-fit" variant="primary" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar datos'}</SubmitButton>
       </form>
 
       <form action={subir} className="flex flex-col gap-3.5 border-t border-line-panel pt-6">
@@ -117,14 +117,12 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
 
         <FilePicker accept="image/png,image/jpeg,image/webp" hint="PNG, JPG o WEBP exportado de la app de tu banco" label="Elegir imagen del QR" name="qr" />
 
-        {imagen.status === 'error' ? <PanelAlert tone="error">{imagen.message}</PanelAlert> : null}
+        <ActionFeedback errorsOnly state={imagen} />
         {imagen.status === 'success' && imagen.message !== undefined ? (
           <PanelAlert tone="ok">{imagen.message}</PanelAlert>
         ) : null}
 
-        <PanelButton className="w-fit" disabled={subiendo} type="submit">
-          {subiendo ? 'Subiendo…' : 'Subir QR'}
-        </PanelButton>
+        <SubmitButton className="w-fit" variant="default" pending={subiendo} pendingLabel={'Subiendo…'}>{'Subir QR'}</SubmitButton>
       </form>
     </div>
   )

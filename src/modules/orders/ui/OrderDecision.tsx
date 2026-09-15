@@ -2,7 +2,8 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { decideOrderAction, type DecideOrderState } from '../actions'
+import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DecideOrderState = { status: 'idle' }
 
@@ -73,9 +74,7 @@ export function OrderDecision({ orderId, esExtra = false }: { orderId: string; /
           con él. Lo que salió de la decisión lo enseña la tarjeta, leyéndolo de la base. */}
 
       <div className="flex flex-wrap gap-2.5">
-        <PanelButton disabled={pendiente} name="decision" type="submit" value="approved" variant="primary">
-          {pendiente ? 'Guardando…' : 'Aprobar pago'}
-        </PanelButton>
+        <SubmitButton name="decision" value="approved" variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Aprobar pago'}</SubmitButton>
         <PanelButton disabled={pendiente} name="decision" type="submit" value="rejected" variant="danger">
           Rechazar
         </PanelButton>

@@ -111,7 +111,7 @@ describe('borrar al usuario que creó un código', () => {
   it('no bloquea el borrado: el código sobrevive sin autor', async () => {
     const [autor] = await db
       .insert(users)
-      .values({ email: `qr-autor-${crypto.randomUUID().slice(0, 8)}@ejemplo.bo`, passwordHash: 'x', role: 'atelier' })
+      .values({ email: `qr-autor-${crypto.randomUUID().slice(0, 8)}@ejemplo.bo`, passwordHash: '$argon2id$v=19$m=19456,t=2,p=1$cHJ1ZWJh$cHJ1ZWJh', role: 'atelier' })
       .returning({ id: users.id })
 
     const suyo = crypto.randomUUID()

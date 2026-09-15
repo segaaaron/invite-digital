@@ -2,9 +2,10 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { addPaymentAction, type PlannerActionState, removeItemAction, removePaymentAction, saveItemAction, setPaymentPaidAction } from '../actions'
+import { addPaymentAction, type PlannerActionState, removeItemAction, removePaymentAction, saveItemAction, setPaymentPaidAction } from '@/app/_acciones/planner/actions'
 import type { Pagador } from '../domain/presupuesto'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -111,12 +112,10 @@ export function ItemForm({ evento, opciones, partida }: { evento: Evento; opcion
     <form action={enviar} className="flex flex-col gap-3">
       <Ocultos {...evento} extra={{ itemId: partida?.id ?? '' }} />
       <CamposDePartida inicial={inicial} key={enviados ? JSON.stringify(enviados) : 'base'} opciones={opciones} />
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <ActionFeedback errorsOnly state={estado} />
       {estado.status === 'success' ? <PanelAlert tone="ok">Partida guardada.</PanelAlert> : null}
       <div>
-        <PanelButton disabled={enviando} type="submit" variant={partida ? 'default' : 'primary'}>
-          {enviando ? 'Guardando…' : partida ? 'Guardar partida' : 'Sumar partida'}
-        </PanelButton>
+        <SubmitButton variant={partida ? 'default' : 'primary'} pending={enviando} pendingLabel={'Guardando…'}>{partida ? 'Guardar partida' : 'Sumar partida'}</SubmitButton>
       </div>
     </form>
   )
@@ -143,10 +142,8 @@ function NuevoPago({ evento, itemId, concepto }: { evento: Evento; itemId: strin
           <option value="saldo">Saldo</option>
         </select>
       </Field>
-      <PanelButton aria-label={`Sumar pago a ${concepto}`} disabled={enviando} type="submit">
-        {enviando ? 'Sumando…' : 'Sumar pago'}
-      </PanelButton>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <SubmitButton aria-label={`Sumar pago a ${concepto}`} variant="default" pending={enviando} pendingLabel={'Sumando…'}>{'Sumar pago'}</SubmitButton>
+      <ActionFeedback errorsOnly state={estado} />
     </form>
   )
 }

@@ -2,9 +2,10 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { type DiaActionState, emitVendorLinkAction, removeVendorAction, revokeVendorLinkAction, saveVendorAction, setVendorStatusAction } from '../dia-actions'
+import { type DiaActionState, emitVendorLinkAction, removeVendorAction, revokeVendorLinkAction, saveVendorAction, setVendorStatusAction } from '@/app/_acciones/planner/dia-actions'
 import { ESTADOS_DE_PROVEEDOR, type EstadoDeProveedor, NOMBRE_DE_ESTADO } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -81,12 +82,10 @@ function FormularioDeProveedor({ evento, categorias, proveedor }: { evento: Even
       <Field htmlFor={`${id}-o`} label="Montaje y acceso">
         <textarea className={FIELD_CLASS} defaultValue={v('setupNotes', proveedor?.setupNotes)} id={`${id}-o`} maxLength={2000} name="setupNotes" rows={2} />
       </Field>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <ActionFeedback errorsOnly state={estado} />
       {estado.status === 'success' ? <PanelAlert tone="ok">Proveedor guardado.</PanelAlert> : null}
       <div>
-        <PanelButton disabled={enviando} type="submit" variant={proveedor ? 'default' : 'primary'}>
-          {enviando ? 'Guardando…' : proveedor ? 'Guardar proveedor' : 'Sumar proveedor'}
-        </PanelButton>
+        <SubmitButton variant={proveedor ? 'default' : 'primary'} pending={enviando} pendingLabel={'Guardando…'}>{proveedor ? 'Guardar proveedor' : 'Sumar proveedor'}</SubmitButton>
       </div>
     </form>
   )
@@ -122,7 +121,7 @@ function EnlaceDeProveedor({ evento, proveedor, incluido }: { evento: Evento; pr
           </code>
         </div>
       ) : null}
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <ActionFeedback errorsOnly state={estado} />
     </div>
   )
 }

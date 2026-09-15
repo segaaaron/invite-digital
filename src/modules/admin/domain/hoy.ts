@@ -102,6 +102,20 @@ const porAntiguedad = (a: Aviso, b: Aviso) => a.desde - b.desde
 
 /** Por encima de esto las consultas se resumen en un aviso: veinte filas iguales no se leen. */
 const CONSULTAS_SUELTAS = 3
+/**
+ * Lo mismo con los pedidos. Además de leerse mal, cada fila se pinta: con setecientos pedidos
+ * pendientes «Hoy» pesaba 1,8 MB de HTML. Los comprobantes admiten más sueltos que el resto
+ * porque cada uno es alguien que ya pagó.
+ */
+const COMPROBANTES_SUELTOS = 5
+const SIN_PAGO_SUELTOS = 3
+
+/** Si son más de `max`, un solo aviso que resume y lleva a donde se atienden. */
+function resumirSiSonMuchos(avisos: Aviso[], max: number, resumen: (masAntiguo: Aviso, cuantos: number) => Aviso): Aviso[] {
+  const ordenados = [...avisos].sort(porAntiguedad)
+  const masAntiguo = ordenados[0]
+  return masAntiguo !== undefined && ordenados.length > max ? [resumen(masAntiguo, ordenados.length)] : ordenados
+}
 
 function avisosDeConsultas(consultas: HoyCrudo['consultasNuevas'], diasDesde: (instante: Date) => number): Aviso[] {
   const ordenadas = [...consultas].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
@@ -141,16 +155,29 @@ export function componerHoy(crudo: HoyCrudo, hoy: string): Hoy {
   // Por tipo primero y por antigüedad dentro: un comprobante es alguien que **ya pagó** y
   // espera; con doscientas consultas sin atender delante, no se vería nunca.
   const ventas: Aviso[] = [
-    ...crudo.pedidosPorRevisar.map((p) => ({
-      clave: `pedido:${p.ref}`,
-      tono: 'pending' as const,
-      etiqueta: 'Comprobante',
-      titulo: p.customerName,
-      detalle: `Pedido ${p.ref} · subió el comprobante ${hace(diasDesde(p.createdAt))}`,
-      href: '/panel/pedidos',
-      accion: 'Revisar',
-      desde: p.createdAt.getTime(),
-    })).sort(porAntiguedad),
+    ...resumirSiSonMuchos(
+      crudo.pedidosPorRevisar.map((p) => ({
+        clave: `pedido:${p.ref}`,
+        tono: 'pending' as const,
+        etiqueta: 'Comprobante',
+        titulo: p.customerName,
+        detalle: `Pedido ${p.ref} · subió el comprobante ${hace(diasDesde(p.createdAt))}`,
+        href: '/panel/pedidos',
+        accion: 'Revisar',
+        desde: p.createdAt.getTime(),
+      })),
+      COMPROBANTES_SUELTOS,
+      (masAntiguo, cuantos) => ({
+        clave: 'comprobantes',
+        tono: 'pending',
+        etiqueta: 'Comprobantes',
+        titulo: `${cuantos} comprobantes por revisar`,
+        detalle: `El más antiguo espera desde ${hace(diasDesde(new Date(masAntiguo.desde)))}`,
+        href: '/panel/pedidos?estado=proof_submitted',
+        accion: 'Abrir bandeja',
+        desde: masAntiguo.desde,
+      }),
+    ),
     ...crudo.cambiosDePlan.map((c) => ({
       clave: `plan:${c.eventSlug}`,
       tono: 'pending' as const,
@@ -194,8 +221,9 @@ export function componerHoy(crudo: HoyCrudo, hoy: string): Hoy {
             etiqueta: 'Sin invitados',
             titulo: e.title,
             detalle: `Publicada, ${faltan(e.dias)} y sin ningún grupo cargado`,
-            href: `/panel/eventos/${e.slug}/invitados`,
-            accion: 'Cargar',
+            // Los invitados los carga el cliente: el admin revisa su acceso, no entra a su lista.
+            href: `/panel/eventos/${e.slug}/configuracion`,
+            accion: 'Revisar',
             desde,
           },
         ]
@@ -217,18 +245,31 @@ export function componerHoy(crudo: HoyCrudo, hoy: string): Hoy {
         accion: 'Escribirle',
         desde: a.createdAt.getTime(),
       })),
-    ...crudo.pedidosSinPago
-      .filter((p) => diasDesde(p.createdAt) >= PAGO_ATASCADO)
-      .map((p) => ({
-        clave: `sin-pago:${p.ref}`,
-        tono: 'maybe' as const,
+    ...resumirSiSonMuchos(
+      crudo.pedidosSinPago
+        .filter((p) => diasDesde(p.createdAt) >= PAGO_ATASCADO)
+        .map((p) => ({
+          clave: `sin-pago:${p.ref}`,
+          tono: 'maybe' as const,
+          etiqueta: 'Sin pago',
+          titulo: p.customerName,
+          detalle: `Pedido ${p.ref} abierto ${hace(diasDesde(p.createdAt))} y sin comprobante`,
+          href: '/panel/pedidos',
+          accion: 'Seguir',
+          desde: p.createdAt.getTime(),
+        })),
+      SIN_PAGO_SUELTOS,
+      (masAntiguo, cuantos) => ({
+        clave: 'sin-pago',
+        tono: 'maybe',
         etiqueta: 'Sin pago',
-        titulo: p.customerName,
-        detalle: `Pedido ${p.ref} abierto ${hace(diasDesde(p.createdAt))} y sin comprobante`,
-        href: '/panel/pedidos',
-        accion: 'Seguir',
-        desde: p.createdAt.getTime(),
-      })),
+        titulo: `${cuantos} pedidos sin pago`,
+        detalle: `El más antiguo se abrió ${hace(diasDesde(new Date(masAntiguo.desde)))}`,
+        href: '/panel/pedidos?estado=pending_payment',
+        accion: 'Abrir bandeja',
+        desde: masAntiguo.desde,
+      }),
+    ),
   ].sort(porAntiguedad)
 
   const proximas: Proxima[] = conDias

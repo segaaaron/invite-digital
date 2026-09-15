@@ -2,7 +2,7 @@
 
 import { useActionState, useId, useState } from 'react'
 import Link from 'next/link'
-import { confirmPasswordResetAction, requestPasswordResetAction, type ResetState } from '../actions'
+import { confirmPasswordResetAction, requestPasswordResetAction, type ResetState } from '@/app/_acciones/identity/actions'
 
 const INICIAL: ResetState = { status: 'idle', message: '' }
 
@@ -64,7 +64,7 @@ export function RecoverForm() {
           />
         </div>
 
-        <button className={BOTON} disabled={pidiendo} type="submit">
+        <button className={BOTON} disabled={pidiendo} type="submit" aria-busy={(pidiendo) || undefined}>
           {pidiendo ? 'Enviando…' : yaSePidio ? 'Enviar otro código' : 'Enviarme un código'}
         </button>
 
@@ -120,7 +120,7 @@ export function RecoverForm() {
             Al menos 12 caracteres. El código caduca en diez minutos y sirve una sola vez.
           </p>
 
-          <button className={BOTON} disabled={confirmando} type="submit">
+          <button className={BOTON} disabled={confirmando} type="submit" aria-busy={(confirmando) || undefined}>
             {confirmando ? 'Cambiando…' : 'Cambiar la contraseña'}
           </button>
 

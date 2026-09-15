@@ -56,3 +56,11 @@ export const createDrizzleUserRepository = (database: DbExecutor): UserRepositor
 })
 
 export const drizzleUserRepository = createDrizzleUserRepository(db)
+
+/**
+ * La contraseña provisional que da el admin al restablecer un acceso: hash y marca de
+ * «debe cambiarla» en la misma escritura, al revés que `updatePassword`.
+ */
+export const setProvisionalPassword = async (userId: string, passwordHash: string): Promise<void> => {
+  await db.update(users).set({ passwordHash, mustChangePassword: true }).where(eq(users.id, userId))
+}

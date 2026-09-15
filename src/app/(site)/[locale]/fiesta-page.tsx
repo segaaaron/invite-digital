@@ -1,13 +1,13 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { catalog, plans, site } from '@/app/composition/container'
+import { site, webPublica } from '@/app/composition/container'
 import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import type { Plan } from '@/modules/catalog'
 import type { Fiesta } from '@/modules/events'
 import { capacidadDePlan } from '@/modules/plans'
 import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
-import { formatAmount } from '@/modules/registry'
+import { formatAmount } from '@/shared/money'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { FiestaLanding } from '@/sections/FiestaLanding'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -37,15 +37,17 @@ export async function metadataDeFiesta(raw: string, fiesta: Fiesta): Promise<Met
  * Si los límites no se leen, no hay tabla: mejor sin ella que con una que invente.
  */
 export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary) {
-  const filas = await plans.listActive().catch((cause: unknown) => {
+  const leidas = await webPublica.planesActivos().catch((cause: unknown) => {
     console.error('Precios sin tabla comparativa:', cause)
-    return []
+    return null
   })
+  const filas = leidas === null || !leidas.ok ? [] : leidas.value
   const columnas = planes.flatMap((plan) => {
     const fila = filas.find((f) => f.slug === plan.slug)
     return fila === undefined ? [] : [{ nombre: plan.name, limites: capacidadDePlan(fila) }]
   })
-  const extras = await plans.listActiveExtras().catch(() => [])
+  const extrasLeidos = await webPublica.extrasActivos().catch(() => null)
+  const extras = extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value
   return columnas.length === 0 ? null : (
     <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: formatAmount(x.priceCents, x.currency) }))} planes={columnas} textos={dictionary.pricing.comparison} />
   )
@@ -63,8 +65,8 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
 
   const fallo = (cause: unknown) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' })
   const [planes, plantillas] = await Promise.all([
-    attempt(() => catalog.listPlans(locale), fallo),
-    attempt(() => catalog.listTemplates(locale), fallo),
+    attempt(() => webPublica.planes(locale), fallo),
+    attempt(() => webPublica.modelos(locale), fallo),
   ])
   if (!isOk(planes)) console.error('Página de fiesta sin planes:', planes.error.detail)
   if (!isOk(plantillas)) console.error('Página de fiesta sin modelos:', plantillas.error.detail)

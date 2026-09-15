@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { PassDialog } from './PassDialog'
-import type { ResendState } from '../actions'
+import type { ResendState } from '@/app/_acciones/guests/actions'
 
 const resendInvitationAction = vi.fn<(previous: unknown, formData: FormData) => Promise<ResendState>>(async () => ({
   status: 'success' as const,
@@ -11,7 +11,7 @@ const resendInvitationAction = vi.fn<(previous: unknown, formData: FormData) => 
 }))
 const replace = vi.fn()
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/guests/actions', () => ({
   resendInvitationAction: (previous: unknown, formData: FormData) => resendInvitationAction(previous, formData),
 }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }))

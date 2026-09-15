@@ -48,13 +48,43 @@ export function aplicarExtras(base: Allowance, extras: readonly ExtraAplicado[])
         a = { ...a, designChange: a.designChange === 'ninguno' ? 'antes_de_repartir' : a.designChange }
         break
       case 'dia_d':
-        a = { ...a, plannerSuite: 'total' }
+        // Sube el completo a total y nada más: sobre un plan esencial (bajado de plan después
+        // de comprarlo) regalaría proveedores, cronograma y cortejo.
+        a = a.plannerSuite === 'completo' ? { ...a, plannerSuite: 'total' } : a
         break
       case 'servicio':
         break
     }
   }
   return a
+}
+
+export type ExtraNoDisponible = 'incluido' | 'requiere_plan'
+
+/**
+ * Si un extra se le puede vender a este evento, con la capacidad **ya con sus extras**. Lo que
+ * solo enciende algo no se vende a quien ya lo tiene: se cobraría dos veces por nada. El Día
+ * D sube el planner a `total`, que trae también lo de `completo`: a un plan esencial le
+ * regalaría proveedores, cronograma y cortejo, así que solo se vende sobre `completo`.
+ */
+export function extraDisponible(a: Allowance, effect: EfectoDeExtra): { ok: true } | { ok: false; motivo: ExtraNoDisponible } {
+  const incluido = { ok: false, motivo: 'incluido' } as const
+  switch (effect) {
+    case 'dia_d':
+      return a.plannerSuite === 'total' ? incluido : a.plannerSuite === 'completo' ? { ok: true } : { ok: false, motivo: 'requiere_plan' }
+    case 'fotos_invitados':
+      return a.guestPhotos ? incluido : { ok: true }
+    case 'cambio_modelo':
+      return a.designChange === 'ninguno' ? { ok: true } : incluido
+    case 'mas_grupos':
+      return a.maxGuestGroups === null ? incluido : { ok: true }
+    case 'sumar_planner':
+      return a.maxHiredPlanners === null ? incluido : { ok: true }
+    case 'mas_porteros':
+    case 'mas_dias':
+    case 'servicio':
+      return { ok: true }
+  }
 }
 
 export type Extra = {

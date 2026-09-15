@@ -61,7 +61,7 @@ describe('lectura del catálogo', () => {
     const row = await drizzlePlansRepository.findEventPlan(eventId)
 
     expect(row?.slug).toBe('atelier')
-    expect(row?.maxGuestGroups).toBe(30)
+    expect(row?.maxGuestGroups).toBe(40)
     expect(row?.includesRegistry).toBe(false)
   })
 

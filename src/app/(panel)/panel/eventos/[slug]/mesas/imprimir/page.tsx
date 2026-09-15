@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events, venue } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Plan del banquete' }

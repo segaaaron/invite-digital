@@ -6,7 +6,7 @@ type ActionResult = { ok: true; message?: string } | { ok: false; kind: string; 
 
 const recordContributionAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/registry/actions', () => ({
   recordContributionAction: (...args: unknown[]) => recordContributionAction(...(args as [Record<string, unknown>])),
 }))
 

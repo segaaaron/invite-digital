@@ -38,6 +38,9 @@ type PanelButtonProps = {
   className?: string
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'>
 
+/** Lo que dice un enlace que abre otra pestaña: sin aviso, quien usa lector se queda sin «atrás». */
+const PESTANA_NUEVA = 'se abre en una pestaña nueva'
+
 export function PanelButton({
   children,
   variant = 'default',
@@ -47,18 +50,43 @@ export function PanelButton({
   ...rest
 }: PanelButtonProps) {
   const clases = `${BOTON_BASE} ${BOTON_VARIANTES[variant]} ${className}`.trim()
+  // Lo accesible viaja también a los enlaces: antes solo el `<button>` recibía `aria-*`.
+  const { 'aria-label': ariaLabel, 'aria-describedby': ariaDescribedBy, disabled, title } = rest
+
+  // Un enlace no se puede deshabilitar: se pinta como texto inerte que lo dice.
+  if (href && disabled) {
+    return (
+      <span aria-disabled="true" aria-label={ariaLabel} className={`${clases} cursor-not-allowed opacity-40`} title={title}>
+        {children}
+      </span>
+    )
+  }
 
   if (href && external) {
     return (
-      <a className={clases} href={href} rel="noopener noreferrer" target="_blank">
+      <a
+        aria-describedby={ariaDescribedBy}
+        aria-label={ariaLabel === undefined ? undefined : `${ariaLabel} (${PESTANA_NUEVA})`}
+        className={clases}
+        href={href}
+        rel="noopener noreferrer"
+        target="_blank"
+        title={title}
+      >
         {children}
+        {ariaLabel === undefined ? (
+          <>
+            {' '}
+            <span className="sr-only">({PESTANA_NUEVA})</span>
+          </>
+        ) : null}
       </a>
     )
   }
 
   if (href) {
     return (
-      <Link className={clases} href={href}>
+      <Link aria-describedby={ariaDescribedBy} aria-label={ariaLabel} className={clases} href={href} title={title}>
         {children}
       </Link>
     )
@@ -171,13 +199,59 @@ export const FIELD_CLASS =
 
 export const LABEL_CLASS = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
 
-export function Field({ children, htmlFor, label }: { children: ReactNode; htmlFor: string; label: string }) {
+/** Lo que `Field` le pasa a su campo cuando se escribe como función: el campo no se ata a mano. */
+export type FieldControlProps = {
+  id: string
+  'aria-describedby'?: string | undefined
+  'aria-invalid'?: true | undefined
+  required?: boolean | undefined
+}
+
+/**
+ * Rótulo, ayuda y error de un campo, **atados al control**.
+ *
+ * Con `children` como función, `Field` pone el `id`, el `aria-describedby` (ayuda y error), el
+ * `aria-invalid` y el `required`: el error se lee al llegar al campo y no solo en un aviso lejano.
+ * Con `children` y `htmlFor`, como siempre, el campo lo ata quien lo escribe.
+ */
+export function Field({
+  children,
+  htmlFor,
+  label,
+  hint,
+  error,
+  required = false,
+}: {
+  label: string
+  hint?: string | undefined
+  error?: string | undefined
+  required?: boolean
+} & ({ htmlFor: string; children: ReactNode } | { htmlFor?: undefined; children: (props: FieldControlProps) => ReactNode })) {
+  const generado = useId()
+  const id = htmlFor ?? generado
+  const idAyuda = hint ? `${id}-ayuda` : undefined
+  const idError = error ? `${id}-error` : undefined
+  const describe = [idAyuda, idError].filter(Boolean).join(' ') || undefined
+
   return (
     <div className="flex min-w-0 flex-col gap-2">
-      <label className={LABEL_CLASS} htmlFor={htmlFor}>
+      <label className={LABEL_CLASS} htmlFor={id}>
         {label}
+        {required ? <span aria-hidden> *</span> : null}
       </label>
-      {children}
+      {typeof children === 'function'
+        ? children({ id, 'aria-describedby': describe, 'aria-invalid': error ? true : undefined, required: required || undefined })
+        : children}
+      {hint ? (
+        <p className="text-[12px] leading-[1.5] text-ink-mute" id={idAyuda}>
+          {hint}
+        </p>
+      ) : null}
+      {error ? (
+        <p className="text-[12px] leading-[1.5] text-danger-deep" id={idError}>
+          {error}
+        </p>
+      ) : null}
     </div>
   )
 }

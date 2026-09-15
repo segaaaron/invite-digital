@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { SignInForm } from './SignInForm'
 
-vi.mock('../actions', () => ({ signInAction: vi.fn() }))
+vi.mock('@/app/_acciones/identity/actions', () => ({ signInAction: vi.fn() }))
 
 describe('SignInForm', () => {
   it('pide correo y contraseña', () => {

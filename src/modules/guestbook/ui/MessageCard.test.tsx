@@ -7,7 +7,7 @@ const markReadAction = vi.fn(async () => ({ ok: true as const }))
 const toggleFeaturedAction = vi.fn(async () => ({ ok: true as const }))
 const replyAction = vi.fn(async () => ({ ok: true as const }))
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/guestbook/actions', () => ({
   markReadAction: (...args: unknown[]) => markReadAction(...(args as [])),
   toggleFeaturedAction: (...args: unknown[]) => toggleFeaturedAction(...(args as [])),
   replyAction: (...args: unknown[]) => replyAction(...(args as [])),

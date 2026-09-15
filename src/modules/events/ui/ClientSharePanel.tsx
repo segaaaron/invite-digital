@@ -1,13 +1,13 @@
 'use client'
 
 import { useActionState } from 'react'
-import { CopyLinkButton } from '@/modules/guests/ui/CopyLinkButton'
+import { CopyLinkButton } from '@/shared/design/ui/CopyLinkButton'
 import {
   createClientShareAction,
   revokeClientShareAction,
   type ClientShareState,
   type RevokeShareState,
-} from '../actions'
+} from '@/app/_acciones/events/actions'
 
 const INITIAL: ClientShareState = { status: 'idle' }
 const INITIAL_REVOKE: RevokeShareState = { status: 'idle' }
@@ -35,8 +35,7 @@ export function ClientSharePanel({ eventId, eventSlug, live }: Props) {
           <button
             className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
             disabled={isPending}
-            type="submit"
-          >
+            type="submit" aria-busy={(isPending) || undefined}>
             {isPending ? 'Creando…' : 'Crear enlace para el cliente'}
           </button>
         </form>
@@ -49,8 +48,7 @@ export function ClientSharePanel({ eventId, eventSlug, live }: Props) {
             <button
               className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
               disabled={isRevoking}
-              type="submit"
-            >
+              type="submit" aria-busy={(isRevoking) || undefined}>
               {isRevoking ? 'Revocando…' : 'Revocar enlace'}
             </button>
           </form>

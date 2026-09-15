@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from 'drizzle-orm'
+import { and, asc, count, eq, isNull } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups } from '@/shared/db/schema'
 import type { GuestGroupRepository } from '../application/ports'
@@ -76,3 +76,9 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
 })
 
 export const drizzleGuestGroupRepository = createDrizzleGuestGroupRepository(db)
+
+/** Cuántos grupos tiene el evento, sin traerlos: la insignia de la barra se pinta en cada página. */
+export const countGroupsByEvent = async (database: DbExecutor, eventId: string): Promise<number> => {
+  const [fila] = await database.select({ total: count() }).from(guestGroups).where(eq(guestGroups.eventId, eventId))
+  return fila?.total ?? 0
+}

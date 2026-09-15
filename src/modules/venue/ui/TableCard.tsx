@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { PinIcon } from '@/shared/design/ui/icons'
-import { assignGroupAction, removeTableAction, unassignGroupAction, updateTableAction } from '../actions'
+import { assignGroupAction, removeTableAction, unassignGroupAction, updateTableAction } from '@/app/_acciones/venue/actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { SeatedGroupRow } from '../application/ports'
 import { IconButton } from '@/shared/design/ui/panel/PanelKit'

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { RevokeInvitationState } from '../actions'
+import type { RevokeInvitationState } from '@/app/_acciones/guests/actions'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 
 /**
@@ -18,7 +18,7 @@ vi.mock('react', async () => {
   }
 })
 
-vi.mock('../actions', () => ({ revokeInvitationAction: vi.fn() }))
+vi.mock('@/app/_acciones/guests/actions', () => ({ revokeInvitationAction: vi.fn() }))
 
 const props = { groupId: 'g1', eventSlug: 'boda' }
 

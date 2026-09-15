@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 
 import { useId, useState, useTransition } from 'react'
 import type { GiftRow } from '../application/ports'
-import { addGiftAction, updateGiftAction } from '../actions'
+import { addGiftAction, updateGiftAction } from '@/app/_acciones/registry/actions'
 import { centsOrMessage, centsToInput, FIELD_CLASS, LABEL_CLASS, nullIfBlank, SUBMIT_CLASS } from './shared'
 
 /**

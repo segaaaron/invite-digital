@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { RsvpForm } from './RsvpForm'
 
-vi.mock('../actions', () => ({ respondAction: vi.fn() }))
+vi.mock('@/app/_acciones/rsvp/actions', () => ({ respondAction: vi.fn() }))
 
 const invitation = getDictionary('es').invitation
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
-import { addZoneAction, updateZoneAction } from '../actions'
+import { addZoneAction, updateZoneAction } from '@/app/_acciones/venue/actions'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ZONE_KINDS, type VenueZone, type ZoneKind } from '../domain/venue-zone'
 
@@ -152,7 +152,7 @@ export function ZoneDialog({
         <PanelButton disabled={pendiente} onClick={cerrar}>
           Cancelar
         </PanelButton>
-        <PanelButton variant="primary" disabled={pendiente} onClick={guardar}>
+        <PanelButton variant="primary" disabled={pendiente} onClick={guardar} aria-busy={(pendiente) || undefined}>
           {pendiente ? 'Guardando…' : 'Guardar'}
         </PanelButton>
       </div>

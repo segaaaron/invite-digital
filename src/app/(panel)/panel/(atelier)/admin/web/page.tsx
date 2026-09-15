@@ -1,8 +1,8 @@
 import { admin } from '@/app/composition/container'
 import { SiteSettingsForm } from '@/modules/admin/ui/SiteSettingsForm'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 

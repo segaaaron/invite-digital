@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { Event } from '../domain/event'
 import { EventForm } from './EventForm'
 
-vi.mock('../actions', () => ({ createEventAction: vi.fn(), updateEventAction: vi.fn() }))
+vi.mock('@/app/_acciones/events/actions', () => ({ createEventAction: vi.fn(), updateEventAction: vi.fn() }))
 
 const evento: Event = {
   id: 'e1',

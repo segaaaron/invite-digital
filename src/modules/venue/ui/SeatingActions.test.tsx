@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SeatingActions } from './SeatingActions'
 
 const { autoAssignAction } = vi.hoisted(() => ({ autoAssignAction: vi.fn(async () => ({ ok: true })) }))
-vi.mock('../actions', () => ({ autoAssignAction }))
+vi.mock('@/app/_acciones/venue/actions', () => ({ autoAssignAction }))
 
 beforeEach(() => autoAssignAction.mockClear())
 

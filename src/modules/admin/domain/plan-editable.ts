@@ -4,9 +4,8 @@ import { adminError, type AdminError } from './errors'
 /**
  * Lo que el admin cambia de un plan sin desplegar: precio, tope, funciones y textos.
  *
- * El importe llega **ya en centavos**: lo parsea la acción con `parseAmount` de la mesa de
- * regalos, que es el único sitio del proyecto donde se convierte texto en dinero, y el
- * dominio no puede importar otro módulo.
+ * El importe llega **ya en centavos**: lo parsea la acción con `parseAmount` de
+ * `@/shared/money`, que es el único sitio del proyecto donde se convierte texto en dinero.
  */
 export type TextoPlan = { name: string; tagline: string; description: string; features: string }
 

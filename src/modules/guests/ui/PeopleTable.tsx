@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
-import { removePersonAction, updatePersonAction } from '../actions'
+import { removePersonAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 
 export type PersonRowView = {

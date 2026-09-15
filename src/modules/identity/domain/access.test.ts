@@ -4,6 +4,7 @@ import {
   canDeleteUser,
   canDemote,
   canManageStaff,
+  gestionaElEvento,
   isAdmin,
   parseRole,
   sectionForRole,
@@ -26,15 +27,41 @@ describe('canAccessEvent', () => {
     expect(canAccessEvent(otro, { userId: 'u1' })).toBe(false)
   })
 
-  it('el admin entra en cualquiera: es lo que hace falta para dar soporte', () => {
-    expect(canAccessEvent(admin, { userId: 'u1' })).toBe(true)
-  })
-
-  it('un evento sin dueño solo lo ve el admin', () => {
+  it('un evento sin dueño: ningún atelier entra, y el admin solo a la ficha', () => {
     // No debería existir ninguno —la migración 0021 los asignó todos—, pero la columna
     // es anulable y «sin dueño» no puede significar «de cualquiera».
     expect(canAccessEvent(atelier, { userId: null })).toBe(false)
-    expect(canAccessEvent(admin, { userId: null })).toBe(true)
+    expect(canAccessEvent(admin, { userId: null }, { section: 'ficha' })).toBe(true)
+  })
+})
+
+describe('canAccessEvent · el admin', () => {
+  // La boda que creó el admin para un cliente: es su dueño y aun así no entra a los datos.
+  const suya = { userId: 'u3' }
+  const clienteActor: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: false }
+
+  it.each(['full', 'cliente', 'checkin', 'porteros', 'planner', 'equipo'] as const)('no entra a «%s»: los datos de la boda son del cliente', (section) => {
+    expect(canAccessEvent(admin, suya, { section })).toBe(false)
+  })
+
+  it.each(['ficha', 'configuracion', 'vistaPrevia'] as const)('entra a «%s»', (section) => {
+    expect(canAccessEvent(admin, suya, { section })).toBe(true)
+  })
+
+  it('el equipo del cliente entra a configuración y vista previa, no a la ficha', () => {
+    expect(canAccessEvent(clienteActor, suya, { section: 'configuracion', memberships: ['cliente'] })).toBe(true)
+    expect(canAccessEvent(clienteActor, suya, { section: 'vistaPrevia', memberships: ['coanfitrion'] })).toBe(true)
+    expect(canAccessEvent(clienteActor, suya, { section: 'ficha', memberships: ['cliente'] })).toBe(false)
+  })
+
+  it('el atelier dueño sigue entrando a todo', () => {
+    for (const section of ['full', 'cliente', 'ficha', 'configuracion'] as const) {
+      expect(canAccessEvent(atelier, { userId: 'u1' }, { section })).toBe(true)
+    }
+  })
+
+  it('la carcasa del admin pide la ficha', () => {
+    expect(sectionForRole('admin')).toBe('ficha')
   })
 })
 
@@ -131,9 +158,9 @@ describe('canAccessEvent · el personal de puerta', () => {
     expect(canAccessEvent(puerta, evento)).toBe(false)
   })
 
-  it('el dueño y el admin no se ven afectados por la sección', () => {
+  it('el dueño no se ve afectado por la sección; el admin sí', () => {
     expect(canAccessEvent(atelier, { userId: 'u1' }, { section: 'checkin' })).toBe(true)
-    expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'full' })).toBe(true)
+    expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'full' })).toBe(false)
   })
 })
 
@@ -170,7 +197,8 @@ describe('canAccessEvent · el cliente', () => {
   it('el dueño del evento entra igual en la sección del cliente', () => {
     // El atelier ve todo lo que ve su cliente; al revés no.
     expect(canAccessEvent(atelier, { userId: 'u1' }, { section: 'cliente' })).toBe(true)
-    expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'cliente' })).toBe(true)
+    // El admin no: los datos del cliente los ve entrando como el cliente.
+    expect(canAccessEvent(admin, { userId: 'u1' }, { section: 'cliente' })).toBe(false)
   })
 
   it('y otro cliente no entra por tener el rol', () => {
@@ -188,7 +216,7 @@ describe('sectionForRole', () => {
     expect(sectionForRole('cliente')).toBe('cliente')
     expect(sectionForRole('puerta')).toBe('checkin')
     expect(sectionForRole('atelier')).toBe('full')
-    expect(sectionForRole('admin')).toBe('full')
+    expect(sectionForRole('admin')).toBe('ficha')
   })
 })
 
@@ -256,9 +284,9 @@ describe('el equipo del evento: anfitrión, co-anfitrión y planner', () => {
     expect(canAccessEvent(otro, evento, { section: 'full', memberships: ['planner'] })).toBe(false)
   })
 
-  it('el dueño y el admin entran también al equipo y a los porteros', () => {
+  it('el dueño entra también al equipo y a los porteros; el admin no', () => {
     expect(canAccessEvent(atelier, evento, { section: 'equipo' })).toBe(true)
-    expect(canAccessEvent(admin, evento, { section: 'porteros' })).toBe(true)
+    expect(canAccessEvent(admin, evento, { section: 'porteros' })).toBe(false)
   })
 
   it('la puerta sigue siendo solo la puerta, aunque la pertenencia diga otra cosa', () => {
@@ -273,3 +301,22 @@ describe('el equipo del evento: anfitrión, co-anfitrión y planner', () => {
   })
 })
 
+
+describe('gestionaElEvento', () => {
+  it('el admin y el atelier dueño gestionan; otro atelier, un cliente y la puerta no', () => {
+    const cliente: Actor = { userId: 'u1', email: 'c@ejemplo.bo', role: 'cliente', mustChangePassword: false }
+    const puerta: Actor = { userId: 'u1', email: 'p@ejemplo.bo', role: 'puerta', mustChangePassword: false }
+    const suyo = { userId: 'u1' }
+    expect(gestionaElEvento(admin, suyo)).toBe(true)
+    expect(gestionaElEvento(atelier, suyo)).toBe(true)
+    expect(gestionaElEvento(otro, suyo)).toBe(false)
+    // Mismo identificador que el dueño, pero sin el rol de atelier: no gestiona.
+    expect(gestionaElEvento(cliente, suyo)).toBe(false)
+    expect(gestionaElEvento(puerta, suyo)).toBe(false)
+  })
+
+  it('un evento sin dueño solo lo gestiona el admin', () => {
+    expect(gestionaElEvento(admin, { userId: null })).toBe(true)
+    expect(gestionaElEvento(atelier, { userId: null })).toBe(false)
+  })
+})

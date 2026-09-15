@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events, planner, plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { momentosParaVer } from '@/modules/planner/ui/cronograma-vista'
 import { isErr } from '@/shared/result'
 

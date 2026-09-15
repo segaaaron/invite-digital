@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
-import { eventUnlocked } from '@/modules/events/actions'
+import { eventUnlocked } from '@/app/_acciones/events/actions'
 
 /**
  * Sirve una imagen de una invitación.

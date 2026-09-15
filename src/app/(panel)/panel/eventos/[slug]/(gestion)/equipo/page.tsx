@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation'
 import { events, plans } from '@/app/composition/container'
 import { TeamCard } from '@/modules/events/ui/TeamCard'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 

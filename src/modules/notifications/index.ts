@@ -9,4 +9,5 @@
  */
 export { clientAccessEmail, type AccesoDeCliente, type CorreoCompuesto } from './domain/client-access-email'
 export { passwordResetEmail } from './domain/password-reset-email'
+export { supportAccessEmail } from './domain/support-access-email'
 export type { EmailSender } from './application/ports'

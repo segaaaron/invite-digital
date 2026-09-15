@@ -2,11 +2,12 @@
 
 import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { type ContentActionState, saveContentBlockAction } from '../actions'
+import { type ContentActionState, saveContentBlockAction } from '@/app/_acciones/events/actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
 import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
 import { type Campo, FORMAS, type FormaBloque } from './content-shapes'
 import { type MediaItem, esPista } from './EventMediaPanel'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -171,9 +172,7 @@ function BloqueDeContenido({
       ) : null}
 
       <div>
-        <PanelButton disabled={isPending} type="submit" variant="default">
-          {isPending ? 'Guardando…' : 'Guardar'}
-        </PanelButton>
+        <SubmitButton variant="default" pending={isPending} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
       </div>
     </form>
   )

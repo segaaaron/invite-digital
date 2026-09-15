@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import { events, planner, plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { DocumentsBoard } from '@/modules/planner/ui/DocumentsBoard'
 import { FeatureLocked } from '@/modules/plans'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Documentos' }

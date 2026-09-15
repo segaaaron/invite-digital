@@ -323,6 +323,27 @@
       "when": 1789520000000,
       "tag": "0046_extras",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1789530000000,
+      "tag": "0047_precios_y_desglose",
+      "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1789540000000,
+      "tag": "0048_extra_un_pedido_abierto",
+      "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1789550000000,
+      "tag": "0049_support_sessions",
+      "breakpoints": true
     }
   ]
 }

@@ -2,9 +2,12 @@ import { createHash, randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 
-// Conexión propia de esta suite, como el resto: compartir el pool entre dos specs deja a
-// la segunda escribiendo contra una conexión que la primera ya cerró.
-const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
+// Conexión propia del fixture, **abierta al usarla y reabrible**: la importan `cliente.spec`
+// y `soporte.spec`, que corren en el mismo proceso y comparten este módulo. Con una conexión
+// fija, la primera suite la cerraba al terminar y la segunda escribía contra ella:
+// `write CONNECTION_ENDED`.
+let conexion: ReturnType<typeof postgres> | null = null
+const db = () => (conexion ??= postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 }))
 
 /** El cliente: quien celebra la boda. Entra a su evento y a ninguno más. */
 export const CLIENTE = { email: 'novios-e2e@invitepremium.bo', password: 'contrasena-del-cliente-1' } as const
@@ -33,6 +36,7 @@ export type ClienteFixture = {
  * de regalos ni modo puerta: la misma trampa que ya documentan los demás fixtures.
  */
 export async function seedCliente(slug: string): Promise<ClienteFixture> {
+  const sql = db()
   await deleteClienteFixture(slug)
 
   const [dueno] = await sql<{ id: string }[]>`
@@ -74,16 +78,19 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
 }
 
 export async function deleteClienteFixture(slug: string): Promise<void> {
+  const sql = db()
   await sql`delete from events where slug = ${slug}`
   await sql`delete from users where email in (${CLIENTE.email}, ${DUENO.email}, ${EQUIPO.planner}, ${EQUIPO.coanfitriona})`
 }
 
 /** Le pone una contraseña conocida y sin marca de provisional, para entrar en la prueba. */
 export async function fijarClave(email: string, password: string): Promise<void> {
+  const sql = db()
   await sql`update users set password_hash = ${await argon2Hasher.hash(password)}, must_change_password = false where email = ${email}`
 }
 
 export async function membresiaDe(slug: string, email: string): Promise<string | null> {
+  const sql = db()
   const [fila] = await sql<{ membership: string }[]>`
     select s.membership from event_staff s join events e on e.id = s.event_id join users u on u.id = s.user_id
     where e.slug = ${slug} and u.email = ${email}`
@@ -91,5 +98,7 @@ export async function membresiaDe(slug: string, email: string): Promise<string |
 }
 
 export async function closeClienteDb(): Promise<void> {
-  await sql.end({ timeout: 5 })
+  const abierta = conexion
+  conexion = null
+  await abierta?.end({ timeout: 5 })
 }

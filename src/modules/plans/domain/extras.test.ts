@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Allowance } from './allowance'
-import { aplicarExtras, leerExtra } from './extras'
+import { aplicarExtras, extraDisponible, leerExtra } from './extras'
 
 const atelier: Allowance = {
   planSlug: 'atelier',
@@ -67,5 +67,47 @@ describe('leerExtra', () => {
       ok: true,
       valor: { name: '+40 grupos', priceCents: 150_00, effect: 'mas_grupos', amount: 40, isActive: true },
     })
+  })
+})
+
+describe('aplicarExtras y el Día D', () => {
+  it('solo sube el planner completo a total: sobre un plan esencial —p. ej. tras bajar de plan— no regala el completo', () => {
+    expect(aplicarExtras(atelier, [{ effect: 'dia_d', amount: 0 }]).plannerSuite).toBe('esencial')
+    expect(aplicarExtras({ ...atelier, plannerSuite: 'completo' }, [{ effect: 'dia_d', amount: 0 }]).plannerSuite).toBe('total')
+  })
+})
+
+describe('extraDisponible', () => {
+  const firma: Allowance = { ...atelier, planSlug: 'firma-3d', maxGuestGroups: 120, guestPhotos: true, designChange: 'antes_de_repartir', maxHiredPlanners: 1, plannerSuite: 'completo' }
+  const alta: Allowance = { ...firma, planSlug: 'alta-costura', maxGuestGroups: null, maxHiredPlanners: null, designChange: 'siempre', plannerSuite: 'total' }
+
+  it('el Día D solo se vende a quien ya tiene el planner completo: Atelier se llevaría proveedores y cronograma por 150 Bs', () => {
+    expect(extraDisponible(atelier, 'dia_d')).toEqual({ ok: false, motivo: 'requiere_plan' })
+    expect(extraDisponible(firma, 'dia_d')).toEqual({ ok: true })
+    expect(extraDisponible(alta, 'dia_d')).toEqual({ ok: false, motivo: 'incluido' })
+  })
+
+  it('lo que solo se enciende no se vende a quien ya lo tiene, por plan o por un extra aprobado', () => {
+    expect(extraDisponible(atelier, 'fotos_invitados')).toEqual({ ok: true })
+    expect(extraDisponible(firma, 'fotos_invitados')).toEqual({ ok: false, motivo: 'incluido' })
+    expect(extraDisponible(aplicarExtras(atelier, [{ effect: 'fotos_invitados', amount: 0 }]), 'fotos_invitados')).toEqual({ ok: false, motivo: 'incluido' })
+    expect(extraDisponible(atelier, 'cambio_modelo')).toEqual({ ok: true })
+    expect(extraDisponible(firma, 'cambio_modelo')).toEqual({ ok: false, motivo: 'incluido' })
+    expect(extraDisponible(aplicarExtras(firma, [{ effect: 'dia_d', amount: 0 }]), 'dia_d')).toEqual({ ok: false, motivo: 'incluido' })
+  })
+
+  it('sumar a lo que no tiene límite no tiene sentido', () => {
+    expect(extraDisponible(alta, 'mas_grupos')).toEqual({ ok: false, motivo: 'incluido' })
+    expect(extraDisponible(alta, 'sumar_planner')).toEqual({ ok: false, motivo: 'incluido' })
+    expect(extraDisponible(firma, 'mas_grupos')).toEqual({ ok: true })
+    expect(extraDisponible(atelier, 'sumar_planner')).toEqual({ ok: true })
+  })
+
+  it('lo que suma y el servicio se venden siempre', () => {
+    for (const a of [atelier, firma, alta]) {
+      expect(extraDisponible(a, 'mas_porteros')).toEqual({ ok: true })
+      expect(extraDisponible(a, 'mas_dias')).toEqual({ ok: true })
+      expect(extraDisponible(a, 'servicio')).toEqual({ ok: true })
+    }
   })
 })

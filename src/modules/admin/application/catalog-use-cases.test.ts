@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import type { PlanCrudo } from '../domain/plan-editable'
 import type { AdminRepository, CatalogAdmin, PlanAdminRow } from './ports'
 import { savePlan, setTemplatePublished } from './catalog-use-cases'

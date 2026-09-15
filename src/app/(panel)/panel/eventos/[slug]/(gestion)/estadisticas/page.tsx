@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import { analytics, events, rsvp } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import type { Breakdown } from '@/modules/analytics'
 import { EventStats } from '@/modules/rsvp/ui/EventStats'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { DonutChart, PanelCard } from '@/modules/shell/ui/cards'
+import { DonutChart, PanelCard } from '@/shared/design/ui/panel/cards'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 

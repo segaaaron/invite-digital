@@ -10,7 +10,7 @@ const addGiftAction = vi.fn(async () => ({ ok: true as const }))
 const updateGiftAction = vi.fn(async () => ({ ok: true as const }))
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/registry/actions', () => ({
   markPurchasedAction: (...args: unknown[]) => markPurchasedAction(...(args as [])),
   releaseGiftAsAtelierAction: (...args: unknown[]) => releaseGiftAsAtelierAction(...(args as [])),
   removeGiftAction: (...args: unknown[]) => removeGiftAction(...(args as [])),

@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState, useId, useState } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { addPorterAction, removePorterAction, type PorterActionState } from '../porter-actions'
+import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { addPorterAction, removePorterAction, type PorterActionState } from '@/app/_acciones/checkin/porter-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: PorterActionState = { status: 'idle' }
 
@@ -113,16 +114,14 @@ export function PortersCard({
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <PanelButton disabled={lleno || sumando} type="submit" variant="primary">
-            {sumando ? 'Sumando…' : 'Agregar portero'}
-          </PanelButton>
+          <SubmitButton disabled={lleno || sumando} variant="primary" pending={sumando} pendingLabel={'Sumando…'}>{'Agregar portero'}</SubmitButton>
           {lleno ? (
             <span className="text-[12px] text-ink-mute">
               {limite === 0 ? 'Tu plan no incluye porteros.' : `Tu plan admite hasta ${limite} a la vez. Quita a uno para sumar otro.`}
             </span>
           ) : null}
         </div>
-        {alta.status === 'error' ? <PanelAlert tone="error">{alta.message}</PanelAlert> : null}
+        <ActionFeedback errorsOnly state={alta} />
       </form>
     </div>
   )
@@ -151,9 +150,7 @@ function FilaPortero({ eventId, eventSlug, portero }: { eventId: string; eventSl
           <input name="eventId" type="hidden" value={eventId} />
           <input name="eventSlug" type="hidden" value={eventSlug} />
           <input name="porterId" type="hidden" value={portero.id} />
-          <PanelButton disabled={quitando} type="submit" variant="danger">
-            {quitando ? 'Quitando…' : 'Sí, quitar'}
-          </PanelButton>
+          <SubmitButton variant="danger" pending={quitando} pendingLabel={'Quitando…'}>{'Sí, quitar'}</SubmitButton>
           <PanelButton onClick={() => setConfirmando(false)}>Cancelar</PanelButton>
         </form>
       ) : (

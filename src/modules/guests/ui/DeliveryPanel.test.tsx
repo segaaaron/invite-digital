@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import type { ResendState } from '../actions'
+import type { ResendState } from '@/app/_acciones/guests/actions'
 import { DeliveryPanel } from './DeliveryPanel'
 
 const guardarTelefono = vi.hoisted(() => vi.fn())
 const reenviar = vi.hoisted(() => vi.fn<() => Promise<ResendState>>(async () => ({ status: 'idle' })))
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/guests/actions', () => ({
   resendInvitationAction: reenviar,
   setGroupPhoneAction: guardarTelefono,
 }))

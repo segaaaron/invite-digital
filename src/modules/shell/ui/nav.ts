@@ -41,7 +41,8 @@ export type NavCounts = {
  * septiembre: una opción que no lleva a ninguna parte no sale.
  *
  * - **Atelier**: EVENTO ACTIVO y DISEÑO si tiene evento, y CUENTA.
- * - **Admin**: ADMINISTRACIÓN y CUENTA; dentro de un evento, además, las del evento.
+ * - **Admin**: ADMINISTRACIÓN y CUENTA; dentro de una boda, además, su ficha: configuración,
+ *   plan y vista previa. Nunca los datos del cliente.
  * - **Cliente** y **puerta**: sus barras propias, más abajo.
  *
  * Ocultar no es la protección —esa vive en la sección que pide cada página y en
@@ -189,6 +190,23 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
         ],
       },
+    ]
+  }
+
+  // El admin dentro de una boda: solo su ficha. Invitados, mensajes, mesas, regalos y planner
+  // son datos del cliente; para verlos entra como el cliente, con motivo y registro.
+  if (esAdmin && base !== null) {
+    return [
+      {
+        label: 'Esta boda',
+        items: [
+          { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
+          { href: en('/plan'), label: 'Plan', icon: 'plan' },
+          { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+        ],
+      },
+      ...administracion,
+      { label: 'Cuenta', items: [{ href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' }] },
     ]
   }
 

@@ -3,8 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { setPaymentPaidAction } from '../actions'
-import { setVendorArrivedAction } from '../dia-actions'
+import { setPaymentPaidAction } from '@/app/_acciones/planner/actions'
+import { setVendorArrivedAction } from '@/app/_acciones/planner/dia-actions'
 import { Accion, type Evento } from './Accion'
 
 export type DiaDVista = {

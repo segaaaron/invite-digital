@@ -2,10 +2,10 @@
 
 import { fechaHora } from '@/shared/format/fecha'
 import { useState, useTransition } from 'react'
-import { markReadAction, replyAction, toggleFeaturedAction } from '../actions'
+import { markReadAction, replyAction, toggleFeaturedAction } from '@/app/_acciones/guestbook/actions'
 import { createReply } from '../domain/message-note'
 import type { GuestMessage } from '../domain/inbox'
-import { avatarColor } from '@/modules/shell/ui/avatar-color'
+import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { isErr } from '@/shared/result'
 
 type Props = {

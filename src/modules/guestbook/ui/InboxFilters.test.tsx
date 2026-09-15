@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { GuestMessage } from '../domain/inbox'
 import { InboxFilters } from './InboxFilters'
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/guestbook/actions', () => ({
   markReadAction: vi.fn(async () => ({ ok: true })),
   toggleFeaturedAction: vi.fn(async () => ({ ok: true })),
   replyAction: vi.fn(async () => ({ ok: true })),

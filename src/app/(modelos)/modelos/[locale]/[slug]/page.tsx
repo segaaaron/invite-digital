@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { admin } from '@/app/composition/container'
+import { webPublica } from '@/app/composition/container'
 import type { Event } from '@/modules/events/domain/event'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
@@ -79,9 +79,12 @@ export default async function ModelPreviewPage({
    * devuelve un error porque no pudo averiguar si había música sería cambiar una canción
    * por una página en blanco, y lo que se viene a ver aquí es el diseño.
    */
-  const [musica, canciones] = await Promise.all([admin.showcaseMusic(), admin.showcaseSongs()])
-  const cancion = canciones[slug]
-  const tieneMusica = isOk(musica) && (musica.value[slug] ?? '') !== ''
+  const [musica, cancionesLeidas] = await Promise.all([
+    webPublica.musicaDeModelos().catch(() => null),
+    webPublica.cancionesDeModelos().catch(() => null),
+  ])
+  const cancion = cancionesLeidas?.ok ? cancionesLeidas.value[slug] : undefined
+  const tieneMusica = musica !== null && isOk(musica) && (musica.value[slug] ?? '') !== ''
   // Con canción subida, el reproductor dice la que suena y no la del contenido de muestra.
   // Una subida anterior a guardar el nombre no lo tiene: sin él se deja en blanco, que es
   // mejor que anunciar a Chayanne sonando otra cosa.

@@ -3,7 +3,8 @@
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { addGuestAction, type GuestActionState } from '../actions'
+import { addGuestAction, type GuestActionState } from '@/app/_acciones/guests/actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 export type GroupChoice = {
   readonly id: string
@@ -215,9 +216,7 @@ export function GuestDialog({
           {/* Cierra el diálogo **y** navega: solo navegar deja el modal abierto encima de
               la lista hasta que Next termina la transición, y con él la página bloqueada. */}
           <PanelButton onClick={cerrar}>{hayEnlace ? 'Cerrar' : 'Cancelar'}</PanelButton>
-          <PanelButton variant="primary" disabled={pendiente || (nuevoGrupo && atLimit)} type="submit">
-            {pendiente ? 'Guardando…' : 'Guardar'}
-          </PanelButton>
+          <SubmitButton variant="primary" disabled={pendiente || (nuevoGrupo && atLimit)} pending={pendiente} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
         </div>
       </form>
     </dialog>

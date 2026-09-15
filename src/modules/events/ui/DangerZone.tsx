@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId, useState } from 'react'
-import { deleteEventAction, type DeleteEventState } from '../actions'
+import { deleteEventAction, type DeleteEventState } from '@/app/_acciones/events/actions'
 
 /**
  * La zona de riesgo de la maqueta.
@@ -48,8 +48,7 @@ export function DangerZone({ eventId, eventSlug }: { eventId: string; eventSlug:
       <button
         className="w-fit rounded-full border border-danger px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase disabled:opacity-40"
         disabled={pending || escrito.trim() !== eventSlug}
-        type="submit"
-      >
+        type="submit" aria-busy={(pending) || undefined}>
         {pending ? 'Eliminando…' : 'Eliminar evento'}
       </button>
     </form>

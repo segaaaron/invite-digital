@@ -1,4 +1,4 @@
-import { canAccessEvent, isAdmin, type Actor, type EventSection } from '@/modules/identity/domain/access'
+import { type Actor, canAccessEvent, type EventSection, isAdmin } from '@/modules/identity'
 import { attempt, err, isErr, isOk, ok, type Result } from '@/shared/result'
 import { createEvent, type Event } from '../domain/event'
 import { eventError, type EventError } from '../domain/errors'
@@ -56,7 +56,9 @@ async function permitido(
   opciones: Opciones,
 ): Promise<boolean> {
   // Sin viaje a la base cuando la respuesta no depende de la pertenencia.
-  if (isAdmin(actor) || (actor.role === 'atelier' && event.userId === actor.userId)) return true
+  // El admin no toma el atajo: su acceso depende de la sección.
+  if (actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId) return true
+  if (isAdmin(actor)) return canAccessEvent(actor, event, { section: opciones.section })
   const memberships = await deps.staff.membershipsOf(event.id, actor.userId)
   return canAccessEvent(actor, event, { section: opciones.section, memberships })
 }

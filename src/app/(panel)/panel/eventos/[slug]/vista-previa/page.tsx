@@ -3,7 +3,7 @@ import { events } from '@/app/composition/container'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { themeFor } from '@/modules/events/ui/themes/registry'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { themeFonts } from '@/shared/design/fonts'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
@@ -36,7 +36,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug, { section: 'cliente' })
+  const event = await events.getFor(actor, slug, { section: 'vistaPrevia' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

@@ -5,7 +5,8 @@ import Link from 'next/link'
 import { useActionState, useId, useState, type ReactNode } from 'react'
 import { CalendarIcon, CheckIcon, EyeIcon, MailIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { createWeddingForClientAction, type NuevaBodaState } from '../actions'
+import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
 
@@ -255,7 +256,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
           </Resumen>
         </dl>
         <div className="flex flex-col gap-3 border-t border-line-panel p-5">
-          {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+          <ActionFeedback errorsOnly state={estado} />
           {estado.status === 'success' ? (
             <PanelAlert tone="ok">
               {estado.message}{' '}
@@ -264,9 +265,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
               </Link>
             </PanelAlert>
           ) : null}
-          <PanelButton className="w-full" disabled={creando} type="submit" variant="primary">
-            {creando ? 'Creando…' : 'Crear el evento y su acceso'}
-          </PanelButton>
+          <SubmitButton className="w-full" variant="primary" pending={creando} pendingLabel={'Creando…'}>{'Crear el evento y su acceso'}</SubmitButton>
         </div>
       </aside>
     </form>

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { admin } from '@/app/composition/container'
+import { admin, webPublica } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
 
 export const dynamic = 'force-dynamic'
@@ -47,8 +47,8 @@ function rangoDe(cabecera: string | null, total: number): { desde: number; hasta
 export async function GET(peticion: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
-  const musica = await admin.showcaseMusic()
-  if (isErr(musica)) return new NextResponse('Sin música', { status: 404 })
+  const musica = await webPublica.musicaDeModelos().catch(() => null)
+  if (musica === null || isErr(musica)) return new NextResponse('Sin música', { status: 404 })
 
   const fichero = musica.value[slug]
   if (fichero === undefined || fichero === '') return new NextResponse('Sin música', { status: 404 })

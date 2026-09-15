@@ -2,7 +2,8 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { addDoorStaffAction, removeDoorStaffAction, type StaffActionState } from '../staff-actions'
+import { addDoorStaffAction, removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -101,9 +102,7 @@ export function DoorStaff({
           </p>
         ) : null}
 
-        <PanelButton className="w-fit" disabled={dandoAlta} type="submit" variant="primary">
-          {dandoAlta ? 'Dando acceso…' : 'Dar acceso a la puerta'}
-        </PanelButton>
+        <SubmitButton className="w-fit" variant="primary" pending={dandoAlta} pendingLabel={'Dando acceso…'}>{'Dar acceso a la puerta'}</SubmitButton>
       </form>
     </div>
   )

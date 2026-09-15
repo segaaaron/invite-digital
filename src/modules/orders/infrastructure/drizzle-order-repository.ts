@@ -1,4 +1,4 @@
-import { desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { addons, events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
 import { ORDER_STATUSES, type Order, type OrderStatus } from '../domain/order'
@@ -118,14 +118,24 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
     async createForAddon(order) {
       // El precio se congela desde el extra **activo** en la misma escritura: apagado, no hay
       // fila que insertar, y un POST directo no compra un extra que ya no se vende.
+      // Idempotente: con un pedido abierto del mismo extra en ese evento se devuelve ese. Lo
+      // decide el índice único parcial (`0048`), no una lectura previa: dos clics a la vez
+      // pasarían los dos por una lectura.
       const filas = await database.execute<{ id: string }>(sql`
         insert into orders (public_ref, addon_slug, event_id, customer_name, contact, amount_cents, currency)
         select ${order.publicRef}, a.slug, ${order.eventId}, ${order.customerName}, ${order.contact}, a.price_cents, a.currency
         from addons a where a.slug = ${order.addonSlug} and a.is_active
+        on conflict (event_id, addon_slug) where addon_slug is not null and event_id is not null and status <> 'approved' do nothing
         returning id
       `)
       const id = (filas as unknown as Array<{ id: string }>)[0]?.id
-      return id === undefined ? null : this.findById(id)
+      if (id !== undefined) return this.findById(id)
+      const [abierto] = await database
+        .select({ id: orders.id })
+        .from(orders)
+        .where(and(eq(orders.eventId, order.eventId), eq(orders.addonSlug, order.addonSlug), ne(orders.status, 'approved')))
+        .limit(1)
+      return abierto === undefined ? null : this.findById(abierto.id)
     },
 
     async findByRef(publicRef): Promise<Order | null> {
@@ -138,9 +148,37 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
       return fila === undefined ? null : aOrder(fila)
     },
 
-    async list(): Promise<Order[]> {
-      const filas = await conPlan().orderBy(desc(orders.createdAt))
+    async listAddonOrdersOf(eventId): Promise<Order[]> {
+      const filas = await conPlan()
+        .where(and(eq(orders.eventId, eventId), isNotNull(orders.addonSlug)))
+        .orderBy(desc(orders.createdAt))
       return filas.map(aOrder)
+    },
+
+    async countByStatusAll() {
+      const filas = await database.select({ status: orders.status, total: count() }).from(orders).groupBy(orders.status)
+      const conteo = Object.fromEntries(ORDER_STATUSES.map((s) => [s, 0])) as Record<OrderStatus, number>
+      for (const { status, total } of filas) if ((ORDER_STATUSES as readonly string[]).includes(status)) conteo[status as OrderStatus] = total
+      return conteo
+    },
+
+    async listPage({ status, limit, prioridad }): Promise<Order[]> {
+      // La prioridad llega de la bandeja y se traduce a un CASE con parámetros: un solo sitio
+      // decide qué va primero. Lo que no esté en la lista va detrás.
+      const orden = sql`case ${sql.join(
+        prioridad.map((s, i) => sql`when ${orders.status} = ${s} then ${i}`),
+        sql` `,
+      )} else ${prioridad.length} end`
+      const filas = await conPlan()
+        .where(status === null ? undefined : eq(orders.status, status))
+        .orderBy(orden, desc(orders.createdAt))
+        .limit(limit)
+      return filas.map(aOrder)
+    },
+
+    async countByStatus(status): Promise<number> {
+      const [fila] = await database.select({ total: count() }).from(orders).where(eq(orders.status, status))
+      return fila?.total ?? 0
     },
 
     async setStatus(input): Promise<void> {

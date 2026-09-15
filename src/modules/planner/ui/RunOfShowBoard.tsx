@@ -1,9 +1,10 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { type DiaActionState, removeMomentAction, saveMomentAction, seedMomentsAction } from '../dia-actions'
+import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { type DiaActionState, removeMomentAction, saveMomentAction, seedMomentsAction } from '@/app/_acciones/planner/dia-actions'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -65,11 +66,9 @@ function FormularioDeMomento({ evento, proveedores, momento }: { evento: Evento;
       <Field htmlFor={`${id}-n`} label="Notas internas">
         <textarea className={FIELD_CLASS} defaultValue={v('notes', momento?.notes)} id={`${id}-n`} maxLength={2000} name="notes" rows={2} />
       </Field>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <ActionFeedback errorsOnly state={estado} />
       <div>
-        <PanelButton disabled={enviando} type="submit" variant={momento ? 'default' : 'primary'}>
-          {enviando ? 'Guardando…' : momento ? 'Guardar momento' : 'Sumar momento'}
-        </PanelButton>
+        <SubmitButton variant={momento ? 'default' : 'primary'} pending={enviando} pendingLabel={'Guardando…'}>{momento ? 'Guardar momento' : 'Sumar momento'}</SubmitButton>
       </div>
     </form>
   )

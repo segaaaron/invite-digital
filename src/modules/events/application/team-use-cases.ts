@@ -1,4 +1,4 @@
-import type { Membership } from '@/modules/identity/domain/access'
+import type { Membership } from '@/modules/identity'
 
 export type TeamDeps = {
   staff: {

@@ -1,4 +1,4 @@
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import { camposCambiados, leerSiteSettings, parseSiteSettings, SITE_SETTINGS_KEY, type SiteSettings } from '../domain/site-settings'

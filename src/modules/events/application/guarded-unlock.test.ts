@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { guardedUnlock } from './guarded-unlock'
-import { createRateLimiter } from '@/modules/leads/application/rate-limit'
+import { createRateLimiter } from '@/shared/http/rate-limit'
 
 const siempreCorrecta = async () => true
 const siempreIncorrecta = async () => false

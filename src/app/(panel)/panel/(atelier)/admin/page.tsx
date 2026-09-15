@@ -1,8 +1,8 @@
 import { admin } from '@/app/composition/container'
 import { AvisoGrupo, HoyTile, ProximaFila } from '@/modules/admin/ui/HoyPiezas'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
+import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 

@@ -1,4 +1,4 @@
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import { MAX_AUDIO_UPLOAD_BYTES, nombreDeCancion, type AudioProcessor } from '@/shared/audio/audio'
 import { attempt, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'

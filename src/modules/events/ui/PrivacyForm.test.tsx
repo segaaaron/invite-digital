@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { PrivacyForm } from './PrivacyForm'
 
-vi.mock('../actions', () => ({ setEventPrivacyAction: vi.fn() }))
+vi.mock('@/app/_acciones/events/actions', () => ({ setEventPrivacyAction: vi.fn() }))
 
 describe('PrivacyForm', () => {
   it('sin la contraseña en el plan, la opción se ve apagada y dice por qué', () => {

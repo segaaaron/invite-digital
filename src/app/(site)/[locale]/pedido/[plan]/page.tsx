@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { catalog, site } from '@/app/composition/container'
+import { site, webPublica } from '@/app/composition/container'
 import { PrivacyNotice } from '@/sections/LegalPage'
 import { formatMoney } from '@/modules/catalog/domain/money'
 import { themeFor } from '@/modules/events/ui/themes/registry'
@@ -34,7 +34,7 @@ export default async function PedidoPage({
   const disenoElegido = tema !== null && tema.key === modelo ? tema : null
 
   const dictionary = getDictionary(locale)
-  const planes = await catalog.listPlans(locale)
+  const planes = await webPublica.planes(locale)
   if (isErr(planes)) throw new Error(planes.error.detail)
 
   const plan = planes.value.find((p) => p.slug === planSlug)

@@ -1,4 +1,4 @@
-import { canDeleteUser, canDemote, type Actor, type Role } from '@/modules/identity/domain/access'
+import { type Actor, canDeleteUser, canDemote, type Role } from '@/modules/identity'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import { componerHoy, fechaEnBolivia, HORIZONTE_RIESGO, type Hoy } from '../domain/hoy'

@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
-import { setPaymentPaidAction, toggleTaskAction } from '../actions'
-import { setVendorStatusAction } from '../dia-actions'
+import { setPaymentPaidAction, toggleTaskAction } from '@/app/_acciones/planner/actions'
+import { setVendorStatusAction } from '@/app/_acciones/planner/dia-actions'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { Accion, type Evento } from './Accion'
 

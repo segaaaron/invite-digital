@@ -1,15 +1,16 @@
 import Link from 'next/link'
 import { admin, orders } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { OrderDecision } from '@/modules/orders/ui/OrderDecision'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { CheckIcon } from '@/shared/design/ui/icons'
 import { PanelAlert, PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import { isErr } from '@/shared/result'
+import { EmptyState, LoadMoreLink } from '@/shared/design/ui/panel/estados'
 
 export const metadata = { title: 'Pedidos' }
 
@@ -41,13 +42,18 @@ const CUANDO = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short'
  * seguimiento: es a quien hay que avisar de la decisión, y esta pantalla vive tras la sesión.
  * Los comprobantes son enlaces a un route handler, no a `public/`: llevan datos bancarios.
  */
-export default async function PedidosPage({ searchParams }: { searchParams: Promise<{ estado?: string }> }) {
+/** Pedidos por página; «Ver más» sube el tope en la dirección, como en Auditoría. */
+const PAGINA = 20
+
+export default async function PedidosPage({ searchParams }: { searchParams: Promise<{ estado?: string; n?: string }> }) {
   // Del admin: aquí se ven los contactos de todos los clientes y se decide sobre pagos.
   await requireAdmin()
 
-  const [lista, cobro] = await Promise.all([orders.list(), admin.payment()])
-  const pedido = (await searchParams).estado
+  const { estado: pedido, n } = await searchParams
   const filtro: Estado | 'todos' = ORDEN.find((e) => e === pedido) ?? 'todos'
+  const pedidoTope = Number(n)
+  const tope = Number.isInteger(pedidoTope) && pedidoTope > 0 ? Math.min(pedidoTope, 500) : PAGINA
+  const [lista, cobro] = await Promise.all([orders.page({ status: filtro === 'todos' ? null : filtro, tope, prioridad: ORDEN }), admin.payment()])
 
   if (isErr(lista)) {
     return (
@@ -62,13 +68,15 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
     )
   }
 
-  const conteo = (estado: Estado) => lista.value.filter(({ order }) => order.status === estado).length
-  const ordenados = [...lista.value].sort((a, b) => ORDEN.indexOf(a.order.status as Estado) - ORDEN.indexOf(b.order.status as Estado))
-  const visibles = ordenados.filter(({ order }) => filtro === 'todos' || order.status === filtro)
+  // Recuento de la base, página cortada en la base: nada se filtra ni se ordena en memoria.
+  const conteo = (estado: Estado) => lista.value.conteo[estado]
+  const total = ORDEN.reduce((suma, e) => suma + conteo(e), 0)
+  const visibles = lista.value.pedidos
+  const verMas = `/panel/pedidos?${filtro === 'todos' ? '' : `estado=${filtro}&`}n=${tope + PAGINA}`
   const cobroListo = !isErr(cobro) && cobro.value.bank !== '' && cobro.value.accountHolder !== '' && cobro.value.accountNumber !== ''
 
   const PASOS = [
-    { titulo: 'Elige su plan en la web', detalle: 'Pulsa el plan en «Precios» y deja nombre, contacto y fecha.', cifra: lista.value.length, rotulo: 'pedidos' },
+    { titulo: 'Elige su plan en la web', detalle: 'Pulsa el plan en «Precios» y deja nombre, contacto y fecha.', cifra: total, rotulo: 'pedidos' },
     { titulo: 'Paga y sube el comprobante', detalle: 'Transfiere a tus datos de cobro o paga con el QR.', cifra: conteo('pending_payment'), rotulo: 'esperando pago' },
     { titulo: 'Tú revisas el pago', detalle: 'Abres el comprobante y apruebas, o rechazas con una nota.', cifra: conteo('proof_submitted'), rotulo: 'por revisar' },
     { titulo: 'Se crea su evento', detalle: 'Al aprobar nace el evento con su diseño, su plan y su acceso.', cifra: conteo('approved'), rotulo: 'aprobados' },
@@ -119,7 +127,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
       </ol>
 
       <PanelCard title="Bandeja">
-        {lista.value.length === 0 ? (
+        {total === 0 ? (
           <div className="flex flex-col items-center gap-3 py-10 text-center">
             <p className="font-display text-[22px] text-ink">Todavía no hay pedidos</p>
             <p className="max-w-[460px] text-[13px] leading-[1.7] text-ink-soft">
@@ -137,14 +145,14 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
                 current={filtro}
                 label="Filtrar pedidos por estado"
                 segments={[
-                  { key: 'todos', label: 'Todos', href: '/panel/pedidos', count: lista.value.length },
+                  { key: 'todos', label: 'Todos', href: '/panel/pedidos', count: total },
                   ...ORDEN.map((e) => ({ key: e, label: ESTADO[e].texto, href: `/panel/pedidos?estado=${e}`, count: conteo(e) })),
                 ]}
               />
             </div>
 
             {visibles.length === 0 ? (
-              <p className="py-8 text-center text-[13px] text-ink-mute">Ningún pedido en este estado.</p>
+              <EmptyState title="Ningún pedido en este estado." />
             ) : (
               <div className="flex flex-col gap-3.5">
                 {visibles.map(({ order, proofs }) => {
@@ -256,6 +264,7 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
                     </section>
                   )
                 })}
+                {lista.value.hayMas ? <LoadMoreLink href={verMas} noun="pedidos" remaining={(filtro === 'todos' ? total : conteo(filtro)) - visibles.length} /> : null}
               </div>
             )}
           </>

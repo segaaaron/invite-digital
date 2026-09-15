@@ -1,4 +1,4 @@
-import type { Membership } from '@/modules/identity/domain/access'
+import type { Membership } from '@/modules/identity'
 import type { Event, EventInput } from '../domain/event'
 import type { ImageType } from '../domain/media'
 
@@ -38,7 +38,7 @@ export interface ClientShareRepository {
   revoke(id: string, at: Date): Promise<void>
 }
 
-export type { Membership } from '@/modules/identity/domain/access'
+export type { Membership } from '@/modules/identity'
 
 
 /**

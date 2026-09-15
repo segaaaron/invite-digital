@@ -3,7 +3,7 @@
 import { useState, useTransition } from 'react'
 import { formatAmount } from '../domain/money'
 import type { FundView } from '../application/list-registry'
-import { removeFundAction } from '../actions'
+import { removeFundAction } from '@/app/_acciones/registry/actions'
 import { ContributionForm } from './ContributionForm'
 import { FundForm } from './FundForm'
 

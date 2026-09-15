@@ -5,14 +5,10 @@ import { useActionState, useId, useState } from 'react'
 import { nombreDeCancion } from '@/shared/audio/audio'
 import { leerEtiquetasId3 } from '@/shared/audio/id3'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
-import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import {
-  removeShowcaseMusicAction,
-  renameShowcaseSongAction,
-  setTemplatePublishedAction,
-  uploadShowcaseMusicAction,
-  type AdminActionState,
-} from '../actions'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import { removeShowcaseMusicAction, renameShowcaseSongAction, setTemplatePublishedAction, uploadShowcaseMusicAction } from '@/app/_acciones/admin/modelos-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -120,9 +116,7 @@ export function ShowcaseMusicRow({
                 <p className="text-[12px] text-danger">Sin nombre: el reproductor sale sin título. Escríbelo aquí.</p>
               ) : null}
               <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
-              <PanelButton disabled={renombrando} type="submit">
-                {renombrando ? 'Guardando…' : 'Guardar nombre'}
-              </PanelButton>
+              <SubmitButton variant="default" pending={renombrando} pendingLabel={'Guardando…'}>{'Guardar nombre'}</SubmitButton>
             </form>
           </>
         ) : (
@@ -165,15 +159,11 @@ export function ShowcaseMusicRow({
             </div>
           )}
           <div className="flex flex-wrap gap-2">
-            <PanelButton disabled={subiendo} type="submit" variant={tieneMusica ? 'default' : 'primary'}>
-              {subiendo ? 'Subiendo y ajustando…' : tieneMusica ? 'Reemplazar' : 'Subir'}
-            </PanelButton>
+            <SubmitButton variant={tieneMusica ? 'default' : 'primary'} pending={subiendo} pendingLabel={'Subiendo y ajustando…'}>{tieneMusica ? 'Reemplazar' : 'Subir'}</SubmitButton>
             {tieneMusica ? (
               // Va a su propio formulario por `form`: con `formAction` se reenviaría el MP3
               // elegido solo para borrar la canción.
-              <PanelButton disabled={quitando} form={`${id}-quitar`} type="submit" variant="danger">
-                {quitando ? 'Quitando…' : 'Quitar'}
-              </PanelButton>
+              <SubmitButton form={`${id}-quitar`} variant="danger" pending={quitando} pendingLabel={'Quitando…'}>{'Quitar'}</SubmitButton>
             ) : null}
           </div>
         </form>
@@ -184,12 +174,10 @@ export function ShowcaseMusicRow({
         <form action={cambiarPublicacion} className="border-t border-line-panel pt-3">
           <input name="themeKey" type="hidden" value={themeKey} />
           <input name="publicar" type="hidden" value={publicado ? 'no' : 'si'} />
-          <PanelButton className="w-full" disabled={cambiando} type="submit" variant={publicado ? 'default' : 'primary'}>
-            {cambiando ? 'Cambiando…' : publicado ? 'Retirar de la web' : 'Publicar en la web'}
-          </PanelButton>
+          <SubmitButton className="w-full" variant={publicado ? 'default' : 'primary'} aria-busy={(cambiando) || undefined} pending={cambiando} pendingLabel={'Cambiando…'}>{publicado ? 'Retirar de la web' : 'Publicar en la web'}</SubmitButton>
         </form>
 
-        {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+        <ActionFeedback errorsOnly state={estado} />
         {estado.status === 'success' && estado.message !== undefined ? (
           <PanelAlert tone="ok">{estado.message}</PanelAlert>
         ) : null}

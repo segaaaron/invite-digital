@@ -1,4 +1,4 @@
-import type { Role } from '@/modules/identity/domain/access'
+import type { Role } from '@/modules/identity'
 import type { HoyCrudo } from '../domain/hoy'
 import type { PedidoCobro } from '../domain/ingresos'
 import type { PlanLimpio, TextoPlanLimpio } from '../domain/plan-editable'

@@ -7,7 +7,7 @@ import {
   porterAccessOkAction,
   recordScansAsPorterAction,
   voidArrivalAsPorterAction,
-} from '@/modules/checkin/porter-actions'
+} from '@/app/_acciones/checkin/porter-actions'
 import { DoorMode } from '@/modules/checkin/ui/DoorMode'
 import { isErr } from '@/shared/result'
 

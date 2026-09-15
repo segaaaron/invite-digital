@@ -34,6 +34,8 @@ export class FakeOrderRepository implements OrderRepository {
   readonly extrasALaVenta = new Set<string>(['mas-40-grupos'])
 
   async createForAddon(order: { publicRef: string; addonSlug: string; eventId: string; customerName: string; contact: string }): Promise<Order | null> {
+    const abierto = this.orders.find((o) => o.eventId === order.eventId && o.addonSlug === order.addonSlug && o.status !== 'approved')
+    if (abierto) return abierto
     if (!this.extrasALaVenta.has(order.addonSlug)) return null
     const fila: Order = {
       id: `o${this.orders.length + 1}`,
@@ -66,8 +68,26 @@ export class FakeOrderRepository implements OrderRepository {
     return this.orders.find((o) => o.id === id) ?? null
   }
 
-  async list(): Promise<Order[]> {
-    return [...this.orders]
+  async countByStatusAll(): Promise<Record<Order['status'], number>> {
+    const conteo = { pending_payment: 0, proof_submitted: 0, approved: 0, rejected: 0 }
+    for (const o of this.orders) conteo[o.status] += 1
+    return conteo
+  }
+
+  async listPage(input: { status: Order['status'] | null; limit: number; prioridad: readonly Order['status'][] }): Promise<Order[]> {
+    const rango = (s: Order['status']) => (input.prioridad.includes(s) ? input.prioridad.indexOf(s) : input.prioridad.length)
+    return this.orders
+      .filter((o) => input.status === null || o.status === input.status)
+      .sort((a, b) => rango(a.status) - rango(b.status) || b.createdAt.getTime() - a.createdAt.getTime())
+      .slice(0, input.limit)
+  }
+
+  async listAddonOrdersOf(eventId: string): Promise<Order[]> {
+    return this.orders.filter((o) => o.eventId === eventId && o.addonSlug !== null)
+  }
+
+  async countByStatus(status: Order['status']): Promise<number> {
+    return this.orders.filter((o) => o.status === status).length
   }
 
   async setStatus(input: {

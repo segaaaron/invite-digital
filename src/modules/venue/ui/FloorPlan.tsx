@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import { moveElementsAction, removeZoneAction } from '../actions'
+import { moveElementsAction, removeZoneAction } from '@/app/_acciones/venue/actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { ElementMove } from '../application/move-element'
 import { seatRing } from '../domain/seat-ring'

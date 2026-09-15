@@ -1,8 +1,8 @@
 import { plans } from '@/app/composition/container'
 import { ExtraEditor } from '@/modules/admin/ui/ExtraEditor'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 
 export const metadata = { title: 'Extras · Administración' }
 export const dynamic = 'force-dynamic'

@@ -4,7 +4,8 @@ import { useActionState, useId, useState } from 'react'
 import { PanelButton, Pill, FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { QrCodeSvg } from '@/shared/design/ui/QrCodeSvg'
 import { printMarkedOnly } from '@/shared/design/ui/print'
-import { createQrCodeAction, toggleQrCodeAction, updateQrCodeAction, type QrActionState } from '../actions'
+import { createQrCodeAction, toggleQrCodeAction, updateQrCodeAction, type QrActionState } from '@/app/_acciones/qr/actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: QrActionState = { status: 'idle' }
 
@@ -102,9 +103,7 @@ export function QrManager({
           </p>
         ) : null}
 
-        <PanelButton className="w-fit" disabled={creando} type="submit" variant="primary">
-          {creando ? 'Creando…' : '+ Crear código'}
-        </PanelButton>
+        <SubmitButton className="w-fit" variant="primary" pending={creando} pendingLabel={'Creando…'}>{'+ Crear código'}</SubmitButton>
       </form>
 
       {codes.length === 0 ? (
@@ -223,9 +222,7 @@ function QrRow({ code, eventId, eventSlug }: { code: QrView; eventId: string; ev
             </div>
           </div>
 
-          <PanelButton className="w-fit" disabled={editando} type="submit" variant="primary">
-            {editando ? 'Guardando…' : 'Guardar'}
-          </PanelButton>
+          <SubmitButton className="w-fit" variant="primary" pending={editando} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
         </form>
       ) : null}
     </li>

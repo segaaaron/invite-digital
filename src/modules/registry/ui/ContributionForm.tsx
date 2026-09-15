@@ -2,7 +2,7 @@
 
 import { useId, useState, useTransition } from 'react'
 import { CONTRIBUTION_METHODS, type ContributionMethod } from '../domain/fund'
-import { recordContributionAction } from '../actions'
+import { recordContributionAction } from '@/app/_acciones/registry/actions'
 import { centsOrMessage, FIELD_CLASS_DARK, LABEL_CLASS_DARK, nullIfBlank, SUBMIT_CLASS_DARK } from './shared'
 
 const NOMBRE_DEL_METODO: Record<ContributionMethod, string> = {
@@ -127,7 +127,7 @@ export function ContributionForm({ eventId, eventSlug, fundId }: { eventId: stri
         </p>
       )}
 
-      <button className={SUBMIT_CLASS_DARK} disabled={pendiente} onClick={enviar} type="button">
+      <button className={SUBMIT_CLASS_DARK} disabled={pendiente} onClick={enviar} type="button" aria-busy={(pendiente) || undefined}>
         {pendiente ? 'Registrando…' : 'Registrar'}
       </button>
     </div>

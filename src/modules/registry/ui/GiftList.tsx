@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 import { formatAmount } from '../domain/money'
 import type { GiftStatus } from '../domain/gift'
 import type { GiftRow } from '../application/ports'
-import { markPurchasedAction, releaseGiftAsAtelierAction, removeGiftAction } from '../actions'
+import { markPurchasedAction, releaseGiftAsAtelierAction, removeGiftAction } from '@/app/_acciones/registry/actions'
 import { GiftForm } from './GiftForm'
 import { PILL_CLASS } from './shared'
 

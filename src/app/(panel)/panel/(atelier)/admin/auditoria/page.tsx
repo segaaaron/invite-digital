@@ -1,9 +1,9 @@
 import { admin } from '@/app/composition/container'
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
+import { LoadMoreLink } from '@/shared/design/ui/panel/estados'
 
 export const metadata = { title: 'Auditoría' }
 export const dynamic = 'force-dynamic'
@@ -106,11 +106,7 @@ export default async function AdminAuditoriaPage({ searchParams }: { searchParam
                 ))}
               </tbody>
             </table>
-            {hayMas ? (
-              <div className="mt-4 flex justify-center">
-                <PanelButton href={`/panel/admin/auditoria?n=${tope + PAGINA}`}>Ver más</PanelButton>
-              </div>
-            ) : null}
+            {hayMas ? <LoadMoreLink href={`/panel/admin/auditoria?n=${tope + PAGINA}`} noun="registros" /> : null}
           </div>
         )}
       </PanelCard>

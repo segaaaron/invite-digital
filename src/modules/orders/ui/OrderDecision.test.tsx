@@ -1,10 +1,10 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { DecideOrderState } from '../actions'
+import type { DecideOrderState } from '@/app/_acciones/orders/actions'
 import { OrderDecision } from './OrderDecision'
 
 const decidir = vi.hoisted(() => vi.fn<(previo: DecideOrderState, datos: FormData) => Promise<DecideOrderState>>())
-vi.mock('../actions', () => ({ decideOrderAction: decidir }))
+vi.mock('@/app/_acciones/orders/actions', () => ({ decideOrderAction: decidir }))
 
 describe('OrderDecision', () => {
   it('la decisión viaja en el botón pulsado, no en un campo que se actualiza tarde', async () => {

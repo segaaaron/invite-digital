@@ -16,7 +16,7 @@ vi.mock('react', async () => {
   }
 })
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/plans/actions', () => ({
   applyPlanChangeAction: (...args: unknown[]) => applyPlanChangeAction(...args),
   rejectPlanChangeAction: (...args: unknown[]) => rejectPlanChangeAction(...args),
 }))
@@ -40,7 +40,7 @@ describe('PlanDecisionForms', () => {
   })
 
   it('si aplicar el cambio falla, la pantalla lo dice y no lo da por hecho', async () => {
-    const actions = await import('../actions')
+    const actions = await import('@/app/_acciones/plans/actions')
     estados.set(actions.applyPlanChangeAction, { status: 'error', kind: 'already_resolved' })
 
     render(<PlanDecisionForms {...props} />)
@@ -49,7 +49,7 @@ describe('PlanDecisionForms', () => {
   })
 
   it('si descartar falla, también se dice', async () => {
-    const actions = await import('../actions')
+    const actions = await import('@/app/_acciones/plans/actions')
     estados.set(actions.rejectPlanChangeAction, { status: 'error', kind: 'storage_failure' })
 
     render(<PlanDecisionForms {...props} />)
@@ -58,7 +58,7 @@ describe('PlanDecisionForms', () => {
   })
 
   it('aplicado de verdad, ninguna alerta', async () => {
-    const actions = await import('../actions')
+    const actions = await import('@/app/_acciones/plans/actions')
     estados.set(actions.applyPlanChangeAction, { status: 'success' })
 
     render(<PlanDecisionForms {...props} />)

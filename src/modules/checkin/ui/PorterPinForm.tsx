@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { enterAsPorterAction, type PinState } from '../porter-actions'
+import { enterAsPorterAction, type PinState } from '@/app/_acciones/checkin/porter-actions'
 
 const INICIAL: PinState = { status: 'idle' }
 
@@ -40,8 +40,7 @@ export function PorterPinForm({ token }: { token: string }) {
       <button
         className="w-full cursor-pointer rounded-[var(--radius-pill)] bg-gold px-4 py-3.5 font-mono text-[11px] tracking-[0.3em] text-shell-deep uppercase disabled:opacity-50"
         disabled={entrando}
-        type="submit"
-      >
+        type="submit" aria-busy={(entrando) || undefined}>
         {entrando ? 'Entrando…' : 'Entrar a la puerta'}
       </button>
     </form>

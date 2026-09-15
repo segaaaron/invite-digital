@@ -2,11 +2,12 @@ import { notFound } from 'next/navigation'
 import { events, planner } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { fiestaDeTema } from '@/modules/events'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { gestionaElEvento } from '@/modules/identity'
+import { requireSession } from '@/app/_acciones/sesion'
 import { avanceDeTareas, estadoDeTarea, etapasDe, FILTROS_DE_TAREAS, filtrarTareas, type FiltroDeTareas } from '@/modules/planner'
 import { NewTaskForm, SeedTasksButton, TaskBoard } from '@/modules/planner/ui/TaskBoard'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fecha } from '@/shared/format/fecha'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
@@ -41,7 +42,7 @@ export default async function TareasPage({
   const todas = await planner.listTasks(event.value.id)
   const filtro = (FILTROS_DE_TAREAS as readonly string[]).includes(pedido ?? '') ? (pedido as FiltroDeTareas) : 'todas'
   // «Mías»: quien celebra ve las de los anfitriones; su planner y quien lleva el evento, las del planner.
-  const dueno = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const dueno = gestionaElEvento(actor, event.value)
   const mias = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).includes('planner') ? 'planner' : 'anfitrion'
   const visibles = filtrarTareas(todas, filtro, { hoy, mias }).map((t) => ({
     ...t,

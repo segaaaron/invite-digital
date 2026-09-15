@@ -9,7 +9,7 @@ const addFundAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionRe
 const updateFundAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }))
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/registry/actions', () => ({
   addFundAction: (...args: unknown[]) => addFundAction(...(args as [Record<string, unknown>])),
   updateFundAction: (...args: unknown[]) => updateFundAction(...(args as [Record<string, unknown>])),
 }))

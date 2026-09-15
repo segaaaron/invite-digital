@@ -1,11 +1,13 @@
 import type { ReactNode } from 'react'
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, guests, leads, orders, plans } from '@/app/composition/container'
-import { unreadCount } from '@/modules/guestbook'
-import { isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity/domain/access'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { checkin, events, guestbook, guests, plans } from '@/app/composition/container'
+import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
+import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
+import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { hasFeature } from '@/modules/plans'
+import { insigniasDeAdmin } from '../../../_carcasa/insignias-de-admin'
 import { isErr } from '@/shared/result'
 
 /**
@@ -39,42 +41,38 @@ export default async function EventoLayout({
     throw new Error(event.error.detail)
   }
 
-  // Las insignias de la barra. Si una falla, la barra se pinta sin ella: un contador no
-  // es motivo para tumbar la página que lo rodea.
-  const grupos = await guests.list(event.value.id)
-  const libro = await guestbook.list(event.value.id)
-  const capacidad = await plans.allowanceFor(event.value.id)
-
-  const conPuerta = await plans.requireFeature(event.value.id, 'checkin')
-  const puerta = isErr(conPuerta) ? null : await checkin.state(event.value.id)
-
-  // La insignia cuenta lo que espera decisión. Un pedido con comprobante y sin mirar es
-  // alguien que transfirió y no ha recibido nada.
-  const pedidos = await orders.list()
-  const porRevisar = isErr(pedidos) ? null : pedidos.value.filter((p) => p.order.status === 'proof_submitted').length
-  // Solo para el admin: es el único que ve la bandeja de consultas.
-  const consultasNuevas = isAdmin(actor) ? await leads.countNew() : null
-
-  // Quien entra por pertenencia ve la barra de su papel en el equipo.
-  const dueno = isAdmin(actor) || (actor.role === 'atelier' && event.value.userId === actor.userId)
-  const equipo = dueno || actor.role === 'puerta' ? null : rolEnEquipo(await events.staff.membershipsOf(event.value.id, actor.userId))
-  const mesaPlanner = actor.role === 'puerta' ? false : (await events.staff.eventIdsOf(actor.userId, ['planner'])).length > 0
+  // Las insignias de la barra, en paralelo: eran once lecturas en fila. Si una falla, la barra
+  // se pinta sin ella: un contador no es motivo para tumbar la página que lo rodea.
+  const id = event.value.id
+  const dueno = gestionaElEvento(actor, event.value)
+  const [grupos, libro, capacidad, insignias, equipo, mesaPlanner] = await Promise.all([
+    guests.contar(id).catch(() => null),
+    guestbook.sinLeer(id).catch(() => null),
+    plans.allowanceFor(id),
+    insigniasDeAdmin(actor),
+    // Quien entra por pertenencia ve la barra de su papel en el equipo.
+    dueno || actor.role === 'puerta' ? null : events.staff.membershipsOf(id, actor.userId).then(rolEnEquipo),
+    actor.role === 'puerta' ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
+  ])
+  // La capacidad ya leída dice si trae puerta: `requireFeature` la volvía a calcular entera.
+  const puerta = !isErr(capacidad) && hasFeature(capacidad.value, 'checkin') ? await checkin.state(id) : null
 
   return (
     <PanelFrame
       brandSub={`EVENTO · ${event.value.slug.toUpperCase()}`}
       sections={panelNav(event.value.slug, {
-        invitados: isErr(grupos) ? null : grupos.value.length,
-        sinLeer: isErr(libro) ? null : unreadCount(libro.value),
+        invitados: grupos,
+        sinLeer: libro,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
-        pedidos: porRevisar,
-        consultas: consultasNuevas,
+        pedidos: insignias.pedidos,
+        consultas: insignias.consultas,
       }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner })}
       user={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'PLAN —' : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,
       }}
     >
+      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
       {children}
     </PanelFrame>
   )

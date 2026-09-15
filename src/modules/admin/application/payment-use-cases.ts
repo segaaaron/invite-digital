@@ -1,4 +1,4 @@
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import { attempt, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import { EMPTY_PAYMENT_SETTINGS, PAYMENT_KEYS, type PaymentSettings } from '../domain/payment-settings'

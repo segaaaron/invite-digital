@@ -1,9 +1,11 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { Field, FIELD_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { savePlanAction, type AdminActionState } from '../actions'
+import { Field, FIELD_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import { savePlanAction } from '@/app/_acciones/admin/planes-actions'
 import { MAX_FUNCIONES, type TextoPlanLimpio } from '../domain/plan-editable'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -209,9 +211,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <PanelButton disabled={guardando} type="submit" variant="primary">
-          {guardando ? 'Guardando…' : 'Guardar plan'}
-        </PanelButton>
+        <SubmitButton variant="primary" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar plan'}</SubmitButton>
         {plan.eventos > 0 ? (
           <span className="text-[12px] text-ink-mute">
             Cambiar el tope o las funciones afecta ya a sus {plan.eventos} evento{plan.eventos === 1 ? '' : 's'}.
@@ -219,8 +219,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
         ) : null}
       </div>
 
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
-      {estado.status === 'success' && estado.message !== undefined ? <PanelAlert tone="ok">{estado.message}</PanelAlert> : null}
+      <ActionFeedback state={estado} />
     </form>
   )
 }

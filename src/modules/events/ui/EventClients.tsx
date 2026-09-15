@@ -2,8 +2,9 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { addEventClientAction, removeDoorStaffAction, type StaffActionState } from '../staff-actions'
+import { addEventClientAction, removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
 import type { StaffMember } from './DoorStaff'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -88,9 +89,7 @@ export function EventClients({
           enviársela. Si el correo ya tiene cuenta, se le da acceso sin tocar su contraseña.
         </p>
 
-        <PanelButton disabled={dandoAlta} type="submit" variant="primary">
-          {dandoAlta ? 'Dando acceso…' : 'Dar acceso al cliente'}
-        </PanelButton>
+        <SubmitButton variant="primary" pending={dandoAlta} pendingLabel={'Dando acceso…'}>{'Dar acceso al cliente'}</SubmitButton>
 
         {alta.status === 'error' ? (
           <p className="text-[13px] text-danger" role="alert">

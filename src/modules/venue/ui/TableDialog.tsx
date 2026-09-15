@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
-import { addTableAction } from '../actions'
+import { addTableAction } from '@/app/_acciones/venue/actions'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { TABLE_SHAPES, type TableShape } from '../domain/venue-table'
 
@@ -173,7 +173,7 @@ export function TableDialog({
         <PanelButton disabled={pendiente} onClick={cerrar}>
           Cancelar
         </PanelButton>
-        <PanelButton variant="primary" disabled={pendiente} onClick={guardar}>
+        <PanelButton variant="primary" disabled={pendiente} onClick={guardar} aria-busy={(pendiente) || undefined}>
           {pendiente ? 'Guardando…' : 'Guardar'}
         </PanelButton>
       </div>

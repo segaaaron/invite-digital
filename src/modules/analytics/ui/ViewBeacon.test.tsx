@@ -3,7 +3,7 @@ import { render } from '@testing-library/react'
 import { ViewBeacon } from './ViewBeacon'
 
 const registrar = vi.hoisted(() => vi.fn(async () => {}))
-vi.mock('../actions', () => ({ recordInvitationViewAction: registrar }))
+vi.mock('@/app/_acciones/analytics/actions', () => ({ recordInvitationViewAction: registrar }))
 
 describe('ViewBeacon', () => {
   beforeEach(() => {

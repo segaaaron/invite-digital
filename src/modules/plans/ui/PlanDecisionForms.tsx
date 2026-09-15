@@ -1,9 +1,9 @@
 'use client'
 
 import { useActionState } from 'react'
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { applyPlanChangeAction, type PlanDecisionState, rejectPlanChangeAction } from '../actions'
+import { applyPlanChangeAction, type PlanDecisionState, rejectPlanChangeAction } from '@/app/_acciones/plans/actions'
 import type { PlansErrorKind } from '../domain/errors'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INITIAL: PlanDecisionState = { status: 'idle' }
 
@@ -36,17 +36,13 @@ export function PlanDecisionForms({ requestId, eventSlug }: { requestId: string;
         <form action={aplicarAction}>
           <input name="requestId" type="hidden" value={requestId} readOnly />
           <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
-          <PanelButton disabled={aplicando} type="submit" variant="primary">
-            {aplicando ? 'Aplicando…' : 'Aplicar el cambio'}
-          </PanelButton>
+          <SubmitButton variant="primary" pending={aplicando} pendingLabel={'Aplicando…'}>{'Aplicar el cambio'}</SubmitButton>
         </form>
 
         <form action={descartarAction}>
           <input name="requestId" type="hidden" value={requestId} readOnly />
           <input name="eventSlug" type="hidden" value={eventSlug} readOnly />
-          <PanelButton disabled={descartando} type="submit">
-            {descartando ? 'Descartando…' : 'Descartar'}
-          </PanelButton>
+          <SubmitButton variant="default" pending={descartando} pendingLabel={'Descartando…'}>{'Descartar'}</SubmitButton>
         </form>
       </div>
 

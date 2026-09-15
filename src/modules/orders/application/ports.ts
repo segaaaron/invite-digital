@@ -23,11 +23,24 @@ export type ProofRow = {
 
 export interface OrderRepository {
   create(order: NewOrder): Promise<Order>
-  /** Un pedido de extra para un evento. `null` si el extra no existe o no está a la venta. */
+  /**
+   * Un pedido de extra para un evento. **Idempotente**: con un pedido abierto (no aprobado) del
+   * mismo extra en ese evento, devuelve ese. `null` si el extra no existe o no está a la venta.
+   */
   createForAddon(order: { publicRef: string; addonSlug: string; eventId: string; customerName: string; contact: string }): Promise<Order | null>
   findByRef(publicRef: string): Promise<Order | null>
   findById(id: string): Promise<Order | null>
-  list(): Promise<Order[]>
+  /** Los pedidos de extras de un evento, del más nuevo al más viejo. */
+  listAddonOrdersOf(eventId: string): Promise<Order[]>
+  /** Cuántos pedidos hay en cada estado, en una consulta. */
+  countByStatusAll(): Promise<Record<OrderStatus, number>>
+  /**
+   * Una página de la bandeja, en la base: filtrada por estado (`null` = todos), ordenada por
+   * `prioridad` y luego lo más nuevo, y cortada en `limit`.
+   */
+  listPage(input: { status: OrderStatus | null; limit: number; prioridad: readonly OrderStatus[] }): Promise<Order[]>
+  /** Cuántos pedidos hay en un estado, sin traerlos. */
+  countByStatus(status: OrderStatus): Promise<number>
   setStatus(input: { id: string; status: OrderStatus; decisionNote: string | null; decidedAt: Date | null }): Promise<void>
   /** Ata el pedido a la boda que creó al aprobarse. */
   linkEvent(orderId: string, eventId: string): Promise<void>

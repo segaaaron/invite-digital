@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { orders } from '@/app/composition/container'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 
 export const dynamic = 'force-dynamic'

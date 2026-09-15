@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import { FakeFileStorage, FakeOrderRepository } from './fake-order-repository'
-import { attachProof, decideOrder, findOrderByRef, listOrders, placeAddonOrder, placeOrder, readProof } from './order-use-cases'
+import { attachProof, decideOrder, findOrderByRef, listOrdersPage, placeAddonOrder, placeOrder, readProof } from './order-use-cases'
 
 const AHORA = new Date('2026-08-25T12:00:00Z')
 const clock = () => AHORA
@@ -225,23 +225,38 @@ describe('decideOrder', () => {
   })
 })
 
-describe('listOrders y readProof', () => {
+describe('listOrdersPage y readProof', () => {
+  const PRIORIDAD = ['proof_submitted', 'pending_payment', 'rejected', 'approved'] as const
+
   it('la bandeja trae cada pedido con sus comprobantes', async () => {
     const { orders, order } = await conPedido()
     await subir(orders)({ rawRef: order.publicRef, bytes: png(), declaredName: 'c.png', declaredType: 'image/png' })
 
-    const lista = await listOrders({ orders, clock })()
+    const lista = await listOrdersPage({ orders, clock })({ status: null, tope: 20, prioridad: PRIORIDAD })
 
-    expect(isOk(lista) && lista.value).toHaveLength(1)
-    expect(isOk(lista) && lista.value[0]?.proofs.map((p) => p.originalName)).toEqual(['c.png'])
+    expect(isOk(lista) && lista.value.pedidos).toHaveLength(1)
+    expect(isOk(lista) && lista.value.pedidos[0]?.proofs.map((p) => p.originalName)).toEqual(['c.png'])
   })
 
   it('un pedido sin comprobantes trae la lista vacía, no falta de la bandeja', async () => {
     const { orders } = await conPedido()
 
-    const lista = await listOrders({ orders, clock })()
+    const lista = await listOrdersPage({ orders, clock })({ status: null, tope: 20, prioridad: PRIORIDAD })
 
-    expect(isOk(lista) && lista.value[0]?.proofs).toEqual([])
+    expect(isOk(lista) && lista.value.pedidos[0]?.proofs).toEqual([])
+  })
+
+  it('pinta solo la página: cuenta todos, corta en el tope y dice si queda más', async () => {
+    const orders = new FakeOrderRepository()
+    for (let i = 0; i < 3; i++) await placeOrder({ orders, clock })({ ...ALTA, customerName: `Cliente ${i}` })
+
+    const pagina = await listOrdersPage({ orders, clock })({ status: null, tope: 2, prioridad: PRIORIDAD })
+
+    expect(isOk(pagina) && pagina.value.pedidos).toHaveLength(2)
+    expect(isOk(pagina) && pagina.value.hayMas).toBe(true)
+    expect(isOk(pagina) && pagina.value.conteo.pending_payment).toBe(3)
+    const todo = await listOrdersPage({ orders, clock })({ status: null, tope: 3, prioridad: PRIORIDAD })
+    expect(isOk(todo) && todo.value.hayMas).toBe(false)
   })
 
   it('el comprobante se lee por su identificador', async () => {
@@ -274,6 +289,16 @@ describe('placeAddonOrder', () => {
     const repo = new FakeOrderRepository()
     const r = await placeAddonOrder({ orders: repo, clock: () => new Date() })({ addonSlug: 'mas-40-grupos', eventId: 'e1', customerName: 'Ana', contact: 'ana@x.bo' })
     expect(isOk(r) && r.value).toMatchObject({ addonSlug: 'mas-40-grupos', eventId: 'e1', status: 'pending_payment' })
+  })
+
+  it('pedirlo otra vez con uno abierto devuelve el mismo pedido, no otro', async () => {
+    const repo = new FakeOrderRepository()
+    const pedir = placeAddonOrder({ orders: repo, clock: () => new Date() })
+    const alta = { addonSlug: 'mas-40-grupos', eventId: 'e1', customerName: 'Ana', contact: 'ana@x.bo' }
+    const uno = await pedir(alta)
+    const dos = await pedir(alta)
+    expect(isOk(uno) && isOk(dos) && dos.value.publicRef === uno.value.publicRef).toBe(true)
+    expect(repo.orders).toHaveLength(1)
   })
 
   it('un extra que no está a la venta no se pide', async () => {

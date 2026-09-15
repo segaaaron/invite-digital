@@ -5,7 +5,7 @@ import { DoorMode } from './DoorMode'
 import { openOutbox } from './outbox'
 
 const recordScansAction = vi.fn()
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/checkin/actions', () => ({
   recordScansAction: (...args: unknown[]) => recordScansAction(...args),
   checkInByGroupAction: vi.fn(async () => ({ scanId: 'x', kind: 'unknown' })),
   adjustArrivalAction: vi.fn(async () => {}),

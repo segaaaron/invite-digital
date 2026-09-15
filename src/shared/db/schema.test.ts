@@ -41,8 +41,8 @@ describe('esquema', () => {
     if (rows.length === 0) throw new Error('No hay planes en la base — ¿corriste `pnpm db:seed`?')
     expect(rows).toEqual([
       { slug: 'atelier', priceCents: 69000, currency: 'BOB' },
-      { slug: 'firma-3d', priceCents: 145000, currency: 'BOB' },
-      { slug: 'alta-costura', priceCents: 290000, currency: 'BOB' },
+      { slug: 'firma-3d', priceCents: 119000, currency: 'BOB' },
+      { slug: 'alta-costura', priceCents: 199000, currency: 'BOB' },
     ])
   })
 
@@ -399,8 +399,8 @@ describe('límites del plan', () => {
       .orderBy(plans.sortOrder)
 
     expect(rows).toEqual([
-      { slug: 'atelier', maxGuestGroups: 30, seating: true, registry: false, checkin: false },
-      { slug: 'firma-3d', maxGuestGroups: 80, seating: true, registry: true, checkin: true },
+      { slug: 'atelier', maxGuestGroups: 40, seating: true, registry: false, checkin: false },
+      { slug: 'firma-3d', maxGuestGroups: 120, seating: true, registry: true, checkin: true },
       { slug: 'alta-costura', maxGuestGroups: null, seating: true, registry: true, checkin: true },
     ])
   })

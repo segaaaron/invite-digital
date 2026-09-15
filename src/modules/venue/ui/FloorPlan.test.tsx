@@ -9,7 +9,7 @@ const push = vi.fn()
 
 const removeZoneAction = vi.fn(async () => ({ ok: true as const }))
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/venue/actions', () => ({
   moveElementsAction: (...args: unknown[]) => moveElementsAction(...(args as [])),
   removeZoneAction: (...args: unknown[]) => removeZoneAction(...(args as [])),
 }))

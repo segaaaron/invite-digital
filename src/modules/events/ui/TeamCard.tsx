@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { addTeamMemberAction, removeTeamMemberAction, type TeamActionState } from '../team-actions'
+import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { addTeamMemberAction, removeTeamMemberAction, type TeamActionState } from '@/app/_acciones/events/team-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: TeamActionState = { status: 'idle' }
 
@@ -27,9 +28,7 @@ function Quitar({ eventId, eventSlug, miembro }: { eventId: string; eventSlug: s
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="userId" readOnly type="hidden" value={miembro.userId} />
       <input name="email" readOnly type="hidden" value={miembro.email} />
-      <PanelButton aria-label={`Quitar a ${miembro.email}`} disabled={enviando} type="submit" variant="danger">
-        {enviando ? 'Quitando…' : 'Quitar'}
-      </PanelButton>
+      <SubmitButton aria-label={`Quitar a ${miembro.email}`} variant="danger" pending={enviando} pendingLabel={'Quitando…'}>{'Quitar'}</SubmitButton>
       {estado.status === 'error' ? <span className="text-[11px] text-danger-deep" role="alert">{estado.message}</span> : null}
     </form>
   )
@@ -91,17 +90,14 @@ export function TeamCard({
             </select>
           </Field>
         </div>
-        {alta.status === 'error' ? <PanelAlert tone="error">{alta.message}</PanelAlert> : null}
-        {alta.status === 'success' ? <PanelAlert tone="ok">{alta.message}</PanelAlert> : null}
+        <ActionFeedback state={alta} />
         {alta.status === 'success' && alta.password ? (
           <p className="font-mono text-[15px] tracking-[0.08em] text-ink" aria-label="Contraseña provisional">
             {alta.password}
           </p>
         ) : null}
         <div>
-          <PanelButton disabled={sumando} type="submit" variant="primary">
-            {sumando ? 'Sumando…' : 'Sumar al equipo'}
-          </PanelButton>
+          <SubmitButton variant="primary" pending={sumando} pendingLabel={'Sumando…'}>{'Sumar al equipo'}</SubmitButton>
         </div>
       </form>
     </div>

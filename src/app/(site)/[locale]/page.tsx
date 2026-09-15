@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 import { NONCE_HEADER } from '@/shared/config/headers'
 import { notFound } from 'next/navigation'
-import { catalog, site } from '@/app/composition/container'
+import { site, webPublica } from '@/app/composition/container'
 import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
@@ -97,9 +97,9 @@ export default async function LandingPage({
   const sitio = sitioPublico(ajustes, locale)
 
   const [plansResult, templatesResult, categoriesResult] = await Promise.all([
-    attempt(() => catalog.listPlans(locale), asOutage),
-    attempt(() => catalog.listTemplates(locale), asOutage),
-    attempt(() => catalog.listCategories(locale), asOutage),
+    attempt(() => webPublica.planes(locale), asOutage),
+    attempt(() => webPublica.modelos(locale), asOutage),
+    attempt(() => webPublica.categorias(locale), asOutage),
   ])
 
   if (!isOk(plansResult)) {

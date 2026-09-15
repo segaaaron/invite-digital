@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation'
 import { events, qr } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { qrUrl } from '@/modules/qr/domain/qr-code'
 import { QrManager } from '@/modules/qr/ui/QrManager'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { err, ok } from '@/shared/result'
 import { leadError } from '../domain/errors'
 import { guardedSubmit } from './guarded-submit'
-import { createRateLimiter } from './rate-limit'
+import { createRateLimiter } from '@/shared/http/rate-limit'
 
 const payload = { name: 'María Rojas', email: 'maria@example.com', locale: 'es' }
 

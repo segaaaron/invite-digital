@@ -1,4 +1,4 @@
-import type { RateLimiter } from '@/modules/leads/application/rate-limit'
+import type { RateLimiter } from '@/shared/http/rate-limit'
 
 export type UnlockOutcome = { status: 'ok' } | { status: 'invalid' } | { status: 'rate_limited' }
 

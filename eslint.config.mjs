@@ -29,6 +29,9 @@ export default defineConfig([
         { type: 'infrastructure', pattern: 'src/modules/*/infrastructure/**' },
         { type: 'ui', pattern: 'src/modules/*/ui/**' },
         { type: 'shared', pattern: 'src/shared/**' },
+        // Las Server Actions: puntos de entrada, como las páginas. Van antes que `app` porque
+        // gana el primer patrón que casa.
+        { type: 'acciones', pattern: 'src/app/_acciones/**' },
         { type: 'app', pattern: 'src/app/**' },
         { type: 'sections', pattern: 'src/sections/**' },
         { type: 'three', pattern: 'src/three/**' },
@@ -45,11 +48,16 @@ export default defineConfig([
             // `application` orquesta el dominio, pero nunca conoce `infrastructure`.
             permitido('application', ['domain', 'application', 'shared']),
             permitido('infrastructure', ['domain', 'application', 'infrastructure', 'shared']),
-            permitido('ui', ['domain', 'application', 'ui', 'shared', 'three']),
+            // La UI llama a las Server Actions (una referencia que Next convierte en petición), pero
+            // no a la composición: `acciones` sí, `app` no.
+            permitido('ui', ['domain', 'application', 'ui', 'shared', 'three', 'acciones']),
+            // Las acciones son frontera: resuelven dependencias en la composición y hablan con los
+            // casos de uso. Ningún módulo importa `acciones` salvo su UI.
+            permitido('acciones', ['acciones', 'app', 'ui', 'application', 'domain', 'infrastructure', 'shared']),
             permitido('sections', ['ui', 'application', 'domain', 'shared', 'three']),
             // Solo la capa de composición ve `infrastructure`: es donde se inyectan las
             // dependencias reales.
-            permitido('app', ['ui', 'application', 'domain', 'shared', 'sections', 'three', 'infrastructure']),
+            permitido('app', ['ui', 'application', 'domain', 'shared', 'sections', 'three', 'infrastructure', 'acciones']),
             permitido('three', ['shared', 'three']),
             permitido('shared', ['shared']),
           ],

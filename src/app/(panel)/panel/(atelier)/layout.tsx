@@ -1,10 +1,11 @@
 import type { ReactNode } from 'react'
-import { events, guestbook, guests, leads, orders, plans } from '@/app/composition/container'
-import { unreadCount } from '@/modules/guestbook'
-import { isAdmin, rolEnEquipo } from '@/modules/identity/domain/access'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { events, guestbook, guests, plans } from '@/app/composition/container'
+import { isAdmin, rolEnEquipo } from '@/modules/identity'
+import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
+import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { insigniasDeAdmin } from '../_carcasa/insignias-de-admin'
 import { isErr } from '@/shared/result'
 
 /**
@@ -22,27 +23,24 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   const listed = admin ? null : await events.listFor(actor)
   const activo = listed === null || isErr(listed) ? null : (listed.value[0] ?? null)
 
-  const grupos = activo === null ? null : await guests.list(activo.id)
-  const libro = activo === null ? null : await guestbook.list(activo.id)
-  const capacidad = activo === null ? null : await plans.allowanceFor(activo.id)
-
-  // La insignia cuenta lo que espera decisión. Un pedido con comprobante y sin mirar es
-  // alguien que transfirió y no ha recibido nada.
-  const pedidos = await orders.list()
-  const porRevisar = isErr(pedidos) ? null : pedidos.value.filter((p) => p.order.status === 'proof_submitted').length
-  // Solo para el admin: es el único que ve la bandeja de consultas.
-  const consultasNuevas = admin ? await leads.countNew() : null
-  const rolEquipo = actor.role === 'cliente' && activo !== null ? rolEnEquipo(await events.staff.membershipsOf(activo.id, actor.userId)) : null
-  const mesaPlanner = actor.role === 'puerta' || admin ? false : (await events.staff.eventIdsOf(actor.userId, ['planner'])).length > 0
+  // Todo lo de la barra en paralelo: eran nueve lecturas en fila antes de pintar nada.
+  const [grupos, libro, capacidad, insignias, rolEquipo, mesaPlanner] = await Promise.all([
+    activo === null ? null : guests.contar(activo.id).catch(() => null),
+    activo === null ? null : guestbook.sinLeer(activo.id).catch(() => null),
+    activo === null ? null : plans.allowanceFor(activo.id),
+    insigniasDeAdmin(actor),
+    actor.role === 'cliente' && activo !== null ? events.staff.membershipsOf(activo.id, actor.userId).then(rolEnEquipo) : null,
+    actor.role === 'puerta' || admin ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
+  ])
 
   return (
     <PanelFrame
       brandSub={admin ? 'ADMINISTRACIÓN' : activo === null ? 'ATELIER' : `EVENTO · ${activo.slug.toUpperCase()}`}
       sections={panelNav(activo?.slug ?? null, {
-        invitados: grupos === null || isErr(grupos) ? null : grupos.value.length,
-        sinLeer: libro === null || isErr(libro) ? null : unreadCount(libro.value),
-        pedidos: porRevisar,
-        consultas: consultasNuevas,
+        invitados: grupos,
+        sinLeer: libro,
+        pedidos: insignias.pedidos,
+        consultas: insignias.consultas,
       }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner })}
       user={{
         title: admin ? 'Administración' : (activo?.title ?? 'Sin eventos todavía'),
@@ -53,6 +51,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
             : `PLAN ${capacidad.value.planSlug.toUpperCase()}`,
       }}
     >
+      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
       {children}
     </PanelFrame>
   )

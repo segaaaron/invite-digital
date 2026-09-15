@@ -11,7 +11,7 @@
  * única forma de volver a tener uno sin escribir SQL.
  */
 import { createInterface } from 'node:readline/promises'
-import { createCredential } from '@/modules/identity/domain/credential'
+import { createCredential } from '@/modules/identity'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { isErr } from '@/shared/result'

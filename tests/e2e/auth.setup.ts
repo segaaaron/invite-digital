@@ -11,7 +11,7 @@ async function entrar(page: import('@playwright/test').Page, quien: { email: str
   await page.getByLabel('Contraseña').fill(quien.password)
   await page.getByRole('button', { name: 'Entrar' }).click()
   // Entrar cae en el resumen del evento activo; sin ningún evento, en la bandeja.
-  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+)?$/)
+  await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+|\/admin)?$/)
 
   await page.context().storageState({ path: destino })
 }

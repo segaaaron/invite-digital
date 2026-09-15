@@ -105,7 +105,7 @@ describe('componerHoy', () => {
       HOY,
     )
     expect(hoy.riesgos.map((a) => a.clave)).toEqual(['sin-invitados:vacia'])
-    expect(hoy.riesgos[0]?.href).toBe('/panel/eventos/vacia/invitados')
+    expect(hoy.riesgos[0]?.href).toBe('/panel/eventos/vacia/configuracion')
   })
 
   it('atascados: acceso sin estrenar a los 3 días, no antes', () => {
@@ -121,6 +121,25 @@ describe('componerHoy', () => {
     )
     expect(hoy.atascados.map((a) => a.titulo)).toEqual(['viejo@x.bo'])
     expect(hoy.atascados[0]?.href).toBe('/panel/admin/usuarios')
+  })
+
+  it('muchos comprobantes se resumen en un aviso que abre la bandeja filtrada: «Hoy» no pinta setecientas filas', () => {
+    const pedidosPorRevisar = Array.from({ length: 6 }, (_, i) => ({ ref: `R${i}`, customerName: `Cliente ${i}`, createdAt: new Date(`2026-09-0${i + 1}T15:00:00Z`) }))
+    const hoy = componerHoy({ ...vacio, pedidosPorRevisar }, HOY)
+    expect(hoy.ventas).toEqual([
+      expect.objectContaining({ clave: 'comprobantes', titulo: '6 comprobantes por revisar', detalle: 'El más antiguo espera desde hace 13 días', href: '/panel/pedidos?estado=proof_submitted' }),
+    ])
+    expect(hoy.totales.pedidos).toBe(6)
+    // Hasta cinco van sueltos: cada uno es alguien que ya pagó.
+    expect(componerHoy({ ...vacio, pedidosPorRevisar: pedidosPorRevisar.slice(0, 5) }, HOY).ventas).toHaveLength(5)
+  })
+
+  it('muchos pedidos sin pago se resumen en un aviso que abre la bandeja filtrada', () => {
+    const pedidosSinPago = Array.from({ length: 4 }, (_, i) => ({ ref: `S${i}`, customerName: `Sin pago ${i}`, createdAt: new Date(`2026-08-0${i + 1}T15:00:00Z`) }))
+    const hoy = componerHoy({ ...vacio, pedidosSinPago }, HOY)
+    expect(hoy.atascados).toEqual([
+      expect.objectContaining({ clave: 'sin-pago', titulo: '4 pedidos sin pago', href: '/panel/pedidos?estado=pending_payment' }),
+    ])
   })
 
   it('atascados: pedido sin pago a los 7 días, no antes', () => {

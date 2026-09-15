@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import { events, guestbook } from '@/app/composition/container'
 import { unreadCount } from '@/modules/guestbook'
 import { InboxFilters } from '@/modules/guestbook/ui/InboxFilters'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
 

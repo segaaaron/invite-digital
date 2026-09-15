@@ -1,12 +1,12 @@
 import { notFound } from 'next/navigation'
 import { catalog, events, plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { capacidadDePlan, NOMBRE_DE_EFECTO, type Allowance } from '@/modules/plans'
 import { BillingToggle } from '@/modules/plans/ui/BillingToggle'
 import { PlanChangeForm } from '@/modules/plans/ui/PlanChangeForm'
 import { PlanDecisionForms } from '@/modules/plans/ui/PlanDecisionForms'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Plan' }
@@ -26,7 +26,8 @@ export default async function PlanPage({
   const { slug } = await params
   const { plan: planPedido } = await searchParams
 
-  const event = await events.getFor(actor, slug)
+  // Plan y cambio de plan son administración comercial: la ficha, que abren el admin y el dueño.
+  const event = await events.getFor(actor, slug, { section: 'ficha' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)

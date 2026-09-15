@@ -1,8 +1,8 @@
 import { site } from '@/app/composition/container'
 import { formatoWhatsapp } from '@/modules/admin/domain/site-settings'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { HelpCenter } from '@/shared/help/HelpCenter'
 import { SupportForm } from '@/shared/help/SupportForm'
 

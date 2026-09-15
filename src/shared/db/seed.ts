@@ -21,44 +21,44 @@ const PLANS = [
     order: 1,
     // El plan de entrada: la lista de invitados va limitada y el salón es lo único
     // avanzado que trae. Mesa de regalos y modo puerta son de los planes de arriba.
-    limits: { maxGuestGroups: 30, seating: true, registry: false, checkin: false, doorPorters: 0, cohosts: 1, hiredPlanners: 0, galleryPhotos: 8, guestPhotos: false, eventPassword: false, csvImport: false, onlineDays: 60, designChange: 'ninguno', plannerSuite: 'esencial' },
+    limits: { maxGuestGroups: 40, seating: true, registry: false, checkin: false, doorPorters: 0, cohosts: 1, hiredPlanners: 0, galleryPhotos: 8, guestPhotos: false, eventPassword: false, csvImport: false, onlineDays: 60, designChange: 'ninguno', plannerSuite: 'esencial' },
     // Solo lo que el sistema entrega de verdad: nada de «3D real», dominio propio ni
     // papelería, que se prometían y no existían.
     es: {
       name: 'Atelier',
       tagline: 'Tu invitación, lista',
-      description: 'Tu invitación digital con confirmación de asistencia y panel en vivo.',
-      features: ['Portada con sobre animado', 'Galería de fotos', 'Cuenta regresiva, mapa e itinerario', 'Confirmación de asistencia con panel en vivo', 'Mesas y plano del salón'],
+      description: 'Tu invitación digital con confirmación de asistencia, mesas y plan de tareas.',
+      features: ['Invitación con portada animada y música', 'Hasta 40 grupos de invitados', 'Confirmación de asistencia con panel en vivo', 'Mesas y plano del salón', 'Plan de tareas y presupuesto', '8 fotos en la galería y 60 días en línea'],
     },
     en: {
       name: 'Atelier',
       tagline: 'Your invitation, ready',
-      description: 'Your digital invitation with RSVP and a live dashboard.',
-      features: ['Animated envelope cover', 'Photo gallery', 'Countdown, map and itinerary', 'RSVP with a live dashboard', 'Tables and floor plan'],
+      description: 'Your digital invitation with RSVP, tables and a task plan.',
+      features: ['Invitation with animated cover and music', 'Up to 40 guest groups', 'RSVP with a live dashboard', 'Tables and floor plan', 'Task plan and budget', '8 gallery photos and 60 days online'],
     },
   },
   {
     slug: 'firma-3d',
-    priceCents: 145000,
+    priceCents: 119000,
     highlighted: true,
     order: 2,
-    limits: { maxGuestGroups: 80, seating: true, registry: true, checkin: true, doorPorters: 3, cohosts: 3, hiredPlanners: 1, galleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'antes_de_repartir', plannerSuite: 'completo' },
+    limits: { maxGuestGroups: 120, seating: true, registry: true, checkin: true, doorPorters: 3, cohosts: 3, hiredPlanners: 1, galleryPhotos: 20, guestPhotos: true, eventPassword: true, csvImport: true, onlineDays: 180, designChange: 'antes_de_repartir', plannerSuite: 'completo' },
     es: {
       name: 'Firma 3D',
       tagline: 'Organiza todo el día',
-      description: 'Invitados, mesas, regalos y la puerta con pases QR, en un solo panel.',
-      features: ['Todo lo de Atelier', 'Mesa de regalos y fondos', 'Pases con QR y modo puerta sin conexión', 'Música de fondo'],
+      description: 'Invitados, regalos, la puerta con pases QR y el día del evento, en un solo panel.',
+      features: ['Todo lo de Atelier', 'Hasta 120 grupos e importación desde CSV', 'Mesa de regalos y fondos', 'Pases QR, modo puerta y 3 porteros', 'Proveedores, cronograma, cortejo y documentos', 'Fotos de los invitados y contraseña', '3 co-anfitriones y tu planner sin costo', '20 fotos, 180 días en línea y cambio de modelo antes de repartir'],
     },
     en: {
       name: 'Signature 3D',
       tagline: 'Run the whole day',
-      description: 'Guests, tables, registry and the door with QR passes, in one dashboard.',
-      features: ['Everything in Atelier', 'Gift registry and cash funds', 'QR passes and offline door mode', 'Background music'],
+      description: 'Guests, registry, the door with QR passes and the event day, in one dashboard.',
+      features: ['Everything in Atelier', 'Up to 120 guest groups and CSV import', 'Gift registry and cash funds', 'QR passes, door mode and 3 door staff', 'Vendors, run sheet, wedding party and documents', 'Guest photos and password', '3 co-hosts and your planner at no cost', '20 photos, 180 days online and design change before sending'],
     },
   },
   {
     slug: 'alta-costura',
-    priceCents: 290000,
+    priceCents: 199000,
     highlighted: false,
     order: 3,
     // `null` es sin límite. No es cero.
@@ -66,14 +66,14 @@ const PLANS = [
     es: {
       name: 'Alta Costura',
       tagline: 'Lo hacemos contigo',
-      description: 'Todo lo de Firma 3D, sin límite de invitados y con una persona asignada.',
-      features: ['Todo lo de Firma 3D', 'Invitados sin límite', 'Atención de una persona asignada'],
+      description: 'Todo lo de Firma 3D sin límites, con el Día D y una persona asignada.',
+      features: ['Todo lo de Firma 3D', 'Invitados y fotos sin límite', 'Día D en el teléfono y enlaces para proveedores', '10 porteros', 'Co-anfitriones y planners sin límite', 'Cambio de modelo cuando quieras', '365 días en línea', 'Atención de una persona asignada'],
     },
     en: {
       name: 'Haute Couture',
       tagline: 'We do it with you',
-      description: 'Everything in Signature 3D, unlimited guests and a dedicated person.',
-      features: ['Everything in Signature 3D', 'Unlimited guests', 'A dedicated person'],
+      description: 'Everything in Signature 3D without limits, with Day-of and a dedicated person.',
+      features: ['Everything in Signature 3D', 'Unlimited guests and photos', 'Day-of on your phone and vendor links', '10 door staff', 'Unlimited co-hosts and planners', 'Change design anytime', '365 days online', 'A dedicated person'],
     },
   },
 ] as const

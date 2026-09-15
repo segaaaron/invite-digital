@@ -7,7 +7,7 @@ vi.mock('react', async (original) => {
   const react = await original<typeof import('react')>()
   return { ...react, useActionState: (_accion: unknown, inicial: unknown) => [estado.valor.status === 'idle' ? inicial : estado.valor, vi.fn(), false] }
 })
-vi.mock('../porter-actions', () => ({ addPorterAction: vi.fn(), removePorterAction: vi.fn() }))
+vi.mock('@/app/_acciones/checkin/porter-actions', () => ({ addPorterAction: vi.fn(), removePorterAction: vi.fn() }))
 
 const base = { eventId: 'e1', eventSlug: 'xv-valeria', limite: 3 }
 const portero = { id: 'p1', name: 'Carlos', gate: 'Puerta 1', phone: '+59170012345', createdAt: '14 sep 2026', registradas: 0, ultima: null }

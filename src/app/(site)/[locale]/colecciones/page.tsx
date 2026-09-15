@@ -3,7 +3,7 @@ import { headers } from 'next/headers'
 import { NONCE_HEADER } from '@/shared/config/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { catalog, site } from '@/app/composition/container'
+import { site, webPublica } from '@/app/composition/container'
 import { enlaceWhatsapp, formatoWhatsapp } from '@/shared/whatsapp'
 import { TemplateCard } from '@/modules/catalog/ui/TemplateCard'
 import { FIESTAS, type Fiesta } from '@/modules/events'
@@ -70,7 +70,7 @@ export default async function CollectionsPage({
   // Same reason as the landing: a connection failure throws, and this page already has
   // a designed fallback for "no catalog" — it should be what the visitor sees.
   const templatesResult = await attempt(
-    () => catalog.listTemplates(locale),
+    () => webPublica.modelos(locale),
     (cause) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' }),
   )
 

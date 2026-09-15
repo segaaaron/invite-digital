@@ -10,7 +10,7 @@ export const createDrizzleSessionRepository = (database: DbExecutor): SessionRep
 
   async findByTokenHash(tokenHash) {
     const [row] = await database
-      .select({ id: sessions.id, userId: sessions.userId, expiresAt: sessions.expiresAt })
+      .select({ id: sessions.id, userId: sessions.userId, expiresAt: sessions.expiresAt, supportSessionId: sessions.supportSessionId })
       .from(sessions)
       .where(eq(sessions.tokenHash, tokenHash))
       .limit(1)

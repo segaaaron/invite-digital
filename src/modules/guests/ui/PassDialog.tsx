@@ -2,10 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef } from 'react'
-import { resendInvitationAction, type ResendState } from '../actions'
+import { resendInvitationAction, type ResendState } from '@/app/_acciones/guests/actions'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { printMarkedOnly } from '@/shared/design/ui/print'
 import { PassQrSvg } from './PassQrSvg'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ResendState = { status: 'idle' }
 
@@ -94,9 +95,7 @@ export function PassDialog({
             <input name="eventSlug" type="hidden" value={eventSlug} />
             <input name="groupId" type="hidden" value={group.id} />
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
-            <PanelButton variant="primary" disabled={pendiente} type="submit">
-              {pendiente ? 'Generando…' : 'Generar pase'}
-            </PanelButton>
+            <SubmitButton variant="primary" pending={pendiente} pendingLabel={'Generando…'}>{'Generar pase'}</SubmitButton>
           </form>
         </>
       ) : (

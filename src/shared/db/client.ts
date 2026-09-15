@@ -5,7 +5,16 @@ import * as schema from './schema'
 
 const globalForDb = globalThis as unknown as { __invitePg?: ReturnType<typeof postgres> }
 
-const client = globalForDb.__invitePg ?? postgres(env.DATABASE_URL, { max: 10, idle_timeout: 20 })
+// Con `DB_LOG_QUERIES=1` cada consulta sale al registro con la marca `[sql]`: se cuentan por
+// petición para medir. Solo el principio del texto y nunca los parámetros.
+const registrarConsultas = env.DB_LOG_QUERIES === '1'
+const client =
+  globalForDb.__invitePg ??
+  postgres(env.DATABASE_URL, {
+    max: 10,
+    idle_timeout: 20,
+    ...(registrarConsultas ? { debug: (_conexion: number, consulta: string) => console.log('[sql]', consulta.replace(/\s+/g, ' ').slice(0, 140)) } : {}),
+  })
 
 if (env.NODE_ENV !== 'production') globalForDb.__invitePg = client
 

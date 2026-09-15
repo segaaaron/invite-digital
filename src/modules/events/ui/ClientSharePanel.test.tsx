@@ -20,7 +20,7 @@ vi.mock('react', async () => {
   }
 })
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/events/actions', () => ({
   createClientShareAction: (...args: unknown[]) => createClientShareAction(...args),
   revokeClientShareAction: (...args: unknown[]) => revokeClientShareAction(...args),
 }))
@@ -43,7 +43,7 @@ describe('ClientSharePanel', () => {
   })
 
   it('cuando la revocación falla, la pantalla dice que el enlace sigue activo', async () => {
-    const actions = await import('../actions')
+    const actions = await import('@/app/_acciones/events/actions')
     estados.set(actions.revokeClientShareAction, { status: 'error' })
 
     render(<ClientSharePanel {...props} />)
@@ -52,7 +52,7 @@ describe('ClientSharePanel', () => {
   })
 
   it('revocado de verdad no deja ninguna alerta', async () => {
-    const actions = await import('../actions')
+    const actions = await import('@/app/_acciones/events/actions')
     estados.set(actions.revokeClientShareAction, { status: 'success' })
 
     render(<ClientSharePanel {...props} />)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { unlockEventAction, type UnlockState } from '../actions'
+import { unlockEventAction, type UnlockState } from '@/app/_acciones/events/actions'
 
 /**
  * La puerta de un evento protegido con contraseña.
@@ -44,8 +44,7 @@ export function EventPasswordGate({ token }: { token: string }) {
         <button
           className="rounded-full bg-gold px-5 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-white uppercase disabled:opacity-60"
           disabled={pending}
-          type="submit"
-        >
+          type="submit" aria-busy={(pending) || undefined}>
           {pending ? 'Comprobando…' : 'Entrar'}
         </button>
       </form>

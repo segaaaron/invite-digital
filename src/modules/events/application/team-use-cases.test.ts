@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Membership } from '@/modules/identity/domain/access'
+import type { Membership } from '@/modules/identity'
 import { addTeamMember, removeTeamMember, type TeamDeps } from './team-use-cases'
 
 function dobles(usuarios: Array<{ id: string; email: string; role: string }> = []) {

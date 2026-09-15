@@ -1,11 +1,12 @@
 import { admin, catalog, leads } from '@/app/composition/container'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { ESTADOS_CONSULTA, tasaDeCierre } from '@/modules/leads/domain/pipeline'
 import { ConsultationItem } from '@/modules/leads/ui/ConsultationItem'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
+import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 
 export const metadata = { title: 'Consultas · Administración' }
 export const dynamic = 'force-dynamic'
@@ -93,9 +94,7 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
         </div>
 
         {visibles.length === 0 ? (
-          <p className="py-10 text-center text-[13px] text-ink-mute">
-            {filtro === 'new' ? 'Ninguna consulta nueva. Todo contestado.' : 'No hay consultas en este estado.'}
-          </p>
+          <EmptyState title={filtro === 'new' ? 'Ninguna consulta nueva. Todo contestado.' : 'No hay consultas en este estado.'} />
         ) : (
           <ul className="flex flex-col">
             {visibles.map((c) => (

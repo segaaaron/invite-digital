@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { whatsappLink } from '@/modules/guests'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
-import { markReminderSentAction } from '../actions'
+import { markReminderSentAction } from '@/app/_acciones/reminders/actions'
 import type { DueReminder, ReminderKind } from '../domain/due'
 import { reminderMessage } from '../domain/reminder-message'
 
@@ -121,8 +121,7 @@ export function ReminderQueue({
                     })
                     .finally(() => setAnotando(null))
                 }}
-                title="Anota que ya lo recordaste. No vuelve a salir en unos días."
-              >
+                title="Anota que ya lo recordaste. No vuelve a salir en unos días." aria-busy={(anotando === clave(fila)) || undefined}>
                 {anotando === clave(fila) ? 'Anotando…' : 'Marcar recordado'}
               </PanelButton>
             </li>

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { DoorMode } from './DoorMode'
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/checkin/actions', () => ({
   recordScansAction: vi.fn(async ({ scans }: { scans: { scanId: string }[] }) => [
     {
       scanId: scans[0]!.scanId,

@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { changePasswordAction, type ChangePasswordState } from '../actions'
+import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { changePasswordAction, type ChangePasswordState } from '@/app/_acciones/identity/actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
 
@@ -53,9 +54,7 @@ export function ChangePasswordForm() {
         entrar con la nueva.
       </p>
 
-      <PanelButton disabled={pendiente} type="submit" variant="primary">
-        {pendiente ? 'Guardando…' : 'Cambiar la contraseña'}
-      </PanelButton>
+      <SubmitButton variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Cambiar la contraseña'}</SubmitButton>
 
       {estado.status === 'error' ? (
         <p className="text-[13px] text-danger" role="alert">

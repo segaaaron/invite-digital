@@ -1,12 +1,13 @@
 'use client'
 
 import { useActionState, useEffect, useState, type ReactNode } from 'react'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { enlaceWhatsapp, formatoWhatsapp } from '@/shared/whatsapp'
-import { restoreSiteVersionAction, saveSiteSettingsAction, type SiteActionState } from '../actions'
+import { restoreSiteVersionAction, saveSiteSettingsAction, type SiteActionState } from '@/app/_acciones/admin/web-actions'
 import type { Bilingue, SiteSettings } from '../domain/site-settings'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: SiteActionState = { status: 'idle' }
 
@@ -487,9 +488,7 @@ export function SiteSettingsForm({ inicial, versiones }: { inicial: SiteSettings
             <PanelButton disabled={!sucio || guardando} onClick={() => setDatos(JSON.parse(guardado.json) as SiteSettings)}>
               Descartar
             </PanelButton>
-            <PanelButton disabled={!sucio || guardando} form="form-web" type="submit" variant="primary">
-              {guardando ? 'Guardando…' : 'Guardar cambios'}
-            </PanelButton>
+            <SubmitButton disabled={!sucio || guardando} form="form-web" variant="primary" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar cambios'}</SubmitButton>
           </span>
         </div>
       </div>
@@ -528,9 +527,7 @@ function VersionRow({ version, actual, base }: { version: VersionView; actual: b
           <form action={restaurar}>
             <input name="versionId" type="hidden" value={version.id} />
             <input name="base" type="hidden" value={base} />
-            <PanelButton disabled={restaurando} type="submit">
-              {restaurando ? 'Restaurando…' : 'Restaurar'}
-            </PanelButton>
+            <SubmitButton variant="default" pending={restaurando} pendingLabel={'Restaurando…'}>{'Restaurar'}</SubmitButton>
           </form>
         )}
       </div>

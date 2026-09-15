@@ -11,7 +11,7 @@ type ActionResult = { ok: true; message?: string } | { ok: false; kind: string; 
 const claimGiftAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 const releaseGiftAction = vi.fn<(input: Record<string, unknown>) => Promise<ActionResult>>(async () => ({ ok: true }))
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/registry/actions', () => ({
   claimGiftAction: (...args: unknown[]) => claimGiftAction(...(args as [Record<string, unknown>])),
   releaseGiftAction: (...args: unknown[]) => releaseGiftAction(...(args as [Record<string, unknown>])),
 }))

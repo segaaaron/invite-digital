@@ -1,9 +1,10 @@
 'use client'
 
 import { useActionState } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { importGuestsAction, type ImportState } from '../actions'
+import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { importGuestsAction, type ImportState } from '@/app/_acciones/guests/actions'
 import { DeliverySheet } from './DeliverySheet'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 /**
  * Importación masiva desde un CSV.
@@ -40,9 +41,7 @@ export function ImportPanel({
           />
         </label>
 
-        <PanelButton className="w-fit" disabled={pending} type="submit" variant="primary">
-          {pending ? 'Importando…' : 'Importar invitados'}
-        </PanelButton>
+        <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={'Importando…'}>{'Importar invitados'}</SubmitButton>
       </form>
 
       {state.status === 'error' ? (

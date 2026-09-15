@@ -1,5 +1,5 @@
 import { isErr, type Result } from '@/shared/result'
-import type { RateLimiter } from '@/modules/leads/application/rate-limit'
+import type { RateLimiter } from '@/shared/http/rate-limit'
 import type { RsvpError, RsvpErrorKind } from '../domain/errors'
 import type { RsvpResponse } from '../domain/rsvp-response'
 

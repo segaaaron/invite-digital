@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import { EyeIcon, EyeOffIcon } from '@/shared/design/ui/icons'
-import { signInAction, type SignInActionState } from '../actions'
+import { signInAction, type SignInActionState } from '@/app/_acciones/identity/actions'
 
 const INITIAL: SignInActionState = { status: 'idle', message: '' }
 
@@ -107,8 +107,7 @@ export function SignInForm() {
       <button
         className="mt-1 cursor-pointer rounded-[var(--radius-pill)] bg-linear-to-b from-gold to-gold-deep px-7 py-3.5 font-mono text-[10px] tracking-[0.3em] text-bg-raised uppercase shadow-[0_6px_18px_rgb(var(--color-gold-rgb)/0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgb(var(--color-gold-rgb)/0.34)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         disabled={isPending}
-        type="submit"
-      >
+        type="submit" aria-busy={(isPending) || undefined}>
         {isPending ? 'Entrando…' : 'Entrar'}
       </button>
 

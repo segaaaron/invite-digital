@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, count, eq, inArray } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { eventStaff, users } from '@/shared/db/schema'
 import type { Membership, StaffReader } from '../application/ports'
@@ -41,11 +41,11 @@ export const createDrizzleStaffRepository = (database: DbExecutor) => ({
   },
 
   async countOf(eventId: string, membership: Membership): Promise<number> {
-    const filas = await database
-      .select({ userId: eventStaff.userId })
+    const [fila] = await database
+      .select({ total: count() })
       .from(eventStaff)
       .where(and(eq(eventStaff.eventId, eventId), eq(eventStaff.membership, membership)))
-    return filas.length
+    return fila?.total ?? 0
   },
 
   async add(eventId: string, userId: string, membership: Membership): Promise<void> {
@@ -65,6 +65,20 @@ export const createDrizzleStaffRepository = (database: DbExecutor) => ({
   },
 
   /** Los de una clase con su correo, que es lo único que la pantalla enseña de ellos. */
+  /** Los anfitriones de varias bodas en **una** consulta: la cartera los pinta fila a fila. */
+  async hostsOf(eventIds: readonly string[]): Promise<Map<string, StaffRow[]>> {
+    const porEvento = new Map<string, StaffRow[]>()
+    if (eventIds.length === 0) return porEvento
+    const filas = await database
+      .select({ eventId: eventStaff.eventId, userId: eventStaff.userId, email: users.email })
+      .from(eventStaff)
+      .innerJoin(users, eq(users.id, eventStaff.userId))
+      .where(and(inArray(eventStaff.eventId, [...eventIds]), eq(eventStaff.membership, 'cliente')))
+      .orderBy(users.email)
+    for (const { eventId, ...fila } of filas) porEvento.set(eventId, [...(porEvento.get(eventId) ?? []), fila])
+    return porEvento
+  },
+
   async listWithEmail(eventId: string, membership: Membership): Promise<StaffRow[]> {
     return database
       .select({ userId: eventStaff.userId, email: users.email })

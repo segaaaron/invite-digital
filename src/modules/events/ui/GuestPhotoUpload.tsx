@@ -2,7 +2,7 @@
 
 import { useActionState, useId, useRef } from 'react'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
-import { type GuestPhotoState, uploadGuestPhotoAction } from '../actions'
+import { type GuestPhotoState, uploadGuestPhotoAction } from '@/app/_acciones/events/actions'
 
 const INICIAL: GuestPhotoState = { status: 'idle', message: '' }
 

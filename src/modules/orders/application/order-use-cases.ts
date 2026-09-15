@@ -1,6 +1,6 @@
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { ordersError, type OrdersError } from '../domain/errors'
-import { canDecide, canReceiveProof, newPublicRef, normalizeRef, type Order } from '../domain/order'
+import { canDecide, canReceiveProof, newPublicRef, normalizeRef, type Order, type OrderStatus } from '../domain/order'
 import { checkProof } from '../domain/proof'
 import type { FileStorage, OrderRepository, ProofRow } from './ports'
 
@@ -174,18 +174,29 @@ export const attachProof =
   }
 
 /**
- * La bandeja del atelier, de lo más nuevo a lo más viejo, con sus comprobantes.
+ * Una página de la bandeja, con sus comprobantes y el recuento por estado.
  *
- * Los comprobantes vienen en **una** consulta agrupada, no una por fila: veinte pedidos en
- * pantalla serían veintiún viajes a la base para pintar una lista.
+ * **Se pagina en la base.** Leía todos los pedidos de la historia con todos sus comprobantes y
+ * pintaba cada uno: con 1.500 pedidos eran 16 MB de HTML por visita. Ahora el recuento es un
+ * `group by`, la página se corta en `tope` (se pide uno más para saber si queda algo) y los
+ * comprobantes vienen en **una** consulta solo para los que se ven.
  */
-export const listOrders =
-  (deps: Deps) => async (): Promise<Result<{ order: Order; proofs: ProofRow[] }[], OrdersError>> =>
+export const listOrdersPage =
+  (deps: Deps) =>
+  async (input: {
+    status: OrderStatus | null
+    tope: number
+    prioridad: readonly OrderStatus[]
+  }): Promise<Result<{ pedidos: { order: Order; proofs: ProofRow[] }[]; conteo: Record<OrderStatus, number>; hayMas: boolean }, OrdersError>> =>
     attempt(
       async () => {
-        const filas = await deps.orders.list()
-        const porPedido = await deps.orders.listProofsFor(filas.map((o) => o.id))
-        return ok(filas.map((order) => ({ order, proofs: porPedido.get(order.id) ?? [] })))
+        const [conteo, filas] = await Promise.all([
+          deps.orders.countByStatusAll(),
+          deps.orders.listPage({ status: input.status, limit: input.tope + 1, prioridad: input.prioridad }),
+        ])
+        const pagina = filas.slice(0, input.tope)
+        const porPedido = await deps.orders.listProofsFor(pagina.map((o) => o.id))
+        return ok({ pedidos: pagina.map((order) => ({ order, proofs: porPedido.get(order.id) ?? [] })), conteo, hayMas: filas.length > input.tope })
       },
       (cause) => ordersError('storage_failure', `No se pudieron leer los pedidos: ${String(cause)}`),
     )

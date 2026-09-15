@@ -1,11 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
-import type { ReminderActionState } from '../actions'
+import type { ReminderActionState } from '@/app/_acciones/reminders/actions'
 import type { DueReminder } from '../domain/due'
 import { ReminderQueue } from './ReminderQueue'
 
 const anotar = vi.hoisted(() => vi.fn<() => Promise<ReminderActionState>>(async () => ({ status: 'success' })))
-vi.mock('../actions', () => ({ markReminderSentAction: anotar }))
+vi.mock('@/app/_acciones/reminders/actions', () => ({ markReminderSentAction: anotar }))
 
 const CIERRE = new Date('2026-09-28T00:00:00Z')
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { recordInvitationViewAction } from '../actions'
+import { recordInvitationViewAction } from '@/app/_acciones/analytics/actions'
 
 /**
  * Cuenta una visita, una sola vez por pestaña.

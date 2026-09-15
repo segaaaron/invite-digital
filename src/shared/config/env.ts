@@ -50,6 +50,12 @@ const envSchema = z.object({
     (valor) => (valor === '' ? undefined : valor),
     z.string().min(1).default('Luxury Atelier <no-reply@luxuryatelier.net>'),
   ),
+  /**
+   * `1` escribe en el registro cada consulta a Postgres. Es para **medir** —cuántas consultas
+   * cuesta una página— antes y después de optimizar; apagado por defecto y nunca en producción,
+   * porque el texto de una consulta puede llevar datos.
+   */
+  DB_LOG_QUERIES: z.enum(['0', '1']).default('0'),
 })
 
 export type Env = z.infer<typeof envSchema>

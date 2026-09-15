@@ -16,7 +16,8 @@ describe('Button', () => {
 
   it('marca los enlaces externos con rel seguro', () => {
     render(<Button href="https://wa.me/59170012345" external>Escribir</Button>)
-    const link = screen.getByRole('link', { name: 'Escribir' })
+    // Avisa de que abre otra pestaña: quien usa lector de pantalla pierde el «atrás».
+    const link = screen.getByRole('link', { name: 'Escribir (se abre en una pestaña nueva)' })
     expect(link.getAttribute('rel')).toBe('noopener noreferrer')
     expect(link.getAttribute('target')).toBe('_blank')
   })

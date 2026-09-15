@@ -1,6 +1,6 @@
 import { isErr, type Result } from '@/shared/result'
 import type { LeadError, LeadErrorKind } from '../domain/errors'
-import type { RateLimiter } from './rate-limit'
+import type { RateLimiter } from '@/shared/http/rate-limit'
 
 export type ConsultationOutcome = {
   status: 'success' | 'error'

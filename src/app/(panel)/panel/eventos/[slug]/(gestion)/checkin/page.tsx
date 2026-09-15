@@ -3,10 +3,10 @@ import { notFound } from 'next/navigation'
 import { checkin, events, plans } from '@/app/composition/container'
 import { ManualCheckin } from '@/modules/checkin/ui/ManualCheckin'
 import { DoorModeCard } from '@/modules/checkin/ui/DoorModeCard'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { DonutChart, PanelCard, PanelCardLink } from '@/modules/shell/ui/cards'
+import { DonutChart, PanelCard, PanelCardLink } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Check-in' }

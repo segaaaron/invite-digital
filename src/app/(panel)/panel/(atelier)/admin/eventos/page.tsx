@@ -1,4 +1,4 @@
-import { admin } from '@/app/composition/container'
+import { admin, events } from '@/app/composition/container'
 import { ETAPAS, etapaDe, ordenarCartera, type Etapa } from '@/modules/admin/domain/cartera'
 import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { NuevaBodaForm } from '@/modules/admin'
@@ -6,12 +6,13 @@ import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
 import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
 import { fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
+import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { FIELD_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
+import { EmptyState, LoadMoreLink } from '@/shared/design/ui/panel/estados'
 
 export const metadata = { title: 'Eventos · Administración' }
 export const dynamic = 'force-dynamic'
@@ -32,14 +33,17 @@ function cuando(dias: number): string {
  * Filtro y búsqueda viven en la URL (`?etapa=`, `?q=`). La búsqueda es un formulario `GET`
  * normal, sin JavaScript: una lista de bodas no necesita filtrar a cada tecla.
  */
+/** Bodas por página en la cartera. */
+const PAGINA = 20
+
 export default async function AdminEventosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ etapa?: string; q?: string; panel?: string }>
+  searchParams: Promise<{ etapa?: string; q?: string; panel?: string; n?: string }>
 }) {
   await requireAdmin()
 
-  const { etapa: etapaPedida, q = '', panel } = await searchParams
+  const { etapa: etapaPedida, q = '', panel, n } = await searchParams
   const [eventos, usuarios, planes] = await Promise.all([admin.events(), admin.users(), admin.planOptions()])
   const hoy = fechaEnBolivia(new Date())
   const filtro: Etapa | 'todas' = ETAPAS.find((e) => e.clave === etapaPedida)?.clave ?? 'todas'
@@ -60,6 +64,14 @@ export default async function AdminEventosPage({
       (busqueda === '' || [e.title, e.slug, e.ownerEmail ?? ''].some((campo) => campo.toLowerCase().includes(busqueda))),
   )
   const mostrarAlta = panel === 'nueva' || cartera.length === 0
+  // **Se pinta una página**, no la cartera entera: cada fila es un componente cliente con cuatro
+  // formularios, y con 400 bodas eran 4,9 MB de HTML por visita. Los recuentos de arriba siguen
+  // siendo de todas. «Ver más» sube el tope en la dirección, como en Auditoría.
+  const pedidoTope = Number(n)
+  const tope = Number.isInteger(pedidoTope) && pedidoTope > 0 ? Math.min(pedidoTope, 1000) : PAGINA
+  const pagina = visibles.slice(0, tope)
+  // Los anfitriones de las que se pintan, en una sola consulta: para el soporte de cada fila.
+  const anfitriones = await events.staff.hostsOf(pagina.map((e) => e.id))
 
   // Lo primero que se lee: qué pide atención ahora, no el total de filas.
   const proximos30 = cartera.filter((e) => {
@@ -75,10 +87,11 @@ export default async function AdminEventosPage({
   const nombreDePlan = new Map(planes.map((p) => [p.slug, p.nombre]))
   const temas = themeDefinitions()
   const nombreDeModelo = new Map(temas.map((t) => [t.key, t.label]))
-  const enlace = (clave: string) => {
+  const enlace = (clave: string, masTope?: number) => {
     const params = new URLSearchParams()
     if (clave !== 'todas') params.set('etapa', clave)
     if (q.trim() !== '') params.set('q', q.trim())
+    if (masTope !== undefined) params.set('n', String(masTope))
     const cadena = params.toString()
     return cadena === '' ? '/panel/admin/eventos' : `/panel/admin/eventos?${cadena}`
   }
@@ -167,12 +180,10 @@ export default async function AdminEventosPage({
             No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
           </p>
         ) : visibles.length === 0 ? (
-          <p className="py-10 text-center text-[13px] text-ink-mute">
-            {cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema.' : 'Ningún evento con ese filtro.'}
-          </p>
+          <EmptyState title={cartera.length === 0 ? 'Todavía no hay ningún evento en el sistema.' : 'Ningún evento con ese filtro.'} />
         ) : (
           <ul className="mt-2 flex flex-col gap-3.5">
-            {visibles.map((evento) => (
+            {pagina.map((evento) => (
               <EventAdminRow
                 key={evento.id}
                 event={{
@@ -191,6 +202,7 @@ export default async function AdminEventosPage({
                   respondidos: evento.respondidos,
                   etapa: evento.etapa,
                   cuando: cuando(diasEntre(hoy, evento.eventDate)),
+                  anfitriones: anfitriones.get(evento.id) ?? [],
                 }}
                 owners={usuarios.value.map((u) => ({ id: u.id, email: u.email }))}
                 plans={planes}
@@ -198,6 +210,7 @@ export default async function AdminEventosPage({
             ))}
           </ul>
         )}
+        <LoadMoreLink href={enlace(filtro, tope + PAGINA)} noun="bodas" remaining={visibles.length - pagina.length} />
       </PanelCard>
     </>
   )

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { LABEL_CLASS, PanelButton, SearchField } from '@/shared/design/ui/panel/PanelKit'
-import { checkInByGroupAction } from '../actions'
+import { checkInByGroupAction } from '@/app/_acciones/checkin/actions'
 
 export type ManualGroup = {
   readonly id: string
@@ -99,8 +99,7 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
                         // una familia fuera de la lista el resto de la noche.
                         .catch(() => setError('No se pudo registrar la llegada. Vuelve a intentarlo.'))
                         .finally(() => setEnCurso(null))
-                    }}
-                  >
+                    }} aria-busy={(enCurso === g.id) || undefined}>
                     {enCurso === g.id ? 'Registrando…' : 'Registrar'}
                   </PanelButton>
                 )}

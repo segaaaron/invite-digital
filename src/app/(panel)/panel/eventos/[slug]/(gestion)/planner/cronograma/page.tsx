@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation'
 import { events, planner, plans } from '@/app/composition/container'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { momentosParaVer } from '@/modules/planner/ui/cronograma-vista'
 import { NewMomentForm, RunOfShowBoard, SeedMomentsButton } from '@/modules/planner/ui/RunOfShowBoard'
 import { FeatureLocked } from '@/modules/plans'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 

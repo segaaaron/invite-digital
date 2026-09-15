@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
-import { resendInvitationAction, setGroupPhoneAction, type ResendState } from '../actions'
+import { resendInvitationAction, setGroupPhoneAction, type ResendState } from '@/app/_acciones/guests/actions'
 import { DeliverySheet } from './DeliverySheet'
 import { renderMessage, whatsappLink } from '../domain/message-template'
 

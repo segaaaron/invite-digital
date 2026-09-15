@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Field, PanelAlert, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import {
   addTaskAction,
   editTaskAction,
@@ -10,9 +10,10 @@ import {
   removeTaskAction,
   seedTasksAction,
   toggleTaskAction,
-} from '../actions'
+} from '@/app/_acciones/planner/actions'
 import type { EstadoDeTarea, Responsable, Tarea } from '../domain/tareas'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -109,11 +110,9 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
                 <textarea className={FIELD_CLASS} defaultValue={valoresDeTarea(tarea, enviados).notes} id={`${id}-n`} maxLength={2000} name="notes" rows={2} />
               </Field>
             </div>
-            {edicion.status === 'error' ? <PanelAlert tone="error">{edicion.message}</PanelAlert> : null}
+            <ActionFeedback errorsOnly state={edicion} />
             <div>
-              <PanelButton disabled={guardando} type="submit">
-                {guardando ? 'Guardando…' : 'Guardar tarea'}
-              </PanelButton>
+              <SubmitButton variant="default" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar tarea'}</SubmitButton>
             </div>
           </form>
           <div className="flex flex-wrap gap-2">
@@ -185,12 +184,10 @@ export function NewTaskForm({ eventId, eventSlug, etapas }: Evento & { etapas: r
     <form action={enviar} className="flex flex-col gap-3">
       <Ocultos eventId={eventId} eventSlug={eventSlug} />
       <CamposDeTarea etapas={etapas} inicial={valoresDeTarea(undefined, estado.status === 'error' ? estado.valores : undefined)} key={estado.status === 'error' ? JSON.stringify(estado.valores) : 'base'} />
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <ActionFeedback errorsOnly state={estado} />
       {estado.status === 'success' ? <PanelAlert tone="ok">Tarea sumada.</PanelAlert> : null}
       <div>
-        <PanelButton disabled={enviando} type="submit" variant="primary">
-          {enviando ? 'Sumando…' : 'Sumar tarea'}
-        </PanelButton>
+        <SubmitButton variant="primary" pending={enviando} pendingLabel={'Sumando…'}>{'Sumar tarea'}</SubmitButton>
       </div>
     </form>
   )
@@ -202,10 +199,8 @@ export function SeedTasksButton({ eventId, eventSlug }: Evento) {
   return (
     <form action={enviar} className="flex flex-col items-center gap-3">
       <Ocultos eventId={eventId} eventSlug={eventSlug} />
-      <PanelButton disabled={enviando} type="submit" variant="primary">
-        {enviando ? 'Creando…' : 'Crear el plan con la plantilla'}
-      </PanelButton>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <SubmitButton variant="primary" pending={enviando} pendingLabel={'Creando…'}>{'Crear el plan con la plantilla'}</SubmitButton>
+      <ActionFeedback errorsOnly state={estado} />
     </form>
   )
 }

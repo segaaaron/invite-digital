@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { GuestGroupTable, type GuestGroupRowView } from './GuestGroupTable'
 
-vi.mock('../actions', async (original) => ({
+vi.mock('@/app/_acciones/guests/actions', async (original) => ({
   // Mock parcial: `RevokeInvitationForm` usa la acción de revocar de verdad.
-  ...(await original<typeof import('../actions')>()),
+  ...(await original<typeof import('@/app/_acciones/guests/actions')>()),
   markInvitationSentAction: vi.fn(async () => ({ status: 'success' as const })),
 }))
 

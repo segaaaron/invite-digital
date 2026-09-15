@@ -5,13 +5,10 @@ import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ETAPAS, type Etapa } from '../domain/cartera'
-import {
-  deleteEventAsAdminAction,
-  grantClientAccessAction,
-  reassignEventAction,
-  setEventPlanAction,
-  type AdminActionState,
-} from '../actions'
+import { SoporteDeBoda, type Anfitrion } from './SoporteDeBoda'
+import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import { deleteEventAsAdminAction, grantClientAccessAction, reassignEventAction, setEventPlanAction } from '@/app/_acciones/admin/bodas-actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -37,6 +34,8 @@ export type EventAdminView = {
   readonly etapa: Etapa
   /** «en 12 días», «hoy», «hace 3 meses». Lo compone la página con la fecha de Bolivia. */
   readonly cuando: string
+  /** Los anfitriones, para darles soporte: entrar como ellos o restablecer su acceso. */
+  readonly anfitriones: readonly Anfitrion[]
 }
 
 export type OwnerChoice = { readonly id: string; readonly email: string }
@@ -103,7 +102,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
             <span className="flex min-w-0 flex-col gap-1">
               <span className="flex flex-wrap items-center gap-2.5">
-                <Link className="font-display text-[22px] leading-tight text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${event.slug}`}>
+                <Link className="font-display text-[22px] leading-tight text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${event.slug}/configuracion`}>
                   {event.title}
                 </Link>
                 <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
@@ -113,7 +112,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
               </span>
             </span>
             <span className="flex gap-2">
-              <PanelButton href={`/panel/eventos/${event.slug}`} variant="primary">
+              <PanelButton href={`/panel/eventos/${event.slug}/configuracion`} variant="primary">
                 Abrir
               </PanelButton>
               <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Ver</PanelButton>
@@ -168,7 +167,7 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
           falla. */}
       <details className="group" open={error !== null || acceso.status !== 'idle' || confirmando}>
         <summary className="w-fit cursor-pointer list-none border-t border-line-panel pt-3 font-mono text-[10px] tracking-[0.25em] text-ink-soft uppercase hover:text-ink">
-          <span className="group-open:hidden">+ Gestionar: dueño, plan, acceso, borrar</span>
+          <span className="group-open:hidden">+ Gestionar: dueño, plan, acceso, soporte, borrar</span>
           <span className="hidden group-open:inline">− Cerrar</span>
         </summary>
         <div className="mt-3.5">
@@ -244,10 +243,12 @@ export function EventAdminRow({ event, owners, plans }: { event: EventAdminView;
               type="text"
             />
           </span>
-          <PanelButton disabled={dandoAcceso} type="submit">
-            {dandoAcceso ? 'Dando…' : 'Dar acceso'}
-          </PanelButton>
+          <SubmitButton variant="default" pending={dandoAcceso} pendingLabel={'Dando…'}>{'Dar acceso'}</SubmitButton>
         </form>
+
+        <div className="w-full border-t border-line-panel pt-3">
+          <SoporteDeBoda anfitriones={event.anfitriones} eventId={event.id} />
+        </div>
 
         {confirmando ? (
           <form action={borrar} className="flex items-end gap-2">

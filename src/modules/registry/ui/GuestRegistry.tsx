@@ -5,7 +5,7 @@ import type { RegistryDictionary, RegistryMessageKey } from '@/shared/i18n/dicti
 import { formatAmount } from '../domain/money'
 import type { FundView } from '../application/list-registry'
 import type { GiftRow } from '../application/ports'
-import { claimGiftAction, releaseGiftAction } from '../actions'
+import { claimGiftAction, releaseGiftAction } from '@/app/_acciones/registry/actions'
 
 type Props = {
   token: string

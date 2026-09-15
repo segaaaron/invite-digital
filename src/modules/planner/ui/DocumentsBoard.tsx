@@ -2,10 +2,11 @@
 
 import { useActionState, useId } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
-import { FIELD_CLASS, Field, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { type DiaActionState, removeDocumentAction, uploadDocumentAction } from '../dia-actions'
+import { FIELD_CLASS, Field, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
+import { type DiaActionState, removeDocumentAction, uploadDocumentAction } from '@/app/_acciones/planner/dia-actions'
 import { NOMBRE_DE_DOCUMENTO, TIPOS_DE_DOCUMENTO, type TipoDeDocumento } from '../domain/dia-d'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -65,12 +66,10 @@ export function DocumentsBoard({ evento, documentos, proveedores, partidas }: { 
             </select>
           </Field>
         </div>
-        {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+        <ActionFeedback errorsOnly state={estado} />
         {estado.status === 'success' ? <PanelAlert tone="ok">Documento guardado.</PanelAlert> : null}
         <div>
-          <PanelButton disabled={subiendo} type="submit" variant="primary">
-            {subiendo ? 'Subiendo…' : 'Subir documento'}
-          </PanelButton>
+          <SubmitButton variant="primary" pending={subiendo} pendingLabel={'Subiendo…'}>{'Subir documento'}</SubmitButton>
         </div>
       </form>
 

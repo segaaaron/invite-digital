@@ -6,7 +6,7 @@ const updatePersonAction = vi.fn(async () => ({ status: 'success' as const }))
 const setGroupPhoneAction = vi.fn(async () => ({ status: 'success' as const }))
 const replace = vi.fn()
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/guests/actions', () => ({
   updatePersonAction: (...args: unknown[]) => updatePersonAction(...(args as [])),
   setGroupPhoneAction: (...args: unknown[]) => setGroupPhoneAction(...(args as [])),
 }))

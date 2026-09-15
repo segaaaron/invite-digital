@@ -3,9 +3,9 @@ import { ShowcaseMusicRow } from '@/modules/admin'
 import { fiestaDeCategoria } from '@/modules/events'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
 import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
-import { requireAdmin } from '@/modules/identity/session-cookie'
+import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Modelos · Administración' }

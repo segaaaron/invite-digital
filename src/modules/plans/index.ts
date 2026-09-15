@@ -7,5 +7,5 @@ export type { PlanChangeRequestRow, PlanChangeStatus, PlanReader, PlanRow, Plans
 export { AllowanceNotice } from './ui/AllowanceNotice'
 export { FeatureLocked } from './ui/FeatureLocked'
 export { PlanCard } from './ui/PlanCard'
-export { aplicarExtras, EFECTOS_DE_EXTRA, leerExtra, NOMBRE_DE_EFECTO } from './domain/extras'
-export type { EfectoDeExtra, Extra, ExtraAplicado } from './domain/extras'
+export { aplicarExtras, EFECTOS_DE_EXTRA, extraDisponible, leerExtra, NOMBRE_DE_EFECTO } from './domain/extras'
+export type { EfectoDeExtra, Extra, ExtraAplicado, ExtraNoDisponible } from './domain/extras'

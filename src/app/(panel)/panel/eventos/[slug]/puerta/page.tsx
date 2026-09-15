@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { checkin, events, plans } from '@/app/composition/container'
 import { DoorMode } from '@/modules/checkin/ui/DoorMode'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { isErr } from '@/shared/result'
 

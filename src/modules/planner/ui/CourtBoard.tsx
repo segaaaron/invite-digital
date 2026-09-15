@@ -1,10 +1,11 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { type DiaActionState, removeCourtMemberAction, removeRehearsalAction, saveCourtMemberAction, saveRehearsalAction, setCourtConfirmedAction } from '../dia-actions'
+import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { type DiaActionState, removeCourtMemberAction, removeRehearsalAction, saveCourtMemberAction, saveRehearsalAction, setCourtConfirmedAction } from '@/app/_acciones/planner/dia-actions'
 import { nombreDelCortejo, type TipoDeCortejo } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -67,11 +68,9 @@ function FormularioDeMiembro({ evento, tipos, partidas, miembro }: { evento: Eve
           </select>
         </Field>
       </div>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+      <ActionFeedback errorsOnly state={estado} />
       <div>
-        <PanelButton disabled={enviando} type="submit" variant={miembro ? 'default' : 'primary'}>
-          {enviando ? 'Guardando…' : miembro ? 'Guardar' : 'Sumar al cortejo'}
-        </PanelButton>
+        <SubmitButton variant={miembro ? 'default' : 'primary'} pending={enviando} pendingLabel={'Guardando…'}>{miembro ? 'Guardar' : 'Sumar al cortejo'}</SubmitButton>
       </div>
     </form>
   )
@@ -190,11 +189,9 @@ export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento;
         <Field htmlFor={`${id}-n`} label="Notas">
           <input className={FIELD_CLASS} defaultValue={e?.notes ?? ''} id={`${id}-n`} maxLength={2000} name="notes" />
         </Field>
-        {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+        <ActionFeedback errorsOnly state={estado} />
         <div>
-          <PanelButton disabled={enviando} type="submit">
-            {enviando ? 'Guardando…' : 'Sumar ensayo'}
-          </PanelButton>
+          <SubmitButton variant="default" pending={enviando} pendingLabel={'Guardando…'}>{'Sumar ensayo'}</SubmitButton>
         </div>
       </form>
     </div>

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { PeopleTable, type PersonRowView } from './PeopleTable'
 
-vi.mock('../actions', () => ({
+vi.mock('@/app/_acciones/guests/actions', () => ({
   updatePersonAction: vi.fn(async () => ({ status: 'success' })),
   removePersonAction: vi.fn(async () => ({ status: 'success' })),
 }))
@@ -190,7 +190,7 @@ describe('PeopleTable · acciones de la fila', () => {
   })
 
   it('eliminar pregunta y solo el segundo clic borra', async () => {
-    const { removePersonAction } = await import('../actions')
+    const { removePersonAction } = await import('@/app/_acciones/guests/actions')
     render(<PeopleTable eventSlug="boda" rows={[filas[0]!]} />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar a Ana Lucía Vega' }))

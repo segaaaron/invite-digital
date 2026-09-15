@@ -38,7 +38,8 @@ export interface PasswordResetRepository {
 
 export interface SessionRepository {
   create(session: { userId: string; tokenHash: Buffer; expiresAt: Date }): Promise<void>
-  findByTokenHash(tokenHash: Buffer): Promise<{ id: string; userId: string; expiresAt: Date } | null>
+  /** `supportSessionId`: el modo soporte abierto de esta sesión, si lo hay (`0049`). */
+  findByTokenHash(tokenHash: Buffer): Promise<{ id: string; userId: string; expiresAt: Date; supportSessionId?: string | null } | null>
   touch(id: string, expiresAt: Date): Promise<void>
   deleteByTokenHash(tokenHash: Buffer): Promise<void>
   deleteExpired(now: Date): Promise<number>
@@ -54,4 +55,19 @@ export interface PasswordHasher {
 export interface TokenMinter {
   mint(): { token: string; hash: Buffer }
   hashOf(token: string): Buffer
+}
+
+/**
+ * El modo soporte: el admin actúa como el cliente sin conocer su contraseña.
+ *
+ * Vive en la sesión del admin, no en una cookie aparte: cerrar sesión lo cierra, y quien no
+ * tiene la sesión del admin no puede abrirlo ni cerrarlo.
+ */
+export interface SupportStore {
+  /** Abre uno en esa sesión y cierra el que hubiera abierto. Devuelve su id. */
+  open(input: { sessionId: string; adminUserId: string; adminEmail: string; clientUserId: string; eventId: string; reason: string }): Promise<string>
+  /** El abierto de esa sesión, o `null`. */
+  activeFor(sessionId: string): Promise<{ id: string; adminEmail: string; clientUserId: string; eventId: string } | null>
+  /** Cierra el abierto y la sesión deja de apuntar. `false` si no había ninguno. */
+  close(sessionId: string, at: Date): Promise<boolean>
 }

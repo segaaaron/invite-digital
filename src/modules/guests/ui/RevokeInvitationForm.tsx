@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { revokeInvitationAction, type RevokeInvitationState } from '../actions'
+import { revokeInvitationAction, type RevokeInvitationState } from '@/app/_acciones/guests/actions'
 import type { GuestErrorKind } from '../domain/errors'
 
 const INITIAL: RevokeInvitationState = { status: 'idle' }
@@ -31,8 +31,7 @@ export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; 
         <button
           className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
           disabled={isPending}
-          type="submit"
-        >
+          type="submit" aria-busy={(isPending) || undefined}>
           {isPending ? 'Revocando…' : 'Revocar'}
         </button>
       </form>

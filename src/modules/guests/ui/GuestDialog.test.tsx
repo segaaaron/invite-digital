@@ -4,7 +4,7 @@ import { GuestDialog } from './GuestDialog'
 
 const { push } = vi.hoisted(() => ({ push: vi.fn() }))
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, replace: push }) }))
-vi.mock('../actions', () => ({ addGuestAction: vi.fn(async () => ({ status: 'idle', message: '' })) }))
+vi.mock('@/app/_acciones/guests/actions', () => ({ addGuestAction: vi.fn(async () => ({ status: 'idle', message: '' })) }))
 
 beforeEach(() => {
   push.mockClear()

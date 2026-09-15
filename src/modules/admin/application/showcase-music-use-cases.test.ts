@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import { isErr, isOk } from '@/shared/result'
 import type { AdminRepository, FileStore, SettingsRepository } from './ports'
 import { readShowcaseMusic, removeShowcaseMusic, saveShowcaseMusic, readShowcaseSongs, renameShowcaseSong } from './showcase-music-use-cases'

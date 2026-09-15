@@ -2,8 +2,10 @@
 
 import { useActionState, useId } from 'react'
 import { EFECTOS_DE_EXTRA, NOMBRE_DE_EFECTO } from '@/modules/plans'
-import { FIELD_CLASS, Field, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { type AdminActionState, saveExtraAction } from '../actions'
+import { FIELD_CLASS, Field } from '@/shared/design/ui/panel/PanelKit'
+import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import { saveExtraAction } from '@/app/_acciones/admin/planes-actions'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -40,12 +42,9 @@ export function ExtraEditor({ extra }: { extra: ExtraEditable }) {
       <label className="flex items-center gap-2 text-[13px] text-ink">
         <input defaultChecked={e ? e.isActive === 'on' : extra.isActive} name="isActive" type="checkbox" />A la venta
       </label>
-      {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
-      {estado.status === 'success' ? <PanelAlert tone="ok">{estado.message}</PanelAlert> : null}
+      <ActionFeedback state={estado} />
       <div>
-        <PanelButton disabled={guardando} type="submit">
-          {guardando ? 'Guardando…' : 'Guardar extra'}
-        </PanelButton>
+        <SubmitButton variant="default" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar extra'}</SubmitButton>
       </div>
     </form>
   )

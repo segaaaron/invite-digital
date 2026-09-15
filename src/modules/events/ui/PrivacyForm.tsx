@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState, useId, useState } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { setEventPrivacyAction, type PrivacyState } from '../actions'
+import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { setEventPrivacyAction, type PrivacyState } from '@/app/_acciones/events/actions'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 /**
  * Privacidad del evento, como en la maqueta: pública con el enlace, o protegida con
@@ -80,9 +81,7 @@ export function PrivacyForm({
         </p>
       ) : null}
 
-      <PanelButton className="w-fit" disabled={pending} type="submit" variant="primary">
-        {pending ? 'Guardando…' : 'Guardar privacidad'}
-      </PanelButton>
+      <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={'Guardando…'}>{'Guardar privacidad'}</SubmitButton>
     </form>
   )
 }

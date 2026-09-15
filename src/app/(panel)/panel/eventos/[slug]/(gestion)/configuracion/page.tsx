@@ -9,10 +9,10 @@ import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
 import { themeFor } from '@/modules/events/ui/themes/registry'
-import { canManageStaff } from '@/modules/identity/domain/access'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { canManageStaff, gestionaElEvento, isAdmin } from '@/modules/identity'
+import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
@@ -43,7 +43,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
    * Pidiéndola fija, cada quien entra por su propio motivo: el admin por ser admin, el
    * atelier por ser dueño, el cliente por su pertenencia, y la puerta rebota.
    */
-  const event = await events.getFor(actor, slug, { section: 'cliente' })
+  const event = await events.getFor(actor, slug, { section: 'configuracion' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
@@ -61,18 +61,20 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
    * pidiendo `full`. Pero enseñar un botón que va a rebotar es peor que no enseñarlo.
    */
   // Dueño o admin: quien entra por pertenencia —anfitrión, co-anfitrión, planner— no.
-  const esDelAtelier = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const esDelAtelier = gestionaElEvento(actor, event.value)
+  const esAdmin = isAdmin(actor)
 
   // El contenido rico que pinta el diseño, y **qué secciones pinta**: pedirle un
   // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.
   const tema = themeFor(event.value.themeKey)
-  const contenido = await events.contentFor(event.value.id, tema.defaultContent)
+  // Contenido, fotografías y enlace compartido son del cliente: para el admin ni se leen.
+  const contenido = esAdmin ? null : await events.contentFor(event.value.id, tema.defaultContent)
 
   // Lo que ya subió el atelier: las fotografías y, desde que la invitación puede sonar,
   // también el MP3. Va a las dos tarjetas: a la suya, para subirlo y verlo, y a la del
   // contenido, donde se elige desde el propio campo en vez de copiar un identificador de
   // una tarjeta y pegarlo en otra.
-  const imagenes = (await events.media.list(event.value.id)).map((imagen) => ({
+  const imagenes = (esAdmin ? [] : await events.media.list(event.value.id)).map((imagen) => ({
     id: imagen.id,
     originalName: imagen.originalName,
     byteSize: imagen.byteSize,
@@ -85,7 +87,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     fromGuest: imagen.uploadedByGroupId !== null,
   }))
 
-  const share = await events.liveShare(event.value.id)
+  const share = esAdmin ? null : await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
   // Si el plan trae la contraseña. Una lectura fallida no la concede.
   const capacidad = await plans.allowanceFor(event.value.id)
@@ -115,6 +117,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
       <PanelHeader kicker="Cuenta" meta={event.value.title} title="Configuración del evento" />
 
       <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
+        {/* El contenido y las fotografías son del cliente: el admin no los ve aquí. Para
+            revisarlos entra como el cliente, con motivo y registro. */}
+        {contenido === null ? null : (
         <PanelCard title={`Contenido de la invitación · ${tema.label}`}>
           {/* Ver la invitación **de esta boda**, sin repartir un enlace ni contar una
               visita ajena en la analítica. El escaparate enseña el diseño con el contenido
@@ -130,9 +135,11 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             sections={tema.sections}
           />
         </PanelCard>
+        )}
 
         {/* «y música» en el título, y no solo en el texto de dentro: la tarjeta se llamaba
             «Fotografías de la invitación» y nadie iba a buscar ahí dónde subir el MP3. */}
+        {esAdmin ? null : (
         <PanelCard title="Fotografías y música">
           <EventMediaPanel
             eventId={event.value.id}
@@ -140,6 +147,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             items={imagenes}
           />
         </PanelCard>
+        )}
 
         {esDelAtelier ? (
           <PanelCard title="Detalles del evento">
@@ -163,6 +171,8 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           </PanelCard>
         ) : null}
 
+        {/* El enlace de solo lectura enseña invitados y confirmaciones: es del cliente. */}
+        {share === null ? null : (
         <PanelCard title="Vista previa del enlace">
           <div className="flex flex-col gap-4">
             <p className="text-[12px] leading-[1.7] text-ink-soft">
@@ -199,6 +209,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             />
           </div>
         </PanelCard>
+        )}
       </div>
     </>
   )

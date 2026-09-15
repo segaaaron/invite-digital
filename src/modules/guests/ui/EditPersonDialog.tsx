@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { setGroupPhoneAction, updatePersonAction } from '../actions'
+import { setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 
 export type EditablePerson = {
@@ -250,7 +250,7 @@ export function EditPersonDialog({
         <PanelButton disabled={pendiente} onClick={cerrar}>
           Cancelar
         </PanelButton>
-        <PanelButton variant="primary" disabled={pendiente} onClick={guardar}>
+        <PanelButton variant="primary" disabled={pendiente} onClick={guardar} aria-busy={(pendiente) || undefined}>
           {pendiente ? 'Guardando…' : 'Guardar'}
         </PanelButton>
       </div>

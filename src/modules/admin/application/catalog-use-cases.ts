@@ -1,4 +1,4 @@
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import { leerPlan, type PlanCrudo } from '../domain/plan-editable'

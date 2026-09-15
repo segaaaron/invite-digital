@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from 'react'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
-import { type RsvpActionState, respondAction } from '../actions'
+import { type RsvpActionState, respondAction } from '@/app/_acciones/rsvp/actions'
 
 const INICIAL: RsvpActionState = { status: 'idle' }
 

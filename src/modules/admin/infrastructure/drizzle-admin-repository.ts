@@ -1,7 +1,7 @@
-import { and, count, desc, eq, sql } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { auditLog, events, guestPeople, orders, plans, planTranslations, users } from '@/shared/db/schema'
-import { parseRole } from '@/modules/identity/domain/access'
+import { auditLog, events, guestGroups, guestPeople, orders, plans, planTranslations, rsvpResponses, users } from '@/shared/db/schema'
+import { parseRole } from '@/modules/identity'
 import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
 
 export const createDrizzleAdminRepository = (database: DbExecutor): AdminRepository => ({
@@ -69,6 +69,24 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
   },
 
   async listEvents(): Promise<AdminEventRow[]> {
+    // **Una pasada agregada**, no tres subconsultas por evento: cada una recorría los grupos de
+    // su evento, así que el coste crecía con eventos × grupos. Medido con 400 eventos y 12.000
+    // grupos: 37,8 ms → 5 ms. Un grupo con varias respuestas cuenta una vez (`distinct`), y los
+    // revocados no cuentan.
+    const respondidos = database.selectDistinct({ guestGroupId: rsvpResponses.guestGroupId }).from(rsvpResponses).as('respondidos')
+    const conteos = database
+      .select({
+        eventId: guestGroups.eventId,
+        grupos: sql<number>`count(*)::int`.as('grupos'),
+        enviados: sql<number>`(count(*) filter (where ${guestGroups.invitationSentAt} is not null))::int`.as('enviados'),
+        respondidos: sql<number>`count(${respondidos.guestGroupId})::int`.as('respondidos'),
+      })
+      .from(guestGroups)
+      .leftJoin(respondidos, eq(respondidos.guestGroupId, guestGroups.id))
+      .where(isNull(guestGroups.revokedAt))
+      .groupBy(guestGroups.eventId)
+      .as('conteos')
+
     return database
       .select({
         id: events.id,
@@ -80,15 +98,17 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         ownerEmail: users.email,
         planSlug: plans.slug,
         themeKey: events.themeKey,
-        grupos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null)`,
-        enviados: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null and guest_groups.invitation_sent_at is not null)`,
-        respondidos: sql<number>`(select count(*)::int from guest_groups where guest_groups.event_id = events.id and guest_groups.revoked_at is null and exists (select 1 from rsvp_responses where rsvp_responses.guest_group_id = guest_groups.id))`,
+        grupos: sql<number>`coalesce(${conteos.grupos}, 0)`,
+        enviados: sql<number>`coalesce(${conteos.enviados}, 0)`,
+        respondidos: sql<number>`coalesce(${conteos.respondidos}, 0)`,
       })
       .from(events)
       // `leftJoin` en los dos: un evento sin dueño o sin plan tiene que salir igual en la
-      // lista del admin. Son justo los que hay que arreglar.
+      // lista del admin. Son justo los que hay que arreglar. Y en los conteos: un evento sin
+      // grupos también sale, con cero.
       .leftJoin(users, eq(users.id, events.userId))
       .leftJoin(plans, eq(plans.id, events.planId))
+      .leftJoin(conteos, eq(conteos.eventId, events.id))
       .orderBy(desc(events.eventDate))
   },
 

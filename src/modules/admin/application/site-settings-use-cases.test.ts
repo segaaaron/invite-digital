@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Actor } from '@/modules/identity/domain/access'
+import type { Actor } from '@/modules/identity'
 import { isErr, isOk } from '@/shared/result'
 import { DEFAULT_SITE_SETTINGS, SITE_SETTINGS_KEY, type SiteSettings } from '../domain/site-settings'
 import type { SettingsRepository, SiteSettingsStore, SiteVersionRow } from './ports'

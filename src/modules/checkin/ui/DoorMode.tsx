@@ -2,7 +2,7 @@
 
 import jsQR from 'jsqr'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction, type DoorActionState, type ScanInput } from '../actions'
+import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction, type DoorActionState, type ScanInput } from '@/app/_acciones/checkin/actions'
 import type { ScanOutcome } from '../application/check-in-by-scan'
 import type { DoorManifest } from '../application/get-door-manifest'
 import type { ResolvedArrival } from '../domain/conflict'

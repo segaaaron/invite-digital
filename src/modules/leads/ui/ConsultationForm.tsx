@@ -4,7 +4,7 @@ import { useActionState, useId, useState } from 'react'
 import type { Category } from '@/modules/catalog'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
-import { submitConsultationAction, type ConsultationActionState } from '../actions'
+import { submitConsultationAction, type ConsultationActionState } from '@/app/_acciones/leads/actions'
 
 type Props = { categories: readonly Category[]; dictionary: Dictionary; locale: Locale }
 

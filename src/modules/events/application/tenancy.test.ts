@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { Actor, Membership } from '@/modules/identity/domain/access'
+import type { Actor, Membership } from '@/modules/identity'
 import { isErr, isOk } from '@/shared/result'
 import type { EventInput } from '../domain/event'
 import type { EventRepository } from './ports'
@@ -71,13 +71,15 @@ describe('getEventFor', () => {
     expect(await repo().findBySlug('boda-de-beto')).not.toBeNull()
   })
 
-  it('un evento sin dueño solo lo abre el admin', async () => {
+  it('un evento sin dueño: el atelier no lo abre y el admin solo su ficha', async () => {
     expect(isErr(await getEventFor({ events: repo(), staff: sinPersonal })(ana, 'boda-huerfana'))).toBe(true)
-    expect(isOk(await getEventFor({ events: repo(), staff: sinPersonal })(jefa, 'boda-huerfana'))).toBe(true)
+    expect(isOk(await getEventFor({ events: repo(), staff: sinPersonal })(jefa, 'boda-huerfana', { section: 'ficha' }))).toBe(true)
   })
 
-  it('el admin abre el de cualquiera', async () => {
-    expect(isOk(await getEventFor({ events: repo(), staff: sinPersonal })(jefa, 'boda-de-beto'))).toBe(true)
+  it('el admin abre la ficha de cualquiera, pero no sus datos', async () => {
+    expect(isOk(await getEventFor({ events: repo(), staff: sinPersonal })(jefa, 'boda-de-beto', { section: 'ficha' }))).toBe(true)
+    expect(isErr(await getEventFor({ events: repo(), staff: sinPersonal })(jefa, 'boda-de-beto'))).toBe(true)
+    expect(isErr(await getEventFor({ events: repo(), staff: sinPersonal })(jefa, 'boda-de-beto', { section: 'cliente' }))).toBe(true)
   })
 
   it('un slug que no existe también es «no existe»: no se distingue de un ajeno', async () => {

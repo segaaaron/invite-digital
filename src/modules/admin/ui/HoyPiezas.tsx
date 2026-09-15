@@ -119,7 +119,7 @@ export function ProximaFila({ boda }: { boda: Proxima }) {
 
   return (
     <li className="border-t border-line-panel first:border-none">
-      <Link className="-mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-bg-sunken/50" href={`/panel/eventos/${boda.slug}`}>
+      <Link className="-mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-bg-sunken/50" href={`/panel/eventos/${boda.slug}/configuracion`}>
         <span className="flex w-12 shrink-0 flex-col items-center rounded-xl border border-line-panel bg-white py-1.5 shadow-card">
           <span className="font-display text-[24px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
           <span className="font-mono text-[8px] tracking-[0.25em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { FilterChip, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
-import { markInvitationSentAction } from '../actions'
+import { markInvitationSentAction } from '@/app/_acciones/guests/actions'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 
 export type GuestGroupRowView = {

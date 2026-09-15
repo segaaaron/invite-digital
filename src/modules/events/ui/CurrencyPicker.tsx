@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
-import { setEventCurrencyAction } from '../actions'
+import { setEventCurrencyAction } from '@/app/_acciones/events/actions'
 import { CURRENCIES, type Currency } from '../domain/event'
 
 const ETIQUETA: Record<Currency, string> = { BOB: 'BOB Bs', USD: 'USD $', CAD: 'CAD $' }

@@ -1,5 +1,5 @@
 import { fecha } from '@/shared/format/fecha'
-import { avatarColor } from './avatar-color'
+import { avatarColor } from '@/shared/design/ui/avatar-color'
 
 export type ActivityItem = {
   readonly at: Date

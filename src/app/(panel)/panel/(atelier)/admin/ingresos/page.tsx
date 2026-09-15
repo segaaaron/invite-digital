@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { admin } from '@/app/composition/container'
-import { requireAdmin } from '@/modules/identity/session-cookie'
-import { formatAmount } from '@/modules/registry'
+import { requireAdmin } from '@/app/_acciones/sesion'
+import { formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, StatCard } from '@/modules/shell/ui/cards'
+import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { BarRow, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
@@ -105,7 +105,7 @@ export default async function AdminIngresosPage() {
                 </span>
                 <span className="text-[12px] text-ink-mute">{p.decidedAt ? FECHA.format(p.decidedAt) : ''}</span>
                 {p.eventSlug ? (
-                  <Link className="text-[12px] text-sage underline underline-offset-2" href={`/panel/eventos/${p.eventSlug}`}>
+                  <Link className="text-[12px] text-sage underline underline-offset-2" href={`/panel/eventos/${p.eventSlug}/configuracion`}>
                     Ver boda
                   </Link>
                 ) : null}

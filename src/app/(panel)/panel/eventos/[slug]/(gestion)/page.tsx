@@ -5,15 +5,16 @@ import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { avanceDeTareas, estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar, totalesDelPresupuesto } from '@/modules/planner'
 import { buildWhatsAppLink } from '@/modules/leads'
 import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
-import { DEFAULT_CURRENCY, formatAmount } from '@/modules/registry'
+import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
 import { fecha as diaCorto } from '@/shared/format/fecha'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
 import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
-import { requireSession } from '@/modules/identity/session-cookie'
+import { gestionaElEvento } from '@/modules/identity'
+import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { ActivityFeed, mergeActivity, type ActivityItem } from '@/modules/shell/ui/ActivityFeed'
-import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/modules/shell/ui/cards'
-import { TimelineChart } from '@/modules/shell/ui/TimelineChart'
+import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/cards'
+import { TimelineChart } from '@/modules/rsvp/ui/TimelineChart'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
@@ -145,7 +146,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
   const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
   // Los proveedores son del anfitrión y su planner: al co-anfitrión no se le ofrecen.
-  const dueno = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const dueno = gestionaElEvento(actor, event.value)
   const llevaProveedores = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).some((m) => m === 'cliente' || m === 'planner')
   const conProveedores = llevaProveedores && !isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))
   const proveedores = conProveedores ? await planner.dia.listVendors(event.value.id) : []

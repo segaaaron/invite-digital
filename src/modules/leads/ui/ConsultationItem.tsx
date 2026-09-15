@@ -3,10 +3,11 @@
 import Link from 'next/link'
 import { BRAND } from '@/shared/config/brand'
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, PanelAlert, PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
-import { moveConsultationAction, type InboxActionState } from '../actions'
+import { FIELD_CLASS, PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
+import { moveConsultationAction, type InboxActionState } from '@/app/_acciones/leads/actions'
 import { destinosDesde, ETIQUETA_ESTADO, type EstadoConsulta } from '../domain/pipeline'
 import { whatsAppToCustomer } from '../domain/whatsapp-link'
+import { ActionFeedback } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: InboxActionState = { status: 'idle' }
 
@@ -181,8 +182,7 @@ export function ConsultationItem({
           </form>
         ) : null}
 
-        {estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
-        {estado.status === 'success' ? <PanelAlert tone="ok">{estado.message}</PanelAlert> : null}
+        <ActionFeedback state={estado} />
       </div>
     </li>
   )

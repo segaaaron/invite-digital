@@ -1,9 +1,9 @@
 import { admin } from '@/app/composition/container'
 import { PlanEditor } from '@/modules/admin/ui/PlanEditor'
-import { requireAdmin } from '@/modules/identity/session-cookie'
-import { formatAmount } from '@/modules/registry'
+import { requireAdmin } from '@/app/_acciones/sesion'
+import { formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/modules/shell/ui/cards'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Planes · Administración' }

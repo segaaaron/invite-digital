@@ -53,9 +53,13 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
   await tarjeta.getByRole('button', { name: 'Aprobar pago' }).click()
   await expect(atelier.locator('section', { hasText: referencia }).first()).toContainText('Aprobado')
 
-  // 4. Y el cliente lo ve aprobado en su misma dirección.
-  await page.reload()
-  await expect(page.getByText('Pago confirmado')).toBeVisible()
+  // 4. Y el cliente lo ve aprobado en su misma dirección. Se recarga hasta verlo: la espera de
+  // arriba puede darse por buena en una sección contenedora que ya dice «Aprobado» por otro
+  // pedido, antes de que termine esta aprobación.
+  await expect(async () => {
+    await page.reload()
+    await expect(page.getByText('Pago confirmado')).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 15_000 })
 })
 
 test('el comprobante no se descarga sin sesión, y una referencia inventada es 404', async ({ page }) => {

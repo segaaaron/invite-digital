@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { catalog, site } from '@/app/composition/container'
+import { site, webPublica } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
 import { attempt, isOk } from '@/shared/result'
@@ -40,7 +40,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
  */
 async function listTemplatesSafely(locale: (typeof LOCALES)[number]): Promise<readonly unknown[]> {
   const result = await attempt(
-    () => catalog.listTemplates(locale),
+    () => webPublica.modelos(locale),
     (cause) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' }),
   )
 

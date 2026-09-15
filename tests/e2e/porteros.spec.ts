@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
-import { ADMIN_AUTH_STATE, ATELIER } from './fixtures/atelier'
+import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 
 /**
  * Los porteros de punta a punta: quien gestiona el evento suma a uno, ese portero entra con
@@ -48,7 +48,7 @@ async function sumarPortero(gestor: import('@playwright/test').Page, slug: strin
 }
 
 test('un portero entra con su PIN, registra una llegada, no sale de la puerta y quitarlo lo saca', async ({ browser }) => {
-  const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
+  const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   const { ruta, pin } = await sumarPortero(gestor, HOY, 'Carlos')
   await expect(gestor.getByText('1 de 3')).toBeVisible()
 
@@ -91,7 +91,7 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
 })
 
 test('fuera del día del evento el acceso no abre, ni con el PIN correcto', async ({ browser }) => {
-  const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
+  const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   const { ruta, pin } = await sumarPortero(gestor, MANANA, 'Ana')
 
   const portero = await (await browser.newContext()).newPage()
@@ -102,7 +102,7 @@ test('fuera del día del evento el acceso no abre, ni con el PIN correcto', asyn
 })
 
 test('un plan sin puerta no ofrece porteros', async ({ browser }) => {
-  const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
+  const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   await gestor.goto(`/panel/eventos/${SIN_PUERTA}/porteros`)
   await expect(gestor.getByText(/no incluye pases con QR ni porteros/)).toBeVisible()
   await expect(gestor.getByRole('button', { name: 'Agregar portero' })).toHaveCount(0)

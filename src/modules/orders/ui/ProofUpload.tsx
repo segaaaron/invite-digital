@@ -2,7 +2,7 @@
 
 import { useActionState } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
-import { uploadProofAction, type UploadProofState } from '../actions'
+import { uploadProofAction, type UploadProofState } from '@/app/_acciones/orders/actions'
 import { ACCEPTED_MIMES, MAX_PROOF_BYTES } from '../domain/proof'
 
 const INICIAL: UploadProofState = { status: 'idle' }
@@ -61,8 +61,7 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
       <button
         className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
         disabled={pendiente}
-        type="submit"
-      >
+        type="submit" aria-busy={(pendiente) || undefined}>
         {pendiente ? 'Subiendo…' : 'Enviar comprobante'}
       </button>
     </form>

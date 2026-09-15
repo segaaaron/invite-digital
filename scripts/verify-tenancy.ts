@@ -10,7 +10,7 @@
  * quien la escribió se pierde en la siguiente sesión, y aquí lo que se pierde es que un
  * atelier pueda escribir en la boda de otro.
  */
-import { readFileSync, readdirSync } from 'node:fs'
+import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 /**
@@ -23,6 +23,7 @@ const EXENTAS: Record<string, string> = {
   createEventAction: 'crea el evento; su dueño es el actor de la sesión',
   signInAction: 'abre la sesión; todavía no hay actor',
   signOutAction: 'la cierra',
+  leaveSupportAction: 'sale del modo soporte: exige actor.soporte (si no, 404) y cierra el de la propia sesión; no toca un evento',
   changePasswordAction: 'cambia la contraseña del propio actor de la sesión; no toca ningún evento',
   requestPasswordResetAction: 'pública: quien la llama ha perdido la contraseña y no tiene sesión. Límite de tasa por IP',
   confirmPasswordResetAction: 'pública: se autoriza con el código de un solo uso que llegó al correo, no con sesión',
@@ -55,7 +56,9 @@ const EXENTAS: Record<string, string> = {
     'del invitado: sube una fotografía desde su propia invitación, autorizada por el token de su enlace, con el candado de la contraseña del evento y límite de tasa por IP',
 }
 
-const RAIZ = 'src/modules'
+// Las Server Actions viven en `src/app/_acciones/<módulo>/`: fuera de los módulos, como puntos
+// de entrada que son.
+const RAIZ = 'src/app/_acciones'
 
 function accionesDe(fuente: string): { nombre: string; cuerpo: string }[] {
   const encontradas: { nombre: string; cuerpo: string }[] = []
@@ -79,6 +82,8 @@ function main(): number {
   let deAdmin = 0
 
   for (const modulo of readdirSync(RAIZ)) {
+    // Solo carpetas de módulo: en la raíz viven también la guardia de sesión y pruebas.
+    if (!statSync(join(RAIZ, modulo)).isDirectory()) continue
     // Todos los ficheros de acciones del módulo, no solo `actions.ts`: uno nuevo con
     // otro nombre se quedaría sin revisar, que es justo el agujero que esto evita.
     const ficheros = readdirSync(join(RAIZ, modulo)).filter((f) => f.endsWith('actions.ts'))

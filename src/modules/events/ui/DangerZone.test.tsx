@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { DangerZone } from './DangerZone'
 
-vi.mock('../actions', () => ({ deleteEventAction: vi.fn(async () => ({ status: 'idle' as const })) }))
+vi.mock('@/app/_acciones/events/actions', () => ({ deleteEventAction: vi.fn(async () => ({ status: 'idle' as const })) }))
 
 describe('DangerZone', () => {
   it('el botón está apagado hasta que se escribe el identificador exacto', () => {

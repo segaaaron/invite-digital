@@ -57,19 +57,11 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     await atelier.reload()
     await expect(atelier.locator('section', { hasText: REFERENCIA }).first()).toContainText('Evento creado')
 
-    // 3. La boda nació con el diseño que se eligió en el escaparate.
+    // 3. El admin ve la ficha de la boda nueva, no sus datos: esos son del cliente.
     const slug = `evento-${REFERENCIA.toLowerCase()}`
     await atelier.goto(`/panel/eventos/${slug}/configuracion`)
-    // Por rol y no por texto suelto: «Botánica» aparece también en el selector de diseños
-    // —que lista los dieciséis con el elegido marcado—, así que `getByText` casaba con
-    // varios elementos y Playwright lo rechazaba por modo estricto. El título de la
-    // tarjeta es un `h2` y es único.
-    await expect(atelier.getByRole('heading', { name: 'Contenido de la invitación · Botánica' })).toBeVisible()
-
-    // Y con su plan de tareas ya sembrado: el pedido aprobado no deja un evento sin planner.
-    await atelier.goto(`/panel/eventos/${slug}/planner/tareas`)
-    await expect(atelier.getByRole('button', { name: 'Crear el plan con la plantilla' })).toHaveCount(0)
-    await expect(atelier.locator('summary', { hasText: '12 meses antes' })).toBeVisible()
+    await expect(atelier.getByRole('heading', { name: 'Detalles del evento' })).toBeVisible()
+    expect((await atelier.goto(`/panel/eventos/${slug}/planner/tareas`))?.status()).toBe(404)
 
     // 4. Los novios entran con lo que les dieron... y lo primero es elegir su contraseña.
     //
@@ -103,6 +95,15 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // sigue siendo del atelier son las tarjetas de dentro, no la pantalla.
     expect((await page.goto(`/panel/eventos/${slug}/configuracion`))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toHaveCount(0)
+
+    // La boda nació con el diseño que se eligió en el escaparate. Por rol y no por texto
+    // suelto: el título de la tarjeta es un `h2` y es único.
+    await expect(page.getByRole('heading', { name: 'Contenido de la invitación · Botánica' })).toBeVisible()
+
+    // Y con su plan de tareas ya sembrado: el pedido aprobado no deja un evento sin planner.
+    await page.goto(`/panel/eventos/${slug}/planner/tareas`)
+    await expect(page.getByRole('button', { name: 'Crear el plan con la plantilla' })).toHaveCount(0)
+    await expect(page.locator('summary', { hasText: '12 meses antes' })).toBeVisible()
 
     // Y el plan sigue fuera, que es lo que de verdad es del atelier.
     expect((await page.goto(`/panel/eventos/${slug}/plan`))?.status()).toBe(404)

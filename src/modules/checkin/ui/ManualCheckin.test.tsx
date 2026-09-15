@@ -6,7 +6,7 @@ import { ManualCheckin } from './ManualCheckin'
 // hace que el rechazo del caso de error se reporte como error del propio test aunque el
 // componente lo capture. Cada caso fija su implementación y con eso basta.
 const registrar = vi.hoisted(() => vi.fn())
-vi.mock('../actions', () => ({ checkInByGroupAction: registrar }))
+vi.mock('@/app/_acciones/checkin/actions', () => ({ checkInByGroupAction: registrar }))
 
 const groups = [
   { id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false },
