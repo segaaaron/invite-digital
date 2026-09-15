@@ -1,7 +1,46 @@
 import type { Dictionary } from '../dictionary'
 
 export const es = {
-  nav: { collections: 'Colecciones', experience: 'Experiencia 3D', cases: 'Casos', pricing: 'Precios', contact: 'Crear invitación' },
+  nav: { weddings: 'Bodas', quinceaneras: 'XV años', collections: 'Colecciones', pricing: 'Precios', contact: 'Crear invitación' },
+  fiestas: {
+    chooserEyebrow: 'Dos fiestas',
+    chooserTitle: '¿Qué celebras?',
+    chooserCta: 'Ver',
+    boda: {
+      eyebrow: 'Wedding Planner',
+      title: 'Organiza tu boda desde un solo lugar',
+      lede: 'Elige tu invitación, repártela por WhatsApp y sigue cada confirmación en vivo. Las mesas, la mesa de regalos y la puerta del salón, en el mismo panel.',
+      modelsTitle: 'Invitaciones de boda',
+      modelsSubtitle: 'Ábrela entera antes de elegir: es la misma que recibirán tus invitados.',
+      cta: 'Ver precios',
+      cardTitle: 'Bodas',
+      cardBody: 'Invitación, confirmaciones, mesas, regalos y la puerta del salón.',
+      seoTitle: 'Invitaciones digitales de boda con confirmación en vivo | Luxury Atelier',
+      seoDescription: 'Invitaciones digitales de boda en Bolivia: confirmación de asistencia en vivo, mesas, mesa de regalos y pases con QR para la puerta.',
+    },
+    xv: {
+      eyebrow: 'XV Planner',
+      title: 'Tus XV, del primer ensayo al último vals',
+      lede: 'Una invitación a la altura de tus quince, confirmaciones en vivo y la puerta del salón en manos de quien tú elijas.',
+      modelsTitle: 'Invitaciones de XV años',
+      modelsSubtitle: 'Ábrela entera antes de elegir: es la misma que recibirán tus invitados.',
+      cta: 'Ver precios',
+      cardTitle: 'XV años',
+      cardBody: 'Invitación, confirmaciones, mesas y la puerta de tu fiesta.',
+      seoTitle: 'Invitaciones digitales de XV años con confirmación en vivo | Luxury Atelier',
+      seoDescription: 'Invitaciones digitales de XV años en Bolivia: confirmación de asistencia en vivo, mesas, regalos y pases con QR para la puerta.',
+    },
+    toolsEyebrow: 'Tu panel',
+    toolsTitle: 'Todo lo del día, en un solo panel',
+    tools: [
+      { title: 'Confirmaciones en vivo', body: 'Cada familia confirma desde su enlace y lo ves al momento, con quién viene y qué come.' },
+      { title: 'Un enlace por familia', body: 'Con su nombre y sus pases. Lo repartes por WhatsApp desde el panel.' },
+      { title: 'Mesas y plano del salón', body: 'Sienta a cada grupo y reparte a los que faltan sin deshacer lo que ya ordenaste.' },
+      { title: 'Mesa de regalos', body: 'Regalos que se reservan al momento y fondos en efectivo con su meta.' },
+      { title: 'Porteros con pase QR', body: 'Suma a tu gente de la puerta con un enlace y un PIN. Funciona sin señal.' },
+      { title: 'Fotos de tus invitados', body: 'Suben las fotos de la fiesta desde su propia invitación.' },
+    ],
+  },
   hero: {
     eyebrow: 'Lujo sereno · Atelier digital',
     titleLine1: 'INVITACIONES',

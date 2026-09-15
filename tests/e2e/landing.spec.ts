@@ -157,3 +157,23 @@ test('las cabeceras de seguridad llegan al cliente', async ({ request }) => {
   expect(headers['referrer-policy']).toBe('strict-origin-when-cross-origin')
   expect(headers['x-powered-by']).toBeUndefined()
 })
+
+test('cada fiesta tiene su página con solo sus modelos, y la portada lleva a las dos', async ({ page, request }) => {
+  await page.goto('/es')
+  await expect(page.getByRole('link', { name: /Bodas/ }).filter({ hasText: 'Wedding Planner' })).toHaveAttribute('href', '/es/bodas')
+  await expect(page.getByRole('link', { name: /XV años/ }).filter({ hasText: 'XV Planner' })).toHaveAttribute('href', '/es/xv-anos')
+
+  await page.goto('/es/xv-anos')
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('XV')
+  const modelos = page.locator('#modelos').getByRole('link', { name: /abrir/i })
+  await expect(modelos).toHaveCount(8)
+  for (const href of await modelos.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
+
+  await page.goto('/es/bodas')
+  await expect(page.locator('#modelos').getByRole('link', { name: /abrir/i })).toHaveCount(8)
+  await expect(page.locator('#precios')).toBeVisible()
+
+  const mapa = await (await request.get('/sitemap.xml')).text()
+  expect(mapa).toContain('/es/bodas')
+  expect(mapa).toContain('/es/xv-anos')
+})

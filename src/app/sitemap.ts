@@ -16,6 +16,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   for (const locale of LOCALES) {
     entries.push({ url: `${env.SITE_URL}/${locale}`, changeFrequency: 'weekly', priority: 1 })
+    // Las dos fiestas tienen página propia: son las entradas principales de la web.
+    entries.push({ url: `${env.SITE_URL}/${locale}/bodas`, changeFrequency: 'weekly', priority: 0.9 })
+    entries.push({ url: `${env.SITE_URL}/${locale}/xv-anos`, changeFrequency: 'weekly', priority: 0.9 })
 
     // Only published routes belong here. The per-template detail page does not exist
     // yet, and announcing 16 URLs that answer 404 costs crawl trust across the site.

@@ -6,6 +6,8 @@ import { notFound } from 'next/navigation'
 import { catalog, site } from '@/app/composition/container'
 import { enlaceWhatsapp, formatoWhatsapp } from '@/shared/whatsapp'
 import { TemplateCard } from '@/modules/catalog/ui/TemplateCard'
+import { FIESTAS, type Fiesta } from '@/modules/events'
+import { plantillasDeFiesta } from '@/sections/FiestaLanding'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
@@ -49,7 +51,7 @@ export default async function CollectionsPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ ver?: string }>
+  searchParams: Promise<{ ver?: string; fiesta?: string }>
 }) {
   const { locale: raw } = await params
   const locale = parseLocaleParam(raw)
@@ -60,7 +62,9 @@ export default async function CollectionsPage({
   // Cuántas se enseñan va **en la URL** y no en `useState`: así el catálogo es enlazable,
   // sobrevive a recargar y a volver atrás desde una vista previa, y la página sigue siendo
   // de servidor. Es la misma regla que el resto del proyecto.
-  const { ver } = await searchParams
+  const { ver, fiesta: fiestaPedida } = await searchParams
+  // Bodas y XV no se mezclan: se ve una fiesta a la vez, y cuál va en la URL.
+  const fiesta: Fiesta = fiestaPedida === 'xv' ? 'xv' : 'boda'
   const pedidas = Number.parseInt(ver ?? '', 10)
   const visibles = Number.isFinite(pedidas) && pedidas > 0 ? Math.min(pedidas, 200) : POR_TANDA
   // Same reason as the landing: a connection failure throws, and this page already has
@@ -96,7 +100,7 @@ export default async function CollectionsPage({
     )
   }
 
-  const templates = templatesResult.value
+  const templates = plantillasDeFiesta(templatesResult.value, fiesta)
   const mostradas = templates.slice(0, visibles)
   const quedan = templates.length - mostradas.length
   const breadcrumb = breadcrumbJsonLd([
@@ -113,7 +117,23 @@ export default async function CollectionsPage({
           <p className="max-w-[46ch] text-[15px] text-ink-soft">{dictionary.models.subtitle}</p>
         </div>
 
-        <div className="mt-16 grid grid-cols-2 place-items-center gap-x-6 gap-y-14 md:grid-cols-4">
+        <nav aria-label={dictionary.nav.collections} className="mt-10 flex justify-center gap-2">
+          {FIESTAS.map((f) => (
+            <Link
+              aria-current={f === fiesta ? 'page' : undefined}
+              className={`rounded-[var(--radius-pill)] border px-6 py-2.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] transition-colors ${
+                f === fiesta ? 'border-gold bg-gold text-bg-raised' : 'border-[var(--color-line)] text-ink-soft hover:border-gold'
+              }`}
+              href={f === 'boda' ? `/${locale}/colecciones#modelos` : `/${locale}/colecciones?fiesta=xv#modelos`}
+              key={f}
+              scroll={false}
+            >
+              {f === 'boda' ? dictionary.nav.weddings : dictionary.nav.quinceaneras}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="mt-12 grid grid-cols-2 place-items-center gap-x-6 gap-y-14 md:grid-cols-4">
           {mostradas.map((template) => (
             <TemplateCard dictionary={dictionary} key={template.id} locale={locale} template={template} />
           ))}
@@ -123,7 +143,7 @@ export default async function CollectionsPage({
           <div className="mt-16 flex flex-col items-center gap-3">
             <Link
               className="rounded-[var(--radius-pill)] border border-[var(--color-line)] px-9 py-3.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink transition-colors hover:border-gold"
-              href={`/${locale}/colecciones?ver=${visibles + POR_TANDA}#modelos`}
+              href={`/${locale}/colecciones?${fiesta === 'xv' ? 'fiesta=xv&' : ''}ver=${visibles + POR_TANDA}#modelos`}
               scroll={false}
             >
               {dictionary.collections.loadMore}

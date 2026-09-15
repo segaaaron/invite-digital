@@ -231,3 +231,16 @@ test('las páginas públicas del pedido tampoco desbordan', async ({ page }) => 
   const alta = await page.evaluate(anchoDocumento)
   expect(alta.ancho).toBeLessThanOrEqual(alta.ventana)
 })
+
+test('las páginas de cada fiesta y la de colecciones tampoco desbordan', async ({ page }) => {
+  for (const ancho of [390, 820, 1280]) {
+    await page.setViewportSize({ width: ancho, height: 900 })
+    for (const ruta of ['/es/bodas', '/es/xv-anos', '/es/colecciones?fiesta=xv']) {
+      await page.goto(ruta)
+      await page.waitForLoadState('domcontentloaded')
+      expect(await page.evaluate(anchoDocumento), `${ruta} a ${ancho}`).toMatchObject({ ancho: expect.any(Number) })
+      const doc = await page.evaluate(anchoDocumento)
+      expect(doc.ancho, `${ruta} estira el documento a ${ancho}`).toBeLessThanOrEqual(doc.ventana)
+    }
+  }
+})

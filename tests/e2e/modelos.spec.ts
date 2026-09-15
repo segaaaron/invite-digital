@@ -253,23 +253,19 @@ test.describe('los modelos, en un portátil', () => {
 })
 
 test.describe('el catálogo público', () => {
-  test('enseña ocho modelos y ofrece traer más', async ({ page }) => {
-    // Dieciséis tarjetas de papel con su sombra y su rotación son dieciséis composiciones
-    // pesadas en la primera pantalla, y en un teléfono con datos eso es la diferencia
-    // entre ver el catálogo y cerrarlo.
+  test('enseña los modelos de una fiesta a la vez: bodas y XV no se mezclan', async ({ page }) => {
     await page.goto('/es/colecciones')
-
+    const pestanas = page.getByRole('navigation', { name: 'Colecciones' })
+    await expect(pestanas.getByRole('link', { name: 'Bodas', exact: true })).toHaveAttribute('aria-current', 'page')
     await expect(page.getByRole('link', { name: /abrir/i })).toHaveCount(8)
-    await expect(page.getByRole('link', { name: /ver más modelos/i })).toBeVisible()
-  })
+    await expect(page.getByRole('link', { name: /abrir/i }).first()).not.toHaveAttribute('href', /\/xv/)
 
-  test('trae la segunda tanda con el botón, y el estado va en la URL', async ({ page }) => {
-    // Enlazable, sobrevive a recargar y a volver desde una vista previa. Es la regla del
-    // proyecto: lo que la maqueta abre con un botón va en un parámetro, no en useState.
-    await page.goto('/es/colecciones?ver=16')
-
-    await expect(page.getByRole('link', { name: /abrir/i })).toHaveCount(16)
-    await expect(page.getByRole('link', { name: /ver más modelos/i })).toHaveCount(0)
+    // La fiesta va en la URL: enlazable, sobrevive a recargar y a volver de una vista previa.
+    await pestanas.getByRole('link', { name: 'XV años', exact: true }).click()
+    await expect(page).toHaveURL(/fiesta=xv/)
+    const enlaces = page.getByRole('link', { name: /abrir/i })
+    await expect(enlaces).toHaveCount(8)
+    for (const href of await enlaces.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
   })
 
   test('cada tarjeta abre la invitación de verdad', async ({ page }) => {

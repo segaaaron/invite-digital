@@ -17,6 +17,7 @@ import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { ComparisonSection } from '@/sections/ComparisonSection'
 import { ExperienceSection } from '@/sections/ExperienceSection'
 import { FaqSection } from '@/sections/FaqSection'
+import { FiestaChooser } from '@/sections/FiestaChooser'
 import { HeroSection } from '@/sections/HeroSection'
 import { HeroStack } from '@/sections/HeroStack'
 import { MobileSection } from '@/sections/MobileSection'
@@ -154,6 +155,7 @@ export default async function LandingPage({
           />
         }
       />
+      <FiestaChooser dictionary={dictionary} locale={locale} />
       <ExperienceSection dictionary={dictionary} />
       <MobileSection dictionary={dictionary} />
 

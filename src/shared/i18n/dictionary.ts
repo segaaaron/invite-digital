@@ -1,10 +1,37 @@
 export interface NavDictionary {
+  /** Las dos fiestas son las entradas principales: cada una lleva a su propia página. */
+  weddings: string
+  quinceaneras: string
   collections: string
-  experience: string
-  /** «Casos» en la maqueta; ancla a la sección de la diferencia. */
-  cases: string
   pricing: string
   contact: string
+}
+
+/** Una fiesta en la web: su página propia y su tarjeta en la portada. */
+export interface FiestaPageDictionary {
+  eyebrow: string
+  title: string
+  lede: string
+  modelsTitle: string
+  modelsSubtitle: string
+  cta: string
+  /** La tarjeta de la portada que lleva a esta página. */
+  cardTitle: string
+  cardBody: string
+  seoTitle: string
+  seoDescription: string
+}
+
+export interface FiestasDictionary {
+  chooserEyebrow: string
+  chooserTitle: string
+  chooserCta: string
+  boda: FiestaPageDictionary
+  xv: FiestaPageDictionary
+  /** Lo que la plataforma ya hace, igual para las dos fiestas. Nada que no exista. */
+  toolsEyebrow: string
+  toolsTitle: string
+  tools: { title: string; body: string }[]
 }
 
 export interface HeroDictionary {
@@ -430,6 +457,7 @@ export interface OrdersDictionary {
 
 export interface Dictionary {
   nav: NavDictionary
+  fiestas: FiestasDictionary
   hero: HeroDictionary
   experience: ExperienceDictionary
   mobile: MobileDictionary

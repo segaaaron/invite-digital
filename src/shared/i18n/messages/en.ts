@@ -1,7 +1,46 @@
 import type { Dictionary } from '../dictionary'
 
 export const en = {
-  nav: { collections: 'Collections', experience: '3D experience', cases: 'Case studies', pricing: 'Pricing', contact: 'Create invitation' },
+  nav: { weddings: 'Weddings', quinceaneras: 'Quinceañeras', collections: 'Collections', pricing: 'Pricing', contact: 'Create invitation' },
+  fiestas: {
+    chooserEyebrow: 'Two celebrations',
+    chooserTitle: 'What are you celebrating?',
+    chooserCta: 'See',
+    boda: {
+      eyebrow: 'Wedding Planner',
+      title: 'Plan your wedding from one place',
+      lede: 'Choose your invitation, share it on WhatsApp and follow every RSVP live. Tables, gift registry and the venue door, in the same dashboard.',
+      modelsTitle: 'Wedding invitations',
+      modelsSubtitle: 'Open the whole invitation before choosing: it is the one your guests will receive.',
+      cta: 'See pricing',
+      cardTitle: 'Weddings',
+      cardBody: 'Invitation, RSVPs, tables, gift registry and the venue door.',
+      seoTitle: 'Digital wedding invitations with live RSVP | Luxury Atelier',
+      seoDescription: 'Digital wedding invitations in Bolivia: live RSVP, seating, gift registry and QR passes for the door.',
+    },
+    xv: {
+      eyebrow: 'XV Planner',
+      title: 'Your quinceañera, from the first rehearsal to the last waltz',
+      lede: 'An invitation worthy of your fifteen, live RSVPs and the venue door in the hands of whoever you choose.',
+      modelsTitle: 'Quinceañera invitations',
+      modelsSubtitle: 'Open the whole invitation before choosing: it is the one your guests will receive.',
+      cta: 'See pricing',
+      cardTitle: 'Quinceañeras',
+      cardBody: 'Invitation, RSVPs, tables and the door of your party.',
+      seoTitle: 'Digital quinceañera invitations with live RSVP | Luxury Atelier',
+      seoDescription: 'Digital quinceañera invitations in Bolivia: live RSVP, seating, gifts and QR passes for the door.',
+    },
+    toolsEyebrow: 'Your dashboard',
+    toolsTitle: 'Everything for the day, in one dashboard',
+    tools: [
+      { title: 'Live RSVPs', body: 'Each family confirms from their link and you see it right away, with who is coming and what they eat.' },
+      { title: 'One link per family', body: 'With their name and seats. Share it on WhatsApp from the dashboard.' },
+      { title: 'Tables and floor plan', body: 'Seat each group and place the rest without undoing what you already arranged.' },
+      { title: 'Gift registry', body: 'Gifts reserved instantly and cash funds with their goal.' },
+      { title: 'Door staff with QR passes', body: 'Add your door team with a link and a PIN. Works offline.' },
+      { title: 'Your guests’ photos', body: 'Guests upload the party photos from their own invitation.' },
+    ],
+  },
   hero: {
     eyebrow: 'Quiet luxury · Digital atelier',
     titleLine1: 'DIGITAL',

@@ -12,12 +12,13 @@ export function SiteHeader({ locale, dictionary }: Props) {
   // Con la portada delante: la cabecera sale también en colecciones y en el pedido, y ahí
   // un `#precios` a secas no llevaba a ninguna parte.
   const inicio = `/${locale}`
+  // Las dos fiestas van primero: son dos productos, cada uno con su página.
   const izquierda = [
-    { href: `${inicio}#colecciones`, label: dictionary.nav.collections },
-    { href: `${inicio}#experiencia`, label: dictionary.nav.experience },
+    { href: `${inicio}/bodas`, label: dictionary.nav.weddings },
+    { href: `${inicio}/xv-anos`, label: dictionary.nav.quinceaneras },
   ]
   const derecha = [
-    { href: `${inicio}#diferencia`, label: dictionary.nav.cases },
+    { href: `${inicio}/colecciones`, label: dictionary.nav.collections },
     { href: `${inicio}#precios`, label: dictionary.nav.pricing },
   ]
 
