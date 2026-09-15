@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { clientShares, events, guestGroups, sessions, users } from '@/shared/db/schema'
+import { clientShares, doorPorters, vendors, events, guestGroups, sessions, users } from '@/shared/db/schema'
 import { createTokenMinter } from '@/shared/security/tokens'
 import { isOk } from '@/shared/result'
 import { addGuestGroup } from '../application/add-guest-group'
@@ -72,12 +72,14 @@ describe('el token no se guarda en claro', () => {
       { tabla: 'guest_groups', columna: guestGroups.tokenHash },
       { tabla: 'sessions', columna: sessions.tokenHash },
       { tabla: 'client_shares', columna: clientShares.tokenHash },
+      { tabla: 'door_porters', columna: doorPorters.tokenHash },
+      { tabla: 'vendors', columna: vendors.accessTokenHash },
     ] as const
 
     // Si alguien cambiara `token_hash` a `text` para "poder leerlo", el tipo dejaría de
     // ser bytea y esta prueba lo diría.
     const tipos = await db.execute<{ table_name: string; data_type: string }>(
-      `select table_name, data_type from information_schema.columns where column_name = 'token_hash'`,
+      `select table_name, data_type from information_schema.columns where column_name in ('token_hash', 'access_token_hash')`,
     )
 
     expect(tipos.map((fila) => fila.table_name).sort()).toEqual(columnas.map((c) => c.tabla).sort())
