@@ -7,6 +7,13 @@ import { buildContentSecurityPolicy, createNonce } from '@/shared/security/csp'
 const PUBLIC_FILE = /\.[^/]+$/
 
 /**
+ * Descargas privadas que se sirven con su propia política, `sandbox`. El proxy no les pone
+ * la de la página encima: pisarla deja un PDF abierto en línea ejecutando guion en el origen
+ * del panel, que es justo lo que esa cabecera impide. Le pasaba al comprobante desde el Plan B.
+ */
+const DESCARGA_PRIVADA = /^\/panel\/(pedidos\/comprobante|eventos\/[^/]+\/documentos)\/[^/]+$/
+
+/**
  * The nonce travels to the render through a request header, which is how a Server
  * Component reads it (`headers()`); the response carries the policy that matches it.
  *
@@ -40,7 +47,8 @@ export function proxy(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname === '/robots.txt' ||
     pathname === '/sitemap.xml' ||
-    PUBLIC_FILE.test(pathname)
+    PUBLIC_FILE.test(pathname) ||
+    DESCARGA_PRIVADA.test(pathname)
   ) {
     return NextResponse.next()
   }

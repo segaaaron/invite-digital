@@ -108,3 +108,16 @@ describe('política de seguridad de contenido', () => {
     expect(csp(proxy(pedir('/imagenes/plantilla.png')))).toBeNull()
   })
 })
+
+describe('las descargas privadas llevan su propia política', () => {
+  // Un comprobante o un contrato se sirven con `CSP: sandbox`. Si el proxy les pone la
+  // política de la página encima, un PDF abierto en línea vuelve a poder ejecutar guion.
+  it('no pisa la política de un comprobante ni de un documento del evento', () => {
+    expect(csp(proxy(pedir('/panel/pedidos/comprobante/abc')))).toBeNull()
+    expect(csp(proxy(pedir('/panel/eventos/boda-ana/documentos/abc')))).toBeNull()
+  })
+
+  it('y sigue poniéndola en las páginas del panel', () => {
+    expect(csp(proxy(pedir('/panel/eventos/boda-ana/planner/documentos')))).not.toBeNull()
+  })
+})

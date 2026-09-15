@@ -30,6 +30,7 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
   await page.getByLabel('Precio (Bs) · crea su partida').fill('3500')
   await page.getByLabel('Categoría del presupuesto').selectOption('dj')
   await page.getByLabel('Llega el día a las').fill('17:30')
+  await page.getByLabel('Estado').selectOption('contratado')
   await page.getByRole('button', { name: 'Sumar proveedor' }).click()
 
   const dj = page.getByRole('listitem', { name: 'DJ' })
@@ -85,6 +86,32 @@ test('el cortejo de XV suma un chambelán con su talla y un ensayo del vals', as
   const [ensayo] = await sql<{ n: number }[]>`
     select count(*)::int as n from rehearsal_attendees a join rehearsals r on r.id = a.rehearsal_id join events e on e.id = r.event_id where e.slug = ${SLUG}`
   expect(ensayo!.n).toBe(1)
+})
+
+test('el Día D dice quién falta por llegar y marca al DJ', async ({ page }) => {
+  await page.goto(`/panel/eventos/${SLUG}/dia-d`)
+  await expect(page.getByRole('heading', { name: 'Día D' })).toBeVisible()
+  await page.getByRole('button', { name: 'Llegó DJ' }).click()
+  await expect(page.getByText('Llegaron todos.')).toBeVisible({ timeout: 15_000 })
+})
+
+test('un contrato en PDF se guarda privado y se descarga como adjunto, nunca en línea', async ({ page, browser }) => {
+  await page.goto(`/panel/eventos/${SLUG}/planner/documentos`)
+  await page.setInputFiles('input[type=file][name=file]', { name: 'contrato-dj.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n%contrato del DJ\n') })
+  await page.getByRole('button', { name: 'Subir documento' }).click()
+  const enlace = page.getByRole('link', { name: 'contrato-dj.pdf' })
+  await expect(enlace).toBeVisible({ timeout: 15_000 })
+
+  const href = (await enlace.getAttribute('href'))!
+  const respuesta = await page.request.get(href)
+  expect(respuesta.status()).toBe(200)
+  expect(respuesta.headers()['content-disposition']).toContain('attachment')
+  expect(respuesta.headers()['content-security-policy']).toBe('sandbox')
+
+  const ajeno = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const sinSesion = await ajeno.request.get(href, { maxRedirects: 0 })
+  expect(sinSesion.status()).not.toBe(200)
+  await ajeno.close()
 })
 
 test('con el plan Atelier, proveedores dice qué plan los trae y el servidor no guarda', async ({ page }) => {
