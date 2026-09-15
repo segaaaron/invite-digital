@@ -32,7 +32,7 @@ test.describe('el panel del cliente', () => {
 
     // Contexto propio y vacío: esta suite no usa la cookie del atelier que guarda
     // `auth.setup.ts`, y un solo inicio de sesión sirve para todas sus pruebas.
-    contexto = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    contexto = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.2' } })
     page = await contexto.newPage()
 
     await page.goto('/panel/entrar')
@@ -93,7 +93,7 @@ test.describe('el panel del cliente', () => {
 
   test('la co-anfitriona organiza, pero no suma gente ni porteros', async ({ browser }) => {
     await fijarClave(EQUIPO.coanfitriona, 'clave-de-la-mama-1')
-    const suyo = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+    const suyo = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.2' } })
     const mama = await suyo.newPage()
     await mama.goto('/panel/entrar')
     await mama.getByLabel('Correo').fill(EQUIPO.coanfitriona)

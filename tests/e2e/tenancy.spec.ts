@@ -21,7 +21,7 @@ test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browse
   const { eventId, userId } = await seedOtroAtelier(SLUG)
 
   // --- El otro atelier: es suyo, lo ve.
-  const suyo = await (await browser.newContext()).newPage()
+  const suyo = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.6' } })).newPage()
   await entrar(suyo, OTRO)
   expect((await suyo.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(200)
 
@@ -45,7 +45,7 @@ test('un atelier no ve ni toca el evento de otro; el admin sí', async ({ browse
   await expect(bandeja.getByText('María & Alejandro')).toHaveCount(0)
 
   // --- El admin entra en el evento del otro y ve la administración.
-  const admin = await (await browser.newContext()).newPage()
+  const admin = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.6' } })).newPage()
   await entrar(admin, ADMIN)
   expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(200)
   await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toBeVisible()

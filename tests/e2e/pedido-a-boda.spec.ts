@@ -2,6 +2,9 @@ import { expect, test } from '@playwright/test'
 import { ADMIN_AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteOrdersOf, deleteProvisioned, seedOrder } from './fixtures/pedido-a-boda'
 
+// IP propia para el limitador de inicios de sesión (cinco por IP): en el CI todas las suites salen de 127.0.0.1.
+test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.5' } })
+
 const CLIENTE = 'Novios del camino completo e2e'
 const CORREO = 'novios-camino-e2e@invitepremium.bo'
 const CLAVE = 'contrasena-del-camino-1'

@@ -24,7 +24,9 @@ import {
 test.describe.configure({ mode: 'serial' })
 
 test.describe('la contraseña provisional', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  // IP propia: el limitador cuenta cinco inicios por IP, y en el CI todas las suites salen de
+  // 127.0.0.1. Sin proxy delante, la app lee `x-real-ip` tal cual; la cuenta sigue limitada.
+  test.use({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.3' } })
 
   test.beforeAll(async () => {
     await seedProvisional()
@@ -84,7 +86,9 @@ test.describe('la contraseña provisional', () => {
 })
 
 test.describe('recuperar la contraseña con código', () => {
-  test.use({ storageState: { cookies: [], origins: [] } })
+  // IP propia: el limitador cuenta cinco inicios por IP, y en el CI todas las suites salen de
+  // 127.0.0.1. Sin proxy delante, la app lee `x-real-ip` tal cual; la cuenta sigue limitada.
+  test.use({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.3' } })
 
   test.afterAll(async () => {
     await borrar()

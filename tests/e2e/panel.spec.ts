@@ -4,6 +4,9 @@ import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
 import { createEvent, signIn } from './helpers/panel'
 
+// IP propia para el limitador de inicios de sesión (cinco por IP): en el CI todas las suites salen de 127.0.0.1.
+test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.4' } })
+
 test.describe('sin sesión', () => {
   test.use({ storageState: { cookies: [], origins: [] } })
 

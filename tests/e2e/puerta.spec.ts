@@ -50,7 +50,7 @@ test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in'
   await sql`update users set must_change_password = false where email = ${PUERTA.email}`
 
   // --- Esa persona entra y cae en el check-in, no en el resumen.
-  const puerta = await (await browser.newContext()).newPage()
+  const puerta = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.7' } })).newPage()
   await entrar(puerta, PUERTA)
   await expect(puerta).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/checkin$`))
   await expect(puerta.getByRole('heading', { name: 'Check-in de invitados' })).toBeVisible()

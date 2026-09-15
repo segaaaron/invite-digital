@@ -157,7 +157,7 @@ const VISTAS_ADMIN = [
  * en un teléfono dejaría el formulario por debajo del pliegue.
  */
 test('la puerta del panel no desborda en ningún ancho', async ({ browser }) => {
-  const anonima = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const anonima = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.8' } })
   const page = await anonima.newPage()
 
   for (const tamano of ANCHOS) {
