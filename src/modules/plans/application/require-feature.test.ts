@@ -20,6 +20,7 @@ const atelier: PlanRow = {
   csvImport: false,
   onlineDays: 60,
   designChange: 'ninguno',
+  plannerSuite: 'esencial',
 }
 
 const firma: PlanRow = {
@@ -38,6 +39,7 @@ const firma: PlanRow = {
   csvImport: true,
   onlineDays: 365,
   designChange: 'siempre',
+  plannerSuite: 'esencial',
 }
 
 const catalogo = [atelier, firma]

@@ -19,6 +19,7 @@ const base: Allowance = {
   csvImport: false,
   onlineDays: 60,
   designChange: 'ninguno',
+  plannerSuite: 'esencial',
 }
 
 describe('PlanComparison', () => {

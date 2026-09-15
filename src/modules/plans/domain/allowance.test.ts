@@ -16,6 +16,7 @@ const atelier: Allowance = {
   csvImport: false,
   onlineDays: 60,
   designChange: 'ninguno',
+  plannerSuite: 'esencial',
 }
 
 const altaCostura: Allowance = {
@@ -33,6 +34,7 @@ const altaCostura: Allowance = {
   csvImport: true,
   onlineDays: 365,
   designChange: 'siempre',
+  plannerSuite: 'esencial',
 }
 
 describe('canAddGroup', () => {
@@ -115,3 +117,18 @@ describe('puedeCambiarDiseno', () => {
     expect(puedeCambiarDiseno('siempre', { enlacesRepartidos: true })).toBe(true)
   })
 })
+
+describe('el planner por plan', () => {
+  it('«completo» trae proveedores y cronograma; «total», además, el Día D', () => {
+    const esencial = { ...atelier, plannerSuite: 'esencial' as const }
+    const completo = { ...atelier, planSlug: 'firma', plannerSuite: 'completo' as const }
+    const total = { ...altaCostura, plannerSuite: 'total' as const }
+    expect(hasFeature(esencial, 'plannerCompleto')).toBe(false)
+    expect(hasFeature(completo, 'plannerCompleto')).toBe(true)
+    expect(hasFeature(completo, 'plannerTotal')).toBe(false)
+    expect(hasFeature(total, 'plannerCompleto')).toBe(true)
+    expect(hasFeature(total, 'plannerTotal')).toBe(true)
+    expect(planThatIncludes('plannerTotal', [esencial, completo, total])).toBe('alta-costura')
+  })
+})
+

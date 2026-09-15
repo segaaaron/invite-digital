@@ -68,6 +68,8 @@ export const plans = pgTable('plans', {
   maxCohosts: integer('max_cohosts').default(1),
   /** Planners contratados que suma. `NULL` es sin límite; cero, ninguno. */
   maxHiredPlanners: integer('max_hired_planners').default(0),
+  /** `esencial` · `completo` · `total`: qué parte del planner trae. */
+  plannerSuite: varchar('planner_suite', { length: 16 }).notNull().default('esencial'),
   /** Fotos de la galería de la invitación. `NULL` es sin límite. */
   maxGalleryPhotos: integer('max_gallery_photos'),
   guestPhotos: boolean('guest_photos').notNull().default(true),
@@ -714,6 +716,8 @@ export const fundContributions = pgTable(
     guestGroupId: uuid('guest_group_id').references(() => guestGroups.id, { onDelete: 'set null' }),
     displayName: varchar('display_name', { length: 160 }).notNull(),
     amountCents: integer('amount_cents').notNull(),
+    /** `anticipo` · `cuota` · `saldo`, o nada. */
+    label: varchar('label', { length: 16 }),
     // 'transfer' | 'card' | 'envelope' | 'other'
     method: varchar('method', { length: 16 }).notNull(),
     message: text('message'),
@@ -968,4 +972,103 @@ export const budgetPayments = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index('budget_payments_item_idx').on(t.itemId), check('budget_payments_amount_check', sql`${t.amountCents} > 0`)],
+)
+
+/** Un proveedor del evento. Su dinero vive en su partida del presupuesto; el enlace, como hash. */
+export const vendors = pgTable(
+  'vendors',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    service: varchar('service', { length: 80 }).notNull(),
+    company: varchar('company', { length: 120 }),
+    contactName: varchar('contact_name', { length: 120 }),
+    whatsapp: varchar('whatsapp', { length: 20 }),
+    email: varchar('email', { length: 200 }),
+    status: varchar('status', { length: 16 }).notNull().default('cotizando'),
+    arrivalTime: varchar('arrival_time', { length: 5 }),
+    setupNotes: text('setup_notes'),
+    budgetItemId: uuid('budget_item_id').references(() => budgetItems.id, { onDelete: 'set null' }),
+    accessTokenHash: bytea('access_token_hash').unique(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('vendors_event_idx').on(t.eventId),
+    check('vendors_status_check', sql`${t.status} in ('cotizando', 'reservado', 'contratado', 'confirmado')`),
+  ],
+)
+
+/** El cronograma interno del día, momento a momento. Las horas son `HH:MM` de Bolivia. */
+export const runOfShow = pgTable(
+  'run_of_show',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    startsAt: varchar('starts_at', { length: 5 }).notNull(),
+    durationMin: integer('duration_min').notNull().default(15),
+    title: varchar('title', { length: 160 }).notNull(),
+    place: varchar('place', { length: 120 }),
+    owner: varchar('owner', { length: 120 }),
+    vendorIds: uuid('vendor_ids').array().notNull().default(sql`'{}'`),
+    cue: varchar('cue', { length: 200 }),
+    notes: text('notes'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('run_of_show_event_idx').on(t.eventId), check('run_of_show_duration_check', sql`${t.durationMin} between 1 and 600`)],
+)
+
+/** El cortejo: padrinos, damas y caballeros, chambelanes y corte de honor. */
+export const courtMembers = pgTable(
+  'court_members',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    kind: varchar('kind', { length: 16 }).notNull(),
+    name: varchar('name', { length: 120 }).notNull(),
+    whatsapp: varchar('whatsapp', { length: 20 }),
+    sponsors: varchar('sponsors', { length: 200 }),
+    size: varchar('size', { length: 20 }),
+    confirmed: boolean('confirmed').notNull().default(false),
+    budgetItemId: uuid('budget_item_id').references(() => budgetItems.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('court_members_event_idx').on(t.eventId),
+    check('court_members_kind_check', sql`${t.kind} in ('padrino', 'dama', 'caballero', 'chambelan', 'corte')`),
+  ],
+)
+
+export const rehearsals = pgTable(
+  'rehearsals',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    date: timestamp('date', { withTimezone: true }).notNull(),
+    place: varchar('place', { length: 120 }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('rehearsals_event_idx').on(t.eventId)],
+)
+
+export const rehearsalAttendees = pgTable(
+  'rehearsal_attendees',
+  {
+    rehearsalId: uuid('rehearsal_id')
+      .notNull()
+      .references(() => rehearsals.id, { onDelete: 'cascade' }),
+    courtMemberId: uuid('court_member_id')
+      .notNull()
+      .references(() => courtMembers.id, { onDelete: 'cascade' }),
+  },
+  (t) => [primaryKey({ columns: [t.rehearsalId, t.courtMemberId] })],
 )

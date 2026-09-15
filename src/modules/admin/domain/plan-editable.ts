@@ -26,6 +26,7 @@ export type PlanCrudo = {
   onlineDays: string
   /** `ninguno` · `antes_de_repartir` · `siempre`. */
   designChange: string
+  plannerSuite: string
   includesSeating: boolean
   includesRegistry: boolean
   includesCheckin: boolean
@@ -37,7 +38,7 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'es' | 'en'> & {
   maxGuestGroups: number | null
   maxDoorPorters: number
   maxCohosts: number | null
@@ -45,6 +46,7 @@ export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | '
   maxGalleryPhotos: number | null
   onlineDays: number
   designChange: 'ninguno' | 'antes_de_repartir' | 'siempre'
+  plannerSuite: 'esencial' | 'completo' | 'total'
   es: TextoPlanLimpio
   en: TextoPlanLimpio
 }
@@ -119,6 +121,11 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     return err(adminError('invalid_input', 'Elige cuándo se puede cambiar el modelo.'))
   }
 
+  const suite = crudo.plannerSuite
+  if (suite !== 'esencial' && suite !== 'completo' && suite !== 'total') {
+    return err(adminError('invalid_input', 'Elige qué parte del planner trae el plan.'))
+  }
+
   const es = leerTexto(crudo.es, 'es')
   if (!es.ok) return es
   const en = leerTexto(crudo.en, 'en')
@@ -133,6 +140,7 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     maxGalleryPhotos: fotos === '' ? null : Number(fotos),
     onlineDays: Number(dias),
     designChange: regla,
+    plannerSuite: suite,
     es: es.value,
     en: en.value,
   })

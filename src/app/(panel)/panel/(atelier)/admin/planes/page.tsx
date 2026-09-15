@@ -51,6 +51,7 @@ export default async function AdminPlanesPage() {
                   csvImport: plan.csvImport,
                   onlineDays: plan.onlineDays,
                   designChange: plan.designChange,
+                  plannerSuite: plan.plannerSuite,
                   includesSeating: plan.includesSeating,
                   includesRegistry: plan.includesRegistry,
                   includesCheckin: plan.includesCheckin,

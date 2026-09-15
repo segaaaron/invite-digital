@@ -18,6 +18,7 @@ const fila: PlanRow = {
   csvImport: true,
   onlineDays: 180,
   designChange: 'antes_de_repartir',
+  plannerSuite: 'esencial',
 }
 
 describe('capacidadDePlan', () => {
@@ -37,6 +38,7 @@ describe('capacidadDePlan', () => {
       csvImport: true,
       onlineDays: 180,
       designChange: 'antes_de_repartir',
+      plannerSuite: 'esencial',
     })
   })
 

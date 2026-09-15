@@ -15,6 +15,7 @@ const crudo: PlanCrudo = {
   csvImport: false,
   onlineDays: '180',
   designChange: 'antes_de_repartir',
+  plannerSuite: 'esencial',
   includesSeating: true,
   includesRegistry: false,
   includesCheckin: false,
@@ -99,7 +100,7 @@ describe('límites nuevos del plan', () => {
   it('el cambio de modelo solo admite las tres reglas conocidas', () => {
     const f = leerPlan({ ...crudo, designChange: 'cuando-quiera' })
     expect(isErr(f) && f.error.detail).toContain('modelo')
-    const r = leerPlan({ ...crudo, designChange: 'siempre' })
+    const r = leerPlan({ ...crudo, designChange: 'siempre', plannerSuite: 'esencial' })
     expect(isOk(r) && r.value.designChange).toBe('siempre')
   })
 

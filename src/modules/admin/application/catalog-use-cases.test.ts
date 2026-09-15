@@ -19,6 +19,7 @@ const crudo = (isActive: boolean): PlanCrudo => ({
   csvImport: true,
   onlineDays: '90',
   designChange: 'siempre',
+  plannerSuite: 'esencial',
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,

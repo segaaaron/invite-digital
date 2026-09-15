@@ -135,6 +135,7 @@ export type PlanAdminRow = {
   readonly csvImport: boolean
   readonly onlineDays: number
   readonly designChange: string
+  readonly plannerSuite: string
   readonly highlighted: boolean
   readonly isActive: boolean
   /** Cuántos eventos lo tienen: es lo que pesa antes de cambiarle el tope. */

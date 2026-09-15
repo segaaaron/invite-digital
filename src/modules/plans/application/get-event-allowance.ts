@@ -24,6 +24,7 @@ const SIN_PLAN: Allowance = {
   csvImport: true,
   onlineDays: 365,
   designChange: 'siempre',
+  plannerSuite: 'total',
 }
 
 const desdeFila = capacidadDePlan

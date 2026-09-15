@@ -12,6 +12,8 @@ const NOMBRE: Record<PlanFeature, string> = {
   guestPhotos: 'las fotos de los invitados',
   eventPassword: 'la invitación con contraseña',
   csvImport: 'importar la lista de invitados',
+  plannerCompleto: 'proveedores, cronograma y cortejo',
+  plannerTotal: 'el Día D y los enlaces para proveedores',
 }
 
 const desdeFila = capacidadDePlan

@@ -25,6 +25,7 @@ export type PlanEditorView = {
   readonly csvImport: boolean
   readonly onlineDays: number
   readonly designChange: string
+  readonly plannerSuite: string
   readonly highlighted: boolean
   readonly isActive: boolean
   readonly eventos: number
@@ -147,6 +148,13 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
             <option value="ninguno">Nunca</option>
             <option value="antes_de_repartir">Hasta repartir los enlaces</option>
             <option value="siempre">Siempre</option>
+          </select>
+        </Field>
+        <Field htmlFor={`${id}-suite`} label="Planner">
+          <select className={FIELD_CLASS} defaultValue={txt('plannerSuite', plan.plannerSuite)} id={`${id}-suite`} name="plannerSuite">
+            <option value="esencial">Esencial · tareas y presupuesto</option>
+            <option value="completo">Completo · + proveedores, cronograma y cortejo</option>
+            <option value="total">Total · + Día D y enlaces para proveedores</option>
           </select>
         </Field>
       </div>

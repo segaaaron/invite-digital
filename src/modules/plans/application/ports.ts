@@ -10,6 +10,7 @@ export type PlanRow = {
   readonly maxDoorPorters: number
   readonly maxCohosts: number | null
   readonly maxHiredPlanners: number | null
+  readonly plannerSuite: string
   readonly maxGalleryPhotos: number | null
   readonly guestPhotos: boolean
   readonly eventPassword: boolean

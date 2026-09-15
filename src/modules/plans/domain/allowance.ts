@@ -28,6 +28,8 @@ export type Allowance = {
   readonly onlineDays: number
   /** Cuándo se puede cambiar el modelo por otro de la misma fiesta. */
   readonly designChange: DesignChange
+  /** Qué parte del planner trae. */
+  readonly plannerSuite: PlannerSuite
 }
 
 /**
@@ -41,8 +43,16 @@ export const DESIGN_CHANGES: readonly DesignChange[] = ['ninguno', 'antes_de_rep
 export const puedeCambiarDiseno = (regla: DesignChange, estado: { enlacesRepartidos: boolean }): boolean =>
   regla === 'siempre' || (regla === 'antes_de_repartir' && !estado.enlacesRepartidos)
 
-/** Las funciones que un plan puede incluir o no. */
-export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport'
+/**
+ * Qué parte del planner trae el plan. `esencial`: tareas y presupuesto. `completo`: además
+ * proveedores, cronograma, cortejo y documentos. `total`: además el Día D y los enlaces para
+ * proveedores.
+ */
+export type PlannerSuite = 'esencial' | 'completo' | 'total'
+export const PLANNER_SUITES: readonly PlannerSuite[] = ['esencial', 'completo', 'total']
+
+/** Las funciones que un plan puede incluir o no. Las dos del planner salen de su nivel. */
+export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport' | 'plannerCompleto' | 'plannerTotal'
 
 /** Umbral del aviso: por debajo no se dice nada, chocar sin verlo venir es peor. */
 export const WARNING_RATIO = 0.8
@@ -72,7 +82,12 @@ export const usageRatio = (limit: number | null, current: number): number | null
   return current / limit
 }
 
-export const hasFeature = (allowance: Allowance, feature: PlanFeature): boolean => allowance[feature]
+export const hasFeature = (allowance: Allowance, feature: PlanFeature): boolean =>
+  feature === 'plannerCompleto'
+    ? allowance.plannerSuite !== 'esencial'
+    : feature === 'plannerTotal'
+      ? allowance.plannerSuite === 'total'
+      : allowance[feature]
 
 /**
  * El plan más barato del catálogo que sí trae la función. `null` si no la trae ninguno.

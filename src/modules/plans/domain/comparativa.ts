@@ -1,4 +1,4 @@
-import type { Allowance, DesignChange } from './allowance'
+import { hasFeature, type Allowance, type DesignChange } from './allowance'
 
 /**
  * Los textos de la comparativa. Llegan de fuera —el diccionario de la web, o el español del
@@ -25,6 +25,9 @@ export type TextosComparativa = {
     porteros: string
     coanfitriones: string
     planners: string
+    tareas: string
+    plannerCompleto: string
+    plannerTotal: string
     enLinea: string
     modelo: string
   }
@@ -52,6 +55,9 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     porteros: (a) => tope(a.maxDoorPorters),
     coanfitriones: (a) => tope(a.maxCohosts),
     planners: (a) => tope(a.maxHiredPlanners),
+    tareas: () => siNo(true),
+    plannerCompleto: (a) => siNo(hasFeature(a, 'plannerCompleto')),
+    plannerTotal: (a) => siNo(hasFeature(a, 'plannerTotal')),
     enLinea: (a) => ({ texto: t.dias.replace('{n}', String(a.onlineDays)), incluido: true }),
     modelo: (a) => ({ texto: t.modelo[a.designChange], incluido: a.designChange !== 'ninguno' }),
   }

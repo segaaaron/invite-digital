@@ -13,6 +13,7 @@ const columnas = {
   maxDoorPorters: plans.maxDoorPorters,
   maxCohosts: plans.maxCohosts,
   maxHiredPlanners: plans.maxHiredPlanners,
+  plannerSuite: plans.plannerSuite,
   maxGalleryPhotos: plans.maxGalleryPhotos,
   guestPhotos: plans.guestPhotos,
   eventPassword: plans.eventPassword,

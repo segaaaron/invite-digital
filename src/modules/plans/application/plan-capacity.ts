@@ -1,4 +1,4 @@
-import { DESIGN_CHANGES, type Allowance, type DesignChange } from '../domain/allowance'
+import { DESIGN_CHANGES, PLANNER_SUITES, type Allowance, type DesignChange, type PlannerSuite } from '../domain/allowance'
 import type { PlanRow } from './ports'
 
 /**
@@ -22,5 +22,6 @@ export const capacidadDePlan = (row: PlanRow): Allowance => ({
   eventPassword: row.eventPassword,
   csvImport: row.csvImport,
   onlineDays: row.onlineDays,
+  plannerSuite: (PLANNER_SUITES as readonly string[]).includes(row.plannerSuite) ? (row.plannerSuite as PlannerSuite) : 'esencial',
   designChange: (DESIGN_CHANGES as readonly string[]).includes(row.designChange) ? (row.designChange as DesignChange) : 'ninguno',
 })

@@ -20,6 +20,7 @@ const atelier: PlanRow = {
   csvImport: false,
   onlineDays: 60,
   designChange: 'ninguno',
+  plannerSuite: 'esencial',
 }
 
 const altaCostura: PlanRow = {
@@ -38,6 +39,7 @@ const altaCostura: PlanRow = {
   csvImport: true,
   onlineDays: 365,
   designChange: 'siempre',
+  plannerSuite: 'esencial',
 }
 
 // El catálogo llega ordenado por precio: el primero es el más barato.
@@ -69,6 +71,7 @@ describe('getEventAllowance', () => {
       csvImport: true,
       onlineDays: 365,
       designChange: 'siempre',
+      plannerSuite: 'esencial',
     })
   })
 
@@ -108,6 +111,7 @@ describe('getEventAllowance', () => {
       csvImport: true,
       onlineDays: 365,
       designChange: 'siempre',
+      plannerSuite: 'total',
     })
     expect(aviso).toHaveBeenCalled()
   })

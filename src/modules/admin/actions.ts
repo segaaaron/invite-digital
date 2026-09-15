@@ -622,6 +622,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
     csvImport: marcado('csvImport'),
     onlineDays: texto(formData, 'onlineDays'),
     designChange: texto(formData, 'designChange'),
+    plannerSuite: texto(formData, 'plannerSuite'),
     includesSeating: marcado('includesSeating'),
     includesRegistry: marcado('includesRegistry'),
     includesCheckin: marcado('includesCheckin'),

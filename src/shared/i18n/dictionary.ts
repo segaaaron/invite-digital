@@ -164,6 +164,9 @@ export interface PlanComparisonDictionary {
     porteros: string
     coanfitriones: string
     planners: string
+    tareas: string
+    plannerCompleto: string
+    plannerTotal: string
     enLinea: string
     modelo: string
   }

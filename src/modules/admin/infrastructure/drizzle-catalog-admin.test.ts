@@ -15,6 +15,7 @@ const plan: PlanLimpio = {
   csvImport: true,
   onlineDays: 90,
   designChange: 'siempre',
+  plannerSuite: 'esencial',
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,

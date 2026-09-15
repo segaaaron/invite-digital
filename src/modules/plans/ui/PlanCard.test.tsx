@@ -18,6 +18,7 @@ const atelier: Allowance = {
   csvImport: false,
   onlineDays: 60,
   designChange: 'ninguno',
+  plannerSuite: 'esencial',
 }
 
 const alta: Allowance = {
@@ -35,6 +36,7 @@ const alta: Allowance = {
   csvImport: true,
   onlineDays: 365,
   designChange: 'siempre',
+  plannerSuite: 'esencial',
 }
 
 describe('PlanCard', () => {

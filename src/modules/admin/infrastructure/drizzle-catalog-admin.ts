@@ -24,6 +24,7 @@ export const createDrizzleCatalogAdmin = (database: DbExecutor): CatalogAdmin =>
         csvImport: plans.csvImport,
         onlineDays: plans.onlineDays,
         designChange: plans.designChange,
+        plannerSuite: plans.plannerSuite,
         highlighted: plans.highlighted,
         isActive: plans.isActive,
         // Nombres escritos a mano: interpolar `${plans.id}` en la subconsulta sale como
@@ -66,6 +67,7 @@ export const createDrizzleCatalogAdmin = (database: DbExecutor): CatalogAdmin =>
           csvImport: plan.csvImport,
           onlineDays: plan.onlineDays,
           designChange: plan.designChange,
+          plannerSuite: plan.plannerSuite,
           highlighted: plan.highlighted,
           isActive: plan.isActive,
           updatedAt: new Date(),
