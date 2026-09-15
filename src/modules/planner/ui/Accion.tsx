@@ -2,9 +2,7 @@
 
 import { useActionState, type ReactNode } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import type { PlannerActionState } from '../actions'
-
-const INICIAL: PlannerActionState = { status: 'idle' }
+type Estado = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
 export type Evento = { eventId: string; eventSlug: string }
 
@@ -29,14 +27,15 @@ export function Accion({
   children,
   variant = 'default',
 }: {
-  action: (s: PlannerActionState, fd: FormData) => Promise<PlannerActionState>
+  /** Cualquier acción del planner: todas devuelven un estado con esta forma, o una más rica. */
+  action: (s: never, fd: FormData) => Promise<Estado>
   evento: Evento
   extra: Record<string, string>
   label: string
   children: ReactNode
   variant?: 'default' | 'danger' | 'primary'
 }) {
-  const [estado, enviar, enviando] = useActionState(action, INICIAL)
+  const [estado, enviar, enviando] = useActionState<Estado, FormData>(action as (s: Estado, fd: FormData) => Promise<Estado>, { status: 'idle' })
   return (
     <form action={enviar} className="inline-flex flex-col items-start gap-1">
       <Ocultos {...evento} extra={extra} />

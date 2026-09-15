@@ -2,7 +2,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { avanceDeTareas, estadoDeTarea, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
+import { avanceDeTareas, estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar, totalesDelPresupuesto } from '@/modules/planner'
+import { buildWhatsAppLink } from '@/modules/leads'
 import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
 import { DEFAULT_CURRENCY, formatAmount } from '@/modules/registry'
 import { fecha as diaCorto } from '@/shared/format/fecha'
@@ -143,6 +144,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const totales = totalesDelPresupuesto(partidas)
   const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
   const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
+  // Los proveedores son del anfitrión y su planner: al co-anfitrión no se le ofrecen.
+  const dueno = actor.role === 'admin' || (actor.role === 'atelier' && event.value.userId === actor.userId)
+  const llevaProveedores = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).some((m) => m === 'cliente' || m === 'planner')
+  const conProveedores = llevaProveedores && !isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))
+  const proveedores = conProveedores ? await planner.dia.listVendors(event.value.id) : []
   const semana = {
     avance: avanceDeTareas(tareas),
     presupuesto: partidas.length === 0 ? null : { previsto: bs(totales.previsto), comprometido: bs(totales.comprometido), pagado: bs(totales.pagado) },
@@ -150,6 +156,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
       .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
       .map(({ t, estado }) => ({ id: t.id, title: t.title, vence: dia(t.dueDate!), atrasada: estado === 'atrasada' })),
+    sinConfirmar: proveedoresSinConfirmar(proveedores).map((v) => ({ id: v.id, service: v.service, whatsappHref: v.whatsapp ? buildWhatsAppLink(v.whatsapp, `Hola, ¿nos confirmas para ${event.value.title}?`) : null })),
     pagos: pagosQueVencen(partidas, hoyBolivia).map((g) => ({ id: g.id, concepto: g.concepto, importe: bs(g.amountCents), vence: dia(g.dueDate!), atrasado: g.dueDate! < hoyBolivia })),
   }
 

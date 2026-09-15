@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { setPaymentPaidAction, toggleTaskAction } from '../actions'
+import { setVendorStatusAction } from '../dia-actions'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { Accion, type Evento } from './Accion'
 
 export type SemanaVista = {
@@ -10,6 +12,8 @@ export type SemanaVista = {
   readonly presupuesto: { previsto: string; comprometido: string; pagado: string } | null
   readonly tareas: ReadonlyArray<{ id: string; title: string; vence: string; atrasada: boolean }>
   readonly pagos: ReadonlyArray<{ id: string; concepto: string; importe: string; vence: string; atrasado: boolean }>
+  /** Contratados o reservados que no confirmaron. Vacío si el plan no trae proveedores. */
+  readonly sinConfirmar: ReadonlyArray<{ id: string; service: string; whatsappHref: string | null }>
 }
 
 /**
@@ -18,7 +22,7 @@ export type SemanaVista = {
  */
 export function ThisWeekCard({ evento, semana }: { evento: Evento; semana: SemanaVista }) {
   const base = `/panel/eventos/${evento.eventSlug}/planner`
-  const nada = semana.tareas.length === 0 && semana.pagos.length === 0
+  const nada = semana.tareas.length === 0 && semana.pagos.length === 0 && semana.sinConfirmar.length === 0
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 [font-variant-numeric:tabular-nums]">
@@ -60,6 +64,24 @@ export function ThisWeekCard({ evento, semana }: { evento: Evento; semana: Seman
                 <Pill tone={g.atrasado ? 'no' : 'maybe'}>{g.atrasado ? 'Vencido' : 'Esta semana'}</Pill>
                 <Accion action={setPaymentPaidAction} evento={evento} extra={{ paymentId: g.id, paid: 'true' }} label={`Marcar pagado ${g.concepto} ${g.importe}`}>
                   Pagado
+                </Accion>
+              </span>
+            </li>
+          ))}
+          {semana.sinConfirmar.map((v) => (
+            <li className="flex flex-wrap items-center justify-between gap-3 border-b border-line-panel py-2.5 last:border-none" key={`v-${v.id}`}>
+              <span className="min-w-0 text-[13px] text-ink">
+                {v.service}
+                <span className="block text-[11px] text-ink-mute">Proveedor sin confirmar</span>
+              </span>
+              <span className="flex items-center gap-2">
+                {v.whatsappHref ? (
+                  <PanelButton external href={v.whatsappHref}>
+                    WhatsApp
+                  </PanelButton>
+                ) : null}
+                <Accion action={setVendorStatusAction} evento={evento} extra={{ vendorId: v.id, status: 'confirmado' }} label={`Marcar confirmado a ${v.service}`}>
+                  Confirmado
                 </Accion>
               </span>
             </li>
