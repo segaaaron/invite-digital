@@ -14,6 +14,13 @@ export const FIESTAS: readonly Fiesta[] = ['boda', 'xv']
 /** La boda civil es una boda. Lo desconocido cae a boda: es la fiesta del diseño de respaldo. */
 export const fiestaDeCategoria = (categoria: string): Fiesta => (categoria === 'xv-anos' ? 'xv' : 'boda')
 
+/**
+ * La fiesta de un diseño por su clave, para quien no puede cargar el registro de temas
+ * (el contenedor, el mantenimiento). Los de XV son `xv` o empiezan por `xv-`; lo ata una prueba contra
+ * la categoría de cada diseño del registro.
+ */
+export const fiestaDeTema = (themeKey: string): Fiesta => (themeKey === 'xv' || themeKey.startsWith('xv-') ? 'xv' : 'boda')
+
 export const mismaFiesta = (a: string, b: string): boolean => fiestaDeCategoria(a) === fiestaDeCategoria(b)
 
 export type Vocabulario = {

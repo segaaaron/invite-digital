@@ -113,6 +113,11 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where guest_group_id in (select id from guest_groups where event_id = ${eventId})
       `)
 
+      // El planner: las notas y el nombre del padrino identifican a gente; quién cerró una
+      // tarea también. Las tareas y los importes se quedan: no son de nadie.
+      await tx.execute(sql`update planner_tasks set notes = null, done_by = null where event_id = ${eventId}`)
+      await tx.execute(sql`update budget_items set padrino_label = null, notes = null where event_id = ${eventId}`)
+
       await tx.update(events).set({ anonymizedAt: at }).where(eq(events.id, eventId))
     })
   },

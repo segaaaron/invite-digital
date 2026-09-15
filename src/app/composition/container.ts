@@ -10,6 +10,9 @@ import {
   revokeClientShare,
 } from '@/modules/events/application/client-share-use-cases'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
+import { fiestaDeTema } from '@/modules/events/domain/fiesta'
+import * as plannerUseCases from '@/modules/planner/application/planner-use-cases'
+import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
 import {
@@ -285,8 +288,40 @@ const mediaDeps = {
   ids: () => crypto.randomUUID(),
 }
 
+/** El planner de cada evento: plan de tareas y presupuesto. */
+const plannerDeps = { store: drizzlePlannerStore, clock }
+export const planner = {
+  listTasks: (eventId: string) => drizzlePlannerStore.listTasks(eventId),
+  seedTasks: plannerUseCases.seedTasks(plannerDeps),
+  addTask: plannerUseCases.addTask(plannerDeps),
+  editTask: plannerUseCases.editTask(plannerDeps),
+  toggleTask: plannerUseCases.toggleTask(plannerDeps),
+  removeTask: plannerUseCases.removeTask(plannerDeps),
+  moveTask: plannerUseCases.moveTask(plannerDeps),
+  listBudget: (eventId: string) => drizzlePlannerStore.listBudget(eventId),
+  saveItem: plannerUseCases.saveItem(plannerDeps),
+  removeItem: plannerUseCases.removeItem(plannerDeps),
+  addPayment: plannerUseCases.addPayment(plannerDeps),
+  setPaymentPaid: plannerUseCases.setPaymentPaid(plannerDeps),
+  removePayment: plannerUseCases.removePayment(plannerDeps),
+} as const
+
 export const events = {
-  create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
+  /**
+   * Crear un evento siembra su plan de tareas con la plantilla de su fiesta. Va aquí, y no
+   * en cada acción, porque se crea desde tres sitios —el atelier, el alta del admin y el
+   * pedido aprobado— y olvidarlo en uno dejaría eventos sin plan. Si sembrar falla, el
+   * evento se crea igual: la pantalla de tareas ofrece sembrarlas a mano.
+   */
+  create: async (input: Parameters<ReturnType<typeof createEventUseCase>>[0]) => {
+    const creado = await createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() })(input)
+    if (!isErr(creado)) {
+      await planner.seedTasks(creado.value.id, fiestaDeTema(creado.value.themeKey), creado.value.eventDate).catch((cause: unknown) => {
+        console.error('No se pudo sembrar el plan de tareas del evento %s:', creado.value.id, cause)
+      })
+    }
+    return creado
+  },
   update: updateEventUseCase({ events: drizzleEventRepository }),
   /**
    * `getBySlug`, `getById` y `list` **sin actor** solo los usan la ruta del invitado —que

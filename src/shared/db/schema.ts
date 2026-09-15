@@ -898,3 +898,70 @@ export const guestPeople = pgTable(
   },
   (t) => [index('guest_people_group_idx').on(t.guestGroupId)],
 )
+
+/**
+ * El plan de tareas de un evento. Se siembra con la plantilla de su fiesta al crearlo; las
+ * propias se suman a mano. Quién la cerró es texto, como en la auditoría.
+ */
+export const plannerTasks = pgTable(
+  'planner_tasks',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    stage: varchar('stage', { length: 24 }).notNull(),
+    title: varchar('title', { length: 200 }).notNull(),
+    dueDate: date('due_date'),
+    assignee: varchar('assignee', { length: 16 }).notNull().default('anfitrion'),
+    notes: text('notes'),
+    doneAt: timestamp('done_at', { withTimezone: true }),
+    doneBy: varchar('done_by', { length: 255 }),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('planner_tasks_event_idx').on(t.eventId, t.sortOrder),
+    check('planner_tasks_assignee_check', sql`${t.assignee} in ('anfitrion', 'planner', 'familia')`),
+  ],
+)
+
+/** Una partida del presupuesto. Centavos enteros; `contracted_cents` nulo es «sin contrato». */
+export const budgetItems = pgTable(
+  'budget_items',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    category: varchar('category', { length: 32 }).notNull(),
+    concept: varchar('concept', { length: 160 }).notNull(),
+    estimatedCents: integer('estimated_cents').notNull().default(0),
+    contractedCents: integer('contracted_cents'),
+    payer: varchar('payer', { length: 16 }).notNull().default('anfitriones'),
+    padrinoLabel: varchar('padrino_label', { length: 120 }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index('budget_items_event_idx').on(t.eventId),
+    check('budget_items_amounts_check', sql`${t.estimatedCents} >= 0 and (${t.contractedCents} is null or ${t.contractedCents} >= 0)`),
+    check('budget_items_payer_check', sql`${t.payer} in ('anfitriones', 'familia_a', 'familia_b', 'padrino', 'otro')`),
+  ],
+)
+
+/** Un pago de una partida: anticipo, cuota o saldo, con su fecha y si ya se pagó. */
+export const budgetPayments = pgTable(
+  'budget_payments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    itemId: uuid('item_id')
+      .notNull()
+      .references(() => budgetItems.id, { onDelete: 'cascade' }),
+    amountCents: integer('amount_cents').notNull(),
+    dueDate: date('due_date'),
+    paidAt: timestamp('paid_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('budget_payments_item_idx').on(t.itemId), check('budget_payments_amount_check', sql`${t.amountCents} > 0`)],
+)

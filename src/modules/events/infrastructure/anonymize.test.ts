@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import {
   arrivals,
+  budgetItems,
   doorPorters,
   events,
   fundContributions,
@@ -10,6 +11,7 @@ import {
   guestGroups,
   guestPeople,
   messageNotes,
+  plannerTasks,
   rsvpResponses,
 } from '@/shared/db/schema'
 import { createDrizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
@@ -305,6 +307,22 @@ describe('anonimización', () => {
       // La llegada se conserva —cuenta para la estadística— sin decir quién la registró.
       const [llegada] = await tx.select().from(arrivals).where(eq(arrivals.guestGroupId, grupo!.id))
       expect(llegada).toMatchObject({ arrivedCount: 2, recordedBy: null })
+    })
+  })
+
+  it('al vencer, el planner pierde nombres y notas y conserva tareas e importes', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+      await tx.insert(plannerTasks).values({ eventId: evento.id, stage: 'm1', title: 'Llamar al DJ', notes: 'Carlos 70012345', doneAt: NOW, doneBy: 'ana@ejemplo.bo' })
+      await tx.insert(budgetItems).values({ eventId: evento.id, category: 'torta', concept: 'Torta', estimatedCents: 800_00, payer: 'padrino', padrinoLabel: 'Tío Jorge Quiroga', notes: 'Paga en efectivo' })
+
+      await repo.anonymize(evento.id, NOW)
+
+      const [tarea] = await tx.select().from(plannerTasks).where(eq(plannerTasks.eventId, evento.id))
+      expect(tarea).toMatchObject({ title: 'Llamar al DJ', notes: null, doneBy: null })
+      const [partida] = await tx.select().from(budgetItems).where(eq(budgetItems.eventId, evento.id))
+      expect(partida).toMatchObject({ estimatedCents: 800_00, padrinoLabel: null, notes: null })
     })
   })
 })
