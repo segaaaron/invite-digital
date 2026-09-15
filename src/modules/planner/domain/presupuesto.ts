@@ -45,11 +45,15 @@ const CATEGORIAS: Record<Fiesta, ReadonlyArray<{ clave: string; nombre: string }
 export const categoriasDe = (fiesta: Fiesta) => CATEGORIAS[fiesta]
 export const nombreDeCategoria = (fiesta: Fiesta, clave: string): string => CATEGORIAS[fiesta].find((c) => c.clave === clave)?.nombre ?? 'Otros'
 
+export const ETIQUETAS_DE_PAGO = ['anticipo', 'cuota', 'saldo'] as const
+
 export type Pago = {
   readonly id: string
   readonly amountCents: number
   readonly dueDate: string | null
   readonly paidAt: Date | null
+  /** `anticipo` · `cuota` · `saldo`, o nada. */
+  readonly label?: string | null
 }
 
 /** Todo importe en centavos enteros. Nunca un `parseFloat` sobre el importe entero. */

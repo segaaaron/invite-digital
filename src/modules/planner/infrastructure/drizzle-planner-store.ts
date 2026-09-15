@@ -70,7 +70,7 @@ export function createDrizzlePlannerStore(database: DbExecutor = db): PlannerSto
         payer: p.payer as Pagador,
         padrinoLabel: p.padrinoLabel,
         notes: p.notes,
-        pagos: pagos.filter((g) => g.itemId === p.id).map((g) => ({ id: g.id, amountCents: g.amountCents, dueDate: g.dueDate, paidAt: g.paidAt })),
+        pagos: pagos.filter((g) => g.itemId === p.id).map((g) => ({ id: g.id, amountCents: g.amountCents, dueDate: g.dueDate, paidAt: g.paidAt, label: g.label })),
       }))
     },
 

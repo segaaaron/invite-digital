@@ -72,4 +72,4 @@ export type MiembroDelCortejo = {
   readonly budgetItemId: string | null
 }
 
-export type Ensayo = { readonly id: string; readonly date: string; readonly place: string | null; readonly notes: string | null; readonly asistentes: readonly string[] }
+export type Ensayo = { readonly id: string; readonly date: Date; readonly place: string | null; readonly notes: string | null; readonly asistentes: readonly string[] }

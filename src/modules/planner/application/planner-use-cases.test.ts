@@ -117,8 +117,10 @@ describe('presupuesto', () => {
     const deps = memoria()
     await saveItem(deps)('e1', 'boda', null, item)
     const id = deps.partidas[0]!.id
-    expect(await addPayment(deps)('e1', id, { amountCents: 0, dueDate: '' })).toMatchObject({ ok: false })
-    expect(await addPayment(deps)('e2', id, { amountCents: 10, dueDate: '' })).toMatchObject({ ok: false })
-    expect(await addPayment(deps)('e1', id, { amountCents: 10, dueDate: '2027-02-01' })).toEqual({ ok: true })
+    expect(await addPayment(deps)('e1', id, { amountCents: 0, dueDate: '', label: '' })).toMatchObject({ ok: false })
+    expect(await addPayment(deps)('e2', id, { amountCents: 10, dueDate: '', label: '' })).toMatchObject({ ok: false })
+    expect(await addPayment(deps)('e1', id, { amountCents: 10, dueDate: '2027-02-01', label: 'propina' })).toMatchObject({ ok: false })
+    expect(await addPayment(deps)('e1', id, { amountCents: 10, dueDate: '2027-02-01', label: 'anticipo' })).toEqual({ ok: true })
+    expect(deps.partidas[0]?.pagos[0]).toMatchObject({ label: 'anticipo' })
   })
 })

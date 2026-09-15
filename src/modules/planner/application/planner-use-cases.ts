@@ -1,5 +1,5 @@
 import type { Fiesta } from '@/modules/events'
-import { categoriasDe, PAGADORES, type Pagador } from '../domain/presupuesto'
+import { categoriasDe, ETIQUETAS_DE_PAGO, PAGADORES, type Pagador } from '../domain/presupuesto'
 import { etapasDe, RESPONSABLES, type Responsable, sembrarTareas } from '../domain/tareas'
 import type { PlannerStore } from './ports'
 
@@ -141,11 +141,12 @@ export const removeItem =
 
 export const addPayment =
   ({ store }: Deps) =>
-  async (eventId: string, itemId: string, input: { amountCents: number; dueDate: string }): Promise<PlannerResult> => {
+  async (eventId: string, itemId: string, input: { amountCents: number; dueDate: string; label: string }): Promise<PlannerResult> => {
     if (!centavosValidos(input.amountCents) || input.amountCents === 0) return fallo('El pago necesita un importe mayor que cero.')
     const fecha = leerFecha(input.dueDate)
     if (!fecha.ok) return fallo('Revisa la fecha del pago.')
-    return (await store.insertPayment(eventId, itemId, { amountCents: input.amountCents, dueDate: fecha.fecha })) ? { ok: true } : fallo(NO_ESTA)
+    if (input.label !== '' && !(ETIQUETAS_DE_PAGO as readonly string[]).includes(input.label)) return fallo('El pago es anticipo, cuota o saldo.')
+    return (await store.insertPayment(eventId, itemId, { amountCents: input.amountCents, dueDate: fecha.fecha, label: input.label || null })) ? { ok: true } : fallo(NO_ESTA)
   }
 
 export const setPaymentPaid =

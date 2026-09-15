@@ -67,6 +67,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
       pagos: p.pagos.map((g) => ({
         id: g.id,
         importe: bs(g.amountCents),
+        etiqueta: g.label ? g.label.charAt(0).toUpperCase() + g.label.slice(1) : null,
         vence: g.dueDate === null ? null : fecha(new Date(`${g.dueDate}T12:00:00.000Z`)),
         pagado: g.paidAt !== null,
         atrasado: g.paidAt === null && g.dueDate !== null && g.dueDate < hoy,

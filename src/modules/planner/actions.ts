@@ -140,7 +140,7 @@ export async function addPaymentAction(_previo: PlannerActionState, fd: FormData
   await requireEventAccess(actor, { eventId: texto(fd, 'eventId'), eventSlug: texto(fd, 'eventSlug'), section: 'cliente' })
   const importe = centavos(texto(fd, 'amount'), false)
   if (!importe.ok) return { status: 'error', message: importe.message, valores: valoresDe(fd) }
-  const resultado = await planner.addPayment(texto(fd, 'eventId'), texto(fd, 'itemId'), { amountCents: importe.cents ?? 0, dueDate: texto(fd, 'dueDate') })
+  const resultado = await planner.addPayment(texto(fd, 'eventId'), texto(fd, 'itemId'), { amountCents: importe.cents ?? 0, dueDate: texto(fd, 'dueDate'), label: texto(fd, 'label') })
   return responder(resultado, texto(fd, 'eventSlug'), fd)
 }
 

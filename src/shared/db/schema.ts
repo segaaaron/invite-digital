@@ -716,8 +716,6 @@ export const fundContributions = pgTable(
     guestGroupId: uuid('guest_group_id').references(() => guestGroups.id, { onDelete: 'set null' }),
     displayName: varchar('display_name', { length: 160 }).notNull(),
     amountCents: integer('amount_cents').notNull(),
-    /** `anticipo` · `cuota` · `saldo`, o nada. */
-    label: varchar('label', { length: 16 }),
     // 'transfer' | 'card' | 'envelope' | 'other'
     method: varchar('method', { length: 16 }).notNull(),
     message: text('message'),
@@ -967,6 +965,8 @@ export const budgetPayments = pgTable(
       .notNull()
       .references(() => budgetItems.id, { onDelete: 'cascade' }),
     amountCents: integer('amount_cents').notNull(),
+    /** `anticipo` · `cuota` · `saldo`, o nada. */
+    label: varchar('label', { length: 16 }),
     dueDate: date('due_date'),
     paidAt: timestamp('paid_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

@@ -24,7 +24,7 @@ export type PartidaVista = {
   readonly falta: string
   readonly campoPrevisto: string
   readonly campoContratado: string
-  readonly pagos: ReadonlyArray<{ id: string; importe: string; vence: string | null; pagado: boolean; atrasado: boolean }>
+  readonly pagos: ReadonlyArray<{ id: string; importe: string; etiqueta: string | null; vence: string | null; pagado: boolean; atrasado: boolean }>
 }
 
 type Opciones = {
@@ -135,6 +135,14 @@ function NuevoPago({ evento, itemId, concepto }: { evento: Evento; itemId: strin
       <Field htmlFor={`${id}-d`} label="Vence">
         <input className={FIELD_CLASS} defaultValue={enviados?.dueDate ?? ''} id={`${id}-d`} name="dueDate" type="date" />
       </Field>
+      <Field htmlFor={`${id}-e`} label="Es">
+        <select className={FIELD_CLASS} defaultValue={enviados?.label ?? ''} id={`${id}-e`} name="label">
+          <option value="">Pago</option>
+          <option value="anticipo">Anticipo</option>
+          <option value="cuota">Cuota</option>
+          <option value="saldo">Saldo</option>
+        </select>
+      </Field>
       <PanelButton aria-label={`Sumar pago a ${concepto}`} disabled={enviando} type="submit">
         {enviando ? 'Sumando…' : 'Sumar pago'}
       </PanelButton>
@@ -178,6 +186,7 @@ export function BudgetBoard({ evento, opciones, partidas }: { evento: Evento; op
               {p.pagos.map((g) => (
                 <li className="flex flex-wrap items-center justify-between gap-3 py-1.5 text-[13px]" key={g.id}>
                   <span className="text-ink [font-variant-numeric:tabular-nums]">
+                    {g.etiqueta ? `${g.etiqueta} · ` : ''}
                     {g.importe}
                     <span className="text-ink-mute">{g.vence ? ` · vence ${g.vence}` : ' · sin fecha'}</span>
                   </span>

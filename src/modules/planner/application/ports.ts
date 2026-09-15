@@ -16,7 +16,7 @@ export interface PlannerStore {
   insertItem(eventId: string, item: PartidaNueva): Promise<string>
   updateItem(eventId: string, id: string, item: PartidaNueva): Promise<boolean>
   removeItem(eventId: string, id: string): Promise<boolean>
-  insertPayment(eventId: string, itemId: string, pago: { amountCents: number; dueDate: string | null }): Promise<boolean>
+  insertPayment(eventId: string, itemId: string, pago: { amountCents: number; dueDate: string | null; label: string | null }): Promise<boolean>
   setPaymentPaid(eventId: string, paymentId: string, paidAt: Date | null): Promise<boolean>
   removePayment(eventId: string, paymentId: string): Promise<boolean>
 }

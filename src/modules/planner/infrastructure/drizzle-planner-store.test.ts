@@ -55,8 +55,8 @@ describe('drizzlePlannerStore · presupuesto', () => {
       padrinoLabel: 'Tío Jorge',
       notes: null,
     })
-    expect(await store.insertPayment(otro, id, { amountCents: 1, dueDate: null })).toBe(false)
-    expect(await store.insertPayment(uno, id, { amountCents: 3_000_00, dueDate: '2027-01-10' })).toBe(true)
+    expect(await store.insertPayment(otro, id, { amountCents: 1, dueDate: null, label: null })).toBe(false)
+    expect(await store.insertPayment(uno, id, { amountCents: 3_000_00, dueDate: '2027-01-10', label: 'anticipo' })).toBe(true)
 
     const [partida] = await store.listBudget(uno)
     const pago = partida!.pagos[0]!
