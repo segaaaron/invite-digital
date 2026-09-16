@@ -214,6 +214,10 @@ export async function resendInvitationAction(_previous: ResendState, formData: F
   const sinEscribir = await invitacionSinEscribir(eventId)
   if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
 
+  // Preparar el enlace es mandar la invitación: con ella escrita no hace falta que nadie la
+  // apruebe. Se publica aquí, antes del enlace, para que abra desde el primer momento.
+  await events.publicarSiBorrador(eventId)
+
   const groupId = campo(formData, 'groupId')
   const result = await guests.resend({ eventId, id: groupId })
 

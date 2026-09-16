@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { createDrizzleEventRepository } from './drizzle-event-repository'
+import { createDrizzleEventRepository, publicarSiBorrador } from './drizzle-event-repository'
 
 class RollbackForTest extends Error {}
 
@@ -65,6 +65,22 @@ describe('repositorio de eventos', () => {
 
       const slugs = (await repo.listAll()).map((row) => row.slug)
       expect(slugs.indexOf('pronto')).toBeLessThan(slugs.indexOf('tarde'))
+    })
+  })
+
+  it('publicar solo pasa de borrador a publicado: uno cerrado no se reabre', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const borrador = evento('boda-borrador')
+      const cerrado = { ...evento('boda-cerrada'), status: 'closed' as const }
+      await repo.insert(borrador)
+      await repo.insert(cerrado)
+
+      await publicarSiBorrador(tx, borrador.id)
+      await publicarSiBorrador(tx, cerrado.id)
+
+      expect((await repo.findById(borrador.id))?.status).toBe('live')
+      expect((await repo.findById(cerrado.id))?.status).toBe('closed')
     })
   })
 })

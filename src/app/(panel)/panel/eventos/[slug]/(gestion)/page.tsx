@@ -211,16 +211,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             accion: 'Ver la invitación',
           },
           {
-            titulo: 'Publícala',
-            hecho: event.value.status !== 'draft',
-            detalle: 'En borrador, los enlaces no abren: quien reciba uno vería una página de error.',
-            href: `/panel/eventos/${event.value.slug}/configuracion`,
-            accion: 'Publicar',
-          },
-          {
             titulo: 'Carga a tus invitados y reparte',
-            hecho: filas.length > 0,
-            detalle: 'Cada invitado recibe su enlace; sus acompañantes entran con el mismo.',
+            // Publicar ya no es un paso: preparar el primer enlace publica la invitación.
+            hecho: filas.some((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined),
+            detalle: 'Cada invitado recibe su enlace; sus acompañantes entran con el mismo. Al preparar el primero, tu invitación queda publicada.',
             href: `/panel/eventos/${event.value.slug}/invitados`,
             accion: 'Ir a invitados',
           },

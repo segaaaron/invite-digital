@@ -1,4 +1,4 @@
-import { asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { events } from '@/shared/db/schema'
 import type { EventRepository } from '../application/ports'
@@ -188,3 +188,12 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
 })
 
 export const drizzleEventRepository = createDrizzleEventRepository(db)
+
+/**
+ * Publica el evento **si está en borrador**. Lo usa el reparto: preparar el primer enlace es
+ * mandar la invitación, y un enlace de un evento en borrador abre una página de error. Uno
+ * cerrado no se reabre por repartir. La condición va en la sentencia, no en una lectura previa.
+ */
+export const publicarSiBorrador = async (database: DbExecutor, eventId: string): Promise<void> => {
+  await database.update(events).set({ status: 'live' }).where(and(eq(events.id, eventId), eq(events.status, 'draft')))
+}

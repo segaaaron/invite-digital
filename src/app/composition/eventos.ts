@@ -27,7 +27,7 @@ import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-med
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
 import { sharpImageProcessor } from '@/modules/events/infrastructure/sharp-image-processor'
 import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
-import { drizzleEventRepository } from '@/modules/events/infrastructure/drizzle-event-repository'
+import { drizzleEventRepository, publicarSiBorrador } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { createDrizzleStaffRepository, drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { recordView } from '@/modules/analytics/application/record-view'
 import { getViewTally } from '@/modules/analytics/application/get-view-tally'
@@ -158,6 +158,8 @@ export const events = {
   listFor: listEventsFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   canTouch: actorCanTouchEvent({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   setOwner: (eventId: string, userId: string) => drizzleEventRepository.setOwner(eventId, userId),
+  /** Al preparar un enlace: la invitación sale publicada, sin que nadie la apruebe. */
+  publicarSiBorrador: (eventId: string) => publicarSiBorrador(db, eventId),
   /**
    * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
    * guarda. `contentFor` no escribe —una invitación se abre cientos de veces—; quien

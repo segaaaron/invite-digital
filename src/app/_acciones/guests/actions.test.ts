@@ -27,6 +27,7 @@ const addGuest = vi.fn()
 const resend = vi.fn()
 const INVITACION_LISTA = { hero: { nameA: 'Camila' }, schedule: { startsAt: '2026-10-18T20:00' }, reception: { place: 'Los Ceibos' } }
 const contentFor = vi.fn()
+const publicarSiBorrador = vi.fn()
 
 vi.mock('@/app/composition/container', () => ({
   guests: {
@@ -37,7 +38,10 @@ vi.mock('@/app/composition/container', () => ({
     addGuest: (...args: unknown[]) => addGuest(...args),
     resend: (...args: unknown[]) => resend(...args),
   },
-  events: { contentFor: (...args: unknown[]) => contentFor(...args) },
+  events: {
+    contentFor: (...args: unknown[]) => contentFor(...args),
+    publicarSiBorrador: (...args: unknown[]) => publicarSiBorrador(...args),
+  },
   plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: (...args: unknown[]) => requireFeature(...args) },
 }))
 
@@ -209,5 +213,36 @@ describe('no se invita con la invitación sin escribir', () => {
 
     expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('error')
     expect(resend).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * Preparar el enlace es mandar la invitación. Con la invitación escrita no hace falta que
+ * nadie la apruebe: se publica sola, y el enlace abre.
+ */
+describe('preparar un enlace publica la invitación', () => {
+  it('publica el evento y después prepara el enlace', async () => {
+    const orden: string[] = []
+    publicarSiBorrador.mockImplementation(async () => void orden.push('publicar'))
+    resend.mockImplementation(async () => {
+      orden.push('enlace')
+      return ok({ token: 't', label: 'Yasmin' })
+    })
+    const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
+
+    const estado = await resendInvitationAction({ status: 'idle' }, form())
+
+    expect(estado.status).toBe('success')
+    expect(publicarSiBorrador).toHaveBeenCalledWith('e1')
+    expect(orden).toEqual(['publicar', 'enlace'])
+  })
+
+  it('sin la invitación escrita no publica nada', async () => {
+    contentFor.mockResolvedValue({})
+    const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
+
+    await resendInvitationAction({ status: 'idle' }, form())
+
+    expect(publicarSiBorrador).not.toHaveBeenCalled()
   })
 })

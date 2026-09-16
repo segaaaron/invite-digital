@@ -12,7 +12,6 @@ import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
 import { loQueFaltaParaInvitar } from '@/modules/events'
-import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -257,11 +256,9 @@ export default async function InvitadosPage({
             title="Enviar invitaciones"
           >
             <DeliveryPanel
-              borrador={event.value.status === 'draft'}
               eventLocale={event.value.locale}
               eventSlug={event.value.slug}
               eventTitle={event.value.title}
-              puedePublicar={gestionaElEvento(actor, event.value)}
               sinContenido={invitacionVacia}
               rows={filas.map((fila) => ({
                 id: fila.id,

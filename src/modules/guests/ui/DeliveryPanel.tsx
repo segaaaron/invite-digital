@@ -41,21 +41,15 @@ export function DeliveryPanel({
   eventLocale,
   template,
   rows,
-  borrador,
   sinContenido,
-  puedePublicar,
 }: {
   eventSlug: string
   eventTitle: string
   eventLocale: string
   template: string | null
   rows: readonly DeliveryRow[]
-  /** El evento sigue en borrador: sus enlaces devuelven 404 a quien los abra. */
-  borrador: boolean
   /** La invitación está en blanco: el enlace abriría una página sin nada escrito. */
   sinContenido: boolean
-  /** Quien lo lleva lo publica desde la ficha; el cliente se lo pide a su atelier. */
-  puedePublicar: boolean
 }) {
   const [state, action, pending] = useActionState<ResendState, FormData>(resendInvitationAction, { status: 'idle' })
   const [telefonos, setTelefonos] = useState<Record<string, string>>(
@@ -68,10 +62,9 @@ export function DeliveryPanel({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Un enlace de un evento en borrador **no abre**: la invitación responde 404. Repartirlo
-          es mandarle a una familia una página de error, así que no se genera ninguno hasta
-          publicar. */}
-      {sinContenido && !borrador ? (
+      {/* Sin la invitación terminada no se reparte: el enlace abriría una invitación que no dice
+          de quién es. Terminada, preparar el primer enlace la publica sola. */}
+      {sinContenido ? (
         <div className="flex flex-col gap-2 rounded-[14px] border border-gold/50 bg-gold/10 p-4" role="alert">
           <p className="text-[13.5px] leading-[1.6] text-ink">
             <strong className="font-medium">Tu invitación está sin terminar.</strong> Termínala antes de repartir enlaces: quien abra el
@@ -82,26 +75,6 @@ export function DeliveryPanel({
               Terminar mi invitación
             </Link>
           </p>
-        </div>
-      ) : null}
-
-      {borrador ? (
-        <div className="flex flex-col gap-2 rounded-[14px] border border-danger/40 bg-danger/5 p-4" role="alert">
-          <p className="text-[13.5px] leading-[1.6] text-ink">
-            <strong className="font-medium">Este evento está en borrador: sus enlaces todavía no abren.</strong> Quien reciba uno vería una
-            página de error, así que el reparto está detenido hasta publicarlo.
-          </p>
-          {puedePublicar ? (
-            <p className="text-[13px] text-ink-soft">
-              Publícalo en{' '}
-              <Link className="text-gold-deep underline underline-offset-4" href={`/panel/eventos/${eventSlug}/configuracion`}>
-                la ficha del evento
-              </Link>
-              , en «Estado».
-            </p>
-          ) : (
-            <p className="text-[13px] text-ink-soft">Pídeselo a quien lleva tu evento: se publica desde su ficha.</p>
-          )}
         </div>
       ) : null}
 
@@ -210,12 +183,10 @@ export function DeliveryPanel({
               <input name="eventSlug" type="hidden" value={eventSlug} />
               <input name="groupId" type="hidden" value={fila.id} />
               <PanelButton
-                disabled={pending || fila.revoked || borrador || sinContenido}
+                disabled={pending || fila.revoked || sinContenido}
                 title={
                   sinContenido
                     ? 'Escribe tu invitación antes de repartir: el enlace abriría una página vacía'
-                    : borrador
-                    ? 'Publica el evento antes de repartir: los enlaces no abren todavía'
                     : fila.revoked
                       ? 'Reactiva la invitación antes de repartirla'
                       : fila.sent
