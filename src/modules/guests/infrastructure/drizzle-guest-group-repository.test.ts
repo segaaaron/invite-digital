@@ -68,10 +68,45 @@ describe('repositorio de grupos', () => {
       await repo.markOpened(id, new Date('2026-08-20T12:00:00Z'))
       expect((await repo.findByTokenHash(hash))?.openedAt?.toISOString()).toBe(primera.toISOString())
 
-      await repo.revoke(id, new Date('2026-08-21T12:00:00Z'))
+      await repo.revoke(eventId, id, new Date('2026-08-21T12:00:00Z'))
       const revocado = await repo.findByTokenHash(hash)
       expect(revocado).not.toBeNull()
       expect(revocado?.revokedAt).not.toBeNull()
+    })
+  })
+
+  it('ninguna escritura por identificador toca la invitación de otro evento', async () => {
+    // El identificador llega del navegador y el evento de la guardia. Con el evento de otra
+    // boda, la fila tiene que quedar exactamente como estaba.
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleGuestGroupRepository(tx)
+      const minter = createTokenMinter()
+      const suyo = await seedEvent(tx)
+      const ajeno = await seedEvent(tx)
+      const id = crypto.randomUUID()
+      const { hash } = minter.mint()
+      await repo.insert({ id, eventId: suyo, label: 'Ana', seats: 1, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, hash)
+      const cuando = new Date('2026-09-16T12:00:00Z')
+
+      expect(await repo.findById(ajeno, id)).toBeNull()
+      await repo.revoke(ajeno, id, cuando)
+      await repo.markSent(ajeno, id, cuando)
+      await repo.replaceToken(ajeno, id, minter.mint().hash)
+      await repo.setPhone(ajeno, id, '+59170000000')
+      await repo.reopenRsvp(ajeno, id, cuando)
+      await repo.setSeats(ajeno, id, 9)
+      await repo.setLabel(ajeno, id, 'Intruso')
+      await repo.remove(ajeno, id)
+
+      const intacta = await repo.findById(suyo, id)
+      expect(intacta).toMatchObject({ label: 'Ana', seats: 1, revokedAt: null, invitationSentAt: null, phone: null })
+      expect((await repo.findByTokenHash(hash))?.id).toBe(id)
+
+      await repo.setSeats(suyo, id, 3)
+      await repo.setLabel(suyo, id, 'Ana Vega')
+      expect(await repo.findById(suyo, id)).toMatchObject({ label: 'Ana Vega', seats: 3 })
+      await repo.remove(suyo, id)
+      expect(await repo.findById(suyo, id)).toBeNull()
     })
   })
 })

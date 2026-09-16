@@ -1,5 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto'
 import postgres from 'postgres'
+import { INVITACION_MINIMA } from './invitacion-minima'
 
 // Conexión propia de esta suite. Compartir el pool con otra suite hace que el primer
 // `afterAll` que cierre deje a la otra escribiendo contra una conexión muerta: pasó, y el
@@ -22,7 +23,7 @@ export async function seedEnvioEvent(slug: string): Promise<{ eventId: string; t
   // nombres—, así que la fixture escribe lo mínimo: es lo que haría cualquier atelier antes.
   await sql`
     insert into event_content (event_id, blocks)
-    values (${event!.id}, ${sql.json({ hero: { nameA: 'María', nameB: 'Alejandro' } })})
+    values (${event!.id}, ${sql.json(INVITACION_MINIMA)})
     on conflict (event_id) do update set blocks = excluded.blocks
   `
 

@@ -13,7 +13,7 @@ export function ArrivalStrip({ tally }: { tally: DoorTally | null }) {
   if (tally === null) return null
 
   const cifras = [
-    { label: 'Grupos que llegaron', value: `${tally.arrivedGroups} de ${tally.expectedGroups}` },
+    { label: 'Invitaciones que llegaron', value: `${tally.arrivedGroups} de ${tally.expectedGroups}` },
     { label: 'Personas dentro', value: `${tally.headsInside} de ${tally.expectedHeads}` },
   ] as const
 
@@ -37,8 +37,8 @@ export function ArrivalStrip({ tally }: { tally: DoorTally | null }) {
       {tally.unexpectedGroups === 0 ? null : (
         <p className="text-[12px] text-ink-soft">
           {tally.unexpectedGroups === 1
-            ? '1 grupo llegó sin estar entre los esperados.'
-            : `${tally.unexpectedGroups} grupos llegaron sin estar entre los esperados.`}
+            ? '1 invitación llegó sin estar entre las esperadas.'
+            : `${tally.unexpectedGroups} invitaciones llegaron sin estar entre las esperadas.`}
         </p>
       )}
     </div>

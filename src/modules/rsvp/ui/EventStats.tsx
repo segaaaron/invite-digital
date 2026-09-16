@@ -26,7 +26,7 @@ export function EventStats({ stats }: { stats: Stats }) {
   }
 
   const pasos = [
-    { label: 'Grupos invitados', count: stats.groupsInvited, percent: 100 },
+    { label: 'Invitaciones enviadas', count: stats.groupsInvited, percent: 100 },
     { label: 'Respondieron', count: stats.groupsResponded, percent: stats.respondedPercent ?? 0 },
     { label: 'Confirmaron', count: stats.groupsAttending, percent: stats.attendingPercent ?? 0 },
   ]

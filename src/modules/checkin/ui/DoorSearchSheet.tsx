@@ -46,7 +46,7 @@ export function DoorSearchSheet({ groups, arrivedIds, open, onPick, onClose }: P
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Nombre del grupo..."
+          placeholder="Nombre del invitado..."
           autoComplete="off"
           className="w-full rounded-full border border-line bg-bg-sunken px-4 py-3 text-[14px]"
         />
@@ -54,7 +54,7 @@ export function DoorSearchSheet({ groups, arrivedIds, open, onPick, onClose }: P
 
       <div className="flex-1 overflow-y-auto px-4 pb-6">
         {hits.length === 0 ? (
-          <p className="p-10 text-center text-[12px] text-ink-mute">Ningún grupo coincide.</p>
+          <p className="p-10 text-center text-[12px] text-ink-mute">Nadie coincide.</p>
         ) : (
           hits.map((g) => {
             const llego = arrivedIds.has(g.id)

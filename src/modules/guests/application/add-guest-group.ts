@@ -39,7 +39,7 @@ export const addGuestGroup =
           return err(
             guestError(
               'plan_limit_reached',
-              `El plan admite ${limite} grupos de invitados y el evento ya tiene ${input.currentGroups}.`,
+              `El plan admite ${limite} invitaciones y el evento ya tiene ${input.currentGroups}.`,
             ),
           )
         }

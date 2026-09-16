@@ -1,214 +1,238 @@
 import { describe, expect, it } from 'vitest'
-import { addPerson, updatePerson } from './person-use-cases'
+import { addPerson, removePerson, updatePerson } from './person-use-cases'
 import type { GuestPerson } from '../domain/person'
-import type { GuestGroupRepository, GuestPersonRepository } from './ports'
+import type { GuestGroupRepository, GuestGroupRow, GuestPersonRepository } from './ports'
 import { isErr, isOk } from '@/shared/result'
 
-const grupo = (seats: number): GuestGroupRepository => ({
-  insert: async () => {},
-  listByEvent: async () => [],
-  findByTokenHash: async () => null,
-  revoke: async () => {},
-  markOpened: async () => {},
-  remove: async () => {},
-  markSent: async () => {},
-  replaceToken: async () => {},
-  reopenRsvp: async () => {},
-  setPhone: async () => {},
-  findById: async () => ({
-    id: 'g1',
-    eventId: 'e1',
-    label: 'Familia Rojas Peña',
-    seats,
-    revokedAt: null,
-    openedAt: null,
-  }),
-})
+/**
+ * Una base en memoria con **dos eventos**: `e1` es el del atelier que llama y `e2` el de
+ * otra boda. Los dobles filtran por evento igual que la base, así que una prueba que pase
+ * `e1` y un identificador de `e2` ve lo mismo que vería en producción: nada.
+ */
+function base(grupos: GuestGroupRow[], gente: GuestPerson[]) {
+  const filasGrupo = grupos.map((g) => ({ ...g }))
+  const filas = gente.map((p) => ({ ...p }))
+  const deEvento = (eventId: string, id: string) => filasGrupo.find((g) => g.id === id && g.eventId === eventId)
+  const eventoDe = (person: { guestGroupId: string }) => filasGrupo.find((g) => g.id === person.guestGroupId)?.eventId
 
-function personas(iniciales: GuestPerson[] = []) {
-  const filas = [...iniciales]
-  const repo: GuestPersonRepository = {
-    insert: async (p) => {
-      filas.push(p)
+  const groups: GuestGroupRepository = {
+    insert: async () => {},
+    listByEvent: async (eventId) => filasGrupo.filter((g) => g.eventId === eventId),
+    findByTokenHash: async () => null,
+    markOpened: async () => {},
+    findById: async (eventId, id) => deEvento(eventId, id) ?? null,
+    revoke: async () => {},
+    markSent: async () => {},
+    replaceToken: async () => {},
+    reopenRsvp: async () => {},
+    setPhone: async () => {},
+    setSeats: async (eventId, id, seats) => {
+      const g = deEvento(eventId, id)
+      if (g) g.seats = seats
     },
-    update: async (p) => {
-      const i = filas.findIndex((f) => f.id === p.id)
-      filas[i] = p
+    setLabel: async (eventId, id, label) => {
+      const g = deEvento(eventId, id)
+      if (g) g.label = label
     },
-    remove: async (id) => {
-      const i = filas.findIndex((f) => f.id === id)
-      filas.splice(i, 1)
+    remove: async (eventId, id) => {
+      const i = filasGrupo.findIndex((g) => g.id === id && g.eventId === eventId)
+      if (i >= 0) filasGrupo.splice(i, 1)
     },
-    listByGroup: async () => filas,
-    listByEvent: async () => filas,
-    countInGroup: async () => filas.length,
-    findById: async (id) => filas.find((f) => f.id === id) ?? null,
   }
-  return { repo, filas }
+
+  const people: GuestPersonRepository = {
+    insert: async (p) => void filas.push({ ...p }),
+    update: async (eventId, p) => {
+      const i = filas.findIndex((f) => f.id === p.id)
+      if (i >= 0 && eventoDe(filas[i]!) === eventId) filas[i] = { ...p }
+    },
+    remove: async (eventId, id) => {
+      const i = filas.findIndex((f) => f.id === id)
+      if (i >= 0 && eventoDe(filas[i]!) === eventId) filas.splice(i, 1)
+    },
+    listByGroup: async (groupId) => filas.filter((f) => f.guestGroupId === groupId),
+    listByEvent: async (eventId) => filas.filter((f) => eventoDe(f) === eventId),
+    countInGroup: async (groupId) => filas.filter((f) => f.guestGroupId === groupId).length,
+    findById: async (eventId, id) => filas.find((f) => f.id === id && eventoDe(f) === eventId) ?? null,
+  }
+
+  return { groups, people, filas, grupos: filasGrupo }
 }
 
-describe('addPerson', () => {
-  it('carga a la persona cuando cabe en el cupo', async () => {
-    const { repo, filas } = personas()
-    const alta = addPerson({ groups: grupo(2), people: repo, ids: () => 'p1' })
+const grupo = (id: string, eventId: string, label: string, seats: number): GuestGroupRow => ({
+  id,
+  eventId,
+  label,
+  seats,
+  revokedAt: null,
+  openedAt: null,
+})
 
-    const result = await alta({ guestGroupId: 'g1', fullName: 'Ana Vega', dietaryNote: 'Sin gluten' })
+const persona = (id: string, guestGroupId: string, fullName: string, over: Partial<GuestPerson> = {}): GuestPerson => ({
+  id,
+  guestGroupId,
+  fullName,
+  isCompanion: false,
+  dietaryNote: null,
+  vip: false,
+  attending: null,
+  email: null,
+  ...over,
+})
+
+describe('addPerson', () => {
+  it('carga a la persona en su invitación', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana Vega', 2)], [])
+    const result = await addPerson({ ...b, ids: () => 'p1' })({ eventId: 'e1', guestGroupId: 'g1', fullName: 'Ana Vega', dietaryNote: 'Sin gluten' })
 
     expect(isOk(result)).toBe(true)
-    expect(filas).toHaveLength(1)
-    expect(filas[0]?.dietaryNote).toBe('Sin gluten')
+    expect(b.filas[0]?.dietaryNote).toBe('Sin gluten')
   })
 
-  it('rechaza cargar más personas que cupos, en el servidor', async () => {
-    // El cupo es lo que se le prometió al invitado y lo que la puerta cuenta al escanear.
-    // Dejar que el panel cargue cinco en un grupo de cuatro deja a alguien fuera el día
-    // del evento, delante de la puerta.
-    const { repo } = personas([
-      { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: null, vip: false, attending: null, email: null },
-    ])
-    const alta = addPerson({ groups: grupo(1), people: repo, ids: () => 'p2' })
+  it('con el cupo lleno, el cupo crece: nadie se queda fuera y el atelier no choca con un tope que no puede cambiar', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana Vega', 1)], [persona('a', 'g1', 'Ana Vega')])
+    const result = await addPerson({ ...b, ids: () => 'p2' })({ eventId: 'e1', guestGroupId: 'g1', fullName: 'Luis', isCompanion: true })
 
-    const result = await alta({ guestGroupId: 'g1', fullName: 'Luis' })
-
-    expect(isErr(result) && result.error.kind).toBe('invalid_seats')
+    expect(isOk(result)).toBe(true)
+    expect(b.grupos[0]?.seats).toBe(2)
   })
 
-  it('un grupo que no existe es not_found, no un error de base', async () => {
-    const { repo } = personas()
-    const sinGrupo: GuestGroupRepository = { ...grupo(4), findById: async () => null }
-    const result = await addPerson({ groups: sinGrupo, people: repo, ids: () => 'p1' })({
-      guestGroupId: 'fantasma',
-      fullName: 'Ana',
-    })
+  it('una invitación de otro evento es not_found y no carga a nadie', async () => {
+    const b = base([grupo('g2', 'e2', 'Ajenos', 4)], [])
+    const result = await addPerson({ ...b, ids: () => 'p1' })({ eventId: 'e1', guestGroupId: 'g2', fullName: 'Intruso' })
+
     expect(isErr(result) && result.error.kind).toBe('not_found')
+    expect(b.filas).toHaveLength(0)
   })
 })
 
 describe('updatePerson', () => {
-  it('el parche solo lleva lo que cambia: marcar VIP no borra la restricción', async () => {
-    const { repo, filas } = personas([
-      {
-        id: 'a',
-        guestGroupId: 'g1',
-        fullName: 'Ana',
-        isCompanion: false,
-        dietaryNote: 'Sin gluten',
-        vip: false,
-        attending: 'yes', email: null,
-      },
-    ])
+  it('el parche solo lleva lo que cambia: marcar VIP no borra restricción, asistencia ni correo', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana', 1)], [persona('a', 'g1', 'Ana', { dietaryNote: 'Sin gluten', attending: 'yes', email: 'ana@ejemplo.com' })])
 
-    const result = await updatePerson({ people: repo, groups: grupo(4) })({ id: 'a', vip: true })
+    const result = await updatePerson(b)({ eventId: 'e1', id: 'a', vip: true })
 
     expect(isOk(result)).toBe(true)
-    expect(filas[0]?.vip).toBe(true)
-    expect(filas[0]?.dietaryNote).toBe('Sin gluten')
-    expect(filas[0]?.attending).toBe('yes')
+    expect(b.filas[0]).toMatchObject({ vip: true, dietaryNote: 'Sin gluten', attending: 'yes', email: 'ana@ejemplo.com' })
   })
 
-  it('permite borrar la restricción pasándola en nulo', async () => {
-    const { repo, filas } = personas([
-      { id: 'a', guestGroupId: 'g1', fullName: 'Ana', isCompanion: false, dietaryNote: 'Sin gluten', vip: false, attending: null, email: null },
-    ])
+  it('nulo borra el dato, que no es lo mismo que no venir', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana', 1)], [persona('a', 'g1', 'Ana', { dietaryNote: 'Sin gluten', email: 'ana@ejemplo.com' })])
 
-    await updatePerson({ people: repo, groups: grupo(4) })({ id: 'a', dietaryNote: null })
+    await updatePerson(b)({ eventId: 'e1', id: 'a', dietaryNote: null, email: null })
 
-    expect(filas[0]?.dietaryNote).toBeNull()
+    expect(b.filas[0]).toMatchObject({ dietaryNote: null, email: null })
+  })
+
+  it('renombrar al principal renombra su invitación, salvo que tenga nombre propio', async () => {
+    const b = base(
+      [grupo('g1', 'e1', 'Ana', 1), grupo('g2', 'e1', 'Familia Rojas', 2)],
+      [persona('a', 'g1', 'Ana'), persona('r', 'g2', 'Rosa Rojas'), persona('c', 'g2', 'Carlos', { isCompanion: true })],
+    )
+
+    await updatePerson(b)({ eventId: 'e1', id: 'a', fullName: 'Ana Vega' })
+    await updatePerson(b)({ eventId: 'e1', id: 'r', fullName: 'Rosa Rojas Peña' })
+    await updatePerson(b)({ eventId: 'e1', id: 'c', fullName: 'Familia Rojas' })
+
+    expect(b.grupos.map((g) => g.label)).toEqual(['Ana Vega', 'Familia Rojas'])
+  })
+
+  it('una persona de otro evento es not_found y no se toca', async () => {
+    const b = base([grupo('g2', 'e2', 'Ajenos', 1)], [persona('x', 'g2', 'Ajena')])
+
+    const result = await updatePerson(b)({ eventId: 'e1', id: 'x', fullName: 'Cambiada' })
+
+    expect(isErr(result) && result.error.kind).toBe('not_found')
+    expect(b.filas[0]?.fullName).toBe('Ajena')
+  })
+
+  it('no se mueve a nadie a una invitación de otro evento', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana', 1), grupo('g2', 'e2', 'Ajenos', 4)], [persona('a', 'g1', 'Ana')])
+
+    const result = await updatePerson(b)({ eventId: 'e1', id: 'a', guestGroupId: 'g2' })
+
+    expect(isErr(result) && result.error.kind).toBe('not_found')
+    expect(b.filas[0]?.guestGroupId).toBe('g1')
+  })
+
+  it('mover a una invitación llena le sube el cupo y entra como acompañante', async () => {
+    const b = base(
+      [grupo('g1', 'e1', 'Luis', 1), grupo('g2', 'e1', 'Ana', 1)],
+      [persona('l', 'g1', 'Luis'), persona('a', 'g2', 'Ana'), persona('l2', 'g1', 'Pedro', { isCompanion: true })],
+    )
+
+    const result = await updatePerson(b)({ eventId: 'e1', id: 'l', guestGroupId: 'g2' })
+
+    expect(isOk(result)).toBe(true)
+    expect(b.filas.find((f) => f.id === 'l')).toMatchObject({ guestGroupId: 'g2', isCompanion: true })
+    expect(b.grupos.find((g) => g.id === 'g2')?.seats).toBe(2)
+  })
+
+  it('mover a la última persona de su invitación se lleva la invitación vacía', async () => {
+    const b = base([grupo('g1', 'e1', 'Luis', 1), grupo('g2', 'e1', 'Ana', 1)], [persona('l', 'g1', 'Luis'), persona('a', 'g2', 'Ana')])
+
+    await updatePerson(b)({ eventId: 'e1', id: 'l', guestGroupId: 'g2' })
+
+    expect(b.grupos.map((g) => g.id)).toEqual(['g2'])
+  })
+
+  it('mover al principal deja al siguiente como principal, y la invitación con su nombre', async () => {
+    const b = base(
+      [grupo('g1', 'e1', 'Luis', 2), grupo('g2', 'e1', 'Ana', 1)],
+      [persona('l', 'g1', 'Luis'), persona('p', 'g1', 'Pedro', { isCompanion: true }), persona('a', 'g2', 'Ana')],
+    )
+
+    await updatePerson(b)({ eventId: 'e1', id: 'l', guestGroupId: 'g2' })
+
+    expect(b.filas.find((f) => f.id === 'p')?.isCompanion).toBe(false)
+    expect(b.grupos.find((g) => g.id === 'g1')?.label).toBe('Pedro')
   })
 })
 
-/**
- * Editar es un parche: lo que no viene en la entrada tiene que quedar como estaba.
- *
- * El correo se perdía en silencio —`updatePerson` rehacía la persona sin pasarlo, así que
- * marcar VIP desde la tabla borraba el email de quien lo tuviera—. Es el mismo fallo que
- * ya se coló una vez con `attending`, y por la misma razón: `createPerson` recibe un
- * objeto literal donde el campo que falta es, sencillamente, `undefined`.
- */
-describe('updatePerson · lo que no se toca se conserva', () => {
-  const conCorreo: GuestPerson = {
-    id: 'p1',
-    guestGroupId: 'g1',
-    fullName: 'Ana Vega',
-    isCompanion: false,
-    dietaryNote: 'Sin gluten',
-    vip: false,
-    attending: 'yes',
-    email: 'ana@ejemplo.com',
-  }
+describe('removePerson', () => {
+  it('borrar a la última persona borra también su invitación: no quedan enlaces vacíos', async () => {
+    const b = base([grupo('g1', 'e1', 'Yasmin', 1)], [persona('y', 'g1', 'Yasmin')])
 
-  it('marcar VIP no borra el correo', async () => {
-    const { repo, filas } = personas([conCorreo])
-
-    const result = await updatePerson({ people: repo, groups: grupo(4) })({ id: 'p1', vip: true })
+    const result = await removePerson(b)({ eventId: 'e1', id: 'y' })
 
     expect(isOk(result)).toBe(true)
-    expect(filas[0]?.email).toBe('ana@ejemplo.com')
-    expect(filas[0]?.vip).toBe(true)
+    expect(b.filas).toHaveLength(0)
+    expect(b.grupos).toHaveLength(0)
   })
 
-  it('acepta un correo nuevo', async () => {
-    const { repo, filas } = personas([conCorreo])
+  it('borrar a un acompañante deja la invitación como estaba', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana', 2)], [persona('a', 'g1', 'Ana'), persona('l', 'g1', 'Luis', { isCompanion: true })])
 
-    await updatePerson({ people: repo, groups: grupo(4) })({ id: 'p1', email: 'nueva@ejemplo.com' })
+    await removePerson(b)({ eventId: 'e1', id: 'l' })
 
-    expect(filas[0]?.email).toBe('nueva@ejemplo.com')
+    expect(b.grupos[0]?.label).toBe('Ana')
+    expect(b.filas.map((f) => f.id)).toEqual(['a'])
   })
 
-  it('borra el correo cuando llega nulo, que no es lo mismo que no venir', async () => {
-    const { repo, filas } = personas([conCorreo])
+  it('borrar al principal pasa la invitación al siguiente, con su nombre', async () => {
+    const b = base([grupo('g1', 'e1', 'Ana', 2)], [persona('a', 'g1', 'Ana'), persona('l', 'g1', 'Luis', { isCompanion: true })])
 
-    await updatePerson({ people: repo, groups: grupo(4) })({ id: 'p1', email: null })
+    await removePerson(b)({ eventId: 'e1', id: 'a' })
 
-    expect(filas[0]?.email).toBeNull()
-  })
-})
-
-/**
- * Mover a alguien de grupo cambia de enlace, de cupo y de mesa: es el grupo quien tiene
- * todo eso. Por eso el cupo del **destino** se comprueba en el servidor, igual que en el
- * alta, y no en el formulario.
- */
-describe('updatePerson · mover de grupo', () => {
-  const ana: GuestPerson = {
-    id: 'p1',
-    guestGroupId: 'g1',
-    fullName: 'Ana Vega',
-    isCompanion: false,
-    dietaryNote: null,
-    vip: false,
-    attending: null,
-    email: null,
-  }
-
-  const grupos = (seats: number): GuestGroupRepository => ({ ...grupo(seats), findById: async (id) => ({ id, eventId: 'e1', label: 'Destino', seats, revokedAt: null, openedAt: null }) })
-
-  it('cambia el grupo cuando queda sitio', async () => {
-    const { repo, filas } = personas([ana])
-
-    const result = await updatePerson({ people: repo, groups: grupos(4) })({ id: 'p1', guestGroupId: 'g2' })
-
-    expect(isOk(result)).toBe(true)
-    expect(filas[0]?.guestGroupId).toBe('g2')
+    expect(b.filas[0]).toMatchObject({ id: 'l', isCompanion: false })
+    expect(b.grupos[0]?.label).toBe('Luis')
   })
 
-  it('rechaza el traslado si el grupo de destino ya está lleno', async () => {
-    const { repo, filas } = personas([ana])
-    // El repositorio cuenta una persona en el destino y el destino tiene un solo cupo.
-    const result = await updatePerson({ people: repo, groups: grupos(1) })({ id: 'p1', guestGroupId: 'g2' })
+  it('una invitación con nombre propio («Familia Rojas») lo conserva al cambiar de principal', async () => {
+    const b = base([grupo('g1', 'e1', 'Familia Rojas', 2)], [persona('a', 'g1', 'Ana'), persona('l', 'g1', 'Luis', { isCompanion: true })])
 
-    expect(isErr(result)).toBe(true)
-    if (isErr(result)) expect(result.error.kind).toBe('invalid_seats')
-    expect(filas[0]?.guestGroupId).toBe('g1')
+    await removePerson(b)({ eventId: 'e1', id: 'a' })
+
+    expect(b.grupos[0]?.label).toBe('Familia Rojas')
   })
 
-  it('un grupo de destino que no existe es un error, no un traslado a la nada', async () => {
-    const { repo } = personas([ana])
-    const sinGrupo: GuestGroupRepository = { ...grupo(4), findById: async () => null }
+  it('una persona de otro evento es not_found y no se borra nada', async () => {
+    const b = base([grupo('g2', 'e2', 'Ajena', 1)], [persona('x', 'g2', 'Ajena')])
 
-    const result = await updatePerson({ people: repo, groups: sinGrupo })({ id: 'p1', guestGroupId: 'fantasma' })
+    const result = await removePerson(b)({ eventId: 'e1', id: 'x' })
 
-    expect(isErr(result)).toBe(true)
-    if (isErr(result)) expect(result.error.kind).toBe('not_found')
+    expect(isErr(result) && result.error.kind).toBe('not_found')
+    expect(b.filas).toHaveLength(1)
+    expect(b.grupos).toHaveLength(1)
   })
 })

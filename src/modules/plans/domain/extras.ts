@@ -10,7 +10,7 @@ export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fot
 export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   cambio_modelo: 'Cambiar de modelo hasta repartir',
   fotos_invitados: 'Fotos de los invitados',
-  mas_grupos: 'Más grupos de invitados',
+  mas_grupos: 'Más invitaciones',
   mas_dias: 'Más días en línea',
   mas_porteros: 'Más porteros',
   sumar_planner: 'Sumar un planner',

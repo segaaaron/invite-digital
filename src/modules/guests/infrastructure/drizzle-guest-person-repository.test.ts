@@ -48,13 +48,13 @@ describe('drizzleGuestPersonRepository', () => {
       attending: 'yes', email: null,
     })
 
-    const leida = await drizzleGuestPersonRepository.findById(id)
+    const leida = await drizzleGuestPersonRepository.findById(eventId, id)
     expect(leida?.fullName).toBe('Ana Lucía Vega')
     expect(leida?.vip).toBe(true)
     expect(leida?.attending).toBe('yes')
 
-    await drizzleGuestPersonRepository.update({ ...leida!, attending: 'maybe' })
-    expect((await drizzleGuestPersonRepository.findById(id))?.dietaryNote).toBe('Sin gluten')
+    await drizzleGuestPersonRepository.update(eventId, { ...leida!, attending: 'maybe' })
+    expect((await drizzleGuestPersonRepository.findById(eventId, id))?.dietaryNote).toBe('Sin gluten')
   })
 
   it('listar por evento no se lleva personas de otro evento', async () => {
@@ -140,7 +140,7 @@ describe('lo que el alta guarda de verdad', () => {
       email: 'lucia@correo.bo',
     }
     await drizzleGuestPersonRepository.insert(persona)
-    await drizzleGuestPersonRepository.update({ ...persona, vip: true })
+    await drizzleGuestPersonRepository.update(eventId, { ...persona, vip: true })
 
     const [fila] = await db.select().from(guestPeople).where(eq(guestPeople.id, id))
     expect(fila?.email).toBe('lucia@correo.bo')
@@ -181,7 +181,48 @@ describe('lo que el alta guarda de verdad', () => {
 
     expect(await countPeopleByEvent(eventId)).toBe(antes + 2)
 
-    await drizzleGuestPersonRepository.remove(id)
+    await drizzleGuestPersonRepository.remove(eventId, id)
     expect(await countPeopleByEvent(eventId)).toBe(antes + 1)
+  })
+
+  it('con el evento de otra boda no se lee, no se edita ni se borra a nadie', async () => {
+    const id = crypto.randomUUID()
+    const persona = {
+      id,
+      guestGroupId: otroGrupoId,
+      fullName: 'De otra boda',
+      isCompanion: false,
+      dietaryNote: null,
+      vip: false,
+      attending: null,
+      email: null,
+    }
+    await drizzleGuestPersonRepository.insert(persona)
+
+    expect(await drizzleGuestPersonRepository.findById(eventId, id)).toBeNull()
+    await drizzleGuestPersonRepository.update(eventId, { ...persona, fullName: 'Intruso', guestGroupId: grupoId })
+    await drizzleGuestPersonRepository.remove(eventId, id)
+
+    expect(await drizzleGuestPersonRepository.findById(otroEventId, id)).toMatchObject({ fullName: 'De otra boda', guestGroupId: otroGrupoId })
+  })
+
+  it('editar guarda también la invitación: mover a alguien llega a la base', async () => {
+    const segundoGrupo = crypto.randomUUID()
+    await db.insert(guestGroups).values({ id: segundoGrupo, eventId, label: 'Destino', seats: 2, tokenHash: hash() })
+    const persona = {
+      id: crypto.randomUUID(),
+      guestGroupId: grupoId,
+      fullName: 'Quien se muda',
+      isCompanion: false,
+      dietaryNote: null,
+      vip: false,
+      attending: null,
+      email: null,
+    }
+    await drizzleGuestPersonRepository.insert(persona)
+
+    await drizzleGuestPersonRepository.update(eventId, { ...persona, guestGroupId: segundoGrupo })
+
+    expect((await drizzleGuestPersonRepository.findById(eventId, persona.id))?.guestGroupId).toBe(segundoGrupo)
   })
 })

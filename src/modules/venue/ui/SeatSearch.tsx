@@ -39,7 +39,7 @@ export function SeatSearch({
     <div className="flex flex-col gap-2">
       <div className="flex">
         <SearchField
-          label="Buscar grupo"
+          label="Buscar invitado"
           onChange={(e) => setTermino(e.target.value)}
           placeholder="Buscar invitado para ver su mesa…"
           value={termino}

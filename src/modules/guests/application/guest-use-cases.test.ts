@@ -34,6 +34,8 @@ const repo = (row: GuestGroupRow | null) => {
     revoke: async () => {},
     markOpened: async (id, at) => void opened.push({ id, at }),
     remove: async () => {},
+    setSeats: async () => {},
+    setLabel: async () => {},
   }
   return { groups, inserted, opened }
 }
@@ -146,6 +148,8 @@ describe('resolveByToken', () => {
       revoke: async () => {},
       markOpened: async () => {},
     remove: async () => {},
+    setSeats: async () => {},
+    setLabel: async () => {},
     }
     const result = await resolveByToken({ groups, minter, clock: () => NOW })('token-visible')
     expect(isErr(result) && result.error.kind).toBe('storage_failure')

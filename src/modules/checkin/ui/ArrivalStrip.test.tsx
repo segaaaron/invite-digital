@@ -16,7 +16,7 @@ describe('ArrivalStrip', () => {
   it('dice cuántos grupos de cuántos han llegado', () => {
     render(<ArrivalStrip tally={tally()} />)
     expect(screen.getByText('5 de 12')).toBeInTheDocument()
-    expect(screen.getByText(/grupos que llegaron/i)).toBeInTheDocument()
+    expect(screen.getByText(/invitaciones que llegaron/i)).toBeInTheDocument()
   })
 
   it('dice cuántas personas hay dentro frente a las esperadas', () => {
@@ -36,7 +36,7 @@ describe('ArrivalStrip', () => {
     // Aparece gente que había dicho que no, y su pase es válido. Sumarla en silencio a
     // los esperados escondería que el salón tiene más gente de la prevista.
     render(<ArrivalStrip tally={tally({ unexpectedGroups: 2 })} />)
-    expect(screen.getByText(/2 grupos llegaron sin estar entre los esperados/i)).toBeInTheDocument()
+    expect(screen.getByText(/2 invitaciones llegaron sin estar entre las esperadas/i)).toBeInTheDocument()
   })
 
   it('sin inesperados no pinta esa línea', () => {
@@ -46,7 +46,7 @@ describe('ArrivalStrip', () => {
 
   it('un solo grupo inesperado se dice en singular', () => {
     render(<ArrivalStrip tally={tally({ unexpectedGroups: 1 })} />)
-    expect(screen.getByText(/1 grupo llegó sin estar entre los esperados/i)).toBeInTheDocument()
+    expect(screen.getByText(/1 invitación llegó sin estar entre las esperadas/i)).toBeInTheDocument()
   })
 
   it('sin datos de puerta —el plan no la incluye— la tira no existe', () => {

@@ -45,7 +45,7 @@ function neutralizarFormula(valor: string): string {
 }
 
 export function filasToCsv(rows: readonly CsvRow[]): string {
-  const cabecera = ['Grupo', 'Cupos', 'Confirmados', 'Estado'].map(celda).join(';')
+  const cabecera = ['Invitación', 'Cupos', 'Confirmados', 'Estado'].map(celda).join(';')
   const cuerpo = rows.map((fila) =>
     [celda(fila.label), celda(String(fila.seats)), celda(fila.confirmed === null ? '' : String(fila.confirmed)), celda(estado(fila))].join(';'),
   )
@@ -60,7 +60,7 @@ const ESTADO_PERSONA: Record<string, string> = { yes: 'Confirmado', no: 'No vien
  * tiene personas cargadas se exporta el de grupos, que es lo único que hay.
  */
 export function personasToCsv(people: readonly CsvPerson[]): string {
-  const cabecera = ['Nombre', 'Grupo', 'RSVP', 'Acompañante', 'Restricciones', 'Mesa', 'VIP'].map(celda).join(';')
+  const cabecera = ['Nombre', 'Invitación', 'RSVP', 'Acompañante', 'Restricciones', 'Mesa', 'VIP'].map(celda).join(';')
   const cuerpo = people.map((p) =>
     [
       celda(p.fullName),

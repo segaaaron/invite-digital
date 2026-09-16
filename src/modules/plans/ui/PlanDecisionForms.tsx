@@ -8,7 +8,7 @@ import { SubmitButton } from '@/shared/design/ui/panel/estados'
 const INITIAL: PlanDecisionState = { status: 'idle' }
 
 const MENSAJES: Record<PlansErrorKind, string> = {
-  plan_limit_reached: 'No pudimos resolver la solicitud: el plan de destino no admite los grupos que ya tiene el evento.',
+  plan_limit_reached: 'No pudimos resolver la solicitud: el plan de destino no admite las invitaciones que ya tiene el evento.',
   feature_not_included: 'No pudimos resolver la solicitud con ese plan.',
   request_already_pending: 'Hay otra solicitud sin resolver para este evento.',
   same_plan: 'El evento ya está en ese plan.',

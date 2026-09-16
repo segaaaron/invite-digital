@@ -1,64 +1,15 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { guests, plans } from '@/app/composition/container'
+import { events, guests, plans } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import type { GuestErrorKind } from '@/modules/guests/domain/errors'
 import { invitationUrl } from '@/modules/guests/domain/invitation-url'
+import { loQueFaltaParaInvitar } from '@/modules/events'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
-
-export type AddGuestGroupState =
-  | { status: 'idle' }
-  // El enlace viaja al cliente una sola vez, justo tras crearlo: después ya no existe en
-  // ninguna parte, porque en la base solo queda el hash.
-  | { status: 'success'; label: string; url: string }
-  | { status: 'error'; message: GuestErrorKind }
-
-export async function addGuestGroupAction(_previous: AddGuestGroupState, formData: FormData): Promise<AddGuestGroupState> {
-  const actor = await requireSession()
-
-  const eventSlug = campo(formData, 'eventSlug')
-  const eventId = campo(formData, 'eventId')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
-
-  // La acción vive en la frontera y puede hablar con el contenedor, así que es ella
-  // quien resuelve la capacidad y se la pasa al caso de uso. `guests` no importa
-  // `plans`: el límite es una regla comercial que va a cambiar y no puede quedar atada
-  // al alta de un grupo.
-  //
-  // Y se comprueba **aquí, en el servidor**. El formulario deshabilitado que verá el
-  // atelier no protege de nada: una Server Action es un extremo HTTP público.
-  const allowance = await plans.allowanceFor(eventId)
-  if (isErr(allowance)) {
-    console.error('no se pudo resolver el plan del evento', allowance.error.kind, allowance.error.detail)
-    return { status: 'error', message: 'storage_failure' }
-  }
-
-  const existentes = await guests.list(eventId)
-  if (isErr(existentes)) {
-    console.error('no se pudieron contar los grupos', existentes.error.kind, existentes.error.detail)
-    return { status: 'error', message: 'storage_failure' }
-  }
-
-  const result = await guests.add({
-    eventId,
-    label: campo(formData, 'label'),
-    seats: Number(formData.get('seats') ?? 0),
-    allowance: { maxGuestGroups: allowance.value.maxGuestGroups },
-    currentGroups: existentes.value.length,
-  })
-
-  if (isErr(result)) {
-    console.error('alta de grupo rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.kind }
-  }
-
-  revalidatePath(`/panel/eventos/${eventSlug}`)
-  return { status: 'success', label: result.value.group.label, url: invitationUrl(result.value.token, env.SITE_URL) }
-}
 
 export type RevokeInvitationState =
   | { status: 'idle' }
@@ -80,9 +31,9 @@ export async function revokeInvitationAction(
   const actor = await requireSession()
 
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventSlug, section: 'cliente' })
 
-  const result = await guests.revoke(campo(formData, 'groupId'))
+  const result = await guests.revoke({ eventId, id: campo(formData, 'groupId') })
   if (isErr(result)) {
     console.error('revocación rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
@@ -106,21 +57,26 @@ export type PersonActionState = { status: 'idle' } | { status: 'success' } | { s
  * creería que cargó a un invitado que la base no tiene, y esa persona aparecería el día
  * del evento sin estar en ninguna lista.
  */
-export type GuestActionState = { status: 'idle' | 'success' | 'error'; message: string; token?: string | null }
+export type GuestActionState = { status: 'idle' | 'success' | 'error'; message: string }
 
 /**
- * El alta de invitado de la maqueta, con sus nueve campos. Crea el grupo si hace falta,
- * la persona, sus acompañantes y guarda el teléfono en el grupo.
+ * El alta de invitado: su invitación, él y sus acompañantes, todo o nada.
  *
  * El tope del plan se resuelve **aquí**, en la frontera, y baja como capacidad: el módulo
- * de invitados no importa `plans`.
+ * de invitados no importa `plans`. El evento sale de la guardia, no del formulario.
  */
 export async function addGuestAction(_previous: GuestActionState, formData: FormData): Promise<GuestActionState> {
   const actor = await requireSession()
 
+  const eventId = await requireEventAccess(actor, {
+    eventId: campo(formData, 'eventId'),
+    eventSlug: campo(formData, 'eventSlug'),
+    section: 'cliente',
+  })
   const eventSlug = campo(formData, 'eventSlug')
-  const eventId = campo(formData, 'eventId')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+
+  const sinEscribir = await invitacionSinEscribir(eventId)
+  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
 
   const capacidad = await plans.allowanceFor(eventId)
   const grupos = await guests.list(eventId)
@@ -131,15 +87,10 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
     return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
   }
 
-  const grupoElegido = campo(formData, 'groupId')
   const asistencia = campo(formData, 'attending')
-
   const result = await guests.addGuest({
     eventId,
-    groupId: grupoElegido === '' ? undefined : grupoElegido,
-    newGroupLabel: campo(formData, 'newGroupLabel') || undefined,
     fullName: campo(formData, 'fullName'),
-    companions: Number(formData.get('companions') ?? 0),
     // Un campo por acompañante, con el mismo nombre: `getAll` los trae en orden.
     companionNames: formData.getAll('companionName').map((v) => String(v)),
     attending: asistencia === '' ? null : (asistencia as 'yes' | 'no' | 'maybe'),
@@ -160,43 +111,25 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
 
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
   revalidatePath(`/panel/eventos/${eventSlug}`)
-
-  // Si algún acompañante se quedó fuera por cupo hay que decirlo: un «hecho» a secas deja
-  // a alguien sin sitio el día del evento, delante de la puerta, y nadie se entera hasta
-  // entonces.
-  const { companions, requestedCompanions } = result.value
-  const faltaron = requestedCompanions - companions
-  return {
-    status: 'success',
-    message:
-      faltaron > 0
-        ? `Invitado añadido, pero ${faltaron} acompañante${faltaron === 1 ? '' : 's'} no cabe${faltaron === 1 ? '' : 'n'} en el cupo del grupo. Sube el cupo y vuelve a añadirlo${faltaron === 1 ? '' : 's'}.`
-        : 'Invitado añadido.',
-    // El enlace del grupo nuevo se enseña **una sola vez**: en la base solo queda su
-    // hash. Viaja ya como URL completa; el token suelto no le sirve a nadie.
-    token: result.value.token === null ? null : invitationUrl(result.value.token, env.SITE_URL),
-  }
+  return { status: 'success', message: 'Invitado añadido.' }
 }
 
-export async function addPersonAction(_previous: PersonActionState, formData: FormData): Promise<PersonActionState> {
+/** «Añadir acompañante», desde la edición de un invitado: suma una persona a su invitación. */
+export async function addPersonAction(input: {
+  eventSlug: string
+  guestGroupId: string
+  fullName: string
+}): Promise<PersonActionState> {
   const actor = await requireSession()
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
-  const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug, section: 'cliente' })
-  const result = await guests.addPerson({
-    guestGroupId: campo(formData, 'guestGroupId'),
-    fullName: campo(formData, 'fullName'),
-    isCompanion: formData.get('isCompanion') === 'on',
-    dietaryNote: campo(formData, 'dietaryNote'),
-    vip: formData.get('vip') === 'on',
-  })
-
+  const result = await guests.addPerson({ eventId, guestGroupId: input.guestGroupId, fullName: input.fullName, isCompanion: true })
   if (isErr(result)) {
-    console.error('alta de persona rechazada', result.error.kind, result.error.detail)
+    console.error('alta de acompañante rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   return { status: 'success' }
 }
 
@@ -206,16 +139,15 @@ export async function updatePersonAction(input: {
   fullName?: string
   dietaryNote?: string | null
   vip?: boolean
-  isCompanion?: boolean
   attending?: string | null
   email?: string | null
   guestGroupId?: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const { eventSlug, ...patch } = input
-  const result = await guests.updatePerson(patch)
+  const result = await guests.updatePerson({ ...patch, eventId })
 
   if (isErr(result)) {
     console.error('edición de persona rechazada', result.error.kind, result.error.detail)
@@ -228,34 +160,12 @@ export async function updatePersonAction(input: {
 
 export async function removePersonAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
-  const result = await guests.removePerson(input.id)
+  // Si era la última persona de su invitación, la invitación se va con ella.
+  const result = await guests.removePerson({ eventId, id: input.id })
   if (isErr(result)) {
     console.error('baja de persona rechazada', result.error.kind, result.error.detail)
-    return { status: 'error', message: result.error.detail }
-  }
-
-  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
-  return { status: 'success' }
-}
-
-/**
- * Marca el reparto de una invitación. Devuelve estado: si el servidor rechaza, el atelier
- * tiene que enterarse, porque la columna «Enviado» es la que usa para saber a quién le
- * falta el enlace.
- */
-export async function markInvitationSentAction(input: {
-  eventSlug: string
-  id: string
-  sent: boolean
-}): Promise<PersonActionState> {
-  const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
-
-  const result = await guests.markSent({ id: input.id, sent: input.sent })
-  if (isErr(result)) {
-    console.error('marca de envío rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -271,12 +181,11 @@ export async function markInvitationSentAction(input: {
  */
 export async function reopenRsvpAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
-  try {
-    await guests.reopenRsvp(input.id)
-  } catch (cause) {
-    console.error('no se pudo reabrir la confirmación', cause)
+  const result = await guests.reopenRsvp({ eventId, id: input.id })
+  if (isErr(result)) {
+    console.error('no se pudo reabrir la confirmación', result.error.kind, result.error.detail)
     return { status: 'error', message: 'No se pudo reabrir la confirmación.' }
   }
 
@@ -301,9 +210,12 @@ export async function resendInvitationAction(_previous: ResendState, formData: F
   const actor = await requireSession()
 
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventSlug, section: 'cliente' })
+  const sinEscribir = await invitacionSinEscribir(eventId)
+  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
+
   const groupId = campo(formData, 'groupId')
-  const result = await guests.resend({ id: groupId })
+  const result = await guests.resend({ eventId, id: groupId })
 
   if (isErr(result)) {
     console.error('reenvío rechazado', result.error.kind, result.error.detail)
@@ -341,12 +253,14 @@ export type ImportRowView = {
 export async function importGuestsAction(_previous: ImportState, formData: FormData): Promise<ImportState> {
   const actor = await requireSession()
 
-  const eventId = campo(formData, 'eventId')
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
 
   // Importar la lista es de algunos planes. Esconder el botón no protege: la acción es un
   // extremo HTTP público.
+  const sinEscribir = await invitacionSinEscribir(eventId)
+  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
+
   const incluida = await plans.requireFeature(eventId, 'csvImport')
   if (isErr(incluida)) return { status: 'error', message: incluida.error.detail }
 
@@ -392,6 +306,16 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
   }
 }
 
+/**
+ * Sin la invitación escrita —quién, cuándo y dónde— no se invita a nadie: el invitado abriría
+ * una invitación que no dice de quién es. La pantalla ya apaga los botones; esto es el corte
+ * de verdad, porque cada acción es un extremo HTTP público. `null` si está lista.
+ */
+const invitacionSinEscribir = async (eventId: string): Promise<string | null> => {
+  const falta = loQueFaltaParaInvitar(await events.contentFor(eventId, {}))
+  return falta.length === 0 ? null : `Antes de invitar, termina tu invitación en Configuración. Falta: ${falta.join(', ').toLowerCase()}.`
+}
+
 /** Un teléfono como se escribe aquí: `70012345` se guarda `+59170012345`. Vacío, `null`. */
 const telefono = (crudo: string): string | null => {
   const escrito = crudo.trim()
@@ -406,11 +330,11 @@ export async function setGroupPhoneAction(input: {
   phone: string
 }): Promise<PersonActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const limpio = telefono(input.phone)
   try {
-    await guests.setPhone(input.id, limpio)
+    await guests.setPhone(eventId, input.id, limpio)
   } catch (cause) {
     console.error('no se pudo guardar el teléfono', cause)
     return { status: 'error', message: 'No se pudo guardar el teléfono.' }

@@ -75,7 +75,7 @@ export function PassDialog({
       {group.revoked ? (
         <p className="mt-5 text-[13px] text-ink-soft">
           La invitación de «{group.label}» está <b className="font-medium">revocada</b>. Revocar se deshace a propósito:
-          para volver a dar acceso a este grupo, reactívalo desde la lista de grupos.
+          para volver a darle acceso, vuelve a añadir al invitado.
         </p>
       ) : emitido === null ? (
         <>

@@ -141,7 +141,7 @@ function FilaPortero({ eventId, eventSlug, portero }: { eventId: string; eventSl
         <span className="text-[12px] text-ink-soft">
           {portero.registradas === 0
             ? 'Todavía no registró llegadas'
-            : `${portero.registradas} grupo${portero.registradas === 1 ? '' : 's'} registrado${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : ` · el último a las ${portero.ultima}`}`}
+            : `${portero.registradas} invitaci${portero.registradas === 1 ? 'ón' : 'ones'} registrada${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : ` · el último a las ${portero.ultima}`}`}
         </span>
         {baja.status === 'error' ? <span className="text-[12px] text-danger">{baja.message}</span> : null}
       </span>

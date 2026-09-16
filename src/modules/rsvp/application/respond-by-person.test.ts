@@ -49,9 +49,9 @@ describe('respondByPerson', () => {
 
     expect(!isErr(salida) && salida.value.attending).toBe(2)
     expect(append).toHaveBeenCalledTimes(1)
-    expect(setAttendance).toHaveBeenCalledWith('p1', 'yes')
-    expect(setAttendance).toHaveBeenCalledWith('p2', 'no')
-    expect(setAttendance).toHaveBeenCalledWith('p3', 'yes')
+    expect(setAttendance).toHaveBeenCalledWith('e1', 'p1', 'yes')
+    expect(setAttendance).toHaveBeenCalledWith('e1', 'p2', 'no')
+    expect(setAttendance).toHaveBeenCalledWith('e1', 'p3', 'yes')
   })
 
   it('ignora a quien no es de ese grupo: el formulario lo escribe quien manda el POST', async () => {

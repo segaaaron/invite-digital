@@ -12,12 +12,12 @@ import type { ReminderKind } from './due'
  */
 const TEXTOS: Record<ReminderKind, Record<string, string>> = {
   sin_respuesta: {
-    es: 'Hola {grupo}: les recordamos confirmar su asistencia antes del {fecha}. Pueden hacerlo desde la invitación que les enviamos por aquí. ¡Gracias!',
-    en: 'Hello {grupo}: a gentle reminder to confirm your attendance before {fecha}. You can do it from the invitation we sent you here. Thank you!',
+    es: 'Hola {nombre}: les recordamos confirmar su asistencia antes del {fecha}. Pueden hacerlo desde la invitación que les enviamos por aquí. ¡Gracias!',
+    en: 'Hello {nombre}: a gentle reminder to confirm your attendance before {fecha}. You can do it from the invitation we sent you here. Thank you!',
   },
   sin_abrir: {
-    es: 'Hola {grupo}: les enviamos su invitación por aquí hace unos días y no sabemos si les llegó. ¿Nos confirman que pueden abrirla? El plazo cierra el {fecha}.',
-    en: 'Hello {grupo}: we sent your invitation here a few days ago and we are not sure it arrived. Could you confirm you can open it? The deadline is {fecha}.',
+    es: 'Hola {nombre}: les enviamos su invitación por aquí hace unos días y no sabemos si les llegó. ¿Nos confirman que pueden abrirla? El plazo cierra el {fecha}.',
+    en: 'Hello {nombre}: we sent your invitation here a few days ago and we are not sure it arrived. Could you confirm you can open it? The deadline is {fecha}.',
   },
 }
 
@@ -37,5 +37,5 @@ export function reminderMessage(input: {
     timeZone: 'UTC',
   }).format(input.deadline)
 
-  return plantilla.replaceAll('{grupo}', input.groupLabel).replaceAll('{fecha}', fecha)
+  return plantilla.replaceAll('{nombre}', input.groupLabel).replaceAll('{fecha}', fecha)
 }

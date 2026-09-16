@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test'
 import { ATELIER } from '../fixtures/atelier'
+import { escribirInvitacion } from '../fixtures/invitacion-minima'
 
 /**
  * Inicia sesión por el formulario. Solo para las pruebas que necesitan una sesión
@@ -34,29 +35,29 @@ export async function createEvent(page: Page, input: EventInput): Promise<void> 
   if (input.diseno !== undefined) await page.getByRole('radio', { name: new RegExp(input.diseno) }).check({ force: true })
   await page.getByRole('button', { name: 'Crear evento' }).click()
   await expect(page.getByRole('status')).toContainText('Evento guardado')
+  // Sin quién, cuándo y dónde el panel no deja invitar: es lo que haría el atelier primero.
+  await escribirInvitacion(input.slug)
 }
 
-/** Crea un grupo y devuelve el enlace de invitación, que solo se muestra una vez. */
+/** Crea un grupo. El enlace no se enseña al crear: se prepara desde «Enviar invitaciones». */
 export async function createGuestGroup(
   page: Page,
   eventSlug: string,
   label: string,
   seats: number,
-): Promise<string> {
+): Promise<void> {
   // El alta es el diálogo de la maqueta. Un grupo se crea dando de alta a su primera
   // persona —«Invitación propia», que es lo que viene puesto— con tantos acompañantes como
   // cupos de más; la invitación se llama como ella.
+  await escribirInvitacion(eventSlug)
   await page.goto(`/panel/eventos/${eventSlug}/invitados?panel=alta`)
   await page.getByLabel('Nombre completo').fill(label)
   // «Acompañado» abre un campo por acompañante, y de cada uno solo se pide el nombre: los
   // cupos del grupo son la persona más ellos.
   await añadirAcompanantes(page, Math.max(0, seats - 1))
   await page.getByRole('button', { name: 'Guardar' }).click()
-  const enlace = await page.getByLabel('Enlace de la invitación').inputValue()
-  // El diálogo se queda abierto para copiar el enlace: cerrarlo deja la página usable.
-  await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
+  // Guardar cierra el diálogo.
   await page.waitForURL(/invitados$/)
-  return enlace
 }
 
 /** Abre «Acompañado» y escribe un nombre por acompañante, que es lo único que se les pide. */

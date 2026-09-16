@@ -323,7 +323,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       ) : null}
       <header className="relative z-10 flex items-center gap-3 p-4 text-white">
         <span className="font-mono text-[11px] tracking-[var(--tracking-luxe)]">
-          <b aria-label="Grupos que han llegado" className="font-mono text-[19px] font-semibold">
+          <b aria-label="Invitaciones que han llegado" className="font-mono text-[19px] font-semibold">
             {tally.arrivedGroups}
           </b>{' '}
           <span className="opacity-55">

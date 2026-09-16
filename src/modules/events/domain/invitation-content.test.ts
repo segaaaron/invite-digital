@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mergeContent, parseInvitationContent } from './invitation-content'
+import { loQueFaltaParaInvitar, mergeContent, parseInvitationContent } from './invitation-content'
 
 describe('parseInvitationContent', () => {
   it('acepta un objeto vacío', () => {
@@ -201,5 +201,29 @@ describe('los avisos sueltos', () => {
   it('corta en cuatro', () => {
     const ocho = Array.from({ length: 8 }, (_, i) => ({ title: `Aviso ${i}` }))
     expect(parseInvitationContent({ notes: ocho }).notes).toHaveLength(4)
+  })
+})
+
+describe('loQueFaltaParaInvitar', () => {
+  const lista = {
+    hero: { nameA: 'Camila' },
+    schedule: { startsAt: '2026-10-18T20:00' },
+    reception: { place: 'Salón Los Ceibos' },
+  }
+
+  it('con quién, cuándo y dónde escritos, no falta nada', () => {
+    expect(loQueFaltaParaInvitar(lista)).toEqual([])
+  })
+
+  it('una invitación en blanco dice las tres cosas que faltan', () => {
+    expect(loQueFaltaParaInvitar({})).toEqual(['Los nombres de la portada', 'La fecha y la hora', 'El lugar de la recepción'])
+  })
+
+  it('un bloque con otros campos escritos no basta: se mira el dato que hace falta', () => {
+    // Antes bastaba con un bloque cualquiera con texto: una frase escrita dejaba invitar
+    // con la invitación sin fecha ni lugar.
+    expect(loQueFaltaParaInvitar({ ...lista, quote: { text: 'Hoy' }, reception: { label: 'Recepción', place: '  ' } })).toEqual([
+      'El lugar de la recepción',
+    ])
   })
 })

@@ -25,18 +25,18 @@ export type ResentInvitation = { readonly token: string; readonly label: string 
  */
 export const resendInvitation =
   (deps: { groups: GuestGroupRepository; minter: Minter; clock: () => Date }) =>
-  async (input: { id: string }): Promise<Result<ResentInvitation, GuestError>> =>
+  async (input: { eventId: string; id: string }): Promise<Result<ResentInvitation, GuestError>> =>
     attempt<ResentInvitation, GuestError>(
       async () => {
-        const row = await deps.groups.findById(input.id)
-        if (row === null) return err(guestError('not_found', 'El grupo no existe'))
+        const row = await deps.groups.findById(input.eventId, input.id)
+        if (row === null) return err(guestError('not_found', 'La invitación no existe'))
         if (row.revokedAt !== null) {
           return err(guestError('revoked', 'Esta invitación está revocada: reactívala antes de volver a repartirla.'))
         }
 
         const minted = deps.minter.mint()
-        await deps.groups.replaceToken(input.id, minted.hash)
-        await deps.groups.markSent(input.id, deps.clock())
+        await deps.groups.replaceToken(input.eventId, input.id, minted.hash)
+        await deps.groups.markSent(input.eventId, input.id, deps.clock())
 
         return ok({ token: minted.token, label: row.label })
       },

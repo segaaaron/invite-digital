@@ -58,11 +58,16 @@ export function createPerson(input: {
 }
 
 /**
- * El cupo del grupo es el tope. Cargar más personas que cupos no es un detalle estético:
- * el cupo es lo que se le prometió al invitado y lo que la puerta cuenta al escanear.
+ * El cupo que necesita una invitación con `personas` cargadas.
+ *
+ * El cupo es lo que la puerta cuenta al escanear, así que nunca puede quedar por debajo de
+ * la gente cargada: dejaría a alguien fuera el día del evento. Pero quien carga la lista es
+ * el atelier, y rechazarle un acompañante por un cupo que no tiene dónde cambiar era un
+ * callejón sin salida. Crece; nunca rechaza. Bajar no baja: un cupo de más puede ser un
+ * «+1» que se prometió sin nombre.
  */
-export function fitsInGroup(seats: number, peopleAlready: number): boolean {
-  return peopleAlready < seats
+export function cupoParaCargar(seats: number, personas: number): number {
+  return Math.max(seats, personas)
 }
 
 export type DietaryLine = { readonly note: string; readonly count: number }

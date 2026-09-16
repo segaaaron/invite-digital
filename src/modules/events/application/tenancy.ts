@@ -133,17 +133,23 @@ export const actorCanTouchEvent =
   async (
     actor: Actor,
     ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
-  ): Promise<boolean> => {
+  ): Promise<string | null> => {
     const opciones = { section: ref.section }
+    let eventId: string | null = null
     if (ref.eventId !== undefined) {
       const porId = await getEventByIdFor(deps)(actor, ref.eventId, opciones)
-      if (!isOk(porId)) return false
+      if (!isOk(porId)) return null
+      eventId = porId.value.id
     }
     if (ref.eventSlug !== undefined) {
       const porSlug = await getEventFor(deps)(actor, ref.eventSlug, opciones)
-      if (!isOk(porSlug)) return false
+      if (!isOk(porSlug)) return null
+      // Con las dos referencias, tienen que ser **el mismo** evento: si no, la acción
+      // comprobaría uno y escribiría en el otro.
+      if (eventId !== null && eventId !== porSlug.value.id) return null
+      eventId = porSlug.value.id
     }
     // Sin ninguna referencia no hay nada que comprobar, y eso es un error de quien llama:
     // la guardia existe justo para las acciones que sí tocan un evento.
-    return ref.eventId !== undefined || ref.eventSlug !== undefined
+    return eventId
   }

@@ -10,7 +10,7 @@ export const TEXTOS_DEL_PANEL: TextosComparativa = {
   hasta: 'Hasta {n}',
   dias: '{n} días',
   filas: {
-    grupos: 'Grupos de invitados',
+    grupos: 'Invitaciones',
     fotos: 'Fotos del evento',
     fotosInvitados: 'Fotos de los invitados',
     contrasena: 'Invitación con contraseña',

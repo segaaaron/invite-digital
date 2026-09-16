@@ -66,7 +66,8 @@ test('la fila del invitado edita, mueve de grupo, emite el pase y borra', async 
   await page.getByRole('row', { name: /Ana Lucía Vega Rojas/ }).getByRole('link', { name: /^Ver el pase de / }).click()
   await expect(page.getByText(/deja de servir/)).toBeVisible()
   await page.getByRole('button', { name: 'Generar pase' }).click()
-  await expect(page.getByRole('img', { name: /Pase de Familia Rojas Peña/ })).toBeVisible()
+  // La invitación se llama como su principal, y al renombrarlo se renombró con él.
+  await expect(page.getByRole('img', { name: /Pase de Ana Lucía Vega Rojas/ })).toBeVisible()
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
 
   // --- Borrar: pregunta primero, y el segundo clic sí se la lleva.
@@ -79,40 +80,25 @@ test('la fila del invitado edita, mueve de grupo, emite el pase y borra', async 
   await expect(page.getByText('Ana Lucía Vega Rojas')).toHaveCount(0)
 })
 
-test('el servidor rechaza mover a alguien a un grupo sin cupo', async ({ page }) => {
-  // El corte está en el servidor: el formulario ofrece el grupo lleno igual que la
-  // maqueta, y es la Server Action la que dice que no.
-  // Su propio grupo de un solo cupo, ya ocupado: el estado que deje el otro test no
+test('mover a alguien a una invitación llena le suma el cupo, y la de origen pasa a su acompañante', async ({ page }) => {
+  // Su propia invitación de un solo cupo, ya ocupado: el estado que deje el otro test no
   // puede decidir si este prueba algo o no.
   await createGuestGroup(page, SLUG, 'Grupo lleno', 1)
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
   const fila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Padrinos' }) })
   await fila.getByRole('link', { name: /^Editar a / }).click()
-  const grupo = page.getByLabel('Grupo', { exact: true })
-  const lleno = await grupo.locator('option', { hasText: 'Grupo lleno' }).getAttribute('value')
-  await grupo.selectOption(lleno)
+  const invitacion = page.getByLabel('Invitación', { exact: true })
+  const llena = await invitacion.locator('option', { hasText: 'Grupo lleno' }).getAttribute('value')
+  await invitacion.selectOption(llena)
   await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.waitForURL(/invitados$/)
 
-  // Acotado al diálogo: Next monta su propio anunciador de rutas con role="alert".
-  await expect(page.getByRole('dialog').getByRole('alert')).toContainText('cupos')
-})
-
-test('personas y grupos son dos vistas de la misma tarjeta, no dos tablas abiertas a la vez', async ({ page }) => {
-  // El evento y su gente los deja la prueba de arriba: aquí solo se mira la forma de la
-  // pantalla, y sembrar otro evento costaría cuatro navegaciones para nada.
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
-
-  // Un solo buscador en pantalla. Dos tablas abiertas obligaban a adivinar cuál de los
-  // dos era el bueno.
-  await expect(page.getByRole('searchbox')).toHaveCount(1)
-  await expect(page.getByRole('columnheader', { name: 'Nombre' })).toBeVisible()
-  await expect(page.getByRole('columnheader', { name: 'Confirmados' })).toHaveCount(0)
-
-  await page.getByRole('link', { name: /^Grupos/ }).click()
-
-  await expect(page).toHaveURL(/vista=grupos/)
-  await expect(page.getByRole('searchbox')).toHaveCount(1)
-  await expect(page.getByRole('columnheader', { name: 'Confirmados' })).toBeVisible()
-  await expect(page.getByRole('columnheader', { name: 'Nombre' })).toHaveCount(0)
+  const [destino] = await sql<{ seats: number }[]>`select seats from guest_groups where id = ${llena!}`
+  expect(destino?.seats).toBe(2)
+  // «Padrinos» (2 cupos) se quedó con su acompañante, que pasa a principal y le da nombre.
+  const invitaciones = await sql<{ label: string; seats: number }[]>`
+    select g.label, g.seats from guest_groups g join events e on e.id = g.event_id where e.slug = ${SLUG}`
+  expect(invitaciones.map((i) => i.label)).not.toContain('Padrinos')
+  expect(invitaciones).toContainEqual({ label: 'Acompañante 1', seats: 2 })
 })

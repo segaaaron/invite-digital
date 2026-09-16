@@ -1,5 +1,5 @@
-import { asc, count, eq } from 'drizzle-orm'
-import { db } from '@/shared/db/client'
+import { and, asc, count, eq, inArray } from 'drizzle-orm'
+import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups, guestPeople } from '@/shared/db/schema'
 import type { GuestPersonRepository } from '../application/ports'
 import type { Attendance, GuestPerson } from '../domain/person'
@@ -30,9 +30,19 @@ const COLUMNS = {
 // aquí solo se estrecha el tipo que el driver entrega como cadena.
 const aPersona = (fila: Fila): GuestPerson => ({ ...fila, attending: fila.attending as Attendance | null })
 
-export const drizzleGuestPersonRepository: GuestPersonRepository = {
+/**
+ * La persona por su id **y** el evento de su invitación. Las personas no llevan `event_id`
+ * a propósito; el evento se comprueba por la invitación, dentro de la misma sentencia.
+ */
+const delEvento = (database: DbExecutor, eventId: string, id: string) =>
+  and(
+    eq(guestPeople.id, id),
+    inArray(guestPeople.guestGroupId, database.select({ id: guestGroups.id }).from(guestGroups).where(eq(guestGroups.eventId, eventId))),
+  )
+
+export const createDrizzleGuestPersonRepository = (database: DbExecutor): GuestPersonRepository => ({
   async insert(person) {
-    await db.insert(guestPeople).values({
+    await database.insert(guestPeople).values({
       id: person.id,
       guestGroupId: person.guestGroupId,
       fullName: person.fullName,
@@ -44,10 +54,13 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
     })
   },
 
-  async update(person) {
-    await db
+  async update(eventId, person) {
+    // `guestGroupId` también: mover a alguien es editar este campo, y sin escribirlo el
+    // traslado se quedaba en la pantalla. El destino lo valida el caso de uso.
+    await database
       .update(guestPeople)
       .set({
+        guestGroupId: person.guestGroupId,
         fullName: person.fullName,
         isCompanion: person.isCompanion,
         dietaryNote: person.dietaryNote,
@@ -55,15 +68,15 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
         attending: person.attending,
         email: person.email,
       })
-      .where(eq(guestPeople.id, person.id))
+      .where(delEvento(database, eventId, person.id))
   },
 
-  async remove(id) {
-    await db.delete(guestPeople).where(eq(guestPeople.id, id))
+  async remove(eventId, id) {
+    await database.delete(guestPeople).where(delEvento(database, eventId, id))
   },
 
   async listByGroup(guestGroupId) {
-    const filas = await db
+    const filas = await database
       .select(COLUMNS)
       .from(guestPeople)
       .where(eq(guestPeople.guestGroupId, guestGroupId))
@@ -74,7 +87,7 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
   async listByEvent(eventId) {
     // Une por el grupo: las personas no llevan `event_id` a propósito, para que no exista
     // la posibilidad de que una persona apunte a un evento distinto del de su grupo.
-    const filas = await db
+    const filas = await database
       .select(COLUMNS)
       .from(guestPeople)
       .innerJoin(guestGroups, eq(guestGroups.id, guestPeople.guestGroupId))
@@ -84,18 +97,20 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
   },
 
   async countInGroup(guestGroupId) {
-    const filas = await db
+    const filas = await database
       .select({ id: guestPeople.id })
       .from(guestPeople)
       .where(eq(guestPeople.guestGroupId, guestGroupId))
     return filas.length
   },
 
-  async findById(id) {
-    const [fila] = await db.select(COLUMNS).from(guestPeople).where(eq(guestPeople.id, id)).limit(1)
+  async findById(eventId, id) {
+    const [fila] = await database.select(COLUMNS).from(guestPeople).where(delEvento(database, eventId, id)).limit(1)
     return fila ? aPersona(fila) : null
   },
-}
+})
+
+export const drizzleGuestPersonRepository = createDrizzleGuestPersonRepository(db)
 
 /**
  * Cuántas personas hay en el evento, sin traerlas: es la insignia de «Invitados».

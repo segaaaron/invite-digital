@@ -28,7 +28,7 @@ export type Event = {
   readonly retentionDays: number
   /** La moneda de la mesa de regalos de este evento. */
   readonly currency: Currency
-  /** Plantilla del mensaje de reparto, con {grupo} y {enlace}. */
+  /** Plantilla del mensaje de reparto, con {nombre} y {enlace}. */
   readonly messageTemplate: string | null
   /** Dónde es. Lo enseña la vista previa del enlace y la propia invitación. */
   readonly venue: string | null

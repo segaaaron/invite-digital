@@ -109,7 +109,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
     <div className="flex min-w-0 flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2.5">
         <SearchField
-          label="Buscar invitado o grupo"
+          label="Buscar invitado"
           autoComplete="off"
           onChange={(e) => {
             setQuery(e.target.value)
@@ -117,7 +117,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             // dentro: el filtro y el buscador vuelven siempre a la primera.
             setPagina(1)
           }}
-          placeholder="Buscar invitado o grupo..."
+          placeholder="Buscar invitado..."
           value={query}
         />
         {(Object.keys(CASA) as Filtro[]).map((clave) => (
@@ -147,7 +147,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
           <table className="w-full min-w-[980px] border-collapse text-left">
             <thead>
               <tr>
-                {['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna, i) => (
+                {['Nombre', 'Invitación', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna, i) => (
                   <th
                     key={columna}
                     // La primera columna queda fija al desplazar la tabla en el teléfono: sin ella,
@@ -221,6 +221,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                             setPorQuitar(null)
                             aplicar(removePersonAction({ eventSlug, id: fila.id }))
                           }}
+                          title="Si es la última persona de su invitación, su enlace se borra con ella."
                           type="button"
                         >
                           Confirmar

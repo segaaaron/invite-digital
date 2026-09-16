@@ -75,12 +75,10 @@ export function GuestDialog({
     if (nodo !== null && !nodo.open) nodo.showModal()
   }, [])
 
-  // Guardar cierra el diálogo, como en la maqueta. **Salvo** cuando el grupo era nuevo:
-  // entonces hay un enlace que solo se enseña una vez, y cerrar se lo llevaría por
-  // delante. En ese caso lo cierra quien lo ha copiado.
-  const hayEnlace = estado.status === 'success' && Boolean(estado.token)
+  // Guardar cierra el diálogo, como en la maqueta. El enlace no se enseña aquí: se prepara
+  // al mandarlo, desde «Enviar invitaciones», que es donde se reparte.
   useEffect(() => {
-    if (estado.status === 'success' && !estado.token) {
+    if (estado.status === 'success') {
       dialogo.current?.close()
       router.replace(closeHref)
     }
@@ -110,18 +108,6 @@ export function GuestDialog({
       <h2 className="font-display text-[24px] font-light italic" id={`${idNombre}-titulo`}>
         Añadir invitado
       </h2>
-
-      {/* Cuando el grupo es nuevo, su enlace se enseña una sola vez: en la base solo
-          queda el hash, y no hay forma de volver a mostrarlo. */}
-      {hayEnlace ? (
-        <div className="mt-5 flex flex-col gap-2 rounded-[14px] border border-gold/50 bg-gold/10 p-4" role="status">
-          <p className="text-[13px] text-ink">Grupo creado. Este enlace no se vuelve a mostrar:</p>
-          <label className="sr-only" htmlFor={`${idNombre}-enlace`}>
-            Enlace de la invitación
-          </label>
-          <input className={FIELD_CLASS} id={`${idNombre}-enlace`} readOnly value={estado.token ?? ''} />
-        </div>
-      ) : null}
 
       <form action={accion} className="mt-5 flex flex-col gap-4">
         <input name="eventId" type="hidden" value={eventId} />
@@ -244,7 +230,7 @@ export function GuestDialog({
         <div className="mt-2 flex justify-end gap-2.5">
           {/* Cierra el diálogo **y** navega: solo navegar deja el modal abierto encima de
               la lista hasta que Next termina la transición, y con él la página bloqueada. */}
-          <PanelButton onClick={cerrar}>{hayEnlace ? 'Cerrar' : 'Cancelar'}</PanelButton>
+          <PanelButton onClick={cerrar}>Cancelar</PanelButton>
           <SubmitButton variant="primary" disabled={pendiente || (nuevoGrupo && atLimit)} pending={pendiente} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
         </div>
       </form>

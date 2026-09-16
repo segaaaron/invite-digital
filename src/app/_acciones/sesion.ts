@@ -124,10 +124,11 @@ export async function requireAdmin(): Promise<Actor> {
 export async function requireEventAccess(
   actor: Actor,
   ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
-): Promise<void> {
-  const permitido = await events.canTouch(actor, ref)
-  if (!permitido) {
+): Promise<string> {
+  const eventId = await events.canTouch(actor, ref)
+  if (eventId === null) {
     console.error('acceso denegado a evento ajeno', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
     throw new Error('Evento no encontrado')
   }
+  return eventId
 }

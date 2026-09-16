@@ -30,19 +30,19 @@ const mesa = {
 describe('SeatSearch', () => {
   it('dice en qué mesa se sienta un grupo', () => {
     render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[]} /></SeatingSearchProvider>)
-    fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'rojas' } })
+    fireEvent.change(screen.getByLabelText('Buscar invitado'), { target: { value: 'rojas' } })
     expect(screen.getByRole('status')).toHaveTextContent('Mesa 01')
   })
 
   it('avisa cuando el grupo aún no tiene mesa', () => {
     render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[grupo('g2', 'Camila Vargas')]} /></SeatingSearchProvider>)
-    fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'camila' } })
+    fireEvent.change(screen.getByLabelText('Buscar invitado'), { target: { value: 'camila' } })
     expect(screen.getByRole('status')).toHaveTextContent(/sin mesa/i)
   })
 
   it('avisa cuando no encuentra a nadie con ese nombre', () => {
     render(<SeatingSearchProvider><SeatSearch tables={[mesa]} unseated={[]} /></SeatingSearchProvider>)
-    fireEvent.change(screen.getByLabelText('Buscar grupo'), { target: { value: 'zulema' } })
+    fireEvent.change(screen.getByLabelText('Buscar invitado'), { target: { value: 'zulema' } })
     expect(screen.getByRole('status')).toHaveTextContent(/no encontramos/i)
   })
 

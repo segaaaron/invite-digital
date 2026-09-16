@@ -21,9 +21,6 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await page.getByLabel('Nombre completo').fill('Ana Lucía Vega')
   await page.getByLabel('Restricciones').fill('Sin gluten')
   await page.getByRole('button', { name: 'Guardar' }).click()
-  // Toda alta crea su invitación, así que el diálogo se queda con el enlace —que solo se
-  // enseña una vez— hasta que lo cierra quien lo copió.
-  await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
   await page.waitForURL(/invitados$/)
   // Dos celdas con su nombre: ella y su invitación, que se llama como ella.
   await expect(page.getByRole('cell', { name: 'Ana Lucía Vega', exact: true }).first()).toBeVisible()

@@ -46,7 +46,7 @@ const filas: PersonRowView[] = [
 describe('PeopleTable', () => {
   it('enseña las columnas de la maqueta', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    for (const columna of ['Nombre', 'Grupo', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa']) {
+    for (const columna of ['Nombre', 'Invitación', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa']) {
       expect(screen.getByRole('columnheader', { name: columna })).toBeInTheDocument()
     }
   })
@@ -131,7 +131,7 @@ describe('PeopleTable · piel de la maqueta', () => {
   it('al filtrar vuelve a la primera página: si no, la lista se ve vacía sin estarlo', () => {
     render(<PeopleTable eventSlug="boda" rows={muchas} />)
     fireEvent.click(screen.getByRole('button', { name: 'Página 3' }))
-    fireEvent.change(screen.getByLabelText('Buscar invitado o grupo'), { target: { value: 'Invitado 1' } })
+    fireEvent.change(screen.getByLabelText('Buscar invitado'), { target: { value: 'Invitado 1' } })
     expect(screen.getByText('Invitado 1')).toBeInTheDocument()
   })
 

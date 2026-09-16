@@ -10,15 +10,14 @@ import { EditPersonDialog } from '@/modules/guests/ui/EditPersonDialog'
 import { PassDialog } from '@/modules/guests/ui/PassDialog'
 import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
-import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
-import { bloquesConDatos } from '@/modules/events'
+import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
+import { loQueFaltaParaInvitar } from '@/modules/events'
 import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, PanelCardLink } from '@/shared/design/ui/panel/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Invitados' }
@@ -40,11 +39,11 @@ export default async function InvitadosPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string; persona?: string; vista?: string }>
+  searchParams: Promise<{ panel?: string; persona?: string }>
 }) {
   const actor = await requireSession()
   const { slug } = await params
-  const { panel, persona, vista } = await searchParams
+  const { panel, persona } = await searchParams
 
   const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
@@ -52,12 +51,13 @@ export default async function InvitadosPage({
     throw new Error(event.error.detail)
   }
 
-  // Antes de invitar, la invitación: repartir enlaces de una invitación en blanco es mandar a
-  // las familias una página vacía con su nombre. Se mide por bloques escritos, no por el
-  // estado del evento: un borrador con el contenido listo puede prepararse en paralelo.
+  // Antes de invitar, la invitación: quién, cuándo y dónde. Sin eso cada enlace abre una
+  // invitación que no dice de quién es. Aquí se apaga y se explica; el corte de verdad está
+  // en las acciones. Se mide por el dato, no por el estado del evento: un borrador con la
+  // invitación escrita puede prepararse en paralelo.
   const contenido = await events.contentFor(event.value.id, {})
-  const bloquesEscritos = bloquesConDatos(contenido)
-  const invitacionVacia = bloquesEscritos === 0
+  const faltaEnInvitacion = loQueFaltaParaInvitar(contenido)
+  const invitacionVacia = faltaEnInvitacion.length > 0
 
   const groups = await guests.list(event.value.id)
   // Una sola consulta para las respuestas de todos los grupos. Antes eran dos por grupo y
@@ -98,13 +98,6 @@ export default async function InvitadosPage({
         respondedAt: respuestaDeGrupo.get(persona.guestGroupId) ?? null,
       }))
 
-  const cargadasPorGrupo = new Map<string, number>()
-  if (!isErr(personas)) {
-    for (const persona of personas.value) {
-      cargadasPorGrupo.set(persona.guestGroupId, (cargadasPorGrupo.get(persona.guestGroupId) ?? 0) + 1)
-    }
-  }
-
   // La cola de recordatorios del día. Si la lectura falla, la tarjeta lo dice: una cola
   // vacía afirmaría que no hay nadie por recordar, que es lo contrario de lo que pasó.
   const cola = await reminders.due({
@@ -115,16 +108,12 @@ export default async function InvitadosPage({
 
   const capacidad = await plans.allowanceFor(event.value.id)
   const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
-  const cupos = filas.reduce((sum, f) => sum + f.seats, 0)
 
   const base = `/panel/eventos/${event.value.slug}/invitados`
-  const abierto = panel === 'alta' || panel === 'envio' || panel === 'importar' ? panel : null
-
-  // Personas y grupos son **la misma lista mirada de dos maneras**, no dos secciones:
-  // la persona es a quien se sienta y se le sirve de comer; el grupo es quien tiene el
-  // enlace, los cupos y la mesa. Dos tablas abiertas a la vez, cada una con su buscador y
-  // su fila de chips, obligaban a adivinar cuál de los dos buscadores era el bueno.
-  const vistaGrupos = vista === 'grupos'
+  // Con la invitación sin terminar, ni el alta ni la importación se abren, tampoco
+  // escribiendo `?panel=alta` a mano.
+  const abierto =
+    panel === 'envio' || (!invitacionVacia && (panel === 'alta' || panel === 'importar')) ? panel : null
 
   // «✎» y «▣» abren su diálogo con la persona en la dirección. Una persona que ya no
   // existe —la lista se recarga sola mientras el atelier mira— no abre nada, en vez de
@@ -134,11 +123,11 @@ export default async function InvitadosPage({
     enFoco === null || isErr(personas) ? null : (personas.value.find((p) => p.id === enFoco.id) ?? null)
   const grupoDeLaPersona = enFoco === null ? null : (filas.find((f) => f.id === enFoco.groupId) ?? null)
 
-  const eleccionDeGrupos = filas.map((fila) => ({
-    id: fila.id,
-    label: fila.label,
-    free: Math.max(0, fila.seats - (cargadasPorGrupo.get(fila.id) ?? 0)),
-  }))
+  // A una invitación revocada no se mueve a nadie; la suya se ofrece igual, o el selector
+  // abriría diciendo otra.
+  const eleccionDeGrupos = filas
+    .filter((fila) => fila.revokedAt === null || fila.id === enFoco?.groupId)
+    .map((fila) => ({ id: fila.id, label: fila.label }))
 
   return (
     <>
@@ -161,7 +150,7 @@ export default async function InvitadosPage({
             <PanelButton
               disabled={invitacionVacia}
               href={abierto === 'importar' ? base : `${base}?panel=importar`}
-              title={invitacionVacia ? 'Escribe tu invitación antes de cargar invitados' : undefined}
+              title={invitacionVacia ? 'Termina tu invitación antes de cargar invitados' : undefined}
             >
               ↑ Importar CSV
             </PanelButton>
@@ -169,7 +158,7 @@ export default async function InvitadosPage({
             <PanelButton
               disabled={invitacionVacia}
               href={`${base}?panel=alta`}
-              title={invitacionVacia ? 'Escribe tu invitación antes de añadir invitados' : undefined}
+              title={invitacionVacia ? 'Termina tu invitación antes de añadir invitados' : undefined}
               variant="primary"
             >
               + Añadir invitado
@@ -177,7 +166,7 @@ export default async function InvitadosPage({
           </>
         }
         kicker="Gestión"
-        meta={`${filasPersona.length} invitados en total · ${filas.length} grupos · ${cupos} cupos`}
+        meta={`${filasPersona.length} invitados en total`}
         title="Invitados"
       />
 
@@ -186,14 +175,19 @@ export default async function InvitadosPage({
       {invitacionVacia ? (
         <PanelCard className="mb-4.5">
           <div className="flex flex-col gap-3">
-            <p className="font-display text-[20px] text-ink">Primero, escribe tu invitación</p>
+            <p className="font-display text-[20px] text-ink">Primero, termina tu invitación</p>
             <p className="max-w-[62ch] text-[13.5px] leading-[1.7] text-ink-soft">
-              Todavía está en blanco: los nombres, la fecha, el lugar y la frase. Lo que escribas ahí es lo que verán tus
-              invitados al abrir su enlace, así que se prepara antes de invitar a nadie.
+              Es lo que verán tus invitados al abrir su enlace, así que no se puede añadir a nadie hasta que diga de quién
+              es, cuándo y dónde. Falta:
             </p>
+            <ul className="list-disc pl-5 text-[13.5px] leading-[1.7] text-ink">
+              {faltaEnInvitacion.map((falta) => (
+                <li key={falta}>{falta}</li>
+              ))}
+            </ul>
             <div className="flex flex-wrap gap-2">
               <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`} variant="primary">
-                Escribir mi invitación
+                Terminar mi invitación
               </PanelButton>
               <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver cómo va quedando</PanelButton>
             </div>
@@ -219,6 +213,12 @@ export default async function InvitadosPage({
           closeHref={base}
           eventSlug={event.value.slug}
           groups={eleccionDeGrupos}
+          invitacion={{
+            id: personaCompleta.guestGroupId,
+            label: grupoDeLaPersona?.label ?? '',
+            revocada: grupoDeLaPersona?.revokedAt !== null && grupoDeLaPersona?.revokedAt !== undefined,
+            respondida: ultimas.has(personaCompleta.guestGroupId),
+          }}
           person={{
             id: personaCompleta.id,
             fullName: personaCompleta.fullName,
@@ -320,46 +320,10 @@ export default async function InvitadosPage({
           </PanelCard>
         )}
 
-        {/* Una sola tarjeta para las dos vistas de la misma lista. */}
-        <PanelCard
-          action={
-            <SegmentedTabs
-              current={vistaGrupos ? 'grupos' : 'personas'}
-              label="Vista de la lista de invitados"
-              segments={[
-                { key: 'personas', label: 'Personas', href: base, count: filasPersona.length },
-                { key: 'grupos', label: 'Grupos', href: `${base}?vista=grupos`, count: filas.length },
-              ]}
-            />
-          }
-          title="Invitados"
-        >
-          {vistaGrupos ? (
-            isErr(groups) ? (
-              <p className="text-[13px] text-danger" role="alert">
-                No pudimos leer los grupos. La base no responde; vuelve a intentarlo en un momento.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-4.5">
-                <p className="text-[12px] leading-[1.7] text-ink-soft">
-                  El grupo es quien tiene el enlace de invitación, los cupos y la mesa. Revocar un grupo deja su enlace
-                  sin abrir nada.
-                </p>
-                <GuestGroupTable
-                  eventSlug={event.value.slug}
-                  groups={filas}
-                  personasPorGrupo={Object.fromEntries(
-                    filas.map((fila) => [
-                      fila.id,
-                      filasPersona
-                        .filter((persona) => persona.groupId === fila.id)
-                        .map((persona) => ({ id: persona.id, fullName: persona.fullName, attending: persona.attending, vip: persona.vip })),
-                    ]),
-                  )}
-                />
-              </div>
-            )
-          ) : isErr(personas) ? (
+        {/* Se cargan invitados, no grupos: el grupo es el enlace que va por debajo y aquí
+            no se enseña (pedido por el usuario el 16 de septiembre). */}
+        <PanelCard title="Invitados">
+          {isErr(personas) ? (
             // Pintar «todavía no hay personas» cuando la lectura falló no es un error
             // invisible: es un error que **miente**. El atelier daría por vacía una
             // lista que existe.
@@ -368,7 +332,7 @@ export default async function InvitadosPage({
             </p>
           ) : filasPersona.length === 0 ? (
             <p className="text-[13px] text-ink-mute">
-              Todavía no hay personas cargadas. Un grupo sin personas sigue siendo válido: míralo en «Grupos».
+              Todavía no hay invitados. Añádelos con «+ Añadir invitado».
             </p>
           ) : (
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />

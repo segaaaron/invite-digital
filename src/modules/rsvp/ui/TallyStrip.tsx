@@ -3,8 +3,8 @@ import type { RsvpTally } from '../domain/tally'
 export function TallyStrip({ tally }: { tally: RsvpTally }) {
   const cifras = [
     { label: 'Cupos confirmados', value: `${tally.seatsConfirmed} / ${tally.seatsInvited}` },
-    { label: 'Grupos que respondieron', value: String(tally.groupsResponded) },
-    { label: 'Grupos pendientes', value: String(tally.groupsPending) },
+    { label: 'Invitaciones que respondieron', value: String(tally.groupsResponded) },
+    { label: 'Invitaciones pendientes', value: String(tally.groupsPending) },
   ] as const
 
   return (

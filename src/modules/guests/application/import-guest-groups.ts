@@ -3,7 +3,8 @@ import type { Minter } from '@/shared/security/tokens'
 import { guestError, type GuestError } from '../domain/errors'
 import { parseGuestCsv } from '../domain/csv-import'
 import { addGuestGroup, type GuestAllowance } from './add-guest-group'
-import type { GuestGroupRepository } from './ports'
+import { createPerson } from '../domain/person'
+import type { GuestGroupRepository, GuestPersonRepository } from './ports'
 
 export type ImportedRow = {
   readonly line: number
@@ -24,13 +25,13 @@ export type ImportReport = {
 /**
  * Crea de golpe los grupos de un CSV y devuelve **fila por fila** qué pasó con cada una.
  *
- * No hay transacción global a propósito: si el plan admite cuarenta grupos y el archivo
- * trae cincuenta, las cuarenta primeras quedan creadas y las diez últimas se rechazan con
- * su motivo. Deshacerlo todo por culpa de la fila cuarenta y uno obligaría a repetir el
- * trabajo entero.
+ * Si el plan admite cuarenta y el archivo trae cincuenta, las cuarenta primeras quedan
+ * creadas y las diez últimas se rechazan con su motivo: deshacerlo todo por culpa de la
+ * fila cuarenta y uno obligaría a repetir el trabajo entero. Un fallo de la base, en
+ * cambio, devuelve error y el contenedor deshace la transacción entera.
  */
 export const importGuestGroups =
-  (deps: { groups: GuestGroupRepository; minter: Minter; ids: () => string; clock: () => Date }) =>
+  (deps: { groups: GuestGroupRepository; people: GuestPersonRepository; minter: Minter; ids: () => string; clock: () => Date }) =>
   async (input: {
     eventId: string
     csv: string
@@ -69,7 +70,12 @@ export const importGuestGroups =
             continue
           }
 
-          if (fila.phone !== null) await deps.groups.setPhone(creado.value.group.id, fila.phone)
+          // La invitación entra con su invitado dentro, que se llama como la fila: una
+          // invitación vacía no aparece en la lista del panel y nadie sabría que existe.
+          const principal = createPerson({ id: deps.ids(), guestGroupId: creado.value.group.id, fullName: fila.label })
+          if (isErr(principal)) return principal
+          await deps.people.insert(principal.value)
+          if (fila.phone !== null) await deps.groups.setPhone(input.eventId, creado.value.group.id, fila.phone)
           cuantos += 1
           resultado.push({
             line: fila.line,

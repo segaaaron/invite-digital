@@ -1,5 +1,6 @@
 import { enExclusiva } from '@/shared/db/candado'
-import { db } from '@/shared/db/client'
+import { enTransaccion } from '@/shared/db/transaccion'
+import { db, type DbExecutor } from '@/shared/db/client'
 import { createClientShare, getLiveClientShare, resolveClientShare, revokeClientShare } from '@/modules/events/application/client-share-use-cases'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { randomBytes } from 'node:crypto'
@@ -42,13 +43,12 @@ import { addGuest } from '@/modules/guests/application/add-guest'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { importGuestGroups } from '@/modules/guests/application/import-guest-groups'
-import { markInvitationSent } from '@/modules/guests/application/mark-invitation-sent'
 import { resendInvitation } from '@/modules/guests/application/resend-invitation'
 import { addPerson, listPeopleByEvent, removePerson, updatePerson } from '@/modules/guests/application/person-use-cases'
-import { countPeopleByEvent, drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
+import { countPeopleByEvent, createDrizzleGuestPersonRepository, drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
-import { revokeInvitation } from '@/modules/guests/application/revoke-invitation'
-import { countGroupsByEvent, drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
+import { reopenRsvp, revokeInvitation } from '@/modules/guests/application/revoke-invitation'
+import { countGroupsByEvent, createDrizzleGuestGroupRepository, drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
 import { getInvitation } from '@/modules/rsvp/application/get-invitation'
 import { getEventStats } from '@/modules/rsvp/application/get-event-stats'
 import { getTally } from '@/modules/rsvp/application/get-tally'
@@ -266,57 +266,55 @@ export const events = {
   }),
 } as const
 
-// Fuera del objeto: `addGuest` los compone, y un objeto que se referencia a sí mismo
-// dentro de su propia definición no tiene tipo que TypeScript pueda inferir.
-const altaDeGrupo = addGuestGroup({ groups: drizzleGuestGroupRepository, minter, ids: () => crypto.randomUUID(), clock })
-
-const altaDePersona = addPerson({
-  groups: drizzleGuestGroupRepository,
-  people: drizzleGuestPersonRepository,
-  ids: () => crypto.randomUUID(),
-})
+/**
+ * Los repositorios de invitados atados a una conexión: la de siempre o la de una transacción.
+ * Lo que escribe más de una fila —alta, baja, mover, importar— corre en `enTransaccion`, que
+ * deshace también cuando el caso de uso devuelve un error: una invitación a medias, o vacía
+ * porque su última persona se fue y la baja de la invitación falló, no llega a la base.
+ */
+const invitadosEn = (database: DbExecutor) => {
+  const groups = createDrizzleGuestGroupRepository(database)
+  const people = createDrizzleGuestPersonRepository(database)
+  const ids = () => crypto.randomUUID()
+  const altaDeGrupo = addGuestGroup({ groups, minter, ids, clock })
+  const altaDePersona = addPerson({ groups, people, ids })
+  return {
+    groups,
+    addPerson: altaDePersona,
+    updatePerson: updatePerson({ groups, people }),
+    removePerson: removePerson({ groups, people }),
+    importCsv: importGuestGroups({ groups, people, minter, ids, clock }),
+    addGuest: addGuest({
+      addGroup: async (input) => {
+        const r = await altaDeGrupo(input)
+        return isErr(r) ? { ok: false, message: r.error.detail } : { ok: true, group: r.value.group, token: r.value.token }
+      },
+      setPhone: (eventId, groupId, phone) => groups.setPhone(eventId, groupId, phone),
+      addPerson: async (input) => {
+        const r = await altaDePersona(input)
+        return isErr(r) ? { ok: false, message: r.error.detail, kind: r.error.kind } : { ok: true }
+      },
+    }),
+  }
+}
 
 export const guests = {
-  add: altaDeGrupo,
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
-  /** Cuántos grupos, sin traerlos: el tope del plan se cuenta en grupos. */
+  /** Cuántas invitaciones, sin traerlas: el tope del plan se cuenta en invitaciones. */
   contar: (eventId: string) => countGroupsByEvent(db, eventId),
   /** Cuántas personas, para la insignia de «Invitados» de la barra. */
   contarPersonas: (eventId: string) => countPeopleByEvent(eventId),
-  revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
-  // El alta de invitado de la maqueta: grupo —nuevo o existente—, persona, acompañantes,
-  // teléfono y correo, en una sola pantalla. Compone los casos de uso que ya existen en
-  // vez de duplicar sus reglas: el tope del plan y el cupo del grupo siguen viviendo
-  // donde vivían.
-  addGuest: addGuest({
-    addGroup: async (input) => {
-      const r = await altaDeGrupo(input)
-      return isErr(r) ? { ok: false, message: r.error.detail } : { ok: true, group: r.value.group, token: r.value.token }
-    },
-    findGroup: (id) => drizzleGuestGroupRepository.findById(id),
-    removeGroup: (id) => drizzleGuestGroupRepository.remove(id),
-    setPhone: (id, phone) => drizzleGuestGroupRepository.setPhone(id, phone),
-    addPerson: async (input) => {
-      const r = await altaDePersona(input)
-      return isErr(r) ? { ok: false, message: r.error.detail, kind: r.error.kind } : { ok: true }
-    },
-  }),
-  addPerson: altaDePersona,
-  updatePerson: updatePerson({ people: drizzleGuestPersonRepository, groups: drizzleGuestGroupRepository }),
-  removePerson: removePerson({ people: drizzleGuestPersonRepository }),
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
-  markSent: markInvitationSent({ groups: drizzleGuestGroupRepository, clock }),
+  revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
+  reopenRsvp: reopenRsvp({ groups: drizzleGuestGroupRepository, clock }),
   resend: resendInvitation({ groups: drizzleGuestGroupRepository, minter, clock }),
-  importCsv: importGuestGroups({
-    groups: drizzleGuestGroupRepository,
-    minter,
-    ids: () => crypto.randomUUID(),
-      clock,
-  }),
-  setPhone: (id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(id, phone),
-  /** Permitir corregir: ese grupo puede contestar una vez más. */
-  reopenRsvp: (id: string) => drizzleGuestGroupRepository.reopenRsvp(id, clock()),
+  setPhone: (eventId: string, id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(eventId, id, phone),
+  addGuest: (input: Parameters<ReturnType<typeof invitadosEn>['addGuest']>[0]) => enTransaccion((tx) => invitadosEn(tx).addGuest(input)),
+  addPerson: (input: Parameters<ReturnType<typeof invitadosEn>['addPerson']>[0]) => enTransaccion((tx) => invitadosEn(tx).addPerson(input)),
+  updatePerson: (input: Parameters<ReturnType<typeof invitadosEn>['updatePerson']>[0]) => enTransaccion((tx) => invitadosEn(tx).updatePerson(input)),
+  removePerson: (input: Parameters<ReturnType<typeof invitadosEn>['removePerson']>[0]) => enTransaccion((tx) => invitadosEn(tx).removePerson(input)),
+  importCsv: (input: Parameters<ReturnType<typeof invitadosEn>['importCsv']>[0]) => enTransaccion((tx) => invitadosEn(tx).importCsv(input)),
 } as const
 
 export const rsvp = {
@@ -332,8 +330,8 @@ export const rsvp = {
     resolveGroup: (token) => guests.resolveByToken(token),
     findEventById: (id) => events.getByIdUnscoped(id),
     peopleOf: (guestGroupId) => drizzleGuestPersonRepository.listByGroup(guestGroupId),
-    setAttendance: async (personId, attending) => {
-      await guests.updatePerson({ id: personId, attending })
+    setAttendance: async (eventId, personId, attending) => {
+      await guests.updatePerson({ eventId, id: personId, attending })
     },
     rsvp: drizzleRsvpRepository,
     ids: () => crypto.randomUUID(),

@@ -17,7 +17,7 @@ describe('EventStats', () => {
     render(<EventStats stats={stats(CUATRO)} />)
 
     expect(screen.getByText(/^4$/)).toBeInTheDocument()
-    expect(screen.getByText(/grupos invitados/i)).toBeInTheDocument()
+    expect(screen.getByText(/invitaciones enviadas/i)).toBeInTheDocument()
     expect(screen.getByText(/respondieron/i)).toBeInTheDocument()
     expect(screen.getByText(/confirmaron/i)).toBeInTheDocument()
   })
@@ -30,7 +30,7 @@ describe('EventStats', () => {
   it('es el embudo de la maqueta: invitados, respondieron y confirmaron', () => {
     render(<EventStats stats={stats(CUATRO)} />)
 
-    expect(screen.getByText('Grupos invitados')).toBeInTheDocument()
+    expect(screen.getByText('Invitaciones enviadas')).toBeInTheDocument()
     expect(screen.getByText('Respondieron')).toBeInTheDocument()
     expect(screen.getByText('Confirmaron')).toBeInTheDocument()
   })

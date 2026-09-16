@@ -46,7 +46,7 @@ export function DoorModeCard({ href }: { href: string }) {
               <li>Abre esta pantalla en el celular o la tablet de la puerta y déjala encendida.</li>
               <li>Apunta al QR del pase: se registra al leerlo, sin pulsar nada.</li>
               <li>Sin red sigue funcionando: los escaneos se guardan y suben solos al volver la señal.</li>
-              <li>La tarjeta verde canta el número de mesa del grupo.</li>
+              <li>La tarjeta verde canta el número de mesa del invitado.</li>
             </ul>
           </details>
 

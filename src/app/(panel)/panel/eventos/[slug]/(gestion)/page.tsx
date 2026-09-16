@@ -2,14 +2,14 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { bloquesConDatos } from '@/modules/events'
+import { loQueFaltaParaInvitar } from '@/modules/events'
 import { avanceDeTareas, estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar, totalesDelPresupuesto } from '@/modules/planner'
 import { buildWhatsAppLink } from '@/modules/leads'
 import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
 import { fecha as diaCorto } from '@/shared/format/fecha'
 import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
-import type { GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
+import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
 import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -40,7 +40,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
    * cuando los cuatro están hechos.
    */
   const contenidoDelEvento = await events.contentFor(event.value.id, {})
-  const bloquesEscritos = bloquesConDatos(contenidoDelEvento)
+  const invitacionLista = loQueFaltaParaInvitar(contenidoDelEvento).length === 0
 
   const groups = await guests.list(event.value.id)
   // Las últimas respuestas, en una sola consulta. Una por grupo y en serie convertía el
@@ -94,7 +94,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       ? []
       : puerta.value.arrivals.map((llegada) => ({
           at: llegada.arrivedAt,
-          actor: puerta.value.groups.find((g) => g.id === llegada.guestGroupId)?.label ?? 'Un grupo',
+          actor: puerta.value.groups.find((g) => g.id === llegada.guestGroupId)?.label ?? 'Un invitado',
           action: 'llegó al evento',
         }))
 
@@ -198,14 +198,14 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         const pasos = [
           {
             titulo: 'Escribe tu invitación',
-            hecho: bloquesEscritos > 0,
+            hecho: invitacionLista,
             detalle: 'Los nombres, la fecha, el lugar y la frase. Es lo que verán tus invitados.',
             href: `/panel/eventos/${event.value.slug}/configuracion`,
             accion: 'Escribirla',
           },
           {
             titulo: 'Mírala antes de repartirla',
-            hecho: bloquesEscritos > 0,
+            hecho: invitacionLista,
             detalle: 'Se abre igual que en el teléfono de un invitado.',
             href: `/panel/eventos/${event.value.slug}/vista-previa`,
             accion: 'Ver la invitación',
@@ -220,7 +220,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           {
             titulo: 'Carga a tus invitados y reparte',
             hecho: filas.length > 0,
-            detalle: 'Un grupo por familia, con sus cupos. Cada uno recibe su propio enlace.',
+            detalle: 'Cada invitado recibe su enlace; sus acompañantes entran con el mismo.',
             href: `/panel/eventos/${event.value.slug}/invitados`,
             accion: 'Ir a invitados',
           },
@@ -355,7 +355,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  {['Nombre', 'Grupo', 'RSVP', 'Acompañantes', 'Mesa'].map((columna) => (
+                  {['Nombre', 'Invitación', 'RSVP', 'Acompañantes', 'Mesa'].map((columna) => (
                     <th
                       key={columna}
                       className="border-b border-line-panel px-3.5 py-3 text-left font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
@@ -468,7 +468,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   href: `/panel/eventos/${event.value.slug}/invitados?panel=envio`,
                   icon: '✉',
                   t: 'Recordar pendientes',
-                  d: `${pendientes} grupo${pendientes === 1 ? '' : 's'} sin responder`,
+                  d: `${pendientes} invitaci${pendientes === 1 ? 'ón' : 'ones'} sin responder`,
                 },
                 {
                   href: `/panel/eventos/${event.value.slug}/configuracion`,

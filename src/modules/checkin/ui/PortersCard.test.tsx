@@ -53,6 +53,6 @@ describe('PortersCard', () => {
 
   it('dice cuántos grupos registró cada portero y a qué hora el último', () => {
     render(<PortersCard {...base} porteros={[{ ...portero, registradas: 12, ultima: '23:40' }]} />)
-    expect(screen.getByText(/12 grupos registrados · el último a las 23:40/)).toBeInTheDocument()
+    expect(screen.getByText(/12 invitaciones registradas · el último a las 23:40/)).toBeInTheDocument()
   })
 })

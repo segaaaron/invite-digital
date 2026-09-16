@@ -36,7 +36,7 @@ export function ImportPanel({
             className={`${FIELD_CLASS} min-h-[120px] font-mono text-[12px]`}
             name="csv"
             placeholder={'Familia Rojas Peña;4;+59170011122\nAna Lucía Vega;2;'}
-            title="Una fila por grupo: etiqueta, número de cupos y teléfono opcional"
+            title="Una fila por invitación: nombre, número de cupos y teléfono opcional"
             required
           />
         </label>
@@ -61,7 +61,7 @@ export function ImportPanel({
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr>
-                  {['Línea', 'Grupo', 'Cupos', 'Resultado'].map((titulo) => (
+                  {['Línea', 'Invitación', 'Cupos', 'Resultado'].map((titulo) => (
                     <th
                       key={titulo}
                       className="border-b border-line-panel py-3 pr-3 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"

@@ -43,7 +43,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   // Uno se sienta a mano.
   const mesa01 = page.locator('article').filter({ hasText: 'Mesa 01' })
   // Elegir es sentar: el diseño no tiene botón aparte.
-  await mesa01.getByLabel('Grupo a sentar en Mesa 01').selectOption({ label: 'Familia Rojas Peña · 4' })
+  await mesa01.getByLabel('Invitación a sentar en Mesa 01').selectOption({ label: 'Familia Rojas Peña · 4' })
   await expect(mesa01).toContainText('4 / 8')
 
   // El resto lo reparte la auto-asignación.
@@ -60,7 +60,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   // Esperar a que la puerta esté montada antes de teclear: el escucha de teclado que
   // atiende al lector de códigos lo engancha React al hidratar, y teclear antes se
   // pierde en el vacío. Sin esta espera la prueba falla de forma reproducible.
-  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('0')
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('0')
   await page.keyboard.type(token)
   await page.keyboard.press('Enter')
 

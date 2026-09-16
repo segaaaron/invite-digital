@@ -17,12 +17,16 @@ vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 // y la e2e con dos usuarios de verdad.
 vi.mock('@/app/_acciones/sesion', () => ({
   requireSession: () => requireSession(),
-  requireEventAccess: async () => {},
+  requireEventAccess: async () => 'e1',
 }))
 const importCsv = vi.fn()
 const listGroups = vi.fn()
 const allowanceFor = vi.fn()
 const requireFeature = vi.fn()
+const addGuest = vi.fn()
+const resend = vi.fn()
+const INVITACION_LISTA = { hero: { nameA: 'Camila' }, schedule: { startsAt: '2026-10-18T20:00' }, reception: { place: 'Los Ceibos' } }
+const contentFor = vi.fn()
 
 vi.mock('@/app/composition/container', () => ({
   guests: {
@@ -30,7 +34,10 @@ vi.mock('@/app/composition/container', () => ({
     list: (...args: unknown[]) => listGroups(...args),
     add: vi.fn(),
     importCsv: (...args: unknown[]) => importCsv(...args),
+    addGuest: (...args: unknown[]) => addGuest(...args),
+    resend: (...args: unknown[]) => resend(...args),
   },
+  events: { contentFor: (...args: unknown[]) => contentFor(...args) },
   plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: (...args: unknown[]) => requireFeature(...args) },
 }))
 
@@ -45,6 +52,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   requireSession.mockResolvedValue({ userId: 'u1' })
   requireFeature.mockResolvedValue(ok({}))
+  contentFor.mockResolvedValue(INVITACION_LISTA)
 })
 
 describe('revokeInvitationAction', () => {
@@ -53,6 +61,15 @@ describe('revokeInvitationAction', () => {
     const { revokeInvitationAction } = await import('@/app/_acciones/guests/actions')
 
     expect(await revokeInvitationAction({ status: 'idle' }, form())).toEqual({ status: 'success' })
+  })
+
+  it('revoca en el evento que abrió la guardia, no en el que diga el identificador', async () => {
+    revoke.mockResolvedValue(ok(undefined))
+    const { revokeInvitationAction } = await import('@/app/_acciones/guests/actions')
+
+    await revokeInvitationAction({ status: 'idle' }, form())
+
+    expect(revoke).toHaveBeenCalledWith({ eventId: 'e1', id: 'g1' })
   })
 
   it('si el caso de uso rechaza, la acción devuelve el error en vez de callárselo', async () => {
@@ -145,5 +162,52 @@ describe('importGuestsAction y el tope del plan', () => {
     expect(estado.status).toBe('error')
     expect(requireFeature).toHaveBeenCalledWith('e1', 'csvImport')
     expect(importCsv).not.toHaveBeenCalled()
+  })
+})
+
+/**
+ * Sin la invitación escrita no se invita a nadie. El botón apagado es cortesía: cada acción
+ * es un extremo HTTP público, y el corte vive aquí.
+ */
+describe('no se invita con la invitación sin escribir', () => {
+  const INCOMPLETA = { hero: { nameA: 'Camila' } }
+
+  it('el alta de invitado se corta y dice qué falta', async () => {
+    contentFor.mockResolvedValue(INCOMPLETA)
+    allowanceFor.mockResolvedValue(ok({ maxGuestGroups: null }))
+    listGroups.mockResolvedValue(ok([]))
+    const { addGuestAction } = await import('@/app/_acciones/guests/actions')
+    const fd = new FormData()
+    fd.set('eventId', 'e1')
+    fd.set('eventSlug', 'boda')
+    fd.set('fullName', 'Yasmin')
+
+    const estado = await addGuestAction({ status: 'idle', message: '' }, fd)
+
+    expect(estado.status).toBe('error')
+    expect(estado.message).toMatch(/la fecha y la hora/i)
+    expect(addGuest).not.toHaveBeenCalled()
+  })
+
+  it('importar tampoco', async () => {
+    contentFor.mockResolvedValue({})
+    allowanceFor.mockResolvedValue(ok({ maxGuestGroups: null }))
+    listGroups.mockResolvedValue(ok([]))
+    const { importGuestsAction } = await import('@/app/_acciones/guests/actions')
+    const fd = new FormData()
+    fd.set('eventId', 'e1')
+    fd.set('eventSlug', 'boda')
+    fd.set('csv', 'Familia Rojas;4')
+
+    expect((await importGuestsAction({ status: 'idle' }, fd)).status).toBe('error')
+    expect(importCsv).not.toHaveBeenCalled()
+  })
+
+  it('ni preparar un enlace para mandarlo', async () => {
+    contentFor.mockResolvedValue({})
+    const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
+
+    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('error')
+    expect(resend).not.toHaveBeenCalled()
   })
 })

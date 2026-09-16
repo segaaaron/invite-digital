@@ -19,7 +19,6 @@ async function crearGrupo(page: Page, etiqueta: string, acompanantes = 1): Promi
   await page.getByLabel('Nombre completo').fill(etiqueta)
   await añadirAcompanantes(page, acompanantes)
   await page.getByRole('button', { name: 'Guardar' }).click()
-  await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
   await page.waitForURL(/invitados$/)
 }
 
@@ -43,7 +42,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   // 2. En el tope, el aviso cambia de tono y el botón de guardar queda deshabilitado.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
   await page.getByLabel('Tipo de invitación').selectOption('personal')
-  await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
+  await expect(page.getByText('El plan no admite más invitaciones')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Guardar' })).toBeDisabled()
 
   // 3. Y ahora lo que importa: se desactiva el guardia del navegador y se manda el
@@ -57,7 +56,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   })
   await page.getByRole('button', { name: 'Guardar' }).click()
 
-  await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
+  await expect(page.getByText('El plan no admite más invitaciones')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Familia Colada', exact: true })).toBeHidden()
 
   // La base es el testigo, no la pantalla: siguen siendo dos.

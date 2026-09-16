@@ -4,7 +4,7 @@ import { isErr, isOk } from '@/shared/result'
 import type { EventInput } from '../domain/event'
 import type { EventRepository } from './ports'
 import type { StaffReader } from './ports'
-import { getEventByIdFor, getEventFor, listEventsFor } from './tenancy'
+import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor } from './tenancy'
 
 /** Nadie pertenece a nada salvo donde la prueba lo diga. */
 const sinPersonal: StaffReader = { membershipsOf: async () => [], eventIdsOf: async () => [] }
@@ -193,3 +193,26 @@ describe('el equipo del evento', () => {
   })
 })
 
+
+describe('actorCanTouchEvent', () => {
+  const tocar = actorCanTouchEvent({ events: repo(), staff: sinPersonal })
+
+  it('devuelve el id del evento que abre, para que la acción filtre por él', async () => {
+    expect(await tocar(ana, { eventSlug: 'boda-de-ana' })).toBe('e1')
+    expect(await tocar(ana, { eventId: 'e1' })).toBe('e1')
+  })
+
+  it('el evento ajeno no abre', async () => {
+    expect(await tocar(ana, { eventSlug: 'boda-de-beto' })).toBeNull()
+  })
+
+  it('un id y un slug de dos eventos distintos no abren, aunque los dos sean suyos', async () => {
+    // Sin esto la acción comprobaría un evento y escribiría en el otro.
+    const deps = { events: repo(), staff: perteneceA('e2', 'u1', 'planner') }
+    expect(await actorCanTouchEvent(deps)(ana, { eventId: 'e2', eventSlug: 'boda-de-ana', section: 'cliente' })).toBeNull()
+  })
+
+  it('sin referencia no abre nada', async () => {
+    expect(await tocar(ana, {})).toBeNull()
+  })
+})

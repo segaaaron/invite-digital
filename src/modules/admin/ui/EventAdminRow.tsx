@@ -112,7 +112,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
             {event.grupos === 0 ? (
               <span className="flex flex-col justify-center">
                 <span className={LABEL_CLASS}>Invitados</span>
-                <span className="text-[13px] text-ink-mute">Todavía sin grupos de invitados</span>
+                <span className="text-[13px] text-ink-mute">Todavía sin invitaciones</span>
               </span>
             ) : (
               <span className="flex flex-col gap-1.5">
@@ -131,7 +131,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
                   <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(event.respondidos / event.grupos) * 100}%` }} />
                 </span>
                 <span className="flex justify-between font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
-                  <span>{event.grupos} grupos</span>
+                  <span>{event.grupos} invitaciones</span>
                   <span>{event.enviados} enviados</span>
                   <span>{event.respondidos} respondieron</span>
                 </span>

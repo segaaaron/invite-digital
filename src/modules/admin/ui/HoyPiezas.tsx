@@ -134,11 +134,11 @@ export function ProximaFila({ boda }: { boda: Proxima }) {
             {SEMANA.format(fecha)} · {boda.dias === 0 ? 'hoy' : boda.dias === 1 ? 'mañana' : `en ${boda.dias} días`}
           </span>
           {porcentaje === null ? (
-            <span className="text-[11px] text-danger">Sin grupos de invitados cargados</span>
+            <span className="text-[11px] text-danger">Sin invitados cargados</span>
           ) : (
             <span className="flex items-center gap-2.5">
               <span
-                aria-label={`${boda.respondidos} de ${boda.grupos} grupos respondieron`}
+                aria-label={`${boda.respondidos} de ${boda.grupos} invitaciones respondieron`}
                 className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg-sunken"
                 role="img"
               >

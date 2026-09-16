@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
-import { setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
+import { addPersonAction, reopenRsvpAction, setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
+import { RevokeInvitationForm } from './RevokeInvitationForm'
 
 export type EditablePerson = {
   readonly id: string
@@ -23,7 +24,15 @@ export type EditablePerson = {
 export type GroupChoice = {
   readonly id: string
   readonly label: string
-  readonly free: number
+}
+
+/** La invitación de la persona: el enlace, que es lo que se revoca y lo que se reabre. */
+export type InvitationOfPerson = {
+  readonly id: string
+  readonly label: string
+  readonly revocada: boolean
+  /** Ya contestó: solo entonces hay algo que reabrir. */
+  readonly respondida: boolean
 }
 
 /** Vacío es «no hay dato», no una cadena en blanco que luego el catering agruparía. */
@@ -37,18 +46,24 @@ const oNulo = (valor: string): string | null => (valor.trim() === '' ? null : va
  * guardar revalida el árbol y remonta la tabla, y un `useState` se perdería en ese
  * remontaje —es lo que ya pasó con el conmutador de la mesa de regalos—.
  *
- * El teléfono es el único campo que no es de la persona: pertenece al grupo, que es quien
- * recibe el enlace. Solo se manda si cambió, para no reescribir el del grupo entero cada
- * vez que alguien corrige una restricción alimentaria.
+ * El teléfono es el único campo que no es de la persona: pertenece a la invitación, que es
+ * quien recibe el enlace. Solo se manda si cambió.
+ *
+ * Debajo, lo que es de su invitación: sumarle un acompañante, reabrir la confirmación si
+ * se equivocaron al contestar y revocar el enlace. Principal o acompañante no se elige: lo
+ * decide la invitación, y elegirlo a mano dejaba invitaciones con dos principales o sin
+ * ninguno.
  */
 export function EditPersonDialog({
   person,
   groups,
+  invitacion,
   eventSlug,
   closeHref,
 }: {
   person: EditablePerson
   groups: readonly GroupChoice[]
+  invitacion: InvitationOfPerson
   eventSlug: string
   closeHref: string
 }) {
@@ -56,12 +71,13 @@ export function EditPersonDialog({
   const dialogo = useRef<HTMLDialogElement>(null)
   const [fullName, setFullName] = useState(person.fullName)
   const [groupId, setGroupId] = useState(person.groupId)
-  const [isCompanion, setIsCompanion] = useState(person.isCompanion)
   const [attending, setAttending] = useState<string>(person.attending ?? '')
   const [dietaryNote, setDietaryNote] = useState(person.dietaryNote ?? '')
   const [phone, setPhone] = useState(person.phone ?? '')
   const [email, setEmail] = useState(person.email ?? '')
   const [vip, setVip] = useState(person.vip)
+  const [acompanante, setAcompanante] = useState('')
+  const [aviso, setAviso] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [pendiente, empezar] = useTransition()
 
@@ -97,7 +113,6 @@ export function EditPersonDialog({
         id: person.id,
         fullName: fullName.trim(),
         guestGroupId: groupId,
-        isCompanion,
         attending: attending === '' ? null : attending,
         dietaryNote: oNulo(dietaryNote),
         email: oNulo(email),
@@ -115,12 +130,23 @@ export function EditPersonDialog({
           phone: phone.trim(),
         })
         if (t.status === 'error') {
-          setError(t.message ?? 'Se guardó el invitado, pero no el teléfono del grupo.')
+          setError(t.message ?? 'Se guardó el invitado, pero no su teléfono.')
           return
         }
       }
 
       cerrar()
+    })
+  }
+
+  /** Lo de la invitación se guarda al pulsar, sin «Guardar»: no es un campo de la persona. */
+  const enInvitacion = (hacer: () => Promise<{ status: string; message?: string }>, hecho: string) => {
+    setError(null)
+    setAviso(null)
+    empezar(async () => {
+      const r = await hacer()
+      if (r.status === 'error') setError(r.message ?? 'No se pudo guardar el cambio.')
+      else setAviso(hecho)
     })
   }
 
@@ -151,28 +177,17 @@ export function EditPersonDialog({
           />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor={idGrupo} label="Grupo">
+        <div>
+          <Field htmlFor={idGrupo} label="Invitación">
             <select className={FIELD_CLASS} id={idGrupo} onChange={(e) => setGroupId(e.target.value)} value={groupId}>
               {groups.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.label} · {g.free} libre{g.free === 1 ? '' : 's'}
+                  {g.label}
                 </option>
               ))}
             </select>
           </Field>
 
-          <Field htmlFor={idAcomp} label="Acompañante">
-            <select
-              className={FIELD_CLASS}
-              id={idAcomp}
-              onChange={(e) => setIsCompanion(e.target.value === 'si')}
-              value={isCompanion ? 'si' : 'no'}
-            >
-              <option value="no">Invitado principal</option>
-              <option value="si">Acompañante</option>
-            </select>
-          </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -232,6 +247,63 @@ export function EditPersonDialog({
           Invitado VIP
         </label>
       </div>
+
+      <section aria-labelledby={`${idAcomp}-titulo`} className="mt-6 flex flex-col gap-3 border-t border-line-panel pt-5">
+        <h3 className="font-display text-[18px] italic" id={`${idAcomp}-titulo`}>
+          Su invitación
+        </h3>
+
+        <div className="flex min-w-0 gap-2">
+          <label className="sr-only" htmlFor={idAcomp}>
+            Nombre del acompañante nuevo
+          </label>
+          <input
+            className={`${FIELD_CLASS} min-w-0 flex-1`}
+            id={idAcomp}
+            maxLength={160}
+            onChange={(e) => setAcompanante(e.target.value)}
+            placeholder="Nombre del acompañante"
+            type="text"
+            value={acompanante}
+          />
+          <PanelButton
+            disabled={pendiente || acompanante.trim() === ''}
+            onClick={() =>
+              enInvitacion(async () => {
+                const r = await addPersonAction({ eventSlug, guestGroupId: invitacion.id, fullName: acompanante.trim() })
+                if (r.status === 'success') setAcompanante('')
+                return r
+              }, 'Acompañante añadido.')
+            }
+          >
+            Añadir acompañante
+          </PanelButton>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          {invitacion.respondida ? (
+            <PanelButton
+              disabled={pendiente}
+              onClick={() => enInvitacion(() => reopenRsvpAction({ eventSlug, id: invitacion.id }), 'Puede volver a confirmar desde su enlace.')}
+            >
+              Reabrir confirmación
+            </PanelButton>
+          ) : (
+            <span />
+          )}
+          {invitacion.revocada ? (
+            <span className="text-[12px] text-ink-mute">Enlace revocado: ya no abre.</span>
+          ) : (
+            <RevokeInvitationForm eventSlug={eventSlug} groupId={invitacion.id} />
+          )}
+        </div>
+
+        {aviso === null ? null : (
+          <p className="text-[13px] text-ink-soft" role="status">
+            {aviso}
+          </p>
+        )}
+      </section>
 
       {error === null ? null : (
         <p className="mt-4 text-[13px] text-danger" role="alert">

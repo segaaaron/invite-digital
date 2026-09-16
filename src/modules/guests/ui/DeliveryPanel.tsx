@@ -74,12 +74,12 @@ export function DeliveryPanel({
       {sinContenido && !borrador ? (
         <div className="flex flex-col gap-2 rounded-[14px] border border-gold/50 bg-gold/10 p-4" role="alert">
           <p className="text-[13.5px] leading-[1.6] text-ink">
-            <strong className="font-medium">Tu invitación está en blanco.</strong> Escríbela antes de repartir enlaces: quien abra el suyo
-            vería una página sin nombres ni fecha.
+            <strong className="font-medium">Tu invitación está sin terminar.</strong> Termínala antes de repartir enlaces: quien abra el
+            suyo no sabría de quién es, cuándo ni dónde.
           </p>
           <p className="text-[13px]">
             <Link className="text-gold-deep underline underline-offset-4" href={`/panel/eventos/${eventSlug}/configuracion`}>
-              Escribir mi invitación
+              Terminar mi invitación
             </Link>
           </p>
         </div>
@@ -108,8 +108,8 @@ export function DeliveryPanel({
       {/* Dos pasos, y el segundo lo da una persona: nada sale solo de aquí. */}
       <ol className="flex flex-col gap-1.5 rounded-[14px] bg-bg-top px-4 py-3 text-[12.5px] leading-[1.6] text-ink-soft">
         <li>
-          <strong className="font-medium text-ink">1. Prepara el enlace</strong> de un grupo. Cada familia tiene el suyo, con su nombre y sus
-          cupos.
+          <strong className="font-medium text-ink">1. Prepara el enlace</strong> de cada invitado. Quien va acompañado comparte el suyo con sus
+          acompañantes.
         </li>
         <li>
           <strong className="font-medium text-ink">2. Mándaselo tú</strong>, por WhatsApp desde aquí o copiándolo. El sistema no escribe a

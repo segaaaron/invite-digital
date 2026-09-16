@@ -186,18 +186,24 @@ function lugar(valor: unknown): PlaceBlock | undefined {
  * que revienta entera porque un bloque está mal es peor que una invitación sin ese bloque,
  * y quien está al otro lado vino a mirar una invitación, no un panel.
  */
+const escrito = (valor: string | undefined): boolean => valor !== undefined && valor.trim() !== ''
+
 /**
- * Cuántos bloques del contenido tienen algo escrito.
+ * Lo que le falta a la invitación para poder invitar a alguien, dicho para el atelier.
  *
- * Es lo que decide si una invitación está empezada: repartir enlaces de una invitación en
- * blanco es mandar a las familias una página vacía con su nombre.
+ * Quién, cuándo y dónde: los nombres de la portada, la fecha y hora, y el lugar de la
+ * recepción. Los dieciséis diseños los pintan y ninguno los deja fuera (`sinCampos`). Sin
+ * ellos, el invitado abre una invitación que no dice de quién es, cuándo ni dónde.
+ *
+ * Se mira **el dato**, no el bloque: antes bastaba con un bloque cualquiera con texto, y una
+ * frase escrita dejaba cargar invitados con la invitación sin fecha ni lugar.
  */
-export function bloquesConDatos(content: InvitationContent): number {
-  return Object.values(content).filter((bloque) => {
-    if (bloque === undefined || bloque === null) return false
-    if (Array.isArray(bloque)) return bloque.length > 0
-    return Object.values(bloque as Record<string, unknown>).some((v) => typeof v === 'string' && v.trim() !== '')
-  }).length
+export function loQueFaltaParaInvitar(content: InvitationContent): readonly string[] {
+  return [
+    escrito(content.hero?.nameA) ? null : 'Los nombres de la portada',
+    escrito(content.schedule?.startsAt) ? null : 'La fecha y la hora',
+    escrito(content.reception?.place) ? null : 'El lugar de la recepción',
+  ].filter((falta): falta is string => falta !== null)
 }
 
 export function parseInvitationContent(crudo: unknown): InvitationContent {

@@ -358,6 +358,13 @@
       "when": 1789570000000,
       "tag": "0051_rsvp_reabierto",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1789580000000,
+      "tag": "0052_invitaciones_sin_vacias",
+      "breakpoints": true
     }
   ]
 }

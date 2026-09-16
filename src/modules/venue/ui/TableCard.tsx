@@ -222,12 +222,12 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
         <p className="text-[12px] text-ink-mute">Sin sitios libres.</p>
       ) : caben.length === 0 ? (
         <p className="text-[12px] text-ink-mute">
-          {unseated.length === 0 ? 'Nadie pendiente de sentar.' : `Ningún grupo pendiente cabe en los ${table.free} sitios que quedan.`}
+          {unseated.length === 0 ? 'Nadie pendiente de sentar.' : `Ninguna invitación pendiente cabe en los ${table.free} sitios que quedan.`}
         </p>
       ) : (
         <div className="flex items-center gap-2">
           <label className="sr-only" htmlFor={`sentar-${table.id}`}>
-            Grupo a sentar en {table.label}
+            Invitación a sentar en {table.label}
           </label>
           {/* Elegir **es** sentar, como en la maqueta: el botón aparte era un paso de más
               en la pantalla donde se reparte el salón entero grupo a grupo. */}

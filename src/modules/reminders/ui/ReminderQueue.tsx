@@ -51,7 +51,7 @@ export function ReminderQueue({
   if (rows.length === 0) {
     return (
       <p className="text-[13px] text-ink-mute">
-        Nadie por recordar hoy. Los grupos vuelven a aparecer aquí solos cuando toque.
+        Nadie por recordar hoy. Vuelven a aparecer aquí solos cuando toque.
       </p>
     )
   }

@@ -50,18 +50,15 @@ test.describe('el panel del cliente', () => {
   })
 
   test('ve sus invitados', async () => {
-    // Con el parámetro, no pulsando la pestaña: la vista por defecto es la de personas y
-    // la etiqueta del grupo solo se pinta en la de grupos. Es la regla de la casa — las
-    // e2e navegan al estado que quieren mirar en vez de depender de un clic previo.
-    await page.goto(`/panel/eventos/${SLUG}/invitados?vista=grupos`)
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
-    await expect(page.getByText('Familia Vargas')).toBeVisible()
+    await expect(page.getByRole('cell', { name: 'Rosa Vargas', exact: true })).toBeVisible()
   })
 
   test('y el recuento de su lista', async () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
-    await expect(page.getByText('1 grupos · 3 cupos')).toBeVisible()
+    await expect(page.getByText('1 invitados en total')).toBeVisible()
   })
 
   test('abre su planner y suma una tarea propia', async () => {

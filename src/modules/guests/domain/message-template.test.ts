@@ -12,6 +12,15 @@ describe('renderMessage', () => {
     expect(texto).toBe('Familia Rojas Peña, su invitación: https://x.bo/i/abc')
   })
 
+  it('{nombre} es el nombre de la invitación, y {grupo} sigue valiendo en las plantillas ya guardadas', () => {
+    expect(renderMessage({ template: 'Hola {nombre}: {enlace}', locale: 'es', groupLabel: 'Ana Vega', url: 'u' })).toBe('Hola Ana Vega: u')
+    expect(renderMessage({ template: 'Hola {grupo}: {enlace}', locale: 'es', groupLabel: 'Ana Vega', url: 'u' })).toBe('Hola Ana Vega: u')
+  })
+
+  it('la plantilla por defecto no habla de grupos', () => {
+    expect(renderMessage({ template: null, locale: 'es', groupLabel: 'Ana', url: 'u' })).not.toContain('{')
+  })
+
   it('sin plantilla usa la del idioma del evento', () => {
     expect(renderMessage({ template: null, locale: 'en', groupLabel: 'Ana', url: 'u' })).toContain('Hello Ana')
     expect(renderMessage({ template: '   ', locale: 'es', groupLabel: 'Ana', url: 'u' })).toContain('Hola Ana')

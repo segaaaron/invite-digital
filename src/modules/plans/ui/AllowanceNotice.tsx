@@ -31,7 +31,7 @@ export function AllowanceNotice({
   if (!canAddGroup(maxGuestGroups, currentGroups)) {
     return (
       <p className="rounded-[14px] border border-gold-deep px-5 py-4 text-[13px] text-gold-deep" role="alert">
-        El plan no admite más grupos de invitados: son {maxGuestGroups} y ya están todos. {enlace} para seguir añadiendo.
+        El plan no admite más invitaciones: son {maxGuestGroups} y ya están todos. {enlace} para seguir añadiendo.
       </p>
     )
   }
@@ -44,7 +44,7 @@ export function AllowanceNotice({
 
   return (
     <p className="rounded-[14px] border border-line px-5 py-4 text-[13px] text-ink-mute" role="status">
-      Quedan {quedan} grupo{quedan === 1 ? '' : 's'} de los {maxGuestGroups} del plan. {enlace} si necesitas más.
+      Quedan {quedan} invitaci{quedan === 1 ? 'ón' : 'ones'} de las {maxGuestGroups} del plan. {enlace} si necesitas más.
     </p>
   )
 }

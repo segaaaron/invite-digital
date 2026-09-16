@@ -1,4 +1,5 @@
 import postgres from 'postgres'
+import { INVITACION_MINIMA } from './invitacion-minima'
 
 // Conexión propia de este archivo, como el resto de fixtures: cada uno cierra la suya en
 // su `afterAll`, y el módulo es el mismo para todo el worker.
@@ -29,6 +30,8 @@ export async function seedPlanEvent(slug: string, maxGuestGroups: number): Promi
     values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Boda ${slug}`}, '2027-06-12', '2027-06-01', 'es', 'clasico', 'live', ${plan!.id})
     returning id
   `
+
+  await sql`insert into event_content (event_id, blocks) values (${event!.id}, ${sql.json(INVITACION_MINIMA)})`
 
   return { eventId: event!.id, planId: plan!.id }
 }

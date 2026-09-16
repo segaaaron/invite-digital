@@ -15,6 +15,9 @@ const COLUMNS = {
   createdAt: guestGroups.createdAt,
 } as const
 
+/** La fila por su id **y** su evento: el id llega del navegador, el evento de la guardia. */
+const delEvento = (eventId: string, id: string) => and(eq(guestGroups.id, id), eq(guestGroups.eventId, eventId))
+
 export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGroupRepository => ({
   async insert(group, tokenHash) {
     await database.insert(guestGroups).values({
@@ -30,8 +33,8 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     return database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.eventId, eventId)).orderBy(asc(guestGroups.createdAt))
   },
 
-  async findById(id) {
-    const [row] = await database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.id, id)).limit(1)
+  async findById(eventId, id) {
+    const [row] = await database.select(COLUMNS).from(guestGroups).where(delEvento(eventId, id)).limit(1)
     return row ?? null
   },
 
@@ -40,32 +43,38 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     return row ?? null
   },
 
-  async replaceToken(id, tokenHash) {
+  async replaceToken(eventId, id, tokenHash) {
     // Reenviar rota el token: el enlace viejo deja de abrir nada. No se puede «volver a
     // enseñar» el anterior porque en la base solo estaba su hash.
-    await database.update(guestGroups).set({ tokenHash }).where(eq(guestGroups.id, id))
+    await database.update(guestGroups).set({ tokenHash }).where(delEvento(eventId, id))
   },
 
-  async reopenRsvp(id, when) {
-    await database.update(guestGroups).set({ rsvpReopenedAt: when }).where(eq(guestGroups.id, id))
+  async reopenRsvp(eventId, id, when) {
+    await database.update(guestGroups).set({ rsvpReopenedAt: when }).where(delEvento(eventId, id))
   },
 
-  async setPhone(id, phone) {
-    await database.update(guestGroups).set({ phone }).where(eq(guestGroups.id, id))
+  async setPhone(eventId, id, phone) {
+    await database.update(guestGroups).set({ phone }).where(delEvento(eventId, id))
   },
 
-  async markSent(id, at) {
-    await database.update(guestGroups).set({ invitationSentAt: at }).where(eq(guestGroups.id, id))
+  async markSent(eventId, id, at) {
+    await database.update(guestGroups).set({ invitationSentAt: at }).where(delEvento(eventId, id))
   },
 
-  async remove(id) {
-    // Solo para deshacer un alta a medias. Un grupo con vida se revoca, no se borra:
-    // borrarlo se llevaría por delante sus respuestas y su historial.
-    await database.delete(guestGroups).where(eq(guestGroups.id, id))
+  async setSeats(eventId, id, seats) {
+    await database.update(guestGroups).set({ seats }).where(delEvento(eventId, id))
   },
 
-  async revoke(id, at) {
-    await database.update(guestGroups).set({ revokedAt: at }).where(eq(guestGroups.id, id))
+  async setLabel(eventId, id, label) {
+    await database.update(guestGroups).set({ label }).where(delEvento(eventId, id))
+  },
+
+  async remove(eventId, id) {
+    await database.delete(guestGroups).where(delEvento(eventId, id))
+  },
+
+  async revoke(eventId, id, at) {
+    await database.update(guestGroups).set({ revokedAt: at }).where(delEvento(eventId, id))
   },
 
   async markOpened(id, at) {

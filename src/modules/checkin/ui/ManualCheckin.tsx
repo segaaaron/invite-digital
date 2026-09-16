@@ -45,9 +45,9 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
       <SearchField
         autoComplete="off"
         className="w-full"
-        label="Buscar por nombre o grupo"
+        label="Buscar por nombre"
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Nombre, grupo o código del pase…"
+        placeholder="Nombre o código del pase…"
         value={query}
       />
 
@@ -58,7 +58,7 @@ export function ManualCheckin({ eventId, eventSlug, groups, arrivedIds }: Props)
       )}
 
       {hits.length === 0 ? (
-        <p className="text-[13px] text-ink-mute">Ningún grupo coincide.</p>
+        <p className="text-[13px] text-ink-mute">Nadie coincide.</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {hits.map((g) => {

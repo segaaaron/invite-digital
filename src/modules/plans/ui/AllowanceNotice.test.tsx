@@ -30,7 +30,7 @@ describe('AllowanceNotice', () => {
     pintar({ maxGuestGroups: 30, currentGroups: 30 })
 
     const aviso = screen.getByRole('alert')
-    expect(aviso).toHaveTextContent(/no admite más grupos/i)
+    expect(aviso).toHaveTextContent(/no admite más invitaciones/i)
     expect(screen.getByRole('link', { name: /plan/i })).toHaveAttribute('href', '/panel/eventos/boda-rojas/plan')
   })
 

@@ -1,7 +1,7 @@
 /** La plantilla por defecto, por idioma del evento. */
 const POR_DEFECTO: Record<string, string> = {
-  es: 'Hola {grupo}: nos encantaría celebrar con ustedes. Aquí está su invitación: {enlace}',
-  en: 'Hello {grupo}: we would love to celebrate with you. Here is your invitation: {enlace}',
+  es: 'Hola {nombre}: nos encantaría celebrar con ustedes. Aquí está su invitación: {enlace}',
+  en: 'Hello {nombre}: we would love to celebrate with you. Here is your invitation: {enlace}',
 }
 
 /**
@@ -18,7 +18,11 @@ export function renderMessage(input: {
   url: string
 }): string {
   const plantilla = input.template?.trim() || POR_DEFECTO[input.locale] || POR_DEFECTO.es!
-  return plantilla.replaceAll('{grupo}', input.groupLabel).replaceAll('{enlace}', input.url)
+  // `{grupo}` es el nombre antiguo de `{nombre}`: las plantillas ya guardadas lo llevan.
+  return plantilla
+    .replaceAll('{nombre}', input.groupLabel)
+    .replaceAll('{grupo}', input.groupLabel)
+    .replaceAll('{enlace}', input.url)
 }
 
 /** El enlace de WhatsApp. Sin teléfono abre el selector de contacto. */

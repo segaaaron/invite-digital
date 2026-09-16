@@ -215,7 +215,7 @@ test.describe('invitados del evento', () => {
     await closeDb()
   })
 
-  test('crea un grupo, enseña el enlace una sola vez y lo revoca', async ({ page }) => {
+  test('añade un invitado y guardar cierra el diálogo', async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
     // El alta es el diálogo de la maqueta: un grupo nace con su primer invitado y sus
@@ -224,29 +224,13 @@ test.describe('invitados del evento', () => {
     await añadirAcompanantes(page, 3)
     await page.getByRole('button', { name: 'Guardar' }).click()
 
-    const enlace = page.getByLabel('Enlace de la invitación')
-    await expect(enlace).toHaveValue(/\/i\/[A-Za-z0-9_-]{22}$/)
-    await expect(page.getByRole('status')).toContainText('no se vuelve a mostrar')
-
-    // El diálogo se queda abierto mientras hay enlace que copiar; lo cierra quien lo copió.
-    await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
-    // Cerrar quita el parámetro de la dirección; sin esperarlo, recargar reabriría el
-    // diálogo y taparía la tabla.
+    // Guardar cierra el diálogo y no enseña enlace: se prepara desde «Enviar invitaciones».
     await expect(page).toHaveURL(/invitados$/)
+    await expect(page.locator('dialog[open]')).toHaveCount(0)
 
-    // Al recargar, el enlace ya no existe en ninguna parte: solo queda su hash.
-    await page.reload()
-    await expect(page.getByLabel('Enlace de la invitación')).toHaveCount(0)
-
-    // Los cupos y «Revocar» son del **grupo**, que es la otra vista de la misma tarjeta.
-    await page.goto(`/panel/eventos/${SLUG}/invitados?vista=grupos`)
-    await expect(page.getByText('— / 4')).toBeVisible()
-
-    // La fila del grupo recién creado, no cualquier «Revocar» de la página.
-    const fila = page.getByRole('row').filter({ hasText: 'Familia Rojas Peña' }).last()
-    await fila.getByRole('button', { name: 'Revocar' }).click()
-    // La fila de la tabla; el panel de reparto también dice «Revocada» en su tarjeta.
-    await expect(page.getByRole('cell', { name: 'Revocada' })).toBeVisible()
+    // Se ve el invitado, no un grupo: la pantalla no enseña grupos.
+    await expect(page.getByRole('cell', { name: 'Familia Rojas Peña', exact: true }).first()).toBeVisible()
+    await expect(page.getByRole('link', { name: /^Grupos/ })).toHaveCount(0)
   })
 
   test('crea el enlace del cliente, se abre en solo lectura y se revoca', async ({ page, context }) => {
@@ -255,8 +239,7 @@ test.describe('invitados del evento', () => {
     await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
     await añadirAcompanantes(page, 3)
     await page.getByRole('button', { name: 'Guardar' }).click()
-    await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()
-    await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
+    await expect(page).toHaveURL(/invitados$/)
 
     // El enlace del cliente vive en Configuración, que es una vista propia como en la maqueta.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)

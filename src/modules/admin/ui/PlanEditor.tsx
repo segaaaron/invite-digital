@@ -37,12 +37,12 @@ export type PlanEditorView = {
 }
 
 const FUNCIONES = [
-  { name: 'includesSeating', label: 'Mesas y plano del salón', description: 'Sentar a cada grupo y dibujar el salón.' },
+  { name: 'includesSeating', label: 'Mesas y plano del salón', description: 'Sentar a cada invitado y dibujar el salón.' },
   { name: 'includesRegistry', label: 'Mesa de regalos y fondos', description: 'Regalos que se reservan y fondos en efectivo con meta.' },
   { name: 'includesCheckin', label: 'Modo puerta', description: 'Pases QR en la entrada. Los porteros se topan arriba.' },
   { name: 'guestPhotos', label: 'Fotos de los invitados', description: 'Cada invitado sube sus fotos desde su invitación.' },
   { name: 'eventPassword', label: 'Invitación con contraseña', description: 'La invitación pide una contraseña antes de abrirse.' },
-  { name: 'csvImport', label: 'Importar la lista desde Excel (CSV)', description: 'Cargar todos los grupos de una vez.' },
+  { name: 'csvImport', label: 'Importar la lista desde Excel (CSV)', description: 'Cargar todos los invitados de una vez.' },
 ] as const
 
 const vacioSiNulo = (n: number | null) => (n === null ? '' : String(n))
@@ -93,7 +93,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
 
       <SettingsSection description="Deja vacío lo que no tiene tope. El servidor corta al llegar al límite." title="Límites">
         <div className="grid gap-4 min-[560px]:grid-cols-2 min-[1200px]:grid-cols-3">
-          <UnitField defaultValue={txt('maxGuestGroups', vacioSiNulo(plan.maxGuestGroups))} id={`${id}-tope`} label="Grupos de invitados" name="maxGuestGroups" placeholder="Sin límite" unit="grupos" />
+          <UnitField defaultValue={txt('maxGuestGroups', vacioSiNulo(plan.maxGuestGroups))} id={`${id}-tope`} label="Invitaciones" name="maxGuestGroups" placeholder="Sin límite" unit="invitaciones" />
           <UnitField defaultValue={txt('maxGalleryPhotos', vacioSiNulo(plan.maxGalleryPhotos))} id={`${id}-fotos`} label="Fotos del evento" name="maxGalleryPhotos" placeholder="Sin límite" unit="fotos" />
           <UnitField defaultValue={txt('onlineDays', String(plan.onlineDays))} id={`${id}-dias`} label="En línea tras la fiesta" name="onlineDays" required unit="días" />
           <UnitField defaultValue={txt('maxCohosts', vacioSiNulo(plan.maxCohosts))} id={`${id}-coanfitriones`} label="Co-anfitriones" name="maxCohosts" placeholder="Sin límite" unit="personas" />

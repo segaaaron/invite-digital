@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createPerson, dietaryReport, fitsInGroup, type GuestPerson } from './person'
+import { createPerson, cupoParaCargar, dietaryReport, type GuestPerson } from './person'
 import { isErr, isOk } from '@/shared/result'
 
 const persona = (over: Partial<GuestPerson> = {}): GuestPerson => ({
@@ -33,10 +33,10 @@ describe('createPerson', () => {
   })
 })
 
-describe('fitsInGroup', () => {
-  it('el cupo del grupo es el tope', () => {
-    expect(fitsInGroup(4, 3)).toBe(true)
-    expect(fitsInGroup(4, 4)).toBe(false)
+describe('cupoParaCargar', () => {
+  it('el cupo nunca queda por debajo de la gente cargada: crece, no rechaza', () => {
+    expect(cupoParaCargar(4, 3)).toBe(4)
+    expect(cupoParaCargar(4, 5)).toBe(5)
   })
 })
 

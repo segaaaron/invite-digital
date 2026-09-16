@@ -64,7 +64,6 @@ function anchoDocumento(): { ancho: number; ventana: number } {
 const VISTAS = [
   ['resumen', ''],
   ['invitados', '/invitados'],
-  ['invitados · grupos', '/invitados?vista=grupos'],
   ['invitados · importar', '/invitados?panel=importar'],
   ['mesas', '/mesas'],
   ['mesas · tarjetas', '/mesas?vista=tarjetas'],

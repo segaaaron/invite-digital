@@ -69,10 +69,12 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
   `
 
   const token = randomBytes(16).toString('base64url')
-  await sql`
+  const [grupo] = await sql<{ id: string }[]>`
     insert into guest_groups (event_id, label, seats, token_hash)
     values (${evento!.id}, 'Familia Vargas', 3, ${createHash('sha256').update(token).digest()})
+    returning id
   `
+  await sql`insert into guest_people (guest_group_id, full_name) values (${grupo!.id}, 'Rosa Vargas')`
 
   return { clienteId: cliente!.id, duenoId: dueno!.id, eventId: evento!.id, token }
 }

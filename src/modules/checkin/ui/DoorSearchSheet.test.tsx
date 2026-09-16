@@ -18,28 +18,28 @@ describe('DoorSearchSheet', () => {
 
   it('filtra por nombre', () => {
     render(<DoorSearchSheet groups={groups} arrivedIds={new Set()} open onPick={() => {}} onClose={() => {}} />)
-    fireEvent.change(screen.getByPlaceholderText(/nombre del grupo/i), { target: { value: 'rojas' } })
+    fireEvent.change(screen.getByPlaceholderText(/nombre del invitado/i), { target: { value: 'rojas' } })
     expect(screen.getByText('Familia Rojas Peña')).toBeInTheDocument()
     expect(screen.queryByText('Ana Lucía Vega')).not.toBeInTheDocument()
   })
 
   it('encuentra también a quien tenía la invitación revocada', () => {
     render(<DoorSearchSheet groups={groups} arrivedIds={new Set()} open onPick={() => {}} onClose={() => {}} />)
-    fireEvent.change(screen.getByPlaceholderText(/nombre del grupo/i), { target: { value: 'zulema' } })
+    fireEvent.change(screen.getByPlaceholderText(/nombre del invitado/i), { target: { value: 'zulema' } })
     expect(screen.getByText('Zulema Castro')).toBeInTheDocument()
     expect(screen.getByText(/invitación revocada/i)).toBeInTheDocument()
   })
 
   it('marca a quien ya llegó y no deja registrarlo otra vez desde aquí', () => {
     render(<DoorSearchSheet groups={groups} arrivedIds={new Set(['g1'])} open onPick={() => {}} onClose={() => {}} />)
-    fireEvent.change(screen.getByPlaceholderText(/nombre del grupo/i), { target: { value: 'rojas' } })
+    fireEvent.change(screen.getByPlaceholderText(/nombre del invitado/i), { target: { value: 'rojas' } })
     expect(screen.getByText(/ya llegó/i)).toBeInTheDocument()
   })
 
   it('elegir un grupo avisa hacia arriba con su id', () => {
     const onPick = vi.fn()
     render(<DoorSearchSheet groups={groups} arrivedIds={new Set()} open onPick={onPick} onClose={() => {}} />)
-    fireEvent.change(screen.getByPlaceholderText(/nombre del grupo/i), { target: { value: 'ana' } })
+    fireEvent.change(screen.getByPlaceholderText(/nombre del invitado/i), { target: { value: 'ana' } })
     fireEvent.click(screen.getByRole('button', { name: /Ana Lucía Vega/ }))
     expect(onPick).toHaveBeenCalledWith('g2')
   })

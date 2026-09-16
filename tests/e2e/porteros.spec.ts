@@ -68,7 +68,7 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
 
   await portero.getByRole('button', { name: /buscar por nombre/i }).click()
   await portero.getByRole('button', { name: /Familia Rojas/ }).click()
-  await expect(portero.getByLabel('Grupos que han llegado')).toHaveText('1')
+  await expect(portero.getByLabel('Invitaciones que han llegado')).toHaveText('1')
 
   // No sale de la puerta: el panel le pide iniciar sesión.
   await portero.goto(`/panel/eventos/${HOY}/invitados`)
@@ -76,7 +76,7 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
 
   // El anfitrión ve quién registró la llegada.
   await gestor.reload()
-  await expect(gestor.getByText(/1 grupo registrado/)).toBeVisible()
+  await expect(gestor.getByText(/1 invitación registrada/)).toBeVisible()
 
   // Quitarlo lo saca, aunque tenga la puerta abierta.
   await gestor.getByRole('button', { name: 'Quitar a Carlos' }).click()

@@ -98,7 +98,7 @@ export const events = pgTable('events', {
   // Hash de la contraseña de acceso, nunca la contraseña. Nulo = evento público: basta
   // con tener el enlace, que es lo que había hasta ahora.
   accessPasswordHash: text('access_password_hash'),
-  // Plantilla del mensaje de reparto, con {grupo} y {enlace}. Nunca guarda un enlace
+  // Plantilla del mensaje de reparto, con {nombre} y {enlace}. Nunca guarda un enlace
   // dentro: el enlace se pega al abrir WhatsApp, no aquí.
   messageTemplate: text('message_template'),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),

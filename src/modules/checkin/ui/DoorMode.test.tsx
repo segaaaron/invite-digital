@@ -39,7 +39,7 @@ const manifest = {
 describe('DoorMode', () => {
   it('muestra el contador de llegadas sobre los esperados', () => {
     render(<DoorMode eventId="e1" eventSlug="boda" manifest={manifest} />)
-    expect(screen.getByLabelText('Grupos que han llegado')).toHaveTextContent('0')
+    expect(screen.getByLabelText('Invitaciones que han llegado')).toHaveTextContent('0')
     expect(screen.getByText(/de 1/)).toBeInTheDocument()
   })
 
@@ -53,7 +53,7 @@ describe('DoorMode', () => {
   it('abre el buscador por nombre', () => {
     render(<DoorMode eventId="e1" eventSlug="boda" manifest={manifest} />)
     fireEvent.click(screen.getByRole('button', { name: /buscar por nombre/i }))
-    expect(screen.getByPlaceholderText(/nombre del grupo/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/nombre del invitado/i)).toBeInTheDocument()
   })
 
   it('si deshacer no llega al servidor, la puerta lo dice en vez de dejar el contador mintiendo', async () => {

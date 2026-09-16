@@ -7,9 +7,9 @@ import type { GuestErrorKind } from '../domain/errors'
 const INITIAL: RevokeInvitationState = { status: 'idle' }
 
 const MENSAJES: Record<GuestErrorKind, string> = {
-  invalid_label: 'No pudimos revocar la invitación: los datos del grupo no son válidos.',
-  invalid_seats: 'No pudimos revocar la invitación: los datos del grupo no son válidos.',
-  not_found: 'Ese grupo ya no existe. Vuelve a cargar la página.',
+  invalid_label: 'No pudimos revocar la invitación: los datos no son válidos.',
+  invalid_seats: 'No pudimos revocar la invitación: los datos no son válidos.',
+  not_found: 'Esa invitación ya no existe. Vuelve a cargar la página.',
   revoked: 'Esa invitación ya estaba revocada.',
   plan_limit_reached: 'No pudimos revocar la invitación. Inténtalo en un momento.',
   storage_failure: 'No pudimos revocar la invitación. El enlace sigue activo; inténtalo en un momento.',
@@ -32,7 +32,7 @@ export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; 
           className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute hover:text-gold-deep disabled:opacity-40"
           disabled={isPending}
           type="submit" aria-busy={(isPending) || undefined}>
-          {isPending ? 'Revocando…' : 'Revocar'}
+          {isPending ? 'Revocando…' : 'Revocar enlace'}
         </button>
       </form>
 

@@ -16,7 +16,7 @@ test('el lector por teclado registra la llegada sin cámara', async ({ page }) =
   const { token, groupId } = await seedDoorEvent(SLUG)
 
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
-  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('0')
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('0')
 
   // Un lector por USB se comporta como un teclado: teclea el código y remata con Enter.
   await page.keyboard.type(token)
@@ -26,7 +26,7 @@ test('el lector por teclado registra la llegada sin cámara', async ({ page }) =
   await expect(page.getByText('Familia Rojas Peña')).toBeVisible()
   // La cantidad la fijó el servidor con lo que el grupo había confirmado.
   await expect(page.getByLabel('Personas que entraron')).toHaveText('3')
-  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('1')
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('1')
 
   // Y está en la base, no solo en la pantalla. Se espera a que la bandeja de salida se
   // vacíe: desde que la puerta responde en local, la escritura va por detrás.
@@ -77,7 +77,7 @@ test('un pase escaneado con la cámara registra la llegada del grupo', async ({ 
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
 
   await expect(page.getByText(/Bienvenidos/i)).toBeVisible({ timeout: 30_000 })
-  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('1')
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('1')
   await expect(page.getByLabel('Escaneos por subir')).toHaveText(/^0/)
   expect(await liveArrivals(groupId)).toEqual([{ arrivedCount: 3 }])
 })
@@ -91,7 +91,7 @@ test('el pase de otra boda no abre esta puerta', async ({ page }) => {
   await page.keyboard.press('Enter')
 
   await expect(page.getByText(/no es de tu evento/i)).toBeVisible()
-  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('0')
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('0')
   expect(await liveArrivals(ajeno.groupId)).toEqual([])
 
   await deleteEvent('boda-ajena-e2e')
@@ -118,5 +118,5 @@ test('sin red la puerta sigue registrando, y sube al volver', async ({ page, con
   // Y la llegada está de verdad en la base, no solo en la pantalla.
   expect(await liveArrivals(groupId)).toEqual([{ arrivedCount: 3 }])
   await page.goto(`/panel/eventos/${SLUG}/puerta`)
-  await expect(page.getByLabel('Grupos que han llegado')).toHaveText('1')
+  await expect(page.getByLabel('Invitaciones que han llegado')).toHaveText('1')
 })

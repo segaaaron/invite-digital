@@ -25,7 +25,7 @@ export const respondByPerson =
     resolveGroup: (token: string) => Promise<Result<GuestGroup, GuestError>>
     findEventById: (id: string) => Promise<Result<Event, EventError>>
     peopleOf: (guestGroupId: string) => Promise<GuestPerson[]>
-    setAttendance: (personId: string, attending: 'yes' | 'no') => Promise<void>
+    setAttendance: (eventId: string, personId: string, attending: 'yes' | 'no') => Promise<void>
     rsvp: RsvpRepository
     ids: () => string
     clock: () => Date
@@ -96,7 +96,7 @@ export const respondByPerson =
         // fallara al marcar a una persona, la confirmación ya está registrada y no se pierde.
         await deps.rsvp.append(response.value)
         for (const persona of personas) {
-          await deps.setAttendance(persona.id, marcados.has(persona.id) ? 'yes' : 'no')
+          await deps.setAttendance(group.value.eventId, persona.id, marcados.has(persona.id) ? 'yes' : 'no')
         }
 
         return ok(response.value)

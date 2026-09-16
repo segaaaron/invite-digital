@@ -51,7 +51,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
     <>
       <PanelHeader
         kicker="Día del evento"
-        meta={`${tally.arrivedGroups} de ${tally.expectedGroups} grupos · ${tally.headsInside} personas dentro`}
+        meta={`${tally.arrivedGroups} de ${tally.expectedGroups} invitaciones · ${tally.headsInside} personas dentro`}
         title="Check-in de invitados"
       />
 
@@ -127,7 +127,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
                 key={a.guestGroupId}
                 className="flex flex-wrap items-center gap-3 border-b border-line-panel py-2.5 last:border-none"
               >
-                <span className="flex-1 text-[14px] text-ink">{etiquetaDe.get(a.guestGroupId) ?? 'Grupo retirado'}</span>
+                <span className="flex-1 text-[14px] text-ink">{etiquetaDe.get(a.guestGroupId) ?? 'Invitación retirada'}</span>
                 <span className="font-mono text-[11px] text-ink-soft">
                   {a.arrivedCount} dentro
                 </span>
