@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import { events, guestGroups, guestPeople } from '@/shared/db/schema'
-import { drizzleGuestPersonRepository } from './drizzle-guest-person-repository'
+import { countPeopleByEvent, drizzleGuestPersonRepository } from './drizzle-guest-person-repository'
 
 const eventId = crypto.randomUUID()
 const otroEventId = crypto.randomUUID()
@@ -145,5 +145,43 @@ describe('lo que el alta guarda de verdad', () => {
     const [fila] = await db.select().from(guestPeople).where(eq(guestPeople.id, id))
     expect(fila?.email).toBe('lucia@correo.bo')
     expect(fila?.vip).toBe(true)
+  })
+
+  it('cuenta las personas del evento, no sus grupos ni las de otra boda', async () => {
+    // La insignia de «Invitados» contaba grupos: al borrar al único invitado la pantalla
+    // decía «0 invitados» y la barra seguía marcando 1, que era el grupo vacío.
+    const antes = await countPeopleByEvent(eventId)
+    const id = crypto.randomUUID()
+    // **Dos en el mismo grupo**: contando grupos saldría uno, y la prueba daría verde igual.
+    for (const [personaId, nombre] of [
+      [id, 'Quien se cuenta'],
+      [crypto.randomUUID(), 'Y su acompañante'],
+    ] as const) {
+      await drizzleGuestPersonRepository.insert({
+        id: personaId,
+        guestGroupId: grupoId,
+        fullName: nombre,
+        isCompanion: false,
+        dietaryNote: null,
+        vip: false,
+        attending: null,
+        email: null,
+      })
+    }
+    await drizzleGuestPersonRepository.insert({
+      id: crypto.randomUUID(),
+      guestGroupId: otroGrupoId,
+      fullName: 'De otra boda',
+      isCompanion: false,
+      dietaryNote: null,
+      vip: false,
+      attending: null,
+      email: null,
+    })
+
+    expect(await countPeopleByEvent(eventId)).toBe(antes + 2)
+
+    await drizzleGuestPersonRepository.remove(id)
+    expect(await countPeopleByEvent(eventId)).toBe(antes + 1)
   })
 })

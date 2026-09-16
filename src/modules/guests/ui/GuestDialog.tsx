@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Field, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { addGuestAction, type GuestActionState } from '@/app/_acciones/guests/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
@@ -19,8 +19,13 @@ const INICIAL: GuestActionState = { status: 'idle', message: '' }
  * El alta de invitado de la maqueta, entera y en un diálogo: nombre, grupo, acompañantes,
  * RSVP, restricciones, WhatsApp, correo y VIP.
  *
- * El grupo se elige de los que ya existen o se escribe uno nuevo. No es un capricho del
- * formulario: el grupo es el dueño del enlace de invitación y de los cupos, así que
+ * **Se pregunta cómo le llega la invitación, no a qué grupo pertenece.** Lo primero es
+ * «invitación propia», que es el caso normal y no exige escribir nada más: la invitación se
+ * llama como el invitado. Lo segundo es sumarse a una que ya existe —la familia, la oficina—,
+ * y entonces comparte enlace, cupos y mesa. Antes se empezaba eligiendo un grupo ajeno de un
+ * desplegable, y dar de alta a una persona sola obligaba a buscar «Grupo nuevo…» al final.
+ *
+ * Debajo sigue siendo lo mismo: el grupo es el dueño del enlace y de los cupos, así que
  * «Ana Lucía Vega + 2» son tres cupos de un grupo, no tres invitaciones sueltas.
  */
 export function GuestDialog({
@@ -43,6 +48,17 @@ export function GuestDialog({
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [estado, accion, pendiente] = useActionState<GuestActionState, FormData>(addGuestAction, INICIAL)
+  /**
+   * Cómo le llega la invitación, que es la pregunta de verdad.
+   *
+   * El formulario empezaba con un desplegable de grupos ya creados —«amigo · 2 libres»— y el
+   * primero venía elegido: para dar de alta a una persona había que meterla dentro del grupo
+   * de otro, o encontrar «Grupo nuevo…» al final de la lista. Lo normal es lo contrario, así
+   * que lo normal es lo que viene puesto.
+   */
+  // Con el tope del plan alcanzado no se pueden crear más invitaciones: se empieza por sumar
+  // a una que ya existe, que es lo único que el servidor va a aceptar.
+  const [modo, setModo] = useState<'propia' | 'grupo'>(atLimit && groups.length > 0 ? 'grupo' : 'propia')
   const [grupo, setGrupo] = useState(groups[0]?.id ?? '')
   // El teléfono se guarda en formato internacional; el campo enseña su país y su número local.
   const [telefono, setTelefono] = useState('')
@@ -80,7 +96,7 @@ export function GuestDialog({
     router.replace(closeHref)
   }
 
-  const nuevoGrupo = grupo === ''
+  const nuevoGrupo = modo === 'propia'
 
   return (
     <dialog
@@ -119,48 +135,90 @@ export function GuestDialog({
           <input autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            hint="El grupo recibe un enlace, sus cupos y su mesa. Puede ser una familia, una pareja, la oficina o una sola persona."
-            htmlFor={idGrupo}
-            label="Grupo"
-          >
-            <select
-              className={FIELD_CLASS}
-              id={idGrupo}
-              name="groupId"
-              onChange={(e) => setGrupo(e.target.value)}
-              value={grupo}
-            >
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.label} · {g.free} libre{g.free === 1 ? '' : 's'}
-                </option>
-              ))}
-              <option value="">Grupo nuevo…</option>
-            </select>
-          </Field>
+        <fieldset className="flex flex-col gap-2">
+          <legend className={`${LABEL_CLASS} mb-2`}>Cómo le llega la invitación</legend>
 
-          <Field htmlFor={idAcomp} label="Acompañantes">
+          <label className="flex cursor-pointer items-start gap-2.5 rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 transition-colors has-checked:border-ink has-checked:bg-bg-top">
+            <input
+              checked={modo === 'propia'}
+              className="mt-0.5 size-4"
+              name="modo"
+              onChange={() => setModo('propia')}
+              type="radio"
+              value="propia"
+            />
+            <span className="flex flex-col text-[13px] text-ink">
+              Invitación propia
+              <span className="text-[12px] text-ink-mute">
+                Recibe su propio enlace. Si viene acompañado, se le suman pases abajo.
+              </span>
+            </span>
+          </label>
+
+          {groups.length === 0 ? null : (
+            <label className="flex cursor-pointer items-start gap-2.5 rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 transition-colors has-checked:border-ink has-checked:bg-bg-top">
+              <input
+                checked={modo === 'grupo'}
+                className="mt-0.5 size-4"
+                name="modo"
+                onChange={() => setModo('grupo')}
+                type="radio"
+                value="grupo"
+              />
+              <span className="flex flex-col text-[13px] text-ink">
+                Se suma a una invitación ya creada
+                <span className="text-[12px] text-ink-mute">
+                  Comparte el enlace, los cupos y la mesa con su familia o su grupo.
+                </span>
+              </span>
+            </label>
+          )}
+        </fieldset>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          {modo === 'grupo' ? (
+            <Field htmlFor={idGrupo} label="A qué invitación se suma">
+              <select
+                className={FIELD_CLASS}
+                id={idGrupo}
+                name="groupId"
+                onChange={(e) => setGrupo(e.target.value)}
+                value={grupo}
+              >
+                {groups.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    {g.label} · {g.free === 0 ? 'sin cupos libres' : `${g.free} cupo${g.free === 1 ? '' : 's'} libre${g.free === 1 ? '' : 's'}`}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          ) : (
+            <Field
+              hint="Vacío, se llama como el invitado."
+              htmlFor={idNuevo}
+              label="Nombre de la invitación"
+            >
+              <input
+                className={FIELD_CLASS}
+                id={idNuevo}
+                maxLength={160}
+                name="newGroupLabel"
+                placeholder="El nombre del invitado"
+                type="text"
+              />
+            </Field>
+          )}
+
+          <Field
+            hint="Pases además del suyo: pareja, hijos. 0 si viene solo."
+            htmlFor={idAcomp}
+            label="Acompañantes"
+          >
             <input className={FIELD_CLASS} defaultValue={0} id={idAcomp} min={0} name="companions" type="number" />
           </Field>
         </div>
 
         {notice === undefined ? null : <div>{notice}</div>}
-
-        {nuevoGrupo ? (
-          <Field htmlFor={idNuevo} label="Nombre del grupo nuevo">
-            <input
-              className={FIELD_CLASS}
-              id={idNuevo}
-              maxLength={160}
-              name="newGroupLabel"
-              placeholder="Familia Rojas, oficina, amigos del colegio…"
-              required
-              type="text"
-            />
-          </Field>
-        ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field htmlFor={idRsvp} label="RSVP">

@@ -13,9 +13,9 @@ test.afterAll(async () => {
 
 /** Da de alta un grupo por el diálogo de la maqueta: primer invitado y sus acompañantes. */
 async function crearGrupo(page: Page, etiqueta: string, acompanantes = 1): Promise<void> {
+  // El alta empieza en «Invitación propia»: la invitación se llama como el invitado y no
+  // hay que elegir grupo ninguno.
   await page.getByLabel('Nombre completo').fill(etiqueta)
-  await page.getByLabel('Grupo', { exact: true }).selectOption('')
-  await page.getByLabel('Nombre del grupo nuevo').fill(etiqueta)
   await page.getByLabel('Acompañantes').fill(String(acompanantes))
   await page.getByRole('button', { name: 'Guardar' }).click()
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
@@ -41,7 +41,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
 
   // 2. En el tope, el aviso cambia de tono y el botón de guardar queda deshabilitado.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-  await page.getByLabel('Grupo', { exact: true }).selectOption('')
+  await page.getByLabel('Invitación propia').check()
   await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Guardar' })).toBeDisabled()
 
@@ -51,7 +51,6 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   //    público y el botón deshabilitado no protege nada. El corte tiene que venir del
   //    servidor.
   await page.getByLabel('Nombre completo').fill('Familia Colada')
-  await page.getByLabel('Nombre del grupo nuevo').fill('Familia Colada')
   await page.evaluate(() => {
     document.querySelectorAll('button[type="submit"]').forEach((b) => b.removeAttribute('disabled'))
   })
@@ -99,6 +98,5 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
 
   // El alta vive en la vista de invitados, que es propia como en la maqueta.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-  await page.getByLabel('Grupo', { exact: true }).selectOption('')
   await expect(page.getByRole('button', { name: 'Guardar' })).toBeEnabled()
 })

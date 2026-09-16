@@ -45,7 +45,7 @@ import { importGuestGroups } from '@/modules/guests/application/import-guest-gro
 import { markInvitationSent } from '@/modules/guests/application/mark-invitation-sent'
 import { resendInvitation } from '@/modules/guests/application/resend-invitation'
 import { addPerson, listPeopleByEvent, removePerson, updatePerson } from '@/modules/guests/application/person-use-cases'
-import { drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
+import { countPeopleByEvent, drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
 import { revokeInvitation } from '@/modules/guests/application/revoke-invitation'
 import { countGroupsByEvent, drizzleGuestGroupRepository } from '@/modules/guests/infrastructure/drizzle-guest-group-repository'
@@ -279,8 +279,10 @@ const altaDePersona = addPerson({
 export const guests = {
   add: altaDeGrupo,
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
-  /** Cuántos grupos, sin traerlos: para la insignia de la barra. */
+  /** Cuántos grupos, sin traerlos: el tope del plan se cuenta en grupos. */
   contar: (eventId: string) => countGroupsByEvent(db, eventId),
+  /** Cuántas personas, para la insignia de «Invitados» de la barra. */
+  contarPersonas: (eventId: string) => countPeopleByEvent(eventId),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
   // El alta de invitado de la maqueta: grupo —nuevo o existente—, persona, acompañantes,

@@ -74,6 +74,17 @@ describe('addGuest', () => {
     expect(d.addGroup).toHaveBeenCalledWith(expect.objectContaining({ label: 'Amigos de Ricardo', seats: 3 }))
   })
 
+  it('sin nombre de grupo, la invitación se llama como el invitado', async () => {
+    // Es el caso normal: se añade a una persona y esa persona recibe su propia invitación.
+    // Pedirle además que le ponga nombre al grupo es hacerle inventar una etiqueta para él
+    // solo, y era lo que obligaba a meterlo en el grupo de otro.
+    const { deps: d } = deps()
+    const r = await addGuest(d as never)({ ...base, companions: 1 })
+
+    expect(isOk(r)).toBe(true)
+    expect(d.addGroup).toHaveBeenCalledWith(expect.objectContaining({ label: 'Ana Lucía Vega', seats: 2 }))
+  })
+
   it('los acompañantes entran como personas propias, marcadas como tales', async () => {
     const { deps: d, personas } = deps()
     await addGuest(d as never)({ ...base, newGroupLabel: 'Padrinos', companions: 2 })
@@ -89,12 +100,14 @@ describe('addGuest', () => {
     expect(d.setPhone).toHaveBeenCalledWith('g1', '+59170011122')
   })
 
-  it('sin grupo elegido ni nombre de grupo nuevo no inventa nada', async () => {
-    const { deps: d } = deps()
-    const r = await addGuest(d as never)({ ...base })
+  it('sin nombre del invitado no se crea ni grupo ni persona', async () => {
+    // El nombre es lo único obligatorio: de él sale también la etiqueta de la invitación.
+    const { deps: d, personas } = deps()
+    const r = await addGuest(d as never)({ ...base, fullName: '  ' })
 
     expect(isErr(r)).toBe(true)
     expect(d.addGroup).not.toHaveBeenCalled()
+    expect(personas).toHaveLength(0)
   })
 
   it('si el alta del grupo falla, no se crea ninguna persona suelta', async () => {

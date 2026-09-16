@@ -47,8 +47,9 @@ export default async function EventoLayout({
   // se pinta sin ella: un contador no es motivo para tumbar la página que lo rodea.
   const id = event.value.id
   const dueno = gestionaElEvento(actor, event.value)
-  const [grupos, libro, capacidad, insignias, equipo, mesaPlanner] = await Promise.all([
-    guests.contar(id).catch(() => null),
+  const [personas, libro, capacidad, insignias, equipo, mesaPlanner] = await Promise.all([
+    // Personas, no grupos: la insignia dice «Invitados» y un grupo sin nadie dentro no lo es.
+    guests.contarPersonas(id).catch(() => null),
     guestbook.sinLeer(id).catch(() => null),
     plans.allowanceFor(id),
     insigniasDeAdmin(actor),
@@ -64,7 +65,7 @@ export default async function EventoLayout({
     <PanelFrame
       brandSub={isAdmin(actor) ? 'FICHA DEL EVENTO · ADMIN' : 'PANEL'}
       sections={panelNav(event.value.slug, {
-        invitados: grupos,
+        invitados: personas,
         sinLeer: libro,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,

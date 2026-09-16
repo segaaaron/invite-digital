@@ -44,11 +44,10 @@ export async function createGuestGroup(
   seats: number,
 ): Promise<string> {
   // El alta es el diálogo de la maqueta. Un grupo se crea dando de alta a su primera
-  // persona con «Grupo nuevo…» y tantos acompañantes como cupos de más.
+  // persona —«Invitación propia», que es lo que viene puesto— con tantos acompañantes como
+  // cupos de más; la invitación se llama como ella.
   await page.goto(`/panel/eventos/${eventSlug}/invitados?panel=alta`)
   await page.getByLabel('Nombre completo').fill(label)
-  await page.getByLabel('Grupo', { exact: true }).selectOption('')
-  await page.getByLabel('Nombre del grupo nuevo').fill(label)
   await page.getByLabel('Acompañantes').fill(String(Math.max(0, seats - 1)))
   await page.getByRole('button', { name: 'Guardar' }).click()
   const enlace = await page.getByLabel('Enlace de la invitación').inputValue()

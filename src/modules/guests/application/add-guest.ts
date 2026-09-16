@@ -81,10 +81,10 @@ export const addGuest =
         let token: string | null = null
 
         if (groupId === null) {
-          const etiqueta = input.newGroupLabel?.trim() ?? ''
-          if (etiqueta === '') {
-            return err(guestError('invalid_label', 'Elige un grupo o escribe el nombre de uno nuevo.'))
-          }
+          // Sin nombre de grupo, la invitación se llama como quien la recibe. El caso normal
+          // es una persona con su propia invitación, y obligarle a inventar una etiqueta para
+          // él solo es lo que empujaba a meterlo dentro del grupo de otro.
+          const etiqueta = input.newGroupLabel?.trim() || nombre
 
           const alta = await deps.addGroup({
             eventId: input.eventId,

@@ -221,8 +221,6 @@ test.describe('invitados del evento', () => {
     // El alta es el diálogo de la maqueta: un grupo nace con su primer invitado y sus
     // acompañantes, que son los cupos de más.
     await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
-    await page.getByLabel('Grupo', { exact: true }).selectOption('')
-    await page.getByLabel('Nombre del grupo nuevo').fill('Familia Rojas Peña')
     await page.getByLabel('Acompañantes').fill('3')
     await page.getByRole('button', { name: 'Guardar' }).click()
 
@@ -255,8 +253,6 @@ test.describe('invitados del evento', () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
     await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
-    await page.getByLabel('Grupo', { exact: true }).selectOption('')
-    await page.getByLabel('Nombre del grupo nuevo').fill('Familia Rojas Peña')
     await page.getByLabel('Acompañantes').fill('3')
     await page.getByRole('button', { name: 'Guardar' }).click()
     await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()

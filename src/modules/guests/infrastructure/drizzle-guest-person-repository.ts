@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm'
+import { asc, count, eq } from 'drizzle-orm'
 import { db } from '@/shared/db/client'
 import { guestGroups, guestPeople } from '@/shared/db/schema'
 import type { GuestPersonRepository } from '../application/ports'
@@ -95,4 +95,20 @@ export const drizzleGuestPersonRepository: GuestPersonRepository = {
     const [fila] = await db.select(COLUMNS).from(guestPeople).where(eq(guestPeople.id, id)).limit(1)
     return fila ? aPersona(fila) : null
   },
+}
+
+/**
+ * Cuántas personas hay en el evento, sin traerlas: es la insignia de «Invitados».
+ *
+ * Cuenta **personas y no grupos**. La insignia contaba grupos, así que al borrar al único
+ * invitado la pantalla decía «0 invitados» y la barra seguía marcando 1: lo que quedaba era
+ * el grupo, que sin personas sigue siendo válido pero no es un invitado.
+ */
+export const countPeopleByEvent = async (eventId: string): Promise<number> => {
+  const [fila] = await db
+    .select({ total: count() })
+    .from(guestPeople)
+    .innerJoin(guestGroups, eq(guestGroups.id, guestPeople.guestGroupId))
+    .where(eq(guestGroups.eventId, eventId))
+  return fila?.total ?? 0
 }

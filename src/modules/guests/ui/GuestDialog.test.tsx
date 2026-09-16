@@ -24,11 +24,11 @@ const props = {
 }
 
 describe('GuestDialog', () => {
-  it('trae los nueve campos de la maqueta', () => {
+  it('trae los campos de la maqueta', () => {
     render(<GuestDialog {...props} />)
 
     expect(screen.getByLabelText('Nombre completo')).toBeInTheDocument()
-    expect(screen.getByLabelText('Grupo')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Invitación propia/)).toBeInTheDocument()
     expect(screen.getByLabelText('Acompañantes')).toBeInTheDocument()
     expect(screen.getByLabelText('RSVP')).toBeInTheDocument()
     expect(screen.getByLabelText('Restricciones')).toBeInTheDocument()
@@ -42,17 +42,28 @@ describe('GuestDialog', () => {
     expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled()
   })
 
-  it('el nombre del grupo nuevo solo aparece al elegir «Grupo nuevo…»', () => {
+  it('empieza en «invitación propia»: dar de alta a alguien no exige elegir el grupo de otro', () => {
     render(<GuestDialog {...props} />)
-    expect(screen.queryByLabelText('Nombre del grupo nuevo')).not.toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText('Grupo'), { target: { value: '' } })
-    expect(screen.getByLabelText('Nombre del grupo nuevo')).toBeInTheDocument()
+    // El desplegable de grupos ya creados no se ve hasta que se pide sumarse a uno, y el
+    // nombre de la invitación es opcional: sin escribirlo se llama como el invitado.
+    expect(screen.queryByLabelText('A qué invitación se suma')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Nombre de la invitación')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByLabelText(/Se suma a una invitación ya creada/))
+    expect(screen.getByLabelText('A qué invitación se suma')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Nombre de la invitación')).not.toBeInTheDocument()
   })
 
-  it('sin grupos creados arranca en «grupo nuevo», que es lo único posible', () => {
+  it('sin invitaciones creadas no ofrece sumarse a ninguna', () => {
     render(<GuestDialog {...props} groups={[]} />)
-    expect(screen.getByLabelText('Nombre del grupo nuevo')).toBeInTheDocument()
+    expect(screen.queryByLabelText(/Se suma a una invitación ya creada/)).not.toBeInTheDocument()
+  })
+
+  it('con el tope del plan alcanzado empieza por sumarse a una que ya existe', () => {
+    // Crear otra no lo permite el servidor: arrancar ahí sería ofrecer lo único imposible.
+    render(<GuestDialog {...props} atLimit />)
+    expect(screen.getByLabelText('A qué invitación se suma')).toBeInTheDocument()
   })
 
   it('cancelar cierra el diálogo y vuelve a la lista', () => {

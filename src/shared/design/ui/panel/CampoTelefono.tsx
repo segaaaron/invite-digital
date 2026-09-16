@@ -10,8 +10,8 @@ import { aGuardar, esValido, formatearMientrasEscribe, nacionalDe, PAIS_POR_DEFE
  * producto que vende fuera de su país.
  *
  * Se guarda en **E.164** (`+59170012345`), que es lo que `wa.me` exige y lo que deja llamar
- * desde cualquier sitio. El país sale del propio número cuando ya hay uno guardado; si no, del
- * idioma del navegador cuando es de la región que vendemos, y si no, Bolivia.
+ * desde cualquier sitio. El país sale del propio número cuando ya hay uno guardado; si no,
+ * Bolivia.
  *
  * El formato se aplica mientras se escribe (`AsYouType` de libphonenumber-js), así que el
  * número se lee como en la agenda del teléfono y no como una tira de dígitos.
@@ -37,9 +37,10 @@ export function CampoTelefono({
   const inicial = () => {
     if (value.trim() !== '') return paisDeNumero(value)
     if (paisPorDefecto !== undefined) return paisPorDefecto
-    // El idioma del navegador trae la región: `es-BO`, `en-US`. Si no es de las nuestras, Bolivia.
-    const region = typeof navigator === 'undefined' ? '' : (new Intl.Locale(navigator.language).region ?? '')
-    return (PAISES.find((p) => p.code === region)?.code ?? PAIS_POR_DEFECTO) as CountryCode
+    // **Bolivia, y no la región del navegador.** El atelier vende desde Bolivia y casi todos
+    // los números que teclea son de aquí; el idioma del navegador es de quien lo configuró,
+    // no del invitado: con `es-ES` salía España y había que corregir el prefijo cada vez.
+    return PAIS_POR_DEFECTO as CountryCode
   }
   const [pais, setPais] = useState<CountryCode>(inicial)
   const [nacional, setNacional] = useState(() => nacionalDe(value, inicial()))
@@ -54,12 +55,17 @@ export function CampoTelefono({
 
   return (
     <span className={`flex min-w-0 flex-col gap-1 ${className}`}>
-      <span className="flex min-w-0 items-stretch gap-2">
+      {/* Rejilla, **no `flex` con un ancho en el `select`**: `FIELD_CLASS` ya trae `w-full`, y
+          dos utilidades de anchura en la misma clase las decide el orden de la hoja, no el de
+          la cadena. Ganaba `w-full`: el país ocupaba la celda entera y el número se salía por
+          la derecha, encima del correo —de ahí el borde doble— y sin sitio donde escribir.
+          Con las pistas de la rejilla el ancho lo pone el contenedor y no hay conflicto. */}
+      <span className="grid min-w-0 grid-cols-[7rem_minmax(0,1fr)] items-stretch gap-2">
         <label className="sr-only" htmlFor={`${id}-pais`}>
           País del teléfono
         </label>
         <select
-          className={`${FIELD_CLASS} w-[112px] shrink-0 px-2.5`}
+          className={`${FIELD_CLASS} min-w-0 px-2.5`}
           id={`${id}-pais`}
           onChange={(e) => {
             const code = e.target.value as CountryCode
@@ -77,7 +83,7 @@ export function CampoTelefono({
 
         <input
           aria-describedby={incompleto ? `${id}-aviso` : undefined}
-          className={`${FIELD_CLASS} min-w-0 flex-1`}
+          className={`${FIELD_CLASS} min-w-0`}
           id={id}
           inputMode="tel"
           onBlur={onBlur}
