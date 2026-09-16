@@ -71,12 +71,13 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     await page.getByLabel('Correo').fill(CORREO)
     await page.getByLabel('Contraseña').fill(CLAVE)
     await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(/\/panel\/cuenta$/)
+    // Su pantalla propia, fuera del panel: con la provisional no se entra a ninguna otra.
+    await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
 
     const SUYA = 'la-que-eligen-los-novios-1'
-    await page.getByLabel('Contraseña actual').fill(CLAVE)
-    await page.getByLabel('Contraseña nueva').fill(SUYA)
-    await page.getByRole('button', { name: 'Cambiar la contraseña' }).click()
+    await page.getByLabel('La contraseña que te dieron').fill(CLAVE)
+    await page.getByLabel('Tu contraseña nueva').fill(SUYA)
+    await page.getByRole('button', { name: 'Guardar y entrar' }).click()
 
     // Cambiarla cierra todas las sesiones, así que vuelven a entrar — ahora sí, a su boda.
     await expect(page).toHaveURL(/\/panel\/entrar/)
