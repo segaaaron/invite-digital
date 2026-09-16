@@ -140,6 +140,8 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
     newGroupLabel: campo(formData, 'newGroupLabel') || undefined,
     fullName: campo(formData, 'fullName'),
     companions: Number(formData.get('companions') ?? 0),
+    // Un campo por acompañante, con el mismo nombre: `getAll` los trae en orden.
+    companionNames: formData.getAll('companionName').map((v) => String(v)),
     attending: asistencia === '' ? null : (asistencia as 'yes' | 'no' | 'maybe'),
     dietaryNote: campo(formData, 'dietaryNote') || null,
     // Ocho dígitos bolivianos se completan con +591: es como lo escribe todo el mundo aquí y

@@ -19,11 +19,14 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   // 1. Una persona con restricción, dentro del grupo sembrado (4 cupos). El alta es el
   // diálogo de la maqueta.
   await page.getByLabel('Nombre completo').fill('Ana Lucía Vega')
-  // Dentro del grupo sembrado: el alta empieza en «Invitación propia», que crearía otro.
-  await page.getByLabel('Se suma a una invitación ya creada').check()
   await page.getByLabel('Restricciones').fill('Sin gluten')
   await page.getByRole('button', { name: 'Guardar' }).click()
-  await expect(page.getByRole('cell', { name: 'Ana Lucía Vega', exact: true })).toBeVisible()
+  // Toda alta crea su invitación, así que el diálogo se queda con el enlace —que solo se
+  // enseña una vez— hasta que lo cierra quien lo copió.
+  await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
+  await page.waitForURL(/invitados$/)
+  // Dos celdas con su nombre: ella y su invitación, que se llama como ella.
+  await expect(page.getByRole('cell', { name: 'Ana Lucía Vega', exact: true }).first()).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Sin gluten', exact: true })).toBeVisible()
 
   // 2. El estado se recorre con un clic: pendiente → confirmado.
@@ -44,30 +47,10 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await expect(page.getByText('comensales confirmados')).toBeVisible()
 })
 
-test('el cupo del grupo es el tope, y el servidor lo dice', async ({ page }) => {
-  const slug = `${SLUG}-tope`
-  await seedPeopleEvent(slug)
+/**
+ * El tope del cupo ya no se prueba desde el alta: ahí cada invitado crea **su** invitación,
+ * con los cupos que hacen falta, así que nunca se pasa. Donde sí se puede chocar con él es
+ * moviendo a alguien a un grupo lleno, y eso lo prueba `invitados-acciones.spec.ts`; la regla
+ * en sí la fijan las unitarias de `addPerson`.
+ */
 
-  await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
-
-  // El grupo sembrado tiene 4 cupos: la quinta persona no entra.
-  for (const nombre of ['Uno', 'Dos', 'Tres', 'Cuatro']) {
-    await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
-    await page.getByLabel('Nombre completo').fill(nombre)
-    await page.getByLabel('Se suma a una invitación ya creada').check()
-    await page.getByRole('button', { name: 'Guardar' }).click()
-    await expect(page.getByRole('cell', { name: nombre, exact: true })).toBeVisible()
-  }
-
-  await page.goto(`/panel/eventos/${slug}/invitados?panel=alta`)
-  await page.getByLabel('Nombre completo').fill('Cinco')
-  await page.getByLabel('Se suma a una invitación ya creada').check()
-  await page.getByRole('button', { name: 'Guardar' }).click()
-
-  // El anunciador de rutas de Next también es role=alert: el aviso del formulario es el
-  // que lleva texto.
-  await expect(page.getByRole('alert').filter({ hasText: 'cupos' })).toBeVisible()
-  await expect(page.getByRole('cell', { name: 'Cinco', exact: true })).toHaveCount(0)
-
-  await deletePeopleEvent(slug)
-})

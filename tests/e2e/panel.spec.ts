@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
 import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
-import { createEvent, signIn } from './helpers/panel'
+import { añadirAcompanantes, createEvent, signIn } from './helpers/panel'
 
 // IP propia para el limitador de inicios de sesión (cinco por IP): en el CI todas las suites salen de 127.0.0.1.
 test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.4' } })
@@ -221,7 +221,7 @@ test.describe('invitados del evento', () => {
     // El alta es el diálogo de la maqueta: un grupo nace con su primer invitado y sus
     // acompañantes, que son los cupos de más.
     await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
-    await page.getByLabel('Acompañantes').fill('3')
+    await añadirAcompanantes(page, 3)
     await page.getByRole('button', { name: 'Guardar' }).click()
 
     const enlace = page.getByLabel('Enlace de la invitación')
@@ -253,7 +253,7 @@ test.describe('invitados del evento', () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
 
     await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
-    await page.getByLabel('Acompañantes').fill('3')
+    await añadirAcompanantes(page, 3)
     await page.getByRole('button', { name: 'Guardar' }).click()
     await expect(page.getByLabel('Enlace de la invitación')).toBeVisible()
     await page.getByRole('button', { name: 'Cerrar', exact: true }).click()

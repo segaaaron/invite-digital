@@ -20,7 +20,6 @@ const props = {
   eventId: 'e1',
   eventSlug: 'boda',
   closeHref: '/panel/eventos/boda/invitados',
-  groups: [{ id: 'g1', label: 'Familia Rojas', free: 2 }],
 }
 
 describe('GuestDialog', () => {
@@ -28,8 +27,7 @@ describe('GuestDialog', () => {
     render(<GuestDialog {...props} />)
 
     expect(screen.getByLabelText('Nombre completo')).toBeInTheDocument()
-    expect(screen.getByLabelText(/Invitación propia/)).toBeInTheDocument()
-    expect(screen.getByLabelText('Acompañantes')).toBeInTheDocument()
+    expect(screen.getByLabelText('Tipo de invitación')).toBeInTheDocument()
     expect(screen.getByLabelText('RSVP')).toBeInTheDocument()
     expect(screen.getByLabelText('Restricciones')).toBeInTheDocument()
     expect(screen.getByLabelText('WhatsApp / Teléfono')).toBeInTheDocument()
@@ -42,28 +40,23 @@ describe('GuestDialog', () => {
     expect(HTMLDialogElement.prototype.showModal).toHaveBeenCalled()
   })
 
-  it('empieza en «invitación propia»: dar de alta a alguien no exige elegir el grupo de otro', () => {
+  it('personal no pregunta por acompañantes; acompañado sí', () => {
     render(<GuestDialog {...props} />)
 
-    // El desplegable de grupos ya creados no se ve hasta que se pide sumarse a uno, y el
-    // nombre de la invitación es opcional: sin escribirlo se llama como el invitado.
-    expect(screen.queryByLabelText('A qué invitación se suma')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Nombre de la invitación')).toBeInTheDocument()
+    const tipo = screen.getByLabelText('Tipo de invitación')
+    expect(tipo).toHaveValue('personal')
+    // Personal es una persona y un cupo: el campo de acompañantes sobra y no se pinta.
+    expect(screen.queryByLabelText('Nombre del acompañante 1')).not.toBeInTheDocument()
 
-    fireEvent.click(screen.getByLabelText(/Se suma a una invitación ya creada/))
-    expect(screen.getByLabelText('A qué invitación se suma')).toBeInTheDocument()
-    expect(screen.queryByLabelText('Nombre de la invitación')).not.toBeInTheDocument()
-  })
+    // Acompañado abre un campo por acompañante, y de cada uno **solo el nombre**.
+    fireEvent.change(tipo, { target: { value: 'acompanado' } })
+    expect(screen.getByLabelText('Nombre del acompañante 1')).toBeInTheDocument()
 
-  it('sin invitaciones creadas no ofrece sumarse a ninguna', () => {
-    render(<GuestDialog {...props} groups={[]} />)
-    expect(screen.queryByLabelText(/Se suma a una invitación ya creada/)).not.toBeInTheDocument()
-  })
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir acompañante' }))
+    expect(screen.getByLabelText('Nombre del acompañante 2')).toBeInTheDocument()
 
-  it('con el tope del plan alcanzado empieza por sumarse a una que ya existe', () => {
-    // Crear otra no lo permite el servidor: arrancar ahí sería ofrecer lo único imposible.
-    render(<GuestDialog {...props} atLimit />)
-    expect(screen.getByLabelText('A qué invitación se suma')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar acompañante 2' }))
+    expect(screen.queryByLabelText('Nombre del acompañante 2')).not.toBeInTheDocument()
   })
 
   it('cancelar cierra el diálogo y vuelve a la lista', () => {

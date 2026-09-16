@@ -208,7 +208,6 @@ export default async function InvitadosPage({
           closeHref={base}
           eventId={event.value.id}
           eventSlug={event.value.slug}
-          groups={eleccionDeGrupos}
           notice={
             <AllowanceNotice currentGroups={filas.length} eventSlug={event.value.slug} maxGuestGroups={limite} />
           }

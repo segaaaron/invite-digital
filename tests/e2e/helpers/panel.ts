@@ -48,11 +48,23 @@ export async function createGuestGroup(
   // cupos de más; la invitación se llama como ella.
   await page.goto(`/panel/eventos/${eventSlug}/invitados?panel=alta`)
   await page.getByLabel('Nombre completo').fill(label)
-  await page.getByLabel('Acompañantes').fill(String(Math.max(0, seats - 1)))
+  // «Acompañado» abre un campo por acompañante, y de cada uno solo se pide el nombre: los
+  // cupos del grupo son la persona más ellos.
+  await añadirAcompanantes(page, Math.max(0, seats - 1))
   await page.getByRole('button', { name: 'Guardar' }).click()
   const enlace = await page.getByLabel('Enlace de la invitación').inputValue()
   // El diálogo se queda abierto para copiar el enlace: cerrarlo deja la página usable.
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
   await page.waitForURL(/invitados$/)
   return enlace
+}
+
+/** Abre «Acompañado» y escribe un nombre por acompañante, que es lo único que se les pide. */
+export async function añadirAcompanantes(page: Page, cuantos: number): Promise<void> {
+  if (cuantos === 0) return
+  await page.getByLabel('Tipo de invitación').selectOption('acompanado')
+  for (let i = 1; i < cuantos; i += 1) await page.getByRole('button', { name: 'Añadir acompañante' }).click()
+  for (let i = 0; i < cuantos; i += 1) {
+    await page.getByLabel(`Nombre del acompañante ${i + 1}`).fill(`Acompañante ${i + 1}`)
+  }
 }

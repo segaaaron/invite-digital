@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test'
 import { AUTH_STATE } from './fixtures/atelier'
 import { closePlanesDb, deletePlanEvent, guestGroupCount, seedPlanEvent } from './fixtures/planes'
+import { añadirAcompanantes } from './helpers/panel'
 
 test.use({ storageState: AUTH_STATE })
 
@@ -13,10 +14,10 @@ test.afterAll(async () => {
 
 /** Da de alta un grupo por el diálogo de la maqueta: primer invitado y sus acompañantes. */
 async function crearGrupo(page: Page, etiqueta: string, acompanantes = 1): Promise<void> {
-  // El alta empieza en «Invitación propia»: la invitación se llama como el invitado y no
+  // El alta empieza en «Personal»: la invitación se llama como el invitado y no
   // hay que elegir grupo ninguno.
   await page.getByLabel('Nombre completo').fill(etiqueta)
-  await page.getByLabel('Acompañantes').fill(String(acompanantes))
+  await añadirAcompanantes(page, acompanantes)
   await page.getByRole('button', { name: 'Guardar' }).click()
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click()
   await page.waitForURL(/invitados$/)
@@ -41,7 +42,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
 
   // 2. En el tope, el aviso cambia de tono y el botón de guardar queda deshabilitado.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-  await page.getByLabel('Invitación propia').check()
+  await page.getByLabel('Tipo de invitación').selectOption('personal')
   await expect(page.getByText('El plan no admite más grupos')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Guardar' })).toBeDisabled()
 

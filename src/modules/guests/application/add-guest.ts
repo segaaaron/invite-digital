@@ -37,6 +37,14 @@ export type AddGuestInput = {
   newGroupLabel?: string | undefined
   fullName: string
   companions: number
+  /**
+   * El nombre de cada acompañante, cuando se conoce.
+   *
+   * Es lo único que la pantalla les pide. Sin nombre la lista sale llena de «Acompañante
+   * de Ana Lucía Vega» y no hay forma de saber a quién sentar dónde ni a quién buscar en la
+   * puerta; con él, cada acompañante es una persona como las demás.
+   */
+  companionNames?: readonly string[] | undefined
   attending: Attendance | null
   dietaryNote: string | null
   phone: string | null
@@ -76,7 +84,10 @@ export const addGuest =
 
         // `Number('abc')` es NaN, y `1 + NaN` cupos llegaba al dominio: el atelier leía
         // «Cupos inválidos: NaN» ante un campo con basura.
-        const acompanantes = Number.isFinite(input.companions) ? Math.max(0, Math.trunc(input.companions)) : 0
+        const nombresDeAcompanantes = (input.companionNames ?? []).map((n) => n.trim()).filter((n) => n !== '')
+        const pedidos = Number.isFinite(input.companions) ? Math.max(0, Math.trunc(input.companions)) : 0
+        // Los nombres mandan sobre el número: la pantalla pide uno por acompañante.
+        const acompanantes = nombresDeAcompanantes.length > 0 ? nombresDeAcompanantes.length : pedidos
         let groupId = input.groupId ?? null
         let token: string | null = null
 
@@ -134,7 +145,7 @@ export const addGuest =
         for (let i = 0; i < acompanantes; i += 1) {
           const acompanante = await deps.addPerson({
             guestGroupId: groupId,
-            fullName: `Acompañante de ${nombre}`,
+            fullName: nombresDeAcompanantes[i] ?? `Acompañante de ${nombre}`,
             isCompanion: true,
             dietaryNote: null,
             vip: false,

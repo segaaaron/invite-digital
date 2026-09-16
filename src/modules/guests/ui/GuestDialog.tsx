@@ -31,14 +31,12 @@ const INICIAL: GuestActionState = { status: 'idle', message: '' }
 export function GuestDialog({
   eventId,
   eventSlug,
-  groups,
   closeHref,
   atLimit = false,
   notice,
 }: {
   eventId: string
   eventSlug: string
-  groups: readonly GroupChoice[]
   closeHref: string
   /** El plan ya no admite más grupos: se puede añadir a uno existente, no crear otro. */
   atLimit?: boolean
@@ -49,23 +47,20 @@ export function GuestDialog({
   const dialogo = useRef<HTMLDialogElement>(null)
   const [estado, accion, pendiente] = useActionState<GuestActionState, FormData>(addGuestAction, INICIAL)
   /**
-   * Cómo le llega la invitación, que es la pregunta de verdad.
+   * Personal o familiar, y ya está.
    *
-   * El formulario empezaba con un desplegable de grupos ya creados —«amigo · 2 libres»— y el
-   * primero venía elegido: para dar de alta a una persona había que meterla dentro del grupo
-   * de otro, o encontrar «Grupo nuevo…» al final de la lista. Lo normal es lo contrario, así
-   * que lo normal es lo que viene puesto.
+   * Personal o acompañado. Las dos crean su invitación, que se llama como el invitado;
+   * acompañado además pregunta cuántos van con él. Sumar a alguien a una invitación que ya existe **no se pregunta
+   * aquí**: se entra desde la fila de esa invitación, que es donde se ve de quién es.
    */
-  // Con el tope del plan alcanzado no se pueden crear más invitaciones: se empieza por sumar
-  // a una que ya existe, que es lo único que el servidor va a aceptar.
-  const [modo, setModo] = useState<'propia' | 'grupo'>(atLimit && groups.length > 0 ? 'grupo' : 'propia')
-  const [grupo, setGrupo] = useState(groups[0]?.id ?? '')
+  const [tipo, setTipo] = useState('personal')
+  // Un nombre por acompañante: es lo único que se les pide.
+  const [acompanantes, setAcompanantes] = useState<readonly string[]>([])
   // El teléfono se guarda en formato internacional; el campo enseña su país y su número local.
   const [telefono, setTelefono] = useState('')
 
   const idNombre = useId()
   const idGrupo = useId()
-  const idNuevo = useId()
   const idAcomp = useId()
   const idRsvp = useId()
   const idDieta = useId()
@@ -96,7 +91,8 @@ export function GuestDialog({
     router.replace(closeHref)
   }
 
-  const nuevoGrupo = modo === 'propia'
+  // Toda alta crea su invitación, así que toda alta cuenta contra el tope del plan.
+  const nuevoGrupo = true
 
   return (
     <dialog
@@ -135,88 +131,60 @@ export function GuestDialog({
           <input autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
         </Field>
 
-        <fieldset className="flex flex-col gap-2">
-          <legend className={`${LABEL_CLASS} mb-2`}>Cómo le llega la invitación</legend>
-
-          <label className="flex cursor-pointer items-start gap-2.5 rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 transition-colors has-checked:border-ink has-checked:bg-bg-top">
-            <input
-              checked={modo === 'propia'}
-              className="mt-0.5 size-4"
-              name="modo"
-              onChange={() => setModo('propia')}
-              type="radio"
-              value="propia"
-            />
-            <span className="flex flex-col text-[13px] text-ink">
-              Invitación propia
-              <span className="text-[12px] text-ink-mute">
-                Recibe su propio enlace. Si viene acompañado, se le suman pases abajo.
-              </span>
-            </span>
-          </label>
-
-          {groups.length === 0 ? null : (
-            <label className="flex cursor-pointer items-start gap-2.5 rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 transition-colors has-checked:border-ink has-checked:bg-bg-top">
-              <input
-                checked={modo === 'grupo'}
-                className="mt-0.5 size-4"
-                name="modo"
-                onChange={() => setModo('grupo')}
-                type="radio"
-                value="grupo"
-              />
-              <span className="flex flex-col text-[13px] text-ink">
-                Se suma a una invitación ya creada
-                <span className="text-[12px] text-ink-mute">
-                  Comparte el enlace, los cupos y la mesa con su familia o su grupo.
-                </span>
-              </span>
-            </label>
-          )}
-        </fieldset>
-
-        <div className="grid gap-4 sm:grid-cols-2">
-          {modo === 'grupo' ? (
-            <Field htmlFor={idGrupo} label="A qué invitación se suma">
-              <select
-                className={FIELD_CLASS}
-                id={idGrupo}
-                name="groupId"
-                onChange={(e) => setGrupo(e.target.value)}
-                value={grupo}
-              >
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.label} · {g.free === 0 ? 'sin cupos libres' : `${g.free} cupo${g.free === 1 ? '' : 's'} libre${g.free === 1 ? '' : 's'}`}
-                  </option>
-                ))}
-              </select>
-            </Field>
-          ) : (
-            <Field
-              hint="Vacío, se llama como el invitado."
-              htmlFor={idNuevo}
-              label="Nombre de la invitación"
-            >
-              <input
-                className={FIELD_CLASS}
-                id={idNuevo}
-                maxLength={160}
-                name="newGroupLabel"
-                placeholder="El nombre del invitado"
-                type="text"
-              />
-            </Field>
-          )}
-
-          <Field
-            hint="Pases además del suyo: pareja, hijos. 0 si viene solo."
-            htmlFor={idAcomp}
-            label="Acompañantes"
+        <Field htmlFor={idGrupo} label="Tipo de invitación">
+          <select
+            className={FIELD_CLASS}
+            id={idGrupo}
+            onChange={(e) => {
+              setTipo(e.target.value)
+              // Al pasar a «Acompañado» hay que poder escribir ya: sin una fila, la pantalla
+              // se queda con un botón y nada donde teclear.
+              if (e.target.value === 'acompanado' && acompanantes.length === 0) setAcompanantes([''])
+            }}
+            value={tipo}
           >
-            <input className={FIELD_CLASS} defaultValue={0} id={idAcomp} min={0} name="companions" type="number" />
-          </Field>
-        </div>
+            <option value="personal">Personal</option>
+            <option value="acompanado">Acompañado</option>
+          </select>
+        </Field>
+
+        {tipo === 'personal' ? null : (
+          <div className="flex flex-col gap-2">
+            <span className={LABEL_CLASS}>Acompañantes</span>
+            {/* De cada acompañante **solo el nombre**. Lo demás —su comida, su confirmación—
+                se edita luego desde su fila, como en cualquier otro invitado. */}
+            {acompanantes.map((valor, indice) => (
+              <span className="flex min-w-0 gap-2" key={indice}>
+                <label className="sr-only" htmlFor={`${idAcomp}-${indice}`}>
+                  Nombre del acompañante {indice + 1}
+                </label>
+                <input
+                  className={`${FIELD_CLASS} min-w-0 flex-1`}
+                  id={`${idAcomp}-${indice}`}
+                  maxLength={160}
+                  name="companionName"
+                  onChange={(e) =>
+                    setAcompanantes((previos) => previos.map((p, i) => (i === indice ? e.target.value : p)))
+                  }
+                  placeholder="Nombre completo"
+                  type="text"
+                  value={valor}
+                />
+                <PanelButton
+                  aria-label={`Quitar acompañante ${indice + 1}`}
+                  onClick={() => setAcompanantes((previos) => previos.filter((_, i) => i !== indice))}
+                >
+                  Quitar
+                </PanelButton>
+              </span>
+            ))}
+            <div>
+              <PanelButton onClick={() => setAcompanantes((previos) => [...previos, ''])}>
+                Añadir acompañante
+              </PanelButton>
+            </div>
+          </div>
+        )}
 
         {notice === undefined ? null : <div>{notice}</div>}
 

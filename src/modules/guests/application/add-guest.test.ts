@@ -85,6 +85,16 @@ describe('addGuest', () => {
     expect(d.addGroup).toHaveBeenCalledWith(expect.objectContaining({ label: 'Ana Lucía Vega', seats: 2 }))
   })
 
+  it('cada acompañante entra con su nombre', async () => {
+    // Es lo único que se les pide en la pantalla: el nombre. Sin él la lista sale llena de
+    // «Acompañante de Ana Lucía Vega» y no hay forma de saber a quién sentar dónde.
+    const { deps: d, personas } = deps()
+    await addGuest(d as never)({ ...base, companionNames: ['Carlos Nieto', 'Sofía Nieto'] })
+
+    expect(personas.map((p) => p.fullName)).toEqual(['Ana Lucía Vega', 'Carlos Nieto', 'Sofía Nieto'])
+    expect(personas.slice(1).every((p) => p.isCompanion)).toBe(true)
+  })
+
   it('los acompañantes entran como personas propias, marcadas como tales', async () => {
     const { deps: d, personas } = deps()
     await addGuest(d as never)({ ...base, newGroupLabel: 'Padrinos', companions: 2 })
