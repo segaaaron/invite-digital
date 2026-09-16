@@ -261,6 +261,7 @@ export type RsvpMessageKey =
   | 'invitation_not_found'
   | 'invitation_revoked'
   | 'rsvp_closed'
+  | 'already_answered'
   | 'too_many_seats'
   | 'invalid_payload'
   | 'storage_failure'
@@ -357,6 +358,26 @@ export interface ThemeDictionary {
 
 export interface InvitationDictionary {
   title: string
+  /** La confirmación nombre por nombre de un grupo. */
+  whoIsComing: string
+  /** El atajo de la pareja, y su salida cuando solo va uno. */
+  bothComing: string
+  onlyOneComing: string
+  /** «Acompañantes sin nombre ({n} cupos libres)». */
+  extraGuests: string
+  addOne: string
+  removeOne: string
+  nobodyComing: string
+  answerOnce: string
+  backToInvitation: string
+  /** El botón de la invitación que lleva a esa pantalla. */
+  confirmAttendance: string
+  /** Lo que ve quien vuelve a abrir su enlace: se contesta una sola vez. */
+  confirmedHeading: string
+  /** «Vienen {n} de {total}». */
+  confirmedCount: string
+  confirmedNobody: string
+  confirmedLocked: string
   seatsLabel: string
   /** «Nombre completo»: el enlace sabe el grupo, no quién de la familia contesta. */
   nameLabel: string

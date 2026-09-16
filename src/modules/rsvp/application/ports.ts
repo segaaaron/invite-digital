@@ -8,6 +8,13 @@ export type LatestResponse = {
 }
 
 export interface RsvpRepository {
+  /**
+   * Cuándo se le permitió a ese grupo volver a responder, o `null` si nunca.
+   *
+   * Se contesta una sola vez; corregir lo reabre el atelier desde el panel, y esa marca solo
+   * vale para la respuesta siguiente.
+   */
+  reopenedAtFor(guestGroupId: string): Promise<Date | null>
   /** Solo anexa: responder otra vez crea una fila nueva, nunca actualiza la anterior. */
   append(response: RsvpResponse): Promise<void>
   latestFor(guestGroupId: string): Promise<LatestResponse | null>

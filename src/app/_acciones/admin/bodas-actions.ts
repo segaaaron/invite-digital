@@ -139,7 +139,7 @@ export async function createWeddingForClientAction(
   // --- 3. El contenido de muestra del diseño: la invitación se ve terminada desde el
   // primer segundo, que es la mitad de lo que se vende.
   try {
-    await events.seedContent(evento.value.id, tema.defaultContent)
+    await events.seedContent(evento.value.id)
   } catch (causa) {
     console.error('no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
   }

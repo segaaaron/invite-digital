@@ -18,7 +18,7 @@ const filas = [
 describe('DeliveryPanel', () => {
   it('si el teléfono no se guarda, lo dice: WhatsApp abriría sin destinatario', async () => {
     guardarTelefono.mockImplementation(async () => ({ status: 'error', message: 'No se pudo guardar el teléfono.' }))
-    render(<DeliveryPanel eventLocale="es" eventSlug="boda" eventTitle="María & Alejandro" rows={filas} template={null} />)
+    render(<DeliveryPanel borrador={false} sinContenido={false} eventLocale="es" eventSlug="boda" eventTitle="María & Alejandro" puedePublicar rows={filas} template={null} />)
 
     // Dos grupos con la misma etiqueta: pasa constantemente —«Familia Rojas Peña» dos
     // veces— y por eso nada puede identificarse por su nombre en esta pantalla.
@@ -36,13 +36,24 @@ describe('DeliveryPanel', () => {
       label: 'Familia Rojas Peña',
       url: 'https://invitepremium.bo/i/TOKEN',
     }))
-    render(<DeliveryPanel eventLocale="es" eventSlug="boda" eventTitle="María & Alejandro" rows={filas} template={null} />)
+    render(<DeliveryPanel borrador={false} sinContenido={false} eventLocale="es" eventSlug="boda" eventTitle="María & Alejandro" puedePublicar rows={filas} template={null} />)
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Generar enlace' })[0]!)
+    fireEvent.click(screen.getAllByRole('button', { name: 'Preparar enlace' })[0]!)
 
     await waitFor(() =>
       expect(screen.getByRole('img', { name: 'Invitación de Familia Rojas Peña' })).toBeInTheDocument(),
     )
+    // La tarjeta va plegada: casi todo se reparte por WhatsApp.
+    fireEvent.click(screen.getByText(/tarjeta con qr para imprimir/i))
     expect(screen.getByRole('button', { name: /imprimir hoja de reparto/i })).toBeInTheDocument()
+    // Y el mensaje se copia **con el enlace dentro**, que es lo único que sirve para pegarlo.
+    expect(screen.getByRole('button', { name: 'Copiar mensaje' })).toBeInTheDocument()
+  })
+
+  it('en borrador no reparte: el enlace devolvería 404 a quien lo abriera', () => {
+    render(<DeliveryPanel borrador sinContenido={false} eventLocale="es" eventSlug="boda" eventTitle="María & Alejandro" puedePublicar rows={filas} template={null} />)
+
+    expect(screen.getByRole('alert')).toHaveTextContent(/está en borrador/i)
+    for (const boton of screen.getAllByRole('button', { name: /preparar/i })) expect(boton).toBeDisabled()
   })
 })

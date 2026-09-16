@@ -46,6 +46,10 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     await database.update(guestGroups).set({ tokenHash }).where(eq(guestGroups.id, id))
   },
 
+  async reopenRsvp(id, when) {
+    await database.update(guestGroups).set({ rsvpReopenedAt: when }).where(eq(guestGroups.id, id))
+  },
+
   async setPhone(id, phone) {
     await database.update(guestGroups).set({ phone }).where(eq(guestGroups.id, id))
   },

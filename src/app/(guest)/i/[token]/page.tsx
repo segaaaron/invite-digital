@@ -1,5 +1,6 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events as eventos, guestbook, plans, registry } from '@/app/composition/container'
+import { events as eventos, guestbook, plans, registry, rsvp } from '@/app/composition/container'
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
@@ -8,6 +9,7 @@ import { invitationUrl } from '@/modules/guests'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
 import { GuestbookForm } from '@/modules/rsvp/ui/GuestbookForm'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
+import { RsvpPareja } from '@/modules/rsvp/ui/RsvpPareja'
 import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
@@ -35,6 +37,11 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   if (!(await eventUnlocked(event.id))) {
     return <EventPasswordGate token={token} />
   }
+  // Las personas del grupo: deciden si se confirma por nombre o con un sí y un no.
+  const personas = await rsvp.peopleOfGroup(group.id)
+  // Igual que en la pantalla de confirmación: reabrir devuelve el formulario una sola vez.
+  const reabierto = latest === null ? null : await rsvp.reopenedAtFor(group.id)
+  const sinResponder = latest === null || (reabierto !== null && reabierto.getTime() > latest.respondedAt.getTime())
   const dictionary = getDictionary(event.locale).invitation
   const registryDictionary = getDictionary(event.locale).registry
   const guestbookDictionary = getDictionary(event.locale).guestbook
@@ -83,14 +90,32 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           guest: (
             <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
           ),
+          // Con dos o más personas cargadas, confirmar es decir **quién** viene, y eso se hace
+          // en su propia pantalla: marcar seis nombres dentro de una invitación de seis mil
+          // píxeles obliga a subir y bajar buscando el formulario.
           rsvp: abierto ? (
+            personas.length === 2 && sinResponder ? (
+              // Una pareja viene junta o no viene: dos nombres que marcar son un paso de más.
+              <RsvpPareja confirmarHref={`/i/${token}/confirmar`} dictionary={dictionary} token={token} />
+            ) : personas.length > 2 && sinResponder ? (
+              <div className="flex flex-col items-center gap-3 py-2 text-center">
+                <p className="text-[14px] leading-[1.7]">{dictionary.whoIsComing}</p>
+                <Link
+                  className="rounded-[var(--radius-pill)] bg-[var(--color-cta)] px-6 py-3 font-mono text-[11px] tracking-[0.28em] text-[var(--color-on-cta)] uppercase"
+                  href={`/i/${token}/confirmar`}
+                >
+                  {dictionary.confirmAttendance}
+                </Link>
+              </div>
+            ) : (
             <RsvpForm
               dictionary={dictionary}
-              previous={latest}
+              previous={sinResponder ? null : latest}
               seats={group.seats}
               token={token}
               variant={definicion.rsvp}
             />
+            )
           ) : (
             <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
           ),

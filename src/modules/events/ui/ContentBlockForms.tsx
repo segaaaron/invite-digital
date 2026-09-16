@@ -7,6 +7,9 @@ import type { InvitationContent, SectionKey } from '../domain/invitation-content
 import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
 import { type Campo, FORMAS, type FormaBloque } from './content-shapes'
 import { type MediaItem, esPista } from './EventMediaPanel'
+import { CheckIcon } from '@/shared/design/ui/icons'
+import { CampoFechaHora } from './CampoFechaHora'
+import { SubidaEnElCampo } from './SubidaEnElCampo'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ContentActionState = { status: 'idle' }
@@ -42,6 +45,11 @@ type Props = {
   readonly content: InvitationContent
   /** Las fotografías ya subidas del evento: lo que se ofrece en los campos de imagen. */
   readonly media: readonly MediaItem[]
+  /**
+   * El contenido de muestra del diseño. **No se guarda**: se enseña como ejemplo dentro de
+   * cada campo y detrás del botón «Usar el texto de ejemplo».
+   */
+  readonly ejemplo: InvitationContent
 }
 
 /**
@@ -60,7 +68,7 @@ type Props = {
  * nadie a mano**: lo compone `aValor` a partir de lo que hay en pantalla. Quien decide qué
  * es válido sigue siendo el dominio, en el servidor.
  */
-export function ContentBlockForms({ eventId, eventSlug, sections, content, media }: Props) {
+export function ContentBlockForms({ eventId, eventSlug, sections, content, media, ejemplo }: Props) {
   if (sections.length === 0) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft">
@@ -69,11 +77,52 @@ export function ContentBlockForms({ eventId, eventSlug, sections, content, media
     )
   }
 
+  // Qué bloques ya tienen algo escrito: el índice lo dice de un vistazo, que es lo que
+  // convierte una columna de doce formularios iguales en una lista de tareas.
+  const escrito = (seccion: SectionKey): boolean => {
+    const bloque = content[seccion]
+    if (bloque === undefined || bloque === null) return false
+    if (Array.isArray(bloque)) return bloque.length > 0
+    return Object.values(bloque as Record<string, unknown>).some((v) => typeof v === 'string' && v.trim() !== '')
+  }
+  const hechos = sections.filter(escrito).length
+
   return (
-    <div className="flex flex-col gap-5">
+    <div className="grid items-start gap-6 min-[1100px]:grid-cols-[210px_minmax(0,1fr)]">
+      {/* El índice: dónde se está, qué falta y cuánto queda. Antes era una columna de bloques
+          iguales sin principio ni final. */}
+      <nav aria-label="Bloques de la invitación" className="hidden min-[1100px]:block min-[1100px]:sticky min-[1100px]:top-6">
+        <p className="mb-2 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">
+          {hechos} de {sections.length} listos
+        </p>
+        <ul className="flex flex-col gap-0.5">
+          {sections.map((seccion) => (
+            <li key={seccion}>
+              <a
+                className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[13px] text-ink-soft transition-colors hover:bg-bg-top hover:text-ink"
+                href={`#bloque-${seccion}`}
+              >
+                <span
+                  aria-hidden
+                  className={`grid size-4 shrink-0 place-items-center rounded-full ${
+                    escrito(seccion) ? 'bg-sage text-white' : 'border border-line-panel-strong'
+                  }`}
+                >
+                  {escrito(seccion) ? <CheckIcon className="size-2.5" /> : null}
+                </span>
+                {TITULOS[seccion]}
+                <span className="sr-only">{escrito(seccion) ? ' · escrito' : ' · vacío'}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div className="flex min-w-0 flex-col gap-5">
       {sections.map((seccion) => (
         <BloqueDeContenido
           content={content}
+          ejemplo={ejemplo}
           eventId={eventId}
           eventSlug={eventSlug}
           key={seccion}
@@ -81,6 +130,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, content, media
           section={seccion}
         />
       ))}
+      </div>
     </div>
   )
 }
@@ -91,12 +141,14 @@ function BloqueDeContenido({
   section,
   content,
   media,
+  ejemplo,
 }: {
   eventId: string
   eventSlug: string
   section: SectionKey
   content: InvitationContent
   media: readonly MediaItem[]
+  ejemplo: InvitationContent
 }) {
   const forma = FORMAS[section]
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
@@ -116,11 +168,18 @@ function BloqueDeContenido({
 
   const error = state.status === 'error' ? (ERRORES[state.message] ?? ERRORES.storage_failure) : null
 
+  // Lo que el diseño trae escrito en este bloque: es el ejemplo de cada campo.
+  const muestra: Record<string, string> = (() => {
+    const bloque = ejemplo[section]
+    if (bloque === undefined || bloque === null || Array.isArray(bloque)) return {}
+    return Object.fromEntries(Object.entries(bloque as Record<string, unknown>).map(([k, v]) => [k, typeof v === 'string' ? v : '']))
+  })()
+
   const escribirCampo = (clave: string, valor: string) =>
     setEstado((previo) => ({ ...previo, campos: { ...previo.campos, [clave]: valor } }))
 
   return (
-    <form action={formAction} className="flex flex-col gap-3.5 border-t border-[var(--color-line-panel)] pt-4">
+    <form action={formAction} className="flex scroll-mt-6 flex-col gap-3.5 border-t border-[var(--color-line-panel)] pt-4" id={`bloque-${section}`}>
       <input name="eventId" readOnly type="hidden" value={eventId} />
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="section" readOnly type="hidden" value={section} />
@@ -135,6 +194,9 @@ function BloqueDeContenido({
             {forma.fields.map((campo) => (
               <CampoDeBloque
                 campo={campo}
+                ejemplo={muestra[campo.key]}
+                eventId={eventId}
+                eventSlug={eventSlug}
                 key={campo.key}
                 media={media}
                 onChange={(valor) => escribirCampo(campo.key, valor)}
@@ -191,6 +253,9 @@ function CampoDeBloque({
   onChange,
   media,
   etiqueta,
+  ejemplo,
+  eventId,
+  eventSlug,
 }: {
   campo: Campo
   valor: string
@@ -198,6 +263,10 @@ function CampoDeBloque({
   media: readonly MediaItem[]
   /** El rótulo, cuando la fila necesita decir de qué fila se trata. */
   etiqueta?: string
+  /** Lo que el diseño escribe aquí, como ejemplo dentro del campo. */
+  ejemplo?: string | undefined
+  eventId?: string
+  eventSlug?: string
 }) {
   const id = useId()
   const pistaId = `${id}-pista`
@@ -210,15 +279,25 @@ function CampoDeBloque({
       </label>
 
       {campo.kind === 'imagen' ? (
-        <SelectorDeImagen id={id} media={media} onChange={onChange} valor={valor} />
+        <SelectorDeImagen
+          eventId={eventId}
+          eventSlug={eventSlug}
+          id={id}
+          media={media}
+          onChange={onChange}
+          valor={valor}
+        />
       ) : campo.kind === 'audio' ? (
-        <SelectorDeAudio id={id} media={media} onChange={onChange} valor={valor} />
+        <SelectorDeAudio eventId={eventId} eventSlug={eventSlug} id={id} media={media} onChange={onChange} valor={valor} />
+      ) : campo.kind === 'fecha' ? (
+        <CampoFechaHora id={id} onChange={onChange} valor={valor} />
       ) : campo.kind === 'parrafo' ? (
         <textarea
           aria-describedby={campo.hint === undefined ? undefined : pistaId}
           className={`${FIELD_CLASS} leading-[1.6]`}
           id={id}
           onChange={(evento) => onChange(evento.target.value)}
+          placeholder={ejemplo}
           rows={3}
           value={valor}
         />
@@ -228,7 +307,8 @@ function CampoDeBloque({
           className={FIELD_CLASS}
           id={id}
           onChange={(evento) => onChange(evento.target.value)}
-          type={campo.kind === 'fecha' ? 'datetime-local' : 'text'}
+          placeholder={ejemplo}
+          type="text"
           value={valor}
         />
       )}
@@ -255,16 +335,20 @@ function SelectorDeImagen({
   valor,
   onChange,
   media,
+  eventId,
+  eventSlug,
 }: {
   id: string
   valor: string
   onChange: (valor: string) => void
   media: readonly MediaItem[]
+  eventId?: string | undefined
+  eventSlug?: string | undefined
 }) {
   const conocida = media.some((imagen) => imagen.id === valor)
 
   return (
-    <div className="flex items-start gap-2.5">
+    <div className="flex flex-wrap items-start gap-2.5">
       {valor === '' ? null : (
         /* La sirve /media/[id], que no pasa por el optimizador: lleva la puerta de
            contraseña del evento. */
@@ -290,6 +374,9 @@ function SelectorDeImagen({
         ))}
         {valor === '' || conocida ? null : <option value={valor}>{valor}</option>}
       </select>
+      {eventId === undefined || eventSlug === undefined ? null : (
+        <SubidaEnElCampo eventId={eventId} eventSlug={eventSlug} onSubido={onChange} tipo="imagen" />
+      )}
     </div>
   )
 }
@@ -309,11 +396,15 @@ function SelectorDeAudio({
   valor,
   onChange,
   media,
+  eventId,
+  eventSlug,
 }: {
   id: string
   valor: string
   onChange: (valor: string) => void
   media: readonly MediaItem[]
+  eventId?: string | undefined
+  eventSlug?: string | undefined
 }) {
   const pistas = media.filter(esPista)
   const conocida = pistas.some((pista) => pista.id === valor)
@@ -329,6 +420,12 @@ function SelectorDeAudio({
         ))}
         {valor === '' || conocida ? null : <option value={valor}>{valor}</option>}
       </select>
+      {/* Sin canciones subidas, el desplegable solo decía «Sin música»: aquí se sube. */}
+      {eventId === undefined || eventSlug === undefined ? null : (
+        <div>
+          <SubidaEnElCampo eventId={eventId} eventSlug={eventSlug} onSubido={onChange} tipo="audio" />
+        </div>
+      )}
 
       {valor === '' ? null : (
         // La sirve /media/[id], con la puerta de contraseña del evento y con soporte de

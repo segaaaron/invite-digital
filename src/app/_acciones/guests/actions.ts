@@ -8,6 +8,7 @@ import { isErr } from '@/shared/result'
 import type { GuestErrorKind } from '@/modules/guests/domain/errors'
 import { invitationUrl } from '@/modules/guests/domain/invitation-url'
 import { campo } from '@/shared/forms/campo'
+import { normalizarWhatsapp } from '@/shared/whatsapp'
 
 export type AddGuestGroupState =
   | { status: 'idle' }
@@ -141,7 +142,9 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
     companions: Number(formData.get('companions') ?? 0),
     attending: asistencia === '' ? null : (asistencia as 'yes' | 'no' | 'maybe'),
     dietaryNote: campo(formData, 'dietaryNote') || null,
-    phone: campo(formData, 'phone') || null,
+    // Ocho dígitos bolivianos se completan con +591: es como lo escribe todo el mundo aquí y
+    // `wa.me` exige el número internacional. Lo que no cuadre se guarda tal cual, sin estorbar.
+    phone: telefono(campo(formData, 'phone')),
     email: campo(formData, 'email') || null,
     vip: formData.get('vip') === 'on',
     allowance: { maxGuestGroups: capacidad.value.maxGuestGroups },
@@ -258,6 +261,27 @@ export async function markInvitationSentAction(input: {
   return { status: 'success' }
 }
 
+/**
+ * «Permitir corregir»: deja a ese grupo contestar una vez más.
+ *
+ * Se confirma una sola vez —el enlace circula por el chat de la familia—, así que equivocarse
+ * necesitaba salida. Esta es, y pasa por quien lleva el evento.
+ */
+export async function reopenRsvpAction(input: { eventSlug: string; id: string }): Promise<PersonActionState> {
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+
+  try {
+    await guests.reopenRsvp(input.id)
+  } catch (cause) {
+    console.error('no se pudo reabrir la confirmación', cause)
+    return { status: 'error', message: 'No se pudo reabrir la confirmación.' }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  return { status: 'success' }
+}
+
 export type ResendState =
   | { status: 'idle' }
   // El enlace nuevo viaja una sola vez, igual que al crear el grupo. Lleva el `groupId`
@@ -366,6 +390,13 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
   }
 }
 
+/** Un teléfono como se escribe aquí: `70012345` se guarda `+59170012345`. Vacío, `null`. */
+const telefono = (crudo: string): string | null => {
+  const escrito = crudo.trim()
+  if (escrito === '') return null
+  return normalizarWhatsapp(escrito) || escrito
+}
+
 /** El teléfono del grupo, para abrir WhatsApp con el destinatario ya puesto. */
 export async function setGroupPhoneAction(input: {
   eventSlug: string
@@ -375,9 +406,9 @@ export async function setGroupPhoneAction(input: {
   const actor = await requireSession()
   await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
-  const limpio = input.phone.trim()
+  const limpio = telefono(input.phone)
   try {
-    await guests.setPhone(input.id, limpio === '' ? null : limpio)
+    await guests.setPhone(input.id, limpio)
   } catch (cause) {
     console.error('no se pudo guardar el teléfono', cause)
     return { status: 'error', message: 'No se pudo guardar el teléfono.' }

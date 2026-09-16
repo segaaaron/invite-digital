@@ -11,6 +11,8 @@ import { PassDialog } from '@/modules/guests/ui/PassDialog'
 import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { GuestGroupTable, type GuestGroupRowView } from '@/modules/guests/ui/GuestGroupTable'
+import { bloquesConDatos } from '@/modules/events'
+import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -49,6 +51,13 @@ export default async function InvitadosPage({
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
   }
+
+  // Antes de invitar, la invitación: repartir enlaces de una invitación en blanco es mandar a
+  // las familias una página vacía con su nombre. Se mide por bloques escritos, no por el
+  // estado del evento: un borrador con el contenido listo puede prepararse en paralelo.
+  const contenido = await events.contentFor(event.value.id, {})
+  const bloquesEscritos = bloquesConDatos(contenido)
+  const invitacionVacia = bloquesEscritos === 0
 
   const groups = await guests.list(event.value.id)
   // Una sola consulta para las respuestas de todos los grupos. Antes eran dos por grupo y
@@ -149,9 +158,20 @@ export default async function InvitadosPage({
               }))}
               rows={filas}
             />
-            <PanelButton href={abierto === 'importar' ? base : `${base}?panel=importar`}>↑ Importar CSV</PanelButton>
+            <PanelButton
+              disabled={invitacionVacia}
+              href={abierto === 'importar' ? base : `${base}?panel=importar`}
+              title={invitacionVacia ? 'Escribe tu invitación antes de cargar invitados' : undefined}
+            >
+              ↑ Importar CSV
+            </PanelButton>
             <PanelButton href={abierto === 'envio' ? base : `${base}?panel=envio`}>✉ Enviar invitaciones</PanelButton>
-            <PanelButton href={`${base}?panel=alta`} variant="primary">
+            <PanelButton
+              disabled={invitacionVacia}
+              href={`${base}?panel=alta`}
+              title={invitacionVacia ? 'Escribe tu invitación antes de añadir invitados' : undefined}
+              variant="primary"
+            >
               + Añadir invitado
             </PanelButton>
           </>
@@ -160,6 +180,26 @@ export default async function InvitadosPage({
         meta={`${filasPersona.length} invitados en total · ${filas.length} grupos · ${cupos} cupos`}
         title="Invitados"
       />
+
+      {/* El orden del trabajo, dicho en la propia pantalla: primero la invitación, luego la
+          gente. Sin esto se podían repartir enlaces a una invitación en blanco. */}
+      {invitacionVacia ? (
+        <PanelCard className="mb-4.5">
+          <div className="flex flex-col gap-3">
+            <p className="font-display text-[20px] text-ink">Primero, escribe tu invitación</p>
+            <p className="max-w-[62ch] text-[13.5px] leading-[1.7] text-ink-soft">
+              Todavía está en blanco: los nombres, la fecha, el lugar y la frase. Lo que escribas ahí es lo que verán tus
+              invitados al abrir su enlace, así que se prepara antes de invitar a nadie.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`} variant="primary">
+                Escribir mi invitación
+              </PanelButton>
+              <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver cómo va quedando</PanelButton>
+            </div>
+          </div>
+        </PanelCard>
+      ) : null}
 
       {/* «+ Añadir invitado» abre el diálogo de la maqueta, con sus nueve campos. */}
       {abierto === 'alta' ? (
@@ -218,9 +258,12 @@ export default async function InvitadosPage({
             title="Enviar invitaciones"
           >
             <DeliveryPanel
+              borrador={event.value.status === 'draft'}
               eventLocale={event.value.locale}
               eventSlug={event.value.slug}
               eventTitle={event.value.title}
+              puedePublicar={gestionaElEvento(actor, event.value)}
+              sinContenido={invitacionVacia}
               rows={filas.map((fila) => ({
                 id: fila.id,
                 label: fila.label,
@@ -303,7 +346,18 @@ export default async function InvitadosPage({
                   El grupo es quien tiene el enlace de invitación, los cupos y la mesa. Revocar un grupo deja su enlace
                   sin abrir nada.
                 </p>
-                <GuestGroupTable eventSlug={event.value.slug} groups={filas} />
+                <GuestGroupTable
+                  eventSlug={event.value.slug}
+                  groups={filas}
+                  personasPorGrupo={Object.fromEntries(
+                    filas.map((fila) => [
+                      fila.id,
+                      filasPersona
+                        .filter((persona) => persona.groupId === fila.id)
+                        .map((persona) => ({ id: persona.id, fullName: persona.fullName, attending: persona.attending, vip: persona.vip })),
+                    ]),
+                  )}
+                />
               </div>
             )
           ) : isErr(personas) ? (

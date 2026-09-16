@@ -49,7 +49,7 @@ describe('GuestGroupTable', () => {
     expect(screen.getByText(/ningún grupo coincide/i)).toBeInTheDocument()
   })
 
-  it('la columna «Enviado» dice si el enlace ya se repartió', () => {
+  it('la columna «Su enlace» dice si ya se repartió, y lleva a prepararlo', () => {
     // Es una marca del atelier, no una prueba de entrega: ni WhatsApp ni el correo
     // avisan de vuelta, y llamarlo «entregado» sería afirmar lo que nadie comprobó.
     render(
@@ -58,8 +58,9 @@ describe('GuestGroupTable', () => {
         groups={[{ ...groups[0]!, invitationSentAt: new Date('2026-08-20') }, groups[1]!]}
       />,
     )
-    expect(screen.getByRole('button', { name: 'Enviada' })).toBeInTheDocument()
-    expect(screen.getAllByRole('button', { name: 'Sin enviar' }).length).toBeGreaterThan(0)
+    expect(screen.getByRole('button', { name: 'Repartido' })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: /preparar y enviar|volver a enviar/i }).length).toBeGreaterThan(0)
+    expect(screen.getAllByRole('button', { name: 'Sin repartir' }).length).toBeGreaterThan(0)
   })
 
   it('el estado se lee como texto, no solo por color', () => {

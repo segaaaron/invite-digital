@@ -15,6 +15,15 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
     })
   },
 
+  async reopenedAtFor(guestGroupId) {
+    const [row] = await database
+      .select({ reabierto: guestGroups.rsvpReopenedAt })
+      .from(guestGroups)
+      .where(eq(guestGroups.id, guestGroupId))
+      .limit(1)
+    return row?.reabierto ?? null
+  },
+
   async latestFor(guestGroupId) {
     const [row] = await database
       .select({

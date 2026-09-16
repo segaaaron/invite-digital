@@ -20,7 +20,7 @@ test('reenviar rota el enlace: el viejo deja de abrir y el nuevo abre', async ({
 
   // El atelier lo reenvía.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=envio`)
-  await page.getByRole('button', { name: /generar enlace|reenviar/i }).first().click()
+  await page.getByRole('button', { name: /preparar/i }).first().click()
   const nuevo = await page.getByLabel('Enlace de la invitación').inputValue()
   expect(nuevo).toMatch(/\/i\/[A-Za-z0-9_-]{22}$/)
 
@@ -59,7 +59,9 @@ test('la hoja de reparto se imprime sola: el resto del panel no sale en el papel
   await seedEnvioEvent(slug)
 
   await page.goto(`/panel/eventos/${slug}/invitados?panel=envio`)
-  await page.getByRole('button', { name: /generar enlace|reenviar/i }).first().click()
+  await page.getByRole('button', { name: /preparar/i }).first().click()
+  // La tarjeta va plegada: casi todo se reparte por WhatsApp, y es para quien entrega en mano.
+  await page.getByText(/tarjeta con qr para imprimir/i).click()
   await expect(page.getByRole('img', { name: 'Invitación de Familia Rojas Peña' })).toBeVisible()
 
   // Con el papel puesto, lo único visible es la tarjeta. Se mide con `visibility`

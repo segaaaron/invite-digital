@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { addGuestAction, type GuestActionState } from '@/app/_acciones/guests/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
@@ -43,6 +44,8 @@ export function GuestDialog({
   const dialogo = useRef<HTMLDialogElement>(null)
   const [estado, accion, pendiente] = useActionState<GuestActionState, FormData>(addGuestAction, INICIAL)
   const [grupo, setGrupo] = useState(groups[0]?.id ?? '')
+  // El teléfono se guarda en formato internacional; el campo enseña su país y su número local.
+  const [telefono, setTelefono] = useState('')
 
   const idNombre = useId()
   const idGrupo = useId()
@@ -117,7 +120,11 @@ export function GuestDialog({
         </Field>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor={idGrupo} label="Grupo">
+          <Field
+            hint="El grupo recibe un enlace, sus cupos y su mesa. Puede ser una familia, una pareja, la oficina o una sola persona."
+            htmlFor={idGrupo}
+            label="Grupo"
+          >
             <select
               className={FIELD_CLASS}
               id={idGrupo}
@@ -148,7 +155,7 @@ export function GuestDialog({
               id={idNuevo}
               maxLength={160}
               name="newGroupLabel"
-              placeholder="Familia, amigos…"
+              placeholder="Familia Rojas, oficina, amigos del colegio…"
               required
               type="text"
             />
@@ -179,14 +186,7 @@ export function GuestDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field htmlFor={idTel} label="WhatsApp / Teléfono">
-            <input
-              className={FIELD_CLASS}
-              id={idTel}
-              maxLength={32}
-              name="phone"
-              placeholder="+591 700 00000"
-              type="tel"
-            />
+            <CampoTelefono id={idTel} name="phone" onChange={setTelefono} value={telefono} />
           </Field>
 
           <Field htmlFor={idCorreo} label="Email">
@@ -203,7 +203,10 @@ export function GuestDialog({
 
         <label className="flex items-center gap-2.5 text-[13px] text-ink" htmlFor={idVip}>
           <input className="size-4" id={idVip} name="vip" type="checkbox" />
-          Invitado VIP
+          <span className="flex flex-col">
+            Invitado VIP
+            <span className="text-[12px] text-ink-mute">Se marca en la lista, se filtra aparte y su silla sale en dorado en el plano del salón.</span>
+          </span>
         </label>
 
         {estado.status === 'error' ? (

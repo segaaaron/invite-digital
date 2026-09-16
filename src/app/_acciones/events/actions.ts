@@ -56,7 +56,7 @@ export async function createEventAction(_previous: EventActionState, formData: F
   // no podría **quitar** una sección: borrar la canción la devolvería en la siguiente
   // apertura, porque la muestra volvería a asomar por debajo. Escribirla una vez la hace
   // suya, y borrarla la borra.
-  await sembrarContenido(result.value.id, result.value.themeKey)
+  await sembrarContenido(result.value.id)
 
   revalidatePath('/panel')
   return { status: 'success', message: '' }
@@ -69,9 +69,9 @@ export async function createEventAction(_previous: EventActionState, formData: F
  * haya podido sembrar no puede impedir crear el evento ni cambiarle el diseño, y la
  * invitación se abre igual —con los huecos que el atelier rellene—.
  */
-async function sembrarContenido(eventId: string, themeKey: string): Promise<void> {
+async function sembrarContenido(eventId: string): Promise<void> {
   try {
-    await eventUseCases.seedContent(eventId, themeFor(themeKey).defaultContent)
+    await eventUseCases.seedContent(eventId)
   } catch (cause) {
     console.error('No se pudo sembrar el contenido del evento %s:', eventId, cause)
   }
@@ -117,7 +117,7 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   // Al cambiar de diseño se siembra lo que el nuevo trae y el evento no tiene. Nunca pisa
   // lo escrito: cambiar de diseño no puede llevarse por delante el itinerario.
   if (temaAnterior !== result.value.themeKey) {
-    await sembrarContenido(result.value.id, result.value.themeKey)
+    await sembrarContenido(result.value.id)
   }
 
   revalidatePath('/panel')
@@ -364,7 +364,8 @@ export async function setEventCurrencyAction(input: {
 
 export type ContentActionState =
   | { status: 'idle' }
-  | { status: 'success' }
+  /** `mediaId`: lo recién subido, para que el campo que lo pidió lo elija solo. */
+  | { status: 'success'; mediaId?: string }
   | { status: 'error'; message: string }
 
 /**
@@ -475,7 +476,7 @@ export async function uploadMediaAction(
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
-  return { status: 'success' }
+  return { status: 'success', mediaId: resultado.id }
 }
 
 

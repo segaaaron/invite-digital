@@ -163,25 +163,34 @@ test.describe('contenido de la invitación', () => {
     expect(servida.headers()['content-type']).toBe('image/webp')
     expect((await servida.body()).byteLength).toBeLessThan(original.byteLength / 4)
 
-    // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno.
+    // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno. En la portada,
+    // que existe siempre: la invitación nace vacía y la galería no tiene casillas todavía.
     await page.reload()
-    await expect(page.getByLabel('Fotografía · casilla 1')).toContainText('retrato.jpg')
+    await expect(page.getByLabel('Fotografía de portada')).toContainText('retrato.jpg')
   })
 
   test('una fila quitada del itinerario no vuelve sola al recargar', async ({ page }) => {
     // Es el fallo que encontró el QA de la colección: el contenido se fusionaba con la
-    // muestra del diseño en cada lectura, así que quitar algo no servía de nada.
+    // muestra del diseño en cada lectura, así que quitar algo no servía de nada. La
+    // invitación nace vacía, así que la fila se escribe aquí antes de quitarla.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
 
     const itinerario = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Itinerario' }) })
-    const primera = await itinerario.getByLabel('Qué pasa · momento 1').inputValue()
+    await itinerario.getByRole('button', { name: 'Añadir momento' }).click()
+    await itinerario.getByLabel('Hora · momento 1').fill('16:00 h')
+    await itinerario.getByLabel('Qué pasa · momento 1').fill('Ceremonia')
+    await itinerario.getByRole('button', { name: 'Guardar' }).click()
+    await expect(itinerario.getByRole('status')).toContainText('Guardado')
+
+    await page.reload()
+    await expect(page.getByLabel('Qué pasa · momento 1')).toHaveValue('Ceremonia')
 
     await itinerario.getByRole('button', { name: 'Quitar momento 1' }).click()
     await itinerario.getByRole('button', { name: 'Guardar' }).click()
     await expect(itinerario.getByRole('status')).toContainText('Guardado')
 
     await page.reload()
-    await expect(page.getByLabel('Qué pasa · momento 1')).not.toHaveValue(primera)
+    await expect(page.getByLabel('Qué pasa · momento 1')).toHaveCount(0)
   })
 })
 

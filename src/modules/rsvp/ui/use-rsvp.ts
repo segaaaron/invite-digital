@@ -19,8 +19,10 @@ export type RsvpControl = {
   readonly error: string | null
   /** Hay una confirmación recién guardada que enseñar en vez del formulario. */
   readonly confirmed: boolean
-  /** Vuelve al formulario tras confirmar, para cambiar la respuesta. */
+  /** Vuelve al panel de gracias recién enviado; **no** reabre una respuesta ya guardada. */
   readonly reopen: () => void
+  /** Ya había una respuesta guardada: se contesta una sola vez. */
+  readonly yaRespondio: boolean
   /** Las opciones del desplegable: de cero hasta los cupos del grupo. */
   readonly defaultAttending: string
   readonly defaultMessage: string
@@ -54,6 +56,7 @@ export function useRsvp({ dictionary, previous, seats }: Entrada): RsvpControl {
     isPending,
     error: state.status === 'error' ? dictionary.errors[state.message] : null,
     confirmed: state.status === 'success' && reconocido !== state,
+    yaRespondio: previous !== null,
     reopen: () => setReconocido(state),
     defaultAttending: String(previous?.attending ?? seats),
     defaultMessage: previous?.message ?? '',

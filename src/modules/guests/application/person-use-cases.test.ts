@@ -13,6 +13,7 @@ const grupo = (seats: number): GuestGroupRepository => ({
   remove: async () => {},
   markSent: async () => {},
   replaceToken: async () => {},
+  reopenRsvp: async () => {},
   setPhone: async () => {},
   findById: async () => ({
     id: 'g1',

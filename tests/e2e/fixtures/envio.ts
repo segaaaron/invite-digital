@@ -18,6 +18,14 @@ export async function seedEnvioEvent(slug: string): Promise<{ eventId: string; t
     returning id
   `
 
+  // Con la invitación en blanco el panel no deja repartir —el enlace abriría una página sin
+  // nombres—, así que la fixture escribe lo mínimo: es lo que haría cualquier atelier antes.
+  await sql`
+    insert into event_content (event_id, blocks)
+    values (${event!.id}, ${sql.json({ hero: { nameA: 'María', nameB: 'Alejandro' } })})
+    on conflict (event_id) do update set blocks = excluded.blocks
+  `
+
   const token = randomBytes(16).toString('base64url')
   await sql`
     insert into guest_groups (event_id, label, seats, token_hash)

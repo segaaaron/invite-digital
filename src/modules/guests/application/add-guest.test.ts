@@ -27,6 +27,7 @@ const deps = (over: Record<string, unknown> = {}) => {
         return { ok: true as const, group: nuevo, token: 'tok' }
       }),
       findGroup: vi.fn(async (id: string) => grupos.find((g) => g.id === id) ?? null),
+      reopenRsvp: async () => {},
       setPhone: vi.fn(async () => {}),
       removeGroup: vi.fn(async (id: string) => {
         const i = grupos.findIndex((g) => g.id === id)

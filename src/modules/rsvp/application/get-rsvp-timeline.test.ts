@@ -5,6 +5,7 @@ import type { RsvpRepository } from './ports'
 
 const repo = (overrides: Partial<RsvpRepository> = {}): RsvpRepository => ({
   append: async () => {},
+  reopenedAtFor: async () => null,
   latestFor: async () => null,
   tallyRowsFor: async () => [],
   respondedAtsFor: async () => [],

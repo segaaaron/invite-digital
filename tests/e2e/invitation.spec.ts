@@ -10,7 +10,7 @@ test.afterAll(async () => {
   await closeInvitationDb()
 })
 
-test('el invitado confirma con su nombre y vuelve a confirmar', async ({ page }) => {
+test('el invitado confirma con su nombre, y su enlace pasa a ser el resumen', async ({ page }) => {
   const { token, groupId, eventSlug } = await seedInvitation({ slug: 'boda-rsvp-e2e' })
 
   await page.goto(`/i/${token}`)
@@ -23,14 +23,14 @@ test('el invitado confirma con su nombre y vuelve a confirmar', async ({ page })
   // El diseño saluda por su nombre a quien acaba de confirmar.
   await expect(page.getByRole('status')).toContainText('¡Gracias, Jorge Rojas!')
 
-  await page.getByRole('button', { name: 'Cambiar mi respuesta' }).click()
-  await expect(page.getByLabel('Nombre completo')).toHaveValue('Jorge Rojas')
+  // Se confirma **una sola vez**: el enlace acaba en el chat de toda la familia, y con el
+  // formulario abierto cualquiera podría cambiar lo que dijeron los demás. Al volver a abrirlo
+  // lo que hay es el resumen.
+  await page.goto(`/i/${token}`)
+  await expect(page.getByText('Confirmación enviada')).toBeVisible()
+  await expect(page.getByLabel('Nombre completo')).toHaveCount(0)
 
-  await page.getByRole('button', { name: 'ENVIAR' }).click()
-  await expect(page.getByRole('status')).toContainText('Gracias')
-
-  // El histórico es de solo anexado: dos respuestas, no una actualizada.
-  expect(await countResponses(groupId)).toBe(2)
+  expect(await countResponses(groupId)).toBe(1)
 
   // Cuántos vienen no se pregunta —el diseño no lo pregunta—, pero se manda: son los cupos
   // del grupo, y con ellos se hacen el catering, las mesas y la puerta.

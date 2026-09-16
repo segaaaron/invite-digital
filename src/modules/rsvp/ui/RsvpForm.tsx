@@ -58,6 +58,28 @@ export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos
   // Con botones, nada se envía hasta que el invitado dice sí o no.
   const [respondido, setRespondido] = useState(false)
 
+  /**
+   * Ya contestaron: se ve lo dicho, no el formulario.
+   *
+   * Se responde **una sola vez** porque el enlace circula por el chat de toda la familia:
+   * con el formulario abierto para siempre, cualquiera podría cambiar lo que dijeron los
+   * demás. Corregir existe, pero lo reabre quien organiza el evento.
+   */
+  if (rsvp.yaRespondio && !rsvp.confirmed) {
+    const vienen = previous?.attending ?? 0
+    return (
+      <div className="relative flex flex-col items-center gap-2.5 py-5 text-center" role="status">
+        <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">
+          {dictionary.confirmedHeading}
+        </p>
+        <p className="text-[26px] leading-tight font-light text-ink" style={{ fontFamily: 'var(--font-script, var(--font-display))' }}>
+          {vienen === 0 ? dictionary.confirmedNobody : dictionary.confirmedCount.replace('{n}', String(vienen)).replace('{total}', String(seats))}
+        </p>
+        <p className="max-w-[40ch] text-[13.5px] leading-[1.7] text-ink-soft">{dictionary.confirmedLocked}</p>
+      </div>
+    )
+  }
+
   if (rsvp.confirmed) {
     return (
       <div aria-live="polite" className="relative flex flex-col items-center gap-3 py-5" role="status">

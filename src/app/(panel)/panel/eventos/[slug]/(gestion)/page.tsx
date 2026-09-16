@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
+import { bloquesConDatos } from '@/modules/events'
 import { avanceDeTareas, estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar, totalesDelPresupuesto } from '@/modules/planner'
 import { buildWhatsAppLink } from '@/modules/leads'
 import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
@@ -30,6 +31,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
   }
+
+  /**
+   * Los primeros pasos, en orden: escribir la invitación, mirarla, publicarla y repartirla.
+   *
+   * Sin esto se podía crear invitados y mandar enlaces con la invitación en blanco y el evento
+   * en borrador, y quien abriera el suyo veía una página de error. La tarjeta desaparece sola
+   * cuando los cuatro están hechos.
+   */
+  const contenidoDelEvento = await events.contentFor(event.value.id, {})
+  const bloquesEscritos = bloquesConDatos(contenidoDelEvento)
 
   const groups = await guests.list(event.value.id)
   // Las últimas respuestas, en una sola consulta. Una por grupo y en serie convertía el
@@ -182,6 +193,68 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         meta={cuentaAtras === null ? fecha : `${fecha} · ${cuentaAtras}`}
         title="Bienvenida, "
       />
+
+      {(() => {
+        const pasos = [
+          {
+            titulo: 'Escribe tu invitación',
+            hecho: bloquesEscritos > 0,
+            detalle: 'Los nombres, la fecha, el lugar y la frase. Es lo que verán tus invitados.',
+            href: `/panel/eventos/${event.value.slug}/configuracion`,
+            accion: 'Escribirla',
+          },
+          {
+            titulo: 'Mírala antes de repartirla',
+            hecho: bloquesEscritos > 0,
+            detalle: 'Se abre igual que en el teléfono de un invitado.',
+            href: `/panel/eventos/${event.value.slug}/vista-previa`,
+            accion: 'Ver la invitación',
+          },
+          {
+            titulo: 'Publícala',
+            hecho: event.value.status !== 'draft',
+            detalle: 'En borrador, los enlaces no abren: quien reciba uno vería una página de error.',
+            href: `/panel/eventos/${event.value.slug}/configuracion`,
+            accion: 'Publicar',
+          },
+          {
+            titulo: 'Carga a tus invitados y reparte',
+            hecho: filas.length > 0,
+            detalle: 'Un grupo por familia, con sus cupos. Cada uno recibe su propio enlace.',
+            href: `/panel/eventos/${event.value.slug}/invitados`,
+            accion: 'Ir a invitados',
+          },
+        ]
+        const siguiente = pasos.find((paso) => !paso.hecho)
+        if (siguiente === undefined) return null
+        return (
+          <PanelCard className="mb-5.5" title="Primeros pasos">
+            <ol className="flex flex-col">
+              {pasos.map((paso, i) => (
+                <li className="flex flex-wrap items-center gap-3 border-b border-line-panel py-3 last:border-none" key={paso.titulo}>
+                  <span
+                    aria-hidden
+                    className={`grid size-6 shrink-0 place-items-center rounded-full text-[11px] ${
+                      paso.hecho ? 'bg-sage text-white' : 'border border-line-panel-strong text-ink-mute'
+                    }`}
+                  >
+                    {paso.hecho ? '✓' : i + 1}
+                  </span>
+                  <span className="flex min-w-[240px] flex-1 flex-col">
+                    <span className={`text-[14px] ${paso.hecho ? 'text-ink-mute line-through' : 'text-ink'}`}>{paso.titulo}</span>
+                    {paso.hecho ? null : <span className="text-[12.5px] leading-[1.5] text-ink-mute">{paso.detalle}</span>}
+                  </span>
+                  {paso.hecho ? null : (
+                    <PanelButton href={paso.href} variant={paso === siguiente ? 'primary' : 'default'}>
+                      {paso.accion}
+                    </PanelButton>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </PanelCard>
+        )
+      })()}
 
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 min-[900px]:grid-cols-4">
         <StatCard

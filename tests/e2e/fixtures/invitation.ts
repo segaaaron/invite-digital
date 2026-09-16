@@ -12,6 +12,8 @@ type Options = {
   locale?: 'es' | 'en'
   /** El plan del evento. Sin él, el evento usa el más barato, que no trae fotos de invitados. */
   plan?: string | null
+  /** Las personas del grupo: con dos o más, la confirmación pasa a ser nombre por nombre. */
+  people?: readonly string[]
 }
 
 /**
@@ -61,6 +63,10 @@ export function invitationFixtures() {
       returning id
     `
 
+    for (const nombre of options.people ?? []) {
+      await sql`insert into guest_people (guest_group_id, full_name) values (${group!.id}, ${nombre})`
+    }
+
     return { eventSlug: slug, token, groupId: group!.id }
   }
 
@@ -77,6 +83,19 @@ export function invitationFixtures() {
     return filas[0]?.attending ?? -1
   }
 
+  /** Quién quedó marcado como asistente, para comprobar la confirmación nombre por nombre. */
+  async function attendanceByPerson(groupId: string): Promise<Record<string, string | null>> {
+    const filas = await sql<{ full_name: string; attending: string | null }[]>`
+      select full_name, attending from guest_people where guest_group_id = ${groupId} order by created_at
+    `
+    return Object.fromEntries(filas.map((fila) => [fila.full_name, fila.attending]))
+  }
+
+  /** «Permitir corregir» del panel, para probar que reabre una sola vez. */
+  async function reopenRsvp(groupId: string): Promise<void> {
+    await sql`update guest_groups set rsvp_reopened_at = now() where id = ${groupId}`
+  }
+
   async function deleteEvent(slug: string): Promise<void> {
     await sql`delete from events where slug = ${slug}`
   }
@@ -85,5 +104,5 @@ export function invitationFixtures() {
     await sql.end({ timeout: 5 })
   }
 
-  return { seedInvitation, countResponses, attendingOf, deleteEvent, closeInvitationDb }
+  return { seedInvitation, countResponses, attendingOf, attendanceByPerson, reopenRsvp, deleteEvent, closeInvitationDb }
 }

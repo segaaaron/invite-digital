@@ -1,12 +1,7 @@
 import Image from 'next/image'
-import { site } from '@/app/composition/container'
 import { SignInForm } from '@/modules/identity/ui/SignInForm'
 
 export const metadata = { title: 'Entrar · Panel' }
-
-// Lee «La web» (ciudad y país): prerenderizada en el build no habría base y quedaría el
-// valor por defecto horneado en la imagen, ajeno a lo que edite el admin.
-export const dynamic = 'force-dynamic'
 
 /**
  * La puerta del panel.
@@ -20,8 +15,7 @@ export const dynamic = 'force-dynamic'
  * se convierte en una banda de cabecera: en un teléfono, media pantalla de decoración
  * dejaría el formulario por debajo del pliegue.
  */
-export default async function SignInPage() {
-  const ajustes = await site.settings()
+export default function SignInPage() {
   return (
     <main className="grid min-h-dvh grid-rows-[auto_1fr] min-[860px]:grid-cols-[1.05fr_1fr] min-[860px]:grid-rows-1">
       <section className="relative flex flex-col justify-between overflow-hidden bg-linear-to-b from-shell to-shell-deep px-8 py-10 text-shell-ink min-[860px]:px-14 min-[860px]:py-14">
@@ -64,9 +58,16 @@ export default async function SignInPage() {
           className="pointer-events-none absolute inset-0 bg-[radial-gradient(620px_380px_at_84%_-4%,rgb(var(--color-gold-rgb)/0.26)_0%,transparent_70%)]"
         />
 
-        <p className="relative font-display text-[26px] leading-none italic min-[860px]:text-[30px]">
-          Luxury <b className="font-medium not-italic">Atelier</b>
-        </p>
+        {/* El monograma y el nombre como una sola pieza, del tamaño del texto: el emblema de
+            la marca es lo primero que se ve al entrar, y repetirlo grande sería un logotipo
+            pegado encima de otro. */}
+        <div className="relative flex items-center gap-3.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img alt="" className="size-11 shrink-0 min-[860px]:size-12" src="/icon.svg" />
+          <p className="font-display text-[26px] leading-none italic min-[860px]:text-[30px]">
+            Luxury <b className="font-medium not-italic">Atelier</b>
+          </p>
+        </div>
 
         <div className="relative mt-10 hidden max-w-[34ch] flex-col gap-6 min-[860px]:flex">
           <span aria-hidden className="h-px w-16 bg-gold/60" />
@@ -78,8 +79,10 @@ export default async function SignInPage() {
           </p>
         </div>
 
+        {/* El dominio y el alcance, no la ciudad: el panel se abre desde donde sea, y quien
+            entra ya sabe dónde está el taller. */}
         <p className="relative mt-8 hidden font-mono text-[9px] tracking-[0.3em] text-shell-ink/40 uppercase min-[860px]:block">
-          {ajustes.ciudad}, {ajustes.pais}
+          luxuryatelier.net · invitaciones digitales en todo el mundo
         </p>
       </section>
 

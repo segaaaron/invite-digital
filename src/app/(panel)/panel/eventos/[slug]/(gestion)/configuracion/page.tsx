@@ -137,6 +137,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           </p>
           <ContentBlockForms
             content={contenido}
+            ejemplo={tema.defaultContent}
             eventId={event.value.id}
             eventSlug={event.value.slug}
             media={imagenes}

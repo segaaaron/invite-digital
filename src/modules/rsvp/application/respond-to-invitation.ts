@@ -42,6 +42,25 @@ export const respondToInvitation =
           return err(rsvpError('rsvp_closed', `Evento ${event.value.slug} cerrado el ${event.value.rsvpDeadline}`))
         }
 
+        /**
+         * **Una sola respuesta por grupo.**
+         *
+         * El enlace circula por WhatsApp y acaba en el chat de toda la familia: si se pudiera
+         * responder una y otra vez, cualquiera podría cambiar lo que dijeron los demás —o
+         * inflar la cuenta— sin que nadie se enterase. Con una sola, reenviarlo no sirve de
+         * nada: lo que hay es un resumen de lo ya contestado.
+         *
+         * Equivocarse tiene salida, pero por el panel: el atelier reabre esa respuesta y queda
+         * anotado quién lo hizo.
+         */
+        const anterior = await deps.rsvp.latestFor(group.value.id)
+        const reabierto = anterior === null ? null : await deps.rsvp.reopenedAtFor(group.value.id)
+        // Reabrir vale para **la respuesta siguiente**: si la marca es anterior a lo ya
+        // contestado, es de una corrección que ya se usó.
+        if (anterior !== null && (reabierto === null || reabierto.getTime() <= anterior.respondedAt.getTime())) {
+          return err(rsvpError('already_answered', `El grupo ${group.value.id} ya respondió el ${anterior.respondedAt.toISOString()}`))
+        }
+
         const response = createRsvpResponse(
           {
             id: deps.ids(),

@@ -24,6 +24,7 @@ const evento: Event = {
 
 const rsvp: RsvpRepository = {
   append: async () => {},
+  reopenedAtFor: async () => null,
   latestFor: async () => ({ attending: 2, responderName: null, message: null, respondedAt: new Date('2026-10-01T12:00:00Z') }),
   tallyRowsFor: async () => [],
     respondedAtsFor: async () => [],

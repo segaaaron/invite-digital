@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 
@@ -204,15 +205,7 @@ export function EditPersonDialog({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field htmlFor={idTel} label="WhatsApp / Teléfono">
-            <input
-              className={FIELD_CLASS}
-              id={idTel}
-              maxLength={32}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+591 700 00000"
-              type="tel"
-              value={phone}
-            />
+            <CampoTelefono id={idTel} onChange={setPhone} value={phone} />
           </Field>
 
           <Field htmlFor={idCorreo} label="Email">

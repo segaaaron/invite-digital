@@ -179,6 +179,20 @@ function lugar(valor: unknown): PlaceBlock | undefined {
  * que revienta entera porque un bloque está mal es peor que una invitación sin ese bloque,
  * y quien está al otro lado vino a mirar una invitación, no un panel.
  */
+/**
+ * Cuántos bloques del contenido tienen algo escrito.
+ *
+ * Es lo que decide si una invitación está empezada: repartir enlaces de una invitación en
+ * blanco es mandar a las familias una página vacía con su nombre.
+ */
+export function bloquesConDatos(content: InvitationContent): number {
+  return Object.values(content).filter((bloque) => {
+    if (bloque === undefined || bloque === null) return false
+    if (Array.isArray(bloque)) return bloque.length > 0
+    return Object.values(bloque as Record<string, unknown>).some((v) => typeof v === 'string' && v.trim() !== '')
+  }).length
+}
+
 export function parseInvitationContent(crudo: unknown): InvitationContent {
   if (!esObjeto(crudo)) return {}
 

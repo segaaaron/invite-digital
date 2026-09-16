@@ -21,6 +21,14 @@ export interface GuestGroupRepository {
   replaceToken(id: string, tokenHash: Buffer): Promise<void>
   setPhone(id: string, phone: string | null): Promise<void>
   /**
+   * Permite a ese grupo contestar **otra vez**.
+   *
+   * Se confirma una sola vez porque el enlace acaba en el chat de toda la familia. Cuando
+   * alguien se equivoca, el atelier reabre su respuesta desde el panel; la marca solo vale
+   * para la que venga después, y queda en la auditoría.
+   */
+  reopenRsvp(id: string, when: Date): Promise<void>
+  /**
    * Borra el grupo. Solo lo usa el alta para deshacer un grupo recién creado cuya persona
    * no llegó a entrar: revocar es lo que se hace con un grupo que ya vive.
    */

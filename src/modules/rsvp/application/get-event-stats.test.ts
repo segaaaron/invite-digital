@@ -5,6 +5,7 @@ import type { RsvpRepository } from './ports'
 
 const repo = (rows: Array<{ seats: number; attending: number | null }>): RsvpRepository => ({
   append: vi.fn(),
+  reopenedAtFor: async () => null,
   latestFor: vi.fn(),
   tallyRowsFor: vi.fn(async () => rows),
     respondedAtsFor: vi.fn(async () => []),
@@ -39,6 +40,7 @@ describe('getEventStats', () => {
   it('si la base no responde, el fallo se envuelve en storage_failure', async () => {
     const roto: RsvpRepository = {
       append: vi.fn(),
+      reopenedAtFor: vi.fn(async () => null),
       latestFor: vi.fn(),
       tallyRowsFor: vi.fn(async () => {
         throw new Error('sin conexión')

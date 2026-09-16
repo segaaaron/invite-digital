@@ -16,6 +16,7 @@ function repo() {
     remove: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},
+    reopenRsvp: async () => {},
     setPhone: async (_id, phone) => void telefonos.push(phone),
   }
   return { groups, insertados, telefonos }

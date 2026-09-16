@@ -18,6 +18,7 @@ function repo(row: GuestGroupRow | null) {
     remove: async () => {},
     markSent: async (_id, at) => void enviados.push(at),
     replaceToken: async (_id, hash) => void tokens.push(hash),
+    reopenRsvp: async () => {},
     setPhone: async () => {},
   }
   return { groups, tokens, enviados }

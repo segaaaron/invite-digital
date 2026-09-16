@@ -2,6 +2,8 @@ export type RsvpErrorKind =
   | 'invitation_not_found'
   | 'invitation_revoked'
   | 'rsvp_closed'
+  /** Ese grupo ya contestó: se responde una sola vez, y corregir lo reabre el atelier. */
+  | 'already_answered'
   | 'too_many_seats'
   | 'invalid_payload'
   | 'storage_failure'

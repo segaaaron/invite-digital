@@ -15,7 +15,7 @@ import { getEventById, getEventBySlug } from '@/modules/events/application/get-e
 import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor } from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
-import { clearContent, contentFor, saveContentBlock, seedContentForTheme } from '@/modules/events/application/content-use-cases'
+import { clearContent, contentFor, saveContentBlock, seedEmptyContent } from '@/modules/events/application/content-use-cases'
 import { listGuestPhotos, listMedia, purgeMedia, readMedia, removeMedia, saveGuestPhoto, saveMedia } from '@/modules/events/application/media-use-cases'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
@@ -54,6 +54,7 @@ import { getEventStats } from '@/modules/rsvp/application/get-event-stats'
 import { getTally } from '@/modules/rsvp/application/get-tally'
 import { getRsvpTimeline } from '@/modules/rsvp/application/get-rsvp-timeline'
 import { respondToInvitation } from '@/modules/rsvp/application/respond-to-invitation'
+import { respondByPerson } from '@/modules/rsvp/application/respond-by-person'
 import { drizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
@@ -160,11 +161,12 @@ export const events = {
   /**
    * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
    * guarda. `contentFor` no escribe —una invitación se abre cientos de veces—; quien
-   * escribe es `seedContent`, al crear el evento o al cambiar de diseño.
+   * escribe es `seedContent`, al crear el evento: deja la fila **vacía**, que es distinto de
+   * no tener fila. El contenido de muestra del diseño se usa solo como ejemplo en el editor.
    */
   contentFor: contentFor(drizzleContentRepository),
   saveContentBlock: saveContentBlock(drizzleContentRepository),
-  seedContent: seedContentForTheme(drizzleContentRepository),
+  seedContent: seedEmptyContent(drizzleContentRepository),
   clearContent: clearContent(drizzleContentRepository),
   /**
    * Las imágenes de la invitación. El fichero vive en disco fuera de `public/`; la fila,
@@ -311,6 +313,8 @@ export const guests = {
       clock,
   }),
   setPhone: (id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(id, phone),
+  /** Permitir corregir: ese grupo puede contestar una vez más. */
+  reopenRsvp: (id: string) => drizzleGuestGroupRepository.reopenRsvp(id, clock()),
 } as const
 
 export const rsvp = {
@@ -321,6 +325,22 @@ export const rsvp = {
     ids: () => crypto.randomUUID(),
     clock,
   }),
+  /** La confirmación nombre por nombre, para los grupos con personas cargadas. */
+  respondByPerson: respondByPerson({
+    resolveGroup: (token) => guests.resolveByToken(token),
+    findEventById: (id) => events.getByIdUnscoped(id),
+    peopleOf: (guestGroupId) => drizzleGuestPersonRepository.listByGroup(guestGroupId),
+    setAttendance: async (personId, attending) => {
+      await guests.updatePerson({ id: personId, attending })
+    },
+    rsvp: drizzleRsvpRepository,
+    ids: () => crypto.randomUUID(),
+    clock,
+  }),
+  /** Cuándo se reabrió la confirmación de un grupo: decide si vuelve a verse el formulario. */
+  reopenedAtFor: (guestGroupId: string) => drizzleRsvpRepository.reopenedAtFor(guestGroupId),
+  /** Las personas de un grupo, para la pantalla de confirmación del invitado. */
+  peopleOfGroup: (guestGroupId: string) => drizzleGuestPersonRepository.listByGroup(guestGroupId),
   tally: getTally({ rsvp: drizzleRsvpRepository }),
   timeline: getRsvpTimeline({ rsvp: drizzleRsvpRepository, clock }),
   stats: getEventStats({ rsvp: drizzleRsvpRepository }),

@@ -44,11 +44,14 @@ describe('RsvpForm', () => {
     expect(container.querySelector('input[name="attending"]')).toHaveValue('4')
   })
 
-  it('preselecciona la respuesta anterior, con su nombre', () => {
+  it('quien ya contestó ve su respuesta, no el formulario: se confirma una sola vez', () => {
+    // El enlace acaba en el chat de toda la familia. Con el formulario abierto para siempre,
+    // cualquiera podría cambiar lo que dijeron los demás.
     pinta({ previous: { attending: 2, responderName: 'Jorge Rojas', message: 'Vamos dos' } })
 
-    expect(screen.getByLabelText(invitation.nameLabel)).toHaveValue('Jorge Rojas')
-    expect(screen.getByLabelText(invitation.messageLabel)).toHaveValue('Vamos dos')
+    expect(screen.getByText(invitation.confirmedHeading)).toBeInTheDocument()
+    expect(screen.getByText('Vienen 2 de 4')).toBeInTheDocument()
+    expect(screen.queryByLabelText(invitation.nameLabel)).not.toBeInTheDocument()
   })
 
   it('con «no podré asistir» manda cero', () => {
@@ -59,11 +62,10 @@ describe('RsvpForm', () => {
     expect(container.querySelector('input[name="attending"]')).toHaveValue('0')
   })
 
-  it('quien ya dijo que no vuelve a entrar con el «no» puesto', () => {
-    const { container } = pinta({ previous: { attending: 0, responderName: null, message: null } })
+  it('quien dijo que no, al volver ve que su respuesta ya está registrada', () => {
+    pinta({ previous: { attending: 0, responderName: null, message: null } })
 
-    expect(screen.getByLabelText(invitation.goingLabel)).toHaveValue('no')
-    expect(container.querySelector('input[name="attending"]')).toHaveValue('0')
+    expect(screen.getByText(invitation.confirmedNobody)).toBeInTheDocument()
   })
 
   it('lleva el token en un campo oculto', () => {

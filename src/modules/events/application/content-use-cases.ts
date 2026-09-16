@@ -67,5 +67,19 @@ export const seedContentForTheme =
     await repo.save(eventId, mergeContent(defaultContent, actual))
   }
 
+/**
+ * Siembra el contenido **vacío** de un evento nuevo.
+ *
+ * Antes se sembraba el contenido de muestra del diseño, y el cliente abría su invitación con
+ * los nombres y la frase del catálogo ya escritos: parecía suya, no se sabía qué había que
+ * cambiar y lo que no tocara salía publicado con datos inventados. Ahora la fila nace vacía
+ * —que es distinto de no tener fila, donde el motor pinta la muestra— y el editor enseña esos
+ * textos como ejemplo dentro de cada campo.
+ */
+export const seedEmptyContent = (repo: ContentRepository) => async (eventId: string): Promise<void> => {
+  const actual = parseInvitationContent(await repo.find(eventId))
+  await repo.save(eventId, actual ?? {})
+}
+
 /** Vacía el contenido. Lo llama la retención cuando el evento vence. */
 export const clearContent = (repo: ContentRepository) => (eventId: string) => repo.clear(eventId)

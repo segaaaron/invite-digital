@@ -34,7 +34,7 @@ describe('GuestDialog', () => {
     expect(screen.getByLabelText('Restricciones')).toBeInTheDocument()
     expect(screen.getByLabelText('WhatsApp / Teléfono')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
-    expect(screen.getByLabelText('Invitado VIP')).toBeInTheDocument()
+    expect(screen.getByLabelText(/Invitado VIP/)).toBeInTheDocument()
   })
 
   it('se abre como modal: el fondo queda inerte', () => {

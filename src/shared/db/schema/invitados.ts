@@ -21,6 +21,10 @@ export const guestGroups = pgTable(
     // Marca del atelier: «este enlace ya lo repartí». No es prueba de entrega — ni
     // WhatsApp ni el correo avisan de vuelta, y decir «entregado» sería mentir.
     invitationSentAt: timestamp('invitation_sent_at', { withTimezone: true }),
+    // Cuándo se le permitió volver a responder. Se contesta una sola vez —el enlace circula
+    // por el chat de toda la familia—, y esta marca es la única forma de corregir: la pone el
+    // atelier desde el panel, y solo vale para la respuesta que venga después.
+    rsvpReopenedAt: timestamp('rsvp_reopened_at', { withTimezone: true }),
     // Teléfono para abrir WhatsApp con el destinatario ya puesto. Dato personal del
     // invitado: la anonimización de la retención lo borra, como la etiqueta.
     phone: varchar('phone', { length: 32 }),

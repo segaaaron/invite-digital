@@ -27,6 +27,7 @@ const repo = () => {
   const appended: RsvpResponse[] = []
   const rsvp: RsvpRepository = {
     append: async (response) => void appended.push(response),
+    reopenedAtFor: async () => null,
     latestFor: async () => null,
     tallyRowsFor: async () => [],
     respondedAtsFor: async () => [],
