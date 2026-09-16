@@ -24,6 +24,7 @@ import { HeroStack } from '@/sections/HeroStack'
 import { MobileSection } from '@/sections/MobileSection'
 import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { ContactSection } from '@/modules/leads'
+import { aLaVenta } from '@/modules/catalog'
 import { PrivacyNotice } from '@/sections/LegalPage'
 import { HeroCanvas } from '@/three/HeroCanvas'
 
@@ -113,7 +114,8 @@ export default async function LandingPage({
 
   const plans = isOk(plansResult) ? plansResult.value : []
   const templates = isOk(templatesResult) ? templatesResult.value : []
-  const categories = isOk(categoriesResult) ? categoriesResult.value : []
+  // El formulario solo ofrece lo que se vende: bodas y XV años.
+  const categories = aLaVenta(isOk(categoriesResult) ? categoriesResult.value : [])
 
   return (
     <>

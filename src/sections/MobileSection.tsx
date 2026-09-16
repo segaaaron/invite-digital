@@ -2,8 +2,11 @@ import Image from 'next/image'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 
-/** Las dos capturas de la maqueta, en el mismo orden. */
-const FOTOS = ['/site/movil/pantalla.avif', '/site/movil/ambiente.avif'] as const
+/**
+ * Las capturas, en el orden del diccionario. Solo se venden bodas y XV años: la del bautizo
+ * se retiró, y la de XV entra en cuanto haya una fotografía suya.
+ */
+const FOTOS = ['/site/movil/pantalla.avif'] as const
 
 export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
   const { mobile } = dictionary
@@ -38,7 +41,7 @@ export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
           </ul>
         </Reveal>
 
-        <Reveal className="grid grid-cols-2 gap-5" delay={0.1}>
+        <Reveal className={`grid gap-5 ${mobile.shots.length > 1 ? 'grid-cols-2' : 'max-w-[320px]'}`} delay={0.1}>
           {mobile.shots.map((shot, index) => (
             <figure
               key={shot.tag}

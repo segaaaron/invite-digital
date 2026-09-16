@@ -31,16 +31,6 @@ export default async function CuentaPage() {
     <div className="flex max-w-[980px] flex-col gap-4.5">
       <PanelHeader kicker="Cuenta" meta="Tus datos de acceso al panel" title="Mi cuenta" />
 
-      {actor.mustChangePassword ? (
-        <PanelCard>
-          <p className="text-[13px] leading-[1.7] text-ink-soft">
-            <strong className="font-normal text-ink">Elige tu contraseña antes de seguir.</strong> La que estás usando
-            te la dio otra persona y viajó por correo, así que no puede ser la definitiva. En cuanto la cambies, el
-            resto del panel se abre.
-          </p>
-        </PanelCard>
-      ) : null}
-
       <PanelCard>
         <SettingsSection description="Con este correo entras al panel y te llegan los avisos. Si hay que cambiarlo, lo hace un administrador." title="Perfil">
           <dl className="grid gap-4 min-[560px]:grid-cols-2">

@@ -56,20 +56,21 @@ test.describe('la contraseña provisional', () => {
     await page.getByLabel('Contraseña').fill(PROVISIONAL.password)
     await page.getByRole('button', { name: 'Entrar' }).click()
 
-    // Directo a cambiarla, sin pasar por el resumen.
-    await expect(page).toHaveURL(/\/panel\/cuenta$/)
-    await expect(page.getByText(/Elige tu contraseña antes de seguir/)).toBeVisible()
+    // Directo a su pantalla propia, fuera del panel y sin barra lateral.
+    await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
+    await expect(page.getByRole('heading', { name: 'Elige tu contraseña' })).toBeVisible()
+    await expect(page.getByRole('navigation')).toHaveCount(0)
 
     // Y el resto del panel devuelve aquí mismo mientras siga provisional: esto es el
     // corte de verdad, no el aviso de la pantalla. Es justo lo que estuvo roto — la
     // página se redirigía a sí misma en bucle y dejaba fuera a todo el mundo.
     await page.goto('/panel')
-    await expect(page).toHaveURL(/\/panel\/cuenta$/)
+    await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
 
     // La cambia.
-    await page.getByLabel('Contraseña actual').fill(PROVISIONAL.password)
-    await page.getByLabel('Contraseña nueva').fill(NUEVA_PASSWORD)
-    await page.getByRole('button', { name: 'Cambiar la contraseña' }).click()
+    await page.getByLabel('La contraseña que te dieron').fill(PROVISIONAL.password)
+    await page.getByLabel('Tu contraseña nueva').fill(NUEVA_PASSWORD)
+    await page.getByRole('button', { name: 'Guardar y entrar' }).click()
 
     // Cambiarla cierra todas las sesiones —incluida esta—, así que devuelve a la puerta.
     await expect(page).toHaveURL(/\/panel\/entrar/)

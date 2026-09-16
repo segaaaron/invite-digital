@@ -1,4 +1,5 @@
 export type { Category } from './domain/category'
+export { aLaVenta, CATEGORIAS_A_LA_VENTA } from './domain/category'
 export type { CatalogError } from './domain/errors'
 export type { Money } from './domain/money'
 export { formatMoney } from './domain/money'

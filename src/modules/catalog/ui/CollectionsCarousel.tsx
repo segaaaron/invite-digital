@@ -2,7 +2,7 @@
 
 import { motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ArrowLeftIcon, ArrowRightIcon } from '@/shared/design/ui/icons'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 
@@ -49,8 +49,29 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
 
   const go = (delta: number) => setIndex((current) => Math.min(Math.max(current + delta, 0), last))
 
+  /**
+   * Avanza solo cada seis segundos. Un carrusel quieto parece una imagen: nadie sabe que
+   * hay quince escenas más detrás. **Se para en cuanto el visitante toca algo** —flecha,
+   * punto, tarjeta, arrastre o teclado— y no vuelve a arrancar: seguir moviéndose debajo de
+   * quien está mirando una escena es lo que hace odiosos a los carruseles (NN/g).
+   *
+   * No se mueve con `prefers-reduced-motion`, ni con la pestaña de fondo, ni mientras el
+   * puntero está encima o el foco dentro.
+   */
+  const [auto, setAuto] = useState(true)
+  const parar = () => setAuto(false)
+  const encima = useRef(false)
+  useEffect(() => {
+    if (!auto || reduceMotion || slides.length < 2) return
+    const id = window.setInterval(() => {
+      if (encima.current || document.hidden) return
+      setIndex((actual) => (actual >= last ? 0 : actual + 1))
+    }, 6000)
+    return () => window.clearInterval(id)
+  }, [auto, reduceMotion, slides.length, last])
+
   return (
-    <div className="relative">
+    <div className="relative" onFocusCapture={() => (encima.current = true)} onMouseEnter={() => (encima.current = true)} onMouseLeave={() => (encima.current = false)}>
       <div
         // `clip` propio, además del de la raíz: las tarjetas se colocan en absoluto desde
         // el centro con `-ml-[165px]`, así que en un teléfono de 390 sobresalen hasta
@@ -58,8 +79,9 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
         // nacen, en vez de dejar que la raíz tape el problema.
         className="relative h-[clamp(430px,64vw,560px)] [perspective:1700px] [overflow-x:clip]"
         onKeyDown={(e) => {
-          if (e.key === 'ArrowRight') go(1)
-          if (e.key === 'ArrowLeft') go(-1)
+          if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return
+          parar()
+          go(e.key === 'ArrowRight' ? 1 : -1)
         }}
         aria-label="Colecciones"
         role="region"
@@ -70,7 +92,10 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
           drag="x"
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.12}
-          onDragEnd={(_, info) => go(info.offset.x < -60 ? 1 : info.offset.x > 60 ? -1 : 0)}
+          onDragEnd={(_, info) => {
+            parar()
+            go(info.offset.x < -60 ? 1 : info.offset.x > 60 ? -1 : 0)
+          }}
         >
           {slides.map((slide, i) => {
             const estilo = posicionar(i - index)
@@ -89,7 +114,10 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
                   // avisaba en cada montaje. No mueve nada: el botón ocupa exactamente el
                   // `<li>` (`h-full w-full`), que es contra lo que ya se resolvía.
                   className="relative block h-full w-full text-left"
-                  onClick={() => setIndex(i)}
+                  onClick={() => {
+                    parar()
+                    setIndex(i)
+                  }}
                   tabIndex={i === index ? 0 : -1}
                   type="button"
                 >
@@ -121,7 +149,10 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
         aria-label={dictionary.collections.previous}
         className="absolute top-1/2 left-0 z-[200] grid size-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg-raised/80 text-ink backdrop-blur-md transition-colors hover:border-gold disabled:opacity-30"
         disabled={index === 0}
-        onClick={() => go(-1)}
+        onClick={() => {
+          parar()
+          go(-1)
+        }}
         type="button"
       >
         <ArrowLeftIcon />
@@ -130,7 +161,10 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
         aria-label={dictionary.collections.next}
         className="absolute top-1/2 right-0 z-[200] grid size-11 -translate-y-1/2 place-items-center rounded-full border border-line bg-bg-raised/80 text-ink backdrop-blur-md transition-colors hover:border-gold disabled:opacity-30"
         disabled={index === last}
-        onClick={() => go(1)}
+        onClick={() => {
+          parar()
+          go(1)
+        }}
         type="button"
       >
         <ArrowRightIcon />
@@ -148,7 +182,10 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
               i === index ? 'w-7 bg-linear-to-r from-gold-deep to-gold-light' : 'w-2 bg-ink-mute/30 hover:bg-ink-mute/60'
             }`}
             key={slide.key}
-            onClick={() => setIndex(i)}
+            onClick={() => {
+              parar()
+              setIndex(i)
+            }}
             type="button"
           />
         ))}

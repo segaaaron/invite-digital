@@ -85,6 +85,28 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
     if (errorBloque) document.getElementById(errorBloque.ancla)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [errorBloque])
 
+  /**
+   * Qué sección se está mirando, para marcarla en el índice. Con `IntersectionObserver`, que es
+   * lo que recomienda cualquier guía de «scrollspy»: leer el scroll en cada fotograma cuesta
+   * más y acierta menos. La franja `-45% 0px -50%` elige la que cruza el centro de la pantalla,
+   * así no hay dos activas a la vez.
+   */
+  const [visible, setVisible] = useState<string>(SECCIONES[0][0])
+  useEffect(() => {
+    const observador = new IntersectionObserver(
+      (entradas) => {
+        const dentro = entradas.filter((e) => e.isIntersecting)[0]
+        if (dentro) setVisible(dentro.target.id)
+      },
+      { rootMargin: '-45% 0px -50% 0px', threshold: 0 },
+    )
+    for (const [ancla] of SECCIONES) {
+      const nodo = document.getElementById(ancla)
+      if (nodo !== null) observador.observe(nodo)
+    }
+    return () => observador.disconnect()
+  }, [])
+
   const actual = JSON.stringify(datos)
   const sucio = actual !== guardado.json
 
@@ -110,19 +132,8 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
 
   return (
     <div className="flex flex-col gap-4.5 pb-24">
-      {/* Índice de secciones y conmutador de idioma. */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <nav aria-label="Secciones de La web" className="flex flex-wrap gap-1.5">
-          {SECCIONES.map(([ancla, nombre]) => (
-            <a
-              className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-3 py-1.5 font-mono text-[9px] tracking-[0.22em] text-ink-soft uppercase hover:border-ink hover:text-ink"
-              href={`#${ancla}`}
-              key={ancla}
-            >
-              {nombre}
-            </a>
-          ))}
-        </nav>
+      {/* El idioma de los textos, arriba: manda sobre todos los campos bilingües de abajo. */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
         <div aria-label="Idioma de los textos" className="inline-flex rounded-[var(--radius-pill)] border border-line-panel-strong bg-bg-raised p-1" role="group">
           {(['es', 'en'] as const).map((i) => (
             <button
@@ -150,7 +161,28 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
         </PanelAlert>
       ) : null}
 
-      <div className="grid items-start gap-4.5 min-[1200px]:grid-cols-[minmax(0,1fr)_360px]">
+      {/* Índice a la izquierda, contenido en medio y la vista previa a la derecha: nueve bloques
+          largos necesitan saber dónde se está y llegar a otro sin buscar. El índice es una lista
+          vertical fija, no una fila de píldoras: en una fila no cabe marcar la sección activa. */}
+      <div className="grid items-start gap-4.5 min-[1000px]:grid-cols-[186px_minmax(0,1fr)] min-[1320px]:grid-cols-[186px_minmax(0,1fr)_330px]">
+        <nav aria-label="Secciones de La web" className="hidden min-[1000px]:block min-[1000px]:sticky min-[1000px]:top-6">
+          <ul className="flex flex-col gap-0.5">
+            {SECCIONES.map(([ancla, nombre]) => (
+              <li key={ancla}>
+                <a
+                  aria-current={visible === ancla ? 'true' : undefined}
+                  className={`block rounded-[10px] px-3 py-2 text-[13px] transition-colors ${
+                    visible === ancla ? 'bg-ink text-white' : 'text-ink-soft hover:bg-bg-top hover:text-ink'
+                  }`}
+                  href={`#${ancla}`}
+                >
+                  {nombre}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
         <form action={guardar} className="flex min-w-0 flex-col gap-4.5" id="form-web">
           <input name="datos" type="hidden" value={actual} />
           <input name="base" type="hidden" value={base} />
@@ -159,7 +191,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
             'contacto',
             'Contacto',
             <>
-              <Campo ayuda="Con el código de país. Un celular de Bolivia sin prefijo se completa con +591." etiqueta="WhatsApp del negocio">
+              <Campo ayuda="Con el código de país. Un celular de Bolivia sin prefijo se completa con +591." etiqueta="WhatsApp del negocio" ancho="medio">
                 <input className={FIELD_CLASS} inputMode="tel" onChange={(e) => cambiar('whatsapp', e.target.value)} placeholder="+591 700 12345" value={datos.whatsapp} />
               </Campo>
               <div className="flex flex-wrap items-center gap-3">
@@ -176,7 +208,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
                     : 'Ábrelo desde tu teléfono antes de guardar: es el enlace que pulsará el cliente.'}
                 </span>
               </div>
-              <Campo ayuda="Se enseña junto al WhatsApp. Un enlace que nadie contesta a tiempo resta confianza." etiqueta={`Horario de respuesta (${idioma === 'es' ? 'español' : 'inglés'})`}>
+              <Campo ayuda="Se enseña junto al WhatsApp. Un enlace que nadie contesta a tiempo resta confianza." etiqueta={`Horario de respuesta (${idioma === 'es' ? 'español' : 'inglés'})`} ancho="medio">
                 <input className={FIELD_CLASS} onChange={(e) => cambiar('horario', bil(datos.horario, e.target.value))} placeholder="Respondemos de lunes a sábado, de 9 a 19 h" value={datos.horario[idioma]} />
               </Campo>
             </>,
@@ -208,14 +240,14 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
               <p className="text-[12px] leading-[1.6] text-ink-mute">
                 Google compara estos datos con tu ficha y tus redes: escríbelos exactamente igual que allí.
               </p>
-              <Campo ayuda="Opcional. Déjala vacía si no atiendes en un local." etiqueta="Dirección">
+              <Campo ayuda="Opcional. Déjala vacía si no atiendes en un local." etiqueta="Dirección" ancho="medio">
                 <input className={FIELD_CLASS} onChange={(e) => cambiar('direccion', e.target.value)} placeholder="Av. América 123" value={datos.direccion} />
               </Campo>
               <div className="grid gap-4 min-[560px]:grid-cols-2">
-                <Campo etiqueta="Ciudad">
+                <Campo ancho="corto" etiqueta="Ciudad">
                   <input className={FIELD_CLASS} onChange={(e) => cambiar('ciudad', e.target.value)} value={datos.ciudad} />
                 </Campo>
-                <Campo etiqueta="País">
+                <Campo ancho="corto" etiqueta="País">
                   <input className={FIELD_CLASS} onChange={(e) => cambiar('pais', e.target.value)} value={datos.pais} />
                 </Campo>
               </div>
@@ -433,7 +465,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
         </form>
 
         {/* La vista previa: lo que verá quien entra en la web, con lo que está escrito ahora. */}
-        <aside className="flex flex-col gap-4.5 min-[1200px]:sticky min-[1200px]:top-6">
+        <aside className="flex flex-col gap-4.5 min-[1000px]:col-start-2 min-[1320px]:col-start-3 min-[1320px]:sticky min-[1320px]:top-6">
           <PanelCard title="Así se ve">
             <div className="flex flex-col gap-4">
               <div className="rounded-[14px] border border-line-panel bg-white p-4">
@@ -524,11 +556,30 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
   )
 }
 
-function Campo({ etiqueta, ayuda, contador, children }: { etiqueta: string; ayuda?: string | undefined; contador?: string; children: ReactNode }) {
+/**
+ * El ancho dice cuánto se espera escribir: un teléfono no necesita mil píxeles, y una línea de
+ * texto larga se lee peor pasados los 65 caracteres. Es lo que recomienda Baymard para los
+ * campos de longitud conocida.
+ */
+const ANCHO = { corto: 'max-w-[260px]', medio: 'max-w-[420px]', largo: 'max-w-[640px]' } as const
+
+function Campo({
+  etiqueta,
+  ayuda,
+  contador,
+  ancho = 'largo',
+  children,
+}: {
+  etiqueta: string
+  ayuda?: string | undefined
+  contador?: string
+  ancho?: keyof typeof ANCHO
+  children: ReactNode
+}) {
   // El rótulo envuelve al control: así casa por su nombre sin inventar ids para cada campo
   // de una lista que crece y encoge.
   return (
-    <label className="flex min-w-0 flex-col gap-2">
+    <label className={`flex min-w-0 flex-col gap-2 ${ANCHO[ancho]}`}>
       <span className={`${LABEL_CLASS} flex justify-between gap-2`}>
         {etiqueta}
         {contador ? <span className="tracking-normal">{contador}</span> : null}

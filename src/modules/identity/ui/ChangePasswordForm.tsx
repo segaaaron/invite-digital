@@ -14,7 +14,7 @@ const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
  * para quedarse con la cuenta. Y al guardar se cierran todas las sesiones, así que la
  * pantalla avisa antes de que alguien pulse.
  */
-export function ChangePasswordForm() {
+export function ChangePasswordForm({ inicial = false }: { inicial?: boolean }) {
   const [estado, accion, pendiente] = useActionState<ChangePasswordState, FormData>(changePasswordAction, INICIAL)
   const id = useId()
   // Mostrar lo escrito evita el error más común: una letra de más en una clave que no se ve.
@@ -25,7 +25,7 @@ export function ChangePasswordForm() {
     <form action={accion} className="flex max-w-[420px] flex-col gap-4">
       <div className="flex flex-col gap-2">
         <label className={LABEL_CLASS} htmlFor={`${id}-actual`}>
-          Contraseña actual
+          {inicial ? 'La contraseña que te dieron' : 'Contraseña actual'}
         </label>
         <input
           autoComplete="current-password"
@@ -39,7 +39,7 @@ export function ChangePasswordForm() {
 
       <div className="flex flex-col gap-2">
         <label className={LABEL_CLASS} htmlFor={`${id}-nueva`}>
-          Contraseña nueva
+          {inicial ? 'Tu contraseña nueva' : 'Contraseña nueva'}
         </label>
         <input
           autoComplete="new-password"
@@ -62,10 +62,14 @@ export function ChangePasswordForm() {
       </label>
 
       <p className="rounded-[12px] bg-bg-top px-3.5 py-2.5 text-[12px] leading-[1.6] text-ink-soft">
-        Al guardar se cierran todas tus sesiones, también esta: vuelves a entrar con la nueva.
+        {inicial
+          ? 'Al guardarla entras de nuevo con ella: es la única que valdrá a partir de ahora.'
+          : 'Al guardar se cierran todas tus sesiones, también esta: vuelves a entrar con la nueva.'}
       </p>
 
-      <SubmitButton variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Cambiar la contraseña'}</SubmitButton>
+      <SubmitButton className="w-full" variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>
+        {inicial ? 'Guardar y entrar' : 'Cambiar la contraseña'}
+      </SubmitButton>
 
       {estado.status === 'error' ? (
         <p className="text-[13px] text-danger" role="alert">

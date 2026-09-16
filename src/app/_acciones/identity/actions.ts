@@ -64,7 +64,7 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   // Con la contraseña provisional se va **directo** a cambiarla. El guard lo rebotaría
   // igual desde cualquier página, pero mandarlo primero a su evento para devolverlo acto
   // seguido es un parpadeo que no explica nada.
-  if (usuario !== null && usuario.mustChangePassword) redirect('/panel/cuenta')
+  if (usuario !== null && usuario.mustChangePassword) redirect('/panel/nueva-contrasena')
 
   // El admin no entra a los datos de ninguna boda: su puerta es la administración.
   if (usuario !== null && parseRole(usuario.role) === 'admin') redirect('/panel/admin')

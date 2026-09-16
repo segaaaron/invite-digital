@@ -93,7 +93,6 @@ export const es = {
     bullets: ['Carga en menos de dos segundos', 'Código QR para la mesa de recepción', 'Botón de confirmación directo al chat'],
     shots: [
       { tag: 'Boda', caption: 'Monograma en foil', alt: 'Invitación de boda abierta en un teléfono' },
-      { tag: 'Bautizo', caption: 'Acuarela & QR', alt: 'Invitación de bautizo abierta en un teléfono durante la fiesta' },
     ],
   },
   collections: {

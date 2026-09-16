@@ -70,7 +70,10 @@ export function ShowcaseMusicRow({
 
   return (
     <li
-      className={`flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white shadow-[var(--shadow-card)] ${
+      // `@container`: los campos de la canción se apilan según lo ancho que sea **la tarjeta**,
+      // no la ventana. Con la consulta de ventana, en la rejilla de cinco columnas salían dos
+      // campos de 90 px con el rótulo partido en tres líneas.
+      className={`@container flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white shadow-[var(--shadow-card)] ${
         publicado ? 'border-line-panel' : 'border-dashed border-line-panel-strong'
       }`}
     >
@@ -118,6 +121,7 @@ export function ShowcaseMusicRow({
                 </p>
               ) : null}
               <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
+              <p className="text-[11px] text-ink-mute">El artista es opcional.</p>
               <SubmitButton variant="default" pending={renombrando} pendingLabel={'Guardando…'}>{'Guardar nombre'}</SubmitButton>
             </form>
           </>
@@ -135,7 +139,7 @@ export function ShowcaseMusicRow({
             onElegir={(archivo) => void alElegir(archivo)}
           />
           {nombreNuevo === null ? null : (
-            <div className="grid gap-2 min-[420px]:grid-cols-2">
+            <div className="grid gap-2 @[380px]:grid-cols-2">
               <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-track`}>
                 <span className={LABEL_CLASS}>Canción</span>
                 <input
@@ -148,7 +152,7 @@ export function ShowcaseMusicRow({
                 />
               </label>
               <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-artist`}>
-                <span className={LABEL_CLASS}>Artista (opcional)</span>
+                <span className={LABEL_CLASS}>Artista</span>
                 <input
                   className={FIELD_CLASS}
                   id={`${id}-alta-artist`}
@@ -190,7 +194,7 @@ export function ShowcaseMusicRow({
 
 function NombreDeCancion({ cancion, id }: { cancion: { track: string; artist: string } | null; id: string }) {
   return (
-    <div className="grid gap-2 min-[420px]:grid-cols-2">
+    <div className="grid gap-2 @[380px]:grid-cols-2">
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-track`}>
         <span className={LABEL_CLASS}>Canción</span>
         <input
@@ -203,7 +207,7 @@ function NombreDeCancion({ cancion, id }: { cancion: { track: string; artist: st
         />
       </label>
       <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-artist`}>
-        <span className={LABEL_CLASS}>Artista (opcional)</span>
+        <span className={LABEL_CLASS}>Artista</span>
         <input className={FIELD_CLASS} defaultValue={cancion?.artist ?? ''} id={`${id}-artist`} maxLength={120} name="artist" />
       </label>
     </div>

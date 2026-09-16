@@ -77,8 +77,8 @@ export interface MobileDictionary {
   title: string
   body: string
   bullets: readonly [string, string, string]
-  /** Las dos fotografías de la maqueta, con su pie. */
-  shots: readonly [MobileShot, MobileShot]
+  /** Las fotografías con su pie: una o dos, según cuántas haya del catálogo que se vende. */
+  shots: readonly MobileShot[]
 }
 
 export interface CollectionScene {

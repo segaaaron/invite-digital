@@ -93,7 +93,6 @@ export const en = {
     bullets: ['Loads in under two seconds', 'A QR code for the welcome table', 'A confirmation button straight to the chat'],
     shots: [
       { tag: 'Wedding', caption: 'Foil monogram', alt: 'A wedding invitation open on a phone' },
-      { tag: 'Christening', caption: 'Watercolour & QR', alt: 'A christening invitation open on a phone during the party' },
     ],
   },
   collections: {

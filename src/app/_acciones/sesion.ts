@@ -27,7 +27,10 @@ export const sessionCookieOptions = (expiresAt: Date) =>
  * siguiente acción del panel la refresca mucho antes de que nadie pierda la sesión.
  */
 /** Adonde se manda a quien todavía usa la contraseña que le escribió otro. */
-const CAMBIAR_CONTRASENA = '/panel/cuenta'
+/** Pantalla propia, fuera del panel: con la provisional no se entra a ninguna otra. */
+const CAMBIAR_CONTRASENA = '/panel/nueva-contrasena'
+/** La cuenta de quien entró. En modo soporte no se toca, y tampoco la pantalla de arriba. */
+const CUENTA = '/panel/cuenta'
 
 /**
  * **Una vez por petición** (`cache` de React): la carcasa y la página la piden las dos, y cada
@@ -63,7 +66,7 @@ async function leerSesion(): Promise<Actor> {
 
   if (actor.soporte !== undefined) {
     // La cuenta del cliente —su contraseña, su correo— no se toca en modo soporte.
-    if (ruta.startsWith(CAMBIAR_CONTRASENA)) notFound()
+    if (ruta.startsWith(CUENTA) || ruta.startsWith(CAMBIAR_CONTRASENA)) notFound()
     // Cada cambio hecho como el cliente queda firmado por el admin. Una Server Action es la
     // única forma de escribir, y trae `next-action`: un solo sitio, no ochenta acciones.
     if (cabeceras.get('next-action') !== null) {
