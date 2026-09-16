@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
+import { anfitrionesXv } from '../../../domain/invitation-content'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
@@ -84,7 +85,6 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, audi
     <article style={{ ...RANURAS, position: 'relative', color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
       <ImageOnlyCover
         accent={P.oroPortada}
-        badge={`▸ ${hero?.eyebrow ?? ''} · ${(hero?.nameA ?? '').toUpperCase()}`}
         bgAsset={themeAsset('xv-isabelle', 'portada-griega.avif')}
         hint={themes.coverEnter}
         name={hero?.nameA ?? ''}
@@ -285,11 +285,22 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, audi
           <Reveal>
             <div style={{ marginTop: 28, padding: '26px 22px', ...PANEL, textAlign: 'center' }}>
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro }}>{hosts.label ?? ''}</div>
-              {hosts.names.map((nombre) => (
+              {anfitrionesXv(hosts).padres.map((nombre) => (
                 <div key={nombre} style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, fontWeight: 600 }}>
                   {nombre}
                 </div>
               ))}
+              {/* Los padrinos, aparte y con su rótulo: antes iban mezclados con los padres. */}
+              {anfitrionesXv(hosts).padrinos.length === 0 ? null : (
+                <>
+                  <div style={{ fontSize: 10, letterSpacing: '0.3em', marginTop: 22, color: P.oro, fontWeight: 600 }}>{themes.godparents}</div>
+                  {anfitrionesXv(hosts).padrinos.map((nombre) => (
+                    <div key={nombre} style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, fontWeight: 600 }}>
+                      {nombre}
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           </Reveal>
         )}

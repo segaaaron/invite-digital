@@ -10,6 +10,7 @@ const groupView = (group: DoorGroupRow): ScanGroupView => ({
   leadName: group.leadName,
   seats: group.seats,
   tableLabel: group.tableLabel,
+  people: group.people,
 })
 
 /**
@@ -21,31 +22,52 @@ const groupView = (group: DoorGroupRow): ScanGroupView => ({
  * `arrivedCount` nulo significa «decide tú»: el cliente no sabe cuántos confirmó el
  * grupo hasta que el servidor se lo dice, y adivinarlo en el navegador fue justo el
  * defecto que se corrigió aquí.
+ *
+ * **Con personas**, el escaneo dice quiénes entran. Solo cuentan las de esta invitación y
+ * que aún no estaban dentro: quien ya entró no se registra dos veces, y una persona de otra
+ * invitación no se cuela en esta. Si no queda nadie nuevo, no se escribe nada.
  */
 export async function registerArrival(
   arrivals: ArrivalRepository,
   eventId: string,
   group: DoorGroupRow,
-  scan: { scanId: string; arrivedCount: number | null; scannedAt: Date },
+  scan: { scanId: string; arrivedCount: number | null; scannedAt: Date; personIds?: readonly string[] | null },
   recordedBy: string | null = null,
 ): Promise<ScanOutcome> {
+  const previous = (await arrivals.listByEvent(eventId)).filter((a) => a.guestGroupId === group.id)
+  const antes = resolveArrival(previous)
+
+  let personIds: string[] | null = null
+  if (group.people.length > 0) {
+    const suyas = new Set(group.people.map((p) => p.id))
+    // Sin nombres —el buscador del panel, una puerta con la versión anterior— entran todos los
+    // que faltaban: así la invitación con personas nunca queda contada por número y sin nombres.
+    const pedidas = scan.personIds === undefined || scan.personIds === null ? [...suyas] : scan.personIds
+    personIds = [...new Set(pedidas)].filter((id) => suyas.has(id) && antes?.personas[id] === undefined)
+    if (personIds.length === 0) {
+      return antes === null
+        ? { scanId: scan.scanId, kind: 'unknown' }
+        : { scanId: scan.scanId, kind: 'already', group: groupView(group), arrivedAt: antes.arrivedAt, arrivedCount: antes.arrivedCount, personas: antes.personas }
+    }
+  }
+
   const arrival = createArrival(
     {
       scanId: scan.scanId,
       guestGroupId: group.id,
-      arrivedCount: scan.arrivedCount ?? group.attending ?? 1,
+      arrivedCount: personIds === null ? (scan.arrivedCount ?? group.attending ?? 1) : personIds.length,
       scannedAt: scan.scannedAt,
       voidedAt: null,
+      personIds,
     },
     group.seats,
   )
   if (isErr(arrival)) return { scanId: scan.scanId, kind: 'unknown' }
 
-  const previous = (await arrivals.listByEvent(eventId)).filter((a) => a.guestGroupId === group.id)
   const inserted = await arrivals.insertIfAbsent({ ...arrival.value, recordedBy })
   const resolved = resolveArrival(inserted ? [...previous, arrival.value] : previous)
 
-  if (!inserted || previous.some((a) => a.voidedAt === null)) {
+  if (!inserted || (personIds === null && previous.some((a) => a.voidedAt === null))) {
     return resolved
       ? {
           scanId: scan.scanId,
@@ -53,6 +75,7 @@ export async function registerArrival(
           group: groupView(group),
           arrivedAt: resolved.arrivedAt,
           arrivedCount: resolved.arrivedCount,
+          personas: resolved.personas,
         }
       : { scanId: scan.scanId, kind: 'unknown' }
   }
@@ -61,6 +84,8 @@ export async function registerArrival(
     scanId: scan.scanId,
     kind: 'welcome',
     group: groupView(group),
-    arrivedCount: arrival.value.arrivedCount,
+    // Por persona, cuántos hay ya dentro de la invitación; por número, lo de este escaneo.
+    arrivedCount: personIds === null ? arrival.value.arrivedCount : (resolved?.arrivedCount ?? personIds.length),
+    personas: resolved?.personas ?? {},
   }
 }

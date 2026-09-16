@@ -32,7 +32,7 @@ function generarClave(): string {
  * pocos campos y ver el recorrido entero da confianza.
  *
  * Los campos se envían con los mismos nombres de siempre (`themeKey`, `title`, `eventDate`,
- * `planSlug`, `clientEmail`, `clientPassword`): la acción no cambia.
+ * `planSlug`, `clientName`, `clientPhone`, `clientEmail`, `clientPassword`).
  */
 export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloElegible[]; planes: readonly PlanElegible[] }) {
   const [estado, crear, creando] = useActionState<NuevaBodaState, FormData>(createWeddingForClientAction, INICIAL)
@@ -170,6 +170,18 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
 
         <Paso numero={4} titulo="Su acceso al panel" ayuda="Le mandamos el acceso por correo. La primera vez que entre, el panel le pide elegir su propia contraseña.">
           <div className="grid gap-4 min-[560px]:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label className={LABEL_CLASS} htmlFor={`${id}-nombre-cliente`}>
+                Nombre del cliente
+              </label>
+              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-nombre-cliente`} maxLength={160} name="clientName" placeholder="María Rojas" required />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className={LABEL_CLASS} htmlFor={`${id}-telefono-cliente`}>
+                WhatsApp del cliente
+              </label>
+              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-telefono-cliente`} inputMode="tel" name="clientPhone" placeholder="+591 700 12345" />
+            </div>
             <div className="flex flex-col gap-2">
               <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
                 Correo del cliente

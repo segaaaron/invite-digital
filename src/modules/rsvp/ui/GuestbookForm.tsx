@@ -9,6 +9,8 @@ type Props = {
   token: string
   seats: number
   previous: { attending: number; message: string | null; responderName: string | null } | null
+  /** El nombre del invitado del enlace, para firmar sin pedírselo. */
+  guestName: string
 }
 
 /**
@@ -19,7 +21,7 @@ type Props = {
  * en `rsvp_responses` desde la primera rebanada— y por eso reenvía el número de asistentes
  * que ya había: firmar el libro no es cambiar la respuesta.
  */
-export function GuestbookForm({ dictionary, token, seats, previous }: Props) {
+export function GuestbookForm({ dictionary, token, seats, previous, guestName }: Props) {
   const rsvp = useRsvp({ dictionary, previous, seats })
   const campoId = useId()
   // El botón no se habilita hasta que hay algo escrito, como en la maqueta.
@@ -37,7 +39,7 @@ export function GuestbookForm({ dictionary, token, seats, previous }: Props) {
     <form action={rsvp.formAction} className="flex flex-col gap-2">
       <input name="token" type="hidden" value={token} readOnly />
       <input name="attending" type="hidden" value={String(previous?.attending ?? seats)} readOnly />
-      <input name="name" type="hidden" value={rsvp.defaultName} readOnly />
+      <input name="name" type="hidden" value={previous?.responderName ?? guestName} readOnly />
 
       <label className="sr-only" htmlFor={campoId}>
         {dictionary.messageLabel}

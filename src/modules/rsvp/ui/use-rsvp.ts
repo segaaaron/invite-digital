@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState } from 'react'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
 import { type RsvpActionState, respondAction } from '@/app/_acciones/rsvp/actions'
 
@@ -19,15 +19,11 @@ export type RsvpControl = {
   readonly error: string | null
   /** Hay una confirmación recién guardada que enseñar en vez del formulario. */
   readonly confirmed: boolean
-  /** Vuelve al panel de gracias recién enviado; **no** reabre una respuesta ya guardada. */
-  readonly reopen: () => void
   /** Ya había una respuesta guardada: se contesta una sola vez. */
   readonly yaRespondio: boolean
   /** Las opciones del desplegable: de cero hasta los cupos del grupo. */
   readonly defaultAttending: string
   readonly defaultMessage: string
-  /** El nombre con el que ya contestó, para no volver a escribirlo. */
-  readonly defaultName: string
   /** Con quién saludar en el panel de gracias, o `null` si no dejó nombre. */
   readonly confirmedName: string | null
 }
@@ -47,20 +43,16 @@ export type RsvpControl = {
  */
 export function useRsvp({ dictionary, previous, seats }: Entrada): RsvpControl {
   const [state, formAction, isPending] = useActionState(respondAction, INICIAL)
-  // Cada resultado es un objeto nuevo, así que recordar el ya reconocido devuelve el
-  // formulario al pulsar «cambiar» y vuelve a enseñar el panel tras el siguiente envío.
-  const [reconocido, setReconocido] = useState<RsvpActionState | null>(null)
 
   return {
     formAction,
     isPending,
     error: state.status === 'error' ? dictionary.errors[state.message] : null,
-    confirmed: state.status === 'success' && reconocido !== state,
+    // Enviada, se queda enviada: se confirma una sola vez y cambiarla lo hace quien invitó.
+    confirmed: state.status === 'success',
     yaRespondio: previous !== null,
-    reopen: () => setReconocido(state),
     defaultAttending: String(previous?.attending ?? seats),
     defaultMessage: previous?.message ?? '',
-    defaultName: previous?.responderName ?? '',
     // El nombre del saludo sale de **la respuesta que acaba de guardarse**, no del campo:
     // así dice el que quedó registrado y no el que se estuviera escribiendo.
     confirmedName: state.status === 'success' ? state.responderName : null,

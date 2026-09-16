@@ -81,7 +81,7 @@ describe('addPorter', () => {
   it('un plan sin porteros (límite 0) no admite ninguno y lo dice', async () => {
     const { deps } = dobles()
     const r = await addPorter(deps)({ ...alta, limit: 0 })
-    expect(isErr(r) && r.error.detail).toContain('no incluye porteros')
+    expect(isErr(r) && r.error.detail).toContain('no incluye personal de recepción')
   })
 
   it('un portero quitado deja su hueco libre', async () => {

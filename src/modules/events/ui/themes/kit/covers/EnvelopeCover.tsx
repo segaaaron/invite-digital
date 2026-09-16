@@ -67,6 +67,7 @@ export function EnvelopeCover({
   return (
     <button
       aria-label={openLabel}
+      data-portada=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

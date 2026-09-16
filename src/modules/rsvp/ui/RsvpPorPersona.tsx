@@ -30,12 +30,18 @@ export function RsvpPorPersona({
   seats,
   personas,
   volverHref,
+  guestName,
+  paseHref,
 }: {
   dictionary: InvitationDictionary
   token: string
   seats: number
   personas: readonly PersonaParaConfirmar[]
   volverHref: string
+  /** El nombre del invitado del enlace: responde él, sin escribirlo otra vez. */
+  guestName: string
+  /** Su pase de entrada, que se entrega al confirmar que viene alguien. */
+  paseHref: string
 }) {
   const [estado, confirmar, enviando] = useActionState(respondByPersonAction, INICIAL)
   const id = useId()
@@ -50,12 +56,22 @@ export function RsvpPorPersona({
     return (
       <div className="flex flex-col items-center gap-3 py-8 text-center" role="status">
         <ConfettiBurst active />
+        <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{dictionary.confirmedHeading}</p>
         <p className="text-[30px] leading-tight font-light text-ink" style={{ fontFamily: 'var(--font-script, var(--font-display))' }}>
           {estado.responderName === null
             ? dictionary.successTitleAnon
             : dictionary.successTitle.replace('{nombre}', estado.responderName)}
         </p>
         <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.successBody}</p>
+        <p className="max-w-[40ch] text-[13px] leading-[1.7] text-ink-soft">{dictionary.confirmedLocked}</p>
+        {estado.attending > 0 ? (
+          <Link
+            className="mt-2 inline-block rounded-[var(--radius-pill)] bg-[var(--color-cta)] px-6 py-3 font-mono text-[11px] tracking-[0.28em] text-[var(--color-on-cta)] uppercase"
+            href={paseHref}
+          >
+            {dictionary.passOpen}
+          </Link>
+        ) : null}
         <Link className="text-[11px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase underline-offset-4 hover:underline" href={volverHref}>
           {dictionary.backToInvitation}
         </Link>
@@ -137,16 +153,7 @@ export function RsvpPorPersona({
         {total === 0 ? dictionary.nobodyComing : dictionary.confirmedCount.replace('{n}', String(total)).replace('{total}', String(seats))}
       </p>
 
-      <label className="flex flex-col gap-2" htmlFor={`${id}-nombre`}>
-        <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase">{dictionary.nameLabel}</span>
-        <input
-          className="w-full rounded-[10px] border border-[var(--color-line)] bg-[var(--color-bg-raised)] px-4 py-3 text-[15px] text-ink"
-          id={`${id}-nombre`}
-          maxLength={120}
-          name="name"
-          placeholder={dictionary.namePlaceholder}
-        />
-      </label>
+      <input name="name" readOnly type="hidden" value={guestName} />
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-mensaje`}>
         <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase">{dictionary.messageLabel}</span>

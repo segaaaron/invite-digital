@@ -4,11 +4,12 @@ import jsQR from 'jsqr'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction, type DoorActionState, type ScanInput } from '@/app/_acciones/checkin/actions'
 import type { ScanOutcome } from '../application/check-in-by-scan'
-import type { DoorManifest } from '../application/get-door-manifest'
+import type { DoorManifest, DoorManifestGroup } from '../application/get-door-manifest'
 import type { ResolvedArrival } from '../domain/conflict'
 import { doorTally } from '../domain/door-tally'
 import { ManualPassDialog } from './ManualPassDialog'
 import { DoorSearchSheet } from './DoorSearchSheet'
+import { EligePersonas } from './EligePersonas'
 import { resolveLocally } from './local-resolve'
 import { openOutbox, type Outbox } from './outbox'
 import { ScanResultCard } from './ScanResultCard'
@@ -35,6 +36,7 @@ export type DoorActions = {
     scanId: string
     arrivedCount: number | null
     scannedAtMs: number
+    personIds?: readonly string[] | null
   }) => Promise<ScanOutcome>
   adjust: (input: { eventId: string; scanId: string; arrivedCount: number; eventSlug: string }) => Promise<DoorActionState>
   void: (input: { eventId: string; scanId: string; eventSlug: string }) => Promise<DoorActionState>
@@ -48,6 +50,16 @@ const ACCIONES_DEL_PANEL: DoorActions = {
   adjust: adjustArrivalAction,
   void: voidArrivalAction,
 }
+
+/** Lo que la tarjeta del escaneo necesita de un grupo del manifiesto. */
+const vistaDe = (group: DoorManifestGroup) => ({
+  id: group.id,
+  label: group.label,
+  leadName: group.leadName,
+  seats: group.seats,
+  tableLabel: group.tableLabel,
+  people: group.people,
+})
 
 const ACCESO_CERRADO = 'Tu acceso a esta puerta se cerró. Pide a quien te sumó un enlace nuevo.'
 
@@ -64,6 +76,13 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
   const [outcome, setOutcome] = useState<ScanOutcome | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [manualOpen, setManualOpen] = useState(false)
+  /**
+   * Una invitación con varias personas por llegar: se elige quién entra ahora. `scanned` es el
+   * pase leído; nulo si se llegó desde el buscador por nombre, que registra por el grupo.
+   */
+  const [eligiendo, setEligiendo] = useState<{ group: DoorManifestGroup; scanned: string | null } | null>(null)
+  /** Lo que registró el último escaneo por persona, para poder deshacerlo. */
+  const ultimoPorPersona = useRef<{ scanId: string; groupId: string; personIds: readonly string[] } | null>(null)
   const [arrivals, setArrivals] = useState<readonly ResolvedArrival[]>(manifest.arrivals)
   /**
    * Lo que el servidor rechazó después de que la pantalla ya se hubiera corregido. A la
@@ -82,8 +101,8 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
   // banderas por referencia en vez de por dependencia del efecto.
   const busyRef = useRef(false)
   useEffect(() => {
-    busyRef.current = outcome !== null || sheetOpen
-  }, [outcome, sheetOpen])
+    busyRef.current = outcome !== null || sheetOpen || eligiendo !== null
+  }, [outcome, sheetOpen, eligiendo])
 
   const arrivedIds = useMemo(() => new Set(arrivals.map((a) => a.guestGroupId)), [arrivals])
   const tally = useMemo(
@@ -105,10 +124,22 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
     setOutcome(result)
     if (result.kind !== 'welcome') return
     setArrivals((prev) => [
-      ...prev,
-      { guestGroupId: result.group.id, arrivedAt: new Date(), arrivedCount: result.arrivedCount, scanCount: 1 },
+      ...prev.filter((a) => a.guestGroupId !== result.group.id),
+      {
+        guestGroupId: result.group.id,
+        arrivedAt: prev.find((a) => a.guestGroupId === result.group.id)?.arrivedAt ?? new Date(),
+        arrivedCount: result.arrivedCount,
+        scanCount: 1,
+        personas: result.personas,
+      },
     ])
   }, [])
+
+  /** Quién de esta invitación está ya dentro, según lo que sabe el dispositivo. */
+  const dentroDe = useCallback(
+    (groupId: string): Readonly<Record<string, Date>> => arrivals.find((a) => a.guestGroupId === groupId)?.personas ?? {},
+    [arrivals],
+  )
 
   /**
    * Se guarda la promesa, no la bandeja ya abierta: abrir IndexedDB tarda, y el primer
@@ -150,6 +181,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
           scanned: scan.scanned,
           arrivedCount: scan.arrivedCount,
           scannedAtMs: scan.scannedAtMs,
+          personIds: scan.personIds ?? null,
         })),
       })
       await box.drop(outcomes.map((o) => o.scanId))
@@ -184,19 +216,31 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         return
       }
 
-      const group = {
-        id: local.group.id,
-        label: local.group.label,
-        leadName: local.group.leadName,
-        seats: local.group.seats,
-        tableLabel: local.group.tableLabel,
+      // Con personas, la puerta decide por nombres: nadie por llegar, uno solo —entra de un
+      // escaneo, como siempre— o varios, y entonces se elige quién entra ahora.
+      if (local.group.people.length > 0) {
+        const dentro = dentroDe(local.group.id)
+        const porLlegar = local.group.people.filter((p) => dentro[p.id] === undefined)
+        if (porLlegar.length === 0) {
+          const primera = Object.values(dentro).sort((a, b) => a.getTime() - b.getTime())[0] ?? new Date()
+          setOutcome({ scanId, kind: 'already', group: vistaDe(local.group), arrivedAt: primera, arrivedCount: Object.keys(dentro).length, personas: dentro })
+          return
+        }
+        if (porLlegar.length === 1) {
+          await registrarPersonas(local.group, scanned, [porLlegar[0]!.id])
+          return
+        }
+        setEligiendo({ group: local.group, scanned })
+        return
       }
+
+      const group = vistaDe(local.group)
       const arrivedCount = local.arrivedCount ?? 1
 
       if (local.kind === 'already') {
-        setOutcome({ scanId, kind: 'already', group, arrivedAt: new Date(), arrivedCount })
+        setOutcome({ scanId, kind: 'already', group, arrivedAt: new Date(), arrivedCount, personas: {} })
       } else {
-        apply({ scanId, kind: 'welcome', group, arrivedCount })
+        apply({ scanId, kind: 'welcome', group, arrivedCount, personas: {} })
       }
 
       // **También cuando ya había ingresado**, y esa es la corrección: en una boda la
@@ -210,8 +254,48 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       }
       void flush()
     },
-    [manifest.groups, arrivedIds, apply, flush, getOutbox],
+    // `registrarPersonas` se declara debajo y se usa por referencia estable: no cambia entre pintados.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [manifest.groups, arrivedIds, apply, flush, getOutbox, dentroDe],
   )
+
+  /**
+   * Registra a personas concretas de una invitación. La pantalla responde en el acto y el
+   * escaneo va a la bandeja de salida con sus nombres: sin red, la puerta sigue sabiendo quién
+   * entró. Desde el buscador (`scanned` nulo) se registra por el grupo, con red.
+   */
+  async function registrarPersonas(group: DoorManifestGroup, scanned: string | null, personIds: readonly string[]) {
+    setEligiendo(null)
+    const scanId = crypto.randomUUID()
+    const ahora = new Date()
+    const personas = { ...dentroDe(group.id) }
+    for (const id of personIds) personas[id] ??= ahora
+    ultimoPorPersona.current = { scanId, groupId: group.id, personIds }
+    apply({ scanId, kind: 'welcome', group: vistaDe(group), arrivedCount: Object.keys(personas).length, personas })
+
+    if (scanned === null) {
+      void acciones
+        .checkInByGroup({ eventId, eventSlug, groupId: group.id, scanId, arrivedCount: null, scannedAtMs: ahora.getTime(), personIds })
+        .catch(async () => {
+          if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
+          else setDesajuste('No se pudo registrar la llegada. Vuelve a intentarlo.')
+        })
+      return
+    }
+
+    const box = await getOutbox()
+    if (box) {
+      await box.push({ scanId, scanned, arrivedCount: personIds.length, scannedAtMs: ahora.getTime(), tries: 0, personIds })
+      setPending(await box.count())
+      void flush()
+    } else {
+      void acciones.recordScans({
+        eventId,
+        eventSlug,
+        scans: [{ scanId, scanned, arrivedCount: personIds.length, scannedAtMs: ahora.getTime(), personIds }],
+      })
+    }
+  }
 
   const onCode = useCallback(
     (raw: string) => {
@@ -394,6 +478,15 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         />
       ) : null}
 
+      {eligiendo === null ? null : (
+        <EligePersonas
+          dentro={dentroDe(eligiendo.group.id)}
+          group={eligiendo.group}
+          onCancelar={() => setEligiendo(null)}
+          onRegistrar={(personIds) => void registrarPersonas(eligiendo.group, eligiendo.scanned, personIds)}
+        />
+      )}
+
       {outcome ? (
         <ScanResultCard
           outcome={outcome}
@@ -413,7 +506,20 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
             // puerta ya hay otras llegadas dentro y borrarlas sería peor que el error.
             if (outcome.kind !== 'unknown') {
               const groupId = outcome.group.id
-              setArrivals((prev) => prev.filter((a) => a.guestGroupId !== groupId))
+              const ultimo = ultimoPorPersona.current
+              if (ultimo !== null && ultimo.scanId === scanId) {
+                // Por persona se retira solo a quienes entraron en este escaneo: su pareja sigue dentro.
+                setArrivals((prev) =>
+                  prev.flatMap((a) => {
+                    if (a.guestGroupId !== groupId) return [a]
+                    const personas = Object.fromEntries(Object.entries(a.personas).filter(([id]) => !ultimo.personIds.includes(id)))
+                    const quedan = Object.keys(personas).length
+                    return quedan === 0 ? [] : [{ ...a, personas, arrivedCount: quedan }]
+                  }),
+                )
+              } else {
+                setArrivals((prev) => prev.filter((a) => a.guestGroupId !== groupId))
+              }
             }
             setOutcome(null)
             void acciones.void({ eventId, scanId, eventSlug }).then((r) => {
@@ -434,6 +540,19 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         onClose={() => setSheetOpen(false)}
         onPick={(groupId) => {
           setSheetOpen(false)
+          const elegido = manifest.groups.find((g) => g.id === groupId)
+          if (elegido !== undefined && elegido.people.length > 0) {
+            const dentro = dentroDe(elegido.id)
+            const porLlegar = elegido.people.filter((p) => dentro[p.id] === undefined)
+            if (porLlegar.length === 0) {
+              setOutcome({ scanId: crypto.randomUUID(), kind: 'already', group: vistaDe(elegido), arrivedAt: new Date(), arrivedCount: Object.keys(dentro).length, personas: dentro })
+            } else if (porLlegar.length === 1) {
+              void registrarPersonas(elegido, null, [porLlegar[0]!.id])
+            } else {
+              setEligiendo({ group: elegido, scanned: null })
+            }
+            return
+          }
           void acciones
             .checkInByGroup({
               eventId,

@@ -47,7 +47,7 @@ const PLANS = [
       name: 'Firma 3D',
       tagline: 'Organiza todo el día',
       description: 'Invitados, regalos, la puerta con pases QR y el día del evento, en un solo panel.',
-      features: ['Todo lo de Atelier', 'Hasta 120 grupos e importación desde CSV', 'Mesa de regalos y fondos', 'Pases QR, modo puerta y 3 porteros', 'Proveedores, cronograma, cortejo y documentos', 'Fotos de los invitados y contraseña', '3 co-anfitriones y tu planner sin costo', '20 fotos, 180 días en línea y cambio de modelo antes de repartir'],
+      features: ['Todo lo de Atelier', 'Hasta 120 grupos e importación desde CSV', 'Mesa de regalos y fondos', 'Pases QR, modo puerta y 3 personas de recepción', 'Proveedores, cronograma, cortejo y documentos', 'Fotos de los invitados y contraseña', 'Tu planner sin costo', '20 fotos, 180 días en línea y cambio de modelo antes de repartir'],
     },
     en: {
       name: 'Signature 3D',
@@ -67,7 +67,7 @@ const PLANS = [
       name: 'Alta Costura',
       tagline: 'Lo hacemos contigo',
       description: 'Todo lo de Firma 3D sin límites, con el Día D y una persona asignada.',
-      features: ['Todo lo de Firma 3D', 'Invitados y fotos sin límite', 'Día D en el teléfono y enlaces para proveedores', '10 porteros', 'Co-anfitriones y planners sin límite', 'Cambio de modelo cuando quieras', '365 días en línea', 'Atención de una persona asignada'],
+      features: ['Todo lo de Firma 3D', 'Invitados y fotos sin límite', 'Día D en el teléfono y enlaces para proveedores', '10 personas de recepción', 'Planners sin límite', 'Cambio de modelo cuando quieras', '365 días en línea', 'Atención de una persona asignada'],
     },
     en: {
       name: 'Haute Couture',

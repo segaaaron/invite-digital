@@ -10,18 +10,20 @@ test.afterAll(async () => {
   await closeInvitationDb()
 })
 
-test('el invitado confirma con su nombre, y su enlace pasa a ser el resumen', async ({ page }) => {
+test('el invitado confirma sin escribir su nombre, y su enlace pasa a ser el resumen', async ({ page }) => {
   const { token, groupId, eventSlug } = await seedInvitation({ slug: 'boda-rsvp-e2e' })
 
   await page.goto(`/i/${token}`)
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Evento boda-rsvp-e2e')
 
-  // El nombre va vacío: el enlace es del grupo y quien contesta es una persona de dentro.
-  await expect(page.getByLabel('Nombre completo')).toHaveValue('')
-  await page.getByLabel('Nombre completo').fill('Jorge Rojas')
+  // No se pide el nombre: el enlace es de un invitado y responde con el suyo.
+  await expect(page.getByLabel('Nombre completo')).toHaveCount(0)
   await page.getByRole('button', { name: 'ENVIAR' }).click()
-  // El diseño saluda por su nombre a quien acaba de confirmar.
-  await expect(page.getByRole('status')).toContainText('¡Gracias, Jorge Rojas!')
+  // Saluda por su nombre, dice que se envió y no ofrece modificarla.
+  const hecho = page.getByRole('status')
+  await expect(hecho).toContainText('¡Gracias, Familia Rojas Peña!')
+  await expect(hecho).toContainText('Confirmación enviada')
+  await expect(page.getByRole('button', { name: /cambiar/i })).toHaveCount(0)
 
   // Se confirma **una sola vez**: el enlace acaba en el chat de toda la familia, y con el
   // formulario abierto cualquiera podría cambiar lo que dijeron los demás. Al volver a abrirlo
@@ -95,10 +97,19 @@ test('la página del invitado no se indexa', async ({ page, request }) => {
 test('el pase vive a solas, a un toque de la invitación', async ({ page }) => {
   const { token } = await seedInvitation({ slug: 'boda-pase-e2e' })
 
+  // Sin confirmar no hay pase: la pantalla lo dice y no enseña ningún QR.
+  await page.goto(`/i/${token}/pase`)
+  await expect(page.getByText(/aparecerá aquí en cuanto confirmes/)).toBeVisible()
+  await expect(page.getByRole('img')).toHaveCount(0)
+
+  // Al confirmar que asiste, el pase se entrega en el acto.
+  await page.goto(`/i/${token}`)
+  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  await expect(page.getByRole('status')).toContainText('Confirmación enviada')
+
   // En la puerta, de noche y con gente detrás, nadie se desplaza hasta el final de la
   // invitación: se abre esta pantalla y se enseña.
-  await page.goto(`/i/${token}`)
-  await page.getByRole('link', { name: 'Abrir mi pase' }).click()
+  await page.getByRole('link', { name: 'Abrir mi pase' }).first().click()
 
   await expect(page).toHaveURL(new RegExp(`/i/${token}/pase$`))
   await expect(page.getByRole('img')).toBeVisible()

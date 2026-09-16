@@ -58,3 +58,41 @@ describe('resolveArrival', () => {
     expect(r?.scanCount).toBe(2)
   })
 })
+
+/**
+ * Llegadas persona por persona: la pareja llega partida y dos puertas pueden registrar a la
+ * misma persona sin red. Se suman las personas —la unión— y cada una entra a la hora de su
+ * primer escaneo; quedarse con el último escaneo perdería a quien entró por la otra puerta.
+ */
+describe('resolveArrival · por persona', () => {
+  const conPersonas = (scanId: string, personIds: string[], iso: string, voidedAt: Date | null = null): Arrival => ({
+    ...scan(scanId, personIds.length, iso, voidedAt),
+    personIds,
+  })
+
+  it('suma a las personas de todos los escaneos, cada una con la hora en que entró', () => {
+    const r = resolveArrival([conPersonas('a', ['ana'], '2026-10-18T23:40:00Z'), conPersonas('b', ['luis'], '2026-10-19T00:20:00Z')])
+    expect(r?.arrivedCount).toBe(2)
+    expect(r?.personas).toEqual({ ana: new Date('2026-10-18T23:40:00Z'), luis: new Date('2026-10-19T00:20:00Z') })
+  })
+
+  it('la misma persona por dos puertas cuenta una vez, a la hora más temprana', () => {
+    const r = resolveArrival([conPersonas('b', ['ana'], '2026-10-18T23:50:00Z'), conPersonas('a', ['ana'], '2026-10-18T23:40:00Z')])
+    expect(r?.arrivedCount).toBe(1)
+    expect(r?.personas.ana?.toISOString()).toBe('2026-10-18T23:40:00.000Z')
+  })
+
+  it('deshacer un escaneo saca a sus personas', () => {
+    const r = resolveArrival([
+      conPersonas('a', ['ana'], '2026-10-18T23:40:00Z'),
+      conPersonas('b', ['luis'], '2026-10-19T00:20:00Z', new Date('2026-10-19T00:21:00Z')),
+    ])
+    expect(r?.personas).toEqual({ ana: new Date('2026-10-18T23:40:00Z') })
+  })
+
+  it('sin personas, como siempre: nadie en el mapa y la cantidad del último escaneo', () => {
+    const r = resolveArrival([scan('a', 3, '2026-10-18T21:00:00Z')])
+    expect(r?.personas).toEqual({})
+    expect(r?.arrivedCount).toBe(3)
+  })
+})

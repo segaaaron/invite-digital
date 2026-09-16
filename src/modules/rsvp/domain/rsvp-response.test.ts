@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
-import { createRsvpResponse } from './rsvp-response'
+import { concedePase, createRsvpResponse } from './rsvp-response'
 
 const base = {
   id: 'r1',
@@ -42,5 +42,13 @@ describe('createRsvpResponse', () => {
   it('rechaza un mensaje de más de 500 caracteres', () => {
     const result = createRsvpResponse({ ...base, message: 'x'.repeat(501) }, { seats: 4 })
     expect(isErr(result) && result.error.kind).toBe('invalid_payload')
+  })
+})
+
+describe('concedePase', () => {
+  it('solo quien confirmó que asiste tiene pase: sin responder o diciendo que no, no', () => {
+    expect(concedePase(null)).toBe(false)
+    expect(concedePase({ attending: 0 })).toBe(false)
+    expect(concedePase({ attending: 2 })).toBe(true)
   })
 })

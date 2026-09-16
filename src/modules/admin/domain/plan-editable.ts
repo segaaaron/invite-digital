@@ -93,7 +93,7 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
   // Porteros siempre con número: la puerta no se vende sin tope, y cero es un plan sin ella.
   const porteros = crudo.maxDoorPorters.trim()
   if (!/^\d+$/.test(porteros) || Number(porteros) > 100) {
-    return err(adminError('invalid_input', 'Los porteros son un número entero de 0 a 100.'))
+    return err(adminError('invalid_input', 'El personal de recepción es un número entero de 0 a 100.'))
   }
 
   // El equipo: vacío es sin límite; cero, ninguno.

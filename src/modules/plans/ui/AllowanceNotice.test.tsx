@@ -2,8 +2,14 @@ import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import { AllowanceNotice } from './AllowanceNotice'
 
-const pintar = (props: { maxGuestGroups: number | null; currentGroups: number }) =>
-  render(<AllowanceNotice currentGroups={props.currentGroups} eventSlug="boda-rojas" maxGuestGroups={props.maxGuestGroups} />)
+const pintar = (props: { maxGuestGroups: number | null; currentGroups: number; mejorar?: { href: string; label: string } | null }) =>
+  render(
+    <AllowanceNotice
+      currentGroups={props.currentGroups}
+      maxGuestGroups={props.maxGuestGroups}
+      mejorar={props.mejorar === undefined ? { href: '/panel/eventos/boda-rojas/plan', label: 'Cambiar de plan' } : props.mejorar}
+    />,
+  )
 
 describe('AllowanceNotice', () => {
   it('con margen amplio no aparece ningún aviso', () => {
@@ -32,6 +38,17 @@ describe('AllowanceNotice', () => {
     const aviso = screen.getByRole('alert')
     expect(aviso).toHaveTextContent(/no admite más invitaciones/i)
     expect(screen.getByRole('link', { name: /plan/i })).toHaveAttribute('href', '/panel/eventos/boda-rojas/plan')
+  })
+
+  it('el anfitrión va a Extras; quien no compra no recibe un enlace que da 404', () => {
+    pintar({ maxGuestGroups: 30, currentGroups: 30, mejorar: { href: '/panel/eventos/boda-rojas/extras', label: 'Sumar invitaciones' } })
+    expect(screen.getByRole('link', { name: 'Sumar invitaciones' })).toHaveAttribute('href', '/panel/eventos/boda-rojas/extras')
+  })
+
+  it('sin adónde ir, dice con quién hablar', () => {
+    pintar({ maxGuestGroups: 30, currentGroups: 30, mejorar: null })
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent(/habla con quien organiza/i)
   })
 
   it('pasado el límite sigue siendo el aviso de tope, no un número negativo', () => {

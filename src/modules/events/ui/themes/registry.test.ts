@@ -53,6 +53,8 @@ describe('los campos que declara cada diseño', () => {
       for (const [seccion, claves] of Object.entries(tema.pinta.sinCampos ?? {})) {
         const forma = FORMAS[seccion as keyof typeof FORMAS]
         const reales = [...forma.fields.map((campo) => campo.key), ...(forma.form === 'campos' && forma.list !== undefined ? [forma.list.key] : [])]
+        // En los anfitriones, `names` es la marca de «no pinta los nombres»: la resuelve `formaPara`.
+        if (seccion === 'hosts') reales.push('names')
         for (const clave of claves) expect(reales, `${tema.key} · ${seccion}.${clave}`).toContain(clave)
       }
     }

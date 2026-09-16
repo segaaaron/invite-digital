@@ -193,7 +193,7 @@ export function NewTaskForm({ eventId, eventSlug, etapas }: Evento & { etapas: r
   )
 }
 
-/** Para los eventos creados antes del planner: su plantilla, con un toque. */
+/** El plan está vacío hasta que se pide: la plantilla de su fiesta, con un toque. */
 export function SeedTasksButton({ eventId, eventSlug }: Evento) {
   const [estado, enviar, enviando] = useActionState(seedTasksAction, INICIAL)
   return (

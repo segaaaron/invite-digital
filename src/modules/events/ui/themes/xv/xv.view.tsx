@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import type { ThemeProps } from '../contract'
+import { anfitrionesXv } from '../../../domain/invitation-content'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
@@ -305,10 +306,13 @@ export function XvSharedView({
                 }}
               />
             )}
+            {/* Alto fijo: vacía, la barra se encogía y el titular subía hasta el borde. */}
             <div
+              data-testid="xv-barra-superior"
               style={{
                 display: 'flex',
                 justifyContent: 'space-between',
+                minHeight: '1.6em',
                 fontFamily: MONO,
                 fontSize: 13,
                 letterSpacing: '0.3em',
@@ -529,7 +533,9 @@ export function XvSharedView({
         <Reveal delay={150}>
           {/* El arco sube bajo la corona donde la hay; sin ella, la maqueta lo baja 40. */}
           {piel.retrato === undefined && retrato?.imageId === undefined ? null : (
-          <div style={{ position: 'relative', margin: piel.corona === undefined ? '40px auto 0' : '-30px auto 0', width: 190, height: 300 }}>
+          // El retrato sube a encajar bajo la corona **solo si la corona se pinta**, y se pinta
+          // con la frase: sin frase subía igual y pisaba el nombre.
+          <div data-retrato style={{ position: 'relative', margin: piel.corona === undefined || quote === undefined ? '40px auto 0' : '-30px auto 0', width: 190, height: 300 }}>
             <div
               aria-hidden
               style={{
@@ -567,7 +573,7 @@ export function XvSharedView({
           {hosts === undefined ? null : (
             <div style={{ textAlign: 'center', marginTop: 46, padding: '26px 22px', ...CRISTAL }}>
               <div style={{ fontFamily: Z.anfitriones?.font ?? CALIGRAFIA, fontSize: Z.anfitriones?.size ?? 30, fontWeight: Z.anfitriones?.weight ?? 400, color: Z.anfitriones?.color ?? P.uva }}>{hosts.label ?? ''}</div>
-              {hosts.names.map((nombre) => (
+              {anfitrionesXv(hosts).padres.map((nombre) => (
                 <div
                   key={nombre}
                   style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, color: Z.anfitrionesNombres ?? P.violetaHondo, fontWeight: 700 }}
@@ -575,6 +581,22 @@ export function XvSharedView({
                   {nombre}
                 </div>
               ))}
+              {/* Los padrinos, aparte y con su rótulo: antes iban mezclados con los padres. */}
+              {anfitrionesXv(hosts).padrinos.length === 0 ? null : (
+                <>
+                  <div style={{ fontSize: 10, letterSpacing: '0.3em', marginTop: 22, color: Z.anfitriones?.color ?? P.uva, fontWeight: 600 }}>
+                    {themes.godparents}
+                  </div>
+                  {anfitrionesXv(hosts).padrinos.map((nombre) => (
+                    <div
+                      key={nombre}
+                      style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, color: Z.anfitrionesNombres ?? P.violetaHondo, fontWeight: 700 }}
+                    >
+                      {nombre}
+                    </div>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </Reveal>

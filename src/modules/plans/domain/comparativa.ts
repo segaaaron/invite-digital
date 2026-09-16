@@ -23,7 +23,6 @@ export type TextosComparativa = {
     regalos: string
     puerta: string
     porteros: string
-    coanfitriones: string
     planners: string
     tareas: string
     plannerCompleto: string
@@ -53,7 +52,6 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     regalos: (a) => siNo(a.registry),
     puerta: (a) => siNo(a.checkin),
     porteros: (a) => tope(a.maxDoorPorters),
-    coanfitriones: (a) => tope(a.maxCohosts),
     planners: (a) => tope(a.maxHiredPlanners),
     tareas: () => siNo(true),
     plannerCompleto: (a) => siNo(hasFeature(a, 'plannerCompleto')),

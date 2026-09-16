@@ -14,6 +14,8 @@ import type { ScanGroupView, ScanOutcome } from '../application/check-in-by-scan
  */
 function titular(group: ScanGroupView): string {
   if (group.leadName === null) return group.label
+  // Con personas, la lista de abajo dice quién es quién: el titular es solo quien encabeza.
+  if (group.people.length > 0) return group.leadName
   const acompanantes = Math.max(0, group.seats - 1)
   if (acompanantes === 0) return group.leadName
   return `${group.leadName} y ${acompanantes} acompañante${acompanantes === 1 ? '' : 's'}`
@@ -42,6 +44,10 @@ const hora = horaBolivia
  * entrada escribe `transform` y le comería el centrado.
  */
 export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) {
+  // Con personas cargadas, la puerta cuenta nombres, no un número: la lista sustituye al contador.
+  const conPersonas = outcome.kind !== 'unknown' && outcome.group.people.length > 0
+  const todosDentro =
+    outcome.kind !== 'unknown' && outcome.group.people.every((persona) => outcome.personas[persona.id] !== undefined)
   return (
     <div
       role="status"
@@ -57,10 +63,28 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
       ) : (
         <>
           <p className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] opacity-85">
-            {outcome.kind === 'welcome' ? '✓ Bienvenidos' : '! Ya había ingresado'}
+            {outcome.kind === 'welcome'
+              ? '✓ Bienvenidos'
+              : conPersonas && todosDentro
+                ? '! Ya entraron todos'
+                : '! Ya había ingresado'}
           </p>
           <p className="mt-2 font-display text-[30px] italic leading-tight">{titular(outcome.group)}</p>
-          <p className="mt-1.5 text-[13px] opacity-80">
+          {conPersonas ? (
+            // Quién entró y quién falta, con su hora. Cuando llega el que faltaba con el mismo
+            // QR, la puerta ve aquí que su pareja ya está dentro.
+            <ul aria-label="Personas de la invitación" className="mt-3 flex flex-col gap-1.5">
+              {outcome.group.people.map((persona) => {
+                const entro = outcome.personas[persona.id]
+                return (
+                  <li className={`rounded-xl bg-black/15 px-3.5 py-2 text-[14px] ${entro === undefined ? 'opacity-75' : ''}`} key={persona.id}>
+                    {`${persona.fullName} · ${entro === undefined ? 'Por llegar' : `Entró ${hora(entro)}`}`}
+                  </li>
+                )
+              })}
+            </ul>
+          ) : null}
+          <p className="mt-1.5 text-[13px] opacity-80" hidden={conPersonas}>
             {outcome.group.leadName === null ? '' : `${outcome.group.label} · `}
             {outcome.group.seats} cupo{outcome.group.seats === 1 ? '' : 's'}
             {outcome.kind === 'already' ? ` · ${outcome.arrivedCount} dentro desde las ${hora(outcome.arrivedAt)}` : ''}
@@ -82,7 +106,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
 
               Se pregunta el **total**, no cuántos más: la regla de conflicto se queda con
               la cantidad más reciente, así que un incremento se perdería al reconciliar. */}
-          <div className="mt-4 flex items-center gap-3 text-[13px]">
+          <div className="mt-4 flex items-center gap-3 text-[13px]" hidden={conPersonas}>
             <span className="opacity-80">
               {outcome.kind === 'welcome' ? '¿Cuántos entraron?' : '¿Cuántos hay dentro ahora?'}
             </span>
@@ -116,7 +140,7 @@ export function ScanResultCard({ outcome, onAdjust, onUndo, onDismiss }: Props) 
 
           {/* Pasar de los cupos es el acompañante que aparece sin estar en la lista.
               Pasa en todas las bodas, y negarlo deja al catering contando mal. */}
-          {outcome.arrivedCount > outcome.group.seats ? (
+          {!conPersonas && outcome.arrivedCount > outcome.group.seats ? (
             <p className="mt-2 text-[12px] opacity-85">{outcome.arrivedCount - outcome.group.seats} sin invitación</p>
           ) : null}
         </>

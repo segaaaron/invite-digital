@@ -14,8 +14,6 @@ type Props = {
   readonly line2: string
   readonly title: string
   readonly name: string
-  /** «▸ MIS QUINCE · SOFÍA». */
-  readonly badge: string
   /** «INGRESA A MI INVITACIÓN». */
   readonly hint: string
   readonly openLabel: string
@@ -31,7 +29,7 @@ type Props = {
  * con teclado no puede abrirla y quien usa lector de pantalla no oye que haya nada que
  * tocar, y la invitación se acaba aquí.
  */
-export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, badge, hint, openLabel }: Props) {
+export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hint, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -40,6 +38,7 @@ export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, bad
   return (
     <button
       aria-label={openLabel}
+      data-portada=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',
@@ -169,21 +168,6 @@ export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, bad
           {name}
         </span>
         <span aria-hidden style={{ display: 'block', width: 90, height: 2, background: '#FFFDF8', margin: '22px auto' }} />
-        <span
-          style={{
-            display: 'inline-block',
-            padding: '10px 20px',
-            border: '2px solid #FFFDF8',
-            background: 'rgba(30,15,55,.30)',
-            backdropFilter: 'blur(6px)',
-            fontFamily: 'var(--font-jetbrains-mono)',
-            fontSize: 10,
-            letterSpacing: '0.3em',
-            color: '#FFFDF8',
-          }}
-        >
-          {badge}
-        </span>
         <span
           style={{
             display: 'block',

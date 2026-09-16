@@ -11,6 +11,7 @@ const groupRow = {
   attending: 3,
   revoked: false,
   leadName: null,
+  people: [],
   tableLabel: 'Mesa 03',
   tokenHash: Buffer.alloc(0),
 }

@@ -61,6 +61,8 @@ export default async function ConfirmarPage({ params }: { params: Promise<{ toke
       {puedeResponder ? (
         <RsvpPorPersona
           dictionary={dictionary}
+          guestName={group.label}
+          paseHref={`/i/${token}/pase`}
           personas={personas.map((persona) => ({ id: persona.id, fullName: persona.fullName }))}
           seats={group.seats}
           token={token}

@@ -32,7 +32,7 @@ const HASH = '8bfb4a7f6c1cb4073b47072626084118324bcbb904ec7f27e62a39270926b999'
 
 const manifest = {
   eventId: 'e1',
-  groups: [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, leadName: null, tableLabel: 'Mesa 03', tokenHashHex: HASH }],
+  groups: [{ id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, leadName: null, tableLabel: 'Mesa 03', tokenHashHex: HASH, people: [] }],
   arrivals: [],
 }
 
@@ -94,8 +94,9 @@ describe('DoorMode', () => {
     const checkInByGroup = vi.fn(async ({ scanId }: { scanId: string }) => ({
       scanId,
       kind: 'welcome' as const,
-      group: { id: 'g1', label: 'Familia Rojas Peña', leadName: null, seats: 4, tableLabel: 'Mesa 03' },
+      group: { id: 'g1', label: 'Familia Rojas Peña', leadName: null, seats: 4, tableLabel: 'Mesa 03', people: [] },
       arrivedCount: 4,
+      personas: {},
     }))
     const acciones = { recordScans: vi.fn(async () => []), checkInByGroup, adjust: vi.fn(), void: vi.fn() }
     render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={manifest} />)
@@ -122,5 +123,82 @@ describe('DoorMode', () => {
     fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/ }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/tu acceso a esta puerta se cerró/i)
+  })
+})
+
+/**
+ * La pareja llega partida. La puerta ve los nombres, marca quién entra y, cuando llega el
+ * otro con el mismo QR, ve que su pareja ya está dentro.
+ */
+describe('DoorMode · por persona', () => {
+  const escanear = () => {
+    for (const ch of 'AbCdEfGhIjKlMnOpQrStUv') fireEvent.keyDown(document, { key: ch })
+    fireEvent.keyDown(document, { key: 'Enter' })
+  }
+  const pareja = (arrivals: DoorManifestArrivals = []) => ({
+    eventId: 'e1',
+    groups: [
+      {
+        id: 'g1',
+        label: 'Ana Rojas',
+        seats: 2,
+        attending: 2,
+        revoked: false,
+        leadName: 'Ana Rojas',
+        tableLabel: 'Mesa 03',
+        tokenHashHex: HASH,
+        people: [
+          { id: 'ana', fullName: 'Ana Rojas' },
+          { id: 'luis', fullName: 'Luis Peña' },
+        ],
+      },
+    ],
+    arrivals,
+  })
+  type DoorManifestArrivals = { guestGroupId: string; arrivedAt: Date; arrivedCount: number; scanCount: number; personas: Record<string, Date> }[]
+
+  it('con dos por llegar, la puerta elige quién entra ahora y solo registra a esos', async () => {
+    const recordScans = vi.fn(async ({ scans }: { scans: { scanId: string }[] }) => scans.map((scan) => ({ scanId: scan.scanId, kind: 'unknown' as const })))
+    const acciones = { recordScans, checkInByGroup: vi.fn(), adjust: vi.fn(), void: vi.fn() }
+    render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={pareja()} />)
+
+    escanear()
+    const luis = await screen.findByRole('checkbox', { name: 'Luis Peña' })
+    expect(screen.getByRole('checkbox', { name: 'Ana Rojas' })).toBeChecked()
+    fireEvent.click(luis)
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar entrada (1)' }))
+
+    // La bandeja de salida es compartida entre pruebas: se busca el escaneo con nombres.
+    const conNombres = () =>
+      recordScans.mock.calls
+        .flatMap((llamada) => (llamada[0] as unknown as { scans: { personIds?: string[] | null }[] }).scans)
+        .find((scan) => Array.isArray(scan.personIds))
+    await waitFor(() => expect(conNombres()?.personIds).toEqual(['ana']))
+    expect(await screen.findByText(/Luis Peña · Por llegar/)).toBeInTheDocument()
+    expect(screen.getByText(/Ana Rojas · Entró/)).toBeInTheDocument()
+  })
+
+  it('cuando llega el que faltaba, entra de un escaneo y la puerta ve que su pareja ya estaba', async () => {
+    const recordScans = vi.fn(async () => [])
+    const acciones = { recordScans, checkInByGroup: vi.fn(), adjust: vi.fn(), void: vi.fn() }
+    const dentro = [{ guestGroupId: 'g1', arrivedAt: new Date('2026-10-18T23:40:00Z'), arrivedCount: 1, scanCount: 1, personas: { ana: new Date('2026-10-18T23:40:00Z') } }]
+    render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={pareja(dentro)} />)
+
+    escanear()
+    expect(await screen.findByText(/Luis Peña · Entró/)).toBeInTheDocument()
+    expect(screen.getByText(/Ana Rojas · Entró 19:40/)).toBeInTheDocument()
+    await waitFor(() => expect(recordScans).toHaveBeenCalled())
+  })
+
+  it('si ya entraron todos, lo dice y no registra nada', async () => {
+    const recordScans = vi.fn(async () => [])
+    const acciones = { recordScans, checkInByGroup: vi.fn(), adjust: vi.fn(), void: vi.fn() }
+    const hora = new Date('2026-10-18T23:40:00Z')
+    const dentro = [{ guestGroupId: 'g1', arrivedAt: hora, arrivedCount: 2, scanCount: 1, personas: { ana: hora, luis: hora } }]
+    render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={pareja(dentro)} />)
+
+    escanear()
+    expect(await screen.findByText(/Ya entraron todos/)).toBeInTheDocument()
+    expect(recordScans).not.toHaveBeenCalled()
   })
 })

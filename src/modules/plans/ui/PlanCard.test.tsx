@@ -90,11 +90,11 @@ describe('PlanCard', () => {
     expect(within(screen.getByRole('listitem', { name: /^invitaciones/i })).getByText(/30/)).toBeInTheDocument()
   })
 
-  it('lista también fotos, porteros, días en línea y cambio de modelo, sacados del plan', () => {
+  it('lista también fotos, recepción, días en línea y cambio de modelo, sacados del plan', () => {
     render(<PlanCard name="Atelier" current={false} plan={atelier} />)
 
     expect(within(screen.getByRole('listitem', { name: /fotos del evento/i })).getByText('Hasta 8')).toBeInTheDocument()
-    expect(within(screen.getByRole('listitem', { name: /porteros/i })).getByText('No')).toBeInTheDocument()
+    expect(within(screen.getByRole('listitem', { name: /recepción/i })).getByText('No')).toBeInTheDocument()
     expect(within(screen.getByRole('listitem', { name: /en línea/i })).getByText('60 días')).toBeInTheDocument()
     expect(within(screen.getByRole('listitem', { name: /cambiar de modelo/i })).getByText('No')).toBeInTheDocument()
   })

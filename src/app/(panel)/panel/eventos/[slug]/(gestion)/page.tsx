@@ -18,6 +18,7 @@ import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/shared/design/
 import { TimelineChart } from '@/modules/rsvp/ui/TimelineChart'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { CheckIcon, ClockIcon, EyeIcon, MailIcon, PenIcon, QrIcon, UsersIcon } from '@/shared/design/ui/icons'
 
 /** Las dos semanas del gráfico de la maqueta. */
 const DIAS_DEL_GRAFICO = 14
@@ -162,7 +163,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const conProveedores = llevaProveedores && !isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))
   const proveedores = conProveedores ? await planner.dia.listVendors(event.value.id) : []
   const semana = {
-    avance: avanceDeTareas(tareas),
+    avance: tareas.length === 0 ? null : avanceDeTareas(tareas),
     presupuesto: partidas.length === 0 ? null : { previsto: bs(totales.previsto), comprometido: bs(totales.comprometido), pagado: bs(totales.pagado) },
     tareas: tareas
       .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
@@ -183,7 +184,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <>
             <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Compartir enlace</PanelButton>
             <PanelButton href={`/panel/eventos/${event.value.slug}/invitados#exportar`}>Exportar lista</PanelButton>
-            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados`} variant="primary">
+            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=alta`} variant="primary">
               + Invitar persona
             </PanelButton>
           </>
@@ -251,25 +252,28 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       })()}
 
       <div className="mb-5.5 grid grid-cols-2 gap-3.5 min-[900px]:grid-cols-4">
+        {/* Las cuatro cifras cuentan lo mismo que la barra: personas. Mezclar invitaciones,
+            lugares y personas daba 8 aquí, 27 en la barra y 17 / 30 al lado. */}
         <StatCard
           label="Invitados"
-          value={filas.length}
-          icon="✉"
-          change={gruposNuevos > 0 ? { direction: 'up', text: `${gruposNuevos} esta semana` } : undefined}
-          detail={gruposNuevos > 0 ? undefined : `${t ? t.seatsInvited : 0} cupos repartidos`}
+          value={isErr(personasResumen) ? '—' : personasResumen.value.length}
+          icon={<UsersIcon />}
+          change={gruposNuevos > 0 ? { direction: 'up', text: `${gruposNuevos} invitaci${gruposNuevos === 1 ? 'ón' : 'ones'} esta semana` } : undefined}
+          detail={gruposNuevos > 0 ? undefined : `En ${filas.length} invitaci${filas.length === 1 ? 'ón' : 'ones'} · ${t ? t.seatsInvited : 0} lugares`}
         />
         <StatCard
           label="Confirmados"
           value={t ? t.seatsConfirmed : 0}
           suffix={`/ ${t ? t.seatsInvited : 0}`}
-          icon="✓"
+          icon={<CheckIcon />}
           change={respuestasSemana > 0 ? { direction: 'up', text: `${respuestasSemana} esta semana` } : undefined}
           progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
         />
         <StatCard
-          label="Pendientes"
-          value={t ? t.groupsPending : pendientes}
-          icon="◔"
+          label="Sin responder"
+          value={pendientes}
+          icon={<ClockIcon />}
+          detail={`invitaci${pendientes === 1 ? 'ón' : 'ones'} de ${filas.length}`}
           // Cada respuesta de la semana es un pendiente menos: la flecha va hacia abajo,
           // que en esta tarjeta es la buena noticia.
           change={respuestasSemana > 0 ? { direction: 'down', text: `${respuestasSemana} esta semana` } : undefined}
@@ -280,7 +284,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           value={vistas ? vistas.total : '—'}
           detail={vistas && vistas.today > 0 ? undefined : 'Nadie la ha abierto hoy'}
           change={vistas && vistas.today > 0 ? { direction: 'up', text: `${vistas.today} hoy` } : undefined}
-          icon="👁"
+          icon={<EyeIcon />}
         />
       </div>
 
@@ -448,7 +452,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 <span>
                   {mesas.tables.length} mesas · capacidad {mesas.tables.reduce((suma, mesa) => suma + mesa.taken + mesa.free, 0)}
                 </span>
-                <span>{mesas.unseated.length} grupos sin mesa</span>
+                <span>{mesas.unseated.length} invitaci{mesas.unseated.length === 1 ? 'ón' : 'ones'} sin mesa</span>
               </p>
             </>
           )}
@@ -460,27 +464,21 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
               {[
                 {
                   href: `/panel/eventos/${event.value.slug}/invitados?panel=envio`,
-                  icon: '✉',
+                  icon: <MailIcon />,
                   t: 'Recordar pendientes',
                   d: `${pendientes} invitaci${pendientes === 1 ? 'ón' : 'ones'} sin responder`,
                 },
                 {
-                  href: `/panel/eventos/${event.value.slug}/configuracion`,
-                  icon: '⛓',
-                  t: 'Copiar enlace',
-                  d: 'El enlace de solo lectura del cliente',
-                },
-                {
                   href: `/panel/eventos/${event.value.slug}/checkin`,
-                  icon: '▣',
+                  icon: <QrIcon />,
                   t: 'Pases con QR',
                   d: 'Para la puerta el día del evento',
                 },
                 {
                   href: `/panel/eventos/${event.value.slug}/configuracion`,
-                  icon: '✎',
+                  icon: <PenIcon />,
                   t: 'Editar la invitación',
-                  d: 'Fecha, plantilla e idioma',
+                  d: 'Textos, fotos y música',
                 },
               ].map((accion) => (
                 <Link
@@ -494,7 +492,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                 >
                   <span
                     aria-hidden
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bg-sunken text-[17px] text-sage"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bg-sunken text-sage [&>svg]:size-[18px]"
                   >
                     {accion.icon}
                   </span>

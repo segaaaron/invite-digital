@@ -21,6 +21,8 @@ export const signIn =
   async (input: {
     email: string
     password: string
+    /** «iPhone · Safari», para reconocer la sesión en Mi cuenta. */
+    device?: string
   }): Promise<Result<{ token: string; expiresAt: Date }, IdentityError>> =>
     attempt(
       async () => {
@@ -41,7 +43,7 @@ export const signIn =
 
         const { token, hash } = deps.minter.mint()
         const expiresAt = nextExpiry(deps.clock())
-        await deps.sessions.create({ userId: user.id, tokenHash: hash, expiresAt })
+        await deps.sessions.create({ userId: user.id, tokenHash: hash, expiresAt, device: input.device ?? null })
 
         return ok({ token, expiresAt })
       },

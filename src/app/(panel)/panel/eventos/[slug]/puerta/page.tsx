@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { checkin, events, plans } from '@/app/composition/container'
 import { DoorMode } from '@/modules/checkin/ui/DoorMode'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -27,7 +28,7 @@ export default async function DoorPage({ params }: { params: Promise<{ slug: str
 
   const permitido = await plans.requireFeature(event.value.id, 'checkin')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Modo puerta" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Modo puerta" />
   }
 
   const manifest = await checkin.manifest(event.value.id)

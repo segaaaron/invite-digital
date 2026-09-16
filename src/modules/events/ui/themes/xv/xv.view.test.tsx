@@ -64,4 +64,34 @@ describe('el tema Bajo el Mar', () => {
     render(<XvView {...conMuestra()} />)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
+
+  it('pinta a los padrinos aparte, bajo su propio rótulo, y a los padres arriba', () => {
+    render(
+      <XvView
+        {...propsDePrueba({
+          content: { hosts: { label: 'Con la bendición de', names: ['Angel', 'Ivana', 'Luis'], roles: { father: 'Angel', mother: 'Ivana', godparents: ['Luis'] } } },
+        })}
+      />,
+    )
+    const rotulo = screen.getByText('PADRINOS')
+    expect(screen.getByText('Angel').compareDocumentPosition(rotulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(rotulo.compareDocumentPosition(screen.getByText('Luis')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('sin padrinos no pinta su rótulo', () => {
+    render(<XvView {...propsDePrueba({ content: { hosts: { label: 'Mis padres', names: ['Angel'], roles: { father: 'Angel' } } } })} />)
+    expect(screen.queryByText('PADRINOS')).toBeNull()
+  })
+
+  it('sin los textos de arriba, la barra conserva su alto: el titular no sube al borde', () => {
+    render(<XvView {...propsDePrueba({ content: { hero: { nameA: 'Loreley' } } })} />)
+    const barra = screen.getByTestId('xv-barra-superior')
+    expect(barra.style.minHeight).not.toBe('')
+  })
+
+  it('sin frase no hay corona, y el retrato no sube a pisar el nombre', () => {
+    const { container } = render(<XvView {...propsDePrueba({ content: { hero: { nameA: 'Loreley' }, gallery: [{ label: 'Retrato', imageId: 'foto' }] } })} />)
+    const marco = container.querySelector<HTMLElement>('[data-retrato]')
+    expect(marco?.style.margin).toBe('40px auto 0px')
+  })
 })

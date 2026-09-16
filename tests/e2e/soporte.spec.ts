@@ -2,6 +2,7 @@ import { expect, test, type BrowserContext, type Page } from '@playwright/test'
 import postgres from 'postgres'
 import { ADMIN } from './fixtures/atelier'
 import { CLIENTE, closeClienteDb, deleteClienteFixture, seedCliente } from './fixtures/cliente'
+import { abrirSeccion } from './helpers/panel'
 
 const SLUG = 'boda-soporte-e2e'
 const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
@@ -51,8 +52,7 @@ test.describe('soporte como el cliente', () => {
   test('pero sí su ficha: configuración sin el contenido del cliente, plan y vista previa', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /Contenido de la invitación/ })).toHaveCount(0)
-    await expect(page.getByRole('heading', { name: 'Fotografías y música' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: /Tu invitación ·/ })).toHaveCount(0)
     expect((await page.goto(`/panel/eventos/${SLUG}/plan`))?.status()).toBe(200)
     expect((await page.goto(`/panel/eventos/${SLUG}/vista-previa`))?.status()).toBe(200)
   })
@@ -74,8 +74,8 @@ test.describe('soporte como el cliente', () => {
 
     // Y lo que cambia queda registrado como el admin.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-    const cancion = page.locator('form', { has: page.getByRole('heading', { name: 'Canción', exact: true }) })
-    await cancion.getByLabel('Canción', { exact: true }).fill('Arreglada por soporte')
+    const cancion = await abrirSeccion(page, 'Canción')
+    await cancion.getByLabel('Título de la canción', { exact: true }).fill('Arreglada por soporte')
     await cancion.getByRole('button', { name: 'Guardar' }).click()
     await expect(cancion.getByText('Guardado.')).toBeVisible()
     await expect

@@ -51,7 +51,7 @@ describe('leerPlan', () => {
     expect(isOk(sinPuerta) && sinPuerta.value.maxDoorPorters).toBe(0)
     for (const malo of ['', '-1', '2.5', '101', 'muchos']) {
       const r = leerPlan({ ...crudo, maxDoorPorters: malo })
-      expect(isErr(r) && r.error.detail).toContain('porteros')
+      expect(isErr(r) && r.error.detail).toContain('recepción')
     }
   })
 

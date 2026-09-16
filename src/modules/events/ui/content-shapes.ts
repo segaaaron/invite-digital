@@ -15,6 +15,7 @@
 import {
   type GalleryRow,
   type HeroBlock,
+  type HostRoles,
   type InvitationContent,
   type ItineraryRow,
   MAXIMOS,
@@ -39,6 +40,8 @@ export type Campo = {
   /** Una fila de lista sin sus campos obligatorios la descarta el dominio al guardar. */
   readonly required?: boolean
   readonly hint?: string
+  /** Ocupa la fila entera: lo que se lee mejor largo, como el título de los anfitriones. */
+  readonly anchoCompleto?: boolean
 }
 
 /** Una lista de valores sueltos dentro de un bloque: los anfitriones, las telas del código. */
@@ -51,7 +54,16 @@ export type ListaSuelta = {
 }
 
 export type FormaBloque =
-  | { readonly form: 'campos'; readonly fields: readonly Campo[]; readonly list?: ListaSuelta }
+  | {
+      readonly form: 'campos'
+      readonly fields: readonly Campo[]
+      readonly list?: ListaSuelta
+      /**
+       * Los anfitriones: los campos salvo el título son papeles (`roles`) y la lista son los
+       * padrinos. Dice además cómo leer lo guardado antes de los papeles, que era por posición.
+       */
+      readonly anfitriones?: Anfitriones
+    }
   | { readonly form: 'filas'; readonly itemLabel: string; readonly max: number; readonly fields: readonly Campo[] }
 
 /**
@@ -90,6 +102,50 @@ export type LoQuePinta = {
   readonly maxAvisos?: number
 }
 
+/** Qué anfitriones pinta la fiesta: padre y madre en un XV, los padres de cada novio en una boda. */
+export type Anfitriones = 'xv' | 'boda'
+
+/** La fiesta de un diseño, para saber qué anfitriones pedir. */
+export const anfitrionesDeCategoria = (categoria: string): Anfitriones => (categoria.startsWith('xv') ? 'xv' : 'boda')
+
+const TITULO_DE_ANFITRIONES: Campo = {
+  anchoCompleto: true,
+  key: 'label',
+  label: 'Título',
+  kind: 'texto',
+  hint: 'Lo que va encima de los nombres: «CON LA BENDICIÓN DE MIS PADRES Y PADRINOS».',
+}
+
+const papeles = <K extends Exclude<keyof HostRoles, 'godparents'>>(...lista: readonly (Campo & { readonly key: K })[]): readonly Campo[] => lista
+
+const PADRINOS: ListaSuelta = { key: 'godparents', label: 'Padrinos', itemLabel: 'padrino o madrina', kind: 'texto', max: MAXIMOS.hosts }
+
+const ANFITRIONES: Record<Anfitriones, FormaBloque> = {
+  xv: {
+    form: 'campos',
+    anfitriones: 'xv',
+    fields: [
+      TITULO_DE_ANFITRIONES,
+      ...papeles({ key: 'father', label: 'Nombre del padre', kind: 'texto' }, { key: 'mother', label: 'Nombre de la madre', kind: 'texto' }),
+    ],
+    list: PADRINOS,
+  },
+  boda: {
+    form: 'campos',
+    anfitriones: 'boda',
+    fields: [
+      TITULO_DE_ANFITRIONES,
+      ...papeles(
+        { key: 'brideFather', label: 'Padre de la novia', kind: 'texto' },
+        { key: 'brideMother', label: 'Madre de la novia', kind: 'texto' },
+        { key: 'groomFather', label: 'Padre del novio', kind: 'texto' },
+        { key: 'groomMother', label: 'Madre del novio', kind: 'texto' },
+      ),
+    ],
+    list: PADRINOS,
+  },
+}
+
 /** Qué declaración hace falta para que se pregunte por este campo de imagen. */
 const PIDE: Record<string, (fotos: FotosDelDiseno) => boolean> = {
   coverImageId: (fotos) => fotos.portada === true,
@@ -107,9 +163,11 @@ const filas = (section: SectionKey, tope: number, pinta: LoQuePinta): number => 
  * La forma del bloque **para este diseño**: sin los campos que no pinta y con cada lista
  * acotada a las filas que de verdad tiene.
  */
-export const formaPara = (section: SectionKey, pinta: LoQuePinta): FormaBloque => {
-  const forma = FORMAS[section]
+export const formaPara = (section: SectionKey, pinta: LoQuePinta, anfitriones: Anfitriones = 'boda'): FormaBloque => {
   const fuera = pinta.sinCampos?.[section] ?? []
+  // Un diseño que no pinta los nombres —«Bodas de Oro»— solo pide el título.
+  if (section === 'hosts') return fuera.includes('names') ? { form: 'campos', fields: [TITULO_DE_ANFITRIONES] } : ANFITRIONES[anfitriones]
+  const forma = FORMAS[section]
   const fields = forma.fields.filter(
     (campo) => !fuera.includes(campo.key) && (PIDE[campo.key]?.(pinta.fotos) ?? true),
   )
@@ -127,7 +185,7 @@ const campos = <T,>(...lista: readonly (Campo & { readonly key: Extract<keyof T,
 
 const lugar = (): readonly Campo[] =>
   campos<PlaceBlock>(
-    { key: 'label', label: 'Rótulo', kind: 'texto', hint: 'Lo que el diseño pone encima: «CEREMONIA».' },
+    { key: 'label', label: 'Título', kind: 'texto', hint: 'Lo que va encima del lugar: «RECEPCIÓN».' },
     { key: 'place', label: 'Lugar', kind: 'texto' },
     { key: 'address', label: 'Dirección', kind: 'texto' },
     { key: 'time', label: 'Hora', kind: 'texto', hint: 'Tal cual se lee: «16:00 h».' },
@@ -137,11 +195,11 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
   hero: {
     form: 'campos',
     fields: campos<HeroBlock>(
-      { key: 'eyebrow', label: 'Antetítulo', kind: 'texto', hint: 'La línea de arriba: «¡NOS CASAMOS!».' },
+      { key: 'eyebrow', label: 'Texto sobre los nombres', kind: 'texto', hint: 'La línea de arriba: «MIS QUINCE» o «¡NOS CASAMOS!».' },
       { key: 'nameA', label: 'Primer nombre', kind: 'texto' },
       { key: 'nameB', label: 'Segundo nombre', kind: 'texto' },
-      { key: 'monogram', label: 'Monograma', kind: 'texto', hint: '«M & R».' },
-      { key: 'serial', label: 'Línea suelta', kind: 'texto', hint: 'La referencia pequeña que algunos diseños pintan bajo los nombres.' },
+      { key: 'monogram', label: 'Iniciales', kind: 'texto', hint: 'Las que adornan la portada: «XV» o «M & R».' },
+      { key: 'serial', label: 'Texto bajo los nombres', kind: 'texto', hint: 'Una línea pequeña debajo de los nombres, como el año.' },
       { key: 'coverImageId', label: 'Fotografía de portada', kind: 'imagen' },
       { key: 'portraitImageId', label: 'Retrato', kind: 'imagen' },
     ),
@@ -150,23 +208,14 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
     form: 'campos',
     fields: campos<NonNullable<InvitationContent['quote']>>({ key: 'text', label: 'Frase', kind: 'parrafo' }),
   },
-  hosts: {
-    form: 'campos',
-    fields: campos<NonNullable<InvitationContent['hosts']>>({
-      key: 'label',
-      label: 'Rótulo',
-      kind: 'texto',
-      hint: '«CON LA BENDICIÓN DE NUESTROS PADRES».',
-    }),
-    list: { key: 'names', label: 'Nombres', itemLabel: 'nombre', kind: 'texto', max: MAXIMOS.hosts },
-  },
+  hosts: ANFITRIONES.boda,
   schedule: {
     form: 'campos',
     fields: campos<NonNullable<InvitationContent['schedule']>>({
       key: 'startsAt',
       label: 'Fecha y hora exactas',
       kind: 'fecha',
-      hint: 'Es lo que usa la cuenta atrás. La fecha del evento sigue siendo la de Detalles.',
+      hint: 'Es la que usa la cuenta atrás de la invitación.',
     }),
   },
   ceremony: { form: 'campos', fields: lugar() },
@@ -204,13 +253,13 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
   music: {
     form: 'campos',
     fields: campos<NonNullable<InvitationContent['music']>>(
-      { key: 'track', label: 'Canción', kind: 'texto' },
+      { key: 'track', label: 'Título de la canción', kind: 'texto' },
       { key: 'artist', label: 'Artista', kind: 'texto' },
       {
         key: 'audioMediaId',
         label: 'Archivo que suena',
         kind: 'audio',
-        hint: 'El MP3 que subiste arriba. Sin él, el reproductor se ve pero no suena — que es como están los dieciséis diseños.',
+        hint: 'La canción que suena. Súbela aquí mismo: MP3, M4A o WAV, entera. Sin archivo, el reproductor se ve pero no suena.',
       },
     ),
   },

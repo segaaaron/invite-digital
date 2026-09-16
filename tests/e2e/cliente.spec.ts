@@ -1,5 +1,6 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
-import { CLIENTE, closeClienteDb, deleteClienteFixture, EQUIPO, fijarClave, membresiaDe, seedCliente } from './fixtures/cliente'
+import { CLIENTE, closeClienteDb, deleteClienteFixture, EQUIPO, fijarClave, membresiaDe, seedCliente, sumarCoanfitriona } from './fixtures/cliente'
+import { abrirSeccion } from './helpers/panel'
 
 const SLUG = 'boda-acceso-cliente-e2e'
 
@@ -70,22 +71,21 @@ test.describe('el panel del cliente', () => {
     await expect(page.getByRole('listitem', { name: 'Probar el peinado' })).toBeVisible({ timeout: 15_000 })
   })
 
-  test('suma a su planner y a una co-anfitriona desde Equipo', async () => {
+  test('suma a su planner desde Equipo, y ya no ofrece co-anfitriones', async () => {
     await page.goto(`/panel/eventos/${SLUG}/equipo`)
-    for (const [email, kind] of [
-      [EQUIPO.planner, 'planner'],
-      [EQUIPO.coanfitriona, 'coanfitrion'],
-    ] as const) {
-      await page.getByLabel('Correo').fill(email)
-      await page.getByLabel('Entra como').selectOption(kind)
-      await page.getByRole('button', { name: 'Sumar al equipo' }).click()
-      await expect(page.getByRole('status').filter({ hasText: email })).toBeVisible({ timeout: 15_000 })
-      // Sin proveedor de correo, la contraseña provisional se enseña una vez.
-      await expect(page.getByLabel('Contraseña provisional')).toBeVisible()
-    }
+    await expect(page.getByRole('radio', { name: /Co-anfitrión/ })).toHaveCount(0)
+    await page.getByRole('radio', { name: /Planner/ }).check()
+    await page.getByLabel('Correo').fill(EQUIPO.planner)
+    await page.getByRole('button', { name: 'Sumar al equipo' }).click()
+    await expect(page.getByRole('status').filter({ hasText: EQUIPO.planner })).toBeVisible({ timeout: 15_000 })
+    // Sin proveedor de correo, la contraseña provisional se enseña una vez.
+    await expect(page.getByLabel('Contraseña provisional')).toBeVisible()
     expect(await membresiaDe(SLUG, EQUIPO.planner)).toBe('planner')
-    expect(await membresiaDe(SLUG, EQUIPO.coanfitriona)).toBe('coanfitrion')
-    await expect(page.getByRole('listitem').filter({ hasText: EQUIPO.coanfitriona })).toContainText('Co-anfitrión')
+
+    // Una co-anfitriona de antes se sigue viendo y se puede quitar.
+    await sumarCoanfitriona(SLUG, EQUIPO.coanfitriona)
+    await page.reload()
+    await expect(page.getByRole('listitem', { name: EQUIPO.coanfitriona })).toContainText('Co-anfitrión')
   })
 
   test('la co-anfitriona organiza, pero no suma gente ni porteros', async ({ browser }) => {
@@ -124,8 +124,8 @@ test.describe('el panel del cliente', () => {
     // El bloque se titula **«Canción»**, no «Música»: el rótulo de la pantalla lo reparte
     // `TITULOS` y no tiene por qué coincidir con la clave del dominio. Y es un `h3` suelto
     // dentro del formulario, así que se acota por el formulario que lo contiene.
-    const cancion = page.locator('form', { has: page.getByRole('heading', { name: 'Canción', exact: true }) })
-    await cancion.getByLabel('Canción', { exact: true }).fill('Nuestra canción')
+    const cancion = await abrirSeccion(page, 'Canción')
+    await cancion.getByLabel('Título de la canción', { exact: true }).fill('Nuestra canción')
     await cancion.getByRole('button', { name: 'Guardar' }).click()
 
     // **Se espera el «Guardado.» antes de recargar, y no es adorno.** Recargar en el mismo
@@ -135,13 +135,14 @@ test.describe('el panel del cliente', () => {
     await expect(cancion.getByText('Guardado.')).toBeVisible()
 
     await page.reload()
-    await expect(cancion.getByLabel('Canción', { exact: true })).toHaveValue('Nuestra canción')
+    await abrirSeccion(page, 'Canción')
+    await expect(cancion.getByLabel('Título de la canción', { exact: true })).toHaveValue('Nuestra canción')
   })
 
   test('y el selector de su música está ahí, que es para lo que sube el MP3', async () => {
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
 
-    const cancion = page.locator('form', { has: page.getByRole('heading', { name: 'Canción', exact: true }) })
+    const cancion = await abrirSeccion(page, 'Canción')
     await expect(cancion.getByLabel('Archivo que suena')).toBeVisible()
   })
 
@@ -183,6 +184,9 @@ test.describe('el panel del cliente', () => {
     await page.goto('/panel/cuenta')
 
     await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
-    await expect(page.getByLabel('Contraseña actual')).toBeVisible()
+    // Con el código del correo, no con la actual: la contraseña puede estar compartida.
+    await expect(page.getByLabel('Contraseña nueva')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Enviarme el código' }).first()).toBeVisible()
+    await expect(page.getByText('Este dispositivo')).toBeVisible()
   })
 })

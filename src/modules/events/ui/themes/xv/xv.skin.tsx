@@ -1,7 +1,6 @@
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { BubblesRise } from '../kit/backgrounds/BubblesRise'
 import { MarBackground } from '../kit/backgrounds/MarBackground'
-import { chapaDePortada } from './cover-copy'
 import { SofiaCover } from './SofiaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv.palette'
@@ -41,7 +40,6 @@ export const PIEL_XV: PielXv = {
   portada: (datos) => (
     <SofiaCover
       bgAsset={themeAsset('xv', 'bajo-el-mar1.avif')}
-      badge={chapaDePortada(datos.eyebrow, datos.name)}
       crownAsset={themeAsset('xv', 'mar-corona-purple.avif')}
       hint={datos.enter}
       line1={datos.line1}

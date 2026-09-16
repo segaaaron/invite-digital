@@ -151,10 +151,9 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
           { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
           { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-          // Su gente de la puerta: la suman el anfitrión y su planner, con enlace y PIN.
-          { href: equipo === 'coanfitrion' ? null : en('/porteros'), label: 'Porteros', icon: 'checkin' },
-          // Solo el anfitrión suma personas: nadie da más permisos de los que tiene.
-          { href: equipo === 'anfitrion' ? en('/equipo') : null, label: 'Equipo', icon: 'usuarios' },
+          // Co-anfitriones, planner y porteros en una sola pantalla. El anfitrión suma a todos;
+          // su planner, solo porteros. El co-anfitrión no suma a nadie.
+          { href: equipo === 'coanfitrion' ? null : en('/equipo'), label: 'Equipo', icon: 'usuarios' },
           // Comprar es del anfitrión.
           { href: equipo === 'anfitrion' ? en('/extras') : null, label: 'Extras', icon: 'plan' },
         ],
@@ -221,7 +220,6 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
         { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
-        { href: en('/porteros'), label: 'Porteros', icon: 'usuarios' },
         { href: en('/equipo'), label: 'Equipo', icon: 'usuarios' },
       ],
     },

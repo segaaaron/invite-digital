@@ -25,7 +25,9 @@ export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData
   const eventSlug = campo(fd, 'eventSlug')
   await requireEventAccess(actor, { eventId, eventSlug, section: 'equipo' })
 
-  const kind = campo(fd, 'kind') === 'planner' ? 'planner' : 'coanfitrion'
+  // Ya no se suman co-anfitriones: la familia entra con la cuenta del cliente.
+  if (campo(fd, 'kind') !== 'planner') return { status: 'error', message: 'Elige qué hará en el evento.' }
+  const kind = 'planner'
   const capacidad = await plans.allowanceFor(eventId)
   if (isErr(capacidad)) return { status: 'error', message: 'No pudimos leer tu plan. Vuelve a intentarlo en un momento.' }
 
@@ -33,7 +35,7 @@ export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData
     eventId,
     email: campo(fd, 'email'),
     kind,
-    limite: kind === 'planner' ? capacidad.value.maxHiredPlanners : capacidad.value.maxCohosts,
+    limite: capacidad.value.maxHiredPlanners,
   })
   if (!alta.ok) return { status: 'error', message: alta.mensaje }
 
@@ -49,7 +51,7 @@ export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
-  const quien = kind === 'planner' ? 'planner' : 'co-anfitrión'
+  const quien = 'planner'
   if (alta.password === null) {
     return { status: 'success', message: `${alta.email} ya tenía cuenta: entra como ${quien} con su contraseña de siempre.${avisado ? ' Le avisamos por correo.' : ''}` }
   }

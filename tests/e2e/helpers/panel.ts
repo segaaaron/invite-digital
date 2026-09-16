@@ -69,3 +69,14 @@ export async function añadirAcompanantes(page: Page, cuantos: number): Promise<
     await page.getByLabel(`Nombre del acompañante ${i + 1}`).fill(`Acompañante ${i + 1}`)
   }
 }
+
+/**
+ * Abre la tarjeta de una sección de «Mi invitación» y devuelve su formulario. Las secciones
+ * se pliegan de una en una: pulsar una ya abierta la cerraría, así que solo se pulsa si está
+ * cerrada.
+ */
+export async function abrirSeccion(page: Page, titulo: string) {
+  const boton = page.getByRole('button', { name: titulo, exact: true })
+  if ((await boton.getAttribute('aria-expanded')) !== 'true') await boton.click()
+  return page.locator('form', { has: boton })
+}

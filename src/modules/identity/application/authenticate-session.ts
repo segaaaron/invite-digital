@@ -3,6 +3,8 @@ import { identityError, type IdentityError } from '../domain/errors'
 import { isSessionExpired, nextExpiry, shouldRenew } from '../domain/session'
 import type { SessionRepository, TokenMinter } from './ports'
 
+const CINCO_MINUTOS = 5 * 60_000
+
 export type AuthenticatedSession = {
   readonly sessionId: string
   readonly userId: string
@@ -26,6 +28,11 @@ export const authenticateSession =
         if (session === null || isSessionExpired(session, now)) {
           return err(identityError('session_expired', 'Sesión inexistente o caducada'))
         }
+
+        // El último uso, para la lista de sesiones de Mi cuenta. Cada cinco minutos como mucho:
+        // escribir en cada petición sería una escritura por página vista.
+        const ultima = session.lastSeenAt ?? null
+        if (ultima === null || now.getTime() - ultima.getTime() >= CINCO_MINUTOS) await deps.sessions.seen(session.id, now)
 
         if (!shouldRenew(session, now)) return ok({ sessionId: session.id, userId: session.userId, renewedUntil: null, supportSessionId: session.supportSessionId ?? null })
 

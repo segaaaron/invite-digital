@@ -54,6 +54,8 @@ export function estadoInicial(forma: FormaBloque, guardado: unknown): EstadoBloq
   }
 
   const bloque = esObjeto(guardado) ? guardado : {}
+  if (forma.anfitriones !== undefined) return anfitrionesIniciales(forma, bloque)
+
   const campos: Record<string, string> = {}
   for (const campo of forma.fields) {
     campos[campo.key] = campo.kind === 'fecha' ? comoFechaLocal(bloque[campo.key]) : comoTexto(bloque[campo.key])
@@ -65,6 +67,29 @@ export function estadoInicial(forma: FormaBloque, guardado: unknown): EstadoBloq
     lista: Array.isArray(crudaLista) ? crudaLista.map(comoTexto) : [],
     filas: [],
   }
+}
+
+/**
+ * Los anfitriones: el título en su campo, cada papel en el suyo y los padrinos en la lista.
+ *
+ * Lo guardado antes de que hubiera papeles era una lista de nombres, y los diseños la leían
+ * por posición: se reparte igual, para que abrir el formulario no cambie a nadie de sitio.
+ */
+function anfitrionesIniciales(forma: Extract<FormaBloque, { form: 'campos' }>, bloque: Record<string, unknown>): EstadoBloque {
+  const campos: Record<string, string> = { label: comoTexto(bloque.label) }
+  const papeles = forma.fields.filter((campo) => campo.key !== 'label').map((campo) => campo.key)
+
+  if (esObjeto(bloque.roles)) {
+    const roles = bloque.roles
+    for (const clave of papeles) campos[clave] = comoTexto(roles[clave])
+    return { campos, lista: Array.isArray(roles.godparents) ? roles.godparents.map(comoTexto) : [], filas: [] }
+  }
+
+  const nombres = Array.isArray(bloque.names) ? bloque.names.map(comoTexto) : []
+  papeles.forEach((clave, indice) => {
+    campos[clave] = nombres[indice] ?? ''
+  })
+  return { campos, lista: nombres.slice(papeles.length), filas: [] }
 }
 
 function filaDesde(campos: FormaBloque['fields'], cruda: unknown): Record<string, string> {
@@ -104,6 +129,17 @@ export function aValor(forma: FormaBloque, estado: EstadoBloque): unknown {
     return estado.filas
       .map((fila) => objetoDesde(forma.fields, fila))
       .filter((fila) => Object.keys(fila).length > 0)
+  }
+
+  if (forma.anfitriones !== undefined) {
+    const escrito = objetoDesde(forma.fields, estado.campos)
+    const { label, ...roles } = escrito
+    const padrinos = estado.lista.map(recortado).filter((valor) => valor !== '')
+    const conPadrinos: Record<string, unknown> = padrinos.length > 0 ? { ...roles, godparents: padrinos } : roles
+    return {
+      ...(label === undefined ? {} : { label }),
+      ...(Object.keys(conPadrinos).length > 0 ? { roles: conPadrinos } : {}),
+    }
   }
 
   const salida: Record<string, unknown> = objetoDesde(forma.fields, estado.campos)

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
 import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
-import { añadirAcompanantes, createEvent, signIn } from './helpers/panel'
+import { abrirSeccion, añadirAcompanantes, createEvent, signIn } from './helpers/panel'
 
 // IP propia para el limitador de inicios de sesión (cinco por IP): en el CI todas las suites salen de 127.0.0.1.
 test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.4' } })
@@ -112,13 +112,14 @@ test.describe('contenido de la invitación', () => {
     await expect(page.getByRole('heading', { name: 'Itinerario' })).toBeVisible()
 
     // La canción, por su campo. El JSON lo compone la pantalla: nadie escribe una llave.
-    const cancion = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Canción' }) })
-    await cancion.getByLabel('Canción', { exact: true }).fill('Perfect')
+    const cancion = await abrirSeccion(page, 'Canción')
+    await cancion.getByLabel('Título de la canción', { exact: true }).fill('Perfect')
     await cancion.getByRole('button', { name: 'Guardar' }).click()
     await expect(cancion.getByRole('status')).toContainText('Guardado')
 
     await page.reload()
-    await expect(page.getByLabel('Canción', { exact: true })).toHaveValue('Perfect')
+    await abrirSeccion(page, 'Canción')
+    await expect(page.getByLabel('Título de la canción', { exact: true })).toHaveValue('Perfect')
   })
 
   test('la vista previa enseña la invitación de esta boda, no la de muestra', async ({ page }) => {
@@ -126,12 +127,12 @@ test.describe('contenido de la invitación', () => {
     // atelier acaba de escribir, sin repartir un enlace ni contar la visita de un invitado.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
 
-    const portada = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Portada y nombres' }) })
+    const portada = await abrirSeccion(page, 'Portada y nombres')
     await portada.getByLabel('Primer nombre').fill('Zulema')
     await portada.getByRole('button', { name: 'Guardar' }).click()
     await expect(portada.getByRole('status')).toContainText('Guardado')
 
-    await page.getByRole('link', { name: 'Ver esta invitación' }).click()
+    await page.getByRole('link', { name: 'Pantalla completa' }).click()
     await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/vista-previa$`))
     await expect(page.getByText('Zulema').first()).toBeVisible()
 
@@ -149,28 +150,25 @@ test.describe('contenido de la invitación', () => {
       .jpeg({ quality: 100 })
       .toBuffer()
 
+    // Se sube desde el propio campo, en la galería, **que es donde este diseño pinta sus
+    // fotografías**: «Botánica» no abre con una portada fotográfica, así que ese campo no se le pide.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-    await page.getByLabel('Elegir fotografía o canción').setInputFiles({
-      name: 'retrato.jpg',
-      mimeType: 'image/jpeg',
-      buffer: original,
-    })
-    await page.getByRole('button', { name: 'Subir', exact: true }).click()
-    await expect(page.getByRole('status')).toContainText('Ya puedes elegirla')
+    await expect(page.getByRole('group', { name: 'Fotografía de portada' })).toHaveCount(0)
+    const galeria = await abrirSeccion(page, 'Galería')
+    await galeria.getByRole('button', { name: 'Añadir casilla' }).click()
+    await galeria.getByRole('button', { name: 'Subir una fotografía' }).click()
+    const subida = page.locator('dialog[open]')
+    await subida.getByLabel('Elegir fotografía').setInputFiles({ name: 'retrato.jpg', mimeType: 'image/jpeg', buffer: original })
+    await subida.getByRole('button', { name: 'Subir', exact: true }).click()
 
-    const fuente = await page.getByRole('img', { name: 'retrato.jpg' }).getAttribute('src')
+    // Queda elegida en la casilla, y se ve: una miniatura, no un nombre de archivo.
+    const elegida = galeria.getByRole('group', { name: 'Fotografía · casilla 1' }).getByRole('button', { name: 'Usar retrato.jpg' })
+    await expect(elegida).toHaveAttribute('aria-pressed', 'true')
+
+    const fuente = await elegida.locator('img').getAttribute('src')
     const servida = await page.request.get(fuente!)
     expect(servida.headers()['content-type']).toBe('image/webp')
     expect((await servida.body()).byteLength).toBeLessThan(original.byteLength / 4)
-
-    // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno. En la
-    // galería, que es **donde este diseño pinta sus fotografías**: «Botánica» no abre con
-    // una portada fotográfica, así que ese campo no se le pide.
-    await page.reload()
-    await expect(page.getByLabel('Fotografía de portada')).toHaveCount(0)
-    const galeria = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Galería' }) })
-    await galeria.getByRole('button', { name: 'Añadir casilla' }).click()
-    await expect(galeria.getByLabel('Fotografía · casilla 1')).toContainText('retrato.jpg')
   })
 
   test('una fila quitada del itinerario no vuelve sola al recargar', async ({ page }) => {
@@ -179,7 +177,7 @@ test.describe('contenido de la invitación', () => {
     // invitación nace vacía, así que la fila se escribe aquí antes de quitarla.
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
 
-    const itinerario = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Itinerario' }) })
+    const itinerario = await abrirSeccion(page, 'Itinerario')
     await itinerario.getByRole('button', { name: 'Añadir momento' }).click()
     await itinerario.getByLabel('Hora · momento 1').fill('16:00 h')
     await itinerario.getByLabel('Qué pasa · momento 1').fill('Ceremonia')
@@ -187,6 +185,7 @@ test.describe('contenido de la invitación', () => {
     await expect(itinerario.getByRole('status')).toContainText('Guardado')
 
     await page.reload()
+    await abrirSeccion(page, 'Itinerario')
     await expect(page.getByLabel('Qué pasa · momento 1')).toHaveValue('Ceremonia')
 
     await itinerario.getByRole('button', { name: 'Quitar momento 1' }).click()

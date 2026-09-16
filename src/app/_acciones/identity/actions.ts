@@ -2,12 +2,14 @@
 
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { revalidatePath } from 'next/cache'
 import { events, identity, notifications } from '@/app/composition/container'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { isErr } from '@/shared/result'
 import { guardedSignIn } from '@/modules/identity/application/guarded-sign-in'
 import { parseRole } from '@/modules/identity/domain/access'
+import { describirDispositivo } from '@/modules/identity/domain/dispositivo'
 import { SESSION_COOKIE, requireSession, sessionCookieOptions } from '@/app/_acciones/sesion'
 import { campo } from '@/shared/forms/campo'
 
@@ -16,20 +18,24 @@ export type SignInActionState = {
   message: 'invalid_credentials' | 'too_many_attempts' | 'storage_failure' | ''
 }
 
-// Cinco intentos por minuto y por IP; tres por minuto y por cuenta.
-const attemptSignIn = guardedSignIn({
-  ipLimiter: createRateLimiter({ windowMs: 60_000, max: 5 }),
-  accountLimiter: createRateLimiter({ windowMs: 60_000, max: 3 }),
-  signIn: (input) => identity.signIn(input),
-  clock: () => Date.now(),
-  log: (message, kind, detail) => console.error(message, kind, detail),
-})
+// Cinco intentos por minuto y por IP; tres por minuto y por cuenta. Los limitadores viven
+// fuera de la petición: dentro se reiniciarían en cada intento.
+const limiteIp = createRateLimiter({ windowMs: 60_000, max: 5 })
+const limiteCuenta = createRateLimiter({ windowMs: 60_000, max: 3 })
+const attemptSignIn = (device: string) =>
+  guardedSignIn({
+    ipLimiter: limiteIp,
+    accountLimiter: limiteCuenta,
+    signIn: (input) => identity.signIn({ ...input, device }),
+    clock: () => Date.now(),
+    log: (message, kind, detail) => console.error(message, kind, detail),
+  })
 
 export async function signInAction(_previous: SignInActionState, formData: FormData): Promise<SignInActionState> {
   const headerBag = await headers()
   const ip = clientIpFrom({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
 
-  const outcome = await attemptSignIn({ ip, payload: Object.fromEntries(formData) })
+  const outcome = await attemptSignIn(describirDispositivo(headerBag.get('user-agent') ?? ''))({ ip, payload: Object.fromEntries(formData) })
   if (outcome.status === 'error') return { status: 'error', message: outcome.message }
 
   const jar = await cookies()
@@ -93,6 +99,9 @@ export async function changePasswordAction(
   formData: FormData,
 ): Promise<ChangePasswordState> {
   const actor = await requireSession()
+  // Con la contraseña compartida, conocer la actual no prueba ser el dueño. Fuera de la
+  // provisional se cambia con el código del correo (`changePasswordWithCodeAction`).
+  if (!actor.mustChangePassword) return { status: 'error', message: 'Para cambiarla, pide el código a tu correo.' }
 
   const result = await identity.changePassword({
     userId: actor.userId,
@@ -189,6 +198,68 @@ export async function confirmPasswordResetAction(_previo: ResetState, formData: 
   }
 
   return { status: 'done', message: 'Contraseña cambiada. Ya puedes entrar con ella.' }
+}
+
+// ============================================================================
+// La seguridad de la cuenta con sesión. **Piden el código del correo**: con la contraseña
+// compartida todos entran como la misma cuenta, y el correo es lo único del dueño.
+// ============================================================================
+
+/** Un código por minuto por cuenta: cada uno manda un correo. */
+const limiteCodigoDeCuenta = createRateLimiter({ windowMs: 60_000, max: 1 })
+
+export type CodigoDeCuentaState = { status: 'idle' | 'sent' | 'done' | 'error'; message: string }
+
+export async function requestAccountCodeAction(): Promise<CodigoDeCuentaState> {
+  const actor = await requireSession()
+  if (limiteCodigoDeCuenta.isLimited(actor.userId, Date.now())) {
+    return { status: 'error', message: 'Ya te mandamos un código hace menos de un minuto. Revisa tu correo.' }
+  }
+  const emitido = await identity.requestAccountCode(actor.userId)
+  if (isErr(emitido)) {
+    console.error('no se pudo emitir el código de cuenta', emitido.error.kind, emitido.error.detail)
+    return { status: 'error', message: 'No pudimos enviarte el código. Inténtalo en un momento.' }
+  }
+  const enviado = await notifications.sendPasswordCode({ to: actor.email, code: emitido.value })
+  if (!enviado) return { status: 'error', message: 'No pudimos enviar el correo. Escríbenos por WhatsApp.' }
+  return { status: 'sent', message: `Te mandamos un código a ${actor.email}. Caduca en 10 minutos.` }
+}
+
+/** Cierra todas las sesiones de la cuenta menos esta. */
+export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, formData: FormData): Promise<CodigoDeCuentaState> {
+  const actor = await requireSession()
+  const sesion = await identity.authenticateSession((await cookies()).get(SESSION_COOKIE)?.value ?? null)
+  if (isErr(sesion)) redirect('/panel/entrar')
+
+  const cerradas = await identity.closeOtherSessions({ userId: actor.userId, sessionId: sesion.value.sessionId, code: campo(formData, 'code') })
+  if (isErr(cerradas)) {
+    return {
+      status: 'error',
+      message: cerradas.error.kind === 'storage_failure' ? 'No pudimos cerrarlas. Inténtalo en un momento.' : 'El código no es válido, ya se usó o caducó. Pide uno nuevo.',
+    }
+  }
+  revalidatePath('/panel/cuenta')
+  return { status: 'done', message: 'Listo: solo queda abierta tu sesión en este dispositivo.' }
+}
+
+/** Cambia la contraseña con el código del correo. Cierra todas las sesiones, esta incluida. */
+export async function changePasswordWithCodeAction(_previo: CodigoDeCuentaState, formData: FormData): Promise<CodigoDeCuentaState> {
+  const actor = await requireSession()
+  const result = await identity.confirmPasswordReset({ email: actor.email, code: campo(formData, 'code'), password: campo(formData, 'password') })
+  if (isErr(result)) {
+    return {
+      status: 'error',
+      message:
+        result.error.kind === 'weak_password'
+          ? 'La contraseña nueva necesita al menos 12 caracteres.'
+          : result.error.kind === 'storage_failure'
+            ? 'No pudimos guardarla. Inténtalo en un momento.'
+            : 'El código no es válido, ya se usó o caducó. Pide uno nuevo.',
+    }
+  }
+  const jar = await cookies()
+  jar.delete(SESSION_COOKIE)
+  redirect('/panel/entrar')
 }
 
 export async function signOutAction(): Promise<void> {

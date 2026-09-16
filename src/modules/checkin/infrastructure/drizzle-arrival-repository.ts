@@ -16,6 +16,7 @@ export const createDrizzleArrivalRepository = (database: DbExecutor): ArrivalRep
         scannedAt: row.scannedAt,
         voidedAt: row.voidedAt,
         recordedBy: row.recordedBy ?? null,
+        personIds: row.personIds === undefined || row.personIds === null ? null : [...row.personIds],
       })
       .onConflictDoNothing({ target: arrivals.scanId })
       .returning({ scanId: arrivals.scanId })
@@ -31,6 +32,7 @@ export const createDrizzleArrivalRepository = (database: DbExecutor): ArrivalRep
         arrivedCount: arrivals.arrivedCount,
         scannedAt: arrivals.scannedAt,
         voidedAt: arrivals.voidedAt,
+        personIds: arrivals.personIds,
       })
       .from(arrivals)
       .innerJoin(guestGroups, eq(guestGroups.id, arrivals.guestGroupId))
@@ -46,6 +48,7 @@ export const createDrizzleArrivalRepository = (database: DbExecutor): ArrivalRep
         arrivedCount: arrivals.arrivedCount,
         scannedAt: arrivals.scannedAt,
         voidedAt: arrivals.voidedAt,
+        personIds: arrivals.personIds,
       })
       .from(arrivals)
       .where(eq(arrivals.scanId, scanId))
@@ -82,6 +85,7 @@ const toRow = (r: {
   tokenHash: Buffer
   tableLabel: string | null
   leadName: string | null
+  people: unknown
 }): DoorGroupRow => ({
   id: r.id,
   eventId: r.eventId,
@@ -92,6 +96,8 @@ const toRow = (r: {
   tokenHash: r.tokenHash,
   tableLabel: r.tableLabel,
   leadName: r.leadName,
+  // `json_agg` llega ya parseado; sin personas, `null`.
+  people: Array.isArray(r.people) ? (r.people as { id: string; fullName: string }[]) : [],
 })
 
 const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
@@ -118,6 +124,12 @@ const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
      where gp.guest_group_id = guest_groups.id
      order by gp.is_companion asc, gp.created_at asc
      limit 1
+  )`,
+  /** Las personas, el principal primero: la puerta marca quién entra. Nombres cualificados a mano, por lo mismo. */
+  people: sql<unknown>`(
+    select json_agg(json_build_object('id', gp.id, 'fullName', gp.full_name) order by gp.is_companion asc, gp.created_at asc)
+      from guest_people gp
+     where gp.guest_group_id = guest_groups.id
   )`,
 })
 

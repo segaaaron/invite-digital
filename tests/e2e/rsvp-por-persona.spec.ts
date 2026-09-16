@@ -27,7 +27,6 @@ test('una familia confirma nombre por nombre, y solo una vez', async ({ page }) 
   await deMateo.getByRole('button', { name: 'ASISTIRÉ' }).click()
 
   await expect(page.getByText('Vienen 2 de 4')).toBeVisible()
-  await page.getByLabel('Nombre completo').fill('Ana Rojas')
   await page.getByRole('button', { name: 'ENVIAR' }).click()
   // Al guardar, el servidor revalida y la pantalla pasa al resumen: ya no hay formulario.
   await expect(page.getByRole('status')).toContainText('Vienen 2 de 4')

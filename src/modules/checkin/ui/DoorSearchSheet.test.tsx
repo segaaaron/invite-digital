@@ -3,9 +3,9 @@ import { fireEvent, render, screen } from '@testing-library/react'
 import { DoorSearchSheet } from './DoorSearchSheet'
 
 const groups = [
-  { id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tableLabel: 'Mesa 03', leadName: null, tokenHashHex: 'aa' },
-  { id: 'g2', label: 'Ana Lucía Vega', seats: 2, attending: 2, revoked: false, tableLabel: null, leadName: null, tokenHashHex: 'bb' },
-  { id: 'g3', label: 'Zulema Castro', seats: 1, attending: null, revoked: true, tableLabel: null, leadName: null, tokenHashHex: 'cc' },
+  { id: 'g1', label: 'Familia Rojas Peña', seats: 4, attending: 4, revoked: false, tableLabel: 'Mesa 03', leadName: null, tokenHashHex: 'aa', people: [] },
+  { id: 'g2', label: 'Ana Lucía Vega', seats: 2, attending: 2, revoked: false, tableLabel: null, leadName: null, tokenHashHex: 'bb', people: [] },
+  { id: 'g3', label: 'Zulema Castro', seats: 1, attending: null, revoked: true, tableLabel: null, leadName: null, tokenHashHex: 'cc', people: [] },
 ]
 
 describe('DoorSearchSheet', () => {

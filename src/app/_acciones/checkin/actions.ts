@@ -34,6 +34,8 @@ export type ScanInput = {
   arrivedCount: number | null
   /** Milisegundos desde época: el reloj del dispositivo cruza como número. */
   scannedAtMs: number
+  /** Quiénes entraron, si la invitación tiene personas. */
+  personIds?: readonly string[] | null
 }
 
 /**
@@ -57,6 +59,7 @@ export async function recordScansAction(input: {
       scanned: s.scanned,
       arrivedCount: s.arrivedCount,
       scannedAt: new Date(s.scannedAtMs),
+      personIds: s.personIds ?? null,
     })),
   })
 
@@ -80,6 +83,7 @@ export async function checkInByGroupAction(input: {
   scanId: string
   arrivedCount: number | null
   scannedAtMs: number
+  personIds?: readonly string[] | null
 }): Promise<ScanOutcome> {
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
@@ -93,6 +97,7 @@ export async function checkInByGroupAction(input: {
       groupId: input.groupId,
       arrivedCount: input.arrivedCount,
       scannedAt: new Date(input.scannedAtMs),
+      personIds: input.personIds ?? null,
     },
   })
 

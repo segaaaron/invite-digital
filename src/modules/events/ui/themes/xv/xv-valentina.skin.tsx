@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { AbanicoOrnamental } from './AbanicoOrnamental'
-import { chapaDePortada } from './cover-copy'
 import { ValentinaCover } from './ValentinaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-valentina.palette'
@@ -45,7 +44,6 @@ export const PIEL: PielXv = {
   portada: (datos) => (
     <ValentinaCover
       accent={P.lila}
-      badge={chapaDePortada(datos.eyebrow, datos.name)}
       bg="#1c0a2d"
       bgAsset={themeAsset('xv-valentina', 'mascarada-morada.avif')}
       foto={datos.foto}

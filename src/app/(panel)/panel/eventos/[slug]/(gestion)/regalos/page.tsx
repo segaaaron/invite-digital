@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, plans, registry } from '@/app/composition/container'
 import { CurrencyPicker } from '@/modules/events/ui/CurrencyPicker'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -39,7 +40,7 @@ export default async function RegalosPage({
 
   const permitido = await plans.requireFeature(event.value.id, 'registry')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Regalos" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Regalos" />
   }
 
   const mesa = await registry.list(event.value.id)

@@ -17,8 +17,7 @@ const TEXTOS: TextosComparativa = {
     mesas: 'Mesas',
     regalos: 'Mesa de regalos',
     puerta: 'Puerta con QR',
-    porteros: 'Porteros',
-    coanfitriones: 'Co-anfitriones',
+    porteros: 'Recepción',
     planners: 'Planner contratado',
     tareas: 'Tareas y presupuesto',
     plannerCompleto: 'Proveedores y cronograma',
@@ -57,7 +56,7 @@ describe('filasComparativas', () => {
     expect(de('Grupos de invitados')).toEqual(['Hasta 40', 'Sin límite'])
     expect(de('Fotos del evento')).toEqual(['Hasta 8', 'Sin límite'])
     expect(de('Puerta con QR')).toEqual(['No', 'Sí'])
-    expect(de('Porteros')).toEqual(['No', 'Hasta 10'])
+    expect(de('Recepción')).toEqual(['No', 'Hasta 10'])
     expect(de('Planner contratado')).toEqual(['No', 'Sin límite'])
     expect(de('Tareas y presupuesto')).toEqual(['Sí', 'Sí'])
     expect(de('Día D')).toEqual(['No', 'Sí'])
@@ -71,7 +70,7 @@ describe('filasComparativas', () => {
     const incluido = (etiqueta: string) => filas.find((f) => f.etiqueta === etiqueta)?.valores[0]?.incluido
 
     expect(incluido('Mesa de regalos')).toBe(false)
-    expect(incluido('Porteros')).toBe(false)
+    expect(incluido('Recepción')).toBe(false)
     expect(incluido('Cambiar de modelo')).toBe(false)
     expect(incluido('Mesas')).toBe(true)
   })

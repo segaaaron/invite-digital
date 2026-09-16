@@ -23,7 +23,8 @@ export function StatCard({
   value: string | number
   suffix?: string | undefined
   detail?: string | undefined
-  icon?: string | undefined
+  /** Un icono SVG de `icons.tsx`: nunca un carácter ni un emoji. */
+  icon?: ReactNode | undefined
   /** 0..1. Se recorta: una barra al 140 % se sale de su carril. */
   progress?: number | undefined
   /** La variación de la semana. La dirección va en la flecha, no solo en el color. */
@@ -38,7 +39,7 @@ export function StatCard({
       {/* El filo de luz del borde superior de la maqueta (`.stat::before`). */}
       <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/90 to-transparent" />
       {icon ? (
-        <span aria-hidden className="pointer-events-none absolute -right-2 -bottom-2 text-[80px] opacity-6">
+        <span aria-hidden className="pointer-events-none absolute right-3 bottom-3 size-16 text-ink opacity-[0.07] [&>svg]:size-full">
           {icon}
         </span>
       ) : null}

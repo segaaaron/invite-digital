@@ -37,6 +37,8 @@ latestByEvent: async () => new Map(),
 }
 
 const deps = (overrides: Partial<Parameters<typeof respondToInvitation>[0]> = {}) => ({
+  peopleOf: async () => [],
+  setAttendance: async () => {},
   resolveGroup: async () => ok(grupo),
   findEventById: async () => ok(evento),
   rsvp: repo().rsvp,
@@ -129,5 +131,44 @@ describe('respondToInvitation', () => {
     const store = repo()
     await respondToInvitation(deps({ rsvp: store.rsvp }))({ token: 'tok', attending: 9, responderName: null, message: null })
     expect(store.appended).toHaveLength(0)
+  })
+})
+
+/**
+ * Confirmar por el formulario de la invitación también dice **quién** viene. Guardaba la
+ * respuesta de la invitación y dejaba a sus personas en «Pendiente»: el panel enseñaba la
+ * fecha de confirmación junto a un «Pendiente», y los filtros y el catering no la contaban.
+ */
+describe('respondToInvitation · las personas de la invitación', () => {
+  const personas = (n: number) => Array.from({ length: n }, (_, i) => ({ id: `p${i + 1}` }))
+
+  const conPersonas = (n: number) => {
+    const marcadas: Array<[string, string, string]> = []
+    const d = deps({
+      peopleOf: async () => personas(n),
+      setAttendance: async (eventId, personId, attending) => void marcadas.push([eventId, personId, attending]),
+    })
+    return { d, marcadas }
+  }
+
+  it('con el sí de toda la invitación, todas sus personas asistirán', async () => {
+    const { d, marcadas } = conPersonas(1)
+    await respondToInvitation(d)({ token: 'tok', attending: 4, responderName: 'Yasmin', message: null })
+    expect(marcadas).toEqual([['e1', 'p1', 'yes']])
+  })
+
+  it('con el no, ninguna', async () => {
+    const { d, marcadas } = conPersonas(2)
+    await respondToInvitation(d)({ token: 'tok', attending: 0, responderName: null, message: null })
+    expect(marcadas).toEqual([
+      ['e1', 'p1', 'no'],
+      ['e1', 'p2', 'no'],
+    ])
+  })
+
+  it('si vienen menos que las personas cargadas no se sabe quiénes, y no se inventa', async () => {
+    const { d, marcadas } = conPersonas(3)
+    await respondToInvitation(d)({ token: 'tok', attending: 2, responderName: null, message: null })
+    expect(marcadas).toEqual([])
   })
 })

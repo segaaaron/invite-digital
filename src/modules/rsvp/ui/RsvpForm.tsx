@@ -24,29 +24,30 @@ type Props = {
    * otra piel.
    */
   variant?: 'campos' | 'botones' | undefined
+  /**
+   * El nombre del invitado, que ya se sabe: cada enlace es de alguien. Se manda oculto con
+   * la respuesta, para que la pareja lea quién contestó sin pedírselo otra vez.
+   */
+  guestName: string
   previous: { attending: number; message: string | null; responderName: string | null } | null
 }
 
 /**
  * El formulario de RSVP, con la composición de la maqueta.
  *
- * Son cuatro piezas y en este orden: **nombre completo**, **¿asistirás?**, **mensaje** y un
+ * Son tres piezas y en este orden: **¿asistirás?**, **mensaje** y un
  * botón a todo lo ancho. Ni una más: lo que el diseño no pregunta, no se pregunta. La piel la pone el diseño por variables CSS —aquí no hay ni un
  * color de la web pública—, así que el mismo marcado sale guinda en «Gala Real» y verde
  * salvia en la boda botánica.
  *
- * **El nombre existe porque el enlace identifica al grupo, no a la persona.** En «Familia
- * Rojas Peña» contesta uno de cuatro, y la pareja leía el mensaje sin saber cuál. Va vacío
- * con su marcador, como en la maqueta: prellenarlo con la etiqueta del grupo hacía que la
- * mayoría la dejara puesta, y entonces el campo no dice nada que no supiéramos.
+ * **El nombre no se pregunta:** cada enlace es de un invitado y su nombre viaja oculto.
  *
  * **El recuento viaja oculto.** El diseño pregunta sí o no, y eso es lo que se ve; lo que
  * se manda son los cupos del grupo con el «sí» y cero con el «no», porque el catering, el
  * reparto de mesas y la puerta se hacen con ese número.
  */
-export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos' }: Props) {
+export function RsvpForm({ dictionary, seats, token, previous, guestName, variant = 'campos' }: Props) {
   const rsvp = useRsvp({ dictionary, previous, seats })
-  const nameId = useId()
   const goingId = useId()
   const messageId = useId()
 
@@ -82,10 +83,11 @@ export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos
 
   if (rsvp.confirmed) {
     return (
-      <div aria-live="polite" className="relative flex flex-col items-center gap-3 py-5" role="status">
+      <div aria-live="polite" className="relative flex flex-col items-center gap-3 py-5 text-center" role="status">
         {/* La celebración de la maqueta, que se había quedado fuera: el invitado confirmaba
             y no pasaba nada. El color lo pone el diseño. */}
         <ConfettiBurst active />
+        <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{dictionary.confirmedHeading}</p>
         {/* En la caligrafía del diseño, que es como la maqueta saluda; sin ella, el titular
             de siempre. */}
         <p
@@ -97,13 +99,14 @@ export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos
             : dictionary.successTitle.replace('{nombre}', rsvp.confirmedName)}
         </p>
         <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.successBody}</p>
-        <button
-          className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep underline-offset-4 hover:underline"
-          onClick={rsvp.reopen}
-          type="button"
-        >
-          {dictionary.change}
-        </button>
+        {/* Sin «cambiar mi respuesta»: se confirma una sola vez. Si algo cambia, lo ajusta
+            quien invitó, y se dice aquí para que nadie busque un botón que no existe. */}
+        <p className="max-w-[40ch] text-[13px] leading-[1.7] text-ink-soft">{dictionary.confirmedLocked}</p>
+        {/* Confirmó que viene: su pase, en el mismo momento. Si dijo que no, no hay pase. */}
+        {/* Confirmó que viene: su pase ya está, con su QR y su botón, en su sitio de la
+            invitación —que se actualiza al guardar—. Aquí se dice; repetir el botón serían dos
+            cosas que hacen lo mismo. */}
+        {viene ? <p className="text-[13.5px] font-medium text-ink">{dictionary.passReady}</p> : null}
       </div>
     )
   }
@@ -115,7 +118,7 @@ export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos
       <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
         <input name="token" type="hidden" value={token} readOnly />
         <input name="attending" type="hidden" value={viene ? String(cuantos) : '0'} readOnly />
-        <input name="name" type="hidden" value={rsvp.defaultName} readOnly />
+        <input name="name" type="hidden" value={guestName} readOnly />
 
         <div className="flex gap-2">
           <button
@@ -189,18 +192,7 @@ export function RsvpForm({ dictionary, seats, token, previous, variant = 'campos
     <form action={rsvp.formAction} className="flex w-full flex-col gap-[18px] text-left">
       <input name="token" type="hidden" value={token} readOnly />
 
-      <label className={LABEL_CLASS} htmlFor={nameId}>
-        {dictionary.nameLabel}
-        <input
-          className={FIELD_CLASS}
-          defaultValue={rsvp.defaultName}
-          id={nameId}
-          maxLength={120}
-          name="name"
-          placeholder={dictionary.namePlaceholder}
-          type="text"
-        />
-      </label>
+      <input name="name" type="hidden" value={guestName} readOnly />
 
       <label className={LABEL_CLASS} htmlFor={goingId}>
         {dictionary.goingLabel}

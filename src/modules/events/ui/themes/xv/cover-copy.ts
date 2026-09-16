@@ -8,13 +8,3 @@
 export function rotuloDePortada(eyebrow: string, name: string): string {
   return `${eyebrow.replace(/^[\s·]+|[\s·]+$/g, '')} · ${name.toUpperCase()}`
 }
-
-/**
- * El mismo rótulo dentro de una chapa con borde, que es como lo llevan cinco de los ocho.
- *
- * El triángulo es del dibujo de la chapa, no del texto: «Encanto Marino» escribe el rótulo
- * suelto sobre la partitura y ahí no pinta nada.
- */
-export function chapaDePortada(eyebrow: string, name: string): string {
-  return `▸ ${rotuloDePortada(eyebrow, name)}`
-}

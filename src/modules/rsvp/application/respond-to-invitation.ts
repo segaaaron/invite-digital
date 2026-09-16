@@ -11,6 +11,9 @@ export const respondToInvitation =
     resolveGroup: (token: string) => Promise<Result<GuestGroup, GuestError>>
     findEventById: (id: string) => Promise<Result<Event, EventError>>
     rsvp: RsvpRepository
+    /** Las personas de la invitación, para marcar quién viene. */
+    peopleOf: (guestGroupId: string) => Promise<readonly { readonly id: string }[]>
+    setAttendance: (eventId: string, personId: string, attending: 'yes' | 'no') => Promise<void>
     ids: () => string
     clock: () => Date
   }) =>
@@ -73,6 +76,18 @@ export const respondToInvitation =
           { seats: group.value.seats },
         )
         if (isErr(response)) return response
+
+        // Quién viene, en cada persona: lo leen el panel, los filtros y el catering. Solo lo
+        // que se sabe seguro —vienen todos o no viene nadie—; con menos que las personas
+        // cargadas no se sabe quiénes, y eso se contesta nombre por nombre.
+        // Antes que la respuesta: si esto falla no queda respuesta, y se puede volver a enviar.
+        const personas = await deps.peopleOf(group.value.id)
+        const todos = input.attending >= personas.length && input.attending > 0
+        if (input.attending === 0 || todos) {
+          for (const persona of personas) {
+            await deps.setAttendance(group.value.eventId, persona.id, todos ? 'yes' : 'no')
+          }
+        }
 
         await deps.rsvp.append(response.value)
         return ok(response.value)

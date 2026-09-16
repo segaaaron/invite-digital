@@ -148,12 +148,12 @@ describe('panelNav', () => {
     }
   })
 
-  it('«Porteros» lo ven quien compró y el atelier; ni el admin ni el personal de puerta', () => {
+  it('«Equipo» —con los porteros dentro— lo ven quien compró y el atelier; ni el admin ni el personal de puerta', () => {
     const hrefs = (admin: boolean, puerta: boolean, cliente: boolean) =>
       panelNav('boda', {}, admin, puerta, cliente)
         .flatMap((seccion) => seccion.items)
         .map((item) => item.href)
-    const ruta = '/panel/eventos/boda/porteros'
+    const ruta = '/panel/eventos/boda/equipo'
     expect(hrefs(false, false, true)).toContain(ruta)
     expect(hrefs(false, false, false)).toContain(ruta)
     expect(hrefs(true, false, false)).not.toContain(ruta)
@@ -173,15 +173,15 @@ describe('panelNav', () => {
     expect(rutas(panelNav('boda', {}, false, true))).not.toContain('/panel/eventos/boda/planner/tareas')
   })
 
-  it('en el equipo cada uno ve lo suyo: el anfitrión suma gente, el planner porteros, el co-anfitrión ninguno', () => {
+  it('en el equipo cada uno ve lo suyo: el anfitrión y el planner abren Equipo, el co-anfitrión no', () => {
     const rutas = (equipo: 'anfitrion' | 'coanfitrion' | 'planner') =>
       panelNav('boda', {}, false, false, true, { equipo }).flatMap((s) => s.items.map((i) => i.href))
-    expect(rutas('anfitrion')).toEqual(expect.arrayContaining(['/panel/eventos/boda/equipo', '/panel/eventos/boda/porteros']))
-    expect(rutas('planner')).toContain('/panel/eventos/boda/porteros')
-    expect(rutas('planner')).not.toContain('/panel/eventos/boda/equipo')
+    expect(rutas('anfitrion')).toContain('/panel/eventos/boda/equipo')
+    expect(rutas('planner')).toContain('/panel/eventos/boda/equipo')
+    // Porteros ya no es una entrada aparte: vive dentro de Equipo.
+    expect(rutas('anfitrion')).not.toContain('/panel/eventos/boda/porteros')
     expect(rutas('anfitrion')).toContain('/panel/eventos/boda/extras')
     expect(rutas('planner')).not.toContain('/panel/eventos/boda/extras')
-    expect(rutas('coanfitrion')).not.toContain('/panel/eventos/boda/porteros')
     expect(rutas('coanfitrion')).not.toContain('/panel/eventos/boda/equipo')
     expect(rutas('coanfitrion')).toContain('/panel/eventos/boda/planner/tareas')
     expect(rutas('coanfitrion')).toContain('/panel/eventos/boda/planner/cortejo')

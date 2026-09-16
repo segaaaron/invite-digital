@@ -13,7 +13,7 @@ const INICIAL: AdminActionState = { status: 'idle' }
 export type ExtraEditable = { readonly slug: string; readonly name: string; readonly precio: string; readonly effect: string; readonly amount: number; readonly isActive: boolean }
 
 /** Los efectos que suman una cantidad, con su unidad. Los demás encienden algo y no la usan. */
-const UNIDAD: Partial<Record<string, string>> = { mas_grupos: 'invitaciones', mas_dias: 'días', mas_porteros: 'porteros', sumar_planner: 'planners' }
+const UNIDAD: Partial<Record<string, string>> = { mas_grupos: 'invitaciones', mas_dias: 'días', mas_porteros: 'personas', sumar_planner: 'planners' }
 
 /**
  * Un extra del catálogo: su resumen de un vistazo —qué hace, cuánto cuesta, si se vende— y los

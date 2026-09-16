@@ -1,7 +1,6 @@
 import Image from 'next/image'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { BotanicalWreath } from '../kit/flora/BotanicalWreath'
-import { chapaDePortada } from './cover-copy'
 import { LucianaCover } from './LucianaCover'
 import { iconoBosque } from './IconosLineaXv'
 import type { PielXv } from './piel-xv'
@@ -67,7 +66,6 @@ export const PIEL: PielXv = {
   portada: (datos) => (
     <LucianaCover
       accent={P.lila}
-      badge={chapaDePortada(datos.eyebrow, datos.name)}
       bg="#0f2a1f"
       bgAsset={themeAsset('xv-luciana', 'bosque-verdee.avif')}
       foto={datos.foto}

@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, guests, plans, venue } from '@/app/composition/container'
 import { dietaryReport } from '@/modules/guests'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -45,7 +46,7 @@ export default async function MesasPage({
   // plan no permite tocar. Lo que protege es la del servidor, no esta.
   const permitido = await plans.requireFeature(event.value.id, 'seating')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Mesas" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Mesas" />
   }
 
   // El reporte del catering sale de las personas cargadas. Sin personas no hay reporte,

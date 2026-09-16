@@ -18,6 +18,9 @@ export const users = pgTable('users', {
    * correo no puede ser la definitiva.
    */
   mustChangePassword: boolean('must_change_password').notNull().default(true),
+  /** Quién es y cómo se le llama. Lo trae el pedido o el alta del admin; sin él, el correo. */
+  fullName: varchar('full_name', { length: 160 }),
+  phone: varchar('phone', { length: 32 }),
   // El plan que compró. Lo asigna el admin al darlo de alta. `set null`: retirar un plan no
   // borra la cuenta.
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -113,6 +116,9 @@ export const sessions = pgTable(
     // El modo soporte abierto de esta sesión de admin (`0049`). La FK la declara la migración:
     // `support_sessions` se define más abajo y referencia a `users` y `events`.
     supportSessionId: uuid('support_session_id'),
+    /** «iPhone · Safari»: dónde está abierta, para reconocerla en Mi cuenta (`0057`). */
+    device: varchar('device', { length: 80 }),
+    lastSeenAt: timestamp('last_seen_at', { withTimezone: true }),
     expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },

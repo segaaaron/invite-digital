@@ -40,4 +40,22 @@ describe('el tema Palacio Griego', () => {
     render(<XvIsabelleView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
+
+  it('pinta a los padrinos aparte, bajo su propio rótulo, y a los padres arriba', () => {
+    render(
+      <XvIsabelleView
+        {...propsDePrueba({
+          content: { hosts: { label: 'Con la bendición de', names: ['Angel', 'Ivana', 'Luis'], roles: { father: 'Angel', mother: 'Ivana', godparents: ['Luis'] } } },
+        })}
+      />,
+    )
+    const rotulo = screen.getByText('PADRINOS')
+    expect(screen.getByText('Angel').compareDocumentPosition(rotulo) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(rotulo.compareDocumentPosition(screen.getByText('Luis')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('sin padrinos no pinta su rótulo', () => {
+    render(<XvIsabelleView {...propsDePrueba({ content: { hosts: { label: 'Mis padres', names: ['Angel'], roles: { father: 'Angel' } } } })} />)
+    expect(screen.queryByText('PADRINOS')).toBeNull()
+  })
 })

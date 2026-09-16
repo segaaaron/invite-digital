@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from 'react'
 import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
-import { removePersonAction, updatePersonAction } from '@/app/_acciones/guests/actions'
+import { removePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
+import { hora } from '@/shared/format/fecha'
 
 export type PersonRowView = {
   readonly id: string
@@ -12,6 +13,8 @@ export type PersonRowView = {
   /** El grupo es el dueño del enlace, del cupo y de la mesa; la fila necesita su id. */
   readonly groupId: string
   readonly groupLabel: string
+  /** Cuándo entró por la puerta; nulo o ausente si todavía no llegó. */
+  readonly llegoA?: Date | null
   readonly isCompanion: boolean
   readonly dietaryNote: string | null
   readonly vip: boolean
@@ -61,8 +64,6 @@ const fechaCorta = (fecha: Date): string =>
 
 /** La maqueta pagina de diez en diez y numera las páginas. */
 const POR_PAGINA = 10
-
-const SIGUIENTE: Record<string, Attendance | null> = { null: 'yes', yes: 'maybe', maybe: 'no', no: null }
 
 export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[]; eventSlug: string }) {
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -174,6 +175,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                         ★
                       </span>
                     ) : null}
+                    {fila.llegoA === undefined || fila.llegoA === null ? null : (
+                      <span className="mt-0.5 block text-[11px] text-sage">{`Llegó ${hora(fila.llegoA)}`}</span>
+                    )}
                   </td>
                   <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {/* Sin repetir el nombre de la fila: la mayoría tiene la suya, y eso se dice. */}
@@ -186,24 +190,10 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     )}
                   </td>
                   <td className="border-b border-line-panel py-3.5 pr-4">
-                    <button
-                      className="cursor-pointer"
-                      onClick={() =>
-                        aplicar(
-                          updatePersonAction({
-                            eventSlug,
-                            id: fila.id,
-                            attending: SIGUIENTE[fila.attending ?? 'null'] ?? null,
-                          }),
-                        )
-                      }
-                      title="Cambiar el estado"
-                      type="button"
-                    >
-                      <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
-                        {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
-                      </Pill>
-                    </button>
+                    {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
+                    <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
+                      {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
+                    </Pill>
                   </td>
                   <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {fila.dietaryNote ?? '—'}

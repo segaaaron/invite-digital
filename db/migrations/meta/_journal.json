@@ -365,6 +365,41 @@
       "when": 1789580000000,
       "tag": "0052_invitaciones_sin_vacias",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1789590000000,
+      "tag": "0053_asistencia_desde_la_respuesta",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1789600000000,
+      "tag": "0054_llegadas_por_persona",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1789700000000,
+      "tag": "0055_sin_tareas_de_ejemplo",
+      "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1789800000000,
+      "tag": "0056_contacto_del_cliente",
+      "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1789900000000,
+      "tag": "0057_sesiones_con_dispositivo",
+      "breakpoints": true
     }
   ]
 }

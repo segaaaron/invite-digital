@@ -15,7 +15,11 @@ export type DoorGroupRow = {
   readonly tokenHash: Buffer
   /** Etiqueta de la mesa asignada, o `null` si el grupo aún no tiene. */
   readonly tableLabel: string | null
+  /** Las personas de la invitación, el principal primero. Vacía en las que no tienen nombres. */
+  readonly people: readonly DoorPerson[]
 }
+
+export type DoorPerson = { readonly id: string; readonly fullName: string }
 
 export type ArrivalRow = {
   readonly scanId: string
@@ -25,6 +29,8 @@ export type ArrivalRow = {
   readonly voidedAt: Date | null
   /** `porter:<id>` o `user:<id>`. Opcional: las llegadas anteriores no lo guardaban. */
   readonly recordedBy?: string | null
+  /** Quiénes entraron en este escaneo; nulo si fue por número. */
+  readonly personIds?: readonly string[] | null
 }
 
 export interface DoorGroupReader {

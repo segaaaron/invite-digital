@@ -164,7 +164,6 @@ export interface PlanComparisonDictionary {
     regalos: string
     puerta: string
     porteros: string
-    coanfitriones: string
     planners: string
     tareas: string
     plannerCompleto: string
@@ -409,12 +408,17 @@ export interface InvitationDictionary {
   successTitle: string
   successTitleAnon: string
   successBody: string
-  change: string
   closed: string
   passTitle: string
   passHint: string
   passAlt: string
   passOpen: string
+  /** Antes de confirmar: el pase llega al decir que asiste. */
+  passPending: string
+  /** Al confirmar que asiste, dentro del formulario: el pase ya está, más abajo. */
+  passReady: string
+  /** Confirmó que no asiste: no hay pase. */
+  passDeclined: string
   passBack: string
   passSaveHint: string
   passNoTable: string

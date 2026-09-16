@@ -15,6 +15,7 @@ const arrived = (guestGroupId: string, arrivedCount: number): ResolvedArrival =>
   arrivedAt: new Date('2026-10-18T21:00:00Z'),
   arrivedCount,
   scanCount: 1,
+  personas: {},
 })
 
 describe('doorTally', () => {

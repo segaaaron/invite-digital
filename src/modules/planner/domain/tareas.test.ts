@@ -31,6 +31,13 @@ describe('sembrarTareas', () => {
     expect(titulos.some((t) => t.includes('novi'))).toBe(false)
   })
 
+  // Un evento dado de alta a un mes de la fiesta no puede abrir con quince tareas vencidas hace un año.
+  it('una fecha que ya pasó vence hoy, no en el pasado', () => {
+    const tareas = sembrarTareas('xv', '2026-10-17', '2026-09-16')
+    expect(tareas.find((t) => t.stage === 'm18')?.dueDate).toBe('2026-09-16')
+    expect(tareas.find((t) => t.stage === 'semana')?.dueDate).toBe('2026-10-10')
+  })
+
   it('el orden es el de la plantilla, sin huecos', () => {
     const orden = sembrarTareas('boda', '2027-05-15').map((t) => t.sortOrder)
     expect(orden).toEqual(orden.map((_, i) => i))

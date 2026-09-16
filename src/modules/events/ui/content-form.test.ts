@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { parseInvitationContent } from '../domain/invitation-content'
 import { aValor, estadoInicial } from './content-form'
-import { FORMAS } from './content-shapes'
+import { FORMAS, formaPara } from './content-shapes'
 
 describe('estadoInicial', () => {
   it('reparte el bloque guardado por campos, con el texto tal cual', () => {
@@ -23,8 +23,8 @@ describe('estadoInicial', () => {
     expect(estado.campos.startsAt).toBe('2026-10-18T16:00')
   })
 
-  it('trae la lista suelta de un bloque que la tiene', () => {
-    const estado = estadoInicial(FORMAS.hosts, { label: 'PADRES', names: ['Ana', 'Luis'] })
+  it('trae la lista suelta de un bloque que la tiene: los padrinos', () => {
+    const estado = estadoInicial(FORMAS.hosts, { label: 'PADRES', names: [], roles: { godparents: ['Ana', 'Luis'] } })
     expect(estado.campos.label).toBe('PADRES')
     expect(estado.lista).toEqual(['Ana', 'Luis'])
   })
@@ -55,7 +55,7 @@ describe('aValor', () => {
 
   it('incluye la lista suelta sin sus huecos', () => {
     const estado = { campos: { label: 'PADRES' }, lista: ['Ana', '  ', 'Luis'], filas: [] }
-    expect(aValor(FORMAS.hosts, estado)).toEqual({ label: 'PADRES', names: ['Ana', 'Luis'] })
+    expect(aValor(FORMAS.hosts, estado)).toEqual({ label: 'PADRES', roles: { godparents: ['Ana', 'Luis'] } })
   })
 
   it('un bloque de filas es la lista, no un objeto', () => {
@@ -76,11 +76,48 @@ describe('aValor', () => {
     // La prueba que importa: el formulario no puede producir algo que el dominio descarte
     // en silencio, porque el atelier vería desaparecer lo que acaba de escribir.
     const estado = {
-      campos: { label: 'PADRES' },
+      campos: { label: 'PADRES', brideFather: 'Juan' },
       lista: ['Ana', 'Luis'],
       filas: [],
     }
     const valor = aValor(FORMAS.hosts, estado)
-    expect(parseInvitationContent({ hosts: valor }).hosts).toEqual({ label: 'PADRES', names: ['Ana', 'Luis'] })
+    expect(parseInvitationContent({ hosts: valor }).hosts).toEqual({
+      label: 'PADRES',
+      roles: { brideFather: 'Juan', godparents: ['Ana', 'Luis'] },
+      names: ['Juan', 'Ana', 'Luis'],
+    })
+  })
+})
+
+describe('los anfitriones por su papel', () => {
+  const xv = formaPara('hosts', { fotos: { casillas: 0 } }, 'xv')
+  const boda = formaPara('hosts', { fotos: { casillas: 0 } }, 'boda')
+
+  it('lo guardado con papeles se reparte en sus campos y los padrinos en la lista', () => {
+    const estado = estadoInicial(xv, { label: 'Con amor', names: [], roles: { father: 'Angel', godparents: ['Luis'] } })
+    expect(estado.campos).toMatchObject({ label: 'Con amor', father: 'Angel', mother: '' })
+    expect(estado.lista).toEqual(['Luis'])
+  })
+
+  it('lo guardado antes de los papeles se lee por posición: en un XV, padre, madre y el resto padrinos', () => {
+    const estado = estadoInicial(xv, { label: 'Con amor', names: ['Angel', 'Ivana', 'Luis'] })
+    expect(estado.campos).toMatchObject({ father: 'Angel', mother: 'Ivana' })
+    expect(estado.lista).toEqual(['Luis'])
+  })
+
+  it('y en una boda, los dos de la novia, los dos del novio y el resto padrinos', () => {
+    const estado = estadoInicial(boda, { names: ['Juan', 'Rosa', 'Pedro', 'Marta', 'Luis'] })
+    expect(estado.campos).toMatchObject({ brideFather: 'Juan', brideMother: 'Rosa', groomFather: 'Pedro', groomMother: 'Marta' })
+    expect(estado.lista).toEqual(['Luis'])
+  })
+
+  it('sale con los papeles, y el dominio compone la lista de nombres', () => {
+    const valor = aValor(xv, { campos: { label: 'Con amor', father: 'Angel', mother: ' ' }, lista: ['Luis', ''], filas: [] })
+    expect(valor).toEqual({ label: 'Con amor', roles: { father: 'Angel', godparents: ['Luis'] } })
+    expect(parseInvitationContent({ hosts: valor }).hosts?.names).toEqual(['Angel', 'Luis'])
+  })
+
+  it('vaciado del todo sale vacío, que es como se quita la sección', () => {
+    expect(aValor(xv, { campos: { label: '', father: '', mother: '' }, lista: [], filas: [] })).toEqual({})
   })
 })

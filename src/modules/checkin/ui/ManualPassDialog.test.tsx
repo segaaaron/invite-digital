@@ -19,6 +19,7 @@ async function grupos(): Promise<DoorManifestGroup[]> {
       revoked: false,
       tableLabel: null,
       tokenHashHex: await sha256Hex(CODIGO),
+      people: [],
     },
   ]
 }

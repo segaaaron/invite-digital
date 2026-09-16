@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm'
+import { eq, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { users } from '@/shared/db/schema'
 import type { UserRepository } from '../application/ports'
@@ -52,6 +52,13 @@ export const createDrizzleUserRepository = (database: DbExecutor): UserRepositor
     // debe estallar aquí y no viajar como un id vacío.
     if (row === undefined) throw new Error('El alta de usuario no devolvió id')
     return row
+  },
+
+  async completarContacto(userId, contacto) {
+    await database
+      .update(users)
+      .set({ fullName: sql`coalesce(${users.fullName}, ${contacto.fullName})`, phone: sql`coalesce(${users.phone}, ${contacto.phone})` })
+      .where(eq(users.id, userId))
   },
 })
 

@@ -8,6 +8,7 @@ import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
 import { GuestbookForm } from '@/modules/rsvp/ui/GuestbookForm'
+import { concedePase } from '@/modules/rsvp'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
 import { RsvpPareja } from '@/modules/rsvp/ui/RsvpPareja'
 import { env } from '@/shared/config/env'
@@ -71,6 +72,27 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   const capacidadDelPlan = await plans.allowanceFor(event.id)
   const fotosDeInvitados = !isErr(capacidadDelPlan) && capacidadDelPlan.value.guestPhotos
 
+  // El pase de entrada: el QR y el botón de abrirlo a solas, en su ranura.
+  const pase = (
+    <>
+      <PassQr
+        label={group.label}
+        labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
+        url={invitationUrl(token, env.SITE_URL)}
+      />
+      {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás,
+          nadie se desplaza hasta el final de la invitación. */}
+      <p className="mt-5 text-center">
+        <a
+          className="inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase"
+          href={`/i/${token}/pase`}
+        >
+          {dictionary.passOpen}
+        </a>
+      </p>
+    </>
+  )
+
   return (
     <>
       {/* Cuenta la visita. No pinta nada, y se queda **fuera** del tema: un diseño no tiene
@@ -96,7 +118,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           rsvp: abierto ? (
             personas.length === 2 && sinResponder ? (
               // Una pareja viene junta o no viene: dos nombres que marcar son un paso de más.
-              <RsvpPareja confirmarHref={`/i/${token}/confirmar`} dictionary={dictionary} token={token} />
+              <RsvpPareja confirmarHref={`/i/${token}/confirmar`} dictionary={dictionary} paseHref={`/i/${token}/pase`} token={token} />
             ) : personas.length > 2 && sinResponder ? (
               <div className="flex flex-col items-center gap-3 py-2 text-center">
                 <p className="text-[14px] leading-[1.7]">{dictionary.whoIsComing}</p>
@@ -110,6 +132,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             ) : (
             <RsvpForm
               dictionary={dictionary}
+              guestName={group.label}
               previous={sinResponder ? null : latest}
               seats={group.seats}
               token={token}
@@ -135,7 +158,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           guestbook: (
             <>
               {definicion.rsvp === 'botones' ? (
-                <GuestbookForm dictionary={dictionary} previous={latest} seats={group.seats} token={token} />
+                <GuestbookForm dictionary={dictionary} guestName={group.label} previous={latest} seats={group.seats} token={token} />
               ) : null}
               <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
             </>
@@ -151,24 +174,12 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               {dictionary.photosPick}
             </a>
           ),
-          pass: (
-            <>
-              <PassQr
-                label={group.label}
-                labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
-                url={invitationUrl(token, env.SITE_URL)}
-              />
-              {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás,
-                  nadie se desplaza hasta el final de la invitación. */}
-              <p className="mt-5 text-center">
-                <a
-                  className="inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase"
-                  href={`/i/${token}/pase`}
-                >
-                  {dictionary.passOpen}
-                </a>
-              </p>
-            </>
+          // El pase llega **al confirmar que asiste**: antes se enseñaba a todos, también a
+          // quien no había contestado o dijo que no.
+          pass: concedePase(latest) ? (
+            pase
+          ) : (
+            <p className="text-center text-[13.5px] leading-[1.7]">{latest === null ? dictionary.passPending : dictionary.passDeclined}</p>
           ),
         }}
       />

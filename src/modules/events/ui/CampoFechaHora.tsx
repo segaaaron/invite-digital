@@ -1,7 +1,9 @@
 'use client'
 
 import { useId } from 'react'
+import { ClockIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { SelectorDeFecha } from '@/shared/design/ui/panel/SelectorDeFecha'
 
 /** Las horas de una fiesta, de media en media: nadie cita a las 19:07. */
 const HORAS = Array.from({ length: 48 }, (_, i) => {
@@ -10,19 +12,12 @@ const HORAS = Array.from({ length: 48 }, (_, i) => {
   return `${String(h).padStart(2, '0')}:${m}`
 })
 
-const FECHA_LARGA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
-
 /**
  * Fecha y hora, cada una por su lado.
  *
- * Un `datetime-local` deja la pantalla en manos del navegador: Chrome pinta su calendario azul
- * con los meses en inglés y una rueda de minutos, que no es ni la piel del panel ni el idioma
- * del proyecto. Aquí la fecha es un `date` —el calendario del sistema sigue siendo el más
- * cómodo en un teléfono— y la hora un desplegable de medias horas, que es como se cita a una
- * boda. Debajo se lee la fecha escrita con todas sus letras, para cazar el clásico
- * mes-por-día.
- *
- * El valor que viaja sigue siendo `YYYY-MM-DDTHH:mm`, lo que el dominio ya guarda.
+ * La fecha, con el calendario del panel (`SelectorDeFecha`): el del navegador pintaba
+ * «10/17/2026» en azul y en inglés. La hora, en medias horas, que es como se cita a una
+ * fiesta. El valor que viaja sigue siendo `YYYY-MM-DDTHH:mm`, lo que el dominio ya guarda.
  */
 export function CampoFechaHora({ id, valor, onChange }: { id: string; valor: string; onChange: (valor: string) => void }) {
   const horaId = useId()
@@ -35,19 +30,21 @@ export function CampoFechaHora({ id, valor, onChange }: { id: string; valor: str
   const opciones = horaActual !== '' && !HORAS.includes(horaActual) ? [horaActual, ...HORAS] : HORAS
 
   return (
-    <div className="flex min-w-0 flex-col gap-2">
-      <div className="flex min-w-0 flex-wrap gap-2">
-        <input
-          className={`${FIELD_CLASS} min-w-[150px] flex-1`}
-          id={id}
-          onChange={(e) => onChange(componer(e.target.value, horaActual))}
-          type="date"
-          value={fecha}
-        />
-        <label className="sr-only" htmlFor={horaId}>
-          Hora
-        </label>
-        <select className={`${FIELD_CLASS} w-[116px] shrink-0`} id={horaId} onChange={(e) => onChange(componer(fecha, e.target.value))} value={horaActual}>
+    <div className="flex min-w-0 flex-wrap gap-2">
+      <div className="min-w-[220px] flex-1">
+        <SelectorDeFecha id={id} onChange={(f) => onChange(componer(f, horaActual))} valor={fecha} />
+      </div>
+      <label className="sr-only" htmlFor={horaId}>
+        Hora
+      </label>
+      <div className="relative w-[128px] shrink-0">
+        <ClockIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-mute" />
+        <select
+          className={`${FIELD_CLASS} cursor-pointer pl-10`}
+          id={horaId}
+          onChange={(e) => onChange(componer(fecha, e.target.value))}
+          value={horaActual}
+        >
           <option value="">Hora</option>
           {opciones.map((h) => (
             <option key={h} value={h}>
@@ -56,12 +53,6 @@ export function CampoFechaHora({ id, valor, onChange }: { id: string; valor: str
           ))}
         </select>
       </div>
-      {fecha === '' ? null : (
-        <p className="text-[12px] text-ink-mute first-letter:uppercase">
-          {FECHA_LARGA.format(new Date(`${fecha}T00:00:00Z`))}
-          {horaActual === '' ? '' : ` · ${horaActual} h`}
-        </p>
-      )}
     </div>
   )
 }

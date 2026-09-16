@@ -99,12 +99,11 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
 
     // La boda nació con el diseño que se eligió en el escaparate. Por rol y no por texto
     // suelto: el título de la tarjeta es un `h2` y es único.
-    await expect(page.getByRole('heading', { name: 'Contenido de la invitación · Botánica' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Tu invitación · Botánica' })).toBeVisible()
 
-    // Y con su plan de tareas ya sembrado: el pedido aprobado no deja un evento sin planner.
+    // Sin tareas de ejemplo: el plan se crea cuando el anfitrión lo pide.
     await page.goto(`/panel/eventos/${slug}/planner/tareas`)
-    await expect(page.getByRole('button', { name: 'Crear el plan con la plantilla' })).toHaveCount(0)
-    await expect(page.locator('summary', { hasText: '12 meses antes' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Crear el plan con la plantilla' })).toBeVisible()
 
     // Y el plan sigue fuera, que es lo que de verdad es del atelier.
     expect((await page.goto(`/panel/eventos/${slug}/plan`))?.status()).toBe(404)

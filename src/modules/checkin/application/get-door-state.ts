@@ -9,6 +9,8 @@ export type DoorState = {
   readonly tally: DoorTally
   readonly groups: readonly DoorGroup[]
   readonly arrivals: readonly ResolvedArrival[]
+  /** El nombre de cada persona de las invitaciones, por id: las llegadas se cuentan por quién entró. */
+  readonly nombres: Readonly<Record<string, string>>
 }
 
 export const getDoorState =
@@ -27,7 +29,8 @@ export const getDoorState =
           revoked: g.revoked,
         }))
 
-        return ok({ tally: doorTally(groups, manifest.value.arrivals), groups, arrivals: manifest.value.arrivals })
+        const nombres = Object.fromEntries(manifest.value.groups.flatMap((g) => g.people.map((p) => [p.id, p.fullName])))
+        return ok({ tally: doorTally(groups, manifest.value.arrivals), groups, arrivals: manifest.value.arrivals, nombres })
       },
       (cause) => checkinError('storage_failure', `No se pudo leer el estado de la puerta: ${String(cause)}`),
     )

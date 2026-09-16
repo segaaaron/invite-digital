@@ -34,12 +34,15 @@ function leerTarea(fiesta: Fiesta, input: TareaInput) {
   return { ok: true as const, valor: { title, stage: input.stage, dueDate: fecha.fecha, assignee: input.assignee as Responsable } }
 }
 
+/** Bolivia es UTC−4 todo el año, sin horario de verano. */
+const hoyEnBolivia = (instante: Date): string => new Date(instante.getTime() - 4 * 3_600_000).toISOString().slice(0, 10)
+
 /** Siembra la plantilla de su fiesta. Si el evento ya tiene tareas, no hace nada. */
 export const seedTasks =
-  ({ store }: Deps) =>
+  ({ store, clock }: Deps) =>
   async (eventId: string, fiesta: Fiesta, eventDate: string): Promise<{ ok: true; creadas: number }> => {
     if ((await store.listTasks(eventId)).length > 0) return { ok: true, creadas: 0 }
-    const tareas = sembrarTareas(fiesta, eventDate)
+    const tareas = sembrarTareas(fiesta, eventDate, hoyEnBolivia(clock()))
     await store.insertTasks(eventId, tareas)
     return { ok: true, creadas: tareas.length }
   }

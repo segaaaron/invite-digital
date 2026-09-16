@@ -137,6 +137,9 @@ export const admin = {
     return drizzleUserRepository.create({ email: input.email, passwordHash, role: input.role })
   },
   findUserByEmail: (email: string) => drizzleUserRepository.findByEmail(email),
+  /** Nombre y teléfono de quien compra, sin pisar los que ya tenía. */
+  completarContacto: (userId: string, contacto: { fullName: string | null; phone: string | null }) =>
+    drizzleUserRepository.completarContacto(userId, contacto),
   /**
    * Los datos de cobro del Plan B. Comparten almacén con los comprobantes —el mismo
    * volumen fuera de `public/`— pero la imagen del QR **sí** se sirve sin sesión: está

@@ -26,17 +26,14 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await expect(page.getByRole('cell', { name: 'Ana Lucía Vega', exact: true }).first()).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Sin gluten', exact: true })).toBeVisible()
 
-  // 2. El estado se recorre con un clic: pendiente → confirmado.
-  // El botón de la fila, no la chip del filtro: se distingue por su título.
-  await page.getByRole('button', { name: 'Pendiente', exact: true }).click()
-  await expect(page.getByRole('button', { name: 'Confirmado', exact: true })).toBeVisible()
-
-  // 3. La chip VIP, que la maqueta pide y antes no tenía dato. Se marca desde el «✎» de
-  // la fila, que es donde la maqueta pone la casilla.
+  // 2. El estado lo da el invitado; corregirlo a mano es de «Editar», no de la fila.
+  // 3. Y ahí mismo, la chip VIP.
   await page.getByRole('link', { name: 'Editar a Ana Lucía Vega' }).click()
+  await page.getByLabel('RSVP').selectOption('yes')
   await page.getByLabel('Invitado VIP').check()
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByRole('button', { name: /VIP 1/i })).toBeVisible()
+  await expect(page.getByRole('button', { name: /Confirmados 1/i })).toBeVisible()
 
   // 4. El reporte del catering sale de esas restricciones.
   await page.goto(`/panel/eventos/${SLUG}/mesas`)

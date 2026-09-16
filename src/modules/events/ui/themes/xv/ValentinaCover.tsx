@@ -17,7 +17,6 @@ type Props = {
   /** «15 AÑOS», la copia del propio diseño. */
   readonly title: string
   readonly name: string
-  readonly badge: string
   readonly hint: string
   readonly openLabel: string
 }
@@ -58,7 +57,6 @@ export function ValentinaCover({
   line2,
   title,
   name,
-  badge,
   hint,
   openLabel,
 }: Props) {
@@ -150,22 +148,6 @@ export function ValentinaCover({
 
         <Filete color={accent} />
 
-        <span
-          style={{
-            padding: '10px 20px',
-            border: `2px solid ${accent}`,
-            background: 'rgba(20,8,35,.72)',
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 4px 16px rgba(0,0,0,.6)',
-            fontFamily: 'var(--font-jetbrains-mono)',
-            fontSize: 10,
-            letterSpacing: '0.3em',
-            color: accent,
-            textShadow: SOMBRA,
-          }}
-        >
-          {badge}
-        </span>
         <span
           style={{
             marginTop: 10,

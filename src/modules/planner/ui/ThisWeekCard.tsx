@@ -8,7 +8,8 @@ import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { Accion, type Evento } from './Accion'
 
 export type SemanaVista = {
-  readonly avance: number
+  /** `null` sin plan de tareas: «0 % hecho» de nada se lee como trabajo atrasado. */
+  readonly avance: number | null
   readonly presupuesto: { previsto: string; comprometido: string; pagado: string } | null
   readonly tareas: ReadonlyArray<{ id: string; title: string; vence: string; atrasada: boolean }>
   readonly pagos: ReadonlyArray<{ id: string; concepto: string; importe: string; vence: string; atrasado: boolean }>
@@ -29,7 +30,13 @@ export function ThisWeekCard({ evento, semana }: { evento: Evento; semana: Seman
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 [font-variant-numeric:tabular-nums]">
         <Link className="text-[13px] text-ink-soft hover:text-ink" href={`${base}/tareas`}>
-          Plan de tareas: <strong className="font-display text-[22px] font-light text-ink">{semana.avance} %</strong> hecho
+          {semana.avance === null ? (
+            'Plan de tareas: todavía sin crear'
+          ) : (
+            <>
+              Plan de tareas: <strong className="font-display text-[22px] font-light text-ink">{semana.avance} %</strong> hecho
+            </>
+          )}
         </Link>
         {semana.presupuesto === null ? null : (
           <Link className="text-[13px] text-ink-soft hover:text-ink" href={`${base}/presupuesto`}>

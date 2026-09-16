@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, planner, plans } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { momentosParaVer } from '@/modules/planner/ui/cronograma-vista'
@@ -23,7 +24,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} reason="El cronograma del día viene con Firma 3D y Alta Costura." title="Cronograma" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cronograma del día viene con Firma 3D y Alta Costura." title="Cronograma" />
   }
 
   const proveedores = (await planner.dia.listVendors(event.value.id)).map((p) => ({ id: p.id, service: p.service }))

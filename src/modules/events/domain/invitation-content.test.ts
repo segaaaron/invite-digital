@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loQueFaltaParaInvitar, mergeContent, parseInvitationContent } from './invitation-content'
+import { anfitrionesBoda, anfitrionesXv, loQueFaltaParaInvitar, mergeContent, parseInvitationContent } from './invitation-content'
 
 describe('parseInvitationContent', () => {
   it('acepta un objeto vacío', () => {
@@ -79,6 +79,25 @@ describe('parseInvitationContent', () => {
     expect(
       parseInvitationContent({ hosts: { label: 'Junto a mis padres', names: ['Juan Julio Pereira', '  ', 'Linzi Torrico'] } }),
     ).toEqual({ hosts: { label: 'Junto a mis padres', names: ['Juan Julio Pereira', 'Linzi Torrico'] } })
+  })
+
+  it('lee quién es cada anfitrión, y compone la lista de nombres en orden: padres y después padrinos', () => {
+    const { hosts } = parseInvitationContent({
+      hosts: {
+        label: 'Con la bendición de',
+        roles: { father: ' Angel Pereira ', mother: 'Ivana Torrico', godparents: ['Luis Rojas', '', 'Ana Vega'], inventado: 'x' },
+      },
+    })
+    expect(hosts).toEqual({
+      label: 'Con la bendición de',
+      roles: { father: 'Angel Pereira', mother: 'Ivana Torrico', godparents: ['Luis Rojas', 'Ana Vega'] },
+      names: ['Angel Pereira', 'Ivana Torrico', 'Luis Rojas', 'Ana Vega'],
+    })
+  })
+
+  it('en una boda, los padres de la novia van antes que los del novio', () => {
+    const { hosts } = parseInvitationContent({ hosts: { roles: { groomMother: 'Rosa', brideFather: 'Juan' } } })
+    expect(hosts?.names).toEqual(['Juan', 'Rosa'])
   })
 
   it('descarta los anfitriones sin ningún nombre', () => {
@@ -225,5 +244,27 @@ describe('loQueFaltaParaInvitar', () => {
     expect(loQueFaltaParaInvitar({ ...lista, quote: { text: 'Hoy' }, reception: { label: 'Recepción', place: '  ' } })).toEqual([
       'El lugar de la recepción',
     ])
+  })
+})
+
+describe('quién es quién entre los anfitriones', () => {
+  it('XV: padres y padrinos por su papel', () => {
+    expect(anfitrionesXv({ names: ['A', 'B', 'C'], roles: { father: 'A', godparents: ['C'] } })).toEqual({ padres: ['A'], padrinos: ['C'] })
+  })
+
+  it('XV sin papeles —contenido anterior—: todos los nombres son de los padres, como se pintaban', () => {
+    expect(anfitrionesXv({ names: ['A', 'B', 'C'] })).toEqual({ padres: ['A', 'B', 'C'], padrinos: [] })
+  })
+
+  it('boda: padres de la novia, del novio y padrinos por su papel, aunque falte alguno', () => {
+    expect(anfitrionesBoda({ names: [], roles: { brideMother: 'M', groomFather: 'P', godparents: ['X'] } })).toEqual({
+      novia: ['M'],
+      novio: ['P'],
+      padrinos: ['X'],
+    })
+  })
+
+  it('boda sin papeles: la posición de siempre (dos, dos y el resto padrinos)', () => {
+    expect(anfitrionesBoda({ names: ['1', '2', '3', '4', '5'] })).toEqual({ novia: ['1', '2'], novio: ['3', '4'], padrinos: ['5'] })
   })
 })

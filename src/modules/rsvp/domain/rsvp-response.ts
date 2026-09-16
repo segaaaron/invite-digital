@@ -51,3 +51,11 @@ export function createRsvpResponse(input: RsvpResponseInput, limits: { seats: nu
     respondedAt: input.respondedAt,
   })
 }
+
+/**
+ * Si la invitación ya tiene pase de entrada: solo cuando su última respuesta dice que asiste.
+ *
+ * El pase es la consecuencia de confirmar. Enseñarlo antes —o a quien dijo que no— era dar
+ * la entrada a quien no ha dicho que viene, y la puerta no distinguía un pase de otro.
+ */
+export const concedePase = (ultima: { readonly attending: number } | null): boolean => ultima !== null && ultima.attending > 0

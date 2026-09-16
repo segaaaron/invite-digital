@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { checkin, events, plans } from '@/app/composition/container'
 import { ManualCheckin } from '@/modules/checkin/ui/ManualCheckin'
 import { DoorModeCard } from '@/modules/checkin/ui/DoorModeCard'
@@ -8,6 +9,7 @@ import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { DonutChart, PanelCard, PanelCardLink } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
+import { hora } from '@/shared/format/fecha'
 
 export const metadata = { title: 'Check-in' }
 
@@ -35,17 +37,29 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
   const permitido = await plans.requireFeature(event.value.id, 'checkin')
   if (isErr(permitido)) {
-    return <FeatureLocked eventSlug={event.value.slug} reason={permitido.error.detail} title="Check-in" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={permitido.error.detail} title="Check-in" />
   }
 
   const estado = await checkin.state(event.value.id)
   if (isErr(estado)) throw new Error(estado.error.detail)
 
-  const { tally, groups, arrivals } = estado.value
+  const { tally, groups, arrivals, nombres } = estado.value
   const porcentaje =
     tally.expectedGroups === 0 ? 0 : Math.round((tally.arrivedGroups / tally.expectedGroups) * 100)
   const etiquetaDe = new Map(groups.map((g) => [g.id, g.label]))
-  const ultimas = [...arrivals].sort((a, b) => b.arrivedAt.getTime() - a.arrivedAt.getTime()).slice(0, 12)
+  // Las últimas llegadas **por quién entró**: con personas, una fila por persona y su hora; sin
+  // personas, una por invitación con su número, como siempre.
+  const ultimas = arrivals
+    .flatMap((a) => {
+      const entradas = Object.entries(a.personas)
+      if (entradas.length === 0) {
+        return [{ clave: a.guestGroupId, nombre: etiquetaDe.get(a.guestGroupId) ?? 'Invitación retirada', detalle: `${a.arrivedCount} dentro`, at: a.arrivedAt }]
+      }
+      const invitacion = etiquetaDe.get(a.guestGroupId) ?? ''
+      return entradas.map(([id, at]) => ({ clave: id, nombre: nombres[id] ?? 'Invitado', detalle: invitacion, at }))
+    })
+    .sort((a, b) => b.at.getTime() - a.at.getTime())
+    .slice(0, 12)
 
   return (
     <>
@@ -59,8 +73,8 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
       <p className="mb-5.5 text-[13px] text-ink-soft">
         ¿Recibe otra persona en la puerta?{' '}
-        <Link className="text-ink underline underline-offset-4" href={`/panel/eventos/${event.value.slug}/porteros`}>
-          Suma a tus porteros
+        <Link className="text-ink underline underline-offset-4" href={`/panel/eventos/${event.value.slug}/equipo`}>
+          Suma a tu personal de recepción
         </Link>{' '}
         con un enlace y un PIN, sin crear cuentas.
       </p>
@@ -124,16 +138,12 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
           <ul className="flex flex-col">
             {ultimas.map((a) => (
               <li
-                key={a.guestGroupId}
+                key={a.clave}
                 className="flex flex-wrap items-center gap-3 border-b border-line-panel py-2.5 last:border-none"
               >
-                <span className="flex-1 text-[14px] text-ink">{etiquetaDe.get(a.guestGroupId) ?? 'Invitación retirada'}</span>
-                <span className="font-mono text-[11px] text-ink-soft">
-                  {a.arrivedCount} dentro
-                </span>
-                <span className="font-mono text-[10px] text-ink-mute">
-                  {a.arrivedAt.toLocaleTimeString('es-BO', { hour: '2-digit', minute: '2-digit' })}
-                </span>
+                <span className="flex-1 text-[14px] text-ink">{a.nombre}</span>
+                <span className="font-mono text-[11px] text-ink-soft">{a.detalle}</span>
+                <span className="font-mono text-[10px] text-ink-mute">{hora(a.at)}</span>
               </li>
             ))}
           </ul>

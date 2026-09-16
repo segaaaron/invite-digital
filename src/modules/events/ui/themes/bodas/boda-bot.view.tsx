@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
+import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
@@ -382,12 +383,11 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
                 <p style={{ fontFamily: CALIGRAFIA, fontSize: 24, color: P.salvia, margin: 0 }}>{hosts.label}</p>
               )}
               {/* Tres parejas y tres rótulos, en el orden del diseño: los nombres van en una
-                  lista plana y quien los agrupa es la composición, no una estructura nueva
-                  en el contenido. */}
+                  papeles (`roles`); lo guardado antes, por posición. */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 26 }}>
                 {[
-                  { rotulo: themes.brideParents, nombres: hosts.names.slice(0, 2) },
-                  { rotulo: themes.groomParents, nombres: hosts.names.slice(2, 4) },
+                  { rotulo: themes.brideParents, nombres: anfitrionesBoda(hosts).novia },
+                  { rotulo: themes.groomParents, nombres: anfitrionesBoda(hosts).novio },
                 ].map((grupo) =>
                   grupo.nombres.length === 0 ? null : (
                     <div key={grupo.rotulo}>
@@ -403,12 +403,12 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
                   ),
                 )}
               </div>
-              {hosts.names.length <= 4 ? null : (
+              {anfitrionesBoda(hosts).padrinos.length === 0 ? null : (
                 <div style={{ marginTop: 26 }}>
                   <div style={{ fontSize: 10, letterSpacing: '0.3em', color: P.salvia, fontWeight: 500 }}>
                     {themes.godparents}
                   </div>
-                  {hosts.names.slice(4).map((nombre) => (
+                  {anfitrionesBoda(hosts).padrinos.map((nombre) => (
                     <div key={nombre} style={{ fontSize: 14, marginTop: 8, lineHeight: 1.5 }}>
                       {nombre}
                     </div>

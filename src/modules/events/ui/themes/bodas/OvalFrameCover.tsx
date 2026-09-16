@@ -57,6 +57,7 @@ export function OvalFrameCover({
   return (
     <button
       aria-label={openLabel}
+      data-portada=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

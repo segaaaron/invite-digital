@@ -20,10 +20,13 @@ export function RsvpPareja({
   dictionary,
   token,
   confirmarHref,
+  paseHref,
 }: {
   dictionary: InvitationDictionary
   token: string
   confirmarHref: string
+  /** Su pase de entrada, que se entrega al confirmar que vienen. */
+  paseHref: string
 }) {
   const [estado, responder, enviando] = useActionState(respondByPersonAction, INICIAL)
 
@@ -35,6 +38,16 @@ export function RsvpPareja({
           {estado.responderName === null ? dictionary.successTitleAnon : dictionary.successTitle.replace('{nombre}', estado.responderName)}
         </p>
         <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.successBody}</p>
+        <p className="max-w-[40ch] text-[13px] leading-[1.7] text-ink-soft">{dictionary.confirmedLocked}</p>
+        {/* Vienen: su pase, en el mismo momento. Si no vienen, no hay pase. */}
+        {estado.attending > 0 ? (
+          <Link
+            className="mt-2 inline-block rounded-[var(--radius-pill)] bg-[var(--color-cta)] px-6 py-3 font-mono text-[11px] tracking-[0.28em] text-[var(--color-on-cta)] uppercase"
+            href={paseHref}
+          >
+            {dictionary.passOpen}
+          </Link>
+        ) : null}
       </div>
     )
   }

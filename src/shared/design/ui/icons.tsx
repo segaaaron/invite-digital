@@ -359,3 +359,70 @@ export function CloseIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Una nota musical doble: la canción de la invitación. */
+export function MusicIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M9 18V5.5l11-2V16" />
+      <circle cx="6.5" cy="18" r="2.5" />
+      <circle cx="17.5" cy="16" r="2.5" />
+    </svg>
+  )
+}
+
+/** Una cámara: la galería y las fotografías. */
+export function CameraIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M4 8h3l1.5-2.5h7L17 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z" />
+      <circle cx="12" cy="13.5" r="3.5" />
+    </svg>
+  )
+}
+
+/** Unas comillas: la frase. */
+export function QuoteIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M9 7H6a2 2 0 0 0-2 2v3h5v5H4M20 7h-3a2 2 0 0 0-2 2v3h5v5h-5" />
+    </svg>
+  )
+}
+
+/** Una percha: el código de vestimenta. */
+export function HangerIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M12 8a2 2 0 1 1 2-2c0 1.2-2 1.6-2 3v1l8.5 6a1 1 0 0 1-.6 1.8H4.1a1 1 0 0 1-.6-1.8L12 10" />
+    </svg>
+  )
+}
+
+/** Un corazón: la despedida. */
+export function HeartIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.2a4.3 4.3 0 0 1 7.5 2.6C19.5 15.4 12 20 12 20z" />
+    </svg>
+  )
+}
+
+/** Una persona: un nombre. */
+export function PersonIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <circle cx="12" cy="8" r="3.5" />
+      <path d="M5 20c.8-3.6 3.6-5.5 7-5.5s6.2 1.9 7 5.5" />
+    </svg>
+  )
+}
+
+/** Una flecha hacia abajo: abrir y plegar. */
+export function ChevronIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
+}

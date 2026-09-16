@@ -12,6 +12,7 @@ const users = (row: { id: string; email: string; passwordHash: string } | null):
   create: async () => ({ id: 'nuevo' }),
   updatePassword: async () => {},
   findIdByEmail: async () => row?.id ?? null,
+  completarContacto: async () => {},
 })
 
 const sessions = () => {
@@ -23,6 +24,9 @@ const sessions = () => {
     deleteByTokenHash: async () => {},
     deleteExpired: async () => 0,
     deleteByUser: async () => {},
+    seen: async () => {},
+    listByUser: async () => [],
+    deleteOthers: async () => {},
   }
   return { repo, created }
 }

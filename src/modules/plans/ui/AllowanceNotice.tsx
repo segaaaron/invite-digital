@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { Mejorar } from './FeatureLocked'
 import { canAddGroup, remainingGroups, usageRatio, WARNING_RATIO } from '../domain/allowance'
 
 /**
@@ -12,21 +13,25 @@ import { canAddGroup, remainingGroups, usageRatio, WARNING_RATIO } from '../doma
 export function AllowanceNotice({
   maxGuestGroups,
   currentGroups,
-  eventSlug,
+  mejorar,
 }: {
   maxGuestGroups: number | null
   currentGroups: number
-  eventSlug: string
+  /** Lo decide la página según quién mira, como en `FeatureLocked`. */
+  mejorar: Mejorar
 }) {
   // Sin límite no hay nada que avisar, ni con miles de grupos.
   const uso = usageRatio(maxGuestGroups, currentGroups)
   if (uso === null) return null
 
-  const enlace = (
-    <Link className="underline underline-offset-4" href={`/panel/eventos/${eventSlug}/plan`}>
-      Cambiar de plan
-    </Link>
-  )
+  const enlace =
+    mejorar === null ? (
+      'Habla con quien organiza tu evento'
+    ) : (
+      <Link className="underline underline-offset-4" href={mejorar.href}>
+        {mejorar.label}
+      </Link>
+    )
 
   if (!canAddGroup(maxGuestGroups, currentGroups)) {
     return (

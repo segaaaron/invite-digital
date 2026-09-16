@@ -7,8 +7,9 @@ import type { SessionRepository, TokenMinter } from './ports'
 const NOW = new Date('2026-08-19T12:00:00Z')
 const minter: TokenMinter = { mint: () => ({ token: 't', hash: Buffer.alloc(32, 1) }), hashOf: () => Buffer.alloc(32, 1) }
 
-const repo = (row: { id: string; userId: string; expiresAt: Date; supportSessionId?: string | null } | null) => {
+const repo = (row: { id: string; userId: string; expiresAt: Date; supportSessionId?: string | null; lastSeenAt?: Date | null } | null) => {
   const touched: Array<{ id: string; expiresAt: Date }> = []
+  const vistas: string[] = []
   const sessions: SessionRepository = {
     create: async () => {},
     findByTokenHash: async () => row,
@@ -16,8 +17,11 @@ const repo = (row: { id: string; userId: string; expiresAt: Date; supportSession
     deleteByTokenHash: async () => {},
     deleteExpired: async () => 0,
     deleteByUser: async () => {},
+    seen: async (id) => void vistas.push(id),
+    listByUser: async () => [],
+    deleteOthers: async () => {},
   }
-  return { sessions, touched }
+  return { sessions, touched, vistas }
 }
 
 describe('authenticateSession', () => {
@@ -50,6 +54,18 @@ describe('authenticateSession', () => {
     expect(isOk(result) && result.value.supportSessionId).toBe('sp1')
     const sinSoporte = await authenticateSession({ sessions: repo({ id: 's2', userId: 'u1', expiresAt: new Date(NOW.getTime() + SESSION_TTL_MS - 1000) }).sessions, minter, clock: () => NOW })('token')
     expect(isOk(sinSoporte) && sinSoporte.value.supportSessionId).toBeNull()
+  })
+
+  // «Último uso» en la lista de sesiones de Mi cuenta, sin escribir en cada petición.
+  it('apunta el último uso si pasaron cinco minutos, y no antes', async () => {
+    const fresca = new Date(NOW.getTime() + SESSION_TTL_MS - 1000)
+    const vieja = repo({ id: 's1', userId: 'u1', expiresAt: fresca, lastSeenAt: new Date(NOW.getTime() - 6 * 60_000) })
+    await authenticateSession({ sessions: vieja.sessions, minter, clock: () => NOW })('token')
+    expect(vieja.vistas).toEqual(['s1'])
+
+    const reciente = repo({ id: 's2', userId: 'u1', expiresAt: fresca, lastSeenAt: new Date(NOW.getTime() - 60_000) })
+    await authenticateSession({ sessions: reciente.sessions, minter, clock: () => NOW })('token')
+    expect(reciente.vistas).toEqual([])
   })
 
   it('rechaza una sesión caducada', async () => {

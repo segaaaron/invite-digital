@@ -4,7 +4,6 @@ import { db, type DbExecutor } from '@/shared/db/client'
 import { createClientShare, getLiveClientShare, resolveClientShare, revokeClientShare } from '@/modules/events/application/client-share-use-cases'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { randomBytes } from 'node:crypto'
-import { fiestaDeTema } from '@/modules/events/domain/fiesta'
 import { addTeamMember, removeTeamMember } from '@/modules/events/application/team-use-cases'
 import type { Membership } from '@/modules/identity'
 import * as diaUseCases from '@/modules/planner/application/dia-use-cases'
@@ -131,20 +130,10 @@ export const planner = {
 
 export const events = {
   /**
-   * Crear un evento siembra su plan de tareas con la plantilla de su fiesta. Va aquí, y no
-   * en cada acción, porque se crea desde tres sitios —el atelier, el alta del admin y el
-   * pedido aprobado— y olvidarlo en uno dejaría eventos sin plan. Si sembrar falla, el
-   * evento se crea igual: la pantalla de tareas ofrece sembrarlas a mano.
+   * Crear un evento no siembra tareas: un plan de ejemplo en un evento real se lee como datos
+   * inventados. La pantalla de tareas ofrece la plantilla con un toque.
    */
-  create: async (input: Parameters<ReturnType<typeof createEventUseCase>>[0]) => {
-    const creado = await createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() })(input)
-    if (!isErr(creado)) {
-      await planner.seedTasks(creado.value.id, fiestaDeTema(creado.value.themeKey), creado.value.eventDate).catch((cause: unknown) => {
-        console.error('No se pudo sembrar el plan de tareas del evento %s:', creado.value.id, cause)
-      })
-    }
-    return creado
-  },
+  create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
   update: updateEventUseCase({ events: drizzleEventRepository }),
   /**
    * `getBySlug`, `getById` y `list` **sin actor** solo los usan la ruta del invitado —que
@@ -324,6 +313,10 @@ export const rsvp = {
     resolveGroup: (token) => guests.resolveByToken(token),
     findEventById: (id) => events.getByIdUnscoped(id),
     rsvp: drizzleRsvpRepository,
+    peopleOf: (guestGroupId) => drizzleGuestPersonRepository.listByGroup(guestGroupId),
+    setAttendance: async (eventId, personId, attending) => {
+      await guests.updatePerson({ eventId, id: personId, attending })
+    },
     ids: () => crypto.randomUUID(),
     clock,
   }),

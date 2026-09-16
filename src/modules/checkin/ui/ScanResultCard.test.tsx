@@ -2,14 +2,14 @@ import { describe, expect, it, vi } from 'vitest'
 import { fireEvent, render, screen } from '@testing-library/react'
 import { ScanResultCard } from './ScanResultCard'
 
-const group = { id: 'g1', label: 'Familia Rojas Peña', seats: 4, leadName: null, tableLabel: 'Mesa 03' }
+const group = { id: 'g1', label: 'Familia Rojas Peña', seats: 4, leadName: null, tableLabel: 'Mesa 03', people: [] }
 const noop = () => {}
 
 describe('ScanResultCard', () => {
   it('canta el número de mesa cuando existe', () => {
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 3 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 3, personas: {} }}
         onAdjust={noop}
         onUndo={noop}
         onDismiss={noop}
@@ -21,7 +21,7 @@ describe('ScanResultCard', () => {
   it('dice mesa por asignar cuando el grupo no tiene', () => {
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group: { ...group, leadName: null, tableLabel: null }, arrivedCount: 3 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group: { ...group, leadName: null, tableLabel: null }, arrivedCount: 3, personas: {} }}
         onAdjust={noop}
         onUndo={noop}
         onDismiss={noop}
@@ -38,7 +38,7 @@ describe('ScanResultCard', () => {
           kind: 'already',
           group,
           arrivedAt: new Date('2026-10-18T21:05:00Z'),
-          arrivedCount: 3,
+          arrivedCount: 3, personas: {},
         }}
         onAdjust={noop}
         onUndo={noop}
@@ -63,7 +63,7 @@ describe('ScanResultCard', () => {
   it('da la bienvenida y dice cuántos entraron', () => {
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 3 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 3, personas: {} }}
         onAdjust={noop}
         onUndo={noop}
         onDismiss={noop}
@@ -82,7 +82,7 @@ describe('ScanResultCard', () => {
           kind: 'already',
           group,
           arrivedAt: new Date('2026-10-18T21:05:00Z'),
-          arrivedCount: 3,
+          arrivedCount: 3, personas: {},
         }}
         onAdjust={noop}
         onUndo={noop}
@@ -104,7 +104,7 @@ describe('ScanResultCard', () => {
     const onAdjust = vi.fn()
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 3 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 3, personas: {} }}
         onAdjust={onAdjust}
         onUndo={noop}
         onDismiss={noop}
@@ -117,7 +117,7 @@ describe('ScanResultCard', () => {
   it('no deja bajar de una persona ni pasar de los cupos', () => {
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 1 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 1, personas: {} }}
         onAdjust={noop}
         onUndo={noop}
         onDismiss={noop}
@@ -130,7 +130,7 @@ describe('ScanResultCard', () => {
     const onUndo = vi.fn()
     render(
       <ScanResultCard
-        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 2 }}
+        outcome={{ scanId: 's1', kind: 'welcome', group, arrivedCount: 2, personas: {} }}
         onAdjust={noop}
         onUndo={onUndo}
         onDismiss={noop}

@@ -268,3 +268,14 @@
   background: rgb(255 255 255 / 0.18);
   border-color: rgb(255 255 255 / 0.45);
 }
+
+/* Con la portada puesta no se desplaza lo de debajo: la invitación se ve al entrar, no
+   antes. Las portadas llevan `data-portada` y desaparecen al abrirse. En el marco (vista
+   previa, escaparate, Configuración) se bloquea el marco; en la página del invitado, la
+   página. El `:not` evita bloquear Configuración entera por la portada de su vista previa. */
+.theme-phone-frame:has([data-portada]) {
+  overflow: hidden;
+}
+html:not(:has(.theme-phone-frame)):has([data-portada]) {
+  overflow: hidden;
+}

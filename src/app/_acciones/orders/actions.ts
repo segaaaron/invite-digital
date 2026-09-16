@@ -12,6 +12,7 @@ import { createRateLimiter } from '@/shared/http/rate-limit'
 import { isErr } from '@/shared/result'
 import { MAX_PROOF_BYTES } from '@/modules/orders/domain/proof'
 import { campo } from '@/shared/forms/campo'
+import { normalizarWhatsapp } from '@/shared/whatsapp'
 
 // ============================================================================
 // Este fichero tiene DOS bloques, y la diferencia importa.
@@ -330,6 +331,9 @@ async function aprovisionar(
   }
 
   await events.staff.add(evento.value.id, clienteId, 'cliente')
+  // Quién compró, con lo que dejó en el pedido. «WhatsApp o correo»: solo un número es teléfono.
+  const telefono = order.contact.includes('@') ? null : normalizarWhatsapp(order.contact)
+  await admin.completarContacto(clienteId, { fullName: order.customerName, phone: telefono === '' ? null : telefono })
 
   // Y se le manda su acceso. Como en el alta desde Configuración: si el correo no sale, el
   // alta sigue siendo válida y la contraseña está en pantalla.

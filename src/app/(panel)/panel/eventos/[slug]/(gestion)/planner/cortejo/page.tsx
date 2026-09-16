@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, planner, plans } from '@/app/composition/container'
 import { fiestaDeTema } from '@/modules/events'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -26,7 +27,7 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} reason="El cortejo y los ensayos vienen con Firma 3D y Alta Costura." title="Cortejo" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cortejo y los ensayos vienen con Firma 3D y Alta Costura." title="Cortejo" />
   }
 
   const fiesta = fiestaDeTema(event.value.themeKey)

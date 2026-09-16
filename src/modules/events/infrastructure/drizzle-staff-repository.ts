@@ -30,9 +30,9 @@ export const createDrizzleStaffRepository = (database: DbExecutor) => ({
   },
 
   /** El equipo de quien celebra, con su correo: anfitrión, co-anfitriones y planner. */
-  async listTeam(eventId: string): Promise<Array<StaffRow & { membership: Membership }>> {
+  async listTeam(eventId: string): Promise<Array<StaffRow & { membership: Membership; fullName: string | null; phone: string | null }>> {
     const filas = await database
-      .select({ userId: eventStaff.userId, email: users.email, membership: eventStaff.membership })
+      .select({ userId: eventStaff.userId, email: users.email, fullName: users.fullName, phone: users.phone, membership: eventStaff.membership })
       .from(eventStaff)
       .innerJoin(users, eq(users.id, eventStaff.userId))
       .where(and(eq(eventStaff.eventId, eventId), inArray(eventStaff.membership, ['cliente', 'coanfitrion', 'planner'])))

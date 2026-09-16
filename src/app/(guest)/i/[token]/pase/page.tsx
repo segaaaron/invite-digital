@@ -5,6 +5,7 @@ import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 import { invitationUrl } from '@/modules/guests'
+import { concedePase } from '@/modules/rsvp'
 import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
@@ -36,13 +37,27 @@ export default async function PasePage({ params }: { params: Promise<{ token: st
     notFound()
   }
 
-  const { group, event } = invitation.value
+  const { group, event, latest } = invitation.value
 
   // La misma puerta que la invitación: quien no tiene la contraseña no averigua de qué
   // boda se trata por tener el enlace.
   if (!(await eventUnlocked(event.id))) return <EventPasswordGate token={token} />
 
   const dictionary = getDictionary(event.locale).invitation
+
+  // Sin confirmar que asiste no hay pase: el QR es la entrada, y se da a quien dijo que viene.
+  if (!concedePase(latest)) {
+    return (
+      <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-bg-top px-6 py-12 text-center text-ink">
+        <p className="font-mono text-[9px] tracking-[0.3em] uppercase opacity-55">{event.title}</p>
+        <h1 className="font-display text-[28px] leading-tight font-light italic">{dictionary.passTitle}</h1>
+        <p className="max-w-[34ch] text-[14px] leading-[1.7] opacity-75">{latest === null ? dictionary.passPending : dictionary.passDeclined}</p>
+        <Link className="text-[12px] underline underline-offset-4 opacity-65" href={`/i/${token}`}>
+          {dictionary.passBack}
+        </Link>
+      </main>
+    )
+  }
 
   // La mesa, que es lo primero que se pregunta al entrar y lo que la puerta canta en voz
   // alta. Sale del manifiesto, que ya la trae; si la lectura falla, el pase sigue en pie

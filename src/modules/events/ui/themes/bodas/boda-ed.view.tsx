@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
+import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
@@ -312,8 +313,8 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   lista plana y quien los agrupa es la composición. */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginTop: 32 }}>
                 {[
-                  { rotulo: themes.brideParents, nombres: hosts.names.slice(0, 2) },
-                  { rotulo: themes.groomParents, nombres: hosts.names.slice(2, 4) },
+                  { rotulo: themes.brideParents, nombres: anfitrionesBoda(hosts).novia },
+                  { rotulo: themes.groomParents, nombres: anfitrionesBoda(hosts).novio },
                 ].map((grupo) =>
                   grupo.nombres.length === 0 ? null : (
                     <div key={grupo.rotulo} style={{ textAlign: 'center' }}>
@@ -329,12 +330,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   ),
                 )}
               </div>
-              {hosts.names.length <= 4 ? null : (
+              {anfitrionesBoda(hosts).padrinos.length === 0 ? null : (
                 <div style={{ textAlign: 'center', marginTop: 32 }}>
                   <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.25em', color: P.oro }}>
                     {themes.godparents}
                   </div>
-                  {hosts.names.slice(4).map((nombre) => (
+                  {anfitrionesBoda(hosts).padrinos.map((nombre) => (
                     <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: 10, lineHeight: 1.6 }}>
                       {nombre}
                     </div>

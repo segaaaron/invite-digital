@@ -42,6 +42,12 @@ function memoria() {
 }
 
 describe('tareas', () => {
+  it('sembrar con la fiesta encima no deja nada vencido: lo que ya pasó vence hoy', async () => {
+    const deps = memoria()
+    await seedTasks(deps)('e1', 'xv', '2027-02-10')
+    expect(deps.tareas.every((t) => t.dueDate !== null && t.dueDate >= '2027-01-10')).toBe(true)
+  })
+
   it('sembrar dos veces no duplica la plantilla', async () => {
     const deps = memoria()
     await seedTasks(deps)('e1', 'boda', '2027-05-15')

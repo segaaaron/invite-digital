@@ -11,8 +11,6 @@ type Props = {
   /** «15 AÑOS», la copia del propio diseño. */
   readonly title: string
   readonly name: string
-  /** «▸ MIS XV AÑOS · ISABELLE», la chapa con borde. */
-  readonly badge: string
   /** «INGRESA A MI INVITACIÓN», abajo del todo. */
   readonly hint: string
   readonly openLabel: string
@@ -30,7 +28,7 @@ type Props = {
  * Es un `<button>` a pantalla completa y no un `<div onClick>`: con un div, quien navega
  * con teclado no puede abrirla y la invitación se acaba en la portada.
  */
-export function ImageOnlyCover({ bgAsset, accent, title, name, badge, hint, openLabel }: Props) {
+export function ImageOnlyCover({ bgAsset, accent, title, name, hint, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -41,6 +39,7 @@ export function ImageOnlyCover({ bgAsset, accent, title, name, badge, hint, open
   return (
     <button
       aria-label={openLabel}
+      data-portada=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',
@@ -92,21 +91,6 @@ export function ImageOnlyCover({ bgAsset, accent, title, name, badge, hint, open
           }}
         >
           {name}
-        </span>
-        <span
-          style={{
-            display: 'inline-block',
-            marginTop: 8,
-            padding: '8px 16px',
-            border: `1.5px solid ${accent}`,
-            fontFamily: 'var(--font-jetbrains-mono)',
-            fontSize: 10,
-            letterSpacing: '0.25em',
-            color: accent,
-            textShadow: sombra,
-          }}
-        >
-          {badge}
         </span>
       </span>
 

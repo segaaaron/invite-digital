@@ -61,7 +61,7 @@ export const addPorter =
     if (!cabeUnoMas(input.limit, actuales)) {
       return err({
         kind: 'limit_reached',
-        detail: input.limit === 0 ? 'Tu plan no incluye porteros.' : `Tu plan admite hasta ${input.limit} porteros a la vez.`,
+        detail: input.limit === 0 ? 'Tu plan no incluye personal de recepción.' : `Tu plan admite hasta ${input.limit} personas de recepción a la vez.`,
       })
     }
 

@@ -7,6 +7,12 @@ export type Arrival = {
   readonly arrivedCount: number
   readonly scannedAt: Date
   readonly voidedAt: Date | null
+  /**
+   * Quiénes entraron **en este escaneo**, cuando la invitación tiene personas cargadas.
+   * Ausente o nulo es un escaneo por número: las invitaciones sin nombres y las llegadas
+   * anteriores a que la puerta registrara personas.
+   */
+  readonly personIds?: readonly string[] | null
 }
 
 export type ArrivalInput = {
@@ -15,6 +21,7 @@ export type ArrivalInput = {
   arrivedCount: number
   scannedAt: Date
   voidedAt: Date | null
+  personIds?: readonly string[] | null
 }
 
 /**
@@ -57,6 +64,7 @@ export function createArrival(input: ArrivalInput, seats: number): Result<Arriva
     arrivedCount,
     scannedAt: input.scannedAt,
     voidedAt: input.voidedAt,
+    personIds: input.personIds ?? null,
   })
 }
 

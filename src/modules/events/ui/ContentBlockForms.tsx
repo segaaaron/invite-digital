@@ -1,34 +1,80 @@
 'use client'
 
-import { useActionState, useId, useState } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { type ContentActionState, saveContentBlockAction } from '@/app/_acciones/events/actions'
+import { useActionState, useId, useState, useTransition } from 'react'
+import { FIELD_CLASS, IconButton, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { type ContentActionState, removeMediaAction, saveContentBlockAction } from '@/app/_acciones/events/actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
 import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
-import { type Campo, type FormaBloque, type LoQuePinta, formaPara } from './content-shapes'
-import { type MediaItem, esPista } from './EventMediaPanel'
-import { CheckIcon } from '@/shared/design/ui/icons'
+import { type Anfitriones, type Campo, type FormaBloque, type LoQuePinta, formaPara } from './content-shapes'
+import { type MediaItem, esPista } from './media-item'
+import {
+  BuildingIcon,
+  CalendarIcon,
+  CameraIcon,
+  CheckIcon,
+  ChevronIcon,
+  ClockIcon,
+  GlobeIcon,
+  HangerIcon,
+  HeartIcon,
+  HelpIcon,
+  LayoutIcon,
+  MusicIcon,
+  PersonIcon,
+  PinIcon,
+  QuoteIcon,
+  TrashIcon,
+  UsersIcon,
+} from '@/shared/design/ui/icons'
+import type { ComponentType } from 'react'
 import { CampoFechaHora } from './CampoFechaHora'
+import { type AvisoDeSeccion, EVENTO_SECCION, textosDeSeccion } from './seguir-seccion'
 import { SubidaEnElCampo } from './SubidaEnElCampo'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
-/** Cómo se llama cada bloque en la pantalla, y qué se le pide. */
-const TITULOS: Record<SectionKey, string> = {
-  hero: 'Portada y nombres',
-  quote: 'Frase',
-  hosts: 'Padres y padrinos',
-  schedule: 'Fecha y hora exactas',
-  ceremony: 'Ceremonia',
-  reception: 'Recepción',
-  map: 'Mapa',
-  itinerary: 'Itinerario',
-  dressCode: 'Código de vestimenta',
-  music: 'Canción',
-  gallery: 'Galería',
-  notes: 'Avisos',
-  closing: 'Despedida',
+type Icono = ComponentType<{ className?: string }>
+
+/**
+ * Cómo se llama cada bloque en la pantalla, qué es en la invitación y su icono.
+ *
+ * La descripción dice **dónde sale**, no cómo se guarda: quien rellena esto es la
+ * quinceañera o los novios, y «rótulo» o «línea suelta» no le dicen nada.
+ */
+const BLOQUES: Record<SectionKey, { titulo: string; descripcion: string; Icono: Icono }> = {
+  hero: { titulo: 'Portada y nombres', descripcion: 'Lo primero que se ve al abrir la invitación.', Icono: LayoutIcon },
+  quote: { titulo: 'Frase', descripcion: 'Unas palabras que abren la invitación.', Icono: QuoteIcon },
+  hosts: {
+    titulo: 'Padres y padrinos',
+    descripcion: 'Tus padres y tus padrinos, cada uno con su nombre.',
+    Icono: UsersIcon,
+  },
+  schedule: { titulo: 'Fecha y hora', descripcion: 'El día y la hora de la fiesta. La cuenta atrás cuenta hasta aquí.', Icono: CalendarIcon },
+  ceremony: { titulo: 'Ceremonia', descripcion: 'Dónde y a qué hora es la ceremonia.', Icono: PinIcon },
+  reception: { titulo: 'Recepción', descripcion: 'Dónde es la fiesta y a qué hora empieza.', Icono: PinIcon },
+  map: { titulo: 'Mapa', descripcion: 'El nombre del lugar sobre el mapa y cómo llegar.', Icono: GlobeIcon },
+  itinerary: { titulo: 'Itinerario', descripcion: 'Los momentos de la noche, en orden.', Icono: ClockIcon },
+  dressCode: { titulo: 'Código de vestimenta', descripcion: 'Cómo pides que vengan vestidos.', Icono: HangerIcon },
+  music: { titulo: 'Canción', descripcion: 'La música que suena al abrir la invitación.', Icono: MusicIcon },
+  gallery: { titulo: 'Galería', descripcion: 'Las fotografías que enseña la invitación.', Icono: CameraIcon },
+  notes: { titulo: 'Avisos', descripcion: 'Lo que tus invitados tienen que saber: regalos, niños, parqueo.', Icono: HelpIcon },
+  closing: { titulo: 'Despedida', descripcion: 'Las últimas palabras, al final de la invitación.', Icono: HeartIcon },
+}
+
+/** El icono que acompaña a un campo, cuando ayuda a saber qué se escribe ahí. */
+const ICONO_DE_CAMPO: Record<string, Icono> = {
+  nameA: PersonIcon,
+  nameB: PersonIcon,
+  names: PersonIcon,
+  place: PinIcon,
+  address: BuildingIcon,
+  time: ClockIcon,
+  coords: GlobeIcon,
+  href: GlobeIcon,
+  track: MusicIcon,
+  artist: PersonIcon,
+  signature: PersonIcon,
 }
 
 const ERRORES: Record<string, string> = {
@@ -52,6 +98,8 @@ type Props = {
    * cada campo y detrás del botón «Usar el texto de ejemplo».
    */
   readonly ejemplo: InvitationContent
+  /** Qué anfitriones pide la fiesta: padre y madre en un XV, los padres de cada novio en una boda. */
+  readonly anfitriones?: Anfitriones
 }
 
 /**
@@ -70,7 +118,7 @@ type Props = {
  * nadie a mano**: lo compone `aValor` a partir de lo que hay en pantalla. Quien decide qué
  * es válido sigue siendo el dominio, en el servidor.
  */
-export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo }: Props) {
+export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo, anfitriones = 'boda' }: Props) {
   if (sections.length === 0) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft">
@@ -79,62 +127,117 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
     )
   }
 
-  // Qué bloques ya tienen algo escrito: el índice lo dice de un vistazo, que es lo que
-  // convierte una columna de doce formularios iguales en una lista de tareas.
-  const escrito = (seccion: SectionKey): boolean => {
-    const bloque = content[seccion]
-    if (bloque === undefined || bloque === null) return false
-    if (Array.isArray(bloque)) return bloque.length > 0
-    return Object.values(bloque as Record<string, unknown>).some((v) => typeof v === 'string' && v.trim() !== '')
-  }
-  const hechos = sections.filter(escrito).length
+  const hechos = sections.filter((seccion) => escrito(content, seccion)).length
 
   return (
-    <div className="grid items-start gap-6 min-[1100px]:grid-cols-[210px_minmax(0,1fr)]">
-      {/* El índice: dónde se está, qué falta y cuánto queda. Antes era una columna de bloques
-          iguales sin principio ni final. */}
-      <nav aria-label="Bloques de la invitación" className="hidden min-[1100px]:block min-[1100px]:sticky min-[1100px]:top-6">
-        <p className="mb-2 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">
-          {hechos} de {sections.length} listos
-        </p>
-        <ul className="flex flex-col gap-0.5">
-          {sections.map((seccion) => (
-            <li key={seccion}>
-              <a
-                className="flex items-center gap-2 rounded-[10px] px-2.5 py-2 text-[13px] text-ink-soft transition-colors hover:bg-bg-top hover:text-ink"
-                href={`#bloque-${seccion}`}
-              >
-                <span
-                  aria-hidden
-                  className={`grid size-4 shrink-0 place-items-center rounded-full ${
-                    escrito(seccion) ? 'bg-sage text-white' : 'border border-line-panel-strong'
-                  }`}
-                >
-                  {escrito(seccion) ? <CheckIcon className="size-2.5" /> : null}
-                </span>
-                {TITULOS[seccion]}
-                <span className="sr-only">{escrito(seccion) ? ' · escrito' : ' · vacío'}</span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <Acordeon
+      anfitriones={anfitriones}
+      content={content}
+      ejemplo={ejemplo}
+      eventId={eventId}
+      eventSlug={eventSlug}
+      hechos={hechos}
+      media={media}
+      pinta={pinta}
+      sections={sections}
+    />
+  )
+}
 
-      <div className="flex min-w-0 flex-col gap-5">
-      {sections.map((seccion) => (
-        <BloqueDeContenido
-          content={content}
-          ejemplo={ejemplo}
-          eventId={eventId}
-          eventSlug={eventSlug}
-          pinta={pinta}
-          key={seccion}
-          media={media}
-          section={seccion}
-        />
-      ))}
+/** Si el bloque tiene algo escrito. */
+const escrito = (content: InvitationContent, seccion: SectionKey): boolean => {
+  const bloque = content[seccion]
+  if (bloque === undefined || bloque === null) return false
+  if (Array.isArray(bloque)) return bloque.length > 0
+  return Object.values(bloque as Record<string, unknown>).some(
+    (v) => (typeof v === 'string' && v.trim() !== '') || (Array.isArray(v) && v.length > 0),
+  )
+}
+
+const FECHA_CORTA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+const fechaLegible = (valor: string): string => {
+  const [dia = '', hora = ''] = valor.split('T')
+  const fecha = new Date(`${dia}T00:00:00Z`)
+  return Number.isNaN(fecha.getTime()) ? valor : `${FECHA_CORTA.format(fecha)}${hora === '' ? '' : `, ${hora.slice(0, 5)} h`}`
+}
+
+/** Lo que el bloque ya dice, en una línea y en el orden del formulario: «MIS QUINCE · Loreley». */
+const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBloque): string => {
+  const bloque = content[seccion]
+  if (bloque === undefined || bloque === null) return ''
+  if (Array.isArray(bloque)) return `${bloque.length} ${bloque.length === 1 ? 'elemento' : 'elementos'}`
+  const datos = bloque as Record<string, unknown>
+  // Los archivos no se resumen: su identificador no le dice nada a quien lo lee.
+  const textos = forma.fields
+    .filter((campo) => campo.kind !== 'imagen' && campo.kind !== 'audio')
+    .map((campo) => {
+      const v = datos[campo.key]
+      if (typeof v !== 'string' || v.trim() === '') return null
+      // Los adornos que algunos escriben alrededor —«· MIS QUINCE ·»— no hacen falta aquí.
+      return campo.kind === 'fecha' ? fechaLegible(v) : v.replace(/^[\s·•|-]+|[\s·•|-]+$/g, '')
+    })
+    .filter((v): v is string => v !== null)
+  // Los padrinos viven dentro de `roles`; los nombres de todos, compuestos, en `names`.
+  const lista = forma.form === 'campos' && forma.anfitriones !== undefined ? [] : forma.form === 'campos' && forma.list !== undefined ? datos[forma.list.key] : undefined
+  const nombres = Array.isArray(lista) ? lista.filter((x): x is string => typeof x === 'string') : []
+  return [...textos, ...nombres].slice(0, 3).join(' · ')
+}
+
+/**
+ * Las secciones como tarjetas que se abren de una en una.
+ *
+ * Doce formularios abiertos uno debajo de otro, con un índice de puntos al lado, no decían
+ * por dónde empezar ni qué faltaba. Aquí cada tarjeta plegada dice qué tiene escrito y si
+ * está lista, en palabras; se abre sola la primera que falta, y abrir otra pliega la que
+ * había. Lo escrito en una tarjeta plegada no se pierde: sigue montada, oculta.
+ */
+function Acordeon({ sections, content, hechos, ...resto }: Props & { hechos: number }) {
+  const [abierta, setAbierta] = useState<SectionKey | null>(
+    () => sections.find((seccion) => !escrito(content, seccion)) ?? sections[0] ?? null,
+  )
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
+        <p className="text-[13px] text-ink">{`${hechos} de ${sections.length} secciones listas`}</p>
+        <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-bg-top">
+          <div className="h-full rounded-full bg-sage transition-[width]" style={{ width: `${(hechos / Math.max(1, sections.length)) * 100}%` }} />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3">
+        {sections.map((seccion) => (
+          <BloqueDeContenido
+            {...resto}
+            abierta={abierta === seccion}
+            content={content}
+            key={seccion}
+            onAlternar={() => {
+              const abre = abierta !== seccion
+              setAbierta(abre ? seccion : null)
+              // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
+              if (abre) {
+                const aviso: AvisoDeSeccion = { seccion, textos: textosDeSeccion(content, seccion) }
+                window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
+              }
+            }}
+            section={seccion}
+          />
+        ))}
       </div>
     </div>
+  )
+}
+
+function IconoDeBloque({ seccion, className = 'size-4 shrink-0 text-ink-mute' }: { seccion: SectionKey; className?: string }) {
+  const { Icono } = BLOQUES[seccion]
+  return <Icono className={className} />
+}
+
+function IconoDeCampo({ clave }: { clave: string }) {
+  const Icono = ICONO_DE_CAMPO[clave]
+  return Icono === undefined ? null : (
+    <Icono className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-mute" />
   )
 }
 
@@ -146,7 +249,13 @@ function BloqueDeContenido({
   content,
   media,
   ejemplo,
+  abierta,
+  onAlternar,
+  anfitriones = 'boda',
 }: {
+  anfitriones?: Anfitriones | undefined
+  abierta: boolean
+  onAlternar: () => void
   eventId: string
   eventSlug: string
   section: SectionKey
@@ -155,7 +264,9 @@ function BloqueDeContenido({
   media: readonly MediaItem[]
   ejemplo: InvitationContent
 }) {
-  const forma = formaPara(section, pinta)
+  const forma = formaPara(section, pinta, anfitriones)
+  const cuerpoId = useId()
+  const listo = escrito(content, section)
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
   const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
 
@@ -184,15 +295,55 @@ function BloqueDeContenido({
     setEstado((previo) => ({ ...previo, campos: { ...previo.campos, [clave]: valor } }))
 
   return (
-    <form action={formAction} className="flex scroll-mt-6 flex-col gap-3.5 border-t border-[var(--color-line-panel)] pt-4" id={`bloque-${section}`}>
+    <form
+      action={formAction}
+      className={`scroll-mt-6 rounded-[18px] border bg-white transition-shadow ${
+        abierta ? 'border-line-panel-strong shadow-[0_12px_40px_-24px_rgb(0_0_0/0.35)]' : 'border-line-panel hover:border-line-panel-strong'
+      }`}
+      id={`bloque-${section}`}
+    >
       <input name="eventId" readOnly type="hidden" value={eventId} />
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="section" readOnly type="hidden" value={section} />
       {/* Lo que se guarda. Se compone de lo que hay arriba; nadie lo teclea. */}
       <input name="value" readOnly type="hidden" value={JSON.stringify(aValor(forma, estado))} />
 
-      <h3 className="font-display text-[17px] text-ink">{TITULOS[section]}</h3>
+      <h3 className="m-0">
+        <button
+          aria-controls={`${cuerpoId}-cuerpo`}
+          aria-describedby={`${cuerpoId}-estado ${cuerpoId}-resumen`}
+          aria-expanded={abierta}
+          aria-labelledby={`${cuerpoId}-titulo`}
+          className="flex w-full cursor-pointer items-center gap-3.5 p-4 text-left min-[560px]:gap-4 min-[560px]:p-5"
+          onClick={onAlternar}
+          type="button"
+        >
+          <span aria-hidden className={`grid size-11 shrink-0 place-items-center rounded-full ${listo ? 'bg-bg-top text-ink-soft' : 'bg-gold/15 text-gold-deep'}`}>
+            <IconoDeBloque className="size-5" seccion={section} />
+          </span>
+          <span className="flex min-w-0 grow flex-col gap-0.5">
+            <span className="font-display text-[19px] leading-tight text-ink min-[560px]:text-[21px]" id={`${cuerpoId}-titulo`}>
+              {BLOQUES[section].titulo}
+            </span>
+            {/* El nombre del botón es solo el título; esto y el estado van en su descripción. */}
+            <span className="truncate text-[12.5px] text-ink-soft" id={`${cuerpoId}-resumen`}>
+              {listo && !abierta ? resumen(content, section, forma) || BLOQUES[section].descripcion : BLOQUES[section].descripcion}
+            </span>
+          </span>
+          <span
+            className={`shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium max-[419px]:sr-only min-[420px]:flex ${
+              listo ? 'bg-sage text-white' : 'border border-gold/60 text-gold-deep'
+            }`}
+            id={`${cuerpoId}-estado`}
+          >
+            {listo ? <CheckIcon className="size-3" /> : null}
+            {listo ? 'Listo' : 'Por completar'}
+          </span>
+          <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? 'rotate-180' : ''}`} />
+        </button>
+      </h3>
 
+      <div className="flex flex-col gap-4 border-t border-line-panel px-4 pt-4 pb-5 min-[560px]:px-5" hidden={!abierta} id={`${cuerpoId}-cuerpo`}>
       {forma.form === 'campos' ? (
         <>
           <div className="grid gap-3 min-[560px]:grid-cols-2">
@@ -220,6 +371,8 @@ function BloqueDeContenido({
         </>
       ) : (
         <FilasDeBloque
+          eventId={eventId}
+          eventSlug={eventSlug}
           forma={forma}
           media={media}
           onChange={(filas) => setEstado((previo) => ({ ...previo, filas }))}
@@ -232,14 +385,15 @@ function BloqueDeContenido({
           {error}
         </p>
       )}
-      {state.status === 'success' ? (
-        <p aria-live="polite" className="text-[12px] text-ink-soft" role="status">
-          Guardado.
-        </p>
-      ) : null}
-
-      <div>
-        <SubmitButton variant="default" pending={isPending} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
+      <div className="flex flex-wrap items-center gap-3 border-t border-line-panel pt-4">
+        <SubmitButton variant="primary" pending={isPending} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
+        {state.status === 'success' ? (
+          <p aria-live="polite" className="flex items-center gap-1.5 text-[12px] text-sage" role="status">
+            <CheckIcon className="size-3.5" />
+            Guardado. La vista previa ya lo enseña.
+          </p>
+        ) : null}
+      </div>
       </div>
     </form>
   )
@@ -278,16 +432,22 @@ function CampoDeBloque({
   const rotulo = etiqueta ?? campo.label
 
   return (
-    <div className={`flex min-w-0 flex-col gap-2 ${campo.kind === 'parrafo' ? 'min-[560px]:col-span-2' : ''}`}>
-      <label className={LABEL_CLASS} htmlFor={id}>
-        {rotulo}
-      </label>
+    <div className={`flex min-w-0 flex-col gap-2 ${campo.kind === 'parrafo' || campo.kind === 'imagen' || campo.kind === 'fecha' || campo.anchoCompleto === true ? 'min-[560px]:col-span-2' : ''}`}>
+      {campo.kind === 'imagen' ? (
+        <p className={LABEL_CLASS} id={`${id}-rotulo`}>
+          {rotulo}
+        </p>
+      ) : (
+        <label className={LABEL_CLASS} htmlFor={id}>
+          {rotulo}
+        </label>
+      )}
 
       {campo.kind === 'imagen' ? (
         <SelectorDeImagen
           eventId={eventId}
           eventSlug={eventSlug}
-          id={id}
+          rotuloId={`${id}-rotulo`}
           media={media}
           onChange={onChange}
           valor={valor}
@@ -302,20 +462,25 @@ function CampoDeBloque({
           className={`${FIELD_CLASS} leading-[1.6]`}
           id={id}
           onChange={(evento) => onChange(evento.target.value)}
-          placeholder={ejemplo}
+          placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `Ej.: ${ejemplo}`}
           rows={3}
           value={valor}
         />
       ) : (
-        <input
-          aria-describedby={campo.hint === undefined ? undefined : pistaId}
-          className={FIELD_CLASS}
-          id={id}
-          onChange={(evento) => onChange(evento.target.value)}
-          placeholder={ejemplo}
-          type="text"
-          value={valor}
-        />
+        <div className="relative">
+          {ICONO_DE_CAMPO[campo.key] === undefined ? null : (
+            <IconoDeCampo clave={campo.key} />
+          )}
+          <input
+            aria-describedby={campo.hint === undefined ? undefined : pistaId}
+            className={`${FIELD_CLASS} ${ICONO_DE_CAMPO[campo.key] === undefined ? '' : 'pl-10'}`}
+            id={id}
+            onChange={(evento) => onChange(evento.target.value)}
+            placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `Ej.: ${ejemplo}`}
+            type="text"
+            value={valor}
+          />
+        </div>
       )}
 
       {campo.hint === undefined ? null : (
@@ -327,60 +492,118 @@ function CampoDeBloque({
   )
 }
 
+const ERRORES_AL_QUITAR: Record<string, string> = {
+  in_use: 'Esa foto la usa otra parte de la invitación. Cámbiala allí primero.',
+  not_found: 'Esa foto ya no está.',
+}
+
+const MINIATURA =
+  'relative grid aspect-square w-full cursor-pointer place-items-center overflow-hidden rounded-[12px] border bg-bg-top transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink'
+
 /**
- * Elegir una fotografía ya subida, en vez de copiar su identificador de una tarjeta y
- * pegarlo en otra.
+ * Elegir la fotografía **mirándola**: una miniatura por foto subida, la elegida marcada, y
+ * al final el botón de subir otra, que queda elegida al subirla.
  *
- * Si lo guardado no está entre las fotografías del evento —una imagen borrada, o el
- * contenido de muestra— se ofrece igual como opción propia: descartarlo en silencio
- * cambiaría la invitación por el mero hecho de abrir el formulario.
+ * Era un desplegable con nombres de archivo —«IMG_4032.jpg»— junto a una tarjeta aparte de
+ * «Fotografías y música» donde se subían: dos sitios para una sola cosa, y ninguno enseñaba
+ * la foto. Las que no se usan en ninguna parte se pueden quitar desde aquí.
+ *
+ * Si lo guardado no está entre las fotos del evento —una imagen borrada, o la muestra— se
+ * ofrece igual como «la fotografía guardada»: descartarla en silencio cambiaría la
+ * invitación por el mero hecho de abrir el formulario.
  */
 function SelectorDeImagen({
-  id,
+  rotuloId,
   valor,
   onChange,
   media,
   eventId,
   eventSlug,
 }: {
-  id: string
+  rotuloId: string
   valor: string
   onChange: (valor: string) => void
   media: readonly MediaItem[]
   eventId?: string | undefined
   eventSlug?: string | undefined
 }) {
-  const conocida = media.some((imagen) => imagen.id === valor)
+  const fotos = media.filter((item) => !esPista(item))
+  const conocida = fotos.some((imagen) => imagen.id === valor)
+  const [quitando, empezar] = useTransition()
+  const [aviso, setAviso] = useState<string | null>(null)
+
+  const quitar = (mediaId: string) => {
+    if (eventId === undefined || eventSlug === undefined) return
+    setAviso(null)
+    empezar(async () => {
+      const datos = new FormData()
+      datos.set('eventId', eventId)
+      datos.set('eventSlug', eventSlug)
+      datos.set('mediaId', mediaId)
+      const r = await removeMediaAction({ status: 'idle' }, datos)
+      if (r.status === 'error') setAviso(ERRORES_AL_QUITAR[r.message] ?? 'No se pudo quitar la foto.')
+    })
+  }
+
+  const marca = (elegida: boolean) => (elegida ? 'border-ink ring-2 ring-ink' : 'border-line-panel hover:border-line-panel-strong')
 
   return (
-    <div className="flex flex-wrap items-start gap-2.5">
-      {valor === '' ? null : (
-        /* La sirve /media/[id], que no pasa por el optimizador: lleva la puerta de
-           contraseña del evento. */
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          alt=""
-          className="size-12 shrink-0 rounded-[10px] border border-[var(--color-line-panel)] object-cover"
-          loading="lazy"
-          src={`/media/${valor}`}
-        />
-      )}
-      <select
-        className={FIELD_CLASS}
-        id={id}
-        onChange={(evento) => onChange(evento.target.value)}
-        value={valor}
-      >
-        <option value="">Sin fotografía</option>
-        {media.map((imagen) => (
-          <option key={imagen.id} value={imagen.id}>
-            {imagen.originalName}
-          </option>
+    <div aria-labelledby={rotuloId} className="flex flex-col gap-2.5" role="group">
+      <div className="grid gap-2 [grid-template-columns:repeat(auto-fill,minmax(76px,1fr))]">
+        <button aria-pressed={valor === ''} className={`${MINIATURA} ${marca(valor === '')}`} onClick={() => onChange('')} type="button">
+          <span className="px-1 text-center text-[11px] leading-tight text-ink-mute">Sin foto</span>
+        </button>
+
+        {valor === '' || conocida ? null : (
+          <button aria-label="Usar la fotografía guardada" aria-pressed className={`${MINIATURA} ${marca(true)}`} onClick={() => onChange(valor)} type="button">
+            {/* La sirve /media/[id], que no pasa por el optimizador: lleva la puerta de contraseña del evento. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img alt="" className="size-full object-cover" loading="lazy" src={`/media/${valor}`} />
+          </button>
+        )}
+
+        {fotos.map((foto) => (
+          <div className="group relative" key={foto.id}>
+            <button
+              aria-label={`Usar ${foto.originalName}`}
+              aria-pressed={valor === foto.id}
+              className={`${MINIATURA} ${marca(valor === foto.id)}`}
+              onClick={() => onChange(foto.id)}
+              title={foto.fromGuest ? `${foto.originalName} · la subió un invitado` : foto.originalName}
+              type="button"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img alt="" className="size-full object-cover" loading="lazy" src={`/media/${foto.id}`} />
+              {valor === foto.id ? (
+                <span aria-hidden className="absolute top-1 right-1 grid size-5 place-items-center rounded-full bg-ink text-white">
+                  <CheckIcon className="size-3" />
+                </span>
+              ) : null}
+            </button>
+            {valor === foto.id || eventId === undefined ? null : (
+              <button
+                aria-label={`Quitar ${foto.originalName}`}
+                className="absolute top-1 right-1 hidden size-6 cursor-pointer place-items-center rounded-full bg-white/95 text-ink-soft shadow group-hover:grid group-focus-within:grid hover:text-danger"
+                disabled={quitando}
+                onClick={() => quitar(foto.id)}
+                type="button"
+              >
+                <TrashIcon className="size-3.5" />
+              </button>
+            )}
+          </div>
         ))}
-        {valor === '' || conocida ? null : <option value={valor}>{valor}</option>}
-      </select>
+      </div>
+
       {eventId === undefined || eventSlug === undefined ? null : (
-        <SubidaEnElCampo eventId={eventId} eventSlug={eventSlug} onSubido={onChange} tipo="imagen" />
+        <div>
+          <SubidaEnElCampo eventId={eventId} eventSlug={eventSlug} onSubido={onChange} tipo="imagen" />
+        </div>
+      )}
+      {aviso === null ? null : (
+        <p className="text-[12px] text-gold-deep" role="alert">
+          {aviso}
+        </p>
       )}
     </div>
   )
@@ -441,7 +664,7 @@ function SelectorDeAudio({
 
       {pistas.length === 0 ? (
         <p className="text-[11px] leading-[1.5] text-ink-mute">
-          Todavía no subiste ninguna. Sube un MP3 en «Fotografías y música» y vuelve aquí.
+          Todavía no subiste ninguna. Súbela con el botón de aquí arriba: queda elegida al subirla.
         </p>
       ) : null}
     </div>
@@ -467,20 +690,26 @@ function ListaSueltaDeBloque({
       <p className={LABEL_CLASS}>{lista.label}</p>
 
       {valores.length === 0 ? (
-        <p className="text-[12px] text-ink-soft">Todavía no hay ninguno.</p>
+        <p className="text-[12px] text-ink-soft">Ninguno todavía. Si no hay, déjalo así: la invitación no pinta este grupo.</p>
       ) : (
         valores.map((valor, indice) => (
           <div className="flex items-end gap-2" key={indice}>
             <div className="min-w-0 grow">
               <CampoDeBloque
                 campo={campo}
-                etiqueta={`${lista.itemLabel} ${indice + 1}`}
+                etiqueta={`${lista.itemLabel.charAt(0).toUpperCase()}${lista.itemLabel.slice(1)} ${indice + 1}`}
                 media={media}
                 onChange={(nuevo) => onChange(valores.map((v, i) => (i === indice ? nuevo : v)))}
                 valor={valor}
               />
             </div>
-            <PanelButton onClick={() => onChange(valores.filter((_, i) => i !== indice))}>Quitar</PanelButton>
+            <IconButton
+              className="mb-1.5 hover:border-danger hover:text-danger"
+              label={`Quitar ${lista.itemLabel} ${indice + 1}`}
+              onClick={() => onChange(valores.filter((_, i) => i !== indice))}
+            >
+              <TrashIcon className="size-4" />
+            </IconButton>
           </div>
         ))
       )}
@@ -505,7 +734,11 @@ function FilasDeBloque({
   filas,
   onChange,
   media,
+  eventId,
+  eventSlug,
 }: {
+  eventId: string
+  eventSlug: string
   forma: Extract<FormaBloque, { form: 'filas' }>
   filas: readonly Readonly<Record<string, string>>[]
   onChange: (filas: readonly Readonly<Record<string, string>>[]) => void
@@ -527,13 +760,15 @@ function FilasDeBloque({
       ) : (
         filas.map((fila, indice) => (
           <div
-            className="flex flex-col gap-3 rounded-[12px] border border-[var(--color-line-panel)] bg-bg-top p-3"
+            className="flex flex-col gap-3 rounded-[14px] border border-[var(--color-line-panel)] bg-bg-top/60 p-3.5"
             key={indice}
           >
             <div className="grid gap-3 min-[560px]:grid-cols-2">
               {forma.fields.map((campo) => (
                 <CampoDeBloque
                   campo={campo}
+                  eventId={eventId}
+                  eventSlug={eventSlug}
                   etiqueta={`${campo.label} · ${forma.itemLabel} ${indice + 1}`}
                   key={campo.key}
                   media={media}
@@ -545,16 +780,21 @@ function FilasDeBloque({
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <PanelButton disabled={indice === 0} onClick={() => mover(indice, indice - 1)}>
-                {`Subir ${forma.itemLabel} ${indice + 1}`}
-              </PanelButton>
-              <PanelButton disabled={indice === filas.length - 1} onClick={() => mover(indice, indice + 1)}>
-                {`Bajar ${forma.itemLabel} ${indice + 1}`}
-              </PanelButton>
-              <PanelButton onClick={() => onChange(filas.filter((_, i) => i !== indice))} variant="danger">
-                {`Quitar ${forma.itemLabel} ${indice + 1}`}
-              </PanelButton>
+            {/* Mover y quitar, discretos: son de cada fila y no deben pesar más que sus datos. */}
+            <div className="flex justify-end gap-1.5">
+              <IconButton disabled={indice === 0} label={`Subir ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice - 1)}>
+                <ChevronIcon className="size-4 rotate-180" />
+              </IconButton>
+              <IconButton disabled={indice === filas.length - 1} label={`Bajar ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice + 1)}>
+                <ChevronIcon className="size-4" />
+              </IconButton>
+              <IconButton
+                className="hover:border-danger hover:text-danger"
+                label={`Quitar ${forma.itemLabel} ${indice + 1}`}
+                onClick={() => onChange(filas.filter((_, i) => i !== indice))}
+              >
+                <TrashIcon className="size-4" />
+              </IconButton>
             </div>
           </div>
         ))

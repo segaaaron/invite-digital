@@ -64,4 +64,20 @@ describe('el tema Editorial', () => {
     render(<BodaEdView {...conMuestra()} />)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
+
+  it('los padres de cada novio salen de su papel, aunque falte alguno, y los padrinos aparte', () => {
+    render(
+      <BodaEdView
+        {...propsDePrueba({
+          content: { hosts: { names: ['Rosa', 'Pedro', 'Luis'], roles: { brideMother: 'Rosa', groomFather: 'Pedro', godparents: ['Luis'] } } },
+        })}
+      />,
+    )
+    // Por posición, «Pedro» habría caído entre los padres de la novia.
+    const novio = screen.getByText('Pedro')
+    const rotuloNovio = screen.getByText(/padres del novio/i)
+    expect(rotuloNovio.compareDocumentPosition(novio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText(/padres de la novia/i).compareDocumentPosition(rotuloNovio) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(screen.getByText('PADRINOS')).toBeInTheDocument()
+  })
 })

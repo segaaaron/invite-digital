@@ -33,6 +33,7 @@ export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 
     rsvp: envuelta(
       <RsvpForm
         dictionary={diccionario.invitation}
+        guestName={INVITADO_DE_MUESTRA.label}
         previous={null}
         seats={INVITADO_DE_MUESTRA.seats}
         token=""
@@ -50,6 +51,7 @@ export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 
         ? envuelta(
             <GuestbookForm
               dictionary={diccionario.invitation}
+              guestName={INVITADO_DE_MUESTRA.label}
               previous={null}
               seats={INVITADO_DE_MUESTRA.seats}
               token=""

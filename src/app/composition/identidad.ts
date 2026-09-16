@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import { changePassword } from '@/modules/identity/application/change-password'
-import { confirmPasswordReset, requestPasswordReset } from '@/modules/identity/application/password-reset-use-cases'
+import { closeOtherSessions, confirmPasswordReset, requestAccountCode, requestPasswordReset } from '@/modules/identity/application/password-reset-use-cases'
 import { drizzlePasswordResetRepository } from '@/modules/identity/infrastructure/drizzle-password-reset-repository'
 import { authenticateSession } from '@/modules/identity/application/authenticate-session'
 import { signIn } from '@/modules/identity/application/sign-in'
@@ -57,4 +57,9 @@ export const identity = {
     minter,
     clock,
   }),
+  /** Las sesiones abiertas de la cuenta, para Mi cuenta. */
+  sessionsOf: (userId: string) => drizzleSessionRepository.listByUser(userId),
+  /** Un código al correo de quien tiene la sesión: para cambiar la contraseña o cerrar las demás. */
+  requestAccountCode: requestAccountCode({ users: drizzleUserRepository, resets: drizzlePasswordResetRepository, minter, clock }),
+  closeOtherSessions: closeOtherSessions({ resets: drizzlePasswordResetRepository, sessions: drizzleSessionRepository, minter, clock }),
 } as const

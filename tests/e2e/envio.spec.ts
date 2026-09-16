@@ -19,8 +19,11 @@ test('reenviar rota el enlace: el viejo deja de abrir y el nuevo abre', async ({
   expect((await invitado.goto(`/i/${token}`))?.status()).toBe(200)
 
   // El atelier lo reenvía.
+  // Un toque: prepara el enlace y abre WhatsApp en otra pestaña, que aquí se cierra.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=envio`)
-  await page.getByRole('button', { name: /preparar/i }).first().click()
+  const whatsapp = page.waitForEvent('popup')
+  await page.getByRole('button', { name: 'Enviar por WhatsApp a Familia Rojas Peña' }).click()
+  await (await whatsapp).close()
   const nuevo = await page.getByLabel('Enlace de la invitación').inputValue()
   expect(nuevo).toMatch(/\/i\/[A-Za-z0-9_-]{22}$/)
 
@@ -59,9 +62,11 @@ test('la hoja de reparto se imprime sola: el resto del panel no sale en el papel
   await seedEnvioEvent(slug)
 
   await page.goto(`/panel/eventos/${slug}/invitados?panel=envio`)
-  await page.getByRole('button', { name: /preparar/i }).first().click()
+  const whatsapp = page.waitForEvent('popup')
+  await page.getByRole('button', { name: 'Enviar por WhatsApp a Familia Rojas Peña' }).click()
+  await (await whatsapp).close()
   // La tarjeta va plegada: casi todo se reparte por WhatsApp, y es para quien entrega en mano.
-  await page.getByText(/tarjeta con qr para imprimir/i).click()
+  await page.getByText(/tarjeta con qr/i).click()
   await expect(page.getByRole('img', { name: 'Invitación de Familia Rojas Peña' })).toBeVisible()
 
   // Con el papel puesto, lo único visible es la tarjeta. Se mide con `visibility`

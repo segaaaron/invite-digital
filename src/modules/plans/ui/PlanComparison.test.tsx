@@ -35,7 +35,7 @@ describe('PlanComparison', () => {
     )
 
     expect(screen.getByRole('columnheader', { name: 'Alta Costura' })).toBeInTheDocument()
-    const porteros = screen.getByRole('row', { name: /porteros/i })
+    const porteros = screen.getByRole('row', { name: /personal de recepción/i })
     expect(within(porteros).getAllByRole('cell').map((c) => c.textContent)).toEqual(['No', 'Hasta 10'])
   })
 

@@ -6,6 +6,8 @@ export type ResolvedArrival = {
   readonly arrivedCount: number
   /** Escaneos vivos del grupo. Más de uno significa dos puertas o un reenvío doble. */
   readonly scanCount: number
+  /** Quién entró y a qué hora, por persona. Vacío en las invitaciones sin nombres. */
+  readonly personas: Readonly<Record<string, Date>>
 }
 
 /**
@@ -26,10 +28,29 @@ export function resolveArrival(arrivals: readonly Arrival[]): ResolvedArrival | 
     if (arrival.scannedAt > latest.scannedAt) latest = arrival
   }
 
+  // Por persona se **suma**: la unión de todos los escaneos, cada una a la hora del primero
+  // que la trae. Dos puertas sin red registrando a los dos de una pareja no se pisan.
+  const personas: Record<string, Date> = {}
+  let ultimoPorNumero: Arrival | null = null
+  for (const arrival of live) {
+    if (arrival.personIds === undefined || arrival.personIds === null) {
+      if (ultimoPorNumero === null || arrival.scannedAt > ultimoPorNumero.scannedAt) ultimoPorNumero = arrival
+      continue
+    }
+    for (const id of arrival.personIds) {
+      const antes = personas[id]
+      if (antes === undefined || arrival.scannedAt < antes) personas[id] = arrival.scannedAt
+    }
+  }
+  const porPersona = Object.keys(personas).length
+
   return {
     guestGroupId: first.guestGroupId,
     arrivedAt: earliest.scannedAt,
-    arrivedCount: latest.arrivedCount,
+    // Sin personas, la cantidad del último escaneo (la última corrección humana). Con
+    // personas, cuántas entraron; si además hubo escaneos por número, el mayor de los dos.
+    arrivedCount: porPersona === 0 ? latest.arrivedCount : Math.max(porPersona, ultimoPorNumero?.arrivedCount ?? 0),
     scanCount: live.length,
+    personas,
   }
 }

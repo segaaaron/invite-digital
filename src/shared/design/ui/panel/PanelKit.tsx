@@ -357,7 +357,7 @@ export function IconLink({ label, href, children }: { label: string; href: strin
   return (
     <Link
       aria-label={label}
-      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel"
       href={href}
       title={label}
     >
@@ -380,7 +380,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${className}`.trim()}
+      className={`inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel ${className}`.trim()}
       {...rest}
     >
       <span aria-hidden>{children}</span>

@@ -17,7 +17,6 @@ type Props = {
   /** «XV AÑOS», la copia del propio diseño. */
   readonly title: string
   readonly name: string
-  readonly badge: string
   readonly hint: string
   readonly openLabel: string
 }
@@ -42,7 +41,6 @@ export function LucianaCover({
   line2,
   title,
   name,
-  badge,
   hint,
   openLabel,
 }: Props) {
@@ -125,19 +123,6 @@ export function LucianaCover({
 
         {barra}
 
-        <span
-          style={{
-            padding: '10px 20px',
-            border: `1.5px solid ${accent}`,
-            fontFamily: 'var(--font-jetbrains-mono)',
-            fontSize: 10,
-            letterSpacing: '0.3em',
-            color: accent,
-            textShadow: SOMBRA,
-          }}
-        >
-          {badge}
-        </span>
         <span
           style={{
             marginTop: 10,

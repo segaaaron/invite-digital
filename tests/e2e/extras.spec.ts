@@ -54,7 +54,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
     .toBe(1)
 
   // 4. El evento, con el plan Atelier, ahora admite tres porteros.
-  await atelier.goto(`/panel/eventos/${SLUG}/porteros`)
+  await atelier.goto(`/panel/eventos/${SLUG}/equipo`)
   await expect(atelier.getByText('0 de 3')).toBeVisible({ timeout: 15_000 })
 })
 

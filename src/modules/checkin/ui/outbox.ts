@@ -4,6 +4,8 @@ export type PendingScan = {
   readonly arrivedCount: number
   readonly scannedAtMs: number
   readonly tries: number
+  /** Quiénes entraron, cuando la invitación tiene personas. */
+  readonly personIds?: readonly string[] | null
 }
 
 export type Outbox = {
@@ -81,6 +83,7 @@ export async function openOutbox(): Promise<Outbox> {
         arrivedCount: row.arrivedCount,
         scannedAtMs: row.scannedAtMs,
         tries: row.tries,
+        personIds: row.personIds ?? null,
       }))
     },
     async drop(scanIds) {

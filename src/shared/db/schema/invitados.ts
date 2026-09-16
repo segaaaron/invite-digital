@@ -77,6 +77,8 @@ export const arrivals = pgTable(
     voidedAt: timestamp('voided_at', { withTimezone: true }),
     /** `porter:<id>` o `user:<id>`: quién registró la llegada. Nulo en las anteriores a la 0040. */
     recordedBy: varchar('recorded_by', { length: 120 }),
+    /** Quiénes entraron en este escaneo. Nulo: escaneo por número (sin personas cargadas). */
+    personIds: uuid('person_ids').array(),
   },
   (t) => [index('arrivals_group_idx').on(t.guestGroupId, t.scannedAt.desc())],
 )

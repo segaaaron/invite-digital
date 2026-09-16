@@ -72,10 +72,63 @@ export type GalleryRow = { readonly label: string; readonly imageId?: string }
  */
 export type NoteCard = { readonly title?: string; readonly text?: string }
 
+/**
+ * Quién es cada anfitrión.
+ *
+ * Antes era solo una lista de nombres y cada diseño adivinaba el papel por la posición
+ * —dos de boda leían «los dos primeros, padres de la novia»—, así que en el panel se
+ * pedía «Nombre 1», «Nombre 2» sin decir de quién. Los XV usan padre y madre; las bodas,
+ * los de la novia y los del novio. Los padrinos son de los dos.
+ */
+export type HostRoles = {
+  readonly father?: string
+  readonly mother?: string
+  readonly brideFather?: string
+  readonly brideMother?: string
+  readonly groomFather?: string
+  readonly groomMother?: string
+  readonly godparents?: readonly string[]
+}
+
+export type HostsBlock = {
+  readonly label?: string
+  /**
+   * Todos los nombres, en orden: padres y después padrinos. Con `roles` se compone de ellos;
+   * sin `roles` es lo que se guardó antes de que existieran. Lo pintan los diseños que no
+   * distinguen quién es quién.
+   */
+  readonly names: readonly string[]
+  readonly roles?: HostRoles
+}
+
+const PADRES_EN_ORDEN = ['father', 'mother', 'brideFather', 'brideMother', 'groomFather', 'groomMother'] as const
+
+const nombresDe = (roles: HostRoles): string[] => [
+  ...PADRES_EN_ORDEN.map((clave) => roles[clave]).filter((n): n is string => n !== undefined),
+  ...(roles.godparents ?? []),
+]
+
+/** Los anfitriones de un XV: padres y padrinos. Sin papeles, todos los nombres son de los padres. */
+export function anfitrionesXv(hosts: HostsBlock): { padres: string[]; padrinos: string[] } {
+  if (hosts.roles === undefined) return { padres: [...hosts.names], padrinos: [] }
+  const r = hosts.roles
+  return { padres: [r.father, r.mother].filter((n): n is string => n !== undefined), padrinos: [...(r.godparents ?? [])] }
+}
+
+/** Los anfitriones de una boda. Sin papeles, la posición de siempre: dos, dos y el resto padrinos. */
+export function anfitrionesBoda(hosts: HostsBlock): { novia: string[]; novio: string[]; padrinos: string[] } {
+  if (hosts.roles === undefined) {
+    return { novia: hosts.names.slice(0, 2), novio: hosts.names.slice(2, 4), padrinos: hosts.names.slice(4) }
+  }
+  const r = hosts.roles
+  const de = (...nombres: (string | undefined)[]) => nombres.filter((n): n is string => n !== undefined)
+  return { novia: de(r.brideFather, r.brideMother), novio: de(r.groomFather, r.groomMother), padrinos: [...(r.godparents ?? [])] }
+}
+
 export type InvitationContent = {
   readonly hero?: HeroBlock
   readonly quote?: { readonly text: string }
-  readonly hosts?: { readonly label?: string; readonly names: readonly string[] }
+  readonly hosts?: HostsBlock
   readonly schedule?: { readonly startsAt: string }
   readonly ceremony?: PlaceBlock
   readonly reception?: PlaceBlock
@@ -150,6 +203,19 @@ function bloque<T extends object>(entradas: [keyof T, string | undefined][]): T 
 }
 
 /** Una lista filtrada y con tope. Vacía es `undefined`: para el diseño es lo mismo que ausente. */
+/** Los papeles de los anfitriones: solo las claves conocidas y con texto. */
+function papeles(crudo: unknown): HostRoles | undefined {
+  if (!esObjeto(crudo)) return undefined
+  const salida: Record<string, unknown> = {}
+  for (const clave of PADRES_EN_ORDEN) {
+    const nombre = texto(crudo[clave], LIMITES.corto)
+    if (nombre !== undefined) salida[clave] = nombre
+  }
+  const padrinos = lista(crudo.godparents, MAXIMOS.hosts, (n) => texto(n, LIMITES.corto))
+  if (padrinos !== undefined) salida.godparents = padrinos
+  return Object.keys(salida).length === 0 ? undefined : (salida as HostRoles)
+}
+
 function lista<T>(valor: unknown, maximo: number, fila: (crudo: unknown) => T | undefined): readonly T[] | undefined {
   if (!Array.isArray(valor)) return undefined
   const filas = valor.map(fila).filter((f): f is T => f !== undefined)
@@ -230,10 +296,16 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
   }
 
   if (esObjeto(crudo.hosts)) {
-    const nombres = lista(crudo.hosts.names, MAXIMOS.hosts, (n) => texto(n, LIMITES.corto))
-    if (nombres !== undefined) {
-      const etiqueta = texto(crudo.hosts.label, LIMITES.corto)
-      salida.hosts = etiqueta === undefined ? { names: nombres } : { label: etiqueta, names: nombres }
+    const etiqueta = texto(crudo.hosts.label, LIMITES.corto)
+    const roles = papeles(crudo.hosts.roles)
+    // Con papeles, la lista sale de ellos; sin papeles es la lista de antes.
+    const nombres = roles === undefined ? lista(crudo.hosts.names, MAXIMOS.hosts, (n) => texto(n, LIMITES.corto)) : nombresDe(roles)
+    if (nombres !== undefined && nombres.length > 0) {
+      salida.hosts = {
+        ...(etiqueta === undefined ? {} : { label: etiqueta }),
+        ...(roles === undefined ? {} : { roles }),
+        names: nombres,
+      }
     }
   }
 

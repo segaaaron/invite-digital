@@ -71,7 +71,7 @@ const PLANTILLAS: Record<Fiesta, readonly Etapa[]> = {
       clave: 'semana',
       nombre: 'La semana del evento',
       antes: { dias: 7 },
-      tareas: [a('Pagos finales a proveedores', 'planner'), a('Ensayo de la ceremonia'), a('Sumar a los porteros y mandarles su acceso')],
+      tareas: [a('Pagos finales a proveedores', 'planner'), a('Ensayo de la ceremonia'), a('Sumar al personal de recepción y mandarle su acceso')],
     },
   ],
   xv: [
@@ -109,7 +109,7 @@ const PLANTILLAS: Record<Fiesta, readonly Etapa[]> = {
       clave: 'semana',
       nombre: 'La semana de los XV',
       antes: { dias: 7 },
-      tareas: [a('Ensayo final del vals'), a('Horarios con los proveedores', 'planner'), a('Sumar a los porteros y mandarles su acceso')],
+      tareas: [a('Ensayo final del vals'), a('Horarios con los proveedores', 'planner'), a('Sumar al personal de recepción y mandarle su acceso')],
     },
   ],
 }
@@ -135,13 +135,15 @@ export function restarMeses(fecha: string, meses: number): string {
 export const sumarDias = (fecha: string, dias: number): string => iso(new Date(utc(fecha).getTime() + dias * 86_400_000))
 
 /**
- * Las tareas de la plantilla con sus fechas. Una fecha que ya pasó se queda: la tarea sale
- * atrasada, que es verdad, en vez de desaparecer como si no hiciera falta.
+ * Las tareas de la plantilla con sus fechas. Una fecha anterior a `hoy` vence hoy: la tarea
+ * sigue haciendo falta, pero un evento dado de alta a un mes de la fiesta no puede abrir con
+ * todo vencido hace un año.
  */
-export function sembrarTareas(fiesta: Fiesta, eventDate: string): NuevaTarea[] {
+export function sembrarTareas(fiesta: Fiesta, eventDate: string, hoy = ''): NuevaTarea[] {
   let orden = 0
   return PLANTILLAS[fiesta].flatMap((etapa) => {
-    const dueDate = 'meses' in etapa.antes ? restarMeses(eventDate, etapa.antes.meses) : sumarDias(eventDate, -etapa.antes.dias)
+    const segunEtapa = 'meses' in etapa.antes ? restarMeses(eventDate, etapa.antes.meses) : sumarDias(eventDate, -etapa.antes.dias)
+    const dueDate = segunEtapa < hoy ? hoy : segunEtapa
     return etapa.tareas.map((t) => ({ stage: etapa.clave, title: t.title, dueDate, assignee: t.assignee, sortOrder: orden++ }))
   })
 }

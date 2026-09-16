@@ -6,6 +6,7 @@ vi.mock('@/app/_acciones/events/actions', () => ({
   saveContentBlockAction: vi.fn(),
   // La subida desde el propio campo vive dentro de los selectores de imagen y de música.
   uploadMediaAction: vi.fn(),
+  removeMediaAction: vi.fn(async () => ({ status: 'success' })),
 }))
 
 const SIN_IMAGENES: never[] = []
@@ -73,7 +74,7 @@ describe('ContentBlockForms', () => {
         sections={['music']}
       />,
     )
-    expect(screen.getByLabelText('Canción')).toHaveValue('At Last')
+    expect(screen.getByLabelText('Título de la canción')).toHaveValue('At Last')
     expect(screen.getByLabelText('Artista')).toHaveValue('Etta James')
   })
 
@@ -82,7 +83,7 @@ describe('ContentBlockForms', () => {
       <ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['music']} />,
     )
 
-    fireEvent.change(screen.getByLabelText('Canción'), { target: { value: 'Perfect' } })
+    fireEvent.change(screen.getByLabelText('Título de la canción'), { target: { value: 'Perfect' } })
 
     expect(valorEnviado(container)).toEqual({ track: 'Perfect' })
   })
@@ -140,9 +141,10 @@ describe('ContentBlockForms', () => {
     expect(screen.getByRole('button', { name: 'Añadir aviso' })).toBeEnabled()
   })
 
-  it('la lista de anfitriones se edita nombre a nombre', () => {
+  it('los anfitriones se escriben por su papel: padre, madre y cada padrino con su nombre', () => {
     const { container } = render(
       <ContentBlockForms
+        anfitriones="xv"
         ejemplo={{}} pinta={TODO}
         content={{ hosts: { label: 'PADRES', names: ['Ana'] } }}
         eventId="e1"
@@ -152,11 +154,24 @@ describe('ContentBlockForms', () => {
       />,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir nombre' }))
-    fireEvent.change(screen.getByLabelText('nombre 2'), { target: { value: 'Luis' } })
+    // Lo guardado antes de los papeles se lee por posición: el primero era el padre.
+    expect(screen.getByLabelText('Nombre del padre')).toHaveValue('Ana')
+    fireEvent.change(screen.getByLabelText('Nombre de la madre'), { target: { value: 'Rosa' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Añadir padrino o madrina' }))
+    fireEvent.change(screen.getByLabelText('Padrino o madrina 1'), { target: { value: 'Luis' } })
 
-    expect(valorEnviado(container)).toEqual({ label: 'PADRES', names: ['Ana', 'Luis'] })
+    expect(valorEnviado(container)).toEqual({ label: 'PADRES', roles: { father: 'Ana', mother: 'Rosa', godparents: ['Luis'] } })
   })
+
+  it('en una boda pide los padres de cada novio', () => {
+    render(
+      <ContentBlockForms anfitriones="boda" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['hosts']} />,
+    )
+    for (const rotulo of ['Padre de la novia', 'Madre de la novia', 'Padre del novio', 'Madre del novio']) {
+      expect(screen.getByLabelText(rotulo)).toBeInTheDocument()
+    }
+  })
+
 
   it('la fotografía se elige de las del evento, no pegando su identificador', () => {
     const { container } = render(
@@ -170,9 +185,12 @@ describe('ContentBlockForms', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText('Fotografía · casilla 1'), { target: { value: 'img-1' } })
+    // Se elige mirándola: una miniatura por fotografía, no un desplegable de nombres de archivo.
+    const selector = screen.getByRole('group', { name: 'Fotografía · casilla 1' })
+    fireEvent.click(within(selector).getByRole('button', { name: 'Usar anillos.jpg' }))
 
     expect(valorEnviado(container)).toEqual([{ label: 'ANILLOS', imageId: 'img-1' }])
+    expect(within(selector).getByRole('button', { name: 'Usar anillos.jpg' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('conserva una fotografía que ya no está entre las del evento, en vez de borrarla al abrir', () => {
@@ -188,7 +206,7 @@ describe('ContentBlockForms', () => {
         sections={['gallery']}
       />,
     )
-    expect(screen.getByLabelText('Fotografía · casilla 1')).toHaveValue('borrada')
+    expect(within(screen.getByRole('group', { name: 'Fotografía · casilla 1' })).getByRole('button', { name: 'Usar la fotografía guardada' })).toHaveAttribute('aria-pressed', 'true')
     expect(valorEnviado(container)).toEqual([{ label: 'ANILLOS', imageId: 'borrada' }])
   })
 
@@ -247,13 +265,13 @@ describe('ContentBlockForms', () => {
       />,
     )
 
-    fireEvent.change(screen.getByLabelText('Canción'), { target: { value: '' } })
+    fireEvent.change(screen.getByLabelText('Título de la canción'), { target: { value: '' } })
 
     expect(valorEnviado(container)).toEqual({})
   })
 
   it('la fecha y la hora van por separado, con la piel del panel y no la del navegador', () => {
-    render(
+    const { container } = render(
       <ContentBlockForms
         ejemplo={{}} pinta={TODO}
         content={{ schedule: { startsAt: '2026-10-18T16:00:00' } }}
@@ -263,14 +281,15 @@ describe('ContentBlockForms', () => {
         sections={['schedule']}
       />,
     )
-    // El `datetime-local` deja la pantalla en manos de Chrome: calendario azul y meses en
-    // inglés. La fecha se elige con el calendario del sistema y la hora en medias horas.
-    const fecha = screen.getByLabelText('Fecha y hora exactas')
-    expect(fecha).toHaveAttribute('type', 'date')
-    expect(fecha).toHaveValue('2026-10-18')
+    // El calendario del navegador pintaba «10/17/2026» y los meses en inglés. El campo dice la
+    // fecha con todas sus letras y el calendario es el del panel; la hora, en medias horas.
+    const fecha = screen.getByRole('button', { name: 'Fecha y hora exactas' })
+    expect(fecha).toHaveTextContent(/domingo, 18 de octubre de 2026/i)
     expect(screen.getByLabelText('Hora')).toHaveValue('16:00')
-    // Y se lee escrita, para cazar el clásico mes por día.
-    expect(screen.getByText(/domingo, 18 de octubre de 2026/i)).toBeInTheDocument()
+
+    fireEvent.click(fecha)
+    fireEvent.click(screen.getByRole('button', { name: /sábado, 24 de octubre de 2026/i }))
+    expect(valorEnviado(container)).toEqual({ startsAt: '2026-10-24T16:00' })
   })
 
   it('cada bloque se guarda por su cuenta, con su propio valor', () => {
@@ -289,5 +308,67 @@ describe('ContentBlockForms', () => {
     const primero = formularios[0] as HTMLElement
     expect(within(primero).getByRole('button', { name: 'Guardar' })).toBeInTheDocument()
     expect(valorEnviado(primero)).toEqual({ track: 'At Last' })
+  })
+
+  it('cada sección es una tarjeta que se abre de una en una, empezando por la que falta', () => {
+    render(
+      <ContentBlockForms
+        ejemplo={{}} pinta={TODO}
+        content={{ hero: { nameA: 'Loreley', eyebrow: 'MIS QUINCE' } }}
+        eventId="e1"
+        eventSlug="b"
+        media={SIN_IMAGENES}
+        sections={['hero', 'quote']}
+      />,
+    )
+
+    const portada = screen.getByRole('button', { name: 'Portada y nombres' })
+    const frase = screen.getByRole('button', { name: 'Frase' })
+    expect(frase).toHaveAttribute('aria-expanded', 'true')
+    expect(portada).toHaveAttribute('aria-expanded', 'false')
+
+    fireEvent.click(portada)
+    expect(portada).toHaveAttribute('aria-expanded', 'true')
+    expect(frase).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('plegada, la tarjeta dice en palabras si está lista y qué tiene escrito', () => {
+    render(
+      <ContentBlockForms
+        ejemplo={{}} pinta={TODO}
+        content={{ hero: { nameA: 'Loreley', eyebrow: 'MIS QUINCE' } }}
+        eventId="e1"
+        eventSlug="b"
+        media={SIN_IMAGENES}
+        sections={['hero', 'quote']}
+      />,
+    )
+
+    expect(screen.getByText('1 de 2 secciones listas')).toBeInTheDocument()
+    const portada = screen.getByRole('button', { name: 'Portada y nombres' })
+    expect(portada).toHaveAccessibleDescription(/Listo/)
+    expect(portada).toHaveAccessibleDescription(/MIS QUINCE · Loreley/)
+    expect(screen.getByRole('button', { name: 'Frase' })).toHaveAccessibleDescription(/Por completar/)
+  })
+
+  it('abrir una sección le dice a la vista previa adónde ir, con lo que esa sección tiene escrito', () => {
+    const avisos: unknown[] = []
+    const oir = (e: Event) => avisos.push((e as CustomEvent).detail)
+    window.addEventListener('invitacion:seccion', oir)
+    render(
+      <ContentBlockForms
+        ejemplo={{}} pinta={TODO}
+        content={{ reception: { place: 'Hacienda Las Estrellas' } }}
+        eventId="e1"
+        eventSlug="b"
+        media={SIN_IMAGENES}
+        sections={['quote', 'reception']}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: 'Recepción' }))
+    window.removeEventListener('invitacion:seccion', oir)
+
+    expect(avisos).toEqual([{ seccion: 'reception', textos: ['Hacienda Las Estrellas'] }])
   })
 })

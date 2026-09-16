@@ -13,6 +13,7 @@ const group: DoorGroupRow = {
   revoked: false,
   tokenHash: Buffer.from([0xde, 0xad, 0xbe, 0xef]),
   leadName: null,
+  people: [],
   tableLabel: 'Mesa 03',
 }
 
@@ -105,5 +106,18 @@ describe('getDoorState', () => {
     expect(isOk(r) && r.value.tally.arrivedGroups).toBe(1)
     expect(isOk(r) && r.value.tally.headsInside).toBe(3)
     expect(isOk(r) && r.value.tally.expectedHeads).toBe(3)
+  })
+})
+
+describe('getDoorState · por persona', () => {
+  it('da el nombre de cada persona, para contar las llegadas por quién entró', async () => {
+    const conPareja: DoorGroupRow = { ...group, people: [{ id: 'ana', fullName: 'Ana Rojas' }, { id: 'luis', fullName: 'Luis Peña' }] }
+    const f = fakes([{ ...arrival, arrivedCount: 1, personIds: ['ana'] }])
+    const deps = { ...f, groups: { ...f.groups, listByEvent: async () => [conPareja] } }
+
+    const estado = await getDoorState(deps)('e1')
+
+    expect(isOk(estado) && estado.value.nombres).toEqual({ ana: 'Ana Rojas', luis: 'Luis Peña' })
+    expect(isOk(estado) && estado.value.arrivals[0]?.personas).toEqual({ ana: new Date('2026-10-18T21:00:00Z') })
   })
 })

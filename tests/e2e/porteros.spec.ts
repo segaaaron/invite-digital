@@ -37,9 +37,10 @@ test.afterAll(async () => {
 })
 
 async function sumarPortero(gestor: import('@playwright/test').Page, slug: string, nombre: string) {
-  await gestor.goto(`/panel/eventos/${slug}/porteros`)
+  await gestor.goto(`/panel/eventos/${slug}/equipo`)
+  await gestor.getByRole('radio', { name: /Recepción/ }).check()
   await gestor.getByLabel('Nombre').fill(nombre)
-  await gestor.getByRole('button', { name: 'Agregar portero' }).click()
+  await gestor.getByRole('button', { name: 'Sumar al equipo' }).click()
   const aviso = gestor.getByRole('status').filter({ hasText: 'ya puede entrar' })
   await expect(aviso).toBeVisible()
   const enlace = (await aviso.locator('dd').first().textContent())!.trim()
@@ -81,7 +82,7 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
   // Quitarlo lo saca, aunque tenga la puerta abierta.
   await gestor.getByRole('button', { name: 'Quitar a Carlos' }).click()
   await gestor.getByRole('button', { name: /sí, quitar/i }).click()
-  await expect(gestor.getByText(/todavía no sumaste porteros/i)).toBeVisible()
+  await expect(gestor.getByText(/todavía no sumaste a nadie/i)).toBeVisible()
 
   await portero.goto(`${ruta}/puerta`)
   await expect(portero).toHaveURL(new RegExp(`${ruta}$`))
@@ -103,7 +104,7 @@ test('fuera del día del evento el acceso no abre, ni con el PIN correcto', asyn
 
 test('un plan sin puerta no ofrece porteros', async ({ browser }) => {
   const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
-  await gestor.goto(`/panel/eventos/${SIN_PUERTA}/porteros`)
-  await expect(gestor.getByText(/no incluye pases con QR ni porteros/)).toBeVisible()
-  await expect(gestor.getByRole('button', { name: 'Agregar portero' })).toHaveCount(0)
+  await gestor.goto(`/panel/eventos/${SIN_PUERTA}/equipo`)
+  await expect(gestor.getByText(/no incluye pases con QR ni personal de recepción/)).toBeVisible()
+  await expect(gestor.getByRole('radio', { name: /Recepción/ })).toBeDisabled()
 })

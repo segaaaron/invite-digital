@@ -16,6 +16,7 @@ const groupRow = {
   attending: 4,
   revoked: false,
   leadName: null,
+  people: [],
   tableLabel: 'Mesa 03',
   tokenHash: Buffer.from(`h:${TOKEN}`),
 }
@@ -155,5 +156,68 @@ describe('quién registró la llegada', () => {
       scans: [{ scanId: 's-quien', scanned: TOKEN, arrivedCount: null, scannedAt: new Date() }],
     })
     expect(rows.find((r) => r.scanId === 's-quien')?.recordedBy).toBe('porter:p1')
+  })
+})
+
+/**
+ * La pareja llega partida: Ana entra a las 19:40 y Luis a las 20:20, con el mismo QR. La
+ * puerta registra **quién** entra, y el segundo escaneo ve que Ana ya estaba.
+ */
+describe('checkInByScan · por persona', () => {
+  const pareja = { ...groupRow, seats: 2, people: [{ id: 'ana', fullName: 'Ana Rojas' }, { id: 'luis', fullName: 'Luis Peña' }] }
+  const fakesPareja = () => {
+    const f = fakes()
+    const groups: DoorGroupReader = {
+      findByTokenHash: async (hash) => ((await f.groups.findByTokenHash(hash))?.id === 'g1' ? pareja : null),
+      findGroupById: async (id) => (id === 'g1' ? pareja : null),
+      listByEvent: async () => [pareja],
+    }
+    return { ...f, groups }
+  }
+  const conPersonas = (scanId: string, personIds: string[], iso: string) => ({ ...scan(scanId), arrivedCount: null, personIds, scannedAt: new Date(iso) })
+
+  it('registra a quien entra, y el segundo ve que el primero ya está dentro', async () => {
+    const { groups, arrivals, rows } = fakesPareja()
+    const run = checkInByScan({ groups, arrivals, minter })
+
+    const primero = await run({ eventId: 'e1', scans: [conPersonas('s1', ['ana'], '2026-10-18T23:40:00Z')] })
+    expect(isOk(primero) && primero.value[0]).toMatchObject({ kind: 'welcome', arrivedCount: 1 })
+
+    const segundo = await run({ eventId: 'e1', scans: [conPersonas('s2', ['luis'], '2026-10-19T00:20:00Z')] })
+    const resultado = isOk(segundo) ? segundo.value[0] : undefined
+    expect(resultado).toMatchObject({ kind: 'welcome', arrivedCount: 2 })
+    expect(resultado?.kind === 'welcome' && resultado.personas).toEqual({
+      ana: new Date('2026-10-18T23:40:00Z'),
+      luis: new Date('2026-10-19T00:20:00Z'),
+    })
+    expect(rows.map((r) => r.personIds)).toEqual([['ana'], ['luis']])
+  })
+
+  it('quien ya entró no se registra otra vez: sale como ya dentro', async () => {
+    const { groups, arrivals, rows } = fakesPareja()
+    const run = checkInByScan({ groups, arrivals, minter })
+    await run({ eventId: 'e1', scans: [conPersonas('s1', ['ana'], '2026-10-18T23:40:00Z')] })
+
+    const otra = await run({ eventId: 'e1', scans: [conPersonas('s2', ['ana'], '2026-10-18T23:45:00Z')] })
+    expect(isOk(otra) && otra.value[0]?.kind).toBe('already')
+    expect(rows).toHaveLength(1)
+  })
+
+  it('una persona de otra invitación no se cuela en esta', async () => {
+    const { groups, arrivals, rows } = fakesPareja()
+    const r = await checkInByScan({ groups, arrivals, minter })({ eventId: 'e1', scans: [conPersonas('s1', ['ana', 'intruso'], '2026-10-18T23:40:00Z')] })
+    expect(isOk(r) && r.value[0]).toMatchObject({ kind: 'welcome', arrivedCount: 1 })
+    expect(rows[0]?.personIds).toEqual(['ana'])
+  })
+
+  it('un registro sin nombres —el buscador del panel, o una puerta antigua— hace entrar a todos los que faltaban', async () => {
+    const { groups, arrivals, rows } = fakesPareja()
+    const run = checkInByScan({ groups, arrivals, minter })
+    await run({ eventId: 'e1', scans: [conPersonas('s1', ['ana'], '2026-10-18T23:40:00Z')] })
+
+    const r = await run({ eventId: 'e1', scans: [{ ...scan('s2'), arrivedCount: null, scannedAt: new Date('2026-10-19T00:20:00Z') }] })
+
+    expect(isOk(r) && r.value[0]).toMatchObject({ kind: 'welcome', arrivedCount: 2 })
+    expect(rows[1]?.personIds).toEqual(['luis'])
   })
 })

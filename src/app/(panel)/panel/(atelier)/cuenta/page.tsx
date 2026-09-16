@@ -1,5 +1,9 @@
-import { ChangePasswordForm } from '@/modules/identity/ui/ChangePasswordForm'
-import { requireSession } from '@/app/_acciones/sesion'
+import { cookies } from 'next/headers'
+import { identity } from '@/app/composition/container'
+import { CambiarConCodigo, SesionesAbiertas } from '@/modules/identity/ui/SeguridadDeCuenta'
+import { fechaHora } from '@/shared/format/fecha'
+import { isErr } from '@/shared/result'
+import { requireSession, SESSION_COOKIE } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { SettingsSection } from '@/shared/design/ui/panel/ajustes'
@@ -26,6 +30,14 @@ export default async function CuentaPage() {
   // esto — el layout de `(atelier)` se evalúa antes y no la pedía, así que redirigía a
   // esta misma dirección en bucle.
   const actor = await requireSession()
+  const actual = await identity.authenticateSession((await cookies()).get(SESSION_COOKIE)?.value ?? null)
+  const estaId = isErr(actual) ? null : actual.value.sessionId
+  const sesiones = (await identity.sessionsOf(actor.userId)).map((s) => ({
+    id: s.id,
+    dispositivo: s.device ?? 'Dispositivo sin identificar',
+    ultimoUso: fechaHora(s.lastSeenAt ?? s.createdAt),
+    esta: s.id === estaId,
+  }))
 
   return (
     <div className="flex max-w-[980px] flex-col gap-4.5">
@@ -45,8 +57,12 @@ export default async function CuentaPage() {
           </dl>
         </SettingsSection>
 
-        <SettingsSection description="Pide la actual para que una sesión abierta en un ordenador ajeno no baste para quedarse con la cuenta." title="Contraseña">
-          <ChangePasswordForm />
+        <SettingsSection description="Pide un código que llega a tu correo: conocer la contraseña actual no basta para cambiarla." title="Contraseña">
+          <CambiarConCodigo />
+        </SettingsSection>
+
+        <SettingsSection description="Dónde está abierta tu cuenta. Si alguien más entra con tu contraseña, ciérrale la sesión con el código de tu correo." title="Sesiones abiertas">
+          <SesionesAbiertas sesiones={sesiones} />
         </SettingsSection>
 
         <SettingsSection description="Sal del panel en este dispositivo." title="Sesión">

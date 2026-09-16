@@ -38,7 +38,7 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
 
   // Los porteros solo existen con puerta: sin el modo puerta en el plan no hay a qué entrar.
   const puerta = await plans.requireFeature(eventId, 'checkin')
-  if (isErr(puerta)) return { status: 'error', message: 'Tu plan no incluye pases con QR ni porteros.' }
+  if (isErr(puerta)) return { status: 'error', message: 'Tu plan no incluye pases con QR ni personal de recepción.' }
 
   const capacidad = await plans.allowanceFor(eventId)
   if (isErr(capacidad)) return { status: 'error', message: 'No pudimos leer tu plan. Vuelve a intentarlo en un momento.' }
@@ -59,7 +59,7 @@ export async function addPorterAction(_previous: PorterActionState, formData: Fo
   const nombre = texto(formData, 'name').trim()
   const telefono = texto(formData, 'phone').trim()
 
-  revalidatePath(`/panel/eventos/${eventSlug}/porteros`)
+  revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
   return {
     status: 'created',
     nombre,
@@ -82,9 +82,9 @@ export async function removePorterAction(_previous: PorterActionState, formData:
   await requireEventAccess(actor, { eventId, eventSlug, section: 'porteros' })
 
   const quitado = await porters.revoke(eventId, texto(formData, 'porterId'))
-  if (!quitado) return { status: 'error', message: 'Ese portero ya no estaba en la puerta.' }
+  if (!quitado) return { status: 'error', message: 'Esa persona ya no estaba en recepción.' }
 
-  revalidatePath(`/panel/eventos/${eventSlug}/porteros`)
+  revalidatePath(`/panel/eventos/${eventSlug}/equipo`)
   return { status: 'removed' }
 }
 
@@ -155,7 +155,7 @@ export async function recordScansAsPorterAction(input: { scans: ScanInput[] }): 
   const result = await checkin.record({
     eventId: portero.eventId,
     recordedBy: `porter:${portero.porterId}`,
-    scans: input.scans.map((s) => ({ scanId: s.scanId, scanned: s.scanned, arrivedCount: s.arrivedCount, scannedAt: new Date(s.scannedAtMs) })),
+    scans: input.scans.map((s) => ({ scanId: s.scanId, scanned: s.scanned, arrivedCount: s.arrivedCount, scannedAt: new Date(s.scannedAtMs), personIds: s.personIds ?? null })),
   })
   if (isErr(result)) {
     console.error('registro del portero rechazado', result.error.kind, result.error.detail)
@@ -169,6 +169,7 @@ export async function checkInByGroupAsPorterAction(input: {
   scanId: string
   arrivedCount: number | null
   scannedAtMs: number
+  personIds?: readonly string[] | null
 }): Promise<ScanOutcome> {
   const portero = await porteroActual()
   if (portero === null) throw new Error('porter_denied')
@@ -176,7 +177,7 @@ export async function checkInByGroupAsPorterAction(input: {
   const result = await checkin.recordGroup({
     eventId: portero.eventId,
     recordedBy: `porter:${portero.porterId}`,
-    scan: { scanId: input.scanId, groupId: input.groupId, arrivedCount: input.arrivedCount, scannedAt: new Date(input.scannedAtMs) },
+    scan: { scanId: input.scanId, groupId: input.groupId, arrivedCount: input.arrivedCount, scannedAt: new Date(input.scannedAtMs), personIds: input.personIds ?? null },
   })
   if (isErr(result)) {
     console.error('registro por grupo del portero rechazado', result.error.kind, result.error.detail)

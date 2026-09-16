@@ -12,7 +12,7 @@ export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   fotos_invitados: 'Fotos de los invitados',
   mas_grupos: 'Más invitaciones',
   mas_dias: 'Más días en línea',
-  mas_porteros: 'Más porteros',
+  mas_porteros: 'Más personal de recepción',
   sumar_planner: 'Sumar un planner',
   dia_d: 'Día D y enlaces para proveedores',
   servicio: 'Servicio (sin cambio en el panel)',

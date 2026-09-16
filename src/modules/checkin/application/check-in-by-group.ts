@@ -9,6 +9,8 @@ export type GroupScanRequest = {
   readonly groupId: string
   readonly arrivedCount: number | null
   readonly scannedAt: Date
+  /** Quiénes entran, si la invitación tiene personas. */
+  readonly personIds?: readonly string[] | null
 }
 
 /**

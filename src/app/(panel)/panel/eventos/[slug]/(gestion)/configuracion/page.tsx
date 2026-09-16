@@ -4,13 +4,15 @@ import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
 import { SoporteDeBoda } from '@/modules/admin/ui/SoporteDeBoda'
 import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
-import { EventMediaPanel } from '@/modules/events/ui/EventMediaPanel'
+import { InvitacionEnVivo } from '@/modules/events/ui/InvitacionEnVivo'
+import '@/modules/events/ui/themes/kit/keyframes.css'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
 import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { anfitrionesDeCategoria } from '@/modules/events/ui/content-shapes'
 import { canManageStaff, gestionaElEvento, isAdmin } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -124,18 +126,19 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     <>
       <PanelHeader kicker="Evento" title={esAdmin ? 'Ficha del evento' : 'Configuración del evento'} />
 
-      <div className="grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]">
-        {/* El contenido y las fotografías son del cliente: el admin no los ve aquí. Para
-            revisarlos entra como el cliente, con motivo y registro. */}
+      {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se
+          vuelve a pintar al guardar cada bloque. El admin no ve el contenido: su ficha sigue en
+          la rejilla de tarjetas de siempre. */}
+      <div className={contenido === null ? 'grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]' : 'grid items-start gap-4.5 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]'}>
         {contenido === null ? null : (
-        <PanelCard title={`Contenido de la invitación · ${tema.label}`}>
-          {/* Ver la invitación **de esta boda**, sin repartir un enlace ni contar una
-              visita ajena en la analítica. El escaparate enseña el diseño con el contenido
-              de muestra; esto enseña lo que se acaba de escribir. */}
-          <p className="mb-4">
-            <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver esta invitación</PanelButton>
+        <div className="flex min-w-0 flex-col gap-4.5">
+        <PanelCard title={`Tu invitación · ${tema.label}`}>
+          {/* En pantallas donde no cabe el teléfono al lado, se abre aparte. */}
+          <p className="mb-4 min-[1280px]:hidden">
+            <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver cómo queda</PanelButton>
           </p>
           <ContentBlockForms
+            anfitriones={anfitrionesDeCategoria(tema.categorySlug)}
             content={contenido}
             ejemplo={tema.defaultContent}
             eventId={event.value.id}
@@ -145,18 +148,13 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             sections={tema.sections}
           />
         </PanelCard>
+        </div>
         )}
 
-        {/* «y música» en el título, y no solo en el texto de dentro: la tarjeta se llamaba
-            «Fotografías de la invitación» y nadie iba a buscar ahí dónde subir el MP3. */}
-        {esAdmin ? null : (
-        <PanelCard title="Fotografías y música">
-          <EventMediaPanel
-            eventId={event.value.id}
-            eventSlug={event.value.slug}
-            items={imagenes}
-          />
-        </PanelCard>
+        {contenido === null ? null : (
+          <aside className="hidden min-[1280px]:sticky min-[1280px]:top-6 min-[1280px]:row-span-6 min-[1280px]:block">
+            <InvitacionEnVivo content={contenido} event={event.value} />
+          </aside>
         )}
 
         {esDelAtelier ? (

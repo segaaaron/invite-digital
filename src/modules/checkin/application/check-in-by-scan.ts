@@ -11,6 +11,11 @@ export type ScanRequest = {
   /** `null` deja la cantidad en manos del servidor: la fija lo confirmado por el grupo. */
   readonly arrivedCount: number | null
   readonly scannedAt: Date
+  /**
+   * Quiénes entran ahora, si la invitación tiene personas cargadas. Sin esto —o sin personas—
+   * es un escaneo por número, como siempre.
+   */
+  readonly personIds?: readonly string[] | null
 }
 
 export type ScanGroupView = {
@@ -21,17 +26,22 @@ export type ScanGroupView = {
   readonly seats: number
   /** La puerta canta este número en voz alta; `null` es «mesa por asignar». */
   readonly tableLabel: string | null
+  /** Las personas de la invitación, para que la puerta vea quién entró y quién falta. */
+  readonly people: readonly { readonly id: string; readonly fullName: string }[]
 }
 
+/** Quién está dentro y desde qué hora, por persona. */
+type Personas = { readonly personas: Readonly<Record<string, Date>> }
+
 export type ScanOutcome =
-  | { readonly scanId: string; readonly kind: 'welcome'; readonly group: ScanGroupView; readonly arrivedCount: number }
-  | {
+  | ({ readonly scanId: string; readonly kind: 'welcome'; readonly group: ScanGroupView; readonly arrivedCount: number } & Personas)
+  | ({
       readonly scanId: string
       readonly kind: 'already'
       readonly group: ScanGroupView
       readonly arrivedAt: Date
       readonly arrivedCount: number
-    }
+    } & Personas)
   | { readonly scanId: string; readonly kind: 'unknown' }
 
 type Deps = { groups: DoorGroupReader; arrivals: ArrivalRepository; minter: Minter }

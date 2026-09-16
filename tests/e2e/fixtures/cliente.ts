@@ -85,6 +85,22 @@ export async function deleteClienteFixture(slug: string): Promise<void> {
   await sql`delete from users where email in (${CLIENTE.email}, ${DUENO.email}, ${EQUIPO.planner}, ${EQUIPO.coanfitriona})`
 }
 
+/** Una co-anfitriona de antes: ya no se suman desde Equipo, pero las que existen siguen entrando. */
+export async function sumarCoanfitriona(slug: string, email: string): Promise<void> {
+  const sql = db()
+  const [usuario] = await sql<{ id: string }[]>`
+    insert into users (email, password_hash, role, must_change_password)
+    values (${email}, ${await argon2Hasher.hash('provisional-de-prueba-1')}, 'cliente', false)
+    on conflict (email) do update set role = 'cliente'
+    returning id
+  `
+  await sql`
+    insert into event_staff (event_id, user_id, membership)
+    select id, ${usuario!.id}, 'coanfitrion' from events where slug = ${slug}
+    on conflict (event_id, user_id) do update set membership = 'coanfitrion'
+  `
+}
+
 /** Le pone una contraseña conocida y sin marca de provisional, para entrar en la prueba. */
 export async function fijarClave(email: string, password: string): Promise<void> {
   const sql = db()

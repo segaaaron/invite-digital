@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events, guestGroups, venueTables } from '@/shared/db/schema'
+import { events, guestGroups, guestPeople, venueTables } from '@/shared/db/schema'
 import { eq } from 'drizzle-orm'
 import { drizzleArrivalRepository, drizzleDoorGroupReader } from './drizzle-arrival-repository'
 
@@ -27,6 +27,29 @@ afterAll(async () => {
 })
 
 describe('drizzleArrivalRepository', () => {
+  it('guarda quiénes entraron en el escaneo, y la llegada por número sigue sin personas', async () => {
+    const [ana, luis] = [crypto.randomUUID(), crypto.randomUUID()]
+    const conPersonas = crypto.randomUUID()
+    const porNumero = crypto.randomUUID()
+    await drizzleArrivalRepository.insertIfAbsent({ scanId: conPersonas, guestGroupId: groupId, arrivedCount: 2, scannedAt: new Date(), voidedAt: null, personIds: [ana, luis] })
+    await drizzleArrivalRepository.insertIfAbsent({ scanId: porNumero, guestGroupId: groupId, arrivedCount: 1, scannedAt: new Date(), voidedAt: null })
+
+    const filas = await drizzleArrivalRepository.listByEvent(eventId)
+    expect(filas.find((f) => f.scanId === conPersonas)?.personIds).toEqual([ana, luis])
+    expect(filas.find((f) => f.scanId === porNumero)?.personIds).toBeNull()
+  })
+
+  it('el lector trae a las personas de la invitación, el principal primero', async () => {
+    const principal = crypto.randomUUID()
+    await db.insert(guestPeople).values([
+      { guestGroupId: groupId, fullName: 'Luis Acompañante', isCompanion: true },
+      { id: principal, guestGroupId: groupId, fullName: 'Ana Principal', isCompanion: false },
+    ])
+    const grupo = await drizzleDoorGroupReader.findGroupById(groupId)
+    expect(grupo?.people.map((p) => p.fullName)).toEqual(['Ana Principal', 'Luis Acompañante'])
+    expect(grupo?.people[0]?.id).toBe(principal)
+  })
+
   it('inserta una llegada y la lee por evento', async () => {
     const scanId = crypto.randomUUID()
     const inserted = await drizzleArrivalRepository.insertIfAbsent({

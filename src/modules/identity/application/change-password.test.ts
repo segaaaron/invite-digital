@@ -18,6 +18,7 @@ function dobles(existe = true) {
       escrito.push({ userId, passwordHash })
     },
     findIdByEmail: async () => (existe ? 'u1' : null),
+    completarContacto: async () => {},
   }
 
   const sessions: SessionRepository = {
@@ -29,6 +30,9 @@ function dobles(existe = true) {
     deleteByUser: async (userId) => {
       cerradas.push(userId)
     },
+    seen: async () => {},
+    listByUser: async () => [],
+    deleteOthers: async () => {},
   }
 
   // Solo acierta quien presenta la contraseña actual de verdad.

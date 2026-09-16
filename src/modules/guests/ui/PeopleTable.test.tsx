@@ -44,6 +44,14 @@ const filas: PersonRowView[] = [
 ]
 
 describe('PeopleTable', () => {
+  // La respuesta la da el invitado; cambiarla a mano es de «Editar», no de un toque suelto.
+  it('el RSVP se lee, no se cambia desde la fila', () => {
+    render(<PeopleTable eventSlug="boda" rows={filas} />)
+    const celda = screen.getByRole('row', { name: /Roberto Núñez/ }).querySelectorAll('td')[2]!
+    expect(celda).toHaveTextContent('Pendiente')
+    expect(celda.querySelector('button')).toBeNull()
+  })
+
   it('enseña las columnas de la maqueta', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
     for (const columna of ['Nombre', 'Invitación', 'RSVP', 'Restricciones', 'Mesa']) {
@@ -73,11 +81,10 @@ describe('PeopleTable', () => {
 
   it('el estado se lee en texto, no solo por color', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    // «Confirmado» es además una columna de la tabla, como en la maqueta: se busca el
-    // botón de la fila, que es el que cambia el estado.
-    expect(screen.getByRole('button', { name: 'Confirmado' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Tal vez' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Pendiente' })).toBeInTheDocument()
+    const rsvp = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[2]
+    expect(rsvp('Ana Lucía Vega')).toHaveTextContent('Confirmado')
+    expect(rsvp('Acompañante de Ana')).toHaveTextContent('Tal vez')
+    expect(rsvp('Roberto Núñez')).toHaveTextContent('Pendiente')
   })
 
   it('trae las columnas Enviado y Confirmado de la maqueta', () => {
@@ -218,5 +225,13 @@ describe('PeopleTable · acciones de la fila', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirmar' }))
     expect(removePersonAction).toHaveBeenCalledWith({ eventSlug: 'boda', id: 'p1' })
+  })
+})
+
+describe('PeopleTable · llegadas', () => {
+  it('dice a qué hora llegó cada persona que ya entró', () => {
+    render(<PeopleTable eventSlug="boda" rows={[{ ...filas[2]!, llegoA: new Date('2026-10-18T23:40:00Z') }, filas[0]!]} />)
+    expect(screen.getByText('Llegó 19:40')).toBeInTheDocument()
+    expect(screen.getAllByText(/^Llegó/)).toHaveLength(1)
   })
 })

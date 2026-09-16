@@ -57,6 +57,25 @@ describe('formaPara', () => {
     expect(hosts.form === 'campos' && hosts.list).toBeUndefined()
   })
 
+  it('los anfitriones se piden por su papel: padre y madre en un XV, los de cada novio en una boda, y padrinos', () => {
+    const xv = formaPara('hosts', { fotos: { casillas: 0 } }, 'xv')
+    expect(xv.fields.map((campo) => [campo.key, campo.label])).toEqual([
+      ['label', 'Título'],
+      ['father', 'Nombre del padre'],
+      ['mother', 'Nombre de la madre'],
+    ])
+    expect(xv.form === 'campos' && xv.list?.key).toBe('godparents')
+
+    const boda = formaPara('hosts', { fotos: { casillas: 0 } }, 'boda')
+    expect(boda.fields.map((campo) => campo.key)).toEqual(['label', 'brideFather', 'brideMother', 'groomFather', 'groomMother'])
+  })
+
+  it('un diseño que no pinta los nombres solo pide el título', () => {
+    const hosts = formaPara('hosts', { fotos: { casillas: 5 }, sinCampos: { hosts: ['names'] } }, 'boda')
+    expect(hosts.fields.map((campo) => campo.key)).toEqual(['label'])
+    expect(hosts.form === 'campos' && hosts.list).toBeUndefined()
+  })
+
   it('acota los avisos a los que el diseño pinta', () => {
     const forma = formaPara('notes', { fotos: { casillas: 6 }, maxAvisos: 1 })
     expect(forma.form === 'filas' && forma.max).toBe(1)

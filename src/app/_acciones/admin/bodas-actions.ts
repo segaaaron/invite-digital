@@ -9,6 +9,7 @@ import { ALFABETO_SUFIJO, slugDeBoda } from '@/modules/admin/domain/nueva-boda'
 import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { refrescar, texto } from '@/app/_acciones/admin/admin-comun'
+import { normalizarWhatsapp } from '@/shared/whatsapp'
 
 /** Reasignar el dueño de un evento. Es la salida cuando hay que borrar a alguien. */
 export async function reassignEventAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
@@ -87,10 +88,14 @@ export async function createWeddingForClientAction(
   const planSlug = texto(formData, 'planSlug')
   const correo = texto(formData, 'clientEmail').trim().toLowerCase()
   const clave = texto(formData, 'clientPassword')
+  const nombreCliente = texto(formData, 'clientName').trim().slice(0, 160)
+  const telefonoCliente = normalizarWhatsapp(texto(formData, 'clientPhone'))
 
   if (titulo === '') return { status: 'error', message: 'Escribe el nombre del evento.' }
   if (fecha === '') return { status: 'error', message: 'Escribe la fecha del evento.' }
   if (correo === '') return { status: 'error', message: 'Escribe el correo del cliente.' }
+  if (nombreCliente === '') return { status: 'error', message: 'Escribe el nombre del cliente.' }
+  if (telefonoCliente === null) return { status: 'error', message: 'Revisa el WhatsApp del cliente.' }
 
   // El diseño, validado contra el registro: comparar la clave es lo único que impide que
   // entre un modelo que nadie eligió.
@@ -182,6 +187,7 @@ export async function createWeddingForClientAction(
   }
 
   await events.staff.add(evento.value.id, clienteId, 'cliente')
+  await admin.completarContacto(clienteId, { fullName: nombreCliente, phone: telefonoCliente === '' ? null : telefonoCliente })
 
   // --- 6. Su acceso por correo. Nunca falla hacia arriba: el alta ya está hecha.
   const avisado = await notifications.sendClientAccess({

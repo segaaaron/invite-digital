@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { events, guests, plans, reminders, rsvp, venue } from '@/app/composition/container'
+import { checkin, events, guests, plans, reminders, rsvp, venue } from '@/app/composition/container'
 import { ExportCsvButton } from '@/modules/guests/ui/ExportCsvButton'
 import { PeopleTable, type PersonRowView } from '@/modules/guests/ui/PeopleTable'
 import { DeliveryPanel } from '@/modules/guests/ui/DeliveryPanel'
@@ -10,6 +10,7 @@ import { EditPersonDialog } from '@/modules/guests/ui/EditPersonDialog'
 import { PassDialog } from '@/modules/guests/ui/PassDialog'
 import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
 import { loQueFaltaParaInvitar } from '@/modules/events'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -77,6 +78,13 @@ export default async function InvitadosPage({
     }
   }
 
+  // A qué hora entró cada persona, si el plan trae la puerta. Una lectura fallida no tumba la lista.
+  const conPuerta = !isErr(await plans.requireFeature(event.value.id, 'checkin'))
+  const puerta = conPuerta ? await checkin.state(event.value.id).catch(() => null) : null
+  const llegadaDe = new Map<string, Date>(
+    puerta === null || isErr(puerta) ? [] : puerta.value.arrivals.flatMap((a) => Object.entries(a.personas)),
+  )
+
   const etiquetaDeGrupo = new Map(filas.map((f) => [f.id, f.label]))
   const respuestaDeGrupo = new Map([...ultimas].map(([id, r]) => [id, r.respondedAt]))
   const filasPersona: PersonRowView[] = isErr(personas)
@@ -86,6 +94,7 @@ export default async function InvitadosPage({
         fullName: persona.fullName,
         groupId: persona.guestGroupId,
         groupLabel: etiquetaDeGrupo.get(persona.guestGroupId) ?? '—',
+        llegoA: llegadaDe.get(persona.id) ?? null,
         isCompanion: persona.isCompanion,
         dietaryNote: persona.dietaryNote,
         vip: persona.vip,
@@ -202,7 +211,7 @@ export default async function InvitadosPage({
           eventId={event.value.id}
           eventSlug={event.value.slug}
           notice={
-            <AllowanceNotice currentGroups={filas.length} eventSlug={event.value.slug} maxGuestGroups={limite} />
+            <AllowanceNotice currentGroups={filas.length} maxGuestGroups={limite} mejorar={await mejorarPara(actor, event.value.slug, 'Sumar invitaciones')} />
           }
         />
       ) : null}
@@ -246,30 +255,25 @@ export default async function InvitadosPage({
       ) : null}
 
       <div className="flex flex-col gap-4.5">
+        {/* «Enviar invitaciones» es un panel lateral: repartir es ir invitado tras invitado
+            mirando la lista, y un bloque aquí la empujaba hacia abajo. */}
         {abierto === 'envio' ? (
-          <PanelCard
-            action={
-              <Link href={base}>
-                <PanelCardLink>Cerrar ✕</PanelCardLink>
-              </Link>
-            }
-            title="Enviar invitaciones"
-          >
-            <DeliveryPanel
-              eventLocale={event.value.locale}
-              eventSlug={event.value.slug}
-              eventTitle={event.value.title}
-              sinContenido={invitacionVacia}
-              rows={filas.map((fila) => ({
-                id: fila.id,
-                label: fila.label,
-                phone: fila.phone ?? null,
-                sent: fila.invitationSentAt !== null && fila.invitationSentAt !== undefined,
-                revoked: fila.revokedAt !== null,
-              }))}
-              template={event.value.messageTemplate ?? null}
-            />
-          </PanelCard>
+          <DeliveryPanel
+            closeHref={base}
+            eventLocale={event.value.locale}
+            eventSlug={event.value.slug}
+            eventTitle={event.value.title}
+            rows={filas.map((fila) => ({
+              id: fila.id,
+              label: fila.label,
+              phone: fila.phone ?? null,
+              sent: fila.invitationSentAt !== null && fila.invitationSentAt !== undefined,
+              revoked: fila.revokedAt !== null,
+              confirmed: fila.confirmed,
+            }))}
+            sinContenido={invitacionVacia}
+            template={event.value.messageTemplate ?? null}
+          />
         ) : null}
 
         {abierto === 'importar' ? (
