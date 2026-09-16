@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { removePersonAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
+import { PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
 
 export type PersonRowView = {
   readonly id: string
@@ -147,7 +148,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
           <table className="w-full min-w-[980px] border-collapse text-left">
             <thead>
               <tr>
-                {['Nombre', 'Invitación', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna, i) => (
+                {['Nombre', 'Invitación', 'RSVP', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna, i) => (
                   <th
                     key={columna}
                     // La primera columna queda fija al desplazar la tabla en el teléfono: sin ella,
@@ -174,7 +175,16 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       </span>
                     ) : null}
                   </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">{fila.groupLabel}</td>
+                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
+                    {/* Sin repetir el nombre de la fila: la mayoría tiene la suya, y eso se dice. */}
+                    {fila.isCompanion ? (
+                      `Acompaña a ${fila.groupLabel}`
+                    ) : fila.groupLabel === fila.fullName ? (
+                      <span className="text-ink-mute">Propia</span>
+                    ) : (
+                      fila.groupLabel
+                    )}
+                  </td>
                   <td className="border-b border-line-panel py-3.5 pr-4">
                     <button
                       className="cursor-pointer"
@@ -194,9 +204,6 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                         {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
                       </Pill>
                     </button>
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
-                    {fila.isCompanion ? 'Sí' : '—'}
                   </td>
                   <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
                     {fila.dietaryNote ?? '—'}
@@ -237,13 +244,17 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     ) : (
                       <div className="flex justify-end gap-1.5">
                         <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
-                          ▣
+                          <QrIcon />
                         </IconLink>
                         <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
-                          ✎
+                          <PenIcon />
                         </IconLink>
-                        <IconButton label={`Eliminar a ${fila.fullName}`} onClick={() => setPorQuitar(fila.id)}>
-                          ×
+                        <IconButton
+                          className="hover:border-danger hover:text-danger"
+                          label={`Eliminar a ${fila.fullName}`}
+                          onClick={() => setPorQuitar(fila.id)}
+                        >
+                          <TrashIcon />
                         </IconButton>
                       </div>
                     )}

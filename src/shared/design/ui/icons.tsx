@@ -342,6 +342,15 @@ export function QrIcon({ className }: IconProps) {
   )
 }
 
+/** La papelera de borrar: tapa, cuerpo y dos vetas. */
+export function TrashIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10.5 11v5.5M13.5 11v5.5" />
+    </svg>
+  )
+}
+
 /** La cruz de cerrar. Un «×» tipográfico no casa con el trazo de 1,4 de los demás. */
 export function CloseIcon({ className }: IconProps) {
   return (

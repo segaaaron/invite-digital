@@ -46,8 +46,28 @@ const filas: PersonRowView[] = [
 describe('PeopleTable', () => {
   it('enseña las columnas de la maqueta', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    for (const columna of ['Nombre', 'Invitación', 'RSVP', 'Acomp.', 'Restricciones', 'Mesa']) {
+    for (const columna of ['Nombre', 'Invitación', 'RSVP', 'Restricciones', 'Mesa']) {
       expect(screen.getByRole('columnheader', { name: columna })).toBeInTheDocument()
+    }
+    // «Acomp.» repetía lo que ya dice la invitación.
+    expect(screen.queryByRole('columnheader', { name: 'Acomp.' })).toBeNull()
+  })
+
+  it('la invitación se lee sin repetir el nombre: propia, con nombre propio, o a quién acompaña', () => {
+    render(<PeopleTable eventSlug="boda" rows={filas} />)
+    const celda = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[1]
+
+    expect(celda('Roberto Núñez')).toHaveTextContent(/^Propia$/)
+    expect(celda('Ana Lucía Vega')).toHaveTextContent(/^Familia Rojas Peña$/)
+    expect(celda('Acompañante de Ana')).toHaveTextContent(/^Acompaña a Familia Rojas Peña$/)
+  })
+
+  it('las acciones de la fila son iconos dibujados con su rótulo, nunca caracteres', () => {
+    render(<PeopleTable eventSlug="boda" rows={filas} />)
+    for (const nombre of ['Ver el pase de Roberto Núñez', 'Editar a Roberto Núñez', 'Eliminar a Roberto Núñez']) {
+      const accion = screen.getByRole(nombre.startsWith('Eliminar') ? 'button' : 'link', { name: nombre })
+      expect(accion.querySelector('svg')).not.toBeNull()
+      expect(accion.textContent?.trim()).toBe('')
     }
   })
 
@@ -78,11 +98,11 @@ describe('PeopleTable', () => {
     expect(screen.queryByText('Acompañante de Ana')).not.toBeInTheDocument()
   })
 
-  it('busca por nombre y por grupo', () => {
+  it('busca por nombre y por invitación', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
     fireEvent.change(screen.getByLabelText(/buscar/i), { target: { value: 'roberto' } })
-    // Su nombre y el de su grupo son el mismo: aparece en dos celdas de la misma fila.
-    expect(screen.getAllByText('Roberto Núñez')).toHaveLength(2)
+    // Su invitación es la suya: la celda dice «Propia» en vez de repetir el nombre.
+    expect(screen.getAllByText('Roberto Núñez')).toHaveLength(1)
     expect(screen.queryByText('Ana Lucía Vega')).not.toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText(/buscar/i), { target: { value: 'rojas' } })

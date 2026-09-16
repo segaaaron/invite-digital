@@ -357,7 +357,7 @@ export function IconLink({ label, href, children }: { label: string; href: strin
   return (
     <Link
       aria-label={label}
-      className="inline-flex size-7 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
+      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
       href={href}
       title={label}
     >
@@ -380,7 +380,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex size-7 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-[13px] transition-colors hover:border-ink ${className}`.trim()}
+      className={`inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${className}`.trim()}
       {...rest}
     >
       <span aria-hidden>{children}</span>
