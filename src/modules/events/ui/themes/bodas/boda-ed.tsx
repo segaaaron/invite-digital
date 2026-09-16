@@ -11,6 +11,7 @@ export const bodaEdDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'italiana', 'dmSans', 'cinzel'],
   rsvp: 'botones',
+  pinta: { fotos: { casillas: 2 }, sinCampos: { itinerary: ['note'] }, maxAvisos: 4 },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-ed.view').then((modulo) => modulo.BodaEdView)),

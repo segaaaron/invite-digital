@@ -3,8 +3,9 @@ import type { FontKey } from '@/shared/design/font-manifest'
 import type { InvitationDictionary, ThemeDictionary } from '@/shared/i18n/dictionary'
 import type { Event } from '../../domain/event'
 import type { InvitationContent, SectionKey } from '../../domain/invitation-content'
+import type { FotosDelDiseno, LoQuePinta } from '../content-shapes'
 
-export type { SectionKey }
+export type { SectionKey, FotosDelDiseno, LoQuePinta }
 
 /**
  * Las ranuras, en vez de un `children` único.
@@ -113,6 +114,13 @@ export type ThemeDefinition = {
    */
   readonly rsvp?: 'campos' | 'botones'
   readonly sections: readonly SectionKey[]
+  /**
+   * Lo que pinta de cada bloque, y por eso lo único que el panel le pide al cliente.
+   *
+   * Es obligatorio a propósito: un diseño nuevo que no lo declare no compila, que es la
+   * única forma de que no se cuele otro campo que nadie pinta.
+   */
+  readonly pinta: LoQuePinta
   readonly defaultContent: InvitationContent
   readonly Component: ComponentType<ThemeProps>
 }

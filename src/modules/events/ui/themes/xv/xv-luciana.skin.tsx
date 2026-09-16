@@ -70,6 +70,7 @@ export const PIEL: PielXv = {
       badge={chapaDePortada(datos.eyebrow, datos.name)}
       bg="#0f2a1f"
       bgAsset={themeAsset('xv-luciana', 'bosque-verdee.avif')}
+      foto={datos.foto}
       hint={datos.enter}
       lanternAsset={themeAsset('xv-luciana', 'faro-verde.avif')}
       line1={datos.line1}

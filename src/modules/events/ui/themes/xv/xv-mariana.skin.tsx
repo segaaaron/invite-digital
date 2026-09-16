@@ -80,6 +80,7 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#050608"
       bgAsset={themeAsset('xv-mariana', 'fondo-disco-mariana-opt.avif')}
+      foto={datos.foto}
       hint={datos.enter}
       name={datos.name}
       nameColor={P.blanco}

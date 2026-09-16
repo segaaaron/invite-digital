@@ -8,6 +8,14 @@ type Props = {
   /** El color de debajo, para el instante en que la fotografía todavía no está. */
   readonly bg: string
   readonly bgAsset: string
+  /**
+   * La fotografía de la quinceañera, cuando la subió.
+   *
+   * En estos cinco diseños la portada **es** una fotografía: la maqueta la trae de muestra
+   * y quien compra la invitación pone la suya. Sin ella se queda la del modelo, que es lo
+   * que se enseña en el escaparate.
+   */
+  readonly foto?: string | undefined
   /** El filtro de la fotografía, cuando el diseño la retoca. */
   readonly imageFilter?: string
   readonly objectPosition?: string
@@ -33,7 +41,7 @@ type Props = {
  * Es un `<button>` y no un `<div onClick>` como en la maqueta: con un div, quien navega
  * con teclado no puede abrirla y la invitación se acaba en la portada.
  */
-export function CoverShell({ bg, bgAsset, imageFilter, objectPosition, veils, openLabel, children }: Props) {
+export function CoverShell({ bg, bgAsset, foto, imageFilter, objectPosition, veils, openLabel, children }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -57,15 +65,34 @@ export function CoverShell({ bg, bgAsset, imageFilter, objectPosition, veils, op
       }}
       type="button"
     >
-      <Image
-        alt=""
-        aria-hidden
-        fill
-        priority
-        sizes="480px"
-        src={bgAsset}
-        style={{ objectFit: 'cover', objectPosition: objectPosition ?? 'center', filter: imageFilter }}
-      />
+      {foto === undefined ? (
+        <Image
+          alt=""
+          aria-hidden
+          fill
+          priority
+          sizes="480px"
+          src={bgAsset}
+          style={{ objectFit: 'cover', objectPosition: objectPosition ?? 'center', filter: imageFilter }}
+        />
+      ) : (
+        /* eslint-disable-next-line @next/next/no-img-element -- la sirve /media/[id], que
+           no pasa por el optimizador de Next: lleva la puerta de contraseña del evento. */
+        <img
+          alt=""
+          aria-hidden
+          src={foto}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: objectPosition ?? 'center',
+            filter: imageFilter,
+          }}
+        />
+      )}
       {veils.map((velo) => (
         <span aria-hidden key={velo} style={{ position: 'absolute', inset: 0, background: velo }} />
       ))}

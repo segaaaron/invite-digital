@@ -36,6 +36,7 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#16223d"
       bgAsset={themeAsset('xv-fantasia', 'noche-estrellada-portada.avif')}
+      foto={datos.foto}
       envelopeAsset={themeAsset('xv-fantasia', 'sobre-corona-recortado.avif')}
       hint={datos.enter}
       name={datos.name}

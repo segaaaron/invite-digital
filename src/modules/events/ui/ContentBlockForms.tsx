@@ -5,7 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/
 import { type ContentActionState, saveContentBlockAction } from '@/app/_acciones/events/actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
 import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
-import { type Campo, FORMAS, type FormaBloque } from './content-shapes'
+import { type Campo, type FormaBloque, type LoQuePinta, formaPara } from './content-shapes'
 import { type MediaItem, esPista } from './EventMediaPanel'
 import { CheckIcon } from '@/shared/design/ui/icons'
 import { CampoFechaHora } from './CampoFechaHora'
@@ -42,6 +42,8 @@ type Props = {
   readonly eventSlug: string
   /** Las secciones que **este** diseño pinta. Las demás no se enseñan. */
   readonly sections: readonly SectionKey[]
+  /** Lo que **este** diseño pinta de cada bloque. Lo que no pinte, no se pide. */
+  readonly pinta: LoQuePinta
   readonly content: InvitationContent
   /** Las fotografías ya subidas del evento: lo que se ofrece en los campos de imagen. */
   readonly media: readonly MediaItem[]
@@ -68,7 +70,7 @@ type Props = {
  * nadie a mano**: lo compone `aValor` a partir de lo que hay en pantalla. Quien decide qué
  * es válido sigue siendo el dominio, en el servidor.
  */
-export function ContentBlockForms({ eventId, eventSlug, sections, content, media, ejemplo }: Props) {
+export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo }: Props) {
   if (sections.length === 0) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft">
@@ -125,6 +127,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, content, media
           ejemplo={ejemplo}
           eventId={eventId}
           eventSlug={eventSlug}
+          pinta={pinta}
           key={seccion}
           media={media}
           section={seccion}
@@ -139,6 +142,7 @@ function BloqueDeContenido({
   eventId,
   eventSlug,
   section,
+  pinta,
   content,
   media,
   ejemplo,
@@ -146,11 +150,12 @@ function BloqueDeContenido({
   eventId: string
   eventSlug: string
   section: SectionKey
+  pinta: LoQuePinta
   content: InvitationContent
   media: readonly MediaItem[]
   ejemplo: InvitationContent
 }) {
-  const forma = FORMAS[section]
+  const forma = formaPara(section, pinta)
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
   const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
 

@@ -63,7 +63,14 @@ export type ItineraryRow = {
 export type GalleryRow = { readonly label: string; readonly imageId?: string }
 
 /** Un aviso con su título y su explicación. */
-export type NoteCard = { readonly title: string; readonly text?: string }
+/**
+ * Un aviso de la invitación: «Solo adultos», «Lluvia de sobres», «Comparte tus fotos».
+ *
+ * **El título es opcional porque hay diseños que no lo pintan.** «Étoile» y «Bodas de Oro»
+ * ponen el aviso como un párrafo suelto y nunca enseñan su encabezado; a esos el panel no
+ * se lo pide, y exigirlo aquí borraba el aviso entero al guardar.
+ */
+export type NoteCard = { readonly title?: string; readonly text?: string }
 
 export type InvitationContent = {
   readonly hero?: HeroBlock
@@ -292,8 +299,9 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
   const avisos = lista<NoteCard>(crudo.notes, MAXIMOS.notes, (fila) => {
     if (!esObjeto(fila)) return undefined
     const titulo = texto(fila.title, LIMITES.corto)
-    if (titulo === undefined) return undefined
     const cuerpo = texto(fila.text, LIMITES.largo)
+    if (titulo === undefined && cuerpo === undefined) return undefined
+    if (titulo === undefined) return { text: cuerpo as string }
     return cuerpo === undefined ? { title: titulo } : { title: titulo, text: cuerpo }
   })
   if (avisos !== undefined) salida.notes = avisos

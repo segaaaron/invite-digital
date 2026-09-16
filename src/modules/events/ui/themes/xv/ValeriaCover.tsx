@@ -5,6 +5,8 @@ import { CoverShell } from './CoverShell'
 
 type Props = {
   readonly bgAsset: string
+  /** La fotografía del evento, cuando la subieron: sustituye a la del modelo. */
+  readonly foto?: string | undefined
   /** La tiara, entre el titular y el nombre. */
   readonly tiaraAsset: string
   readonly accent: string
@@ -28,6 +30,7 @@ const SOMBRA = '0 2px 10px rgba(0,0,0,.8), 0 0 20px rgba(0,0,0,.6)'
  */
 export function ValeriaCover({
   bgAsset,
+  foto,
   tiaraAsset,
   accent,
   textColor,
@@ -41,6 +44,7 @@ export function ValeriaCover({
     <CoverShell
       bg={bg}
       bgAsset={bgAsset}
+      foto={foto}
       openLabel={openLabel}
       veils={['rgba(45,10,22,.2)', `linear-gradient(180deg, transparent 88%, ${bg} 100%)`]}
     >

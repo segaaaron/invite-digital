@@ -45,6 +45,7 @@ export const clasicoDefinition: ThemeDefinition = {
   fonts: ['cormorant'],
   // No pinta ninguno de los bloques de la colección: es la hoja sobria con lo que ya
   // guarda `events`. Por eso el panel no le ofrece ninguna sección que rellenar.
+  pinta: { fotos: { casillas: 0 } },
   sections: [],
   defaultContent: {},
   Component: ClasicoTheme,

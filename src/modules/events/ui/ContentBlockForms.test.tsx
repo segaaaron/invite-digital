@@ -10,6 +10,9 @@ vi.mock('@/app/_acciones/events/actions', () => ({
 
 const SIN_IMAGENES: never[] = []
 
+/** Un diseño que pinta de todo: seis casillas de galería, portada y retrato. */
+const TODO = { fotos: { portada: true, retrato: true, casillas: 6 } } as const
+
 /** Lo que la acción recibiría si se pulsara «Guardar» ahora mismo. */
 const valorEnviado = (container: HTMLElement): unknown =>
   JSON.parse((container.querySelector('input[name="value"]') as HTMLInputElement).value)
@@ -18,7 +21,7 @@ describe('ContentBlockForms', () => {
   it('enseña un formulario por sección que el diseño pinta', () => {
     render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ music: { track: 'At Last' } }}
         eventId="e1"
         eventSlug="boda"
@@ -32,27 +35,27 @@ describe('ContentBlockForms', () => {
 
   it('no enseña las secciones que el diseño no pinta', () => {
     // Pedirle un itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.
-    render(<ContentBlockForms ejemplo={{}} content={{}} eventId="e1" eventSlug="boda" media={SIN_IMAGENES} sections={['music']} />)
+    render(<ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="boda" media={SIN_IMAGENES} sections={['music']} />)
     expect(screen.queryByText('Itinerario')).not.toBeInTheDocument()
     expect(screen.queryByText('Código de vestimenta')).not.toBeInTheDocument()
   })
 
   it('si el servidor cambia la canción —al subir el archivo—, el bloque enseña la nueva', () => {
     // Sin esto el formulario seguía con el nombre de muestra, y guardarlo lo volvía a escribir.
-    const props = { eventId: 'e1', eventSlug: 'b', media: SIN_IMAGENES, sections: ['music'] as const }
+    const props = { eventId: 'e1', eventSlug: 'b', media: SIN_IMAGENES, pinta: TODO, sections: ['music'] as const }
     const { container, rerender } = render(<ContentBlockForms ejemplo={{}} {...props} content={{ music: { track: 'Tiempo de Vals', artist: 'Chayanne' } }} />)
     rerender(<ContentBlockForms ejemplo={{}} {...props} content={{ music: { track: 'Mi Vals', artist: 'Cuarteto Andino' } }} />)
     expect(valorEnviado(container)).toMatchObject({ track: 'Mi Vals', artist: 'Cuarteto Andino' })
   })
 
   it('un diseño sin contenido editable lo dice, en vez de dejar la tarjeta vacía', () => {
-    render(<ContentBlockForms ejemplo={{}} content={{}} eventId="e1" eventSlug="boda" media={SIN_IMAGENES} sections={[]} />)
+    render(<ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="boda" media={SIN_IMAGENES} sections={[]} />)
     expect(screen.getByText(/no lleva contenido editable/i)).toBeInTheDocument()
   })
 
   it('cada formulario lleva su evento y su sección, para que la acción sepa qué guardar', () => {
     const { container } = render(
-      <ContentBlockForms ejemplo={{}} content={{}} eventId="e1" eventSlug="boda-demo" media={SIN_IMAGENES} sections={['music']} />,
+      <ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="boda-demo" media={SIN_IMAGENES} sections={['music']} />,
     )
     expect(container.querySelector('input[name="eventId"]')).toHaveValue('e1')
     expect(container.querySelector('input[name="eventSlug"]')).toHaveValue('boda-demo')
@@ -62,7 +65,7 @@ describe('ContentBlockForms', () => {
   it('pinta un campo por dato, con lo que el evento ya tiene escrito', () => {
     render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ music: { track: 'At Last', artist: 'Etta James' } }}
         eventId="e1"
         eventSlug="b"
@@ -76,7 +79,7 @@ describe('ContentBlockForms', () => {
 
   it('lo que se escribe en un campo es lo que se enviaría a guardar', () => {
     const { container } = render(
-      <ContentBlockForms ejemplo={{}} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['music']} />,
+      <ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['music']} />,
     )
 
     fireEvent.change(screen.getByLabelText('Canción'), { target: { value: 'Perfect' } })
@@ -87,7 +90,7 @@ describe('ContentBlockForms', () => {
   it('añade, mueve y quita una fila del itinerario sin tocar las demás', () => {
     const { container } = render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{
           itinerary: [
             { time: '16:00 h', label: 'Ceremonia' },
@@ -122,7 +125,7 @@ describe('ContentBlockForms', () => {
   it('no deja añadir más filas de las que el dominio guarda', () => {
     render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ notes: [{ title: 'a' }, { title: 'b' }, { title: 'c' }, { title: 'd' }] }}
         eventId="e1"
         eventSlug="b"
@@ -140,7 +143,7 @@ describe('ContentBlockForms', () => {
   it('la lista de anfitriones se edita nombre a nombre', () => {
     const { container } = render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ hosts: { label: 'PADRES', names: ['Ana'] } }}
         eventId="e1"
         eventSlug="b"
@@ -158,7 +161,7 @@ describe('ContentBlockForms', () => {
   it('la fotografía se elige de las del evento, no pegando su identificador', () => {
     const { container } = render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ gallery: [{ label: 'ANILLOS' }] }}
         eventId="e1"
         eventSlug="b"
@@ -177,7 +180,7 @@ describe('ContentBlockForms', () => {
     // formulario, y el atelier no se enteraría hasta verla rota.
     const { container } = render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ gallery: [{ label: 'ANILLOS', imageId: 'borrada' }] }}
         eventId="e1"
         eventSlug="b"
@@ -195,7 +198,7 @@ describe('ContentBlockForms', () => {
     // se guarda, y lo que suena en la invitación es un JPEG — o sea, nada.
     render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ music: { track: 'At Last' } }}
         eventId="e1"
         eventSlug="b"
@@ -219,7 +222,7 @@ describe('ContentBlockForms', () => {
     // fotografía: ofrecerlas pondría el retrato de la novia donde va la campana.
     render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ itinerary: [{ time: '16:00 h', label: 'Ceremonia', imageId: 'church' }] }}
         eventId="e1"
         eventSlug="b"
@@ -235,7 +238,7 @@ describe('ContentBlockForms', () => {
   it('vaciar todos los campos es como se quita una sección', () => {
     const { container } = render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ music: { track: 'At Last' } }}
         eventId="e1"
         eventSlug="b"
@@ -252,7 +255,7 @@ describe('ContentBlockForms', () => {
   it('la fecha y la hora van por separado, con la piel del panel y no la del navegador', () => {
     render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ schedule: { startsAt: '2026-10-18T16:00:00' } }}
         eventId="e1"
         eventSlug="b"
@@ -273,7 +276,7 @@ describe('ContentBlockForms', () => {
   it('cada bloque se guarda por su cuenta, con su propio valor', () => {
     const { container } = render(
       <ContentBlockForms
-        ejemplo={{}}
+        ejemplo={{}} pinta={TODO}
         content={{ music: { track: 'At Last' }, quote: { text: 'para siempre' } }}
         eventId="e1"
         eventSlug="b"

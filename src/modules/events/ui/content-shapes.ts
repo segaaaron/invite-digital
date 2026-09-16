@@ -54,6 +54,73 @@ export type FormaBloque =
   | { readonly form: 'campos'; readonly fields: readonly Campo[]; readonly list?: ListaSuelta }
   | { readonly form: 'filas'; readonly itemLabel: string; readonly max: number; readonly fields: readonly Campo[] }
 
+/**
+ * Qué fotografías pinta un diseño, que es lo mismo que decir cuáles se le piden.
+ *
+ * **No todas las tarjetas llevan fotografía.** Hay XV cuya portada es una escena dibujada
+ * —el fondo musical de «Encanto Musical»— y que no tienen ni arco de retrato ni galería:
+ * ahí no hay ningún sitio donde poner una foto. Pedirla igual deja al cliente subiendo un
+ * retrato que su invitación no enseña en ninguna parte, y lo descubre el día que reparte
+ * el enlace. Por eso el campo de imagen sale de lo que el diseño declara, no de una lista
+ * fija igual para los dieciséis.
+ */
+export type FotosDelDiseno = {
+  /** La portada a pantalla completa: `hero.coverImageId`. */
+  readonly portada?: boolean
+  /** El retrato del bloque de arriba: `hero.portraitImageId`. */
+  readonly retrato?: boolean
+  /** Cuántas casillas de la galería pinta. Cero es un diseño sin galería. */
+  readonly casillas: number
+}
+
+/**
+ * Lo que un diseño pinta, que es lo mismo que decir lo que se le pide al cliente.
+ *
+ * Los dieciséis comparten los mismos bloques y **no pintan los mismos datos dentro de
+ * ellos**: «Étoile» no escribe el monograma ni la firma de la despedida, «Bodas de Oro» no
+ * enseña la hora de la recepción ni los nombres de los padres, y solo dos de los dieciséis
+ * pintan el enlace del mapa. Un campo que se pide y no sale a ninguna parte es trabajo que
+ * el cliente hace para nadie, y no lo descubre hasta que reparte el enlace.
+ */
+export type LoQuePinta = {
+  readonly fotos: FotosDelDiseno
+  /** Los campos que este diseño **no** pinta, por bloque. Lo que no esté aquí, se pide. */
+  readonly sinCampos?: Partial<Record<SectionKey, readonly string[]>>
+  /** Cuántos avisos pinta, cuando son menos que el tope del dominio. */
+  readonly maxAvisos?: number
+}
+
+/** Qué declaración hace falta para que se pregunte por este campo de imagen. */
+const PIDE: Record<string, (fotos: FotosDelDiseno) => boolean> = {
+  coverImageId: (fotos) => fotos.portada === true,
+  portraitImageId: (fotos) => fotos.retrato === true,
+}
+
+/** Cuántas filas admite esta lista en este diseño. */
+const filas = (section: SectionKey, tope: number, pinta: LoQuePinta): number => {
+  if (section === 'gallery') return Math.min(tope, pinta.fotos.casillas)
+  if (section === 'notes' && pinta.maxAvisos !== undefined) return Math.min(tope, pinta.maxAvisos)
+  return tope
+}
+
+/**
+ * La forma del bloque **para este diseño**: sin los campos que no pinta y con cada lista
+ * acotada a las filas que de verdad tiene.
+ */
+export const formaPara = (section: SectionKey, pinta: LoQuePinta): FormaBloque => {
+  const forma = FORMAS[section]
+  const fuera = pinta.sinCampos?.[section] ?? []
+  const fields = forma.fields.filter(
+    (campo) => !fuera.includes(campo.key) && (PIDE[campo.key]?.(pinta.fotos) ?? true),
+  )
+  if (forma.form === 'filas') return { ...forma, fields, max: filas(section, forma.max, pinta) }
+  // La lista suelta —los nombres de los anfitriones— se quita como cualquier otro campo.
+  if (forma.list !== undefined && fuera.includes(forma.list.key)) {
+    return { form: 'campos', fields }
+  }
+  return { ...forma, fields }
+}
+
 /** Ata las claves declaradas a las del bloque del dominio. Su único trabajo es no compilar. */
 const campos = <T,>(...lista: readonly (Campo & { readonly key: Extract<keyof T, string> })[]): readonly Campo[] =>
   lista
@@ -130,7 +197,9 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
       { key: 'note', label: 'Rótulo', kind: 'texto', hint: '«CÓDIGO DE VESTIMENTA».' },
       { key: 'detail', label: 'Detalle', kind: 'parrafo' },
     ),
-    list: { key: 'imageIds', label: 'Fotografías', itemLabel: 'fotografía', kind: 'imagen', max: 4 },
+    // Sin lista de fotografías: **ninguno de los dieciséis diseños pinta las telas del
+    // código de vestimenta**. El campo existía en el dominio desde el primer día y el
+    // editor las pedía; lo que se subía ahí no aparecía en la invitación.
   },
   music: {
     form: 'campos',
@@ -168,7 +237,7 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
     fields: campos<NonNullable<InvitationContent['closing']>>(
       { key: 'text', label: 'Despedida', kind: 'parrafo' },
       { key: 'signature', label: 'Firma', kind: 'texto' },
-      { key: 'imageId', label: 'Fotografía', kind: 'imagen' },
+      // Igual que la vestimenta: la fotografía de la despedida no la pinta ningún diseño.
     ),
   },
 }

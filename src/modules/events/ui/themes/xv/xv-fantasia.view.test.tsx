@@ -41,3 +41,20 @@ describe('el tema Noche Estrellada', () => {
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
   })
 })
+
+describe('la fotografía de la portada de Noche Estrellada', () => {
+  // Su portada **es** una fotografía, así que el tema la declara (`fotos.portada`) y el
+  // panel la pide. Sin esta conexión, lo que se subía ahí no salía en ninguna parte y la
+  // invitación abría para siempre con la foto del modelo.
+  it('usa la del evento cuando la subieron', () => {
+    const { container } = render(
+      <XvFantasiaView {...propsDePrueba({ content: { ...CONTENIDO_DE_MUESTRA, hero: { ...CONTENIDO_DE_MUESTRA.hero, coverImageId: 'foto-1' } } })} />,
+    )
+    expect(container.querySelector('img[src="/media/foto-1"]')).toBeInTheDocument()
+  })
+
+  it('sin fotografía del evento se queda la del modelo', () => {
+    const { container } = render(<XvFantasiaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
+    expect(container.querySelector('img[src="/media/foto-1"]')).not.toBeInTheDocument()
+  })
+})

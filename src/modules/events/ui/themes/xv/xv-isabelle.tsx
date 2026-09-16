@@ -10,6 +10,11 @@ export const xvIsabelleDefinition: ThemeDefinition = {
   categorySlug: 'xv-anos',
   palette: PALETA,
   fonts: ['greatVibes', 'cormorant', 'cinzel', 'marcellus', 'allura', 'italiana', 'jetbrainsMono', 'playfairDisplay'],
+  pinta: {
+    fotos: { casillas: 1 },
+    sinCampos: { hero: ['nameB', 'monogram', 'serial'], map: ['href'], itinerary: ['note'] },
+    maxAvisos: 1,
+  },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./xv-isabelle.view').then((modulo) => modulo.XvIsabelleView)),

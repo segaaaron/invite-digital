@@ -187,9 +187,15 @@ describe('los avisos sueltos', () => {
     ).toEqual([{ title: 'Solo adultos', text: 'Evento para adultos y adolescentes.' }, { title: 'Lluvia de sobres' }])
   })
 
-  it('descarta un aviso sin título', () => {
-    // Un cuerpo sin encabezado es un párrafo suelto en medio del diseño.
-    expect(parseInvitationContent({ notes: [{ text: 'sin título' }] }).notes).toBeUndefined()
+  it('conserva un aviso que solo trae texto', () => {
+    // «Étoile» y «Bodas de Oro» pintan el aviso como un párrafo suelto, sin encabezado: a
+    // esos diseños el panel no les pide título, y descartarlo aquí borraba el aviso entero
+    // al guardar.
+    expect(parseInvitationContent({ notes: [{ text: 'sin título' }] }).notes).toEqual([{ text: 'sin título' }])
+  })
+
+  it('descarta un aviso sin título y sin texto', () => {
+    expect(parseInvitationContent({ notes: [{}] }).notes).toBeUndefined()
   })
 
   it('corta en cuatro', () => {

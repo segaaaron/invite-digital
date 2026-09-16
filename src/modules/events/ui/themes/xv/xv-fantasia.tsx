@@ -10,7 +10,8 @@ export const xv_fantasiaDefinition: ThemeDefinition = {
   categorySlug: 'xv-anos',
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
-  sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'closing'],
+  pinta: { fotos: { portada: true, casillas: 0 }, sinCampos: { hero: ['nameB'], map: ['href'], itinerary: ['note'] } },
+  sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./xv-fantasia.view').then((modulo) => modulo.XvFantasiaView)),
 }

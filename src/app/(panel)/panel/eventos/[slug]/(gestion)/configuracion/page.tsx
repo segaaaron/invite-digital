@@ -140,6 +140,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             ejemplo={tema.defaultContent}
             eventId={event.value.id}
             eventSlug={event.value.slug}
+            pinta={tema.pinta}
             media={imagenes}
             sections={tema.sections}
           />

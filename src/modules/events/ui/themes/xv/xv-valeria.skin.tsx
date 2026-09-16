@@ -63,6 +63,7 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#3a0e1c"
       bgAsset={themeAsset('xv-valeria', 'marco-guindo-portada.avif')}
+      foto={datos.foto}
       hint={datos.enter}
       name={datos.name}
       openLabel={datos.openLabel}

@@ -10,7 +10,8 @@ export const xv_lucianaDefinition: ThemeDefinition = {
   categorySlug: 'xv-anos',
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
-  sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'gallery', 'closing'],
+  pinta: { fotos: { portada: true, casillas: 0 }, sinCampos: { hero: ['nameB'], map: ['href'], itinerary: ['note'] } },
+  sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./xv-luciana.view').then((modulo) => modulo.XvLucianaView)),
 }

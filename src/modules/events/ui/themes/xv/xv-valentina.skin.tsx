@@ -48,6 +48,7 @@ export const PIEL: PielXv = {
       badge={chapaDePortada(datos.eyebrow, datos.name)}
       bg="#1c0a2d"
       bgAsset={themeAsset('xv-valentina', 'mascarada-morada.avif')}
+      foto={datos.foto}
       hint={datos.enter}
       line1={datos.line1}
       line2={datos.line2}

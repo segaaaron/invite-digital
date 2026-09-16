@@ -17,6 +17,13 @@ export const bodaDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['cormorant', 'spaceGrotesk', 'jetbrainsMono', 'cinzel'],
   rsvp: 'botones',
+  pinta: {
+    fotos: { retrato: true, casillas: 6 },
+    // «Étoile» escribe los nombres sin monograma, no pone firma bajo la despedida, su
+    // cronograma es hora y frase —sin detalle ni icono— y su aviso es un párrafo suelto.
+    sinCampos: { hero: ['monogram'], map: ['href'], dressCode: ['detail'], closing: ['signature'], itinerary: ['note', 'imageId'], notes: ['title'] },
+    maxAvisos: 1,
+  },
   sections: ['hero', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda.view').then((modulo) => modulo.BodaView)),

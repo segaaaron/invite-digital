@@ -1,4 +1,6 @@
 import { fiestaDeCategoria, fiestaDeTema } from '../../domain/fiesta'
+import { MAXIMOS } from '../../domain/invitation-content'
+import { FORMAS } from '../content-shapes'
 import { describe, expect, it } from 'vitest'
 import { THEME_KEYS, themeDefinitions, themeFor } from './registry'
 
@@ -23,6 +25,44 @@ describe('fiestaDeTema', () => {
   it('coincide con la categoría de cada diseño del registro', () => {
     for (const tema of themeDefinitions()) {
       expect(fiestaDeTema(tema.key), tema.key).toBe(fiestaDeCategoria(tema.categorySlug))
+    }
+  })
+})
+
+describe('las fotografías que declara cada diseño', () => {
+  // Un diseño sin casillas no tiene dónde poner una fotografía de galería: dejar la sección
+  // en la lista le pinta al cliente un formulario de fotos que su invitación no enseña.
+  it('lleva la galería solo el diseño que pinta alguna casilla', () => {
+    for (const tema of themeDefinitions()) {
+      expect(tema.sections.includes('gallery'), tema.key).toBe(tema.pinta.fotos.casillas > 0)
+    }
+  })
+
+  it('no promete más casillas de las que el dominio guarda', () => {
+    for (const tema of themeDefinitions()) {
+      expect(tema.pinta.fotos.casillas, tema.key).toBeLessThanOrEqual(MAXIMOS.gallery)
+    }
+  })
+})
+
+describe('los campos que declara cada diseño', () => {
+  // Una omisión con el nombre mal escrito no quita nada y no se nota: el campo se sigue
+  // preguntando. Esto ata cada omisión al campo real de su bloque.
+  it('cada campo que un diseño declara no pintar existe en su bloque', () => {
+    for (const tema of themeDefinitions()) {
+      for (const [seccion, claves] of Object.entries(tema.pinta.sinCampos ?? {})) {
+        const forma = FORMAS[seccion as keyof typeof FORMAS]
+        const reales = [...forma.fields.map((campo) => campo.key), ...(forma.form === 'campos' && forma.list !== undefined ? [forma.list.key] : [])]
+        for (const clave of claves) expect(reales, `${tema.key} · ${seccion}.${clave}`).toContain(clave)
+      }
+    }
+  })
+
+  it('un diseño solo declara omisiones de las secciones que pinta', () => {
+    for (const tema of themeDefinitions()) {
+      for (const seccion of Object.keys(tema.pinta.sinCampos ?? {})) {
+        expect(tema.sections, `${tema.key} · ${seccion}`).toContain(seccion)
+      }
     }
   })
 })

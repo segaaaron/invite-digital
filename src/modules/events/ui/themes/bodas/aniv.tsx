@@ -11,6 +11,13 @@ export const anivDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['cormorant', 'jetbrainsMono', 'cinzel'],
   rsvp: 'botones',
+  pinta: {
+    fotos: { casillas: 5 },
+    // «Bodas de Oro» pone el rótulo de los anfitriones sobre los nombres de la pareja y no
+    // llega a enseñar los suyos; su recepción va sin hora y su aviso, sin encabezado.
+    sinCampos: { hosts: ['names'], reception: ['time'], map: ['href'], notes: ['title'] },
+    maxAvisos: 1,
+  },
   sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./aniv.view').then((modulo) => modulo.AnivView)),

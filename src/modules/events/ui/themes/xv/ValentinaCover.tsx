@@ -5,6 +5,8 @@ import { CoverShell } from './CoverShell'
 
 type Props = {
   readonly bgAsset: string
+  /** La fotografía del evento, cuando la subieron: sustituye a la del modelo. */
+  readonly foto?: string | undefined
   /** La máscara veneciana, arriba del todo. */
   readonly maskAsset: string
   readonly accent: string
@@ -47,6 +49,7 @@ function Filete({ color }: { readonly color: string }) {
  */
 export function ValentinaCover({
   bgAsset,
+  foto,
   maskAsset,
   accent,
   textColor,
@@ -63,6 +66,7 @@ export function ValentinaCover({
     <CoverShell
       bg={bg}
       bgAsset={bgAsset}
+      foto={foto}
       imageFilter="saturate(0.85)"
       openLabel={openLabel}
       veils={['rgba(20,8,35,.58)', 'linear-gradient(180deg, rgba(18,7,32,0) 45%, rgba(18,7,32,.82) 100%)']}

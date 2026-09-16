@@ -163,10 +163,14 @@ test.describe('contenido de la invitación', () => {
     expect(servida.headers()['content-type']).toBe('image/webp')
     expect((await servida.body()).byteLength).toBeLessThan(original.byteLength / 4)
 
-    // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno. En la portada,
-    // que existe siempre: la invitación nace vacía y la galería no tiene casillas todavía.
+    // Y se ofrece por su nombre en el bloque, sin copiar identificador ninguno. En la
+    // galería, que es **donde este diseño pinta sus fotografías**: «Botánica» no abre con
+    // una portada fotográfica, así que ese campo no se le pide.
     await page.reload()
-    await expect(page.getByLabel('Fotografía de portada')).toContainText('retrato.jpg')
+    await expect(page.getByLabel('Fotografía de portada')).toHaveCount(0)
+    const galeria = page.locator('form').filter({ has: page.getByRole('heading', { name: 'Galería' }) })
+    await galeria.getByRole('button', { name: 'Añadir casilla' }).click()
+    await expect(galeria.getByLabel('Fotografía · casilla 1')).toContainText('retrato.jpg')
   })
 
   test('una fila quitada del itinerario no vuelve sola al recargar', async ({ page }) => {

@@ -129,6 +129,14 @@ export type PielXv = {
     line2: string
     /** «INGRESA A MI INVITACIÓN». */
     enter: string
+    /**
+     * La fotografía de la portada, ya como ruta, **cuando el diseño la pinta y existe**.
+     *
+     * Solo cinco de estos diseños abren con una fotografía; los demás abren con una escena
+     * dibujada y esto les llega siempre vacío. Es lo que declara `fotos.portada` del tema:
+     * lo que no se pinta no se pide.
+     */
+    foto?: string | undefined
   }) => ReactNode
   /**
    * El color de **cada pieza**, cuando este diseño no lo reparte como «Bajo el Mar».

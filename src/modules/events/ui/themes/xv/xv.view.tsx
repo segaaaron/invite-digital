@@ -153,6 +153,7 @@ export function XvSharedView({
         eyebrow: hero?.eyebrow ?? '',
         name: hero?.nameA ?? '',
         title: hero?.monogram ?? 'XV',
+        foto: hero?.coverImageId === undefined ? undefined : `/media/${hero.coverImageId}`,
         openLabel: themes.coverAria,
         line1: themes.coverInviteLine1,
         line2: themes.coverInviteLine2,

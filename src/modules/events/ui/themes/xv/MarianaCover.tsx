@@ -4,6 +4,8 @@ import { CoverShell } from './CoverShell'
 
 type Props = {
   readonly bgAsset: string
+  /** La fotografía del evento, cuando la subieron: sustituye a la del modelo. */
+  readonly foto?: string | undefined
   readonly accent: string
   readonly bg: string
   /** El degradado de plata del titular: aquí el color es el material, no un acento. */
@@ -30,6 +32,7 @@ const SOMBRA = '0 2px 10px rgba(0,0,0,.8), 0 0 20px rgba(0,0,0,.6)'
  */
 export function MarianaCover({
   bgAsset,
+  foto,
   accent,
   bg,
   titleGradient,
@@ -43,6 +46,7 @@ export function MarianaCover({
     <CoverShell
       bg={bg}
       bgAsset={bgAsset}
+      foto={foto}
       objectPosition="center 35%"
       openLabel={openLabel}
       veils={['rgba(0,0,0,.2)', `linear-gradient(180deg, transparent 88%, ${bg} 100%)`]}
