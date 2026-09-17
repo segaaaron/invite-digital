@@ -17,7 +17,7 @@ import { recordInvitationViewAction } from '@/app/_acciones/analytics/actions'
  * y un referente del propio sitio se manda como nulo: navegar dentro de la casa no es
  * una fuente de tráfico.
  */
-export function ViewBeacon({ token, kind }: { token: string; kind: 'guest' | 'client' }) {
+export function ViewBeacon({ token, kind }: { token: string; kind: 'guest' }) {
   useEffect(() => {
     const clave = `visita:${kind}:${token}`
     try {

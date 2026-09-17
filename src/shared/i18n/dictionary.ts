@@ -357,6 +357,9 @@ export interface ThemeDictionary {
 
 export interface InvitationDictionary {
   title: string
+  /** El título del bloque cuando ya respondió que viene, y cuando dijo que no. */
+  titleConfirmed: string
+  titleDeclined: string
   /** La confirmación nombre por nombre de un grupo. */
   whoIsComing: string
   /** El atajo de la pareja, y su salida cuando solo va uno. */

@@ -101,7 +101,7 @@ test.describe('el panel del cliente', () => {
     expect((await mama.goto(`/panel/eventos/${SLUG}/planner/tareas`))?.status()).toBe(200)
     // Ve el presupuesto, pero no lo edita: el dinero lo llevan el anfitrión y su planner.
     expect((await mama.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
-    await expect(mama.getByRole('link', { name: 'Sumar partida' })).toHaveCount(0)
+    await expect(mama.getByRole('link', { name: 'Anotar un gasto' })).toHaveCount(0)
     for (const ruta of ['/equipo', '/porteros', '/plan', '/checkin']) {
       expect((await mama.goto(`/panel/eventos/${SLUG}${ruta}`))?.status(), ruta).toBe(404)
     }
@@ -116,7 +116,7 @@ test.describe('el panel del cliente', () => {
     const respuesta = await page.goto(`/panel/eventos/${SLUG}/configuracion`)
     expect(respuesta?.status()).toBe(200)
 
-    await expect(page.getByRole('heading', { name: 'Configuración del evento' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Mi invitación', exact: true })).toBeVisible()
 
     // Y escribe de verdad: no basta con que la página pinte. Si la guarda de
     // `saveContentBlockAction` siguiera pidiendo `full`, esto reventaría al guardar.
@@ -162,8 +162,9 @@ test.describe('el panel del cliente', () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/qr`))?.status()).toBe(404)
   })
 
-  test('el check-in es de la puerta, no suyo', async () => {
-    expect((await page.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(404)
+  test('ve las llegadas de su evento', async () => {
+    expect((await page.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(200)
+    await expect(page.getByRole('heading', { name: 'Llegadas' })).toBeVisible()
   })
 
   test('la barra no le ofrece lo que no puede abrir', async () => {
@@ -172,7 +173,7 @@ test.describe('el panel del cliente', () => {
     const barra = page.getByRole('navigation')
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
     // Su invitación sí: es la pantalla donde escribe sus textos y elige su canción.
-    await expect(barra.getByRole('link', { name: 'Mi invitación' })).toBeVisible()
+    await expect(barra.getByRole('link', { name: 'Escribir mi invitación' })).toBeVisible()
     // Lo del atelier, no.
     await expect(barra.getByRole('link', { name: 'Plan', exact: true })).toHaveCount(0)
     await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)

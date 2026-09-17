@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
 import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
-import { abrirSeccion, añadirAcompanantes, createEvent, signIn } from './helpers/panel'
+import { abrirSeccion, añadirAcompanantes, createEvent, elegirFecha, signIn } from './helpers/panel'
 
 // IP propia para el limitador de inicios de sesión (cinco por IP): en el CI todas las suites salen de 127.0.0.1.
 test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.4' } })
@@ -50,8 +50,8 @@ test.describe('con sesión', () => {
 
     await page.getByLabel('Título').fill('Boda e2e')
     await page.getByLabel('Enlace del evento').fill(SLUG)
-    await page.getByLabel('Fecha del evento').fill('2027-05-15')
-    await page.getByLabel('Fecha límite de confirmación').fill('2027-05-01')
+    await elegirFecha(page, 'Fecha del evento', '2027-05-15')
+    await elegirFecha(page, 'Fecha límite de confirmación', '2027-05-01')
     await page.getByRole('button', { name: 'Crear evento' }).click()
     await expect(page.getByRole('status')).toContainText('Evento guardado')
 
@@ -64,8 +64,8 @@ test.describe('con sesión', () => {
 
     await page.getByLabel('Título').fill('Boda inválida')
     await page.getByLabel('Enlace del evento').fill(SLUG)
-    await page.getByLabel('Fecha del evento').fill('2027-05-15')
-    await page.getByLabel('Fecha límite de confirmación').fill('2027-06-01')
+    await elegirFecha(page, 'Fecha del evento', '2027-05-15')
+    await elegirFecha(page, 'Fecha límite de confirmación', '2027-06-01')
     await page.getByRole('button', { name: 'Crear evento' }).click()
 
     await expect(page.locator('form').getByRole('alert')).toContainText('no puede ser posterior')
@@ -230,36 +230,6 @@ test.describe('invitados del evento', () => {
     // Se ve el invitado, no un grupo: la pantalla no enseña grupos.
     await expect(page.getByRole('cell', { name: 'Familia Rojas Peña', exact: true }).first()).toBeVisible()
     await expect(page.getByRole('link', { name: /^Grupos/ })).toHaveCount(0)
-  })
-
-  test('crea el enlace del cliente, se abre en solo lectura y se revoca', async ({ page, context }) => {
-    await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-
-    await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
-    await añadirAcompanantes(page, 3)
-    await page.getByRole('button', { name: 'Guardar' }).click()
-    await expect(page).toHaveURL(/invitados$/)
-
-    // El enlace del cliente vive en Configuración, que es una vista propia como en la maqueta.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-
-    await page.getByRole('button', { name: 'Crear enlace para el cliente' }).click()
-    const url = await page.getByLabel('Enlace para el cliente').inputValue()
-    expect(url).toMatch(/\/compartir\/[A-Za-z0-9_-]{22}$/)
-
-    // Sin sesión: el cliente no es del atelier.
-    const anonima = await context.browser()!.newContext()
-    const vista = await anonima.newPage()
-    await vista.goto(url)
-    await expect(vista.getByText('Familia Rojas Peña')).toBeVisible()
-    await expect(vista.getByRole('button', { name: 'Revocar' })).toHaveCount(0)
-
-    await page.reload()
-    await page.getByRole('button', { name: 'Revocar enlace' }).click()
-    await expect(page.getByRole('button', { name: 'Crear enlace para el cliente' })).toBeVisible()
-
-    expect((await vista.goto(url))?.status()).toBe(404)
-    await anonima.close()
   })
 
   test('un invitado sin nombre no se envía: el navegador lo corta', async ({ page }) => {

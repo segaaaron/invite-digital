@@ -74,9 +74,19 @@ export function buscarEnInvitacion(raiz: HTMLElement, textos: readonly string[])
  * recepción, la fila de la cuenta atrás—. Se sube mientras el elemento sea más bajo que
  * `altoMinimo`, sin pasar de la raíz.
  */
+/** Más alto que esto ya no es una pieza, es la invitación. */
+const TOPE_DE_PIEZA = 900
+
 export function piezaQueContiene(elemento: HTMLElement, raiz: HTMLElement, altoMinimo = 120): HTMLElement {
   let actual = elemento
-  while (actual.parentElement !== null && actual.parentElement !== raiz && actual.getBoundingClientRect().height < altoMinimo) {
+  while (
+    actual.parentElement !== null &&
+    actual.parentElement !== raiz &&
+    actual.getBoundingClientRect().height < altoMinimo &&
+    // Sin saltar a un contenedor de media invitación: una pieza pequeña —el reproductor— que
+    // cuelga de la columna entera se queda en sí misma.
+    actual.parentElement.getBoundingClientRect().height <= TOPE_DE_PIEZA
+  ) {
     actual = actual.parentElement
   }
   return actual

@@ -1,12 +1,12 @@
 'use server'
 
 import { headers } from 'next/headers'
-import { analytics, events, guests } from '@/app/composition/container'
+import { analytics, guests } from '@/app/composition/container'
 import { classifyDevice, classifySource } from '@/modules/analytics/domain/view'
 import { isErr } from '@/shared/result'
 
 /**
- * Registra una visita a una invitación o a la vista del cliente.
+ * Registra una visita a una invitación.
  *
  * **Sin sesión, a propósito**: el invitado no tiene cuenta. Se autoriza por token, igual
  * que el RSVP y la mesa de regalos; un token desconocido no escribe nada.
@@ -20,7 +20,7 @@ import { isErr } from '@/shared/result'
  */
 export async function recordInvitationViewAction(input: {
   token: string
-  kind: 'guest' | 'client'
+  kind: 'guest'
   /** El `utm_source` de la URL que abrió el invitado. Lo lee el navegador, no el servidor. */
   utmSource?: string | null
   /** El referente real de la navegación, ya filtrado si era del propio sitio. */
@@ -34,26 +34,12 @@ export async function recordInvitationViewAction(input: {
     const device = classifyDevice(cabeceras.get('user-agent') ?? '')
     const source = classifySource(input.utmSource ?? null, input.referrer ?? null)
 
-    if (input.kind === 'guest') {
-      const group = await guests.resolveByToken(input.token)
-      if (isErr(group)) return
-
-      await analytics.record({
-        eventId: group.value.eventId,
-        guestGroupId: group.value.id,
-        device,
-        source,
-        viewedAt: new Date(),
-      })
-      return
-    }
-
-    const share = await events.resolveShare(input.token)
-    if (isErr(share)) return
+    const group = await guests.resolveByToken(input.token)
+    if (isErr(group)) return
 
     await analytics.record({
-      eventId: share.value.id,
-      guestGroupId: null,
+      eventId: group.value.eventId,
+      guestGroupId: group.value.id,
       device,
       source,
       viewedAt: new Date(),

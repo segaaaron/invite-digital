@@ -21,7 +21,7 @@ export const bodaDefinition: ThemeDefinition = {
     fotos: { retrato: true, casillas: 6 },
     // «Étoile» escribe los nombres sin monograma, no pone firma bajo la despedida, su
     // cronograma es hora y frase —sin detalle ni icono— y su aviso es un párrafo suelto.
-    sinCampos: { hero: ['monogram'], map: ['href'], dressCode: ['detail'], closing: ['signature'], itinerary: ['note', 'imageId'], notes: ['title'] },
+    sinCampos: { hero: ['monogram'], dressCode: ['detail'], closing: ['signature'], itinerary: ['note', 'imageId'], notes: ['title'] },
     maxAvisos: 1,
   },
   sections: ['hero', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],

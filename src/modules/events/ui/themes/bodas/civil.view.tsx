@@ -162,6 +162,9 @@ export function CivilView({ content, dictionary, themes, slots }: ThemeProps) {
                 accent={P.violeta}
                 border="rgba(124,92,255,0.3)"
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.papel}
               />

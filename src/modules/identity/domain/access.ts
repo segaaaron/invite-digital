@@ -81,7 +81,8 @@ export type Membership = 'puerta' | 'cliente' | 'coanfitrion' | 'planner'
 
 /** Las pertenencias que abren cada sección. Nadie da más permisos de los que tiene. */
 const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> = {
-  checkin: ['puerta'],
+  // La puerta, y quien celebra con su planner: ven quién llegó y pueden abrir el modo puerta.
+  checkin: ['puerta', 'cliente', 'planner'],
   cliente: ['cliente', 'coanfitrion', 'planner'],
   configuracion: ['cliente', 'coanfitrion', 'planner'],
   vistaPrevia: ['cliente', 'coanfitrion', 'planner'],
@@ -146,7 +147,7 @@ export function canAccessEvent(
 
   if (actor.role === 'puerta') return section === 'checkin' && memberships.includes('puerta')
 
-  if (section === 'full' || section === 'checkin') return false
+  if (section === 'full') return false
   return QUIEN_ENTRA[section].some((m) => memberships.includes(m))
 }
 

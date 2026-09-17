@@ -9,6 +9,8 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { themeFor } from '@/modules/events/ui/themes/registry'
+import { iconosDelItinerario } from '@/modules/events/ui/themes/iconos-itinerario'
 
 export const metadata = { title: 'Cronograma' }
 export const dynamic = 'force-dynamic'
@@ -32,6 +34,9 @@ export default async function CronogramaPage({ params, searchParams }: { params:
   // La vista por proveedor: el DJ ve sus entradas de canción; el catering, sus tiempos.
   const momentos = proveedor ? todos.filter((m) => m.vendorIds.includes(proveedor)) : todos
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
+  // Los iconos del diseño de su invitación, para los momentos que salen en ella.
+  const iconos = iconosDelItinerario(themeFor(event.value.themeKey).key)
+  const enInvitacion = todos.filter((m) => m.enInvitacion).length
   const base = `/panel/eventos/${event.value.slug}/planner/cronograma`
   const conAviso = todos.filter((m) => m.aviso !== null).length
 
@@ -49,20 +54,20 @@ export default async function CronogramaPage({ params, searchParams }: { params:
           </>
         }
         kicker="Planner"
-        meta={`${todos.length} momentos${conAviso > 0 ? ` · ${conAviso} con aviso` : ''}`}
+        meta={`${todos.length} momentos · ${enInvitacion} en la invitación${conAviso > 0 ? ` · ${conAviso} con aviso` : ''}`}
         title="Cronograma del día"
       />
       <div className="flex flex-col gap-4.5">
         {panel === 'momento' ? (
           <PanelCard title="Momento nuevo">
-            <NewMomentForm evento={evento} proveedores={proveedores} />
+            <NewMomentForm evento={evento} iconos={iconos} proveedores={proveedores} />
           </PanelCard>
         ) : null}
         {todos.length === 0 ? (
           <PanelCard title="Tu cronograma">
             <div className="flex flex-col items-center gap-4 py-4 text-center">
               <p className="max-w-[52ch] text-[13px] leading-[1.7] text-ink-soft">
-                Empieza con la plantilla de tu fiesta y ajusta las horas. Es el cronograma interno: el itinerario que ven los invitados se edita en la invitación.
+                Empieza con la plantilla de tu fiesta y ajusta las horas. Es la única lista de la noche: marca «Sale en la invitación» en los momentos que deben ver tus invitados.
               </p>
               <SeedMomentsButton evento={evento} />
             </div>
@@ -81,7 +86,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
                 ))}
               </nav>
             )}
-            <RunOfShowBoard evento={evento} momentos={momentos} proveedores={proveedores} />
+            <RunOfShowBoard evento={evento} iconos={iconos} momentos={momentos} proveedores={proveedores} />
           </PanelCard>
         )}
       </div>

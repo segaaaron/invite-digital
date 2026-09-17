@@ -1,5 +1,6 @@
 'use client'
 
+import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useActionState, useId, useState, type ReactNode } from 'react'
@@ -140,7 +141,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
               <label className={LABEL_CLASS} htmlFor={`${id}-fecha`}>
                 Fecha del evento
               </label>
-              <input className={FIELD_CLASS} id={`${id}-fecha`} name="eventDate" onChange={(e) => setFecha(e.target.value)} required type="date" value={fecha} />
+              <CampoFecha id={`${id}-fecha`} name="eventDate" onChange={setFecha} required valor={fecha} />
             </div>
           </div>
         </Paso>

@@ -5,6 +5,7 @@ import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
@@ -600,6 +601,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 >
                   {dressCode.detail ?? ''}
                 </div>
+                <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
               </div>
             </Reveal>
           )}
@@ -652,6 +654,9 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                     accent={P.oro}
                     border={P.filete}
                     coords={map.coords ?? ''}
+                    directionsLabel={themes.viewLocation}
+                    href={map.href}
+                    respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                     coordsColor={P.oro}
                     label={map.label ?? ''}
                     pinDot={P.papel}

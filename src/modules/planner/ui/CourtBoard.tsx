@@ -1,5 +1,6 @@
 'use client'
 
+import { CampoFechaYHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { type DiaActionState, removeCourtMemberAction, removeRehearsalAction, saveCourtMemberAction, saveRehearsalAction, setCourtConfirmedAction } from '@/app/_acciones/planner/dia-actions'
@@ -169,7 +170,7 @@ export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento;
         <Ocultos {...evento} />
         <div className="grid gap-3 min-[560px]:grid-cols-2">
           <Field htmlFor={`${id}-f`} label="Fecha y hora">
-            <input className={FIELD_CLASS} defaultValue={e?.date ?? ''} id={`${id}-f`} name="date" required type="datetime-local" />
+            <CampoFechaYHora defaultValue={e?.date ?? ''} id={`${id}-f`} name="date" required />
           </Field>
           <Field htmlFor={`${id}-l`} label="Lugar">
             <input className={FIELD_CLASS} defaultValue={e?.place ?? ''} id={`${id}-l`} maxLength={120} name="place" />

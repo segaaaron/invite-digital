@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useId, useState, useTransition } from 'react'
+import { createContext, useActionState, useContext, useId, useMemo, useState, useTransition } from 'react'
 import { FIELD_CLASS, IconButton, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { type ContentActionState, removeMediaAction, saveContentBlockAction } from '@/app/_acciones/events/actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
@@ -27,9 +27,12 @@ import {
   UsersIcon,
 } from '@/shared/design/ui/icons'
 import type { ComponentType } from 'react'
-import { CampoFechaHora } from './CampoFechaHora'
+import { CampoFechaHora } from '@/shared/design/ui/panel/CampoFechaHora'
 import { type AvisoDeSeccion, EVENTO_SECCION, textosDeSeccion } from './seguir-seccion'
 import { SubidaEnElCampo } from './SubidaEnElCampo'
+import { enlaceDeUbicacion, mapaIncrustado } from '../domain/ubicacion'
+import { COLORES_DE_VESTIMENTA } from '../domain/paleta-vestimenta'
+import { iconosDelItinerario, type OpcionDeIcono } from './themes/iconos-itinerario'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: ContentActionState = { status: 'idle' }
@@ -61,6 +64,18 @@ const BLOQUES: Record<SectionKey, { titulo: string; descripcion: string; Icono: 
   notes: { titulo: 'Avisos', descripcion: 'Lo que tus invitados tienen que saber: regalos, niños, parqueo.', Icono: HelpIcon },
   closing: { titulo: 'Despedida', descripcion: 'Las últimas palabras, al final de la invitación.', Icono: HeartIcon },
 }
+
+/**
+ * El orden en que se rellena una invitación, por pasos. Primero lo que se ve —portada y
+ * fotos—, después cuándo y dónde, la familia, los detalles y la música.
+ */
+const PASOS: ReadonlyArray<{ titulo: string; secciones: readonly SectionKey[] }> = [
+  { titulo: 'Portada y fotos', secciones: ['hero', 'gallery'] },
+  { titulo: 'Fecha y lugar', secciones: ['schedule', 'ceremony', 'reception', 'map'] },
+  { titulo: 'Familia y palabras', secciones: ['hosts', 'quote', 'closing'] },
+  { titulo: 'Detalles de la fiesta', secciones: ['itinerary', 'dressCode', 'notes'] },
+  { titulo: 'Música', secciones: ['music'] },
+]
 
 /** El icono que acompaña a un campo, cuando ayuda a saber qué se escribe ahí. */
 const ICONO_DE_CAMPO: Record<string, Icono> = {
@@ -100,7 +115,17 @@ type Props = {
   readonly ejemplo: InvitationContent
   /** Qué anfitriones pide la fiesta: padre y madre en un XV, los padres de cada novio en una boda. */
   readonly anfitriones?: Anfitriones
+  /** El diseño, para ofrecer los iconos de su itinerario dibujados como los pinta. */
+  readonly temaKey?: string
+  /**
+   * Dónde se edita el itinerario cuando sale del cronograma del día. Con él, la sección no
+   * pide los momentos otra vez: lleva al cronograma, que es la única lista.
+   */
+  readonly itinerarioDesde?: string
 }
+
+/** Los iconos del itinerario del diseño, sin pasarlos campo a campo por cada nivel. */
+const IconosDelDiseno = createContext<readonly OpcionDeIcono[]>([])
 
 /**
  * El contenido de la invitación, un formulario por bloque y un campo por dato.
@@ -118,7 +143,8 @@ type Props = {
  * nadie a mano**: lo compone `aValor` a partir de lo que hay en pantalla. Quien decide qué
  * es válido sigue siendo el dominio, en el servidor.
  */
-export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo, anfitriones = 'boda' }: Props) {
+export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo, anfitriones = 'boda', temaKey, itinerarioDesde }: Props) {
+  const iconos = useMemo(() => (temaKey === undefined ? [] : iconosDelItinerario(temaKey)), [temaKey])
   if (sections.length === 0) {
     return (
       <p className="text-[13px] leading-[1.7] text-ink-soft">
@@ -130,7 +156,9 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
   const hechos = sections.filter((seccion) => escrito(content, seccion)).length
 
   return (
+    <IconosDelDiseno.Provider value={iconos}>
     <Acordeon
+      {...(itinerarioDesde === undefined ? {} : { itinerarioDesde })}
       anfitriones={anfitriones}
       content={content}
       ejemplo={ejemplo}
@@ -141,6 +169,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
       pinta={pinta}
       sections={sections}
     />
+    </IconosDelDiseno.Provider>
   )
 }
 
@@ -180,6 +209,9 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
   // Los padrinos viven dentro de `roles`; los nombres de todos, compuestos, en `names`.
   const lista = forma.form === 'campos' && forma.anfitriones !== undefined ? [] : forma.form === 'campos' && forma.list !== undefined ? datos[forma.list.key] : undefined
   const nombres = Array.isArray(lista) ? lista.filter((x): x is string => typeof x === 'string') : []
+  if (forma.form === 'campos' && forma.list?.kind === 'color' && nombres.length > 0) {
+    return [...textos.slice(0, 2), `${nombres.length} ${nombres.length === 1 ? 'color' : 'colores'}`].join(' · ')
+  }
   return [...textos, ...nombres].slice(0, 3).join(' · ')
 }
 
@@ -192,9 +224,13 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
  * había. Lo escrito en una tarjeta plegada no se pierde: sigue montada, oculta.
  */
 function Acordeon({ sections, content, hechos, ...resto }: Props & { hechos: number }) {
-  const [abierta, setAbierta] = useState<SectionKey | null>(
-    () => sections.find((seccion) => !escrito(content, seccion)) ?? sections[0] ?? null,
-  )
+  const pasos = PASOS.map((paso) => ({ ...paso, secciones: paso.secciones.filter((s) => sections.includes(s)) })).filter((paso) => paso.secciones.length > 0)
+  // Lo que un diseño pinte y no esté en ningún paso no se pierde: va al último.
+  const sueltas = sections.filter((s) => !PASOS.some((paso) => paso.secciones.includes(s)))
+  if (sueltas.length > 0) pasos.push({ titulo: 'Más', secciones: sueltas })
+  const enOrden = pasos.flatMap((paso) => paso.secciones)
+
+  const [abierta, setAbierta] = useState<SectionKey | null>(() => enOrden.find((seccion) => !escrito(content, seccion)) ?? enOrden[0] ?? null)
 
   return (
     <div className="flex flex-col gap-4">
@@ -205,26 +241,46 @@ function Acordeon({ sections, content, hechos, ...resto }: Props & { hechos: num
         </div>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {sections.map((seccion) => (
-          <BloqueDeContenido
-            {...resto}
-            abierta={abierta === seccion}
-            content={content}
-            key={seccion}
-            onAlternar={() => {
-              const abre = abierta !== seccion
-              setAbierta(abre ? seccion : null)
-              // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
-              if (abre) {
-                const aviso: AvisoDeSeccion = { seccion, textos: textosDeSeccion(content, seccion) }
-                window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
-              }
-            }}
-            section={seccion}
-          />
-        ))}
-      </div>
+      {pasos.map((paso, i) => {
+        const listas = paso.secciones.filter((s) => escrito(content, s)).length
+        const completo = listas === paso.secciones.length
+        const tituloId = `paso-${i + 1}`
+        return (
+          <section aria-labelledby={tituloId} className="flex flex-col gap-3" key={paso.titulo}>
+            <h2 className="m-0 flex items-center gap-3 pt-2" id={tituloId}>
+              <span
+                aria-hidden
+                className={`grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-medium ${completo ? 'bg-sage text-white' : 'bg-ink text-white'}`}
+              >
+                {completo ? <CheckIcon className="size-3.5" /> : i + 1}
+              </span>
+              <span className="sr-only">{`${i + 1}. `}</span>
+              <span className="font-display text-[20px] leading-tight text-ink">{paso.titulo}</span>
+              <span className="ml-auto text-[12px] font-normal text-ink-mute">{`${listas} de ${paso.secciones.length} listas`}</span>
+            </h2>
+            <div className="flex flex-col gap-3 border-l border-line-panel pl-3 min-[560px]:ml-3.5 min-[560px]:pl-6">
+              {paso.secciones.map((seccion) => (
+                <BloqueDeContenido
+                  {...resto}
+                  abierta={abierta === seccion}
+                  content={content}
+                  key={seccion}
+                  onAlternar={() => {
+                    const abre = abierta !== seccion
+                    setAbierta(abre ? seccion : null)
+                    // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
+                    if (abre) {
+                      const aviso: AvisoDeSeccion = { seccion, textos: textosDeSeccion(content, seccion) }
+                      window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
+                    }
+                  }}
+                  section={seccion}
+                />
+              ))}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }
@@ -244,6 +300,7 @@ function IconoDeCampo({ clave }: { clave: string }) {
 function BloqueDeContenido({
   eventId,
   eventSlug,
+  itinerarioDesde,
   section,
   pinta,
   content,
@@ -254,6 +311,7 @@ function BloqueDeContenido({
   anfitriones = 'boda',
 }: {
   anfitriones?: Anfitriones | undefined
+  itinerarioDesde?: string | undefined
   abierta: boolean
   onAlternar: () => void
   eventId: string
@@ -344,7 +402,17 @@ function BloqueDeContenido({
       </h3>
 
       <div className="flex flex-col gap-4 border-t border-line-panel px-4 pt-4 pb-5 min-[560px]:px-5" hidden={!abierta} id={`${cuerpoId}-cuerpo`}>
-      {forma.form === 'campos' ? (
+      {section === 'itinerary' && itinerarioDesde !== undefined ? (
+        <div className="flex flex-col items-start gap-3 rounded-[14px] bg-bg-top p-4">
+          <p className="text-[13px] leading-[1.6] text-ink-soft">
+            Los momentos de la noche salen de tu <strong className="font-medium text-ink">Cronograma del día</strong>: marca en cada
+            momento «Sale en la invitación» y elige su icono. Así hay una sola lista y la invitación nunca dice otra hora.
+          </p>
+          <PanelButton href={itinerarioDesde} variant="primary">
+            Ir al cronograma
+          </PanelButton>
+        </div>
+      ) : forma.form === 'campos' ? (
         <>
           <div className="grid gap-3 min-[560px]:grid-cols-2">
             {forma.fields.map((campo) => (
@@ -385,7 +453,7 @@ function BloqueDeContenido({
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center gap-3 border-t border-line-panel pt-4">
+      <div className={`flex flex-wrap items-center gap-3 border-t border-line-panel pt-4 ${section === 'itinerary' && itinerarioDesde !== undefined ? 'hidden' : ''}`}>
         <SubmitButton variant="primary" pending={isPending} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
         {state.status === 'success' ? (
           <p aria-live="polite" className="flex items-center gap-1.5 text-[12px] text-sage" role="status">
@@ -432,8 +500,8 @@ function CampoDeBloque({
   const rotulo = etiqueta ?? campo.label
 
   return (
-    <div className={`flex min-w-0 flex-col gap-2 ${campo.kind === 'parrafo' || campo.kind === 'imagen' || campo.kind === 'fecha' || campo.anchoCompleto === true ? 'min-[560px]:col-span-2' : ''}`}>
-      {campo.kind === 'imagen' ? (
+    <div className={`flex min-w-0 flex-col gap-2 ${campo.kind === 'parrafo' || campo.kind === 'imagen' || campo.kind === 'icono' || campo.kind === 'fecha' || campo.kind === 'ubicacion' || campo.anchoCompleto === true ? 'min-[560px]:col-span-2' : ''}`}>
+      {campo.kind === 'imagen' || campo.kind === 'icono' ? (
         <p className={LABEL_CLASS} id={`${id}-rotulo`}>
           {rotulo}
         </p>
@@ -454,6 +522,10 @@ function CampoDeBloque({
         />
       ) : campo.kind === 'audio' ? (
         <SelectorDeAudio eventId={eventId} eventSlug={eventSlug} id={id} media={media} onChange={onChange} valor={valor} />
+      ) : campo.kind === 'icono' ? (
+        <SelectorDeIcono id={id} onChange={onChange} rotulo={rotulo} valor={valor} />
+      ) : campo.kind === 'ubicacion' ? (
+        <CampoUbicacion describedBy={campo.hint === undefined ? undefined : pistaId} id={id} onChange={onChange} valor={valor} />
       ) : campo.kind === 'fecha' ? (
         <CampoFechaHora id={id} onChange={onChange} valor={valor} />
       ) : campo.kind === 'parrafo' ? (
@@ -488,6 +560,74 @@ function CampoDeBloque({
           {campo.hint}
         </p>
       )}
+    </div>
+  )
+}
+
+/**
+ * El icono de un momento del itinerario, elegido **mirándolo**: los dibujos del propio diseño,
+ * con su nombre. Antes era un campo donde había que escribir «church» o «corona».
+ */
+function SelectorDeIcono({ id, rotulo, valor, onChange }: { id: string; rotulo: string; valor: string; onChange: (v: string) => void }) {
+  const opciones = useContext(IconosDelDiseno)
+  if (opciones.length === 0) {
+    return <input aria-labelledby={`${id}-rotulo`} className={FIELD_CLASS} onChange={(e) => onChange(e.target.value)} type="text" value={valor} />
+  }
+  return (
+    <div aria-label={rotulo} className="flex flex-wrap gap-2" role="group">
+      {opciones.map((o) => {
+        const activo = o.clave === valor
+        return (
+          <button
+            aria-label={o.nombre}
+            aria-pressed={activo}
+            className={`flex w-[76px] cursor-pointer flex-col items-center gap-1 rounded-[12px] border bg-white px-1.5 py-2 text-ink transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
+              activo ? 'border-ink ring-2 ring-ink' : 'border-line-panel hover:border-line-panel-strong'
+            }`}
+            key={o.clave}
+            onClick={() => onChange(o.clave)}
+            type="button"
+          >
+            <span aria-hidden className="grid size-10 place-items-center [&_svg]:max-h-10 [&_svg]:max-w-10">
+              {o.dibujo}
+            </span>
+            <span className="text-center text-[10.5px] leading-tight text-ink-soft">{o.nombre}</span>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/**
+ * La ubicación: se pega el enlace de Google Maps o se escribe la dirección, y se ve el mapa
+ * que verán los invitados. Una dirección escrita se guarda como búsqueda de Google Maps; un
+ * enlace corto de «Compartir» (`maps.app.goo.gl`) lo resuelve el servidor al guardar.
+ */
+function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valor: string; onChange: (v: string) => void; describedBy?: string | undefined }) {
+  const [escrito, setEscrito] = useState(valor)
+  const mapa = mapaIncrustado({ href: valor })
+  const corto = /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl)\//i.test(valor)
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="relative">
+        <PinIcon className="pointer-events-none absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-ink-mute" />
+        <input
+          aria-describedby={describedBy}
+          className={`${FIELD_CLASS} pl-10`}
+          id={id}
+          onBlur={() => onChange(enlaceDeUbicacion(escrito))}
+          onChange={(e) => setEscrito(e.target.value)}
+          placeholder="https://maps.app.goo.gl/… o Av. Arce 2020, La Paz"
+          type="text"
+          value={escrito}
+        />
+      </div>
+      {mapa !== null ? (
+        <iframe className="h-[200px] w-full rounded-[12px] border border-line-panel" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={mapa} title="Vista del mapa" />
+      ) : corto ? (
+        <p className="text-[12px] text-ink-soft">Al guardar buscamos el lugar de ese enlace y aparece el mapa.</p>
+      ) : null}
     </div>
   )
 }
@@ -683,6 +823,7 @@ function ListaSueltaDeBloque({
   onChange: (valores: readonly string[]) => void
   media: readonly MediaItem[]
 }) {
+  if (lista.kind === 'color') return <SelectorDePaleta max={lista.max} onChange={onChange} rotulo={lista.label} valores={valores} />
   const campo: Campo = { key: lista.key, label: lista.itemLabel, kind: lista.kind === 'imagen' ? 'imagen' : 'texto' }
 
   return (
@@ -724,6 +865,78 @@ function ListaSueltaDeBloque({
 }
 
 /**
+ * La paleta del código de vestimenta: los colores de siempre a un toque, y cualquier otro con
+ * el selector del sistema. Lo elegido se ve arriba, en el orden en que saldrá en la invitación.
+ */
+function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; valores: readonly string[]; onChange: (v: readonly string[]) => void; max: number }) {
+  const id = useId()
+  const elegidos = valores.map((v) => v.toLowerCase())
+  const [otro, setOtro] = useState(COLORES_DE_VESTIMENTA[0]!.hex)
+  const lleno = elegidos.length >= max
+  const alternar = (hex: string) =>
+    onChange(elegidos.includes(hex) ? elegidos.filter((v) => v !== hex) : lleno ? elegidos : [...elegidos, hex])
+  const nombreDe = (hex: string) => COLORES_DE_VESTIMENTA.find((c) => c.hex === hex)?.nombre ?? hex
+
+  return (
+    <div aria-labelledby={`${id}-rotulo`} className="flex flex-col gap-3" role="group">
+      <p className={LABEL_CLASS} id={`${id}-rotulo`}>
+        {rotulo}
+      </p>
+
+      {elegidos.length === 0 ? (
+        <p className="text-[12px] text-ink-soft">Elige los colores que sugieres. Sin colores, la invitación no pinta la paleta.</p>
+      ) : (
+        <ul className="flex flex-wrap gap-2">
+          {elegidos.map((hex) => (
+            <li className="flex items-center gap-2 rounded-full border border-line-panel bg-white py-1 pr-1 pl-1.5" key={hex}>
+              <span aria-hidden className="size-6 rounded-full border border-black/10" style={{ background: hex }} />
+              <span className="text-[12.5px] text-ink">{nombreDe(hex)}</span>
+              <IconButton className="size-6 hover:border-danger hover:text-danger" label={`Quitar ${nombreDe(hex)}`} onClick={() => alternar(hex)}>
+                <TrashIcon className="size-3.5" />
+              </IconButton>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex flex-wrap gap-2">
+        {COLORES_DE_VESTIMENTA.map((color) => {
+          const activo = elegidos.includes(color.hex)
+          return (
+            <button
+              aria-label={color.nombre}
+              aria-pressed={activo}
+              className={`grid size-9 cursor-pointer place-items-center rounded-full border transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-40 ${
+                activo ? 'border-ink ring-2 ring-ink ring-offset-2' : 'border-black/10 hover:scale-105'
+              }`}
+              disabled={!activo && lleno}
+              key={color.hex}
+              onClick={() => alternar(color.hex)}
+              style={{ background: color.hex }}
+              title={color.nombre}
+              type="button"
+            >
+              {activo ? <CheckIcon className="size-4 text-white mix-blend-difference" /> : null}
+            </button>
+          )
+        })}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="text-[12.5px] text-ink-soft" htmlFor={`${id}-otro`}>
+          Otro color
+        </label>
+        <input className="h-9 w-12 cursor-pointer rounded-[10px] border border-line-panel bg-white p-1" id={`${id}-otro`} onChange={(e) => setOtro(e.target.value.toLowerCase())} type="color" value={otro} />
+        <PanelButton disabled={lleno || elegidos.includes(otro)} onClick={() => alternar(otro)}>
+          Añadir color
+        </PanelButton>
+        <span className="text-[11px] text-ink-mute">{`${elegidos.length} de ${max}`}</span>
+      </div>
+    </div>
+  )
+}
+
+/**
  * El itinerario, la galería y los avisos: una lista de filas con sus propios campos.
  *
  * El orden importa —el itinerario se lee de arriba abajo— y por eso hay que poder moverlas
@@ -759,10 +972,30 @@ function FilasDeBloque({
         <p className="text-[12px] text-ink-soft">Todavía no hay ninguna. El diseño deja su sitio sin pintar.</p>
       ) : (
         filas.map((fila, indice) => (
-          <div
-            className="flex flex-col gap-3 rounded-[14px] border border-[var(--color-line-panel)] bg-bg-top/60 p-3.5"
-            key={indice}
-          >
+          <div className="flex flex-col gap-3 rounded-[14px] border border-line-panel bg-white p-3.5 shadow-[0_1px_0_rgb(0_0_0/0.02)]" key={indice}>
+            {/* Cabecera de la fila: cuál es y sus mandos, arriba, donde se buscan. */}
+            <div className="flex items-center gap-2 border-b border-line-panel pb-2.5">
+              <span className="grid size-6 place-items-center rounded-full bg-bg-top text-[11px] font-medium text-ink-soft">{indice + 1}</span>
+              <span className="truncate text-[13px] text-ink">
+                {fila.label?.trim() || fila.title?.trim() || `${forma.itemLabel.charAt(0).toUpperCase()}${forma.itemLabel.slice(1)} ${indice + 1}`}
+                {fila.time?.trim() ? <span className="ml-2 text-ink-mute">{fila.time}</span> : null}
+              </span>
+              <span className="ml-auto flex gap-1.5">
+                <IconButton disabled={indice === 0} label={`Subir ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice - 1)}>
+                  <ChevronIcon className="size-4 rotate-180" />
+                </IconButton>
+                <IconButton disabled={indice === filas.length - 1} label={`Bajar ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice + 1)}>
+                  <ChevronIcon className="size-4" />
+                </IconButton>
+                <IconButton
+                  className="hover:border-danger hover:text-danger"
+                  label={`Quitar ${forma.itemLabel} ${indice + 1}`}
+                  onClick={() => onChange(filas.filter((_, i) => i !== indice))}
+                >
+                  <TrashIcon className="size-4" />
+                </IconButton>
+              </span>
+            </div>
             <div className="grid gap-3 min-[560px]:grid-cols-2">
               {forma.fields.map((campo) => (
                 <CampoDeBloque
@@ -778,23 +1011,6 @@ function FilasDeBloque({
                   valor={fila[campo.key] ?? ''}
                 />
               ))}
-            </div>
-
-            {/* Mover y quitar, discretos: son de cada fila y no deben pesar más que sus datos. */}
-            <div className="flex justify-end gap-1.5">
-              <IconButton disabled={indice === 0} label={`Subir ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice - 1)}>
-                <ChevronIcon className="size-4 rotate-180" />
-              </IconButton>
-              <IconButton disabled={indice === filas.length - 1} label={`Bajar ${forma.itemLabel} ${indice + 1}`} onClick={() => mover(indice, indice + 1)}>
-                <ChevronIcon className="size-4" />
-              </IconButton>
-              <IconButton
-                className="hover:border-danger hover:text-danger"
-                label={`Quitar ${forma.itemLabel} ${indice + 1}`}
-                onClick={() => onChange(filas.filter((_, i) => i !== indice))}
-              >
-                <TrashIcon className="size-4" />
-              </IconButton>
             </div>
           </div>
         ))

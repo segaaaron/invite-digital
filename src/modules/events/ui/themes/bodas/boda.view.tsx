@@ -3,6 +3,7 @@ import type { ThemeProps } from '../contract'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoCollage } from '../kit/PhotoCollage'
 import { PhotoSlot } from '../kit/PhotoSlot'
@@ -313,6 +314,9 @@ export function BodaView({ content, event, dictionary, themes, slots, audioSrc }
                 accent={P.oro}
                 border="rgba(212,180,131,0.3)"
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.fondo}
               />
@@ -381,6 +385,7 @@ export function BodaView({ content, event, dictionary, themes, slots, audioSrc }
                 {dressCode.title ?? ''}
               </div>
               <div style={{ fontSize: 11, marginTop: 6, opacity: 0.6 }}>{dressCode.note ?? ''}</div>
+              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

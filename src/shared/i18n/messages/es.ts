@@ -206,6 +206,8 @@ export const es = {
   },
   invitation: {
     title: 'Confirma tu Asistencia',
+    titleConfirmed: '¡Gracias por confirmar!',
+    titleDeclined: 'Gracias por avisarnos',
     whoIsComing: '¿Quiénes vienen?',
     bothComing: 'Asistiremos los dos',
     onlyOneComing: 'Solo va uno de los dos',

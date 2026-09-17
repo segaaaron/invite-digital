@@ -80,3 +80,24 @@ export async function abrirSeccion(page: Page, titulo: string) {
   if ((await boton.getAttribute('aria-expanded')) !== 'true') await boton.click()
   return page.locator('form', { has: boton })
 }
+
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+
+/**
+ * Elige un día en el calendario del panel (`SelectorDeFecha`), como lo haría alguien: abre el
+ * campo por su rótulo, pasa meses hasta el buscado y pulsa el día. `iso` es `YYYY-MM-DD`.
+ */
+export async function elegirFecha(page: Page, rotulo: string, iso: string): Promise<void> {
+  await page.getByLabel(rotulo, { exact: true }).click()
+  const calendario = page.getByRole('dialog', { name: 'Elegir fecha' })
+  const [anio, mes, dia] = iso.split('-').map(Number) as [number, number, number]
+  const buscado = `${MESES[mes - 1]} de ${anio}`
+  for (let i = 0; i < 48; i++) {
+    const titulo = (await calendario.locator('p[aria-live]').textContent())?.trim().toLowerCase() ?? ''
+    if (titulo === buscado) break
+    const [mesActual = '', , anioActual = '0'] = titulo.split(' ')
+    const adelante = Number(anioActual) * 12 + MESES.indexOf(mesActual) < anio * 12 + (mes - 1)
+    await calendario.getByRole('button', { name: adelante ? 'Mes siguiente' : 'Mes anterior' }).click()
+  }
+  await calendario.getByRole('button', { name: new RegExp(`, ${dia} de ${MESES[mes - 1]} de ${anio}$`) }).click()
+}

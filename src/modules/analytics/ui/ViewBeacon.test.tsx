@@ -49,7 +49,7 @@ describe('ViewBeacon', () => {
   })
 
   it('no pinta nada', () => {
-    const { container } = render(<ViewBeacon kind="client" token="abc" />)
+    const { container } = render(<ViewBeacon kind="guest" token="nada" />)
     expect(container.innerHTML).toBe('')
   })
 })

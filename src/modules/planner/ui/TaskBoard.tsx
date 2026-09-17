@@ -1,5 +1,8 @@
 'use client'
 
+import Link from 'next/link'
+import { CheckIcon } from '@/shared/design/ui/icons'
+import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import {
@@ -31,6 +34,10 @@ export type TareaVista = Omit<Tarea, 'doneAt'> & {
   /** Ya formateadas por la página, en hora de Bolivia. */
   readonly vence: string | null
   readonly hechaCuando: string | null
+  /** Hecha porque su pantalla ya lo resolvió —un proveedor contratado, el presupuesto fijado—. */
+  readonly porLaApp?: boolean
+  /** Adónde se resuelve: «Ir a Proveedores». */
+  readonly atajo?: { readonly href: string; readonly texto: string } | null
 }
 
 type Etapa = { clave: string; nombre: string }
@@ -60,7 +67,7 @@ function CamposDeTarea({ etapas, inicial }: { etapas: readonly Etapa[]; inicial:
         </select>
       </Field>
       <Field htmlFor={`${id}-f`} label="Vence">
-        <input className={FIELD_CLASS} defaultValue={inicial.dueDate} id={`${id}-f`} name="dueDate" type="date" />
+        <CampoFecha defaultValue={inicial.dueDate} id={`${id}-f`} name="dueDate" />
       </Field>
       <Field htmlFor={`${id}-r`} label="Se encarga">
         <select className={FIELD_CLASS} defaultValue={inicial.assignee} id={`${id}-r`} name="assignee">
@@ -85,17 +92,29 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
   return (
     <li aria-label={tarea.title} className="flex flex-col gap-2 border-b border-line-panel py-3 last:border-none">
       <div className="flex flex-wrap items-center gap-3">
-        <Accion action={toggleTaskAction} evento={evento} extra={extra} label={tarea.estado === 'hecha' ? `Reabrir «${tarea.title}»` : `Marcar hecha «${tarea.title}»`}>
-          {tarea.estado === 'hecha' ? 'Reabrir' : 'Hecha'}
-        </Accion>
+        {tarea.porLaApp ? (
+          <span className="grid w-[74px] place-items-center text-sage" title="Resuelta en su pantalla">
+            <CheckIcon className="size-5" />
+          </span>
+        ) : (
+          <Accion action={toggleTaskAction} evento={evento} extra={extra} label={tarea.estado === 'hecha' ? `Reabrir «${tarea.title}»` : `Marcar hecha «${tarea.title}»`}>
+            {tarea.estado === 'hecha' ? 'Reabrir' : 'Hecha'}
+          </Accion>
+        )}
         <div className="flex min-w-0 flex-1 flex-col">
           <span className={`text-[14px] ${tarea.estado === 'hecha' ? 'text-ink-mute line-through' : 'text-ink'}`}>{tarea.title}</span>
           <span className="text-[11px] text-ink-mute">
             {NOMBRE_RESPONSABLE[tarea.assignee]}
             {tarea.vence ? ` · vence ${tarea.vence}` : ' · sin fecha'}
             {tarea.hechaCuando ? ` · hecha ${tarea.hechaCuando}${tarea.doneBy ? ` por ${tarea.doneBy}` : ''}` : ''}
+            {tarea.porLaApp ? ' · resuelta en su pantalla' : ''}
           </span>
         </div>
+        {tarea.atajo && tarea.estado !== 'hecha' ? (
+          <Link className="text-[12px] text-ink underline underline-offset-2" href={tarea.atajo.href}>
+            {tarea.atajo.texto}
+          </Link>
+        ) : null}
         <Pill tone={estado.tono}>{estado.texto}</Pill>
       </div>
 

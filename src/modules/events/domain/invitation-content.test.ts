@@ -268,3 +268,24 @@ describe('quién es quién entre los anfitriones', () => {
     expect(anfitrionesBoda({ names: ['1', '2', '3', '4', '5'] })).toEqual({ novia: ['1', '2'], novio: ['3', '4'], padrinos: ['5'] })
   })
 })
+
+describe('la paleta del código de vestimenta', () => {
+  it('guarda los colores como hexadecimales de seis cifras, sin repetidos y con tope', () => {
+    const r = parseInvitationContent({
+      dressCode: { title: 'Formal', colors: ['#A7C7E7', '#a7c7e7', 'rojo', '#FFF', 'url(javascript:x)', '#1d3557', '#000000', '#111111', '#222222', '#333333', '#444444', '#555555'] },
+    })
+    expect(r?.dressCode?.colors).toEqual(['#a7c7e7', '#1d3557', '#000000', '#111111', '#222222', '#333333', '#444444', '#555555'])
+  })
+
+  it('solo con colores ya es un bloque', () => {
+    expect(parseInvitationContent({ dressCode: { colors: ['#a7c7e7'] } })?.dressCode).toEqual({ colors: ['#a7c7e7'] })
+  })
+})
+
+describe('el enlace del mapa', () => {
+  // Acaba en un `<a href>` que pulsa el invitado: un `javascript:` ahí sería un agujero.
+  it('solo admite http y https', () => {
+    expect(parseInvitationContent({ map: { label: 'Salón', href: 'javascript:alert(1)' } })?.map).toEqual({ label: 'Salón' })
+    expect(parseInvitationContent({ map: { href: 'https://maps.app.goo.gl/abc' } })?.map).toEqual({ href: 'https://maps.app.goo.gl/abc' })
+  })
+})

@@ -1,7 +1,6 @@
 import { enExclusiva } from '@/shared/db/candado'
 import { enTransaccion } from '@/shared/db/transaccion'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { createClientShare, getLiveClientShare, resolveClientShare, revokeClientShare } from '@/modules/events/application/client-share-use-cases'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { randomBytes } from 'node:crypto'
 import { addTeamMember, removeTeamMember } from '@/modules/events/application/team-use-cases'
@@ -9,6 +8,7 @@ import type { Membership } from '@/modules/identity'
 import * as diaUseCases from '@/modules/planner/application/dia-use-cases'
 import * as plannerUseCases from '@/modules/planner/application/planner-use-cases'
 import { drizzleDiaStore } from '@/modules/planner/infrastructure/drizzle-dia-store'
+import { itinerarioDeInvitacion } from '@/modules/planner/domain/cronograma'
 import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
@@ -20,7 +20,6 @@ import { listGuestPhotos, listMedia, purgeMedia, readMedia, removeMedia, saveGue
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
-import { drizzleClientShareRepository } from '@/modules/events/infrastructure/drizzle-client-share-repository'
 import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
 import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
@@ -59,6 +58,8 @@ import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
 import { createDrizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { clock, minter } from './base'
+// Solo dentro de funciones: una referencia ansiosa entre ficheros de composición revienta al cargar.
+import { plans } from './negocio'
 
 const mediaDeps = {
   media: drizzleMediaRepository,
@@ -94,6 +95,8 @@ export const planner = {
   removeTask: plannerUseCases.removeTask(plannerDeps),
   moveTask: plannerUseCases.moveTask(plannerDeps),
   listBudget: (eventId: string) => drizzlePlannerStore.listBudget(eventId),
+  getBudgetPlan: (eventId: string) => drizzlePlannerStore.getBudgetPlan(eventId),
+  saveBudgetPlan: plannerUseCases.saveBudgetPlan(plannerDeps),
   saveItem: plannerUseCases.saveItem(plannerDeps),
   removeItem: plannerUseCases.removeItem(plannerDeps),
   addPayment: plannerUseCases.addPayment(plannerDeps),
@@ -156,6 +159,16 @@ export const events = {
    * no tener fila. El contenido de muestra del diseño se usa solo como ejemplo en el editor.
    */
   contentFor: contentFor(drizzleContentRepository),
+  /**
+   * El contenido **que ven los invitados**: con el itinerario sacado del cronograma del día
+   * cuando el plan lo trae y hay momentos marcados. Una sola lista de momentos, no dos.
+   */
+  contenidoParaInvitados: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1]) => {
+    const contenido = await contentFor(drizzleContentRepository)(eventId, muestra)
+    if (isErr(await plans.requireFeature(eventId, 'plannerCompleto'))) return contenido
+    const itinerario = itinerarioDeInvitacion(await drizzleDiaStore.listMoments(eventId))
+    return itinerario === null ? contenido : { ...contenido, itinerary: itinerario }
+  },
   saveContentBlock: saveContentBlock(drizzleContentRepository),
   seedContent: seedEmptyContent(drizzleContentRepository),
   clearContent: clearContent(drizzleContentRepository),
@@ -242,10 +255,6 @@ export const events = {
    */
   getBySlugUnscoped: getEventBySlug({ events: drizzleEventRepository }),
   getByIdUnscoped: getEventById({ events: drizzleEventRepository }),
-  createShare: createClientShare({ shares: drizzleClientShareRepository, minter, ids: () => crypto.randomUUID(), clock }),
-  revokeShare: revokeClientShare({ shares: drizzleClientShareRepository, clock }),
-  liveShare: getLiveClientShare({ shares: drizzleClientShareRepository, clock }),
-  resolveShare: resolveClientShare({ shares: drizzleClientShareRepository, events: drizzleEventRepository, minter, clock }),
   runMaintenance: anonymizeExpiredEvents({
     events: drizzleEventRepository,
     deleteExpiredSessions: (now) => drizzleSessionRepository.deleteExpired(now),

@@ -139,6 +139,8 @@ export type InvitationContent = {
     readonly note?: string
     readonly detail?: string
     readonly imageIds?: readonly string[]
+    /** Los colores sugeridos, en hexadecimal de seis cifras y minúsculas: «#a7c7e7». */
+    readonly colors?: readonly string[]
   }
   /**
    * La canción del evento: lo que se lee y, si el atelier subió un MP3, lo que suena.
@@ -235,6 +237,37 @@ function marcaDeTiempo(valor: unknown): string | undefined {
   return Number.isNaN(new Date(crudo).getTime()) ? undefined : crudo
 }
 
+/** Cuántos colores lleva la paleta de la vestimenta: más ya no se leen como sugerencia. */
+export const MAX_COLORES = 8
+
+/**
+ * Los colores de la paleta. Solo `#rrggbb`: acaban en un `style` de la invitación, y un
+ * valor libre ahí —`url(...)`, `expression(...)`— es lo que no puede entrar.
+ */
+function coloresDePaleta(valor: unknown): readonly string[] | undefined {
+  if (!Array.isArray(valor)) return undefined
+  const vistos = new Set<string>()
+  for (const crudo of valor) {
+    if (typeof crudo !== 'string') continue
+    const color = crudo.trim().toLowerCase()
+    if (/^#[0-9a-f]{6}$/.test(color)) vistos.add(color)
+    if (vistos.size === MAX_COLORES) break
+  }
+  return vistos.size === 0 ? undefined : [...vistos]
+}
+
+/** Un enlace que pulsará el invitado: solo `http` y `https`. */
+function enlaceSeguro(valor: unknown): string | undefined {
+  const crudo = texto(valor)
+  if (crudo === undefined) return undefined
+  try {
+    const url = new URL(crudo)
+    return url.protocol === 'https:' || url.protocol === 'http:' ? url.toString() : undefined
+  } catch {
+    return undefined
+  }
+}
+
 function lugar(valor: unknown): PlaceBlock | undefined {
   if (!esObjeto(valor)) return undefined
   return bloque<PlaceBlock>([
@@ -324,7 +357,7 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
     salida.map = bloque<NonNullable<InvitationContent['map']>>([
       ['label', texto(crudo.map.label, LIMITES.corto)],
       ['coords', texto(crudo.map.coords, LIMITES.corto)],
-      ['href', texto(crudo.map.href)],
+      ['href', enlaceSeguro(crudo.map.href)],
     ])
   }
 
@@ -347,13 +380,18 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
   if (esObjeto(crudo.dressCode)) {
     const dc = crudo.dressCode
     const imagenes = lista(dc.imageIds, 4, (i) => texto(i, LIMITES.corto))
+    const colores = coloresDePaleta(dc.colors)
     const base = bloque<{ title?: string; note?: string; detail?: string }>([
       ['title', texto(dc.title, LIMITES.corto)],
       ['note', texto(dc.note, LIMITES.corto)],
       ['detail', texto(dc.detail)],
     ])
-    if (base !== undefined || imagenes !== undefined) {
-      salida.dressCode = imagenes === undefined ? base : { ...base, imageIds: imagenes }
+    if (base !== undefined || imagenes !== undefined || colores !== undefined) {
+      salida.dressCode = {
+        ...base,
+        ...(imagenes === undefined ? {} : { imageIds: imagenes }),
+        ...(colores === undefined ? {} : { colors: colores }),
+      }
     }
   }
 

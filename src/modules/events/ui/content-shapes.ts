@@ -19,6 +19,7 @@ import {
   type InvitationContent,
   type ItineraryRow,
   MAXIMOS,
+  MAX_COLORES,
   type NoteCard,
   type PlaceBlock,
   type SectionKey,
@@ -31,7 +32,7 @@ import {
  * dibujo que trae el diseño —`church`, `flutes`, `cake`—, no una fotografía del evento.
  * Ofrecer ahí las fotos de la boda pondría el retrato de la novia donde va la campana.
  */
-export type ClaseDeCampo = 'texto' | 'parrafo' | 'fecha' | 'imagen' | 'icono' | 'audio'
+export type ClaseDeCampo = 'texto' | 'parrafo' | 'fecha' | 'imagen' | 'icono' | 'audio' | 'ubicacion'
 
 export type Campo = {
   readonly key: string
@@ -49,7 +50,7 @@ export type ListaSuelta = {
   readonly key: string
   readonly label: string
   readonly itemLabel: string
-  readonly kind: 'texto' | 'imagen'
+  readonly kind: 'texto' | 'imagen' | 'color'
   readonly max: number
 }
 
@@ -195,13 +196,14 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
   hero: {
     form: 'campos',
     fields: campos<HeroBlock>(
-      { key: 'eyebrow', label: 'Texto sobre los nombres', kind: 'texto', hint: 'La línea de arriba: «MIS QUINCE» o «¡NOS CASAMOS!».' },
+      // Las fotos justo después de los nombres: al fondo del bloque no se encontraban.
       { key: 'nameA', label: 'Primer nombre', kind: 'texto' },
       { key: 'nameB', label: 'Segundo nombre', kind: 'texto' },
-      { key: 'monogram', label: 'Iniciales', kind: 'texto', hint: 'Las que adornan la portada: «XV» o «M & R».' },
-      { key: 'serial', label: 'Texto bajo los nombres', kind: 'texto', hint: 'Una línea pequeña debajo de los nombres, como el año.' },
       { key: 'coverImageId', label: 'Fotografía de portada', kind: 'imagen' },
       { key: 'portraitImageId', label: 'Retrato', kind: 'imagen' },
+      { key: 'eyebrow', label: 'Texto sobre los nombres', kind: 'texto', hint: 'La línea de arriba: «MIS QUINCE» o «¡NOS CASAMOS!».' },
+      { key: 'monogram', label: 'Iniciales', kind: 'texto', hint: 'Las que adornan la portada: «XV» o «M & R».' },
+      { key: 'serial', label: 'Texto bajo los nombres', kind: 'texto', hint: 'Una línea pequeña debajo de los nombres, como el año.' },
     ),
   },
   quote: {
@@ -223,9 +225,14 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
   map: {
     form: 'campos',
     fields: campos<NonNullable<InvitationContent['map']>>(
-      { key: 'label', label: 'Rótulo', kind: 'texto' },
-      { key: 'coords', label: 'Coordenadas', kind: 'texto', hint: '«19.32°N · 99.18°W».' },
-      { key: 'href', label: 'Enlace al mapa', kind: 'texto' },
+      { key: 'label', label: 'Nombre del lugar', kind: 'texto', hint: 'Lo que se lee sobre el mapa: «HACIENDA LAS ESTRELLAS».' },
+      {
+        key: 'href',
+        label: 'Ubicación en Google Maps',
+        kind: 'ubicacion',
+        anchoCompleto: true,
+        hint: 'Pega el enlace de «Compartir» de Google Maps o escribe la dirección. Tus invitados verán el mapa y el botón para llegar.',
+      },
     ),
   },
   itinerary: {
@@ -246,6 +253,8 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
       { key: 'note', label: 'Rótulo', kind: 'texto', hint: '«CÓDIGO DE VESTIMENTA».' },
       { key: 'detail', label: 'Detalle', kind: 'parrafo' },
     ),
+    // La paleta sí se pinta: una fila de círculos bajo el detalle, en los diseños que tienen vestimenta.
+    list: { key: 'colors', label: 'Paleta de colores', itemLabel: 'color', kind: 'color', max: MAX_COLORES },
     // Sin lista de fotografías: **ninguno de los dieciséis diseños pinta las telas del
     // código de vestimenta**. El campo existía en el dominio desde el primer día y el
     // editor las pedía; lo que se subía ahí no aparecía en la invitación.

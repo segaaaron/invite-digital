@@ -2,8 +2,8 @@
 
 import { useId } from 'react'
 import { ClockIcon } from '@/shared/design/ui/icons'
-import { FIELD_CLASS } from '@/shared/design/ui/panel/PanelKit'
-import { SelectorDeFecha } from '@/shared/design/ui/panel/SelectorDeFecha'
+import { FIELD_CLASS } from './PanelKit'
+import { SelectorDeFecha } from './SelectorDeFecha'
 
 /** Las horas de una fiesta, de media en media: nadie cita a las 19:07. */
 const HORAS = Array.from({ length: 48 }, (_, i) => {

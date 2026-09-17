@@ -152,6 +152,8 @@ export async function saveMomentAction(_previo: DiaActionState, fd: FormData): P
     vendorIds: fd.getAll('vendorIds').map(String),
     cue: campo(fd, 'cue'),
     notes: campo(fd, 'notes'),
+    enInvitacion: campo(fd, 'enInvitacion') === 'on',
+    icono: campo(fd, 'icono'),
   })
   return responder(resultado, eventSlug, fd)
 }

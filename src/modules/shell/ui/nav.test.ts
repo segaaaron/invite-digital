@@ -119,9 +119,11 @@ describe('panelNav', () => {
       .flatMap((seccion) => seccion.items)
       .map((item) => item.href)
 
-    for (const prohibido of ['/plan', '/qr', '/checkin']) {
+    for (const prohibido of ['/plan', '/qr']) {
       expect(delCliente).not.toContain(`/panel/eventos/boda${prohibido}`)
     }
+    // Las llegadas sí: quien celebra ve quién entró (16 sep).
+    expect(delCliente).toContain('/panel/eventos/boda/checkin')
     expect(delCliente).not.toContain('/panel/pedidos')
     expect(delCliente).not.toContain('/panel')
   })
@@ -160,9 +162,15 @@ describe('panelNav', () => {
     expect(hrefs(false, true, false)).not.toContain(ruta)
   })
 
+  // Escribir la invitación es lo primero que se hace: su grupo va arriba de la barra.
+  it('la invitación va primero, para el cliente y para el atelier', () => {
+    expect(panelNav('boda', {}, false, false, true)[0]?.label).toBe('Mi invitación')
+    expect(panelNav('boda')[0]?.label).toBe('Invitación')
+  })
+
   it('la vista previa es su propia pantalla, no un trozo de Configuración', () => {
-    const diseno = panelNav('boda').find((seccion) => seccion.label === 'Diseño')
-    const previa = diseno?.items.find((item) => item.label === 'Vista previa')
+    const diseno = panelNav('boda').find((seccion) => seccion.label === 'Invitación')
+    const previa = diseno?.items.find((item) => item.label === 'Ver cómo queda')
     expect(previa?.href).toBe('/panel/eventos/boda/vista-previa')
   })
 

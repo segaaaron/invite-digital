@@ -11,10 +11,13 @@ import {
   nombreDePagador,
   PAGADORES,
   porPagador,
+  pagosQueVencen,
   presupuestoACsv,
+  resumenPorCategoria,
   totalesDelPresupuesto,
 } from '@/modules/planner'
 import { BudgetBoard, BudgetCsvButton, ItemForm } from '@/modules/planner/ui/BudgetBoard'
+import { BudgetOverview, BudgetStart } from '@/modules/planner/ui/BudgetPlanCard'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
@@ -29,10 +32,10 @@ const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
 /** El importe como se escribe en el campo: `1234.50`. */
 const campo = (cents: number) => `${Math.trunc(cents / 100)}.${String(cents % 100).padStart(2, '0')}`
 
-export default async function PresupuestoPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ panel?: string }> }) {
+export default async function PresupuestoPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ panel?: string; categoria?: string }> }) {
   const actor = await requireSession()
   const { slug } = await params
-  const { panel } = await searchParams
+  const { panel, categoria } = await searchParams
 
   const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
@@ -50,6 +53,36 @@ export default async function PresupuestoPage({ params, searchParams }: { params
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
   const opciones = { categorias: categoriasDe(fiesta), pagadores: PAGADORES.map((clave) => ({ clave, nombre: nombreDePagador(fiesta, clave) })) }
   const base = `/panel/eventos/${event.value.slug}/planner/presupuesto`
+
+  // El total y su reparto: el punto de partida del presupuesto.
+  const plan = await planner.getBudgetPlan(event.value.id)
+  const vistaDelPlan =
+    plan === null
+      ? null
+      : {
+          total: bs(plan.totalCents),
+          comprometido: bs(totales.comprometido),
+          pagado: bs(totales.pagado),
+          queda: bs(Math.abs(plan.totalCents - totales.comprometido)),
+          pasado: totales.comprometido > plan.totalCents,
+          avance: plan.totalCents === 0 ? 0 : totales.comprometido / plan.totalCents,
+          campoTotal: campo(plan.totalCents),
+        }
+  const categoriasVista =
+    plan === null
+      ? []
+      : resumenPorCategoria(partidas, fiesta, plan.asignaciones).map((c) => ({
+          clave: c.clave,
+          nombre: c.nombre,
+          asignado: bs(c.asignado),
+          comprometido: bs(c.comprometido),
+          pagado: bs(c.pagado),
+          avance: c.asignado === 0 ? (c.comprometido > 0 ? 1 : 0) : c.comprometido / c.asignado,
+          estado: c.estado,
+          partidas: c.partidas,
+          campoAsignado: campo(c.asignado),
+        }))
+  const proximos = pagosQueVencen(partidas, hoy)
 
   const vistas = partidas.map((p) => {
     const c = cuentasDePartida(p)
@@ -87,46 +120,49 @@ export default async function PresupuestoPage({ params, searchParams }: { params
             {partidas.length > 0 ? <BudgetCsvButton csv={presupuestoACsv(partidas, fiesta)} nombre={`presupuesto-${event.value.slug}.csv`} /> : null}
             {editable ? (
               <PanelButton href={`${base}?panel=partida`} variant="primary">
-                Sumar partida
+                Anotar un gasto
               </PanelButton>
             ) : null}
           </>
         }
         kicker="Planner"
-        meta={`${partidas.length} partida${partidas.length === 1 ? '' : 's'} · falta pagar ${bs(totales.falta)}`}
+        meta={plan === null ? 'Empieza por cuánto quieres gastar' : `${partidas.length} gasto${partidas.length === 1 ? '' : 's'} anotado${partidas.length === 1 ? '' : 's'} · falta pagar ${bs(totales.falta)}`}
         title="Presupuesto"
       />
 
       <div className="flex flex-col gap-4.5">
         {panel === 'partida' && editable ? (
           <PanelCard title="Partida nueva">
-            <ItemForm evento={evento} opciones={opciones} />
+            <ItemForm categoria={categoria} evento={evento} opciones={opciones} />
           </PanelCard>
         ) : null}
 
-        {partidas.length === 0 ? null : (
+        <PanelCard title={plan === null ? '¿Cuánto quieres gastar?' : 'Tu presupuesto'}>
+          {vistaDelPlan === null ? (
+            editable ? <BudgetStart evento={evento} /> : <p className="text-[13px] text-ink-soft">Todavía no se fijó el presupuesto total.</p>
+          ) : (
+            <BudgetOverview categorias={categoriasVista} editable={editable} evento={evento} plan={vistaDelPlan} />
+          )}
+        </PanelCard>
+
+        {proximos.length === 0 && partidas.length === 0 ? null : (
           <div className="grid gap-4.5 min-[900px]:grid-cols-2">
-            <PanelCard title="Totales">
-              <dl className="grid grid-cols-2 gap-4 [font-variant-numeric:tabular-nums]">
-                {[
-                  ['Previsto', bs(totales.previsto)],
-                  ['Comprometido', bs(totales.comprometido)],
-                  ['Pagado', bs(totales.pagado)],
-                  ['Falta', bs(totales.falta)],
-                ].map(([k, v]) => (
-                  <div key={k}>
-                    <dt className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">{k}</dt>
-                    <dd className="font-display text-[26px] font-light text-ink [font-variant-numeric:lining-nums]">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-              <p className={`mt-3 text-[13px] ${totales.desvio > 0 ? 'text-danger-deep' : 'text-ink-soft'}`} role={totales.desvio > 0 ? 'alert' : undefined}>
-                {totales.desvio > 0
-                  ? `Vas ${bs(totales.desvio)} por encima de lo previsto.`
-                  : totales.desvio < 0
-                    ? `Vas ${bs(-totales.desvio)} por debajo de lo previsto.`
-                    : 'Justo en lo previsto.'}
-              </p>
+            <PanelCard title="Próximos pagos">
+              {proximos.length === 0 ? (
+                <p className="text-[13px] text-ink-soft">Nada vence en los próximos siete días.</p>
+              ) : (
+                <ul className="flex flex-col">
+                  {proximos.map((g) => (
+                    <li className="flex items-baseline justify-between gap-3 border-b border-line-panel py-2 text-[13px] last:border-none [font-variant-numeric:tabular-nums]" key={g.id}>
+                      <span className="text-ink">
+                        {g.concepto}
+                        <span className="block text-[11px] text-ink-mute">{g.dueDate! < hoy ? 'Vencido' : 'Vence'} el {fecha(new Date(`${g.dueDate}T12:00:00.000Z`))}</span>
+                      </span>
+                      <span className={g.dueDate! < hoy ? 'text-danger-deep' : 'text-ink-soft'}>{bs(g.amountCents)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </PanelCard>
             <PanelCard title="Quién aporta">
               <ul className="flex flex-col">

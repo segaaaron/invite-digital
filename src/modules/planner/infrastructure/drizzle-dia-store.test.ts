@@ -32,9 +32,9 @@ describe('drizzleDiaStore', () => {
 
   it('el cronograma guarda los proveedores de cada momento', async () => {
     const dj = await store.insertVendor(uno, { ...vendor, service: 'DJ del vals' })
-    await store.insertMoments(uno, [{ startsAt: '20:00', durationMin: 10, title: 'Vals con el papá', place: null, owner: 'Planner', vendorIds: [dj], cue: 'Tiempo de vals', notes: null, sortOrder: 0 }])
+    await store.insertMoments(uno, [{ startsAt: '20:00', durationMin: 10, title: 'Vals con el papá', place: null, owner: 'Planner', vendorIds: [dj], cue: 'Tiempo de vals', notes: null, sortOrder: 0, enInvitacion: true, icono: 'corona' }])
     const [momento] = await store.listMoments(uno)
-    expect(momento).toMatchObject({ title: 'Vals con el papá', vendorIds: [dj], cue: 'Tiempo de vals' })
+    expect(momento).toMatchObject({ title: 'Vals con el papá', vendorIds: [dj], cue: 'Tiempo de vals', enInvitacion: true, icono: 'corona' })
     expect(await store.updateMoment(otro, momento!.id, { ...momento!, title: 'Ajeno' })).toBe(false)
   })
 

@@ -3,15 +3,17 @@ import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { checkin, events, plans } from '@/app/composition/container'
 import { ManualCheckin } from '@/modules/checkin/ui/ManualCheckin'
+import { ListaDeLlegadas } from '@/modules/checkin/ui/ListaDeLlegadas'
+import { listaDeLlegadas } from '@/modules/checkin/domain/lista-de-llegadas'
 import { DoorModeCard } from '@/modules/checkin/ui/DoorModeCard'
 import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { DonutChart, PanelCard, PanelCardLink } from '@/shared/design/ui/panel/cards'
+import { DonutChart, PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 import { hora } from '@/shared/format/fecha'
 
-export const metadata = { title: 'Check-in' }
+export const metadata = { title: 'Llegadas' }
 
 // Las llegadas entran mientras el atelier mira esta pantalla: no se cachea.
 export const dynamic = 'force-dynamic'
@@ -43,30 +45,22 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   const estado = await checkin.state(event.value.id)
   if (isErr(estado)) throw new Error(estado.error.detail)
 
-  const { tally, groups, arrivals, nombres } = estado.value
-  const porcentaje =
-    tally.expectedGroups === 0 ? 0 : Math.round((tally.arrivedGroups / tally.expectedGroups) * 100)
-  const etiquetaDe = new Map(groups.map((g) => [g.id, g.label]))
-  // Las últimas llegadas **por quién entró**: con personas, una fila por persona y su hora; sin
-  // personas, una por invitación con su número, como siempre.
-  const ultimas = arrivals
-    .flatMap((a) => {
-      const entradas = Object.entries(a.personas)
-      if (entradas.length === 0) {
-        return [{ clave: a.guestGroupId, nombre: etiquetaDe.get(a.guestGroupId) ?? 'Invitación retirada', detalle: `${a.arrivedCount} dentro`, at: a.arrivedAt }]
-      }
-      const invitacion = etiquetaDe.get(a.guestGroupId) ?? ''
-      return entradas.map(([id, at]) => ({ clave: id, nombre: nombres[id] ?? 'Invitado', detalle: invitacion, at }))
-    })
-    .sort((a, b) => b.at.getTime() - a.at.getTime())
-    .slice(0, 12)
+  const { groups, arrivals, personas } = estado.value
+
+  // Quién está dentro y a quién se espera, persona por persona: lo que la recepción escanea se ve aquí.
+  const filas = listaDeLlegadas(groups, arrivals, personas).map((f) => ({ ...f, hora: f.hora === null ? null : hora(f.hora) }))
+  const dentro = filas.filter((f) => f.estado === 'dentro').length
+  const porLlegar = filas.filter((f) => f.estado === 'por_llegar').length
+  const noVienen = filas.filter((f) => f.estado === 'no_viene').length
+  const esperados = dentro + porLlegar
+  const porcentaje = esperados === 0 ? 0 : Math.round((dentro / esperados) * 100)
 
   return (
     <>
       <PanelHeader
         kicker="Día del evento"
-        meta={`${tally.arrivedGroups} de ${tally.expectedGroups} invitaciones · ${tally.headsInside} personas dentro`}
-        title="Check-in de invitados"
+        meta={`${dentro} dentro · ${porLlegar} por llegar${noVienen > 0 ? ` · ${noVienen} no vienen` : ''}`}
+        title="Llegadas"
       />
 
       <DoorModeCard href={`/panel/eventos/${event.value.slug}/puerta`} />
@@ -79,12 +73,28 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
         con un enlace y un PIN, sin crear cuentas.
       </p>
 
-      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.3fr_1fr]">
-        <PanelCard title="Buscar a mano">
+      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
+        <PanelCard title="Invitados">
+          <ListaDeLlegadas filas={filas} />
+        </PanelCard>
+
+        <div className="flex flex-col gap-4.5">
+          <PanelCard title="Cómo va la llegada">
+            <DonutChart
+              big={`${porcentaje}%`}
+              caption="LLEGARON"
+              slices={[
+                { label: 'Dentro', value: dentro, color: 'var(--color-sage)' },
+                { label: 'Por llegar', value: porLlegar, color: 'var(--color-gold-light)' },
+                { label: 'No vienen', value: noVienen, color: 'var(--color-line-panel-strong)' },
+              ]}
+            />
+          </PanelCard>
+          <PanelCard title="Buscar a mano">
           <div className="flex flex-col gap-4">
             <p className="text-[12px] leading-[1.7] text-ink-soft">
               Para quien llegue sin el pase, con el celular sin batería o con la pantalla rota. Busca por nombre o
-              grupo y registra el ingreso directo, sin escanear nada.
+              invitación y registra el ingreso directo, sin escanear nada.
             </p>
             <ManualCheckin
               arrivedIds={arrivals.map((a) => a.guestGroupId)}
@@ -105,50 +115,9 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
               directo.
             </p>
           </div>
-        </PanelCard>
-
-        <PanelCard title="Progreso de llegada">
-          <DonutChart
-            big={`${porcentaje}%`}
-            caption="LLEGARON"
-            slices={[
-              { label: 'Dentro', value: tally.arrivedGroups, color: 'var(--color-sage)' },
-              {
-                label: 'Sin llegar',
-                // Nunca negativo: pueden llegar grupos que no estaban entre los esperados.
-                value: Math.max(0, tally.expectedGroups - tally.arrivedGroups),
-                color: 'var(--color-gold-light)',
-              },
-            ]}
-          />
-        </PanelCard>
+          </PanelCard>
+        </div>
       </div>
-
-      <PanelCard
-        action={
-          <Link href={`/panel/eventos/${event.value.slug}/invitados`}>
-            <PanelCardLink>Ver todos los invitados →</PanelCardLink>
-          </Link>
-        }
-        title="Últimas llegadas"
-      >
-        {ultimas.length === 0 ? (
-          <p className="text-[13px] text-ink-mute">Todavía no ha llegado nadie. La puerta está lista.</p>
-        ) : (
-          <ul className="flex flex-col">
-            {ultimas.map((a) => (
-              <li
-                key={a.clave}
-                className="flex flex-wrap items-center gap-3 border-b border-line-panel py-2.5 last:border-none"
-              >
-                <span className="flex-1 text-[14px] text-ink">{a.nombre}</span>
-                <span className="font-mono text-[11px] text-ink-soft">{a.detalle}</span>
-                <span className="font-mono text-[10px] text-ink-mute">{hora(a.at)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </PanelCard>
     </>
   )
 }

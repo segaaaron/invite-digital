@@ -235,10 +235,10 @@ describe('ContentBlockForms', () => {
     expect(opciones).not.toContain('anillos.jpg')
   })
 
-  it('el icono del itinerario no ofrece las fotografías del evento', () => {
+  it('el icono del itinerario se elige viéndolo, entre los que pinta el diseño, y no ofrece fotos', () => {
     // `imageId` es ahí la clave del dibujo que trae el diseño —`church`, `flutes`—, no una
-    // fotografía: ofrecerlas pondría el retrato de la novia donde va la campana.
-    render(
+    // fotografía; y escribir «church» a mano no le decía nada a nadie.
+    const { container } = render(
       <ContentBlockForms
         ejemplo={{}} pinta={TODO}
         content={{ itinerary: [{ time: '16:00 h', label: 'Ceremonia', imageId: 'church' }] }}
@@ -246,11 +246,24 @@ describe('ContentBlockForms', () => {
         eventSlug="b"
         media={[{ id: 'img-1', originalName: 'anillos.jpg', byteSize: 2048, contentType: 'image/jpeg', fromGuest: false }]}
         sections={['itinerary']}
+        temaKey="boda-bot"
       />,
     )
-    const campo = screen.getByLabelText('Icono · momento 1')
-    expect(campo.tagName).toBe('INPUT')
-    expect(campo).toHaveValue('church')
+    const grupo = screen.getByRole('group', { name: 'Icono · momento 1' })
+    expect(within(grupo).getByRole('button', { name: 'Ceremonia' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(grupo).queryByRole('button', { name: /anillos\.jpg/ })).toBeNull()
+
+    fireEvent.click(within(grupo).getByRole('button', { name: 'Brindis' }))
+    expect(valorEnviado(container)).toEqual([{ time: '16:00 h', label: 'Ceremonia', imageId: 'flutes' }])
+  })
+
+  // Con cronograma del día, los momentos no se escriben dos veces.
+  it('con cronograma, el itinerario lleva al cronograma en vez de pedir los momentos', () => {
+    render(
+      <ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" itinerarioDesde="/panel/eventos/b/planner/cronograma" media={SIN_IMAGENES} sections={['itinerary']} />,
+    )
+    expect(screen.getByRole('link', { name: 'Ir al cronograma', hidden: true })).toHaveAttribute('href', '/panel/eventos/b/planner/cronograma')
+    expect(screen.queryByRole('button', { name: /Añadir momento/, hidden: true })).toBeNull()
   })
 
   it('vaciar todos los campos es como se quita una sección', () => {
@@ -305,9 +318,39 @@ describe('ContentBlockForms', () => {
     )
     const formularios = container.querySelectorAll('form')
     expect(formularios).toHaveLength(2)
-    const primero = formularios[0] as HTMLElement
-    expect(within(primero).getByRole('button', { name: 'Guardar' })).toBeInTheDocument()
-    expect(valorEnviado(primero)).toEqual({ track: 'At Last' })
+    const cancion = container.querySelector('#bloque-music') as HTMLElement
+    expect(within(cancion).getByRole('button', { name: 'Guardar', hidden: true })).toBeInTheDocument()
+    expect(valorEnviado(cancion)).toEqual({ track: 'At Last' })
+  })
+
+  // Doce tarjetas seguidas no decían por dónde empezar, y la galería quedaba al fondo.
+  it('agrupa las secciones en pasos numerados, con las fotos en el primero', () => {
+    render(
+      <ContentBlockForms
+        ejemplo={{}} pinta={TODO}
+        content={{}}
+        eventId="e1"
+        eventSlug="b"
+        media={SIN_IMAGENES}
+        sections={['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'gallery', 'notes', 'closing']}
+      />,
+    )
+    const pasos = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+    expect(pasos).toEqual([
+      expect.stringMatching(/^1.*Portada y fotos/),
+      expect.stringMatching(/^2.*Fecha y lugar/),
+      expect.stringMatching(/^3.*Familia y palabras/),
+      expect.stringMatching(/^4.*Detalles de la fiesta/),
+      expect.stringMatching(/^5.*Música/),
+    ])
+    const primero = screen.getByRole('region', { name: /Portada y fotos/ })
+    expect(within(primero).getByRole('button', { name: 'Galería' })).toBeInTheDocument()
+  })
+
+  it('en la portada, las fotos van justo después de los nombres', () => {
+    render(<ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['hero']} />)
+    const rotulos = [...document.querySelectorAll('#bloque-hero label, #bloque-hero p[id$="-rotulo"]')].map((n) => n.textContent)
+    expect(rotulos.slice(0, 4)).toEqual(['Primer nombre', 'Segundo nombre', 'Fotografía de portada', 'Retrato'])
   })
 
   it('cada sección es una tarjeta que se abre de una en una, empezando por la que falta', () => {
@@ -347,7 +390,7 @@ describe('ContentBlockForms', () => {
     expect(screen.getByText('1 de 2 secciones listas')).toBeInTheDocument()
     const portada = screen.getByRole('button', { name: 'Portada y nombres' })
     expect(portada).toHaveAccessibleDescription(/Listo/)
-    expect(portada).toHaveAccessibleDescription(/MIS QUINCE · Loreley/)
+    expect(portada).toHaveAccessibleDescription(/Loreley · MIS QUINCE/)
     expect(screen.getByRole('button', { name: 'Frase' })).toHaveAccessibleDescription(/Por completar/)
   })
 

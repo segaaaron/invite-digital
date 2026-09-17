@@ -2,6 +2,7 @@ import type { ThemeProps } from '../contract'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
@@ -354,6 +355,9 @@ export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: Th
                     accent={P.oro}
                     border="rgba(184,148,90,0.3)"
                     coords={map.coords ?? ''}
+                    directionsLabel={themes.viewLocation}
+                    href={map.href}
+                    respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                     label={map.label ?? ''}
                     pinDot={P.fondo}
                   />
@@ -390,6 +394,7 @@ export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: Th
               </div>
               <div style={{ marginTop: 10, fontFamily: DISPLAY, fontSize: 30 }}>{dressCode.title ?? ''}</div>
               <div style={{ marginTop: 8, fontSize: 13, opacity: 0.8 }}>{dressCode.detail ?? ''}</div>
+              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

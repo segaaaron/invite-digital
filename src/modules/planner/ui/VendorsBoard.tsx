@@ -1,5 +1,6 @@
 'use client'
 
+import { CampoHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { type DiaActionState, emitVendorLinkAction, removeVendorAction, revokeVendorLinkAction, saveVendorAction, setVendorStatusAction } from '@/app/_acciones/planner/dia-actions'
@@ -76,7 +77,7 @@ function FormularioDeProveedor({ evento, categorias, proveedor }: { evento: Even
           </select>
         </Field>
         <Field htmlFor={`${id}-h`} label="Llega el día a las">
-          <input className={FIELD_CLASS} defaultValue={v('arrivalTime', proveedor?.arrivalTime)} id={`${id}-h`} name="arrivalTime" type="time" />
+          <CampoHora defaultValue={v('arrivalTime', proveedor?.arrivalTime)} id={`${id}-h`} name="arrivalTime" />
         </Field>
       </div>
       <Field htmlFor={`${id}-o`} label="Montaje y acceso">

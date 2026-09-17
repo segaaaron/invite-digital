@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { avisosDelCronograma, momentoActual, minutos, plantillaDeCronograma, type Momento } from './cronograma'
+import { avisosDelCronograma, momentoActual, minutos, plantillaDeCronograma, itinerarioDeInvitacion, type Momento } from './cronograma'
 
-const m = (parcial: Partial<Momento>): Momento => ({ id: 'x', startsAt: '20:00', durationMin: 30, title: 'Momento', place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: 0, ...parcial })
+const m = (parcial: Partial<Momento>): Momento => ({ id: 'x', startsAt: '20:00', durationMin: 30, title: 'Momento', place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: 0, enInvitacion: false, icono: null, ...parcial })
 
 describe('plantillaDeCronograma', () => {
   it('la boda trae su primer baile y el ramo; XV, el vals con el papá y el cambio de zapatillas', () => {
@@ -44,5 +44,24 @@ describe('momentoActual', () => {
     expect(momentoActual(lista, '20:10')).toEqual({ ahora: 'a', sigue: 'b' })
     expect(momentoActual(lista, '20:45')).toEqual({ ahora: null, sigue: 'b' })
     expect(momentoActual(lista, '00:05')).toEqual({ ahora: 'c', sigue: null })
+  })
+})
+
+describe('itinerarioDeInvitacion', () => {
+  const m = (id: string, startsAt: string, title: string, enInvitacion: boolean, icono: string | null = null) =>
+    ({ id, startsAt, title, enInvitacion, icono, durationMin: 15, place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: 0 }) as const
+
+  // Un solo cronograma: los invitados ven los momentos marcados, en orden de hora y con su icono.
+  it('solo los marcados, en orden de la noche, con su icono', () => {
+    expect(
+      itinerarioDeInvitacion([m('a', '00:30', 'Hora loca', true, 'fiesta'), m('b', '20:00', 'Vals', false), m('c', '19:00', 'Recepción', true, 'recepcion')]),
+    ).toEqual([
+      { time: '19:00', label: 'Recepción', imageId: 'recepcion' },
+      { time: '00:30', label: 'Hora loca', imageId: 'fiesta' },
+    ])
+  })
+
+  it('sin ninguno marcado no hay itinerario desde el cronograma', () => {
+    expect(itinerarioDeInvitacion([m('b', '20:00', 'Vals', false)])).toBeNull()
   })
 })

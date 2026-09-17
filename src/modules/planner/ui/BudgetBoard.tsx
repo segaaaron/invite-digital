@@ -1,5 +1,6 @@
 'use client'
 
+import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { addPaymentAction, type PlannerActionState, removeItemAction, removePaymentAction, saveItemAction, setPaymentPaidAction } from '@/app/_acciones/planner/actions'
@@ -86,7 +87,7 @@ function CamposDePartida({ opciones, inicial }: { opciones: Opciones; inicial: V
  * Alta o edición de una partida. El nombre del padrino solo aparece si paga un padrino. Con
  * error, los campos se vuelven a montar con lo que se envió: React vacía el formulario.
  */
-export function ItemForm({ evento, opciones, partida }: { evento: Evento; opciones: Opciones; partida?: PartidaVista }) {
+export function ItemForm({ evento, opciones, partida, categoria }: { evento: Evento; opciones: Opciones; partida?: PartidaVista; categoria?: string | undefined }) {
   const [estado, enviar, enviando] = useActionState(saveItemAction, INICIAL)
   const enviados = estado.status === 'error' ? estado.valores : undefined
   const inicial: ValoresPartida = enviados
@@ -101,7 +102,7 @@ export function ItemForm({ evento, opciones, partida }: { evento: Evento; opcion
       }
     : {
         concept: partida?.concept ?? '',
-        category: partida?.category ?? '',
+        category: partida?.category ?? categoria ?? '',
         estimated: partida?.campoPrevisto ?? '',
         contracted: partida?.campoContratado ?? '',
         payer: partida?.payer ?? 'anfitriones',
@@ -132,7 +133,7 @@ function NuevoPago({ evento, itemId, concepto }: { evento: Evento; itemId: strin
         <input className={FIELD_CLASS} defaultValue={enviados?.amount ?? ''} id={`${id}-a`} inputMode="decimal" name="amount" required />
       </Field>
       <Field htmlFor={`${id}-d`} label="Vence">
-        <input className={FIELD_CLASS} defaultValue={enviados?.dueDate ?? ''} id={`${id}-d`} name="dueDate" type="date" />
+        <CampoFecha defaultValue={enviados?.dueDate ?? ''} id={`${id}-d`} name="dueDate" />
       </Field>
       <Field htmlFor={`${id}-e`} label="Es">
         <select className={FIELD_CLASS} defaultValue={enviados?.label ?? ''} id={`${id}-e`} name="label">

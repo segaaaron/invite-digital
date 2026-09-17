@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { comoLlegar, mapaIncrustado } from '../../../domain/ubicacion'
 import { prefiereMenosMovimiento } from './motion'
 
 type Props = {
@@ -17,17 +18,23 @@ type Props = {
   readonly coordsColor?: string
   /** El punto del alfiler, que contrasta contra el acento. */
   readonly pinDot: string
+  /** El enlace de Google Maps que pegó el atelier, o la búsqueda de la dirección que escribió. */
+  readonly href?: string | undefined
+  /** La dirección del lugar, si no hay enlace ni coordenadas: «Hacienda Las Estrellas, Km 8». */
+  readonly respaldo?: string | undefined
+  /** «VER UBICACIÓN», en el idioma del evento. */
+  readonly directionsLabel?: string | undefined
 }
 
 /**
- * El plano estilizado del lugar, con su alfiler y su pulso de radar.
+ * El mapa del lugar, dentro del marco del diseño.
  *
- * **No es un mapa de verdad y no pretende serlo**: es una ilustración con el nombre y las
- * coordenadas. Un mapa real aquí significaría un proveedor de teselas, una clave y un
- * tercero que sabe quién abre cada invitación de boda y desde dónde.
+ * Con algo que ubicar —el enlace de Google Maps, las coordenadas o la dirección— es **el
+ * mapa de Google de verdad**, incrustado sin clave (`output=embed`), con el rótulo y el botón
+ * de cómo llegar pintados con los colores del diseño encima. Pedido por el usuario: el plano
+ * dibujado no servía para llegar. Sin nada que ubicar, queda el plano estilizado de siempre.
  *
- * Quien quiera llegar usa el enlace del bloque `map`, que abre la aplicación de mapas del
- * teléfono. Este dibujo es el que aparece en el diseño.
+ * El iframe carga en diferido: no se pide a Google hasta que el invitado baja hasta aquí.
  */
 export function MapPreview({
   accent,
@@ -41,8 +48,77 @@ export function MapPreview({
   labelLetterSpacing = '0.3em',
   coordsColor,
   pinDot,
+  href,
+  respaldo,
+  directionsLabel,
 }: Props) {
   const [reducido] = useState(prefiereMenosMovimiento)
+  const incrustado = mapaIncrustado({ href, coords, label }, respaldo)
+  const llegar = comoLlegar({ href, coords }) ?? (incrustado === null ? null : incrustado.replace('&z=16&output=embed', ''))
+
+  if (incrustado !== null) {
+    return (
+      <div style={{ position: 'relative', height: Math.max(height, 220), borderRadius: 8, overflow: 'hidden', border: `1px solid ${border}` }}>
+        <iframe
+          allowFullScreen
+          loading="lazy"
+          referrerPolicy="no-referrer-when-downgrade"
+          src={incrustado}
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
+          title={label === '' ? 'Mapa del lugar' : `Mapa: ${label}`}
+        />
+        {label === '' ? null : (
+          <div
+            style={{
+              position: 'absolute',
+              top: 10,
+              left: 10,
+              maxWidth: 'calc(100% - 20px)',
+              padding: '6px 10px',
+              borderRadius: 999,
+              background: pinDot,
+              border: `1px solid ${border}`,
+              fontFamily: 'var(--font-cinzel)',
+              fontWeight: 600,
+              fontSize: 9,
+              letterSpacing: labelLetterSpacing,
+              textTransform: 'uppercase',
+              color: labelColor ?? accent,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            ● {label}
+          </div>
+        )}
+        {llegar === null ? null : (
+          <a
+            href={llegar}
+            rel="noopener noreferrer"
+            style={{
+              position: 'absolute',
+              right: 10,
+              bottom: 10,
+              padding: '8px 14px',
+              borderRadius: 999,
+              background: accent,
+              color: pinDot,
+              fontFamily: 'var(--font-cinzel)',
+              fontWeight: 600,
+              fontSize: 9,
+              letterSpacing: '0.2em',
+              textDecoration: 'none',
+              boxShadow: `0 6px 16px ${accent}40`,
+            }}
+            target="_blank"
+          >
+            {directionsLabel ?? 'VER UBICACIÓN'}
+          </a>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div

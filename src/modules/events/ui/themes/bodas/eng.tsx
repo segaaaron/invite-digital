@@ -11,7 +11,7 @@ export const engDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['newsreader', 'jetbrainsMono', 'cormorant', 'cinzel'],
   rsvp: 'botones',
-  pinta: { fotos: { casillas: 5 }, sinCampos: { hero: ['monogram', 'serial'], reception: ['time'], map: ['href'] } },
+  pinta: { fotos: { casillas: 5 }, sinCampos: { hero: ['monogram', 'serial'], reception: ['time'] } },
   sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./eng.view').then((modulo) => modulo.EngView)),

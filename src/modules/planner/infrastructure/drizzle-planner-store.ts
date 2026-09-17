@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { budgetItems, budgetPayments, plannerTasks } from '@/shared/db/schema'
+import { budgetItems, budgetPayments, budgetPlans, plannerTasks } from '@/shared/db/schema'
 import type { PlannerStore } from '../application/ports'
 import type { Pagador } from '../domain/presupuesto'
 import type { Responsable } from '../domain/tareas'
@@ -51,6 +51,16 @@ export function createDrizzlePlannerStore(database: DbExecutor = db): PlannerSto
       return filas.length > 0
     },
 
+    async getBudgetPlan(eventId) {
+      const [fila] = await database.select().from(budgetPlans).where(eq(budgetPlans.eventId, eventId)).limit(1)
+      return fila === undefined ? null : { totalCents: fila.totalCents, asignaciones: fila.allocations }
+    },
+    async saveBudgetPlan(eventId, plan) {
+      await database
+        .insert(budgetPlans)
+        .values({ eventId, totalCents: plan.totalCents, allocations: plan.asignaciones })
+        .onConflictDoUpdate({ target: budgetPlans.eventId, set: { totalCents: plan.totalCents, allocations: plan.asignaciones, updatedAt: new Date() } })
+    },
     async listBudget(eventId) {
       const partidas = await database.select().from(budgetItems).where(eq(budgetItems.eventId, eventId)).orderBy(asc(budgetItems.createdAt))
       const pagos =

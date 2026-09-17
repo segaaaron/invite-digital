@@ -1,5 +1,5 @@
 import type { Fiesta } from '@/modules/events'
-import { categoriasDe, ETIQUETAS_DE_PAGO, PAGADORES, type Pagador } from '../domain/presupuesto'
+import { categoriasDe, ETIQUETAS_DE_PAGO, PAGADORES, type Pagador, repartoRecomendado } from '../domain/presupuesto'
 import { etapasDe, RESPONSABLES, type Responsable, sembrarTareas } from '../domain/tareas'
 import type { PlannerStore } from './ports'
 
@@ -135,6 +135,30 @@ export const saveItem =
       return { ok: true }
     }
     return (await store.updateItem(eventId, id, item)) ? { ok: true } : fallo(NO_ESTA)
+  }
+
+/**
+ * Fija el presupuesto total. Sin reparto propio, se reparte con la guía por categorías; con
+ * reparto, el total es la suma de lo asignado —así nunca dicen cosas distintas—.
+ */
+export const saveBudgetPlan =
+  ({ store }: Deps) =>
+  async (eventId: string, fiesta: Fiesta, input: { totalCents: number } | { asignaciones: Record<string, number> }): Promise<PlannerResult> => {
+    if ('totalCents' in input) {
+      if (!centavosValidos(input.totalCents) || input.totalCents === 0) return fallo('Escribe cuánto quieres gastar en total.')
+      await store.saveBudgetPlan(eventId, { totalCents: input.totalCents, asignaciones: repartoRecomendado(fiesta, input.totalCents) })
+      return { ok: true }
+    }
+    const asignaciones: Record<string, number> = {}
+    for (const { clave } of categoriasDe(fiesta)) {
+      const cents = input.asignaciones[clave] ?? 0
+      if (!centavosValidos(cents)) return fallo('Revisa los importes del reparto.')
+      asignaciones[clave] = cents
+    }
+    const totalCents = Object.values(asignaciones).reduce((a, b) => a + b, 0)
+    if (totalCents === 0) return fallo('Asigna algo a alguna categoría.')
+    await store.saveBudgetPlan(eventId, { totalCents, asignaciones })
+    return { ok: true }
   }
 
 export const removeItem =

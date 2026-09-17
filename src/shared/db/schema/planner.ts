@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { boolean, check, date, index, integer, pgTable, primaryKey, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, check, date, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { events } from './eventos'
 import { bytea } from './base'
 
@@ -31,6 +31,19 @@ export const plannerTasks = pgTable(
 )
 
 /** Una partida del presupuesto. Centavos enteros; `contracted_cents` nulo es «sin contrato». */
+/**
+ * El presupuesto total del evento y cómo se reparte por categorías (`0060`). Una fila por
+ * evento. `allocations` son centavos por clave de categoría; su suma es `total_cents`.
+ */
+export const budgetPlans = pgTable('budget_plans', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  totalCents: integer('total_cents').notNull(),
+  allocations: jsonb('allocations').$type<Record<string, number>>().notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [check('budget_plans_total_check', sql`${t.totalCents} >= 0`)])
+
 export const budgetItems = pgTable(
   'budget_items',
   {
@@ -117,6 +130,9 @@ export const runOfShow = pgTable(
     cue: varchar('cue', { length: 200 }),
     notes: text('notes'),
     sortOrder: integer('sort_order').notNull().default(0),
+    /** Sale en el itinerario de la invitación (`0059`): el cronograma es la única lista. */
+    inInvitation: boolean('in_invitation').notNull().default(false),
+    icon: varchar('icon', { length: 40 }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index('run_of_show_event_idx').on(t.eventId), check('run_of_show_duration_check', sql`${t.durationMin} between 1 and 600`)],

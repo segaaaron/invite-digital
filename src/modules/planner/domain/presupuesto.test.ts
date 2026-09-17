@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { categoriasDe, cuentasDePartida, nombreDePagador, pagosQueVencen, porPagador, presupuestoACsv, totalesDelPresupuesto, type Partida } from './presupuesto'
+import { categoriasDe, repartoRecomendado, resumenPorCategoria, cuentasDePartida, nombreDePagador, pagosQueVencen, porPagador, presupuestoACsv, totalesDelPresupuesto, type Partida } from './presupuesto'
 
 const partida = (parcial: Partial<Partida>): Partida => ({
   id: 'p',
@@ -74,5 +74,24 @@ describe('presupuestoACsv', () => {
     expect(csv.startsWith('﻿')).toBe(true)
     expect(csv).toContain('"\'=HYPERLINK(""x"")"')
     expect(csv).toContain('"1234.50"')
+  })
+})
+
+describe('el presupuesto total repartido por categorías', () => {
+  it('el reparto recomendado suma el total entero, sin céntimos perdidos', () => {
+    for (const fiesta of ['boda', 'xv'] as const) {
+      const reparto = repartoRecomendado(fiesta, 3_333_333)
+      expect(Object.values(reparto).reduce((a, b) => a + b, 0)).toBe(3_333_333)
+      expect(Object.keys(reparto).sort()).toEqual(categoriasDe(fiesta).map((c) => c.clave).sort())
+    }
+  })
+
+  it('cada categoría dice lo asignado, lo comprometido y si se pasó', () => {
+    const partidas: Partida[] = [
+      { id: 'a', category: 'salon', concept: 'Hacienda', estimatedCents: 900_000, contractedCents: 1_200_000, payer: 'anfitriones', padrinoLabel: null, notes: null, pagos: [{ id: 'g', amountCents: 300_000, dueDate: null, paidAt: new Date() }] },
+    ]
+    const filas = resumenPorCategoria(partidas, 'xv', { salon: 1_000_000, catering: 2_000_000 })
+    expect(filas.find((f) => f.clave === 'salon')).toMatchObject({ asignado: 1_000_000, comprometido: 1_200_000, pagado: 300_000, estado: 'pasado' })
+    expect(filas.find((f) => f.clave === 'catering')).toMatchObject({ asignado: 2_000_000, comprometido: 0, estado: 'libre' })
   })
 })

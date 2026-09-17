@@ -130,7 +130,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       {
         label: 'Puerta',
         items: [
-          { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
+          { href: en('/checkin'), label: 'Llegadas', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
         ],
       },
     ]
@@ -143,11 +143,25 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   // enseñar que existe algo a lo que no se llega.
   if (esCliente) {
     return [
+      // Lo primero que se hace: escribir la invitación. Va arriba, con nombres que dicen qué pasa.
+      {
+        label: 'Mi invitación',
+        items: [
+          // Su invitación la escribe él: textos, canción e itinerario. La pantalla es la
+          // misma del atelier, con las tarjetas del evento —diseño, contraseña, borrado—
+          // fuera: esas son de quien le vendió la boda.
+          { href: en('/configuracion'), label: 'Escribir mi invitación', icon: 'editar' },
+          { href: en('/vista-previa'), label: 'Ver cómo queda', icon: 'vistaPrevia' },
+          { href: en('/estadisticas'), label: 'Quién la abrió', icon: 'estadisticas' },
+        ],
+      },
       {
         label: 'Mi evento',
         items: [
           { href: base, label: 'Resumen', icon: 'resumen' },
           { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
+          // Quién llegó y quién falta, en vivo; y desde ahí, el modo puerta para escanear.
+          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Llegadas', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
           { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
           { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
@@ -169,17 +183,6 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
           { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
           { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'checkin' },
-        ],
-      },
-      {
-        label: 'Mi invitación',
-        items: [
-          // Su invitación la escribe él: textos, canción e itinerario. La pantalla es la
-          // misma del atelier, con las tarjetas del evento —diseño, contraseña, borrado—
-          // fuera: esas son de quien le vendió la boda.
-          { href: en('/configuracion'), label: 'Mi invitación', icon: 'configuracion' },
-          { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
-          { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
         ],
       },
       {
@@ -212,6 +215,18 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
 
   return [
     {
+      label: 'Invitación',
+      items: [
+        { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
+        // La invitación de esta boda, entera. Era un ancla —`#vista-previa`— que no
+        // existía en ninguna página: pulsarla dejaba al atelier en Configuración
+        // preguntándose qué había pasado.
+        { href: en('/vista-previa'), label: 'Ver cómo queda', icon: 'vistaPrevia' },
+        { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
+        { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
+      ],
+    },
+    {
       label: 'Evento activo',
       items: [
         { href: base, label: 'Resumen', icon: 'resumen' },
@@ -219,7 +234,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
         { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-        { href: en('/checkin'), label: 'Check-in', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'grupos dentro' },
+        { href: en('/checkin'), label: 'Llegadas', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
         { href: en('/equipo'), label: 'Equipo', icon: 'usuarios' },
       ],
     },
@@ -233,18 +248,6 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
         { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
         { href: en('/dia-d'), label: 'Día D', icon: 'checkin' },
-      ],
-    },
-    {
-      label: 'Diseño',
-      items: [
-        { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
-        // La invitación de esta boda, entera. Era un ancla —`#vista-previa`— que no
-        // existía en ninguna página: pulsarla dejaba al atelier en Configuración
-        // preguntándose qué había pasado.
-        { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
-        { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
-        { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],
     },
     ...administracion,

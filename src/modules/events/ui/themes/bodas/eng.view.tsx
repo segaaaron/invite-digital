@@ -244,6 +244,9 @@ export function EngView({ content, dictionary, themes, slots, audioSrc }: ThemeP
                 accent={P.rosa}
                 border="rgba(212,86,108,0.3)"
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.papel}
               />

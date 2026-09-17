@@ -129,8 +129,8 @@ describe('proveedores', () => {
     await saveVendor(deps)('e1', 'xv', null, proveedor, { precioCents: null, categoria: '' })
     const { vendors } = { vendors: await deps.dia.listVendors('e1') }
     momentos.push(
-      { id: 'm1', eventId: 'e1', startsAt: '20:00', durationMin: 10, title: 'Vals', place: null, owner: 'Ana', vendorIds: [vendors[0]!.id], cue: 'Tiempo de vals', notes: 'privado', sortOrder: 0 },
-      { id: 'm2', eventId: 'e1', startsAt: '21:00', durationMin: 10, title: 'Torta', place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: 1 },
+      { id: 'm1', eventId: 'e1', startsAt: '20:00', durationMin: 10, title: 'Vals', place: null, owner: 'Ana', vendorIds: [vendors[0]!.id], cue: 'Tiempo de vals', notes: 'privado', sortOrder: 0, enInvitacion: false, icono: null },
+      { id: 'm2', eventId: 'e1', startsAt: '21:00', durationMin: 10, title: 'Torta', place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: 1, enInvitacion: false, icono: null },
     )
     const enlace = await emitirEnlaceDeProveedor(deps)('e1', vendors[0]!.id)
     expect(enlace).toEqual({ ok: true, token: 'token-del-dj' })

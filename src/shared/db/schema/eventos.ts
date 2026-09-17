@@ -194,17 +194,6 @@ export const planChangeRequests = pgTable(
   ],
 )
 
-export const clientShares = pgTable('client_shares', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  eventId: uuid('event_id')
-    .notNull()
-    .references(() => events.id, { onDelete: 'cascade' }),
-  tokenHash: bytea('token_hash').notNull().unique(),
-  expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
-  revokedAt: timestamp('revoked_at', { withTimezone: true }),
-  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
-})
-
 export const eventsRelations = relations(events, ({ many }) => ({ guestGroups: many(guestGroups) }))
 
 /**

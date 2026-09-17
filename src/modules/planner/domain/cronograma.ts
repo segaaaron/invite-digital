@@ -1,6 +1,9 @@
 import type { Fiesta } from '@/modules/events'
 
-/** Un momento del cronograma interno del día. No es el itinerario de la invitación. */
+/**
+ * Un momento del cronograma del día. El equipo lo ve entero; los invitados, solo los marcados
+ * `enInvitacion`, que forman el itinerario de la invitación: una sola lista, no dos.
+ */
 export type Momento = {
   readonly id: string
   /** `HH:MM`, hora de Bolivia. */
@@ -15,6 +18,10 @@ export type Momento = {
   readonly cue: string | null
   readonly notes: string | null
   readonly sortOrder: number
+  /** Si sale en el itinerario que ven los invitados. */
+  readonly enInvitacion: boolean
+  /** La clave del dibujo del diseño para ese momento: `corona`, `church`. */
+  readonly icono: string | null
 }
 
 export type MomentoNuevo = Pick<Momento, 'startsAt' | 'durationMin' | 'title'>
@@ -78,4 +85,17 @@ export function momentoActual(momentos: readonly Momento[], hhmm: string): { aho
   const ahora = orden.find((x) => minutos(x.startsAt) <= t && t < minutos(x.startsAt) + x.durationMin) ?? null
   const sigue = orden.find((x) => minutos(x.startsAt) > t) ?? null
   return { ahora: ahora?.id ?? null, sigue: sigue?.id ?? null }
+}
+
+/** Una fila del itinerario de la invitación. Misma forma que `ItineraryRow` del contenido. */
+export type FilaDeItinerario = { readonly time: string; readonly label: string; readonly imageId?: string }
+
+/**
+ * El itinerario que ven los invitados, sacado del cronograma: los momentos marcados, en orden
+ * de la noche. `null` si no hay ninguno marcado, y entonces manda lo escrito en la invitación.
+ */
+export function itinerarioDeInvitacion(momentos: readonly Momento[]): FilaDeItinerario[] | null {
+  const marcados = momentos.filter((m) => m.enInvitacion).sort((a, b) => minutos(a.startsAt) - minutos(b.startsAt))
+  if (marcados.length === 0) return null
+  return marcados.map((m) => ({ time: m.startsAt, label: m.title, ...(m.icono === null ? {} : { imageId: m.icono }) }))
 }

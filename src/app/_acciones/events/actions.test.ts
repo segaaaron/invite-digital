@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { err, ok } from '@/shared/result'
-import { eventError } from '@/modules/events/domain/errors'
 
-const revokeShare = vi.fn()
 const setPassword = vi.fn()
 const requireFeature = vi.fn()
 const requireSession = vi.fn().mockResolvedValue({ userId: 'u1' })
@@ -24,12 +22,10 @@ vi.mock('@/app/_acciones/sesion', () => ({
 }))
 vi.mock('@/app/composition/container', () => ({
   events: {
-    revokeShare: (...args: unknown[]) => revokeShare(...args),
     create: (...args: unknown[]) => create(...args),
     update: (...args: unknown[]) => update(...args),
     getByIdFor: (...args: unknown[]) => getByIdFor(...args),
     seedContent: (...args: unknown[]) => seedContent(...args),
-    createShare: vi.fn(),
     setPassword: (...args: unknown[]) => setPassword(...args),
   },
   plans: {
@@ -40,44 +36,9 @@ vi.mock('@/app/composition/container', () => ({
   guests: { list: (...args: unknown[]) => listGroups(...args) },
 }))
 
-const form = (): FormData => {
-  const fd = new FormData()
-  fd.set('shareId', 's1')
-  fd.set('eventSlug', 'boda')
-  return fd
-}
-
 beforeEach(() => {
   vi.clearAllMocks()
   requireSession.mockResolvedValue({ userId: 'u1' })
-})
-
-describe('revokeClientShareAction', () => {
-  it('revocado de verdad, devuelve éxito', async () => {
-    revokeShare.mockResolvedValue(ok(undefined))
-    const { revokeClientShareAction } = await import('@/app/_acciones/events/actions')
-
-    expect(await revokeClientShareAction({ status: 'idle' }, form())).toEqual({ status: 'success' })
-  })
-
-  it('si el caso de uso rechaza, devuelve error en vez de fingir que se revocó', async () => {
-    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    revokeShare.mockResolvedValue(err(eventError('storage_failure', 'La base no responde.')))
-    const { revokeClientShareAction } = await import('@/app/_acciones/events/actions')
-
-    expect(await revokeClientShareAction({ status: 'idle' }, form())).toEqual({ status: 'error' })
-    // El registro del servidor se conserva: sigue siendo por donde se diagnostica.
-    expect(spy).toHaveBeenCalledWith('revocación de enlace rechazada', 'storage_failure', 'La base no responde.')
-    spy.mockRestore()
-  })
-
-  it('exige sesión', async () => {
-    revokeShare.mockResolvedValue(ok(undefined))
-    const { revokeClientShareAction } = await import('@/app/_acciones/events/actions')
-
-    await revokeClientShareAction({ status: 'idle' }, form())
-    expect(requireSession).toHaveBeenCalled()
-  })
 })
 
 describe('setEventPrivacyAction y el plan', () => {

@@ -64,6 +64,12 @@ export type ThemeProps = {
    */
   readonly guestInfo?: { readonly label: string; readonly seats: number }
   /**
+   * Si este invitado ya respondió. Con la respuesta dada el diseño no pinta el plazo de
+   * confirmar: «Confírmame antes del…» encima de «Confirmación enviada» se contradice. El
+   * título lo cambia la página en `dictionary.title`.
+   */
+  readonly respondida?: boolean
+  /**
    * La música que suena, **cuando no sale del contenido del evento**.
    *
    * Una boda pone la suya en `content.music.audioMediaId` y la vista compone `/media/<id>`.

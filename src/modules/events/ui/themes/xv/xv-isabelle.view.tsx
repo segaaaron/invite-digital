@@ -5,6 +5,7 @@ import { anfitrionesXv } from '../../../domain/invitation-content'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
@@ -380,6 +381,9 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, audi
                 accent={P.arenaTexto}
                 border={P.filete}
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.marfil}
               />
@@ -395,6 +399,7 @@ export function XvIsabelleView({ content, event, dictionary, themes, slots, audi
               </div>
               <div style={{ fontFamily: PLAYFAIR, fontStyle: 'italic', fontWeight: 600, fontSize: 40, marginTop: 8, color: P.tintaFuerte }}>{dressCode.title ?? ''}</div>
               <div style={{ fontSize: 13, marginTop: 6, fontStyle: 'italic', opacity: 0.75 }}>{dressCode.detail ?? ''}</div>
+              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

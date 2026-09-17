@@ -183,8 +183,9 @@ describe('canAccessEvent · el cliente', () => {
     expect(canAccessEvent(cliente, evento, { section: 'full', memberships: ['cliente'] })).toBe(false)
   })
 
-  it('ni el check-in: la puerta es otro oficio', () => {
-    expect(canAccessEvent(cliente, evento, { section: 'checkin', memberships: ['cliente'] })).toBe(false)
+  // Pedido por el usuario (16 sep): quien celebra ve quién llegó y puede abrir la puerta.
+  it('ve las llegadas de su evento', () => {
+    expect(canAccessEvent(cliente, evento, { section: 'checkin', memberships: ['cliente'] })).toBe(true)
   })
 
   it('sin decir la sección, hereda «full» y queda fuera', () => {
@@ -270,11 +271,11 @@ describe('el equipo del evento: anfitrión, co-anfitrión y planner', () => {
     expect(puede(['coanfitrion'], 'equipo')).toBe(false)
   })
 
-  it('ninguno entra a lo del atelier ni a la puerta', () => {
-    for (const m of ['cliente', 'coanfitrion', 'planner'] as const) {
-      expect(puede([m], 'full')).toBe(false)
-      expect(puede([m], 'checkin')).toBe(false)
-    }
+  it('ninguno entra a lo del atelier; las llegadas, el anfitrión y su planner', () => {
+    for (const m of ['cliente', 'coanfitrion', 'planner'] as const) expect(puede([m], 'full')).toBe(false)
+    expect(puede(['cliente'], 'checkin')).toBe(true)
+    expect(puede(['planner'], 'checkin')).toBe(true)
+    expect(puede(['coanfitrion'], 'checkin')).toBe(false)
   })
 
   // Una planner puede tener cuenta de atelier propia: en el evento de otro entra por su

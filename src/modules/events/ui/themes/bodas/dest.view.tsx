@@ -1,4 +1,5 @@
 import { HeroOcean } from '../art/HeroOcean'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import type { ThemeProps } from '../contract'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
@@ -277,6 +278,7 @@ export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
                 {dressCode.title ?? themes.dressCode}
               </div>
               <div style={{ fontSize: 14, fontStyle: 'italic', opacity: 0.9 }}>{dressCode.detail ?? ''}</div>
+              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

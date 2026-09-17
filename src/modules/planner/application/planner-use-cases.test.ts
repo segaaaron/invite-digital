@@ -1,13 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import type { Partida } from '../domain/presupuesto'
 import type { Tarea } from '../domain/tareas'
-import { addPayment, addTask, editTask, moveTask, saveItem, seedTasks, toggleTask } from './planner-use-cases'
+import { addPayment, addTask, editTask, moveTask, saveBudgetPlan, saveItem, seedTasks, toggleTask } from './planner-use-cases'
 import type { PlannerStore } from './ports'
 
 /** Un almacén en memoria que respeta el evento como el de verdad. */
 function memoria() {
   const tareas: Array<Tarea & { eventId: string }> = []
   const partidas: Array<Partida & { eventId: string }> = []
+  const planes = new Map<string, { totalCents: number; asignaciones: Record<string, number> }>()
   let n = 0
   const store: PlannerStore = {
     listTasks: async (e) => tareas.filter((t) => t.eventId === e).sort((a, b) => a.sortOrder - b.sortOrder),
@@ -37,8 +38,10 @@ function memoria() {
     },
     setPaymentPaid: async () => true,
     removePayment: async () => true,
+    getBudgetPlan: async (e) => planes.get(e) ?? null,
+    saveBudgetPlan: async (e, plan) => void planes.set(e, plan),
   }
-  return { store, tareas, partidas, clock: () => new Date('2027-01-10T15:00:00.000Z') }
+  return { store, tareas, partidas, planes, clock: () => new Date('2027-01-10T15:00:00.000Z') }
 }
 
 describe('tareas', () => {
@@ -128,5 +131,22 @@ describe('presupuesto', () => {
     expect(await addPayment(deps)('e1', id, { amountCents: 10, dueDate: '2027-02-01', label: 'propina' })).toMatchObject({ ok: false })
     expect(await addPayment(deps)('e1', id, { amountCents: 10, dueDate: '2027-02-01', label: 'anticipo' })).toEqual({ ok: true })
     expect(deps.partidas[0]?.pagos[0]).toMatchObject({ label: 'anticipo' })
+  })
+})
+
+describe('saveBudgetPlan', () => {
+  it('con solo el total, lo reparte con la guía y la suma cuadra', async () => {
+    const deps = memoria()
+    expect(await saveBudgetPlan(deps)('e1', 'xv', { totalCents: 5_000_000 })).toEqual({ ok: true })
+    const plan = deps.planes.get('e1')!
+    expect(plan.totalCents).toBe(5_000_000)
+    expect(Object.values(plan.asignaciones).reduce((a, b) => a + b, 0)).toBe(5_000_000)
+  })
+
+  it('con reparto propio, el total es la suma; y una categoría ajena no entra', async () => {
+    const deps = memoria()
+    await saveBudgetPlan(deps)('e1', 'xv', { asignaciones: { salon: 1_000_000, catering: 2_000_000, inventada: 9 } })
+    expect(deps.planes.get('e1')).toMatchObject({ totalCents: 3_000_000 })
+    expect(deps.planes.get('e1')!.asignaciones).not.toHaveProperty('inventada')
   })
 })

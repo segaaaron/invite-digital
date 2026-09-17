@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation'
 import { admin, events, guests, plans } from '@/app/composition/container'
 import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
 import { SoporteDeBoda } from '@/modules/admin/ui/SoporteDeBoda'
-import { ClientSharePanel } from '@/modules/events/ui/ClientSharePanel'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { InvitacionEnVivo } from '@/modules/events/ui/InvitacionEnVivo'
 import '@/modules/events/ui/themes/kit/keyframes.css'
@@ -17,8 +16,8 @@ import { canManageStaff, gestionaElEvento, isAdmin } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
-import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { isErr } from '@/shared/result'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { isErr, isOk } from '@/shared/result'
 
 export const metadata = { title: 'Configuración' }
 
@@ -72,7 +71,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.
   const tema = themeFor(event.value.themeKey)
   // Contenido, fotografías y enlace compartido son del cliente: para el admin ni se leen.
-  const contenido = esAdmin ? null : await events.contentFor(event.value.id, tema.defaultContent)
+  // Lo que ven los invitados: con el itinerario del cronograma cuando el plan lo trae.
+  const contenido = esAdmin ? null : await events.contenidoParaInvitados(event.value.id, tema.defaultContent)
+  const conCronograma = !esAdmin && isOk(await plans.requireFeature(event.value.id, 'plannerCompleto'))
 
   // Lo que ya subió el atelier: las fotografías y, desde que la invitación puede sonar,
   // también el MP3. Va a las dos tarjetas: a la suya, para subirlo y verlo, y a la del
@@ -91,7 +92,6 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     fromGuest: imagen.uploadedByGroupId !== null,
   }))
 
-  const share = esAdmin ? null : await events.liveShare(event.value.id)
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
   // Si el plan trae la contraseña. Una lectura fallida no la concede.
   const capacidad = await plans.allowanceFor(event.value.id)
@@ -124,7 +124,11 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <PanelHeader kicker="Evento" title={esAdmin ? 'Ficha del evento' : 'Configuración del evento'} />
+      <PanelHeader
+        kicker="Evento"
+        {...(esAdmin ? {} : { meta: 'Completa cada paso y mira a la derecha cómo queda. Se guarda sección por sección.' })}
+        title={esAdmin ? 'Ficha del evento' : esDelAtelier ? 'Configuración del evento' : 'Mi invitación'}
+      />
 
       {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se
           vuelve a pintar al guardar cada bloque. El admin no ve el contenido: su ficha sigue en
@@ -139,6 +143,8 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           </p>
           <ContentBlockForms
             anfitriones={anfitrionesDeCategoria(tema.categorySlug)}
+            temaKey={tema.key}
+            {...(conCronograma ? { itinerarioDesde: `/panel/eventos/${event.value.slug}/planner/cronograma` } : {})}
             content={contenido}
             ejemplo={tema.defaultContent}
             eventId={event.value.id}
@@ -199,45 +205,6 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           </PanelCard>
         ) : null}
 
-        {/* El enlace de solo lectura enseña invitados y confirmaciones: es del cliente. */}
-        {share === null ? null : (
-        <PanelCard title="Vista previa del enlace">
-          <div className="flex flex-col gap-4">
-            <p className="text-[12px] leading-[1.7] text-ink-soft">
-              Así verán tus invitados la información básica del evento. El enlace de solo lectura es el que se comparte
-              con el cliente; el de cada invitado se reparte desde la sección Invitados.
-            </p>
-
-            {/* La ficha de la maqueta: lo que el invitado ve antes de abrir nada. */}
-            <div className="rounded-[14px] border border-line-panel bg-bg-raised p-5">
-              <p className="font-display text-[22px] italic text-ink">{event.value.title}</p>
-              <p className="mt-1.5 text-[12px] text-ink-soft">
-                {new Date(`${event.value.eventDate}T00:00:00`).toLocaleDateString('es-BO', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-              {event.value.venue === null ? null : (
-                <p className="mt-1 text-[12px] text-ink-soft">{event.value.venue}</p>
-              )}
-              <p className="mt-1.5 font-mono text-[11px] break-all text-ink-mute">{`/i/${event.value.slug}`}</p>
-              <p className="mt-3">
-                {conContrasena ? <Pill tone="pending">Protegida</Pill> : <Pill tone="ok">Pública</Pill>}
-              </p>
-            </div>
-            <ClientSharePanel
-              eventId={event.value.id}
-              eventSlug={event.value.slug}
-              live={
-                isErr(share) || share.value === null
-                  ? null
-                  : { id: share.value.id, expiresAt: share.value.expiresAt.toISOString().slice(0, 10) }
-              }
-            />
-          </div>
-        </PanelCard>
-        )}
       </div>
     </>
   )

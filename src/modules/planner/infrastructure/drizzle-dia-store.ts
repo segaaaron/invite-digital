@@ -67,16 +67,18 @@ export function createDrizzleDiaStore(database: DbExecutor = db): DiaStore {
         cue: f.cue,
         notes: f.notes,
         sortOrder: f.sortOrder,
+        enInvitacion: f.inInvitation,
+        icono: f.icon,
       }))
     },
     async insertMoments(eventId, momentos) {
       if (momentos.length === 0) return
-      await database.insert(runOfShow).values(momentos.map((m) => ({ ...m, vendorIds: [...m.vendorIds], eventId })))
+      await database.insert(runOfShow).values(momentos.map(({ enInvitacion, icono, ...m }) => ({ ...m, inInvitation: enInvitacion, icon: icono, vendorIds: [...m.vendorIds], eventId })))
     },
-    async updateMoment(eventId, id, m) {
+    async updateMoment(eventId, id, { enInvitacion, icono, ...m }) {
       const filas = await database
         .update(runOfShow)
-        .set({ ...m, vendorIds: [...m.vendorIds] })
+        .set({ ...m, inInvitation: enInvitacion, icon: icono, vendorIds: [...m.vendorIds] })
         .where(and(eq(runOfShow.id, id), eq(runOfShow.eventId, eventId)))
         .returning({ id: runOfShow.id })
       return filas.length > 0

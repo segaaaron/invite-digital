@@ -108,6 +108,31 @@ export async function removeTaskAction(_previo: PlannerActionState, fd: FormData
 // El dinero lo llevan el anfitrión y su planner (sección `planner`). El co-anfitrión lo ve
 // en la pantalla, pero no escribe ni marca pagos.
 
+/**
+ * El presupuesto total. Con `total`, se reparte solo con la guía; con `reparto`, cada categoría
+ * lleva su importe (`asig_<clave>`) y el total es la suma.
+ */
+export async function saveBudgetPlanAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: campo(fd, 'eventId'), eventSlug: campo(fd, 'eventSlug'), section: 'planner' })
+  const { eventId, eventSlug, fiesta } = await eventoDe(actor, fd)
+
+  if (campo(fd, 'modo') === 'reparto') {
+    const asignaciones: Record<string, number> = {}
+    for (const [clave, valor] of fd.entries()) {
+      if (!clave.startsWith('asig_') || typeof valor !== 'string') continue
+      const leido = centavos(valor, true)
+      if (!leido.ok) return { status: 'error', message: leido.message, valores: valoresDe(fd) }
+      asignaciones[clave.slice(5)] = leido.cents ?? 0
+    }
+    return responder(await planner.saveBudgetPlan(eventId, fiesta, { asignaciones }), eventSlug, fd)
+  }
+
+  const total = centavos(campo(fd, 'total'), false)
+  if (!total.ok) return { status: 'error', message: total.message, valores: valoresDe(fd) }
+  return responder(await planner.saveBudgetPlan(eventId, fiesta, { totalCents: total.cents ?? 0 }), eventSlug, fd)
+}
+
 export async function saveItemAction(_previo: PlannerActionState, fd: FormData): Promise<PlannerActionState> {
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: campo(fd, 'eventId'), eventSlug: campo(fd, 'eventSlug'), section: 'planner' })

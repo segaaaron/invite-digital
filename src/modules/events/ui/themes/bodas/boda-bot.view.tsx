@@ -5,6 +5,7 @@ import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { MarcoQr } from '../kit/MarcoQr'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
@@ -45,12 +46,12 @@ const ROTULOS = {
   giftsNote: 'Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
 } as const
 
-export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, audioSrc, respondida = false }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   // La fecha límite, en el idioma del evento: la maqueta la pinta bajo el rótulo.
   const plazo =
-    event.rsvpDeadline === null
+    respondida || event.rsvpDeadline === null
       ? null
       : `${themes.rsvpBefore} ${new Intl.DateTimeFormat(event.locale === 'en' ? 'en-GB' : 'es-BO', {
           day: 'numeric',
@@ -553,6 +554,9 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
                 accent={P.salvia}
                 border="rgba(90,112,92,0.3)"
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.papel}
               />
@@ -585,6 +589,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
               />
 
               <div style={{ fontSize: 13, marginTop: 16, fontStyle: 'italic', opacity: 0.7 }}>{dressCode.detail ?? ''}</div>
+              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
 
               <div aria-hidden style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 18 }}>
                 {CARTA_DE_COLOR.map((color) => (

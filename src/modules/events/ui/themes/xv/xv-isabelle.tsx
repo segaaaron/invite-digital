@@ -12,7 +12,7 @@ export const xvIsabelleDefinition: ThemeDefinition = {
   fonts: ['greatVibes', 'cormorant', 'cinzel', 'marcellus', 'allura', 'italiana', 'jetbrainsMono', 'playfairDisplay'],
   pinta: {
     fotos: { casillas: 1 },
-    sinCampos: { hero: ['nameB', 'monogram', 'serial'], map: ['href'], itinerary: ['note'] },
+    sinCampos: { hero: ['nameB', 'monogram', 'serial'], itinerary: ['note'] },
     maxAvisos: 1,
   },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],

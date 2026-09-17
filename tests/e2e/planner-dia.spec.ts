@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
 import { AUTH_STATE } from './fixtures/atelier'
 import { invitationFixtures } from './fixtures/invitation'
+import { elegirFecha } from './helpers/panel'
 
 const { closeInvitationDb, deleteEvent, seedInvitation } = invitationFixtures()
 const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
@@ -79,7 +80,8 @@ test('el cortejo de XV suma un chambelán con su talla y un ensayo del vals', as
   const diego = page.getByRole('listitem', { name: 'Diego Rojas' })
   await expect(diego).toContainText('talla M', { timeout: 15_000 })
 
-  await page.getByLabel('Fecha y hora').fill('2027-04-10T19:00')
+  await elegirFecha(page, 'Fecha y hora', '2027-04-10')
+  await page.getByLabel('Hora', { exact: true }).last().selectOption('19:00')
   await page.getByRole('checkbox', { name: 'Diego Rojas' }).check()
   await page.getByRole('button', { name: 'Sumar ensayo' }).click()
   await expect(page.getByRole('button', { name: /^Quitar el ensayo del/ })).toBeVisible({ timeout: 15_000 })
@@ -97,8 +99,8 @@ test('el Día D dice quién falta por llegar y marca al DJ', async ({ page }) =>
 
 test('un contrato en PDF se guarda privado y se descarga como adjunto, nunca en línea', async ({ page, browser }) => {
   await page.goto(`/panel/eventos/${SLUG}/planner/documentos`)
-  await page.setInputFiles('input[type=file][name=file]', { name: 'contrato-dj.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n%contrato del DJ\n') })
-  await page.getByRole('button', { name: 'Subir documento' }).click()
+  // Se suelta en la tarjeta del proveedor —o se toca para elegir— y sube solo, sin formulario.
+  await page.getByRole('region', { name: 'Otros documentos' }).locator('input[type=file]').setInputFiles({ name: 'contrato-dj.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n%contrato del DJ\n') })
   const enlace = page.getByRole('link', { name: 'contrato-dj.pdf' })
   await expect(enlace).toBeVisible({ timeout: 15_000 })
 

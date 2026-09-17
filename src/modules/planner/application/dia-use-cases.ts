@@ -125,12 +125,12 @@ export const seedMoments =
     if ((await dia.listMoments(eventId)).length > 0) return { ok: true }
     await dia.insertMoments(
       eventId,
-      plantillaDeCronograma(fiesta).map((m, i) => ({ ...m, place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: i })),
+      plantillaDeCronograma(fiesta).map((m, i) => ({ ...m, place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: i, enInvitacion: false, icono: null })),
     )
     return { ok: true }
   }
 
-type MomentoForm = { startsAt: string; durationMin: string; title: string; place: string; owner: string; vendorIds: readonly string[]; cue: string; notes: string }
+type MomentoForm = { startsAt: string; durationMin: string; title: string; place: string; owner: string; vendorIds: readonly string[]; cue: string; notes: string; enInvitacion?: boolean; icono?: string }
 
 export const saveMoment =
   ({ dia }: Deps) =>
@@ -151,6 +151,8 @@ export const saveMoment =
       vendorIds: input.vendorIds.filter((v) => propios.has(v)),
       cue: opcional(input.cue, 200),
       notes: opcional(input.notes, 2000),
+      enInvitacion: input.enInvitacion === true,
+      icono: opcional(input.icono ?? '', 40),
     }
     if (id === null) {
       const sortOrder = (await dia.listMoments(eventId)).reduce((max, m) => Math.max(max, m.sortOrder), -1) + 1

@@ -56,28 +56,3 @@ test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la r
   await expect(page.getByText('Gracias, los esperamos con muchas ganas.')).toBeVisible()
 })
 
-test('lo destacado en el panel es lo que ve la pareja en su enlace de solo lectura', async ({ page }) => {
-  const slug = `${SLUG}-destacados`
-  const { token } = await seedGuestbookEvent(slug)
-
-  await page.goto(`/i/${token}`)
-  await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Un abrazo enorme para los dos.')
-  await page.getByRole('button', { name: 'ENVIAR' }).click()
-  await expect(page.getByRole('status')).toContainText('Gracias')
-
-  await page.goto(`/panel/eventos/${slug}/mensajes`)
-  await page.getByRole('button', { name: 'Destacar' }).click()
-  await expect(page.getByRole('button', { name: 'Quitar destacado' })).toBeVisible()
-
-  // El enlace del cliente se crea desde la página del evento y se muestra una sola vez.
-  // El enlace del cliente vive en Configuración, que es una vista propia como en la maqueta.
-  await page.goto(`/panel/eventos/${slug}/configuracion`)
-  await page.getByRole('button', { name: 'Crear enlace para el cliente' }).click()
-  const enlace = await page.getByLabel('Enlace para el cliente').inputValue()
-
-  await page.goto(new URL(enlace).pathname)
-  await expect(page.getByRole('heading', { name: 'Mensajes destacados' })).toBeVisible()
-  await expect(page.getByText('Un abrazo enorme para los dos.')).toBeVisible()
-
-  await deleteGuestbookEvent(slug)
-})

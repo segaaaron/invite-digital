@@ -4,6 +4,7 @@ import { anfitrionesXv } from '../../../domain/invitation-content'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { MarcoQr } from '../kit/MarcoQr'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PhotoSlot } from '../kit/PhotoSlot'
@@ -46,6 +47,7 @@ export function XvSharedView({
   slots,
   guestInfo,
   audioSrc,
+  respondida = false,
   piel,
 }: ThemeProps & { piel: PielXv }) {
   const P = piel.paleta
@@ -96,7 +98,7 @@ export function XvSharedView({
   // La fecha límite, en el idioma del evento. Sin plazo, la línea no se pinta: prometer
   // «confírmame antes del …» sin fecha detrás es peor que no decir nada.
   const plazo =
-    event.rsvpDeadline === null
+    respondida || event.rsvpDeadline === null
       ? null
       : new Intl.DateTimeFormat(event.locale === 'en' ? 'en-GB' : 'es-BO', {
           day: 'numeric',
@@ -885,6 +887,9 @@ export function XvSharedView({
                 accent={MAPA}
                 border={P.amatista}
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.blanco}
                 pinRing={P.blanco}
@@ -1114,6 +1119,7 @@ export function XvSharedView({
               <div style={{ fontSize: 12, opacity: 0.85, marginTop: 10, color: Z.vestimentaDetalle ?? UVA_HONDA, fontWeight: 600 }}>
                 {dressCode.detail ?? ''}
               </div>
+              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

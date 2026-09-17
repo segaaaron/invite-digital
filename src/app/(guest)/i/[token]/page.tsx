@@ -67,7 +67,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   // El contenido rico que pinta el diseño, ya fusionado con el de muestra del tema: lo que
   // el atelier no haya escrito se ve con lo que traía el diseño, en vez de dejar un hueco.
-  const contenido = await eventos.contentFor(event.id, definicion.defaultContent)
+  const contenido = await eventos.contenidoParaInvitados(event.id, definicion.defaultContent)
   // «Comparte tus fotos» solo si el plan lo trae: un botón que lleva a un rechazo no se ofrece.
   const capacidadDelPlan = await plans.allowanceFor(event.id)
   const fotosDeInvitados = !isErr(capacidadDelPlan) && capacidadDelPlan.value.guestPhotos
@@ -101,7 +101,10 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
       <Theme
         content={contenido}
-        dictionary={dictionary}
+        // Con la respuesta dada, el bloque deja de pedir que confirme: da las gracias y no
+        // recuerda el plazo, que encima de «Confirmación enviada» se contradecía.
+        dictionary={sinResponder ? dictionary : { ...dictionary, title: latest.attending > 0 ? dictionary.titleConfirmed : dictionary.titleDeclined }}
+        respondida={!sinResponder}
         event={event}
         guestInfo={{ label: group.label, seats: group.seats }}
         themes={temasDictionary}

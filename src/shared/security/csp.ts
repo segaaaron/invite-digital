@@ -21,6 +21,8 @@ export function buildContentSecurityPolicy(nonce: string, { dev = false }: { dev
     "img-src 'self' data: blob:",
     "font-src 'self'",
     "connect-src 'self'",
+    // El mapa del lugar en la invitación: Google Maps incrustado, y nada más.
+    'frame-src https://www.google.com https://maps.google.com',
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

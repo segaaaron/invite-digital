@@ -11,7 +11,7 @@ export const bodaCinDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['italiana', 'cormorant', 'jetbrainsMono', 'cinzel'],
   rsvp: 'botones',
-  pinta: { fotos: { casillas: 3 }, sinCampos: { map: ['href'], itinerary: ['imageId'] } },
+  pinta: { fotos: { casillas: 3 }, sinCampos: { itinerary: ['imageId'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-cin.view').then((modulo) => modulo.BodaCinView)),

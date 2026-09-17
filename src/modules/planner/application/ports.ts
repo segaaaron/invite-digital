@@ -19,6 +19,10 @@ export interface PlannerStore {
   insertPayment(eventId: string, itemId: string, pago: { amountCents: number; dueDate: string | null; label: string | null }): Promise<boolean>
   setPaymentPaid(eventId: string, paymentId: string, paidAt: Date | null): Promise<boolean>
   removePayment(eventId: string, paymentId: string): Promise<boolean>
+
+  /** El total y su reparto por categorías, o `null` si todavía no se fijó. */
+  getBudgetPlan(eventId: string): Promise<{ totalCents: number; asignaciones: Record<string, number> } | null>
+  saveBudgetPlan(eventId: string, plan: { totalCents: number; asignaciones: Record<string, number> }): Promise<void>
 }
 
 export type PartidaNueva = {

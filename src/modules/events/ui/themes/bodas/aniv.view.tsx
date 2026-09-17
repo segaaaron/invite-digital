@@ -217,6 +217,9 @@ export function AnivView({ content, dictionary, themes, slots, audioSrc }: Theme
                 accent={P.oro}
                 border={P.filete}
                 coords={map.coords ?? ''}
+                directionsLabel={themes.viewLocation}
+                href={map.href}
+                respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
                 pinDot={P.fondo}
               />

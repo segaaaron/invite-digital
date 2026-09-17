@@ -53,7 +53,7 @@ test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in'
   const puerta = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.7' } })).newPage()
   await entrar(puerta, PUERTA)
   await expect(puerta).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/checkin$`))
-  await expect(puerta.getByRole('heading', { name: 'Check-in de invitados' })).toBeVisible()
+  await expect(puerta.getByRole('heading', { name: 'Llegadas' })).toBeVisible()
 
   // Su barra tiene una sola entrada: enseñarle el resto sería enseñarle enlaces que le
   // devuelven 404.

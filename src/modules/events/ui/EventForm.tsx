@@ -1,5 +1,6 @@
 'use client'
 
+import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId, type ReactNode } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
@@ -90,10 +91,10 @@ export function EventForm({
 
         <div className="grid gap-5 min-[560px]:grid-cols-2">
           <Campo etiqueta="Fecha del evento" htmlFor={dateId}>
-            <input className={FIELD_CLASS} defaultValue={event?.eventDate} id={dateId} name="eventDate" required type="date" />
+            <CampoFecha defaultValue={event?.eventDate ?? ''} id={dateId} name="eventDate" required />
           </Campo>
           <Campo etiqueta="Fecha límite de confirmación" htmlFor={deadlineId}>
-            <input className={FIELD_CLASS} defaultValue={event?.rsvpDeadline} id={deadlineId} name="rsvpDeadline" required type="date" />
+            <CampoFecha defaultValue={event?.rsvpDeadline ?? ''} id={deadlineId} name="rsvpDeadline" required />
           </Campo>
         </div>
 

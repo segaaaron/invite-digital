@@ -129,3 +129,43 @@ export function presupuestoACsv(partidas: readonly Partida[], fiesta: Fiesta): s
   // BOM: sin él Excel en Windows abre los acentos rotos.
   return `﻿${[cabecera, ...filas].join('\n')}\n`
 }
+
+/**
+ * Qué parte del total suele ir a cada categoría, en por ciento. Es una guía para empezar —
+ * como la de las guías de bodas y XV—, y cada quien la ajusta. Suma cien.
+ */
+const PORCENTAJES: Record<Fiesta, Record<string, number>> = {
+  boda: { salon: 20, ceremonia: 2, catering: 35, musica: 7, foto: 10, vestido: 7, traje: 3, decoracion: 9, torta: 2, recuerdos: 2, otros: 3 },
+  xv: { salon: 20, misa: 1, catering: 30, dj: 8, foto: 8, vestido: 10, chambelanes: 3, coreografo: 3, decoracion: 8, torta: 3, show: 4, otros: 2 },
+}
+
+/** El total repartido por categorías según la guía, en centavos. El redondeo va a «Otros»: suma exacto. */
+export function repartoRecomendado(fiesta: Fiesta, totalCents: number): Record<string, number> {
+  const reparto: Record<string, number> = {}
+  let asignado = 0
+  for (const { clave } of CATEGORIAS[fiesta]) {
+    const parte = Math.floor((totalCents * (PORCENTAJES[fiesta][clave] ?? 0)) / 100)
+    reparto[clave] = parte
+    asignado += parte
+  }
+  reparto.otros = (reparto.otros ?? 0) + (totalCents - asignado)
+  return reparto
+}
+
+export type EstadoDeCategoria = 'libre' | 'en_marcha' | 'cerca' | 'pasado'
+
+/**
+ * Cada categoría con lo que se le asignó, lo comprometido (contratado o previsto) y lo pagado.
+ * `cerca` a partir del 90 % de lo asignado; `pasado`, por encima.
+ */
+export function resumenPorCategoria(partidas: readonly Partida[], fiesta: Fiesta, asignaciones: Readonly<Record<string, number>>) {
+  return CATEGORIAS[fiesta].map(({ clave, nombre }) => {
+    const suyas = partidas.filter((p) => p.category === clave)
+    const comprometidoCents = suyas.reduce((s, p) => s + comprometido(p), 0)
+    const pagadoCents = suyas.reduce((s, p) => s + pagado(p), 0)
+    const asignado = asignaciones[clave] ?? 0
+    const estado: EstadoDeCategoria =
+      comprometidoCents === 0 ? 'libre' : asignado > 0 && comprometidoCents > asignado ? 'pasado' : asignado > 0 && comprometidoCents >= asignado * 0.9 ? 'cerca' : asignado === 0 ? 'pasado' : 'en_marcha'
+    return { clave, nombre, asignado, comprometido: comprometidoCents, pagado: pagadoCents, partidas: suyas.length, estado }
+  })
+}

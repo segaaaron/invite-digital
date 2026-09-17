@@ -13,7 +13,6 @@ import { SECTION_KEYS, type SectionKey } from '@/modules/events/domain/invitatio
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
-import { shareUrl } from '@/modules/events/domain/client-share'
 import { mismaFiesta } from '@/modules/events/domain/fiesta'
 import { puedeCambiarDiseno } from '@/modules/plans'
 import type { EventErrorKind } from '@/modules/events/domain/errors'
@@ -123,60 +122,6 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   revalidatePath('/panel')
   revalidatePath(`/panel/eventos/${result.value.slug}`)
   return { status: 'success', message: '' }
-}
-
-export type ClientShareState =
-  | { status: 'idle' }
-  // Igual que el enlace del invitado: viaja al cliente una sola vez, porque en la base
-  // solo queda el hash.
-  | { status: 'success'; url: string; expiresAt: string }
-  | { status: 'error' }
-
-export async function createClientShareAction(_previous: ClientShareState, formData: FormData): Promise<ClientShareState> {
-  const actor = await requireSession()
-
-  const eventSlug = campo(formData, 'eventSlug')
-  const eventId = campo(formData, 'eventId')
-  await requireEventAccess(actor, { eventId, eventSlug })
-
-  const result = await eventUseCases.createShare({ eventId })
-
-  if (isErr(result)) {
-    console.error('alta de enlace de cliente rechazada', result.error.kind, result.error.detail)
-    return { status: 'error' }
-  }
-
-  revalidatePath(`/panel/eventos/${eventSlug}`)
-  return {
-    status: 'success',
-    url: shareUrl(result.value.token, env.SITE_URL),
-    expiresAt: result.value.expiresAt.toISOString().slice(0, 10),
-  }
-}
-
-export type RevokeShareState = { status: 'idle' } | { status: 'success' } | { status: 'error' }
-
-/**
- * Devuelve estado, no `void`. Antes, si la revocación fallaba, el panel volvía a
- * pintarse igual y el enlace del cliente seguía vivo sin que nadie lo supiera.
- */
-export async function revokeClientShareAction(
-  _previous: RevokeShareState,
-  formData: FormData,
-): Promise<RevokeShareState> {
-  const actor = await requireSession()
-
-  const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventSlug })
-
-  const result = await eventUseCases.revokeShare(campo(formData, 'shareId'))
-  if (isErr(result)) {
-    console.error('revocación de enlace rechazada', result.error.kind, result.error.detail)
-    return { status: 'error' }
-  }
-
-  revalidatePath(`/panel/eventos/${eventSlug}`)
-  return { status: 'success' }
 }
 
 export type DeleteEventState = { status: 'idle' } | { status: 'error'; message: string }
@@ -380,6 +325,39 @@ export type ContentActionState =
  * planos con índices en el nombre es exactamente donde se pierden filas al reordenar.
  * Quien decide qué es válido es el dominio, que lo vuelve a parsear.
  */
+const CORTOS_DE_MAPA = new Set(['maps.app.goo.gl', 'goo.gl'])
+const GOOGLE = /(^|\.)google\.[a-z.]+$|^maps\.app\.goo\.gl$|^goo\.gl$/
+
+/**
+ * El enlace largo de un enlace corto de Google Maps, o `null`.
+ *
+ * Solo se sigue desde esos dos dominios y solo mientras las redirecciones se queden en
+ * Google: es una petición que hace el servidor con algo que escribió el usuario, y no puede
+ * servir para que el servidor llame a cualquier sitio. No se lee el cuerpo.
+ */
+async function enlaceLargoDeMapa(href: string): Promise<string | null> {
+  let url: URL
+  try {
+    url = new URL(href)
+  } catch {
+    return null
+  }
+  if (!CORTOS_DE_MAPA.has(url.hostname)) return null
+  try {
+    for (let salto = 0; salto < 5; salto++) {
+      const respuesta = await fetch(url, { method: 'HEAD', redirect: 'manual', signal: AbortSignal.timeout(5000) })
+      const destino = respuesta.headers.get('location')
+      if (destino === null) return salto === 0 ? null : url.toString()
+      url = new URL(destino, url)
+      if (url.protocol !== 'https:' || !GOOGLE.test(url.hostname)) return null
+      if (!CORTOS_DE_MAPA.has(url.hostname)) return url.toString()
+    }
+  } catch (causa) {
+    console.error('no se pudo resolver el enlace del mapa', causa)
+  }
+  return null
+}
+
 export async function saveContentBlockAction(
   _previo: ContentActionState,
   formData: FormData,
@@ -404,6 +382,13 @@ export async function saveContentBlockAction(
     valor = JSON.parse(String(formData.get('value') ?? 'null'))
   } catch {
     return { status: 'error', message: 'invalid_payload' }
+  }
+
+  // El enlace corto de «Compartir» de Google Maps no dice dónde es: se sigue hasta el largo,
+  // que sí lleva el lugar, para que la invitación pueda pintar el mapa.
+  if (section === 'map' && typeof valor === 'object' && valor !== null && typeof (valor as { href?: unknown }).href === 'string') {
+    const largo = await enlaceLargoDeMapa((valor as { href: string }).href)
+    if (largo !== null) valor = { ...valor, href: largo }
   }
 
   try {
