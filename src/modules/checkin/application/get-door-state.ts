@@ -12,7 +12,7 @@ export type DoorState = {
   /** El nombre de cada persona de las invitaciones, por id: las llegadas se cuentan por quién entró. */
   readonly nombres: Readonly<Record<string, string>>
   /** Las personas de cada invitación, por id de invitación: la lista de quién llegó y quién falta. */
-  readonly personas: Readonly<Record<string, readonly { readonly id: string; readonly fullName: string }[]>>
+  readonly personas: Readonly<Record<string, readonly { readonly id: string; readonly fullName: string; readonly vip?: boolean }[]>>
 }
 
 export const getDoorState =

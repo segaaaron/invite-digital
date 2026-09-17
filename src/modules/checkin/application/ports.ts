@@ -19,7 +19,7 @@ export type DoorGroupRow = {
   readonly people: readonly DoorPerson[]
 }
 
-export type DoorPerson = { readonly id: string; readonly fullName: string }
+export type DoorPerson = { readonly id: string; readonly fullName: string; readonly vip?: boolean }
 
 export type ArrivalRow = {
   readonly scanId: string

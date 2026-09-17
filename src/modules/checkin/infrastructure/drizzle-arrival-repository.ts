@@ -97,7 +97,7 @@ const toRow = (r: {
   tableLabel: r.tableLabel,
   leadName: r.leadName,
   // `json_agg` llega ya parseado; sin personas, `null`.
-  people: Array.isArray(r.people) ? (r.people as { id: string; fullName: string }[]) : [],
+  people: Array.isArray(r.people) ? (r.people as { id: string; fullName: string; vip?: boolean }[]) : [],
 })
 
 const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
@@ -127,7 +127,7 @@ const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
   )`,
   /** Las personas, el principal primero: la puerta marca quién entra. Nombres cualificados a mano, por lo mismo. */
   people: sql<unknown>`(
-    select json_agg(json_build_object('id', gp.id, 'fullName', gp.full_name) order by gp.is_companion asc, gp.created_at asc)
+    select json_agg(json_build_object('id', gp.id, 'fullName', gp.full_name, 'vip', gp.vip) order by gp.is_companion asc, gp.created_at asc)
       from guest_people gp
      where gp.guest_group_id = guest_groups.id
   )`,

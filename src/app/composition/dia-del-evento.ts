@@ -6,7 +6,7 @@ import { getDoorManifest } from '@/modules/checkin/application/get-door-manifest
 import { addPorter, enterWithPin, listPorters, porterActivity, resolvePorter, revokePorter } from '@/modules/checkin/application/porter-use-cases'
 import { createDrizzlePorterStore, drizzlePorterStore } from '@/modules/checkin/infrastructure/drizzle-porter-store'
 import { getDoorState } from '@/modules/checkin/application/get-door-state'
-import { voidArrival } from '@/modules/checkin/application/void-arrival'
+import { deshacerIngreso, voidArrival } from '@/modules/checkin/application/void-arrival'
 import { drizzleArrivalRepository, drizzleDoorGroupReader } from '@/modules/checkin/infrastructure/drizzle-arrival-repository'
 import { assignGroup, autoAssignGroups, unassignGroup } from '@/modules/venue/application/assign-use-cases'
 import { listSeating } from '@/modules/venue/application/list-seating'
@@ -29,6 +29,7 @@ export const checkin = {
   recordGroup: checkInByGroup({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   adjust: adjustArrival({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader }),
   void: voidArrival({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader, clock }),
+  deshacer: deshacerIngreso({ arrivals: drizzleArrivalRepository, groups: drizzleDoorGroupReader, clock, ids: () => crypto.randomUUID() }),
   manifest: getDoorManifest({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
   state: getDoorState({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository }),
 } as const

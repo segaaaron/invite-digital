@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import { adjustArrival } from './adjust-arrival'
-import { voidArrival } from './void-arrival'
+import { deshacerIngreso, voidArrival } from './void-arrival'
 import type { ArrivalRepository, ArrivalRow, DoorGroupReader, DoorGroupRow } from './ports'
 
 const group: DoorGroupRow = {
@@ -20,7 +20,8 @@ const group: DoorGroupRow = {
 const fakes = (initial: ArrivalRow[] = []) => {
   const rows = [...initial]
   const arrivals: ArrivalRepository = {
-    async insertIfAbsent() {
+    async insertIfAbsent(nueva) {
+      rows.push(nueva)
       return true
     },
     async listByEvent() {
@@ -128,6 +129,34 @@ describe('una llegada solo se toca desde su evento', () => {
     const { arrivals, groups, rows } = fakes([row])
     const r = await voidArrival({ arrivals, groups, clock: () => new Date() })({ eventId: 'otro-evento', scanId: 's1' })
     expect(isErr(r) && r.error.kind).toBe('not_found')
+    expect(rows[0]?.voidedAt).toBeNull()
+  })
+})
+
+describe('deshacerIngreso', () => {
+  const deps = (filas: ArrivalRow[]) => {
+    const f = fakes(filas)
+    return { ...f, run: deshacerIngreso({ arrivals: f.arrivals, groups: f.groups, clock: () => new Date('2026-10-18T22:00:00Z'), ids: () => 'nuevo' }) }
+  }
+  const pareja: ArrivalRow = { ...row, arrivedCount: 2, personIds: ['ana', 'luis'] }
+
+  it('saca solo a esa persona: los demás de su escaneo siguen dentro, a la misma hora', async () => {
+    const { rows, run } = deps([pareja])
+    expect(isOk(await run({ eventId: 'e1', groupId: 'g1', personId: 'ana' }))).toBe(true)
+    expect(rows[0]?.voidedAt).not.toBeNull()
+    expect(rows[1]).toMatchObject({ scanId: 'nuevo', personIds: ['luis'], arrivedCount: 1, scannedAt: pareja.scannedAt, voidedAt: null })
+  })
+
+  it('sin personas deshace la invitación entera', async () => {
+    const { rows, run } = deps([row])
+    await run({ eventId: 'e1', groupId: 'g1', personId: null })
+    expect(rows[0]?.voidedAt).not.toBeNull()
+    expect(rows).toHaveLength(1)
+  })
+
+  it('no toca una invitación de otro evento', async () => {
+    const { rows, run } = deps([pareja])
+    expect(isErr(await run({ eventId: 'otro', groupId: 'g1', personId: 'ana' }))).toBe(true)
     expect(rows[0]?.voidedAt).toBeNull()
   })
 })

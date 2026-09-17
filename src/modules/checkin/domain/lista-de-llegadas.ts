@@ -14,6 +14,8 @@ export type FilaDeLlegada = {
   readonly invitacion: string | null
   readonly estado: EstadoDeLlegada
   readonly hora: Date | null
+  /** Se marca en la puerta: a quien importa se le recibe sabiendo quién es. */
+  readonly vip: boolean
 }
 
 /**
@@ -24,7 +26,7 @@ export type FilaDeLlegada = {
 export function listaDeLlegadas(
   groups: readonly DoorGroup[],
   arrivals: readonly ResolvedArrival[],
-  personas: Readonly<Record<string, readonly { readonly id: string; readonly fullName: string }[]>>,
+  personas: Readonly<Record<string, readonly { readonly id: string; readonly fullName: string; readonly vip?: boolean }[]>>,
 ): FilaDeLlegada[] {
   const porInvitacion = new Map(arrivals.map((a) => [a.guestGroupId, a]))
   return groups
@@ -34,11 +36,11 @@ export function listaDeLlegadas(
       const noViene = g.attending === 0
       const suyas = personas[g.id] ?? []
       if (suyas.length === 0) {
-        return [{ clave: g.id, invitacionId: g.id, personaId: null, nombre: g.label, invitacion: null, estado: llegada ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora: llegada?.arrivedAt ?? null }]
+        return [{ clave: g.id, invitacionId: g.id, personaId: null, nombre: g.label, invitacion: null, estado: llegada ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora: llegada?.arrivedAt ?? null, vip: false }]
       }
       return suyas.map((p) => {
         const hora = llegada?.personas[p.id] ?? null
-        return { clave: p.id, invitacionId: g.id, personaId: p.id, nombre: p.fullName, invitacion: g.label, estado: hora ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora }
+        return { clave: p.id, invitacionId: g.id, personaId: p.id, nombre: p.fullName, invitacion: g.label, estado: hora ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora, vip: p.vip === true }
       })
     })
 }

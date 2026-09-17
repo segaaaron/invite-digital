@@ -158,3 +158,19 @@ export async function voidArrivalAction(input: {
   revalidatePath(`/panel/eventos/${input.eventSlug}/puerta`)
   return { status: 'success' }
 }
+
+/** Deshacer el ingreso de una persona (o de la invitación sin nombres) registrado por error. */
+export async function undoCheckInAction(input: { eventId: string; eventSlug: string; groupId: string; personId: string | null }): Promise<DoorActionState> {
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'checkin' })
+  await exigirModoPuerta(input.eventId)
+
+  const result = await checkin.deshacer({ eventId: input.eventId, groupId: input.groupId, personId: input.personId })
+  if (isErr(result)) {
+    console.error('deshacer ingreso rechazado', result.error.kind, result.error.detail)
+    return { status: 'error', kind: result.error.kind }
+  }
+
+  revalidatePath(`/panel/eventos/${input.eventSlug}/checkin`)
+  return { status: 'success' }
+}
