@@ -19,14 +19,16 @@ async function grupos(): Promise<DoorManifestGroup[]> {
       revoked: false,
       tableLabel: null,
       tokenHashHex: await sha256Hex(CODIGO),
+      passCode: 'K7P3X',
       people: [],
     },
   ]
 }
 
+const porGrupo = vi.fn()
 const pintar = async (onConfirm = vi.fn()) => {
   render(
-    <ManualPassDialog arrivedIds={new Set()} groups={await grupos()} onClose={vi.fn()} onConfirm={onConfirm} />,
+    <ManualPassDialog arrivedIds={new Set()} groups={await grupos()} onClose={vi.fn()} onConfirm={onConfirm} onConfirmGrupo={porGrupo} />,
   )
   return onConfirm
 }
@@ -55,6 +57,16 @@ describe('ManualPassDialog', () => {
     expect(onConfirm).toHaveBeenCalledWith(CODIGO)
   })
 
+  it('acepta el código corto que va bajo el QR, aunque se escriba en minúsculas o con guion', async () => {
+    const onConfirm = await pintar()
+    fireEvent.change(screen.getByPlaceholderText(/código del pase/i), { target: { value: 'k7p-3x' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Buscar' }))
+    await waitFor(() => expect(screen.getByText('Valentina Ruiz y 2 acompañantes')).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: /registrar ingreso/i }))
+    expect(porGrupo).toHaveBeenCalledWith('g1')
+    expect(onConfirm).not.toHaveBeenCalled()
+  })
+
   it('un código que no es del evento lo dice y no ofrece registrar', async () => {
     const onConfirm = await pintar()
 
@@ -69,7 +81,7 @@ describe('ManualPassDialog', () => {
   it('sin personas cargadas cae a la etiqueta del grupo', async () => {
     const sinPersonas = (await grupos()).map((g) => ({ ...g, leadName: null }))
     render(
-      <ManualPassDialog arrivedIds={new Set()} groups={sinPersonas} onClose={vi.fn()} onConfirm={vi.fn()} />,
+      <ManualPassDialog arrivedIds={new Set()} groups={sinPersonas} onClose={vi.fn()} onConfirm={vi.fn()} onConfirmGrupo={vi.fn()} />,
     )
 
     fireEvent.change(screen.getByPlaceholderText(/código del pase/i), { target: { value: CODIGO } })

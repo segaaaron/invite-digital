@@ -6,6 +6,8 @@ export type GuestGroupRow = GuestGroupInput & {
   openedAt: Date | null
   invitationSentAt?: Date | null
   phone?: string | null
+  /** El código corto del pase, para la puerta. */
+  passCode?: string | null
 }
 
 /**

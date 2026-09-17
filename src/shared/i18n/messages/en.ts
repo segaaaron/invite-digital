@@ -59,8 +59,6 @@ export const en = {
     ctaSecondary: 'See the live demo',
     trustLabel: 'Planners who trust us',
     posterAlt: 'Cotton envelope with a golden wax seal, closed on an ivory background',
-    envelopeOpen: 'Open the envelope',
-    envelopeClose: 'Close the envelope',
   },
   experience: {
     eyebrow: 'The experience',
@@ -92,7 +90,8 @@ export const en = {
     body: 'A single link, sent over WhatsApp. It opens full screen, with no app to download, and behaves the same way on iPhone, Android, or tablet.',
     bullets: ['Loads in under two seconds', 'A QR code for the welcome table', 'A confirmation button straight to the chat'],
     shots: [
-      { tag: 'Wedding', caption: 'Foil monogram', alt: 'A wedding invitation open on a phone' },
+      { tag: 'Wedding', caption: 'Botánica', alt: 'The Botánica wedding invitation open on a phone' },
+      { tag: 'Quinceañera', caption: 'Bajo el Mar', alt: 'The Bajo el Mar quinceañera invitation open on a phone' },
     ],
   },
   collections: {
@@ -248,6 +247,7 @@ export const en = {
     closed: 'The confirmation window has closed. Message us on WhatsApp if you need to tell us anything.',
     passTitle: 'Entry pass',
     passHint: 'Show it at the door.',
+    passCode: 'Code',
     passNoTable: 'Table to be assigned',
     passSaveHint: 'Save this screen to your phone: at the door you will only need to open it and show it.',
     passBack: 'Back to the invitation',

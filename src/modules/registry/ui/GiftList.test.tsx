@@ -119,7 +119,7 @@ describe('GiftList', () => {
 
   it('con la lista vacía lo dice en vez de enseñar un hueco', () => {
     render(<GiftList {...props} gifts={[]} />)
-    expect(screen.getByText(/todavía no hay regalos/i)).toBeInTheDocument()
+    expect(screen.getByText('Tu mesa de regalos está vacía')).toBeInTheDocument()
   })
 })
 

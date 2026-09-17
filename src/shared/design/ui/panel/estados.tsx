@@ -31,12 +31,39 @@ export function ActionFeedback({
  * Lo que se enseña cuando una lista no tiene nada. Dice **qué** falta y, si la hay, la salida:
  * una tabla vacía sin explicación parece un fallo de carga.
  */
-export function EmptyState({ title, description, action }: { title: string; description?: string | undefined; action?: ReactNode }) {
+export function EmptyState({
+  title,
+  description,
+  action,
+  icon,
+  compact = false,
+}: {
+  title: string
+  description?: string | undefined
+  action?: ReactNode
+  /** Un icono SVG de `icons.tsx`, dentro de su medallón. */
+  icon?: ReactNode
+  /** Dentro de una tarjeta pequeña: menos aire. */
+  compact?: boolean
+}) {
   return (
-    <div className="flex flex-col items-center gap-3 px-4 py-10 text-center">
-      <p className="text-[14px] text-ink">{title}</p>
-      {description ? <p className="max-w-[46ch] text-[13px] leading-[1.6] text-ink-mute">{description}</p> : null}
-      {action ? <div className="mt-1">{action}</div> : null}
+    <div
+      className={`relative flex flex-col items-center gap-3 overflow-hidden rounded-[18px] border border-dashed border-line-panel-strong bg-linear-to-b from-bg-top/70 to-white/40 text-center ${
+        compact ? 'px-5 py-7' : 'px-6 py-12 min-[560px]:py-14'
+      }`}
+    >
+      {icon === undefined ? null : (
+        <span
+          aria-hidden
+          className={`relative grid place-items-center rounded-full bg-white text-gold-deep shadow-card ring-1 ring-gold/30 [&>svg]:size-1/2 ${compact ? 'size-12' : 'size-16'}`}
+        >
+          <span className="absolute inset-[-6px] rounded-full border border-gold/15" />
+          {icon}
+        </span>
+      )}
+      <p className={`m-0 font-display font-light text-ink ${compact ? 'text-[19px]' : 'text-[24px]'} leading-tight`}>{title}</p>
+      {description ? <p className="m-0 max-w-[48ch] text-[13px] leading-[1.7] text-ink-soft">{description}</p> : null}
+      {action ? <div className="mt-2">{action}</div> : null}
     </div>
   )
 }

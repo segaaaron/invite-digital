@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
-import { checkin, events, plans, venue } from '@/app/composition/container'
+import { checkin, events, plans, porters, venue } from '@/app/composition/container'
 import { listaDeLlegadas } from '@/modules/checkin/domain/lista-de-llegadas'
 import { ControlDeIngreso } from '@/modules/checkin/ui/ControlDeIngreso'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -48,6 +48,20 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   const salon = isErr(await plans.requireFeature(event.value.id, 'seating')) ? null : await venue.seating(event.value.id).catch(() => null)
   if (salon !== null && !isErr(salon)) for (const mesa of salon.value.tables) for (const g of mesa.groups) mesaDe.set(g.id, mesa.label)
 
+  // Quién recibe en la puerta, a la vista: su nombre, su puerta y cuántos registró.
+  const recepcion =
+    actor.role === 'puerta'
+      ? null
+      : await Promise.all([porters.list(event.value.id), porters.activity(event.value.id)]).then(([lista, actividad]) => ({
+          gestionarHref: `/panel/eventos/${event.value.slug}/equipo`,
+          personas: lista.map((p) => ({
+            id: p.id,
+            nombre: p.name,
+            puerta: p.gate,
+            registradas: (actividad as Record<string, { registradas: number } | undefined>)[p.id]?.registradas ?? 0,
+          })),
+        }))
+
   const filas = listaDeLlegadas(groups, arrivals, personas).map((f) => ({ ...f, hora: f.hora === null ? null : hora(f.hora), mesa: mesaDe.get(f.invitacionId) ?? null }))
 
   return (
@@ -58,7 +72,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
         eventId={event.value.id}
         eventSlug={event.value.slug}
         filas={filas}
-        recepcionHref={actor.role === 'puerta' ? null : `/panel/eventos/${event.value.slug}/equipo`}
+        recepcion={recepcion}
       />
     </>
   )

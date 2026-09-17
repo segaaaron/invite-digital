@@ -5,7 +5,8 @@ import { rsvpError, type RsvpError } from '../domain/errors'
 import type { LatestResponse, RsvpRepository } from './ports'
 
 export type Invitation = {
-  readonly group: GuestGroup
+  /** Con el código corto del pase, que el invitado ve bajo su QR. */
+  readonly group: GuestGroup & { readonly passCode?: string | null }
   readonly event: Event
   readonly latest: LatestResponse | null
 }
@@ -16,7 +17,7 @@ export type Invitation = {
  */
 export const getInvitation =
   (deps: {
-    resolveGroup: (token: string) => Promise<Result<GuestGroup, GuestError>>
+    resolveGroup: (token: string) => Promise<Result<GuestGroup & { readonly passCode?: string | null }, GuestError>>
     findEventById: (id: string) => Promise<Result<Event, EventError>>
     rsvp: RsvpRepository
   }) =>

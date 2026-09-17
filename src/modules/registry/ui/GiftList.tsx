@@ -1,5 +1,7 @@
 'use client'
 
+import { GiftIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { useState, useTransition } from 'react'
 import { formatAmount } from '../domain/money'
 import type { GiftStatus } from '../domain/gift'
@@ -149,9 +151,11 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
 export function GiftList({ eventId, eventSlug, currency, gifts }: Props) {
   if (gifts.length === 0) {
     return (
-      <p className="text-[13px] text-ink-mute">
-        Todavía no hay regalos en la lista. Añade el primero y el invitado lo verá en su invitación.
-      </p>
+      <EmptyState
+        description="Añade lo que te gustaría recibir. Tus invitados lo ven en su invitación y lo apartan para que nadie lo repita."
+        icon={<GiftIcon />}
+        title="Tu mesa de regalos está vacía"
+      />
     )
   }
 

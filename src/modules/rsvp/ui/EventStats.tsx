@@ -1,3 +1,5 @@
+import { ChartIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import type { EventStats as Stats } from '../domain/stats'
 
@@ -19,9 +21,7 @@ export function EventStats({ stats }: { stats: Stats }) {
     // Ceros y porcentajes en un evento recién creado se leen como un evento que nadie
     // contesta. Es distinto de no haber invitado a nadie todavía, y se dice.
     return (
-      <p className="text-[13px] text-ink-mute">
-        Todavía no hay invitados en este evento. Añade el primer grupo y aquí aparecerá cuánta gente respondió.
-      </p>
+      <EmptyState compact description="Añade a tus invitados y aquí verás cuánta gente respondió." icon={<ChartIcon />} title="Aún no hay invitados" />
     )
   }
 

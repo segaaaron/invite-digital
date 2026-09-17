@@ -28,28 +28,6 @@ type Target = { responseId: string; eventId: string; eventSlug: string }
 /** La bandeja y la página del invitado cambian a la vez: la respuesta se ve en las dos. */
 const refrescar = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mensajes`)
 
-export async function markReadAction(input: Target): Promise<GuestbookActionResult> {
-  const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
-
-  const result = await guestbook.markRead({ responseId: input.responseId, eventId: input.eventId })
-  if (isErr(result)) return fallo(result.error)
-
-  refrescar(input.eventSlug)
-  return { ok: true }
-}
-
-export async function toggleFeaturedAction(input: Target): Promise<GuestbookActionResult> {
-  const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
-
-  const result = await guestbook.toggleFeatured({ responseId: input.responseId, eventId: input.eventId })
-  if (isErr(result)) return fallo(result.error)
-
-  refrescar(input.eventSlug)
-  return { ok: true }
-}
-
 export async function replyAction(input: Target & { text: string }): Promise<GuestbookActionResult> {
   const actor = await requireSession()
   await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })

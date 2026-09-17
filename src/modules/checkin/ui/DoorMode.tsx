@@ -397,6 +397,37 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
     }
   }, [onCode])
 
+  /** Registrar a una invitación elegida sin escanear: por nombre o por el código corto del pase. */
+  function elegirGrupo(groupId: string) {
+          const elegido = manifest.groups.find((g) => g.id === groupId)
+          if (elegido !== undefined && elegido.people.length > 0) {
+            const dentro = dentroDe(elegido.id)
+            const porLlegar = elegido.people.filter((p) => dentro[p.id] === undefined)
+            if (porLlegar.length === 0) {
+              setOutcome({ scanId: crypto.randomUUID(), kind: 'already', group: vistaDe(elegido), arrivedAt: new Date(), arrivedCount: Object.keys(dentro).length, personas: dentro })
+            } else if (porLlegar.length === 1) {
+              void registrarPersonas(elegido, null, [porLlegar[0]!.id])
+            } else {
+              setEligiendo({ group: elegido, scanned: null })
+            }
+            return
+          }
+          void acciones
+            .checkInByGroup({
+              eventId,
+              eventSlug,
+              groupId,
+              scanId: crypto.randomUUID(),
+              arrivedCount: null,
+              scannedAtMs: Date.now(),
+            })
+            .then(apply)
+            .catch(async () => {
+              if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
+              else setDesajuste('No se pudo registrar la llegada. Vuelve a intentarlo.')
+            })
+          }
+
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-black">
       <video ref={videoRef} playsInline muted className="absolute inset-0 size-full object-cover" />
@@ -475,6 +506,10 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
             setManualOpen(false)
             void submit(scanned)
           }}
+          onConfirmGrupo={(groupId) => {
+            setManualOpen(false)
+            elegirGrupo(groupId)
+          }}
         />
       ) : null}
 
@@ -540,33 +575,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         onClose={() => setSheetOpen(false)}
         onPick={(groupId) => {
           setSheetOpen(false)
-          const elegido = manifest.groups.find((g) => g.id === groupId)
-          if (elegido !== undefined && elegido.people.length > 0) {
-            const dentro = dentroDe(elegido.id)
-            const porLlegar = elegido.people.filter((p) => dentro[p.id] === undefined)
-            if (porLlegar.length === 0) {
-              setOutcome({ scanId: crypto.randomUUID(), kind: 'already', group: vistaDe(elegido), arrivedAt: new Date(), arrivedCount: Object.keys(dentro).length, personas: dentro })
-            } else if (porLlegar.length === 1) {
-              void registrarPersonas(elegido, null, [porLlegar[0]!.id])
-            } else {
-              setEligiendo({ group: elegido, scanned: null })
-            }
-            return
-          }
-          void acciones
-            .checkInByGroup({
-              eventId,
-              eventSlug,
-              groupId,
-              scanId: crypto.randomUUID(),
-              arrivedCount: null,
-              scannedAtMs: Date.now(),
-            })
-            .then(apply)
-            .catch(async () => {
-              if (acciones.comprobarAcceso && !(await acciones.comprobarAcceso())) setDesajuste(ACCESO_CERRADO)
-              else setDesajuste('No se pudo registrar la llegada. Vuelve a intentarlo.')
-            })
+          elegirGrupo(groupId)
         }}
       />
     </div>

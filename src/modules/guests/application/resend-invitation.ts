@@ -45,8 +45,8 @@ export const resendInvitation =
 
 /**
  * Enviar la invitación **sin tocar el enlace**: el que ya existe —guardado cifrado desde que se
- * creó— se reparte por WhatsApp, correo o donde sea, y queda marcada como enviada. Solo las
- * invitaciones de antes de guardar el enlace acuñan uno, igual que al reenviar.
+ * creó— se reparte por WhatsApp, correo o donde sea, y queda marcada como enviada. Solo acuña uno
+ * una invitación sin enlace guardado que **nunca se envió**: si ya se envió, el invitado tiene el suyo.
  */
 export const enviarInvitacion =
   (deps: { groups: GuestGroupRepository; minter: Minter; clock: () => Date }) =>
@@ -55,7 +55,14 @@ export const enviarInvitacion =
     if (row === null) return err(guestError('not_found', 'La invitación no existe'))
     if (row.revokedAt !== null) return err(guestError('revoked', 'Esta invitación está revocada: reactívala antes de enviarla.'))
     const guardado = (await deps.groups.tokensOf(input.eventId)).get(input.id)
-    if (guardado === undefined) return resendInvitation(deps)(input)
+    if (guardado === undefined) {
+      // Ya enviada y sin enlace guardado (anterior a `0062`): acuñar uno aquí dejaría fuera al invitado
+      // que ya tiene el suyo. Un enlace nuevo solo se pide a propósito, con «Generar un enlace nuevo».
+      if (row.invitationSentAt !== null && row.invitationSentAt !== undefined) {
+        return err(guestError('not_found', 'Esta invitación ya se envió antes de que el panel guardara los enlaces: el invitado usa el que recibió. Si lo perdió, genera uno nuevo.'))
+      }
+      return resendInvitation(deps)(input)
+    }
     await deps.groups.markSent(input.eventId, input.id, deps.clock())
     return ok({ token: guardado, label: row.label })
   }

@@ -1,10 +1,11 @@
 'use client'
 
+import { UsersIcon } from '@/shared/design/ui/icons'
 import { useActionState, useId, useState } from 'react'
 import { addPorterAction, removePorterAction, type PorterActionState } from '@/app/_acciones/checkin/porter-actions'
 import { addTeamMemberAction, removeTeamMemberAction, type TeamActionState } from '@/app/_acciones/events/team-actions'
 import { FIELD_CLASS, Field, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 
 export type MiembroVista = {
   readonly userId: string
@@ -101,9 +102,12 @@ export function EquipoCard({
   return (
     <div className="flex flex-col gap-6">
       {vacio ? (
-        <p className="rounded-[14px] border border-dashed border-line-panel-strong px-4 py-6 text-center text-[13px] text-ink-mute">
-          Todavía no sumaste a nadie.
-        </p>
+        <EmptyState
+          compact
+          description="Suma a tu planner o a quien reciba en la puerta. La recepción entra con un enlace y un PIN, sin crear cuenta."
+          icon={<UsersIcon />}
+          title="Aún no sumaste a nadie"
+        />
       ) : (
         <ul className="flex flex-col divide-y divide-line-panel rounded-[14px] border border-line-panel bg-white">
           {miembros.map((m) => (

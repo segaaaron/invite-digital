@@ -1,13 +1,14 @@
 'use client'
 
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
-import { ChevronIcon, CloseIcon, MailIcon, MessageIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { ChevronIcon, CloseIcon, MailIcon, MessageIcon, WhatsAppIcon, CheckIcon } from '@/shared/design/ui/icons'
 import { resendInvitationAction, sendInvitationAction, setGroupPhoneAction, type ResendState } from '@/app/_acciones/guests/actions'
-import { DeliverySheet } from './DeliverySheet'
+import { QrDigital } from '@/shared/design/ui/QrDigital'
 import { renderMessage, whatsappLink } from '../domain/message-template'
 
 export type DeliveryRow = {
@@ -34,7 +35,7 @@ function respuesta(fila: DeliveryRow): { tone: PillTone; text: string } {
   return fila.confirmed > 0 ? { tone: 'ok', text: 'Confirmó' } : { tone: 'no', text: 'No viene' }
 }
 
-const OTRA_FORMA = 'flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong bg-white px-4 py-2.5 text-[12.5px] text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40'
+const OTRA_FORMA = 'flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-line-panel-strong bg-white px-3 py-1.5 text-[12px] text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40'
 
 /**
  * Enviar invitaciones, en un modal centrado. **Cada invitado tiene un enlace que no cambia**:
@@ -199,7 +200,8 @@ export function DeliveryPanel({
   return (
     <dialog
       aria-labelledby="enviar-titulo"
-      className="m-auto max-h-[min(820px,94dvh)] w-[min(620px,94vw)] flex-col overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/45 open:flex"
+      // Tamaño fijo, haya uno o cien invitados; en el celular ocupa la pantalla entera.
+      className="m-auto h-[min(820px,94dvh)] max-h-none w-[min(620px,94vw)] max-w-none flex-col overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/45 open:flex max-[560px]:h-dvh max-[560px]:w-screen max-[560px]:rounded-none max-[560px]:border-0"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
@@ -275,9 +277,12 @@ export function DeliveryPanel({
         )}
 
         {lista.length === 0 ? (
-          <p className="py-10 text-center text-[13.5px] text-ink-soft">
-            {pestana === 'pendientes' ? 'Todas las invitaciones están enviadas.' : 'Todavía no enviaste ninguna.'}
-          </p>
+          <EmptyState
+            compact
+            description={pestana === 'pendientes' ? 'Las enviadas siguen en su pestaña, por si hay que volver a mandarlas.' : 'Empieza por «Por enviar»: WhatsApp o su enlace, por donde quieras.'}
+            icon={pestana === 'pendientes' ? <CheckIcon /> : <MailIcon />}
+            title={pestana === 'pendientes' ? 'Todas tus invitaciones salieron' : 'Aún no enviaste ninguna'}
+          />
         ) : (
           <ul className="flex flex-col gap-2.5">
             {lista.map((fila) => {
@@ -314,7 +319,7 @@ export function DeliveryPanel({
                       <div className="grid gap-2 min-[480px]:grid-cols-2">
                         <button
                           aria-label={`Enviar por WhatsApp a ${fila.label}`}
-                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-colors hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 py-2.5 text-[13px] text-white transition-colors hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={bloqueado}
                           onClick={() => porWhatsapp(fila)}
                           type="button"
@@ -325,7 +330,7 @@ export function DeliveryPanel({
                         <button
                           aria-controls={`otras-${fila.id}`}
                           aria-expanded={abierta}
-                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-5 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-4 py-2.5 text-[13px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={sinContenido}
                           onClick={() => abrirOtras(fila)}
                           type="button"
@@ -339,7 +344,11 @@ export function DeliveryPanel({
                         <div className="flex flex-col gap-3 rounded-[14px] bg-bg-top p-3.5" id={`otras-${fila.id}`}>
                           {url === undefined ? (
                             <p className="text-[12.5px] text-ink-soft" role="status">
-                              {trabajando === fila.id ? 'Preparando su enlace…' : 'No se pudo preparar el enlace.'}
+                              {trabajando === fila.id
+                                ? 'Preparando su enlace…'
+                                : fila.sent
+                                  ? 'Este invitado ya tiene su enlace: se envió antes de que el panel lo guardara, así que aquí no se puede mostrar.'
+                                  : 'No se pudo preparar el enlace.'}
                             </p>
                           ) : (
                             <>
@@ -352,11 +361,11 @@ export function DeliveryPanel({
                                   readOnly
                                   value={url}
                                 />
-                                <PanelButton onClick={() => copiar(fila, url, 'enlace')} variant="primary">
+                                <button className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90" onClick={() => copiar(fila, url, 'enlace')} type="button">
                                   {copiado === `${fila.id}:enlace` ? 'Copiado' : 'Copiar'}
-                                </PanelButton>
+                                </button>
                               </div>
-                              <div className="grid grid-cols-2 gap-2 min-[480px]:[grid-template-columns:repeat(auto-fit,minmax(120px,1fr))]">
+                              <div className="flex flex-wrap gap-2">
                                 <button className={OTRA_FORMA} onClick={() => copiar(fila, mensaje(fila, url), 'mensaje')} type="button">
                                   {copiado === `${fila.id}:mensaje` ? 'Copiado' : 'Copiar mensaje'}
                                 </button>
@@ -378,13 +387,9 @@ export function DeliveryPanel({
                                   </button>
                                 ) : null}
                               </div>
-                              {/* La tarjeta con el QR, para quien la entrega en mano. */}
-                              <details className="group">
-                                <summary className="w-fit cursor-pointer list-none text-[12px] text-ink-soft underline underline-offset-4">Tarjeta con QR para entregar en mano</summary>
-                                <div className="mt-3">
-                                  <DeliverySheet cards={[{ label: fila.label, url }]} eventTitle={eventTitle} />
-                                </div>
-                              </details>
+                              <div className="border-t border-line-panel pt-3">
+                                <QrDigital nombre={fila.label} url={url} />
+                              </div>
                             </>
                           )}
 

@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events, guestbook } from '@/app/composition/container'
-import { unreadCount } from '@/modules/guestbook'
-import { InboxFilters } from '@/modules/guestbook/ui/InboxFilters'
+import { LibroDeFirmas } from '@/modules/guestbook/ui/LibroDeFirmas'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
@@ -24,19 +23,15 @@ export default async function MensajesPage({ params }: { params: Promise<{ slug:
   const libro = await guestbook.list(event.value.id)
   if (isErr(libro)) throw new Error(libro.error.detail)
 
-  const sinLeer = unreadCount(libro.value)
-
   return (
     <>
       <PanelHeader
         kicker="Libro de firmas"
-        meta={`${libro.value.length} mensaje${libro.value.length === 1 ? '' : 's'} en tu libro de firmas · ${sinLeer} sin leer`}
+        meta={libro.value.length === 0 ? 'Las palabras que te dejan tus invitados al confirmar' : `${libro.value.length} ${libro.value.length === 1 ? 'firma' : 'firmas'} de tus invitados`}
         title="Mensajes"
       />
 
-      {/* Sin tarjeta que lo envuelva: la maqueta pinta los mensajes sueltos sobre el
-          marfil, y cada firma ya es su propia tarjeta. */}
-      <InboxFilters eventId={event.value.id} eventSlug={event.value.slug} messages={libro.value} />
+      <LibroDeFirmas eventId={event.value.id} eventSlug={event.value.slug} messages={libro.value} />
     </>
   )
 }

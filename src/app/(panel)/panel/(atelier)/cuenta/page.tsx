@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers'
 import { identity } from '@/app/composition/container'
-import { ChangePasswordForm } from '@/modules/identity/ui/ChangePasswordForm'
 import { SesionesAbiertas } from '@/modules/identity/ui/SeguridadDeCuenta'
 import { fechaHora } from '@/shared/format/fecha'
 import { tipoDeDispositivo } from '@/modules/identity/domain/dispositivo'
@@ -60,9 +59,6 @@ export default async function CuentaPage() {
           </dl>
         </SettingsSection>
 
-        <SettingsSection description="Escribe la actual y elige una nueva. Si no la recuerdas, recupérala con un código a tu correo." title="Contraseña">
-          <ChangePasswordForm />
-        </SettingsSection>
 
         <SettingsSection description="Dónde está abierta tu cuenta. Si alguien más entra con tu contraseña, ciérrale la sesión con el código de tu correo." title="Sesiones abiertas">
           <SesionesAbiertas sesiones={sesiones} />

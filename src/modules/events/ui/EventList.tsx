@@ -1,3 +1,5 @@
+import { CalendarIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import Link from 'next/link'
 import type { Event } from '../domain/event'
 
@@ -6,7 +8,7 @@ const FECHA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short',
 
 export function EventList({ events }: { events: readonly Event[] }) {
   if (events.length === 0) {
-    return <p className="text-[14px] text-ink-soft">Todavía no hay eventos. Crea el primero.</p>
+    return <EmptyState description="Crea la primera boda o los primeros quince: su invitación, sus invitados y su planner viven dentro." icon={<CalendarIcon />} title="Aún no hay eventos" />
   }
 
   return (

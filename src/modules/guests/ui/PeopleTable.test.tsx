@@ -47,27 +47,36 @@ describe('PeopleTable', () => {
   // La respuesta la da el invitado; cambiarla a mano es de «Editar», no de un toque suelto.
   it('el RSVP se lee, no se cambia desde la fila', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    const celda = screen.getByRole('row', { name: /Roberto Núñez/ }).querySelectorAll('td')[2]!
+    const celda = screen.getByRole('row', { name: /Roberto Núñez/ }).querySelectorAll('td')[1]!
     expect(celda).toHaveTextContent('Pendiente')
     expect(celda.querySelector('button')).toBeNull()
   })
 
   it('enseña las columnas de la maqueta', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    for (const columna of ['Nombre', 'Invitación', 'RSVP', 'Restricciones', 'Mesa']) {
+    for (const columna of ['Invitado', 'Confirmación', 'Restricciones', 'Mesa', 'Invitación']) {
       expect(screen.getByRole('columnheader', { name: columna })).toBeInTheDocument()
     }
     // «Acomp.» repetía lo que ya dice la invitación.
     expect(screen.queryByRole('columnheader', { name: 'Acomp.' })).toBeNull()
   })
 
-  it('la invitación se lee sin repetir el nombre: propia, con nombre propio, o a quién acompaña', () => {
+  it('agrupa por invitación: la familia junta, el principal primero, y la invitación se dice una vez', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    const celda = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[1]
+    const celda = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[4]
 
-    expect(celda('Roberto Núñez')).toHaveTextContent(/^Propia$/)
-    expect(celda('Ana Lucía Vega')).toHaveTextContent(/^Familia Rojas Peña$/)
-    expect(celda('Acompañante de Ana')).toHaveTextContent(/^Acompaña a Familia Rojas Peña$/)
+    expect(celda('Roberto Núñez')).toHaveTextContent(/^PropiaSin enviar$/)
+    expect(celda('Ana Lucía Vega')).toHaveTextContent(/^Familia Rojas Peña · 2 personas/)
+    // Debajo de su principal, el acompañante no repite la invitación.
+    expect(celda('Acompañante de Ana')).toHaveTextContent(/^$/)
+    const nombres = screen.getAllByRole('row').slice(1).map((r) => r.querySelector('td')?.textContent)
+    expect(nombres.findIndex((n) => n?.includes('Acompañante de Ana'))).toBe(nombres.findIndex((n) => n?.includes('Ana Lucía Vega')) + 1)
+  })
+
+  it('si solo se ve el acompañante, dice a quién acompaña', () => {
+    render(<PeopleTable eventSlug="boda" rows={filas} />)
+    fireEvent.click(screen.getByRole('button', { name: /tal vez 1/i }))
+    expect(screen.getByRole('row', { name: /Acompañante de Ana/ }).querySelectorAll('td')[4]).toHaveTextContent(/^Acompaña a Familia Rojas Peña/)
   })
 
   it('las acciones de la fila son iconos dibujados con su rótulo, nunca caracteres', () => {
@@ -81,16 +90,17 @@ describe('PeopleTable', () => {
 
   it('el estado se lee en texto, no solo por color', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    const rsvp = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[2]
+    const rsvp = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[1]
     expect(rsvp('Ana Lucía Vega')).toHaveTextContent('Confirmado')
     expect(rsvp('Acompañante de Ana')).toHaveTextContent('Tal vez')
     expect(rsvp('Roberto Núñez')).toHaveTextContent('Pendiente')
   })
 
-  it('trae las columnas Enviado y Confirmado de la maqueta', () => {
-    render(<PeopleTable eventSlug="boda" rows={filas} />)
-    expect(screen.getByRole('columnheader', { name: 'Enviado' })).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Confirmado' })).toBeInTheDocument()
+  it('la invitación dice si se envió y cuándo respondió', () => {
+    render(<PeopleTable eventSlug="boda" rows={[{ ...filas[2]!, sentAt: new Date('2026-08-20T12:00:00Z'), respondedAt: new Date('2026-08-22T12:00:00Z') }]} />)
+    const celda = screen.getByRole('row', { name: /Roberto Núñez/ }).querySelectorAll('td')[4]!
+    expect(celda).toHaveTextContent('Enviado')
+    expect(celda).toHaveTextContent('respondió 22-ago')
   })
 
   it('filtra por «tal vez» y por VIP, que es lo que la maqueta añade', () => {
@@ -136,8 +146,8 @@ describe('PeopleTable · piel de la maqueta', () => {
   const muchas: PersonRowView[] = Array.from({ length: 23 }, (_, i) => ({
     id: `x${i}`,
     fullName: `Invitado ${i}`,
-    groupId: 'g1',
-    groupLabel: 'Grupo',
+    groupId: `g${i}`,
+    groupLabel: `Invitado ${i}`,
     isCompanion: false,
     dietaryNote: null,
     vip: false,
@@ -145,7 +155,7 @@ describe('PeopleTable · piel de la maqueta', () => {
     tableLabel: null,
   }))
 
-  it('pagina de diez en diez, como la maqueta', () => {
+  it('pagina de diez invitaciones en diez', () => {
     render(<PeopleTable eventSlug="boda" rows={muchas} />)
     expect(screen.getByText('Invitado 0')).toBeInTheDocument()
     expect(screen.queryByText('Invitado 10')).not.toBeInTheDocument()
@@ -181,7 +191,7 @@ describe('PeopleTable · la fecha de confirmación', () => {
     )
 
     // 22 de agosto en UTC, aunque quien lo pinte esté en La Paz (UTC−4) o en Tokio.
-    expect(screen.getByText('22-ago')).toBeInTheDocument()
+    expect(screen.getByText('respondió 22-ago')).toBeInTheDocument()
   })
 })
 

@@ -15,6 +15,11 @@ export type DoorManifestGroup = {
   readonly tableLabel: string | null
   /** SHA-256 en hexadecimal. Nunca el token en claro. */
   readonly tokenHashHex: string
+  /**
+   * El código corto del pase: la puerta lo resuelve a mano sin red. No abre la invitación.
+   * Opcional: un manifiesto guardado antes en el celular de la puerta no lo trae.
+   */
+  readonly passCode?: string | null
   /** Las personas de la invitación: la puerta marca quién entra, también sin red. */
   readonly people: readonly { readonly id: string; readonly fullName: string }[]
 }
@@ -61,6 +66,7 @@ export const getDoorManifest =
             leadName: g.leadName,
             tableLabel: g.tableLabel,
             tokenHashHex: g.tokenHash.toString('hex'),
+            passCode: g.passCode ?? null,
             people: g.people,
           })),
           arrivals: resolved,

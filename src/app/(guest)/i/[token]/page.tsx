@@ -110,7 +110,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
     <>
       <PassQr
         label={group.label}
-        labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt }}
+        codigo={group.passCode ?? null}
+        labels={{ title: dictionary.passTitle, hint: dictionary.passHint, alt: dictionary.passAlt, code: dictionary.passCode }}
         url={invitationUrl(token, env.SITE_URL)}
       />
       {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás,

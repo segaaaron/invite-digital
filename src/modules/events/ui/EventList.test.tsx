@@ -26,6 +26,6 @@ describe('EventList', () => {
 
   it('avisa cuando no hay ninguno, en vez de dejar la página muda', () => {
     render(<EventList events={[]} />)
-    expect(screen.getByText(/Todavía no hay eventos/)).toBeInTheDocument()
+    expect(screen.getByText('Aún no hay eventos')).toBeInTheDocument()
   })
 })

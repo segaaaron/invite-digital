@@ -4,6 +4,7 @@ import { guestGroups } from '@/shared/db/schema'
 import { env } from '@/shared/config/env'
 import { crearSello } from '@/shared/security/sello'
 import type { GuestGroupRepository } from '../application/ports'
+import { codigoDePase } from '../domain/codigo-de-pase'
 
 const sello = crearSello(env.LINK_KEY ?? env.DATABASE_URL)
 
@@ -16,6 +17,7 @@ const COLUMNS = {
   openedAt: guestGroups.openedAt,
   invitationSentAt: guestGroups.invitationSentAt,
   phone: guestGroups.phone,
+  passCode: guestGroups.passCode,
   createdAt: guestGroups.createdAt,
 } as const
 
@@ -24,14 +26,17 @@ const delEvento = (eventId: string, id: string) => and(eq(guestGroups.id, id), e
 
 export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGroupRepository => ({
   async insert(group, tokenHash, token) {
-    await database.insert(guestGroups).values({
-      id: group.id,
-      eventId: group.eventId,
-      label: group.label,
-      seats: group.seats,
-      tokenHash,
-      tokenSealed: sello.sellar(token),
-    })
+    // El código corto puede chocar con otro del mismo evento (uno entre millones): se prueba otro.
+    // `on conflict do nothing` y no capturar el error: dentro de una transacción, el error la aborta.
+    for (let intento = 0; intento < 8; intento++) {
+      const insertadas = await database
+        .insert(guestGroups)
+        .values({ id: group.id, eventId: group.eventId, label: group.label, seats: group.seats, tokenHash, tokenSealed: sello.sellar(token), passCode: codigoDePase() })
+        .onConflictDoNothing()
+        .returning({ id: guestGroups.id })
+      if (insertadas.length > 0) return
+    }
+    throw new Error('No se pudo dar un código de pase único a la invitación')
   },
 
   async listByEvent(eventId) {

@@ -1,3 +1,4 @@
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import Link from 'next/link'
 import { invitationUrl } from '@/modules/guests'
 import { env } from '@/shared/config/env'
@@ -18,7 +19,8 @@ import { loQueFaltaParaInvitar } from '@/modules/events'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, PanelCardLink } from '@/shared/design/ui/panel/cards'
+import { PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/cards'
+import { CheckIcon, ClockIcon, MailIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
@@ -121,7 +123,7 @@ export default async function InvitadosPage({
 
   const base = `/panel/eventos/${event.value.slug}/invitados`
   // El enlace de cada invitación, guardado cifrado: el envío y el pase lo vuelven a enseñar.
-  const enlaces = await guests.enlaces(event.value.id)
+  const [enlaces, codigos] = await Promise.all([guests.enlaces(event.value.id), guests.codigos(event.value.id)])
   const enlaceDe = (groupId: string) => {
     const token = enlaces.get(groupId)
     return token === undefined ? null : invitationUrl(token, env.SITE_URL)
@@ -234,6 +236,8 @@ export default async function InvitadosPage({
             label: grupoDeLaPersona?.label ?? '',
             revocada: grupoDeLaPersona?.revokedAt !== null && grupoDeLaPersona?.revokedAt !== undefined,
             respondida: ultimas.has(personaCompleta.guestGroupId),
+            enlace: enlaceDe(personaCompleta.guestGroupId),
+            codigo: codigos.get(personaCompleta.guestGroupId) ?? null,
           }}
           person={{
             id: personaCompleta.id,
@@ -257,6 +261,7 @@ export default async function InvitadosPage({
           eventTitle={event.value.title}
           group={{ id: grupoDeLaPersona.id, label: grupoDeLaPersona.label, revoked: grupoDeLaPersona.revokedAt !== null }}
           personName={enFoco.fullName}
+          codigo={codigos.get(grupoDeLaPersona.id) ?? null}
           url={enlaceDe(grupoDeLaPersona.id)}
           tableLabel={enFoco.tableLabel}
           venue={event.value.venue}
@@ -336,9 +341,28 @@ export default async function InvitadosPage({
           </PanelCard>
         )}
 
+        {/* Las cifras de un vistazo, como los tableros de Joy o Zola: cuántos, quién confirmó, quién
+            falta y cuántas invitaciones salieron. */}
+        {filasPersona.length === 0 ? null : (() => {
+          const total = filasPersona.length
+          const si = filasPersona.filter((p) => p.attending === 'yes').length
+          const pendientes = filasPersona.filter((p) => p.attending === null || p.attending === 'maybe').length
+          const no = filasPersona.filter((p) => p.attending === 'no').length
+          const vivas = filas.filter((f) => f.revokedAt === null)
+          const enviadas = vivas.filter((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined).length
+          return (
+            <div className="grid grid-cols-2 gap-3 min-[900px]:grid-cols-4 min-[900px]:gap-4.5">
+              <StatCard detail={`${vivas.length} ${vivas.length === 1 ? 'invitación' : 'invitaciones'}`} icon={<UsersIcon />} label="Invitados" value={total} />
+              <StatCard detail={`${Math.round((si / total) * 100)} % del total`} icon={<CheckIcon />} label="Confirmados" progress={si / total} value={si} />
+              <StatCard detail={no > 0 ? `${no} no ${no === 1 ? 'viene' : 'vienen'}` : 'sin responder o tal vez'} icon={<ClockIcon />} label="Por responder" value={pendientes} />
+              <StatCard detail={enviadas === vivas.length ? 'Todas enviadas' : `Faltan ${vivas.length - enviadas}`} icon={<MailIcon />} label="Enviadas" progress={vivas.length === 0 ? 0 : enviadas / vivas.length} suffix={`/ ${vivas.length}`} value={enviadas} />
+            </div>
+          )
+        })()}
+
         {/* Se cargan invitados, no grupos: el grupo es el enlace que va por debajo y aquí
             no se enseña (pedido por el usuario el 16 de septiembre). */}
-        <PanelCard title="Invitados">
+        <PanelCard title="Lista de invitados">
           {isErr(personas) ? (
             // Pintar «todavía no hay personas» cuando la lectura falló no es un error
             // invisible: es un error que **miente**. El atelier daría por vacía una
@@ -347,9 +371,12 @@ export default async function InvitadosPage({
               No pudimos leer las personas. La base no responde; vuelve a intentarlo en un momento.
             </p>
           ) : filasPersona.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">
-              Todavía no hay invitados. Añádelos con «+ Añadir invitado».
-            </p>
+            <EmptyState
+              action={invitacionVacia ? undefined : <PanelButton href={`${base}?panel=alta`} variant="primary">Añadir el primer invitado</PanelButton>}
+              description="Carga a cada invitado con sus acompañantes. Cada uno recibe su propio enlace y su pase de entrada."
+              icon={<UsersIcon />}
+              title="Tu lista de invitados empieza aquí"
+            />
           ) : (
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
           )}

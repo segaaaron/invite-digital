@@ -6,8 +6,8 @@ import type { GuestGroupRepository } from './ports'
 
 export const resolveByToken =
   (deps: { groups: GuestGroupRepository; minter: Minter; clock: () => Date }) =>
-  async (token: string): Promise<Result<GuestGroup, GuestError>> =>
-    attempt<GuestGroup, GuestError>(
+  async (token: string): Promise<Result<GuestGroup & { readonly passCode: string | null }, GuestError>> =>
+    attempt<GuestGroup & { readonly passCode: string | null }, GuestError>(
       async () => {
         const row = await deps.groups.findByTokenHash(deps.minter.hashOf(token))
         // Un token desconocido y uno revocado acaban los dos en 404 de cara afuera; se
@@ -22,7 +22,8 @@ export const resolveByToken =
         // vez y ninguna regla de negocio depende de ella.
         if (row.openedAt === null) await deps.groups.markOpened(group.value.id, deps.clock())
 
-        return ok(group.value)
+        // El código corto del pase va con él: el invitado lo ve bajo su QR.
+        return ok({ ...group.value, passCode: row.passCode ?? null })
       },
       (cause) => guestError('storage_failure', `No se pudo resolver el token: ${String(cause)}`),
     )

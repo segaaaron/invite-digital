@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm'
-import { boolean, index, integer, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { users } from './identidad'
 import { events } from './eventos'
 import { venueTables } from './salon-y-regalos'
@@ -19,6 +19,8 @@ export const guestGroups = pgTable(
     // El token, cifrado (`shared/security/sello`): el panel vuelve a enseñar el enlace y su QR
     // sin que un volcado de la base los entregue. Nulo en las invitaciones de antes de `0062`.
     tokenSealed: text('token_sealed'),
+    // El código corto del pase (`K7P3X`), para escribirlo a mano en la puerta. Único por evento (`0063`).
+    passCode: varchar('pass_code', { length: 8 }),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     openedAt: timestamp('opened_at', { withTimezone: true }),
     // Marca del atelier: «este enlace ya lo repartí». No es prueba de entrega — ni
@@ -36,7 +38,7 @@ export const guestGroups = pgTable(
     tableId: uuid('table_id').references(() => venueTables.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
-  (t) => [index('guest_groups_event_idx').on(t.eventId), index('guest_groups_table_idx').on(t.tableId)],
+  (t) => [index('guest_groups_event_idx').on(t.eventId), index('guest_groups_table_idx').on(t.tableId), uniqueIndex('guest_groups_pass_code_idx').on(t.eventId, t.passCode)],
 )
 
 export const rsvpResponses = pgTable(

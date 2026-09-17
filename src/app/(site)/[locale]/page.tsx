@@ -26,7 +26,6 @@ import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { ContactSection } from '@/modules/leads'
 import { aLaVenta } from '@/modules/catalog'
 import { PrivacyNotice } from '@/sections/LegalPage'
-import { HeroCanvas } from '@/three/HeroCanvas'
 
 // Rendered per request, not prerendered: the pages read Postgres and the image is
 // built in CI/Docker where the database is unreachable. The queries are indexed and
@@ -148,13 +147,10 @@ export default async function LandingPage({
         dictionary={dictionary}
         marcas={sitio.marcas}
         slot={
-          <HeroCanvas
-            alt={dictionary.hero.posterAlt}
-            closeLabel={dictionary.hero.envelopeClose}
-            openLabel={dictionary.hero.envelopeOpen}
-            posterSlot={<HeroStack alt={dictionary.hero.posterAlt} />}
-            posterSrc="/hero/envelope-poster.avif"
-          />
+          // La composición de sobres, sin botón de «Abrir el sobre» (pedido por el usuario).
+          <div className="relative h-[440px] w-full lg:h-[540px]">
+            <HeroStack alt={dictionary.hero.posterAlt} />
+          </div>
         }
       />
       <FiestaChooser dictionary={dictionary} locale={locale} />

@@ -1,3 +1,5 @@
+import { TableIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, guests, plans, venue } from '@/app/composition/container'
@@ -157,9 +159,11 @@ export default async function MesasPage({
 
         {tables.length === 0 ? (
           <PanelCard>
-            <p className="text-[13px] text-ink-mute">
-              Todavía no hay mesas. Créalas con «+ Añadir mesa» y empieza a repartir a los invitados.
-            </p>
+            <EmptyState
+              description="Crea las mesas con sus lugares y reparte a las familias. La puerta le dice a cada invitado dónde se sienta."
+              icon={<TableIcon />}
+              title="Aún no hay mesas en tu salón"
+            />
           </PanelCard>
         ) : (
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">

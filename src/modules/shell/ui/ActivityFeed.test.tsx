@@ -29,7 +29,7 @@ describe('mergeActivity', () => {
 describe('ActivityFeed', () => {
   it('sin actividad lo dice con palabras', () => {
     render(<ActivityFeed items={[]} />)
-    expect(screen.getByText(/todavía no ha pasado nada/i)).toBeInTheDocument()
+    expect(screen.getByText('Todo tranquilo por ahora')).toBeInTheDocument()
   })
 
   it('enseña quién y qué, en dos líneas, como la maqueta', () => {

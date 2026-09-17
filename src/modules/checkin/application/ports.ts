@@ -13,6 +13,8 @@ export type DoorGroupRow = {
    */
   readonly leadName: string | null
   readonly tokenHash: Buffer
+  /** El código corto del pase, para escribirlo a mano. */
+  readonly passCode?: string | null
   /** Etiqueta de la mesa asignada, o `null` si el grupo aún no tiene. */
   readonly tableLabel: string | null
   /** Las personas de la invitación, el principal primero. Vacía en las que no tienen nombres. */

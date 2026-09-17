@@ -11,7 +11,7 @@ test.afterAll(async () => {
   await closeGuestbookDb()
 })
 
-test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la respuesta', async ({ page }) => {
+test('el invitado firma el libro, se le agradece, y él ve la respuesta', async ({ page }) => {
   const { eventId, token } = await seedGuestbookEvent(SLUG)
 
   // 1. El invitado confirma **con un mensaje**. El texto no vuelve a escribirse en
@@ -21,36 +21,22 @@ test('el invitado firma el libro, el atelier lo lee y le responde, y él ve la r
   await page.getByRole('button', { name: 'ENVIAR' }).click()
   await expect(page.getByRole('status')).toContainText('Gracias')
 
-  // 2. El evento anuncia el mensaje sin leer desde su propia página, sin entrar.
-  await page.goto(`/panel/eventos/${SLUG}`)
-  await expect(page.getByRole('link', { name: /Mensajes\s*1 sin leer/ })).toBeVisible()
-
-  // 3. La bandeja lo muestra sin leer. Recién escrito no tiene nota todavía: si la
-  //    consulta uniera con `innerJoin`, aquí no habría nada que ver.
-  await page.getByRole('link', { name: /Mensajes/ }).click()
+  // 2. El libro de firmas lo muestra: sin «leído» ni «destacado», solo las palabras y quién las dejó.
+  await page.goto(`/panel/eventos/${SLUG}/mensajes`)
   await expect(page.getByText('Qué ganas de celebrar con ustedes.')).toBeVisible()
-  // `exact` y el `span`: «Sin leer» también es el nombre del filtro, que lleva su cuenta
-  // pegada («Sin leer 1»). Lo que se comprueba aquí es la insignia de la tarjeta.
-  await expect(page.getByText('Sin leer', { exact: true })).toBeVisible()
-  await expect(page.getByRole('button', { name: /^Sin leer/ })).toHaveText(/1/)
+  await expect(page.getByRole('button', { name: /Marcar leído|Destacar/ })).toHaveCount(0)
 
-  // 4. Marcado leído, el contador baja.
-  await page.getByRole('button', { name: 'Marcar leído' }).click()
-  await expect(page.getByRole('button', { name: /^Sin leer/ })).toHaveText(/0/)
-  await expect(page.getByText('Sin leer', { exact: true })).toBeHidden()
-
-  // 5. El atelier responde, y la respuesta llega a la base. Responder va plegado tras su
-  // botón: la maqueta solo enseña «Marcar leído» y «Destacar» en la tarjeta.
-  await page.getByText('Responder', { exact: true }).first().click()
-  await page.getByLabel('Responder a Familia Rojas Peña').fill('Gracias, los esperamos con muchas ganas.')
-  await page.getByRole('button', { name: 'Responder' }).click()
-  await expect(page.getByText('Tu respuesta')).toBeVisible()
+  // 3. Se le agradece, y la respuesta llega a la base.
+  await page.getByRole('button', { name: 'Agradecer' }).first().click()
+  await page.getByLabel(/^Agradecer a /).fill('Gracias, los esperamos con muchas ganas.')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect(page.getByText('Tu agradecimiento')).toBeVisible()
 
   await expect
     .poll(async () => (await noteOf(eventId))?.reply)
     .toBe('Gracias, los esperamos con muchas ganas.')
 
-  // 6. El invitado recarga su enlace y ve la respuesta.
+  // 4. El invitado recarga su enlace y ve la respuesta.
   await page.goto(`/i/${token}`)
   await expect(page.getByText('Respuesta de los anfitriones')).toBeVisible()
   await expect(page.getByText('Gracias, los esperamos con muchas ganas.')).toBeVisible()

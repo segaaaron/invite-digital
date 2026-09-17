@@ -6,6 +6,7 @@ import { removePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
 import { hora } from '@/shared/format/fecha'
+import { avatarColor } from '@/shared/design/ui/avatar-color'
 
 export type PersonRowView = {
   readonly id: string
@@ -62,15 +63,22 @@ const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
 const fechaCorta = (fecha: Date): string =>
   fecha.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', timeZone: 'UTC' })
 
-/** La maqueta pagina de diez en diez y numera las páginas. */
+/** Diez invitaciones por página: una familia no se parte entre dos páginas. */
 const POR_PAGINA = 10
 
+const CELDA = 'border-b border-line-panel py-3 pr-4 align-middle'
+
+/**
+ * La lista de invitados, **agrupada por invitación** como las listas de Joy o Zola: la familia se
+ * lee junta —el principal y, debajo, sus acompañantes— y el envío y la respuesta se dicen una vez
+ * por invitación, no en cada persona. Sigue siendo una tabla: se lee por columnas y se recorre
+ * con lector de pantalla.
+ */
 export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[]; eventSlug: string }) {
   const [filtro, setFiltro] = useState<Filtro>('todos')
   const [query, setQuery] = useState('')
   const [error, setError] = useState<string | null>(null)
-  // Quién está a un clic de ser borrado. Borrar no tiene deshacer, y un clic de más se
-  // lleva a alguien de la lista sin que nadie se entere hasta el día del evento.
+  // Quién está a un clic de ser borrado. Borrar no tiene deshacer.
   const [porQuitar, setPorQuitar] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
 
@@ -78,62 +86,60 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
 
   // Los contadores se calculan sobre todas las filas, nunca sobre las visibles.
   const cuentas = useMemo(
-    () =>
-      Object.fromEntries((Object.keys(CASA) as Filtro[]).map((k) => [k, rows.filter(CASA[k]).length])) as Record<
-        Filtro,
-        number
-      >,
+    () => Object.fromEntries((Object.keys(CASA) as Filtro[]).map((k) => [k, rows.filter(CASA[k]).length])) as Record<Filtro, number>,
     [rows],
   )
 
-  const visibles = useMemo(() => {
+  // Las visibles, juntas por invitación y con el principal primero.
+  const grupos = useMemo(() => {
     const needle = query.trim().toLowerCase()
-    return rows.filter(
-      (fila) =>
-        CASA[filtro](fila) &&
-        (needle === '' ||
-          fila.fullName.toLowerCase().includes(needle) ||
-          fila.groupLabel.toLowerCase().includes(needle)),
+    const visibles = rows.filter(
+      (fila) => CASA[filtro](fila) && (needle === '' || fila.fullName.toLowerCase().includes(needle) || fila.groupLabel.toLowerCase().includes(needle)),
     )
+    const porGrupo = new Map<string, PersonRowView[]>()
+    for (const fila of visibles) porGrupo.set(fila.groupId, [...(porGrupo.get(fila.groupId) ?? []), fila])
+    return [...porGrupo.values()].map((filas) => [...filas].sort((a, b) => Number(a.isCompanion) - Number(b.isCompanion)))
   }, [rows, filtro, query])
 
-  const paginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA))
-  const enPagina = visibles.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+  const paginas = Math.max(1, Math.ceil(grupos.length / POR_PAGINA))
+  const enPagina = grupos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+  // Cuántas personas tiene cada invitación en total, no solo las visibles.
+  const personasDe = (groupId: string) => rows.filter((r) => r.groupId === groupId).length
 
   const aplicar = (accion: Promise<{ status: string; message?: string }>) => {
     void accion.then((estado) => {
-      // Un fallo que solo va al registro deja al atelier creyendo que marcó a alguien.
       if (estado.status === 'error') setError(estado.message ?? 'No se pudo guardar el cambio.')
     })
   }
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div className="flex flex-col gap-3">
         <SearchField
-          label="Buscar invitado"
           autoComplete="off"
+          className="w-full"
+          label="Buscar invitado"
           onChange={(e) => {
             setQuery(e.target.value)
-            // Buscar con la página 3 puesta enseñaba una tabla vacía con resultados
-            // dentro: el filtro y el buscador vuelven siempre a la primera.
             setPagina(1)
           }}
-          placeholder="Buscar invitado..."
+          placeholder="Buscar por nombre o invitación…"
           value={query}
         />
-        {(Object.keys(CASA) as Filtro[]).map((clave) => (
-          <FilterChip
-            key={clave}
-            active={filtro === clave}
-            onClick={() => {
-              setFiltro(clave)
-              setPagina(1)
-            }}
-          >
-            {ETIQUETA[clave]} {cuentas[clave]}
-          </FilterChip>
-        ))}
+        <div className="flex flex-wrap gap-2">
+          {(Object.keys(CASA) as Filtro[]).map((clave) => (
+            <FilterChip
+              active={filtro === clave}
+              key={clave}
+              onClick={() => {
+                setFiltro(clave)
+                setPagina(1)
+              }}
+            >
+              {ETIQUETA[clave]} {cuentas[clave]}
+            </FilterChip>
+          ))}
+        </div>
       </div>
 
       {error === null ? null : (
@@ -142,116 +148,125 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
         </p>
       )}
 
-      {visibles.length === 0 ? (
-        <p className="text-[13px] text-ink-mute">Ningún invitado coincide.</p>
+      {grupos.length === 0 ? (
+        <p className="py-8 text-center text-[13px] text-ink-mute">Ningún invitado coincide.</p>
       ) : (
         <div className="relative min-w-0 overflow-x-auto">
-          <table className="w-full min-w-[980px] border-collapse text-left">
+          <table className="w-full min-w-[900px] border-collapse text-left">
             <thead>
               <tr>
-                {['Nombre', 'Invitación', 'RSVP', 'Restricciones', 'Mesa', 'Enviado', 'Confirmado'].map((columna, i) => (
-                  <th
-                    key={columna}
-                    // La primera columna queda fija al desplazar la tabla en el teléfono: sin ella,
-                    // a la tercera columna ya no se sabe de quién es la fila.
-                    className={`border-b border-line-panel py-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase ${i === 0 ? 'max-[860px]:sticky max-[860px]:left-0 max-[860px]:z-1 max-[860px]:bg-white max-[860px]:shadow-[1px_0_0_var(--color-line-panel)]' : ''}`}
-                    scope="col"
-                  >
+                {['Invitado', 'Confirmación', 'Restricciones', 'Mesa', 'Invitación'].map((columna) => (
+                  <th className="border-b border-line-panel pt-1 pb-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase" key={columna} scope="col">
                     {columna}
                   </th>
                 ))}
-                <th className="border-b border-line-panel py-3" scope="col">
+                <th className="border-b border-line-panel pb-3" scope="col">
                   <span className="sr-only">Acciones</span>
                 </th>
               </tr>
             </thead>
-            <tbody>
-              {enPagina.map((fila) => (
-                <tr key={fila.id} className="hover:bg-bg-raised">
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[14px] text-ink max-[860px]:max-w-[140px] max-[860px]:sticky max-[860px]:left-0 max-[860px]:z-1 max-[860px]:bg-white max-[860px]:shadow-[1px_0_0_var(--color-line-panel)]">
-                    {fila.fullName}
-                    {fila.vip ? (
-                      <span aria-label="VIP" className="ml-1 text-gold" title="VIP">
-                        ★
-                      </span>
-                    ) : null}
-                    {fila.llegoA === undefined || fila.llegoA === null ? null : (
-                      <span className="mt-0.5 block text-[11px] text-sage">{`Llegó ${hora(fila.llegoA)}`}</span>
-                    )}
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
-                    {/* Sin repetir el nombre de la fila: la mayoría tiene la suya, y eso se dice. */}
-                    {fila.isCompanion ? (
-                      `Acompaña a ${fila.groupLabel}`
-                    ) : fila.groupLabel === fila.fullName ? (
-                      <span className="text-ink-mute">Propia</span>
-                    ) : (
-                      fila.groupLabel
-                    )}
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4">
-                    {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
-                    <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
-                      {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
-                    </Pill>
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
-                    {fila.dietaryNote ?? '—'}
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4 text-[13px] text-ink-soft">
-                    {fila.tableLabel ?? 'Sin mesa'}
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4">
-                    <Pill tone={fila.sentAt ? 'ok' : 'pending'}>{fila.sentAt ? 'Enviado' : 'Pendiente'}</Pill>
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 pr-4 font-mono text-[11px] text-ink-soft">
-                    {fila.respondedAt === null || fila.respondedAt === undefined
-                      ? '—'
-                      : fechaCorta(fila.respondedAt)}
-                  </td>
-                  <td className="border-b border-line-panel py-3.5 whitespace-nowrap">
-                    {porQuitar === fila.id ? (
-                      <div className="flex justify-end gap-1.5">
-                        <button
-                          className="cursor-pointer rounded-lg border border-danger px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
-                          onClick={() => {
-                            setPorQuitar(null)
-                            aplicar(removePersonAction({ eventSlug, id: fila.id }))
-                          }}
-                          title="Si es la última persona de su invitación, su enlace se borra con ella."
-                          type="button"
-                        >
-                          Confirmar
-                        </button>
-                        <button
-                          className="cursor-pointer rounded-lg border border-line-panel px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
-                          onClick={() => setPorQuitar(null)}
-                          type="button"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex justify-end gap-1.5">
-                        <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
-                          <QrIcon />
-                        </IconLink>
-                        <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
-                          <PenIcon />
-                        </IconLink>
-                        <IconButton
-                          className="hover:border-danger hover:text-danger"
-                          label={`Eliminar a ${fila.fullName}`}
-                          onClick={() => setPorQuitar(fila.id)}
-                        >
-                          <TrashIcon />
-                        </IconButton>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+            {enPagina.map((filas) => {
+              const primera = filas[0]!
+              const familia = personasDe(primera.groupId) > 1
+              return (
+                <tbody className="group/invitacion" key={primera.groupId}>
+                  {filas.map((fila, i) => (
+                    <tr className="transition-colors hover:bg-bg-top/60" key={fila.id}>
+                      <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40' : ''} ${fila.isCompanion ? 'pl-9' : 'pl-3'}`}>
+                        <span className="flex items-center gap-3">
+                          <span
+                            aria-hidden
+                            className={`grid shrink-0 place-items-center rounded-full bg-linear-to-br text-white ${avatarColor(fila.fullName)} ${fila.isCompanion ? 'size-8 text-[12px]' : 'size-10 text-[14px]'}`}
+                          >
+                            {(fila.fullName.trim()[0] ?? '·').toUpperCase()}
+                          </span>
+                          <span className="flex min-w-0 flex-col">
+                            <span className="flex items-center gap-2 text-[14.5px] text-ink">
+                              {fila.fullName}
+                              {fila.vip ? (
+                                <span aria-hidden className="rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep" title="VIP">
+                                  VIP
+                                </span>
+                              ) : null}
+                            </span>
+                            {fila.llegoA === undefined || fila.llegoA === null ? null : (
+                              <span className="mt-0.5 block text-[11px] text-sage">{`Llegó ${hora(fila.llegoA)}`}</span>
+                            )}
+                          </span>
+                        </span>
+                      </td>
+                      <td className={CELDA}>
+                        {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
+                        <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
+                          {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
+                        </Pill>
+                      </td>
+                      <td className={`${CELDA} text-[13px] text-ink-soft`}>{fila.dietaryNote ?? '—'}</td>
+                      <td className={`${CELDA} text-[13px] text-ink-soft`}>{fila.tableLabel ?? 'Sin mesa'}</td>
+                      <td className={`${CELDA} text-[13px]`}>
+                        {i === 0 ? (
+                          <span className="flex flex-col gap-1">
+                            <span className="text-ink-soft">
+                              {fila.isCompanion ? (
+                                `Acompaña a ${fila.groupLabel}`
+                              ) : fila.groupLabel === fila.fullName ? (
+                                <span className="text-ink-mute">{familia ? `Propia · ${personasDe(fila.groupId)} personas` : 'Propia'}</span>
+                              ) : familia ? (
+                                `${fila.groupLabel} · ${personasDe(fila.groupId)} personas`
+                              ) : (
+                                fila.groupLabel
+                              )}
+                            </span>
+                            <span className="flex flex-wrap items-center gap-1.5">
+                              <Pill tone={fila.sentAt ? 'ok' : 'pending'}>{fila.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
+                              {fila.respondedAt === null || fila.respondedAt === undefined ? null : (
+                                <span className="font-mono text-[10.5px] text-ink-mute">{`respondió ${fechaCorta(fila.respondedAt)}`}</span>
+                              )}
+                            </span>
+                          </span>
+                        ) : null}
+                      </td>
+                      <td className={`${CELDA} pr-0 whitespace-nowrap`}>
+                        {porQuitar === fila.id ? (
+                          <div className="flex justify-end gap-1.5">
+                            <button
+                              className="cursor-pointer rounded-lg border border-danger px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
+                              onClick={() => {
+                                setPorQuitar(null)
+                                aplicar(removePersonAction({ eventSlug, id: fila.id }))
+                              }}
+                              title="Si es la última persona de su invitación, su enlace se borra con ella."
+                              type="button"
+                            >
+                              Confirmar
+                            </button>
+                            <button
+                              className="cursor-pointer rounded-lg border border-line-panel px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
+                              onClick={() => setPorQuitar(null)}
+                              type="button"
+                            >
+                              Cancelar
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex justify-end gap-1.5 opacity-70 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100">
+                            <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
+                              <QrIcon />
+                            </IconLink>
+                            <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
+                              <PenIcon />
+                            </IconLink>
+                            <IconButton className="hover:border-danger hover:text-danger" label={`Eliminar a ${fila.fullName}`} onClick={() => setPorQuitar(fila.id)}>
+                              <TrashIcon />
+                            </IconButton>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              )
+            })}
           </table>
 
           {paginas === 1 ? null : (
@@ -266,12 +281,10 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
               </button>
               {Array.from({ length: paginas }, (_, i) => i + 1).map((numero) => (
                 <button
-                  key={numero}
                   aria-current={numero === pagina ? 'page' : undefined}
                   aria-label={`Página ${numero}`}
-                  className={`size-8 cursor-pointer rounded-lg border font-mono text-[11px] ${
-                    numero === pagina ? 'border-ink bg-ink text-white' : 'border-line-panel bg-white text-ink'
-                  }`}
+                  className={`size-8 cursor-pointer rounded-lg border font-mono text-[11px] ${numero === pagina ? 'border-ink bg-ink text-white' : 'border-line-panel bg-white text-ink'}`}
+                  key={numero}
                   onClick={() => setPagina(numero)}
                   type="button"
                 >

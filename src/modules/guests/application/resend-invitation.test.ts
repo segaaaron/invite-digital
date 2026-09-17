@@ -99,6 +99,14 @@ describe('enviarInvitacion', () => {
     expect(tokens).toHaveLength(1)
   })
 
+  it('ya enviada y sin enlace guardado no acuña otro: el invitado sigue con el suyo', async () => {
+    const { groups, tokens, enviados } = repo(fila({ invitationSentAt: NOW }))
+    const result = await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
+    expect(isErr(result)).toBe(true)
+    expect(tokens).toHaveLength(0)
+    expect(enviados).toHaveLength(0)
+  })
+
   it('no envía una revocada', async () => {
     const { groups } = repo(fila({ revokedAt: NOW }), new Map([['g1', 'token-guardado']]))
     expect(isErr(await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' }))).toBe(true)

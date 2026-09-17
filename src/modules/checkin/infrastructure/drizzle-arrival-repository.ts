@@ -83,6 +83,7 @@ const toRow = (r: {
   attending: number | null
   revokedAt: Date | null
   tokenHash: Buffer
+  passCode: string | null
   tableLabel: string | null
   leadName: string | null
   people: unknown
@@ -94,6 +95,7 @@ const toRow = (r: {
   attending: r.attending,
   revoked: r.revokedAt !== null,
   tokenHash: r.tokenHash,
+  passCode: r.passCode,
   tableLabel: r.tableLabel,
   leadName: r.leadName,
   // `json_agg` llega ya parseado; sin personas, `null`.
@@ -108,6 +110,7 @@ const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
   attending: latest.attending,
   revokedAt: guestGroups.revokedAt,
   tokenHash: guestGroups.tokenHash,
+  passCode: guestGroups.passCode,
   tableLabel: venueTables.label,
   /**
    * Quien encabeza el grupo: la primera persona cargada que no es acompañante, y si

@@ -99,6 +99,10 @@ export async function changePasswordAction(
   formData: FormData,
 ): Promise<ChangePasswordState> {
   const actor = await requireSession()
+  // Solo la provisional se cambia con sesión. Con la cuenta compartida por la familia, cualquiera
+  // que entre podría quitarle el control a quien la compró: el resto va por «¿Olvidaste tu contraseña?»,
+  // con el código que llega a su correo.
+  if (!actor.mustChangePassword) return { status: 'error', message: 'La contraseña se cambia desde «¿Olvidaste tu contraseña?», con el código de tu correo.' }
 
   const result = await identity.changePassword({
     userId: actor.userId,

@@ -59,8 +59,6 @@ export const es = {
     ctaSecondary: 'Ver demo interactiva',
     trustLabel: 'Organizadores que confían en nosotros',
     posterAlt: 'Sobre de algodón con sello de cera dorado, cerrado sobre fondo marfil',
-    envelopeOpen: 'Abrir el sobre',
-    envelopeClose: 'Cerrar el sobre',
   },
   experience: {
     eyebrow: 'La experiencia',
@@ -92,7 +90,8 @@ export const es = {
     body: 'Un solo enlace por WhatsApp. Se abre a pantalla completa, sin apps ni descargas, y funciona igual en iPhone, Android y tablet.',
     bullets: ['Carga en menos de dos segundos', 'Código QR para la mesa de recepción', 'Botón de confirmación directo al chat'],
     shots: [
-      { tag: 'Boda', caption: 'Monograma en foil', alt: 'Invitación de boda abierta en un teléfono' },
+      { tag: 'Boda', caption: 'Botánica', alt: 'La invitación de boda Botánica abierta en un celular' },
+      { tag: 'XV años', caption: 'Bajo el Mar', alt: 'La invitación de XV años Bajo el Mar abierta en un celular' },
     ],
   },
   collections: {
@@ -248,6 +247,7 @@ export const es = {
     closed: 'El plazo para confirmar ya cerró. Escríbenos por WhatsApp si necesitas avisar algo.',
     passTitle: 'Pase de entrada',
     passHint: 'Muéstralo en la entrada.',
+    passCode: 'Código',
     passNoTable: 'Mesa por asignar',
     passSaveHint: 'Guarda esta pantalla en tu teléfono: en la entrada solo tendrás que abrirla y mostrarla.',
     passBack: 'Volver a la invitación',

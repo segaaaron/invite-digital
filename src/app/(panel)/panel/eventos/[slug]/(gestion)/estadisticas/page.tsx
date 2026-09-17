@@ -1,3 +1,5 @@
+import { ChartIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { notFound } from 'next/navigation'
 import { analytics, events, rsvp } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -78,7 +80,7 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
         <div className="grid items-start gap-4.5 min-[900px]:grid-cols-2">
           <PanelCard title="Estado de RSVPs">
             {stats.value.empty ? (
-              <p className="text-[13px] text-ink-mute">Todavía no hay invitados en este evento.</p>
+              <EmptyState compact description="Con los primeros invitados verás aquí quién confirmó." icon={<ChartIcon />} title="Aún no hay respuestas" />
             ) : (
               <DonutChart
                 big={`${stats.value.attendingPercent ?? 0}%`}

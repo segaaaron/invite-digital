@@ -1,11 +1,12 @@
 'use client'
 
+import { QrIcon } from '@/shared/design/ui/icons'
 import { useActionState, useId, useState } from 'react'
 import { PanelButton, Pill, FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { QrCodeSvg } from '@/shared/design/ui/QrCodeSvg'
 import { printMarkedOnly } from '@/shared/design/ui/print'
 import { createQrCodeAction, toggleQrCodeAction, updateQrCodeAction, type QrActionState } from '@/app/_acciones/qr/actions'
-import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: QrActionState = { status: 'idle' }
 
@@ -107,9 +108,12 @@ export function QrManager({
       </form>
 
       {codes.length === 0 ? (
-        <p className="border-t border-line-panel pt-6 text-[13px] text-ink-mute">
-          Todavía no hay ningún código. El primero suele ser el de la mesa de regalos.
-        </p>
+        <EmptyState
+          compact
+          description="Un código impreso que lleva adonde quieras y se puede cambiar después. El primero suele ser el de la mesa de regalos."
+          icon={<QrIcon />}
+          title="Aún no creaste códigos QR"
+        />
       ) : (
         <>
           <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-panel pt-6">

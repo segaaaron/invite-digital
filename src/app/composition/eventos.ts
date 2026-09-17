@@ -311,6 +311,8 @@ export const guests = {
   enviar: enviarInvitacion({ groups: drizzleGuestGroupRepository, minter, clock }),
   /** El enlace vigente de cada invitación que lo tenga guardado, para volver a enseñarlo. */
   enlaces: (eventId: string) => drizzleGuestGroupRepository.tokensOf(eventId),
+  /** El código corto del pase de cada invitación, para enseñarlo en el panel. */
+  codigos: async (eventId: string) => new Map((await drizzleGuestGroupRepository.listByEvent(eventId)).map((r) => [r.id, r.passCode ?? null] as const)),
   setPhone: (eventId: string, id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(eventId, id, phone),
   addGuest: (input: Parameters<ReturnType<typeof invitadosEn>['addGuest']>[0]) => enTransaccion((tx) => invitadosEn(tx).addGuest(input)),
   addPerson: (input: Parameters<ReturnType<typeof invitadosEn>['addPerson']>[0]) => enTransaccion((tx) => invitadosEn(tx).addPerson(input)),
@@ -372,10 +374,6 @@ export const reminders = {
 
 export const guestbook = {
   list: listGuestbook({ guestbook: drizzleGuestbookRepository }),
-  /** Cuántos sin leer, sin traer el libro: para la insignia de la barra. */
-  sinLeer: (eventId: string) => countUnreadMessages(db, eventId),
-  markRead: markRead({ guestbook: drizzleGuestbookRepository, clock }),
-  toggleFeatured: toggleFeatured({ guestbook: drizzleGuestbookRepository, clock }),
   reply: replyToMessage({ guestbook: drizzleGuestbookRepository, clock }),
 
   // Lo único que el invitado usa, y es de solo lectura.

@@ -48,8 +48,6 @@ export interface HeroDictionary {
   ctaSecondary: string
   trustLabel: string
   posterAlt: string
-  envelopeOpen: string
-  envelopeClose: string
 }
 
 export interface ExperienceAct {
@@ -419,6 +417,8 @@ export interface InvitationDictionary {
   closed: string
   passTitle: string
   passHint: string
+  /** «Código», sobre el código corto que la puerta escribe a mano si el QR no se lee. */
+  passCode: string
   passAlt: string
   passOpen: string
   /** Antes de confirmar: el pase llega al decir que asiste. */

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { events, guestbook, guests, plans } from '@/app/composition/container'
+import { events, guests, plans } from '@/app/composition/container'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
@@ -24,9 +24,8 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   const activo = listed === null || isErr(listed) ? null : (listed.value[0] ?? null)
 
   // Todo lo de la barra en paralelo: eran nueve lecturas en fila antes de pintar nada.
-  const [grupos, libro, capacidad, insignias, rolEquipo, mesaPlanner] = await Promise.all([
+  const [grupos, capacidad, insignias, rolEquipo, mesaPlanner] = await Promise.all([
     activo === null ? null : guests.contar(activo.id).catch(() => null),
-    activo === null ? null : guestbook.sinLeer(activo.id).catch(() => null),
     activo === null ? null : plans.allowanceFor(activo.id),
     insigniasDeAdmin(actor),
     actor.role === 'cliente' && activo !== null ? events.staff.membershipsOf(activo.id, actor.userId).then(rolEnEquipo) : null,
@@ -38,7 +37,6 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
       sections={panelNav(activo?.slug ?? null, {
         invitados: grupos,
-        sinLeer: libro,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
       }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner })}

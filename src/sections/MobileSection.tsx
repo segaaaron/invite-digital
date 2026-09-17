@@ -3,10 +3,11 @@ import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 
 /**
- * Las capturas, en el orden del diccionario. Solo se venden bodas y XV años: la del bautizo
- * se retiró, y la de XV entra en cuanto haya una fotografía suya.
+ * Las capturas, en el orden del diccionario: **nuestras invitaciones de verdad**, abiertas en un
+ * celular —«Botánica» para bodas y «Bajo el Mar» para XV—. Se sacaron de `/modelos/es/<clave>` a
+ * 390 × 844 (pedido por el usuario: nada de fotos de archivo con invitaciones ajenas).
  */
-const FOTOS = ['/site/movil/pantalla.avif'] as const
+const FOTOS = ['/site/movil/boda.avif', '/site/movil/xv.avif'] as const
 
 export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
   const { mobile } = dictionary
@@ -41,27 +42,18 @@ export function MobileSection({ dictionary }: { dictionary: Dictionary }) {
           </ul>
         </Reveal>
 
-        <Reveal className={`grid gap-5 ${mobile.shots.length > 1 ? 'grid-cols-2' : 'max-w-[320px]'}`} delay={0.1}>
+        <Reveal className="flex items-start justify-center gap-5 sm:gap-8" delay={0.1}>
           {mobile.shots.map((shot, index) => (
-            <figure
-              key={shot.tag}
-              className={`overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-bg-raised shadow-[var(--shadow-lift)] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] hover:-translate-y-2.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0 ${
-                index === 1 ? 'mt-10' : ''
-              }`}
-            >
-              <div className="relative aspect-3/4">
-                <Image
-                  alt={shot.alt}
-                  className="object-cover"
-                  fill
-                  sizes="(min-width: 1024px) 280px, 45vw"
-                  src={FOTOS[index] ?? FOTOS[0]}
-                />
+            <figure className={`flex w-[46%] max-w-[250px] flex-col items-center gap-4 ${index === 1 ? 'mt-12' : ''}`} key={shot.tag}>
+              {/* El celular: marco de tinta, isla arriba y la invitación a pantalla completa dentro. */}
+              <div className="relative w-full rounded-[38px] bg-ink p-[7px] shadow-[var(--shadow-lift)] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] hover:-translate-y-2.5 motion-reduce:transition-none motion-reduce:hover:translate-y-0">
+                <div className="relative aspect-[390/844] overflow-hidden rounded-[31px] bg-bg-sunken">
+                  <Image alt={shot.alt} className="object-cover object-top" fill sizes="(min-width: 1024px) 250px, 46vw" src={FOTOS[index] ?? FOTOS[0]} />
+                  <span aria-hidden className="absolute top-2.5 left-1/2 h-[18px] w-[30%] -translate-x-1/2 rounded-full bg-ink" />
+                </div>
               </div>
-              <figcaption className="flex flex-col gap-1 px-5 py-4">
-                <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">
-                  {shot.tag}
-                </span>
+              <figcaption className="flex flex-col items-center gap-1 text-center">
+                <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{shot.tag}</span>
                 <span className="text-[13px] text-ink">{shot.caption}</span>
               </figcaption>
             </figure>

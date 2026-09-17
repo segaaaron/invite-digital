@@ -16,7 +16,7 @@ import {
 } from '@/app/_acciones/planner/actions'
 import type { EstadoDeTarea, Responsable, Tarea } from '../domain/tareas'
 import { Accion, type Evento, Ocultos } from './Accion'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -168,7 +168,11 @@ export function TaskBoard({
     .filter((g) => g.tareas.length > 0)
 
   if (grupos.length === 0) {
-    return <p className="rounded-[14px] border border-dashed border-line-panel-strong px-4 py-6 text-center text-[13px] text-ink-mute">{filtrando ? 'Nada en este filtro.' : 'Todavía no hay tareas.'}</p>
+    return filtrando ? (
+      <EmptyState compact title="Nada en este filtro" />
+    ) : (
+      <EmptyState description="Suma lo que tienes que hacer antes de la fiesta, con su fecha y quién se encarga." icon={<CheckIcon />} title="Tu plan de tareas está en blanco" />
+    )
   }
 
   return (

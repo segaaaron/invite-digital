@@ -1,3 +1,5 @@
+import { ClockIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { fecha } from '@/shared/format/fecha'
 import { avatarColor } from '@/shared/design/ui/avatar-color'
 
@@ -28,7 +30,7 @@ export function mergeActivity(...fuentes: readonly (readonly ActivityItem[])[]):
 
 export function ActivityFeed({ items }: { items: readonly ActivityItem[] }) {
   if (items.length === 0) {
-    return <p className="text-[13px] text-ink-mute">Todavía no ha pasado nada. Aquí saldrá lo que hagan los invitados.</p>
+    return <EmptyState compact description="Aquí saldrá lo que hagan tus invitados: quién abrió su invitación, quién confirmó y quién te escribió." icon={<ClockIcon />} title="Todo tranquilo por ahora" />
   }
 
   return (

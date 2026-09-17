@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { checkin, events, guestbook, guests, plans } from '@/app/composition/container'
+import { checkin, events, guests, plans } from '@/app/composition/container'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
@@ -47,10 +47,9 @@ export default async function EventoLayout({
   // se pinta sin ella: un contador no es motivo para tumbar la página que lo rodea.
   const id = event.value.id
   const dueno = gestionaElEvento(actor, event.value)
-  const [personas, libro, capacidad, insignias, equipo, mesaPlanner] = await Promise.all([
+  const [personas, capacidad, insignias, equipo, mesaPlanner] = await Promise.all([
     // Personas, no grupos: la insignia dice «Invitados» y un grupo sin nadie dentro no lo es.
     guests.contarPersonas(id).catch(() => null),
-    guestbook.sinLeer(id).catch(() => null),
     plans.allowanceFor(id),
     insigniasDeAdmin(actor),
     // Quien entra por pertenencia ve la barra de su papel en el equipo.
@@ -66,7 +65,6 @@ export default async function EventoLayout({
       brandSub={isAdmin(actor) ? 'FICHA DEL EVENTO · ADMIN' : 'PANEL'}
       sections={panelNav(event.value.slug, {
         invitados: personas,
-        sinLeer: libro,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,

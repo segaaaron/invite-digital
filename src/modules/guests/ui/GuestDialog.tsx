@@ -17,7 +17,7 @@ const INICIAL: GuestActionState = { status: 'idle', message: '' }
 
 /**
  * El alta de invitado de la maqueta, entera y en un diálogo: nombre, grupo, acompañantes,
- * RSVP, restricciones, WhatsApp, correo y VIP.
+ * restricciones, WhatsApp, correo y VIP. Sin RSVP: lo decide el invitado.
  *
  * **Se pregunta cómo le llega la invitación, no a qué grupo pertenece.** Lo primero es
  * «invitación propia», que es el caso normal y no exige escribir nada más: la invitación se
@@ -62,7 +62,6 @@ export function GuestDialog({
   const idNombre = useId()
   const idGrupo = useId()
   const idAcomp = useId()
-  const idRsvp = useId()
   const idDieta = useId()
   const idTel = useId()
   const idCorreo = useId()
@@ -174,16 +173,8 @@ export function GuestDialog({
 
         {notice === undefined ? null : <div>{notice}</div>}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor={idRsvp} label="RSVP">
-            <select className={FIELD_CLASS} id={idRsvp} name="attending">
-              <option value="">Pendiente</option>
-              <option value="yes">Asistirá</option>
-              <option value="no">No podrá</option>
-              <option value="maybe">Tal vez</option>
-            </select>
-          </Field>
-
+        {/* Sin RSVP al crear: la asistencia la decide el invitado desde su invitación. */}
+        <div>
           <Field htmlFor={idDieta} label="Restricciones">
             <input
               className={FIELD_CLASS}

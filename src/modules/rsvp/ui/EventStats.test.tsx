@@ -48,7 +48,7 @@ describe('EventStats', () => {
   it('sin invitados lo dice en vez de pintar ceros y porcentajes', () => {
     render(<EventStats stats={stats([])} />)
 
-    expect(screen.getByText(/todavía no hay invitados/i)).toBeInTheDocument()
+    expect(screen.getByText('Aún no hay invitados')).toBeInTheDocument()
     expect(screen.queryByText(/%/)).not.toBeInTheDocument()
     expect(screen.queryByText(/nan/i)).not.toBeInTheDocument()
   })

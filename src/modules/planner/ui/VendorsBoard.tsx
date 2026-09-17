@@ -1,12 +1,13 @@
 'use client'
 
+import { BuildingIcon } from '@/shared/design/ui/icons'
 import { CampoHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { type DiaActionState, emitVendorLinkAction, removeVendorAction, revokeVendorLinkAction, saveVendorAction, setVendorStatusAction } from '@/app/_acciones/planner/dia-actions'
 import { ESTADOS_DE_PROVEEDOR, type EstadoDeProveedor, NOMBRE_DE_ESTADO } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -140,7 +141,13 @@ export function VendorsBoard({
   enlacesIncluidos: boolean
 }) {
   if (proveedores.length === 0) {
-    return <p className="rounded-[14px] border border-dashed border-line-panel-strong px-4 py-6 text-center text-[13px] text-ink-mute">Todavía no hay proveedores.</p>
+    return (
+      <EmptyState
+        description="Anota a cada proveedor con su precio y su hora de llegada: su pago entra al presupuesto y sus momentos al cronograma."
+        icon={<BuildingIcon />}
+        title="Aún no sumaste proveedores"
+      />
+    )
   }
   return (
     <ul className="flex flex-col gap-3">

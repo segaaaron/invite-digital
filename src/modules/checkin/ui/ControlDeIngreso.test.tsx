@@ -15,7 +15,7 @@ const filas = [
   fila({ clave: 'tio', invitacionId: 'tio', personaId: 'tio', nombre: 'Luis Peña', invitacion: 'Luis Peña', estado: 'no_viene' as const, mesa: null }),
 ]
 
-const pinta = () => render(<ControlDeIngreso escanerHref="/puerta" eventId="e1" eventSlug="xv" filas={filas} recepcionHref="/equipo" />)
+const pinta = () => render(<ControlDeIngreso escanerHref="/puerta" eventId="e1" eventSlug="xv" filas={filas} recepcion={{ gestionarHref: '/equipo', personas: [{ id: 'p1', nombre: 'Carla Mena', puerta: 'Puerta norte', registradas: 4 }] }} />)
 const personas = () => screen.getAllByRole('listitem').filter((l) => l.hasAttribute('aria-label')).map((l) => l.getAttribute('aria-label'))
 
 beforeEach(() => vi.clearAllMocks())
@@ -26,6 +26,14 @@ describe('ControlDeIngreso', () => {
     expect(screen.getByRole('region', { name: 'Cómo va el ingreso' })).toHaveTextContent('1de 3 personas dentro')
     expect(personas()).toEqual(['Luis Rojas', 'Sofía Rojas'])
     expect(screen.getByRole('button', { name: 'Escanear QR' })).toBeInTheDocument()
+  })
+
+  it('la recepción se ve: quién tiene acceso y cuántos registró, y dónde sumar más', () => {
+    pinta()
+    const recepcion = screen.getByRole('region', { name: 'Recepción' })
+    expect(recepcion).toHaveTextContent('Carla Mena')
+    expect(recepcion).toHaveTextContent('Puerta norte · 4 ingresos registrados')
+    expect(within(recepcion).getByRole('link', { name: 'Sumar o quitar personal' })).toHaveAttribute('href', '/equipo')
   })
 
   it('buscar encuentra en todas las listas, y el VIP se ve', () => {

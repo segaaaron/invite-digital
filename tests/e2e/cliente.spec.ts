@@ -179,14 +179,14 @@ test.describe('el panel del cliente', () => {
     await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)
   })
 
-  test('puede cambiar su propia contraseña', async () => {
+  test('su cuenta no deja cambiar la contraseña, y enseña sus sesiones', async () => {
     // La clave inicial la escribió el atelier y viajó por WhatsApp: sin esta pantalla
     // valdría para siempre.
     await page.goto('/panel/cuenta')
 
     await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
-    await expect(page.getByLabel('Contraseña actual')).toBeVisible()
-    await expect(page.getByRole('link', { name: '¿Olvidaste tu contraseña?' })).toBeVisible()
+    // La contraseña no se cambia aquí: con la cuenta compartida, cualquiera la cambiaría. Se recupera desde la entrada.
+    await expect(page.getByLabel('Contraseña actual')).toHaveCount(0)
     await expect(page.getByText('Este dispositivo')).toBeVisible()
   })
 })

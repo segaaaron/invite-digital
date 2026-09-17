@@ -1,12 +1,16 @@
 'use client'
 
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { checkInByGroupAction, undoCheckInAction } from '@/app/_acciones/checkin/actions'
 import { CheckIcon, ScanIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { SearchField } from '@/shared/design/ui/panel/PanelKit'
 import type { EstadoDeLlegada } from '../domain/lista-de-llegadas'
+
+export type PersonaDeRecepcion = { readonly id: string; readonly nombre: string; readonly puerta: string | null; readonly registradas: number }
 
 export type FilaDeIngreso = {
   readonly clave: string
@@ -50,14 +54,17 @@ export function ControlDeIngreso({
   eventId,
   eventSlug,
   escanerHref,
-  recepcionHref,
+  recepcion,
 }: {
   filas: readonly FilaDeIngreso[]
   eventId: string
   eventSlug: string
   escanerHref: string
-  /** Sumar personal de recepción; `null` para quien no puede. */
-  recepcionHref: string | null
+  /**
+   * Quiénes reciben en la puerta y dónde se suman. Se **ve** el equipo, no un botón que no dice si
+   * lleva a verlo o a crearlo. `null` para la propia recepción, que no gestiona a nadie.
+   */
+  recepcion: { readonly gestionarHref: string; readonly personas: readonly PersonaDeRecepcion[] } | null
 }) {
   const router = useRouter()
   const [filtro, setFiltro] = useState<Filtro>('por_llegar')
@@ -84,7 +91,6 @@ export function ControlDeIngreso({
   const dentro = cuantos('dentro')
   const esperados = dentro + cuantos('por_llegar')
   const avance = esperados === 0 ? 0 : dentro / esperados
-  const ultima = vistas.filter((f) => f.estado === 'dentro' && f.hora !== null).sort((a, b) => (b.hora ?? '').localeCompare(a.hora ?? ''))[0]
 
   const buscado = normal(busqueda.trim())
   // Buscando, se busca en todos: quien llega no sabe en qué pestaña está.
@@ -162,24 +168,44 @@ export function ControlDeIngreso({
     })()
   }
 
+  const recientes = vistas
+    .filter((f) => f.estado === 'dentro' && f.hora !== null)
+    .sort((a, b) => (b.hora ?? '').localeCompare(a.hora ?? ''))
+    .slice(0, 5)
+
   return (
-    <div className="flex flex-col gap-4.5">
-      <section aria-label="Cómo va el ingreso" className="flex flex-col gap-5 rounded-[18px] border border-line-panel bg-white p-5 shadow-card min-[860px]:flex-row min-[860px]:items-center min-[860px]:p-6">
-        <div className="flex min-w-0 flex-1 flex-col gap-3">
-          <p className="flex items-baseline gap-2.5">
-            <span className="font-display text-[52px] leading-none font-light text-ink [font-variant-numeric:lining-nums_tabular-nums]">{dentro}</span>
-            <span className="text-[15px] text-ink-soft">{`de ${esperados} ${esperados === 1 ? 'persona' : 'personas'} dentro`}</span>
-          </p>
-          <div aria-hidden className="h-2 overflow-hidden rounded-full bg-bg-top">
-            <div className="h-full rounded-full bg-sage transition-[width] duration-500" style={{ width: `${Math.round(avance * 100)}%` }} />
+    <div className="grid items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1fr)_340px]">
+      <aside className="flex flex-col gap-4.5 max-[1099px]:contents min-[1100px]:sticky min-[1100px]:top-6 min-[1100px]:order-2">
+        <section aria-label="Cómo va el ingreso" className="flex flex-col gap-5 max-[1099px]:order-1 rounded-[18px] border border-line-panel bg-white p-5 shadow-card">
+          <div className="flex items-center gap-5">
+            <div
+              aria-hidden
+              className="grid size-[92px] shrink-0 place-items-center rounded-full"
+              style={{ background: `conic-gradient(var(--color-sage) ${Math.round(avance * 360)}deg, var(--color-bg-top) 0deg)` }}
+            >
+              <span className="grid size-[74px] place-items-center rounded-full bg-white font-display text-[24px] font-light text-ink [font-variant-numeric:lining-nums]">
+                {`${Math.round(avance * 100)}%`}
+              </span>
+            </div>
+            <p className="flex flex-col">
+              <span className="font-display text-[44px] leading-none font-light text-ink [font-variant-numeric:lining-nums_tabular-nums]">{dentro}</span>
+              <span className="mt-1 text-[13px] text-ink-soft">{`de ${esperados} ${esperados === 1 ? 'persona' : 'personas'} dentro`}</span>
+            </p>
           </div>
-          <p className="text-[12.5px] text-ink-mute">
-            {[`${cuantos('por_llegar')} por llegar`, cuantos('no_viene') > 0 ? `${cuantos('no_viene')} no vienen` : null, ultima ? `última llegada ${ultima.hora}, ${ultima.nombre}` : null]
-              .filter(Boolean)
-              .join(' · ')}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 min-[860px]:w-[260px]">
+          <dl className="grid grid-cols-3 divide-x divide-line-panel rounded-[14px] bg-bg-top/60 py-3 text-center">
+            {(
+              [
+                ['Dentro', cuantos('dentro'), 'text-sage'],
+                ['Por llegar', cuantos('por_llegar'), 'text-ink'],
+                ['No vienen', cuantos('no_viene'), 'text-ink-mute'],
+              ] as const
+            ).map(([k, v, tono]) => (
+              <div className="flex flex-col gap-0.5" key={k}>
+                <dt className="text-[11px] text-ink-mute">{k}</dt>
+                <dd className={`font-display text-[24px] leading-none ${tono} [font-variant-numeric:lining-nums]`}>{v}</dd>
+              </div>
+            ))}
+          </dl>
           <button
             className="flex cursor-pointer items-center justify-center gap-2.5 rounded-full bg-ink px-6 py-3.5 font-mono text-[10.5px] tracking-[0.25em] text-white uppercase transition-colors hover:bg-ink/90"
             onClick={abrirEscaner}
@@ -188,15 +214,58 @@ export function ControlDeIngreso({
             <ScanIcon className="size-4.5" />
             Escanear QR
           </button>
-          {recepcionHref === null ? null : (
-            <Link className="flex items-center justify-center gap-2 rounded-full border border-line-panel-strong px-6 py-3 text-[12.5px] text-ink transition hover:border-ink" href={recepcionHref}>
-              <UsersIcon className="size-4" />
-              Personal de recepción
-            </Link>
-          )}
-        </div>
-      </section>
+        </section>
 
+        <section aria-label="Últimas llegadas" className="hidden flex-col gap-3 rounded-[18px] border border-line-panel bg-white p-5 shadow-card min-[1100px]:flex">
+          <h2 className="m-0 font-display text-[19px] font-light text-ink italic">Últimas llegadas</h2>
+          {recientes.length === 0 ? (
+            <p className="text-[12.5px] text-ink-mute">Todavía no entró nadie.</p>
+          ) : (
+            <ul className="flex flex-col gap-2.5">
+              {recientes.map((f) => (
+                <li className="flex items-center justify-between gap-3 text-[13px]" key={f.clave}>
+                  <span className="min-w-0 truncate text-ink">{f.nombre}</span>
+                  <span className="shrink-0 font-mono text-[11px] text-sage">{f.hora}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {recepcion === null ? null : (
+          <section aria-label="Recepción" className="flex flex-col gap-3 max-[1099px]:order-3 rounded-[18px] border border-line-panel bg-white p-5 shadow-card">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="m-0 font-display text-[19px] font-light text-ink italic">Recepción</h2>
+              <span className="text-[12px] text-ink-mute">{`${recepcion.personas.length} con acceso`}</span>
+            </div>
+            {recepcion.personas.length === 0 ? (
+              <p className="text-[12.5px] leading-[1.6] text-ink-soft">
+                Solo tú registras ingresos. Suma a quien reciba en la puerta: le llega un enlace y un PIN para escanear desde su celular, sin crear cuenta.
+              </p>
+            ) : (
+              <ul className="flex flex-col gap-2.5">
+                {recepcion.personas.map((p) => (
+                  <li className="flex items-center gap-3" key={p.id}>
+                    <span aria-hidden className={`grid size-8 shrink-0 place-items-center rounded-full bg-linear-to-br ${avatarColor(p.nombre)} text-[12px] text-white`}>
+                      {(p.nombre.trim()[0] ?? '·').toUpperCase()}
+                    </span>
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-[13.5px] text-ink">{p.nombre}</span>
+                      <span className="truncate text-[11.5px] text-ink-mute">{[p.puerta, `${p.registradas} ${p.registradas === 1 ? 'ingreso registrado' : 'ingresos registrados'}`].filter(Boolean).join(' · ')}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <Link className="flex items-center justify-center gap-2 rounded-full border border-line-panel-strong px-5 py-2.5 text-[12.5px] text-ink transition hover:border-ink" href={recepcion.gestionarHref}>
+              <UsersIcon className="size-4" />
+              {recepcion.personas.length === 0 ? 'Sumar personal de recepción' : 'Sumar o quitar personal'}
+            </Link>
+          </section>
+        )}
+      </aside>
+
+      <div className="flex min-w-0 flex-col gap-4.5 max-[1099px]:order-2 min-[1100px]:order-1">
       {aviso === null ? null : (
         <p className="rounded-[12px] bg-danger/10 px-4 py-3 text-[13px] text-danger" role="alert">
           {aviso}
@@ -225,9 +294,11 @@ export function ControlDeIngreso({
         </div>
 
         {visibles.length === 0 ? (
-          <p className="px-4 py-10 text-center text-[13.5px] text-ink-soft">
-            {filas.length === 0 ? 'Todavía no hay invitados.' : buscado !== '' ? 'Nadie con ese nombre.' : filtro === 'por_llegar' ? 'Llegaron todos los que se esperaban.' : 'Nadie en esta lista.'}
-          </p>
+          <EmptyState
+            compact
+            {...(filas.length === 0 ? { icon: <UsersIcon />, description: 'Cuando cargues invitados, aquí se registra su llegada.' } : filtro === 'por_llegar' && buscado === '' ? { icon: <CheckIcon /> } : {})}
+            title={filas.length === 0 ? 'Aún no hay invitados' : buscado !== '' ? 'Nadie con ese nombre' : filtro === 'por_llegar' ? 'Llegaron todos los que se esperaban' : 'Nadie en esta lista'}
+          />
         ) : (
           <ul className="flex flex-col divide-y divide-line-panel">
             {porInvitacion.map((bloque) => {
@@ -259,7 +330,7 @@ export function ControlDeIngreso({
                       <li aria-label={f.nombre} className="flex items-center gap-3 py-2.5" key={f.clave}>
                         <span
                           aria-hidden
-                          className={`grid size-10 shrink-0 place-items-center rounded-full text-[14px] ${f.estado === 'dentro' ? 'bg-sage text-white' : 'bg-bg-top text-ink-soft'}`}
+                          className={`grid size-10 shrink-0 place-items-center rounded-full text-[14px] text-white ${f.estado === 'dentro' ? 'bg-sage' : `bg-linear-to-br ${avatarColor(f.nombre)}`}`}
                         >
                           {f.estado === 'dentro' ? <CheckIcon className="size-4" /> : (f.nombre.trim()[0] ?? '·').toUpperCase()}
                         </span>
@@ -318,6 +389,7 @@ export function ControlDeIngreso({
           </ul>
         )}
       </section>
+      </div>
     </div>
   )
 }

@@ -33,6 +33,10 @@ export type InvitationOfPerson = {
   readonly revocada: boolean
   /** Ya contestó: solo entonces hay algo que reabrir. */
   readonly respondida: boolean
+  /** El enlace que se le envió, si está guardado. Se enseña, no se edita. */
+  readonly enlace?: string | null
+  /** El código corto de su pase. */
+  readonly codigo?: string | null
 }
 
 /** Vacío es «no hay dato», no una cadena en blanco que luego el catering agruparía. */
@@ -70,6 +74,7 @@ export function EditPersonDialog({
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [fullName, setFullName] = useState(person.fullName)
+  const [copiado, setCopiado] = useState(false)
   const [groupId, setGroupId] = useState(person.groupId)
   const [attending, setAttending] = useState<string>(person.attending ?? '')
   const [dietaryNote, setDietaryNote] = useState(person.dietaryNote ?? '')
@@ -252,6 +257,39 @@ export function EditPersonDialog({
         <h3 className="font-display text-[18px] italic" id={`${idAcomp}-titulo`}>
           Su invitación
         </h3>
+
+        {invitacion.enlace || invitacion.codigo ? (
+          <div className="flex flex-col gap-2 rounded-[14px] bg-bg-top p-3.5">
+            {invitacion.enlace ? (
+              <div className="flex min-w-0 items-center gap-2">
+                <input
+                  aria-label="Enlace de su invitación"
+                  className="min-w-0 flex-1 rounded-[10px] border border-line-panel bg-white px-3 py-2 font-mono text-[11.5px] text-ink-soft"
+                  onFocus={(e) => e.currentTarget.select()}
+                  readOnly
+                  value={invitacion.enlace}
+                />
+                <button
+                  className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(invitacion.enlace ?? '')
+                    setCopiado(true)
+                  }}
+                  type="button"
+                >
+                  {copiado ? 'Copiado' : 'Copiar'}
+                </button>
+              </div>
+            ) : (
+              <p className="m-0 text-[12px] text-ink-mute">Su enlace se envió antes de que el panel lo guardara: lo tiene el invitado.</p>
+            )}
+            {invitacion.codigo ? (
+              <p className="m-0 text-[12px] text-ink-soft">
+                Código del pase para la puerta: <span className="font-mono text-[14px] tracking-[0.2em] text-ink">{invitacion.codigo}</span>
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="flex min-w-0 gap-2">
           <label className="sr-only" htmlFor={idAcomp}>

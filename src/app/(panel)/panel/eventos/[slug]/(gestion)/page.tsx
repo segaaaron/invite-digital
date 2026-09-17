@@ -1,5 +1,6 @@
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { loQueFaltaParaInvitar } from '@/modules/events'
@@ -18,7 +19,7 @@ import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/shared/design/
 import { TimelineChart } from '@/modules/rsvp/ui/TimelineChart'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
-import { CheckIcon, ClockIcon, EyeIcon, MailIcon, PenIcon, QrIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, ClockIcon, EyeIcon, MailIcon, PenIcon, QrIcon, UsersIcon, TableIcon } from '@/shared/design/ui/icons'
 
 /** Las dos semanas del gráfico de la maqueta. */
 const DIAS_DEL_GRAFICO = 14
@@ -42,6 +43,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
    */
   const contenidoDelEvento = await events.contentFor(event.value.id, {})
   const invitacionLista = loQueFaltaParaInvitar(contenidoDelEvento).length === 0
+  // Quien celebra entra primero a su invitación mientras no esté escrita: al iniciar sesión, desde
+  // la barra o desde un enlace. Con ella lista, el resumen. El atelier y el admin ven el resumen.
+  if (!invitacionLista && !gestionaElEvento(actor, event.value)) redirect(`/panel/eventos/${event.value.slug}/configuracion`)
 
   const groups = await guests.list(event.value.id)
   // Las últimas respuestas, en una sola consulta. Una por grupo y en serie convertía el
@@ -347,7 +351,13 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
           </p>
         ) : recientes.length === 0 ? (
-          <p className="text-[14px] text-ink-soft">Todavía no hay invitados. Se cargan en la sección Invitados.</p>
+          <EmptyState
+            action={<PanelButton href={`/panel/eventos/${event.value.slug}/invitados`}>Ir a Invitados</PanelButton>}
+            compact
+            description="Aquí verás a los últimos que cargaste y cómo responden."
+            icon={<UsersIcon />}
+            title="Aún no hay invitados"
+          />
         ) : (
           <div className="relative overflow-x-auto">
             <table className="w-full border-collapse">
@@ -420,7 +430,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           {mesas === null ? (
             <p className="text-[13px] text-ink-mute">El plan de este evento no incluye el plano del salón.</p>
           ) : mesas.tables.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">Todavía no hay mesas. Se crean en la sección Mesas.</p>
+            <EmptyState compact description="Cuando crees las mesas, aquí verás cuántos lugares quedan." icon={<TableIcon />} title="Aún no hay mesas" />
           ) : (
             <>
               <ul className="grid grid-cols-4 gap-1.5">

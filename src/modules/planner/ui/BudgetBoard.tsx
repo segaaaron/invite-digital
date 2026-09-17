@@ -1,12 +1,13 @@
 'use client'
 
+import { ReceiptIcon } from '@/shared/design/ui/icons'
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { addPaymentAction, type PlannerActionState, removeItemAction, removePaymentAction, saveItemAction, setPaymentPaidAction } from '@/app/_acciones/planner/actions'
 import type { Pagador } from '../domain/presupuesto'
 import { Accion, type Evento, Ocultos } from './Accion'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -152,7 +153,14 @@ function NuevoPago({ evento, itemId, concepto }: { evento: Evento; itemId: strin
 /** Las partidas, cada una con sus cuentas, sus pagos y su edición plegada. */
 export function BudgetBoard({ evento, opciones, partidas, editable = true }: { evento: Evento; opciones: Opciones; partidas: readonly PartidaVista[]; /** El co-anfitrión lo ve sin tocarlo. */ editable?: boolean }) {
   if (partidas.length === 0) {
-    return <p className="rounded-[14px] border border-dashed border-line-panel-strong px-4 py-6 text-center text-[13px] text-ink-mute">Todavía no hay partidas. Empieza por el salón: suele ser la más grande.</p>
+    return (
+      <EmptyState
+        compact
+        description="Anota cada gasto con lo que cuesta y lo que ya pagaste. Empieza por el salón: suele ser el más grande."
+        icon={<ReceiptIcon />}
+        title="Aún no anotaste gastos"
+      />
+    )
   }
   return (
     <ul className="flex flex-col gap-3">

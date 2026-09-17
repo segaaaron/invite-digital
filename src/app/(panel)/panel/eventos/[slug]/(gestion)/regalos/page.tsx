@@ -1,3 +1,5 @@
+import { CardIcon } from '@/shared/design/ui/icons'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, plans, registry } from '@/app/composition/container'
@@ -102,10 +104,12 @@ export default async function RegalosPage({
           funds={
             funds.length === 0 ? (
               <PanelCard>
-                <p className="text-[13px] text-ink-mute">
-                  Todavía no hay fondos abiertos. Un fondo recauda por transferencia o en un sobre; lo que llega lo
-                  registras tú.
-                </p>
+                <EmptyState
+                  compact
+                  description="Un fondo junta aportes para algo grande —el viaje, la luna de miel— por transferencia o en sobre. Lo que llega lo anotas tú."
+                  icon={<CardIcon />}
+                  title="Sin fondos abiertos"
+                />
               </PanelCard>
             ) : (
               <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">

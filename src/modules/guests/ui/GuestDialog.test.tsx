@@ -28,7 +28,8 @@ describe('GuestDialog', () => {
 
     expect(screen.getByLabelText('Nombre completo')).toBeInTheDocument()
     expect(screen.getByLabelText('Tipo de invitación')).toBeInTheDocument()
-    expect(screen.getByLabelText('RSVP')).toBeInTheDocument()
+    // Al crear no se elige la asistencia: la decide el invitado.
+    expect(screen.queryByLabelText('RSVP')).toBeNull()
     expect(screen.getByLabelText('Restricciones')).toBeInTheDocument()
     expect(screen.getByLabelText('WhatsApp / Teléfono')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()

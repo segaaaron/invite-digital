@@ -1,21 +1,18 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useActionState, useEffect, useId, useRef, useState } from 'react'
-import { resendInvitationAction, type ResendState } from '@/app/_acciones/guests/actions'
+import { useEffect, useId, useRef } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { printMarkedOnly } from '@/shared/design/ui/print'
+import { compartirQr, descargarQr } from '@/shared/design/ui/QrDigital'
 import { PassQrSvg } from './PassQrSvg'
-import { SubmitButton } from '@/shared/design/ui/panel/estados'
-
-const INICIAL: ResendState = { status: 'idle' }
 
 /**
- * El pase de entrada imprimible: el QR del enlace del invitado.
+ * El pase de entrada del invitado: **el QR que ya tiene**, para verlo, descargarlo o compartirlo. Aquí no se
+ * genera nada —pedido por el usuario—: un pase nuevo por descuido dejaría fuera al invitado que ya
+ * guardó el suyo. Emitir otro enlace es una decisión aparte, en «Enviar invitaciones».
  *
- * El enlace se guarda cifrado al crear la invitación, así que el pase **es el que ya tiene**
- * y se enseña al abrir. Generar uno nuevo se pide aparte, porque anula el anterior. Solo las
- * invitaciones de antes de guardar el enlace (`url` nulo) tienen que generarlo.
+ * `url` nulo: invitaciones creadas antes de guardar los enlaces (`0062`). Su pase existe, dentro
+ * de su invitación, pero aquí no se puede redibujar.
  */
 export function PassDialog({
   group,
@@ -24,24 +21,25 @@ export function PassDialog({
   eventTitle,
   eventMeta,
   venue,
-  eventSlug,
   closeHref,
   url = null,
+  codigo = null,
 }: {
-  /** Su enlace vigente, si está guardado. */
-  url?: string | null
+  /** El código corto del pase, que la puerta escribe si el QR no se lee. */
+  codigo?: string | null
   group: { id: string; label: string; revoked: boolean }
   personName: string
   tableLabel: string | null
   eventTitle: string
   eventMeta: string
   venue: string | null
-  eventSlug: string
+  eventSlug?: string
   closeHref: string
+  /** Su enlace vigente, si está guardado. */
+  url?: string | null
 }) {
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
-  const [estado, accion, pendiente] = useActionState<ResendState, FormData>(resendInvitationAction, INICIAL)
   const idTitulo = useId()
 
   useEffect(() => {
@@ -54,19 +52,17 @@ export function PassDialog({
     router.replace(closeHref)
   }
 
-  const [confirmar, setConfirmar] = useState(false)
-  const emitido = estado.status === 'success' ? estado : url === null ? null : { url }
   const sitio = [tableLabel ?? 'Mesa por asignar', venue].filter((x) => x !== null && x !== '').join(' · ')
 
   return (
     <dialog
-      ref={dialogo}
       aria-labelledby={idTitulo}
-      className="m-auto w-[min(380px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
+      className="m-auto w-[min(420px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
       }}
+      ref={dialogo}
     >
       <h2 className="font-display text-[24px] font-light italic" id={idTitulo}>
         Pase de entrada
@@ -74,80 +70,46 @@ export function PassDialog({
 
       {group.revoked ? (
         <p className="mt-5 text-[13px] text-ink-soft">
-          La invitación de «{group.label}» está <b className="font-medium">revocada</b>. Revocar se deshace a propósito:
-          para volver a darle acceso, vuelve a añadir al invitado.
+          La invitación de «{group.label}» está <b className="font-medium">revocada</b>: su pase ya no abre la puerta.
         </p>
-      ) : emitido === null ? (
+      ) : url === null ? (
         <>
-          <p className="mt-5 text-[13px] text-ink-soft">
-            La invitación de {personName} es de antes de que guardáramos los enlaces, así que su pase no se puede volver a mostrar. Al
-            generarlo, <b className="font-medium">el enlace que ya tenga deja de servir</b>: mándale el nuevo.
+          <p className="mt-5 text-[13px] leading-[1.7] text-ink-soft">
+            {personName} ya tiene su pase: está dentro de la invitación que le enviaste, y la puerta lo reconoce. Esta invitación se creó
+            antes de que el panel guardara los enlaces, así que aquí no se puede volver a dibujar.
           </p>
-
-          {estado.status === 'error' ? (
-            <p className="mt-4 text-[13px] text-danger" role="alert">
-              {estado.message}
-            </p>
-          ) : null}
-
-          <form action={accion} className="mt-6 flex justify-end gap-2.5">
-            <input name="eventSlug" type="hidden" value={eventSlug} />
-            <input name="groupId" type="hidden" value={group.id} />
+          <div className="mt-6 flex justify-end">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
-            <SubmitButton variant="primary" pending={pendiente} pendingLabel={'Generando…'}>{'Generar pase'}</SubmitButton>
-          </form>
+          </div>
         </>
       ) : (
         <>
           <div
-            className="mt-5 flex flex-col items-center gap-4 rounded-[18px] border border-gold/40 bg-linear-to-br from-bg-top to-bg-raised p-7 text-center shadow-float print:shadow-none"
-            data-para-imprimir
-            id="pase-para-imprimir"
+            className="mt-5 flex flex-col items-center gap-4 rounded-[18px] border border-gold/40 bg-linear-to-br from-bg-top to-bg-raised p-7 text-center shadow-float"
           >
             <p className="font-mono text-[9px] tracking-[0.35em] text-gold-deep uppercase">Pase de entrada</p>
             <p className="font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase">
               {eventTitle} · {eventMeta}
             </p>
             <div className="rounded-xl border border-line-panel bg-white p-2.5">
-              <PassQrSvg label={group.label} url={emitido.url} />
+              <PassQrSvg label={group.label} url={url} />
             </div>
             <p className="font-display text-[23px] leading-tight italic">{group.label}</p>
             <p className="text-[12px] text-ink-soft">{sitio}</p>
-            <span
-              aria-hidden
-              className="h-px w-full bg-[repeating-linear-gradient(90deg,var(--color-line-panel-strong)_0_6px,transparent_6px_12px)]"
-            />
-            <p className="font-mono text-[10px] tracking-[0.15em] break-all text-ink-mute">{emitido.url}</p>
-          </div>
-
-          {estado.status === 'success' && url !== null ? (
-            <p className="mt-4 text-[12px] text-ink-soft" role="status">
-              Pase nuevo generado: el anterior ya no sirve.
-            </p>
-          ) : confirmar ? (
-            <form action={accion} className="mt-4 flex flex-col gap-2 rounded-[12px] bg-bg-top p-3" role="alert">
-              <input name="eventSlug" type="hidden" value={eventSlug} />
-              <input name="groupId" type="hidden" value={group.id} />
-              <p className="text-[12.5px] leading-[1.6]">
-                El enlace y el pase actuales <b className="font-medium">dejarán de servir</b>. Úsalo solo si lo perdió.
+            {codigo === null ? null : (
+              <p className="flex flex-col items-center gap-0.5">
+                <span className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Código</span>
+                <span className="font-mono text-[20px] tracking-[0.3em] text-ink">{codigo}</span>
               </p>
-              <div className="flex gap-2">
-                <SubmitButton pending={pendiente} pendingLabel="Generando…" variant="danger">
-                  Sí, generar uno nuevo
-                </SubmitButton>
-                <PanelButton onClick={() => setConfirmar(false)}>Cancelar</PanelButton>
-              </div>
-            </form>
-          ) : (
-            <button className="mt-4 cursor-pointer text-[12px] text-ink-mute underline underline-offset-4 hover:text-danger" onClick={() => setConfirmar(true)} type="button">
-              ¿Lo perdió? Generar un pase nuevo
-            </button>
-          )}
-
-          <div className="mt-6 flex justify-end gap-2.5">
+            )}
+            <span aria-hidden className="h-px w-full bg-[repeating-linear-gradient(90deg,var(--color-line-panel-strong)_0_6px,transparent_6px_12px)]" />
+            <p className="font-mono text-[10px] tracking-[0.15em] break-all text-ink-mute">{url}</p>
+          </div>
+          <div className="mt-6 flex flex-wrap justify-end gap-2">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
-            <PanelButton variant="primary" onClick={printMarkedOnly}>
-              Imprimir pase
+            <PanelButton onClick={() => void compartirQr(url, group.label).catch(() => undefined)}>Compartir QR</PanelButton>
+            <PanelButton onClick={() => void descargarQr(url, group.label)} variant="primary">
+              Descargar QR
             </PanelButton>
           </div>
         </>

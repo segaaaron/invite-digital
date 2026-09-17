@@ -311,7 +311,8 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: 26px;
-  background: var(--color-bg-top);
+  /* Oscuro, como el escenario: con fondo claro asomaba un filo blanco en las cuatro esquinas. */
+  background: var(--color-shell-deep);
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.14),
     0 0 0 1px rgb(0 0 0 / 0.5),

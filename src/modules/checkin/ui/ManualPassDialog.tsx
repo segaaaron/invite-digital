@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { DoorManifestGroup } from '../application/get-door-manifest'
 import { resolveLocally } from './local-resolve'
 
-export type ManualCandidate = { readonly scanned: string; readonly group: DoorManifestGroup; readonly yaDentro: boolean }
+/** `scanned` es el enlace; con el código corto va nulo y se registra por la invitación. */
+export type ManualCandidate = { readonly scanned: string | null; readonly group: DoorManifestGroup; readonly yaDentro: boolean }
 
 /**
  * Escribir el código del pase a mano, y **confirmar antes de registrar**.
@@ -22,11 +23,14 @@ export function ManualPassDialog({
   groups,
   arrivedIds,
   onConfirm,
+  onConfirmGrupo,
   onClose,
 }: {
   groups: readonly DoorManifestGroup[]
   arrivedIds: ReadonlySet<string>
   onConfirm: (scanned: string) => void
+  /** Con el código corto del pase (`K7P3X`): se registra por la invitación. */
+  onConfirmGrupo: (groupId: string) => void
   onClose: () => void
 }) {
   const [codigo, setCodigo] = useState('')
@@ -38,6 +42,13 @@ export function ManualPassDialog({
 
   const buscar = async () => {
     setError(null)
+    // Primero el código corto que va impreso bajo el QR; si no, el enlace entero.
+    const corto = codigo.replace(/[\s-]/g, '').toUpperCase()
+    const porCodigo = groups.find((g) => g.passCode !== undefined && g.passCode !== null && g.passCode === corto)
+    if (porCodigo !== undefined) {
+      setCandidato({ scanned: null, group: porCodigo, yaDentro: arrivedIds.has(porCodigo.id) })
+      return
+    }
     const local = await resolveLocally(codigo.trim(), groups, arrivedIds)
     if (local.kind === 'unknown' || !local.group) {
       setError('Ese código no es de este evento. Revísalo o busca por nombre.')
@@ -68,12 +79,13 @@ export function ManualPassDialog({
             <input
               ref={campo}
               autoComplete="off"
-              className="mt-4 w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3.5 font-mono text-[15px] text-ink outline-none focus-visible:border-ink"
+              autoCapitalize="characters"
+              className="mt-4 w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3.5 font-mono text-[18px] tracking-[0.2em] text-ink uppercase outline-none placeholder:text-[13px] placeholder:tracking-normal placeholder:normal-case focus-visible:border-ink"
               onChange={(e) => setCodigo(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void buscar()
               }}
-              placeholder="Código del pase…"
+              placeholder="Código del pase, por ejemplo K7P3X"
               value={codigo}
             />
 
@@ -130,7 +142,7 @@ export function ManualPassDialog({
               </button>
               <button
                 className="flex-1 rounded-full bg-ink px-4 py-3.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase"
-                onClick={() => onConfirm(candidato.scanned)}
+                onClick={() => (candidato.scanned === null ? onConfirmGrupo(candidato.group.id) : onConfirm(candidato.scanned))}
                 type="button"
               >
                 ✓ Registrar ingreso

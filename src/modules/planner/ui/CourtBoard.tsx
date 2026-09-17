@@ -1,12 +1,13 @@
 'use client'
 
+import { UsersIcon } from '@/shared/design/ui/icons'
 import { CampoFechaYHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { type DiaActionState, removeCourtMemberAction, removeRehearsalAction, saveCourtMemberAction, saveRehearsalAction, setCourtConfirmedAction } from '@/app/_acciones/planner/dia-actions'
 import { nombreDelCortejo, type TipoDeCortejo } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -84,7 +85,13 @@ export function NewCourtMemberForm(props: { evento: Evento; tipos: readonly Tipo
 /** El cortejo por papel, con confirmado, contacto y lo que apadrina cada uno. */
 export function CourtBoard({ evento, tipos, partidas, miembros }: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; miembros: readonly MiembroVista[] }) {
   if (miembros.length === 0) {
-    return <p className="rounded-[14px] border border-dashed border-line-panel-strong px-4 py-6 text-center text-[13px] text-ink-mute">Todavía no hay nadie en el cortejo.</p>
+    return (
+      <EmptyState
+        description="Padrinos, damas, chambelanes: con su papel, su talla y su teléfono, y los ensayos a los que vienen."
+        icon={<UsersIcon />}
+        title="Tu cortejo todavía no tiene a nadie"
+      />
+    )
   }
   return (
     <div className="flex flex-col gap-4">
