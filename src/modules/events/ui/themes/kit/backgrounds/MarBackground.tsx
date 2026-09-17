@@ -1,5 +1,5 @@
-import Image from 'next/image'
 import { themeAsset } from '../../assets'
+import { FotoDeFondo } from './FotoDeFondo'
 
 type Props = {
   /** Cuál de los dos fondos de mar de la maqueta. */
@@ -20,17 +20,8 @@ type Props = {
 export function MarBackground({ variant = 'a', opacity = 0.92, theme }: Props) {
   return (
     <>
-      {/* Va con `next/image`: es un archivo del repositorio, no una imagen del evento, así
-          que sí pasa por el optimizador. `priority` porque es lo primero que se ve. */}
-      <Image
-        alt=""
-        aria-hidden
-        fill
-        priority
-        sizes="100vw"
-        src={themeAsset(theme, variant === 'a' ? 'mar-bg-a.avif' : 'mar-bg-b.avif')}
-        style={{ objectFit: 'cover', opacity, pointerEvents: 'none' }}
-      />
+      {/* Un archivo del repositorio: pasa por el optimizador. Entera en pantallas anchas. */}
+      <FotoDeFondo opacity={opacity} priority src={themeAsset(theme, variant === 'a' ? 'mar-bg-a.avif' : 'mar-bg-b.avif')} />
       <div
         aria-hidden
         style={{

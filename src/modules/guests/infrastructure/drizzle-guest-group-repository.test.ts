@@ -42,13 +42,15 @@ describe('repositorio de grupos', () => {
 
       const primero = minter.mint()
       const segundo = minter.mint()
-      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, primero.hash)
-      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Daniela Ortiz', seats: 1, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, segundo.hash)
+      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, primero.hash, primero.token)
+      await repo.insert({ id: crypto.randomUUID(), eventId, label: 'Daniela Ortiz', seats: 1, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, segundo.hash, segundo.token)
 
       expect((await repo.listByEvent(eventId)).map((row) => row.label)).toEqual(['Familia Rojas', 'Daniela Ortiz'])
       // La insignia de la barra: el mismo número que la lista, sin traerla.
       expect(await countGroupsByEvent(tx, eventId)).toBe(2)
       expect((await repo.findByTokenHash(minter.hashOf(primero.token)))?.label).toBe('Familia Rojas')
+      // El enlace se vuelve a enseñar: el token se guarda cifrado y se abre por evento.
+      expect([...(await repo.tokensOf(eventId)).values()].sort()).toEqual([primero.token, segundo.token].sort())
       expect(await repo.findByTokenHash(Buffer.alloc(32, 255))).toBeNull()
     })
   })
@@ -59,9 +61,9 @@ describe('repositorio de grupos', () => {
       const minter = createTokenMinter()
       const eventId = await seedEvent(tx)
       const id = crypto.randomUUID()
-      const { hash } = minter.mint()
+      const { hash, token } = minter.mint()
 
-      await repo.insert({ id, eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, hash)
+      await repo.insert({ id, eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, hash, token)
 
       const primera = new Date('2026-08-19T12:00:00Z')
       await repo.markOpened(id, primera)
@@ -84,14 +86,15 @@ describe('repositorio de grupos', () => {
       const suyo = await seedEvent(tx)
       const ajeno = await seedEvent(tx)
       const id = crypto.randomUUID()
-      const { hash } = minter.mint()
-      await repo.insert({ id, eventId: suyo, label: 'Ana', seats: 1, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, hash)
+      const { hash, token } = minter.mint()
+      await repo.insert({ id, eventId: suyo, label: 'Ana', seats: 1, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, hash, token)
       const cuando = new Date('2026-09-16T12:00:00Z')
 
       expect(await repo.findById(ajeno, id)).toBeNull()
       await repo.revoke(ajeno, id, cuando)
       await repo.markSent(ajeno, id, cuando)
-      await repo.replaceToken(ajeno, id, minter.mint().hash)
+      const otro = minter.mint()
+      await repo.replaceToken(ajeno, id, otro.hash, otro.token)
       await repo.setPhone(ajeno, id, '+59170000000')
       await repo.reopenRsvp(ajeno, id, cuando)
       await repo.setSeats(ajeno, id, 9)

@@ -35,10 +35,27 @@ export const resendInvitation =
         }
 
         const minted = deps.minter.mint()
-        await deps.groups.replaceToken(input.eventId, input.id, minted.hash)
+        await deps.groups.replaceToken(input.eventId, input.id, minted.hash, minted.token)
         await deps.groups.markSent(input.eventId, input.id, deps.clock())
 
         return ok({ token: minted.token, label: row.label })
       },
       (cause) => guestError('storage_failure', `No se pudo reenviar la invitación: ${String(cause)}`),
     )
+
+/**
+ * Enviar la invitación **sin tocar el enlace**: el que ya existe —guardado cifrado desde que se
+ * creó— se reparte por WhatsApp, correo o donde sea, y queda marcada como enviada. Solo las
+ * invitaciones de antes de guardar el enlace acuñan uno, igual que al reenviar.
+ */
+export const enviarInvitacion =
+  (deps: { groups: GuestGroupRepository; minter: Minter; clock: () => Date }) =>
+  async (input: { eventId: string; id: string }): Promise<Result<ResentInvitation, GuestError>> => {
+    const row = await deps.groups.findById(input.eventId, input.id)
+    if (row === null) return err(guestError('not_found', 'La invitación no existe'))
+    if (row.revokedAt !== null) return err(guestError('revoked', 'Esta invitación está revocada: reactívala antes de enviarla.'))
+    const guardado = (await deps.groups.tokensOf(input.eventId)).get(input.id)
+    if (guardado === undefined) return resendInvitation(deps)(input)
+    await deps.groups.markSent(input.eventId, input.id, deps.clock())
+    return ok({ token: guardado, label: row.label })
+  }

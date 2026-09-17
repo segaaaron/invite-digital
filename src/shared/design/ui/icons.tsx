@@ -426,3 +426,33 @@ export function ChevronIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Una computadora portátil: la sesión abierta en una laptop o un escritorio. */
+export function LaptopIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <rect height="11" rx="1.5" width="16" x="4" y="5" />
+      <path d="M2 19h20" />
+    </svg>
+  )
+}
+
+/** Un celular. */
+export function PhoneIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <rect height="18" rx="2.5" width="10" x="7" y="3" />
+      <path d="M11 18h2" />
+    </svg>
+  )
+}
+
+/** Una tablet. */
+export function TabletIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <rect height="18" rx="2" width="14" x="5" y="3" />
+      <path d="M11 18h2" />
+    </svg>
+  )
+}

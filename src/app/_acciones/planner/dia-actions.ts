@@ -125,16 +125,6 @@ export async function revokeVendorLinkAction(_previo: DiaActionState, fd: FormDa
 
 // ─── Cronograma ──────────────────────────────────────────────────────────────
 
-export async function seedMomentsAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
-  const actor = await requireSession()
-  const eventId = campo(fd, 'eventId')
-  const eventSlug = campo(fd, 'eventSlug')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'planner' })
-  const corte = await incluido(eventId, 'plannerCompleto')
-  if (corte) return corte
-  return responder(await planner.dia.seedMoments(eventId, await fiestaDe(actor, eventId)), eventSlug)
-}
-
 export async function saveMomentAction(_previo: DiaActionState, fd: FormData): Promise<DiaActionState> {
   const actor = await requireSession()
   const eventId = campo(fd, 'eventId')

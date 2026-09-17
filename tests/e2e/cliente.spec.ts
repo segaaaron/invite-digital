@@ -116,7 +116,7 @@ test.describe('el panel del cliente', () => {
     const respuesta = await page.goto(`/panel/eventos/${SLUG}/configuracion`)
     expect(respuesta?.status()).toBe(200)
 
-    await expect(page.getByRole('heading', { name: 'Mi invitación', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Personalizar invitación', exact: true })).toBeVisible()
 
     // Y escribe de verdad: no basta con que la página pinte. Si la guarda de
     // `saveContentBlockAction` siguiera pidiendo `full`, esto reventaría al guardar.
@@ -164,7 +164,7 @@ test.describe('el panel del cliente', () => {
 
   test('ve las llegadas de su evento', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(200)
-    await expect(page.getByRole('heading', { name: 'Llegadas' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Ingreso al evento' })).toBeVisible()
   })
 
   test('la barra no le ofrece lo que no puede abrir', async () => {
@@ -173,7 +173,7 @@ test.describe('el panel del cliente', () => {
     const barra = page.getByRole('navigation')
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
     // Su invitación sí: es la pantalla donde escribe sus textos y elige su canción.
-    await expect(barra.getByRole('link', { name: 'Escribir mi invitación' })).toBeVisible()
+    await expect(barra.getByRole('link', { name: 'Personalizar invitación' })).toBeVisible()
     // Lo del atelier, no.
     await expect(barra.getByRole('link', { name: 'Plan', exact: true })).toHaveCount(0)
     await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)
@@ -185,9 +185,8 @@ test.describe('el panel del cliente', () => {
     await page.goto('/panel/cuenta')
 
     await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
-    // Con el código del correo, no con la actual: la contraseña puede estar compartida.
-    await expect(page.getByLabel('Contraseña nueva')).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Enviarme el código' }).first()).toBeVisible()
+    await expect(page.getByLabel('Contraseña actual')).toBeVisible()
+    await expect(page.getByRole('link', { name: '¿Olvidaste tu contraseña?' })).toBeVisible()
     await expect(page.getByText('Este dispositivo')).toBeVisible()
   })
 })

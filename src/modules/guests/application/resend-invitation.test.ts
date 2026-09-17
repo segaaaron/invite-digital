@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { resendInvitation } from './resend-invitation'
+import { enviarInvitacion, resendInvitation } from './resend-invitation'
 import type { GuestGroupRepository, GuestGroupRow } from './ports'
 import { isErr, isOk } from '@/shared/result'
 
 const NOW = new Date('2026-08-22T12:00:00Z')
 
-function repo(row: GuestGroupRow | null) {
+function repo(row: GuestGroupRow | null, guardados: ReadonlyMap<string, string> = new Map()) {
   const tokens: Buffer[] = []
   const enviados: Date[] = []
   const groups: GuestGroupRepository = {
@@ -18,6 +18,7 @@ function repo(row: GuestGroupRow | null) {
     remove: async () => {},
     markSent: async (_e, _id, at) => void enviados.push(at),
     replaceToken: async (_e, _id, hash) => void tokens.push(hash),
+    tokensOf: async () => guardados,
     reopenRsvp: async () => {},
     setPhone: async () => {},
     setSeats: async () => {},
@@ -79,5 +80,27 @@ describe('resendInvitation', () => {
 
     expect(isErr(result) && result.error.kind).toBe('not_found')
     expect(tokens).toHaveLength(0)
+  })
+})
+
+describe('enviarInvitacion', () => {
+  it('con el enlace guardado lo usa tal cual y marca el reparto: el que ya tiene el invitado sigue valiendo', async () => {
+    const { groups, tokens, enviados } = repo(fila(), new Map([['g1', 'token-guardado']]))
+    const result = await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
+    expect(isOk(result) && result.value.token).toBe('token-guardado')
+    expect(tokens).toHaveLength(0)
+    expect(enviados).toEqual([NOW])
+  })
+
+  it('sin enlace guardado (invitaciones de antes) acuña uno', async () => {
+    const { groups, tokens } = repo(fila())
+    const result = await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
+    expect(isOk(result) && result.value.token).toBe('token-nuevo')
+    expect(tokens).toHaveLength(1)
+  })
+
+  it('no envía una revocada', async () => {
+    const { groups } = repo(fila({ revokedAt: NOW }), new Map([['g1', 'token-guardado']]))
+    expect(isErr(await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' }))).toBe(true)
   })
 })

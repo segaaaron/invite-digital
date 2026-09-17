@@ -127,7 +127,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
       <PanelHeader
         kicker="Evento"
         {...(esAdmin ? {} : { meta: 'Completa cada paso y mira a la derecha cómo queda. Se guarda sección por sección.' })}
-        title={esAdmin ? 'Ficha del evento' : esDelAtelier ? 'Configuración del evento' : 'Mi invitación'}
+        title={esAdmin ? 'Ficha del evento' : esDelAtelier ? 'Configuración del evento' : 'Personalizar invitación'}
       />
 
       {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se
@@ -139,7 +139,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
         <PanelCard title={`Tu invitación · ${tema.label}`}>
           {/* En pantallas donde no cabe el teléfono al lado, se abre aparte. */}
           <p className="mb-4 min-[1280px]:hidden">
-            <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver cómo queda</PanelButton>
+            <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Vista previa</PanelButton>
           </p>
           <ContentBlockForms
             anfitriones={anfitrionesDeCategoria(tema.categorySlug)}

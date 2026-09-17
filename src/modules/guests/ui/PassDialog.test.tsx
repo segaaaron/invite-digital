@@ -43,6 +43,16 @@ beforeEach(() => {
 })
 
 describe('PassDialog', () => {
+  it('con el enlace guardado enseña el pase que ya tiene, sin generar otro', () => {
+    render(<PassDialog {...props} url="http://localhost:3000/i/GUARDADO" />)
+
+    expect(screen.getByText('http://localhost:3000/i/GUARDADO')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Generar pase' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /Generar un pase nuevo/ }))
+    expect(screen.getByRole('alert')).toHaveTextContent(/dejarán de servir/)
+    expect(resendInvitationAction).not.toHaveBeenCalled()
+  })
+
   it('avisa antes de generar nada: el pase anterior deja de servir', () => {
     render(<PassDialog {...props} />)
 

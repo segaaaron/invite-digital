@@ -1,7 +1,11 @@
 import { and, asc, count, eq, isNull } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups } from '@/shared/db/schema'
+import { env } from '@/shared/config/env'
+import { crearSello } from '@/shared/security/sello'
 import type { GuestGroupRepository } from '../application/ports'
+
+const sello = crearSello(env.LINK_KEY ?? env.DATABASE_URL)
 
 const COLUMNS = {
   id: guestGroups.id,
@@ -19,13 +23,14 @@ const COLUMNS = {
 const delEvento = (eventId: string, id: string) => and(eq(guestGroups.id, id), eq(guestGroups.eventId, eventId))
 
 export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGroupRepository => ({
-  async insert(group, tokenHash) {
+  async insert(group, tokenHash, token) {
     await database.insert(guestGroups).values({
       id: group.id,
       eventId: group.eventId,
       label: group.label,
       seats: group.seats,
       tokenHash,
+      tokenSealed: sello.sellar(token),
     })
   },
 
@@ -43,10 +48,19 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     return row ?? null
   },
 
-  async replaceToken(eventId, id, tokenHash) {
-    // Reenviar rota el token: el enlace viejo deja de abrir nada. No se puede «volver a
-    // enseñar» el anterior porque en la base solo estaba su hash.
-    await database.update(guestGroups).set({ tokenHash }).where(delEvento(eventId, id))
+  async replaceToken(eventId, id, tokenHash, token) {
+    // Reenviar rota el token: el enlace viejo deja de abrir nada.
+    await database.update(guestGroups).set({ tokenHash, tokenSealed: sello.sellar(token) }).where(delEvento(eventId, id))
+  },
+
+  async tokensOf(eventId) {
+    const filas = await database.select({ id: guestGroups.id, sellado: guestGroups.tokenSealed }).from(guestGroups).where(eq(guestGroups.eventId, eventId))
+    const tokens = new Map<string, string>()
+    for (const fila of filas) {
+      const token = fila.sellado === null ? null : sello.abrir(fila.sellado)
+      if (token !== null) tokens.set(fila.id, token)
+    }
+    return tokens
   },
 
   async reopenRsvp(eventId, id, when) {

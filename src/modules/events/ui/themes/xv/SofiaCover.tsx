@@ -4,6 +4,7 @@ import Image from 'next/image'
 import { useState } from 'react'
 import { prefiereMenosMovimiento } from '../kit/motion'
 import { BubblesRise } from '../kit/backgrounds/BubblesRise'
+import { FotoDeFondo } from '../kit/backgrounds/FotoDeFondo'
 import { PALETA as P } from './xv.palette'
 
 type Props = {
@@ -58,15 +59,7 @@ export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hin
       }}
       type="button"
     >
-      <Image
-        alt=""
-        aria-hidden
-        fill
-        priority
-        sizes="100vw"
-        src={bgAsset}
-        style={{ objectFit: 'cover', filter: 'saturate(1.35) contrast(1.12)' }}
-      />
+      <FotoDeFondo filter="saturate(1.35) contrast(1.12)" priority src={bgAsset} />
       <span
         aria-hidden
         style={{

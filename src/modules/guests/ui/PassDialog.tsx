@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useActionState, useEffect, useId, useRef } from 'react'
+import { useActionState, useEffect, useId, useRef, useState } from 'react'
 import { resendInvitationAction, type ResendState } from '@/app/_acciones/guests/actions'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { printMarkedOnly } from '@/shared/design/ui/print'
@@ -11,15 +11,11 @@ import { SubmitButton } from '@/shared/design/ui/panel/estados'
 const INICIAL: ResendState = { status: 'idle' }
 
 /**
- * El «▣» de la fila: el pase de entrada imprimible de la maqueta.
+ * El pase de entrada imprimible: el QR del enlace del invitado.
  *
- * Con una diferencia que no es cosmética. En la maqueta el pase es un código guardado en
- * `localStorage` que se puede volver a enseñar cuantas veces se quiera; aquí lo que la
- * puerta lee es el **token del enlace del invitado**, y de ese token la base solo guarda
- * su SHA-256. No existe forma de redibujar un pase ya repartido: la única manera de tener
- * un QR válido en la mano es emitir uno nuevo, y emitirlo **invalida el anterior**.
- *
- * Por eso el diálogo no genera nada al abrirse. Avisa primero, y lo genera quien lo lee.
+ * El enlace se guarda cifrado al crear la invitación, así que el pase **es el que ya tiene**
+ * y se enseña al abrir. Generar uno nuevo se pide aparte, porque anula el anterior. Solo las
+ * invitaciones de antes de guardar el enlace (`url` nulo) tienen que generarlo.
  */
 export function PassDialog({
   group,
@@ -30,7 +26,10 @@ export function PassDialog({
   venue,
   eventSlug,
   closeHref,
+  url = null,
 }: {
+  /** Su enlace vigente, si está guardado. */
+  url?: string | null
   group: { id: string; label: string; revoked: boolean }
   personName: string
   tableLabel: string | null
@@ -55,7 +54,8 @@ export function PassDialog({
     router.replace(closeHref)
   }
 
-  const emitido = estado.status === 'success' ? estado : null
+  const [confirmar, setConfirmar] = useState(false)
+  const emitido = estado.status === 'success' ? estado : url === null ? null : { url }
   const sitio = [tableLabel ?? 'Mesa por asignar', venue].filter((x) => x !== null && x !== '').join(' · ')
 
   return (
@@ -80,9 +80,8 @@ export function PassDialog({
       ) : emitido === null ? (
         <>
           <p className="mt-5 text-[13px] text-ink-soft">
-            El pase de {personName} es el enlace de «{group.label}», y de ese enlace la base solo guarda su huella: no
-            se puede volver a mostrar. Al generar un pase nuevo,{' '}
-            <b className="font-medium">el anterior deja de servir</b> — incluido el que el invitado ya tenga—.
+            La invitación de {personName} es de antes de que guardáramos los enlaces, así que su pase no se puede volver a mostrar. Al
+            generarlo, <b className="font-medium">el enlace que ya tenga deja de servir</b>: mándale el nuevo.
           </p>
 
           {estado.status === 'error' ? (
@@ -121,9 +120,29 @@ export function PassDialog({
             <p className="font-mono text-[10px] tracking-[0.15em] break-all text-ink-mute">{emitido.url}</p>
           </div>
 
-          <p className="mt-4 text-[12px] text-ink-soft" role="status">
-            Este enlace no se vuelve a mostrar. Imprímelo o cópialo antes de cerrar.
-          </p>
+          {estado.status === 'success' && url !== null ? (
+            <p className="mt-4 text-[12px] text-ink-soft" role="status">
+              Pase nuevo generado: el anterior ya no sirve.
+            </p>
+          ) : confirmar ? (
+            <form action={accion} className="mt-4 flex flex-col gap-2 rounded-[12px] bg-bg-top p-3" role="alert">
+              <input name="eventSlug" type="hidden" value={eventSlug} />
+              <input name="groupId" type="hidden" value={group.id} />
+              <p className="text-[12.5px] leading-[1.6]">
+                El enlace y el pase actuales <b className="font-medium">dejarán de servir</b>. Úsalo solo si lo perdió.
+              </p>
+              <div className="flex gap-2">
+                <SubmitButton pending={pendiente} pendingLabel="Generando…" variant="danger">
+                  Sí, generar uno nuevo
+                </SubmitButton>
+                <PanelButton onClick={() => setConfirmar(false)}>Cancelar</PanelButton>
+              </div>
+            </form>
+          ) : (
+            <button className="mt-4 cursor-pointer text-[12px] text-ink-mute underline underline-offset-4 hover:text-danger" onClick={() => setConfirmar(true)} type="button">
+              ¿Lo perdió? Generar un pase nuevo
+            </button>
+          )}
 
           <div className="mt-6 flex justify-end gap-2.5">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>

@@ -4,7 +4,7 @@ import type { Momento } from '../domain/cronograma'
 import type { MiembroDelCortejo, Proveedor } from '../domain/equipo-del-dia'
 import type { Partida } from '../domain/presupuesto'
 import type { DiaStore, Documento } from './dia-ports'
-import { emitirEnlaceDeProveedor, purgeDocuments, readDocument, saveDocument, setVendorArrived, fechaDeEnsayo, saveCourtMember, saveMoment, saveRehearsal, saveVendor, seedMoments, verComoProveedor } from './dia-use-cases'
+import { emitirEnlaceDeProveedor, purgeDocuments, readDocument, saveDocument, setVendorArrived, fechaDeEnsayo, saveCourtMember, saveMoment, saveRehearsal, saveVendor, verComoProveedor } from './dia-use-cases'
 import type { PlannerStore } from './ports'
 
 function memoria() {
@@ -143,15 +143,6 @@ describe('proveedores', () => {
 })
 
 describe('cronograma', () => {
-  it('sembrar trae la plantilla de su fiesta una sola vez', async () => {
-    const { deps, momentos } = memoria()
-    await seedMoments(deps)('e1', 'xv')
-    const cuantos = momentos.length
-    await seedMoments(deps)('e1', 'xv')
-    expect(momentos).toHaveLength(cuantos)
-    expect(momentos.some((m) => m.title === 'Cambio de zapatillas')).toBe(true)
-  })
-
   it('valida hora y duración, y solo acepta proveedores de este evento', async () => {
     const { deps, momentos } = memoria()
     const base = { startsAt: '20:00', durationMin: '15', title: 'Brindis', place: '', owner: '', vendorIds: [] as string[], cue: '', notes: '' }

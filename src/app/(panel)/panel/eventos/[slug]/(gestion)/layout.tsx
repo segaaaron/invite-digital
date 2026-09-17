@@ -70,7 +70,7 @@ export default async function EventoLayout({
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner })}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, diaD: !isErr(capacidad) && hasFeature(capacidad.value, 'plannerTotal') })}
       evento={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'Plan —' : `Plan ${capacidad.value.planSlug}`,

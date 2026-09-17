@@ -372,30 +372,37 @@ export async function saveContentBlockAction(
   // de la boda de otro.
   await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
 
-  const section = campo(formData, 'section')
-  if (!(SECTION_KEYS as readonly string[]).includes(section)) {
-    return { status: 'error', message: 'unknown_section' }
+  // Una tarjeta puede guardar dos bloques: la recepción lleva dentro su mapa.
+  const bloques: Array<[string, FormDataEntryValue | null]> = [[campo(formData, 'section'), formData.get('value')]]
+  if (campo(formData, 'anexoSection') !== '') bloques.push([campo(formData, 'anexoSection'), formData.get('anexoValue')])
+
+  const aGuardar: Array<[SectionKey, unknown]> = []
+  for (const [section, crudo] of bloques) {
+    if (!(SECTION_KEYS as readonly string[]).includes(section)) {
+      return { status: 'error', message: 'unknown_section' }
+    }
+    let valor: unknown
+    try {
+      valor = JSON.parse(String(crudo ?? 'null'))
+    } catch {
+      return { status: 'error', message: 'invalid_payload' }
+    }
+    // El enlace corto de «Compartir» de Google Maps no dice dónde es: se sigue hasta el largo,
+    // que sí lleva el lugar.
+    if (section === 'map' && typeof valor === 'object' && valor !== null && typeof (valor as { href?: unknown }).href === 'string') {
+      const largo = await enlaceLargoDeMapa((valor as { href: string }).href)
+      if (largo !== null) valor = { ...valor, href: largo }
+    }
+    aGuardar.push([section as SectionKey, valor])
   }
 
-  let valor: unknown
-  try {
-    valor = JSON.parse(String(formData.get('value') ?? 'null'))
-  } catch {
-    return { status: 'error', message: 'invalid_payload' }
-  }
-
-  // El enlace corto de «Compartir» de Google Maps no dice dónde es: se sigue hasta el largo,
-  // que sí lleva el lugar, para que la invitación pueda pintar el mapa.
-  if (section === 'map' && typeof valor === 'object' && valor !== null && typeof (valor as { href?: unknown }).href === 'string') {
-    const largo = await enlaceLargoDeMapa((valor as { href: string }).href)
-    if (largo !== null) valor = { ...valor, href: largo }
-  }
-
-  try {
-    await eventUseCases.saveContentBlock(eventId, section as SectionKey, valor)
-  } catch (cause) {
-    console.error('No se pudo guardar el bloque %s del evento %s:', section, eventId, cause)
-    return { status: 'error', message: 'storage_failure' }
+  for (const [section, valor] of aGuardar) {
+    try {
+      await eventUseCases.saveContentBlock(eventId, section, valor)
+    } catch (cause) {
+      console.error('No se pudo guardar el bloque %s del evento %s:', section, eventId, cause)
+      return { status: 'error', message: 'storage_failure' }
+    }
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)

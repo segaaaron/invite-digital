@@ -14,22 +14,24 @@ const proveedores = [
 const doc = (id: string, over: object) => ({ id, kind: 'contrato' as const, topic: null, originalName: `${id}.pdf`, peso: '1 MB', vendorId: null, esImagen: false, href: `/d/${id}`, ...over })
 
 describe('DocumentsBoard', () => {
-  it('los contratos viven en la tarjeta de su proveedor', () => {
+  it('la lista dice de qué proveedor es cada documento', () => {
     render(<DocumentsBoard documentos={[doc('contrato-foto', { vendorId: 'v1' })]} evento={evento} proveedores={proveedores} />)
-    const foto = screen.getByRole('region', { name: 'Fotógrafo · Luz Estudio' })
-    expect(within(foto).getByRole('link', { name: /contrato-foto\.pdf/ })).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: 'Salón · Hacienda' })).getByText(/Arrastra aquí/)).toBeInTheDocument()
+    const lista = screen.getByRole('region', { name: /Tus documentos/ })
+    expect(within(lista).getByRole('link', { name: 'contrato-foto.pdf' })).toBeInTheDocument()
+    expect(within(lista).getByText(/Contrato · Fotógrafo · Luz Estudio/)).toBeInTheDocument()
   })
 
-  it('soltar un archivo en un proveedor lo sube enlazado a él, sin formulario previo', async () => {
+  it('se elige qué es y de qué proveedor, y soltar el archivo lo sube', async () => {
     render(<DocumentsBoard documentos={[]} evento={evento} proveedores={proveedores} />)
-    const zona = within(screen.getByRole('region', { name: 'Salón · Hacienda' })).getByText(/Arrastra aquí/).closest('label')!
-    const archivo = new File(['x'], 'contrato.pdf', { type: 'application/pdf' })
-    fireEvent.drop(zona, { dataTransfer: { files: [archivo] } })
+    const subida = screen.getByRole('region', { name: 'Subir un documento' })
+    fireEvent.click(within(subida).getByRole('radio', { name: 'Cotización' }))
+    fireEvent.change(within(subida).getByLabelText(/De qué proveedor/), { target: { value: 'v2' } })
+    const zona = within(subida).getByText(/Arrastra aquí/).closest('label')!
+    fireEvent.drop(zona, { dataTransfer: { files: [new File(['x'], 'cotizacion.pdf', { type: 'application/pdf' })] } })
     await waitFor(() => expect(subir).toHaveBeenCalled())
     const fd = (subir.mock.calls[0] as unknown as [unknown, FormData])[1]
     expect(fd.get('vendorId')).toBe('v2')
-    expect(fd.get('kind')).toBe('contrato')
+    expect(fd.get('kind')).toBe('cotizacion')
   })
 
   it('la inspiración es un tablero de fotos por tema', () => {

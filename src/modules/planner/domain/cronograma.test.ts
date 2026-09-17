@@ -1,23 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import { avisosDelCronograma, momentoActual, minutos, plantillaDeCronograma, itinerarioDeInvitacion, type Momento } from './cronograma'
+import { avisosDelCronograma, momentoActual, itinerarioDeInvitacion, type Momento } from './cronograma'
 
 const m = (parcial: Partial<Momento>): Momento => ({ id: 'x', startsAt: '20:00', durationMin: 30, title: 'Momento', place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: 0, enInvitacion: false, icono: null, ...parcial })
-
-describe('plantillaDeCronograma', () => {
-  it('la boda trae su primer baile y el ramo; XV, el vals con el papá y el cambio de zapatillas', () => {
-    const boda = plantillaDeCronograma('boda').map((x) => x.title.toLowerCase())
-    const xv = plantillaDeCronograma('xv').map((x) => x.title.toLowerCase())
-    expect(boda.some((t) => t.includes('primer baile'))).toBe(true)
-    expect(boda.some((t) => t.includes('ramo'))).toBe(true)
-    expect(xv.some((t) => t.includes('vals con el papá'))).toBe(true)
-    expect(xv.some((t) => t.includes('zapatillas'))).toBe(true)
-    expect(xv.some((t) => t.includes('novi'))).toBe(false)
-  })
-  it('las horas van en orden y cada una es HH:MM', () => {
-    const horas = plantillaDeCronograma('boda').map((x) => minutos(x.startsAt))
-    expect(horas).toEqual([...horas].sort((a, b) => a - b))
-  })
-})
 
 describe('avisosDelCronograma', () => {
   it('avisa si dos momentos se pisan y si quedan menos de diez minutos entre ellos', () => {

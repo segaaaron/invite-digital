@@ -376,6 +376,11 @@ export interface InvitationDictionary {
   confirmAttendance: string
   /** Lo que ve quien vuelve a abrir su enlace: se contesta una sola vez. */
   confirmedHeading: string
+  /** «Invitación para», sobre el nombre del invitado en el RSVP. */
+  invitationFor: string
+  /** «{n} lugares reservados»; `seatsReservedOne` con uno. */
+  seatsReserved: string
+  seatsReservedOne: string
   /** «Vienen {n} de {total}». */
   confirmedCount: string
   confirmedNobody: string

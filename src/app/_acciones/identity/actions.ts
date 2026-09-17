@@ -99,9 +99,6 @@ export async function changePasswordAction(
   formData: FormData,
 ): Promise<ChangePasswordState> {
   const actor = await requireSession()
-  // Con la contraseña compartida, conocer la actual no prueba ser el dueño. Fuera de la
-  // provisional se cambia con el código del correo (`changePasswordWithCodeAction`).
-  if (!actor.mustChangePassword) return { status: 'error', message: 'Para cambiarla, pide el código a tu correo.' }
 
   const result = await identity.changePassword({
     userId: actor.userId,
@@ -240,26 +237,6 @@ export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, for
   }
   revalidatePath('/panel/cuenta')
   return { status: 'done', message: 'Listo: solo queda abierta tu sesión en este dispositivo.' }
-}
-
-/** Cambia la contraseña con el código del correo. Cierra todas las sesiones, esta incluida. */
-export async function changePasswordWithCodeAction(_previo: CodigoDeCuentaState, formData: FormData): Promise<CodigoDeCuentaState> {
-  const actor = await requireSession()
-  const result = await identity.confirmPasswordReset({ email: actor.email, code: campo(formData, 'code'), password: campo(formData, 'password') })
-  if (isErr(result)) {
-    return {
-      status: 'error',
-      message:
-        result.error.kind === 'weak_password'
-          ? 'La contraseña nueva necesita al menos 12 caracteres.'
-          : result.error.kind === 'storage_failure'
-            ? 'No pudimos guardarla. Inténtalo en un momento.'
-            : 'El código no es válido, ya se usó o caducó. Pide uno nuevo.',
-    }
-  }
-  const jar = await cookies()
-  jar.delete(SESSION_COOKIE)
-  redirect('/panel/entrar')
 }
 
 export async function signOutAction(): Promise<void> {

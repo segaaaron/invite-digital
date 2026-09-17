@@ -14,10 +14,10 @@ describe('listaDeLlegadas', () => {
       { fam: [{ id: 'ana', fullName: 'Ana Rojas' }, { id: 'luis', fullName: 'Luis Rojas' }], tio: [{ id: 'tio1', fullName: 'Luis Peña' }] },
     )
     expect(filas).toEqual([
-      { clave: 'ana', nombre: 'Ana Rojas', invitacion: 'Familia Rojas', estado: 'dentro', hora: new Date('2026-10-17T23:40:00Z') },
-      { clave: 'luis', nombre: 'Luis Rojas', invitacion: 'Familia Rojas', estado: 'por_llegar', hora: null },
-      { clave: 'tio1', nombre: 'Luis Peña', invitacion: 'Tío Luis', estado: 'no_viene', hora: null },
-      { clave: 'vieja', nombre: 'Invitación sin nombres', invitacion: null, estado: 'por_llegar', hora: null },
+      { clave: 'ana', invitacionId: 'fam', personaId: 'ana', nombre: 'Ana Rojas', invitacion: 'Familia Rojas', estado: 'dentro', hora: new Date('2026-10-17T23:40:00Z') },
+      { clave: 'luis', invitacionId: 'fam', personaId: 'luis', nombre: 'Luis Rojas', invitacion: 'Familia Rojas', estado: 'por_llegar', hora: null },
+      { clave: 'tio1', invitacionId: 'tio', personaId: 'tio1', nombre: 'Luis Peña', invitacion: 'Tío Luis', estado: 'no_viene', hora: null },
+      { clave: 'vieja', invitacionId: 'vieja', personaId: null, nombre: 'Invitación sin nombres', invitacion: null, estado: 'por_llegar', hora: null },
     ])
   })
 

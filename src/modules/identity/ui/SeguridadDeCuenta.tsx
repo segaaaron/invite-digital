@@ -1,14 +1,18 @@
 'use client'
 
-import { useActionState, useId, useState } from 'react'
+import { useActionState, useId } from 'react'
 import {
-  changePasswordWithCodeAction,
   closeOtherSessionsAction,
   requestAccountCodeAction,
   type CodigoDeCuentaState,
 } from '@/app/_acciones/identity/actions'
 import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { HelpIcon, LaptopIcon, PhoneIcon, TabletIcon } from '@/shared/design/ui/icons'
+import type { TipoDeDispositivo } from '../domain/dispositivo'
+
+const ICONO = { computadora: LaptopIcon, celular: PhoneIcon, tablet: TabletIcon, desconocido: HelpIcon } as const
+const CLASE = { computadora: 'Computadora', celular: 'Celular', tablet: 'Tablet', desconocido: 'Dispositivo' } as const
 
 const MAX_VISIBLES = 5
 
@@ -17,6 +21,7 @@ const INICIAL: CodigoDeCuentaState = { status: 'idle', message: '' }
 export type SesionVista = {
   readonly id: string
   readonly dispositivo: string
+  readonly tipo: TipoDeDispositivo
   /** «hace 5 min», «ayer 20:14»: ya formateado por la página. */
   readonly ultimoUso: string
   readonly esta: boolean
@@ -58,9 +63,17 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
       <ul className="flex flex-col divide-y divide-line-panel rounded-[14px] border border-line-panel bg-white">
         {visibles.map((s) => (
           <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3" key={s.id}>
-            <span className="flex flex-col">
-              <span className="text-[14px] text-ink">{s.dispositivo}</span>
+            <span className="flex items-center gap-3">
+              <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-bg-top text-ink-soft">
+                {(() => {
+                  const Icono = ICONO[s.tipo]
+                  return <Icono className="size-5" />
+                })()}
+              </span>
+              <span className="flex flex-col">
+              <span className="text-[14px] text-ink">{`${CLASE[s.tipo]} · ${s.dispositivo}`}</span>
               <span className="text-[12px] text-ink-mute">Último uso: {s.ultimoUso}</span>
+              </span>
             </span>
             {s.esta ? <Pill tone="ok">Este dispositivo</Pill> : null}
           </li>
@@ -91,42 +104,6 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
         </div>
       )}
       <ActionFeedback state={estado.status === 'idle' ? { status: 'idle' } : { status: estado.status === 'done' ? 'success' : 'error', message: estado.message }} />
-    </div>
-  )
-}
-
-/** Cambiar la contraseña con el código del correo. Cierra todas las sesiones. */
-export function CambiarConCodigo() {
-  const [estado, cambiar, cambiando] = useActionState(changePasswordWithCodeAction, INICIAL)
-  const id = useId()
-  const [visible, setVisible] = useState(false)
-
-  return (
-    <div className="flex max-w-[420px] flex-col gap-4">
-      <PedirCodigo texto="Enviarme el código" />
-      <form action={cambiar} className="flex flex-col gap-4">
-        <Field htmlFor={`${id}-codigo`} label="Código del correo">
-          <input autoComplete="one-time-code" className={`${FIELD_CLASS} font-mono tracking-[0.2em]`} id={`${id}-codigo`} inputMode="numeric" maxLength={9} name="code" required />
-        </Field>
-        <Field htmlFor={`${id}-nueva`} label="Contraseña nueva">
-          <input autoComplete="new-password" className={FIELD_CLASS} id={`${id}-nueva`} minLength={12} name="password" required type={visible ? 'text' : 'password'} />
-        </Field>
-        <label className="flex cursor-pointer items-center gap-2 text-[13px] text-ink-soft">
-          <input checked={visible} className="accent-ink" onChange={(e) => setVisible(e.target.checked)} type="checkbox" />
-          Mostrar la contraseña
-        </label>
-        <p className="text-[12px] text-ink-mute">Al menos 12 caracteres. Al guardarla se cierran todas las sesiones, esta incluida.</p>
-        {estado.status === 'error' ? (
-          <p className="text-[13px] text-danger" role="alert">
-            {estado.message}
-          </p>
-        ) : null}
-        <div>
-          <SubmitButton pending={cambiando} pendingLabel="Guardando…" variant="primary">
-            Cambiar contraseña
-          </SubmitButton>
-        </div>
-      </form>
     </div>
   )
 }

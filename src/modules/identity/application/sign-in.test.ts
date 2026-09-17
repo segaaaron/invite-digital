@@ -24,6 +24,7 @@ const sessions = () => {
     deleteByTokenHash: async () => {},
     deleteExpired: async () => 0,
     deleteByUser: async () => {},
+    setDevice: async () => {},
     seen: async () => {},
     listByUser: async () => [],
     deleteOthers: async () => {},

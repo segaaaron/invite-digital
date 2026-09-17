@@ -26,10 +26,12 @@ describe('la paleta del código de vestimenta', () => {
 })
 
 describe('el mapa del lugar', () => {
-  it('con un enlace de Google Maps es el mapa de verdad, con su botón para llegar', () => {
+  it('es el dibujo del diseño, y tocarlo abre Google Maps', () => {
     const href = 'https://www.google.com/maps/place/Hacienda/@-16.5001,-68.1193,17z'
-    render(<XvView {...propsDePrueba({ content: { ...SOFIA, map: { label: 'HACIENDA', href } } })} />)
-    expect(screen.getByTitle('Mapa: HACIENDA')).toHaveAttribute('src', expect.stringContaining('output=embed'))
-    expect(screen.getByRole('link', { name: 'VER UBICACIÓN' })).toHaveAttribute('href', href)
+    const { container } = render(<XvView {...propsDePrueba({ content: { ...SOFIA, map: { label: 'HACIENDA', href } } })} />)
+    expect(container.querySelector('iframe')).toBeNull()
+    const enlace = screen.getByRole('link', { name: /HACIENDA/ })
+    expect(enlace).toHaveAttribute('href', href)
+    expect(enlace).toHaveAttribute('target', '_blank')
   })
 })

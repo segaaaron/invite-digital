@@ -16,6 +16,9 @@ export const guestGroups = pgTable(
     seats: integer('seats').notNull(),
     // SHA-256 del token; el token en claro no se guarda en ninguna parte.
     tokenHash: bytea('token_hash').notNull().unique(),
+    // El token, cifrado (`shared/security/sello`): el panel vuelve a enseñar el enlace y su QR
+    // sin que un volcado de la base los entregue. Nulo en las invitaciones de antes de `0062`.
+    tokenSealed: text('token_sealed'),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),
     openedAt: timestamp('opened_at', { withTimezone: true }),
     // Marca del atelier: «este enlace ya lo repartí». No es prueba de entrega — ni

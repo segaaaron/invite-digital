@@ -62,7 +62,7 @@ const nextConfig: NextConfig = {
       './node_modules/.pnpm/@node-rs+argon2*/node_modules/@node-rs/**',
     ],
   },
-  images: { formats: ['image/avif', 'image/webp'] },
+  images: { formats: ['image/avif', 'image/webp'], qualities: [75, 90] },
   async headers() {
     return [
       {

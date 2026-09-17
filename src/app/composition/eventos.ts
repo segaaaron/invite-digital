@@ -41,7 +41,7 @@ import { addGuest } from '@/modules/guests/application/add-guest'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { importGuestGroups } from '@/modules/guests/application/import-guest-groups'
-import { resendInvitation } from '@/modules/guests/application/resend-invitation'
+import { enviarInvitacion, resendInvitation } from '@/modules/guests/application/resend-invitation'
 import { addPerson, listPeopleByEvent, removePerson, updatePerson } from '@/modules/guests/application/person-use-cases'
 import { countPeopleByEvent, createDrizzleGuestPersonRepository, drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -112,7 +112,6 @@ export const planner = {
     revokeVendorLink: diaUseCases.quitarEnlaceDeProveedor(diaDeps),
     viewAsVendor: diaUseCases.verComoProveedor(diaDeps),
     listMoments: (eventId: string) => drizzleDiaStore.listMoments(eventId),
-    seedMoments: diaUseCases.seedMoments(diaDeps),
     saveMoment: diaUseCases.saveMoment(diaDeps),
     removeMoment: diaUseCases.removeMoment(diaDeps),
     listCourt: (eventId: string) => drizzleDiaStore.listCourt(eventId),
@@ -309,6 +308,9 @@ export const guests = {
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   reopenRsvp: reopenRsvp({ groups: drizzleGuestGroupRepository, clock }),
   resend: resendInvitation({ groups: drizzleGuestGroupRepository, minter, clock }),
+  enviar: enviarInvitacion({ groups: drizzleGuestGroupRepository, minter, clock }),
+  /** El enlace vigente de cada invitación que lo tenga guardado, para volver a enseñarlo. */
+  enlaces: (eventId: string) => drizzleGuestGroupRepository.tokensOf(eventId),
   setPhone: (eventId: string, id: string, phone: string | null) => drizzleGuestGroupRepository.setPhone(eventId, id, phone),
   addGuest: (input: Parameters<ReturnType<typeof invitadosEn>['addGuest']>[0]) => enTransaccion((tx) => invitadosEn(tx).addGuest(input)),
   addPerson: (input: Parameters<ReturnType<typeof invitadosEn>['addPerson']>[0]) => enTransaccion((tx) => invitadosEn(tx).addPerson(input)),

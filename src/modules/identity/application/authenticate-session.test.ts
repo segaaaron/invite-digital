@@ -17,6 +17,7 @@ const repo = (row: { id: string; userId: string; expiresAt: Date; supportSession
     deleteByTokenHash: async () => {},
     deleteExpired: async () => 0,
     deleteByUser: async () => {},
+    setDevice: async () => {},
     seen: async (id) => void vistas.push(id),
     listByUser: async () => [],
     deleteOthers: async () => {},

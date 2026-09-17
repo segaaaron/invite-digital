@@ -1,4 +1,4 @@
-import { and, desc, eq, lt, ne, sql } from 'drizzle-orm'
+import { and, desc, eq, isNull, lt, ne, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { sessions } from '@/shared/db/schema'
 import type { SessionRepository } from '../application/ports'
@@ -10,7 +10,7 @@ export const createDrizzleSessionRepository = (database: DbExecutor): SessionRep
 
   async findByTokenHash(tokenHash) {
     const [row] = await database
-      .select({ id: sessions.id, userId: sessions.userId, expiresAt: sessions.expiresAt, supportSessionId: sessions.supportSessionId, lastSeenAt: sessions.lastSeenAt })
+      .select({ id: sessions.id, userId: sessions.userId, expiresAt: sessions.expiresAt, supportSessionId: sessions.supportSessionId, lastSeenAt: sessions.lastSeenAt, device: sessions.device })
       .from(sessions)
       .where(eq(sessions.tokenHash, tokenHash))
       .limit(1)
@@ -23,6 +23,10 @@ export const createDrizzleSessionRepository = (database: DbExecutor): SessionRep
 
   async deleteByTokenHash(tokenHash) {
     await database.delete(sessions).where(eq(sessions.tokenHash, tokenHash))
+  },
+
+  async setDevice(id, device) {
+    await database.update(sessions).set({ device }).where(and(eq(sessions.id, id), isNull(sessions.device)))
   },
 
   async seen(id, at) {

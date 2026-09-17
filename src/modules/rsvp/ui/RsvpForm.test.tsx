@@ -21,6 +21,13 @@ const pinta = (over: Partial<Parameters<typeof RsvpForm>[0]> = {}) =>
   )
 
 describe('RsvpForm', () => {
+  it('dice a quién va la invitación y cuántos lugares tiene, sin preguntarlo', () => {
+    pinta({ guestName: 'Familia Soto Vargas', seats: 3 })
+    expect(screen.getByText('Invitación para')).toBeInTheDocument()
+    expect(screen.getByText('Familia Soto Vargas')).toBeInTheDocument()
+    expect(screen.getByText('3 lugares reservados')).toBeInTheDocument()
+  })
+
   it('no pide el nombre: el enlace ya es de un invitado, y responde con el suyo', () => {
     // Cada invitación es de alguien con nombre. Pedírselo otra vez era preguntar lo que ya se sabe.
     const { container } = pinta()

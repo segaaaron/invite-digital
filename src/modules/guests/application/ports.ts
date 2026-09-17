@@ -18,7 +18,8 @@ export type GuestGroupRow = GuestGroupInput & {
  * autoriza por el token y no tiene sesión.
  */
 export interface GuestGroupRepository {
-  insert(group: GuestGroup, tokenHash: Buffer): Promise<void>
+  /** `token` se guarda cifrado para volver a enseñar el enlace; se busca siempre por su hash. */
+  insert(group: GuestGroup, tokenHash: Buffer, token: string): Promise<void>
   listByEvent(eventId: string): Promise<GuestGroupRow[]>
   findByTokenHash(tokenHash: Buffer): Promise<GuestGroupRow | null>
   markOpened(id: string, at: Date): Promise<void>
@@ -27,7 +28,9 @@ export interface GuestGroupRepository {
   /** Marca el reparto de la invitación. */
   markSent(eventId: string, id: string, at: Date): Promise<void>
   /** Cambia el hash del token: el enlace anterior deja de abrir nada. */
-  replaceToken(eventId: string, id: string, tokenHash: Buffer): Promise<void>
+  replaceToken(eventId: string, id: string, tokenHash: Buffer, token: string): Promise<void>
+  /** El token vigente de cada invitación del evento que lo tenga guardado. */
+  tokensOf(eventId: string): Promise<ReadonlyMap<string, string>>
   setPhone(eventId: string, id: string, phone: string | null): Promise<void>
   /**
    * Permite a esa invitación contestar **otra vez**.

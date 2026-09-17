@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { type DragEvent, useId, useState, useTransition } from 'react'
 import { removeDocumentAction, uploadDocumentAction } from '@/app/_acciones/planner/dia-actions'
 import { TrashIcon, UploadIcon } from '@/shared/design/ui/icons'
-import { IconButton, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
+import { botonClases, FIELD_CLASS, Field, IconButton, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { NOMBRE_DE_DOCUMENTO, type TipoDeDocumento } from '../domain/dia-d'
 import type { Evento } from './Accion'
 
@@ -61,18 +61,20 @@ export function DocumentsBoard({ evento, documentos, proveedores }: { evento: Ev
       </div>
 
       {pestana === 'contratos' ? (
-        <div className="grid gap-4 min-[900px]:grid-cols-2">
-          {[...proveedores, { id: '', nombre: 'Otros documentos' }].map((p) => (
-            <Tarjeta key={p.id || 'otros'} titulo={p.nombre}>
-              <ListaDeArchivos documentos={archivos.filter((d) => (d.vendorId ?? '') === p.id)} evento={evento} />
-              <ZonaDeSubida accept="application/pdf,image/jpeg,image/png,image/webp" campos={{ vendorId: p.id }} conTipo evento={evento} texto="Arrastra aquí el contrato o la cotización" />
-            </Tarjeta>
-          ))}
-          {proveedores.length === 0 ? (
-            <p className="text-[13px] text-ink-soft min-[900px]:col-span-2">
-              Suma a tus proveedores en «Proveedores» y cada uno tendrá aquí su tarjeta para sus contratos.
-            </p>
-          ) : null}
+        <div className="flex flex-col gap-4">
+          <Tarjeta titulo="Subir un documento">
+            <SubirContrato evento={evento} proveedores={proveedores} />
+          </Tarjeta>
+          <Tarjeta titulo={archivos.length === 0 ? 'Tus documentos' : `Tus documentos (${archivos.length})`}>
+            {archivos.length === 0 ? (
+              <p className="text-[13px] leading-[1.7] text-ink-soft">
+                Todavía no subiste nada. Aquí se guardan los contratos, las cotizaciones y las facturas de tu fiesta: privados, solo para ti y tu
+                equipo, y a mano el día que un proveedor diga otra cosa.
+              </p>
+            ) : (
+              <ListaDeArchivos documentos={archivos} evento={evento} proveedores={proveedores} />
+            )}
+          </Tarjeta>
         </div>
       ) : (
         <div className="flex flex-col gap-4">
@@ -120,22 +122,49 @@ function Tarjeta({ titulo, children }: { titulo: string; children: React.ReactNo
   )
 }
 
-function ListaDeArchivos({ documentos, evento }: { documentos: readonly DocumentoVista[]; evento: Evento }) {
-  if (documentos.length === 0) return null
+function ListaDeArchivos({ documentos, evento, proveedores }: { documentos: readonly DocumentoVista[]; evento: Evento; proveedores: readonly Opcion[] }) {
   return (
     <ul className="flex flex-col divide-y divide-line-panel">
       {documentos.map((d) => (
-        <li className="relative flex items-center justify-between gap-3 py-2" key={d.id}>
-          <a className="min-w-0 truncate text-[13.5px] text-ink underline underline-offset-2" download href={d.href}>
-            {d.originalName}
-          </a>
-          <span className="flex shrink-0 items-center gap-2">
-            <span className="text-[11px] text-ink-mute">{`${NOMBRE_DE_DOCUMENTO[d.kind]} · ${d.peso}`}</span>
-            <Quitar enLinea evento={evento} id={d.id} nombre={d.originalName} />
+        <li className="flex items-center gap-3 py-3" key={d.id}>
+          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-bg-top font-mono text-[9px] tracking-[0.1em] text-ink-soft uppercase">
+            {d.esImagen ? 'IMG' : 'PDF'}
           </span>
+          <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <a className="truncate text-[14px] text-ink underline-offset-2 hover:underline" download href={d.href}>
+              {d.originalName}
+            </a>
+            <span className="text-[12px] text-ink-mute">
+              {[NOMBRE_DE_DOCUMENTO[d.kind], proveedores.find((p) => p.id === d.vendorId)?.nombre, d.peso].filter(Boolean).join(' · ')}
+            </span>
+          </span>
+          <Quitar enLinea evento={evento} id={d.id} nombre={d.originalName} />
         </li>
       ))}
     </ul>
+  )
+}
+
+/** Qué es, de quién, y el archivo: los tres a la vista, y se sube en cuanto se elige. */
+function SubirContrato({ evento, proveedores }: { evento: Evento; proveedores: readonly Opcion[] }) {
+  const id = useId()
+  const [proveedor, setProveedor] = useState('')
+  return (
+    <div className="flex flex-col gap-4">
+      {proveedores.length === 0 ? null : (
+        <Field htmlFor={`${id}-p`} label="De qué proveedor (opcional)">
+          <select className={`${FIELD_CLASS} max-w-[360px]`} id={`${id}-p`} onChange={(e) => setProveedor(e.target.value)} value={proveedor}>
+            <option value="">Sin proveedor</option>
+            {proveedores.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
+      <ZonaDeSubida accept="application/pdf,image/jpeg,image/png,image/webp" campos={{ vendorId: proveedor }} conTipo evento={evento} multiple texto="Arrastra aquí el archivo" />
+    </div>
   )
 }
 
@@ -219,7 +248,8 @@ function ZonaDeSubida({
   return (
     <div className="flex flex-col gap-2">
       {conTipo ? (
-        <div aria-label="Qué vas a subir" className="flex flex-wrap gap-1.5" role="radiogroup">
+        <div aria-label="Qué vas a subir" className="flex flex-wrap items-center gap-1.5" role="radiogroup">
+          <span className="mr-1 text-[12.5px] text-ink-soft">Es un</span>
           {TIPOS_DE_ARCHIVO.map((t) => (
             <button
               aria-checked={tipo === t}
@@ -235,7 +265,7 @@ function ZonaDeSubida({
         </div>
       ) : null}
       <label
-        className={`flex cursor-pointer items-center gap-3 rounded-[14px] border border-dashed px-4 py-3.5 transition ${
+        className={`flex cursor-pointer flex-wrap items-center gap-3 rounded-[14px] border border-dashed px-4 py-5 transition ${
           encima ? 'border-ink bg-bg-top' : 'border-line-panel-strong hover:border-ink'
         }`}
         htmlFor={id}
@@ -246,12 +276,15 @@ function ZonaDeSubida({
         }}
         onDrop={soltar}
       >
-        <span className="grid size-9 shrink-0 place-items-center rounded-full bg-bg-top text-ink-soft">
+        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-bg-top text-ink-soft">
           <UploadIcon className="size-4" />
         </span>
-        <span className="flex flex-col">
-          <span className="text-[13px] text-ink">{subiendo ? 'Subiendo…' : texto}</span>
-          <span className="text-[11px] text-ink-mute">{`o toca para elegir · ${conTipo ? 'PDF o imagen' : 'fotos JPG, PNG o WEBP'}, hasta 10 MB`}</span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="text-[13.5px] text-ink">{subiendo ? 'Subiendo…' : texto}</span>
+          <span className="text-[11.5px] text-ink-mute">{`${conTipo ? 'PDF o imagen' : 'Fotos JPG, PNG o WEBP'}, hasta 10 MB`}</span>
+        </span>
+        <span aria-hidden className={`${botonClases('primary')} pointer-events-none shrink-0`}>
+          Elegir archivo
         </span>
         <input
           accept={accept}

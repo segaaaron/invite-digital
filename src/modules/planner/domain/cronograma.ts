@@ -1,4 +1,3 @@
-import type { Fiesta } from '@/modules/events'
 
 /**
  * Un momento del cronograma del día. El equipo lo ve entero; los invitados, solo los marcados
@@ -23,30 +22,6 @@ export type Momento = {
   /** La clave del dibujo del diseño para ese momento: `corona`, `church`. */
   readonly icono: string | null
 }
-
-export type MomentoNuevo = Pick<Momento, 'startsAt' | 'durationMin' | 'title'>
-
-const PLANTILLAS: Record<Fiesta, readonly MomentoNuevo[]> = {
-  boda: [
-    { startsAt: '18:00', durationMin: 60, title: 'Ceremonia' },
-    { startsAt: '19:30', durationMin: 15, title: 'Entrada de los novios' },
-    { startsAt: '20:00', durationMin: 15, title: 'Brindis' },
-    { startsAt: '20:30', durationMin: 10, title: 'Primer baile' },
-    { startsAt: '22:30', durationMin: 20, title: 'Corte de la torta' },
-    { startsAt: '23:30', durationMin: 15, title: 'Lanzamiento del ramo' },
-  ],
-  xv: [
-    { startsAt: '18:00', durationMin: 60, title: 'Misa' },
-    { startsAt: '19:30', durationMin: 15, title: 'Entrada de la quinceañera' },
-    { startsAt: '20:00', durationMin: 10, title: 'Vals con el papá' },
-    { startsAt: '20:15', durationMin: 15, title: 'Vals de chambelanes' },
-    { startsAt: '21:30', durationMin: 10, title: 'Cambio de zapatillas' },
-    { startsAt: '22:30', durationMin: 15, title: 'Vals sorpresa' },
-    { startsAt: '23:30', durationMin: 20, title: 'Corte de la torta' },
-  ],
-}
-
-export const plantillaDeCronograma = (fiesta: Fiesta): readonly MomentoNuevo[] => PLANTILLAS[fiesta]
 
 /**
  * Minutos desde el mediodía, para que una fiesta que cruza la medianoche siga en orden: las

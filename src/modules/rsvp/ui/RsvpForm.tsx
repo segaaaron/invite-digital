@@ -46,6 +46,20 @@ type Props = {
  * se manda son los cupos del grupo con el «sí» y cero con el «no», porque el catering, el
  * reparto de mesas y la puerta se hacen con ese número.
  */
+/** A quién va la invitación: cada enlace es de alguien, y se le dice por su nombre. */
+function ParaQuien({ dictionary, guestName, seats }: { dictionary: InvitationDictionary; guestName: string; seats: number }) {
+  if (guestName.trim() === '') return null
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <p className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-[var(--color-form-label)] uppercase opacity-80">{dictionary.invitationFor}</p>
+      <p className="text-[28px] leading-tight text-ink" style={{ fontFamily: 'var(--font-script, var(--font-display))' }}>
+        {guestName}
+      </p>
+      <p className="text-[12.5px] text-ink-soft">{seats === 1 ? dictionary.seatsReservedOne : dictionary.seatsReserved.replace('{n}', String(seats))}</p>
+    </div>
+  )
+}
+
 export function RsvpForm({ dictionary, seats, token, previous, guestName, variant = 'campos' }: Props) {
   const rsvp = useRsvp({ dictionary, previous, seats })
   const goingId = useId()
@@ -119,6 +133,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
         <input name="token" type="hidden" value={token} readOnly />
         <input name="attending" type="hidden" value={viene ? String(cuantos) : '0'} readOnly />
         <input name="name" type="hidden" value={guestName} readOnly />
+        <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />
 
         <div className="flex gap-2">
           <button
@@ -193,6 +208,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
       <input name="token" type="hidden" value={token} readOnly />
 
       <input name="name" type="hidden" value={guestName} readOnly />
+      <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />
 
       <label className={LABEL_CLASS} htmlFor={goingId}>
         {dictionary.goingLabel}

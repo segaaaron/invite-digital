@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
@@ -12,6 +13,8 @@ export type DiaDVista = {
   readonly ahora: { title: string; startsAt: string; cue: string | null; owner: string | null } | null
   readonly sigue: { title: string; startsAt: string } | null
   readonly llegadas: { grupos: number; esperados: number; personas: number } | null
+  /** Donde se escanean los pases y se ve la lista entera. */
+  readonly ingreso: string
   readonly porLlegar: ReadonlyArray<{ id: string; service: string; arrivalTime: string | null; telHref: string | null }>
   readonly pagos: ReadonlyArray<{ id: string; concepto: string; importe: string }>
   readonly mesas: ReadonlyArray<{ id: string; label: string; faltan: readonly string[] }> | null
@@ -60,8 +63,11 @@ export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) 
       {dia.llegadas ? (
         <Bloque titulo="Llegadas">
           <p className="font-display text-[34px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">
-            {dia.llegadas.grupos} <span className="text-[16px] text-ink-mute">de {dia.llegadas.esperados} grupos · {dia.llegadas.personas} personas dentro</span>
+            {dia.llegadas.personas} <span className="text-[16px] text-ink-mute">personas dentro · {dia.llegadas.grupos} de {dia.llegadas.esperados} invitaciones</span>
           </p>
+          <Link className="text-[13px] text-ink underline underline-offset-2" href={dia.ingreso}>
+            Ver quién llegó y escanear pases
+          </Link>
         </Bloque>
       ) : null}
 

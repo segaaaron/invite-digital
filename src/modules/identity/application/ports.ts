@@ -41,9 +41,11 @@ export interface PasswordResetRepository {
 export interface SessionRepository {
   create(session: { userId: string; tokenHash: Buffer; expiresAt: Date; device?: string | null }): Promise<void>
   /** `supportSessionId`: el modo soporte abierto de esta sesión, si lo hay (`0049`). */
-  findByTokenHash(tokenHash: Buffer): Promise<{ id: string; userId: string; expiresAt: Date; supportSessionId?: string | null; lastSeenAt?: Date | null } | null>
+  findByTokenHash(tokenHash: Buffer): Promise<{ id: string; userId: string; expiresAt: Date; supportSessionId?: string | null; lastSeenAt?: Date | null; device?: string | null } | null>
   /** Cuándo se usó por última vez. Se escribe como mucho cada pocos minutos, no en cada petición. */
   seen(id: string, at: Date): Promise<void>
+  /** Pone el dispositivo a una sesión que no lo tenía: las abiertas antes de guardarlo. */
+  setDevice(id: string, device: string): Promise<void>
   /** Las abiertas de un usuario, la más usada primero. */
   listByUser(userId: string): Promise<Array<{ id: string; device: string | null; createdAt: Date; lastSeenAt: Date | null }>>
   /** Todas menos `keepId`. */

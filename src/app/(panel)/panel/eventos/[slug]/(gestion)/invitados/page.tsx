@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { invitationUrl } from '@/modules/guests'
+import { env } from '@/shared/config/env'
 import { notFound } from 'next/navigation'
 import { checkin, events, guests, plans, reminders, rsvp, venue } from '@/app/composition/container'
 import { ExportCsvButton } from '@/modules/guests/ui/ExportCsvButton'
@@ -118,6 +120,12 @@ export default async function InvitadosPage({
   const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
 
   const base = `/panel/eventos/${event.value.slug}/invitados`
+  // El enlace de cada invitación, guardado cifrado: el envío y el pase lo vuelven a enseñar.
+  const enlaces = await guests.enlaces(event.value.id)
+  const enlaceDe = (groupId: string) => {
+    const token = enlaces.get(groupId)
+    return token === undefined ? null : invitationUrl(token, env.SITE_URL)
+  }
   // Con la invitación sin terminar, ni el alta ni la importación se abren, tampoco
   // escribiendo `?panel=alta` a mano.
   const abierto =
@@ -249,6 +257,7 @@ export default async function InvitadosPage({
           eventTitle={event.value.title}
           group={{ id: grupoDeLaPersona.id, label: grupoDeLaPersona.label, revoked: grupoDeLaPersona.revokedAt !== null }}
           personName={enFoco.fullName}
+          url={enlaceDe(grupoDeLaPersona.id)}
           tableLabel={enFoco.tableLabel}
           venue={event.value.venue}
         />
@@ -270,7 +279,13 @@ export default async function InvitadosPage({
               sent: fila.invitationSentAt !== null && fila.invitationSentAt !== undefined,
               revoked: fila.revokedAt !== null,
               confirmed: fila.confirmed,
+              seats: fila.seats,
+              url: enlaceDe(fila.id),
+              email: isErr(personas) ? null : (personas.value.find((p) => p.guestGroupId === fila.id && !p.isCompanion)?.email ?? null),
             }))}
+            fechaDelEvento={new Intl.DateTimeFormat(event.value.locale === 'en' ? 'en-GB' : 'es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
+              new Date(`${(contenido.schedule?.startsAt ?? event.value.eventDate).slice(0, 10)}T12:00:00Z`),
+            )}
             sinContenido={invitacionVacia}
             template={event.value.messageTemplate ?? null}
           />

@@ -40,17 +40,19 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
     select i.concept, i.contracted_cents as contracted from budget_items i join events e on e.id = i.event_id where e.slug = ${SLUG}`
   expect(partida).toEqual({ concept: 'DJ · Beat', contracted: 3_500_00 })
 
-  // El cronograma con la plantilla de XV, y el DJ en el vals con el papá.
-  await page.goto(`/panel/eventos/${SLUG}/planner/cronograma`)
-  await page.getByRole('button', { name: 'Crear el cronograma con la plantilla' }).click()
+  // El cronograma empieza vacío: el momento se suma a mano, en su modal, con el DJ y su canción.
+  await page.goto(`/panel/eventos/${SLUG}/planner/cronograma?momento=nuevo`)
+  const modal = page.getByRole('dialog', { name: 'Nuevo momento' })
+  await modal.getByLabel('Hora', { exact: true }).selectOption('20:00')
+  await modal.getByLabel('Momento').fill('Vals con el papá')
+  await modal.getByText('Para tu equipo').click()
+  await modal.getByLabel('Duración (minutos)').fill('10')
+  await modal.getByText('DJ', { exact: true }).click()
+  await modal.getByLabel('Canción o señal').fill('Tiempo de vals')
+  await modal.getByRole('button', { name: 'Sumar momento' }).click()
   const vals = page.getByRole('listitem', { name: '20:00 Vals con el papá' })
-  await expect(vals).toBeVisible({ timeout: 15_000 })
-  await expect(page.getByRole('listitem', { name: /Cambio de zapatillas/ })).toBeVisible()
-  await vals.getByText('Editar o quitar').click()
-  await vals.getByLabel('DJ').check()
-  await vals.getByLabel('Canción o señal').fill('Tiempo de vals')
-  await vals.getByRole('button', { name: 'Guardar momento' }).click()
-  await expect(page.getByRole('listitem', { name: '20:00 Vals con el papá' })).toContainText('♪ Tiempo de vals', { timeout: 15_000 })
+  await expect(vals).toContainText('♪ Tiempo de vals', { timeout: 15_000 })
+  await expect(vals).toContainText('En la invitación')
 
   // Su enlace, una vez.
   await page.goto(`/panel/eventos/${SLUG}/planner/proveedores`)
@@ -100,7 +102,7 @@ test('el Día D dice quién falta por llegar y marca al DJ', async ({ page }) =>
 test('un contrato en PDF se guarda privado y se descarga como adjunto, nunca en línea', async ({ page, browser }) => {
   await page.goto(`/panel/eventos/${SLUG}/planner/documentos`)
   // Se suelta en la tarjeta del proveedor —o se toca para elegir— y sube solo, sin formulario.
-  await page.getByRole('region', { name: 'Otros documentos' }).locator('input[type=file]').setInputFiles({ name: 'contrato-dj.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n%contrato del DJ\n') })
+  await page.getByRole('region', { name: 'Subir un documento' }).locator('input[type=file]').setInputFiles({ name: 'contrato-dj.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.7\n%contrato del DJ\n') })
   const enlace = page.getByRole('link', { name: 'contrato-dj.pdf' })
   await expect(enlace).toBeVisible({ timeout: 15_000 })
 

@@ -67,6 +67,8 @@ export type NavExtra = {
   readonly equipo?: 'anfitrion' | 'coanfitrion' | 'planner' | null
   /** Es planner en algún evento: llega a su mesa desde la cuenta. */
   readonly mesaPlanner?: boolean
+  /** Si el plan trae el Día D. Sin él no se enseña: un enlace a una pantalla cerrada solo confunde. */
+  readonly diaD?: boolean
 }
 
 function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPuerta: boolean, esCliente: boolean, extra: NavExtra): Borrador[] {
@@ -130,7 +132,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       {
         label: 'Puerta',
         items: [
-          { href: en('/checkin'), label: 'Llegadas', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+          { href: en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
         ],
       },
     ]
@@ -150,9 +152,9 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           // Su invitación la escribe él: textos, canción e itinerario. La pantalla es la
           // misma del atelier, con las tarjetas del evento —diseño, contraseña, borrado—
           // fuera: esas son de quien le vendió la boda.
-          { href: en('/configuracion'), label: 'Escribir mi invitación', icon: 'editar' },
-          { href: en('/vista-previa'), label: 'Ver cómo queda', icon: 'vistaPrevia' },
-          { href: en('/estadisticas'), label: 'Quién la abrió', icon: 'estadisticas' },
+          { href: en('/configuracion'), label: 'Personalizar invitación', icon: 'editar' },
+          { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
+          { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
         ],
       },
       {
@@ -161,7 +163,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: base, label: 'Resumen', icon: 'resumen' },
           { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
           // Quién llegó y quién falta, en vivo; y desde ahí, el modo puerta para escanear.
-          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Llegadas', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
           { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
           { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
@@ -182,7 +184,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
           { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
           { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
-          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'checkin' },
+          { href: equipo === 'coanfitrion' || extra.diaD === false ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
         ],
       },
       {
@@ -221,7 +223,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         // La invitación de esta boda, entera. Era un ancla —`#vista-previa`— que no
         // existía en ninguna página: pulsarla dejaba al atelier en Configuración
         // preguntándose qué había pasado.
-        { href: en('/vista-previa'), label: 'Ver cómo queda', icon: 'vistaPrevia' },
+        { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
         { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
         { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],
@@ -234,7 +236,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
         { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-        { href: en('/checkin'), label: 'Llegadas', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+        { href: en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
         { href: en('/equipo'), label: 'Equipo', icon: 'usuarios' },
       ],
     },
@@ -247,7 +249,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
         { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
         { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
-        { href: en('/dia-d'), label: 'Día D', icon: 'checkin' },
+        { href: extra.diaD === false ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
       ],
     },
     ...administracion,

@@ -31,3 +31,14 @@ export function describirDispositivo(agente: string): string {
             : 'Navegador'
   return `${aparato} · ${navegador}`
 }
+
+export type TipoDeDispositivo = 'computadora' | 'celular' | 'tablet' | 'desconocido'
+
+/** Qué clase de aparato es, por el nombre guardado: para su icono en Mi cuenta. */
+export function tipoDeDispositivo(nombre: string | null): TipoDeDispositivo {
+  if (nombre === null) return 'desconocido'
+  if (/^iPad\b/.test(nombre)) return 'tablet'
+  if (/^(iPhone|Android)\b/.test(nombre)) return 'celular'
+  if (/^(Mac|Windows|Linux)\b/.test(nombre)) return 'computadora'
+  return 'desconocido'
+}

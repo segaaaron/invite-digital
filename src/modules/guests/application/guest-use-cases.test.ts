@@ -29,6 +29,7 @@ const repo = (row: GuestGroupRow | null) => {
     findById: async () => row,
     markSent: async () => {},
     replaceToken: async () => {},
+    tokensOf: async () => new Map(),
     reopenRsvp: async () => {},
     setPhone: async () => {},
     revoke: async () => {},
@@ -140,6 +141,7 @@ describe('resolveByToken', () => {
       findById: async () => null,
       markSent: async () => {},
       replaceToken: async () => {},
+      tokensOf: async () => new Map(),
       reopenRsvp: async () => {},
       setPhone: async () => {},
       findByTokenHash: async () => {

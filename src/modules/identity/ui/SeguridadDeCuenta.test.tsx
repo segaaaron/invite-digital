@@ -3,12 +3,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { SesionesAbiertas } from './SeguridadDeCuenta'
 
 vi.mock('@/app/_acciones/identity/actions', () => ({
-  changePasswordWithCodeAction: vi.fn(),
   closeOtherSessionsAction: vi.fn(),
   requestAccountCodeAction: vi.fn(),
 }))
 
-const sesion = (i: number) => ({ id: `s${i}`, dispositivo: `iPhone · Safari ${i}`, ultimoUso: '16 de septiembre · 19:30', esta: i === 0 })
+const sesion = (i: number) => ({ id: `s${i}`, dispositivo: `iPhone · Safari ${i}`, tipo: 'celular' as const, ultimoUso: '16 de septiembre · 19:30', esta: i === 0 })
 
 describe('SesionesAbiertas', () => {
   it('marca la de este dispositivo y cierra las demás con el código del correo', () => {

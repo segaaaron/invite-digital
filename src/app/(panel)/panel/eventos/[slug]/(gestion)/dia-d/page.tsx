@@ -44,6 +44,7 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
     hora,
     ahora: momentoAhora ? { title: momentoAhora.title, startsAt: momentoAhora.startsAt, cue: momentoAhora.cue, owner: momentoAhora.owner } : null,
     sigue: momentoSigue ? { title: momentoSigue.title, startsAt: momentoSigue.startsAt } : null,
+    ingreso: `/panel/eventos/${event.value.slug}/checkin`,
     llegadas: estadoPuerta ? { grupos: estadoPuerta.tally.arrivedGroups, esperados: estadoPuerta.tally.expectedGroups, personas: estadoPuerta.tally.headsInside } : null,
     porLlegar: proveedoresPorLlegar(await planner.dia.listVendors(event.value.id)).map((p) => ({ id: p.id, service: p.service, arrivalTime: p.arrivalTime, telHref: p.whatsapp ? `tel:${p.whatsapp}` : null })),
     pagos: pagosDelDia(await planner.listBudget(event.value.id), hoy).map((g) => ({ id: g.id, concepto: g.concepto, importe: formatAmount(g.amountCents, DEFAULT_CURRENCY) })),
@@ -52,7 +53,11 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
 
   return (
     <>
-      <PanelHeader kicker="Planner" meta={event.value.eventDate === hoy ? 'Es hoy' : `El evento es el ${event.value.eventDate}`} title="Día D" />
+      <PanelHeader
+        kicker="Planner"
+        meta={`${event.value.eventDate === hoy ? 'Es hoy. ' : ''}El día de la fiesta, en el celular: qué pasa ahora, qué sigue, quién llegó y qué proveedor falta.`}
+        title="Día D"
+      />
       <DayOfBoard dia={dia} evento={{ eventId: event.value.id, eventSlug: event.value.slug }} />
     </>
   )

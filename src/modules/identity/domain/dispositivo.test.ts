@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { describirDispositivo } from './dispositivo'
+import { describirDispositivo, tipoDeDispositivo } from './dispositivo'
 
 describe('describirDispositivo', () => {
   it('dice el aparato y el navegador, que es lo que la persona reconoce', () => {
@@ -12,5 +12,16 @@ describe('describirDispositivo', () => {
 
   it('sin agente, algo legible y no una cadena vacía', () => {
     expect(describirDispositivo('')).toBe('Dispositivo desconocido')
+  })
+})
+
+describe('tipoDeDispositivo', () => {
+  it('computadora, celular o tablet, para su icono', () => {
+    expect(tipoDeDispositivo('Mac · Chrome')).toBe('computadora')
+    expect(tipoDeDispositivo('Windows · Edge')).toBe('computadora')
+    expect(tipoDeDispositivo('iPhone · Safari')).toBe('celular')
+    expect(tipoDeDispositivo('Android · Chrome')).toBe('celular')
+    expect(tipoDeDispositivo('iPad · Safari')).toBe('tablet')
+    expect(tipoDeDispositivo(null)).toBe('desconocido')
   })
 })

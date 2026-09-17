@@ -11,6 +11,8 @@ export type AuthenticatedSession = {
   readonly renewedUntil: Date | null
   /** El modo soporte abierto, leído en la misma consulta: sin él no hace falta otra. */
   readonly supportSessionId: string | null
+  /** «iPhone · Safari», o `null` en las sesiones abiertas antes de guardarlo. */
+  readonly device: string | null
 }
 
 export const authenticateSession =
@@ -34,11 +36,11 @@ export const authenticateSession =
         const ultima = session.lastSeenAt ?? null
         if (ultima === null || now.getTime() - ultima.getTime() >= CINCO_MINUTOS) await deps.sessions.seen(session.id, now)
 
-        if (!shouldRenew(session, now)) return ok({ sessionId: session.id, userId: session.userId, renewedUntil: null, supportSessionId: session.supportSessionId ?? null })
+        if (!shouldRenew(session, now)) return ok({ sessionId: session.id, userId: session.userId, renewedUntil: null, supportSessionId: session.supportSessionId ?? null, device: session.device ?? null })
 
         const renewedUntil = nextExpiry(now)
         await deps.sessions.touch(session.id, renewedUntil)
-        return ok({ sessionId: session.id, userId: session.userId, renewedUntil, supportSessionId: session.supportSessionId ?? null })
+        return ok({ sessionId: session.id, userId: session.userId, renewedUntil, supportSessionId: session.supportSessionId ?? null, device: session.device ?? null })
       },
       (cause) => identityError('storage_failure', `No se pudo validar la sesión: ${String(cause)}`),
     )

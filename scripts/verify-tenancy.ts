@@ -27,7 +27,6 @@ const EXENTAS: Record<string, string> = {
   changePasswordAction: 'cambia la contraseña del propio actor de la sesión; no toca ningún evento',
   requestAccountCodeAction: 'manda un código al correo del propio actor de la sesión; no toca ningún evento',
   closeOtherSessionsAction: 'cierra las demás sesiones del propio actor, con el código de su correo; no toca ningún evento',
-  changePasswordWithCodeAction: 'cambia la contraseña del propio actor con el código de su correo; no toca ningún evento',
   requestPasswordResetAction: 'pública: quien la llama ha perdido la contraseña y no tiene sesión. Límite de tasa por IP',
   confirmPasswordResetAction: 'pública: se autoriza con el código de un solo uso que llegó al correo, no con sesión',
   submitConsultationAction: 'formulario público de la web, sin sesión',

@@ -30,6 +30,7 @@ function dobles(existe = true) {
     deleteByUser: async (userId) => {
       cerradas.push(userId)
     },
+    setDevice: async () => {},
     seen: async () => {},
     listByUser: async () => [],
     deleteOthers: async () => {},

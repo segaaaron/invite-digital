@@ -59,7 +59,7 @@ export const addGuestGroup =
         // El token en claro sale de aquí una sola vez, hacia quien lo va a entregar. Al
         // repositorio solo baja el hash.
         const { token, hash } = deps.minter.mint()
-        await deps.groups.insert(group.value, hash)
+        await deps.groups.insert(group.value, hash, token)
 
         return ok({ group: group.value, token })
       },

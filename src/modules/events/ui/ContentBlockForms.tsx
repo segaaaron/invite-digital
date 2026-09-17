@@ -55,7 +55,7 @@ const BLOQUES: Record<SectionKey, { titulo: string; descripcion: string; Icono: 
   },
   schedule: { titulo: 'Fecha y hora', descripcion: 'El día y la hora de la fiesta. La cuenta atrás cuenta hasta aquí.', Icono: CalendarIcon },
   ceremony: { titulo: 'Ceremonia', descripcion: 'Dónde y a qué hora es la ceremonia.', Icono: PinIcon },
-  reception: { titulo: 'Recepción', descripcion: 'Dónde es la fiesta y a qué hora empieza.', Icono: PinIcon },
+  reception: { titulo: 'Recepción', descripcion: 'Dónde es la fiesta, a qué hora empieza y cómo llegar.', Icono: PinIcon },
   map: { titulo: 'Mapa', descripcion: 'El nombre del lugar sobre el mapa y cómo llegar.', Icono: GlobeIcon },
   itinerary: { titulo: 'Itinerario', descripcion: 'Los momentos de la noche, en orden.', Icono: ClockIcon },
   dressCode: { titulo: 'Código de vestimenta', descripcion: 'Cómo pides que vengan vestidos.', Icono: HangerIcon },
@@ -153,7 +153,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
     )
   }
 
-  const hechos = sections.filter((seccion) => escrito(content, seccion)).length
+  const hechos = visibles(sections).filter((seccion) => escrito(content, seccion)).length
 
   return (
     <IconosDelDiseno.Provider value={iconos}>
@@ -172,6 +172,15 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
     </IconosDelDiseno.Provider>
   )
 }
+
+/**
+ * El mapa va **dentro** de la recepción: es el mismo lugar, y en dos tarjetas se leía como
+ * dos sitios distintos. Solo si el diseño pinta las dos.
+ */
+const anexoDe = (sections: readonly SectionKey[], seccion: SectionKey): SectionKey | undefined =>
+  seccion === 'reception' && sections.includes('map') ? 'map' : undefined
+const visibles = (sections: readonly SectionKey[]): readonly SectionKey[] =>
+  sections.includes('reception') ? sections.filter((s) => s !== 'map') : sections
 
 /** Si el bloque tiene algo escrito. */
 const escrito = (content: InvitationContent, seccion: SectionKey): boolean => {
@@ -223,7 +232,8 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
  * está lista, en palabras; se abre sola la primera que falta, y abrir otra pliega la que
  * había. Lo escrito en una tarjeta plegada no se pierde: sigue montada, oculta.
  */
-function Acordeon({ sections, content, hechos, ...resto }: Props & { hechos: number }) {
+function Acordeon({ sections: todas, content, hechos, ...resto }: Props & { hechos: number }) {
+  const sections = visibles(todas)
   const pasos = PASOS.map((paso) => ({ ...paso, secciones: paso.secciones.filter((s) => sections.includes(s)) })).filter((paso) => paso.secciones.length > 0)
   // Lo que un diseño pinte y no esté en ningún paso no se pierde: va al último.
   const sueltas = sections.filter((s) => !PASOS.some((paso) => paso.secciones.includes(s)))
@@ -262,6 +272,7 @@ function Acordeon({ sections, content, hechos, ...resto }: Props & { hechos: num
               {paso.secciones.map((seccion) => (
                 <BloqueDeContenido
                   {...resto}
+                  anexo={anexoDe(todas, seccion)}
                   abierta={abierta === seccion}
                   content={content}
                   key={seccion}
@@ -309,8 +320,11 @@ function BloqueDeContenido({
   abierta,
   onAlternar,
   anfitriones = 'boda',
+  anexo,
 }: {
   anfitriones?: Anfitriones | undefined
+  /** Otro bloque que se edita y se guarda dentro de esta tarjeta: el mapa en la recepción. */
+  anexo?: SectionKey | undefined
   itinerarioDesde?: string | undefined
   abierta: boolean
   onAlternar: () => void
@@ -327,17 +341,22 @@ function BloqueDeContenido({
   const listo = escrito(content, section)
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
   const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
+  const formaAnexo = anexo === undefined ? undefined : formaPara(anexo, pinta, anfitriones)
+  const [estadoAnexo, setEstadoAnexo] = useState<EstadoBloque | undefined>(() =>
+    anexo === undefined || formaAnexo === undefined ? undefined : estadoInicial(formaAnexo, content[anexo]),
+  )
 
   // Si lo guardado cambia en el servidor por otro camino —subir la canción escribe su
   // archivo, título y artista—, el formulario se pone al día. Sin esto seguía con el archivo
   // ya borrado y el nombre de muestra, y guardarlo dejaba la invitación muda anunciando otra
   // canción. Se ajusta durante el render y **no** remontando con una `key`: remontar borraba
   // también el «Guardado» de la propia acción.
-  const firma = JSON.stringify(content[section] ?? null)
+  const firma = JSON.stringify([content[section] ?? null, anexo === undefined ? null : (content[anexo] ?? null)])
   const [firmaVista, setFirmaVista] = useState(firma)
   if (firmaVista !== firma) {
     setFirmaVista(firma)
     setEstado(estadoInicial(forma, content[section]))
+    if (anexo !== undefined && formaAnexo !== undefined) setEstadoAnexo(estadoInicial(formaAnexo, content[anexo]))
   }
 
   const error = state.status === 'error' ? (ERRORES[state.message] ?? ERRORES.storage_failure) : null
@@ -365,6 +384,12 @@ function BloqueDeContenido({
       <input name="section" readOnly type="hidden" value={section} />
       {/* Lo que se guarda. Se compone de lo que hay arriba; nadie lo teclea. */}
       <input name="value" readOnly type="hidden" value={JSON.stringify(aValor(forma, estado))} />
+      {anexo === undefined || formaAnexo === undefined || estadoAnexo === undefined ? null : (
+        <>
+          <input name="anexoSection" readOnly type="hidden" value={anexo} />
+          <input name="anexoValue" readOnly type="hidden" value={JSON.stringify(aValor(formaAnexo, estadoAnexo))} />
+        </>
+      )}
 
       <h3 className="m-0">
         <button
@@ -435,6 +460,27 @@ function BloqueDeContenido({
               onChange={(valores) => setEstado((previo) => ({ ...previo, lista: valores }))}
               valores={estado.lista}
             />
+          )}
+          {anexo === undefined || formaAnexo?.form !== 'campos' || estadoAnexo === undefined ? null : (
+            <div className="flex flex-col gap-3 border-t border-line-panel pt-4">
+              <p className="m-0 flex items-center gap-2 text-[13px] text-ink">
+                <IconoDeBloque seccion={anexo} />
+                Cómo llegar
+              </p>
+              <div className="grid gap-3 min-[560px]:grid-cols-2">
+                {formaAnexo.fields.map((campo) => (
+                  <CampoDeBloque
+                    campo={campo}
+                    eventId={eventId}
+                    eventSlug={eventSlug}
+                    key={campo.key}
+                    media={media}
+                    onChange={(valor) => setEstadoAnexo((previo) => (previo === undefined ? previo : { ...previo, campos: { ...previo.campos, [campo.key]: valor } }))}
+                    valor={estadoAnexo.campos[campo.key] ?? ''}
+                  />
+                ))}
+              </div>
+            </div>
           )}
         </>
       ) : (
@@ -875,52 +921,55 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
   const lleno = elegidos.length >= max
   const alternar = (hex: string) =>
     onChange(elegidos.includes(hex) ? elegidos.filter((v) => v !== hex) : lleno ? elegidos : [...elegidos, hex])
-  const nombreDe = (hex: string) => COLORES_DE_VESTIMENTA.find((c) => c.hex === hex)?.nombre ?? hex
+  // Los de la lista y, detrás, los que se añadieron a mano: todos se eligen y se quitan igual.
+  const opciones = [
+    ...COLORES_DE_VESTIMENTA,
+    ...elegidos.filter((hex) => !COLORES_DE_VESTIMENTA.some((c) => c.hex === hex)).map((hex) => ({ nombre: 'Tu color', hex })),
+  ]
 
   return (
     <div aria-labelledby={`${id}-rotulo`} className="flex flex-col gap-3" role="group">
-      <p className={LABEL_CLASS} id={`${id}-rotulo`}>
-        {rotulo}
-      </p>
+      <div className="flex flex-col gap-1">
+        <p className={LABEL_CLASS} id={`${id}-rotulo`}>
+          {rotulo}
+        </p>
+        <p className="text-[12px] leading-[1.6] text-ink-soft">
+          Los colores que sugieres a tus invitados para vestirse. Salen como círculos debajo del código de vestimenta; toca uno para
+          elegirlo o quitarlo. Sin colores, la invitación no pinta la paleta.
+        </p>
+      </div>
 
-      {elegidos.length === 0 ? (
-        <p className="text-[12px] text-ink-soft">Elige los colores que sugieres. Sin colores, la invitación no pinta la paleta.</p>
-      ) : (
-        <ul className="flex flex-wrap gap-2">
-          {elegidos.map((hex) => (
-            <li className="flex items-center gap-2 rounded-full border border-line-panel bg-white py-1 pr-1 pl-1.5" key={hex}>
-              <span aria-hidden className="size-6 rounded-full border border-black/10" style={{ background: hex }} />
-              <span className="text-[12.5px] text-ink">{nombreDe(hex)}</span>
-              <IconButton className="size-6 hover:border-danger hover:text-danger" label={`Quitar ${nombreDe(hex)}`} onClick={() => alternar(hex)}>
-                <TrashIcon className="size-3.5" />
-              </IconButton>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      <div className="flex flex-wrap gap-2">
-        {COLORES_DE_VESTIMENTA.map((color) => {
+      <ul className="grid gap-x-2 gap-y-3 [grid-template-columns:repeat(auto-fill,minmax(64px,1fr))]">
+        {opciones.map((color) => {
           const activo = elegidos.includes(color.hex)
           return (
-            <button
-              aria-label={color.nombre}
-              aria-pressed={activo}
-              className={`grid size-9 cursor-pointer place-items-center rounded-full border transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-40 ${
-                activo ? 'border-ink ring-2 ring-ink ring-offset-2' : 'border-black/10 hover:scale-105'
-              }`}
-              disabled={!activo && lleno}
-              key={color.hex}
-              onClick={() => alternar(color.hex)}
-              style={{ background: color.hex }}
-              title={color.nombre}
-              type="button"
-            >
-              {activo ? <CheckIcon className="size-4 text-white mix-blend-difference" /> : null}
-            </button>
+            <li key={color.hex}>
+              <button
+                aria-pressed={activo}
+                className="group flex w-full cursor-pointer flex-col items-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-40"
+                disabled={!activo && lleno}
+                onClick={() => alternar(color.hex)}
+                type="button"
+              >
+                <span
+                  className={`relative size-10 rounded-full border transition group-focus-visible:outline-2 group-focus-visible:outline-offset-2 group-focus-visible:outline-ink ${
+                    activo ? 'border-ink ring-2 ring-ink ring-offset-2' : 'border-black/10 group-hover:scale-105'
+                  }`}
+                  style={{ background: color.hex }}
+                >
+                  {/* La marca va sobre su propio disco blanco: sobre el color cambiaba de tono con cada uno. */}
+                  {activo ? (
+                    <span className="absolute -top-1 -right-1 grid size-5 place-items-center rounded-full bg-ink text-white">
+                      <CheckIcon className="size-3" />
+                    </span>
+                  ) : null}
+                </span>
+                <span className={`text-center text-[11px] leading-tight ${activo ? 'text-ink' : 'text-ink-soft'}`}>{color.nombre}</span>
+              </button>
+            </li>
           )
         })}
-      </div>
+      </ul>
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="text-[12.5px] text-ink-soft" htmlFor={`${id}-otro`}>
@@ -930,7 +979,7 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
         <PanelButton disabled={lleno || elegidos.includes(otro)} onClick={() => alternar(otro)}>
           Añadir color
         </PanelButton>
-        <span className="text-[11px] text-ink-mute">{`${elegidos.length} de ${max}`}</span>
+        <span className="text-[11px] text-ink-mute">{`${elegidos.length} de ${max} elegidos`}</span>
       </div>
     </div>
   )

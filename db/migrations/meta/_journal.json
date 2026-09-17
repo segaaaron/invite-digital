@@ -421,6 +421,20 @@
       "when": 1790200000000,
       "tag": "0060_presupuesto_total",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1790300000000,
+      "tag": "0061_cronograma_sin_plantilla",
+      "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1790400000000,
+      "tag": "0062_enlace_guardado",
+      "breakpoints": true
     }
   ]
 }

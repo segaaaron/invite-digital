@@ -59,6 +59,7 @@ export const identity = {
   }),
   /** Las sesiones abiertas de la cuenta, para Mi cuenta. */
   sessionsOf: (userId: string) => drizzleSessionRepository.listByUser(userId),
+  nombrarSesion: (sessionId: string, device: string) => drizzleSessionRepository.setDevice(sessionId, device),
   /** Un código al correo de quien tiene la sesión: para cambiar la contraseña o cerrar las demás. */
   requestAccountCode: requestAccountCode({ users: drizzleUserRepository, resets: drizzlePasswordResetRepository, minter, clock }),
   closeOtherSessions: closeOtherSessions({ resets: drizzlePasswordResetRepository, sessions: drizzleSessionRepository, minter, clock }),

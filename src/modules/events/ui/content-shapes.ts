@@ -225,13 +225,13 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
   map: {
     form: 'campos',
     fields: campos<NonNullable<InvitationContent['map']>>(
-      { key: 'label', label: 'Nombre del lugar', kind: 'texto', hint: 'Lo que se lee sobre el mapa: «HACIENDA LAS ESTRELLAS».' },
+      { key: 'label', label: 'Nombre sobre el mapa', kind: 'texto', hint: 'Lo que se lee sobre el mapa: «HACIENDA LAS ESTRELLAS».' },
       {
         key: 'href',
         label: 'Ubicación en Google Maps',
         kind: 'ubicacion',
         anchoCompleto: true,
-        hint: 'Pega el enlace de «Compartir» de Google Maps o escribe la dirección. Tus invitados verán el mapa y el botón para llegar.',
+        hint: 'Pega el enlace de «Compartir» de Google Maps o escribe la dirección. Al tocar el mapa de la invitación se abre Google Maps.',
       },
     ),
   },

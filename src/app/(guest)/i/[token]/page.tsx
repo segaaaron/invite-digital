@@ -1,9 +1,11 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events as eventos, guestbook, plans, registry, rsvp } from '@/app/composition/container'
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { tarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-invitacion'
 import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
@@ -21,6 +23,33 @@ import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
+
+/**
+ * La vista previa al pegar el enlace en WhatsApp: título, saludo e imagen de la invitación.
+ * Sin esto se veía un enlace pelado. Con contraseña no dice de quién es la fiesta.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ token: string }> }): Promise<Metadata> {
+  const { token } = await params
+  const invitation = await resolveInvitation(token)
+  if (isErr(invitation)) return {}
+  const { event, group } = invitation.value
+  const protegida = (await eventos.passwordHashOf(event.id)) !== null
+  const contenido = protegida ? {} : await eventos.contenidoParaInvitados(event.id, {})
+  const tarjeta = tarjetaDeInvitacion({ evento: event, contenido, invitado: group.label, protegida })
+  const sitio = env.SITE_URL.replace(/\/+$/, '')
+  return {
+    title: tarjeta.titulo,
+    description: tarjeta.descripcion,
+    openGraph: {
+      type: 'website',
+      title: tarjeta.titulo,
+      description: tarjeta.descripcion,
+      url: `${sitio}/i/${token}`,
+      images: [{ url: `${sitio}/i/${token}/imagen`, width: 1200, height: 630, type: 'image/jpeg', alt: tarjeta.titulo }],
+    },
+    twitter: { card: 'summary_large_image', title: tarjeta.titulo, description: tarjeta.descripcion, images: [`${sitio}/i/${token}/imagen`] },
+  }
+}
 
 export default async function InvitationPage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params

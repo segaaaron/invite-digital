@@ -5,8 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
-import { CloseIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
-import { resendInvitationAction, setGroupPhoneAction } from '@/app/_acciones/guests/actions'
+import { ChevronIcon, CloseIcon, MailIcon, MessageIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { resendInvitationAction, sendInvitationAction, setGroupPhoneAction, type ResendState } from '@/app/_acciones/guests/actions'
 import { DeliverySheet } from './DeliverySheet'
 import { renderMessage, whatsappLink } from '../domain/message-template'
 
@@ -18,12 +18,15 @@ export type DeliveryRow = {
   readonly revoked: boolean
   /** Cupos confirmados en su última respuesta; `null` si no respondió. */
   readonly confirmed: number | null
+  /** Cupos de la invitación: con más de uno el mensaje habla de ustedes. */
+  readonly seats?: number
+  /** Su enlace, si está guardado. Las invitaciones de antes de guardarlo no lo tienen. */
+  readonly url?: string | null
+  /** El correo de quien encabeza la invitación, para escribirle desde el correo propio. */
+  readonly email?: string | null
 }
 
 type Pestana = 'pendientes' | 'enviadas'
-
-/** El enlace recién preparado de una invitación: se enseña una vez, junto a ella. */
-type Preparado = { readonly url: string }
 
 function respuesta(fila: DeliveryRow): { tone: PillTone; text: string } {
   if (fila.revoked) return { tone: 'no', text: 'Revocada' }
@@ -31,20 +34,14 @@ function respuesta(fila: DeliveryRow): { tone: PillTone; text: string } {
   return fila.confirmed > 0 ? { tone: 'ok', text: 'Confirmó' } : { tone: 'no', text: 'No viene' }
 }
 
+const OTRA_FORMA = 'flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong bg-white px-4 py-2.5 text-[12.5px] text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40'
+
 /**
- * Enviar invitaciones, en un **panel lateral**.
+ * Enviar invitaciones, en un modal centrado. **Cada invitado tiene un enlace que no cambia**:
+ * se guarda cifrado al crearlo, así que se puede mandar por WhatsApp o copiarlo y mandarlo por
+ * correo, SMS o donde se quiera, las veces que haga falta. Usar cualquiera la marca enviada.
  *
- * Repartir es una tarea larga y repetida —un invitado tras otro— que se hace mirando la lista:
- * un modal la taparía y obligaría a abrirlo y cerrarlo por cada uno. El panel se desliza desde
- * la derecha y en el teléfono ocupa la pantalla.
- *
- * **Un toque por invitado.** «Enviar por WhatsApp» prepara el enlace, abre WhatsApp con el
- * mensaje ya escrito y lo da por repartido. La ventana se abre **antes** de pedir el enlace,
- * dentro del propio toque: abierta después de esperar al servidor, el navegador la bloquea.
- *
- * **Reenviar rota el enlace**: el anterior deja de abrir nada. Se avisa en «Enviadas», antes
- * de pulsar. El enlace nuevo se enseña una sola vez, junto a quien se le mandó: en la base
- * solo queda su hash.
+ * Generar un enlace nuevo es otra cosa, y se pide aparte: anula el anterior y su pase.
  */
 export function DeliveryPanel({
   eventSlug,
@@ -54,10 +51,13 @@ export function DeliveryPanel({
   rows,
   sinContenido,
   closeHref,
+  fechaDelEvento = null,
 }: {
   eventSlug: string
   eventTitle: string
   eventLocale: string
+  /** El día, ya legible, para el mensaje: «sábado, 17 de octubre». */
+  fechaDelEvento?: string | null
   template: string | null
   rows: readonly DeliveryRow[]
   /** La invitación está sin terminar: el enlace abriría una página que no dice de quién es. */
@@ -68,16 +68,15 @@ export function DeliveryPanel({
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
   const [pestana, setPestana] = useState<Pestana>('pendientes')
-  const [telefonos, setTelefonos] = useState<Record<string, string>>(
-    Object.fromEntries(rows.map((fila) => [fila.id, fila.phone ?? ''])),
-  )
-  const [preparados, setPreparados] = useState<Record<string, Preparado>>({})
-  const [enviando, setEnviando] = useState<string | null>(null)
-  /**
-   * Las enviadas desde «Por enviar» en esta visita se quedan a la vista, marcadas, hasta cambiar de
-   * pestaña: su enlace se enseña una sola vez y tiene que poder copiarse.
-   */
+  const [telefonos, setTelefonos] = useState<Record<string, string>>(Object.fromEntries(rows.map((fila) => [fila.id, fila.phone ?? ''])))
+  const [urls, setUrls] = useState<Record<string, string>>(Object.fromEntries(rows.flatMap((fila) => (fila.url ? [[fila.id, fila.url]] : []))))
+  const [marcadas, setMarcadas] = useState<ReadonlySet<string>>(new Set())
+  /** Las que se enviaron en esta visita se quedan en «Por enviar» hasta cambiar de pestaña. */
   const [recienEnviadas, setRecienEnviadas] = useState<ReadonlySet<string>>(new Set())
+  const [abiertas, setAbiertas] = useState<ReadonlySet<string>>(new Set())
+  const [confirmarNuevo, setConfirmarNuevo] = useState<string | null>(null)
+  const [trabajando, setTrabajando] = useState<string | null>(null)
+  const [copiado, setCopiado] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [, empezar] = useTransition()
 
@@ -91,54 +90,116 @@ export function DeliveryPanel({
     router.replace(closeHref)
   }
 
-  // Lo preparado en esta pantalla cuenta como enviado aunque el servidor aún no haya revalidado.
-  const enviada = (fila: DeliveryRow) => fila.sent || preparados[fila.id] !== undefined
+  const enviada = (fila: DeliveryRow) => fila.sent || marcadas.has(fila.id)
   const pendientes = rows.filter((fila) => !fila.revoked && !enviada(fila))
   const enviadas = rows.filter((fila) => fila.revoked || enviada(fila))
   const total = rows.filter((fila) => !fila.revoked).length
   const hechas = total - pendientes.length
 
-  const mensaje = (label: string, url: string) => renderMessage({ template, locale: eventLocale, groupLabel: label, url })
+  const mensaje = (fila: DeliveryRow, url: string) =>
+    renderMessage({ template, locale: eventLocale, groupLabel: fila.label, url, seats: fila.seats ?? 1, fecha: fechaDelEvento, evento: eventTitle })
 
-  const enviarPorWhatsapp = (fila: DeliveryRow) => {
-    setError(null)
-    // Dentro del toque: después de esperar al servidor, el navegador bloquearía la ventana.
-    const ventana = window.open('', '_blank')
-    setEnviando(fila.id)
+  const alternar = (conjunto: ReadonlySet<string>, id: string) => {
+    const nuevo = new Set(conjunto)
+    if (nuevo.has(id)) nuevo.delete(id)
+    else nuevo.add(id)
+    return nuevo
+  }
+
+  /** Pide al servidor el enlace —el mismo, o uno nuevo— y la marca enviada. */
+  const pedir = async (fila: DeliveryRow, modo: 'mismo' | 'nuevo'): Promise<string | null> => {
+    const datos = new FormData()
+    datos.set('eventSlug', eventSlug)
+    datos.set('groupId', fila.id)
+    const r: ResendState = await (modo === 'nuevo' ? resendInvitationAction : sendInvitationAction)({ status: 'idle' }, datos)
+    if (r.status !== 'success') {
+      setError(r.status === 'error' ? r.message : 'No se pudo preparar el enlace.')
+      return null
+    }
+    setUrls((previas) => ({ ...previas, [fila.id]: r.url }))
+    setMarcadas((previas) => new Set(previas).add(fila.id))
+    if (pestana === 'pendientes') setRecienEnviadas((previas) => new Set(previas).add(fila.id))
+    return r.url
+  }
+
+  /** Marcar enviada sin esperar: el enlace ya está en pantalla. */
+  const marcar = (fila: DeliveryRow) => {
+    if (enviada(fila)) return
     empezar(async () => {
-      const datos = new FormData()
-      datos.set('eventSlug', eventSlug)
-      datos.set('groupId', fila.id)
-      const r = await resendInvitationAction({ status: 'idle' }, datos)
-      setEnviando(null)
-      if (r.status !== 'success') {
+      await pedir(fila, 'mismo')
+    })
+  }
+
+  const porWhatsapp = (fila: DeliveryRow) => {
+    setError(null)
+    const url = urls[fila.id]
+    if (url !== undefined) {
+      window.open(whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(fila, url) }), '_blank')
+      marcar(fila)
+      return
+    }
+    // Sin enlace guardado: la ventana se abre dentro del toque, o el navegador la bloquea.
+    const ventana = window.open('', '_blank')
+    setTrabajando(fila.id)
+    empezar(async () => {
+      const nueva = await pedir(fila, 'mismo')
+      setTrabajando(null)
+      if (nueva === null) {
         ventana?.close()
-        setError(r.status === 'error' ? r.message : 'No se pudo preparar el enlace.')
         return
       }
-      setPreparados((previos) => ({ ...previos, [fila.id]: { url: r.url } }))
-      if (pestana === 'pendientes') setRecienEnviadas((previas) => new Set(previas).add(fila.id))
-      const destino = whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(r.label, r.url) })
+      const destino = whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(fila, nueva) })
       if (ventana !== null) ventana.location.href = destino
       else window.location.href = destino
     })
   }
 
+  const abrirOtras = (fila: DeliveryRow) => {
+    setError(null)
+    setAbiertas((previas) => alternar(previas, fila.id))
+    if (urls[fila.id] === undefined && !abiertas.has(fila.id)) {
+      setTrabajando(fila.id)
+      empezar(async () => {
+        await pedir(fila, 'mismo')
+        setTrabajando(null)
+      })
+    }
+  }
+
+  const copiar = (fila: DeliveryRow, texto: string, que: string) => {
+    void navigator.clipboard?.writeText(texto)
+    setCopiado(`${fila.id}:${que}`)
+    marcar(fila)
+  }
+
+  const compartir = (fila: DeliveryRow, url: string) => {
+    void navigator.share?.({ title: eventTitle, text: mensaje(fila, url) }).then(() => marcar(fila), () => {})
+  }
+
+  const enlaceNuevo = (fila: DeliveryRow) => {
+    setError(null)
+    setConfirmarNuevo(null)
+    setTrabajando(fila.id)
+    empezar(async () => {
+      await pedir(fila, 'nuevo')
+      setTrabajando(null)
+    })
+  }
+
   const guardarTelefono = (fila: DeliveryRow) => {
     setError(null)
-    // Un fallo mudo aquí deja el número en pantalla y no en la base: al reenviar, WhatsApp
-    // abriría sin destinatario.
     void setGroupPhoneAction({ eventSlug, id: fila.id, phone: telefonos[fila.id] ?? '' }).then((resultado) => {
       if (resultado.status === 'error') setError(resultado.message)
     })
   }
 
   const lista = pestana === 'pendientes' ? rows.filter((fila) => !fila.revoked && (!enviada(fila) || recienEnviadas.has(fila.id))) : enviadas
+  const puedeCompartir = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
 
   return (
     <dialog
       aria-labelledby="enviar-titulo"
-      className="m-0 ml-auto h-dvh max-h-dvh w-full max-w-full flex-col bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/40 open:flex min-[560px]:w-[min(520px,100vw)] min-[560px]:rounded-l-[22px]"
+      className="m-auto max-h-[min(820px,94dvh)] w-[min(620px,94vw)] flex-col overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/45 open:flex"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
@@ -179,9 +240,7 @@ export function DeliveryPanel({
           ).map(([clave, texto]) => (
             <button
               aria-selected={pestana === clave}
-              className={`flex-1 cursor-pointer rounded-full px-3 py-2 text-[12.5px] transition-colors ${
-                pestana === clave ? 'bg-white text-ink shadow-sm' : 'text-ink-soft hover:text-ink'
-              }`}
+              className={`flex-1 cursor-pointer rounded-full px-3 py-2 text-[12.5px] transition-colors ${pestana === clave ? 'bg-white text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}
               key={clave}
               onClick={() => {
                 setPestana(clave)
@@ -215,13 +274,6 @@ export function DeliveryPanel({
           </p>
         )}
 
-        {pestana === 'enviadas' && enviadas.length > 0 ? (
-          <p className="text-[12px] leading-[1.6] text-ink-mute">
-            Reenviar crea un enlace nuevo y <strong className="font-medium text-ink-soft">anula el anterior</strong>, también su pase de
-            entrada. Úsalo si lo perdió; si el evento ya empezó, avísale antes.
-          </p>
-        ) : null}
-
         {lista.length === 0 ? (
           <p className="py-10 text-center text-[13.5px] text-ink-soft">
             {pestana === 'pendientes' ? 'Todas las invitaciones están enviadas.' : 'Todavía no enviaste ninguna.'}
@@ -229,7 +281,11 @@ export function DeliveryPanel({
         ) : (
           <ul className="flex flex-col gap-2.5">
             {lista.map((fila) => {
-              const preparado = preparados[fila.id]
+              const url = urls[fila.id]
+              const abierta = abiertas.has(fila.id)
+              const bloqueado = sinContenido || trabajando !== null
+              const correo = fila.email ?? ''
+              const telefono = (telefonos[fila.id] ?? '').replace(/[^0-9+]/g, '')
               return (
                 <li aria-label={fila.label} className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-white p-4" key={fila.id}>
                   <div className="flex items-center justify-between gap-3">
@@ -241,7 +297,7 @@ export function DeliveryPanel({
                     ) : null}
                   </div>
 
-                  {fila.revoked || (pestana === 'pendientes' && recienEnviadas.has(fila.id)) ? null : (
+                  {fila.revoked ? null : (
                     <>
                       <div>
                         <label className="sr-only" htmlFor={`tel-${fila.id}`}>
@@ -254,47 +310,107 @@ export function DeliveryPanel({
                           value={telefonos[fila.id] ?? ''}
                         />
                       </div>
-                      <button
-                        aria-label={`${pestana === 'pendientes' ? 'Enviar por WhatsApp a' : 'Reenviar a'} ${fila.label}`}
-                        className={`flex cursor-pointer items-center justify-center gap-2 rounded-full px-5 py-3 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${
-                          pestana === 'pendientes' ? 'bg-ink text-white hover:bg-ink/90' : 'border border-line-panel-strong text-ink hover:border-ink'
-                        }`}
-                        disabled={sinContenido || enviando !== null}
-                        onClick={() => enviarPorWhatsapp(fila)}
-                        type="button"
-                      >
-                        <WhatsAppIcon className="size-4" />
-                        {enviando === fila.id ? 'Preparando…' : pestana === 'pendientes' ? 'Enviar por WhatsApp' : 'Reenviar'}
-                      </button>
-                    </>
-                  )}
 
-                  {preparado === undefined ? null : (
-                    <div className="flex flex-col gap-2 rounded-[12px] bg-bg-top p-3" role="status">
-                      <p className="text-[12px] text-ink-soft">Enlace nuevo, se enseña una sola vez:</p>
-                      <input
-                        aria-label="Enlace de la invitación"
-                        className="w-full rounded-[10px] border border-line-panel-strong bg-white px-3 py-2 font-mono text-[11.5px]"
-                        readOnly
-                        value={preparado.url}
-                      />
-                      <div className="flex flex-wrap gap-2">
-                        <PanelButton onClick={() => void navigator.clipboard?.writeText(preparado.url)}>Copiar enlace</PanelButton>
-                        <PanelButton onClick={() => void navigator.clipboard?.writeText(mensaje(fila.label, preparado.url))}>
-                          Copiar mensaje
-                        </PanelButton>
+                      <div className="grid gap-2 min-[480px]:grid-cols-2">
+                        <button
+                          aria-label={`Enviar por WhatsApp a ${fila.label}`}
+                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-5 py-3 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-colors hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={bloqueado}
+                          onClick={() => porWhatsapp(fila)}
+                          type="button"
+                        >
+                          <WhatsAppIcon className="size-4" />
+                          {trabajando === fila.id && !abierta ? 'Preparando…' : 'WhatsApp'}
+                        </button>
+                        <button
+                          aria-controls={`otras-${fila.id}`}
+                          aria-expanded={abierta}
+                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-5 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
+                          disabled={sinContenido}
+                          onClick={() => abrirOtras(fila)}
+                          type="button"
+                        >
+                          Enlace y otras formas
+                          <ChevronIcon className={`size-3.5 transition-transform ${abierta ? 'rotate-180' : ''}`} />
+                        </button>
                       </div>
-                      {/* Plegada: casi todo se reparte por WhatsApp. La tarjeta con el QR es para quien
-                          la entrega en mano, y solo puede existir ahora: el enlace en claro se va con esta pantalla. */}
-                      <details className="group">
-                        <summary className="w-fit cursor-pointer list-none text-[12px] text-ink-soft underline underline-offset-4">
-                          ¿La entregas en mano? Tarjeta con QR
-                        </summary>
-                        <div className="mt-3">
-                          <DeliverySheet cards={[{ label: fila.label, url: preparado.url }]} eventTitle={eventTitle} />
+
+                      {abierta ? (
+                        <div className="flex flex-col gap-3 rounded-[14px] bg-bg-top p-3.5" id={`otras-${fila.id}`}>
+                          {url === undefined ? (
+                            <p className="text-[12.5px] text-ink-soft" role="status">
+                              {trabajando === fila.id ? 'Preparando su enlace…' : 'No se pudo preparar el enlace.'}
+                            </p>
+                          ) : (
+                            <>
+                              <p className="text-[12px] text-ink-soft">Su enlace, para mandarlo por donde quieras. Es siempre el mismo.</p>
+                              <div className="flex gap-2">
+                                <input
+                                  aria-label={`Enlace de la invitación de ${fila.label}`}
+                                  className="min-w-0 flex-1 rounded-[10px] border border-line-panel-strong bg-white px-3 py-2 font-mono text-[11.5px]"
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  readOnly
+                                  value={url}
+                                />
+                                <PanelButton onClick={() => copiar(fila, url, 'enlace')} variant="primary">
+                                  {copiado === `${fila.id}:enlace` ? 'Copiado' : 'Copiar'}
+                                </PanelButton>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 min-[480px]:[grid-template-columns:repeat(auto-fit,minmax(120px,1fr))]">
+                                <button className={OTRA_FORMA} onClick={() => copiar(fila, mensaje(fila, url), 'mensaje')} type="button">
+                                  {copiado === `${fila.id}:mensaje` ? 'Copiado' : 'Copiar mensaje'}
+                                </button>
+                                <a
+                                  className={OTRA_FORMA}
+                                  href={`mailto:${encodeURIComponent(correo)}?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(mensaje(fila, url))}`}
+                                  onClick={() => marcar(fila)}
+                                >
+                                  <MailIcon className="size-4" />
+                                  Correo
+                                </a>
+                                <a className={OTRA_FORMA} href={`sms:${telefono}?&body=${encodeURIComponent(mensaje(fila, url))}`} onClick={() => marcar(fila)}>
+                                  <MessageIcon className="size-4" />
+                                  SMS
+                                </a>
+                                {puedeCompartir ? (
+                                  <button className={OTRA_FORMA} onClick={() => compartir(fila, url)} type="button">
+                                    Compartir
+                                  </button>
+                                ) : null}
+                              </div>
+                              {/* La tarjeta con el QR, para quien la entrega en mano. */}
+                              <details className="group">
+                                <summary className="w-fit cursor-pointer list-none text-[12px] text-ink-soft underline underline-offset-4">Tarjeta con QR para entregar en mano</summary>
+                                <div className="mt-3">
+                                  <DeliverySheet cards={[{ label: fila.label, url }]} eventTitle={eventTitle} />
+                                </div>
+                              </details>
+                            </>
+                          )}
+
+                          {pestana === 'enviadas' ? (
+                            confirmarNuevo === fila.id ? (
+                              <div className="flex flex-col gap-2 border-t border-line-panel pt-3" role="alert">
+                                <p className="text-[12.5px] leading-[1.6] text-ink">
+                                  El enlace actual y su pase de entrada <strong className="font-medium">dejarán de servir</strong>. Úsalo solo si lo perdió o
+                                  llegó a quien no debía.
+                                </p>
+                                <div className="flex gap-2">
+                                  <PanelButton disabled={bloqueado} onClick={() => enlaceNuevo(fila)} variant="danger">
+                                    Sí, generar uno nuevo
+                                  </PanelButton>
+                                  <PanelButton onClick={() => setConfirmarNuevo(null)}>Cancelar</PanelButton>
+                                </div>
+                              </div>
+                            ) : (
+                              <button className="w-fit cursor-pointer text-[12px] text-ink-mute underline underline-offset-4 hover:text-danger" onClick={() => setConfirmarNuevo(fila.id)} type="button">
+                                ¿Lo perdió? Generar un enlace nuevo
+                              </button>
+                            )
+                          ) : null}
                         </div>
-                      </details>
-                    </div>
+                      ) : null}
+                    </>
                   )}
                 </li>
               )

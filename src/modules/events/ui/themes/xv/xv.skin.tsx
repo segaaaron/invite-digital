@@ -27,8 +27,11 @@ export const PIEL_XV: PielXv = {
   // Su maqueta sí pinta «Detalles que Abrazan» con el sobre y el código.
   regalos: true,
   fondoBase: `linear-gradient(160deg, ${P.cielo} 0%, ${P.lavanda} 45%, ${P.rosa} 100%)`,
-  velo: 'rgba(252,250,255,.45)',
+  // Pegado a la pantalla y con un velo ligero: estirado a lo largo de la invitación entera,
+  // con velo al 45 % y desenfoque, la foto se veía lechosa y borrosa (pedido por el usuario).
+  velo: 'rgba(252,250,255,.22)',
   fondo: <MarBackground opacity={1} theme="xv" variant="b" />,
+  fondoFijo: true,
   burbujas: <BubblesRise color="rgba(180,220,255,0.5)" count={24} seed={11} />,
   // Las burbujas de la maqueta (`invites-1.jsx:351-352`) son de este diseño y de ninguno
   // más: es el fondo del mar. Van pedidas a propósito, no heredadas.

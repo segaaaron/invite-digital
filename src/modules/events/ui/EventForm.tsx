@@ -161,13 +161,13 @@ export function EventForm({
           </div>
         </div>
 
-        <Campo ayuda="{nombre} y {enlace} se sustituyen al enviar. El enlace nunca se guarda aquí." etiqueta="Mensaje para repartir la invitación" htmlFor={templateId}>
+        <Campo ayuda="{nombre}, {fecha}, {evento} y {enlace} se sustituyen al enviar. Vacío, se usa un mensaje cordial con la fecha. El enlace nunca se guarda aquí." etiqueta="Mensaje para repartir la invitación" htmlFor={templateId}>
           <textarea
             className={FIELD_CLASS}
             defaultValue={event?.messageTemplate ?? ''}
             id={templateId}
             name="messageTemplate"
-            placeholder="Hola {nombre}: nos encantaría celebrar con ustedes. Aquí está su invitación: {enlace}"
+            placeholder="Hola {nombre} ✨ Con mucha alegría queremos compartir contigo un día muy especial: el {fecha}. Aquí está tu invitación: {enlace}"
             rows={3}
           />
         </Campo>

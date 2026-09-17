@@ -1,7 +1,9 @@
 import { cookies } from 'next/headers'
 import { identity } from '@/app/composition/container'
-import { CambiarConCodigo, SesionesAbiertas } from '@/modules/identity/ui/SeguridadDeCuenta'
+import { ChangePasswordForm } from '@/modules/identity/ui/ChangePasswordForm'
+import { SesionesAbiertas } from '@/modules/identity/ui/SeguridadDeCuenta'
 import { fechaHora } from '@/shared/format/fecha'
+import { tipoDeDispositivo } from '@/modules/identity/domain/dispositivo'
 import { isErr } from '@/shared/result'
 import { requireSession, SESSION_COOKIE } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -34,7 +36,8 @@ export default async function CuentaPage() {
   const estaId = isErr(actual) ? null : actual.value.sessionId
   const sesiones = (await identity.sessionsOf(actor.userId)).map((s) => ({
     id: s.id,
-    dispositivo: s.device ?? 'Dispositivo sin identificar',
+    dispositivo: s.device ?? 'sin identificar (se abrió antes de guardarlo)',
+    tipo: tipoDeDispositivo(s.device),
     ultimoUso: fechaHora(s.lastSeenAt ?? s.createdAt),
     esta: s.id === estaId,
   }))
@@ -57,8 +60,8 @@ export default async function CuentaPage() {
           </dl>
         </SettingsSection>
 
-        <SettingsSection description="Pide un código que llega a tu correo: conocer la contraseña actual no basta para cambiarla." title="Contraseña">
-          <CambiarConCodigo />
+        <SettingsSection description="Escribe la actual y elige una nueva. Si no la recuerdas, recupérala con un código a tu correo." title="Contraseña">
+          <ChangePasswordForm />
         </SettingsSection>
 
         <SettingsSection description="Dónde está abierta tu cuenta. Si alguien más entra con tu contraseña, ciérrale la sesión con el código de tu correo." title="Sesiones abiertas">

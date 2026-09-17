@@ -1,6 +1,6 @@
 import type { Fiesta } from '@/modules/events'
 import { extensionDeDocumento, leerDocumento } from '../domain/dia-d'
-import { horaValida, plantillaDeCronograma } from '../domain/cronograma'
+import { horaValida } from '../domain/cronograma'
 import { leerProveedor, type ProveedorInput, TIPOS_DE_CORTEJO, type TipoDeCortejo } from '../domain/equipo-del-dia'
 import { categoriasDe } from '../domain/presupuesto'
 import type { DiaStore } from './dia-ports'
@@ -118,17 +118,6 @@ export const verComoProveedor =
   }
 
 // ─── Cronograma ──────────────────────────────────────────────────────────────
-
-export const seedMoments =
-  ({ dia }: Deps) =>
-  async (eventId: string, fiesta: Fiesta): Promise<PlannerResult> => {
-    if ((await dia.listMoments(eventId)).length > 0) return { ok: true }
-    await dia.insertMoments(
-      eventId,
-      plantillaDeCronograma(fiesta).map((m, i) => ({ ...m, place: null, owner: null, vendorIds: [], cue: null, notes: null, sortOrder: i, enInvitacion: false, icono: null })),
-    )
-    return { ok: true }
-  }
 
 type MomentoForm = { startsAt: string; durationMin: string; title: string; place: string; owner: string; vendorIds: readonly string[]; cue: string; notes: string; enInvitacion?: boolean; icono?: string }
 

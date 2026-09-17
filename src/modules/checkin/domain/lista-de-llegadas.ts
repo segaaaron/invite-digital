@@ -5,6 +5,10 @@ export type EstadoDeLlegada = 'dentro' | 'por_llegar' | 'no_viene'
 
 export type FilaDeLlegada = {
   readonly clave: string
+  /** La invitación, para registrar su ingreso. */
+  readonly invitacionId: string
+  /** La persona, si la invitación tiene nombres: entra ella sola. */
+  readonly personaId: string | null
   readonly nombre: string
   /** La invitación, cuando no es la propia persona; `null` en las que no tienen nombres. */
   readonly invitacion: string | null
@@ -30,11 +34,11 @@ export function listaDeLlegadas(
       const noViene = g.attending === 0
       const suyas = personas[g.id] ?? []
       if (suyas.length === 0) {
-        return [{ clave: g.id, nombre: g.label, invitacion: null, estado: llegada ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora: llegada?.arrivedAt ?? null }]
+        return [{ clave: g.id, invitacionId: g.id, personaId: null, nombre: g.label, invitacion: null, estado: llegada ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora: llegada?.arrivedAt ?? null }]
       }
       return suyas.map((p) => {
         const hora = llegada?.personas[p.id] ?? null
-        return { clave: p.id, nombre: p.fullName, invitacion: g.label, estado: hora ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora }
+        return { clave: p.id, invitacionId: g.id, personaId: p.id, nombre: p.fullName, invitacion: g.label, estado: hora ? 'dentro' : noViene ? 'no_viene' : 'por_llegar', hora }
       })
     })
 }

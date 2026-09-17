@@ -145,14 +145,15 @@ describe('la pertenencia del cliente y la de la puerta no se cruzan', () => {
     expect(isErr(conClaseAjena) && conClaseAjena.error.kind).toBe('not_found')
   })
 
-  it('ni el check-in, que es de la puerta', async () => {
+  // El ingreso al evento también es del anfitrión: ve quién llegó (16 de septiembre).
+  it('sí el ingreso al evento, para ver quién llegó', async () => {
     const puerta = await getEventFor({ events: repo(), staff: perteneceA('e1', 'c1', 'cliente') })(
       cliente,
       'boda-de-ana',
       { section: 'checkin' },
     )
 
-    expect(isErr(puerta) && puerta.error.kind).toBe('not_found')
+    expect(isErr(puerta)).toBe(false)
   })
 
   it('ni la sección completa: Configuración, el plan y el borrado son del atelier', async () => {

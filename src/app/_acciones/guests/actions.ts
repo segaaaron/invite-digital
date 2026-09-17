@@ -208,9 +208,23 @@ export type ResendState =
  */
 export async function resendInvitationAction(_previous: ResendState, formData: FormData): Promise<ResendState> {
   const actor = await requireSession()
-
   const eventSlug = campo(formData, 'eventSlug')
   const eventId = await requireEventAccess(actor, { eventSlug, section: 'cliente' })
+  return repartir(eventId, eventSlug, formData, 'rotar')
+}
+
+/**
+ * Enviar la invitación con **su** enlace, sin cambiarlo: lo usan WhatsApp, copiar, correo y
+ * SMS. Solo marca el reparto (y acuña uno si la invitación es de antes de guardarlo).
+ */
+export async function sendInvitationAction(_previous: ResendState, formData: FormData): Promise<ResendState> {
+  const actor = await requireSession()
+  const eventSlug = campo(formData, 'eventSlug')
+  const eventId = await requireEventAccess(actor, { eventSlug, section: 'cliente' })
+  return repartir(eventId, eventSlug, formData, 'mismo')
+}
+
+async function repartir(eventId: string, eventSlug: string, formData: FormData, modo: 'rotar' | 'mismo'): Promise<ResendState> {
   const sinEscribir = await invitacionSinEscribir(eventId)
   if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
 
@@ -219,7 +233,7 @@ export async function resendInvitationAction(_previous: ResendState, formData: F
   await events.publicarSiBorrador(eventId)
 
   const groupId = campo(formData, 'groupId')
-  const result = await guests.resend({ eventId, id: groupId })
+  const result = modo === 'rotar' ? await guests.resend({ eventId, id: groupId }) : await guests.enviar({ eventId, id: groupId })
 
   if (isErr(result)) {
     console.error('reenvío rechazado', result.error.kind, result.error.detail)

@@ -170,7 +170,7 @@ describe('panelNav', () => {
 
   it('la vista previa es su propia pantalla, no un trozo de Configuración', () => {
     const diseno = panelNav('boda').find((seccion) => seccion.label === 'Invitación')
-    const previa = diseno?.items.find((item) => item.label === 'Ver cómo queda')
+    const previa = diseno?.items.find((item) => item.label === 'Vista previa')
     expect(previa?.href).toBe('/panel/eventos/boda/vista-previa')
   })
 

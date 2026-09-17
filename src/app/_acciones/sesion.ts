@@ -6,6 +6,7 @@ import { PATHNAME_HEADER } from '@/shared/config/headers'
 import { isErr } from '@/shared/result'
 import { type Actor, type EventSection, isAdmin, parseRole } from '@/modules/identity/domain/access'
 import { actorDeSesion } from '@/modules/identity/domain/support'
+import { describirDispositivo } from '@/modules/identity/domain/dispositivo'
 
 export const SESSION_COOKIE = 'invite_session'
 
@@ -63,6 +64,9 @@ async function leerSesion(): Promise<Actor> {
 
   const cabeceras = await headers()
   const ruta = cabeceras.get(PATHNAME_HEADER) ?? ''
+  // Las sesiones abiertas antes de guardar el dispositivo lo toman en su siguiente visita:
+  // si no, Mi cuenta las lista como «Dispositivo sin identificar» para siempre.
+  if (result.value.device === null) await identity.nombrarSesion(result.value.sessionId, describirDispositivo(cabeceras.get('user-agent') ?? ''))
 
   if (actor.soporte !== undefined) {
     // La cuenta del cliente —su contraseña, su correo— no se toca en modo soporte.

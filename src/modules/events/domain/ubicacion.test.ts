@@ -42,4 +42,9 @@ describe('comoLlegar', () => {
     expect(comoLlegar({ coords: '19.32°N · 99.18°W' })).toBe('https://www.google.com/maps/search/?api=1&query=19.32%2C-99.18')
     expect(comoLlegar({})).toBeNull()
   })
+
+  it('sin enlace ni coordenadas, busca la dirección de la recepción', () => {
+    expect(comoLlegar({}, 'Hacienda Las Estrellas, Km 8')).toBe('https://www.google.com/maps/search/?api=1&query=Hacienda%20Las%20Estrellas%2C%20Km%208')
+    expect(comoLlegar({}, '  ')).toBeNull()
+  })
 })

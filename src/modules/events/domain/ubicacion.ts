@@ -52,9 +52,9 @@ export function enlaceDeUbicacion(entrada: string): string {
   return /^https?:\/\//i.test(limpio) ? limpio : BUSQUEDA(limpio)
 }
 
-/** El botón «Cómo llegar»: abre la aplicación de mapas del teléfono. */
-export function comoLlegar(mapa: Mapa): string | null {
-  if (mapa.href !== undefined) return mapa.href
-  const c = coordenadas(mapa.coords)
+/** Adónde lleva tocar el mapa: la aplicación de mapas del teléfono, o Google Maps en la web. */
+export function comoLlegar(mapa: Mapa, respaldo?: string): string | null {
+  if (mapa.href !== undefined && mapa.href !== '') return mapa.href
+  const c = coordenadas(mapa.coords) ?? (respaldo?.trim() || null)
   return c === null ? null : BUSQUEDA(c)
 }

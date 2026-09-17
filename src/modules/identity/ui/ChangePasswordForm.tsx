@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { changePasswordAction, type ChangePasswordState } from '@/app/_acciones/identity/actions'
@@ -35,6 +36,11 @@ export function ChangePasswordForm({ inicial = false }: { inicial?: boolean }) {
           required
           type={tipo}
         />
+        {inicial ? null : (
+          <Link className="self-start text-[12px] text-ink-soft underline underline-offset-2 hover:text-ink" href="/panel/recuperar">
+            ¿Olvidaste tu contraseña?
+          </Link>
+        )}
       </div>
 
       <div className="flex flex-col gap-2">

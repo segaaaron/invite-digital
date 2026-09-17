@@ -56,6 +56,8 @@ const envSchema = z.object({
    * porque el texto de una consulta puede llevar datos.
    */
   DB_LOG_QUERIES: z.enum(['0', '1']).default('0'),
+  /** La clave con la que se guarda cifrado el enlace de cada invitado. Sin ella se deriva de `DATABASE_URL`. */
+  LINK_KEY: z.preprocess((valor) => (valor === '' ? undefined : valor), z.string().min(16).optional()),
 })
 
 export type Env = z.infer<typeof envSchema>

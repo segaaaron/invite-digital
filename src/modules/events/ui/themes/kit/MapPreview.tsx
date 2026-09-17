@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { comoLlegar, mapaIncrustado } from '../../../domain/ubicacion'
+import { comoLlegar } from '../../../domain/ubicacion'
 import { prefiereMenosMovimiento } from './motion'
 
 type Props = {
@@ -27,14 +27,11 @@ type Props = {
 }
 
 /**
- * El mapa del lugar, dentro del marco del diseño.
+ * El plano estilizado del lugar, con su alfiler y su pulso de radar: el dibujo del diseño.
  *
- * Con algo que ubicar —el enlace de Google Maps, las coordenadas o la dirección— es **el
- * mapa de Google de verdad**, incrustado sin clave (`output=embed`), con el rótulo y el botón
- * de cómo llegar pintados con los colores del diseño encima. Pedido por el usuario: el plano
- * dibujado no servía para llegar. Sin nada que ubicar, queda el plano estilizado de siempre.
- *
- * El iframe carga en diferido: no se pide a Google hasta que el invitado baja hasta aquí.
+ * **Tocarlo abre Google Maps** —en el teléfono, la aplicación— con el enlace que pegó el
+ * atelier, las coordenadas o la dirección de la recepción. Se probó incrustar el mapa de
+ * Google y rompía el diseño (pedido por el usuario: el dibujo se queda, el toque lleva).
  */
 export function MapPreview({
   accent,
@@ -53,74 +50,11 @@ export function MapPreview({
   directionsLabel,
 }: Props) {
   const [reducido] = useState(prefiereMenosMovimiento)
-  const incrustado = mapaIncrustado({ href, coords, label }, respaldo)
-  const llegar = comoLlegar({ href, coords }) ?? (incrustado === null ? null : incrustado.replace('&z=16&output=embed', ''))
+  const llegar = comoLlegar({ href, coords }, respaldo)
+  // Sin coordenadas escritas, la esquina dice que se puede tocar.
+  const esquina = coords !== '' ? coords : llegar === null ? '' : `${directionsLabel ?? 'VER UBICACIÓN'} ↗`
 
-  if (incrustado !== null) {
-    return (
-      <div style={{ position: 'relative', height: Math.max(height, 220), borderRadius: 8, overflow: 'hidden', border: `1px solid ${border}` }}>
-        <iframe
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          src={incrustado}
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0 }}
-          title={label === '' ? 'Mapa del lugar' : `Mapa: ${label}`}
-        />
-        {label === '' ? null : (
-          <div
-            style={{
-              position: 'absolute',
-              top: 10,
-              left: 10,
-              maxWidth: 'calc(100% - 20px)',
-              padding: '6px 10px',
-              borderRadius: 999,
-              background: pinDot,
-              border: `1px solid ${border}`,
-              fontFamily: 'var(--font-cinzel)',
-              fontWeight: 600,
-              fontSize: 9,
-              letterSpacing: labelLetterSpacing,
-              textTransform: 'uppercase',
-              color: labelColor ?? accent,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            ● {label}
-          </div>
-        )}
-        {llegar === null ? null : (
-          <a
-            href={llegar}
-            rel="noopener noreferrer"
-            style={{
-              position: 'absolute',
-              right: 10,
-              bottom: 10,
-              padding: '8px 14px',
-              borderRadius: 999,
-              background: accent,
-              color: pinDot,
-              fontFamily: 'var(--font-cinzel)',
-              fontWeight: 600,
-              fontSize: 9,
-              letterSpacing: '0.2em',
-              textDecoration: 'none',
-              boxShadow: `0 6px 16px ${accent}40`,
-            }}
-            target="_blank"
-          >
-            {directionsLabel ?? 'VER UBICACIÓN'}
-          </a>
-        )}
-      </div>
-    )
-  }
-
-  return (
+  const plano = (
     <div
       style={{
         position: 'relative',
@@ -220,8 +154,21 @@ export function MapPreview({
           opacity: coordsColor === undefined ? 0.7 : 1,
         }}
       >
-        {coords}
+        {esquina}
       </div>
     </div>
+  )
+
+  if (llegar === null) return plano
+  return (
+    <a
+      aria-label={`${directionsLabel ?? 'Ver ubicación'}${label === '' ? '' : `: ${label}`}`}
+      href={llegar}
+      rel="noopener noreferrer"
+      style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}
+      target="_blank"
+    >
+      {plano}
+    </a>
   )
 }
