@@ -1,4 +1,4 @@
-import { attempt, err, ok, type Result } from '@/shared/result'
+import { attempt, err, isErr, ok, type Result } from '@/shared/result'
 import type { Minter } from '@/shared/security/tokens'
 import { guestError, type GuestError } from '../domain/errors'
 import type { GuestGroupRepository } from './ports'
@@ -44,25 +44,45 @@ export const resendInvitation =
     )
 
 /**
- * Enviar la invitación **sin tocar el enlace**: el que ya existe —guardado cifrado desde que se
- * creó— se reparte por WhatsApp, correo o donde sea, y queda marcada como enviada. Solo acuña uno
- * una invitación sin enlace guardado que **nunca se envió**: si ya se envió, el invitado tiene el suyo.
+ * El enlace de una invitación, **siempre**.
+ *
+ * Si lo tiene guardado (desde `0062`), ese. Si no —las invitaciones de antes—, se le acuña uno y
+ * se guarda **sin invalidar el repartido**: el hash del viejo se conserva (`adoptToken`, `0064`) y
+ * los dos abren la misma invitación. Así el panel puede enseñar y copiar un enlace de cualquiera
+ * sin dejar fuera al invitado que ya tiene el suyo en el chat.
+ *
+ * No marca el reparto: enseñar un enlace no es repartirlo.
+ */
+export const asegurarEnlace =
+  (deps: { groups: GuestGroupRepository; minter: Minter }) =>
+  async (input: { eventId: string; id: string }): Promise<Result<ResentInvitation, GuestError>> =>
+    attempt<ResentInvitation, GuestError>(
+      async () => {
+        const row = await deps.groups.findById(input.eventId, input.id)
+        if (row === null) return err(guestError('not_found', 'La invitación no existe'))
+        if (row.revokedAt !== null) return err(guestError('revoked', 'Esta invitación está revocada: reactívala para volver a repartirla.'))
+
+        const guardado = (await deps.groups.tokensOf(input.eventId)).get(input.id)
+        if (guardado !== undefined) return ok({ token: guardado, label: row.label })
+
+        const minted = deps.minter.mint()
+        await deps.groups.adoptToken(input.eventId, input.id, minted.hash, minted.token)
+        return ok({ token: minted.token, label: row.label })
+      },
+      (cause) => guestError('storage_failure', `No se pudo preparar el enlace: ${String(cause)}`),
+    )
+
+/**
+ * Enviar la invitación **sin tocar el enlace que el invitado ya tiene**: se reparte por WhatsApp,
+ * correo o donde sea, y queda marcada como enviada. El enlace lo da `asegurarEnlace`, así que una
+ * invitación de antes de `0062` también se puede repartir: recibe uno nuevo y el viejo sigue
+ * abriendo.
  */
 export const enviarInvitacion =
   (deps: { groups: GuestGroupRepository; minter: Minter; clock: () => Date }) =>
   async (input: { eventId: string; id: string }): Promise<Result<ResentInvitation, GuestError>> => {
-    const row = await deps.groups.findById(input.eventId, input.id)
-    if (row === null) return err(guestError('not_found', 'La invitación no existe'))
-    if (row.revokedAt !== null) return err(guestError('revoked', 'Esta invitación está revocada: reactívala antes de enviarla.'))
-    const guardado = (await deps.groups.tokensOf(input.eventId)).get(input.id)
-    if (guardado === undefined) {
-      // Ya enviada y sin enlace guardado (anterior a `0062`): acuñar uno aquí dejaría fuera al invitado
-      // que ya tiene el suyo. Un enlace nuevo solo se pide a propósito, con «Generar un enlace nuevo».
-      if (row.invitationSentAt !== null && row.invitationSentAt !== undefined) {
-        return err(guestError('not_found', 'Esta invitación ya se envió antes de que el panel guardara los enlaces: el invitado usa el que recibió. Si lo perdió, genera uno nuevo.'))
-      }
-      return resendInvitation(deps)(input)
-    }
+    const enlace = await asegurarEnlace(deps)(input)
+    if (isErr(enlace)) return enlace
     await deps.groups.markSent(input.eventId, input.id, deps.clock())
-    return ok({ token: guardado, label: row.label })
+    return enlace
   }

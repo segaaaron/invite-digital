@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, useState, useTransition } from 'react'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
-import { addPersonAction, reopenRsvpAction, resendInvitationAction, setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
+import { addPersonAction, ensureInvitationLinkAction, reopenRsvpAction, setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 
@@ -76,7 +76,6 @@ export function EditPersonDialog({
   const [fullName, setFullName] = useState(person.fullName)
   const [copiado, setCopiado] = useState(false)
   const [enlaceNuevo, setEnlaceNuevo] = useState<string | null>(null)
-  const [confirmarEnlace, setConfirmarEnlace] = useState(false)
   const [groupId, setGroupId] = useState(person.groupId)
   const [attending, setAttending] = useState<string>(person.attending ?? '')
   const [dietaryNote, setDietaryNote] = useState(person.dietaryNote ?? '')
@@ -147,19 +146,22 @@ export function EditPersonDialog({
   }
 
   /** Lo de la invitación se guarda al pulsar, sin «Guardar»: no es un campo de la persona. */
-  /** Enlace nuevo para una invitación sin enlace guardado: a propósito y con confirmación. */
-  const generarEnlace = () => {
-    setError(null)
-    setConfirmarEnlace(false)
-    empezar(async () => {
-      const datos = new FormData()
-      datos.set('eventSlug', eventSlug)
-      datos.set('groupId', invitacion.id)
-      const r = await resendInvitationAction({ status: 'idle' }, datos)
+  /**
+   * El enlace **siempre** se enseña. Una invitación de antes de `0062` no guardó el suyo: el
+   * servidor le acuña uno y conserva el viejo, que sigue abriendo. Se pide al abrir el diálogo.
+   */
+  useEffect(() => {
+    if (invitacion.enlace || invitacion.revocada) return
+    let vigente = true
+    void ensureInvitationLinkAction({ eventSlug, groupId: invitacion.id }).then((r) => {
+      if (!vigente) return
       if (r.status === 'success') setEnlaceNuevo(r.url)
-      else if (r.status === 'error') setError(r.message)
+      else setError(r.message)
     })
-  }
+    return () => {
+      vigente = false
+    }
+  }, [eventSlug, invitacion.enlace, invitacion.id, invitacion.revocada])
 
   const enInvitacion = (hacer: () => Promise<{ status: string; message?: string }>, hecho: string) => {
     setError(null)
@@ -274,7 +276,7 @@ export function EditPersonDialog({
           Su invitación
         </h3>
 
-        {invitacion.enlace || invitacion.codigo ? (
+        {invitacion.revocada ? null : (
           <div className="flex flex-col gap-2 rounded-[14px] bg-bg-top p-3.5">
             {(enlaceNuevo ?? invitacion.enlace) ? (
               <div className="flex min-w-0 items-center gap-2">
@@ -297,24 +299,7 @@ export function EditPersonDialog({
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                <p className="m-0 text-[12px] leading-[1.6] text-ink-soft">
-                  Su enlace se envió antes de que el panel guardara los enlaces, así que aquí no se puede mostrar. Si necesitas verlo, genera
-                  uno nuevo: el que ya tiene dejará de abrir.
-                </p>
-                {confirmarEnlace ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <PanelButton disabled={pendiente} onClick={generarEnlace} variant="danger">
-                      Sí, generar uno nuevo
-                    </PanelButton>
-                    <PanelButton onClick={() => setConfirmarEnlace(false)}>Cancelar</PanelButton>
-                  </div>
-                ) : (
-                  <button className="w-fit cursor-pointer text-[12px] text-ink underline underline-offset-4" onClick={() => setConfirmarEnlace(true)} type="button">
-                    Generar enlace nuevo
-                  </button>
-                )}
-              </div>
+              <p className="m-0 text-[12px] text-ink-soft">Preparando su enlace…</p>
             )}
             {invitacion.codigo ? (
               <p className="m-0 text-[12px] text-ink-soft">
@@ -322,7 +307,7 @@ export function EditPersonDialog({
               </p>
             ) : null}
           </div>
-        ) : null}
+        )}
 
         <div className="flex min-w-0 gap-2">
           <label className="sr-only" htmlFor={idAcomp}>

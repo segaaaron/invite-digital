@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
 import { AUTH_STATE } from './fixtures/atelier'
-import { createEvent, createGuestGroup } from './helpers/panel'
+import { createEvent, createGuestGroup, desplegarInvitacion } from './helpers/panel'
 
 test.use({ storageState: AUTH_STATE })
 
@@ -32,6 +32,8 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await createGuestGroup(page, SLUG, 'Padrinos', 2)
 
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  // Cuatro personas: la invitación nace plegada y sus personas no están en el DOM hasta abrirla.
+  await desplegarInvitacion(page, 'Familia Rojas Peña')
   const fila = page.getByRole('row', { name: /Familia Rojas Peña/ }).first()
 
   // --- Editar: nombre, restricción y correo, en el diálogo de la maqueta.
@@ -52,6 +54,8 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   expect(guardada?.email).toBe('ana@ejemplo.com')
 
   // --- Editar otra vez: marcar VIP no puede llevarse el correo por delante.
+  // Guardar volvió a la lista, y la invitación —renombrada con su principal— vuelve plegada.
+  await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
   await page.getByRole('row', { name: /Ana Lucía Vega Rojas/ }).getByRole('link', { name: /^Editar a / }).click()
   await page.getByLabel('Invitado VIP').check()
   await page.getByRole('button', { name: 'Guardar' }).click()
@@ -63,6 +67,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   expect(trasVip?.email).toBe('ana@ejemplo.com')
 
   // --- El pase: enseña el QR que ya tiene, sin generar nada.
+  await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
   await page.getByRole('row', { name: /Ana Lucía Vega Rojas/ }).getByRole('link', { name: /^Ver el pase de / }).click()
   await expect(page.getByRole('button', { name: /generar/i })).toHaveCount(0)
   // La invitación se llama como su principal, y al renombrarlo se renombró con él.
@@ -71,6 +76,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
 
   // --- Borrar: pregunta primero, y el segundo clic sí se la lleva.
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
   const suFila = page.getByRole('row', { name: /Ana Lucía Vega Rojas/ })
   await suFila.getByRole('button', { name: /^Eliminar a / }).click()
   await expect(suFila.getByRole('button', { name: 'Confirmar' })).toBeVisible()
@@ -85,6 +91,8 @@ test('mover a alguien a una invitación llena le suma el cupo, y la de origen pa
   await createGuestGroup(page, SLUG, 'Grupo lleno', 1)
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
+  // «Padrinos» son dos personas: su invitación va plegada.
+  await desplegarInvitacion(page, 'Padrinos')
   const fila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Padrinos' }) })
   await fila.getByRole('link', { name: /^Editar a / }).click()
   const invitacion = page.getByLabel('Invitación', { exact: true })

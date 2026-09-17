@@ -41,7 +41,7 @@ import { addGuest } from '@/modules/guests/application/add-guest'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
 import { importGuestGroups } from '@/modules/guests/application/import-guest-groups'
-import { enviarInvitacion, resendInvitation } from '@/modules/guests/application/resend-invitation'
+import { asegurarEnlace, enviarInvitacion, resendInvitation } from '@/modules/guests/application/resend-invitation'
 import { addPerson, listPeopleByEvent, removePerson, updatePerson } from '@/modules/guests/application/person-use-cases'
 import { countPeopleByEvent, createDrizzleGuestPersonRepository, drizzleGuestPersonRepository } from '@/modules/guests/infrastructure/drizzle-guest-person-repository'
 import { resolveByToken } from '@/modules/guests/application/resolve-by-token'
@@ -309,6 +309,7 @@ export const guests = {
   reopenRsvp: reopenRsvp({ groups: drizzleGuestGroupRepository, clock }),
   resend: resendInvitation({ groups: drizzleGuestGroupRepository, minter, clock }),
   enviar: enviarInvitacion({ groups: drizzleGuestGroupRepository, minter, clock }),
+  enlaceDe: asegurarEnlace({ groups: drizzleGuestGroupRepository, minter }),
   /** El enlace vigente de cada invitación que lo tenga guardado, para volver a enseñarlo. */
   enlaces: (eventId: string) => drizzleGuestGroupRepository.tokensOf(eventId),
   /** El código corto del pase de cada invitación, para enseñarlo en el panel. */

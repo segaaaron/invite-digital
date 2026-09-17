@@ -24,6 +24,7 @@ function base(grupos: GuestGroupRow[], gente: GuestPerson[]) {
     revoke: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},
+    adoptToken: async () => {},
     tokensOf: async () => new Map(),
     reopenRsvp: async () => {},
     setPhone: async () => {},

@@ -60,6 +60,18 @@ export async function createGuestGroup(
   await page.waitForURL(/invitados$/)
 }
 
+/**
+ * Despliega una invitación de varias personas en la lista de Invitados: nace **plegada** —se lee
+ * como una línea: nombre, cuántos son, si se envió— y sus personas no están en el DOM hasta
+ * tocarla. Sin esto, «Editar a …» de un acompañante no existe para Playwright.
+ *
+ * No hace nada si esa invitación es de una sola persona, que va en su fila de siempre.
+ */
+export async function desplegarInvitacion(page: Page, label: string): Promise<void> {
+  const cabecera = page.getByRole('button', { expanded: false }).filter({ hasText: label })
+  if ((await cabecera.count()) > 0) await cabecera.first().click()
+}
+
 /** Abre «Acompañado» y escribe un nombre por acompañante, que es lo único que se les pide. */
 export async function añadirAcompanantes(page: Page, cuantos: number): Promise<void> {
   if (cuantos === 0) return

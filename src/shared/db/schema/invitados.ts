@@ -19,6 +19,10 @@ export const guestGroups = pgTable(
     // El token, cifrado (`shared/security/sello`): el panel vuelve a enseñar el enlace y su QR
     // sin que un volcado de la base los entregue. Nulo en las invitaciones de antes de `0062`.
     tokenSealed: text('token_sealed'),
+    // El hash del enlace **anterior**, cuando se le dio uno nuevo sin invalidar el repartido
+    // (`0064`): las invitaciones de antes de `0062` no guardaron su token y no se puede volver a
+    // enseñar, así que se les acuña uno nuevo y el viejo sigue abriendo.
+    tokenHashPrev: bytea('token_hash_prev'),
     // El código corto del pase (`K7P3X`), para escribirlo a mano en la puerta. Único por evento (`0063`).
     passCode: varchar('pass_code', { length: 8 }),
     revokedAt: timestamp('revoked_at', { withTimezone: true }),

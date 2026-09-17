@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useState, useTransition } from 'react'
 import { checkInByGroupAction, undoCheckInAction } from '@/app/_acciones/checkin/actions'
-import { CheckIcon, ScanIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, ChevronIcon, RefreshIcon, ScanIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
@@ -42,16 +42,18 @@ const normal = (t: string) =>
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
 
-const horaAhora = () => new Intl.DateTimeFormat('es-BO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/La_Paz' }).format(new Date())
+const horaDe = (cuando: Date) => new Intl.DateTimeFormat('es-BO', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/La_Paz' }).format(cuando)
 
-const COLUMNAS = 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 min-[760px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_140px_120px]'
+const COLUMNAS = 'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 min-[760px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_92px_140px_112px]'
 
 /**
  * El control de la puerta. **Se entra con el pase**: escaneando su QR o escribiendo su código corto.
  * Registrar a alguien sin pase existe, pero es el último recurso y así se ve (pedido por el usuario).
  * Debajo, la lista de invitados como tabla: quién, de qué invitación y mesa, y su estado.
  *
- * Se refresca sola cada veinte segundos: la recepción escanea en otro teléfono y aquí se ve.
+ * **No se refresca sola**, y es a propósito: una pantalla que se recarga cada pocos segundos mueve
+ * la lista bajo el dedo de quien está registrando. Lo que se hace aquí se ve al momento; lo que
+ * escanea la recepción desde otro teléfono se trae con el botón «Actualizar», cuando se quiere.
  */
 export function ControlDeIngreso({
   filas,
@@ -76,13 +78,13 @@ export function ControlDeIngreso({
   const [entraron, setEntraron] = useState<Readonly<Record<string, string>>>({})
   const [salieron, setSalieron] = useState<ReadonlySet<string>>(new Set())
   const [confirmar, setConfirmar] = useState<string | null>(null)
+  /** Qué invitaciones de varias personas están desplegadas. Plegadas, la lista se lee de un vistazo. */
+  const [abiertas, setAbiertas] = useState<ReadonlySet<string>>(new Set())
   const [enCurso, setEnCurso] = useState<string | null>(null)
   const [aviso, setAviso] = useState<string | null>(null)
-
-  useEffect(() => {
-    const t = setInterval(() => router.refresh(), 20_000)
-    return () => clearInterval(t)
-  }, [router])
+  /** Lo que hay que decir sin que sea un fallo: «ya estaba dentro». Rojo aquí sería mentir. */
+  const [nota, setNota] = useState<string | null>(null)
+  const [actualizando, actualizar] = useTransition()
 
   // Lo registrado aquí cuenta ya, aunque el servidor aún no haya vuelto a pintar.
   const vistas = filas.map((f) => {
@@ -119,6 +121,7 @@ export function ControlDeIngreso({
     if (primero === undefined) return
     setEnCurso(clave)
     setAviso(null)
+    setNota(null)
     setConfirmar(null)
     const conNombres = quienes.every((q) => q.personaId !== null)
     void checkInByGroupAction({
@@ -130,12 +133,17 @@ export function ControlDeIngreso({
       scannedAtMs: ahoraMs,
       personIds: conNombres ? quienes.map((q) => q.personaId as string) : null,
     })
-      .then(() => {
-        const hora = horaAhora()
+      .then((resultado) => {
+        // El servidor es quien sabe: si otra puerta ya lo registró, dice `already` y desde cuándo.
+        // Registrar de nuevo no duplica —los escaneos se unen—, pero la pantalla no puede fingir
+        // que acaba de entrar alguien que ya estaba dentro.
+        const yaEstaba = resultado.kind === 'already'
+        const hora = horaDe(yaEstaba ? new Date(resultado.arrivedAt) : new Date())
         setEntraron((previo) => ({ ...previo, ...Object.fromEntries(quienes.map((q) => [q.clave, hora])) }))
         setSalieron((previo) => new Set([...previo].filter((c) => !quienes.some((q) => q.clave === c))))
         setPorCodigo(null)
         setCodigo('')
+        setNota(yaEstaba ? `${quienes.length === 1 ? primero.nombre : (primero.invitacion ?? primero.nombre)} ya estaba dentro desde las ${hora}.` : null)
         router.refresh()
       })
       .catch(() => setAviso(`No se pudo registrar a ${quienes.length === 1 ? primero.nombre : primero.invitacion}. Vuelve a intentarlo.`))
@@ -378,6 +386,12 @@ export function ControlDeIngreso({
               {aviso}
             </p>
           )}
+
+          {nota === null ? null : (
+            <p className="m-0 rounded-[12px] bg-sage/12 px-4 py-3 text-[13px] text-ink-soft" role="status">
+              {nota}
+            </p>
+          )}
         </section>
 
         <section aria-label="Invitados" className="flex flex-col gap-4 rounded-[18px] border border-line-panel bg-white p-4 shadow-card max-[1099px]:order-3 min-[560px]:p-5">
@@ -402,6 +416,17 @@ export function ControlDeIngreso({
             <div className="min-w-0 flex-1">
               <SearchField className="w-full" label="Buscar invitado" onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre…" value={busqueda} />
             </div>
+            {/* Traer lo que registró la recepción desde otro teléfono. A mano: quien mira decide cuándo. */}
+            <button
+              aria-busy={actualizando}
+              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-4 py-2 text-[12.5px] text-ink transition hover:border-ink disabled:opacity-50"
+              disabled={actualizando}
+              onClick={() => actualizar(() => router.refresh())}
+              type="button"
+            >
+              <RefreshIcon className={`size-4 ${actualizando ? 'animate-spin' : ''}`} />
+              {actualizando ? 'Actualizando…' : 'Actualizar'}
+            </button>
           </div>
 
           {porInvitacion.length === 0 ? (
@@ -415,96 +440,169 @@ export function ControlDeIngreso({
               <div className={`${COLUMNAS} border-b border-line-panel pb-2.5 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase max-[759px]:hidden`} role="row">
                 <span role="columnheader">Invitado</span>
                 <span role="columnheader">Invitación · Mesa</span>
+                <span role="columnheader">Personas</span>
                 <span role="columnheader">Estado</span>
                 <span className="text-right" role="columnheader">
                   <span className="sr-only">Acción</span>
                 </span>
               </div>
               {porInvitacion.map((bloque) => {
-                const pendientes = vistas.filter((v) => v.invitacionId === bloque.id && v.estado !== 'dentro')
-                const familia = vistas.filter((v) => v.invitacionId === bloque.id).length > 1
+                const todas = vistas.filter((v) => v.invitacionId === bloque.id)
+                const pendientes = todas.filter((v) => v.estado !== 'dentro')
+                const familia = todas.length > 1
+                // Plegada, una familia se lee como una línea; buscando se abre sola, que es cuando se busca a alguien.
+                const abierta = !familia || abiertas.has(bloque.id) || buscado !== ''
+                const dentroN = todas.length - pendientes.length
+                const nombreDeBloque = bloque.filas[0]?.invitacion ?? bloque.filas[0]?.nombre ?? ''
                 return (
                   <div className={familia ? 'border-l-2 border-l-gold/40' : ''} key={bloque.id} role="rowgroup">
-                    {bloque.filas.map((f, i) => (
-                      <div aria-label={f.nombre} className={`${COLUMNAS} border-b border-line-panel py-3 ${familia ? 'pl-3' : ''}`} key={f.clave} role="row">
-                        <span className="flex min-w-0 items-center gap-3" role="cell">
-                          <span aria-hidden className={`grid size-9 shrink-0 place-items-center rounded-full text-[13px] text-white ${f.estado === 'dentro' ? 'bg-sage' : `bg-linear-to-br ${avatarColor(f.nombre)}`}`}>
-                            {f.estado === 'dentro' ? <CheckIcon className="size-4" /> : (f.nombre.trim()[0] ?? '·').toUpperCase()}
-                          </span>
-                          <span className="flex min-w-0 flex-col">
-                            <span className="flex min-w-0 items-center gap-2">
-                              <span className="truncate text-[14.5px] text-ink">{f.nombre}</span>
-                              {f.vip ? <span className="shrink-0 rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
+                    {familia ? (
+                      <div className={`${COLUMNAS} border-b border-line-panel py-3 pl-3`} role="row">
+                        <span className="flex min-w-0" role="cell">
+                          <button
+                            aria-expanded={abierta}
+                            className="flex min-w-0 cursor-pointer items-center gap-3 text-left"
+                            onClick={() =>
+                              setAbiertas((previo) => {
+                                const siguiente = new Set(previo)
+                                if (siguiente.has(bloque.id)) siguiente.delete(bloque.id)
+                                else siguiente.add(bloque.id)
+                                return siguiente
+                              })
+                            }
+                            type="button"
+                          >
+                            <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? '' : '-rotate-90'}`} />
+                            <span aria-hidden className="flex -space-x-2">
+                              {todas.slice(0, 3).map((v) => (
+                                <span
+                                  className={`grid size-7 shrink-0 place-items-center rounded-full text-[11px] text-white ring-2 ring-white ${v.estado === 'dentro' ? 'bg-sage' : `bg-linear-to-br ${avatarColor(v.nombre)}`}`}
+                                  key={v.clave}
+                                >
+                                  {(v.nombre.trim()[0] ?? '·').toUpperCase()}
+                                </span>
+                              ))}
                             </span>
-                            <span className="truncate text-[11.5px] text-ink-mute min-[760px]:hidden">
-                              {[f.invitacion !== f.nombre ? f.invitacion : null, f.mesa, f.estado === 'dentro' ? (f.hora === null ? 'Dentro' : `Entró ${f.hora}`) : null].filter(Boolean).join(' · ')}
+                            <span className="flex min-w-0 flex-col">
+                              <span className="truncate text-[14.5px] text-ink">{nombreDeBloque}</span>
+                              <span className="truncate text-[11.5px] text-ink-mute min-[760px]:hidden">
+                                {[`${todas.length} personas`, bloque.filas[0]?.mesa, dentroN === 0 ? 'Por llegar' : `${dentroN} dentro`].filter(Boolean).join(' · ')}
+                              </span>
                             </span>
-                          </span>
+                          </button>
                         </span>
                         <span className="min-w-0 truncate text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
-                          {i === 0 ? [f.invitacion ?? f.nombre, f.mesa ?? 'Sin mesa'].join(' · ') : ''}
+                          {bloque.filas[0]?.mesa ?? 'Sin mesa'}
+                        </span>
+                        <span className="text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
+                          {`${todas.length} personas`}
                         </span>
                         <span className="max-[759px]:hidden" role="cell">
-                          {f.estado === 'dentro' ? (
-                            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage/15 px-2.5 py-1 text-[12px] text-sage">{f.hora === null ? 'Dentro' : `Entró ${f.hora}`}</span>
-                          ) : f.estado === 'no_viene' ? (
-                            <span className="inline-flex rounded-full bg-bg-top px-2.5 py-1 text-[12px] text-ink-mute">No viene</span>
+                          {dentroN === 0 ? (
+                            todas.every((v) => v.estado === 'no_viene') ? (
+                              <span className="inline-flex rounded-full bg-bg-top px-2.5 py-1 text-[12px] text-ink-mute">No vienen</span>
+                            ) : (
+                              <span className="inline-flex rounded-full border border-line-panel-strong px-2.5 py-1 text-[12px] text-ink-soft">Por llegar</span>
+                            )
                           ) : (
-                            <span className="inline-flex rounded-full border border-line-panel-strong px-2.5 py-1 text-[12px] text-ink-soft">Por llegar</span>
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-sage/15 px-2.5 py-1 text-[12px] text-sage">
+                              {dentroN === todas.length ? 'Dentro' : `${dentroN} de ${todas.length} dentro`}
+                            </span>
                           )}
                         </span>
                         <span className="flex justify-end" role="cell">
-                          {confirmar === f.clave ? (
-                            <span className="flex items-center gap-1.5" role="alert">
-                              <button
-                                className={`cursor-pointer rounded-full px-3 py-1.5 text-[12px] text-white ${f.estado === 'dentro' ? 'bg-danger' : 'bg-ink'}`}
-                                onClick={() => (f.estado === 'dentro' ? deshacer(f) : registrar([f], Date.now(), f.clave))}
-                                type="button"
-                              >
-                                {f.estado === 'dentro' ? 'Deshacer' : 'Registrar'}
-                              </button>
-                              <button className="cursor-pointer px-2 py-1.5 text-[12px] text-ink-soft" onClick={() => setConfirmar(null)} type="button">
-                                No
-                              </button>
-                            </span>
-                          ) : f.estado === 'dentro' ? (
+                          {pendientes.length > 1 ? (
                             <button
-                              aria-label={`Deshacer el ingreso de ${f.nombre}`}
-                              className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-danger hover:underline disabled:opacity-50"
-                              disabled={enCurso !== null}
-                              onClick={() => setConfirmar(f.clave)}
-                              type="button"
-                            >
-                              {enCurso === f.clave ? 'Deshaciendo…' : 'Deshacer'}
-                            </button>
-                          ) : (
-                            <button
-                              aria-label={`Registrar sin pase a ${f.nombre}`}
+                              aria-label={`Registrar sin pase a los ${pendientes.length} de ${nombreDeBloque}`}
                               className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
                               disabled={enCurso !== null}
-                              onClick={() => setConfirmar(f.clave)}
-                              title="Solo si no trae ni el QR ni el código del pase"
+                              onClick={() => registrar(pendientes, Date.now(), `todos:${bloque.id}`)}
+                              title="Solo si la familia no trae ni el QR ni el código del pase"
                               type="button"
                             >
-                              {enCurso === f.clave ? 'Registrando…' : 'Sin pase'}
+                              {enCurso === `todos:${bloque.id}` ? 'Registrando…' : `Sin pase, los ${pendientes.length}`}
                             </button>
-                          )}
+                          ) : null}
                         </span>
                       </div>
-                    ))}
-                    {familia && pendientes.length > 1 ? (
-                      <div className="flex justify-end py-2 pr-0.5">
-                        <button
-                          aria-label={`Registrar sin pase a los ${pendientes.length} de ${bloque.filas[0]?.invitacion ?? ''}`}
-                          className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
-                          disabled={enCurso !== null}
-                          onClick={() => registrar(pendientes, Date.now(), `todos:${bloque.id}`)}
-                          type="button"
-                        >
-                          {enCurso === `todos:${bloque.id}` ? 'Registrando…' : `Sin pase, los ${pendientes.length}`}
-                        </button>
-                      </div>
                     ) : null}
+                    {!abierta
+                      ? null
+                      : bloque.filas.map((f) => (
+                          <div aria-label={f.nombre} className={`${COLUMNAS} border-b border-line-panel py-3 ${familia ? 'pl-9' : ''}`} key={f.clave} role="row">
+                            <span className="flex min-w-0 items-center gap-3" role="cell">
+                              <span
+                                aria-hidden
+                                className={`grid size-9 shrink-0 place-items-center rounded-full text-[13px] text-white ${f.estado === 'dentro' ? 'bg-sage' : `bg-linear-to-br ${avatarColor(f.nombre)}`}`}
+                              >
+                                {f.estado === 'dentro' ? <CheckIcon className="size-4" /> : (f.nombre.trim()[0] ?? '·').toUpperCase()}
+                              </span>
+                              <span className="flex min-w-0 flex-col">
+                                <span className="flex min-w-0 items-center gap-2">
+                                  <span className="truncate text-[14.5px] text-ink">{f.nombre}</span>
+                                  {f.vip ? <span className="shrink-0 rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
+                                </span>
+                                <span className="truncate text-[11.5px] text-ink-mute min-[760px]:hidden">
+                                  {[familia || f.invitacion === f.nombre ? null : f.invitacion, familia ? null : f.mesa, f.estado === 'dentro' ? (f.hora === null ? 'Dentro' : `Entró ${f.hora}`) : null]
+                                    .filter(Boolean)
+                                    .join(' · ')}
+                                </span>
+                              </span>
+                            </span>
+                            <span className="min-w-0 truncate text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
+                              {familia ? '' : [f.invitacion ?? f.nombre, f.mesa ?? 'Sin mesa'].join(' · ')}
+                            </span>
+                            <span className="text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
+                              {familia ? '' : '1 persona'}
+                            </span>
+                            <span className="max-[759px]:hidden" role="cell">
+                              {f.estado === 'dentro' ? (
+                                <span className="inline-flex items-center gap-1.5 rounded-full bg-sage/15 px-2.5 py-1 text-[12px] text-sage">{f.hora === null ? 'Dentro' : `Entró ${f.hora}`}</span>
+                              ) : f.estado === 'no_viene' ? (
+                                <span className="inline-flex rounded-full bg-bg-top px-2.5 py-1 text-[12px] text-ink-mute">No viene</span>
+                              ) : (
+                                <span className="inline-flex rounded-full border border-line-panel-strong px-2.5 py-1 text-[12px] text-ink-soft">Por llegar</span>
+                              )}
+                            </span>
+                            <span className="flex justify-end" role="cell">
+                              {confirmar === f.clave ? (
+                                <span className="flex items-center gap-1.5" role="alert">
+                                  <button
+                                    className={`cursor-pointer rounded-full px-3 py-1.5 text-[12px] text-white ${f.estado === 'dentro' ? 'bg-danger' : 'bg-ink'}`}
+                                    onClick={() => (f.estado === 'dentro' ? deshacer(f) : registrar([f], Date.now(), f.clave))}
+                                    type="button"
+                                  >
+                                    {f.estado === 'dentro' ? 'Deshacer' : 'Registrar'}
+                                  </button>
+                                  <button className="cursor-pointer px-2 py-1.5 text-[12px] text-ink-soft" onClick={() => setConfirmar(null)} type="button">
+                                    No
+                                  </button>
+                                </span>
+                              ) : f.estado === 'dentro' ? (
+                                <button
+                                  aria-label={`Deshacer el ingreso de ${f.nombre}`}
+                                  className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-danger hover:underline disabled:opacity-50"
+                                  disabled={enCurso !== null}
+                                  onClick={() => setConfirmar(f.clave)}
+                                  type="button"
+                                >
+                                  {enCurso === f.clave ? 'Deshaciendo…' : 'Deshacer'}
+                                </button>
+                              ) : (
+                                <button
+                                  aria-label={`Registrar sin pase a ${f.nombre}`}
+                                  className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
+                                  disabled={enCurso !== null}
+                                  onClick={() => setConfirmar(f.clave)}
+                                  title="Solo si no trae ni el QR ni el código del pase"
+                                  type="button"
+                                >
+                                  {enCurso === f.clave ? 'Registrando…' : 'Sin pase'}
+                                </button>
+                              )}
+                            </span>
+                          </div>
+                        ))}
                   </div>
                 )
               })}

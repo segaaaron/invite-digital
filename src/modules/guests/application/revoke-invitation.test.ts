@@ -19,6 +19,7 @@ function repo() {
     remove: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},
+    adoptToken: async () => {},
     tokensOf: async () => new Map(),
     reopenRsvp: async (_e, id) => void reabiertas.push(id),
     setPhone: async () => {},

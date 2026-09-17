@@ -224,6 +224,24 @@ export async function sendInvitationAction(_previous: ResendState, formData: For
   return repartir(eventId, eventSlug, formData, 'mismo')
 }
 
+/**
+ * El enlace de una invitación para **enseñarlo** en el panel: no lo rota ni marca el reparto.
+ *
+ * Una invitación de antes de `0062` no guardó su enlace y no se puede volver a enseñar; esta acción
+ * le acuña uno y conserva el viejo, que sigue abriendo. Así «Editar invitado» siempre tiene un
+ * enlace que copiar sin dejar fuera al invitado que ya tiene el suyo.
+ */
+export async function ensureInvitationLinkAction(input: { eventSlug: string; groupId: string }): Promise<{ status: 'success'; url: string } | { status: 'error'; message: string }> {
+  const actor = await requireSession()
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+  const result = await guests.enlaceDe({ eventId, id: input.groupId })
+  if (isErr(result)) {
+    console.error('enlace no disponible', result.error.kind, result.error.detail)
+    return { status: 'error', message: result.error.detail }
+  }
+  return { status: 'success', url: invitationUrl(result.value.token, env.SITE_URL) }
+}
+
 async function repartir(eventId: string, eventSlug: string, formData: FormData, modo: 'rotar' | 'mismo'): Promise<ResendState> {
   const sinEscribir = await invitacionSinEscribir(eventId)
   if (sinEscribir !== null) return { status: 'error', message: sinEscribir }

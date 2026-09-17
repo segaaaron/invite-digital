@@ -25,6 +25,18 @@ export function ArrowLeftIcon({ className }: IconProps) {
   )
 }
 
+/** Dos flechas en círculo: volver a leer lo que hay en el servidor. */
+export function RefreshIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M20 11a8 8 0 0 0-13.7-5.3L4 8" />
+      <path d="M4 4v4h4" />
+      <path d="M4 13a8 8 0 0 0 13.7 5.3L20 16" />
+      <path d="M20 20v-4h-4" />
+    </svg>
+  )
+}
+
 export function MailIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>

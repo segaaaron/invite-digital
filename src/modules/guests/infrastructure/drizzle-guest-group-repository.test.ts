@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { events } from '@/shared/db/schema'
+import { eq } from 'drizzle-orm'
+import { events, guestGroups } from '@/shared/db/schema'
 import { createTokenMinter } from '@/shared/security/tokens'
 import { countGroupsByEvent, createDrizzleGuestGroupRepository } from './drizzle-guest-group-repository'
 
@@ -52,6 +53,40 @@ describe('repositorio de grupos', () => {
       // El enlace se vuelve a enseñar: el token se guarda cifrado y se abre por evento.
       expect([...(await repo.tokensOf(eventId)).values()].sort()).toEqual([primero.token, segundo.token].sort())
       expect(await repo.findByTokenHash(Buffer.alloc(32, 255))).toBeNull()
+    })
+  })
+
+  /**
+   * Una invitación de antes de `0062` no guardó su token: el panel no puede enseñar su enlace, y
+   * rotarlo dejaría fuera al invitado que ya tiene el suyo en el chat. `adoptToken` le da uno nuevo
+   * **conservando el viejo**: los dos abren la misma invitación.
+   */
+  it('adoptar un enlace deja vivos los dos, y no toca la que ya tenía el suyo guardado', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleGuestGroupRepository(tx)
+      const minter = createTokenMinter()
+      const eventId = await seedEvent(tx)
+
+      const id = crypto.randomUUID()
+      const viejo = minter.mint()
+      await repo.insert({ id, eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, viejo.hash, viejo.token)
+      // Como las de antes de `0062`: con hash y sin token guardado.
+      await tx.update(guestGroups).set({ tokenSealed: null }).where(eq(guestGroups.id, id))
+      expect((await repo.tokensOf(eventId)).get(id)).toBeUndefined()
+
+      const nuevo = minter.mint()
+      await repo.adoptToken(eventId, id, nuevo.hash, nuevo.token)
+
+      expect((await repo.tokensOf(eventId)).get(id)).toBe(nuevo.token)
+      expect((await repo.findByTokenHash(minter.hashOf(nuevo.token)))?.id).toBe(id)
+      // Lo que importa: el enlace que ya circula por el chat sigue abriendo.
+      expect((await repo.findByTokenHash(minter.hashOf(viejo.token)))?.id).toBe(id)
+
+      // Sobre una que sí tiene su enlace guardado, adoptar no hace nada.
+      const otro = minter.mint()
+      await repo.adoptToken(eventId, id, otro.hash, otro.token)
+      expect((await repo.tokensOf(eventId)).get(id)).toBe(nuevo.token)
+      expect(await repo.findByTokenHash(minter.hashOf(otro.token))).toBeNull()
     })
   })
 

@@ -2,10 +2,11 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ControlDeIngreso, type FilaDeIngreso } from './ControlDeIngreso'
 
-const registrar = vi.hoisted(() => vi.fn(async () => ({})))
+const registrar = vi.hoisted(() => vi.fn(async (): Promise<Record<string, unknown>> => ({ kind: 'welcome' })))
 const deshacer = vi.hoisted(() => vi.fn(async () => ({ status: 'success' })))
 vi.mock('@/app/_acciones/checkin/actions', () => ({ checkInByGroupAction: registrar, undoCheckInAction: deshacer }))
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }))
+const refrescar = vi.hoisted(() => vi.fn())
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: refrescar, push: vi.fn() }) }))
 
 const fila = (over: Partial<FilaDeIngreso> & Pick<FilaDeIngreso, 'clave' | 'personaId' | 'nombre' | 'estado'>): FilaDeIngreso => ({ invitacion: 'Familia Rojas', invitacionId: 'fam', hora: null, mesa: 'Mesa 3', vip: false, codigo: 'K7P3X', ...over })
 const filas = [
@@ -17,6 +18,8 @@ const filas = [
 
 const pinta = () => render(<ControlDeIngreso escanerHref="/puerta" eventId="e1" eventSlug="xv" filas={filas} recepcion={{ gestionarHref: '/equipo', personas: [{ id: 'p1', nombre: 'Carla Mena', puerta: 'Puerta norte', registradas: 4 }] }} />)
 const personas = () => within(screen.getByRole('table', { name: 'Ingresos' })).getAllByRole('row').filter((l) => l.hasAttribute('aria-label')).map((l) => l.getAttribute('aria-label'))
+/** Una invitación de varias personas nace plegada: se despliega para llegar a cada persona. */
+const desplegar = () => fireEvent.click(screen.getByRole('button', { expanded: false }))
 
 beforeEach(() => vi.clearAllMocks())
 
@@ -24,6 +27,11 @@ describe('ControlDeIngreso', () => {
   it('arriba cuántos entraron de los esperados; la lista empieza por quien falta', () => {
     pinta()
     expect(screen.getByRole('region', { name: 'Cómo va el ingreso' })).toHaveTextContent('1de 3 personas dentro')
+    // Plegada, la familia es una línea: su nombre, cuántos son y cómo va.
+    expect(personas()).toEqual([])
+    expect(screen.getByRole('button', { expanded: false })).toHaveTextContent('Familia Rojas')
+    expect(screen.getByText('3 personas')).toBeInTheDocument()
+    desplegar()
     expect(personas()).toEqual(['Luis Rojas', 'Sofía Rojas'])
     expect(screen.getByRole('button', { name: 'Escanear QR' })).toBeInTheDocument()
   })
@@ -68,6 +76,7 @@ describe('ControlDeIngreso', () => {
 
   it('sin pase es el último recurso: pide confirmar y registra solo a esa persona', async () => {
     pinta()
+    desplegar()
     fireEvent.click(screen.getByRole('button', { name: 'Registrar sin pase a Luis Rojas' }))
     expect(registrar).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Registrar' }))
@@ -86,10 +95,38 @@ describe('ControlDeIngreso', () => {
   it('deshacer un ingreso pide confirmar y lo devuelve a por llegar', async () => {
     pinta()
     fireEvent.click(screen.getByRole('tab', { name: 'Dentro 1' }))
+    desplegar()
     fireEvent.click(screen.getByRole('button', { name: 'Deshacer el ingreso de Ana Rojas' }))
     expect(deshacer).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Deshacer' }))
     await waitFor(() => expect(deshacer).toHaveBeenCalledWith({ eventId: 'e1', eventSlug: 'xv', groupId: 'fam', personId: 'ana' }))
     await waitFor(() => expect(screen.getByRole('region', { name: 'Cómo va el ingreso' })).toHaveTextContent('0de 3 personas dentro'))
+  })
+})
+
+/** Nada se refresca solo: quien mira decide cuándo traer lo que registró la recepción. */
+describe('ControlDeIngreso · actualizar', () => {
+  it('el botón trae lo del servidor, y sin él no se recarga nada', () => {
+    vi.useFakeTimers()
+    pinta()
+    vi.advanceTimersByTime(120_000)
+    expect(refrescar).not.toHaveBeenCalled()
+    vi.useRealTimers()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
+    expect(refrescar).toHaveBeenCalled()
+  })
+})
+
+/** La verdad la tiene el servidor: si otra puerta ya lo registró, lo dice y la pantalla lo repite. */
+describe('ControlDeIngreso · alguien ya lo registró', () => {
+  it('lo dice con su hora, en vez de fingir que acaba de entrar', async () => {
+    registrar.mockResolvedValueOnce({ kind: 'already', arrivedAt: new Date('2026-10-18T23:40:00Z'), arrivedCount: 3 })
+    pinta()
+    desplegar()
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar sin pase a Luis Rojas' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Registrar' }))
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Luis Rojas ya estaba dentro desde las 19:40'))
   })
 })

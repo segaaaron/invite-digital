@@ -16,6 +16,11 @@ export type DoorManifestGroup = {
   /** SHA-256 en hexadecimal. Nunca el token en claro. */
   readonly tokenHashHex: string
   /**
+   * El del enlace anterior, cuando la invitación tiene dos vivos (`0064`): sin él, el QR que el
+   * invitado ya guardó no lo reconocería la puerta sin red. Opcional: un manifiesto viejo no lo trae.
+   */
+  readonly tokenHashPrevHex?: string | null
+  /**
    * El código corto del pase: la puerta lo resuelve a mano sin red. No abre la invitación.
    * Opcional: un manifiesto guardado antes en el celular de la puerta no lo trae.
    */
@@ -66,6 +71,7 @@ export const getDoorManifest =
             leadName: g.leadName,
             tableLabel: g.tableLabel,
             tokenHashHex: g.tokenHash.toString('hex'),
+            tokenHashPrevHex: g.tokenHashPrev?.toString('hex') ?? null,
             passCode: g.passCode ?? null,
             people: g.people,
           })),

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { PeopleTable, type PersonRowView } from './PeopleTable'
 
 vi.mock('@/app/_acciones/guests/actions', () => ({
@@ -61,7 +61,7 @@ describe('PeopleTable', () => {
     expect(screen.queryByRole('columnheader', { name: 'Acomp.' })).toBeNull()
   })
 
-  it('una familia se presenta como su invitación, con sus personas debajo; una invitación propia va en su fila', () => {
+  it('una familia se presenta como su invitación, plegada, y se despliega al tocarla', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
     const cabecera = screen.getAllByRole('row').find((r) => r.querySelector('td[colspan]') !== null)!
     expect(cabecera).toHaveTextContent('Familia Rojas Peña')
@@ -70,6 +70,12 @@ describe('PeopleTable', () => {
     // Su pase es de la invitación: va en la cabecera, no repetido en cada persona.
     expect(screen.getByRole('link', { name: 'Ver el pase de Familia Rojas Peña' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Ver el pase de Ana Lucía Vega' })).toBeNull()
+
+    // Plegada: sus personas no se ven hasta que se toca la cabecera.
+    expect(screen.queryByText('Ana Lucía Vega')).not.toBeInTheDocument()
+    const desplegar = within(cabecera).getByRole('button', { expanded: false })
+    fireEvent.click(desplegar)
+    expect(screen.getByText('Ana Lucía Vega')).toBeInTheDocument()
 
     const celda = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[4]
     expect(celda('Roberto Núñez')).toHaveTextContent(/^PropiaSin enviar$/)
@@ -95,6 +101,7 @@ describe('PeopleTable', () => {
 
   it('el estado se lee en texto, no solo por color', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
+    fireEvent.click(screen.getByRole('button', { expanded: false }))
     const rsvp = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[1]
     expect(rsvp('Ana Lucía Vega')).toHaveTextContent('Confirmado')
     expect(rsvp('Acompañante de Ana')).toHaveTextContent('Tal vez')
@@ -135,6 +142,7 @@ describe('PeopleTable', () => {
     // Borrar es inmediato y no hay deshacer: un clic de más se lleva a alguien de la
     // lista y nadie se entera hasta el día del evento.
     render(<PeopleTable eventSlug="boda" rows={filas} />)
+    fireEvent.click(screen.getByRole('button', { expanded: false }))
 
     fireEvent.click(screen.getAllByRole('button', { name: /^eliminar a /i })[0]!)
 

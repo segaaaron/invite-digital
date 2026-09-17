@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { enviarInvitacion, resendInvitation } from './resend-invitation'
+import { asegurarEnlace, enviarInvitacion, resendInvitation } from './resend-invitation'
 import type { GuestGroupRepository, GuestGroupRow } from './ports'
 import { isErr, isOk } from '@/shared/result'
 
@@ -7,6 +7,7 @@ const NOW = new Date('2026-08-22T12:00:00Z')
 
 function repo(row: GuestGroupRow | null, guardados: ReadonlyMap<string, string> = new Map()) {
   const tokens: Buffer[] = []
+  const adoptados: Buffer[] = []
   const enviados: Date[] = []
   const groups: GuestGroupRepository = {
     insert: async () => {},
@@ -18,13 +19,14 @@ function repo(row: GuestGroupRow | null, guardados: ReadonlyMap<string, string> 
     remove: async () => {},
     markSent: async (_e, _id, at) => void enviados.push(at),
     replaceToken: async (_e, _id, hash) => void tokens.push(hash),
+    adoptToken: async (_e, _id, hash) => void adoptados.push(hash),
     tokensOf: async () => guardados,
     reopenRsvp: async () => {},
     setPhone: async () => {},
     setSeats: async () => {},
     setLabel: async () => {},
   }
-  return { groups, tokens, enviados }
+  return { groups, tokens, adoptados, enviados }
 }
 
 const fila = (over: Partial<GuestGroupRow> = {}): GuestGroupRow => ({
@@ -92,23 +94,56 @@ describe('enviarInvitacion', () => {
     expect(enviados).toEqual([NOW])
   })
 
-  it('sin enlace guardado (invitaciones de antes) acuña uno', async () => {
-    const { groups, tokens } = repo(fila())
+  it('sin enlace guardado (invitaciones de antes) acuña uno sin invalidar el repartido', async () => {
+    const { groups, tokens, adoptados } = repo(fila())
     const result = await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
     expect(isOk(result) && result.value.token).toBe('token-nuevo')
-    expect(tokens).toHaveLength(1)
+    // Adoptar, nunca rotar: el enlace que ya circula por el chat sigue abriendo.
+    expect(adoptados).toHaveLength(1)
+    expect(tokens).toHaveLength(0)
   })
 
-  it('ya enviada y sin enlace guardado no acuña otro: el invitado sigue con el suyo', async () => {
-    const { groups, tokens, enviados } = repo(fila({ invitationSentAt: NOW }))
+  it('ya enviada y sin enlace guardado: se le suma uno y el que tiene el invitado sigue valiendo', async () => {
+    const { groups, tokens, adoptados, enviados } = repo(fila({ invitationSentAt: NOW }))
     const result = await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' })
-    expect(isErr(result)).toBe(true)
+    expect(isOk(result) && result.value.token).toBe('token-nuevo')
+    expect(adoptados).toHaveLength(1)
     expect(tokens).toHaveLength(0)
-    expect(enviados).toHaveLength(0)
+    expect(enviados).toEqual([NOW])
   })
 
   it('no envía una revocada', async () => {
     const { groups } = repo(fila({ revokedAt: NOW }), new Map([['g1', 'token-guardado']]))
     expect(isErr(await enviarInvitacion({ groups, minter, clock: () => NOW })({ eventId: 'e1', id: 'g1' }))).toBe(true)
+  })
+})
+
+describe('asegurarEnlace', () => {
+  it('con el enlace guardado lo devuelve y no escribe nada: enseñarlo no es repartirlo', async () => {
+    const { groups, tokens, adoptados, enviados } = repo(fila(), new Map([['g1', 'token-guardado']]))
+    const result = await asegurarEnlace({ groups, minter })({ eventId: 'e1', id: 'g1' })
+    expect(isOk(result) && result.value.token).toBe('token-guardado')
+    expect([tokens, adoptados, enviados].every((l) => l.length === 0)).toBe(true)
+  })
+
+  it('sin enlace guardado acuña uno, conserva el anterior y tampoco marca el reparto', async () => {
+    const { groups, adoptados, enviados } = repo(fila({ invitationSentAt: NOW }))
+    const result = await asegurarEnlace({ groups, minter })({ eventId: 'e1', id: 'g1' })
+    expect(isOk(result) && result.value.token).toBe('token-nuevo')
+    expect(adoptados).toHaveLength(1)
+    expect(enviados).toHaveLength(0)
+  })
+
+  it('una revocada no da enlace', async () => {
+    const { groups, adoptados } = repo(fila({ revokedAt: NOW }))
+    const result = await asegurarEnlace({ groups, minter })({ eventId: 'e1', id: 'g1' })
+    expect(isErr(result) && result.error.kind).toBe('revoked')
+    expect(adoptados).toHaveLength(0)
+  })
+
+  it('una invitación de otro evento es not_found', async () => {
+    const { groups, adoptados } = repo(fila({ eventId: 'e2' }))
+    expect(isErr(await asegurarEnlace({ groups, minter })({ eventId: 'e1', id: 'g1' }))).toBe(true)
+    expect(adoptados).toHaveLength(0)
   })
 })

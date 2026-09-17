@@ -35,7 +35,8 @@ export async function resolveLocally(
   if (isErr(token)) return { kind: 'unknown' }
 
   const hash = await sha256Hex(token.value)
-  const group = groups.find((g) => g.tokenHashHex === hash)
+  // Los dos enlaces de una invitación abren igual en la puerta (`0064`).
+  const group = groups.find((g) => g.tokenHashHex === hash || g.tokenHashPrevHex === hash)
   if (!group) return { kind: 'unknown' }
 
   if (arrivedIds.has(group.id)) return { kind: 'already', group, arrivedCount: group.attending ?? 1 }

@@ -1,4 +1,4 @@
-import { desc, eq, sql } from 'drizzle-orm'
+import { desc, eq, sql, or } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { arrivals, guestGroups, rsvpResponses, venueTables } from '@/shared/db/schema'
 import type { ArrivalRepository, DoorGroupReader, DoorGroupRow } from '../application/ports'
@@ -83,6 +83,7 @@ const toRow = (r: {
   attending: number | null
   revokedAt: Date | null
   tokenHash: Buffer
+  tokenHashPrev: Buffer | null
   passCode: string | null
   tableLabel: string | null
   leadName: string | null
@@ -95,6 +96,7 @@ const toRow = (r: {
   attending: r.attending,
   revoked: r.revokedAt !== null,
   tokenHash: r.tokenHash,
+  tokenHashPrev: r.tokenHashPrev,
   passCode: r.passCode,
   tableLabel: r.tableLabel,
   leadName: r.leadName,
@@ -110,6 +112,7 @@ const groupColumns = (latest: ReturnType<typeof latestAttending>) => ({
   attending: latest.attending,
   revokedAt: guestGroups.revokedAt,
   tokenHash: guestGroups.tokenHash,
+  tokenHashPrev: guestGroups.tokenHashPrev,
   passCode: guestGroups.passCode,
   tableLabel: venueTables.label,
   /**
@@ -145,7 +148,8 @@ export const createDrizzleDoorGroupReader = (database: DbExecutor): DoorGroupRea
       .leftJoin(latest, eq(latest.guestGroupId, guestGroups.id))
       // Left join, no inner: un grupo sin mesa tiene que seguir apareciendo en la puerta.
       .leftJoin(venueTables, eq(venueTables.id, guestGroups.tableId))
-      .where(eq(guestGroups.tokenHash, tokenHash))
+      // También por el anterior: una invitación puede tener dos enlaces vivos (`0064`).
+      .where(or(eq(guestGroups.tokenHash, tokenHash), eq(guestGroups.tokenHashPrev, tokenHash)))
       .limit(1)
     return row ? toRow(row) : null
   },

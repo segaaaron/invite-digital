@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import sharp from 'sharp'
 import { ATELIER, AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteEvent } from './fixtures/db'
-import { abrirSeccion, añadirAcompanantes, createEvent, elegirFecha, signIn } from './helpers/panel'
+import { abrirSeccion, añadirAcompanantes, createEvent, desplegarInvitacion, elegirFecha, signIn } from './helpers/panel'
 
 // IP propia para el limitador de inicios de sesión (cinco por IP): en el CI todas las suites salen de 127.0.0.1.
 test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.4' } })
@@ -228,6 +228,8 @@ test.describe('invitados del evento', () => {
     await expect(page.locator('dialog[open]')).toHaveCount(0)
 
     // Se ve el invitado, no un grupo: la pantalla no enseña grupos.
+    // Cuatro personas es una invitación plegada: se despliega para ver a cada una.
+    await desplegarInvitacion(page, 'Familia Rojas Peña')
     await expect(page.getByRole('cell', { name: 'Familia Rojas Peña', exact: true }).first()).toBeVisible()
     await expect(page.getByRole('link', { name: /^Grupos/ })).toHaveCount(0)
   })

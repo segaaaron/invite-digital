@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { removePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
-import { PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
+import { ChevronIcon, PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
 import { hora } from '@/shared/format/fecha'
 import { avatarColor } from '@/shared/design/ui/avatar-color'
 
@@ -81,6 +81,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   // Quién está a un clic de ser borrado. Borrar no tiene deshacer.
   const [porQuitar, setPorQuitar] = useState<string | null>(null)
   const [pagina, setPagina] = useState(1)
+  /** Qué invitaciones de varias personas están desplegadas. */
+  const [abiertas, setAbiertas] = useState<ReadonlySet<string>>(new Set())
 
   const base = `/panel/eventos/${eventSlug}/invitados`
 
@@ -168,6 +170,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             {enPagina.map((filas) => {
               const primera = filas[0]!
               const familia = personasDe(primera.groupId) > 1
+              // Plegada, la familia es una línea; con filtro o búsqueda se abre sola, que es cuando se busca a alguien.
+              const abierta = !familia || abiertas.has(primera.groupId) || query.trim() !== '' || filtro !== 'todos'
               return (
                 <tbody className="group/invitacion" key={primera.groupId}>
                   {/* Una familia se presenta como su invitación: nombre, cuántos son, si se envió y su pase. */}
@@ -175,22 +179,37 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     <tr>
                       <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3" colSpan={6}>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                          <span aria-hidden className="flex -space-x-2">
-                            {rows
-                              .filter((r) => r.groupId === primera.groupId)
-                              .slice(0, 3)
-                              .map((r) => (
-                                <span className={`grid size-7 place-items-center rounded-full bg-linear-to-br text-[11px] text-white ring-2 ring-white ${avatarColor(r.fullName)}`} key={r.id}>
-                                  {(r.fullName.trim()[0] ?? '·').toUpperCase()}
-                                </span>
-                              ))}
-                          </span>
-                          <span className="text-[13.5px] text-ink">{primera.groupLabel}</span>
-                          <span className="text-[12px] text-ink-mute">{`${personasDe(primera.groupId)} personas`}</span>
-                          <Pill tone={primera.sentAt ? 'ok' : 'pending'}>{primera.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
-                          {primera.respondedAt === null || primera.respondedAt === undefined ? null : (
-                            <span className="font-mono text-[10.5px] text-ink-mute">{`respondió ${fechaCorta(primera.respondedAt)}`}</span>
-                          )}
+                          <button
+                            aria-expanded={abierta}
+                            className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 text-left"
+                            onClick={() =>
+                              setAbiertas((previo) => {
+                                const siguiente = new Set(previo)
+                                if (siguiente.has(primera.groupId)) siguiente.delete(primera.groupId)
+                                else siguiente.add(primera.groupId)
+                                return siguiente
+                              })
+                            }
+                            type="button"
+                          >
+                            <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? '' : '-rotate-90'}`} />
+                            <span aria-hidden className="flex -space-x-2">
+                              {rows
+                                .filter((r) => r.groupId === primera.groupId)
+                                .slice(0, 3)
+                                .map((r) => (
+                                  <span className={`grid size-7 place-items-center rounded-full bg-linear-to-br text-[11px] text-white ring-2 ring-white ${avatarColor(r.fullName)}`} key={r.id}>
+                                    {(r.fullName.trim()[0] ?? '·').toUpperCase()}
+                                  </span>
+                                ))}
+                            </span>
+                            <span className="text-[13.5px] text-ink">{primera.groupLabel}</span>
+                            <span className="text-[12px] text-ink-mute">{`${personasDe(primera.groupId)} personas`}</span>
+                            <Pill tone={primera.sentAt ? 'ok' : 'pending'}>{primera.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
+                            {primera.respondedAt === null || primera.respondedAt === undefined ? null : (
+                              <span className="font-mono text-[10.5px] text-ink-mute">{`respondió ${fechaCorta(primera.respondedAt)}`}</span>
+                            )}
+                          </button>
                           <span className="ml-auto">
                             <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={`Ver el pase de ${primera.groupLabel}`}>
                               <QrIcon />
@@ -200,7 +219,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       </td>
                     </tr>
                   ) : null}
-                  {filas.map((fila, i) => (
+                  {(abierta ? filas : []).map((fila, i) => (
                     <tr className="transition-colors hover:bg-bg-top/60" key={fila.id}>
                       <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40 pl-7' : 'pl-3'}`}>
                         <span className="flex items-center gap-3">

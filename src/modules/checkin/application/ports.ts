@@ -13,6 +13,8 @@ export type DoorGroupRow = {
    */
   readonly leadName: string | null
   readonly tokenHash: Buffer
+  /** El hash del enlace anterior, cuando la invitación tiene dos vivos (`0064`). */
+  readonly tokenHashPrev?: Buffer | null
   /** El código corto del pase, para escribirlo a mano. */
   readonly passCode?: string | null
   /** Etiqueta de la mesa asignada, o `null` si el grupo aún no tiene. */
@@ -65,6 +67,8 @@ export type PorterRow = {
   readonly phone: string | null
   readonly gate: string | null
   readonly tokenHash: Buffer
+  /** El hash del enlace anterior, cuando la invitación tiene dos vivos (`0064`). */
+  readonly tokenHashPrev?: Buffer | null
   readonly pinHash: Buffer
   readonly failedAttempts: number
   readonly lockedUntil: Date | null
@@ -80,6 +84,8 @@ export type NewPorter = {
   readonly phone: string | null
   readonly gate: string | null
   readonly tokenHash: Buffer
+  /** El hash del enlace anterior, cuando la invitación tiene dos vivos (`0064`). */
+  readonly tokenHashPrev?: Buffer | null
   readonly pinHash: Buffer
   readonly opensHoursBefore: number
   readonly closesHoursAfter: number

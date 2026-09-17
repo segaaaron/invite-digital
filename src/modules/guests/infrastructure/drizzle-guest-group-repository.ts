@@ -1,4 +1,4 @@
-import { and, asc, count, eq, isNull } from 'drizzle-orm'
+import { and, asc, count, eq, isNull, or } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups } from '@/shared/db/schema'
 import { env } from '@/shared/config/env'
@@ -49,13 +49,27 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
   },
 
   async findByTokenHash(tokenHash) {
-    const [row] = await database.select(COLUMNS).from(guestGroups).where(eq(guestGroups.tokenHash, tokenHash)).limit(1)
+    // También por el anterior: cuando se acuña un enlace nuevo sin romper el repartido, los dos abren.
+    const [row] = await database
+      .select(COLUMNS)
+      .from(guestGroups)
+      .where(or(eq(guestGroups.tokenHash, tokenHash), eq(guestGroups.tokenHashPrev, tokenHash)))
+      .limit(1)
     return row ?? null
+  },
+
+  async adoptToken(eventId, id, tokenHash, token) {
+    // El enlace repartido **sigue abriendo**: su hash pasa a `token_hash_prev`. Solo para las
+    // invitaciones de antes de `0062`, que no guardaron su token y no se puede volver a enseñar.
+    await database
+      .update(guestGroups)
+      .set({ tokenHash, tokenSealed: sello.sellar(token), tokenHashPrev: guestGroups.tokenHash })
+      .where(and(delEvento(eventId, id), isNull(guestGroups.tokenSealed)))
   },
 
   async replaceToken(eventId, id, tokenHash, token) {
     // Reenviar rota el token: el enlace viejo deja de abrir nada.
-    await database.update(guestGroups).set({ tokenHash, tokenSealed: sello.sellar(token) }).where(delEvento(eventId, id))
+    await database.update(guestGroups).set({ tokenHash, tokenSealed: sello.sellar(token), tokenHashPrev: null }).where(delEvento(eventId, id))
   },
 
   async tokensOf(eventId) {

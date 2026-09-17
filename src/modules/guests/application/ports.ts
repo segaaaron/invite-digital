@@ -31,6 +31,11 @@ export interface GuestGroupRepository {
   markSent(eventId: string, id: string, at: Date): Promise<void>
   /** Cambia el hash del token: el enlace anterior deja de abrir nada. */
   replaceToken(eventId: string, id: string, tokenHash: Buffer, token: string): Promise<void>
+  /**
+   * Le da un enlace guardado **sin invalidar el repartido**: el hash del viejo se conserva y los
+   * dos abren. Solo hace algo si la invitación todavía no tiene enlace guardado (antes de `0062`).
+   */
+  adoptToken(eventId: string, id: string, tokenHash: Buffer, token: string): Promise<void>
   /** El token vigente de cada invitación del evento que lo tenga guardado. */
   tokensOf(eventId: string): Promise<ReadonlyMap<string, string>>
   setPhone(eventId: string, id: string, phone: string | null): Promise<void>

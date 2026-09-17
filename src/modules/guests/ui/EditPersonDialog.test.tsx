@@ -1,11 +1,12 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { EditPersonDialog } from './EditPersonDialog'
 
 const updatePersonAction = vi.fn(async () => ({ status: 'success' as const }))
 const setGroupPhoneAction = vi.fn(async () => ({ status: 'success' as const }))
 const addPersonAction = vi.fn(async () => ({ status: 'success' as const }))
 const reopenRsvpAction = vi.fn(async () => ({ status: 'success' as const }))
+const ensureInvitationLinkAction = vi.fn(async () => ({ status: 'success' as const, url: 'https://luxuryatelier.net/i/token-guardado' }))
 const replace = vi.fn()
 
 vi.mock('@/app/_acciones/guests/actions', () => ({
@@ -14,6 +15,7 @@ vi.mock('@/app/_acciones/guests/actions', () => ({
   addPersonAction: (...args: unknown[]) => addPersonAction(...(args as [])),
   reopenRsvpAction: (...args: unknown[]) => reopenRsvpAction(...(args as [])),
   revokeInvitationAction: vi.fn(async () => ({ status: 'success' })),
+  ensureInvitationLinkAction: (...args: unknown[]) => ensureInvitationLinkAction(...(args as [])),
 }))
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace }) }))
@@ -44,6 +46,7 @@ beforeEach(() => {
   addPersonAction.mockClear()
   reopenRsvpAction.mockClear()
   setGroupPhoneAction.mockClear()
+  ensureInvitationLinkAction.mockClear()
   replace.mockClear()
   // jsdom no implementa `showModal`. El doble hace lo único que estas pruebas necesitan
   // de él: marcar el diálogo como abierto, que es lo que expone su contenido al árbol de
@@ -173,5 +176,35 @@ describe('EditPersonDialog', () => {
     render(<EditPersonDialog {...props} invitacion={{ ...invitacion, revocada: true }} />)
     expect(screen.queryByRole('button', { name: 'Revocar enlace' })).toBeNull()
     expect(screen.getByText(/enlace revocado/i)).toBeInTheDocument()
+  })
+})
+
+/**
+ * El enlace de la invitación se **ve y se copia**, nunca se edita. Una invitación de antes de
+ * `0062` no guardó el suyo: el servidor le acuña uno —conservando el repartido— y aquí se enseña.
+ */
+describe('EditPersonDialog · el enlace de su invitación', () => {
+  it('el guardado se enseña de solo lectura, con su botón de copiar', () => {
+    render(<EditPersonDialog {...props} invitacion={{ ...invitacion, enlace: 'https://luxuryatelier.net/i/abc', codigo: '63CAN' }} />)
+
+    const campo = screen.getByLabelText('Enlace de su invitación')
+    expect(campo).toHaveValue('https://luxuryatelier.net/i/abc')
+    expect(campo).toHaveAttribute('readonly')
+    expect(screen.getByRole('button', { name: 'Copiar' })).toBeInTheDocument()
+    expect(screen.getByText('63CAN')).toBeInTheDocument()
+  })
+
+  it('sin enlace guardado lo pide al servidor y lo enseña igual', async () => {
+    render(<EditPersonDialog {...props} />)
+
+    await waitFor(() => expect(screen.getByLabelText('Enlace de su invitación')).toHaveValue('https://luxuryatelier.net/i/token-guardado'))
+    expect(ensureInvitationLinkAction).toHaveBeenCalledWith({ eventSlug: 'boda', groupId: 'g1' })
+  })
+
+  it('una invitación revocada no pide enlace: no hay nada que repartir', () => {
+    render(<EditPersonDialog {...props} invitacion={{ ...invitacion, revocada: true }} />)
+
+    expect(ensureInvitationLinkAction).not.toHaveBeenCalled()
+    expect(screen.queryByLabelText('Enlace de su invitación')).toBeNull()
   })
 })
