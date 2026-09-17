@@ -18,6 +18,8 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
 import { ViewBeacon } from '@/modules/analytics/ui/ViewBeacon'
+import { classifyDevice } from '@/modules/analytics'
+import { headers } from 'next/headers'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 
@@ -61,6 +63,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   }
 
   const { group, event, latest } = invitation.value
+  // En celular, a pantalla completa; en tablet, laptop o escritorio, dentro de un teléfono.
+  const enMarco = classifyDevice((await headers()).get('user-agent') ?? '') !== 'mobile'
 
   // Evento protegido con contraseña: sin desbloquear no se enseña nada, ni el título.
   // Quien no la tiene no debe averiguar de qué boda se trata por tener el enlace.
@@ -128,93 +132,99 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           por qué saber que la analítica existe. */}
       <ViewBeacon kind="guest" token={token} />
 
-      <Theme
-        content={contenido}
-        // Con la respuesta dada, el bloque deja de pedir que confirme: da las gracias y no
-        // recuerda el plazo, que encima de «Confirmación enviada» se contradecía.
-        dictionary={sinResponder ? dictionary : { ...dictionary, title: latest.attending > 0 ? dictionary.titleConfirmed : dictionary.titleDeclined }}
-        respondida={!sinResponder}
-        event={event}
-        guestInfo={{ label: group.label, seats: group.seats }}
-        themes={temasDictionary}
-        slots={{
-          // A quién va dirigida y cuántos lugares tiene. Es dato nuestro —sale del
-          // grupo—, y va en su propia ranura porque varios diseños lo pintan en una
-          // tarjeta arriba del todo, que es donde el invitado lo busca.
-          guest: (
-            <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
-          ),
-          // Con dos o más personas cargadas, confirmar es decir **quién** viene, y eso se hace
-          // en su propia pantalla: marcar seis nombres dentro de una invitación de seis mil
-          // píxeles obliga a subir y bajar buscando el formulario.
-          rsvp: abierto ? (
-            personas.length === 2 && sinResponder ? (
-              // Una pareja viene junta o no viene: dos nombres que marcar son un paso de más.
-              <RsvpPareja confirmarHref={`/i/${token}/confirmar`} dictionary={dictionary} paseHref={`/i/${token}/pase`} token={token} />
-            ) : personas.length > 2 && sinResponder ? (
-              <div className="flex flex-col items-center gap-3 py-2 text-center">
-                <p className="text-[14px] leading-[1.7]">{dictionary.whoIsComing}</p>
-                <Link
-                  className="rounded-[var(--radius-pill)] bg-[var(--color-cta)] px-6 py-3 font-mono text-[11px] tracking-[0.28em] text-[var(--color-on-cta)] uppercase"
-                  href={`/i/${token}/confirmar`}
+      {/* En tablet, laptop o escritorio, dentro de un teléfono centrado: los diseños están dibujados
+          para esa pantalla. En el celular, a pantalla completa. Lo decide el aparato. */}
+      <div className={enMarco ? 'invitacion-escenario' : undefined}>
+        <div className={enMarco ? 'invitacion-marco' : undefined}>
+          <Theme
+            content={contenido}
+            // Con la respuesta dada, el bloque deja de pedir que confirme: da las gracias y no
+            // recuerda el plazo, que encima de «Confirmación enviada» se contradecía.
+            dictionary={sinResponder ? dictionary : { ...dictionary, title: latest.attending > 0 ? dictionary.titleConfirmed : dictionary.titleDeclined }}
+            respondida={!sinResponder}
+            event={event}
+            guestInfo={{ label: group.label, seats: group.seats }}
+            themes={temasDictionary}
+            slots={{
+              // A quién va dirigida y cuántos lugares tiene. Es dato nuestro —sale del
+              // grupo—, y va en su propia ranura porque varios diseños lo pintan en una
+              // tarjeta arriba del todo, que es donde el invitado lo busca.
+              guest: (
+                <p className="text-[13px]">{`${group.label} · ${dictionary.seatsLabel}: ${group.seats}`}</p>
+              ),
+              // Con dos o más personas cargadas, confirmar es decir **quién** viene, y eso se hace
+              // en su propia pantalla: marcar seis nombres dentro de una invitación de seis mil
+              // píxeles obliga a subir y bajar buscando el formulario.
+              rsvp: abierto ? (
+                personas.length === 2 && sinResponder ? (
+                  // Una pareja viene junta o no viene: dos nombres que marcar son un paso de más.
+                  <RsvpPareja confirmarHref={`/i/${token}/confirmar`} dictionary={dictionary} paseHref={`/i/${token}/pase`} token={token} />
+                ) : personas.length > 2 && sinResponder ? (
+                  <div className="flex flex-col items-center gap-3 py-2 text-center">
+                    <p className="text-[14px] leading-[1.7]">{dictionary.whoIsComing}</p>
+                    <Link
+                      className="rounded-[var(--radius-pill)] bg-[var(--color-cta)] px-6 py-3 font-mono text-[11px] tracking-[0.28em] text-[var(--color-on-cta)] uppercase"
+                      href={`/i/${token}/confirmar`}
+                    >
+                      {dictionary.confirmAttendance}
+                    </Link>
+                  </div>
+                ) : (
+                <RsvpForm
+                  dictionary={dictionary}
+                  guestName={group.label}
+                  previous={sinResponder ? null : latest}
+                  seats={group.seats}
+                  token={token}
+                  variant={definicion.rsvp}
+                />
+                )
+              ) : (
+                <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
+              ),
+              registry: isErr(mesa) ? null : (
+                <GuestRegistry
+                  currency={event.currency}
+                  dictionary={registryDictionary}
+                  funds={mesa.value.funds}
+                  gifts={mesa.value.gifts}
+                  groupId={group.id}
+                  open={mesaAbierta}
+                  token={token}
+                />
+              ),
+              // El libro de firmas: en los diseños de boda es su propia sección con su campo y
+              // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
+              guestbook: (
+                <>
+                  {definicion.rsvp === 'botones' ? (
+                    <GuestbookForm dictionary={dictionary} guestName={group.label} previous={latest} seats={group.seats} token={token} />
+                  ) : null}
+                  <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
+                </>
+              ),
+              // El botón de «Comparte tus fotos». Lleva a su propia pantalla y no abre un campo
+              // aquí: subir fotos es volver varias veces a lo largo del día, y hacerlo desde
+              // media invitación obliga a desplazarse hasta el bloque cada vez.
+              photos: !fotosDeInvitados ? undefined : (
+                <a
+                  className="inline-block rounded-[var(--radius-pill)] bg-gold px-5 py-3 font-mono text-[9px] font-bold tracking-[0.15em] text-[var(--color-on-gold)] uppercase"
+                  href={`/i/${token}/fotos`}
                 >
-                  {dictionary.confirmAttendance}
-                </Link>
-              </div>
-            ) : (
-            <RsvpForm
-              dictionary={dictionary}
-              guestName={group.label}
-              previous={sinResponder ? null : latest}
-              seats={group.seats}
-              token={token}
-              variant={definicion.rsvp}
-            />
-            )
-          ) : (
-            <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
-          ),
-          registry: isErr(mesa) ? null : (
-            <GuestRegistry
-              currency={event.currency}
-              dictionary={registryDictionary}
-              funds={mesa.value.funds}
-              gifts={mesa.value.gifts}
-              groupId={group.id}
-              open={mesaAbierta}
-              token={token}
-            />
-          ),
-          // El libro de firmas: en los diseños de boda es su propia sección con su campo y
-          // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
-          guestbook: (
-            <>
-              {definicion.rsvp === 'botones' ? (
-                <GuestbookForm dictionary={dictionary} guestName={group.label} previous={latest} seats={group.seats} token={token} />
-              ) : null}
-              <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
-            </>
-          ),
-          // El botón de «Comparte tus fotos». Lleva a su propia pantalla y no abre un campo
-          // aquí: subir fotos es volver varias veces a lo largo del día, y hacerlo desde
-          // media invitación obliga a desplazarse hasta el bloque cada vez.
-          photos: !fotosDeInvitados ? undefined : (
-            <a
-              className="inline-block rounded-[var(--radius-pill)] bg-gold px-5 py-3 font-mono text-[9px] font-bold tracking-[0.15em] text-[var(--color-on-gold)] uppercase"
-              href={`/i/${token}/fotos`}
-            >
-              {dictionary.photosPick}
-            </a>
-          ),
-          // El pase llega **al confirmar que asiste**: antes se enseñaba a todos, también a
-          // quien no había contestado o dijo que no.
-          pass: concedePase(latest) ? (
-            pase
-          ) : (
-            <p className="text-center text-[13.5px] leading-[1.7]">{latest === null ? dictionary.passPending : dictionary.passDeclined}</p>
-          ),
-        }}
-      />
+                  {dictionary.photosPick}
+                </a>
+              ),
+              // El pase llega **al confirmar que asiste**: antes se enseñaba a todos, también a
+              // quien no había contestado o dijo que no.
+              pass: concedePase(latest) ? (
+                pase
+              ) : (
+                <p className="text-center text-[13.5px] leading-[1.7]">{latest === null ? dictionary.passPending : dictionary.passDeclined}</p>
+              ),
+            }}
+          />
+        </div>
+      </div>
     </>
   )
 }

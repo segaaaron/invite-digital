@@ -279,3 +279,47 @@
 html:not(:has(.theme-phone-frame)):has([data-portada]) {
   overflow: hidden;
 }
+
+/*
+ * La página del invitado en tablet, laptop y escritorio: la invitación dentro de un teléfono
+ * centrado, como el escaparate. **Lo decide el aparato, no el ancho**: la página pone estas
+ * clases solo si el agente no es de celular (`classifyDevice`). En el celular, pantalla
+ * completa a la medida de cada modelo (pedido por el usuario).
+ */
+.invitacion-escenario {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(
+      118% 74% at 50% 6%,
+      color-mix(in srgb, var(--color-shell) 82%, var(--color-shell-ink) 18%) 0%,
+      var(--color-shell) 34%,
+      var(--color-shell-deep) 72%,
+      color-mix(in srgb, var(--color-shell-deep) 80%, black 20%) 100%
+    ),
+    var(--color-shell-deep);
+  padding: clamp(0px, 2vh, 22px);
+  box-sizing: border-box;
+}
+.invitacion-marco {
+  position: relative;
+  width: min(430px, 100%);
+  height: min(100%, 932px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: 26px;
+  background: var(--color-bg-top);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 2px 6px rgb(0 0 0 / 0.4),
+    0 34px 90px rgb(0 0 0 / 0.62);
+  /* Bloque contenedor: los fondos y la portada `fixed` se quedan dentro del teléfono. */
+  transform: translateZ(0);
+}
+.invitacion-marco:has([data-portada]) {
+  overflow: hidden;
+}
