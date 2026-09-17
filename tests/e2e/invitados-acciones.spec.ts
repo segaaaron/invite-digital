@@ -26,7 +26,7 @@ test.afterAll(async () => {
  * Las tres viven detrás de un icono y de un parámetro de la dirección; ninguna es
  * alcanzable por texto, así que un cambio de rótulo no las tapa.
  */
-test('la fila del invitado edita, mueve de grupo, emite el pase y borra', async ({ page }) => {
+test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => {
   await createEvent(page, { slug: SLUG, title: 'Boda acciones e2e' })
   await createGuestGroup(page, SLUG, 'Familia Rojas Peña', 4)
   await createGuestGroup(page, SLUG, 'Padrinos', 2)
@@ -62,10 +62,9 @@ test('la fila del invitado edita, mueve de grupo, emite el pase y borra', async 
   expect(trasVip?.vip).toBe(true)
   expect(trasVip?.email).toBe('ana@ejemplo.com')
 
-  // --- El pase: no se genera solo, avisa, y al emitirlo enseña el QR.
+  // --- El pase: enseña el QR que ya tiene, sin generar nada.
   await page.getByRole('row', { name: /Ana Lucía Vega Rojas/ }).getByRole('link', { name: /^Ver el pase de / }).click()
-  await expect(page.getByText(/deja de servir/)).toBeVisible()
-  await page.getByRole('button', { name: 'Generar pase' }).click()
+  await expect(page.getByRole('button', { name: /generar/i })).toHaveCount(0)
   // La invitación se llama como su principal, y al renombrarlo se renombró con él.
   await expect(page.getByRole('img', { name: /Pase de Ana Lucía Vega Rojas/ })).toBeVisible()
   await page.getByRole('button', { name: 'Cerrar', exact: true }).click()

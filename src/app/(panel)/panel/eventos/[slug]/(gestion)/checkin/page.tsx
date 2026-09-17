@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
-import { checkin, events, plans, porters, venue } from '@/app/composition/container'
+import { checkin, events, guests, plans, porters, venue } from '@/app/composition/container'
 import { listaDeLlegadas } from '@/modules/checkin/domain/lista-de-llegadas'
 import { ControlDeIngreso } from '@/modules/checkin/ui/ControlDeIngreso'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -62,11 +62,13 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
           })),
         }))
 
-  const filas = listaDeLlegadas(groups, arrivals, personas).map((f) => ({ ...f, hora: f.hora === null ? null : hora(f.hora), mesa: mesaDe.get(f.invitacionId) ?? null }))
+  // El código corto del pase de cada invitación: la puerta lo escribe si el QR no se lee.
+  const codigos = await guests.codigos(event.value.id)
+  const filas = listaDeLlegadas(groups, arrivals, personas).map((f) => ({ ...f, hora: f.hora === null ? null : hora(f.hora), mesa: mesaDe.get(f.invitacionId) ?? null, codigo: codigos.get(f.invitacionId) ?? null }))
 
   return (
     <>
-      <PanelHeader kicker="Día del evento" meta="Busca a quien llega y registra su ingreso, o escanea su pase con el celular." title="Ingreso al evento" />
+      <PanelHeader kicker="Día del evento" meta="Escanea el QR del pase o escribe su código. Registrar sin pase queda para cuando no trae ninguno." title="Ingreso al evento" />
       <ControlDeIngreso
         escanerHref={`/panel/eventos/${event.value.slug}/puerta`}
         eventId={event.value.id}

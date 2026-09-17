@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
       title: tarjeta.titulo,
       description: tarjeta.descripcion,
       url: `${sitio}/i/${token}`,
-      images: [{ url: `${sitio}/i/${token}/imagen`, width: 1200, height: 630, type: 'image/jpeg', alt: tarjeta.titulo }],
+      images: [{ url: `${sitio}/i/${token}/imagen`, secureUrl: `${sitio}/i/${token}/imagen`, width: 1200, height: 630, type: 'image/jpeg', alt: tarjeta.titulo }],
     },
     twitter: { card: 'summary_large_image', title: tarjeta.titulo, description: tarjeta.descripcion, images: [`${sitio}/i/${token}/imagen`] },
   }

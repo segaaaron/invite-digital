@@ -170,9 +170,39 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
               const familia = personasDe(primera.groupId) > 1
               return (
                 <tbody className="group/invitacion" key={primera.groupId}>
+                  {/* Una familia se presenta como su invitación: nombre, cuántos son, si se envió y su pase. */}
+                  {familia ? (
+                    <tr>
+                      <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3" colSpan={6}>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                          <span aria-hidden className="flex -space-x-2">
+                            {rows
+                              .filter((r) => r.groupId === primera.groupId)
+                              .slice(0, 3)
+                              .map((r) => (
+                                <span className={`grid size-7 place-items-center rounded-full bg-linear-to-br text-[11px] text-white ring-2 ring-white ${avatarColor(r.fullName)}`} key={r.id}>
+                                  {(r.fullName.trim()[0] ?? '·').toUpperCase()}
+                                </span>
+                              ))}
+                          </span>
+                          <span className="text-[13.5px] text-ink">{primera.groupLabel}</span>
+                          <span className="text-[12px] text-ink-mute">{`${personasDe(primera.groupId)} personas`}</span>
+                          <Pill tone={primera.sentAt ? 'ok' : 'pending'}>{primera.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
+                          {primera.respondedAt === null || primera.respondedAt === undefined ? null : (
+                            <span className="font-mono text-[10.5px] text-ink-mute">{`respondió ${fechaCorta(primera.respondedAt)}`}</span>
+                          )}
+                          <span className="ml-auto">
+                            <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={`Ver el pase de ${primera.groupLabel}`}>
+                              <QrIcon />
+                            </IconLink>
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : null}
                   {filas.map((fila, i) => (
                     <tr className="transition-colors hover:bg-bg-top/60" key={fila.id}>
-                      <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40' : ''} ${fila.isCompanion ? 'pl-9' : 'pl-3'}`}>
+                      <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40 pl-7' : 'pl-3'}`}>
                         <span className="flex items-center gap-3">
                           <span
                             aria-hidden
@@ -204,7 +234,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                       <td className={`${CELDA} text-[13px] text-ink-soft`}>{fila.dietaryNote ?? '—'}</td>
                       <td className={`${CELDA} text-[13px] text-ink-soft`}>{fila.tableLabel ?? 'Sin mesa'}</td>
                       <td className={`${CELDA} text-[13px]`}>
-                        {i === 0 ? (
+                        {i === 0 && !familia ? (
                           <span className="flex flex-col gap-1">
                             <span className="text-ink-soft">
                               {fila.isCompanion ? (
@@ -250,9 +280,11 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           </div>
                         ) : (
                           <div className="flex justify-end gap-1.5 opacity-70 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100">
-                            <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
-                              <QrIcon />
-                            </IconLink>
+                            {familia ? null : (
+                              <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
+                                <QrIcon />
+                              </IconLink>
+                            )}
                             <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
                               <PenIcon />
                             </IconLink>

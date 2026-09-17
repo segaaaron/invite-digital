@@ -72,11 +72,10 @@ export function PassDialog({
         <p className="mt-5 text-[13px] text-ink-soft">
           La invitación de «{group.label}» está <b className="font-medium">revocada</b>: su pase ya no abre la puerta.
         </p>
-      ) : url === null ? (
+      ) : url === null && codigo === null ? (
         <>
           <p className="mt-5 text-[13px] leading-[1.7] text-ink-soft">
-            {personName} ya tiene su pase: está dentro de la invitación que le enviaste, y la puerta lo reconoce. Esta invitación se creó
-            antes de que el panel guardara los enlaces, así que aquí no se puede volver a dibujar.
+            {personName} ya tiene su pase dentro de la invitación que le enviaste, y la puerta lo reconoce.
           </p>
           <div className="mt-6 flex justify-end">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
@@ -92,7 +91,7 @@ export function PassDialog({
               {eventTitle} · {eventMeta}
             </p>
             <div className="rounded-xl border border-line-panel bg-white p-2.5">
-              <PassQrSvg label={group.label} url={url} />
+              <PassQrSvg label={group.label} url={url ?? codigo ?? ''} />
             </div>
             <p className="font-display text-[23px] leading-tight italic">{group.label}</p>
             <p className="text-[12px] text-ink-soft">{sitio}</p>
@@ -103,12 +102,18 @@ export function PassDialog({
               </p>
             )}
             <span aria-hidden className="h-px w-full bg-[repeating-linear-gradient(90deg,var(--color-line-panel-strong)_0_6px,transparent_6px_12px)]" />
-            <p className="font-mono text-[10px] tracking-[0.15em] break-all text-ink-mute">{url}</p>
+            {url === null ? (
+              <p className="text-[11.5px] leading-[1.6] text-ink-mute">
+                Su invitación se envió antes de que el panel guardara los enlaces: este QR lleva su código, y la puerta lo lee igual que su pase.
+              </p>
+            ) : (
+              <p className="font-mono text-[10px] tracking-[0.15em] break-all text-ink-mute">{url}</p>
+            )}
           </div>
-          <div className="mt-6 flex flex-wrap justify-end gap-2">
+          <div className="mt-6 grid grid-cols-3 gap-2 [&>*]:w-full [&>*]:justify-center [&>*]:px-2">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
-            <PanelButton onClick={() => void compartirQr(url, group.label).catch(() => undefined)}>Compartir QR</PanelButton>
-            <PanelButton onClick={() => void descargarQr(url, group.label)} variant="primary">
+            <PanelButton onClick={() => void compartirQr(url ?? codigo ?? '', group.label).catch(() => undefined)}>Compartir QR</PanelButton>
+            <PanelButton onClick={() => void descargarQr(url ?? codigo ?? '', group.label)} variant="primary">
               Descargar QR
             </PanelButton>
           </div>

@@ -106,6 +106,6 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   const jpeg = await sharp(Buffer.from(await tarjetaPng.arrayBuffer())).jpeg({ quality: 80, mozjpeg: true }).toBuffer()
 
   return new Response(new Uint8Array(jpeg), {
-    headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'private, max-age=300', 'X-Robots-Tag': 'noindex' },
+    headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=3600', 'X-Robots-Tag': 'noindex' },
   })
 }

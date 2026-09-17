@@ -206,6 +206,14 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
 
   const submit = useCallback(
     async (scanned: string) => {
+      // Un QR que solo lleva el código corto del pase (`K7P3X`): el del panel para invitaciones
+      // sin enlace guardado. Se registra por la invitación, como buscar por nombre.
+      const corto = scanned.replace(/[\s-]/g, '').toUpperCase()
+      const porCodigo = manifest.groups.find((g) => g.passCode !== undefined && g.passCode !== null && g.passCode === corto)
+      if (porCodigo !== undefined) {
+        elegirGrupo(porCodigo.id)
+        return
+      }
       // La pantalla responde con lo que decide el dispositivo, no con lo que diga la
       // red: en un salón sin wifi la puerta no puede quedarse esperando a un servidor.
       const local = await resolveLocally(scanned, manifest.groups, arrivedIds)

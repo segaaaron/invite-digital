@@ -61,22 +61,27 @@ describe('PeopleTable', () => {
     expect(screen.queryByRole('columnheader', { name: 'Acomp.' })).toBeNull()
   })
 
-  it('agrupa por invitación: la familia junta, el principal primero, y la invitación se dice una vez', () => {
+  it('una familia se presenta como su invitación, con sus personas debajo; una invitación propia va en su fila', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
-    const celda = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[4]
+    const cabecera = screen.getAllByRole('row').find((r) => r.querySelector('td[colspan]') !== null)!
+    expect(cabecera).toHaveTextContent('Familia Rojas Peña')
+    expect(cabecera).toHaveTextContent('2 personas')
+    expect(cabecera).toHaveTextContent('Sin enviar')
+    // Su pase es de la invitación: va en la cabecera, no repetido en cada persona.
+    expect(screen.getByRole('link', { name: 'Ver el pase de Familia Rojas Peña' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Ver el pase de Ana Lucía Vega' })).toBeNull()
 
+    const celda = (nombre: string) => screen.getByRole('row', { name: new RegExp(nombre) }).querySelectorAll('td')[4]
     expect(celda('Roberto Núñez')).toHaveTextContent(/^PropiaSin enviar$/)
-    expect(celda('Ana Lucía Vega')).toHaveTextContent(/^Familia Rojas Peña · 2 personas/)
-    // Debajo de su principal, el acompañante no repite la invitación.
     expect(celda('Acompañante de Ana')).toHaveTextContent(/^$/)
-    const nombres = screen.getAllByRole('row').slice(1).map((r) => r.querySelector('td')?.textContent)
-    expect(nombres.findIndex((n) => n?.includes('Acompañante de Ana'))).toBe(nombres.findIndex((n) => n?.includes('Ana Lucía Vega')) + 1)
   })
 
-  it('si solo se ve el acompañante, dice a quién acompaña', () => {
+  it('filtrando, la familia sigue presentándose aunque solo se vea el acompañante', () => {
     render(<PeopleTable eventSlug="boda" rows={filas} />)
     fireEvent.click(screen.getByRole('button', { name: /tal vez 1/i }))
-    expect(screen.getByRole('row', { name: /Acompañante de Ana/ }).querySelectorAll('td')[4]).toHaveTextContent(/^Acompaña a Familia Rojas Peña/)
+    const cabecera = screen.getAllByRole('row').find((r) => r.querySelector('td[colspan]') !== null)!
+    expect(cabecera).toHaveTextContent('Familia Rojas Peña')
+    expect(screen.getByText('Acompañante de Ana')).toBeInTheDocument()
   })
 
   it('las acciones de la fila son iconos dibujados con su rótulo, nunca caracteres', () => {

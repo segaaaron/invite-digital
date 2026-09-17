@@ -34,9 +34,16 @@ describe('PassDialog', () => {
   it('nunca ofrece generar otro pase: uno nuevo por descuido deja fuera al invitado', () => {
     render(<PassDialog {...props} url="http://localhost:3000/i/GUARDADO" />)
     expect(screen.queryByRole('button', { name: /generar/i })).toBeNull()
-    render(<PassDialog {...props} url={null} />)
+    render(<PassDialog {...props} codigo={null} url={null} />)
     expect(screen.queryByRole('button', { name: /generar/i })).toBeNull()
     expect(screen.getByText(/ya tiene su pase/)).toBeInTheDocument()
+  })
+
+  it('sin enlace guardado, el QR lleva su código corto, que la puerta también lee', () => {
+    render(<PassDialog {...props} codigo="63CAN" url={null} />)
+    expect(screen.getByRole('img', { name: /Pase de Familia Rojas Peña/ })).toBeInTheDocument()
+    expect(screen.getByText('63CAN')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Descargar QR' })).toBeInTheDocument()
   })
 
   it('una invitación revocada lo dice', () => {
