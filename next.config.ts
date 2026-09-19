@@ -60,6 +60,10 @@ const nextConfig: NextConfig = {
     '/**/*': [
       './node_modules/.pnpm/@swc+helpers@*/node_modules/@swc/helpers/**',
       './node_modules/.pnpm/@node-rs+argon2*/node_modules/@node-rs/**',
+      // Las fuentes de las imágenes de vista previa (satori solo lee TTF). Se leen con una
+      // ruta compuesta en tiempo de ejecución, así que el rastreo no las ve seguro; son tres
+      // ficheros pequeños y anclados, no un glob sobre una carpeta grande.
+      './src/shared/seo/*.ttf',
     ],
   },
   images: { formats: ['image/avif', 'image/webp'], qualities: [75, 90] },

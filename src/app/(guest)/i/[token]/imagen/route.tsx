@@ -5,7 +5,7 @@ import sharp from 'sharp'
 import { events } from '@/app/composition/container'
 import { tarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-invitacion'
 import { themeFor } from '@/modules/events/ui/themes/registry'
-import { portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
+import { medallonDeCompartir, portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
 import { PALETTE } from '@/shared/design/palette'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from '../invitation'
@@ -15,11 +15,13 @@ const ALTO = 630
 
 // Satori solo lee TTF: las mismas de la imagen de la web.
 const FUENTES = join(process.cwd(), 'src/shared/seo')
-let fuentes: Promise<Array<{ name: string; data: Buffer; weight: 400 | 300; style: 'normal' }>> | null = null
+let fuentes: Promise<Array<{ name: string; data: Buffer; weight: 400 | 300 | 700; style: 'normal' }>> | null = null
 const leerFuentes = () =>
   (fuentes ??= Promise.all([
     readFile(join(FUENTES, 'cormorant-garamond-400.ttf')).then((data) => ({ name: 'Cormorant', data, weight: 400 as const, style: 'normal' as const })),
     readFile(join(FUENTES, 'jost-300.ttf')).then((data) => ({ name: 'Jost', data, weight: 300 as const, style: 'normal' as const })),
+    // Para el nombre dentro del medallón: es la misma que rotula la portada al abrirla.
+    readFile(join(FUENTES, 'cinzel-700.ttf')).then((data) => ({ name: 'Cinzel', data, weight: 700 as const, style: 'normal' as const })),
   ]))
 
 /**
@@ -48,8 +50,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
       ? Buffer.from(propia.bytes)
       : await readFile(join(process.cwd(), 'public', portadaParaCompartir(themeFor(event.themeKey).key))).catch(() => null)
 
-  const ALTO_PORTADA = 570
-  const ANCHO_PORTADA = 380
+  /**
+   * El hueco del arte donde va rotulado el nombre, para el diseño cuyo arte lo tiene (hoy
+   * «Cervecería Vintage»). Con la portada propia del cliente no hay medallón que rellenar.
+   */
+  const hueco = propia === null ? medallonDeCompartir(themeFor(event.themeKey).key) : null
+
+  // La miniatura es 380×570 salvo cuando el arte lleva medallón: ahí toma **la proporción
+  // del propio arte**, para que entre entero. Con el recorte de 380×570 se le iban los
+  // bordes de arriba y abajo, que en este diseño son la cenefa de espigas y el cierre.
+  const ALTO_PORTADA = hueco === null ? 570 : 600
+  const ANCHO_PORTADA = hueco === null ? 380 : Math.round((ALTO_PORTADA * hueco.arte.ancho) / hueco.arte.alto)
   const [portada, desenfocada] =
     original === null
       ? [null, null]
@@ -58,6 +69,24 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
           sharp(original).resize(ANCHO, ALTO, { fit: 'cover' }).blur(28).modulate({ brightness: 0.55 }).jpeg({ quality: 70 }).toBuffer(),
         ])
   const uri = (b: Buffer | null) => (b === null ? null : `data:image/jpeg;base64,${b.toString('base64')}`)
+
+  /**
+   * El nombre dentro del medallón. Las coordenadas son del arte, así que hay que llevarlas a
+   * la miniatura: entra con `fit: cover` y `position: centre`, o sea escalada por el lado que
+   * manda y recortada por igual a los dos lados del otro (con la proporción del arte, cero).
+   */
+  const rotulo = hueco === null || tarjeta.nombres === null ? null : (() => {
+    const escala = Math.max(ANCHO_PORTADA / hueco.arte.ancho, ALTO_PORTADA / hueco.arte.alto)
+    const centro = {
+      x: hueco.x * escala - (hueco.arte.ancho * escala - ANCHO_PORTADA) / 2,
+      y: hueco.y * escala - (hueco.arte.alto * escala - ALTO_PORTADA) / 2,
+    }
+    const ancho = hueco.ancho * escala
+    const letras = Math.max(tarjeta.nombres.trim().length, 1)
+    // 0,68 em es el ancho medio de una mayúscula de Cinzel, medido en el propio fichero.
+    const tamano = Math.min(46, Math.round(ancho / (0.68 * letras)))
+    return { texto: tarjeta.nombres.trim().toUpperCase(), tamano, centro }
+  })()
 
   const tarjetaPng = new ImageResponse(
     (
@@ -71,32 +100,64 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
             // eslint-disable-next-line @next/next/no-img-element -- satori
             <img alt="" height={ALTO_PORTADA} src={uri(portada)!} style={{ position: 'absolute', inset: 0 }} width={ANCHO_PORTADA} />
           )}
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 300,
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              alignItems: 'center',
-              textAlign: 'center',
-              padding: '0 24px 34px',
-              color: 'white',
-              background: 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 70%)',
-            }}
-          >
-            {tarjeta.antetitulo === null ? null : (
-              <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 16, letterSpacing: 6 }}>{tarjeta.antetitulo.toUpperCase()}</div>
-            )}
-            <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: (tarjeta.nombres ?? tarjeta.titulo).length > 16 ? 48 : 64, lineHeight: 1.05, marginTop: 8 }}>
-              {tarjeta.nombres ?? tarjeta.titulo}
+          {rotulo === null ? null : (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                top: Math.round(rotulo.centro.y - rotulo.tamano * 0.5),
+                display: 'flex',
+                justifyContent: 'center',
+                fontFamily: 'Cinzel',
+                fontSize: rotulo.tamano,
+                lineHeight: 1,
+                color: '#f3e0b8',
+              }}
+            >
+              {rotulo.texto}
             </div>
-            <div style={{ display: 'flex', width: 70, height: 1, background: 'rgba(255,255,255,0.8)', margin: '14px 0' }} />
-            <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 18 }}>{tarjeta.fecha ?? (event.locale === 'en' ? 'Tap to open it' : 'Toca para abrirla')}</div>
-          </div>
+          )}
+          {/* Con el nombre rotulado en el medallón, el arte ya lo dice todo: el pie con la
+              fecha caía justo encima de la frase que el propio arte trae escrita, y las dos
+              se leían encimadas. La fecha la enseña igualmente WhatsApp en el texto de la
+              vista previa, debajo de la imagen. */}
+          {rotulo !== null ? null : (
+            <div
+              style={{
+                position: 'absolute',
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 300,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'flex-end',
+                alignItems: 'center',
+                textAlign: 'center',
+                padding: '0 24px 34px',
+                color: 'white',
+                // Con el nombre en el medallón, abajo solo queda la fecha y el arte trae su
+                // propia frase escrita ahí: sin un velo más oscuro, las dos se leen encimadas.
+                background:
+                  rotulo === null
+                    ? 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 70%)'
+                    : 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 62%)',
+              }}
+            >
+              {tarjeta.antetitulo === null ? null : (
+                <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 16, letterSpacing: 6 }}>{tarjeta.antetitulo.toUpperCase()}</div>
+              )}
+              {/* Con el nombre ya rotulado en el medallón, repetirlo abajo lo diría dos veces. */}
+              {rotulo !== null ? null : (
+                <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: (tarjeta.nombres ?? tarjeta.titulo).length > 16 ? 48 : 64, lineHeight: 1.05, marginTop: 8 }}>
+                  {tarjeta.nombres ?? tarjeta.titulo}
+                </div>
+              )}
+              <div style={{ display: 'flex', width: 70, height: 1, background: 'rgba(255,255,255,0.8)', margin: '14px 0' }} />
+              <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 18 }}>{tarjeta.fecha ?? (event.locale === 'en' ? 'Tap to open it' : 'Toca para abrirla')}</div>
+            </div>
+          )}
         </div>
       </div>
     ),
