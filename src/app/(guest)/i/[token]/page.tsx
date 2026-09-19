@@ -143,6 +143,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             // recuerda el plazo, que encima de «Confirmación enviada» se contradecía.
             dictionary={sinResponder ? dictionary : { ...dictionary, title: latest.attending > 0 ? dictionary.titleConfirmed : dictionary.titleDeclined }}
             respondida={!sinResponder}
+            {...(sinResponder ? {} : { asistira: latest.attending > 0 })}
             event={event}
             guestInfo={{ label: group.label, seats: group.seats }}
             themes={temasDictionary}

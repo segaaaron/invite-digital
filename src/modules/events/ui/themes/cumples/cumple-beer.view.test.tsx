@@ -57,6 +57,35 @@ describe('el tema Cervecería Vintage', () => {
     expect(screen.queryByText('TOCA PARA ABRIR')).not.toBeInTheDocument()
   })
 
+  it('quien ya respondió ve solo las gracias: ni la invitación ni la música', () => {
+    // Volver al enlace después de contestar es comprobar que la respuesta llegó, no leer la
+    // fiesta otra vez —y con la canción arrancando de nuevo, esa confirmación se perdía—.
+    const { container } = render(
+      <CumpleBeerView
+        {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: 'Edson y Vania', seats: 2 }, respondida: true, asistira: true })}
+      />,
+    )
+    expect(screen.getByText('¡Gracias por confirmar!')).toBeInTheDocument()
+    expect(screen.getByText('Edson y Vania')).toBeInTheDocument()
+    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas']) {
+      expect(screen.queryByText(ranura), ranura).not.toBeInTheDocument()
+    }
+    expect(screen.queryByText('La Celebración')).not.toBeInTheDocument()
+    expect(container.querySelector('audio')).toBeNull()
+  })
+
+  it('quien dijo que no tiene su propia despedida', () => {
+    render(
+      <CumpleBeerView
+        {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: 'Pamela', seats: 1 }, respondida: true, asistira: false })}
+      />,
+    )
+    expect(screen.getByText('Gracias por avisar')).toBeInTheDocument()
+    // Y se despide igual de bien que quien viene: nadie se queda con un «gracias» a secas.
+    expect(screen.getByText(/En otra oportunidad será/)).toBeInTheDocument()
+    expect(screen.queryByText('¡Gracias por confirmar!')).not.toBeInTheDocument()
+  })
+
   it('emite un solo encabezado de nivel 1', () => {
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)

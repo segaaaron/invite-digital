@@ -27,6 +27,18 @@ const ROTULOS = {
   // versalitas de oro: es lo único de la invitación escrito así, y por eso se lee primero.
   saludo: 'Llega el gran día y me gustaría compartirlo juntos:',
   confirma: 'CONFIRMA TU LUGAR EN LA BARRA',
+  // La despedida de quien ya respondió. Es lo único que ve al volver a su enlace: la
+  // invitación no se vuelve a pintar y la música no suena.
+  graciasVieneRotulo: 'TU LUGAR ESTÁ GUARDADO',
+  graciasViene: '¡Gracias por confirmar!',
+  graciasVieneTexto: 'Nos vemos para brindar, cantar y celebrar juntos.',
+  graciasNoRotulo: 'RESPUESTA RECIBIDA',
+  graciasNo: 'Gracias por avisar',
+  graciasNoTexto: 'Sentiremos tu ausencia. Brindaremos por ti y te guardamos la historia para contártela.',
+  // Las dos despedidas cierran igual de bonito: quien no puede venir no se queda con un
+  // «gracias» a secas.
+  graciasVieneCierre: 'Tu cerveza ya tiene nombre',
+  graciasNoCierre: 'En otra oportunidad será',
   guestbook: 'Déjame un Mensaje',
 } as const
 
@@ -56,6 +68,76 @@ function Filete() {
 }
 
 /**
+ * Lo único que ve quien ya respondió: las gracias, y nada más.
+ *
+ * **No se vuelve a pintar la invitación ni suena la música.** Quien ya contestó no vuelve a
+ * su enlace a leerla otra vez: vuelve a comprobar que su respuesta llegó, y con la fiesta
+ * entera delante —y la canción arrancando de nuevo— esa confirmación se perdía. Lleva la
+ * piel del diseño para que se siga viendo como su invitación.
+ */
+function Gracias({ invitado, viene }: { invitado: string | null; viene: boolean }) {
+  return (
+    <article
+      style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100dvh',
+        padding: '48px 28px',
+        background: `linear-gradient(180deg, ${P.madera}, ${P.maderaClara})`,
+        color: P.crema,
+        fontFamily: SANS,
+        lineHeight: 'normal',
+        overflowX: 'clip',
+      }}
+    >
+      {/* Las duelas del barril, como en la invitación. */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: `repeating-linear-gradient(90deg, ${P.duelas} 0 2px, transparent 2px 40px)`,
+          pointerEvents: 'none',
+        }}
+      />
+      <div style={{ position: 'relative', maxWidth: 420, textAlign: 'center' }} role="status">
+        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.32em', color: P.oro, textTransform: 'uppercase' }}>
+          {viene ? ROTULOS.graciasVieneRotulo : ROTULOS.graciasNoRotulo}
+        </div>
+        {invitado === null ? null : (
+          <div
+            style={{
+              marginTop: 18,
+              fontFamily: TITULAR,
+              fontVariantCaps: 'small-caps',
+              fontWeight: 700,
+              fontSize: 27,
+              letterSpacing: '0.06em',
+              color: P.oro,
+            }}
+          >
+            {invitado}
+          </div>
+        )}
+        <h1 style={{ marginTop: 10, fontFamily: CALIGRAFIA, fontSize: 40, fontWeight: 400, lineHeight: 1.2, color: P.oro }}>
+          {viene ? ROTULOS.graciasViene : ROTULOS.graciasNo}
+        </h1>
+        <Filete />
+        <p style={{ fontSize: 15, lineHeight: 1.75, opacity: 0.85 }}>{viene ? ROTULOS.graciasVieneTexto : ROTULOS.graciasNoTexto}</p>
+        <p style={{ marginTop: 26, fontFamily: CALIGRAFIA, fontSize: 26, lineHeight: 1.3, color: P.oro }}>
+          {viene ? ROTULOS.graciasVieneCierre : ROTULOS.graciasNoCierre}{' '}
+          <span aria-hidden style={{ fontSize: 26 }}>
+            {viene ? '🍻' : '🍺'}
+          </span>
+        </p>
+      </div>
+    </article>
+  )
+}
+
+/**
  * «Cervecería Vintage» — el cumpleaños de Miguel, de `invites-4.jsx:479`
  * (`BeerBirthdayInvite`).
  *
@@ -68,7 +150,7 @@ function Filete() {
  * arriba con su párrafo, y el segundo, el del karaoke. Se leen por índice porque en la
  * maqueta son dos bloques distintos del diseño, no una lista.
  */
-export function CumpleBeerView({ content, event, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+export function CumpleBeerView({ content, event, themes, slots, guestInfo, audioSrc, respondida = false, asistira = false }: ThemeProps) {
   const { hero, quote, schedule, reception, map, music, notes, closing } = content
 
   // A quién va dirigida: el nombre de su invitación, tal cual —«Pamela», «Carlos Rojas»,
@@ -76,6 +158,9 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
   // solo, como en la maqueta.
   const etiqueta = guestInfo?.label.trim() ?? ''
   const invitado = etiqueta === '' ? null : etiqueta
+
+  // Ya respondió: se despide y nada más. Ni la invitación otra vez, ni la música.
+  if (respondida) return <Gracias invitado={invitado} viene={asistira} />
 
   const bienvenida = notes?.[0]
   const karaoke = notes?.[1]

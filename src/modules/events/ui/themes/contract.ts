@@ -70,6 +70,11 @@ export type ThemeProps = {
    */
   readonly respondida?: boolean
   /**
+   * Qué dijo, cuando ya respondió. Lo necesita el diseño que, en vez de volver a pintar la
+   * invitación, se despide con un mensaje distinto para quien viene y para quien no puede.
+   */
+  readonly asistira?: boolean
+  /**
    * La música que suena, **cuando no sale del contenido del evento**.
    *
    * Una boda pone la suya en `content.music.audioMediaId` y la vista compone `/media/<id>`.
