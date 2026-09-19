@@ -114,11 +114,12 @@ export type ThemeDefinition = {
   /**
    * Cómo pinta este diseño el formulario de confirmación.
    *
-   * En la maqueta son dos: las bodas usan dos botones —«ASISTIRÉ» y «NO PUEDO»— con un
-   * contador de invitados, y los XV un formulario de campos. No es una piel del mismo:
-   * son dos composiciones.
+   * En la maqueta son tres: las bodas usan dos botones —«ASISTIRÉ» y «NO PUEDO»— con un
+   * contador de invitados, los XV un formulario de campos, y el cumpleaños los dos botones
+   * con el «sí» ya en su oro y sin el saludo encima. No es una piel del mismo: son tres
+   * composiciones.
    */
-  readonly rsvp?: 'campos' | 'botones'
+  readonly rsvp?: 'campos' | 'botones' | 'botones-oro'
   readonly sections: readonly SectionKey[]
   /**
    * Lo que pinta de cada bloque, y por eso lo único que el panel le pide al cliente.

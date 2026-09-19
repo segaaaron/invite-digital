@@ -198,7 +198,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
               guestbook: (
                 <>
-                  {definicion.rsvp === 'botones' ? (
+                  {definicion.rsvp !== undefined && definicion.rsvp !== 'campos' ? (
                     <GuestbookForm dictionary={dictionary} guestName={group.label} previous={latest} seats={group.seats} token={token} />
                   ) : null}
                   <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />

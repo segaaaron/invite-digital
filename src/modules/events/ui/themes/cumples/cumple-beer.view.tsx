@@ -191,9 +191,6 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
                 {bienvenida.text === undefined ? null : (
                   <div style={{ marginTop: 18, fontSize: 14, lineHeight: 1.6, opacity: 0.85 }}>{bienvenida.text}</div>
                 )}
-                {/* A quién va dirigida, aquí y no junto al RSVP: el propio formulario lo
-                    repite arriba de sus botones, y pegados se leía dos veces seguidas. */}
-                <div style={{ marginTop: 18, fontSize: 13, opacity: 0.85 }}>{slots.guest}</div>
               </div>
             </Reveal>
           </>
@@ -405,7 +402,12 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
           <div style={{ marginTop: 28 }}>{slots.registry}</div>
         </Reveal>
 
-        <div style={{ marginTop: 28 }}>{slots.pass}</div>
+        {/* A quién va dirigida y su pase, juntos y al final. El cuerpo de la invitación es
+            el de la maqueta, que no menciona al invitado en ninguna parte; esto es nuestro
+            —cada enlace es de alguien y su QR es el que lee la puerta— y va donde no parte
+            el diseño en dos. */}
+        <div style={{ marginTop: 28, textAlign: 'center', fontSize: 13, opacity: 0.85 }}>{slots.guest}</div>
+        <div style={{ marginTop: 14 }}>{slots.pass}</div>
 
         {closing === undefined ? null : (
           <div style={{ marginTop: 34, textAlign: 'center' }}>

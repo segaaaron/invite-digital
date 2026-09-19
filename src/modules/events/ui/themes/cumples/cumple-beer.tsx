@@ -18,9 +18,10 @@ export const cumpleBeerDefinition: ThemeDefinition = {
   categorySlug: 'cumpleanos',
   palette: PALETA,
   fonts: ['dmSans', 'jetbrainsMono', 'greatVibes', 'cinzel', 'cormorant'],
-  // Dos botones y el contador de invitados, como las bodas: en un cumpleaños se contesta
-  // «voy» o «no voy», y el libro de firmas es «Déjame un Mensaje», que el diseño sí pinta.
-  rsvp: 'botones',
+  // Dos botones y el contador de invitados, como las bodas, pero con el «sí» ya en el oro
+  // del diseño y sin el saludo encima: es lo que dibuja su maqueta. El libro de firmas es
+  // «Déjame un Mensaje», que este diseño sí pinta.
+  rsvp: 'botones-oro',
   pinta: {
     // **Ninguna fotografía.** La portada es el arte del diseño, a sangre y con su texto
     // dentro, y no hay galería ni retrato: no existe un solo hueco donde poner una foto.

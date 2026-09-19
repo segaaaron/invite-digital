@@ -22,8 +22,13 @@ type Props = {
    * ancho—. `botones` es el de las bodas: dos botones, «ASISTIRÉ» y «NO PUEDO», y con el
    * sí un contador de invitados. Son dos formularios distintos en la maqueta, no uno con
    * otra piel.
+   *
+   * `botones-oro` es el tercero, y es el del cumpleaños: los mismos dos botones con el
+   * «sí» **ya en el acento del diseño** —es la llamada, no el acuse de la elección— y sin
+   * el saludo encima, que ese diseño pinta arriba, en su bloque de bienvenida. Es lo que
+   * su maqueta dibuja, y por eso lo decide el diseño y no una preferencia suelta.
    */
-  variant?: 'campos' | 'botones' | undefined
+  variant?: 'campos' | 'botones' | 'botones-oro' | undefined
   /**
    * El nombre del invitado, que ya se sabe: cada enlace es de alguien. Se manda oculto con
    * la respuesta, para que la pareja lea quién contestó sin pedírselo otra vez.
@@ -125,19 +130,24 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     )
   }
 
-  if (variant === 'botones') {
+  if (variant === 'botones' || variant === 'botones-oro') {
     const BOTON =
       'flex-1 rounded-[4px] border px-0 py-3.5 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200'
+    const LLENO = 'border-transparent bg-[var(--color-cta)] font-bold text-[var(--color-on-cta)]'
+    const HUECO = 'border-[var(--color-line)] text-ink'
+    // Con el «sí» destacado de salida, lo que marca la elección es el otro botón: dejar
+    // los dos llenos a la vez no diría cuál se eligió.
+    const siLleno = variant === 'botones-oro' ? !respondido || viene : viene && respondido
     return (
       <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
         <input name="token" type="hidden" value={token} readOnly />
         <input name="attending" type="hidden" value={viene ? String(cuantos) : '0'} readOnly />
         <input name="name" type="hidden" value={guestName} readOnly />
-        <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />
+        {variant === 'botones-oro' ? null : <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />}
 
         <div className="flex gap-2">
           <button
-            className={`${BOTON} ${viene && respondido ? 'border-transparent bg-[var(--color-cta)] font-bold text-[var(--color-on-cta)]' : 'border-[var(--color-line)] text-ink'}`}
+            className={`${BOTON} ${siLleno ? LLENO : HUECO}`}
             onClick={() => {
               setViene(true)
               setRespondido(true)
@@ -147,7 +157,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
             {dictionary.goingYesShort}
           </button>
           <button
-            className={`${BOTON} ${!viene && respondido ? 'border-transparent bg-[var(--color-cta)] font-bold text-[var(--color-on-cta)]' : 'border-[var(--color-line)] text-ink'}`}
+            className={`${BOTON} ${!viene && respondido ? LLENO : HUECO}`}
             onClick={() => {
               setViene(false)
               setRespondido(true)

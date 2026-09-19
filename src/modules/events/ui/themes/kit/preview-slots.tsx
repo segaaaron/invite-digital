@@ -21,7 +21,7 @@ export const INVITADO_DE_MUESTRA = { label: 'Pedro Zárate', seats: 2 } as const
  *
  * El pase se queda fuera: es un QR de un grupo concreto, y aquí no hay ninguno.
  */
-export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 'botones'): ThemeSlots {
+export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 'botones' | 'botones-oro'): ThemeSlots {
   const envuelta = (contenido: React.ReactNode) => <PreviewSlot>{contenido}</PreviewSlot>
 
   return {
@@ -47,7 +47,7 @@ export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 
     // Sin respuesta de los anfitriones: en una invitación real solo aparece si la pareja
     // contestó, y el diseño no la pinta.
     guestbook:
-      rsvp === 'botones'
+      rsvp !== 'campos' && rsvp !== undefined
         ? envuelta(
             <GuestbookForm
               dictionary={diccionario.invitation}
