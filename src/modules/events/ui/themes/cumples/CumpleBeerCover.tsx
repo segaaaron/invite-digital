@@ -43,7 +43,7 @@ const MEDALLON = { x: 384, centroY: 548, ancho: 377 } as const
  * (538, 1262). La llamada a entrar se pinta **encima**, tapándolo, porque dice lo mismo: con
  * las dos a la vez la frase se leía dos veces seguidas.
  */
-const DESPEDIDA = { x: 432, y: 1242, ancho: 372, alto: 100 } as const
+const DESPEDIDA = { x: 432, y: 1242, ancho: 404, alto: 100 } as const
 
 /**
  * El rótulo del arte es una condensada de taberna y Cinzel es mucho más ancha: a la altura
@@ -168,7 +168,7 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: P
             />
             <text
               dominantBaseline="central"
-              style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: 30, letterSpacing: '0.3em', fill: accent }}
+              style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: 24, letterSpacing: '0.22em', fill: accent }}
               textAnchor="middle"
               x={DESPEDIDA.x + 4}
               y={DESPEDIDA.y + 2}

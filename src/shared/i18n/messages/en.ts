@@ -168,7 +168,7 @@ export const en = {
     coverInviteLine2: 'to celebrate with me',
     coverEnter: 'ENTER MY INVITATION',
     coverEnterShared: 'ENTER OUR INVITATION',
-    coverTap: 'SEE YOU THERE',
+    coverTap: 'TAP TO OPEN',
     countdownPrefix: 'In',
     countdownDays: 'DAYS',
     countdownHours: 'HRS',

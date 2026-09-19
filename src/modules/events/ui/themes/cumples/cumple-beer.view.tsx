@@ -38,6 +38,11 @@ const ROTULOS = {
   // Las dos despedidas cierran igual de bonito: quien no puede venir no se queda con un
   // «gracias» a secas.
   graciasVieneCierre: 'Tu cerveza ya tiene nombre',
+  // La dirección, por si el día de la fiesta ya no recuerda dónde era: la invitación ya no
+  // se vuelve a abrir, así que este es el único sitio donde puede mirarla.
+  graciasDondeRotulo: 'DÓNDE ES LA FIESTA',
+  graciasDondeAyuda: 'Guarda la dirección, por si acaso:',
+  graciasComoLlegar: 'CÓMO LLEGAR',
   graciasNoCierre: 'En otra oportunidad será',
   guestbook: 'Déjame un Mensaje',
 } as const
@@ -75,7 +80,19 @@ function Filete() {
  * entera delante —y la canción arrancando de nuevo— esa confirmación se perdía. Lleva la
  * piel del diseño para que se siga viendo como su invitación.
  */
-function Gracias({ invitado, viene }: { invitado: string | null; viene: boolean }) {
+function Gracias({
+  invitado,
+  viene,
+  lugar,
+  direccion,
+  llegar,
+}: {
+  invitado: string | null
+  viene: boolean
+  lugar: string | undefined
+  direccion: string
+  llegar: string | null
+}) {
   return (
     <article
       style={{
@@ -132,6 +149,42 @@ function Gracias({ invitado, viene }: { invitado: string | null; viene: boolean 
             {viene ? '🍻' : '🍺'}
           </span>
         </p>
+
+        {/* Dónde es, para quien viene: cerrada la invitación, esta pantalla es lo único que
+            le queda, y el día de la fiesta la dirección es lo que va a buscar. */}
+        {!viene || direccion === '' ? null : (
+          <div style={{ marginTop: 40, paddingTop: 28, borderTop: `1px solid ${P.filete}` }}>
+            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: P.oro, textTransform: 'uppercase' }}>
+              {ROTULOS.graciasDondeRotulo}
+            </div>
+            <p style={{ marginTop: 12, fontSize: 13, opacity: 0.7 }}>{ROTULOS.graciasDondeAyuda}</p>
+            {lugar === undefined || lugar === '' ? null : (
+              <p style={{ marginTop: 10, fontSize: 15, fontWeight: 600, color: P.crema }}>{lugar}</p>
+            )}
+            <p style={{ marginTop: 4, fontSize: 14, lineHeight: 1.6, opacity: 0.85 }}>{direccion}</p>
+            {llegar === null ? null : (
+              <a
+                href={llegar}
+                rel="noreferrer"
+                style={{
+                  display: 'inline-block',
+                  marginTop: 18,
+                  borderRadius: 999,
+                  border: `1px solid ${P.oro}`,
+                  padding: '12px 24px',
+                  fontFamily: MONO,
+                  fontSize: 11,
+                  letterSpacing: '0.24em',
+                  color: P.oro,
+                  textDecoration: 'none',
+                }}
+                target="_blank"
+              >
+                {ROTULOS.graciasComoLlegar}
+              </a>
+            )}
+          </div>
+        )}
       </div>
     </article>
   )
@@ -159,9 +212,6 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
   const etiqueta = guestInfo?.label.trim() ?? ''
   const invitado = etiqueta === '' ? null : etiqueta
 
-  // Ya respondió: se despide y nada más. Ni la invitación otra vez, ni la música.
-  if (respondida) return <Gracias invitado={invitado} viene={asistira} />
-
   const bienvenida = notes?.[0]
   const karaoke = notes?.[1]
 
@@ -187,6 +237,12 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
   const direccionCorta = lineas.length < 2 ? direccion : `${lineas[0]}, ${lineas[lineas.length - 1]}`
   const respaldo = [reception?.place, lineas.join(', ')].filter((parte) => parte !== undefined && parte !== '').join(', ')
   const llegar = comoLlegar({ href: map?.href, coords: map?.coords }, respaldo)
+
+  // Ya respondió: se despide y nada más. Ni la invitación otra vez, ni la música. Va aquí
+  // —y no al principio— porque la despedida lleva la dirección, que se compone arriba.
+  if (respondida) {
+    return <Gracias direccion={direccionCorta} invitado={invitado} llegar={llegar} lugar={reception?.place} viene={asistira} />
+  }
 
   /**
    * La canción que suena, si la hay. **El reproductor solo aparece con archivo detrás.**

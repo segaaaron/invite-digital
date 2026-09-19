@@ -291,9 +291,9 @@ export interface ThemeDictionary {
   /** La misma llamada en boda, donde la invitación es de dos: «nuestra», no «mi». */
   coverEnterShared: string
   /**
-   * La llamada corta del cumpleaños, en el filete de oro de su portada. Dice «TE ESPERO»
-   * —la misma frase que el arte trae escrita debajo, que el filete tapa— para que no se lean
-   * las dos encimadas.
+   * «TOCA PARA ABRIR»: la llamada del cumpleaños, en la placa de su portada. La placa se
+   * pinta **encima** del «te espero.» que el arte trae escrito, para no dejar dos frases
+   * encimadas en el mismo sitio.
    */
   coverTap: string
   countdownPrefix: string

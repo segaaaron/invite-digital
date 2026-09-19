@@ -51,10 +51,10 @@ describe('el tema Cervecería Vintage', () => {
     // arranca sin un gesto.
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
     const portada = screen.getByRole('button', { name: /abrir/i })
-    expect(screen.getByText('TE ESPERO')).toBeInTheDocument()
+    expect(screen.getByText('TOCA PARA ABRIR')).toBeInTheDocument()
 
     fireEvent.click(portada)
-    expect(screen.queryByText('TE ESPERO')).not.toBeInTheDocument()
+    expect(screen.queryByText('TOCA PARA ABRIR')).not.toBeInTheDocument()
   })
 
   it('quien ya respondió ve solo las gracias: ni la invitación ni la música', () => {
@@ -72,6 +72,10 @@ describe('el tema Cervecería Vintage', () => {
     }
     expect(screen.queryByText('La Celebración')).not.toBeInTheDocument()
     expect(container.querySelector('audio')).toBeNull()
+    // Y la dirección, que el día de la fiesta es lo único que va a buscar: la invitación ya
+    // no se abre.
+    expect(screen.getByText(/Guarda la dirección/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'CÓMO LLEGAR' })).toBeInTheDocument()
   })
 
   it('quien dijo que no tiene su propia despedida', () => {
@@ -83,6 +87,8 @@ describe('el tema Cervecería Vintage', () => {
     expect(screen.getByText('Gracias por avisar')).toBeInTheDocument()
     // Y se despide igual de bien que quien viene: nadie se queda con un «gracias» a secas.
     expect(screen.getByText(/En otra oportunidad será/)).toBeInTheDocument()
+    // A quien no viene no se le da la dirección: no la necesita.
+    expect(screen.queryByText(/Guarda la dirección/)).not.toBeInTheDocument()
     expect(screen.queryByText('¡Gracias por confirmar!')).not.toBeInTheDocument()
   })
 
