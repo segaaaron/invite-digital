@@ -13,6 +13,8 @@ type Props = {
   /** Quien cumple. Va rotulado dentro del medallón, que es donde lo pone el arte. */
   readonly name: string
   readonly openLabel: string
+  /** La llamada visible: lo que se toca para entrar. */
+  readonly cta: string
 }
 
 /** El tamaño del arte. El nombre se coloca en sus coordenadas, no en las de la pantalla. */
@@ -57,7 +59,7 @@ const ALTURA_DE_MAYUSCULA = 0.7
  * Es un `<button>` a pantalla completa y no un `<div onClick>`: con un div, quien navega
  * con teclado no puede abrirla y la invitación se acaba en la portada.
  */
-export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel }: Props) {
+export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -94,6 +96,35 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel }: Props)
           cortadas; aquí no, a cambio de dos franjas de la madera del fondo arriba y abajo, que
           es el mismo tono del borde del propio arte. */}
       <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'contain' }} />
+
+      {/* La llamada a entrar, abajo y a la vista. Sin ella la portada parece una estampa y
+          no una puerta: se miraba el arte y nadie tocaba. Va dentro del botón que ya es toda
+          la pantalla —un `<span>`, no otro botón: uno dentro de otro no es HTML válido—, y
+          al tocarla arranca también la música, que ningún navegador deja sonar sin un gesto. */}
+      <span
+        style={{
+          position: 'absolute',
+          left: '50%',
+          // A la altura del pulgar y despegado del borde: en el celular el filo de abajo lo
+          // tapan la barra del navegador y el gesto de volver.
+          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 6%)',
+          transform: 'translateX(-50%)',
+          display: 'inline-block',
+          maxWidth: '84%',
+          borderRadius: 999,
+          padding: '14px 24px',
+          background: accent,
+          color: bg,
+          fontFamily: 'var(--font-jetbrains-mono)',
+          fontSize: 11,
+          fontWeight: 700,
+          letterSpacing: '0.2em',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.55)',
+          animation: reducido ? undefined : 'theme-stampDown 2.6s ease-in-out infinite',
+        }}
+      >
+        {cta}
+      </span>
 
       {escrito === '' ? null : (
         <svg

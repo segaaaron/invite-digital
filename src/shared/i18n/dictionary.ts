@@ -290,6 +290,8 @@ export interface ThemeDictionary {
   coverEnter: string
   /** La misma llamada en boda, donde la invitación es de dos: «nuestra», no «mi». */
   coverEnterShared: string
+  /** «TOCA PARA ABRIR»: la llamada corta del cumpleaños, que va en un botón sobre el arte. */
+  coverTap: string
   countdownPrefix: string
   countdownDays: string
   countdownHours: string

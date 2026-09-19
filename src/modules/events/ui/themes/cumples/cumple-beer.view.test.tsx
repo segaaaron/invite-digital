@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { conMovimientoReducido, conObservadorQueNuncaDispara } from '../kit/test-helpers'
 import { propsDePrueba } from '../test-props'
@@ -42,6 +42,18 @@ describe('el tema Cervecería Vintage', () => {
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: '   ', seats: 1 } })} />)
     expect(screen.queryByText(/Te invito/)).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La Celebración')
+  })
+
+  it('la portada enseña la llamada a abrirla, y al tocarla entra', () => {
+    // Sin una llamada visible la portada parece una estampa: se miraba el arte y nadie
+    // tocaba. Y el primer toque es además lo que deja sonar la música, que ningún navegador
+    // arranca sin un gesto.
+    render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
+    const portada = screen.getByRole('button', { name: /abrir/i })
+    expect(screen.getByText('TOCA PARA ABRIR')).toBeInTheDocument()
+
+    fireEvent.click(portada)
+    expect(screen.queryByText('TOCA PARA ABRIR')).not.toBeInTheDocument()
   })
 
   it('emite un solo encabezado de nivel 1', () => {
