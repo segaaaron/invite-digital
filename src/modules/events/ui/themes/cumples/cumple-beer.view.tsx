@@ -86,12 +86,18 @@ function Gracias({
   lugar,
   direccion,
   llegar,
+  mapa,
+  respaldo,
+  verUbicacion,
 }: {
   invitado: string | null
   viene: boolean
   lugar: string | undefined
   direccion: string
   llegar: string | null
+  mapa: { readonly label?: string; readonly coords?: string; readonly href?: string } | undefined
+  respaldo: string
+  verUbicacion: string
 }) {
   return (
     <article
@@ -162,6 +168,25 @@ function Gracias({
               <p style={{ marginTop: 10, fontSize: 15, fontWeight: 600, color: P.crema }}>{lugar}</p>
             )}
             <p style={{ marginTop: 4, fontSize: 14, lineHeight: 1.6, opacity: 0.85 }}>{direccion}</p>
+            {/* El mismo plano dibujado de la invitación: tocarlo abre el mapa. Una dirección
+                escrita se lee; un plano se reconoce. */}
+            {mapa === undefined ? null : (
+              <div style={{ marginTop: 18 }}>
+                <MapPreview
+                  accent={P.oro}
+                  border={P.filete}
+                  coords={mapa.coords ?? ''}
+                  coordsColor={P.oro}
+                  directionsLabel={verUbicacion}
+                  href={mapa.href}
+                  label={mapa.label ?? lugar ?? ''}
+                  labelColor={P.crema}
+                  pinDot={P.madera}
+                  pinRing={P.madera}
+                  respaldo={respaldo}
+                />
+              </div>
+            )}
             {llegar === null ? null : (
               <a
                 href={llegar}
@@ -241,7 +266,18 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
   // Ya respondió: se despide y nada más. Ni la invitación otra vez, ni la música. Va aquí
   // —y no al principio— porque la despedida lleva la dirección, que se compone arriba.
   if (respondida) {
-    return <Gracias direccion={direccionCorta} invitado={invitado} llegar={llegar} lugar={reception?.place} viene={asistira} />
+    return (
+      <Gracias
+        direccion={direccionCorta}
+        invitado={invitado}
+        llegar={llegar}
+        lugar={reception?.place}
+        mapa={map}
+        respaldo={respaldo}
+        verUbicacion={themes.viewLocation}
+        viene={asistira}
+      />
+    )
   }
 
   /**
