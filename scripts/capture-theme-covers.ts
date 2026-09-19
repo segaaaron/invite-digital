@@ -26,16 +26,14 @@ const DESTINO = 'public/templates'
  * capturas cambian un poco en cada pasada y ese ruido acaba en el repositorio.
  */
 /**
- * Los diseños cuya portada **es** una ilustración a sangre: la tarjeta sale del propio arte
- * recortado, no de una captura.
+ * Los diseños cuya tarjeta es **su portada cerrada**, no la invitación abierta.
  *
  * El guion abre la portada antes de capturar —si no, los ocho de sobre saldrían con la
  * misma fotografía—, y en estos la portada es justo lo que hay que enseñar: «Cervecería
- * Vintage» abierta es madera oscura con una cuenta atrás, que no dice nada del modelo.
+ * Vintage» abierta es madera oscura con una cuenta atrás, que no dice nada del modelo. Y se
+ * captura, no se recorta el arte: el nombre de quien cumple lo pinta el diseño encima.
  */
-const PORTADA_ES_EL_ARTE: Record<string, string> = {
-  'cumple-beer': 'public/temas/cumple-beer/portada-cumple.avif',
-}
+const TARJETA_ES_LA_PORTADA = new Set(['cumple-beer'])
 
 const PEDIDOS = process.argv.slice(2).filter((argumento) => !argumento.startsWith('-'))
 const MODELOS = PEDIDOS.length === 0 ? CATALOG_LISTOS : CATALOG_LISTOS.filter((entrada) => PEDIDOS.includes(entrada.key))
@@ -65,13 +63,6 @@ async function principal(): Promise<void> {
   if (MODELOS.length === 0) throw new Error(`Ningún modelo del catálogo se llama así: ${PEDIDOS.join(', ')}`)
 
   for (const entrada of MODELOS) {
-    const arte = PORTADA_ES_EL_ARTE[entrada.key]
-    if (arte !== undefined) {
-      await sharp(arte).resize({ width: ANCHO, height: ALTO, fit: 'cover', position: 'top' }).avif({ quality: 62, effort: 6 }).toFile(`${DESTINO}/${entrada.key}.avif`)
-      console.log('· %s (su arte de portada)', entrada.key)
-      continue
-    }
-
     const pagina = await contexto.newPage()
     // `domcontentloaded` y no `networkidle`: contra `next dev` el canal de recarga en
     // caliente deja una conexión abierta y la espera no termina nunca.
@@ -92,7 +83,7 @@ async function principal(): Promise<void> {
     // enseñar **el diseño**, y con la portada puesta los ocho de sobre saldrían con la misma
     // fotografía de un sobre y no habría forma de distinguirlos en la rejilla.
     const portada = pagina.getByRole('button', { name: /abrir la invitaci/i })
-    if ((await portada.count()) > 0) {
+    if ((await portada.count()) > 0 && !TARJETA_ES_LA_PORTADA.has(entrada.key)) {
       await portada.first().click()
       await pagina.waitForTimeout(600)
     }

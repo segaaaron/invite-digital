@@ -86,12 +86,14 @@ describe('el tema Cervecería Vintage', () => {
     expect(screen.getByText('Karaoke de la casa')).toBeInTheDocument()
   })
 
-  it('no pide nada de la portada: el arte lo trae todo rotulado', () => {
-    // Esta invitación **no tiene fotografía en ninguna parte** —ni portada, ni retrato, ni
-    // galería— y tampoco nombres ni línea sobre ellos: el arte de portada los lleva dentro.
-    // Pedirlos en el editor es trabajo que el cliente hace para nadie, y lo descubre el día
-    // que reparte el enlace.
-    expect(cumpleBeerDefinition.sections).not.toContain('hero')
+  it('de la portada pide el nombre, y lo pinta dentro del medallón', () => {
+    // El arte venía con «MIGUEL» rotulado dentro y se le quitó del archivo: si no, cualquier
+    // otro cumpleaños abriría su invitación con el nombre de otra persona.
+    render(<CumpleBeerView {...propsDePrueba({ content: { ...CONTENIDO_DE_MUESTRA, hero: { nameA: 'Carlos' } } })} />)
+    expect(screen.getByText('CARLOS')).toBeInTheDocument()
+  })
+
+  it('no pide ninguna fotografía: no tiene dónde ponerla', () => {
     expect(cumpleBeerDefinition.pinta.fotos.casillas).toBe(0)
     expect(cumpleBeerDefinition.pinta.fotos.portada ?? false).toBe(false)
     expect(cumpleBeerDefinition.pinta.fotos.retrato ?? false).toBe(false)

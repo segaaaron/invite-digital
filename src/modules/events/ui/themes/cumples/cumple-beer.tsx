@@ -23,19 +23,21 @@ export const cumpleBeerDefinition: ThemeDefinition = {
   // «Déjame un Mensaje», que este diseño sí pinta.
   rsvp: 'botones-oro',
   pinta: {
-    // **Ninguna fotografía.** La portada es el arte del diseño, a sangre y con su texto
-    // dentro, y no hay galería ni retrato: no existe un solo hueco donde poner una foto.
+    // **Ninguna fotografía.** La portada es el arte del diseño, a sangre, y no hay galería
+    // ni retrato: no existe un solo hueco donde poner una foto.
     fotos: { casillas: 0 },
+    sinCampos: {
+      // De la portada, solo el nombre de quien cumple: va rotulado dentro del medallón del
+      // arte. Las dos líneas de texto, las iniciales y el segundo nombre no se pintan —el
+      // arte trae «CELEBRAMOS» y «MI CUMPLEAÑOS» dibujados—, y una fiesta es de uno.
+      hero: ['nameB', 'monogram', 'serial', 'eyebrow', 'coverImageId', 'portraitImageId'],
+    },
 
     // Los dos avisos del diseño: la frase de bienvenida y el karaoke. Un tercero no tendría
     // dónde pintarse.
     maxAvisos: 2,
   },
-  // **Sin bloque de portada.** No es un olvido: la portada de este diseño es la
-  // ilustración, con los nombres y la frase rotulados dentro, y no pinta ni una palabra de
-  // lo que se escribiría ahí. El título con el que viaja el enlace al compartirlo sale
-  // entonces del nombre del evento, que ya escribe quien lo da de alta.
-  sections: ['schedule', 'notes', 'reception', 'map', 'music', 'quote', 'closing'],
+  sections: ['hero', 'schedule', 'notes', 'reception', 'map', 'music', 'quote', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./cumple-beer.view').then((modulo) => modulo.CumpleBeerView)),
 }

@@ -9,6 +9,8 @@ import type { InvitationContent } from '../../../domain/invitation-content'
  * karaoke, junto al micrófono. Por eso `maxAvisos` es 2.
  */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
+  // Quien cumple: se rotula dentro del medallón de la portada, donde el arte lo dejó vacío.
+  hero: { nameA: 'Miguel' },
   schedule: { startsAt: '2026-09-26T19:00:00' },
   notes: [
     {
