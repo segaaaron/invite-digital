@@ -9,11 +9,9 @@ import type { InvitationContent } from '../../../domain/invitation-content'
  * karaoke, junto al micrófono. Por eso `maxAvisos` es 2.
  */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
-  hero: {
-    eyebrow: 'MI CUMPLEAÑOS',
-    nameA: 'Miguel',
-    monogram: 'M',
-  },
+  // Del bloque de la portada solo el nombre: el arte trae rotulado todo lo demás. Es el
+  // que viaja en el título del enlace cuando se comparte por WhatsApp.
+  hero: { nameA: 'Miguel' },
   schedule: { startsAt: '2026-09-26T19:00:00' },
   notes: [
     {

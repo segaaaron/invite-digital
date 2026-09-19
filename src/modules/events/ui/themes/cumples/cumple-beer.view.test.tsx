@@ -2,7 +2,9 @@ import { render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { conMovimientoReducido, conObservadorQueNuncaDispara } from '../kit/test-helpers'
 import { propsDePrueba } from '../test-props'
+import { formaPara } from '../../content-shapes'
 import { CONTENIDO_DE_MUESTRA } from './cumple-beer.content'
+import { cumpleBeerDefinition } from './cumple-beer'
 import { CumpleBeerView } from './cumple-beer.view'
 
 beforeEach(() => {
@@ -83,6 +85,18 @@ describe('el tema Cervecería Vintage', () => {
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} audioSrc="/modelos/musica/cumple-beer" />)
     expect(screen.getByText('LA CANCIÓN DE LA NOCHE')).toBeInTheDocument()
     expect(screen.getByText('Karaoke de la casa')).toBeInTheDocument()
+  })
+
+  it('de la portada solo pide el nombre: el arte trae el resto rotulado', () => {
+    // Esta invitación **no tiene fotografía en ninguna parte** —ni portada, ni retrato, ni
+    // galería— y tampoco la línea sobre los nombres: el arte de portada las lleva dentro.
+    // Pedirlas en el editor es trabajo que el cliente hace para nadie, y lo descubre el día
+    // que reparte el enlace.
+    const forma = formaPara('hero', cumpleBeerDefinition.pinta)
+    expect(forma.fields.map((campo) => campo.key)).toEqual(['nameA'])
+    expect(cumpleBeerDefinition.pinta.fotos.casillas).toBe(0)
+    expect(cumpleBeerDefinition.pinta.fotos.portada ?? false).toBe(false)
+    expect(cumpleBeerDefinition.pinta.fotos.retrato ?? false).toBe(false)
   })
 
   it('sin contenido no revienta ni escribe «undefined»', () => {

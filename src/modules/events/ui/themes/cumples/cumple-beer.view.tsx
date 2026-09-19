@@ -66,7 +66,7 @@ function Filete() {
  * maqueta son dos bloques distintos del diseño, no una lista.
  */
 export function CumpleBeerView({ content, event, themes, slots, audioSrc }: ThemeProps) {
-  const { hero, quote, schedule, reception, map, music, notes, closing } = content
+  const { quote, schedule, reception, map, music, notes, closing } = content
 
   const bienvenida = notes?.[0]
   const karaoke = notes?.[1]
@@ -120,16 +120,7 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
         overflowX: 'clip',
       }}
     >
-      <CumpleBeerCover
-        accent={P.oro}
-        bg={P.madera}
-        bgAsset={themeAsset('cumple-beer', 'portada-cumple.avif')}
-        foto={hero?.coverImageId === undefined ? undefined : `/media/${hero.coverImageId}`}
-        hint={themes.coverEnter}
-        label={hero?.eyebrow ?? themes.coverOpen}
-        name={hero?.nameA ?? ''}
-        openLabel={themes.coverAria}
-      />
+      <CumpleBeerCover accent={P.oro} bg={P.madera} bgAsset={themeAsset('cumple-beer', 'portada-cumple.avif')} openLabel={themes.coverAria} />
 
       {/* Las duelas del barril: son lo que hace que el fondo se lea como madera. */}
       <div

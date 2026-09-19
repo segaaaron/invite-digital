@@ -22,11 +22,15 @@ export const cumpleBeerDefinition: ThemeDefinition = {
   // «voy» o «no voy», y el libro de firmas es «Déjame un Mensaje», que el diseño sí pinta.
   rsvp: 'botones',
   pinta: {
-    fotos: { portada: true, casillas: 0 },
+    // **Ninguna fotografía.** La portada es el arte del diseño, a sangre y con su texto
+    // dentro, y no hay galería ni retrato: no existe un solo hueco donde poner una foto.
+    fotos: { casillas: 0 },
     sinCampos: {
-      // El monograma y la línea bajo los nombres no se pintan: la portada es una imagen y
-      // el segundo nombre no existe —cumple una persona—.
-      hero: ['nameB', 'monogram', 'serial', 'portraitImageId'],
+      // Del bloque de la portada solo se pide el nombre de quien cumple, que es lo que
+      // viaja en el título del enlace al compartirlo. Todo lo demás —el segundo nombre,
+      // las iniciales, las dos líneas de texto y las fotografías— lo trae el arte
+      // rotulado dentro, y pedirlo sería trabajo que no sale a ninguna parte.
+      hero: ['nameB', 'monogram', 'serial', 'eyebrow', 'coverImageId', 'portraitImageId'],
     },
     // Los dos avisos del diseño: la frase de bienvenida y el karaoke. Un tercero no tendría
     // dónde pintarse.
