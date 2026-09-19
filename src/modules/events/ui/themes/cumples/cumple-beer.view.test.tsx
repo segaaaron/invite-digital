@@ -51,10 +51,10 @@ describe('el tema Cervecería Vintage', () => {
     // arranca sin un gesto.
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
     const portada = screen.getByRole('button', { name: /abrir/i })
-    expect(screen.getByText('TOCA PARA ABRIR')).toBeInTheDocument()
+    expect(screen.getByText('TE ESPERO')).toBeInTheDocument()
 
     fireEvent.click(portada)
-    expect(screen.queryByText('TOCA PARA ABRIR')).not.toBeInTheDocument()
+    expect(screen.queryByText('TE ESPERO')).not.toBeInTheDocument()
   })
 
   it('quien ya respondió ve solo las gracias: ni la invitación ni la música', () => {

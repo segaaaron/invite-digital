@@ -39,6 +39,13 @@ const ARTE = { ancho: 768, alto: 1376 } as const
 const MEDALLON = { x: 384, centroY: 548, ancho: 377 } as const
 
 /**
+ * El «te espero.» que el arte trae escrito al pie, medido sobre él: va de (327, 1217) a
+ * (538, 1262). La llamada a entrar se pinta **encima**, tapándolo, porque dice lo mismo: con
+ * las dos a la vez la frase se leía dos veces seguidas.
+ */
+const DESPEDIDA = { x: 432, y: 1242, ancho: 372, alto: 100 } as const
+
+/**
  * El rótulo del arte es una condensada de taberna y Cinzel es mucho más ancha: a la altura
  * de mayúscula del original (106 px) «MIGUEL» mediría 640 px de ancho y se saldría del
  * medallón. Se pinta grande y se estrecha al 68 %, que es lo que acerca más el tamaño al del
@@ -108,60 +115,14 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: P
           es el mismo tono del borde del propio arte. */}
       <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'contain' }} />
 
-      {/* La llamada a entrar. No es un botón de aplicación pegado encima del arte: es un velo
-          que sube del borde —el arte no se toca, se enmarca—, el filete con la hoja aldina del
-          propio diseño y el texto en monoespaciada latiendo en opacidad. Va dentro del botón
-          que ya es toda la pantalla, como `<span>`: un botón dentro de otro no es HTML válido.
-          Y ese primer toque es lo que deja sonar la música, que ningún navegador arranca sin
-          un gesto. */}
-      <span
-        style={{
-          position: 'absolute',
-          left: 0,
-          right: 0,
-          bottom: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 12,
-          padding: '110px 24px calc(env(safe-area-inset-bottom, 0px) + 54px)',
-          background: `linear-gradient(180deg, transparent 0%, ${velo(bg, 0.72)} 58%, ${velo(bg, 0.94)} 100%)`,
-        }}
-      >
-        <span aria-hidden style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ display: 'block', width: 44, height: 1, background: accent, opacity: 0.55 }} />
-          <span style={{ color: accent, fontSize: 13, opacity: 0.85 }}>❧</span>
-          <span style={{ display: 'block', width: 44, height: 1, background: accent, opacity: 0.55 }} />
-        </span>
-        {/* El filete de oro alrededor lo hace inconfundible sin volverlo un botón de
-            aplicación: es el mismo recurso que usa el diseño en sus tarjetas. */}
-        <span
-          style={{
-            display: 'inline-block',
-            maxWidth: '86%',
-            borderRadius: 999,
-            border: `1px solid ${accent}`,
-            padding: '13px 26px',
-            fontFamily: 'var(--font-jetbrains-mono)',
-            fontSize: 12,
-            letterSpacing: '0.34em',
-            textIndent: '0.34em',
-            color: accent,
-            animation: reducido ? undefined : 'theme-tapPulse 2.8s ease-in-out infinite',
-          }}
-        >
-          {cta}
-        </span>
-      </span>
-
-      {escrito === '' ? null : (
-        <svg
+      <svg
           // `meet` para que case con el `contain` de la imagen: el nombre se escala igual que
           // la ilustración, así no se sale del medallón.
           preserveAspectRatio="xMidYMid meet"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           viewBox={`0 0 ${ARTE.ancho} ${ARTE.alto}`}
         >
+          {escrito === '' ? null : (
           <text
             lengthAdjust="spacingAndGlyphs"
             style={{
@@ -187,8 +148,35 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: P
           >
             {escrito.toUpperCase()}
           </text>
+          )}
+
+          {/* La llamada a entrar, justo encima del «te espero.» del arte y tapándolo: dice lo
+              mismo, y las dos juntas se leían dos veces. Va dentro del `<svg>` del arte para
+              caer siempre en ese punto, en el teléfono y en el marco del escaparate. Es un
+              dibujo dentro del botón que ya es toda la pantalla —no otro botón— y ese primer
+              toque es además lo que deja sonar la música. */}
+          <g style={{ animation: reducido ? undefined : 'theme-tapPulse 2.8s ease-in-out infinite' }}>
+            <rect
+              fill={bg}
+              height={DESPEDIDA.alto}
+              rx={DESPEDIDA.alto / 2}
+              stroke={accent}
+              strokeWidth={2}
+              width={DESPEDIDA.ancho}
+              x={DESPEDIDA.x - DESPEDIDA.ancho / 2}
+              y={DESPEDIDA.y - DESPEDIDA.alto / 2}
+            />
+            <text
+              dominantBaseline="central"
+              style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: 30, letterSpacing: '0.3em', fill: accent }}
+              textAnchor="middle"
+              x={DESPEDIDA.x + 4}
+              y={DESPEDIDA.y + 2}
+            >
+              {cta}
+            </text>
+          </g>
         </svg>
-      )}
     </button>
   )
 }
