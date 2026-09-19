@@ -15,7 +15,8 @@ import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
-import { loQueFaltaParaInvitar } from '@/modules/events'
+import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -60,7 +61,7 @@ export default async function InvitadosPage({
   // en las acciones. Se mide por el dato, no por el estado del evento: un borrador con la
   // invitación escrita puede prepararse en paralelo.
   const contenido = await events.contentFor(event.value.id, {})
-  const faltaEnInvitacion = loQueFaltaParaInvitar(contenido)
+  const faltaEnInvitacion = loQueFaltaParaInvitar(contenido, { pideNombres: pideNombres(themeFor(event.value.themeKey)) })
   const invitacionVacia = faltaEnInvitacion.length > 0
 
   const groups = await guests.list(event.value.id)

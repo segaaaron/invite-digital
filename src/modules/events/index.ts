@@ -1,6 +1,6 @@
 export type { Event, EventStatus } from './domain/event'
 export { acceptsResponses } from './domain/event'
-export { loQueFaltaParaInvitar } from './domain/invitation-content'
+export { loQueFaltaParaInvitar, pideNombres } from './domain/invitation-content'
 export {
   FIESTAS,
   FIESTAS_A_LA_VENTA,

@@ -291,19 +291,32 @@ const escrito = (valor: string | undefined): boolean => valor !== undefined && v
  * Lo que le falta a la invitación para poder invitar a alguien, dicho para el atelier.
  *
  * Quién, cuándo y dónde: los nombres de la portada, la fecha y hora, y el lugar de la
- * recepción. Los dieciséis diseños los pintan y ninguno los deja fuera (`sinCampos`). Sin
- * ellos, el invitado abre una invitación que no dice de quién es, cuándo ni dónde.
+ * recepción. Sin ellos, el invitado abre una invitación que no dice de quién es, cuándo ni
+ * dónde.
  *
  * Se mira **el dato**, no el bloque: antes bastaba con un bloque cualquiera con texto, y una
  * frase escrita dejaba cargar invitados con la invitación sin fecha ni lugar.
+ *
+ * **Los nombres solo se exigen si el diseño los pinta.** Hay diseños cuya portada es una
+ * ilustración con el nombre rotulado dentro: ahí no hay campo que rellenar —el editor no lo
+ * ofrece— y pedirlo dejaría el reparto bloqueado para siempre, sin nada que se pueda hacer
+ * para desbloquearlo. Quien llama lo sabe por el `pinta` del diseño.
  */
-export function loQueFaltaParaInvitar(content: InvitationContent): readonly string[] {
+export function loQueFaltaParaInvitar(
+  content: InvitationContent,
+  opciones: { readonly pideNombres?: boolean } = {},
+): readonly string[] {
+  const nombres = opciones.pideNombres ?? true
   return [
-    escrito(content.hero?.nameA) ? null : 'Los nombres de la portada',
+    !nombres || escrito(content.hero?.nameA) ? null : 'Los nombres de la portada',
     escrito(content.schedule?.startsAt) ? null : 'La fecha y la hora',
     escrito(content.reception?.place) ? null : 'El lugar de la recepción',
   ].filter((falta): falta is string => falta !== null)
 }
+
+/** Si el diseño pide el nombre de la portada, para `loQueFaltaParaInvitar`. */
+export const pideNombres = (tema: { sections: readonly SectionKey[]; pinta: { sinCampos?: Partial<Record<SectionKey, readonly string[]>> } }): boolean =>
+  tema.sections.includes('hero') && !(tema.pinta.sinCampos?.hero ?? []).includes('nameA')
 
 export function parseInvitationContent(crudo: unknown): InvitationContent {
   if (!esObjeto(crudo)) return {}

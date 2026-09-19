@@ -3,7 +3,8 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { loQueFaltaParaInvitar } from '@/modules/events'
+import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { avanceDeTareas, estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar, totalesDelPresupuesto } from '@/modules/planner'
 import { buildWhatsAppLink } from '@/modules/leads'
 import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
@@ -42,7 +43,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
    * cuando los cuatro están hechos.
    */
   const contenidoDelEvento = await events.contentFor(event.value.id, {})
-  const invitacionLista = loQueFaltaParaInvitar(contenidoDelEvento).length === 0
+  const invitacionLista = loQueFaltaParaInvitar(contenidoDelEvento, { pideNombres: pideNombres(themeFor(event.value.themeKey)) }).length === 0
   // Quien celebra entra primero a su invitación mientras no esté escrita: al iniciar sesión, desde
   // la barra o desde un enlace. Con ella lista, el resumen. El atelier y el admin ven el resumen.
   if (!invitacionLista && !gestionaElEvento(actor, event.value)) redirect(`/panel/eventos/${event.value.slug}/configuracion`)

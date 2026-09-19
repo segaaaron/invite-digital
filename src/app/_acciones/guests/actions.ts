@@ -7,7 +7,8 @@ import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import type { GuestErrorKind } from '@/modules/guests/domain/errors'
 import { invitationUrl } from '@/modules/guests/domain/invitation-url'
-import { loQueFaltaParaInvitar } from '@/modules/events'
+import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 
@@ -348,7 +349,11 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
  * de verdad, porque cada acción es un extremo HTTP público. `null` si está lista.
  */
 const invitacionSinEscribir = async (eventId: string): Promise<string | null> => {
-  const falta = loQueFaltaParaInvitar(await events.contentFor(eventId, {}))
+  // Qué hace falta depende del diseño: hay portadas que traen el nombre rotulado dentro y
+  // no ofrecen ese campo, y exigirlo dejaría su reparto bloqueado sin nada que rellenar.
+  const evento = await events.getByIdUnscoped(eventId)
+  const tema = themeFor(isErr(evento) ? '' : evento.value.themeKey)
+  const falta = loQueFaltaParaInvitar(await events.contentFor(eventId, {}), { pideNombres: pideNombres(tema) })
   return falta.length === 0 ? null : `Antes de invitar, termina tu invitación en Configuración. Falta: ${falta.join(', ').toLowerCase()}.`
 }
 

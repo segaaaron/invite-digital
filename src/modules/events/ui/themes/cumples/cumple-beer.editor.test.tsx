@@ -1,6 +1,6 @@
 import { render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { InvitationContent, SectionKey } from '../../../domain/invitation-content'
+import { loQueFaltaParaInvitar, pideNombres, type InvitationContent, type SectionKey } from '../../../domain/invitation-content'
 import { formaPara } from '../../content-shapes'
 import { conMovimientoReducido, conObservadorQueNuncaDispara } from '../kit/test-helpers'
 import { propsDePrueba } from '../test-props'
@@ -76,10 +76,6 @@ describe('lo que el editor pide de «Cervecería Vintage»', () => {
       const forma = formaPara(seccion, cumpleBeerDefinition.pinta)
       for (const campo of forma.fields) {
         if (SIN_TEXTO.has(campo.kind)) continue
-        // El nombre de la portada es la excepción **declarada**: este diseño lo lleva
-        // rotulado dentro del arte y el campo existe porque es el título con el que viaja
-        // el enlace al compartirlo por WhatsApp, no porque se pinte.
-        if (seccion === 'hero' && campo.key === 'nameA') continue
         const esperado = valor(seccion, campo.key)
         const sale = forma.form === 'filas' ? pintado.includes(`${esperado}-0`) : pintado.includes(esperado)
         if (!sale) huerfanos.push(`${seccion}.${campo.key}`)
@@ -89,8 +85,15 @@ describe('lo que el editor pide de «Cervecería Vintage»', () => {
     expect(huerfanos).toEqual([])
   })
 
-  it('no pide ninguna fotografía, porque no tiene dónde ponerla', () => {
+  it('no pide ni fotografías ni bloque de portada: no tiene dónde ponerlos', () => {
     expect(cumpleBeerDefinition.pinta.fotos).toEqual({ casillas: 0 })
-    expect(formaPara('hero', cumpleBeerDefinition.pinta).fields.map((campo) => campo.key)).toEqual(['nameA'])
+    expect(cumpleBeerDefinition.sections).not.toContain('hero')
+  })
+
+  it('no exige los nombres para poder invitar, porque no los pide', () => {
+    // Exigir un campo que el editor no ofrece deja el reparto bloqueado para siempre, sin
+    // nada que se pueda rellenar para desbloquearlo.
+    expect(pideNombres(cumpleBeerDefinition)).toBe(false)
+    expect(loQueFaltaParaInvitar(CONTENIDO_DE_MUESTRA, { pideNombres: false })).toEqual([])
   })
 })

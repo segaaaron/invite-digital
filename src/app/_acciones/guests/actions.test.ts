@@ -27,6 +27,7 @@ const addGuest = vi.fn()
 const resend = vi.fn()
 const INVITACION_LISTA = { hero: { nameA: 'Camila' }, schedule: { startsAt: '2026-10-18T20:00' }, reception: { place: 'Los Ceibos' } }
 const contentFor = vi.fn()
+const getByIdUnscoped = vi.fn()
 const publicarSiBorrador = vi.fn()
 
 vi.mock('@/app/composition/container', () => ({
@@ -41,6 +42,9 @@ vi.mock('@/app/composition/container', () => ({
   events: {
     contentFor: (...args: unknown[]) => contentFor(...args),
     publicarSiBorrador: (...args: unknown[]) => publicarSiBorrador(...args),
+    // Qué hace falta para invitar depende del diseño: hay portadas que traen los nombres
+    // rotulados dentro y no ofrecen ese campo. Por eso la acción lee el evento.
+    getByIdUnscoped: (...args: unknown[]) => getByIdUnscoped(...args),
   },
   plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: (...args: unknown[]) => requireFeature(...args) },
 }))
@@ -55,6 +59,8 @@ const form = (): FormData => {
 beforeEach(() => {
   vi.clearAllMocks()
   requireSession.mockResolvedValue({ userId: 'u1' })
+  // Un diseño de los que sí piden los nombres de la portada, que es el caso de las bodas.
+  getByIdUnscoped.mockResolvedValue(ok({ themeKey: 'boda' }))
   requireFeature.mockResolvedValue(ok({}))
   contentFor.mockResolvedValue(INVITACION_LISTA)
 })
