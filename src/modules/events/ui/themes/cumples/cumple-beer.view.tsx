@@ -454,11 +454,12 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
           <div style={{ marginTop: 28 }}>{slots.registry}</div>
         </Reveal>
 
-        {/* Su pase, al final. El cuerpo de la invitación es el de la maqueta, que no menciona
-            al invitado en ninguna parte; el QR es nuestro —es el que lee la puerta— y va donde
-            no parte el diseño en dos. El rótulo «Nombre · Cupos reservados» (`slots.guest`) no
-            se pinta en este diseño: el pase ya dice de quién es. */}
-        <div style={{ marginTop: 28 }}>{slots.pass}</div>
+        {/* **Este diseño no tiene pase.** Un cumpleaños entre amigos no controla la entrada
+            con un QR: ni el «tu pase aparecerá aquí» mientras no conteste, ni el código
+            después. Al confirmar, el propio formulario da las gracias y ya está. Tampoco
+            pinta el rótulo «Nombre · Cupos reservados» (`slots.guest`): el saludo de arriba
+            dice a quién va dirigida, y aquí no hay cupos que contar. Los otros dieciséis
+            siguen con su pase. */}
 
         {closing === undefined ? null : (
           <div style={{ marginTop: 34, textAlign: 'center' }}>

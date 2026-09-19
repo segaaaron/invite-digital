@@ -14,15 +14,17 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks())
 
 describe('el tema Cervecería Vintage', () => {
-  it('coloca sus cuatro ranuras, y no la del invitado', () => {
+  it('coloca sus tres ranuras, y ni la del invitado ni la del pase', () => {
     // Un diseño que se olvide de slots.rsvp es una invitación en la que nadie puede
     // confirmar, y todo lo demás se ve perfecto.
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
-    // «Nombre · Cupos reservados» no se pinta en este diseño: el pase ya dice de quién es.
+    // Un cumpleaños no controla la entrada con un QR: ni pase ni «Nombre · Cupos
+    // reservados». A quién va dirigida lo dice el saludo de «La Celebración».
     expect(screen.queryByText('ranura-invitado')).not.toBeInTheDocument()
+    expect(screen.queryByText('ranura-pase')).not.toBeInTheDocument()
   })
 
   it('saluda por su nombre a quien recibe el enlace, delante del titular', () => {

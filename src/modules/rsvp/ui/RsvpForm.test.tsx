@@ -101,4 +101,18 @@ describe('RsvpForm', () => {
     expect(await screen.findByText(invitation.confirmedHeading)).toBeInTheDocument()
     expect(screen.queryByText(invitation.passReady)).not.toBeInTheDocument()
   })
+
+  it('con «botones-oro» da las gracias y no anuncia pase: ese diseño no lo tiene', async () => {
+    // El cumpleaños no controla la entrada con un QR, así que su invitación no pinta la
+    // ranura del pase: anunciarlo mandaría a buscar más abajo algo que no está.
+    respondAction.mockResolvedValue({ status: 'success', responderName: 'Yasmin Medrano Avila' })
+    pinta({ variant: 'botones-oro' })
+
+    fireEvent.click(screen.getByRole('button', { name: invitation.goingYesShort }))
+    fireEvent.submit(screen.getByRole('button', { name: invitation.goingYesShort }).closest('form')!)
+
+    expect(await screen.findByText(invitation.confirmedHeading)).toBeInTheDocument()
+    expect(screen.getByText(invitation.successBody)).toBeInTheDocument()
+    expect(screen.queryByText(invitation.passReady)).not.toBeInTheDocument()
+  })
 })

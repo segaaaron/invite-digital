@@ -121,11 +121,13 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
         {/* Sin «cambiar mi respuesta»: se confirma una sola vez. Si algo cambia, lo ajusta
             quien invitó, y se dice aquí para que nadie busque un botón que no existe. */}
         <p className="max-w-[40ch] text-[13px] leading-[1.7] text-ink-soft">{dictionary.confirmedLocked}</p>
-        {/* Confirmó que viene: su pase, en el mismo momento. Si dijo que no, no hay pase. */}
         {/* Confirmó que viene: su pase ya está, con su QR y su botón, en su sitio de la
             invitación —que se actualiza al guardar—. Aquí se dice; repetir el botón serían dos
-            cosas que hacen lo mismo. */}
-        {viene ? <p className="text-[13.5px] font-medium text-ink">{dictionary.passReady}</p> : null}
+            cosas que hacen lo mismo.
+
+            Con `botones-oro` no se dice nada: ese diseño —el cumpleaños— no pinta la ranura
+            del pase, así que anunciar uno que no existe mandaría a buscarlo más abajo. */}
+        {viene && variant !== 'botones-oro' ? <p className="text-[13.5px] font-medium text-ink">{dictionary.passReady}</p> : null}
       </div>
     )
   }
