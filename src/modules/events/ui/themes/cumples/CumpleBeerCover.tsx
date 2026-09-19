@@ -155,7 +155,8 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: P
               caer siempre en ese punto, en el teléfono y en el marco del escaparate. Es un
               dibujo dentro del botón que ya es toda la pantalla —no otro botón— y ese primer
               toque es además lo que deja sonar la música. */}
-          <g style={{ animation: reducido ? undefined : 'theme-tapPulse 2.8s ease-in-out infinite' }}>
+          {/* Quieta, sin latido: el usuario lo pidió estática y con un solo texto. */}
+          <g>
             <rect
               fill={bg}
               height={DESPEDIDA.alto}
