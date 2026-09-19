@@ -5,7 +5,8 @@ import { FIELD_CLASS, IconButton, LABEL_CLASS, PanelButton } from '@/shared/desi
 import { type ContentActionState, removeMediaAction, saveContentBlockAction } from '@/app/_acciones/events/actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
 import { type EstadoBloque, aValor, estadoInicial, filaVacia } from './content-form'
-import { type Anfitriones, type Campo, type FormaBloque, type LoQuePinta, formaPara } from './content-shapes'
+import type { Fiesta } from '../domain/fiesta'
+import { type Campo, type FormaBloque, type LoQuePinta, formaPara } from './content-shapes'
 import { type MediaItem, esPista } from './media-item'
 import {
   BuildingIcon,
@@ -66,6 +67,25 @@ const BLOQUES: Record<SectionKey, { titulo: string; descripcion: string; Icono: 
 }
 
 /**
+ * Cómo se llama cada bloque cuando la fiesta no es una boda.
+ *
+ * Un cumpleaños no tiene «recepción»: puede ser un salón, un bar o la casa de quien cumple,
+ * y hablarle de recepción hace pensar que se le pide otra cosa. Lo que no esté aquí se
+ * llama igual en las tres fiestas.
+ */
+const BLOQUES_DE_FIESTA: Partial<Record<Fiesta, Partial<Record<SectionKey, { titulo: string; descripcion: string }>>>> = {
+  cumple: {
+    reception: { titulo: 'Dónde es la fiesta', descripcion: 'El sitio —un salón, un bar o tu casa—, a qué hora empieza y cómo llegar.' },
+    ceremony: { titulo: 'Otro lugar', descripcion: 'Si la celebración empieza en otro sitio, dónde y a qué hora.' },
+    hosts: { titulo: 'Quién invita', descripcion: 'Los nombres de quienes reciben, cada uno con el suyo.' },
+    closing: { titulo: 'Despedida', descripcion: 'Las últimas palabras, al final de la invitación.' },
+  },
+}
+
+/** El nombre y la descripción de un bloque en esta fiesta. */
+const bloqueDe = (section: SectionKey, fiesta: Fiesta) => ({ ...BLOQUES[section], ...BLOQUES_DE_FIESTA[fiesta]?.[section] })
+
+/**
  * El orden en que se rellena una invitación, por pasos. Primero lo que se ve —portada y
  * fotos—, después cuándo y dónde, la familia, los detalles y la música.
  */
@@ -113,8 +133,11 @@ type Props = {
    * cada campo y detrás del botón «Usar el texto de ejemplo».
    */
   readonly ejemplo: InvitationContent
-  /** Qué anfitriones pide la fiesta: padre y madre en un XV, los padres de cada novio en una boda. */
-  readonly anfitriones?: Anfitriones
+  /**
+   * La fiesta del diseño. Decide qué anfitriones se piden —padre y madre en un XV, los
+   * padres de cada novio en una boda— y cómo se llaman los bloques y sus ejemplos.
+   */
+  readonly fiesta?: Fiesta
   /** El diseño, para ofrecer los iconos de su itinerario dibujados como los pinta. */
   readonly temaKey?: string
   /**
@@ -143,7 +166,7 @@ const IconosDelDiseno = createContext<readonly OpcionDeIcono[]>([])
  * nadie a mano**: lo compone `aValor` a partir de lo que hay en pantalla. Quien decide qué
  * es válido sigue siendo el dominio, en el servidor.
  */
-export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo, anfitriones = 'boda', temaKey, itinerarioDesde }: Props) {
+export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content, media, ejemplo, fiesta = 'boda', temaKey, itinerarioDesde }: Props) {
   const iconos = useMemo(() => (temaKey === undefined ? [] : iconosDelItinerario(temaKey)), [temaKey])
   if (sections.length === 0) {
     return (
@@ -159,7 +182,7 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
     <IconosDelDiseno.Provider value={iconos}>
     <Acordeon
       {...(itinerarioDesde === undefined ? {} : { itinerarioDesde })}
-      anfitriones={anfitriones}
+      fiesta={fiesta}
       content={content}
       ejemplo={ejemplo}
       eventId={eventId}
@@ -326,10 +349,10 @@ function BloqueDeContenido({
   ejemplo,
   abierta,
   onAlternar,
-  anfitriones = 'boda',
+  fiesta = 'boda',
   anexo,
 }: {
-  anfitriones?: Anfitriones | undefined
+  fiesta?: Fiesta | undefined
   /** Otro bloque que se edita y se guarda dentro de esta tarjeta: el mapa en la recepción. */
   anexo?: SectionKey | undefined
   itinerarioDesde?: string | undefined
@@ -343,12 +366,13 @@ function BloqueDeContenido({
   media: readonly MediaItem[]
   ejemplo: InvitationContent
 }) {
-  const forma = formaPara(section, pinta, anfitriones)
+  const bloque = bloqueDe(section, fiesta)
+  const forma = formaPara(section, pinta, fiesta)
   const cuerpoId = useId()
   const listo = escrito(content, section)
   const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
   const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
-  const formaAnexo = anexo === undefined ? undefined : formaPara(anexo, pinta, anfitriones)
+  const formaAnexo = anexo === undefined ? undefined : formaPara(anexo, pinta, fiesta)
   const [estadoAnexo, setEstadoAnexo] = useState<EstadoBloque | undefined>(() =>
     anexo === undefined || formaAnexo === undefined ? undefined : estadoInicial(formaAnexo, content[anexo]),
   )
@@ -413,11 +437,11 @@ function BloqueDeContenido({
           </span>
           <span className="flex min-w-0 grow flex-col gap-0.5">
             <span className="font-display text-[19px] leading-tight text-ink min-[560px]:text-[21px]" id={`${cuerpoId}-titulo`}>
-              {BLOQUES[section].titulo}
+              {bloque.titulo}
             </span>
             {/* El nombre del botón es solo el título; esto y el estado van en su descripción. */}
             <span className="truncate text-[12.5px] text-ink-soft" id={`${cuerpoId}-resumen`}>
-              {listo && !abierta ? resumen(content, section, forma) || BLOQUES[section].descripcion : BLOQUES[section].descripcion}
+              {listo && !abierta ? resumen(content, section, forma) || bloque.descripcion : bloque.descripcion}
             </span>
           </span>
           <span

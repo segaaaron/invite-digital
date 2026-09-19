@@ -144,7 +144,7 @@ describe('ContentBlockForms', () => {
   it('los anfitriones se escriben por su papel: padre, madre y cada padrino con su nombre', () => {
     const { container } = render(
       <ContentBlockForms
-        anfitriones="xv"
+        fiesta="xv"
         ejemplo={{}} pinta={TODO}
         content={{ hosts: { label: 'PADRES', names: ['Ana'] } }}
         eventId="e1"
@@ -163,9 +163,25 @@ describe('ContentBlockForms', () => {
     expect(valorEnviado(container)).toEqual({ label: 'PADRES', roles: { father: 'Ana', mother: 'Rosa', godparents: ['Luis'] } })
   })
 
+  it('en un cumpleaños el bloque no se llama «Recepción»', () => {
+    // Puede ser un salón, un bar o la casa de quien cumple: «Recepción» hace pensar que se
+    // le está pidiendo otra cosa.
+    const { unmount } = render(
+      <ContentBlockForms fiesta="cumple" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['reception']} />,
+    )
+    expect(screen.getByText('Dónde es la fiesta')).toBeInTheDocument()
+    expect(screen.queryByText('Recepción')).not.toBeInTheDocument()
+    unmount()
+
+    render(
+      <ContentBlockForms fiesta="boda" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['reception']} />,
+    )
+    expect(screen.getByText('Recepción')).toBeInTheDocument()
+  })
+
   it('en una boda pide los padres de cada novio', () => {
     render(
-      <ContentBlockForms anfitriones="boda" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['hosts']} />,
+      <ContentBlockForms fiesta="boda" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['hosts']} />,
     )
     for (const rotulo of ['Padre de la novia', 'Madre de la novia', 'Padre del novio', 'Madre del novio']) {
       expect(screen.getByLabelText(rotulo)).toBeInTheDocument()

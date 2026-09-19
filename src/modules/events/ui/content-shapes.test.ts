@@ -76,6 +76,32 @@ describe('formaPara', () => {
     expect(hosts.form === 'campos' && hosts.list).toBeUndefined()
   })
 
+  it('el cumpleaños cambia los ejemplos: ni «RECEPCIÓN» ni una hacienda', () => {
+    // Un cumpleaños puede ser en un bar o en una casa. Con los ejemplos de boda delante,
+    // quien rellena el formulario cree que se le pide otra cosa.
+    const sinFotos = { fotos: { casillas: 0 } }
+    const pista = (seccion: 'reception' | 'map', clave: string, fiesta: 'boda' | 'cumple') =>
+      formaPara(seccion, sinFotos, fiesta).fields.find((campo) => campo.key === clave)?.hint
+
+    expect(pista('reception', 'label', 'boda')).toContain('RECEPCIÓN')
+    expect(pista('reception', 'label', 'cumple')).not.toContain('RECEPCIÓN')
+    expect(pista('reception', 'label', 'cumple')).toContain('EN CASA')
+
+    expect(pista('map', 'label', 'boda')).toContain('HACIENDA')
+    expect(pista('map', 'label', 'cumple')).not.toContain('HACIENDA')
+
+    // Y los campos son los mismos: cambia el ejemplo, no lo que se pregunta.
+    expect(formaPara('reception', sinFotos, 'cumple').fields.map((campo) => campo.key)).toEqual(
+      formaPara('reception', sinFotos, 'boda').fields.map((campo) => campo.key),
+    )
+  })
+
+  it('un cumpleaños que pidiera anfitriones los pide como una boda: un nombre y otro', () => {
+    expect(formaPara('hosts', { fotos: { casillas: 0 } }, 'cumple').fields.map((campo) => campo.key)).toEqual(
+      formaPara('hosts', { fotos: { casillas: 0 } }, 'boda').fields.map((campo) => campo.key),
+    )
+  })
+
   it('acota los avisos a los que el diseño pinta', () => {
     const forma = formaPara('notes', { fotos: { casillas: 6 }, maxAvisos: 1 })
     expect(forma.form === 'filas' && forma.max).toBe(1)

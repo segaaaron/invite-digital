@@ -2,7 +2,8 @@ import type { ComponentType } from 'react'
 import { render } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { InvitationContent } from '../../domain/invitation-content'
-import { anfitrionesDeCategoria, formaPara } from '../content-shapes'
+import { fiestaDeCategoria } from '../../domain/fiesta'
+import { formaPara } from '../content-shapes'
 import type { ThemeDefinition, ThemeProps } from './contract'
 import { conMovimientoReducido, conObservadorQueNuncaDispara } from './kit/test-helpers'
 import { themeDefinitions } from './registry'
@@ -48,10 +49,10 @@ const valor = (seccion: string, clave: string) => `zzz${seccion}${clave}`.toLowe
 function contenidoConTodo(tema: ThemeDefinition): { contenido: InvitationContent; esperados: [string, string][] } {
   const salida: Record<string, unknown> = structuredClone(tema.defaultContent) as Record<string, unknown>
   const esperados: [string, string][] = []
-  const anfitriones = anfitrionesDeCategoria(tema.categorySlug)
+  const fiesta = fiestaDeCategoria(tema.categorySlug)
 
   for (const seccion of tema.sections) {
-    const forma = formaPara(seccion, tema.pinta, anfitriones)
+    const forma = formaPara(seccion, tema.pinta, fiesta)
     const campos = forma.fields.filter((campo) => !SIN_TEXTO.has(campo.kind))
 
     if (forma.form === 'filas') {

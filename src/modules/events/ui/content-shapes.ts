@@ -12,6 +12,7 @@
  * Módulo puro: sin React, sin acciones, sin nada de `infrastructure`.
  */
 
+import type { Fiesta } from '../domain/fiesta'
 import {
   type GalleryRow,
   type HeroBlock,
@@ -109,6 +110,22 @@ export type Anfitriones = 'xv' | 'boda'
 /** La fiesta de un diseño, para saber qué anfitriones pedir. */
 export const anfitrionesDeCategoria = (categoria: string): Anfitriones => (categoria.startsWith('xv') ? 'xv' : 'boda')
 
+/**
+ * Los ejemplos que acompañan a un campo, cuando la fiesta los cambia.
+ *
+ * Un cumpleaños no tiene «recepción» ni se celebra en una hacienda: puede ser un bar, una
+ * casa o un parque. Con los ejemplos de boda delante, quien rellena el formulario cree que
+ * le estamos pidiendo otra cosa. Lo que no esté aquí se queda con el ejemplo de siempre.
+ */
+const EJEMPLOS: Partial<Record<Fiesta, Partial<Record<SectionKey, Partial<Record<string, string>>>>>> = {
+  cumple: {
+    ceremony: { label: 'Lo que va encima del lugar: «LA FIESTA» o «EN CASA».' },
+    reception: { label: 'Lo que va encima del lugar: «LA FIESTA» o «EN CASA».' },
+    map: { label: 'Lo que se lee sobre el mapa: «EL BAR DE MIKI» o «CASA DE MIGUEL».' },
+    hero: { eyebrow: 'La línea de arriba: «MI CUMPLEAÑOS».', monogram: 'La que adorna la portada, como la inicial del nombre.' },
+  },
+}
+
 const TITULO_DE_ANFITRIONES: Campo = {
   anchoCompleto: true,
   key: 'label',
@@ -164,14 +181,21 @@ const filas = (section: SectionKey, tope: number, pinta: LoQuePinta): number => 
  * La forma del bloque **para este diseño**: sin los campos que no pinta y con cada lista
  * acotada a las filas que de verdad tiene.
  */
-export const formaPara = (section: SectionKey, pinta: LoQuePinta, anfitriones: Anfitriones = 'boda'): FormaBloque => {
+export const formaPara = (section: SectionKey, pinta: LoQuePinta, fiesta: Fiesta = 'boda'): FormaBloque => {
   const fuera = pinta.sinCampos?.[section] ?? []
+  // El cumpleaños no pide anfitriones —ningún diseño suyo los pinta—, y si algún día los
+  // pidiera serían los de una boda: un nombre y otro.
+  const anfitriones: Anfitriones = fiesta === 'xv' ? 'xv' : 'boda'
   // Un diseño que no pinta los nombres —«Bodas de Oro»— solo pide el título.
   if (section === 'hosts') return fuera.includes('names') ? { form: 'campos', fields: [TITULO_DE_ANFITRIONES] } : ANFITRIONES[anfitriones]
   const forma = FORMAS[section]
-  const fields = forma.fields.filter(
-    (campo) => !fuera.includes(campo.key) && (PIDE[campo.key]?.(pinta.fotos) ?? true),
-  )
+  const ejemplos = EJEMPLOS[fiesta]?.[section]
+  const fields = forma.fields
+    .filter((campo) => !fuera.includes(campo.key) && (PIDE[campo.key]?.(pinta.fotos) ?? true))
+    .map((campo) => {
+      const ejemplo = ejemplos?.[campo.key]
+      return ejemplo === undefined ? campo : { ...campo, hint: ejemplo }
+    })
   if (forma.form === 'filas') return { ...forma, fields, max: filas(section, forma.max, pinta) }
   // La lista suelta —los nombres de los anfitriones— se quita como cualquier otro campo.
   if (forma.list !== undefined && fuera.includes(forma.list.key)) {

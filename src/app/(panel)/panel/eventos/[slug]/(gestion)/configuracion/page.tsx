@@ -11,7 +11,7 @@ import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
 import { themeFor } from '@/modules/events/ui/themes/registry'
-import { anfitrionesDeCategoria } from '@/modules/events/ui/content-shapes'
+import { fiestaDeCategoria } from '@/modules/events/domain/fiesta'
 import { canManageStaff, gestionaElEvento, isAdmin } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -150,7 +150,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Vista previa</PanelButton>
           </p>
           <ContentBlockForms
-            anfitriones={anfitrionesDeCategoria(tema.categorySlug)}
+            fiesta={fiestaDeCategoria(tema.categorySlug)}
             temaKey={tema.key}
             {...(conCronograma ? { itinerarioDesde: `/panel/eventos/${event.value.slug}/planner/cronograma` } : {})}
             content={contenido}
