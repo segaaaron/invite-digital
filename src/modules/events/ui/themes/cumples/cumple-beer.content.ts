@@ -25,7 +25,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   reception: {
     label: 'Recepción Social',
     place: 'El Bar de Miki',
-    address: 'Calle W. Z. Tovar #2045\nEntre Circunvalación y Elena Rendón\nCochabamba',
+    address: 'Calle W. Z. Tovar #2045, entre Circunvalación y Elena Rendón, Cochabamba',
     time: '19:00 HRS',
   },
   map: { label: 'EL BAR DE MIKI', coords: '17.39°S · 66.15°O' },

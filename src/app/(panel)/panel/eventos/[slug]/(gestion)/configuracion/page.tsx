@@ -71,8 +71,16 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.
   const tema = themeFor(event.value.themeKey)
   // Contenido, fotografías y enlace compartido son del cliente: para el admin ni se leen.
-  // Lo que ven los invitados: con el itinerario del cronograma cuando el plan lo trae.
-  const contenido = esAdmin ? null : await events.contenidoParaInvitados(event.value.id, tema.defaultContent)
+  //
+  // **Lo que aún no se ha escrito se ve con el ejemplo del modelo.** Es una vista previa: con
+  // la fila vacía —como nacen los eventos— se quedaba en blanco y no se veía el diseño, y al
+  // abrir una sección la invitación no saltaba a ella porque buscaba su texto y no había
+  // ninguno. Lo que reparte a los invitados sigue siendo lo escrito, tal cual.
+  // **El editor enseña lo escrito; la vista previa, lo escrito con el ejemplo debajo.** Son
+  // dos lecturas y no una: rellenar los campos del formulario con la muestra haría que el
+  // cliente publicara «El Bar de Miki» con solo pulsar Guardar sin mirar.
+  const contenido = esAdmin ? null : await events.contenidoParaInvitados(event.value.id, {})
+  const contenidoDeLaVistaPrevia = esAdmin ? null : await events.contenidoParaVistaPrevia(event.value.id, tema.defaultContent)
   const conCronograma = !esAdmin && isOk(await plans.requireFeature(event.value.id, 'plannerCompleto'))
 
   // Lo que ya subió el atelier: las fotografías y, desde que la invitación puede sonar,
@@ -159,7 +167,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
 
         {contenido === null ? null : (
           <aside className="hidden min-[1280px]:sticky min-[1280px]:top-6 min-[1280px]:row-span-6 min-[1280px]:block">
-            <InvitacionEnVivo content={contenido} event={event.value} />
+            <InvitacionEnVivo content={contenidoDeLaVistaPrevia ?? {}} event={event.value} />
           </aside>
         )}
 

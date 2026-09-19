@@ -39,6 +39,29 @@ export const contentFor =
   }
 
 /**
+ * El contenido de **una vista previa del panel**: lo escrito, y el ejemplo del modelo en lo
+ * que todavía está en blanco.
+ *
+ * No es lo mismo que lo que ve el invitado, y por eso es otra función. Una invitación
+ * repartida no puede enseñar datos que no escribió nadie —«El Bar de Miki» en la fiesta de
+ * otro—, así que ahí se pinta lo guardado tal cual. Pero el panel es donde el cliente mira
+ * **cómo queda su modelo** mientras lo rellena: con la fila vacía se quedaba en blanco,
+ * sin portada y sin bloques, y además el editor no podía llevar la vista previa a la
+ * sección que se abría, porque buscaba por el texto de esa sección y no había ninguno.
+ */
+export const contentForPreview =
+  (repo: ContentRepository) =>
+  async (eventId: string, defaultContent: InvitationContent): Promise<InvitationContent> => {
+    try {
+      const crudo = await repo.find(eventId)
+      return mergeContent(defaultContent, crudo === null ? {} : parseInvitationContent(crudo))
+    } catch (cause) {
+      console.error('No se pudo leer el contenido del evento %s:', eventId, cause)
+      return defaultContent
+    }
+  }
+
+/**
  * Guarda un bloque, dejando los demás como estaban.
  *
  * El bloque es la unidad de edición porque es la unidad de sentido: la pantalla del panel

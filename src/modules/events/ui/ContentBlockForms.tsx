@@ -232,7 +232,7 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
  * está lista, en palabras; se abre sola la primera que falta, y abrir otra pliega la que
  * había. Lo escrito en una tarjeta plegada no se pierde: sigue montada, oculta.
  */
-function Acordeon({ sections: todas, content, hechos, ...resto }: Props & { hechos: number }) {
+function Acordeon({ sections: todas, content, ejemplo, hechos, ...resto }: Props & { hechos: number }) {
   const sections = visibles(todas)
   const pasos = PASOS.map((paso) => ({ ...paso, secciones: paso.secciones.filter((s) => sections.includes(s)) })).filter((paso) => paso.secciones.length > 0)
   // Lo que un diseño pinte y no esté en ningún paso no se pierde: va al último.
@@ -275,13 +275,20 @@ function Acordeon({ sections: todas, content, hechos, ...resto }: Props & { hech
                   anexo={anexoDe(todas, seccion)}
                   abierta={abierta === seccion}
                   content={content}
+                  ejemplo={ejemplo}
                   key={seccion}
                   onAlternar={() => {
                     const abre = abierta !== seccion
                     setAbierta(abre ? seccion : null)
                     // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
                     if (abre) {
-                      const aviso: AvisoDeSeccion = { seccion, textos: textosDeSeccion(content, seccion) }
+                      // Con el bloque escrito se busca su texto; vacío, el del ejemplo, que
+                      // es justo lo que la vista previa está pintando. Con el texto escrito
+                      // en un bloque vacío no se encontraba nada y la invitación no se movía.
+                      const aviso: AvisoDeSeccion = {
+                        seccion,
+                        textos: textosDeSeccion(escrito(content, seccion) ? content : ejemplo, seccion),
+                      }
                       window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
                     }
                   }}

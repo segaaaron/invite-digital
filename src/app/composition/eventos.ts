@@ -15,7 +15,7 @@ import { getEventById, getEventBySlug } from '@/modules/events/application/get-e
 import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor } from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
-import { clearContent, contentFor, saveContentBlock, seedEmptyContent } from '@/modules/events/application/content-use-cases'
+import { clearContent, contentFor, contentForPreview, saveContentBlock, seedEmptyContent } from '@/modules/events/application/content-use-cases'
 import { listGuestPhotos, listMedia, purgeMedia, readMedia, removeMedia, saveGuestPhoto, saveMedia } from '@/modules/events/application/media-use-cases'
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
@@ -164,6 +164,16 @@ export const events = {
    */
   contenidoParaInvitados: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1]) => {
     const contenido = await contentFor(drizzleContentRepository)(eventId, muestra)
+    if (isErr(await plans.requireFeature(eventId, 'plannerCompleto'))) return contenido
+    const itinerario = itinerarioDeInvitacion(await drizzleDiaStore.listMoments(eventId))
+    return itinerario === null ? contenido : { ...contenido, itinerary: itinerario }
+  },
+  /**
+   * Lo que se pinta en **las vistas previas del panel**: lo escrito, con el ejemplo del
+   * modelo en lo que aún está en blanco. El invitado nunca ve esto.
+   */
+  contenidoParaVistaPrevia: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1]) => {
+    const contenido = await contentForPreview(drizzleContentRepository)(eventId, muestra)
     if (isErr(await plans.requireFeature(eventId, 'plannerCompleto'))) return contenido
     const itinerario = itinerarioDeInvitacion(await drizzleDiaStore.listMoments(eventId))
     return itinerario === null ? contenido : { ...contenido, itinerary: itinerario }

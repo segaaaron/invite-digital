@@ -84,12 +84,14 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
   // La dirección va escrita en varias líneas, y una búsqueda de Google con saltos dentro no
   // encuentra nada: para el mapa se aplana.
   const direccion = reception?.address ?? ''
-  const lineas = direccion.split('\n').filter((linea) => linea.trim() !== '')
+  // La maqueta la escribe en tres renglones y el editor la pide en una línea: se parte por
+  // sus comas, que es donde la cortaría quien la lee.
+  const lineas = direccion.split(/[\n,]/).map((linea) => linea.trim()).filter((linea) => linea !== '')
   // La tarjeta de la recepción la escribe en una línea —«Calle W. Z. Tovar #2045,
   // Cochabamba»— y el bloque de arriba entera, con sus tres renglones. Son los dos sitios
   // de la maqueta y el mismo dato: la corta es la calle y la ciudad.
   const direccionCorta = lineas.length < 2 ? direccion : `${lineas[0]}, ${lineas[lineas.length - 1]}`
-  const respaldo = [reception?.place, direccion.replace(/\n+/g, ', ')].filter((parte) => parte !== undefined && parte !== '').join(', ')
+  const respaldo = [reception?.place, lineas.join(', ')].filter((parte) => parte !== undefined && parte !== '').join(', ')
   const llegar = comoLlegar({ href: map?.href, coords: map?.coords }, respaldo)
 
   /**
@@ -241,7 +243,13 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
         {direccion === '' ? null : (
           <Reveal>
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: 14, lineHeight: 1.7, whiteSpace: 'pre-line' }}>{direccion}</div>
+              <div style={{ fontSize: 14, lineHeight: 1.7 }}>
+                {lineas.map((linea) => (
+                  <span key={linea} style={{ display: 'block' }}>
+                    {linea}
+                  </span>
+                ))}
+              </div>
               {llegar === null ? null : (
                 <a
                   href={llegar}
@@ -280,7 +288,9 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.oro }}>{reception.label ?? themes.reception}</div>
+                {/* Sin título, la tarjeta se queda con su jarra: «RECEPCIÓN» en mayúsculas
+                    dentro de una caligrafía inglesa se lee deforme. */}
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.oro }}>{reception.label ?? ''}</div>
                 <span aria-hidden style={{ fontSize: 66, lineHeight: 1 }}>
                   🍺
                 </span>

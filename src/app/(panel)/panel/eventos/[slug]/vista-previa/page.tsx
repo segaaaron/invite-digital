@@ -47,7 +47,8 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
 
   // El mismo contenido y la misma caída que la página del invitado: sin fila sembrada, la
   // muestra del diseño. Si aquí se viera otra cosa, esta pantalla no serviría para nada.
-  const contenido = await events.contenidoParaInvitados(event.value.id, definicion.defaultContent)
+  // Como en el editor: lo escrito, y el ejemplo del modelo en lo que todavía está en blanco.
+  const contenido = await events.contenidoParaVistaPrevia(event.value.id, definicion.defaultContent)
 
   const diccionario = getDictionary(event.value.locale)
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')
