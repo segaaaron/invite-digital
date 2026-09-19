@@ -125,7 +125,7 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
       <CumpleBeerCover
         accent={P.oro}
         bg={P.madera}
-        bgAsset={themeAsset('cumple-beer', 'portada-cumple.avif')}
+        bgAsset={themeAsset('cumple-beer', 'portada-medallon.avif')}
         name={hero?.nameA ?? ''}
         openLabel={themes.coverAria}
       />

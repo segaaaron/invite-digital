@@ -9,12 +9,19 @@
  * El manifiesto está aquí y no se descubre leyendo el disco a propósito: así una imagen
  * que se renombra o se pierde rompe una prueba, y no una invitación abierta el día de la
  * boda. Cinco diseños de boda no aparecen porque no usan ninguna: son SVG y CSS.
+ *
+ * **Una imagen que cambia de contenido cambia de nombre.** Estas se sirven por el
+ * optimizador de Next, que las cachea por su dirección y durante mucho tiempo: reescribir
+ * el archivo dejando el mismo nombre no llega a quien ya la tenía —ni a su navegador, ni a
+ * la caché del contenedor—, y la invitación sigue enseñando la de antes sin que nada falle.
+ * Pasó al quitarle el nombre rotulado a la portada del cumpleaños: en producción estaba la
+ * nueva y en el navegador seguía la vieja, con los dos nombres encima.
  */
 export const THEME_ASSETS = {
   'cumple-beer': [
     'cerveza-pastel.avif',
     'karaoke-beer.avif',
-    'portada-cumple.avif',
+    'portada-medallon.avif',
     'reloj-beer.avif',
   ],
   'boda-bot': [
