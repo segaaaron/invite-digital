@@ -14,13 +14,32 @@ beforeEach(() => {
 afterEach(() => vi.restoreAllMocks())
 
 describe('el tema Cervecería Vintage', () => {
-  it('coloca las cinco ranuras', () => {
+  it('coloca sus cuatro ranuras, y no la del invitado', () => {
     // Un diseño que se olvide de slots.rsvp es una invitación en la que nadie puede
     // confirmar, y todo lo demás se ve perfecto.
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
+    // «Nombre · Cupos reservados» no se pinta en este diseño: el pase ya dice de quién es.
+    expect(screen.queryByText('ranura-invitado')).not.toBeInTheDocument()
+  })
+
+  it('saluda por su nombre a quien recibe el enlace, delante del titular', () => {
+    // Es lo único que este diseño dice del invitado: el rótulo «Nombre · Cupos reservados»
+    // no lo pinta, y sin saludo la invitación no nombra a quien la recibe en ninguna parte.
+    render(
+      <CumpleBeerView
+        {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: 'Edson y Vania', seats: 2 } })}
+      />,
+    )
+    expect(screen.getByText('Te invito Edson y Vania a')).toBeInTheDocument()
+  })
+
+  it('sin invitado —el escaparate— el titular se queda solo', () => {
+    render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: '   ', seats: 1 } })} />)
+    expect(screen.queryByText(/Te invito/)).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La Celebración')
   })
 
   it('emite un solo encabezado de nivel 1', () => {

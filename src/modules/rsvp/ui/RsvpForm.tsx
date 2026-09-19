@@ -131,10 +131,14 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
   }
 
   if (variant === 'botones' || variant === 'botones-oro') {
-    const BOTON =
-      'flex-1 rounded-[4px] border px-0 py-3.5 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200'
-    const LLENO = 'border-transparent bg-[var(--color-cta)] font-bold text-[var(--color-on-cta)]'
-    const HUECO = 'border-[var(--color-line)] text-ink'
+    const oro = variant === 'botones-oro'
+    const BOTON = `flex-1 rounded-[4px] border px-0 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200 ${
+      oro ? 'border-[1.5px] py-[13px]' : 'py-3.5'
+    }`
+    // El cumpleaños copia los botones de su maqueta: el «sí» en oro macizo **sin negrita** y
+    // el «no» con la letra y el filete del mismo oro, no en el crema ni en el filete al 30 %.
+    const LLENO = `border-transparent bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : 'font-bold'}`
+    const HUECO = oro ? 'border-[var(--color-cta)] text-[var(--color-cta)]' : 'border-[var(--color-line)] text-ink'
     // Con el «sí» destacado de salida, lo que marca la elección es el otro botón: dejar
     // los dos llenos a la vez no diría cuál se eligió.
     const siLleno = variant === 'botones-oro' ? !respondido || viene : viene && respondido

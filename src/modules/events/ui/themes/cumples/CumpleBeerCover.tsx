@@ -18,8 +18,27 @@ type Props = {
 /** El tamaño del arte. El nombre se coloca en sus coordenadas, no en las de la pantalla. */
 const ARTE = { ancho: 768, alto: 1376 } as const
 
-/** El hueco del medallón, medido sobre el arte: ahí iba el nombre rotulado. */
-const MEDALLON = { x: 384, y: 578, ancho: 400 } as const
+/**
+ * El hueco del medallón, medido sobre el arte con el nombre original todavía puesto: el
+ * interior verde va de (184, 382) a (585, 734) y «MIGUEL» ocupaba 377 px de ancho con las
+ * mayúsculas centradas en y = 548.
+ */
+const MEDALLON = { x: 384, centroY: 548, ancho: 377 } as const
+
+/**
+ * El rótulo del arte es una condensada de taberna y Cinzel es mucho más ancha: a la altura
+ * de mayúscula del original (106 px) «MIGUEL» mediría 640 px de ancho y se saldría del
+ * medallón. Se pinta grande y se estrecha al 68 %, que es lo que acerca más el tamaño al del
+ * original sin salirse del redondo —al 59 %, con la altura exacta, las letras salen finas y
+ * estiradas, y ya no se parecen—.
+ */
+const CONDENSADA = 0.68
+/** El tope de tamaño: con él «MIGUEL» sale como en el arte, 95 px de mayúscula contra 106. */
+const TAMANO_MAXIMO = 136
+/** Ancho medio de una mayúscula de Cinzel, medido en el propio fichero: 3,991 em / 6. */
+const EM_POR_LETRA = 0.68
+/** Cinzel: `sCapHeight` 700 sobre 1000 unidades por em. */
+const ALTURA_DE_MAYUSCULA = 0.7
 
 /**
  * La portada de «Cervecería Vintage»: la ilustración a sangre y el nombre de quien cumple
@@ -46,7 +65,9 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel }: Props)
 
   const escrito = name.trim()
   // El nombre llena el medallón y no se sale: los largos encogen, los cortos no se estiran.
-  const tamano = Math.min(84, Math.round((84 * 6) / Math.max(escrito.length, 1)))
+  const letras = Math.max(escrito.length, 1)
+  const tamano = Math.min(TAMANO_MAXIMO, Math.round(MEDALLON.ancho / CONDENSADA / (EM_POR_LETRA * letras)))
+  const naturales = EM_POR_LETRA * letras * tamano
 
   return (
     <button
@@ -68,31 +89,42 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel }: Props)
       }}
       type="button"
     >
+      {/* `cover`, como la maqueta (`IntroCover` con `bgImage`): el arte llena la pantalla y se
+          recorta por los lados. Las botellas de los bordes quedan cortadas también allí; con
+          `contain` no se cortarían, pero saldrían dos franjas de madera lisa arriba y abajo que
+          el diseño no tiene. */}
       <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'cover' }} />
 
       {escrito === '' ? null : (
         <svg
+          // `slice` para que case con el `cover` de la imagen: el texto se escala y se recorta
+          // exactamente igual que la ilustración, así el nombre no se sale del medallón.
           preserveAspectRatio="xMidYMid slice"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           viewBox={`0 0 ${ARTE.ancho} ${ARTE.alto}`}
         >
           <text
-            dominantBaseline="middle"
             lengthAdjust="spacingAndGlyphs"
             style={{
               fontFamily: 'var(--font-cinzel)',
               fontSize: tamano,
               fontWeight: 700,
-              letterSpacing: '0.04em',
               fill: '#f3e0b8',
               paintOrder: 'stroke fill',
               stroke: 'rgba(12,8,4,0.55)',
-              strokeWidth: 3,
+              strokeWidth: 2,
+              // El rótulo del arte va con su sombra: sin ella, sobre el verde del medallón el
+              // nombre se ve pegado y plano.
+              filter: 'drop-shadow(0 6px 5px rgba(0,0,0,0.75))',
             }}
             textAnchor="middle"
-            textLength={escrito.length > 10 ? MEDALLON.ancho : undefined}
+            // Se estrecha al ancho del medallón; un nombre corto se queda a su ancho natural,
+            // porque estirarlo lo deformaría al revés.
+            textLength={naturales > MEDALLON.ancho ? MEDALLON.ancho : undefined}
             x={MEDALLON.x}
-            y={MEDALLON.y}
+            // La línea base, desde el centro de las mayúsculas: así el nombre queda centrado
+            // en el redondo sea cual sea su tamaño.
+            y={Math.round(MEDALLON.centroY + (ALTURA_DE_MAYUSCULA * tamano) / 2)}
           >
             {escrito.toUpperCase()}
           </text>

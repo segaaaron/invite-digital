@@ -23,6 +23,11 @@ const TITULAR = 'var(--font-cinzel)'
  */
 const ROTULOS = {
   celebracion: 'La Celebración',
+  // El saludo a quien recibe el enlace, delante del titular: «Te invito Edson y Vania a ·
+  // La Celebración». Sale tal cual está escrito el nombre de la invitación —uno, dos o el
+  // nombre completo—, que es lo que el anfitrión cargó.
+  teInvito: 'Te invito',
+  aEsto: 'a',
   confirma: 'CONFIRMA TU LUGAR EN LA BARRA',
   guestbook: 'Déjame un Mensaje',
 } as const
@@ -65,8 +70,14 @@ function Filete() {
  * arriba con su párrafo, y el segundo, el del karaoke. Se leen por índice porque en la
  * maqueta son dos bloques distintos del diseño, no una lista.
  */
-export function CumpleBeerView({ content, event, themes, slots, audioSrc }: ThemeProps) {
+export function CumpleBeerView({ content, event, themes, slots, guestInfo, audioSrc }: ThemeProps) {
   const { hero, quote, schedule, reception, map, music, notes, closing } = content
+
+  // A quién va dirigida: el nombre de su invitación, tal cual —«Pamela», «Carlos Rojas»,
+  // «Edson y Vania»—. Sin invitado (el escaparate abierto sin enlace) el titular se queda
+  // solo, como en la maqueta.
+  const etiqueta = guestInfo?.label.trim() ?? ''
+  const invitado = etiqueta === '' ? null : etiqueta
 
   const bienvenida = notes?.[0]
   const karaoke = notes?.[1]
@@ -118,6 +129,11 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
         background: `linear-gradient(180deg, ${P.madera}, ${P.maderaClara})`,
         color: P.crema,
         fontFamily: SANS,
+        // La maqueta no fija interlineado en ninguna parte, así que sus textos van con el del
+        // navegador; aquí se heredaba el 1,5 de la hoja base y cada línea salía más alta —«La
+        // Celebración» medía 60 px contra 50—. Lo que sí lo declara (1, 1.25, 1.35, 1.6, 1.7)
+        // manda igual.
+        lineHeight: 'normal',
         minHeight: '100dvh',
         overflowX: 'clip',
       }}
@@ -217,7 +233,20 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
                 style={{ width: '100%', display: 'block' }}
               />
             </div>
-            <h1 style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 40, fontWeight: 400, color: P.oro }}>
+            {invitado === null ? null : (
+              <div style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 26, lineHeight: 1.3, color: P.crema }}>
+                {`${ROTULOS.teInvito} ${invitado} ${ROTULOS.aEsto}`}
+              </div>
+            )}
+            <h1
+              style={{
+                marginTop: invitado === null ? 18 : 2,
+                fontFamily: CALIGRAFIA,
+                fontSize: 40,
+                fontWeight: 400,
+                color: P.oro,
+              }}
+            >
               {ROTULOS.celebracion}
             </h1>
             {cuando === null ? null : (
@@ -388,7 +417,14 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
           <Reveal>
             <div style={{ position: 'relative', marginTop: 48, textAlign: 'center' }}>
               <Espigas />
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, lineHeight: 1.35, color: P.oro, whiteSpace: 'pre-line' }}>
+              {/* La maqueta parte esta frase a mano con tres `<br />` y así nunca toca las
+                  espigas. Aquí el texto lo escribe el cliente y puede venir de una sola línea,
+                  que se le echaba encima: la frase arranca bajo las espigas (que están en
+                  `top: 6` y miden 15) en vez de estrecharse, que le cambiaría los cortes de
+                  línea a la del propio diseño. */}
+              <div
+                style={{ paddingTop: 26, fontFamily: CALIGRAFIA, fontSize: 34, lineHeight: 1.35, color: P.oro, whiteSpace: 'pre-line' }}
+              >
                 {quote.text}
               </div>
             </div>
@@ -418,12 +454,11 @@ export function CumpleBeerView({ content, event, themes, slots, audioSrc }: Them
           <div style={{ marginTop: 28 }}>{slots.registry}</div>
         </Reveal>
 
-        {/* A quién va dirigida y su pase, juntos y al final. El cuerpo de la invitación es
-            el de la maqueta, que no menciona al invitado en ninguna parte; esto es nuestro
-            —cada enlace es de alguien y su QR es el que lee la puerta— y va donde no parte
-            el diseño en dos. */}
-        <div style={{ marginTop: 28, textAlign: 'center', fontSize: 13, opacity: 0.85 }}>{slots.guest}</div>
-        <div style={{ marginTop: 14 }}>{slots.pass}</div>
+        {/* Su pase, al final. El cuerpo de la invitación es el de la maqueta, que no menciona
+            al invitado en ninguna parte; el QR es nuestro —es el que lee la puerta— y va donde
+            no parte el diseño en dos. El rótulo «Nombre · Cupos reservados» (`slots.guest`) no
+            se pinta en este diseño: el pase ya dice de quién es. */}
+        <div style={{ marginTop: 28 }}>{slots.pass}</div>
 
         {closing === undefined ? null : (
           <div style={{ marginTop: 34, textAlign: 'center' }}>
