@@ -23,11 +23,9 @@ const TITULAR = 'var(--font-cinzel)'
  */
 const ROTULOS = {
   celebracion: 'La Celebración',
-  // El saludo a quien recibe el enlace, delante del titular: «Te invito Edson y Vania a ·
-  // La Celebración». Sale tal cual está escrito el nombre de la invitación —uno, dos o el
-  // nombre completo—, que es lo que el anfitrión cargó.
-  teInvito: 'Te invito',
-  aEsto: 'a',
+  // El saludo a quien recibe el enlace, delante del titular. El nombre va debajo, en
+  // versalitas de oro: es lo único de la invitación escrito así, y por eso se lee primero.
+  saludo: 'Llega el gran día y me gustaría compartirlo juntos:',
   confirma: 'CONFIRMA TU LUGAR EN LA BARRA',
   guestbook: 'Déjame un Mensaje',
 } as const
@@ -235,13 +233,31 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
               />
             </div>
             {invitado === null ? null : (
-              <div style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 26, lineHeight: 1.3, color: P.crema }}>
-                {`${ROTULOS.teInvito} ${invitado} ${ROTULOS.aEsto}`}
-              </div>
+              <>
+                <div style={{ marginTop: 20, fontSize: 13.5, lineHeight: 1.6, color: P.crema, opacity: 0.8 }}>{ROTULOS.saludo}</div>
+                {/* El nombre de quien recibe el enlace: Cinzel en versalitas y en oro, con
+                    aire alrededor. Es la misma familia del día y de la despedida, así que no
+                    entra una tipografía nueva; lo que lo hace notorio es el color y el
+                    interletrado, no un tamaño de más. */}
+                <div
+                  style={{
+                    marginTop: 10,
+                    fontFamily: TITULAR,
+                    fontVariantCaps: 'small-caps',
+                    fontWeight: 700,
+                    fontSize: 27,
+                    lineHeight: 1.25,
+                    letterSpacing: '0.06em',
+                    color: P.oro,
+                  }}
+                >
+                  {invitado}
+                </div>
+              </>
             )}
             <h1
               style={{
-                marginTop: invitado === null ? 18 : 2,
+                marginTop: invitado === null ? 18 : 12,
                 fontFamily: CALIGRAFIA,
                 fontSize: 40,
                 fontWeight: 400,

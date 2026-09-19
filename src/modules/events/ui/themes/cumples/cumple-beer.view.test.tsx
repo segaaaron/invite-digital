@@ -35,12 +35,13 @@ describe('el tema Cervecería Vintage', () => {
         {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: 'Edson y Vania', seats: 2 } })}
       />,
     )
-    expect(screen.getByText('Te invito Edson y Vania a')).toBeInTheDocument()
+    expect(screen.getByText('Edson y Vania')).toBeInTheDocument()
+    expect(screen.getByText(/Llega el gran día/)).toBeInTheDocument()
   })
 
   it('sin invitado —el escaparate— el titular se queda solo', () => {
     render(<CumpleBeerView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: '   ', seats: 1 } })} />)
-    expect(screen.queryByText(/Te invito/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Llega el gran día/)).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('La Celebración')
   })
 

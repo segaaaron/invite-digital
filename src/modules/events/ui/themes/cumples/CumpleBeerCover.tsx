@@ -17,6 +17,17 @@ type Props = {
   readonly cta: string
 }
 
+/**
+ * El fondo del diseño con alfa, para el velo de la llamada. Sale del color que ya trae la
+ * paleta: un hexadecimal nuevo aquí sería un color que nadie eligió.
+ */
+const velo = (hex: string, alfa: number): string => {
+  const limpio = /^#([0-9a-f]{6})$/i.exec(hex.trim())
+  if (limpio === null) return hex
+  const valor = Number.parseInt(limpio[1] ?? '', 16)
+  return `rgba(${(valor >> 16) & 255}, ${(valor >> 8) & 255}, ${valor & 255}, ${alfa})`
+}
+
 /** El tamaño del arte. El nombre se coloca en sus coordenadas, no en las de la pantalla. */
 const ARTE = { ancho: 768, alto: 1376 } as const
 
@@ -97,33 +108,50 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: P
           es el mismo tono del borde del propio arte. */}
       <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'contain' }} />
 
-      {/* La llamada a entrar, abajo y a la vista. Sin ella la portada parece una estampa y
-          no una puerta: se miraba el arte y nadie tocaba. Va dentro del botón que ya es toda
-          la pantalla —un `<span>`, no otro botón: uno dentro de otro no es HTML válido—, y
-          al tocarla arranca también la música, que ningún navegador deja sonar sin un gesto. */}
+      {/* La llamada a entrar. No es un botón de aplicación pegado encima del arte: es un velo
+          que sube del borde —el arte no se toca, se enmarca—, el filete con la hoja aldina del
+          propio diseño y el texto en monoespaciada latiendo en opacidad. Va dentro del botón
+          que ya es toda la pantalla, como `<span>`: un botón dentro de otro no es HTML válido.
+          Y ese primer toque es lo que deja sonar la música, que ningún navegador arranca sin
+          un gesto. */}
       <span
         style={{
           position: 'absolute',
-          left: '50%',
-          // A la altura del pulgar y despegado del borde: en el celular el filo de abajo lo
-          // tapan la barra del navegador y el gesto de volver.
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 6%)',
-          transform: 'translateX(-50%)',
-          display: 'inline-block',
-          maxWidth: '84%',
-          borderRadius: 999,
-          padding: '14px 24px',
-          background: accent,
-          color: bg,
-          fontFamily: 'var(--font-jetbrains-mono)',
-          fontSize: 11,
-          fontWeight: 700,
-          letterSpacing: '0.2em',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.55)',
-          animation: reducido ? undefined : 'theme-stampDown 2.6s ease-in-out infinite',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+          padding: '110px 24px calc(env(safe-area-inset-bottom, 0px) + 54px)',
+          background: `linear-gradient(180deg, transparent 0%, ${velo(bg, 0.72)} 58%, ${velo(bg, 0.94)} 100%)`,
         }}
       >
-        {cta}
+        <span aria-hidden style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ display: 'block', width: 44, height: 1, background: accent, opacity: 0.55 }} />
+          <span style={{ color: accent, fontSize: 13, opacity: 0.85 }}>❧</span>
+          <span style={{ display: 'block', width: 44, height: 1, background: accent, opacity: 0.55 }} />
+        </span>
+        {/* El filete de oro alrededor lo hace inconfundible sin volverlo un botón de
+            aplicación: es el mismo recurso que usa el diseño en sus tarjetas. */}
+        <span
+          style={{
+            display: 'inline-block',
+            maxWidth: '86%',
+            borderRadius: 999,
+            border: `1px solid ${accent}`,
+            padding: '13px 26px',
+            fontFamily: 'var(--font-jetbrains-mono)',
+            fontSize: 12,
+            letterSpacing: '0.34em',
+            textIndent: '0.34em',
+            color: accent,
+            animation: reducido ? undefined : 'theme-tapPulse 2.8s ease-in-out infinite',
+          }}
+        >
+          {cta}
+        </span>
       </span>
 
       {escrito === '' ? null : (
