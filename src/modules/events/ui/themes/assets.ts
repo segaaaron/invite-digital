@@ -11,6 +11,12 @@
  * boda. Cinco diseños de boda no aparecen porque no usan ninguna: son SVG y CSS.
  */
 export const THEME_ASSETS = {
+  'cumple-beer': [
+    'cerveza-pastel.avif',
+    'karaoke-beer.avif',
+    'portada-cumple.avif',
+    'reloj-beer.avif',
+  ],
   'boda-bot': [
     'boda-01-pareja.avif',
     'boda-02-arreglo.avif',

@@ -7,9 +7,15 @@ import { useActionState, useId, useState, type ReactNode } from 'react'
 import { CalendarIcon, CheckIcon, EyeIcon, MailIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
+import { FIESTAS, VOCABULARIO } from '@/modules/events'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
+
+/** El ejemplo de nombre por fiesta, buscado por el plural con el que se agrupan los modelos. */
+const EJEMPLO_DE_NOMBRE: Record<string, string> = Object.fromEntries(
+  FIESTAS.map((fiesta) => [VOCABULARIO[fiesta].plural, VOCABULARIO[fiesta].ejemploNombre]),
+)
 
 export type ModeloElegible = { readonly key: string; readonly label: string; readonly categoria: string }
 export type PlanElegible = { readonly slug: string; readonly nombre: string; readonly precio: string }
@@ -24,7 +30,8 @@ function generarClave(): string {
 }
 
 /**
- * Crear el evento de un cliente —boda o XV años— con su modelo, su plan y su acceso.
+ * Crear el evento de un cliente —boda, XV años o cumpleaños— con su modelo, su plan y su
+ * acceso.
  *
  * **Un flujo en cuatro pasos a la vista, con el resumen al lado**, y no un formulario plano:
  * el modelo se elige **mirándolo** (la portada de cada diseño, como en la web que vio el
@@ -131,7 +138,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
                 maxLength={160}
                 name="title"
                 onChange={(e) => setTitulo(e.target.value)}
-                placeholder={categoria === 'XV años' ? 'XV de Valeria' : 'Boda de Ana y Luis'}
+                placeholder={EJEMPLO_DE_NOMBRE[categoria] ?? VOCABULARIO.boda.ejemploNombre}
                 required
                 type="text"
                 value={titulo}

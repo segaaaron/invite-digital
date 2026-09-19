@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import type { Template } from '@/modules/catalog'
 import { TemplateCard } from '@/modules/catalog/ui/TemplateCard'
-import { fiestaDeCategoria, type Fiesta } from '@/modules/events'
+import { fiestaDeCategoria, type Fiesta, type FiestaPublica } from '@/modules/events'
 import { Button } from '@/shared/design/ui/Button'
 import { CheckIcon } from '@/shared/design/ui/icons'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
@@ -28,7 +28,7 @@ export function FiestaLanding({
 }: {
   dictionary: Dictionary
   locale: Locale
-  fiesta: Fiesta
+  fiesta: FiestaPublica
   templates: readonly Template[]
   /** La sección de precios ya compuesta por la página, o `null` si el catálogo no responde. */
   pricing: ReactNode

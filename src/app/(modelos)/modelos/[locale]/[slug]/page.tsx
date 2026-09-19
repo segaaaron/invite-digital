@@ -8,6 +8,7 @@ import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isOk } from '@/shared/result'
+import { seVende } from '@/shared/design/theme-catalog'
 import { buildPageMetadata } from '@/shared/seo/metadata'
 
 /**
@@ -46,12 +47,15 @@ export async function generateMetadata({
   if (tema.key !== slug) return {}
 
   const diccionario = getDictionary(locale)
-  return buildPageMetadata({
+  const metadatos = buildPageMetadata({
     locale,
     path: `/modelos/${locale}/${slug}`,
     title: `${tema.label} · ${diccionario.seo.collectionsTitle}`,
     description: diccionario.seo.collectionsDescription,
   })
+  // Un modelo que todavía no se vende no se indexa: la dirección existe porque el panel
+  // enlaza a ella para verlo, y el catálogo no lo enseña.
+  return seVende(slug) ? metadatos : { ...metadatos, robots: { index: false, follow: false } }
 }
 
 export default async function ModelPreviewPage({

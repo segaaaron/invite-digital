@@ -1,6 +1,6 @@
 import { eq, sql } from 'drizzle-orm'
 import { beforeAll, describe, expect, it } from 'vitest'
-import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
+import { CATALOG_EN_VENTA } from '@/shared/design/theme-catalog'
 import { db } from './client'
 import {
   arrivals,
@@ -69,10 +69,17 @@ describe('esquema', () => {
     // Las ocho de relleno siguen en la tabla pero **despublicadas**: borrarlas rompería
     // cualquier enlace repartido, y una plantilla es lo que un evento antiguo puede tener
     // apuntado. Lo que se enseña son los diseños de la colección que ya están portados.
+    // Publicado no es lo mismo que portado: lo portado y todavía sin vender —«cumple-beer»—
+    // entra en la tabla retirado, para que el admin lo asigne sin que salga en la web.
     const publicadas = rows.filter((r) => r.isPublished)
-    const esperadas = CATALOG_LISTOS.map((entrada) => entrada.key)
+    const esperadas = CATALOG_EN_VENTA.map((entrada) => entrada.key)
     expect(publicadas.map((r) => r.slug).sort()).toEqual([...esperadas].sort())
-    expect(publicadas.map((r) => r.sortOrder)).toEqual(esperadas.map((_, indice) => indice + 1))
+    // El orden es el del catálogo y se comprueba como tal —creciente y sin repetir—, no
+    // contra «1, 2, 3…»: el seed numera sobre todo lo portado, y un diseño sin vender en
+    // medio dejaría huecos que no son un error.
+    const ordenes = publicadas.map((r) => r.sortOrder)
+    expect(ordenes).toEqual([...ordenes].sort((a, b) => a - b))
+    expect(new Set(ordenes).size).toBe(ordenes.length)
     // En una base que las tuvo siguen ahí despublicadas; en una base nueva —la del CI— nunca
     // se sembraron. Lo que no puede pasar es que alguna esté publicada.
     for (const retirada of ['perla', 'marmol', 'laurel', 'carmesi', 'zafiro', 'nacarado', 'onix', 'sobre']) {

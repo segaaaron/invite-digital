@@ -32,6 +32,9 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
 
   const fiesta = fiestaDeTema(event.value.themeKey)
   const tipos = TIPOS_DE_CORTEJO[fiesta]
+  // Un cumpleaños no tiene cortejo: sin papeles que elegir, el formulario ofrecería un
+  // desplegable vacío. La barra tampoco enseña el enlace.
+  if (tipos.length === 0) notFound()
   const partidas = (await planner.listBudget(event.value.id)).map((p) => ({ id: p.id, concept: p.concept }))
   const miembros = (await planner.dia.listCourt(event.value.id)).map((m) => ({
     ...m,

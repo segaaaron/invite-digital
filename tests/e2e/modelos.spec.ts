@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { CATALOG_LISTOS } from '../../src/shared/design/theme-catalog'
 
 /**
- * El escaparate de modelos: las dieciséis invitaciones que la web vende.
+ * El escaparate de modelos: las invitaciones que el motor sabe pintar.
  *
  * No necesita sesión ni base sembrada con eventos: la vista previa arma su propio evento
  * de muestra y pinta el contenido que el propio diseño trae. Es lo que la hace servible
@@ -103,10 +103,14 @@ function desbordanLaColumna(tope: number): string[] {
 }
 
 test.describe('el escaparate de modelos', () => {
-  test('lista los dieciséis diseños de la colección', () => {
+  test('lista los diecisiete diseños portados de la colección', () => {
     // Si algún día se publica uno sin portar, esta suite recorre uno más y falla al
     // abrirlo. Es lo que impide que el número se desajuste en silencio.
-    expect(CLAVES).toHaveLength(16)
+    //
+    // Son diecisiete y la web vende dieciséis: «cumple-beer» está portado y todavía no se
+    // vende, así que se abre por su dirección —el panel enlaza a ella— y no sale en el
+    // catálogo. Lo comprueba la última prueba de este archivo.
+    expect(CLAVES).toHaveLength(17)
   })
 
   for (const clave of CLAVES) {
@@ -266,6 +270,20 @@ test.describe('el catálogo público', () => {
     const enlaces = page.getByRole('link', { name: /abrir/i })
     await expect(enlaces).toHaveCount(8)
     for (const href of await enlaces.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
+  })
+
+  test('el cumpleaños no se vende todavía: no está en el catálogo, ni indexado', async ({ page }) => {
+    // Está portado y solo el admin lo asigna. La dirección existe —el panel enlaza a ella
+    // para verlo— y por eso lleva `noindex`; lo que no puede es salir en la web.
+    for (const fiesta of ['', '?fiesta=xv']) {
+      await page.goto(`/es/colecciones${fiesta}`)
+      const hrefs = await page.getByRole('link', { name: /abrir/i }).evaluateAll((as) => as.map((a) => a.getAttribute('href') ?? ''))
+      expect(hrefs.filter((href) => href.includes('cumple'))).toEqual([])
+    }
+
+    const respuesta = await page.goto('/modelos/es/cumple-beer')
+    expect(respuesta?.status()).toBe(200)
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
   })
 
   test('cada tarjeta abre la invitación de verdad', async ({ page }) => {

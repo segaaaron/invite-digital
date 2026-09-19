@@ -1,6 +1,6 @@
 import { inArray, sql } from 'drizzle-orm'
 import { db } from './client'
-import { CATALOG_ENTRIES, CATALOG_LISTOS } from '@/shared/design/theme-catalog'
+import { CATALOG_ENTRIES, CATALOG_EN_VENTA, CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { eventCategories, eventCategoryTranslations, planTranslations, plans, templateTranslations, templates } from './schema'
 
 const CATEGORIES = [
@@ -11,6 +11,7 @@ const CATEGORIES = [
   { slug: 'graduacion', order: 5, es: 'Graduación', en: 'Graduation' },
   { slug: 'bautizo', order: 6, es: 'Bautizo', en: 'Christening' },
   { slug: 'corporativo', order: 7, es: 'Corporativo', en: 'Corporate' },
+  { slug: 'cumpleanos', order: 8, es: 'Cumpleaños', en: 'Birthday' },
 ] as const
 
 const PLANS = [
@@ -167,7 +168,10 @@ async function seed() {
         coverImagePath: `/templates/${entrada.key}.avif`,
         palette: entrada.palette,
         sortOrder: orden,
-        isPublished: true,
+        // **Nace publicado salvo que el catálogo diga que no.** `cumple-beer` está portado
+        // y todavía no se vende: entra retirado y solo el admin lo ve. Al actualizar no se
+        // toca, así que publicarlo desde `/panel/admin/modelos` es definitivo.
+        isPublished: entrada.publicar !== false,
         sampleMonogram: entrada.sample.monogram,
         sampleNames: entrada.sample.names,
         sampleDateLabel: entrada.sample.dateLabel,
@@ -226,8 +230,8 @@ async function seed() {
     'Seed completo: %d categorías, %d planes, %d plantillas publicadas, %d retiradas',
     CATEGORIES.length,
     PLANS.length,
-    CATALOG_LISTOS.length,
-    CATALOG_ENTRIES.length - CATALOG_LISTOS.length + PLANTILLAS_RETIRADAS.length,
+    CATALOG_EN_VENTA.length,
+    CATALOG_ENTRIES.length - CATALOG_EN_VENTA.length + PLANTILLAS_RETIRADAS.length,
   )
 }
 

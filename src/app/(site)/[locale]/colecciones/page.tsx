@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation'
 import { site, webPublica } from '@/app/composition/container'
 import { enlaceWhatsapp, formatoWhatsapp } from '@/shared/whatsapp'
 import { TemplateCard } from '@/modules/catalog/ui/TemplateCard'
-import { FIESTAS, type Fiesta } from '@/modules/events'
+import { FIESTAS_A_LA_VENTA, type FiestaPublica } from '@/modules/events'
 import { plantillasDeFiesta } from '@/sections/FiestaLanding'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -64,7 +64,7 @@ export default async function CollectionsPage({
   // de servidor. Es la misma regla que el resto del proyecto.
   const { ver, fiesta: fiestaPedida } = await searchParams
   // Bodas y XV no se mezclan: se ve una fiesta a la vez, y cuál va en la URL.
-  const fiesta: Fiesta = fiestaPedida === 'xv' ? 'xv' : 'boda'
+  const fiesta: FiestaPublica = fiestaPedida === 'xv' ? 'xv' : 'boda'
   const pedidas = Number.parseInt(ver ?? '', 10)
   const visibles = Number.isFinite(pedidas) && pedidas > 0 ? Math.min(pedidas, 200) : POR_TANDA
   // Same reason as the landing: a connection failure throws, and this page already has
@@ -118,7 +118,7 @@ export default async function CollectionsPage({
         </div>
 
         <nav aria-label={dictionary.nav.collections} className="mt-10 flex justify-center gap-2">
-          {FIESTAS.map((f) => (
+          {FIESTAS_A_LA_VENTA.map((f) => (
             <Link
               aria-current={f === fiesta ? 'page' : undefined}
               className={`rounded-[var(--radius-pill)] border px-6 py-2.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] transition-colors ${

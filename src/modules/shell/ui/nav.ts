@@ -69,6 +69,11 @@ export type NavExtra = {
   readonly mesaPlanner?: boolean
   /** Si el plan trae el Día D. Sin él no se enseña: un enlace a una pantalla cerrada solo confunde. */
   readonly diaD?: boolean
+  /**
+   * Si esta fiesta tiene cortejo. Un cumpleaños no lo tiene —ni padrinos, ni chambelanes,
+   * ni corte de honor—, y la pantalla responde 404: enseñar el enlace sería llevar ahí.
+   */
+  readonly cortejo?: boolean
 }
 
 function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPuerta: boolean, esCliente: boolean, extra: NavExtra): Borrador[] {
@@ -182,7 +187,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           // Proveedores y cronograma los llevan el anfitrión y su planner; el cortejo, todos.
           { href: equipo === 'coanfitrion' ? null : en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
           { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
-          { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
+          { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
           { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
           { href: equipo === 'coanfitrion' || extra.diaD === false ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
         ],
@@ -247,7 +252,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
         { href: en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
         { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
-        { href: en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
+        { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
         { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
         { href: extra.diaD === false ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
       ],

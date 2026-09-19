@@ -2,7 +2,7 @@
 
 import Image from 'next/image'
 import { useId, useState } from 'react'
-import { fiestaDeCategoria, VOCABULARIO, type Fiesta } from '../domain/fiesta'
+import { FIESTAS, fiestaDeCategoria, VOCABULARIO, type Fiesta } from '../domain/fiesta'
 import type { ThemeDefinition } from './themes/contract'
 
 type Props = {
@@ -45,7 +45,9 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
   const inicial = definitions.find((d) => d.key === defaultValue) ?? definitions[0]
   const [tipo, setTipo] = useState<Fiesta>(inicial === undefined ? 'boda' : fiestaDeCategoria(inicial.categorySlug))
   const [elegido, setElegido] = useState(inicial?.key ?? '')
-  const tipos = (['boda', 'xv'] as const).filter((t) => definitions.some((d) => fiestaDeCategoria(d.categorySlug) === t))
+  // Las fiestas que de verdad tienen diseños entre los que se le pasan: el cumpleaños solo
+  // sale cuando alguien puede elegirlo, que hoy es únicamente el admin.
+  const tipos = FIESTAS.filter((t) => definitions.some((d) => fiestaDeCategoria(d.categorySlug) === t))
   const porCategoria = { [tipo]: definitions.filter((d) => fiestaDeCategoria(d.categorySlug) === tipo) }
 
   return (

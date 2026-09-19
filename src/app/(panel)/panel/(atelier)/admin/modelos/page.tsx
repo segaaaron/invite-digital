@@ -1,6 +1,6 @@
 import { admin } from '@/app/composition/container'
 import { ShowcaseMusicRow } from '@/modules/admin'
-import { fiestaDeCategoria } from '@/modules/events'
+import { FIESTAS, fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
 import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -27,11 +27,13 @@ export default async function AdminModelosPage() {
 
   const [musica, publicacion, canciones] = await Promise.all([admin.showcaseMusic(), admin.publication(), admin.showcaseSongs()])
   const modelos = themeDefinitions().filter((tema) => tema.key !== 'clasico')
-  const esXv = (clave: string) => fiestaDeCategoria(CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug ?? '') === 'xv'
-  const grupos = [
-    { titulo: 'Bodas', temas: modelos.filter((tema) => !esXv(tema.key)) },
-    { titulo: 'XV años', temas: modelos.filter((tema) => esXv(tema.key)) },
-  ]
+  const fiestaDe = (clave: string) => fiestaDeCategoria(CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug ?? '')
+  // Un grupo por fiesta, y solo los que tienen algún modelo: los cumpleaños son uno solo y
+  // todavía sin publicar, así que el grupo aparece el día que existe.
+  const grupos = FIESTAS.map((fiesta) => ({
+    titulo: VOCABULARIO[fiesta].plural,
+    temas: modelos.filter((tema) => fiestaDe(tema.key) === fiesta),
+  })).filter((grupo) => grupo.temas.length > 0)
 
   return (
     <>

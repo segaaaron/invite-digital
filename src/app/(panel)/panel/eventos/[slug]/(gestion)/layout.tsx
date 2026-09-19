@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, guests, plans } from '@/app/composition/container'
+import { fiestaDeTema } from '@/modules/events'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
@@ -9,6 +10,7 @@ import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { hasFeature } from '@/modules/plans'
+import { TIPOS_DE_CORTEJO } from '@/modules/planner'
 import { insigniasDeAdmin } from '../../../_carcasa/insignias-de-admin'
 import { isErr } from '@/shared/result'
 
@@ -68,7 +70,7 @@ export default async function EventoLayout({
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, diaD: !isErr(capacidad) && hasFeature(capacidad.value, 'plannerTotal') })}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, diaD: !isErr(capacidad) && hasFeature(capacidad.value, 'plannerTotal'), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })}
       evento={{
         title: event.value.title,
         planLabel: isErr(capacidad) ? 'Plan —' : `Plan ${capacidad.value.planSlug}`,

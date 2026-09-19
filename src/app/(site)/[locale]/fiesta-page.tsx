@@ -4,7 +4,7 @@ import { site, webPublica } from '@/app/composition/container'
 import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import type { Plan } from '@/modules/catalog'
-import type { Fiesta } from '@/modules/events'
+import type { FiestaPublica } from '@/modules/events'
 import { capacidadDePlan } from '@/modules/plans'
 import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
 import { formatAmount } from '@/shared/money'
@@ -15,11 +15,15 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 import { attempt, isOk } from '@/shared/result'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 
-/** La ruta de cada fiesta. Una sola fuente para la página, el sitemap y la cabecera. */
-export const RUTA_DE_FIESTA: Record<Fiesta, string> = { boda: 'bodas', xv: 'xv-anos' }
+/**
+ * La ruta de cada fiesta que la web vende. Una sola fuente para la página, el sitemap y la
+ * cabecera. El cumpleaños no está: no tiene página pública, y por eso todo lo de aquí pide
+ * `FiestaPublica` y no `Fiesta`.
+ */
+export const RUTA_DE_FIESTA: Record<FiestaPublica, string> = { boda: 'bodas', xv: 'xv-anos' }
 
 /** Título y descripción: los que escribió el admin en «La web» o, vacíos, los del diccionario. */
-export async function metadataDeFiesta(raw: string, fiesta: Fiesta): Promise<Metadata> {
+export async function metadataDeFiesta(raw: string, fiesta: FiestaPublica): Promise<Metadata> {
   const locale = parseLocaleParam(raw)
   if (!locale) return {}
   const textos = getDictionary(locale).fiestas[fiesta]
@@ -57,7 +61,7 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
  * La página de una fiesta. Como la portada, lee Postgres por petición y degrada sección por
  * sección si la base no responde: sin catálogo se queda sin modelos ni precios, no en 500.
  */
-export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fiesta }) {
+export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: FiestaPublica }) {
   const locale = parseLocaleParam(raw)
   if (!locale) notFound()
   const dictionary = getDictionary(locale)

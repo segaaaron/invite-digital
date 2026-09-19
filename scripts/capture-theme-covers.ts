@@ -19,6 +19,28 @@ const BASE = process.env.SITE_URL ?? 'http://localhost:3100'
 const DESTINO = 'public/templates'
 
 /**
+ * Qué diseños se capturan. Sin argumentos, todos los portados; con claves sueltas
+ * —`pnpm tsx scripts/capture-theme-covers.ts cumple-beer`—, solo esos.
+ *
+ * Un diseño nuevo no tiene por qué reescribir las dieciséis portadas que ya estaban: las
+ * capturas cambian un poco en cada pasada y ese ruido acaba en el repositorio.
+ */
+/**
+ * Los diseños cuya portada **es** una ilustración a sangre: la tarjeta sale del propio arte
+ * recortado, no de una captura.
+ *
+ * El guion abre la portada antes de capturar —si no, los ocho de sobre saldrían con la
+ * misma fotografía—, y en estos la portada es justo lo que hay que enseñar: «Cervecería
+ * Vintage» abierta es madera oscura con una cuenta atrás, que no dice nada del modelo.
+ */
+const PORTADA_ES_EL_ARTE: Record<string, string> = {
+  'cumple-beer': 'public/temas/cumple-beer/portada-cumple.avif',
+}
+
+const PEDIDOS = process.argv.slice(2).filter((argumento) => !argumento.startsWith('-'))
+const MODELOS = PEDIDOS.length === 0 ? CATALOG_LISTOS : CATALOG_LISTOS.filter((entrada) => PEDIDOS.includes(entrada.key))
+
+/**
  * El tamaño de la captura.
  *
  * La tarjeta del catálogo tiene proporción 5:7, así que se captura en esa proporción y no
@@ -40,7 +62,16 @@ async function principal(): Promise<void> {
     reducedMotion: 'reduce',
   })
 
-  for (const entrada of CATALOG_LISTOS) {
+  if (MODELOS.length === 0) throw new Error(`Ningún modelo del catálogo se llama así: ${PEDIDOS.join(', ')}`)
+
+  for (const entrada of MODELOS) {
+    const arte = PORTADA_ES_EL_ARTE[entrada.key]
+    if (arte !== undefined) {
+      await sharp(arte).resize({ width: ANCHO, height: ALTO, fit: 'cover', position: 'top' }).avif({ quality: 62, effort: 6 }).toFile(`${DESTINO}/${entrada.key}.avif`)
+      console.log('· %s (su arte de portada)', entrada.key)
+      continue
+    }
+
     const pagina = await contexto.newPage()
     // `domcontentloaded` y no `networkidle`: contra `next dev` el canal de recarga en
     // caliente deja una conexión abierta y la espera no termina nunca.
@@ -84,7 +115,7 @@ async function principal(): Promise<void> {
   }
 
   await navegador.close()
-  console.log('%d portadas en %s', CATALOG_LISTOS.length, DESTINO)
+  console.log('%d portadas en %s', MODELOS.length, DESTINO)
 }
 
 principal().catch((cause: unknown) => {

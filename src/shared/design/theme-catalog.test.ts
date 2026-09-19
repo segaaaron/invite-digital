@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATALOG_ENTRIES, CATALOG_KEYS } from './theme-catalog'
+import { CATALOG_EN_VENTA, CATALOG_ENTRIES, CATALOG_KEYS, seVende } from './theme-catalog'
 
 /**
  * Los dieciséis que el usuario pidió: las ocho bodas y los ocho XV años de la maqueta.
@@ -24,9 +24,20 @@ const LOS_DIECISEIS = [
   'xv-isabelle',
 ] as const
 
+/** Lo portado que todavía no se vende: el cumpleaños, hasta que el usuario lo publique. */
+const SIN_VENDER = ['cumple-beer'] as const
+
 describe('el catálogo de diseños', () => {
-  it('lista los dieciséis, sin faltar ni sobrar ninguno', () => {
-    expect([...CATALOG_KEYS].sort()).toEqual([...LOS_DIECISEIS].sort())
+  it('lista los dieciséis de la colección más lo portado sin vender', () => {
+    expect([...CATALOG_KEYS].sort()).toEqual([...LOS_DIECISEIS, ...SIN_VENDER].sort())
+  })
+
+  it('lo que no se vende queda fuera de lo que la web enseña', () => {
+    // El seed publica `CATALOG_EN_VENTA`. Un diseño portado y no vendido que se colara
+    // aquí aparecería en el catálogo público en el siguiente despliegue, sin más aviso.
+    expect(CATALOG_EN_VENTA.map((entrada) => entrada.key).sort()).toEqual([...LOS_DIECISEIS].sort())
+    for (const clave of SIN_VENDER) expect(seVende(clave), clave).toBe(false)
+    for (const clave of LOS_DIECISEIS) expect(seVende(clave), clave).toBe(true)
   })
 
   it('no repite ninguna clave', () => {

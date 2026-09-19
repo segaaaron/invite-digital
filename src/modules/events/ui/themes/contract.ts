@@ -108,7 +108,7 @@ export type ThemePalette = Readonly<Record<string, string>>
 export type ThemeDefinition = {
   readonly key: string
   readonly label: string
-  readonly categorySlug: 'boda' | 'boda-civil' | 'xv-anos'
+  readonly categorySlug: 'boda' | 'boda-civil' | 'xv-anos' | 'cumpleanos'
   readonly palette: ThemePalette
   readonly fonts: readonly FontKey[]
   /**

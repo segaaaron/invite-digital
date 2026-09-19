@@ -15,6 +15,7 @@ import { xv_lucianaDefinition } from './xv/xv-luciana'
 import { xv_fantasiaDefinition } from './xv/xv-fantasia'
 import { xv_valeriaDefinition } from './xv/xv-valeria'
 import { xv_marianaDefinition } from './xv/xv-mariana'
+import { cumpleBeerDefinition } from './cumples/cumple-beer'
 import type { ThemeDefinition } from './contract'
 
 /**
@@ -43,6 +44,9 @@ const THEMES = {
   'xv-valeria': xv_valeriaDefinition,
   'xv-mariana': xv_marianaDefinition,
   'xv-isabelle': xvIsabelleDefinition,
+  // Cumpleaños. Portado y **sin publicar**: el catálogo lo lleva con `publicar: false`, así
+  // que no sale en la web; el admin lo asigna desde el panel.
+  'cumple-beer': cumpleBeerDefinition,
 } as const satisfies Record<string, ThemeDefinition>
 
 export const THEME_KEYS: readonly string[] = Object.keys(THEMES)

@@ -2,6 +2,7 @@ import { readFileSync, existsSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 import { FONT_VARIABLES, type FontKey } from '@/shared/design/font-manifest'
+import { fiestaDeCategoria, type Fiesta } from '../../domain/fiesta'
 import { themeDefinitions } from './registry'
 
 /**
@@ -68,12 +69,16 @@ function familiasQuePinta(entrada: string): Set<FontKey> {
 }
 
 describe('las tipografías de cada diseño', () => {
+  // La carpeta sale de la fiesta del diseño, no de un `startsWith('xv')`: un diseño que
+  // viva en otra —«cumple-beer», en `cumples/`— se quedaría fuera y la prueba lo daría por
+  // bueno sin haberlo mirado.
+  const CARPETA: Record<Fiesta, string> = { boda: 'bodas', xv: 'xv', cumple: 'cumples' }
   const conVista = themeDefinitions()
-    .map((tema) => ({ tema, vista: join(RAIZ, tema.key.startsWith('xv') ? 'xv' : 'bodas', `${tema.key}.view.tsx`) }))
+    .map((tema) => ({ tema, vista: join(RAIZ, CARPETA[fiestaDeCategoria(tema.categorySlug)], `${tema.key}.view.tsx`) }))
     .filter(({ vista }) => existsSync(vista))
 
-  it('encuentra la vista de los dieciséis, para que la prueba no pase por no mirar nada', () => {
-    expect(conVista).toHaveLength(16)
+  it('encuentra la vista de los diecisiete, para que la prueba no pase por no mirar nada', () => {
+    expect(conVista).toHaveLength(17)
   })
 
   it.each(conVista)('«$tema.key» declara todas las que pinta', ({ tema, vista }) => {

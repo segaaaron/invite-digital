@@ -25,7 +25,15 @@ export type CatalogEntry = {
    * marcar aquí sin registrar allí, ni al revés.
    */
   readonly listo: boolean
-  readonly categorySlug: 'boda' | 'boda-civil' | 'xv-anos'
+  readonly categorySlug: 'boda' | 'boda-civil' | 'xv-anos' | 'cumpleanos'
+  /**
+   * Si la web lo vende. **Por defecto sí**; `false` lo deja registrado y portado pero
+   * **retirado del escaparate**: el seed lo inserta sin publicar, así que no sale en el
+   * catálogo, ni en la página de su fiesta, ni en el mapa del sitio. El admin lo asigna a
+   * un evento desde el panel y lo publica cuando quiera desde `/panel/admin/modelos`, y
+   * el seed no lo vuelve a retirar —`isPublished` no se toca al actualizar—.
+   */
+  readonly publicar?: boolean
   readonly es: string
   readonly en: string
   readonly palette: { readonly base: string; readonly accent: string }
@@ -187,10 +195,41 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     palette: { base: '#fafaf6', accent: '#5a705c' },
     sample: { monogram: 'I', names: 'Isabelle', dateLabel: '14 · 11 · 2026', venue: 'Villa Helena' },
   },
+
+  // ─────────── CUMPLEAÑOS ───────────
+  {
+    key: 'cumple-beer',
+    listo: true,
+    // No se vende todavía: nace retirado del escaparate y solo el admin lo asigna.
+    publicar: false,
+    categorySlug: 'cumpleanos',
+    es: 'Cervecería Vintage',
+    en: 'Vintage Brewery',
+    palette: { base: '#1c140c', accent: '#d4a94b' },
+    sample: { monogram: 'M', names: 'Miguel', dateLabel: '26 · 09 · 2026', venue: 'El Bar de Miki' },
+  },
 ]
 
 /** Las claves del catálogo, en el orden en que se enseñan. Las dieciséis, portadas o no. */
 export const CATALOG_KEYS: readonly string[] = CATALOG_ENTRIES.map((entrada) => entrada.key)
 
-/** Lo que el escaparate publica: solo lo que un tema sabe pintar. */
+/** Lo que el motor sabe pintar: los diseños portados, los venda la web o no. */
 export const CATALOG_LISTOS: readonly CatalogEntry[] = CATALOG_ENTRIES.filter((entrada) => entrada.listo)
+
+/**
+ * Lo que la web enseña: los portados **y** puestos a la venta.
+ *
+ * `cumple-beer` está portado y no se vende: existe en el panel del admin y no en el
+ * catálogo. El seed publica esta lista, no `CATALOG_LISTOS`.
+ */
+export const CATALOG_EN_VENTA: readonly CatalogEntry[] = CATALOG_LISTOS.filter((entrada) => entrada.publicar !== false)
+
+/**
+ * Si la web vende ese diseño.
+ *
+ * `cumple-beer` está portado y **no** se vende: el seed lo deja retirado del catálogo y su
+ * ficha de escaparate va con `noindex`, porque la dirección existe —el panel enlaza a ella
+ * para verlo— y no debe acabar en un buscador antes de que se ponga a la venta.
+ */
+export const seVende = (key: string): boolean =>
+  CATALOG_ENTRIES.find((entrada) => entrada.key === key)?.publicar !== false

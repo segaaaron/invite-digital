@@ -112,6 +112,34 @@ const PLANTILLAS: Record<Fiesta, readonly Etapa[]> = {
       tareas: [a('Ensayo final del vals'), a('Horarios con los proveedores', 'planner'), a('Sumar al personal de recepción y mandarle su acceso')],
     },
   ],
+  // Un cumpleaños se organiza en tres meses, no en doce: no hay iglesia que reservar, ni
+  // vestido a medida, ni vals que ensayar. Las etapas son las que de verdad tiene.
+  cumple: [
+    {
+      clave: 'm3',
+      nombre: '3 meses antes',
+      antes: { meses: 3 },
+      tareas: [a('Definir el presupuesto'), a('Fijar la fecha y la hora'), a('Reservar el local o preparar la casa')],
+    },
+    {
+      clave: 'm2',
+      nombre: '2 meses antes',
+      antes: { meses: 2 },
+      tareas: [a('Cerrar la lista de invitados'), a('Contratar la música o el karaoke', 'planner'), a('Terminar la invitación')],
+    },
+    {
+      clave: 'm1',
+      nombre: '1 mes antes',
+      antes: { meses: 1 },
+      tareas: [a('Repartir las invitaciones'), a('Cerrar el menú y la bebida', 'planner'), a('Encargar la torta', 'familia')],
+    },
+    {
+      clave: 'semana',
+      nombre: 'La semana del cumpleaños',
+      antes: { dias: 7 },
+      tareas: [a('Llamar a quien no confirmó'), a('Decoración y montaje', 'planner'), a('Confirmar horarios con los proveedores', 'planner')],
+    },
+  ],
 }
 
 export const etapasDe = (fiesta: Fiesta): readonly Etapa[] => PLANTILLAS[fiesta]

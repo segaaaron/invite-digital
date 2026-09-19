@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
+import { CATALOG_EN_VENTA, CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { db } from '@/shared/db/client'
 import { eventCategories, planTranslations, plans, templateTranslations, templates } from '@/shared/db/schema'
@@ -36,12 +36,16 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
     expect(en[1]?.name).toBe('Signature 3D')
   })
 
-  it('publica exactamente los diseños portados, y ninguna de las de relleno', async () => {
+  it('publica exactamente los diseños que se venden, y ninguna de las de relleno', async () => {
     // Las ocho de relleno —perla, mármol, laurel…— se despublicaron al entrar la colección.
     // No se borraron: borrarlas rompería cualquier enlace repartido.
+    //
+    // Y publicado no es lo mismo que portado: «cumple-beer» está portado y todavía no se
+    // vende, así que el seed lo deja retirado y aquí no sale.
     const rows = await drizzleTemplateRepository.listPublished('es')
-    expect(rows).toHaveLength(CATALOG_LISTOS.length)
+    expect(rows).toHaveLength(CATALOG_EN_VENTA.length)
     expect(rows.map((fila) => fila.slug)).not.toContain('perla')
+    expect(rows.map((fila) => fila.slug)).not.toContain('cumple-beer')
   })
 
   it('el slug de cada plantilla publicada es la clave de su tema', async () => {

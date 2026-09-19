@@ -8,6 +8,7 @@ export const PAGADORES: readonly Pagador[] = ['anfitriones', 'familia_a', 'famil
 const NOMBRES_DE_PAGADOR: Record<Fiesta, Record<Pagador, string>> = {
   boda: { anfitriones: 'Novios', familia_a: 'Familia de la novia', familia_b: 'Familia del novio', padrino: 'Padrino', otro: 'Otro' },
   xv: { anfitriones: 'Padres', familia_a: 'Familia materna', familia_b: 'Familia paterna', padrino: 'Padrino', otro: 'Otro' },
+  cumple: { anfitriones: 'Quien cumple', familia_a: 'Familia', familia_b: 'Amigos', padrino: 'Padrino', otro: 'Otro' },
 }
 
 export const nombreDePagador = (fiesta: Fiesta, pagador: Pagador): string => NOMBRES_DE_PAGADOR[fiesta][pagador]
@@ -38,6 +39,17 @@ const CATEGORIAS: Record<Fiesta, ReadonlyArray<{ clave: string; nombre: string }
     { clave: 'decoracion', nombre: 'Decoración' },
     { clave: 'torta', nombre: 'Torta' },
     { clave: 'show', nombre: 'Show' },
+    { clave: 'otros', nombre: 'Otros' },
+  ],
+  cumple: [
+    { clave: 'local', nombre: 'Local o casa' },
+    { clave: 'catering', nombre: 'Comida' },
+    { clave: 'bebida', nombre: 'Bebida' },
+    { clave: 'musica', nombre: 'Música y karaoke' },
+    { clave: 'foto', nombre: 'Fotografía y video' },
+    { clave: 'decoracion', nombre: 'Decoración' },
+    { clave: 'torta', nombre: 'Torta' },
+    { clave: 'recuerdos', nombre: 'Recuerdos' },
     { clave: 'otros', nombre: 'Otros' },
   ],
 }
@@ -137,6 +149,7 @@ export function presupuestoACsv(partidas: readonly Partida[], fiesta: Fiesta): s
 const PORCENTAJES: Record<Fiesta, Record<string, number>> = {
   boda: { salon: 20, ceremonia: 2, catering: 35, musica: 7, foto: 10, vestido: 7, traje: 3, decoracion: 9, torta: 2, recuerdos: 2, otros: 3 },
   xv: { salon: 20, misa: 1, catering: 30, dj: 8, foto: 8, vestido: 10, chambelanes: 3, coreografo: 3, decoracion: 8, torta: 3, show: 4, otros: 2 },
+  cumple: { local: 20, catering: 30, bebida: 15, musica: 12, foto: 6, decoracion: 8, torta: 4, recuerdos: 2, otros: 3 },
 }
 
 /** El total repartido por categorías según la guía, en centavos. El redondeo va a «Otros»: suma exacto. */

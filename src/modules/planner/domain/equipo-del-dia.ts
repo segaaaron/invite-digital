@@ -57,7 +57,12 @@ export const proveedoresSinConfirmar = <T extends { status: EstadoDeProveedor }>
   lista.filter((p) => p.status === 'reservado' || p.status === 'contratado')
 
 export type TipoDeCortejo = 'padrino' | 'dama' | 'caballero' | 'chambelan' | 'corte'
-export const TIPOS_DE_CORTEJO: Record<Fiesta, readonly TipoDeCortejo[]> = { boda: ['padrino', 'dama', 'caballero'], xv: ['padrino', 'chambelan', 'corte'] }
+/** Un cumpleaños no tiene cortejo: sin tipos, la pantalla no ofrece sumar a nadie. */
+export const TIPOS_DE_CORTEJO: Record<Fiesta, readonly TipoDeCortejo[]> = {
+  boda: ['padrino', 'dama', 'caballero'],
+  xv: ['padrino', 'chambelan', 'corte'],
+  cumple: [],
+}
 const NOMBRE_DE_CORTEJO: Record<TipoDeCortejo, string> = { padrino: 'Padrino', dama: 'Dama de honor', caballero: 'Caballero de honor', chambelan: 'Chambelán', corte: 'Corte de honor' }
 export const nombreDelCortejo = (tipo: TipoDeCortejo): string => NOMBRE_DE_CORTEJO[tipo]
 

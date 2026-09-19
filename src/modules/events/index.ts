@@ -1,7 +1,17 @@
 export type { Event, EventStatus } from './domain/event'
 export { acceptsResponses } from './domain/event'
 export { loQueFaltaParaInvitar } from './domain/invitation-content'
-export { FIESTAS, fiestaDeCategoria, fiestaDeTema, mismaFiesta, VOCABULARIO, type Fiesta, type Vocabulario } from './domain/fiesta'
+export {
+  FIESTAS,
+  FIESTAS_A_LA_VENTA,
+  fiestaDeCategoria,
+  fiestaDeTema,
+  mismaFiesta,
+  VOCABULARIO,
+  type Fiesta,
+  type FiestaPublica,
+  type Vocabulario,
+} from './domain/fiesta'
 export type { EventError, EventErrorKind } from './domain/errors'
 export type { EventRepository } from './application/ports'
 
