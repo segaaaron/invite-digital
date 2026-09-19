@@ -89,17 +89,17 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel }: Props)
       }}
       type="button"
     >
-      {/* `cover`, como la maqueta (`IntroCover` con `bgImage`): el arte llena la pantalla y se
-          recorta por los lados. Las botellas de los bordes quedan cortadas también allí; con
-          `contain` no se cortarían, pero saldrían dos franjas de madera lisa arriba y abajo que
-          el diseño no tiene. */}
-      <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'cover' }} />
+      {/* `contain`, no `cover`: el arte se ve **entero**, pedido por el usuario el 19 de
+          septiembre y repetido. La maqueta usa `cover` y ahí las botellas de los bordes salen
+          cortadas; aquí no, a cambio de dos franjas de la madera del fondo arriba y abajo, que
+          es el mismo tono del borde del propio arte. */}
+      <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'contain' }} />
 
       {escrito === '' ? null : (
         <svg
-          // `slice` para que case con el `cover` de la imagen: el texto se escala y se recorta
-          // exactamente igual que la ilustración, así el nombre no se sale del medallón.
-          preserveAspectRatio="xMidYMid slice"
+          // `meet` para que case con el `contain` de la imagen: el nombre se escala igual que
+          // la ilustración, así no se sale del medallón.
+          preserveAspectRatio="xMidYMid meet"
           style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
           viewBox={`0 0 ${ARTE.ancho} ${ARTE.alto}`}
         >
