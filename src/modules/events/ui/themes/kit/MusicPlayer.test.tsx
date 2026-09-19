@@ -46,6 +46,19 @@ describe('MusicPlayer', () => {
     expect(screen.getByRole('button', { name: 'Pausar Perfect' })).toBeInTheDocument()
   })
 
+  it('con «soloAlAbrir» no suena al montar: espera al toque que abre la portada', async () => {
+    // El cumpleaños tapa la invitación con su portada hasta que el invitado la abre. Donde
+    // el navegador permite el audio —un escritorio con historial de reproducción—, sin esto
+    // la canción empezaba con la portada todavía puesta.
+    const play = simular(false)
+    render(<MusicPlayer {...props} soloAlAbrir />)
+    await act(async () => {})
+    expect(play).not.toHaveBeenCalled()
+
+    await act(async () => void fireEvent.pointerDown(document.body))
+    expect(play).toHaveBeenCalledTimes(1)
+  })
+
   it('tocar el propio botón como primer gesto lo enciende una vez, no lo apaga', async () => {
     simular(true)
     render(<MusicPlayer {...props} />)

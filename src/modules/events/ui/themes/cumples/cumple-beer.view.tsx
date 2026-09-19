@@ -592,6 +592,7 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
             >
               <MusicPlayer
                 accent={P.oro}
+                soloAlAbrir
                 artist={music?.artist ?? ''}
                 artistColor={P.crema}
                 audioSrc={cancion}

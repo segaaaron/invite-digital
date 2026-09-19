@@ -27,6 +27,16 @@ type Props = {
    * cuando esa boda no tiene música.
    */
   readonly audioSrc?: string | undefined
+  /**
+   * No intentar sonar al montar: esperar al primer toque.
+   *
+   * Lo pide el cumpleaños, cuya portada tapa la invitación entera hasta que el invitado la
+   * abre. Sin esto, en un escritorio donde el navegador permite el audio —Chrome se lo
+   * concede a los sitios con historial de reproducción— la canción empezaba **con la
+   * portada todavía puesta**, y se oía antes de que nadie entrara. Con esto no suena hasta
+   * que hay un gesto, y el gesto es abrirla.
+   */
+  readonly soloAlAbrir?: boolean
   readonly textColor?: string
   readonly playBg?: string
   readonly playIconColor: string
@@ -69,6 +79,7 @@ export function MusicPlayer({
   artist,
   eyebrow,
   audioSrc,
+  soloAlAbrir = false,
   textColor = 'currentColor',
   playBg,
   playIconColor,
@@ -95,15 +106,21 @@ export function MusicPlayer({
       if (elemento!.paused) void elemento!.play().catch(() => setSonando(false))
     }
 
+    const alPrimerGesto = () => GESTOS.forEach((tipo) => document.addEventListener(tipo, alGesto, { capture: true }))
+
     let vigente = true
-    elemento.play().catch(() => {
-      if (vigente) GESTOS.forEach((tipo) => document.addEventListener(tipo, alGesto, { capture: true }))
-    })
+    // Con `soloAlAbrir` ni se intenta: la invitación está tapada por su portada y sonar
+    // ahora sería sonar antes de que nadie la abra.
+    if (soloAlAbrir) alPrimerGesto()
+    else
+      elemento.play().catch(() => {
+        if (vigente) alPrimerGesto()
+      })
     return () => {
       vigente = false
       quitar()
     }
-  }, [audioSrc])
+  }, [audioSrc, soloAlAbrir])
 
   const alternar = () => {
     const elemento = audio.current
