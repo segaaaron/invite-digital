@@ -4,6 +4,17 @@ import type { Locale } from '@/shared/i18n/locales'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Template } from '../domain/template'
 
+/**
+ * La versión de las portadas del catálogo.
+ *
+ * El optimizador de Next cachea por **dirección**, y durante mucho tiempo: recapturar las
+ * portadas sin cambiarles el nombre deja a todo el que ya las vio con las de antes —pasó
+ * con el arte de «Cervecería Vintage» en producción—. Renombrar diecisiete ficheros en
+ * cada pasada ensuciaría el repositorio y la base, así que la dirección lleva su versión
+ * detrás. **Se sube al recapturar.**
+ */
+const VERSION_DE_PORTADAS = '2'
+
 type Props = { template: Template; dictionary: Dictionary; locale: Locale }
 
 /**
@@ -42,7 +53,7 @@ export function TemplateCard({ template, dictionary, locale }: Props) {
           className="h-full w-full object-cover"
           height={996}
           sizes="(max-width: 768px) 80vw, 280px"
-          src={template.coverImagePath}
+          src={`${template.coverImagePath}?v=${VERSION_DE_PORTADAS}`}
           width={560}
         />
         {/* El filete de oro del sitio, por dentro: separa la portada del papel del fondo sin
