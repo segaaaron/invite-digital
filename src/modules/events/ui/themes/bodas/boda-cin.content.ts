@@ -4,8 +4,8 @@ import type { InvitationContent } from '../../../domain/invitation-content'
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: {
     eyebrow: '· A LOVE STORY ·',
-    nameA: 'SOFÍA',
-    nameB: 'DIEGO',
+    nameA: 'Sofía',
+    nameB: 'Diego',
     monogram: '● REC · TAKE 014',
     serial: '· DIRECTED BY DESTINY ·',
   },

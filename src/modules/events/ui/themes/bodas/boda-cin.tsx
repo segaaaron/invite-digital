@@ -9,7 +9,9 @@ export const bodaCinDefinition: ThemeDefinition = {
   label: 'Cinemática',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['italiana', 'cormorant', 'jetbrainsMono', 'cinzel'],
+  // Great Vibes entra con la portada: los nombres van en caligrafía sobre el arte, como en
+  // la maqueta.
+  fonts: ['italiana', 'cormorant', 'jetbrainsMono', 'cinzel', 'greatVibes'],
   rsvp: 'botones',
   pinta: { fotos: { casillas: 3 }, sinCampos: { itinerary: ['imageId'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'closing'],

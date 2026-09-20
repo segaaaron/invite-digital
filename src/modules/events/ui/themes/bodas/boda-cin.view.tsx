@@ -1,3 +1,4 @@
+import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
@@ -8,7 +9,7 @@ import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { WeddingMagicBg } from '../kit/backgrounds/WeddingMagicBg'
-import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
+import { CinematicaCover } from './CinematicaCover'
 import { PALETA as P } from './boda-cin.palette'
 
 const MONO = 'var(--font-jetbrains-mono)'
@@ -38,10 +39,19 @@ const GRANO =
  * «estás invitado» y «algo inolvidable». No es del diccionario porque no es una
  * traducción: es el guion de este modelo.
  */
-const ROTULOS = { coverEyebrow: 'ESTÁS INVITADO', coverHeadline: 'Algo inolvidable', cover: 'NOW · SHOWING' } as const
+const ROTULOS = { coverEyebrow: 'NUESTRA BODA', coverHeadline: 'Algo inolvidable', cover: 'NOW · SHOWING' } as const
 
-export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
+export function BodaCinView({ content, event, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, gallery, closing } = content
+
+  // La fecha de la portada, en palabras y en mayúsculas: «12 DE DICIEMBRE DE 2026».
+  const cuandoPortada = schedule === undefined ? null : new Date(schedule.startsAt)
+  const fechaLargaDePortada =
+    cuandoPortada === null || Number.isNaN(cuandoPortada.getTime())
+      ? ''
+      : cuandoPortada
+          .toLocaleDateString(event.locale === 'en' ? 'en-US' : 'es-BO', { day: 'numeric', month: 'long', year: 'numeric' })
+          .toUpperCase()
   const retrato = gallery?.[0]
   const reparto = (gallery ?? []).slice(1, 3)
 
@@ -51,16 +61,17 @@ export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: Th
 
   return (
     <article style={{ ...RANURAS, position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      <EnvelopeCover
+      {/* Su portada es la fotografía negra y dorada de la maqueta, no el telón dibujado del
+          kit: ese es el que la maqueta usa cuando un diseño no trae arte propio. */}
+      <CinematicaCover
         accent={P.oro}
         bg={P.fondo}
+        bgAsset={themeAsset('boda-cin', 'portada-negra-dorada.avif')}
         eyebrow={ROTULOS.coverEyebrow}
-        headline={ROTULOS.coverHeadline}
-        hint={themes.coverHint}
-        label={ROTULOS.cover}
+        fecha={fechaLargaDePortada}
+        hint={themes.coverEnterShared}
+        names={[hero?.nameA, hero?.nameB].filter((nombre) => nombre !== undefined && nombre !== '').join(' & ')}
         openLabel={themes.coverAria}
-        textColor={P.tinta}
-        variant="curtain"
       />
 
       <WeddingMagicBg
@@ -153,6 +164,9 @@ export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: Th
               color: P.claro,
               textShadow: '0 4px 24px rgba(0,0,0,0.6)',
               margin: 0,
+              // El cartel los pinta en mayúsculas; el nombre se guarda como lo escribe el
+              // cliente, para que la caligrafía de la portada no salga en capitales.
+              textTransform: 'uppercase',
             }}
           >
             {hero?.nameA ?? ''}
@@ -170,6 +184,7 @@ export function BodaCinView({ content, dictionary, themes, slots, audioSrc }: Th
                   letterSpacing: '0.04em',
                   color: P.claro,
                   textShadow: '0 4px 24px rgba(0,0,0,0.6)',
+                  textTransform: 'uppercase',
                 }}
               >
                 {hero.nameB}

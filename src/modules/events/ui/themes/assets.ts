@@ -44,6 +44,7 @@ export const THEME_ASSETS = {
     'pareja-4.avif',
     'pareja-5.avif',
   ],
+  'boda-cin': ['portada-negra-dorada.avif'],
   'boda-ed': [
     'aros-sf.avif',
     'camara-dorada-sf.avif',
