@@ -26,6 +26,8 @@ export const THEME_ASSETS = {
   ],
   'boda-bot': [
     'boda-01-pareja.avif',
+    // La portada de la maqueta (`wedding-variants-2.jsx`): el sobre lacrado sobre las rosas.
+    'portada-rosas.avif',
     'boda-02-arreglo.avif',
     'boda-03-anillos.avif',
     'boda-04-pastel.avif',

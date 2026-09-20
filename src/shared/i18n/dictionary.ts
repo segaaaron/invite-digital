@@ -286,6 +286,9 @@ export interface ThemeDictionary {
    */
   coverInviteLine1: string
   coverInviteLine2: string
+  /** «LLEGÓ EL GRAN DÍA» y «NOS CASAMOS»: las dos líneas de la portada de una boda. */
+  coverBigDay: string
+  coverWeMarry: string
   /** «INGRESA A MI INVITACIÓN»: la llamada de las portadas con fotografía de los XV. */
   coverEnter: string
   /** La misma llamada en boda, donde la invitación es de dos: «nuestra», no «mi». */

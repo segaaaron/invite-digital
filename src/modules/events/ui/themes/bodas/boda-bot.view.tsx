@@ -12,7 +12,7 @@ import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { WeddingMagicBg } from '../kit/backgrounds/WeddingMagicBg'
-import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
+import { BotanicaCover } from './BotanicaCover'
 import { BotanicalTimeline } from '../kit/flora/BotanicalTimeline'
 import { FallingPetals } from '../kit/flora/FallingPetals'
 import { FloralCorner, FloralDivider, FloralSpray } from '../kit/flora/FloralArt'
@@ -85,13 +85,17 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
 
   return (
     <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
-      <EnvelopeCover
-        accent={P.salvia}
+      {/* Su portada es la de la maqueta: el sobre lacrado sobre las rosas, con los nombres
+          de la pareja escritos encima. Antes salía el sobre **dibujado** del kit. */}
+      <BotanicaCover
+        bgAsset={themeAsset('boda-bot', 'portada-rosas.avif')}
         bg={P.papel}
         hint={themes.coverHint}
-        label={hero?.eyebrow ?? themes.coverOpen}
+        line1={themes.coverBigDay}
+        line2={themes.coverWeMarry}
+        names={[hero?.nameA, hero?.nameB].filter((nombre) => nombre !== undefined && nombre !== '').join(' &\n')}
         openLabel={themes.coverAria}
-        textColor={P.tinta}
+        textColor={P.salvia}
       />
 
       <WeddingMagicBg
