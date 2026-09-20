@@ -68,6 +68,15 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     sample: { monogram: 'V & M', names: 'Valentina\n& Mateo', dateLabel: '20 · 12 · 2027', venue: 'Jardín Las Magnolias' },
   },
   {
+    key: 'boda-sello',
+    listo: true,
+    categorySlug: 'boda',
+    es: 'Clásica - Sobre Lacrado',
+    en: 'Classic - Wax Seal',
+    palette: { base: '#f2ede4', accent: '#c9a961' },
+    sample: { monogram: 'C & S', names: 'Camila\n& Sebastián', dateLabel: '14 · 11 · 2026', venue: 'Salón Los Cedros' },
+  },
+  {
     key: 'boda-ed',
     listo: true,
     categorySlug: 'boda',

@@ -32,6 +32,7 @@ export type FontKey =
   | 'spectral'
   | 'playfairDisplay'
   | 'outfit'
+  | 'bodoniModa'
 
 export const FONT_VARIABLES = {
   cormorant: '--font-cormorant',
@@ -48,6 +49,7 @@ export const FONT_VARIABLES = {
   spectral: '--font-spectral',
   playfairDisplay: '--font-playfair-display',
   outfit: '--font-outfit',
+  bodoniModa: '--font-bodoni-moda',
 } as const satisfies Record<FontKey, string>
 
 /**
@@ -71,6 +73,8 @@ export const FONT_FALLBACKS = {
   playfairDisplay: ['Cormorant Garamond', 'Georgia', 'serif'],
   // Geométrica de palo seco; detrás, las que más se le parecen sin descargar nada.
   outfit: ['Avenir Next', 'Helvetica Neue', 'Arial', 'sans-serif'],
+  // Didona de contraste alto: detrás, las que más se le parecen.
+  bodoniModa: ['Didot', 'Bodoni MT', 'Georgia', 'serif'],
 } as const satisfies Record<FontKey, readonly string[]>
 
 /**
@@ -99,4 +103,5 @@ export const FONT_FILES: readonly string[] = [
   'spectral-400.woff2',
   'playfair-display-600-italic.woff2',
   'outfit-variable.woff2',
+  'bodoni-moda-italic-variable.woff2',
 ]

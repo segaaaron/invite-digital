@@ -5,11 +5,10 @@ import { FONT_FILES, FONT_VARIABLES, type FontKey } from './font-manifest'
 
 describe('las tipografías de los temas de invitación', () => {
   it('declara una variable CSS por familia', () => {
-    // Trece familias: las tres que ya estaban —Cormorant, Space Grotesk y JetBrains Mono—
-    // más las diez que piden los dieciséis diseños, con Playfair Display, que es la cursiva
-    // de «Palacio Griego». Jost no está: es de la web pública marfil y no la usa ningún
-    // tema.
-    expect(Object.keys(FONT_VARIABLES)).toHaveLength(14)
+    // Las que piden los diseños de invitación. Crece con la colección: Outfit entró con
+    // «Esencia» y Bodoni Moda con «Sobre Lacrado». Jost no está: es de la web pública
+    // marfil y no la usa ningún tema.
+    expect(Object.keys(FONT_VARIABLES)).toHaveLength(15)
     for (const variable of Object.values(FONT_VARIABLES)) {
       expect(variable).toMatch(/^--font-[a-z-]+$/)
     }

@@ -134,6 +134,17 @@ export const outfit = localFont({
   src: [{ path: '../../../public/fonts/outfit-variable.woff2', weight: '100 900', style: 'normal' }],
 })
 
+/**
+ * La cursiva de «Sobre Lacrado» para los números grandes (`esencia.jsx` usa Outfit; esta es
+ * de `boda-sobre-lacrado.jsx`). Solo la cursiva: el diseño no pinta ni una recta.
+ */
+export const bodoniModa = localFont({
+  variable: '--font-bodoni-moda',
+  display: 'swap',
+  fallback: ['Didot', 'Bodoni MT', 'Georgia', 'serif'],
+  src: [{ path: '../../../public/fonts/bodoni-moda-italic-variable.woff2', weight: '400 900', style: 'italic' }],
+})
+
 export const newsreader = localFont({
   variable: '--font-newsreader',
   display: 'swap',
@@ -222,4 +233,5 @@ export const themeFonts = {
   spectral,
   playfairDisplay,
   outfit,
+  bodoniModa,
 } as const satisfies Record<FontKey, { variable: string }>

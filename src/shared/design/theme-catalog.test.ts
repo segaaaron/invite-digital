@@ -24,6 +24,7 @@ const A_LA_VENTA = [
   'xv-isabelle',
   // Los nuevos, según se portan.
   'esencia',
+  'boda-sello',
 ] as const
 
 /** Lo portado que todavía no se vende: el cumpleaños, hasta que el usuario lo publique. */
