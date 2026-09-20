@@ -26,27 +26,39 @@ const DESTINO = 'public/templates'
  * capturas cambian un poco en cada pasada y ese ruido acaba en el repositorio.
  */
 /**
- * Los diseños cuya tarjeta es **su portada cerrada**, no la invitación abierta.
+ * Los diseños cuya tarjeta es **su portada**, sin abrir.
  *
- * El guion abre la portada antes de capturar —si no, los ocho de sobre saldrían con la
- * misma fotografía—, y en estos la portada es justo lo que hay que enseñar: «Cervecería
- * Vintage» abierta es madera oscura con una cuenta atrás, que no dice nada del modelo. Y se
- * captura, no se recorta el arte: el nombre de quien cumple lo pinta el diseño encima.
+ * Es lo primero que ve el invitado y lo que el cliente cree que está comprando, así que
+ * sería la tarjeta de todos... salvo que siete de las ocho bodas tienen por portada un
+ * **sobre dibujado**: capturadas cerradas salían cuatro sobres casi iguales —cambia el
+ * color— y dos «Algo inolvidable». Esas se abren, que es lo único que las distingue.
+ *
+ * Los ocho XV, «Cervecería Vintage» y «Editorial» sí traen portada propia, con su
+ * fotografía y su nombre. Un diseño nuevo entra aquí si su portada es suya.
  */
-const TARJETA_ES_LA_PORTADA = new Set(['cumple-beer'])
+const PORTADA_PROPIA = new Set([
+  'boda-ed',
+  'xv',
+  'xv-natalia',
+  'xv-valentina',
+  'xv-luciana',
+  'xv-fantasia',
+  'xv-valeria',
+  'xv-mariana',
+  'xv-isabelle',
+  'cumple-beer',
+])
 
 const PEDIDOS = process.argv.slice(2).filter((argumento) => !argumento.startsWith('-'))
 const MODELOS = PEDIDOS.length === 0 ? CATALOG_LISTOS : CATALOG_LISTOS.filter((entrada) => PEDIDOS.includes(entrada.key))
 
 /**
- * El tamaño de la captura.
- *
- * La tarjeta del catálogo tiene proporción 5:7, así que se captura en esa proporción y no
- * en la de la pantalla: recortar después dejaría la mitad del diseño fuera. 560 de ancho
- * es el corte al que estos diseños siguen componiéndose como columna.
+ * El tamaño de la captura: la proporción del teléfono (9:16), que es la de la tarjeta del
+ * catálogo desde que enseña la portada de verdad. A 5:7 —la del papel dibujado— la portada
+ * perdía el pie, que es donde estos diseños ponen la llamada a entrar.
  */
 const ANCHO = 560
-const ALTO = Math.round((ANCHO * 7) / 5)
+const ALTO = Math.round((ANCHO * 16) / 9)
 
 async function principal(): Promise<void> {
   await mkdir(DESTINO, { recursive: true })
@@ -79,11 +91,9 @@ async function principal(): Promise<void> {
     await pagina.evaluate(() => document.fonts.ready)
     await pagina.waitForTimeout(1200)
 
-    // La portada de apertura se abre antes de capturar. La tarjeta del catálogo tiene que
-    // enseñar **el diseño**, y con la portada puesta los ocho de sobre saldrían con la misma
-    // fotografía de un sobre y no habría forma de distinguirlos en la rejilla.
-    const portada = pagina.getByRole('button', { name: /abrir la invitaci/i })
-    if ((await portada.count()) > 0 && !TARJETA_ES_LA_PORTADA.has(entrada.key)) {
+    // La portada se queda puesta **si es suya**; si no, se abre antes de capturar.
+    const portada = pagina.getByRole('button', { name: /abrir la invitaci|toca para abrir/i })
+    if ((await portada.count()) > 0 && !PORTADA_PROPIA.has(entrada.key)) {
       await portada.first().click()
       await pagina.waitForTimeout(600)
     }
@@ -95,9 +105,9 @@ async function principal(): Promise<void> {
     const captura = await ((await marco.count()) > 0 ? marco.screenshot({ type: 'png' }) : pagina.screenshot({ type: 'png' }))
 
     await sharp(captura)
-      // La tarjeta del catálogo es 5:7 y el teléfono es más alargado: se recorta por arriba,
-      // que es donde estos diseños ponen el nombre y la fotografía.
-      .resize({ width: ANCHO, height: ALTO, fit: 'cover', position: 'top' })
+      // Ya viene en la proporción del teléfono; el ajuste es por si el marco trae un píxel
+      // de más. Centrado: a esta altura no hay nada que recortar por arriba.
+      .resize({ width: ANCHO, height: ALTO, fit: 'cover' })
       .avif({ quality: 62, effort: 6 })
       .toFile(`${DESTINO}/${entrada.key}.avif`)
 
