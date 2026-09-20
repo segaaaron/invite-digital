@@ -192,10 +192,10 @@ describe('PeopleTable · piel de la maqueta', () => {
 })
 
 describe('PeopleTable · la fecha de confirmación', () => {
-  it('se pinta igual en el servidor y en el navegador', () => {
-    // `toLocaleDateString` depende de la zona horaria de quien lo ejecuta. Este componente
-    // se pinta primero en el servidor y luego hidrata en el navegador: con husos distintos
-    // salían dos fechas y React avisaba de un desajuste de hidratación.
+  it('es el día de Bolivia, no el de UTC', () => {
+    // Quien contestó a las 22:30 del 21 en Cochabamba tiene que leer «21-ago». En UTC eso
+    // ya es el 22, así que con esa zona —como estaba— toda respuesta dada después de las
+    // 20:00 salía con la fecha del día siguiente.
     render(
       <PeopleTable
         eventSlug="boda"
@@ -203,7 +203,19 @@ describe('PeopleTable · la fecha de confirmación', () => {
       />,
     )
 
-    // 22 de agosto en UTC, aunque quien lo pinte esté en La Paz (UTC−4) o en Tokio.
+    expect(screen.getByText('respondió 21-ago')).toBeInTheDocument()
+  })
+
+  it('se pinta igual en el servidor y en el navegador', () => {
+    // La fecha se compone de las piezas de `Intl` con la zona fijada: sin ella, el servidor
+    // escribe una fecha y el navegador otra, y React descarta el HTML al hidratar.
+    render(
+      <PeopleTable
+        eventSlug="boda"
+        rows={[{ ...filas[0]!, respondedAt: new Date('2026-08-22T18:00:00Z') }]}
+      />,
+    )
+
     expect(screen.getByText('respondió 22-ago')).toBeInTheDocument()
   })
 })

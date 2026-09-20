@@ -5,7 +5,7 @@ import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/de
 import { removePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { ChevronIcon, PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
-import { hora } from '@/shared/format/fecha'
+import { fechaCorta, hora } from '@/shared/format/fecha'
 import { avatarColor } from '@/shared/design/ui/avatar-color'
 
 export type PersonRowView = {
@@ -60,9 +60,6 @@ const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
  * fijar la zona, un servidor en UTC y un navegador en La Paz dan dos días distintos para
  * la misma respuesta y React avisa de un desajuste de hidratación.
  */
-const fechaCorta = (fecha: Date): string =>
-  fecha.toLocaleDateString('es-BO', { day: '2-digit', month: 'short', timeZone: 'UTC' })
-
 /** Diez invitaciones por página: una familia no se parte entre dos páginas. */
 const POR_PAGINA = 10
 

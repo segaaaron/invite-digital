@@ -36,3 +36,17 @@ export function hora(instante: Date): string {
   const partes = PIEZAS.formatToParts(instante)
   return `${pieza(partes, 'hour')}:${pieza(partes, 'minute')}`
 }
+
+/**
+ * «19-sept», en hora de Bolivia: la fecha corta de las listas del panel.
+ *
+ * Con `timeZone: 'UTC'` —como estaba— toda respuesta dada **después de las 20:00** en
+ * Bolivia salía con la fecha del día siguiente: a esa hora allí ya es mañana en UTC.
+ */
+const PIEZAS_CORTAS = new Intl.DateTimeFormat('es-BO', { timeZone: 'America/La_Paz', day: '2-digit', month: 'short' })
+
+export function fechaCorta(instante: Date): string {
+  const partes = PIEZAS_CORTAS.formatToParts(instante)
+  return `${pieza(partes, 'day')}-${pieza(partes, 'month')}`
+}
+
