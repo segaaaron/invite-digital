@@ -166,6 +166,8 @@ export const es = {
     coverAria: 'Abrir la invitación',
     coverInviteLine1: 'Te invito',
     coverInviteLine2: 'a celebrar mi fiesta',
+    galleryPrev: 'Fotografía anterior',
+    galleryNext: 'Fotografía siguiente',
     coverScroll: 'DESLIZA ↓',
     coverBigDay: 'LLEGÓ EL GRAN DÍA',
     coverWeMarry: 'NOS CASAMOS',

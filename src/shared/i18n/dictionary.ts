@@ -286,6 +286,9 @@ export interface ThemeDictionary {
    */
   coverInviteLine1: string
   coverInviteLine2: string
+  /** Las flechas del carrusel de fotografías de las Editorial. */
+  galleryPrev: string
+  galleryNext: string
   /** «Desliza ↓»: la llamada de las portadas que se recorren hacia abajo. */
   coverScroll: string
   /** «LLEGÓ EL GRAN DÍA» y «NOS CASAMOS»: las dos líneas de la portada de una boda. */

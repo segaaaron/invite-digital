@@ -3,6 +3,7 @@ import { bodaDefinition } from './bodas/boda'
 import { bodaBotDefinition } from './bodas/boda-bot'
 import { esenciaDefinition } from './bodas/esencia'
 import { bodaSelloDefinition } from './bodas/boda-sello'
+import { bodaSerenidadDefinition } from './bodas/boda-serenidad'
 import { bodaCinDefinition } from './bodas/boda-cin'
 import { bodaEdDefinition } from './bodas/boda-ed'
 import { anivDefinition } from './bodas/aniv'
@@ -34,6 +35,7 @@ const THEMES = {
   'boda-bot': bodaBotDefinition,
   esencia: esenciaDefinition,
   'boda-sello': bodaSelloDefinition,
+  'boda-serenidad': bodaSerenidadDefinition,
   'boda-cin': bodaCinDefinition,
   'boda-ed': bodaEdDefinition,
   civil: civilDefinition,

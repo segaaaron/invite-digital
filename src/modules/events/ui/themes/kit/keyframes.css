@@ -32,6 +32,12 @@
 /** «Sobre Lacrado»: los iconos de acuarela, que flotan despacio. */
 @keyframes theme-floatIcon { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
+/** «Jardín de Serenidad»: las motas doradas que suben por la portada. */
+@keyframes theme-floatUp { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: 0.6; } 100% { transform: translateY(-105vh); opacity: 0; } }
+
+/** La flecha de «desliza» que rebota, de las portadas de la maqueta. */
+@keyframes theme-bounceDown { 0%,100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+
 @keyframes theme-haloPulse { 0%,100% { opacity: 0.06; transform: scale(1); } 50% { opacity: 0.18; transform: scale(1.15); } }
 
 @keyframes theme-introFade { from { opacity: 0; } to { opacity: 1; } }
