@@ -25,30 +25,6 @@ const DESTINO = 'public/templates'
  * Un diseño nuevo no tiene por qué reescribir las dieciséis portadas que ya estaban: las
  * capturas cambian un poco en cada pasada y ese ruido acaba en el repositorio.
  */
-/**
- * Los diseños cuya tarjeta es **su portada**, sin abrir.
- *
- * Es lo primero que ve el invitado y lo que el cliente cree que está comprando, así que
- * sería la tarjeta de todos... salvo que siete de las ocho bodas tienen por portada un
- * **sobre dibujado**: capturadas cerradas salían cuatro sobres casi iguales —cambia el
- * color— y dos «Algo inolvidable». Esas se abren, que es lo único que las distingue.
- *
- * Los ocho XV, «Cervecería Vintage» y «Editorial» sí traen portada propia, con su
- * fotografía y su nombre. Un diseño nuevo entra aquí si su portada es suya.
- */
-const PORTADA_PROPIA = new Set([
-  'boda-ed',
-  'xv',
-  'xv-natalia',
-  'xv-valentina',
-  'xv-luciana',
-  'xv-fantasia',
-  'xv-valeria',
-  'xv-mariana',
-  'xv-isabelle',
-  'cumple-beer',
-])
-
 const PEDIDOS = process.argv.slice(2).filter((argumento) => !argumento.startsWith('-'))
 const MODELOS = PEDIDOS.length === 0 ? CATALOG_LISTOS : CATALOG_LISTOS.filter((entrada) => PEDIDOS.includes(entrada.key))
 
@@ -91,12 +67,10 @@ async function principal(): Promise<void> {
     await pagina.evaluate(() => document.fonts.ready)
     await pagina.waitForTimeout(1200)
 
-    // La portada se queda puesta **si es suya**; si no, se abre antes de capturar.
-    const portada = pagina.getByRole('button', { name: /abrir la invitaci|toca para abrir/i })
-    if ((await portada.count()) > 0 && !PORTADA_PROPIA.has(entrada.key)) {
-      await portada.first().click()
-      await pagina.waitForTimeout(600)
-    }
+    // **La portada se queda puesta, en todos.** Es lo que la web enseña de cada diseño:
+    // la pantalla del «toca en cualquier lugar», que es lo primero que ve el invitado.
+    // Pedido por el usuario el 19 de septiembre, y repetido: nada de abrir la invitación
+    // para capturar un trozo de su cuerpo.
 
     // Se captura **el aparato**, no la ventana: la vista previa enseña la invitación dentro
     // de un marco de teléfono sobre fondo oscuro, y una portada con esa moldura y sus bandas
