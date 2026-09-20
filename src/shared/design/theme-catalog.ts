@@ -86,6 +86,15 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     sample: { monogram: 'S & D', names: 'Sofía\n& Daniel', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
   },
   {
+    key: 'boda-royal',
+    listo: true,
+    categorySlug: 'boda',
+    es: 'Editorial - Royal Blush',
+    en: 'Editorial - Royal Blush',
+    palette: { base: '#f5d6d0', accent: '#8b2252' },
+    sample: { monogram: 'R & P', names: 'Renata\n& Pablo', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
+  },
+  {
     key: 'boda-ed',
     listo: true,
     categorySlug: 'boda',

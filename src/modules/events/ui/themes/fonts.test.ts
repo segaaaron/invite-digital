@@ -78,7 +78,7 @@ describe('las tipografías de cada diseño', () => {
     .filter(({ vista }) => existsSync(vista))
 
   it('encuentra la vista de cada diseño, para que la prueba no pase por no mirar nada', () => {
-    expect(conVista).toHaveLength(20)
+    expect(conVista).toHaveLength(21)
   })
 
   it.each(conVista)('«$tema.key» declara todas las que pinta', ({ tema, vista }) => {
