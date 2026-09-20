@@ -9,7 +9,7 @@ describe('las tipografías de los temas de invitación', () => {
     // más las diez que piden los dieciséis diseños, con Playfair Display, que es la cursiva
     // de «Palacio Griego». Jost no está: es de la web pública marfil y no la usa ningún
     // tema.
-    expect(Object.keys(FONT_VARIABLES)).toHaveLength(13)
+    expect(Object.keys(FONT_VARIABLES)).toHaveLength(14)
     for (const variable of Object.values(FONT_VARIABLES)) {
       expect(variable).toMatch(/^--font-[a-z-]+$/)
     }

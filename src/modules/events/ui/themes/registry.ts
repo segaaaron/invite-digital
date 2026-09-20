@@ -1,6 +1,7 @@
 import { clasicoDefinition } from './ClasicoTheme'
 import { bodaDefinition } from './bodas/boda'
 import { bodaBotDefinition } from './bodas/boda-bot'
+import { esenciaDefinition } from './bodas/esencia'
 import { bodaCinDefinition } from './bodas/boda-cin'
 import { bodaEdDefinition } from './bodas/boda-ed'
 import { anivDefinition } from './bodas/aniv'
@@ -30,6 +31,7 @@ const THEMES = {
   clasico: clasicoDefinition,
   boda: bodaDefinition,
   'boda-bot': bodaBotDefinition,
+  esencia: esenciaDefinition,
   'boda-cin': bodaCinDefinition,
   'boda-ed': bodaEdDefinition,
   civil: civilDefinition,

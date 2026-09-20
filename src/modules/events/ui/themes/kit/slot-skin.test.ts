@@ -67,13 +67,13 @@ describe('la piel de las ranuras', () => {
   })
 })
 
-describe('los dieciséis diseños', () => {
+describe('las vistas de los diseños', () => {
   const vistas = themeDefinitions()
     .map((tema) => ({ clave: tema.key, ruta: join(RAIZ, tema.key.startsWith('xv') ? 'xv' : 'bodas', `${tema.key}.view.tsx`) }))
     .filter(({ ruta }) => existsSync(ruta))
 
-  it('son dieciséis, para que la prueba no pase por no mirar nada', () => {
-    expect(vistas).toHaveLength(16)
+  it('están todas, para que la prueba no pase por no mirar nada', () => {
+    expect(vistas).toHaveLength(17)
   })
 
   it.each(vistas)('«$clave» le presta su paleta a las ranuras', ({ ruta }) => {

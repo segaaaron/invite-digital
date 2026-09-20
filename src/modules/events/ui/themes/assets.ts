@@ -36,6 +36,14 @@ export const THEME_ASSETS = {
     'trajes-dorados-sf.avif',
     'wedding-couple.avif',
   ],
+  esencia: [
+    'portada-lino.avif',
+    'pareja-1.avif',
+    'pareja-2.avif',
+    'pareja-3.avif',
+    'pareja-4.avif',
+    'pareja-5.avif',
+  ],
   'boda-ed': [
     'aros-sf.avif',
     'camara-dorada-sf.avif',

@@ -126,6 +126,14 @@ export const dmSans = localFont({
   ],
 })
 
+/** La geométrica de «Esencia», de su maqueta (`esencia.jsx`): Outfit en pesos 200–500. */
+export const outfit = localFont({
+  variable: '--font-outfit',
+  display: 'swap',
+  fallback: ['Avenir Next', 'Helvetica Neue', 'Arial', 'sans-serif'],
+  src: [{ path: '../../../public/fonts/outfit-variable.woff2', weight: '100 900', style: 'normal' }],
+})
+
 export const newsreader = localFont({
   variable: '--font-newsreader',
   display: 'swap',
@@ -213,4 +221,5 @@ export const themeFonts = {
   newsreader,
   spectral,
   playfairDisplay,
+  outfit,
 } as const satisfies Record<FontKey, { variable: string }>

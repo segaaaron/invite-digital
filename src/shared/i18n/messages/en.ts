@@ -166,6 +166,7 @@ export const en = {
     coverAria: 'Open the invitation',
     coverInviteLine1: 'I invite you',
     coverInviteLine2: 'to celebrate with me',
+    coverScroll: 'SCROLL ↓',
     coverBigDay: 'THE BIG DAY IS HERE',
     coverWeMarry: 'WE ARE GETTING MARRIED',
     coverEnter: 'ENTER MY INVITATION',

@@ -77,8 +77,8 @@ describe('las tipografías de cada diseño', () => {
     .map((tema) => ({ tema, vista: join(RAIZ, CARPETA[fiestaDeCategoria(tema.categorySlug)], `${tema.key}.view.tsx`) }))
     .filter(({ vista }) => existsSync(vista))
 
-  it('encuentra la vista de los diecisiete, para que la prueba no pase por no mirar nada', () => {
-    expect(conVista).toHaveLength(17)
+  it('encuentra la vista de cada diseño, para que la prueba no pase por no mirar nada', () => {
+    expect(conVista).toHaveLength(18)
   })
 
   it.each(conVista)('«$tema.key» declara todas las que pinta', ({ tema, vista }) => {

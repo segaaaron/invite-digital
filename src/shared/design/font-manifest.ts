@@ -12,7 +12,7 @@
  */
 
 /**
- * Las doce familias que piden los dieciséis diseños de invitación.
+ * Las catorce familias que piden los diseños de invitación.
  *
  * Tres ya estaban en el proyecto —Cormorant Garamond, Space Grotesk y JetBrains Mono—.
  * Jost no aparece: es de la web pública marfil y no la usa ningún tema.
@@ -31,6 +31,7 @@ export type FontKey =
   | 'newsreader'
   | 'spectral'
   | 'playfairDisplay'
+  | 'outfit'
 
 export const FONT_VARIABLES = {
   cormorant: '--font-cormorant',
@@ -46,6 +47,7 @@ export const FONT_VARIABLES = {
   newsreader: '--font-newsreader',
   spectral: '--font-spectral',
   playfairDisplay: '--font-playfair-display',
+  outfit: '--font-outfit',
 } as const satisfies Record<FontKey, string>
 
 /**
@@ -67,6 +69,8 @@ export const FONT_FALLBACKS = {
   newsreader: ['Georgia', 'Times New Roman', 'serif'],
   spectral: ['Georgia', 'Times New Roman', 'serif'],
   playfairDisplay: ['Cormorant Garamond', 'Georgia', 'serif'],
+  // Geométrica de palo seco; detrás, las que más se le parecen sin descargar nada.
+  outfit: ['Avenir Next', 'Helvetica Neue', 'Arial', 'sans-serif'],
 } as const satisfies Record<FontKey, readonly string[]>
 
 /**
@@ -94,4 +98,5 @@ export const FONT_FILES: readonly string[] = [
   'spectral-300.woff2',
   'spectral-400.woff2',
   'playfair-display-600-italic.woff2',
+  'outfit-variable.woff2',
 ]
