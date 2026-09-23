@@ -145,6 +145,10 @@ export const THEME_ASSETS = {
     'patron.avif',
     'carruaje.avif',
   ],
+  'xv-boho': [
+    'esquina-rosa.avif',
+    'ramo-naranja.avif',
+  ],
   'boda-serenidad': [
     'portada-flores.avif',
     'pareja-1.avif',

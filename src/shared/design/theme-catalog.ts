@@ -298,7 +298,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Y2K Galaxy',
     palette: { base: '#0a0220', accent: '#ff6ed4' },
     sample: { monogram: 'M', names: 'Mariana', dateLabel: '08 · 10 · 2026', venue: 'Sky Lounge' },
+  },  {
+    key: 'xv-boho',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Bohemia',
+    en: 'Bohemian',
+    palette: { base: '#f7ede0', accent: '#a8734a' },
+    sample: { monogram: 'R', names: 'Renata', dateLabel: '24 · 10 · 2026', venue: 'Jardín Las Lomas' },
   },
+
 
 
 

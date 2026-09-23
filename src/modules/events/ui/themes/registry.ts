@@ -20,6 +20,7 @@ import { xvDecoDefinition } from './xv/xv-deco'
 import { xvRealezaDefinition } from './xv/xv-realeza'
 import { xvVogueDefinition } from './xv/xv-vogue'
 import { xvY2kDefinition } from './xv/xv-y2k'
+import { xvBohoDefinition } from './xv/xv-boho'
 import { xvIsabelleDefinition } from './xv/xv-isabelle'
 import { xvNataliaDefinition } from './xv/xv-natalia'
 import { xv_valentinaDefinition } from './xv/xv-valentina'
@@ -64,6 +65,7 @@ const THEMES = {
   'xv-valeria': xv_valeriaDefinition,
   'xv-mariana': xv_marianaDefinition,
   'xv-isabelle': xvIsabelleDefinition,
+  'xv-boho': xvBohoDefinition,
   'xv-y2k': xvY2kDefinition,
   'xv-vogue': xvVogueDefinition,
   'xv-realeza': xvRealezaDefinition,
