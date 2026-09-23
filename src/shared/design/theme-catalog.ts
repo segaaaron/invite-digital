@@ -290,7 +290,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Pastel Pink',
     palette: { base: '#0f0d0f', accent: '#d4566c' },
     sample: { monogram: 'I', names: 'Isabela', dateLabel: '19 · 09 · 2026', venue: 'Salón Rosa Vogue' },
+  },  {
+    key: 'xv-y2k',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Y2K Galaxy',
+    en: 'Y2K Galaxy',
+    palette: { base: '#0a0220', accent: '#ff6ed4' },
+    sample: { monogram: 'M', names: 'Mariana', dateLabel: '08 · 10 · 2026', venue: 'Sky Lounge' },
   },
+
 
 
 
