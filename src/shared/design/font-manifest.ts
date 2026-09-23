@@ -104,6 +104,8 @@ export const FONT_FILES: readonly string[] = [
   'cinzel-variable.woff2',
   'dm-sans-variable.woff2',
   'newsreader-variable.woff2',
+  'newsreader-italic-variable.woff2',
+  'cormorant-garamond-italic-variable.woff2',
   'spectral-200.woff2',
   'spectral-300.woff2',
   'spectral-400.woff2',

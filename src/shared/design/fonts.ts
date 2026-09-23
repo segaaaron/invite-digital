@@ -151,6 +151,7 @@ export const newsreader = localFont({
   fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/newsreader-variable.woff2', weight: '300 500', style: 'normal' },
+    { path: '../../../public/fonts/newsreader-italic-variable.woff2', weight: '300 400', style: 'italic' },
   ],
 })
 
@@ -207,6 +208,8 @@ export const cormorantTheme = localFont({
     { path: '../../../public/fonts/cormorant-garamond-400.woff2', weight: '400', style: 'normal' },
     { path: '../../../public/fonts/cormorant-garamond-500.woff2', weight: '500', style: 'normal' },
     { path: '../../../public/fonts/cormorant-garamond-600.woff2', weight: '600', style: 'normal' },
+    // La cursiva, que la maqueta carga (300–500) y pintan el telón y las frases.
+    { path: '../../../public/fonts/cormorant-garamond-italic-variable.woff2', weight: '300 500', style: 'italic' },
   ],
 })
 
