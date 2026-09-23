@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { prefiereMenosMovimiento } from '../kit/motion'
 import { PALETA as P } from './boda-perla.palette'
 
 type Props = {
@@ -30,7 +29,6 @@ type Props = {
  */
 export function PerlaCover({ bgAsset, eyebrow, initials, names, fecha, cta, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
-  const [reducido] = useState(prefiereMenosMovimiento)
 
   if (abierta) return null
 
@@ -39,6 +37,7 @@ export function PerlaCover({ bgAsset, eyebrow, initials, names, fecha, cta, open
       aria-label={openLabel}
       data-portada=""
       onClick={() => setAbierta(true)}
+      className="theme-quieto-si-reduce"
       style={{
         position: 'fixed',
         inset: 0,
@@ -49,7 +48,7 @@ export function PerlaCover({ bgAsset, eyebrow, initials, names, fecha, cta, open
         width: '100%',
         overflow: 'hidden',
         background: P.marfil,
-        animation: reducido ? undefined : 'theme-introFade 800ms ease',
+        animation: 'theme-introFade 800ms ease',
       }}
       type="button"
     >
@@ -120,7 +119,8 @@ export function PerlaCover({ bgAsset, eyebrow, initials, names, fecha, cta, open
         </span>
         <span
           aria-hidden
-          style={{ display: 'block', marginTop: 8, fontSize: 17, animation: reducido ? undefined : 'theme-bounceDown 1.4s ease-in-out infinite' }}
+          className="theme-quieto-si-reduce"
+          style={{ display: 'block', marginTop: 8, fontSize: 17, animation: 'theme-bounceDown 1.4s ease-in-out infinite' }}
         >
           ↓
         </span>

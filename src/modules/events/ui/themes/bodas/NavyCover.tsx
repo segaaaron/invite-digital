@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { prefiereMenosMovimiento } from '../kit/motion'
 import { PALETA as P } from './boda-navy.palette'
 
 type Props = {
@@ -39,7 +38,6 @@ const RESPLANDOR = '0 0 15px rgba(197,150,26,0.6), 0 2px 4px rgba(0,0,0,0.8)'
  */
 export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
-  const [reducido] = useState(prefiereMenosMovimiento)
 
   if (abierta) return null
 
@@ -48,6 +46,7 @@ export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openL
       aria-label={openLabel}
       data-portada=""
       onClick={() => setAbierta(true)}
+      className="theme-quieto-si-reduce"
       style={{
         position: 'fixed',
         inset: 0,
@@ -58,33 +57,32 @@ export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openL
         width: '100%',
         overflow: 'hidden',
         background: P.marino,
-        animation: reducido ? undefined : 'theme-introFade 800ms ease',
+        animation: 'theme-introFade 800ms ease',
       }}
       type="button"
     >
       <Image alt="" aria-hidden fill priority sizes="480px" src={bgAsset} style={{ objectFit: 'cover' }} />
 
-      {reducido ? null : (
-        <span aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-          {MOTAS.map((mota) => (
-            <span
-              key={mota.izquierda}
-              style={{
-                position: 'absolute',
-                left: `${mota.izquierda}%`,
-                bottom: -10,
-                width: 4,
-                height: 4,
-                borderRadius: '50%',
-                background: '#f0d98a',
-                opacity: 0.5,
-                boxShadow: '0 0 4px #f0d98a',
-                animation: `theme-floatUp ${mota.duracion}s linear ${mota.retraso}s infinite`,
-              }}
-            />
-          ))}
-        </span>
-      )}
+      <span aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
+        {MOTAS.map((mota) => (
+          <span
+            className="theme-quieto-si-reduce"
+            key={mota.izquierda}
+            style={{
+              position: 'absolute',
+              left: `${mota.izquierda}%`,
+              bottom: -10,
+              width: 4,
+              height: 4,
+              borderRadius: '50%',
+              background: '#f0d98a',
+              opacity: 0.5,
+              boxShadow: '0 0 4px #f0d98a',
+              animation: `theme-floatUp ${mota.duracion}s linear ${mota.retraso}s infinite`,
+            }}
+          />
+        ))}
+      </span>
 
       <span
         style={{
@@ -147,7 +145,8 @@ export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openL
           </span>
           <span
             aria-hidden
-            style={{ display: 'block', marginTop: 8, fontSize: 16, animation: reducido ? undefined : 'theme-bounceDown 1.4s ease-in-out infinite' }}
+            className="theme-quieto-si-reduce"
+            style={{ display: 'block', marginTop: 8, fontSize: 16, animation: 'theme-bounceDown 1.4s ease-in-out infinite' }}
           >
             ↓
           </span>

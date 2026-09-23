@@ -151,11 +151,14 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     // El cumpleaños copia los botones de su maqueta: el «sí» en oro macizo **sin negrita** y
     // el «no» con la letra y el filete del mismo oro, no en el crema ni en el filete al 30 %.
     // Las Editorial, en cambio, lo llevan en negrita y el «no» con la tinta del diseño.
-    const LLENO = `border-[var(--color-cta)] bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : 'font-bold'}`
+    // El filete de las píldoras puede pedirlo el diseño (`--rsvp-borde`): «Glamour» las pinta
+    // huecas, con el «sí» transparente y un filete crema en las dos.
+    const FILETE = pildora ? 'border-[var(--rsvp-borde,var(--color-cta))]' : 'border-[var(--color-cta)]'
+    const LLENO = `${FILETE} bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : 'font-bold'}`
     const HUECO = oro
       ? 'border-[var(--color-cta)] text-[var(--color-cta)]'
       : pildora
-        ? 'border-[var(--color-cta)] text-ink'
+        ? `${FILETE} text-ink`
         : 'border-[var(--color-line)] text-ink'
     // Con el «sí» destacado de salida, lo que marca la elección es el otro botón: dejar
     // los dos llenos a la vez no diría cuál se eligió.
