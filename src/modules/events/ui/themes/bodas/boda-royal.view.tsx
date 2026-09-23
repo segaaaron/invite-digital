@@ -59,7 +59,7 @@ const ROTULOS = {
  * repite de fondo en toda la invitación, los bloques se separan con filetes de oro y el
  * itinerario va en una rejilla de tres columnas con un medallón por hito.
  */
-export function BodaRoyalView({ content, event, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+export function BodaRoyalView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
@@ -414,7 +414,6 @@ export function BodaRoyalView({ content, event, themes, slots, guestInfo, audioS
             sombra="rgba(184,134,11,0.3)"
           />
         </Reveal>
-        <div style={{ marginTop: 18 }}>{slots.photos}</div>
       </div>
 
       <div style={{ padding: '0 24px' }}>
@@ -514,6 +513,18 @@ export function BodaRoyalView({ content, event, themes, slots, guestInfo, audioS
             <div style={{ marginTop: 18 }}>{slots.rsvp}</div>
           </div>
         </Reveal>
+
+        {/* ── Comparte tus fotos, con su cámara: solo si el plan trae las fotos de invitados ── */}
+        {slots.photos === undefined ? null : (
+          <Reveal>
+            <div style={{ marginTop: 50, padding: '32px 24px', borderTop: `1.5px solid ${P.oro}`, textAlign: 'center' }}>
+              <Arte ancho={200} estilo={{ width: '45%', margin: '0 auto' }} src={themeAsset('boda-royal', 'camara.avif')} />
+              <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.borgona, marginTop: 20 }}>{dictionary.photosTitle}</p>
+              <p style={{ fontFamily: SERIF, fontSize: 19.8, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.tinta }}>{dictionary.photosIntro}</p>
+              <div style={{ marginTop: 22 }}>{slots.photos}</div>
+            </div>
+          </Reveal>
+        )}
 
         {/* ── El libro de firmas ── */}
         <Reveal>

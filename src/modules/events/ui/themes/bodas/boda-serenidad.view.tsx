@@ -58,7 +58,7 @@ const ROTULOS = {
  * bloques se separan con la cenefa floral, que alterna su reflejo, y sobre toda la
  * invitación caen treinta y dos pétalos blancos.
  */
-export function BodaSerenidadView({ content, event, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+export function BodaSerenidadView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
@@ -378,7 +378,6 @@ export function BodaSerenidadView({ content, event, themes, slots, guestInfo, au
             sombra="rgba(184,150,12,0.3)"
           />
         </Reveal>
-        <div style={{ marginTop: 18 }}>{slots.photos}</div>
       </div>
 
       <Cenefa />
@@ -481,6 +480,21 @@ export function BodaSerenidadView({ content, event, themes, slots, guestInfo, au
             <div style={{ marginTop: 18 }}>{slots.rsvp}</div>
           </div>
         </Reveal>
+
+        {/* ── Comparte tus fotos, con su cámara: solo si el plan trae las fotos de invitados ── */}
+        {slots.photos === undefined ? null : (
+          <>
+            <Cenefa />
+            <Reveal>
+              <div style={{ marginTop: 8, padding: '32px 24px', textAlign: 'center' }}>
+                <Arte ancho={220} estilo={{ margin: '0 auto' }} src={themeAsset('boda-serenidad', 'camara.avif')} />
+                <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.titular, marginTop: 20 }}>{dictionary.photosTitle}</p>
+                <p style={{ fontFamily: SERIF, fontSize: 16, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.tinta }}>{dictionary.photosIntro}</p>
+                <div style={{ marginTop: 22 }}>{slots.photos}</div>
+              </div>
+            </Reveal>
+          </>
+        )}
 
         <Cenefa />
 

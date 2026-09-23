@@ -139,8 +139,14 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
   if (variant === 'botones' || variant === 'botones-oro' || variant === 'pildoras') {
     const oro = variant === 'botones-oro'
     const pildora = variant === 'pildoras'
-    const BOTON = `flex-1 border px-0 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200 ${
-      pildora ? 'rounded-[20px] border-[1.5px] py-[14px]' : oro ? 'rounded-[4px] border-[1.5px] py-[13px]' : 'rounded-[4px] py-3.5'
+    // Las píldoras toman su tamaño del diseño (`--rsvp-py`, `--rsvp-fs`): «Perla» y «Boho»
+    // las piden algo más grandes que las demás Editorial.
+    const BOTON = `flex-1 border px-0 font-mono tracking-[0.28em] transition-colors duration-200 ${
+      pildora
+        ? 'rounded-[20px] border-[1.5px] py-[var(--rsvp-py,14px)] text-[length:var(--rsvp-fs,10px)]'
+        : oro
+          ? 'rounded-[4px] border-[1.5px] py-[13px] text-[10px]'
+          : 'rounded-[4px] py-3.5 text-[10px]'
     }`
     // El cumpleaños copia los botones de su maqueta: el «sí» en oro macizo **sin negrita** y
     // el «no» con la letra y el filete del mismo oro, no en el crema ni en el filete al 30 %.

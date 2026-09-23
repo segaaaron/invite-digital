@@ -341,3 +341,17 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
 .invitacion-marco:has([data-portada]) {
   overflow: hidden;
 }
+
+/*
+ * Las piezas que flotan (`floatIcon` de las maquetas: iglesia, copas, regalo, cámara…) y las
+ * hojas o pétalos que caen con su animación en línea. Con movimiento reducido se quedan quietas.
+ */
+.theme-flota {
+  animation: theme-floatIcon 3.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-flota,
+  .theme-quieto-si-reduce {
+    animation: none !important;
+  }
+}
