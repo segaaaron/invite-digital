@@ -109,7 +109,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Editorial - Pearl Frame',
     palette: { base: '#ede0c8', accent: '#d4b678' },
     sample: { monogram: 'E & G', names: 'Emma\n& Gael', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
+  },  {
+    key: 'boda-boho',
+    listo: true,
+    categorySlug: 'boda',
+    es: 'Editorial - Pampas y Flores Secas',
+    en: 'Editorial - Pampas and Dried Flowers',
+    palette: { base: '#f5ead9', accent: '#b8795a' },
+    sample: { monogram: 'S & O', names: 'Sara\n& Óscar', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
   },
+
 
 
   {
