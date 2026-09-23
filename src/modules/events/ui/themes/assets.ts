@@ -149,6 +149,9 @@ export const THEME_ASSETS = {
     'esquina-rosa.avif',
     'ramo-naranja.avif',
   ],
+  'xv-princ': [
+    'quinceanera.avif',
+  ],
   'boda-serenidad': [
     'portada-flores.avif',
     'pareja-1.avif',
