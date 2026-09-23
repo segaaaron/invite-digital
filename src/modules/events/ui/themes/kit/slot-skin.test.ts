@@ -73,7 +73,7 @@ describe('las vistas de los diseños', () => {
     .filter(({ ruta }) => existsSync(ruta))
 
   it('están todas, para que la prueba no pase por no mirar nada', () => {
-    expect(vistas).toHaveLength(29)
+    expect(vistas).toHaveLength(30)
   })
 
   it.each(vistas)('«$clave» le presta su paleta a las ranuras', ({ ruta }) => {

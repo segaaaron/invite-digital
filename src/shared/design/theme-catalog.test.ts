@@ -36,6 +36,7 @@ const A_LA_VENTA = [
   'xv-vogue',
   'xv-y2k',
   'xv-boho',
+  'xv-min',
 ] as const
 
 /** Lo portado que todavía no se vende: el cumpleaños, hasta que el usuario lo publique. */

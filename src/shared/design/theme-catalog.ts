@@ -306,7 +306,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Bohemian',
     palette: { base: '#f7ede0', accent: '#a8734a' },
     sample: { monogram: 'R', names: 'Renata', dateLabel: '24 · 10 · 2026', venue: 'Jardín Las Lomas' },
+  },  {
+    key: 'xv-min',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Editorial',
+    en: 'Editorial',
+    palette: { base: '#f4f4f1', accent: '#7c5cff' },
+    sample: { monogram: 'S', names: 'Sofía', dateLabel: '21 · 11 · 2026', venue: 'Hacienda Lavanda' },
   },
+
 
 
 
