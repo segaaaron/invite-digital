@@ -117,7 +117,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Editorial - Pampas and Dried Flowers',
     palette: { base: '#f5ead9', accent: '#b8795a' },
     sample: { monogram: 'S & O', names: 'Sara\n& Óscar', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
+  },  {
+    key: 'boda-glamour',
+    listo: true,
+    categorySlug: 'boda',
+    es: 'Glamour - Íconos 3D',
+    en: 'Glamour - 3D Icons',
+    palette: { base: '#3a0015', accent: '#c5963a' },
+    sample: { monogram: 'V & N', names: 'Valeria\n& Nicolas', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
   },
+
 
 
 
