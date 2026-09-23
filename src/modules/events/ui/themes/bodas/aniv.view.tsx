@@ -39,7 +39,7 @@ const ROTULOS = {
    */
   cover: '50 AÑOS DE AMOR',
   coverEyebrow: 'ESTÁS INVITADO',
-  coverHeadline: 'Algo inolvidable',
+  coverHeadline: 'Algo\ninolvidable',
   gifts: 'NUESTRO MEJOR REGALO',
   guestbook: 'DEDÍCALES UNAS PALABRAS',
 } as const

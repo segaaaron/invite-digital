@@ -161,6 +161,8 @@ export function EnvelopeCover({
                 fontSize: 56,
                 lineHeight: 1,
                 color: textColor,
+                // «Algo / inolvidable» va en dos líneas, como el `<br/>` de la maqueta.
+                whiteSpace: 'pre-line',
               }}
             >
               {headline}
@@ -201,7 +203,7 @@ export function EnvelopeCover({
                 marginTop: 14,
                 fontFamily: headlineFont ?? 'var(--font-jetbrains-mono)',
                 fontWeight: 700,
-                fontSize: 64,
+                fontSize: 72,
                 lineHeight: 0.9,
                 letterSpacing: '-0.04em',
                 color: textColor,
@@ -216,7 +218,8 @@ export function EnvelopeCover({
                 padding: '10px 22px',
                 border: `1px solid ${accent}`,
                 background: accent,
-                color: bg,
+                // Negro sobre el acento, siempre: es lo que pinta la maqueta.
+                color: 'black',
                 fontFamily: 'var(--font-jetbrains-mono)',
                 fontSize: 10,
                 fontWeight: 600,
