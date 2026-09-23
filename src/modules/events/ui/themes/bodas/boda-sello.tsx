@@ -17,7 +17,7 @@ export const bodaSelloDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['cormorant', 'greatVibes', 'bodoniModa', 'jetbrainsMono'],
-  rsvp: 'campos',
+  rsvp: 'uniformes',
   pinta: {
     // Este diseño no tiene galería: sus fotografías son las del arte, a sangre. Lo que sí
     // pide es el retrato de la pareja... que también es del diseño, así que ninguna casilla.

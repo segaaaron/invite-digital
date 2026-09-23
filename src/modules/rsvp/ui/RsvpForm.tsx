@@ -31,8 +31,12 @@ type Props = {
    * `pildoras` es el de las Editorial (`primarySecondary` en su maqueta): dos píldoras, el
    * «sí» macizo en el acento y en negrita desde el principio, el «no» con su filete. Sin el
    * saludo: esos diseños pintan justo encima el nombre del invitado y sus pases.
+   *
+   * `uniformes` es el de «Sobre Lacrado» (`uniformBg` en su maqueta): los dos botones iguales,
+   * con un velo y un filete que pone el diseño (`--rsvp-fondo`, `--rsvp-borde`), en
+   * Cormorant; al elegir, el otro se atenúa. Tampoco lleva saludo.
    */
-  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | undefined
+  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | undefined
   /**
    * El nombre del invitado, que ya se sabe: cada enlace es de alguien. Se manda oculto con
    * la respuesta, para que la pareja lea quién contestó sin pedírselo otra vez.
@@ -136,17 +140,20 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     )
   }
 
-  if (variant === 'botones' || variant === 'botones-oro' || variant === 'pildoras') {
+  if (variant === 'botones' || variant === 'botones-oro' || variant === 'pildoras' || variant === 'uniformes') {
     const oro = variant === 'botones-oro'
     const pildora = variant === 'pildoras'
+    const uniforme = variant === 'uniformes'
     // Las píldoras toman su tamaño del diseño (`--rsvp-py`, `--rsvp-fs`): «Perla» y «Boho»
     // las piden algo más grandes que las demás Editorial.
-    const BOTON = `flex-1 border px-0 font-mono tracking-[0.28em] transition-colors duration-200 ${
-      pildora
-        ? 'rounded-[20px] border-[1.5px] py-[var(--rsvp-py,14px)] text-[length:var(--rsvp-fs,10px)]'
+    const BOTON = `flex-1 border px-0 tracking-[0.28em] transition-colors duration-200 ${
+      uniforme
+        ? 'rounded-[10px] border-[1.5px] py-[18px] [font-family:var(--font-cormorant)] text-[15px] font-semibold'
+        : pildora
+        ? 'rounded-[20px] border-[1.5px] py-[var(--rsvp-py,14px)] font-mono text-[length:var(--rsvp-fs,10px)]'
         : oro
-          ? 'rounded-[4px] border-[1.5px] py-[13px] text-[10px]'
-          : 'rounded-[4px] py-3.5 text-[10px]'
+          ? 'rounded-[4px] border-[1.5px] py-[13px] font-mono text-[10px]'
+          : 'rounded-[4px] py-3.5 font-mono text-[10px]'
     }`
     // El cumpleaños copia los botones de su maqueta: el «sí» en oro macizo **sin negrita** y
     // el «no» con la letra y el filete del mismo oro, no en el crema ni en el filete al 30 %.
@@ -163,16 +170,20 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     // Con el «sí» destacado de salida, lo que marca la elección es el otro botón: dejar
     // los dos llenos a la vez no diría cuál se eligió.
     const siLleno = oro || pildora ? !respondido || viene : viene && respondido
+    // Los uniformes no se llenan: se atenúa el que no se eligió.
+    const UNIFORME = 'border-[var(--rsvp-borde,var(--color-cta))] bg-[var(--rsvp-fondo,transparent)] text-ink'
+    const claseSi = uniforme ? `${BOTON} ${UNIFORME}${respondido && !viene ? ' opacity-60' : ''}` : `${BOTON} ${siLleno ? LLENO : HUECO}`
+    const claseNo = uniforme ? `${BOTON} ${UNIFORME}${respondido && viene ? ' opacity-60' : ''}` : `${BOTON} ${!viene && respondido ? LLENO : HUECO}`
     return (
       <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
         <input name="token" type="hidden" value={token} readOnly />
         <input name="attending" type="hidden" value={viene ? String(cuantos) : '0'} readOnly />
         <input name="name" type="hidden" value={guestName} readOnly />
-        {oro || pildora ? null : <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />}
+        {oro || pildora || uniforme ? null : <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />}
 
         <div className="flex gap-2">
           <button
-            className={`${BOTON} ${siLleno ? LLENO : HUECO}`}
+            className={claseSi}
             onClick={() => {
               setViene(true)
               setRespondido(true)
@@ -182,7 +193,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
             {dictionary.goingYesShort}
           </button>
           <button
-            className={`${BOTON} ${!viene && respondido ? LLENO : HUECO}`}
+            className={claseNo}
             onClick={() => {
               setViene(false)
               setRespondido(true)
@@ -227,7 +238,11 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
 
         {respondido ? (
           <button
-            className="rounded-[4px] bg-[var(--color-cta)] px-0 py-3.5 font-mono text-[10px] font-semibold tracking-[0.3em] text-[var(--color-on-cta)] disabled:opacity-60"
+            className={
+              uniforme
+                ? 'rounded-[10px] bg-[var(--rsvp-fondo,transparent)] px-0 py-[17px] [font-family:var(--font-cormorant)] text-[15px] font-semibold tracking-[0.3em] text-ink disabled:opacity-60'
+                : 'rounded-[4px] bg-[var(--color-cta)] px-0 py-3.5 font-mono text-[10px] font-semibold tracking-[0.3em] text-[var(--color-on-cta)] disabled:opacity-60'
+            }
             disabled={rsvp.isPending}
             type="submit"
           >

@@ -86,6 +86,9 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
     <article
       style={{
         ...RANURAS,
+        // Los dos botones iguales del RSVP (`uniformBg` en la maqueta): velo vino y filete de oro.
+        ['--rsvp-fondo' as string]: 'rgba(90,30,51,0.06)',
+        ['--rsvp-borde' as string]: P.oro,
         position: 'relative',
         background: P.crema,
         color: P.vino,

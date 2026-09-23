@@ -116,6 +116,22 @@ describe('RsvpForm', () => {
     expect(screen.getByRole('button', { name: invitation.goingYesShort }).className).not.toContain('bg-[var(--color-cta)]')
   })
 
+  it('con «uniformes» los dos botones son iguales y el que no se eligió se atenúa', () => {
+    // «Sobre Lacrado»: dos botones con el mismo velo y el mismo filete, en Cormorant, y sin el
+    // saludo, que el diseño ya pinta en su tarjeta del invitado.
+    pinta({ variant: 'uniformes' })
+    expect(screen.queryByText('Invitación para')).not.toBeInTheDocument()
+    const si = screen.getByRole('button', { name: invitation.goingYesShort })
+    const no = screen.getByRole('button', { name: invitation.goingNoShort })
+    expect(si.className).toBe(no.className)
+    expect(si.className).toContain('rounded-[10px]')
+
+    fireEvent.click(no)
+    expect(si.className).toContain('opacity-60')
+    expect(no.className).not.toContain('opacity-60')
+    expect(screen.getByRole('button', { name: invitation.submitLong }).className).toContain('rounded-[10px]')
+  })
+
   it('con «botones-oro» da las gracias y no anuncia pase: ese diseño no lo tiene', async () => {
     // El cumpleaños no controla la entrada con un QR, así que su invitación no pinta la
     // ranura del pase: anunciarlo mandaría a buscar más abajo algo que no está.
