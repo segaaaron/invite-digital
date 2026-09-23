@@ -282,7 +282,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Crystal Royalty',
     palette: { base: '#eaf3fb', accent: '#5a9fd4' },
     sample: { monogram: 'C', names: 'Camila', dateLabel: '12 · 12 · 2026', venue: 'Salón Castillo Azul' },
+  },  {
+    key: 'xv-vogue',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Rosa Pastel',
+    en: 'Pastel Pink',
+    palette: { base: '#0f0d0f', accent: '#d4566c' },
+    sample: { monogram: 'I', names: 'Isabela', dateLabel: '19 · 09 · 2026', venue: 'Salón Rosa Vogue' },
   },
+
 
 
 
