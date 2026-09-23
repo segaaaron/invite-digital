@@ -95,6 +95,10 @@ export function EsenciaView({ content, event, themes, slots, audioSrc }: ThemePr
         retrato={hero?.portraitImageId === undefined ? themeAsset('esencia', 'pareja-1.avif') : `/media/${hero.portraitImageId}`}
       />
 
+      {/* Los nombres solo se pintan en la portada, que es un botón: el titular de la página va
+          para lectores de pantalla. */}
+      <h1 className="sr-only">{[hero?.nameA, hero?.nameB].filter(Boolean).join(' & ')}</h1>
+
       {/* El papel de lino: dos tramas cruzadas al 1,5 %, como en la maqueta. */}
       <div
         aria-hidden

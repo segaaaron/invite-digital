@@ -166,8 +166,8 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
           aria-hidden
           style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 180, background: `linear-gradient(180deg, transparent 0%, ${P.rosa} 92%)` }}
         />
-        <span style={{ position: 'absolute', bottom: 20, left: 32, right: 32, textAlign: 'left' }}>
-          <span style={{ display: 'block', fontFamily: SERIF, fontStyle: 'italic', fontWeight: 200, fontSize: 64, lineHeight: 0.9, color: P.borgona }}>
+        <div style={{ position: 'absolute', bottom: 20, left: 32, right: 32, textAlign: 'left' }}>
+          <h1 style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 200, fontSize: 64, lineHeight: 0.9, color: P.borgona }}>
             {hero?.nameA}
             {hero?.nameB === undefined ? null : (
               <>
@@ -175,13 +175,13 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
                 <span style={{ fontStyle: 'normal', fontWeight: 400 }}>&amp; {hero.nameB}</span>
               </>
             )}
-          </span>
+          </h1>
           {hero?.serial === undefined ? null : (
             <span style={{ display: 'block', marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oroHondo }}>
               {hero.serial}
             </span>
           )}
-        </span>
+        </div>
       </div>
 
       {/* ── La cuenta atrás ── */}

@@ -81,7 +81,7 @@ export function XvDecoView({ content, event, themes, slots, audioSrc }: ThemePro
         </Reveal>
         <Reveal>
           <div style={{ textAlign: 'center', marginTop: 4 }}>
-            <p style={{ fontFamily: ITALIANA, fontSize: 60, letterSpacing: '0.04em' }}>{hero?.nameA}</p>
+            <h1 style={{ fontFamily: ITALIANA, fontSize: 60, letterSpacing: '0.04em' }}>{hero?.nameA}</h1>
             <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.4em', color: P.oro, marginTop: 10 }}>
               · {ROTULOS.xvAnos}
               {fechaCorta === '' ? '' : ` · ${fechaCorta}`} ·

@@ -146,7 +146,7 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
         <div style={{ position: 'relative', borderRadius: 18, border: `1.5px solid ${P.oro}`, overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: 22, left: 0, right: 0, textAlign: 'center', zIndex: 2 }}>
             <p style={{ fontFamily: SANS, fontSize: 12, letterSpacing: '0.28em' }}>{ROTULOS.nuestraBoda}</p>
-            <p style={{ fontFamily: CALIGRAFIA, fontSize: 34, marginTop: 2 }}>{nombres}</p>
+            <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 34, marginTop: 2 }}>{nombres}</h1>
           </div>
           <span style={{ position: 'relative', display: 'block', width: '82%', margin: '70px auto 0' }}>
             <Image

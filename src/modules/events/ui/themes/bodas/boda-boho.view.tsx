@@ -166,10 +166,9 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
             maskComposite: 'intersect',
           }}
         />
-        <span style={{ position: 'absolute', bottom: 20, left: 32, right: 32, textAlign: 'left' }}>
-          <span
+        <div style={{ position: 'absolute', bottom: 20, left: 32, right: 32, textAlign: 'left' }}>
+          <h1
             style={{
-              display: 'block',
               fontFamily: SERIF,
               fontStyle: 'italic',
               fontWeight: 200,
@@ -186,7 +185,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
                 <span style={{ fontStyle: 'normal', fontWeight: 400 }}>&amp; {hero.nameB}</span>
               </>
             )}
-          </span>
+          </h1>
           {hero?.serial === undefined ? null : (
             <span
               style={{
@@ -202,7 +201,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
               {hero.serial}
             </span>
           )}
-        </span>
+        </div>
       </div>
 
       {/* ── El reloj y la cuenta atrás ── */}

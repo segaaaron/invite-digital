@@ -73,7 +73,7 @@ export function XvBohoView({ content, event, themes, slots, audioSrc }: ThemePro
         </Reveal>
         <Reveal>
           <div style={{ textAlign: 'center', marginTop: 18 }}>
-            <p style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 74, lineHeight: 0.95 }}>{hero?.nameA}</p>
+            <h1 style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 74, lineHeight: 0.95 }}>{hero?.nameA}</h1>
             {fecha === '' ? null : <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', marginTop: 10 }}>{fecha}</p>}
           </div>
         </Reveal>

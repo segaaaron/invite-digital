@@ -127,7 +127,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       <Seccion estilo={{ padding: '0 26px 68px' }}>
         <FotoConOnda alto={560} posicion="20% 15%" src={themeAsset('boda-sello', 'pareja-fecha.avif')} />
         <div style={{ textAlign: 'center', marginTop: -8, marginBottom: 8 }}>
-          <p style={{ fontFamily: CALIGRAFIA, fontSize: 44, lineHeight: 1.1, color: P.vino }}>{nombres}</p>
+          <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 44, lineHeight: 1.1, color: P.vino }}>{nombres}</h1>
         </div>
         <div style={{ textAlign: 'center' }}>
           <Rotulo color={P.rosa}>{diaSemana}</Rotulo>

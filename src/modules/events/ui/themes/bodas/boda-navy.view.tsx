@@ -146,8 +146,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
           aria-hidden
           style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: 140, background: `linear-gradient(180deg, transparent 0%, ${P.marino} 90%)` }}
         />
-        <span style={{ position: 'absolute', bottom: 20, left: 32, right: 32, textAlign: 'left' }}>
-          <span style={{ display: 'block', fontFamily: SERIF, fontStyle: 'italic', fontWeight: 200, fontSize: 64, lineHeight: 0.9, color: P.oro }}>
+        <div style={{ position: 'absolute', bottom: 20, left: 32, right: 32, textAlign: 'left' }}>
+          <h1 style={{ fontFamily: SERIF, fontStyle: 'italic', fontWeight: 200, fontSize: 64, lineHeight: 0.9, color: P.oro }}>
             {hero?.nameA}
             {hero?.nameB === undefined ? null : (
               <>
@@ -155,13 +155,13 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
                 <span style={{ fontStyle: 'normal', fontWeight: 400 }}>&amp; {hero.nameB}</span>
               </>
             )}
-          </span>
+          </h1>
           {hero?.serial === undefined ? null : (
             <span style={{ display: 'block', marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oroPalido }}>
               {hero.serial}
             </span>
           )}
-        </span>
+        </div>
       </div>
 
       <div style={{ padding: '32px 24px 0' }}>

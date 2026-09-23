@@ -98,7 +98,7 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
         </Reveal>
 
         <Reveal>
-          <p style={{ textAlign: 'center', marginTop: 4, fontFamily: CALIGRAFIA, fontSize: 62 }}>{nombre}</p>
+          <h1 style={{ textAlign: 'center', marginTop: 4, fontFamily: CALIGRAFIA, fontSize: 62 }}>{nombre}</h1>
         </Reveal>
 
         <Reveal delay={100}>

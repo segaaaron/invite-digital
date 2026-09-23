@@ -135,9 +135,9 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
       <div style={{ padding: '10px 24px 0' }}>
         <div style={{ textAlign: 'center', paddingBottom: 18 }}>
           <p style={{ fontFamily: SERIF, fontSize: 56, fontWeight: 200, lineHeight: 0.95, color: P.titular }}>{ROTULOS.nuestraBoda}</p>
-          <p style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', marginTop: 2, color: P.medio }}>
+          <h1 style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.5em', marginTop: 2, color: P.medio }}>
             · {nombres.toUpperCase()} ·
-          </p>
+          </h1>
           {fechaLarga === '' ? null : (
             <p style={{ fontFamily: MONO, fontSize: 13.5, letterSpacing: '0.3em', marginTop: 8, fontWeight: 600, color: P.tinta }}>{fechaLarga}</p>
           )}

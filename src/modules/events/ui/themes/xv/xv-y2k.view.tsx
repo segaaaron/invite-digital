@@ -139,7 +139,7 @@ export function XvY2kView({ content, themes, slots, audioSrc }: ThemeProps) {
                 {ROTULOS.xv}
               </span>
             </span>
-            <p style={{ fontFamily: ITALIANA, fontStyle: 'italic', fontSize: 36, marginTop: 6 }}>{nombre}</p>
+            <h1 style={{ fontFamily: ITALIANA, fontStyle: 'italic', fontSize: 36, marginTop: 6 }}>{nombre}</h1>
             <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.rosa, marginTop: 8 }}>
               ★ {ROTULOS.misXv}
               {fechaCorta === '' ? '' : ` · ${fechaCorta}`} ★

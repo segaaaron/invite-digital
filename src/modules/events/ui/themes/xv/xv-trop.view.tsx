@@ -70,7 +70,7 @@ export function XvTropView({ content, themes, slots, audioSrc }: ThemeProps) {
         </Reveal>
         <Reveal>
           <div style={{ textAlign: 'center', marginTop: 6 }}>
-            <p style={{ fontFamily: ITALIANA, fontSize: 64 }}>{nombre}</p>
+            <h1 style={{ fontFamily: ITALIANA, fontSize: 64 }}>{nombre}</h1>
             <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', marginTop: 8, textTransform: 'uppercase' }}>
               {ROTULOS.misXv}
               {hero?.eyebrow === undefined ? '' : ` · ${hero.eyebrow}`}

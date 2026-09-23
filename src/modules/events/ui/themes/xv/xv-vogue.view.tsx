@@ -97,7 +97,7 @@ export function XvVogueView({ content, themes, slots, guestInfo, audioSrc }: The
             >
               {ROTULOS.xv}
             </p>
-            <p style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 46, marginTop: 6 }}>{nombre}</p>
+            <h1 style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 46, marginTop: 6 }}>{nombre}</h1>
           </div>
         </Reveal>
         <Reveal delay={100}>

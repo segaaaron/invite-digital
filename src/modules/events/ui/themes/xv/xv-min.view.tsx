@@ -122,11 +122,11 @@ export function XvMinView({ content, event, themes, slots, respondida }: ThemePr
 
         <Reveal>
           <div style={{ marginTop: 28, textAlign: 'left' }}>
-            <p style={{ fontFamily: SPECTRAL, fontSize: 96, fontWeight: 200, lineHeight: 0.9, letterSpacing: '-0.04em' }}>
+            <h1 style={{ fontFamily: SPECTRAL, fontSize: 96, fontWeight: 200, lineHeight: 0.9, letterSpacing: '-0.04em' }}>
               {ROTULOS.titular}
               <br />
               <span style={{ fontStyle: 'italic', color: P.iris }}>{nombre}.</span>
-            </p>
+            </h1>
             {fechaLarga === '' ? null : <p style={{ marginTop: 14, fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em' }}>{fechaLarga}</p>}
           </div>
         </Reveal>

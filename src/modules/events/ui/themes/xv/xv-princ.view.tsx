@@ -100,7 +100,7 @@ export function XvPrincView({ content, event, themes, slots, audioSrc }: ThemePr
         </Reveal>
         <Reveal>
           <div style={{ textAlign: 'center', marginTop: 8 }}>
-            <p style={{ fontFamily: CALIGRAFIA, fontSize: 80, lineHeight: 0.9, fontWeight: 400 }}>{hero?.nameA}</p>
+            <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 80, lineHeight: 0.9, fontWeight: 400 }}>{hero?.nameA}</h1>
             <p style={{ fontStyle: 'italic', fontSize: 22, color: P.frambuesa, margin: '8px 0', letterSpacing: '0.2em' }}>
               {ROTULOS.cumple} <span style={{ fontSize: 36, color: P.ciruela, fontStyle: 'normal' }}>{ROTULOS.xv}</span> {ROTULOS.anios}
             </p>

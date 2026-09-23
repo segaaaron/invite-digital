@@ -137,7 +137,7 @@ export function XvElegView({ content, event, themes, slots, audioSrc, respondida
             </div>
           </Reveal>
           <Reveal>
-            <p style={{ textAlign: 'center', marginTop: 6, fontFamily: CALIGRAFIA, fontSize: 60, color: P.oro }}>{nombre}</p>
+            <h1 style={{ textAlign: 'center', marginTop: 6, fontFamily: CALIGRAFIA, fontSize: 60, color: P.oro }}>{nombre}</h1>
           </Reveal>
           <Reveal delay={100}>
             <div style={{ position: 'relative', margin: '26px auto 0', width: 230, height: 260 }}>

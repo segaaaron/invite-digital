@@ -103,14 +103,15 @@ function desbordanLaColumna(tope: number): string[] {
 }
 
 test.describe('el escaparate de modelos', () => {
-  test('lista los diecisiete diseños portados de la colección', () => {
+  test('lista los treinta y cuatro diseños portados de la colección', () => {
     // Si algún día se publica uno sin portar, esta suite recorre uno más y falla al
     // abrirlo. Es lo que impide que el número se desajuste en silencio.
     //
-    // Son diecisiete y la web vende dieciséis: «cumple-beer» está portado y todavía no se
-    // vende, así que se abre por su dirección —el panel enlaza a ella— y no sale en el
-    // catálogo. Lo comprueba la última prueba de este archivo.
-    expect(CLAVES).toHaveLength(17)
+    // Son treinta y cuatro —dieciséis bodas, diecisiete XV y el cumpleaños— y la web vende
+    // treinta y tres: «cumple-beer» está portado y todavía no se vende, así que se abre por
+    // su dirección —el panel enlaza a ella— y no sale en el catálogo. Lo comprueba la
+    // última prueba de este archivo.
+    expect(CLAVES).toHaveLength(34)
   })
 
   for (const clave of CLAVES) {
@@ -199,6 +200,10 @@ test.describe('los modelos, dentro del teléfono', () => {
       await page.setViewportSize({ width: 1440, height: 900 })
       await page.goto(`/modelos/es/${clave}`)
       await page.waitForLoadState('networkidle')
+      // Con la portada puesta el marco no se desplaza a propósito (`data-portada` en
+      // `keyframes.css`): se mide con la invitación abierta, que es lo que se recorre.
+      await page.locator('[data-portada]').first().click()
+      await expect(page.locator('[data-portada]'), clave).toHaveCount(0)
 
       const marco = await page.evaluate(() => {
         const nodo = document.querySelector('.theme-phone-frame')
