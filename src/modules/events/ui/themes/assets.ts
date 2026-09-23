@@ -141,6 +141,10 @@ export const THEME_ASSETS = {
     'tacon-y-corbata.avif',
     'regalo.avif',
   ],
+  'xv-realeza': [
+    'patron.avif',
+    'carruaje.avif',
+  ],
   'boda-serenidad': [
     'portada-flores.avif',
     'pareja-1.avif',

@@ -274,7 +274,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Art Deco',
     palette: { base: '#12100c', accent: '#d4af55' },
     sample: { monogram: 'A', names: 'Alessandra', dateLabel: '07 · 11 · 2026', venue: 'Gran Salón Imperial' },
+  },  {
+    key: 'xv-realeza',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Realeza Cristal',
+    en: 'Crystal Royalty',
+    palette: { base: '#eaf3fb', accent: '#5a9fd4' },
+    sample: { monogram: 'C', names: 'Camila', dateLabel: '12 · 12 · 2026', venue: 'Salón Castillo Azul' },
   },
+
 
 
   // ─────────── CUMPLEAÑOS ───────────
