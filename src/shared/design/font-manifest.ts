@@ -33,6 +33,7 @@ export type FontKey =
   | 'playfairDisplay'
   | 'outfit'
   | 'bodoniModa'
+  | 'montserrat'
 
 export const FONT_VARIABLES = {
   cormorant: '--font-cormorant',
@@ -50,6 +51,7 @@ export const FONT_VARIABLES = {
   playfairDisplay: '--font-playfair-display',
   outfit: '--font-outfit',
   bodoniModa: '--font-bodoni-moda',
+  montserrat: '--font-montserrat',
 } as const satisfies Record<FontKey, string>
 
 /**
@@ -75,13 +77,17 @@ export const FONT_FALLBACKS = {
   outfit: ['Avenir Next', 'Helvetica Neue', 'Arial', 'sans-serif'],
   // Didona de contraste alto: detrás, las que más se le parecen.
   bodoniModa: ['Didot', 'Bodoni MT', 'Georgia', 'serif'],
+  montserrat: ['Helvetica Neue', 'Arial', 'sans-serif'],
 } as const satisfies Record<FontKey, readonly string[]>
 
 /**
  * Los ficheros que `fonts.ts` carga, para poder comprobar que están.
  *
  * Spectral va en tres pesos sueltos y no como variable: Google no publica eje variable
- * para esa familia. Se comprobó pidiéndolo.
+ * para esa familia. Se comprobó pidiéndolo. Son **los seis que carga la maqueta**
+ * (200, 300 y 400, rectos y en cursiva) y ni uno más: lo que ella pide en 500 se pinta en
+ * 400, y lo de 600 para arriba en negrita sintética. Con los pesos de verdad, la frase y
+ * las cifras salían más gruesas que en el diseño.
  */
 export const FONT_FILES: readonly string[] = [
   'cormorant-garamond-300.woff2',
@@ -101,7 +107,12 @@ export const FONT_FILES: readonly string[] = [
   'spectral-200.woff2',
   'spectral-300.woff2',
   'spectral-400.woff2',
+  'spectral-200-italic.woff2',
+  'spectral-300-italic.woff2',
+  'spectral-400-italic.woff2',
   'playfair-display-600-italic.woff2',
+  'playfair-display-700.woff2',
+  'montserrat-variable.woff2',
   'outfit-variable.woff2',
   'bodoni-moda-italic-variable.woff2',
 ]

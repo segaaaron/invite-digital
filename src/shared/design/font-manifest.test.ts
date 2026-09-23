@@ -6,9 +6,9 @@ import { FONT_FILES, FONT_VARIABLES, type FontKey } from './font-manifest'
 describe('las tipografías de los temas de invitación', () => {
   it('declara una variable CSS por familia', () => {
     // Las que piden los diseños de invitación. Crece con la colección: Outfit entró con
-    // «Esencia» y Bodoni Moda con «Sobre Lacrado». Jost no está: es de la web pública
-    // marfil y no la usa ningún tema.
-    expect(Object.keys(FONT_VARIABLES)).toHaveLength(15)
+    // «Esencia», Bodoni Moda con «Sobre Lacrado» y Montserrat con «Noche Estrellada». Jost
+    // no está: es de la web pública marfil y no la usa ningún tema.
+    expect(Object.keys(FONT_VARIABLES)).toHaveLength(16)
     for (const variable of Object.values(FONT_VARIABLES)) {
       expect(variable).toMatch(/^--font-[a-z-]+$/)
     }

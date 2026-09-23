@@ -93,7 +93,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Editorial - Royal Blush',
     palette: { base: '#f5d6d0', accent: '#8b2252' },
     sample: { monogram: 'R & P', names: 'Renata\n& Pablo', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
+  },  {
+    key: 'boda-navy',
+    listo: true,
+    categorySlug: 'boda',
+    es: 'Editorial - Noche Estrellada',
+    en: 'Editorial - Starry Night',
+    palette: { base: '#0a1628', accent: '#c5963a' },
+    sample: { monogram: 'M & A', names: 'Maya\n& Anderson', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
   },
+
   {
     key: 'boda-ed',
     listo: true,

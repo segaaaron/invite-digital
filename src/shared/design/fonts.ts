@@ -167,7 +167,10 @@ export const playfairDisplay = localFont({
   variable: '--font-playfair-display',
   display: 'swap',
   fallback: ['Cormorant Garamond', 'Georgia', 'serif'],
-  src: [{ path: '../../../public/fonts/playfair-display-600-italic.woff2', weight: '600', style: 'italic' }],
+  src: [
+    { path: '../../../public/fonts/playfair-display-600-italic.woff2', weight: '600', style: 'italic' },
+    { path: '../../../public/fonts/playfair-display-700.woff2', weight: '700', style: 'normal' },
+  ],
 })
 
 export const spectral = localFont({
@@ -178,7 +181,18 @@ export const spectral = localFont({
     { path: '../../../public/fonts/spectral-200.woff2', weight: '200', style: 'normal' },
     { path: '../../../public/fonts/spectral-300.woff2', weight: '300', style: 'normal' },
     { path: '../../../public/fonts/spectral-400.woff2', weight: '400', style: 'normal' },
+    { path: '../../../public/fonts/spectral-200-italic.woff2', weight: '200', style: 'italic' },
+    { path: '../../../public/fonts/spectral-300-italic.woff2', weight: '300', style: 'italic' },
+    { path: '../../../public/fonts/spectral-400-italic.woff2', weight: '400', style: 'italic' },
   ],
+})
+
+/** La palo seco geométrica de las portadas de marco ovalado (`IntroCover` sin `textPalette`). */
+export const montserrat = localFont({
+  variable: '--font-montserrat',
+  display: 'swap',
+  fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
+  src: [{ path: '../../../public/fonts/montserrat-variable.woff2', weight: '300 600', style: 'normal' }],
 })
 
 // Las tres que ya estaban se cargan otra vez con su variable de tema: en la invitación
@@ -234,4 +248,5 @@ export const themeFonts = {
   playfairDisplay,
   outfit,
   bodoniModa,
+  montserrat,
 } as const satisfies Record<FontKey, { variable: string }>
