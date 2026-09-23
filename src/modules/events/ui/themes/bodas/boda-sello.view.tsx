@@ -6,6 +6,7 @@ import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
+import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
 import { SelloCover } from './SelloCover'
 import { PALETA as P } from './boda-sello.palette'
@@ -103,7 +104,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       />
 
       {/* Los pétalos de la maqueta, cayendo sobre toda la invitación. */}
-      <div aria-hidden style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 5, overflow: 'hidden' }}>
+      <CapaFija zIndex={5}>
         {PETALOS.map((petalo) => (
           <span
             key={petalo.izquierda}
@@ -120,7 +121,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
             }}
           />
         ))}
-      </div>
+      </CapaFija>
 
       {/* ── La fecha, con la pareja a sangre ── */}
       <Seccion estilo={{ padding: '0 26px 68px' }}>

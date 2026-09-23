@@ -6,6 +6,7 @@ import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
+import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
 import { CarruselDePerla } from './CarruselDePerla'
 import { RoyalCover } from './RoyalCover'
@@ -69,7 +70,7 @@ export function BodaRoyalView({ content, event, themes, slots, guestInfo, audioS
       : cuando.toLocaleDateString(etiquetaLocal, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
 
   const nombres = [hero?.nameA, hero?.nameB].filter((nombre) => nombre !== undefined && nombre !== '').join(' & ')
-  const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts)
+  const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts, { madreDelante: true })
   const historia = notes?.[0]
   const soloAdultos = notes?.[1]
   const regalos = notes?.[2]
@@ -110,21 +111,18 @@ export function BodaRoyalView({ content, event, themes, slots, guestInfo, audioS
       />
 
       {/* El fondo: la misma fotografía, repetida hacia abajo, como en la maqueta. */}
-      <div
-        aria-hidden
+      <CapaFija
         style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: -1,
-          backgroundImage: `url(${themeAsset('boda-royal', 'portada-royal.avif')})`,
-          backgroundSize: 'cover',
-          backgroundRepeat: 'repeat-y',
-          backgroundPosition: 'top center',
+        backgroundImage: `url(${themeAsset('boda-royal', 'portada-royal.avif')})`,
+        backgroundSize: 'cover',
+        backgroundRepeat: 'repeat-y',
+        backgroundPosition: 'top center',
         }}
+        zIndex={-1}
       />
 
       {/* Los pétalos rosados. */}
-      <div aria-hidden style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 5, overflow: 'hidden' }}>
+      <CapaFija zIndex={5}>
         {PETALOS.map((petalo) => (
           <span
             key={petalo.izquierda}
@@ -141,7 +139,7 @@ export function BodaRoyalView({ content, event, themes, slots, guestInfo, audioS
             }}
           />
         ))}
-      </div>
+      </CapaFija>
 
       {/* ── La cabecera de revista ── */}
       <div style={{ padding: '22px 24px', borderBottom: `1.5px solid ${P.oro}` }}>

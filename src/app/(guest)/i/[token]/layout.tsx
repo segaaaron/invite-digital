@@ -45,7 +45,7 @@ export default async function InvitationLayout({
       lang={invitation.value.event.locale}
       suppressHydrationWarning
     >
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

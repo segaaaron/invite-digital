@@ -102,6 +102,20 @@ describe('RsvpForm', () => {
     expect(screen.queryByText(invitation.passReady)).not.toBeInTheDocument()
   })
 
+  it('con «pildoras» el «sí» sale de entrada en el acento y sin el saludo: lo dice el diseño arriba', () => {
+    // Las Editorial pintan el nombre del invitado y sus pases justo encima: repetirlo aquí
+    // se leía dos veces. Y su maqueta dibuja el «sí» macizo desde el principio.
+    pinta({ variant: 'pildoras' })
+    expect(screen.queryByText('Invitación para')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: invitation.goingYesShort }).className).toContain('bg-[var(--color-cta)]')
+    expect(screen.getByRole('button', { name: invitation.goingYesShort }).className).toContain('rounded-[20px]')
+    expect(screen.getByRole('button', { name: invitation.goingNoShort }).className).not.toContain('bg-[var(--color-cta)]')
+
+    fireEvent.click(screen.getByRole('button', { name: invitation.goingNoShort }))
+    expect(screen.getByRole('button', { name: invitation.goingNoShort }).className).toContain('bg-[var(--color-cta)]')
+    expect(screen.getByRole('button', { name: invitation.goingYesShort }).className).not.toContain('bg-[var(--color-cta)]')
+  })
+
   it('con «botones-oro» da las gracias y no anuncia pase: ese diseño no lo tiene', async () => {
     // El cumpleaños no controla la entrada con un QR, así que su invitación no pinta la
     // ranura del pase: anunciarlo mandaría a buscar más abajo algo que no está.

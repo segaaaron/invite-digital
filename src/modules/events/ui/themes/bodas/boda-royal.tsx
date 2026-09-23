@@ -16,7 +16,7 @@ export const bodaRoyalDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'playfairDisplay'],
-  rsvp: 'botones',
+  rsvp: 'pildoras',
   pinta: {
     fotos: { casillas: 5, retrato: true },
     sinCampos: {

@@ -318,6 +318,11 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
 }
 .invitacion-marco {
   position: relative;
+  /* Las maquetas pintan en escala de grises (`-webkit-font-smoothing: antialiased` en su
+     `body`): sin ello, en macOS el texto claro sobre fondo oscuro sale bastante más grueso.
+     En el celular no cambia nada: iOS y Android ya suavizan así. */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   width: min(430px, 100%);
   height: min(100%, 932px);
   overflow-x: hidden;

@@ -27,8 +27,12 @@ type Props = {
    * «sí» **ya en el acento del diseño** —es la llamada, no el acuse de la elección— y sin
    * el saludo encima, que ese diseño pinta arriba, en su bloque de bienvenida. Es lo que
    * su maqueta dibuja, y por eso lo decide el diseño y no una preferencia suelta.
+   *
+   * `pildoras` es el de las Editorial (`primarySecondary` en su maqueta): dos píldoras, el
+   * «sí» macizo en el acento y en negrita desde el principio, el «no» con su filete. Sin el
+   * saludo: esos diseños pintan justo encima el nombre del invitado y sus pases.
    */
-  variant?: 'campos' | 'botones' | 'botones-oro' | undefined
+  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | undefined
   /**
    * El nombre del invitado, que ya se sabe: cada enlace es de alguien. Se manda oculto con
    * la respuesta, para que la pareja lea quién contestó sin pedírselo otra vez.
@@ -132,24 +136,30 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     )
   }
 
-  if (variant === 'botones' || variant === 'botones-oro') {
+  if (variant === 'botones' || variant === 'botones-oro' || variant === 'pildoras') {
     const oro = variant === 'botones-oro'
-    const BOTON = `flex-1 rounded-[4px] border px-0 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200 ${
-      oro ? 'border-[1.5px] py-[13px]' : 'py-3.5'
+    const pildora = variant === 'pildoras'
+    const BOTON = `flex-1 border px-0 font-mono text-[10px] tracking-[0.28em] transition-colors duration-200 ${
+      pildora ? 'rounded-[20px] border-[1.5px] py-[14px]' : oro ? 'rounded-[4px] border-[1.5px] py-[13px]' : 'rounded-[4px] py-3.5'
     }`
     // El cumpleaños copia los botones de su maqueta: el «sí» en oro macizo **sin negrita** y
     // el «no» con la letra y el filete del mismo oro, no en el crema ni en el filete al 30 %.
-    const LLENO = `border-transparent bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : 'font-bold'}`
-    const HUECO = oro ? 'border-[var(--color-cta)] text-[var(--color-cta)]' : 'border-[var(--color-line)] text-ink'
+    // Las Editorial, en cambio, lo llevan en negrita y el «no» con la tinta del diseño.
+    const LLENO = `border-[var(--color-cta)] bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : 'font-bold'}`
+    const HUECO = oro
+      ? 'border-[var(--color-cta)] text-[var(--color-cta)]'
+      : pildora
+        ? 'border-[var(--color-cta)] text-ink'
+        : 'border-[var(--color-line)] text-ink'
     // Con el «sí» destacado de salida, lo que marca la elección es el otro botón: dejar
     // los dos llenos a la vez no diría cuál se eligió.
-    const siLleno = variant === 'botones-oro' ? !respondido || viene : viene && respondido
+    const siLleno = oro || pildora ? !respondido || viene : viene && respondido
     return (
       <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
         <input name="token" type="hidden" value={token} readOnly />
         <input name="attending" type="hidden" value={viene ? String(cuantos) : '0'} readOnly />
         <input name="name" type="hidden" value={guestName} readOnly />
-        {variant === 'botones-oro' ? null : <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />}
+        {oro || pildora ? null : <ParaQuien dictionary={dictionary} guestName={guestName} seats={seats} />}
 
         <div className="flex gap-2">
           <button

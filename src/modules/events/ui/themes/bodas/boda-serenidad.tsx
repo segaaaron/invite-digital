@@ -16,7 +16,7 @@ export const bodaSerenidadDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'playfairDisplay'],
-  rsvp: 'botones',
+  rsvp: 'pildoras',
   pinta: {
     // Seis en el carrusel y el retrato grande de arriba.
     fotos: { casillas: 6, retrato: true },

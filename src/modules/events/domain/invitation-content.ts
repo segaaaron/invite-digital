@@ -116,12 +116,17 @@ export function anfitrionesXv(hosts: HostsBlock): { padres: string[]; padrinos: 
 }
 
 /** Los anfitriones de una boda. Sin papeles, la posición de siempre: dos, dos y el resto padrinos. */
-export function anfitrionesBoda(hosts: HostsBlock): { novia: string[]; novio: string[]; padrinos: string[] } {
+export function anfitrionesBoda(
+  hosts: HostsBlock,
+  { madreDelante = false }: { readonly madreDelante?: boolean } = {},
+): { novia: string[]; novio: string[]; padrinos: string[] } {
   if (hosts.roles === undefined) {
     return { novia: hosts.names.slice(0, 2), novio: hosts.names.slice(2, 4), padrinos: hosts.names.slice(4) }
   }
   const r = hosts.roles
-  const de = (...nombres: (string | undefined)[]) => nombres.filter((n): n is string => n !== undefined)
+  // Las Editorial escriben primero a la madre («Carmen Robles de Vargas / Ricardo Vargas»).
+  const de = (padre: string | undefined, madre: string | undefined) =>
+    (madreDelante ? [madre, padre] : [padre, madre]).filter((n): n is string => n !== undefined)
   return { novia: de(r.brideFather, r.brideMother), novio: de(r.groomFather, r.groomMother), padrinos: [...(r.godparents ?? [])] }
 }
 

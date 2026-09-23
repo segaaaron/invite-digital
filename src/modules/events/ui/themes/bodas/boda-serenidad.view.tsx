@@ -6,6 +6,7 @@ import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
+import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
 import { FloralDivider } from '../kit/flora/FloralArt'
 import { CarruselDePerla } from './CarruselDePerla'
@@ -68,7 +69,7 @@ export function BodaSerenidadView({ content, event, themes, slots, guestInfo, au
       : cuando.toLocaleDateString(etiquetaLocal, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()
 
   const nombres = [hero?.nameA, hero?.nameB].filter((nombre) => nombre !== undefined && nombre !== '').join(' & ')
-  const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts)
+  const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts, { madreDelante: true })
   const historia = notes?.[0]
   const soloAdultos = notes?.[1]
   const regalos = notes?.[2]
@@ -109,7 +110,7 @@ export function BodaSerenidadView({ content, event, themes, slots, guestInfo, au
       />
 
       {/* Los pétalos blancos, cayendo sobre toda la invitación. */}
-      <div aria-hidden style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 5, overflow: 'hidden' }}>
+      <CapaFija zIndex={5}>
         {PETALOS.map((petalo) => (
           <span
             key={petalo.izquierda}
@@ -126,7 +127,7 @@ export function BodaSerenidadView({ content, event, themes, slots, guestInfo, au
             }}
           />
         ))}
-      </div>
+      </CapaFija>
 
       <Cenefa />
 

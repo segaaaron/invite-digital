@@ -36,7 +36,7 @@ export default async function ModelPreviewLayout({
 
   return (
     <html className={variables} lang={locale} suppressHydrationWarning>
-      <body>{children}</body>
+      <body className="antialiased">{children}</body>
     </html>
   )
 }

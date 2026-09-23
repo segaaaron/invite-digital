@@ -264,6 +264,12 @@ describe('quién es quién entre los anfitriones', () => {
     })
   })
 
+  it('boda con la madre delante, como la escriben las Editorial', () => {
+    const roles = { brideFather: 'PN', brideMother: 'MN', groomFather: 'PV', groomMother: 'MV' }
+    expect(anfitrionesBoda({ names: [], roles })).toMatchObject({ novia: ['PN', 'MN'], novio: ['PV', 'MV'] })
+    expect(anfitrionesBoda({ names: [], roles }, { madreDelante: true })).toMatchObject({ novia: ['MN', 'PN'], novio: ['MV', 'PV'] })
+  })
+
   it('boda sin papeles: la posición de siempre (dos, dos y el resto padrinos)', () => {
     expect(anfitrionesBoda({ names: ['1', '2', '3', '4', '5'] })).toEqual({ novia: ['1', '2'], novio: ['3', '4'], padrinos: ['5'] })
   })
