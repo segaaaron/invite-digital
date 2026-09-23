@@ -152,6 +152,16 @@ export const THEME_ASSETS = {
   'xv-princ': [
     'quinceanera.avif',
   ],
+  'xv-eleg': [
+    'esquina-izq.avif',
+    'esquina-der.avif',
+    'arco.avif',
+    'atardecer.avif',
+    'columnas.avif',
+    'ramo.avif',
+    'lago.avif',
+    'familia.avif',
+  ],
   'boda-serenidad': [
     'portada-flores.avif',
     'pareja-1.avif',

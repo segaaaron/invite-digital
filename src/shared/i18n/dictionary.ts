@@ -332,6 +332,9 @@ export interface ThemeDictionary {
   previewClose: string
   /** «HORAS» entera: algunos diseños no abrevian la casilla de la cuenta atrás. */
   countdownHoursLong: string
+  /** «MINUTOS» y «SEGUNDOS» enteros, para los diseños que no abrevian la cuenta atrás. */
+  countdownMinsLong: string
+  countdownSecsLong: string
   /** Los tres rótulos de los anfitriones, en el orden en que el diseño los pinta. */
   brideParents: string
   groomParents: string

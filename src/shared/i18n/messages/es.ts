@@ -193,6 +193,8 @@ export const es = {
     previewNotice: 'Vista previa del modelo. Nada de lo que escribas aquí se guarda.',
     previewClose: 'Cerrar y volver a la colección',
     countdownHoursLong: 'HORAS',
+    countdownMinsLong: 'MINUTOS',
+    countdownSecsLong: 'SEGUNDOS',
     brideParents: 'PADRES DE LA NOVIA',
     groomParents: 'PADRES DEL NOVIO',
     godparents: 'PADRINOS',

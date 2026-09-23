@@ -193,6 +193,8 @@ export const en = {
     previewNotice: 'Model preview. Nothing you type here is saved.',
     previewClose: 'Close and go back to the collection',
     countdownHoursLong: 'HOURS',
+    countdownMinsLong: 'MINUTES',
+    countdownSecsLong: 'SECONDS',
     brideParents: "BRIDE'S PARENTS",
     groomParents: "GROOM'S PARENTS",
     godparents: 'GODPARENTS',

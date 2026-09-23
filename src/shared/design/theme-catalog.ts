@@ -322,7 +322,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Royal Princess',
     palette: { base: '#fef0f5', accent: '#d4566c' },
     sample: { monogram: 'V', names: 'Valentina', dateLabel: '12 · 09 · 2026', venue: 'Hacienda Princesa' },
+  },  {
+    key: 'xv-eleg',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Floral Elegante',
+    en: 'Elegant Floral',
+    palette: { base: '#faf6ef', accent: '#c9a45c' },
+    sample: { monogram: 'X', names: 'Ximena', dateLabel: '14 · 03 · 2026', venue: 'Quinta la Bonita' },
   },
+
 
 
 
