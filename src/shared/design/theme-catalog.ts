@@ -330,7 +330,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Elegant Floral',
     palette: { base: '#faf6ef', accent: '#c9a45c' },
     sample: { monogram: 'X', names: 'Ximena', dateLabel: '14 · 03 · 2026', venue: 'Quinta la Bonita' },
+  },  {
+    key: 'xv-trop',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Sunset',
+    en: 'Sunset',
+    palette: { base: '#ff8a5b', accent: '#0d2e28' },
+    sample: { monogram: 'X', names: 'Ximena', dateLabel: '05 · 12 · 2026', venue: 'Terraza Poniente' },
   },
+
 
 
 
