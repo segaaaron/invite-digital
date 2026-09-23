@@ -266,7 +266,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Greek Palace',
     palette: { base: '#fafaf6', accent: '#5a705c' },
     sample: { monogram: 'I', names: 'Isabelle', dateLabel: '14 · 11 · 2026', venue: 'Villa Helena' },
+  },  {
+    key: 'xv-deco',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Art Déco',
+    en: 'Art Deco',
+    palette: { base: '#12100c', accent: '#d4af55' },
+    sample: { monogram: 'A', names: 'Alessandra', dateLabel: '07 · 11 · 2026', venue: 'Gran Salón Imperial' },
   },
+
 
   // ─────────── CUMPLEAÑOS ───────────
   {

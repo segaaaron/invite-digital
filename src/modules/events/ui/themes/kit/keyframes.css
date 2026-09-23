@@ -355,3 +355,6 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
     animation: none !important;
   }
 }
+
+/* Los de los XV V2 (`xv-premium.jsx`, `xv-variants.jsx`), copiados de la maqueta. */
+@keyframes theme-crownFloat { 0%,100% { transform: translateY(0) rotate(-1deg); } 50% { transform: translateY(-8px) rotate(1deg); } }
