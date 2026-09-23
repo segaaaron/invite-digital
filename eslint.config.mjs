@@ -74,5 +74,5 @@ export default defineConfig([
   // trae su propio estilo y ensuciaba la puerta con once avisos de un archivo que
   // nadie va a tocar. Esto NO relaja ninguna frontera: `docs/` no se compila ni se
   // sirve, y `src/**` sigue lintándose entero.
-  globalIgnores(['.next/**', '.next-e2e/**', '.shots/**', 'out/**', 'build/**', 'next-env.d.ts', 'public/**', 'docs/**']),
+  globalIgnores(['.next/**', '.next-*/**', '.shots/**', 'out/**', 'build/**', 'next-env.d.ts', 'public/**', 'docs/**']),
 ])
