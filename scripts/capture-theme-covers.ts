@@ -41,7 +41,11 @@ async function principal(): Promise<void> {
 
   const navegador = await chromium.launch()
   const contexto = await navegador.newContext({
-    viewport: { width: ANCHO, height: ALTO },
+    // El visor lo bastante bajo para que el marco (430 de ancho, alto de la ventana) nazca ya
+    // en 9:16: con la ventana a 995, el marco medía 430 × 932 y el recorte a 9:16 se comía
+    // 80 px arriba y abajo —el rótulo de «Pampas» y la llamada a entrar de «Noche
+    // Estrellada»—. Así la portada se compone a la medida de la tarjeta, sin recorte.
+    viewport: { width: ANCHO, height: Math.round((430 * 16) / 9) },
     deviceScaleFactor: 2,
     // Sin animación: una portada que cambia sola cada vez que se regenera no sirve de
     // portada, y con las partículas en marcha cada captura sale distinta.
@@ -64,6 +68,9 @@ async function principal(): Promise<void> {
 
     // Las tipografías tardan más que la red: capturar antes deja el diseño con la fuente
     // de respaldo, que es justo lo que la portada no puede enseñar.
+    // Lo que el escaparate pone encima del aparato —«Elegir este diseño», la salida— y el
+    // indicador de `next dev` caen dentro del marco a esta altura de ventana: fuera.
+    await pagina.addStyleTag({ content: '.theme-phone-cta, .theme-phone-exit, nextjs-portal { display: none !important; }' })
     await pagina.evaluate(() => document.fonts.ready)
     await pagina.waitForTimeout(1200)
 

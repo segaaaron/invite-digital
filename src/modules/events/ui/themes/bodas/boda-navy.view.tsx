@@ -40,8 +40,9 @@ const ROTULOS = {
   firmas: 'Déjanos un mensaje',
 } as const
 
-/** La inicial de un nombre, en mayúscula. */
-const inicial = (nombre: string | undefined): string => (nombre ?? '').trim().slice(0, 1).toUpperCase()
+/** La inicial de un nombre, en mayúscula y sin tilde: el monograma de «Óscar» es «O». */
+const inicial = (nombre: string | undefined): string =>
+  (nombre ?? '').trim().slice(0, 1).normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase()
 
 /**
  * «Noche Estrellada» — Maya & Anderson, de `wedding-variants-7.jsx`

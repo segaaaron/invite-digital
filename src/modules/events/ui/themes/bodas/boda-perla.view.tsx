@@ -48,8 +48,9 @@ const ROTULOS = {
   firmas: 'Déjanos un mensaje',
 } as const
 
-/** La inicial de un nombre, en mayúscula. */
-const inicial = (nombre: string | undefined): string => (nombre ?? '').trim().slice(0, 1).toUpperCase()
+/** La inicial de un nombre, en mayúscula y sin tilde: el monograma de «Óscar» es «O». */
+const inicial = (nombre: string | undefined): string =>
+  (nombre ?? '').trim().slice(0, 1).normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase()
 
 /** La tarjeta blanca translúcida con filete perla de ceremonia, recepción y «solo adultos». */
 const TARJETA: React.CSSProperties = { background: 'rgba(255,255,255,0.55)', border: `1.5px solid ${P.perla}`, borderRadius: 16 }
