@@ -5,6 +5,7 @@ import { esenciaDefinition } from './bodas/esencia'
 import { bodaSelloDefinition } from './bodas/boda-sello'
 import { bodaSerenidadDefinition } from './bodas/boda-serenidad'
 import { bodaRoyalDefinition } from './bodas/boda-royal'
+import { bodaPerlaDefinition } from './bodas/boda-perla'
 import { bodaNavyDefinition } from './bodas/boda-navy'
 import { bodaCinDefinition } from './bodas/boda-cin'
 import { bodaEdDefinition } from './bodas/boda-ed'
@@ -39,6 +40,7 @@ const THEMES = {
   'boda-sello': bodaSelloDefinition,
   'boda-serenidad': bodaSerenidadDefinition,
   'boda-royal': bodaRoyalDefinition,
+  'boda-perla': bodaPerlaDefinition,
   'boda-navy': bodaNavyDefinition,
   'boda-cin': bodaCinDefinition,
   'boda-ed': bodaEdDefinition,

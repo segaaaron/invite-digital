@@ -101,7 +101,16 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     en: 'Editorial - Starry Night',
     palette: { base: '#0a1628', accent: '#c5963a' },
     sample: { monogram: 'M & A', names: 'Maya\n& Anderson', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
+  },  {
+    key: 'boda-perla',
+    listo: true,
+    categorySlug: 'boda',
+    es: 'Editorial - Marco Perlado',
+    en: 'Editorial - Pearl Frame',
+    palette: { base: '#ede0c8', accent: '#d4b678' },
+    sample: { monogram: 'E & G', names: 'Emma\n& Gael', dateLabel: '20 · 09 · 2026', venue: 'Salón Los Cedros' },
   },
+
 
   {
     key: 'boda-ed',
