@@ -25,6 +25,7 @@ import { xvMinDefinition } from './xv/xv-min'
 import { xvPrincDefinition } from './xv/xv-princ'
 import { xvElegDefinition } from './xv/xv-eleg'
 import { xvTropDefinition } from './xv/xv-trop'
+import { xvPapillonDefinition } from './xv/xv-papillon'
 import { xvIsabelleDefinition } from './xv/xv-isabelle'
 import { xvNataliaDefinition } from './xv/xv-natalia'
 import { xv_valentinaDefinition } from './xv/xv-valentina'
@@ -70,6 +71,7 @@ const THEMES = {
   'xv-mariana': xv_marianaDefinition,
   'xv-isabelle': xvIsabelleDefinition,
   'xv-trop': xvTropDefinition,
+  'xv-papillon': xvPapillonDefinition,
   'xv-eleg': xvElegDefinition,
   'xv-princ': xvPrincDefinition,
   'xv-min': xvMinDefinition,

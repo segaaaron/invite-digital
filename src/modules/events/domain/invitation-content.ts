@@ -109,10 +109,15 @@ const nombresDe = (roles: HostRoles): string[] => [
 ]
 
 /** Los anfitriones de un XV: padres y padrinos. Sin papeles, todos los nombres son de los padres. */
-export function anfitrionesXv(hosts: HostsBlock): { padres: string[]; padrinos: string[] } {
+export function anfitrionesXv(
+  hosts: HostsBlock,
+  { madreDelante = false }: { readonly madreDelante?: boolean } = {},
+): { padres: string[]; padrinos: string[] } {
   if (hosts.roles === undefined) return { padres: [...hosts.names], padrinos: [] }
   const r = hosts.roles
-  return { padres: [r.father, r.mother].filter((n): n is string => n !== undefined), padrinos: [...(r.godparents ?? [])] }
+  // «Papillon» escribe primero a la madre («Marcela Ríos & Fernando Ortega»).
+  const padres = madreDelante ? [r.mother, r.father] : [r.father, r.mother]
+  return { padres: padres.filter((n): n is string => n !== undefined), padrinos: [...(r.godparents ?? [])] }
 }
 
 /** Los anfitriones de una boda. Sin papeles, la posición de siempre: dos, dos y el resto padrinos. */

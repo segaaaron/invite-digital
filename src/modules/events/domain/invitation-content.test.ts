@@ -250,6 +250,7 @@ describe('loQueFaltaParaInvitar', () => {
 describe('quién es quién entre los anfitriones', () => {
   it('XV: padres y padrinos por su papel', () => {
     expect(anfitrionesXv({ names: ['A', 'B', 'C'], roles: { father: 'A', godparents: ['C'] } })).toEqual({ padres: ['A'], padrinos: ['C'] })
+    expect(anfitrionesXv({ names: ['A', 'B'], roles: { father: 'A', mother: 'B' } }, { madreDelante: true }).padres).toEqual(['B', 'A'])
   })
 
   it('XV sin papeles —contenido anterior—: todos los nombres son de los padres, como se pintaban', () => {

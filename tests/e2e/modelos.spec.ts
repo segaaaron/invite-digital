@@ -111,7 +111,7 @@ test.describe('el escaparate de modelos', () => {
     // treinta y tres: «cumple-beer» está portado y todavía no se vende, así que se abre por
     // su dirección —el panel enlaza a ella— y no sale en el catálogo. Lo comprueba la
     // última prueba de este archivo.
-    expect(CLAVES).toHaveLength(34)
+    expect(CLAVES).toHaveLength(35)
   })
 
   for (const clave of CLAVES) {

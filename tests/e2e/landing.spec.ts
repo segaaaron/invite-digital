@@ -185,7 +185,7 @@ test('cada fiesta tiene su página con solo sus modelos, y la portada lleva a la
   await expect(page.getByRole('heading', { level: 1 })).toContainText('XV')
   // La página de cada fiesta enseña todos sus modelos: diecisiete XV y dieciséis bodas.
   const modelos = page.locator('#modelos').getByRole('link', { name: /abrir/i })
-  await expect(modelos).toHaveCount(17)
+  await expect(modelos).toHaveCount(18)
   for (const href of await modelos.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
 
   await page.goto('/es/bodas')

@@ -340,6 +340,15 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     palette: { base: '#ff8a5b', accent: '#0d2e28' },
     sample: { monogram: 'X', names: 'Ximena', dateLabel: '05 · 12 · 2026', venue: 'Terraza Poniente' },
   },
+  {
+    key: 'xv-papillon',
+    listo: true,
+    categorySlug: 'xv-anos',
+    es: 'Papillon',
+    en: 'Papillon',
+    palette: { base: '#fdf8f3', accent: '#c5a55a' },
+    sample: { monogram: 'E', names: 'Emilia', dateLabel: '12 · 09 · 2026', venue: 'Jardín Botánico Le Blanc' },
+  },
 
 
 

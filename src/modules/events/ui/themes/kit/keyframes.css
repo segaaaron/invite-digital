@@ -359,3 +359,14 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
 @keyframes theme-wingFlapY2K { 0%,100% { transform: scaleX(1); } 50% { transform: scaleX(0.7); } }
 @keyframes theme-bflyFloat { 0%,100% { transform: translateY(0) rotate(0deg); } 25% { transform: translateY(-12px) rotate(4deg); } 75% { transform: translateY(-6px) rotate(-3deg); } }
 @keyframes theme-treeSway { 0%,100% { transform: rotate(-2deg); } 50% { transform: rotate(2deg); } }
+
+/** «Papillon»: la corona de la portada late con un resplandor dorado. */
+@keyframes theme-crownGlow { 0%,100% { filter: drop-shadow(0 0 0px rgba(197,165,90,0)); } 50% { filter: drop-shadow(0 0 18px rgba(197,165,90,0.6)); } }
+
+/**
+ * «Papillon»: todo el texto lleva un halo blanco (`.pp-glow` de la maqueta), que es lo que
+ * lo despega de las mariposas del fondo. Alcanza también a las ranuras, como allí.
+ */
+.theme-pp-glow :is(div, span, button, input, textarea, p, li, h1, h2, label, a) {
+  text-shadow: 0 0 20px rgba(255, 255, 255, 0.9), 0 0 40px rgba(255, 255, 255, 0.5);
+}
