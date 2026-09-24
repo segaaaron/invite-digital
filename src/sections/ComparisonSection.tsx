@@ -1,5 +1,6 @@
 import { BRAND } from '@/shared/config/brand'
 import { CompareSlider } from './CompareSlider'
+import { CompareStacked } from './CompareStacked'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -12,11 +13,21 @@ export function ComparisonSection({ dictionary }: { dictionary: Dictionary }) {
       <div className="mx-auto max-w-[1180px]">
         <SectionHeading eyebrow={comparison.eyebrow} title={<span id="comparison-title">{comparison.title}</span>} />
 
-        <p className="mt-4 text-center text-[12px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+        <p className="mt-4 hidden text-center text-[12px] md:block tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
           {comparison.hint}
         </p>
 
-        <Reveal className="mt-10">
+        {/* En el teléfono se compara bajando; el deslizador, desde la tableta. */}
+        <Reveal className="mt-10 md:hidden">
+          <CompareStacked
+            luxe={comparison.luxe}
+            luxeLabel={BRAND.siteName}
+            traditional={comparison.traditional}
+            traditionalLabel={comparison.traditionalLabel}
+          />
+        </Reveal>
+
+        <Reveal className="mt-10 hidden md:block">
           <CompareSlider
             imageAlt={comparison.imageAlt}
             luxe={comparison.luxe}

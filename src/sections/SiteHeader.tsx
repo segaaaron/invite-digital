@@ -2,6 +2,7 @@ import Link from 'next/link'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 import { Button } from '@/shared/design/ui/Button'
+import { MenuMovil } from './MenuMovil'
 
 type Props = { locale: Locale; dictionary: Dictionary }
 
@@ -24,7 +25,7 @@ export function SiteHeader({ locale, dictionary }: Props) {
 
   return (
     <header className="fixed inset-x-0 top-[18px] z-[70] flex justify-center px-4">
-      <div className="flex w-full max-w-[1180px] items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/72 px-4 py-3 md:gap-8 md:px-6 shadow-[var(--shadow-float)] backdrop-blur-[18px]">
+      <div className="relative flex w-full max-w-[1180px] items-center gap-3 rounded-[var(--radius-pill)] border border-[var(--color-line)] bg-bg-raised/72 px-4 py-3 md:gap-8 md:px-6 shadow-[var(--shadow-float)] backdrop-blur-[18px]">
         <nav className="hidden flex-1 items-center justify-end gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">
           {izquierda.map((link) => (
             <a key={link.href} className="text-ink-soft transition-colors hover:text-gold-deep" href={link.href}>
@@ -51,9 +52,18 @@ export function SiteHeader({ locale, dictionary }: Props) {
           </Button>
         </nav>
 
-        <Button href={`${inicio}#contacto`} className="ml-auto px-4! whitespace-nowrap md:hidden">
+        {/* En pantallas estrechas no caben logotipo, botón y menú: el botón pasa al menú. */}
+        <Button href={`${inicio}#contacto`} className="ml-auto px-4! whitespace-nowrap max-[439px]:hidden! md:hidden!">
           {dictionary.nav.contact}
         </Button>
+        <div className="ml-auto min-[440px]:ml-0 md:hidden">
+          <MenuMovil
+            abrir={dictionary.nav.menu}
+            accion={{ href: `${inicio}#contacto`, label: dictionary.nav.contact }}
+            cerrar={dictionary.nav.closeMenu}
+            enlaces={[...izquierda, ...derecha]}
+          />
+        </div>
       </div>
     </header>
   )

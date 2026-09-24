@@ -4,10 +4,12 @@ import { es } from '@/shared/i18n/messages/es'
 import { ComparisonSection } from './ComparisonSection'
 
 describe('ComparisonSection', () => {
-  it('muestra las cinco ventajas de Luxury Atelier y las cinco tradicionales', () => {
+  it('muestra las cinco ventajas de Luxury Atelier y las cinco tradicionales, en teléfono y en escritorio', () => {
+    // Dos composiciones —tarjetas apiladas en el teléfono, deslizador desde la tableta—, y
+    // las dos llevan las diez líneas.
     render(<ComparisonSection dictionary={es} />)
-    for (const item of es.comparison.luxe) expect(screen.getByText(item)).toBeDefined()
-    for (const item of es.comparison.traditional) expect(screen.getByText(item)).toBeDefined()
+    for (const item of es.comparison.luxe) expect(screen.getAllByText(item)).toHaveLength(2)
+    for (const item of es.comparison.traditional) expect(screen.getAllByText(item)).toHaveLength(2)
   })
 
   it('rotula las dos columnas de forma accesible', () => {

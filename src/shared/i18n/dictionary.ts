@@ -5,6 +5,9 @@ export interface NavDictionary {
   collections: string
   pricing: string
   contact: string
+  /** El botón que abre y cierra el menú en el teléfono. */
+  menu: string
+  closeMenu: string
 }
 
 /** Una fiesta en la web: su página propia y su tarjeta en la portada. */

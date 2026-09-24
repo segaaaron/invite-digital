@@ -1,7 +1,7 @@
 import type { Dictionary } from '../dictionary'
 
 export const en = {
-  nav: { weddings: 'Weddings', quinceaneras: 'Quinceañeras', collections: 'Collections', pricing: 'Pricing', contact: 'Create invitation' },
+  nav: { weddings: 'Weddings', quinceaneras: 'Quinceañeras', collections: 'Collections', pricing: 'Pricing', contact: 'Create invitation', menu: 'Menu', closeMenu: 'Close menu' },
   fiestas: {
     chooserEyebrow: 'Two celebrations',
     chooserTitle: 'What are you celebrating?',

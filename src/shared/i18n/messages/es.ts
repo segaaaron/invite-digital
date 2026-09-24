@@ -1,7 +1,7 @@
 import type { Dictionary } from '../dictionary'
 
 export const es = {
-  nav: { weddings: 'Bodas', quinceaneras: 'XV años', collections: 'Colecciones', pricing: 'Precios', contact: 'Crear invitación' },
+  nav: { weddings: 'Bodas', quinceaneras: 'XV años', collections: 'Colecciones', pricing: 'Precios', contact: 'Crear invitación', menu: 'Menú', closeMenu: 'Cerrar menú' },
   fiestas: {
     chooserEyebrow: 'Dos fiestas',
     chooserTitle: '¿Qué celebras?',
