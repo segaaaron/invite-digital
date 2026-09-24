@@ -64,6 +64,7 @@ export const PIEL: PielXv = {
   // Los colores que «Mascarada» reparte distinto de «Bajo el Mar»: su fecha va en oro y la
   // hora de su cronograma en marfil, justo al revés que la marina.
   piezas: {
+    recepcionFilete: P.lilaFuerte,
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
     firma: '#E8C87A',
     // El disco del cronograma es morado translúcido, y lo que separa el rótulo de la hora

@@ -16,6 +16,13 @@ export const PALETA = {
   lila: '#a97fd1',
   lilaFuerte: '#9b6fc4',
   blanco: '#ffffff',
+  /** El formulario morado de V3: titular y rótulos, texto, filete del campo y marcador. */
+  ciruela: '#5b1a7a',
+  morado: '#7b2d8e',
+  lilaCampo: '#c9a3e0',
+  marcador: '#9b8aa8',
+  botonMorado: 'rgba(123,45,142,.75)',
+  campoVidrio: 'rgba(255,255,255,.4)',
   /** El cristal esmerilado sobre el que se apoya todo el texto. */
   vidrio: 'rgba(255,255,255,.55)',
   vidrioFuerte: 'rgba(255,255,255,.55)',

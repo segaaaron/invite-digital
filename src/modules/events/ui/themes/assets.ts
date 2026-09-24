@@ -229,7 +229,9 @@ export const THEME_ASSETS = {
   'xv': [
     'bajo-el-mar1.avif',
     'castillo-purpura.avif',
+    'concha-pastel.avif',
     'concha-recortada.avif',
+    'corona-joyas.avif',
     'corona-icono1.avif',
     'despedida-icono.avif',
     'fiesta-icono.avif',
@@ -238,10 +240,8 @@ export const THEME_ASSETS = {
     'invitacion-recepcion.avif',
     'mar-bg-a.avif',
     'mar-bg-b.avif',
-    'mar-corona-purple.avif',
     'mar-corona.avif',
     'nota-sol-dorado-sf.avif',
-    'vestido-solo.avif',
     'xv3.avif',
   ],
   'xv-fantasia': [

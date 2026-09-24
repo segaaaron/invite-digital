@@ -122,14 +122,14 @@ export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hin
         <Image
           alt=""
           aria-hidden
-          height={200}
+          height={287}
           src={crownAsset}
           style={{
             width: 200,
             height: 'auto',
             margin: '0 auto',
             display: 'block',
-            filter: 'brightness(0) invert(1) drop-shadow(0 2px 10px rgba(30,15,55,.55)) contrast(1.4)',
+            filter: 'drop-shadow(0 2px 10px rgba(30,15,55,.55))',
           }}
           width={200}
         />

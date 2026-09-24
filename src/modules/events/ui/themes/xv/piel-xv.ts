@@ -222,6 +222,19 @@ export type PielXv = {
     readonly tituloFormulario?: string
     /** La tinta sobre el botón de confirmar, cuando no es el papel del diseño. */
     readonly botonTinta?: string
+    /**
+     * El formulario de confirmación con colores propios (el tema morado de «Bajo el Mar» en
+     * V3): botón, campo, filete del campo, tinta, rótulo, marcador y el filete de encima.
+     */
+    readonly formulario?: {
+      readonly boton?: string
+      readonly campo?: string
+      readonly linea?: string
+      readonly tinta?: string
+      readonly etiqueta?: string
+      readonly marcador?: string
+      readonly filete?: string
+    }
     /** «Tu presencia hará este día más especial». */
     readonly invitadoTitulo?: string
     /**
@@ -304,6 +317,8 @@ export type PielXv = {
      * la izquierda y la pieza a la derecha.
      */
     readonly recepcionCentrada?: boolean
+    /** El filete bajo la dirección de la recepción (en fila), con su color. */
+    readonly recepcionFilete?: string
     /**
      * Si la tarjeta de la fecha lleva el ornamento del diseño arriba y abajo.
      *
@@ -408,10 +423,14 @@ export type PielXv = {
    * corona marina el 78 % del ancho; el castillo de «Gala Real» va a 90 y el marino a 48;
    * el traje de «Encanto Musical» a 200 y el de «Gala Real» a 90.
    */
+  /** El ornamento de encima del titular del formulario, si no es el de los avisos. */
+  readonly ornamentoFormulario?: ReactNode
   readonly arte?: {
     readonly coronaWidth?: number | string
     readonly coronaFiltro?: string
     readonly relojWidth?: number
+    /** La sombra de la pieza de encima del «Faltan»; la concha pastel la lleva más suave. */
+    readonly relojFiltro?: string
     readonly castilloWidth?: number
     readonly castilloFiltro?: string
     readonly vestimentaWidth?: number | string

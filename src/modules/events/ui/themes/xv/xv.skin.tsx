@@ -18,6 +18,23 @@ const ICONOS: Record<string, ArchivoXv> = {
   despedida: 'despedida-icono.avif',
 }
 
+/** La coronita de línea sobre el formulario (el tema morado de V3). */
+function CoronaDeLinea() {
+  return (
+    <svg aria-hidden height="30" style={{ display: 'block', margin: '0 auto' }} viewBox="0 0 120 30" width="120">
+      <path d="M4 20 H40 M80 20 H116" stroke={P.amatista} strokeWidth="1" />
+      <path
+        d="M50 20 L54 8 L60 14 L66 4 L72 14 L78 8 L82 20"
+        fill="none"
+        stroke={P.amatista}
+        strokeLinejoin="round"
+        strokeWidth="1.2"
+      />
+      <circle cx="60" cy="5" fill={P.amatista} r="2" />
+    </svg>
+  )
+}
+
 /** La piel de «Bajo el Mar»: pasteles sobre fotografía de mar. */
 export const PIEL_XV: PielXv = {
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
@@ -43,7 +60,7 @@ export const PIEL_XV: PielXv = {
   portada: (datos) => (
     <SofiaCover
       bgAsset={themeAsset('xv', 'bajo-el-mar1.avif')}
-      crownAsset={themeAsset('xv', 'mar-corona-purple.avif')}
+      crownAsset={themeAsset('xv', 'corona-joyas.avif')}
       hint={datos.enter}
       line1={datos.line1}
       line2={datos.line2}
@@ -58,7 +75,21 @@ export const PIEL_XV: PielXv = {
     qrAro: P.lila,
     // Su tarjeta de la fecha va enmarcada por dos filetes, arriba y abajo.
     fechaFiletes: true,
+    recepcionFilete: P.lilaFuerte,
+    // El formulario morado de V3 (`SofiaRSVPForm theme="purple"`).
+    tituloFormulario: P.ciruela,
+    plazo: P.morado,
+    formulario: {
+      boton: P.botonMorado,
+      campo: P.campoVidrio,
+      linea: P.lilaCampo,
+      tinta: P.ciruela,
+      etiqueta: P.ciruela,
+      marcador: P.marcador,
+      filete: P.morado,
+    },
   },
+  ornamentoFormulario: <CoronaDeLinea />,
   paleta: P,
   cristal: {
     background: P.vidrio,
@@ -69,7 +100,9 @@ export const PIEL_XV: PielXv = {
   },
   corona: themeAsset('xv', 'mar-corona.avif'),
   retrato: themeAsset('xv', 'xv3.avif'),
-  reloj: themeAsset('xv', 'vestido-solo.avif'),
+  // V3 cambió el vestido por la concha pastel, a 200 y con sombra suave.
+  reloj: themeAsset('xv', 'concha-pastel.avif'),
+  arte: { relojWidth: 200, relojFiltro: 'drop-shadow(0 8px 20px rgba(0,0,0,.3))' },
   castillo: themeAsset('xv', 'castillo-purpura.avif'),
   vestimenta: themeAsset('xv', 'icono-vestimenta.avif'),
   cierre: themeAsset('xv', 'concha-recortada.avif'),

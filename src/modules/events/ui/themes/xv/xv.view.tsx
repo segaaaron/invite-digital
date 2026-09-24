@@ -79,6 +79,7 @@ export function XvSharedView({
   // El color de cada pieza: el del diseño si lo declara, y si no el de «Bajo el Mar», que
   // es de quien salió este esqueleto.
   const Z = piel.piezas ?? {}
+  const F = Z.formulario ?? {}
   const SERIAL = Z.serial ?? P.orquidea
   const MONOGRAMA = Z.monograma ?? P.uva
   const ANIOS = Z.anios ?? P.amatista
@@ -117,22 +118,22 @@ export function XvSharedView({
   // se calcula para las bodas: estas pieles ya traen su vidrio esmerilado.
   const RANURAS = variablesDeRanuras({
     // El «ENVIAR» de la maqueta es morado macizo, no del lila de los filetes.
-    boton: P.violeta,
+    boton: F.boton ?? P.violeta,
     sobreBoton: Z.botonTinta ?? P.blanco,
-    etiqueta: P.uva,
+    etiqueta: F.etiqueta ?? P.uva,
     caligrafia: CALIGRAFIA,
     sobreAcento: P.blanco,
     acento: P.lila,
     acentoHondo: P.lilaFuerte,
-    campo: P.vidrioFuerte,
+    campo: F.campo ?? P.vidrioFuerte,
     hueco: P.vidrioFuerte,
-    linea: P.bordeVidrio,
+    linea: F.linea ?? P.bordeVidrio,
     panel: P.vidrio,
     // La tinta de los campos del formulario es la fuerte del diseño, que es la que la
     // maqueta usa ahí; `tinta` a secas es la del cuerpo, más clara.
-    tinta: P.violetaHondo,
+    tinta: F.tinta ?? P.violetaHondo,
     tintaSuave: P.malva,
-    tintaTenue: P.bruma,
+    tintaTenue: F.marcador ?? P.bruma,
   })
 
   return (
@@ -654,7 +655,11 @@ export function XvSharedView({
                   aria-hidden
                   height={220}
                   src={piel.reloj}
-                  style={{ width: piel.arte?.relojWidth ?? 160, height: 'auto', filter: 'drop-shadow(0 8px 20px rgba(0,0,0,.6))' }}
+                  style={{
+                    width: piel.arte?.relojWidth ?? 160,
+                    height: 'auto',
+                    filter: piel.arte?.relojFiltro ?? 'drop-shadow(0 8px 20px rgba(0,0,0,.6))',
+                  }}
                   width={160}
                 />
               </div>
@@ -812,7 +817,13 @@ export function XvSharedView({
                   {piel.ornamento}
                 </div>
               ) : (
-                <>
+                <div
+                  style={
+                    Z.recepcionFilete === undefined
+                      ? undefined
+                      : { borderBottom: `1.5px solid ${Z.recepcionFilete}`, paddingBottom: 18 }
+                  }
+                >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
                     <div
                       style={{
@@ -865,7 +876,7 @@ export function XvSharedView({
                   <div style={{ fontSize: 11, marginTop: 4, color: LUGAR_DIRECCION, fontWeight: 600, textShadow: Z.sombraTexto }}>
                     {reception.address ?? ''}
                   </div>
-                </>
+                </div>
               )}
             </div>
           </Reveal>
@@ -1277,7 +1288,7 @@ export function XvSharedView({
               boxShadow: P.sombraFuerte,
             }}
           >
-            {piel.ornamento ?? <DividerOrnamental color={P.amatista} />}
+            {piel.ornamentoFormulario ?? piel.ornamento ?? <DividerOrnamental color={P.amatista} />}
             <div style={{ marginTop: 18, fontFamily: CALIGRAFIA, fontSize: 40, color: Z.tituloFormulario ?? TITULO }}>
               {dictionary.title}
             </div>
@@ -1286,7 +1297,7 @@ export function XvSharedView({
                 {themes.rsvpDeadlineLine.replace('{fecha}', plazo)}
               </div>
             )}
-            {piel.ornamento ?? <FileteDegradado color={P.lilaFuerte} margin="22px auto" />}
+            {piel.ornamento ?? <FileteDegradado color={F.filete ?? P.lilaFuerte} margin="22px auto" />}
             {slots.rsvp}
           </div>
         </Reveal>
