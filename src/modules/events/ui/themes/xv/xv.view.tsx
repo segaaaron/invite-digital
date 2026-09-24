@@ -80,6 +80,7 @@ export function XvSharedView({
   // es de quien salió este esqueleto.
   const Z = piel.piezas ?? {}
   const F = Z.formulario ?? {}
+  const fotoDePortada = hero?.coverImageId === undefined ? undefined : `/media/${hero.coverImageId}`
   /** La recepción centrada y compacta de «Gala Real» en V3. */
   const C = Z.recepcionCentrada === 'compacta'
   const SERIAL = Z.serial ?? P.orquidea
@@ -159,7 +160,7 @@ export function XvSharedView({
         eyebrow: hero?.eyebrow ?? '',
         name: hero?.nameA ?? '',
         title: hero?.monogram ?? 'XV',
-        foto: hero?.coverImageId === undefined ? undefined : `/media/${hero.coverImageId}`,
+        foto: fotoDePortada,
         openLabel: themes.coverAria,
         line1: themes.coverInviteLine1,
         line2: themes.coverInviteLine2,
@@ -232,7 +233,7 @@ export function XvSharedView({
       {piel.burbujas}
 
       {/* Lo que el diseño abre a sangre, antes de la barra. */}
-      {piel.apertura}
+      {typeof piel.apertura === 'function' ? piel.apertura(fotoDePortada) : piel.apertura}
       {/*
         Las burbujas **solo las trae «Bajo el Mar»**, que es el diseño del fondo del mar.
         En la maqueta aparecen una vez, en `QuinceInvite` (`invites-1.jsx:351-352`), y en
@@ -469,6 +470,9 @@ export function XvSharedView({
                   lineHeight: Z.cita?.interlineado,
                   marginBottom: piel.corona === undefined ? 0 : 40,
                   textTransform: Z.cita?.mayusculas === false ? undefined : 'uppercase',
+                  // Los saltos que escribe quien la redacta se respetan (Palacio Griego la
+                  // compone en tres renglones).
+                  whiteSpace: 'pre-line',
                   color: Z.cita?.color ?? UVA_HONDA,
                   fontWeight: Z.cita?.weight ?? 900,
                   opacity: Z.cita?.opacidad ?? 0.78,
@@ -731,7 +735,7 @@ export function XvSharedView({
               }}
               rowStyle={{ marginTop: 14, display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 8 }}
               targetISO={schedule.startsAt}
-              valueStyle={{ fontFamily: DISPLAY, fontSize: 30, lineHeight: 1, color: FECHA, fontWeight: 700 }}
+              valueStyle={{ fontFamily: DISPLAY, fontSize: 30, lineHeight: 1, color: Z.cuentaCifra ?? FECHA, fontWeight: 700 }}
             />
           </Reveal>
         )}
@@ -1397,9 +1401,11 @@ export function XvSharedView({
                   {bendicion}
                 </p>
               )}
-              <div aria-hidden style={{ marginTop: 26, fontSize: 20, color: P.amatista, opacity: 0.7 }}>
-                ◆
-              </div>
+              {Z.cierreRombo === false ? null : (
+                <div aria-hidden style={{ marginTop: 26, fontSize: 20, color: P.amatista, opacity: 0.7 }}>
+                  ◆
+                </div>
+              )}
             </div>
           </div>
         </Reveal>

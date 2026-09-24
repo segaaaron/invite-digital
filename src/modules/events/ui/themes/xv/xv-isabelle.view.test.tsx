@@ -18,16 +18,19 @@ describe('el tema Palacio Griego', () => {
     }
   })
 
-  it('pinta la ceremonia y la recepción, que este diseño sí separa', () => {
-    render(<XvIsabelleView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    expect(screen.getByText('Parroquia Santa Isabel')).toBeInTheDocument()
-    expect(screen.getByText('Jardín Las Magnolias')).toBeInTheDocument()
+  it('pinta la recepción centrada y el itinerario con una pieza dorada por hito', () => {
+    const { container } = render(<XvIsabelleView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
+    expect(screen.getByText('Salón de Eventos Elianne')).toBeInTheDocument()
+    const piezas = [...container.querySelectorAll('li img')].map((img) => img.getAttribute('src') ?? '')
+    expect(piezas.some((src) => src.includes('carrosa-dorada'))).toBe(true)
+    expect(screen.getByText('Baile Sorpresa')).toBeInTheDocument()
   })
 
-  it('compone la fecha como hoja de calendario', () => {
-    render(<XvIsabelleView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    expect(screen.getByText(/noviembre/i)).toBeInTheDocument()
-    expect(screen.getByText('2026')).toBeInTheDocument()
+  it('abre con la foto de portada del evento cuando la hay', () => {
+    const { container } = render(
+      <XvIsabelleView {...propsDePrueba({ content: { ...CONTENIDO_DE_MUESTRA, hero: { ...CONTENIDO_DE_MUESTRA.hero, coverImageId: 'abc' } } })} />,
+    )
+    expect(container.querySelector('img[src="/media/abc"]')).not.toBeNull()
   })
 
   it('sin contenido no revienta ni escribe «undefined»', () => {

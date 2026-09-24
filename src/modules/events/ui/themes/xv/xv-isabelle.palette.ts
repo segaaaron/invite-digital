@@ -1,20 +1,25 @@
-/** La paleta de «Palacio Griego»: mármol, oro viejo y acuarela blanca. */
+/**
+ * La paleta de «Palacio Griego» (Isabelle, V3): oro viejo y pardo sobre mármol crema.
+ *
+ * Con los nombres de color de la piel marina, para encajar en el esqueleto compartido.
+ */
 export const PALETA = {
-  marfil: '#fdf8f0',
-  tinta: '#4a3520',
-  tintaFuerte: '#4a3221',
-  /** El pardo con el que la maqueta escribe los rótulos en versalitas y las direcciones. */
-  tintaRotulo: '#4a3221',
-  arenaTexto: '#6b5442',
-  oro: '#8c6a21',
-  oroClaro: '#a8801f',
-  /** El oro con el que se escribe **sobre la acuarela de la portada**: más oscuro que el
-   * del papel, porque ahí el fondo es claro y el `oro` normal no se lee. */
-  oroPortada: '#6B5015',
-  bronce: '#8a6b2f',
-  arena: '#6b5442',
-  panel: 'rgba(255,252,246,.6)',
-  panelFuerte: 'rgba(255,252,246,.7)',
-  panelSuave: 'rgba(255,252,246,.5)',
-  filete: 'rgba(138,107,47,0.35)',
+  tinta: '#5c4033',
+  orquidea: '#8b6914',
+  uva: '#8b6914',
+  /** Las calles del plano y el acento del reproductor: el verde oliva de la maqueta. */
+  amatista: '#808a5c',
+  violetaHondo: '#3c2a14',
+  violeta: '#8b6914',
+  malva: '#6b5b4e',
+  bruma: '#9b8a7a',
+  lila: '#c5961a',
+  lilaFuerte: '#c5961a',
+  blanco: '#ffffff',
+  crema: '#fff8e7',
+  vidrio: 'rgba(255,248,231,.85)',
+  vidrioFuerte: 'rgba(255,248,231,.85)',
+  bordeVidrio: '#c5961a',
+  sombra: '0 6px 22px rgba(139,105,20,.15)',
+  sombraFuerte: '0 6px 22px rgba(139,105,20,.15)',
 } as const

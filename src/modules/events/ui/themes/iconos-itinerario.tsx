@@ -4,6 +4,7 @@ import { themeAsset } from './assets'
 import { TIMELINE_ICONS, type TimelineIconKey } from './kit/flora/TimelineIcons'
 import type { PielXv } from './xv/piel-xv'
 import { PIEL_XV } from './xv/xv.skin'
+import { ICONOS_ISABELLE } from './xv/xv-isabelle.skin'
 import { CONTENIDO_DE_MUESTRA as XV } from './xv/xv.content'
 import { PIEL as FANTASIA } from './xv/xv-fantasia.skin'
 import { CONTENIDO_DE_MUESTRA as XV_FANTASIA } from './xv/xv-fantasia.content'
@@ -92,12 +93,26 @@ const cinematica = (): OpcionDeIcono[] => [
   })),
 ]
 
+/** «Palacio Griego»: las cinco piezas doradas del itinerario. */
+const isabelle = (): OpcionDeIcono[] =>
+  Object.entries(ICONOS_ISABELLE).map(([clave, icono]) => ({
+    clave,
+    nombre: icono.nombre,
+    dibujo: (
+      <span
+        aria-hidden
+        className="block size-10"
+        style={{ backgroundImage: `url(${themeAsset('xv-isabelle', icono.archivo)})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}
+      />
+    ),
+  }))
+
 const POR_DISENO: Record<string, () => OpcionDeIcono[]> = {
   xv: () => deXv(PIEL_XV, XV),
   'xv-fantasia': () => deXv(FANTASIA, XV_FANTASIA),
   'xv-mariana': () => deXv(MARIANA, XV_MARIANA),
   'xv-valentina': () => deXv(VALENTINA, XV_VALENTINA),
-  'xv-isabelle': botanicos,
+  'xv-isabelle': isabelle,
   'boda-bot': botanicos,
   'boda-cin': cinematica,
 }

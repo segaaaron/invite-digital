@@ -1,52 +1,39 @@
 import type { InvitationContent } from '../../../domain/invitation-content'
 
 /**
- * El contenido de muestra de «Palacio Griego», copiado de la maqueta.
- *
- * La cita son tres piezas y en este orden, como el diseño las compone: la frase, los años y
- * la historia que va bajo «mi historia».
- *
- * El cronograma son cinco hitos y no seis: este diseño los pinta en una rejilla de dos
- * columnas con el último centrado debajo, y una fila de más le rompe la simetría.
+ * El contenido de muestra de «Palacio Griego», copiado de la maqueta V3. En el itinerario,
+ * `imageId` es la pieza dorada: `copa`, `cena`, `baile`, `torta` o `carroza`.
  */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: {
-    eyebrow: 'MIS XV AÑOS',
+    eyebrow: '· MIS QUINCE ·',
     nameA: 'Isabelle',
-    monogram: 'I',
+    monogram: 'XV',
+    serial: '2026',
   },
-  quote: {
-    text: '"hoy florezco\ny celebro quien soy"\n\n2011 — 2026\n\nQuince años de risas, sueños y momentos que hoy se convierten en la celebración más especial. Gracias por ser parte de mi historia y por acompañarme en esta nueva etapa.',
-  },
+  quote: { text: 'Como una diosa entre columnas,\nhoy florece mi historia\nbajo cielos de mármol y oro.' },
   hosts: {
     label: 'Agradecida por el amor y cuidado de mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],
   },
-  schedule: { startsAt: '2026-11-14T17:00:00' },
-  ceremony: { label: 'CEREMONIA', place: 'Parroquia Santa Isabel', address: 'Av. de la Fe 22, Centro', time: '17:00 h' },
-  reception: {
-    label: 'RECEPCIÓN',
-    place: 'Jardín Las Magnolias',
-    address: 'Km 5 Carretera al Bosque',
-    time: '18:30',
-  },
-  map: { label: 'JARDÍN LAS MAGNOLIAS', coords: '19.32°N · 99.18°W' },
+  schedule: { startsAt: '2026-09-12T19:00:00' },
+  reception: { label: 'Recepción Social', place: 'Salón de Eventos Elianne', time: '18:00' },
+  map: { label: 'SALÓN ELIANNE', coords: '19.32°N · 99.18°W' },
   itinerary: [
-    { time: '18:30', label: 'RECEPCIÓN SOCIAL', imageId: 'envelope' },
-    { time: '21:00', label: 'CENA', imageId: 'dinner' },
-    { time: '23:00', label: 'BAILE SORPRESA', imageId: 'disco' },
-    { time: '00:00', label: 'TORTA', imageId: 'cake' },
-    { time: '01:00', label: 'DESPEDIDA', imageId: 'bouquet' },
+    { time: '18:00', label: 'Recepción', imageId: 'copa' },
+    { time: '21:00', label: 'Cena', imageId: 'cena' },
+    { time: '23:00', label: 'Baile Sorpresa', imageId: 'baile' },
+    { time: '00:00', label: 'Torta', imageId: 'torta' },
+    { time: '02:00', label: 'Cierre', imageId: 'carroza' },
   ],
-  music: { track: 'Tiempo de Vals', artist: 'Chayanne · vals oficial' },
-  dressCode: { title: 'Formal', note: 'CÓDIGO DE VESTIMENTA', detail: 'formal · tonos tierra · evita blanco' },
-  gallery: [{ label: 'ISABELLE' }],
-  // La copia del bloque de regalos, que este diseño lleva escrita.
-  notes: [
-    {
-      title: 'Tu presencia es mi mejor regalo',
-      text: 'Si deseas obsequiarme algo, tu detalle en sobre será muy bien recibido.',
-    },
-  ],
-  closing: { text: 'Te espero para celebrar juntos esta bella noche.', signature: 'Isabelle' },
+  music: { track: 'Canon in D', artist: 'Instrumental' },
+  dressCode: {
+    title: 'Código de Vestimenta',
+    note: 'FORMAL — DE GALA',
+    detail: 'El dorado queda reservado para la quinceañera',
+  },
+  closing: {
+    text: 'Te espero, para celebrar conmigo esta noche entre columnas y estrellas.',
+    signature: 'Isabelle',
+  },
 }

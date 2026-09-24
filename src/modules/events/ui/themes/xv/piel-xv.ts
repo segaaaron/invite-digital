@@ -204,6 +204,8 @@ export type PielXv = {
     readonly anfitrionesNombres?: string
     /** La fecha grande, el separador y las casillas de la cuenta atrás. */
     readonly fecha?: string
+    /** Las cifras de la cuenta atrás, cuando no van del color de la fecha. */
+    readonly cuentaCifra?: string
     /** «HRS», «DÍAS», «Reservamos», «Lugar para ti». */
     readonly rotuloTenue?: string
     /** «Faltan». */
@@ -351,6 +353,8 @@ export type PielXv = {
     readonly fechaOrnamento?: boolean
     /** «Gracias por acompañarme…», cuando no va con la tinta del diseño. */
     readonly despedida?: string
+    /** Si el cierre acaba con el rombo; Palacio Griego no lo pinta. */
+    readonly cierreRombo?: boolean
     /** El halo claro detrás de la bendición del cierre. */
     readonly haloCierre?: string
     /** La sombra de la bendición, cuando no es la del resto del texto. */
@@ -497,8 +501,11 @@ export type PielXv = {
    *
    * No todos lo llevan —Bajo el Mar abre con el título— y por eso es opcional: quien no lo
    * declare empieza por la barra, como hasta ahora.
+   *
+   * Como función recibe la foto de portada del evento, cuando el diseño la pinta aquí y no
+   * en la portada (Palacio Griego).
    */
-  readonly apertura?: ReactNode
+  readonly apertura?: ReactNode | ((foto: string | undefined) => ReactNode)
   /**
    * Cómo llama **este** diseño a sus secciones.
    *

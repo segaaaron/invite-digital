@@ -264,9 +264,10 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     categorySlug: 'xv-anos',
     es: 'Palacio Griego',
     en: 'Greek Palace',
-    palette: { base: '#fafaf6', accent: '#5a705c' },
-    sample: { monogram: 'I', names: 'Isabelle', dateLabel: '14 · 11 · 2026', venue: 'Villa Helena' },
-  },  {
+    palette: { base: '#fff8e7', accent: '#8b6914' },
+    sample: { monogram: 'I', names: 'Isabelle', dateLabel: '12 · 09 · 2026', venue: 'Salón Elianne' },
+  },
+  {
     key: 'xv-deco',
     listo: true,
     categorySlug: 'xv-anos',
