@@ -1,18 +1,10 @@
 import Image from 'next/image'
-import { THEME_ASSETS, themeAsset } from '../assets'
+import { themeAsset } from '../assets'
+import { CronogramaZigzag } from './CronogramasV3'
 import { rotuloDePortada } from './cover-copy'
 import { NataliaCover } from './NataliaCover'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-natalia.palette'
-
-type ArchivoNatalia = (typeof THEME_ASSETS)['xv-natalia'][number]
-
-const ICONOS: Record<string, ArchivoNatalia> = {
-  recepcion: 'invitacion-recepcion.avif',
-  corona: 'corona-icono1.avif',
-  fiesta: 'fiesta-icono.avif',
-  despedida: 'despedida-icono.avif',
-}
 
 /**
  * La piel de «Encanto Marino»: dorado sobre negro, con partitura de fondo.
@@ -58,56 +50,96 @@ export const PIEL_NATALIA: PielXv = {
   // Los colores que «Encanto Marino» reparte distinto de «Bajo el Mar», medidos contra su
   // componente de la maqueta.
   piezas: {
-    // La firma del cierre va con el oro del diseño, no con su tinta clara.
-    firma: '#E8C88F',
-    // El titular no lleva el halo blanco de la marina: sobre la partitura, la maqueta pone
-    // uno negro y desenfocado. Y la barra y la cita van sobre su propio velo.
+    mapaBorde: P.uva,
+    mapaAro: P.pinAro,
+    mapaRotulo: P.blanco,
+    // V3: blanco y oro. Titulares y el nombre en #D4AF37, rótulos en #C5961A, cifras y
+    // textos en blanco.
+    firma: P.violeta,
     haloTitular: 'radial-gradient(ellipse 70% 75% at 50% 50%, rgba(0,0,0,.5) 0%, rgba(0,0,0,.32) 55%, transparent 80%)',
     haloTitularFiltro: 'blur(6px)',
     veloTexto: 'rgba(0,0,0,.45)',
-    cita: { size: 15, color: '#FFFFFF', opacidad: 1 },
+    cita: { size: 15, color: P.blanco, opacidad: 1, sombra: 'none' },
     fechaFiletes: true,
     // El código de la mesa de regalos va casi en negro, como en la maqueta: es lo que se lee.
     qrTinta: '#1a1208',
-    qrAro: '#b8901f',
-    // La tarjeta de regalos: en la maqueta el rótulo de los sobres va en oro y el texto que
-    // lo acompaña en marfil; aquí salían justo al revés.
-    regalosIntro: '#F5EFE6',
-    sobresRotulo: '#E8C88F',
-    sobresNota: '#F5EFE6',
-    serial: '#B8901F',
-    monograma: '#E8C88F',
-    anios: '#F5EFE6',
-    anfitrionesNombres: '#F5EFE6',
-    fecha: '#E8C88F',
-    rotuloTenue: '#B8901F',
-    faltan: '#E8C88F',
+    qrAro: P.lila,
+    regalosIntro: P.blanco,
+    sobresRotulo: P.violeta,
+    sobresNota: P.blanco,
+    serial: P.uva,
+    monograma: P.blanco,
+    anios: P.blanco,
+    nombre: P.violeta,
+    anfitrionesNombres: P.blanco,
+    fecha: P.blanco,
+    rotuloTenue: P.uva,
+    faltan: P.violeta,
+    lugarNombre: P.blanco,
+    lugarDireccion: P.blanco,
+    lugarHora: P.blanco,
+    recepcionFilete: P.fileteTenue,
+    mapa: P.uva,
+    musicaAcento: P.uva,
+    musicaPista: P.oroClaro,
+    musicaArtista: P.uva,
+    vestimentaNota: P.uva,
+    vestimentaDetalle: P.blanco,
+    despedida: P.blanco,
+    // V3 quitó las sombras blancas del texto; el nombre conserva la suya y la bendición
+    // lleva una más tenue, con el halo claro detrás.
+    sombraTexto: 'none',
+    sombraNombre: '0 2px 10px rgba(255,255,255,.7)',
+    sombraBendicion: '0 2px 8px rgba(255,255,255,.3)',
+    haloCierre: 'radial-gradient(ellipse 70% 65% at 50% 45%, rgba(255,252,255,.5) 0%, transparent 75%)',
+    invitadoTitulo: P.blanco,
+    plazo: P.blanco,
+    // El formulario dorado de la maqueta (`SofiaRSVPForm` sin tema).
+    botonTinta: '#1a1208',
+    formulario: {
+      boton: P.uva,
+      campo: P.campo,
+      linea: P.uva,
+      tinta: P.blanco,
+      etiqueta: P.violeta,
+      marcador: P.bruma,
+      filete: P.uva,
+      panel: P.cafe,
+      hueco: P.cafe,
+    },
   },
-  arte: { castilloWidth: 48 },
-  iconoTam: (clave) => ({ recepcion: 48, corona: 55, fiesta: 50, despedida: 60 })[clave ?? ''] ?? 48,
-  // Copiado literal de su maqueta (`invites-1.jsx:718`). Estaba con `hue-rotate(2deg)` y
-  // sin la opacidad, y eso deja la corona en **rojo encendido** en vez del morado
-  // apagado del diseño: los dos grados no giran el tono y el 0,6 es lo que la mete detrás.
-  iconoFiltro: (clave) =>
-    clave === 'corona'
-      ? 'brightness(0) saturate(100%) invert(24%) sepia(84%) saturate(2500%) hue-rotate(265deg) brightness(80%) contrast(105%) opacity(0.6)'
-      : undefined,
+  // La casita de línea de la recepción (V3), en blanco con el tejado y las ventanas en oro.
+  castilloNodo: (
+    <svg aria-hidden fill="none" height="48" style={{ flexShrink: 0 }} viewBox="0 0 48 48" width="48">
+      <rect height="20" stroke={P.blanco} strokeWidth="1.6" width="32" x="8" y="20" />
+      <path d="M6 20 L24 8 L42 20" stroke={P.uva} strokeLinejoin="round" strokeWidth="1.8" />
+      <rect height="10" stroke={P.blanco} strokeWidth="1.4" width="8" x="20" y="30" />
+      <rect height="6" stroke={P.uva} strokeWidth="1.2" width="5" x="11" y="25" />
+      <rect height="6" stroke={P.uva} strokeWidth="1.2" width="5" x="32" y="25" />
+      <line stroke={P.uva} strokeWidth="1.4" x1="24" x2="24" y1="8" y2="3" />
+      <circle cx="24" cy="2" fill={P.uva} r="1.4" />
+    </svg>
+  ),
+  // El cronograma en zigzag de V3, sin tarjeta.
+  itinerario: (filas) => <CronogramaZigzag acento={P.uva} filas={filas} fondo={P.fondoRombo} hora={P.blanco} />,
+  arte: { castilloWidth: 48, vestimentaWidth: '70%' },
   // Como en su maqueta: la partitura va fija a la ventana y sin velo borroso, no hay
   // burbujas —son del mar, no de la música— y lo que flota son notas doradas.
   fondoFijo: true,
-  particulas: { char: '♪', color: '#B8901F', count: 14 },
+  particulas: { char: '♪', color: P.uva, count: 14 },
   paleta: P,
   cristal: {
     background: P.vidrio,
     backdropFilter: 'blur(12px)',
     borderRadius: 16,
-    border: `1px solid ${P.bordeVidrio}`,
+    border: `1.5px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
   },
   corona: themeAsset('xv-natalia', 'guitarra-y-saxo-dorado-sf.avif'),
   reloj: themeAsset('xv-natalia', 'nota-sol-sf.avif'),
   castillo: themeAsset('xv-natalia', 'castillo-purpura.avif'),
-  vestimenta: themeAsset('xv-natalia', 'icono-vestimenta.avif'),
-  cierre: themeAsset('xv-natalia', 'concha-recortada.avif'),
-  icono: (clave) => themeAsset('xv-natalia', ICONOS[clave ?? ''] ?? 'corona-icono1.avif'),
+  vestimenta: themeAsset('xv-natalia', 'traje-y-vestido.avif'),
+  cierre: themeAsset('xv-natalia', 'instrumentos-sf.avif'),
+  // El zigzag no pinta iconos; el esqueleto pide uno igual.
+  icono: () => themeAsset('xv-natalia', 'nota-sol-sf.avif'),
 }

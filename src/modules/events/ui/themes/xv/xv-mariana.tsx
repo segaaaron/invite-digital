@@ -6,7 +6,7 @@ import { PALETA } from './xv-mariana.palette'
 /** «Encanto Musical» — Mariana. */
 export const xv_marianaDefinition: ThemeDefinition = {
   key: 'xv-mariana',
-  label: 'Encanto Musical',
+  label: 'Noche Disco',
   categorySlug: 'xv-anos',
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],

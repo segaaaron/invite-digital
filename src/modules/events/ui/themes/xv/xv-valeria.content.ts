@@ -17,16 +17,15 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   reception: {
     label: 'Recepción Social',
     place: 'Salón de Eventos Elianne',
-    address: 'Km 8, Carretera al Cielo',
     time: '18:00',
   },
   map: { label: 'SALÓN ELIANNE', coords: '19.32°N · 99.18°W' },
   itinerary: [
-    { time: '18:00', label: 'Recepción', imageId: 'recepcion' },
-    { time: '21:00', label: 'Cena', imageId: 'cena' },
-    { time: '23:00', label: 'Baile Sorpresa', imageId: 'baile' },
-    { time: '00:00', label: 'Torta', imageId: 'torta' },
-    { time: '02:00', label: 'Cierre', imageId: 'cierre' },
+    { time: '18:00', label: 'Recepción' },
+    { time: '21:00', label: 'Acto Principal' },
+    { time: '23:00', label: 'Baile Sorpresa' },
+    { time: '00:00', label: 'Torta' },
+    { time: '02:00', label: 'Cierre' },
   ],
   music: { track: 'Tiempo de Vals', artist: 'Chayanne · vals oficial' },
   dressCode: {

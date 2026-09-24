@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import type { ItineraryRow } from '../../../domain/invitation-content'
 
 /**
  * Lo que distingue a un diseño de XV de otro.
@@ -85,6 +86,13 @@ export type PielXv = {
    * (`invites-1.jsx:2075`, que abre la rejilla sin ella).
    */
   readonly itinerarioDivisoria?: boolean
+  /**
+   * El cronograma dibujado por el diseño, en lugar de la tarjeta de dos columnas: el zigzag
+   * de «Encanto Musical» o la esfera de «Luciana» y «Valeria» en V3. Va debajo del rótulo.
+   */
+  readonly itinerario?: (filas: readonly ItineraryRow[]) => ReactNode
+  /** Los hitos en una sola columna centrada (Mariana), sin divisoria. */
+  readonly itinerarioColumna?: boolean
 
   /**
    * Si la última fila del itinerario ocupa las dos columnas cuando queda impar. Solo lo
@@ -185,7 +193,14 @@ export type PielXv = {
       readonly sombra?: string
     }
     /** El rótulo de los anfitriones, que no todos pintan en caligrafía grande. */
-    readonly anfitriones?: { readonly font?: string; readonly size?: number; readonly weight?: number; readonly color?: string }
+    readonly anfitriones?: {
+      readonly font?: string
+      readonly size?: number
+      readonly weight?: number
+      readonly color?: string
+      /** En versalitas espaciadas, como «JUNTO A MIS PADRES» de las de gala. */
+      readonly mayusculas?: boolean
+    }
     readonly anfitrionesNombres?: string
     /** La fecha grande, el separador y las casillas de la cuenta atrás. */
     readonly fecha?: string
@@ -204,6 +219,12 @@ export type PielXv = {
     readonly tituloRecepcionSize?: number
     /** El acento del plano: el punto, el nombre y las coordenadas. */
     readonly mapa?: string
+    /** Las calles y el marco del plano, cuando no van del tono suave del diseño. */
+    readonly mapaBorde?: string
+    /** El aro alrededor del alfiler: el color del fondo en los diseños oscuros. */
+    readonly mapaAro?: string
+    /** El rótulo y las coordenadas, cuando no van del color del alfiler. */
+    readonly mapaRotulo?: string
     readonly itinerarioRotulo?: string
     readonly itinerarioRotuloSize?: number
     readonly itinerarioHora?: string
@@ -234,6 +255,9 @@ export type PielXv = {
       readonly etiqueta?: string
       readonly marcador?: string
       readonly filete?: string
+      /** El vidrio plano de las tarjetas de las ranuras, si el del diseño es un degradado. */
+      readonly panel?: string
+      readonly hueco?: string
     }
     /** «Tu presencia hará este día más especial». */
     readonly invitadoTitulo?: string
@@ -316,7 +340,7 @@ export type PielXv = {
      * Es la composición de «Bosque Encantado»; las demás la ponen en fila, con el título a
      * la izquierda y la pieza a la derecha.
      */
-    readonly recepcionCentrada?: boolean
+    readonly recepcionCentrada?: boolean | 'compacta'
     /** El filete bajo la dirección de la recepción (en fila), con su color. */
     readonly recepcionFilete?: string
     /**
@@ -325,6 +349,12 @@ export type PielXv = {
      * «Noche Estrellada», «Gala Real» y «Encanto Musical» la dejan desnuda en su maqueta.
      */
     readonly fechaOrnamento?: boolean
+    /** «Gracias por acompañarme…», cuando no va con la tinta del diseño. */
+    readonly despedida?: string
+    /** El halo claro detrás de la bendición del cierre. */
+    readonly haloCierre?: string
+    /** La sombra de la bendición, cuando no es la del resto del texto. */
+    readonly sombraBendicion?: string
     /** La firma del cierre, cuando no va con la tinta fuerte del diseño. */
     readonly firma?: string
     /**
@@ -389,6 +419,8 @@ export type PielXv = {
    * máscara enorme encima del «Faltan».
    */
   readonly reloj?: string
+  /** La pieza de la recepción dibujada en línea (la casita de «Encanto Musical» en V3). */
+  readonly castilloNodo?: ReactNode
   readonly castillo: string
   readonly vestimenta: string
   /**

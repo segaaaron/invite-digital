@@ -286,20 +286,14 @@ export const THEME_ASSETS = {
     'traje-plata-opt.avif',
   ],
   'xv-natalia': [
-    'bajo-el-mar1.avif',
     'castillo-purpura.avif',
-    'concha-recortada.avif',
-    'corona-icono1.avif',
-    'despedida-icono.avif',
-    'fiesta-icono.avif',
     'fondo-musical.avif',
     'fondo-notas-dorado.avif',
     'guitarra-y-saxo-dorado-sf.avif',
-    'icono-vestimenta.avif',
-    'invitacion-recepcion.avif',
-    'mar-corona-purple.avif',
+    'instrumentos-sf.avif',
     'nota-sol-dorado-sf.avif',
     'nota-sol-sf.avif',
+    'traje-y-vestido.avif',
   ],
   'xv-valentina': [
     'castillo2sf.avif',
@@ -313,19 +307,13 @@ export const THEME_ASSETS = {
     'xv3.avif',
   ],
   'xv-valeria': [
-    'baile-guindo-round.avif',
-    'bienvenida-guindo-round.avif',
     'borde.avif',
     'candelabro-guindo-sf.avif',
     'castillo-guindo-opt.avif',
-    'cierre-guinda-round.avif',
-    'corona-plata-opt.avif',
     'fondo-vino-guindo-bg.avif',
     'marco-guindo-portada.avif',
-    'menu-guindo-round.avif',
-    'reloj-plata-opt.avif',
+    'reloj-conteo-sf.avif',
     'tiara-vino-sf.avif',
-    'torta-guinda-round.avif',
     'traje1-opt.avif',
     'xv-guindo-photo.avif',
   ],
@@ -336,7 +324,7 @@ export type ThemeAssetKey = keyof typeof THEME_ASSETS
 /**
  * La ruta pública de una imagen del tema.
  *
- * Tipada contra el manifiesto: `themeAsset('xv-valeria', 'corona-plata-opt.avif')` compila
+ * Tipada contra el manifiesto: `themeAsset('xv-valeria', 'tiara-vino-sf.avif')` compila
  * y con el nombre mal escrito no. Un `<img>` con la ruta cambiada no falla al compilar ni
  * en ninguna prueba de render — falla en el teléfono de un invitado, en silencio y con un
  * hueco donde iba la corona.

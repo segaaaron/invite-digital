@@ -10,7 +10,7 @@ beforeEach(() => {
   conMovimientoReducido(true)
 })
 
-describe('el tema Encanto Marino', () => {
+describe('el tema Encanto Musical', () => {
   it('coloca las cinco ranuras', () => {
     render(<XvNataliaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
     for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {

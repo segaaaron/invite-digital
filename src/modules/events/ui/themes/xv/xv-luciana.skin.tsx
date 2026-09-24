@@ -1,15 +1,10 @@
 import Image from 'next/image'
-import { THEME_ASSETS, themeAsset } from '../assets'
+import { themeAsset } from '../assets'
 import { BotanicalWreath } from '../kit/flora/BotanicalWreath'
 import { LucianaCover } from './LucianaCover'
-import { iconoBosque } from './IconosLineaXv'
+import { CronogramaEsfera } from './CronogramasV3'
 import type { PielXv } from './piel-xv'
 import { PALETA as P } from './xv-luciana.palette'
-
-type Archivo = (typeof THEME_ASSETS)['xv-luciana'][number]
-
-/** Los iconos del cronograma, tipados contra el manifiesto: un nombre mal escrito no compila. */
-const ICONOS: Record<string, Archivo> = {}
 
 /** La piel de «Bosque Encantado». */
 export const PIEL: PielXv = {
@@ -81,6 +76,12 @@ export const PIEL: PielXv = {
   ),
   // Los colores que «Bosque Encantado» reparte distinto de «Bajo el Mar».
   piezas: {
+    // El «ENVIAR» de su formulario en la maqueta.
+    formulario: { boton: '#D9B85C' },
+    botonTinta: '#0f2a1f',
+    // El plano como su maqueta: calles del oro del borde y aro del fondo.
+    mapaBorde: '#D9B85C',
+    mapaAro: '#0f2a1f',
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
     firma: '#E8C87A',
     // Disco de oro al 10 % y la lámina del borde entre el rótulo y la hora.
@@ -139,9 +140,46 @@ export const PIEL: PielXv = {
   castillo: themeAsset('xv-luciana', 'faro-verde.avif'),
   vestimenta: themeAsset('xv-luciana', 'traje1.avif'),
   cierre: themeAsset('xv-luciana', 'faro-verde.avif'),
-  // Su cronograma no lleva fotografías: son trazos dorados, como en la maqueta.
-  iconoNodo: (clave) => iconoBosque(clave, { color: '#D9B85C' }),
-  icono: (clave) => themeAsset('xv-luciana', ICONOS[clave ?? ''] ?? 'faro-verde.avif'),
+  // Su cronograma en V3 es una esfera de reloj con «XV» al centro, dentro de su panel.
+  itinerario: (filas) => (
+    <div style={{ padding: '20px 14px 30px', background: P.vidrio, borderRadius: 20, border: `1.5px solid ${P.bordeVidrio}`, boxShadow: P.sombra }}>
+      <CronogramaEsfera
+        e={{
+          size: 208,
+          salida: 24,
+          anillo: P.bordeVidrio,
+          acento: '#E8C87A',
+          hora: { color: '#EAF3E4', size: 16, peso: 700 },
+          momento: { color: '#E8C87A', size: 8, tracking: '0.1em' },
+          centro: { font: 'var(--font-great-vibes)', size: 26, dy: 6 },
+          sombra: '0 2px 8px rgba(0,0,0,.75)',
+          pie: 30,
+        }}
+        filas={filas}
+      />
+    </div>
+  ),
+  // La recepción lleva un castillo de línea dorado, como en su maqueta.
+  castilloNodo: (
+    <svg
+      aria-hidden
+      fill="none"
+      height="62"
+      stroke="#D9B85C"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.4"
+      style={{ display: 'block', margin: '0 auto 20px' }}
+      viewBox="0 0 24 24"
+      width="62"
+    >
+      <path d="M4 21 V10 M20 21 V10 M4 10 L4 7 L7 7 L7 10 M20 10 L20 7 L17 7 L17 10 M7 10 L7 4 L9 6 M17 10 L17 4 L15 6 M9 6 L12 3 L15 6" />
+      <path d="M4 21 H20" />
+      <rect height="6" width="4" x="10" y="15" />
+    </svg>
+  ),
+  // La esfera no pinta iconos; el esqueleto pide uno igual.
+  icono: () => themeAsset('xv-luciana', 'faro-verde.avif'),
   /**
    * Su encabezado, copiado de `invites-1.jsx:1338-1345`.
    *

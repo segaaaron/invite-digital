@@ -7,8 +7,6 @@ type Props = {
   readonly bgAsset: string
   /** La fotografía del evento, cuando la subieron: sustituye a la del modelo. */
   readonly foto?: string | undefined
-  /** La tiara, arriba. */
-  readonly tiaraAsset: string
   /** El sobre con la corona: el nombre va escrito **encima**, a su altura. */
   readonly envelopeAsset: string
   readonly accent: string
@@ -24,7 +22,7 @@ type Props = {
 const SOMBRA = '0 2px 10px rgba(0,0,0,.8), 0 0 20px rgba(0,0,0,.6)'
 
 /**
- * La portada de «Noche Estrellada»: tiara, «XV AÑOS» y el sobre con el nombre escrito
+ * La portada de «Noche Estrellada»: «XV AÑOS» y el sobre con el nombre escrito
  * sobre él.
  *
  * El nombre no va debajo del sobre sino **dentro**, al 84 % de su altura: es donde la
@@ -34,7 +32,6 @@ const SOMBRA = '0 2px 10px rgba(0,0,0,.8), 0 0 20px rgba(0,0,0,.6)'
 export function FantasiaCover({
   bgAsset,
   foto,
-  tiaraAsset,
   envelopeAsset,
   accent,
   textColor,
@@ -64,17 +61,10 @@ export function FantasiaCover({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          // V3: sin la tiara de arriba y con los tres bloques a 36 px.
+          gap: 36,
         }}
       >
-        <Image
-          alt=""
-          aria-hidden
-          height={150}
-          src={tiaraAsset}
-          style={{ width: 150, height: 'auto', marginBottom: 4, filter: 'drop-shadow(0 4px 14px rgba(0,0,0,.5))' }}
-          width={150}
-        />
-
         <span
           style={{
             fontFamily: 'var(--font-italiana)',
@@ -82,14 +72,13 @@ export function FantasiaCover({
             fontWeight: 700,
             letterSpacing: '0.15em',
             color: accent,
-            marginTop: 18,
             textShadow: SOMBRA,
           }}
         >
           {title}
         </span>
 
-        <span style={{ position: 'relative', display: 'block', width: '92%', margin: '20px 0' }}>
+        <span style={{ position: 'relative', display: 'block', width: '92%' }}>
           <Image
             alt=""
             aria-hidden
@@ -97,6 +86,18 @@ export function FantasiaCover({
             src={envelopeAsset}
             style={{ width: '100%', height: 'auto', display: 'block' }}
             width={480}
+          />
+          <span
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '84%',
+              width: 'calc(100% + 80px)',
+              height: 138,
+              transform: 'translate(-50%,-50%)',
+              background: 'radial-gradient(ellipse 60% 60% at 50% 50%, rgba(10,18,38,.55) 0%, transparent 75%)',
+            }}
           />
           <span
             style={{

@@ -16,8 +16,10 @@ const ICONOS: Record<string, Archivo> = {
   cierre: 'auto-plata-opt.avif',
 }
 
-/** La piel de «Encanto Musical». */
+/** La piel de «Noche Disco» (Mariana). */
 export const PIEL: PielXv = {
+  // Su itinerario es una sola columna centrada (`invites-1.jsx`, «Itinerario»).
+  itinerarioColumna: true,
   // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta.
   apertura: (
     <>
@@ -92,6 +94,12 @@ export const PIEL: PielXv = {
   // Los colores que «Encanto Musical» reparte distinto de «Bajo el Mar». Su «XV» no es un
   // color: es un degradado de plata recortado sobre el texto, como el material del diseño.
   piezas: {
+    // El «ENVIAR» de su formulario en la maqueta.
+    formulario: { boton: '#C0C6CD' },
+    botonTinta: '#000000',
+    // El plano como su maqueta: aro negro, rótulo y coordenadas en plata.
+    mapaAro: '#000000',
+    mapaRotulo: '#B8BFC7',
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
     firma: '#D8DDE3',
     // Su recepción también va centrada, con el castillo en plata arriba.
@@ -109,6 +117,10 @@ export const PIEL: PielXv = {
     cita: {
       panel: true,
       fuente: 'var(--font-cormorant)',
+      // Como la maqueta: cursiva de peso normal y sin resplandor.
+      weight: 400,
+      sombra: 'none',
+      color: '#FFFFFF',
       cursiva: true,
       mayusculas: false,
       size: 18,
@@ -136,7 +148,7 @@ export const PIEL: PielXv = {
     nombre: '#FFFFFF',
     // Su nombre lleva sombra negra **y** un resplandor blanco, como en la maqueta.
     sombraNombre: '0 2px 10px rgba(0,0,0,.7), 0 0 24px rgba(255,255,255,.35)',
-    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#B8BFC7' },
+    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#B8BFC7', mayusculas: true },
     anfitrionesNombres: '#FFFFFF',
     fecha: '#D8DDE3',
     rotuloTenue: '#B8BFC7',

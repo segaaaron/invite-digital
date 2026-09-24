@@ -80,6 +80,8 @@ export function XvSharedView({
   // es de quien salió este esqueleto.
   const Z = piel.piezas ?? {}
   const F = Z.formulario ?? {}
+  /** La recepción centrada y compacta de «Gala Real» en V3. */
+  const C = Z.recepcionCentrada === 'compacta'
   const SERIAL = Z.serial ?? P.orquidea
   const MONOGRAMA = Z.monograma ?? P.uva
   const ANIOS = Z.anios ?? P.amatista
@@ -126,9 +128,9 @@ export function XvSharedView({
     acento: P.lila,
     acentoHondo: P.lilaFuerte,
     campo: F.campo ?? P.vidrioFuerte,
-    hueco: P.vidrioFuerte,
+    hueco: F.hueco ?? P.vidrioFuerte,
     linea: F.linea ?? P.bordeVidrio,
-    panel: P.vidrio,
+    panel: F.panel ?? P.vidrio,
     // La tinta de los campos del formulario es la fuerte del diseño, que es la que la
     // maqueta usa ahí; `tinta` a secas es la del cuerpo, más clara.
     tinta: F.tinta ?? P.violetaHondo,
@@ -575,11 +577,22 @@ export function XvSharedView({
 
           {hosts === undefined ? null : (
             <div style={{ textAlign: 'center', marginTop: 46, padding: '26px 22px', ...CRISTAL }}>
-              <div style={{ fontFamily: Z.anfitriones?.font ?? CALIGRAFIA, fontSize: Z.anfitriones?.size ?? 30, fontWeight: Z.anfitriones?.weight ?? 400, color: Z.anfitriones?.color ?? P.uva }}>{hosts.label ?? ''}</div>
-              {anfitrionesXv(hosts).padres.map((nombre) => (
+              <div
+                style={{
+                  fontFamily: Z.anfitriones?.font ?? CALIGRAFIA,
+                  fontSize: Z.anfitriones?.size ?? 30,
+                  fontWeight: Z.anfitriones?.weight ?? 400,
+                  color: Z.anfitriones?.color ?? P.uva,
+                  ...(Z.anfitriones?.mayusculas === true ? { letterSpacing: '0.2em', textTransform: 'uppercase' as const } : {}),
+                }}
+              >
+                {hosts.label ?? ''}
+              </div>
+              {/* Como la maqueta: el primer nombre a 12 del rótulo y el segundo pegado, a 2. */}
+              {anfitrionesXv(hosts).padres.map((nombre, i) => (
                 <div
                   key={nombre}
-                  style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: 10, color: Z.anfitrionesNombres ?? P.violetaHondo, fontWeight: 700 }}
+                  style={{ fontSize: 15, letterSpacing: '0.08em', marginTop: i === 0 ? 12 : 2, color: Z.anfitrionesNombres ?? P.violetaHondo, fontWeight: 700 }}
                 >
                   {nombre}
                 </div>
@@ -769,8 +782,9 @@ export function XvSharedView({
             >
               {/* «Bosque Encantado» la compone centrada —pieza arriba, hora al pie—; las
                   demás en fila, con el título a la izquierda y la pieza a la derecha. */}
-              {Z.recepcionCentrada === true ? (
-                <div style={{ textAlign: 'center', padding: '10px 0 22px' }}>
+              {Z.recepcionCentrada === true || Z.recepcionCentrada === 'compacta' ? (
+                <div style={{ textAlign: 'center', padding: C ? 0 : '10px 0 22px' }}>
+                  {piel.castilloNodo ?? (
                   <Image
                     alt=""
                     aria-hidden
@@ -780,15 +794,16 @@ export function XvSharedView({
                       width: piel.arte?.castilloWidth ?? 62,
                       height: 'auto',
                       display: 'block',
-                      margin: '0 auto 20px',
+                      margin: C ? '0 auto 16px' : '0 auto 20px',
                       filter: piel.arte?.castilloFiltro,
                     }}
                     width={62}
                   />
+                  )}
                   <div
                     style={{
                       fontFamily: CALIGRAFIA,
-                      fontSize: Z.tituloRecepcionSize ?? 32,
+                      fontSize: Z.tituloRecepcionSize ?? (C ? 30 : 32),
                       color: TITULO,
                       fontWeight: 700,
                       textShadow: Z.sombraTexto,
@@ -796,25 +811,27 @@ export function XvSharedView({
                   >
                     {reception.label ?? themes.reception}
                   </div>
-                  <div style={{ marginTop: 12, fontSize: 14, color: LUGAR_NOMBRE, fontWeight: 700, textShadow: Z.sombraTexto }}>
+                  <div style={{ marginTop: C ? 10 : 12, fontSize: C ? 13 : 14, color: LUGAR_NOMBRE, fontWeight: 700, textShadow: Z.sombraTexto }}>
                     {reception.place ?? ''}
                   </div>
-                  <div style={{ fontSize: 11, marginTop: 6, color: LUGAR_DIRECCION, fontWeight: 600, textShadow: Z.sombraTexto }}>
-                    {reception.address ?? ''}
-                  </div>
+                  {C && reception.address === undefined ? null : (
+                    <div style={{ fontSize: 11, marginTop: 6, color: LUGAR_DIRECCION, fontWeight: 600, textShadow: Z.sombraTexto }}>
+                      {reception.address ?? ''}
+                    </div>
+                  )}
                   <div
                     style={{
                       fontFamily: MONO,
-                      fontSize: 20,
-                      letterSpacing: '0.15em',
+                      fontSize: C ? 14 : 20,
+                      letterSpacing: C ? undefined : '0.15em',
                       color: LUGAR_HORA,
-                      marginTop: 16,
+                      marginTop: C ? 6 : 16,
                       textShadow: Z.sombraTexto,
                     }}
                   >
                     {reception.time ?? ''}
                   </div>
-                  {piel.ornamento}
+                  {C ? null : piel.ornamento}
                 </div>
               ) : (
                 <div
@@ -836,6 +853,7 @@ export function XvSharedView({
                     >
                       {reception.label ?? themes.reception}
                     </div>
+                    {piel.castilloNodo ?? (
                     <Image
                       alt=""
                       aria-hidden
@@ -849,6 +867,7 @@ export function XvSharedView({
                       }}
                       width={48}
                     />
+                    )}
                   </div>
                   <div
                     style={{
@@ -896,14 +915,16 @@ export function XvSharedView({
             >
               <MapPreview
                 accent={MAPA}
-                border={P.amatista}
+                border={Z.mapaBorde ?? P.amatista}
                 coords={map.coords ?? ''}
                 directionsLabel={themes.viewLocation}
                 href={map.href}
                 respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
                 label={map.label ?? ''}
+                labelColor={Z.mapaRotulo}
+                coordsColor={Z.mapaRotulo}
                 pinDot={P.blanco}
-                pinRing={P.blanco}
+                pinRing={Z.mapaAro ?? P.blanco}
                 roadWidth={1.5}
               />
             </div>
@@ -924,9 +945,10 @@ export function XvSharedView({
             >
               {piel.rotulos?.itinerary ?? themes.itinerary}
             </div>
+            {piel.itinerario?.(itinerary) ?? (
             <div
               style={{
-                padding: '30px 22px',
+                padding: piel.itinerarioColumna === true ? '26px 22px' : '30px 22px',
                 borderRadius: 20,
                 // El mismo fondo que las demás tarjetas del diseño, **no uno más opaco**.
                 // Estaba con `vidrioFuerte` y en la maqueta ninguno de los siete lo usa:
@@ -946,10 +968,16 @@ export function XvSharedView({
                 referencia que enseña el usuario lo pinta cronológico, y cuando las dos
                 fuentes no coinciden manda la que se ve.
               */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', position: 'relative' }}>
+              <div
+                style={
+                  piel.itinerarioColumna === true
+                    ? { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 18 }
+                    : { display: 'grid', gridTemplateColumns: '1fr 1fr', position: 'relative' }
+                }
+              >
                 {/* La divisoria la llevan todos menos «Gala Real», cuya rejilla la maqueta
                     abre sin ella (`invites-1.jsx:2075`). */}
-                {piel.itinerarioDivisoria === false ? null : (
+                {piel.itinerarioDivisoria === false || piel.itinerarioColumna === true ? null : (
                   <div aria-hidden style={{ position: 'absolute', top: 0, bottom: 0, left: '50%', width: 1.5, background: P.lilaFuerte }} />
                 )}
                 {itinerary.map((fila, i) => (
@@ -957,7 +985,7 @@ export function XvSharedView({
                     key={`${fila.time}-${fila.label}`}
                     style={{
                       textAlign: 'center',
-                      padding: '18px 14px',
+                      padding: piel.itinerarioColumna === true ? 0 : '18px 14px',
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
@@ -1052,6 +1080,7 @@ export function XvSharedView({
                 ))}
               </div>
             </div>
+            )}
           </Reveal>
         )}
 
@@ -1325,7 +1354,7 @@ export function XvSharedView({
               pie de foto.
             */}
             {despedida === undefined ? null : (
-              <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: P.violeta, maxWidth: '70%', marginInline: 'auto' }}>
+              <p style={{ fontFamily: SANS, fontSize: 15, lineHeight: 1.7, color: Z.despedida ?? P.violeta, maxWidth: '70%', marginInline: 'auto' }}>
                 {despedida}
               </p>
             )}
@@ -1349,22 +1378,28 @@ export function XvSharedView({
                 width={400}
               />
             </div>
-            {bendicion === undefined ? null : (
-              <p
-                style={{
-                  fontFamily: SERIF,
-                  fontStyle: 'italic',
-                  fontSize: 21,
-                  lineHeight: 1.8,
-                  color: P.violeta,
-                  textShadow: Z.sombraTexto ?? '0 2px 8px rgba(255,255,255,.9)',
-                }}
-              >
-                {bendicion}
-              </p>
-            )}
-            <div aria-hidden style={{ marginTop: 26, fontSize: 20, color: P.amatista, opacity: 0.7 }}>
-              ◆
+            <div style={{ position: 'relative', isolation: 'isolate' }}>
+              {/* El halo claro que la maqueta pone detrás de la bendición (marina y partitura). */}
+              {Z.haloCierre === undefined ? null : (
+                <div aria-hidden style={{ position: 'absolute', inset: -20, background: Z.haloCierre, zIndex: -1 }} />
+              )}
+              {bendicion === undefined ? null : (
+                <p
+                  style={{
+                    fontFamily: SERIF,
+                    fontStyle: 'italic',
+                    fontSize: 21,
+                    lineHeight: 1.8,
+                    color: P.violeta,
+                    textShadow: Z.sombraBendicion ?? Z.sombraTexto ?? '0 2px 8px rgba(255,255,255,.9)',
+                  }}
+                >
+                  {bendicion}
+                </p>
+              )}
+              <div aria-hidden style={{ marginTop: 26, fontSize: 20, color: P.amatista, opacity: 0.7 }}>
+                ◆
+              </div>
             </div>
           </div>
         </Reveal>

@@ -36,7 +36,7 @@ describe('las imágenes de los temas', () => {
   })
 
   it('compone la ruta pública', () => {
-    expect(themeAsset('xv-valeria', 'corona-plata-opt.avif')).toBe('/temas/xv-valeria/corona-plata-opt.avif')
+    expect(themeAsset('xv-valeria', 'tiara-vino-sf.avif')).toBe('/temas/xv-valeria/tiara-vino-sf.avif')
   })
 
   it('todo nombre es seguro en una URL', () => {

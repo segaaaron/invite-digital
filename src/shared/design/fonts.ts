@@ -170,6 +170,7 @@ export const playfairDisplay = localFont({
   fallback: ['Cormorant Garamond', 'Georgia', 'serif'],
   src: [
     { path: '../../../public/fonts/playfair-display-600-italic.woff2', weight: '600', style: 'italic' },
+    { path: '../../../public/fonts/playfair-display-600.woff2', weight: '600', style: 'normal' },
     { path: '../../../public/fonts/playfair-display-700.woff2', weight: '700', style: 'normal' },
   ],
 })

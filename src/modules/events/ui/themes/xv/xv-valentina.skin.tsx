@@ -64,6 +64,12 @@ export const PIEL: PielXv = {
   // Los colores que «Mascarada» reparte distinto de «Bajo el Mar»: su fecha va en oro y la
   // hora de su cronograma en marfil, justo al revés que la marina.
   piezas: {
+    // El «ENVIAR» de su formulario en la maqueta.
+    formulario: { boton: '#C9A227' },
+    botonTinta: '#2A1140',
+    // El plano como su maqueta: calles del oro del borde y aro del fondo.
+    mapaBorde: '#C9A227',
+    mapaAro: '#2A1140',
     recepcionFilete: P.lilaFuerte,
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
     firma: '#E8C87A',

@@ -42,13 +42,17 @@ export const PIEL: PielXv = {
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      tiaraAsset={themeAsset('xv-fantasia', 'tiara-vino-sf.avif')}
       title={`${datos.title} AÑOS`}
     />
   ),
   // Los colores que «Noche Estrellada» reparte distinto de «Bajo el Mar». Su rótulo de
   // anfitriones no va en caligrafía grande: es una línea pequeña en DM Sans.
   piezas: {
+    // El «ENVIAR» de su formulario en la maqueta.
+    formulario: { boton: '#C9A24A' },
+    // El plano como su maqueta: calles del oro del borde y aro del fondo.
+    mapaBorde: '#D9B85C',
+    mapaAro: '#0c1830',
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
     firma: '#D9B85C',
     // Su tarjeta de la fecha va desnuda: la maqueta no le pone ornamento.
@@ -64,6 +68,10 @@ export const PIEL: PielXv = {
     cita: {
       panel: true,
       fuente: 'var(--font-cormorant)',
+      // Como la maqueta: cursiva de peso normal y sin resplandor.
+      weight: 400,
+      sombra: 'none',
+      color: '#F3EDD8',
       cursiva: true,
       mayusculas: false,
       size: 18,
@@ -82,7 +90,7 @@ export const PIEL: PielXv = {
     vestimentaDetalle: '#F3EDD8',
     tituloFormulario: '#C9A24A',
     botonTinta: '#0C1830',
-    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#C9B78A' },
+    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#C9B78A', mayusculas: true },
     anfitrionesNombres: '#F3EDD8',
     fecha: '#D9B85C',
     tituloSeccion: '#D9B85C',
@@ -93,6 +101,25 @@ export const PIEL: PielXv = {
   },
   // Los tamaños de su maqueta: el ramo y la luna a 260, el reloj a 100.
   arte: { coronaWidth: 260, relojWidth: 100, cierreWidth: '60%' },
+  // La recepción lleva un castillo de línea dorado, como en su maqueta.
+  castilloNodo: (
+    <svg
+      aria-hidden
+      fill="none"
+      height="40"
+      stroke="#D9B85C"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="1.7"
+      style={{ flexShrink: 0 }}
+      viewBox="0 0 24 24"
+      width="40"
+    >
+      <path d="M4 21 V10 M20 21 V10 M4 10 L4 7 L7 7 L7 10 M20 10 L20 7 L17 7 L17 10 M7 10 L7 4 L9 6 M17 10 L17 4 L15 6 M9 6 L12 3 L15 6" />
+      <path d="M4 21 H20" />
+      <rect height="6" width="4" x="10" y="15" />
+    </svg>
+  ),
   paleta: P,
   cristal: {
     background: P.vidrio,

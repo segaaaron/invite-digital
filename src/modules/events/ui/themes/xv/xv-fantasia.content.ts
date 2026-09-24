@@ -17,7 +17,6 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   reception: {
     label: 'Recepción Social',
     place: 'Salón de Eventos Elianne',
-    address: 'Km 8, Carretera al Cielo',
     time: '18:00',
   },
   map: { label: 'SALÓN ELIANNE', coords: '19.32°N · 99.18°W' },

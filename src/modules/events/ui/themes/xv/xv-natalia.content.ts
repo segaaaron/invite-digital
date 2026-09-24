@@ -22,16 +22,16 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   },
   map: { label: 'HACIENDA LAS ESTRELLAS', coords: '19.32°N · 99.18°W' },
   itinerary: [
-    { time: '18:00', label: 'Recepción', imageId: 'recepcion' },
-    { time: '20:30', label: 'Acto Central', imageId: 'corona' },
-    { time: '21:30', label: 'Fiesta', imageId: 'fiesta' },
-    { time: '02:00', label: 'Despedida', imageId: 'despedida' },
+    { time: '18:00', label: 'Recepción' },
+    { time: '20:30', label: 'Acto Central' },
+    { time: '21:30', label: 'Fiesta' },
+    { time: '02:00', label: 'Despedida' },
   ],
   music: { track: 'Tiempo de Vals', artist: 'Chayanne · vals oficial' },
   dressCode: {
     title: 'Código de Vestimenta',
     note: 'FORMAL — DE GALA',
-    detail: 'El color morado queda reservado para la quinceañera',
+    detail: 'Evitar el color dorado, queda reservado para la quinceañera',
   },
   notes: [
     {

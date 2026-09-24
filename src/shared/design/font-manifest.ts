@@ -113,6 +113,7 @@ export const FONT_FILES: readonly string[] = [
   'spectral-300-italic.woff2',
   'spectral-400-italic.woff2',
   'playfair-display-600-italic.woff2',
+  'playfair-display-600.woff2',
   'playfair-display-700.woff2',
   'montserrat-variable.woff2',
   'outfit-variable.woff2',

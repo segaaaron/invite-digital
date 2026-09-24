@@ -76,6 +76,7 @@ export const PIEL_XV: PielXv = {
     // Su tarjeta de la fecha va enmarcada por dos filetes, arriba y abajo.
     fechaFiletes: true,
     recepcionFilete: P.lilaFuerte,
+    haloCierre: 'radial-gradient(ellipse 70% 65% at 50% 45%, rgba(255,252,255,.5) 0%, transparent 75%)',
     // El formulario morado de V3 (`SofiaRSVPForm theme="purple"`).
     tituloFormulario: P.ciruela,
     plazo: P.morado,

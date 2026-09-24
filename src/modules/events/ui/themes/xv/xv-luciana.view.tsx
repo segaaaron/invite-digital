@@ -10,5 +10,8 @@ import { XvSharedView } from './xv.view'
  * arreglo hay que hacerlo siete veces.
  */
 export function XvLucianaView(props: ThemeProps) {
-  return <XvSharedView {...props} piel={PIEL} />
+  // Su maqueta no pinta a los padres: lo escrito antes en ese bloque no sale.
+  const content = { ...props.content }
+  delete content.hosts
+  return <XvSharedView {...props} content={content} piel={PIEL} />
 }

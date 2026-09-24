@@ -13,9 +13,9 @@ type Props = {
   readonly height?: number
   readonly roadWidth?: number
   readonly pinRing?: string
-  readonly labelColor?: string
+  readonly labelColor?: string | undefined
   readonly labelLetterSpacing?: string
-  readonly coordsColor?: string
+  readonly coordsColor?: string | undefined
   /** El punto del alfiler, que contrasta contra el acento. */
   readonly pinDot: string
   /** El enlace de Google Maps que pegó el atelier, o la búsqueda de la dirección que escribió. */

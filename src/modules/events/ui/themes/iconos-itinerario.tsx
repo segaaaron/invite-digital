@@ -7,16 +7,10 @@ import { PIEL_XV } from './xv/xv.skin'
 import { CONTENIDO_DE_MUESTRA as XV } from './xv/xv.content'
 import { PIEL as FANTASIA } from './xv/xv-fantasia.skin'
 import { CONTENIDO_DE_MUESTRA as XV_FANTASIA } from './xv/xv-fantasia.content'
-import { PIEL as LUCIANA } from './xv/xv-luciana.skin'
-import { CONTENIDO_DE_MUESTRA as XV_LUCIANA } from './xv/xv-luciana.content'
 import { PIEL as MARIANA } from './xv/xv-mariana.skin'
 import { CONTENIDO_DE_MUESTRA as XV_MARIANA } from './xv/xv-mariana.content'
-import { PIEL_NATALIA } from './xv/xv-natalia.skin'
-import { CONTENIDO_DE_MUESTRA as XV_NATALIA } from './xv/xv-natalia.content'
 import { PIEL as VALENTINA } from './xv/xv-valentina.skin'
 import { CONTENIDO_DE_MUESTRA as XV_VALENTINA } from './xv/xv-valentina.content'
-import { PIEL as VALERIA } from './xv/xv-valeria.skin'
-import { CONTENIDO_DE_MUESTRA as XV_VALERIA } from './xv/xv-valeria.content'
 
 /** Un icono que se puede elegir para un momento del itinerario, dibujado como lo pinta el diseño. */
 export type OpcionDeIcono = { readonly clave: string; readonly nombre: string; readonly dibujo: ReactNode }
@@ -83,11 +77,8 @@ const editorial = (): OpcionDeIcono[] =>
 const POR_DISENO: Record<string, () => OpcionDeIcono[]> = {
   xv: () => deXv(PIEL_XV, XV),
   'xv-fantasia': () => deXv(FANTASIA, XV_FANTASIA),
-  'xv-luciana': () => deXv(LUCIANA, XV_LUCIANA),
   'xv-mariana': () => deXv(MARIANA, XV_MARIANA),
-  'xv-natalia': () => deXv(PIEL_NATALIA, XV_NATALIA),
   'xv-valentina': () => deXv(VALENTINA, XV_VALENTINA),
-  'xv-valeria': () => deXv(VALERIA, XV_VALERIA),
   'xv-isabelle': botanicos,
   'boda-bot': botanicos,
   'boda-ed': editorial,
