@@ -13,6 +13,7 @@ import { isErr } from '@/shared/result'
 import { MAX_PROOF_BYTES } from '@/modules/orders/domain/proof'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
+import type { OrderErrorCode } from '@/shared/i18n/dictionary'
 
 // ============================================================================
 // Este fichero tiene DOS bloques, y la diferencia importa.
@@ -34,14 +35,20 @@ async function ipDeLaPeticion(): Promise<string> {
   return clientIpFrom({ realIp: bolsa.get('x-real-ip'), forwardedFor: bolsa.get('x-forwarded-for') })
 }
 
+/**
+ * Lo público devuelve **códigos**, no frases: el formulario los traduce con el diccionario
+ * del idioma de la página. Una frase escrita aquí salía en español en la web en inglés.
+ */
 export type PlaceOrderState =
   | { status: 'idle' }
   | { status: 'success'; publicRef: string }
-  | { status: 'error'; message: string }
+  | { status: 'error'; code: OrderErrorCode }
+
+const CODIGOS_DE_PEDIDO: ReadonlySet<string> = new Set(['name', 'contact', 'plan', 'notes'])
 
 export async function placeOrderAction(_previous: PlaceOrderState, formData: FormData): Promise<PlaceOrderState> {
   if (limitePedido.isLimited(await ipDeLaPeticion(), Date.now())) {
-    return { status: 'error', message: 'Demasiados pedidos seguidos. Espera un minuto e inténtalo otra vez.' }
+    return { status: 'error', code: 'rateLimited' }
   }
 
   const texto = (clave: string): string => {
@@ -64,40 +71,35 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
 
   if (isErr(result)) {
     console.error('pedido rechazado', result.error.kind, result.error.detail)
-    return {
-      status: 'error',
-      message:
-        result.error.kind === 'invalid_input'
-          ? result.error.detail
-          : 'No pudimos registrar el pedido. Inténtalo en un momento.',
-    }
+    if (result.error.kind !== 'invalid_input') return { status: 'error', code: 'failed' }
+    return { status: 'error', code: CODIGOS_DE_PEDIDO.has(result.error.detail) ? (result.error.detail as OrderErrorCode) : 'invalid' }
   }
 
   return { status: 'success', publicRef: result.value.publicRef }
 }
 
-export type UploadProofState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+export type UploadProofState = { status: 'idle' } | { status: 'success' } | { status: 'error'; code: OrderErrorCode }
 
-const MOTIVO: Record<string, string> = {
-  vacio: 'El archivo está vacío.',
-  demasiado_grande: `El archivo pasa de ${Math.round(MAX_PROOF_BYTES / 1024 / 1024)} MB.`,
-  tipo_no_admitido: 'Solo aceptamos una foto (JPG, PNG o WEBP) o un PDF.',
+const MOTIVO: Record<string, OrderErrorCode> = {
+  vacio: 'proofEmpty',
+  demasiado_grande: 'proofTooBig',
+  tipo_no_admitido: 'proofType',
 }
 
 export async function uploadProofAction(_previous: UploadProofState, formData: FormData): Promise<UploadProofState> {
   if (limiteSubida.isLimited(await ipDeLaPeticion(), Date.now())) {
-    return { status: 'error', message: 'Demasiados intentos seguidos. Espera un minuto.' }
+    return { status: 'error', code: 'proofRateLimited' }
   }
 
   const archivo = formData.get('proof')
   const rawRef = formData.get('publicRef')
   if (!(archivo instanceof File) || typeof rawRef !== 'string') {
-    return { status: 'error', message: 'Falta el archivo del comprobante.' }
+    return { status: 'error', code: 'proofMissing' }
   }
 
   // El tope se comprueba **antes** de leer el fichero a memoria: `arrayBuffer()` de un
   // archivo de dos gigas se los trae enteros al servidor antes de que nadie lo rechace.
-  if (archivo.size > MAX_PROOF_BYTES) return { status: 'error', message: MOTIVO.demasiado_grande! }
+  if (archivo.size > MAX_PROOF_BYTES) return { status: 'error', code: 'proofTooBig' }
 
   const result = await orders.attachProof({
     rawRef,
@@ -109,15 +111,9 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
   if (isErr(result)) {
     console.error('comprobante rechazado', result.error.kind, result.error.detail)
     if (result.error.kind === 'proof_rejected') {
-      return { status: 'error', message: MOTIVO[result.error.detail] ?? 'No pudimos aceptar ese archivo.' }
+      return { status: 'error', code: MOTIVO[result.error.detail] ?? 'proofRejected' }
     }
-    return {
-      status: 'error',
-      message:
-        result.error.kind === 'wrong_status'
-          ? 'Este pedido ya está aprobado: no hace falta otro comprobante.'
-          : 'No pudimos guardar el comprobante. Inténtalo en un momento.',
-    }
+    return { status: 'error', code: result.error.kind === 'wrong_status' ? 'proofApproved' : 'proofFailed' }
   }
 
   revalidatePath(`/panel/pedidos`)

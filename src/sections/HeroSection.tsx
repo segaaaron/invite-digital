@@ -75,7 +75,7 @@ export function HeroSection({ dictionary, slot, cifras, marcas }: Props) {
           )}
         </Reveal>
 
-        <div className="relative min-h-[420px]">{slot ?? <HeroEnvelope />}</div>
+        <div className="relative min-h-[420px]">{slot ?? <HeroEnvelope etiqueta={hero.envelopeLabel} />}</div>
       </div>
 
       {/* La franja de cifras que cierra el hero en la maqueta. */}

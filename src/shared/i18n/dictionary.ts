@@ -43,6 +43,8 @@ export interface FiestasDictionary {
 
 export interface HeroDictionary {
   eyebrow: string
+  /** El rótulo de la tarjeta de muestra que sustituye al sobre de la portada. */
+  envelopeLabel: string
   titleLine1: string
   titleLine2: string
   titleAccent: string
@@ -98,6 +100,8 @@ export interface CollectionsDictionary {
   /** El botón que trae la siguiente tanda de ocho modelos. */
   loadMore: string
   errorMessage: string
+  /** «Ir a la escena {n}: {nombre}», el nombre accesible de cada punto del carrusel. */
+  goToScene: string
   /** Las nueve escenas de la maqueta, en su orden. */
   scenes: readonly CollectionScene[]
 }
@@ -110,6 +114,9 @@ export interface ComparisonDictionary {
   sliderLabel: string
   imageAlt: string
   traditionalLabel: string
+  /** El botón y el pie del teléfono de muestra del lado de Luxury Atelier. */
+  phoneCta: string
+  phoneCaption: string
   luxe: readonly [string, string, string, string, string]
   traditional: readonly [string, string, string, string, string]
 }
@@ -550,6 +557,48 @@ export interface OrdersDictionary {
   decisionNote: string
   proofsHeading: string
   keepRef: string
+  /** El formulario del pedido y la subida del comprobante: sus rótulos, avisos y errores. */
+  form: OrderFormDictionary
+}
+
+/** Los errores del pedido público, por su código: la acción devuelve la clave, no la frase. */
+export type OrderErrorCode =
+  | 'rateLimited'
+  | 'failed'
+  | 'name'
+  | 'contact'
+  | 'plan'
+  | 'notes'
+  | 'invalid'
+  | 'proofRateLimited'
+  | 'proofMissing'
+  | 'proofEmpty'
+  | 'proofTooBig'
+  | 'proofType'
+  | 'proofRejected'
+  | 'proofApproved'
+  | 'proofFailed'
+
+export interface OrderFormDictionary {
+  plan: string
+  design: string
+  name: string
+  contact: string
+  eventDate: string
+  notes: string
+  submit: string
+  submitting: string
+  successTitle: string
+  /** «Tu referencia es {ref}. Guárdala: …» — `{ref}` se pinta en negrita. */
+  successText: string
+  goPay: string
+  proofLabel: string
+  /** «Una foto o un PDF, hasta {mb} MB». */
+  proofHint: string
+  proofReceived: string
+  proofSubmit: string
+  proofSubmitting: string
+  errors: Record<OrderErrorCode, string>
 }
 
 export interface Dictionary {

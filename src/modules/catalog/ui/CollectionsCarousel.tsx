@@ -83,7 +83,7 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
           parar()
           go(e.key === 'ArrowRight' ? 1 : -1)
         }}
-        aria-label="Colecciones"
+        aria-label={dictionary.nav.collections}
         role="region"
         tabIndex={0}
       >
@@ -177,7 +177,7 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
         {slides.map((slide, i) => (
           <button
             aria-current={i === index ? 'true' : undefined}
-            aria-label={`Ir a la escena ${i + 1}: ${slide.name}`}
+            aria-label={dictionary.collections.goToScene.replace('{n}', String(i + 1)).replace('{nombre}', slide.name)}
             className={`h-2 rounded-full transition-all duration-500 ${
               i === index ? 'w-7 bg-linear-to-r from-gold-deep to-gold-light' : 'w-2 bg-ink-mute/30 hover:bg-ink-mute/60'
             }`}

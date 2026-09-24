@@ -9,6 +9,8 @@ const props = {
   traditionalLabel: 'Tradicional',
   traditional: ['Imagen estática', 'Plantilla con logo'],
   sliderLabel: 'Comparar',
+  phoneCta: 'Confirmar asistencia',
+  phoneCaption: 'Un enlace por familia',
 }
 
 describe('CompareSlider', () => {

@@ -107,7 +107,7 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
 
           <section className="flex flex-col gap-3">
             <h2 className="font-display text-[22px] font-light text-ink">{dictionary.orders.proofHeading}</h2>
-            <ProofUpload publicRef={order.publicRef} />
+            <ProofUpload publicRef={order.publicRef} textos={dictionary.orders.form} />
           </section>
         </>
       )}

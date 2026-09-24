@@ -32,19 +32,21 @@ export const placeOrder =
     eventDate: string | null
     notes: string | null
   }): Promise<Result<Order, OrdersError>> => {
+    // Los errores del pedido público son **códigos** (`name`, `contact`…): la web los
+    // traduce con su diccionario, en el idioma de quien pide.
     const nombre = input.customerName.trim()
     const contacto = input.contact.trim()
 
     if (nombre === '' || nombre.length > MAX_NAME) {
-      return err(ordersError('invalid_input', 'El nombre es obligatorio y no puede pasar de 160 caracteres.'))
+      return err(ordersError('invalid_input', 'name'))
     }
     if (contacto === '' || contacto.length > MAX_NAME) {
-      return err(ordersError('invalid_input', 'Hace falta un contacto: WhatsApp o correo.'))
+      return err(ordersError('invalid_input', 'contact'))
     }
-    if (input.planSlug.trim() === '') return err(ordersError('invalid_input', 'Falta el plan.'))
+    if (input.planSlug.trim() === '') return err(ordersError('invalid_input', 'plan'))
 
     const notas = input.notes?.trim() ?? ''
-    if (notas.length > MAX_NOTES) return err(ordersError('invalid_input', 'Las notas no pueden pasar de 1000 caracteres.'))
+    if (notas.length > MAX_NOTES) return err(ordersError('invalid_input', 'notes'))
 
     // Un diseño que no cabe en la columna **no tumba el pedido**: se descarta y el evento
     // nacerá con el clásico. Un pedido es dinero; perderlo por un parámetro raro de la URL

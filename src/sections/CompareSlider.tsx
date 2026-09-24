@@ -10,6 +10,8 @@ type Props = {
   traditionalLabel: string
   traditional: readonly string[]
   sliderLabel: string
+  phoneCta: string
+  phoneCaption: string
 }
 
 /**
@@ -24,7 +26,7 @@ type Props = {
  * El control es un `input[type=range]` de verdad, no un div con eventos de puntero: así
  * funciona con teclado y lo anuncia un lector de pantalla.
  */
-export function CompareSlider({ imageAlt, luxeLabel, luxe, traditionalLabel, traditional, sliderLabel }: Props) {
+export function CompareSlider({ imageAlt, luxeLabel, luxe, traditionalLabel, traditional, sliderLabel, phoneCta, phoneCaption }: Props) {
   const [posicion, setPosicion] = useState(50)
 
   return (
@@ -98,10 +100,10 @@ export function CompareSlider({ imageAlt, luxeLabel, luxe, traditionalLabel, tra
             <div className="relative aspect-[9/16] overflow-hidden rounded-[20px] bg-bg-sunken">
               <Image alt="" className="object-cover object-top" fill sizes="176px" src="/templates/boda-bot.avif" />
               <span className="absolute inset-x-2 bottom-2 rounded-full bg-gold px-3 py-1.5 text-center text-[9px] tracking-[0.18em] text-shell-deep uppercase">
-                Confirmar asistencia
+                {phoneCta}
               </span>
             </div>
-            <p className="pt-2 pb-1 text-center font-mono text-[8px] tracking-[0.2em] text-gold-light uppercase">Un enlace por familia</p>
+            <p className="pt-2 pb-1 text-center font-mono text-[8px] tracking-[0.2em] text-gold-light uppercase">{phoneCaption}</p>
           </div>
           <div className="flex flex-col items-end gap-4">
             <p className="font-display text-[30px] font-light text-gold-light">{luxeLabel}</p>

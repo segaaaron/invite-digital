@@ -48,6 +48,8 @@ export default async function PedidoPage({
       </header>
 
       <OrderForm
+        locale={locale}
+        textos={dictionary.orders.form}
         planName={plan.name}
         planSlug={plan.slug}
         priceLabel={`${formatMoney(plan.price, locale)} ${plan.price.currency}`}

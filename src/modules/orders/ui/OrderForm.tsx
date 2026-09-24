@@ -3,6 +3,8 @@
 import Link from 'next/link'
 import { useActionState, useId } from 'react'
 import { placeOrderAction, type PlaceOrderState } from '@/app/_acciones/orders/actions'
+import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
+import type { Locale } from '@/shared/i18n/locales'
 
 const INICIAL: PlaceOrderState = { status: 'idle' }
 
@@ -20,7 +22,12 @@ export function OrderForm({
   priceLabel,
   templateSlug = null,
   templateName = null,
+  textos,
+  locale,
 }: {
+  /** Los rótulos y avisos del formulario, en el idioma de la página. */
+  textos: OrderFormDictionary
+  locale: Locale
   planSlug: string
   planName: string
   priceLabel: string
@@ -34,16 +41,17 @@ export function OrderForm({
   if (estado.status === 'success') {
     return (
       <div className="flex flex-col gap-4 rounded-[18px] border border-gold/50 bg-gold/10 p-6" role="status">
-        <p className="font-display text-[24px] font-light text-ink">Pedido registrado</p>
+        <p className="font-display text-[24px] font-light text-ink">{textos.successTitle}</p>
         <p className="text-[14px] text-ink-soft">
-          Tu referencia es <strong className="font-mono tracking-[0.2em]">{estado.publicRef}</strong>. Guárdala: con
-          ella subes el comprobante y sigues el estado de tu pedido.
+          {textos.successText.split('{ref}')[0]}
+          <strong className="font-mono tracking-[0.2em]">{estado.publicRef}</strong>
+          {textos.successText.split('{ref}')[1] ?? ''}
         </p>
         <Link
           className="w-fit rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase"
-          href={`/es/pedido/ref/${estado.publicRef}`}
+          href={`/${locale}/pedido/ref/${estado.publicRef}`}
         >
-          Ir a pagar
+          {textos.goPay}
         </Link>
       </div>
     )
@@ -57,38 +65,38 @@ export function OrderForm({
       {templateSlug === null ? null : <input name="templateSlug" type="hidden" value={templateSlug} />}
 
       <p className="text-[14px] text-ink-soft">
-        Plan <strong className="font-normal text-ink">{planName}</strong> · {priceLabel}
+        {textos.plan} <strong className="font-normal text-ink">{planName}</strong> · {priceLabel}
       </p>
 
       {templateName === null ? null : (
         <p className="text-[14px] text-ink-soft">
-          Diseño <strong className="font-normal text-ink">{templateName}</strong>
+          {textos.design} <strong className="font-normal text-ink">{templateName}</strong>
         </p>
       )}
 
       {estado.status === 'error' ? (
         <p className="text-[13px] text-gold-deep" role="alert">
-          {estado.message}
+          {textos.errors[estado.code]}
         </p>
       ) : null}
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-nombre`}>
-        <span className={ROTULO}>Tu nombre</span>
+        <span className={ROTULO}>{textos.name}</span>
         <input className={CAMPO} id={`${id}-nombre`} maxLength={160} name="customerName" required type="text" />
       </label>
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-contacto`}>
-        <span className={ROTULO}>WhatsApp o correo</span>
+        <span className={ROTULO}>{textos.contact}</span>
         <input className={CAMPO} id={`${id}-contacto`} maxLength={160} name="contact" required type="text" />
       </label>
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-fecha`}>
-        <span className={ROTULO}>Fecha del evento (si ya la tienes)</span>
+        <span className={ROTULO}>{textos.eventDate}</span>
         <input className={CAMPO} id={`${id}-fecha`} name="eventDate" type="date" />
       </label>
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-notas`}>
-        <span className={ROTULO}>Cuéntanos lo que tienes en mente</span>
+        <span className={ROTULO}>{textos.notes}</span>
         <textarea className={`${CAMPO} min-h-[110px]`} id={`${id}-notas`} maxLength={1000} name="notes" />
       </label>
 
@@ -96,7 +104,7 @@ export function OrderForm({
         className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
         disabled={pendiente}
         type="submit" aria-busy={(pendiente) || undefined}>
-        {pendiente ? 'Registrando…' : 'Registrar pedido'}
+        {pendiente ? textos.submitting : textos.submit}
       </button>
     </form>
   )

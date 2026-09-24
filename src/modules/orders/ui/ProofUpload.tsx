@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { uploadProofAction, type UploadProofState } from '@/app/_acciones/orders/actions'
 import { ACCEPTED_MIMES, MAX_PROOF_BYTES } from '../domain/proof'
+import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
 
 const INICIAL: UploadProofState = { status: 'idle' }
 
@@ -14,7 +15,8 @@ const INICIAL: UploadProofState = { status: 'idle' }
  * herramientas del navegador en dos segundos. Quien decide qué es el fichero es el
  * servidor, mirándole los primeros bytes.
  */
-export function ProofUpload({ publicRef }: { publicRef: string }) {
+export function ProofUpload({ publicRef, textos }: { publicRef: string; textos: OrderFormDictionary }) {
+  const megas = String(Math.round(MAX_PROOF_BYTES / 1024 / 1024))
   const [estado, accion, pendiente] = useActionState<UploadProofState, FormData>(uploadProofAction, INICIAL)
 
   return (
@@ -24,8 +26,8 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
       <div className="flex flex-col gap-2">
         <FilePicker
           accept={ACCEPTED_MIMES.join(',')}
-          hint={`Una foto o un PDF, hasta ${Math.round(MAX_PROOF_BYTES / 1024 / 1024)} MB`}
-          label="Comprobante de la transferencia"
+          hint={textos.proofHint.replace('{mb}', megas)}
+          label={textos.proofLabel}
           name="proof"
         />
       </div>
@@ -42,7 +44,7 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
           <span aria-hidden className="mt-px font-mono text-[11px]">
             !
           </span>
-          <span>{estado.message}</span>
+          <span>{textos.errors[estado.code].replace('{mb}', megas)}</span>
         </p>
       ) : null}
       {estado.status === 'success' ? (
@@ -54,7 +56,7 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
           <span aria-hidden className="mt-px font-mono text-[11px]">
             ✓
           </span>
-          <span>Comprobante recibido. Lo revisamos y te avisamos por WhatsApp.</span>
+          <span>{textos.proofReceived}</span>
         </p>
       ) : null}
 
@@ -62,7 +64,7 @@ export function ProofUpload({ publicRef }: { publicRef: string }) {
         className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
         disabled={pendiente}
         type="submit" aria-busy={(pendiente) || undefined}>
-        {pendiente ? 'Subiendo…' : 'Enviar comprobante'}
+        {pendiente ? textos.proofSubmitting : textos.proofSubmit}
       </button>
     </form>
   )

@@ -32,6 +32,8 @@ export function ComparisonSection({ dictionary }: { dictionary: Dictionary }) {
             imageAlt={comparison.imageAlt}
             luxe={comparison.luxe}
             luxeLabel={BRAND.siteName}
+            phoneCaption={comparison.phoneCaption}
+            phoneCta={comparison.phoneCta}
             sliderLabel={comparison.sliderLabel}
             traditional={comparison.traditional}
             traditionalLabel={comparison.traditionalLabel}

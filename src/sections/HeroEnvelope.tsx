@@ -3,7 +3,7 @@
  * without one — today only in tests and in any future page that reuses the section.
  * The landing passes the WebGL canvas through `slot`.
  */
-export function HeroEnvelope() {
+export function HeroEnvelope({ etiqueta }: { readonly etiqueta: string }) {
   return (
     <div
       aria-hidden="true"
@@ -13,7 +13,7 @@ export function HeroEnvelope() {
       <div className="relative aspect-[5/7] w-full max-w-[300px] overflow-hidden rounded-[var(--radius-card)] border border-[var(--color-line)] bg-gradient-to-br from-bg-raised via-bg to-bg-sunken shadow-[var(--shadow-lift)]">
         <div className="absolute inset-3 rounded-[16px] border border-[var(--color-line)]" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 px-8 text-center">
-          <span className="text-[10px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep">Alta costura</span>
+          <span className="text-[10px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep">{etiqueta}</span>
           <span className="font-display text-[30px] italic text-ink">L &amp; M</span>
           <span className="h-px w-14 bg-gold/60" />
           <span className="text-[11px] uppercase tracking-[0.24em] text-ink-mute">17 · 10 · 2026</span>
