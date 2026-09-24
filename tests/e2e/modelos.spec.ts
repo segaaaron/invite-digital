@@ -108,7 +108,7 @@ test.describe('el escaparate de modelos', () => {
     // abrirlo. Es lo que impide que el número se desajuste en silencio.
     //
     // Son treinta y cinco —dieciséis bodas, dieciocho XV y el cumpleaños— y la web vende
-    // veintinueve: «cumple-beer» todavía no y cinco bodas que V3 retiró. Se abren por su
+    // veinte: «cumple-beer» todavía no, ni cinco bodas que V3 retiró ni los nueve XV V2. Se abren por su
     // dirección —las bodas que ya los usan siguen funcionando— y no salen en el catálogo.
     expect(CLAVES).toHaveLength(35)
   })

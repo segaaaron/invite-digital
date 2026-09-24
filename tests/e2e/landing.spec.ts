@@ -183,9 +183,9 @@ test('cada fiesta tiene su página con solo sus modelos, y la portada lleva a la
 
   await page.goto('/es/xv-anos')
   await expect(page.getByRole('heading', { level: 1 })).toContainText('XV')
-  // La página de cada fiesta enseña todos sus modelos: dieciocho XV y once bodas (V3 retiró cinco).
+  // La página de cada fiesta enseña todos sus modelos: nueve XV y once bodas (los demás, retirados).
   const modelos = page.locator('#modelos').getByRole('link', { name: /abrir/i })
-  await expect(modelos).toHaveCount(18)
+  await expect(modelos).toHaveCount(9)
   for (const href of await modelos.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
 
   await page.goto('/es/bodas')

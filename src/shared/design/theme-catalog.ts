@@ -280,6 +280,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'xv-deco',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Art Déco',
     en: 'Art Deco',
@@ -288,6 +290,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-realeza',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Realeza Cristal',
     en: 'Crystal Royalty',
@@ -296,6 +300,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-vogue',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Rosa Pastel',
     en: 'Pastel Pink',
@@ -304,6 +310,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-y2k',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Y2K Galaxy',
     en: 'Y2K Galaxy',
@@ -312,6 +320,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-boho',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Bohemia',
     en: 'Bohemian',
@@ -320,6 +330,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-min',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Editorial',
     en: 'Editorial',
@@ -328,6 +340,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-princ',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Princesa Real',
     en: 'Royal Princess',
@@ -336,6 +350,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-eleg',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Floral Elegante',
     en: 'Elegant Floral',
@@ -344,6 +360,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   },  {
     key: 'xv-trop',
     listo: true,
+    // Retirado del escaparate a pedido del usuario (0066).
+    publicar: false,
     categorySlug: 'xv-anos',
     es: 'Sunset',
     en: 'Sunset',
