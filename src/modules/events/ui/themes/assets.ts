@@ -38,8 +38,9 @@ export const THEME_ASSETS = {
   ],
   esencia: [
     'portada-lino.avif',
+    'pareja-1-rect.avif',
     'pareja-1.avif',
-    'pareja-2.avif',
+    'pareja-2-rect.avif',
     'pareja-3.avif',
     'pareja-4.avif',
     'pareja-5.avif',

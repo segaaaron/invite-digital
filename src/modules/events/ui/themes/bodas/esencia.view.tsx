@@ -17,11 +17,19 @@ const ROTULO_DEL_PIE = 'INVITACIÓN DIGITAL'
 const SANS = 'var(--font-outfit)'
 const SERIF = 'var(--font-cormorant)'
 
-/** Las cinco fotografías del diseño, en el orden en que la maqueta las coloca. */
-const GALERIA = ['pareja-1.avif', 'pareja-2.avif', 'pareja-3.avif', 'pareja-4.avif', 'pareja-5.avif'] as const
+/**
+ * Las cinco fotografías del diseño, en el orden de la maqueta. Las dos primeras van
+ * recortadas a rectángulo: la maqueta las trae con un óvalo y un arco pintados sobre gris,
+ * y junto a las fotos que sube el cliente —rectangulares— se veían rotas.
+ */
+const GALERIA = ['pareja-1-rect.avif', 'pareja-2-rect.avif', 'pareja-3.avif', 'pareja-4.avif', 'pareja-5.avif'] as const
 
-/** Qué casillas de la galería van a doble alto, como en la maqueta: la primera y la última. */
-const ALTAS = new Set([0, 4])
+/**
+ * Qué casillas van a doble alto: la primera, la cuarta y la última. La maqueta alarga solo
+ * la primera y la última y deja un hueco abajo a la izquierda; con la cuarta también alta,
+ * las cinco llenan la rejilla sin huecos.
+ */
+const ALTAS = new Set([0, 3, 4])
 
 /** El icono que acompaña a cada hora del itinerario, por su orden. */
 const ICONOS: readonly ClaveDeIcono[] = ['church', 'glasses', 'glasses', 'plate', 'note', 'bouquet', 'star']
