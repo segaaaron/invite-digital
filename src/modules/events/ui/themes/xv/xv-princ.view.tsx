@@ -226,7 +226,7 @@ export function XvPrincView({ content, event, themes, slots, audioSrc }: ThemePr
           </Reveal>
         )}
 
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 28 }}>
               <MusicPlayer

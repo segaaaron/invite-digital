@@ -146,7 +146,7 @@ export function XvTropView({ content, themes, slots, audioSrc }: ThemeProps) {
             </div>
           </Reveal>
         )}
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 26 }}>
               <MusicPlayer

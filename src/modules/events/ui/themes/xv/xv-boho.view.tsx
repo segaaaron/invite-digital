@@ -154,7 +154,7 @@ export function XvBohoView({ content, event, themes, slots, audioSrc }: ThemePro
             </div>
           </Reveal>
         )}
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 26 }}>
               <MusicPlayer

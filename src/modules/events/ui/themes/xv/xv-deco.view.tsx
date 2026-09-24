@@ -165,7 +165,7 @@ export function XvDecoView({ content, event, themes, slots, audioSrc }: ThemePro
           </Reveal>
         )}
 
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 28 }}>
               <MusicPlayer

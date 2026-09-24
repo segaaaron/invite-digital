@@ -182,7 +182,7 @@ export function XvVogueView({ content, themes, slots, guestInfo, audioSrc }: The
             </div>
           </Reveal>
         )}
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 28 }}>
               <MusicPlayer

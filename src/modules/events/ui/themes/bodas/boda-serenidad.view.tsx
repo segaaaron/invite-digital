@@ -8,7 +8,6 @@ import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
-import { FloralDivider } from '../kit/flora/FloralArt'
 import { CarruselDePerla } from './CarruselDePerla'
 import { SerenidadCover } from './SerenidadCover'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-serenidad.palette'
@@ -530,9 +529,14 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
  * la alterna reflejada, y así se lee como una guarda de revista y no como una repetición.
  */
 function Cenefa({ reflejada = false }: { readonly reflejada?: boolean }) {
+  // La franja de «caída de flores» (`FloralDivider` de `wedding-variants-4.jsx`, la que gana
+  // en la maqueta porque se carga después que la de `flora-art.jsx`): 54 px de la fotografía
+  // de la portada, desde arriba; `reflejada` la da la vuelta en vertical.
   return (
-    <div style={{ padding: '18px 24px', transform: reflejada ? 'scaleX(-1)' : undefined }}>
-      <FloralDivider line={P.oro} opacity={0.75} tone="white" width={150} />
+    <div aria-hidden style={{ position: 'relative', width: '100%', height: 54, overflow: 'hidden', opacity: 0.9, transform: reflejada ? 'scaleY(-1)' : undefined }}>
+      <span style={{ position: 'absolute', left: 0, right: 0, top: -30, height: 220 }}>
+        <Image alt="" fill sizes="480px" src={themeAsset('boda-serenidad', 'portada-flores.avif')} style={{ objectFit: 'cover', objectPosition: 'top' }} />
+      </span>
     </div>
   )
 }

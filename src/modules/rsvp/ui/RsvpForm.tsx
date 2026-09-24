@@ -35,8 +35,12 @@ type Props = {
    * `uniformes` es el de «Sobre Lacrado» (`uniformBg` en su maqueta): los dos botones iguales,
    * con un velo y un filete que pone el diseño (`--rsvp-fondo`, `--rsvp-borde`), en
    * Cormorant; al elegir, el otro se atenúa. Tampoco lleva saludo.
+   *
+   * `linea` es el de «Esencia»: los campos sin recuadro, subrayados; «¿Asistirás?» es la
+   * opción que se ve hasta elegir, y sin elegirla el formulario no sale; y el botón dice
+   * «Confirmar asistencia», con el color que pone el diseño (`--rsvp-fondo`, `--rsvp-tinta`).
    */
-  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | undefined
+  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | undefined
   /**
    * El nombre del invitado, que ya se sabe: cada enlace es de alguien. Se manda oculto con
    * la respuesta, para que la pareja lea quién contestó sin pedírselo otra vez.
@@ -81,6 +85,8 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
   // Quién viene se decide con un sí o un no, y cuántos es un detalle del sí. El estado es
   // del formulario, no del servidor: lo que se envía sigue siendo un número.
   const [viene, setViene] = useState(rsvp.defaultAttending !== '0')
+  // La elección de `linea`, que empieza sin hacer.
+  const [eleccion, setEleccion] = useState<'' | 'si' | 'no'>('')
   // El contador del formulario de botones. Arranca en los cupos del grupo.
   const [cuantos, setCuantos] = useState(Number(rsvp.defaultAttending) || seats)
   // Con botones, nada se envía hasta que el invitado dice sí o no.
@@ -249,6 +255,57 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
             {rsvp.isPending ? dictionary.sending : dictionary.submitLong}
           </button>
         ) : null}
+      </form>
+    )
+  }
+
+  if (variant === 'linea') {
+    const SUBRAYADO =
+      'w-full border-0 border-b border-[var(--color-line)] bg-transparent px-0 py-2 text-[13.6px] text-ink outline-none transition-colors focus-visible:border-[var(--color-cta)]'
+    return (
+      <form action={rsvp.formAction} className="mx-auto flex w-full max-w-[300px] flex-col gap-[18px] text-left">
+        <input name="token" type="hidden" value={token} readOnly />
+        <input name="name" type="hidden" value={guestName} readOnly />
+        {/* Sin elegir no hay cantidad que mandar: el formulario no sale sin la asistencia. */}
+        {eleccion === '' ? null : <input name="attending" type="hidden" value={eleccion === 'si' ? String(seats) : '0'} readOnly />}
+
+        <label className="sr-only" htmlFor={goingId}>
+          {dictionary.goingLabel}
+        </label>
+        <select className={SUBRAYADO} id={goingId} onChange={(evento) => setEleccion(evento.target.value as 'si' | 'no')} required value={eleccion}>
+          <option disabled value="">
+            {dictionary.goingLabel}
+          </option>
+          <option value="si">{dictionary.goingYes}</option>
+          <option value="no">{dictionary.goingNo}</option>
+        </select>
+
+        <label className="sr-only" htmlFor={messageId}>
+          {dictionary.messageLabel}
+        </label>
+        <input
+          className={SUBRAYADO}
+          defaultValue={rsvp.defaultMessage}
+          id={messageId}
+          maxLength={500}
+          name="message"
+          placeholder={dictionary.messageLabel}
+          type="text"
+        />
+
+        {rsvp.error === null ? null : (
+          <p className="text-[13px] text-danger" role="alert">
+            {rsvp.error}
+          </p>
+        )}
+
+        <button
+          className="mt-2 w-full rounded-[2px] bg-[var(--rsvp-fondo,var(--color-cta))] px-0 py-[13px] text-[11.5px] uppercase tracking-[0.12em] text-[var(--rsvp-tinta,var(--color-on-cta))] transition-colors hover:bg-[var(--color-cta)] disabled:opacity-60"
+          disabled={rsvp.isPending}
+          type="submit"
+        >
+          {rsvp.isPending ? dictionary.sending : dictionary.confirmAttendance}
+        </button>
       </form>
     )
   }

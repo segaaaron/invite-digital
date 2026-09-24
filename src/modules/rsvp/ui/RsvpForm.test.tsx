@@ -132,6 +132,22 @@ describe('RsvpForm', () => {
     expect(screen.getByRole('button', { name: invitation.submitLong }).className).toContain('rounded-[10px]')
   })
 
+  it('con «linea» los campos van subrayados, la asistencia se elige y el botón dice «confirmar asistencia»', () => {
+    // «Esencia»: sin recuadros, el «¿Asistirás?» es la opción que se ve hasta elegir y el
+    // formulario no sale sin elegirla. Sin el saludo: el diseño pinta al invitado al final.
+    const { container } = pinta({ variant: 'linea' })
+    expect(screen.queryByText('Invitación para')).not.toBeInTheDocument()
+    const asistencia = screen.getByRole('combobox', { name: invitation.goingLabel })
+    expect(asistencia).toBeRequired()
+    expect(asistencia).toHaveValue('')
+    expect(asistencia.className).toContain('border-b')
+    expect(container.querySelector('input[name="attending"]')).toBeNull()
+
+    fireEvent.change(asistencia, { target: { value: 'si' } })
+    expect(container.querySelector('input[name="attending"]')).toHaveValue('4')
+    expect(screen.getByRole('button', { name: new RegExp(invitation.confirmAttendance, 'i') })).toBeInTheDocument()
+  })
+
   it('con «botones-oro» da las gracias y no anuncia pase: ese diseño no lo tiene', async () => {
     // El cumpleaños no controla la entrada con un QR, así que su invitación no pinta la
     // ranura del pase: anunciarlo mandaría a buscar más abajo algo que no está.

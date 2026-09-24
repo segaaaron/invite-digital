@@ -160,7 +160,7 @@ export function XvElegView({ content, event, themes, slots, audioSrc, respondida
               <p style={{ marginTop: 30, textAlign: 'center', fontStyle: 'italic', fontSize: 14, lineHeight: 1.8, padding: '0 6px' }}>{quote.text}</p>
             </Reveal>
           )}
-          {cancion === undefined ? null : (
+          {music === undefined ? null : (
             <Reveal>
               <div style={{ marginTop: 30 }}>
                 <p style={{ textAlign: 'center', fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.oro, marginBottom: 10 }}>{ROTULOS.dalePlay}</p>

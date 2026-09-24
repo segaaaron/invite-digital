@@ -270,7 +270,7 @@ export function XvY2kView({ content, themes, slots, audioSrc }: ThemeProps) {
           </Reveal>
         )}
 
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 28 }}>
               <MusicPlayer

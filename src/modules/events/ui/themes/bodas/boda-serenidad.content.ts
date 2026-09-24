@@ -5,7 +5,7 @@ import type { InvitationContent } from '../../../domain/invitation-content'
  * (`wedding-variants-5.jsx`): la boda de Sofía & Daniel.
  */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
-  hero: { eyebrow: 'ISSUE · 09 / 2026', nameA: 'Sofía', nameB: 'Daniel' },
+  hero: { eyebrow: 'Nuestra Boda', nameA: 'Sofía', nameB: 'Daniel' },
   quote: { text: '"Te ví y supe\nque era todo\nlo que iba a querer."' },
   schedule: { startsAt: '2026-09-20T13:00:00' },
   hosts: {

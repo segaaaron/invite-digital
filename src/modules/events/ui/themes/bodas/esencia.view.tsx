@@ -1,4 +1,5 @@
 import Image from 'next/image'
+import { BRAND } from '@/shared/config/brand'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { comoLlegar } from '../../../domain/ubicacion'
@@ -10,6 +11,9 @@ import { EsenciaCover } from './EsenciaCover'
 import { FileteDeEsencia, IconoDeEsencia, RamitaDeOlivo, type ClaveDeIcono } from './esencia-ornamentos'
 import { CARTA_DE_COLOR, PALETA as P } from './esencia.palette'
 
+
+/** El rótulo de la franja del pie, delante del nombre de la marca. */
+const ROTULO_DEL_PIE = 'INVITACIÓN DIGITAL'
 const SANS = 'var(--font-outfit)'
 const SERIF = 'var(--font-cormorant)'
 
@@ -36,6 +40,7 @@ const ROTULOS = {
   musica: 'Música',
   verUbicacion: 'Ver ubicación ↗',
   preguntaRsvp: '¿Nos acompañas?',
+  confirmaAntes: 'Confirma tu asistencia',
   firmas: 'Déjanos un mensaje',
 } as const
 
@@ -49,8 +54,14 @@ const ROTULOS = {
  * Dos tipografías: Outfit para los rótulos y los párrafos —geométrica, ligera— y Cormorant
  * Garamond para los titulares y las horas.
  */
-export function EsenciaView({ content, event, themes, slots, audioSrc }: ThemeProps) {
+export function EsenciaView({ content, event, themes, slots, audioSrc, respondida }: ThemeProps) {
   const { hero, quote, schedule, ceremony, reception, map, itinerary, dressCode, gallery, music, closing } = content
+  // «#ValentinaYMateo2027»: los dos nombres y el año, sin espacios.
+  const anioDeLaBoda = schedule === undefined ? '' : schedule.startsAt.slice(0, 4)
+  const hashtag =
+    hero?.nameA === undefined || hero.nameB === undefined || anioDeLaBoda === ''
+      ? null
+      : `#${[hero.nameA, 'Y', hero.nameB, anioDeLaBoda].join('').replace(/\s+/g, '')}`
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const etiqueta = event.locale === 'en' ? 'en-US' : 'es-BO'
@@ -74,6 +85,9 @@ export function EsenciaView({ content, event, themes, slots, audioSrc }: ThemePr
     <article
       style={{
         ...RANURAS,
+        // El botón de confirmar, en la tinta del diseño con la letra en papel (`linea`).
+        ['--rsvp-fondo' as string]: P.tinta,
+        ['--rsvp-tinta' as string]: P.papel,
         position: 'relative',
         background: P.papel,
         color: P.tinta,
@@ -285,6 +299,11 @@ export function EsenciaView({ content, event, themes, slots, audioSrc }: ThemePr
             <Rotulo>{ROTULOS.confirmacion}</Rotulo>
             <FileteDeEsencia />
             <p style={{ fontFamily: SERIF, fontSize: 24 }}>{ROTULOS.preguntaRsvp}</p>
+            {respondida || event.rsvpDeadline === null ? null : (
+              <p style={{ marginTop: 6, fontSize: 12.5, color: P.tintaSuave }}>
+                {`${ROTULOS.confirmaAntes} ${themes.rsvpBefore} ${new Intl.DateTimeFormat(event.locale === 'en' ? 'en-GB' : 'es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(`${event.rsvpDeadline}T00:00:00Z`))}`}
+              </p>
+            )}
             <div style={{ marginTop: 22, width: '100%' }}>{slots.rsvp}</div>
           </Reveal>
         </Bloque>
@@ -350,6 +369,9 @@ export function EsenciaView({ content, event, themes, slots, audioSrc }: ThemePr
               )}
               <FileteDeEsencia />
               {closing.signature === undefined ? null : <p style={{ fontSize: 12, color: P.tintaSuave }}>{closing.signature}</p>}
+              {hashtag === null ? null : (
+                <p style={{ marginTop: 8, fontSize: 11, letterSpacing: '0.15em', color: P.oro }}>{hashtag}</p>
+              )}
             </Reveal>
           </Bloque>
         )}
@@ -360,6 +382,11 @@ export function EsenciaView({ content, event, themes, slots, audioSrc }: ThemePr
           <div style={{ fontSize: 13, color: P.tintaSuave }}>{slots.guest}</div>
           <div style={{ marginTop: 14, width: '100%' }}>{slots.pass}</div>
         </Bloque>
+      </div>
+
+      {/* La franja del pie: en la maqueta, «Invitación digital — tu marca». */}
+      <div style={{ background: P.calido, borderTop: `1px solid ${P.filete}`, padding: 24, textAlign: 'center' }}>
+        <p style={{ fontSize: 8, letterSpacing: '0.18em', color: P.tintaSuave }}>{`${ROTULO_DEL_PIE} — ${BRAND.siteName.toUpperCase()}`}</p>
       </div>
     </article>
   )

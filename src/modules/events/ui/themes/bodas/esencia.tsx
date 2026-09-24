@@ -18,7 +18,7 @@ export const esenciaDefinition: ThemeDefinition = {
   // JetBrains Mono no es del diseño: la pinta el reproductor de música del kit, que este
   // diseño usa. Declararla es lo que impide que salga con la fuente de respaldo.
   fonts: ['outfit', 'cormorant', 'jetbrainsMono'],
-  rsvp: 'campos',
+  rsvp: 'linea',
   pinta: {
     // Cinco de la galería y el retrato redondo de la portada. El lino del fondo es arte del
     // diseño, no una casilla: la maqueta no ofrece cambiarlo.

@@ -54,7 +54,7 @@ const PETALOS = Array.from({ length: 22 }, (_, i) => ({
  * interletrado y los nombres en caligrafía. Las fotografías entran a sangre y se funden con
  * el papel por una onda dibujada, no por un degradado recto.
  */
-export function BodaSelloView({ content, event, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+export function BodaSelloView({ content, event, themes, slots, guestInfo, audioSrc, respondida }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
@@ -68,7 +68,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
   const fechaCorta = cuando === null ? '' : `${dia} · ${String(cuando.getMonth() + 1).padStart(2, '0')} · ${anio}`
 
   const nombres = [hero?.nameA, hero?.nameB].filter((nombre) => nombre !== undefined && nombre !== '').join(' & ')
-  const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts)
+  const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts, { madreDelante: true })
   const historia = notes?.[0]
   const soloAdultos = notes?.[1]
   const regalos = notes?.[2]
@@ -77,6 +77,12 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
     comoLlegar({ href: map?.href, coords: map?.coords }, [lugar?.place, lugar?.address].filter(Boolean).join(', '))
 
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
+  // «Antes del 17 de octubre», en caligrafía bajo el rótulo de la confirmación. Con la
+  // respuesta dada no se pinta: el plazo ya no le dice nada a quien contestó.
+  const plazo =
+    respondida || event.rsvpDeadline === null
+      ? null
+      : `${themes.rsvpBefore} ${new Intl.DateTimeFormat(event.locale === 'en' ? 'en-GB' : 'es-BO', { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${event.rsvpDeadline}T00:00:00Z`))}`
 
   const RANURAS = variablesDeRanuras(
     pielDeRanuras({ acento: P.vino, sobreAcento: P.crema, tinta: P.vino, display: SERIF, radio: 10 }),
@@ -417,8 +423,8 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
         </div>
       </Seccion>
 
-      {/* ── La canción ── */}
-      {cancion === undefined ? null : (
+      {/* ── La canción: la foto de la pareja y el reproductor, como en la maqueta ── */}
+      {music === undefined ? null : (
         <Seccion>
           <Arte
             ancho={420}
@@ -443,6 +449,11 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       <Seccion esquinas={['tr', 'bl']}>
         <div style={{ textAlign: 'center', marginBottom: 30 }}>
           <Rotulo color={P.rosa}>{ROTULOS.confirma}</Rotulo>
+          {plazo === null ? null : (
+            <p style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.vino, lineHeight: 1.1, marginTop: 10 }}>
+              {plazo.charAt(0).toUpperCase() + plazo.slice(1)}
+            </p>
+          )}
         </div>
         <div style={{ width: '100%' }}>{slots.rsvp}</div>
       </Seccion>

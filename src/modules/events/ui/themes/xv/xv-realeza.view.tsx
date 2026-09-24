@@ -157,7 +157,7 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
           </Reveal>
         )}
 
-        {cancion === undefined ? null : (
+        {music === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 28 }}>
               <p style={{ textAlign: 'center', fontFamily: MONO, fontSize: 10, letterSpacing: '0.4em', color: P.cristal, marginBottom: 10 }}>{ROTULOS.dalePlay}</p>
