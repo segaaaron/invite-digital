@@ -81,15 +81,17 @@ export function PanelSidebar({
   return (
     <aside className="sticky top-0 z-50 flex max-h-dvh flex-col gap-y-2 overflow-y-auto bg-linear-to-b from-shell to-shell-deep px-4 py-3 text-shell-ink shadow-[12px_0_40px_rgb(0_0_0/0.18)] min-[860px]:h-dvh min-[860px]:flex-nowrap min-[860px]:items-stretch min-[860px]:gap-0 min-[860px]:px-5 min-[860px]:py-6.5">
       {/* La barra del teléfono: marca, dónde estás y el botón que abre el menú. */}
-      <div className="flex items-center gap-3 min-[860px]:hidden">
-        <p className="font-display text-[18px] italic">
+      {/* La marca no se parte nunca; lo que cede, con puntos suspensivos, es el nombre de la
+          sección («Todos los eventos», «Ficha del evento»), que antes la empujaba a dos líneas. */}
+      <div className="flex min-w-0 items-center gap-3 min-[860px]:hidden">
+        <p className="shrink-0 whitespace-nowrap font-display text-[18px] italic">
           Luxury <b className="font-medium not-italic">Atelier</b>
         </p>
-        {actual ? <span className="truncate font-mono text-[10px] tracking-[0.2em] uppercase opacity-60">· {actual.label}</span> : null}
+        {actual ? <span className="min-w-0 truncate font-mono text-[10px] tracking-[0.2em] uppercase opacity-60">· {actual.label}</span> : null}
         <button
           aria-controls="menu-panel"
           aria-expanded={abierto}
-          className="ml-auto flex items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50"
+          className="ml-auto flex shrink-0 items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50"
           onClick={() => setAbierto((a) => !a)}
           type="button"
         >

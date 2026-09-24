@@ -38,7 +38,7 @@ export function TemplateCard({ template, dictionary, locale }: Props) {
   return (
     <Link
       aria-label={`${models.open} · ${template.name}`}
-      className="group m-0 flex w-[238px] shrink-0 flex-col items-center gap-5 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4"
+      className="group m-0 flex w-full max-w-[238px] flex-col items-center gap-5 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4"
       href={`/modelos/${locale}/${template.slug}`}
     >
       <div
@@ -61,7 +61,7 @@ export function TemplateCard({ template, dictionary, locale }: Props) {
         <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[14px] border border-line" />
       </div>
 
-      <span className="font-display text-[20px] font-light text-ink">{template.name}</span>
+      <span className="text-center font-display text-[17px] font-light leading-tight text-ink sm:text-[20px]">{template.name}</span>
     </Link>
   )
 }

@@ -121,7 +121,7 @@ export const es = {
     sliderLabel: 'Comparar Luxury Atelier con una invitación tradicional',
     imageAlt: 'Suite de invitación botánica del atelier',
     traditionalLabel: 'Tradicional',
-    luxe: ['Portada con sobre animado', 'Un enlace por familia, con su nombre y sus pases', 'Confirmaciones en vivo en tu panel', 'Música, galería y cuenta regresiva', 'Dieciséis diseños que ves antes de elegir'],
+    luxe: ['Portada con sobre animado', 'Un enlace por familia, con su nombre y sus pases', 'Confirmaciones en vivo en tu panel', 'Música, galería y cuenta regresiva', 'Diseños que ves antes de elegir'],
     traditional: ['Imagen estática enviada por chat', 'Plantilla con logo de la plataforma', 'Confirmaciones contadas a mano', 'Sin galería, sin música, sin mapa', 'Mismo diseño que otros mil eventos'],
   },
   pricing: {
@@ -159,7 +159,7 @@ export const es = {
       modelo: { ninguno: 'No', antes_de_repartir: 'Hasta repartir', siempre: 'Siempre' },
     },
   },
-  models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Dieciséis diseños · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir' },
+  models: { eyebrow: 'Modelos', title: 'Invitaciones a tu medida', subtitle: 'Diseños de autor · con código QR, botón de apertura y confirmación en línea', qr: 'Código QR', open: 'Abrir' },
   themes: {
     coverOpen: 'ABRIR INVITACIÓN',
     coverHint: 'TOCA EN CUALQUIER LUGAR',
@@ -408,7 +408,7 @@ export const es = {
       'Invitaciones digitales para bodas y XV años en Bolivia. Sobre animado, confirmación de asistencia en vivo, mesas, regalos y pases con QR.',
     collectionsTitle: 'Colecciones de invitaciones digitales 3D | Luxury Atelier',
     collectionsDescription:
-      'Dieciséis modelos de invitación digital para bodas y XV años en Bolivia, con confirmación de asistencia en vivo.',
+      'Modelos de invitación digital para bodas y XV años en Bolivia, con confirmación de asistencia en vivo.',
     breadcrumbHome: 'Inicio',
   },
   footer: { rights: 'Todos los derechos reservados', privacy: 'Privacidad', terms: 'Términos', onNetwork: 'Luxury Atelier en {red}', builtBy: 'Desarrollado por', whatsappFloat: 'Escríbenos por WhatsApp' },

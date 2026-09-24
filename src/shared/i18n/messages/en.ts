@@ -121,7 +121,7 @@ export const en = {
     imageAlt: 'A botanical invitation suite by the atelier',
     hint: 'Drag the seal to compare',
     traditionalLabel: 'Traditional',
-    luxe: ['An animated envelope cover', 'One link per family, with their name and seats', 'Live RSVPs in your dashboard', 'Music, a gallery and a countdown', 'Sixteen designs you see before you choose'],
+    luxe: ['An animated envelope cover', 'One link per family, with their name and seats', 'Live RSVPs in your dashboard', 'Music, a gallery and a countdown', 'Designs you see before you choose'],
     traditional: ['A static image sent over chat', 'A template carrying the platform’s logo', 'Confirmations tallied by hand', 'No gallery, no music, no map', 'The same design shared with a thousand other events'],
   },
   pricing: {
@@ -159,7 +159,7 @@ export const en = {
       modelo: { ninguno: 'No', antes_de_repartir: 'Until links are sent', siempre: 'Anytime' },
     },
   },
-  models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Sixteen signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open' },
+  models: { eyebrow: 'Models', title: 'Invitations tailored to you', subtitle: 'Signature designs · with QR code, opening animation, and online confirmation', qr: 'QR code', open: 'Open' },
   themes: {
     coverOpen: 'OPEN INVITATION',
     coverHint: 'TAP ANYWHERE',
@@ -408,7 +408,7 @@ export const en = {
       'Digital invitations for weddings and quinceañeras in Bolivia. Animated envelope, live RSVP, seating, gift registry and QR passes.',
     collectionsTitle: '3D digital invitation collections | Luxury Atelier',
     collectionsDescription:
-      'Sixteen digital invitation models for weddings and quinceañeras in Bolivia, with live RSVP.',
+      'Digital invitation models for weddings and quinceañeras in Bolivia, with live RSVP.',
     breadcrumbHome: 'Home',
   },
   footer: { rights: 'All rights reserved', privacy: 'Privacy', terms: 'Terms', onNetwork: 'Luxury Atelier on {red}', builtBy: 'Built by', whatsappFloat: 'Message us on WhatsApp' },
