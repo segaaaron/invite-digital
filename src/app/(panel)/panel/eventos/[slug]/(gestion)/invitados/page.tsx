@@ -24,6 +24,7 @@ import { PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/car
 import { CheckIcon, ClockIcon, MailIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 export const metadata = { title: 'Invitados' }
 
@@ -188,6 +189,7 @@ export default async function InvitadosPage({
         meta={`${filasPersona.length} invitados en total`}
         title="Invitados"
       />
+      <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       {/* El orden del trabajo, dicho en la propia pantalla: primero la invitación, luego la
           gente. Sin esto se podían repartir enlaces a una invitación en blanco. */}

@@ -11,6 +11,7 @@ import { isUnlockValid, unlockValue, UNLOCK_MS } from '@/modules/events/domain/u
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { SECTION_KEYS, type SectionKey } from '@/modules/events/domain/invitation-content'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { seAsigna } from '@/shared/design/theme-catalog'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { mismaFiesta } from '@/modules/events/domain/fiesta'
@@ -43,7 +44,11 @@ export async function createEventAction(_previous: EventActionState, formData: F
   // Sin plan, el evento usa el más barato activo, y sus datos duran lo que ese plan dice.
   // Asignarle otro plan después arrastra sus días (`setEventPlan`, `applyRequest`).
   const retentionDays = (await plans.cheapestActive())?.onlineDays ?? 90
-  const result = await eventUseCases.create({ ...readForm(formData), retentionDays, userId: actor.userId })
+  const datos = readForm(formData)
+  // Un retirado no se asigna a un evento nuevo: la pantalla no lo ofrece y el POST no lo cuela,
+  // igual que en el alta del admin y en el cambio de diseño.
+  if (!seAsigna(datos.themeKey)) return { status: 'error', message: 'invalid_theme' }
+  const result = await eventUseCases.create({ ...datos, retentionDays, userId: actor.userId })
   if (isErr(result)) {
     console.error('alta de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
@@ -103,7 +108,8 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   if (isErr(anterior)) return { status: 'error', message: anterior.error.kind }
   const temaAnterior = anterior.value.themeKey
   const pedido = themeFor(String(formData.get('themeKey') ?? temaAnterior))
-  const cambia = pedido.key !== temaAnterior && mismaFiesta(pedido.categorySlug, themeFor(temaAnterior).categorySlug)
+  // Tampoco a un retirado: la pantalla no lo ofrece y el POST no lo cuela.
+  const cambia = pedido.key !== temaAnterior && seAsigna(pedido.key) && mismaFiesta(pedido.categorySlug, themeFor(temaAnterior).categorySlug)
   const themeKey = cambia && (await planDejaCambiarDiseno(actor.role, eventId)) ? pedido.key : temaAnterior
 
   // La retención no se edita aquí: la fija el plan del evento.
@@ -561,4 +567,19 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
 
   revalidatePath(`/i/${token}/fotos`)
   return { status: 'success', message: '' }
+}
+
+export type AvisoDeRespuestasState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
+
+/**
+ * Enciende o apaga el correo a los anfitriones con cada respuesta. Lo cambian quienes abren la
+ * sección del anfitrión: el dueño, el anfitrión y su planner.
+ */
+export async function setAvisoDeRespuestasAction(_previous: AvisoDeRespuestasState, formData: FormData): Promise<AvisoDeRespuestasState> {
+  const actor = await requireSession()
+  const eventSlug = campo(formData, 'eventSlug')
+  const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
+  await eventUseCases.guardarAvisoDeRespuestas(eventId, formData.get('avisar') === 'on')
+  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
+  return { status: 'success', message: 'Guardado.' }
 }

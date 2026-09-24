@@ -7,18 +7,30 @@ import { useActionState, useId, useState, type ReactNode } from 'react'
 import { CalendarIcon, CheckIcon, EyeIcon, MailIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
-import { FIESTAS, VOCABULARIO } from '@/modules/events'
+import { FIESTAS, VOCABULARIO, VOCABULARIO_GENERICO } from '@/modules/events'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
 
 /** El ejemplo de nombre por fiesta, buscado por el plural con el que se agrupan los modelos. */
 const EJEMPLO_DE_NOMBRE: Record<string, string> = Object.fromEntries(
-  FIESTAS.map((fiesta) => [VOCABULARIO[fiesta].plural, VOCABULARIO[fiesta].ejemploNombre]),
+  [...FIESTAS.map((fiesta) => VOCABULARIO[fiesta]), VOCABULARIO_GENERICO].map((v) => [v.plural, v.ejemploNombre]),
 )
 
 export type ModeloElegible = { readonly key: string; readonly label: string; readonly categoria: string }
 export type PlanElegible = { readonly slug: string; readonly nombre: string; readonly precio: string }
+
+/** Lo que trae un pedido aprobado sin evento: el alta nace rellena y, al crearse, lo enlaza. */
+export type DesdePedido = {
+  readonly ref: string
+  readonly modelo: string | null
+  readonly plan: string | null
+  readonly titulo: string
+  readonly fecha: string | null
+  readonly nombre: string
+  readonly correo: string | null
+  readonly telefono: string | null
+}
 
 const FECHA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
@@ -42,17 +54,19 @@ function generarClave(): string {
  * Los campos se envían con los mismos nombres de siempre (`themeKey`, `title`, `eventDate`,
  * `planSlug`, `clientName`, `clientPhone`, `clientEmail`, `clientPassword`).
  */
-export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloElegible[]; planes: readonly PlanElegible[] }) {
+export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly ModeloElegible[]; planes: readonly PlanElegible[]; pedido?: DesdePedido | undefined }) {
   const [estado, crear, creando] = useActionState<NuevaBodaState, FormData>(createWeddingForClientAction, INICIAL)
   const id = useId()
 
   const categorias = [...new Set(modelos.map((m) => m.categoria))]
-  const [categoria, setCategoria] = useState(categorias[0] ?? '')
-  const [modelo, setModelo] = useState(modelos[0]?.key ?? '')
-  const [titulo, setTitulo] = useState('')
-  const [fecha, setFecha] = useState('')
-  const [plan, setPlan] = useState(planes[0]?.slug ?? '')
-  const [correo, setCorreo] = useState('')
+  // Con un pedido, lo que eligió el cliente; si su modelo ya no se asigna, el primero.
+  const modeloInicial = modelos.find((m) => m.key === pedido?.modelo) ?? modelos[0]
+  const [categoria, setCategoria] = useState(modeloInicial?.categoria ?? categorias[0] ?? '')
+  const [modelo, setModelo] = useState(modeloInicial?.key ?? '')
+  const [titulo, setTitulo] = useState(pedido?.titulo ?? '')
+  const [fecha, setFecha] = useState(pedido?.fecha ?? '')
+  const [plan, setPlan] = useState(planes.find((p) => p.slug === pedido?.plan)?.slug ?? planes[0]?.slug ?? '')
+  const [correo, setCorreo] = useState(pedido?.correo ?? '')
   const [clave, setClave] = useState('')
   const [copiada, setCopiada] = useState(false)
 
@@ -63,6 +77,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
   return (
     <form action={crear} className="grid items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]">
       <input name="themeKey" type="hidden" value={modelo} />
+      {pedido === undefined ? null : <input name="orderRef" type="hidden" value={pedido.ref} />}
       <input name="planSlug" type="hidden" value={plan} />
 
       <div className="flex min-w-0 flex-col gap-7">
@@ -138,7 +153,7 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
                 maxLength={160}
                 name="title"
                 onChange={(e) => setTitulo(e.target.value)}
-                placeholder={EJEMPLO_DE_NOMBRE[categoria] ?? VOCABULARIO.boda.ejemploNombre}
+                placeholder={EJEMPLO_DE_NOMBRE[categoria] ?? VOCABULARIO_GENERICO.ejemploNombre}
                 required
                 type="text"
                 value={titulo}
@@ -182,13 +197,13 @@ export function NuevaBodaForm({ modelos, planes }: { modelos: readonly ModeloEle
               <label className={LABEL_CLASS} htmlFor={`${id}-nombre-cliente`}>
                 Nombre del cliente
               </label>
-              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-nombre-cliente`} maxLength={160} name="clientName" placeholder="María Rojas" required />
+              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-nombre-cliente`} maxLength={160} defaultValue={pedido?.nombre} name="clientName" placeholder="María Rojas" required />
             </div>
             <div className="flex flex-col gap-2">
               <label className={LABEL_CLASS} htmlFor={`${id}-telefono-cliente`}>
                 WhatsApp del cliente
               </label>
-              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-telefono-cliente`} inputMode="tel" name="clientPhone" placeholder="+591 700 12345" />
+              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-telefono-cliente`} defaultValue={pedido?.telefono ?? undefined} inputMode="tel" name="clientPhone" placeholder="+591 700 12345" />
             </div>
             <div className="flex flex-col gap-2">
               <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>

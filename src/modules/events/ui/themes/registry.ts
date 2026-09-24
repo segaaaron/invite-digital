@@ -16,15 +16,6 @@ import { civilDefinition } from './bodas/civil'
 import { destDefinition } from './bodas/dest'
 import { engDefinition } from './bodas/eng'
 import { xvDefinition } from './xv/xv'
-import { xvDecoDefinition } from './xv/xv-deco'
-import { xvRealezaDefinition } from './xv/xv-realeza'
-import { xvVogueDefinition } from './xv/xv-vogue'
-import { xvY2kDefinition } from './xv/xv-y2k'
-import { xvBohoDefinition } from './xv/xv-boho'
-import { xvMinDefinition } from './xv/xv-min'
-import { xvPrincDefinition } from './xv/xv-princ'
-import { xvElegDefinition } from './xv/xv-eleg'
-import { xvTropDefinition } from './xv/xv-trop'
 import { xvPapillonDefinition } from './xv/xv-papillon'
 import { xvIsabelleDefinition } from './xv/xv-isabelle'
 import { xvNataliaDefinition } from './xv/xv-natalia'
@@ -70,16 +61,7 @@ const THEMES = {
   'xv-valeria': xv_valeriaDefinition,
   'xv-mariana': xv_marianaDefinition,
   'xv-isabelle': xvIsabelleDefinition,
-  'xv-trop': xvTropDefinition,
   'xv-papillon': xvPapillonDefinition,
-  'xv-eleg': xvElegDefinition,
-  'xv-princ': xvPrincDefinition,
-  'xv-min': xvMinDefinition,
-  'xv-boho': xvBohoDefinition,
-  'xv-y2k': xvY2kDefinition,
-  'xv-vogue': xvVogueDefinition,
-  'xv-realeza': xvRealezaDefinition,
-  'xv-deco': xvDecoDefinition,
   // Cumpleaños. Portado y **sin publicar**: el catálogo lo lleva con `publicar: false`, así
   // que no sale en la web; el admin lo asigna desde el panel.
   'cumple-beer': cumpleBeerDefinition,

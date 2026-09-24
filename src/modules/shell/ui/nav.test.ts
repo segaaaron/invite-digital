@@ -73,6 +73,8 @@ describe('panelNav', () => {
     expect(hrefs).toContain('/panel/admin/eventos')
     // «Hoy» abre la administración y «Consultas» va justo detrás: son lo que se mira cada día.
     expect(hrefs.slice(0, 2)).toEqual(['/panel/admin', '/panel/admin/consultas'])
+    // Y el buscador, que es donde lleva ⌘K.
+    expect(hrefs).toContain('/panel/admin/buscar')
   })
 
   it('el admin llega a planes, ingresos y modelos desde la barra', () => {

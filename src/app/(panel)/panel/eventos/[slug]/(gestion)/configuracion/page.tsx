@@ -6,6 +6,7 @@ import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { InvitacionEnVivo } from '@/modules/events/ui/InvitacionEnVivo'
 import '@/modules/events/ui/themes/kit/keyframes.css'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
+import { AvisoDeRespuestas } from '@/modules/events/ui/AvisoDeRespuestas'
 import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
@@ -101,6 +102,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   }))
 
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
+  const avisoDeRespuestas = contenido === null ? false : await events.avisoDeRespuestas(event.value.id)
   // Si el plan trae la contraseña. Una lectura fallida no la concede.
   const capacidad = await plans.allowanceFor(event.value.id)
   const contrasenaIncluida = !isErr(capacidad) && capacidad.value.eventPassword
@@ -141,7 +143,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
       {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se
           vuelve a pintar al guardar cada bloque. El admin no ve el contenido: su ficha sigue en
           la rejilla de tarjetas de siempre. */}
-      <div className={contenido === null ? 'grid gap-4.5 min-[900px]:grid-cols-[1.25fr_1fr]' : 'grid items-start gap-4.5 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]'}>
+      <div className={contenido === null ? 'grid items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : 'grid items-start gap-4.5 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]'}>
         {contenido === null ? null : (
         <div className="flex min-w-0 flex-col gap-4.5">
         <PanelCard title={`Tu invitación · ${tema.label}`}>
@@ -162,6 +164,9 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             sections={tema.sections}
           />
         </PanelCard>
+        <PanelCard title="Avisos">
+          <AvisoDeRespuestas avisar={avisoDeRespuestas} eventId={event.value.id} eventSlug={event.value.slug} />
+        </PanelCard>
         </div>
         )}
 
@@ -176,11 +181,13 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             <div className="flex flex-col gap-6">
               <EventForm diseno={diseno} event={event.value} />
               <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
-              <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
             </div>
           </PanelCard>
         ) : null}
 
+        {/* Lo demás en una columna propia: en la rejilla, la tarjeta de al lado de «Detalles»
+            —que es muy alta por el selector de diseños— se estiraba en blanco hasta su altura. */}
+        <div className="flex min-w-0 flex-col gap-4.5">
         {puedeGestionarPersonal ? (
           <PanelCard title="Acceso del cliente">
             <div className="flex flex-col gap-5">
@@ -207,11 +214,15 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
           </PanelCard>
         ) : null}
 
-        {puedeGestionarPersonal ? (
+        {puedeGestionarPersonal && personal.length > 0 ? (
           <PanelCard title="Personal de puerta">
             <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />
           </PanelCard>
         ) : null}
+
+        {/* Borrar va lo último: es lo irreversible, y estaba en medio de la ficha. */}
+        {esDelAtelier ? <DangerZone eventId={event.value.id} eventSlug={event.value.slug} /> : null}
+        </div>
 
       </div>
     </>

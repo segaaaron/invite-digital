@@ -1,6 +1,6 @@
 import type { Role } from '@/modules/identity'
 import type { HoyCrudo } from '../domain/hoy'
-import type { PedidoCobro } from '../domain/ingresos'
+import type { CifrasDeHoy, ConteoDeVenta, PedidoCobro } from '../domain/ingresos'
 import type { PlanLimpio, TextoPlanLimpio } from '../domain/plan-editable'
 
 export type AdminUserRow = {
@@ -29,6 +29,8 @@ export type AdminEventRow = {
   readonly enviados: number
   /** Y cuántos contestaron, sí o no. */
   readonly respondidos: number
+  /** Invitaciones (grupos) que se abrieron al menos una vez. */
+  readonly abiertos: number
 }
 
 export type AuditRow = {
@@ -40,11 +42,15 @@ export type AuditRow = {
   readonly createdAt: Date
 }
 
+/** Lo que acota la auditoría. `prefijos` sale de un grupo (`prefijosDeGrupo`); `patron`, de `patronDeBusqueda`. */
+export type FiltroDeAuditoria = {
+  readonly actorEmail?: string | undefined
+  readonly prefijos?: readonly string[] | undefined
+  readonly patron?: string | undefined
+}
+
 export type AdminMetrics = {
   readonly eventos: number
-  readonly usuarios: number
-  readonly invitados: number
-  readonly pedidosAprobados: number
   /** Eventos por mes, de los **doce que vienen**: en este negocio están por delante. */
   readonly porMes: readonly { readonly mes: string; readonly total: number }[]
   readonly porPlan: readonly { readonly plan: string; readonly total: number }[]
@@ -67,7 +73,9 @@ export interface AdminRepository {
   /** Los planes para un selector: su clave y el nombre que se lee, en orden de venta. */
   listPlanOptions(): Promise<{ slug: string; nombre: string; priceCents: number }[]>
   metrics(): Promise<AdminMetrics>
-  listAudit(limit: number): Promise<AuditRow[]>
+  listAudit(limit: number, filtro?: FiltroDeAuditoria): Promise<AuditRow[]>
+  /** Quiénes aparecen en el registro, para el filtro «Quién». */
+  listAuditActors(): Promise<string[]>
   /**
    * Deja constancia. Copia el correo del actor como texto, además de su identificador:
    * borrar al admin no puede borrar el rastro de lo que hizo.
@@ -159,6 +167,10 @@ export interface CatalogAdmin {
 /** Los pedidos tal como los necesita la pantalla de ingresos. Solo lectura. */
 export interface IncomeReader {
   pedidos(): Promise<PedidoCobro[]>
+  /** Lo que entró por cada puerta desde `desde`. */
+  conteoDeVenta(desde: Date): Promise<ConteoDeVenta>
+  /** Las cifras de «Hoy» del mes `YYYY-MM` de Bolivia, sumadas en la base. */
+  cifrasDelMes(mes: string): Promise<CifrasDeHoy>
 }
 
 export type SiteVersionRow = {

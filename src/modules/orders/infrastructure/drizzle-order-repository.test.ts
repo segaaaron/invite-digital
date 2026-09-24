@@ -122,7 +122,8 @@ describe('drizzleOrderRepository', () => {
     const cliente = `Pagina ${crypto.randomUUID().slice(0, 6)}`
     const alta = async (status: 'pending_payment' | 'proof_submitted' | 'approved', minutos: number) => {
       const o = await nuevo({ customerName: cliente })
-      await db.update(orders).set({ status, createdAt: new Date(Date.now() - minutos * 60_000) }).where(eq(orders.id, o.id))
+      const cuando = new Date(Date.now() - minutos * 60_000)
+      await db.update(orders).set({ status, createdAt: cuando, decidedAt: status === 'approved' ? cuando : null }).where(eq(orders.id, o.id))
       return o.id
     }
     const aprobadoNuevo = await alta('approved', 1)
@@ -181,11 +182,11 @@ describe('drizzleOrderRepository', () => {
       await db.update(orders).set({ status: 'rejected' }).where(eq(orders.id, order!.id))
       expect((await repo.createForAddon({ ...alta, publicRef: ref() }))?.id).toBe(order!.id)
       // Aprobado, lo que suma se puede volver a comprar.
-      await db.update(orders).set({ status: 'approved' }).where(eq(orders.id, order!.id))
+      await db.update(orders).set({ status: 'approved', decidedAt: new Date() }).where(eq(orders.id, order!.id))
       const otra = await repo.createForAddon({ ...alta, publicRef: ref() })
       expect(otra?.id).not.toBe(order!.id)
       creados.push(otra!.id)
-      await db.update(orders).set({ status: 'approved' }).where(eq(orders.id, otra!.id))
+      await db.update(orders).set({ status: 'approved', decidedAt: new Date() }).where(eq(orders.id, otra!.id))
 
       // Los pedidos de extras de un evento, sin traer la bandeja entera.
       const delEvento = await repo.listAddonOrdersOf(evento!.id)

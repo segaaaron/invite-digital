@@ -19,6 +19,8 @@ const client =
 if (env.NODE_ENV !== 'production') globalForDb.__invitePg = client
 
 export const db = drizzle(client, { schema })
+/** El cliente de `postgres.js` sin Drizzle: lo usa `cambios-en-vivo.ts` para `LISTEN`. */
+export const pg = client
 export type Database = typeof db
 
 // Cualquier ejecutor de consultas compatible con `db`: el cliente normal o una

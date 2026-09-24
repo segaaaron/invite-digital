@@ -21,6 +21,7 @@ import { TimelineChart } from '@/modules/rsvp/ui/TimelineChart'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { CheckIcon, ClockIcon, EyeIcon, MailIcon, PenIcon, QrIcon, UsersIcon, TableIcon } from '@/shared/design/ui/icons'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 /** Las dos semanas del gráfico de la maqueta. */
 const DIAS_DEL_GRAFICO = 14
@@ -199,6 +200,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         meta={cuentaAtras === null ? fecha : `${fecha} · ${cuentaAtras}`}
         title="Bienvenida, "
       />
+      <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       {(() => {
         const pasos = [

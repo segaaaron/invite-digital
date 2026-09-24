@@ -197,3 +197,13 @@ export const drizzleEventRepository = createDrizzleEventRepository(db)
 export const publicarSiBorrador = async (database: DbExecutor, eventId: string): Promise<void> => {
   await database.update(events).set({ status: 'live' }).where(and(eq(events.id, eventId), eq(events.status, 'draft')))
 }
+
+/** Si los anfitriones reciben un correo con cada respuesta (`0070`). Un evento que no existe, no. */
+export const leerAvisoDeRespuestas = async (database: DbExecutor, eventId: string): Promise<boolean> => {
+  const [fila] = await database.select({ avisar: events.avisarRespuestas }).from(events).where(eq(events.id, eventId))
+  return fila?.avisar ?? false
+}
+
+export const guardarAvisoDeRespuestas = async (database: DbExecutor, eventId: string, avisar: boolean): Promise<void> => {
+  await database.update(events).set({ avisarRespuestas: avisar }).where(eq(events.id, eventId))
+}

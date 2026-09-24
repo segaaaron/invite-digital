@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import postgres from 'postgres'
 import { AUTH_STATE } from './fixtures/atelier'
 import { invitationFixtures } from './fixtures/invitation'
+import { abrirSeccion } from './helpers/panel'
 
 const { closeInvitationDb, deleteEvent, seedInvitation } = invitationFixtures()
 const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
@@ -27,11 +28,18 @@ test('con las fotos del plan agotadas, subir otra se rechaza y lo dice', async (
     await sql`insert into event_media (event_id, content_type, original_name, byte_size) values (${evento!.id}, 'image/webp', ${`foto-${i}.webp`}, 10)`
   }
 
+  // Las fotos se suben desde el campo que las pide (desde el 16 de septiembre ya no hay tarjeta
+  // de fotos aparte): la galería de «Botánica», como en `panel.spec`.
+  await sql`update events set theme_key = 'boda-bot' where id = ${evento!.id}`
   await page.goto(`/panel/eventos/${eventSlug}/configuracion`)
-  await page.setInputFiles('input[type=file][name=file]', { name: 'una-mas.png', mimeType: 'image/png', buffer: PNG })
-  await page.getByRole('button', { name: 'Subir', exact: true }).click()
+  const galeria = await abrirSeccion(page, 'Galería')
+  await galeria.getByRole('button', { name: 'Añadir casilla' }).click()
+  await galeria.getByRole('button', { name: 'Subir una fotografía' }).click()
+  const subida = page.locator('dialog[open]')
+  await subida.getByLabel('Elegir fotografía').setInputFiles({ name: 'una-mas.png', mimeType: 'image/png', buffer: PNG })
+  await subida.getByRole('button', { name: 'Subir', exact: true }).click()
 
-  await expect(page.getByRole('alert').filter({ hasText: 'Ya subiste todas las fotos que incluye tu plan' })).toBeVisible()
+  await expect(subida.getByRole('alert').filter({ hasText: 'Ya subiste todas las fotos que incluye tu plan' })).toBeVisible()
   const [cuenta] = await sql<{ n: number }[]>`select count(*)::int as n from event_media where event_id = ${evento!.id}`
   expect(cuenta!.n).toBe(plan!.max)
 

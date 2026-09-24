@@ -84,3 +84,22 @@ export function LoadMoreLink({ href, noun, remaining }: { href: string; noun: st
     </p>
   )
 }
+
+/**
+ * La explicación larga de una pantalla, plegada. Lo que se lee una vez —cómo funciona, por
+ * qué— no puede ocupar el sitio de lo que se usa cada día. `<details>` nativo: abre con
+ * teclado y sin JavaScript.
+ */
+export function Ayuda({ children, titulo = '¿Cómo funciona?' }: { children: ReactNode; titulo?: string }) {
+  return (
+    <details className="group text-[12px] leading-[1.7] text-ink-soft">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-ink-mute uppercase hover:text-ink [&::-webkit-details-marker]:hidden">
+        <span aria-hidden className="grid size-4 place-items-center rounded-full border border-current text-[9px] leading-none">
+          ?
+        </span>
+        {titulo}
+      </summary>
+      <div className="mt-2.5 flex max-w-[70ch] flex-col gap-2">{children}</div>
+    </details>
+  )
+}

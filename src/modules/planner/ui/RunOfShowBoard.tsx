@@ -57,12 +57,15 @@ export function MomentoDialog({
   momento,
   iconos,
   cerrarEn,
+  ejemplo,
 }: {
   evento: Evento
   proveedores: readonly ProveedorCorto[]
   momento?: MomentoVista | undefined
   iconos: readonly IconoDeMomento[]
   cerrarEn: string
+  /** Un momento de esa fiesta (`Vocabulario.ejemplos.momento`): el vals no es de todas. */
+  ejemplo: string
 }) {
   const router = useRouter()
   const [estado, enviar, enviando] = useActionState(saveMomentAction, INICIAL)
@@ -87,7 +90,7 @@ export function MomentoDialog({
             <CampoHora defaultValue={v('startsAt', momento?.startsAt)} id={`${id}-h`} name="startsAt" required />
           </Field>
           <Field htmlFor={`${id}-t`} label="Momento">
-            <input className={FIELD_CLASS} defaultValue={v('title', momento?.title)} id={`${id}-t`} maxLength={160} name="title" placeholder="Por ejemplo, Vals con papá" required />
+            <input className={FIELD_CLASS} defaultValue={v('title', momento?.title)} id={`${id}-t`} maxLength={160} name="title" placeholder={`Por ejemplo, ${ejemplo}`} required />
           </Field>
         </div>
 

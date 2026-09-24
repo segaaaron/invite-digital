@@ -11,24 +11,36 @@ test.afterAll(async () => {
   await closeEnvioDb()
 })
 
-test('reenviar rota el enlace: el viejo deja de abrir y el nuevo abre', async ({ page, browser }) => {
+test('enviar guarda el enlace y lo enseña siempre igual; generar uno nuevo invalida el anterior', async ({ page, browser }) => {
   const { token } = await seedEnvioEvent(SLUG)
-
-  // El enlace sembrado funciona.
   const invitado = await (await browser.newContext()).newPage()
   expect((await invitado.goto(`/i/${token}`))?.status()).toBe(200)
 
-  // El atelier lo reenvía.
-  // Un toque: prepara el enlace y abre WhatsApp en otra pestaña, que aquí se cierra.
+  // Enviar por WhatsApp prepara su enlace y lo guarda (cifrado): desde el 16 de septiembre
+  // **enviar no rota**. El sembrado no estaba guardado, así que se acuña uno y queda fijo.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=envio`)
   const whatsapp = page.waitForEvent('popup')
   await page.getByRole('button', { name: 'Enviar por WhatsApp a Familia Rojas Peña' }).click()
   await (await whatsapp).close()
-  const nuevo = await page.getByLabel('Enlace de la invitación').inputValue()
+  const fila = page.getByRole('listitem', { name: 'Familia Rojas Peña' })
+  await fila.getByRole('button', { name: /Enlace y otras formas/ }).click()
+  const campo = fila.getByLabel('Enlace de la invitación de Familia Rojas Peña')
+  const enviado = await campo.inputValue()
+  expect(enviado).toMatch(/\/i\/[A-Za-z0-9_-]{22}$/)
+  expect((await invitado.goto(enviado))?.status()).toBe(200)
+
+  // Rotar es aparte y con confirmación, en «Enviadas»: «¿Lo perdió?».
+  await page.getByRole('tab', { name: /Enviadas/ }).click()
+  // La fila sigue abierta al cambiar de pestaña: no se vuelve a pulsar, que la cerraría.
+  await expect(fila.getByRole('button', { name: /Enlace y otras formas/ })).toHaveAttribute('aria-expanded', 'true')
+  await fila.getByRole('button', { name: /Generar un enlace nuevo/ }).click()
+  await fila.getByRole('button', { name: 'Sí, generar uno nuevo' }).click()
+  await expect(campo).not.toHaveValue(enviado)
+  const nuevo = await campo.inputValue()
   expect(nuevo).toMatch(/\/i\/[A-Za-z0-9_-]{22}$/)
 
-  // El viejo ya no abre nada; el nuevo sí.
-  expect((await invitado.goto(`/i/${token}`))?.status()).toBe(404)
+  // El anterior ya no abre nada; el nuevo sí.
+  expect((await invitado.goto(enviado))?.status()).toBe(404)
   expect((await invitado.goto(nuevo))?.status()).toBe(200)
 })
 
@@ -48,43 +60,27 @@ test('la importación dice fila por fila qué entró y qué no', async ({ page }
   await expect(informe).toContainText('Sin etiqueta')
   await expect(page.getByLabel('Enlace de Familia García')).toHaveValue(/\/i\/[A-Za-z0-9_-]{22}$/)
 
-  // La hoja de reparto trae un QR por enlace creado, y solo por los creados: la fila
-  // rechazada no tiene enlace que imprimir.
-  await expect(page.getByRole('img', { name: 'Invitación de Familia García' })).toBeVisible()
-  await expect(page.getByRole('img', { name: 'Invitación de Ana Vega' })).toBeVisible()
-  await expect(page.getByRole('img', { name: /^Invitación de/ })).toHaveCount(2)
+  // Un QR digital por enlace creado, y solo por los creados: la fila rechazada no tiene enlace.
+  await expect(page.getByRole('img', { name: 'Código QR de Familia García' })).toBeVisible()
+  await expect(page.getByRole('img', { name: 'Código QR de Ana Vega' })).toBeVisible()
+  await expect(page.getByRole('img', { name: /^Código QR de/ })).toHaveCount(2)
 
   await deleteEnvioEvent(slug)
 })
 
-test('la hoja de reparto se imprime sola: el resto del panel no sale en el papel', async ({ page }) => {
+test('el QR del invitado es digital: se descarga como imagen, no se imprime', async ({ page }) => {
   const slug = `${SLUG}-qr`
   await seedEnvioEvent(slug)
 
   await page.goto(`/panel/eventos/${slug}/invitados?panel=envio`)
-  const whatsapp = page.waitForEvent('popup')
-  await page.getByRole('button', { name: 'Enviar por WhatsApp a Familia Rojas Peña' }).click()
-  await (await whatsapp).close()
-  // La tarjeta va plegada: casi todo se reparte por WhatsApp, y es para quien entrega en mano.
-  await page.getByText(/tarjeta con qr/i).click()
-  await expect(page.getByRole('img', { name: 'Invitación de Familia Rojas Peña' })).toBeVisible()
+  const fila = page.getByRole('listitem', { name: 'Familia Rojas Peña' })
+  await fila.getByRole('button', { name: /Enlace y otras formas/ }).click()
+  await expect(fila.getByRole('img', { name: 'Código QR de Familia Rojas Peña' })).toBeVisible()
 
-  // Con el papel puesto, lo único visible es la tarjeta. Se mide con `visibility`
-  // calculada, que es justo lo que la regla cambia; `toBeVisible` de Playwright no
-  // consulta el medio de impresión.
-  await page.emulateMedia({ media: 'print' })
-  const oculto = await page.evaluate(() => {
-    document.body.dataset.imprimiendo = 'tarjeta'
-    const tarjeta = document.querySelector('[data-para-imprimir]')
-    const barra = document.querySelector('nav')
-    return {
-      tarjeta: tarjeta === null ? null : getComputedStyle(tarjeta).visibility,
-      barra: barra === null ? null : getComputedStyle(barra).visibility,
-    }
-  })
-
-  expect(oculto.tarjeta).toBe('visible')
-  expect(oculto.barra).toBe('hidden')
+  // «Descargar QR» baja un PNG con el nombre del invitado; nada de hojas para imprimir.
+  const descarga = page.waitForEvent('download')
+  await fila.getByRole('button', { name: 'Descargar QR' }).click()
+  expect((await descarga).suggestedFilename()).toBe('familia-rojas-pena-qr.png')
 
   await deleteEnvioEvent(slug)
 })

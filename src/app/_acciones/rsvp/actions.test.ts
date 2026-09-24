@@ -10,6 +10,7 @@ import { ok } from '@/shared/result'
 const respond = vi.fn()
 const resolveByToken = vi.fn()
 const eventUnlocked = vi.fn()
+const avisar = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
@@ -18,6 +19,7 @@ vi.mock('@/app/composition/container', () => ({
   guests: { resolveByToken: (...args: unknown[]) => resolveByToken(...args) },
 }))
 vi.mock('@/app/_acciones/events/actions', () => ({ eventUnlocked: (...args: unknown[]) => eventUnlocked(...args) }))
+vi.mock('@/app/_acciones/avisar-a-los-anfitriones', () => ({ avisarALosAnfitriones: (...args: unknown[]) => avisar(...args) }))
 
 const form = (): FormData => {
   const fd = new FormData()
@@ -28,7 +30,7 @@ const form = (): FormData => {
 
 beforeEach(() => {
   vi.clearAllMocks()
-  resolveByToken.mockResolvedValue(ok({ id: 'g1', eventId: 'e1' }))
+  resolveByToken.mockResolvedValue(ok({ id: 'g1', eventId: 'e1', label: 'Familia Vargas' }))
   respond.mockResolvedValue(ok({ attending: 2 }))
 })
 
@@ -41,6 +43,7 @@ describe('respondAction con un evento protegido', () => {
 
     expect(outcome.status).toBe('error')
     expect(respond).not.toHaveBeenCalled()
+    expect(avisar).not.toHaveBeenCalled()
   })
 
   it('desbloqueado, confirma con normalidad', async () => {
@@ -50,5 +53,7 @@ describe('respondAction con un evento protegido', () => {
     await respondAction({ status: 'idle' }, form())
 
     expect(respond).toHaveBeenCalled()
+    // Y los anfitriones reciben su aviso: quién, de qué evento y cuántos vienen.
+    expect(avisar).toHaveBeenCalledWith({ eventId: 'e1', invitado: 'Familia Vargas', asistentes: 2, mensaje: null })
   })
 })

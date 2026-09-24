@@ -9,6 +9,7 @@ import { isErr } from '@/shared/result'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { guardedRespond, type RsvpOutcome } from '@/modules/rsvp/application/guarded-respond'
 import { campo } from '@/shared/forms/campo'
+import { avisarALosAnfitriones } from '@/app/_acciones/avisar-a-los-anfitriones'
 
 export type RsvpActionState = RsvpOutcome | { status: 'idle' }
 
@@ -40,7 +41,12 @@ export async function respondAction(_previous: RsvpActionState, formData: FormDa
   }
 
   const outcome = await respond({ ip, token, payload: Object.fromEntries(formData) })
-  if (outcome.status === 'success') revalidatePath(`/i/${token}`)
+  if (outcome.status === 'success') {
+    revalidatePath(`/i/${token}`)
+    if (!isErr(group)) {
+      avisarALosAnfitriones({ eventId: group.value.eventId, invitado: group.value.label, asistentes: outcome.attending, mensaje: campo(formData, 'message') || null })
+    }
+  }
   return outcome
 }
 
@@ -83,5 +89,8 @@ export async function respondByPersonAction(_previous: RsvpActionState, formData
 
   revalidatePath(`/i/${token}`)
   revalidatePath(`/i/${token}/confirmar`)
+  if (!isErr(group)) {
+    avisarALosAnfitriones({ eventId: group.value.eventId, invitado: group.value.label, asistentes: resultado.value.attending, mensaje: campo(formData, 'message') || null })
+  }
   return { status: 'success', attending: resultado.value.attending, responderName: resultado.value.responderName }
 }

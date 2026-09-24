@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import postgres from 'postgres'
+import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { ADMIN_AUTH_STATE, ATELIER } from './fixtures/atelier'
 
 const SLUG = 'boda-puerta-e2e'
@@ -20,7 +21,7 @@ async function entrar(page: Page, quien: { email: string; password: string }): P
   await page.getByRole('button', { name: 'Entrar' }).click()
 }
 
-test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in', async ({ browser }) => {
+test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo quita', async ({ browser }) => {
   await sql`delete from events where slug = ${SLUG}`
   await sql`delete from users where email = ${PUERTA.email}`
   await sql`
@@ -30,24 +31,23 @@ test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in'
             (select id from plans where slug = 'alta-costura'))
   `
 
-  // --- El **admin** la da de alta desde Configuración del evento.
+  // --- La cuenta de puerta ya existe: desde que la recepción se suma con enlace y PIN, el
+  // panel no crea cuentas de puerta nuevas, pero las que había siguen entrando y se quitan.
+  await sql`
+    insert into users (email, password_hash, role, must_change_password)
+    values (${PUERTA.email}, ${await argon2Hasher.hash(PUERTA.password)}, 'puerta', false)
+  `
+  await sql`
+    insert into event_staff (event_id, user_id, membership)
+    values ((select id from events where slug = ${SLUG}), (select id from users where email = ${PUERTA.email}), 'puerta')
+  `
+
   const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
   await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
-
   const tarjeta = gestor.locator('section', { has: gestor.getByRole('heading', { name: 'Personal de puerta' }) })
-  await expect(tarjeta).toContainText('Todavía no hay nadie asignado')
-  await tarjeta.getByLabel('Correo').fill(PUERTA.email)
-  await tarjeta.getByLabel('Contraseña').fill(PUERTA.password)
-  await tarjeta.getByRole('button', { name: 'Dar acceso a la puerta' }).click()
-  // En la lista, no en el aviso de éxito: el correo sale en los dos sitios.
   await expect(tarjeta.getByRole('listitem').filter({ hasText: PUERTA.email })).toBeVisible()
-
-  // Su contraseña nace **provisional**: la escribió el admin, así que al entrar el panel
-  // la mandaría a cambiarla y no al check-in. Se apaga la marca aquí porque lo que esta
-  // prueba demuestra son los permisos del personal de puerta; el flujo de contraseñas
-  // tiene su propia suite (`identidad.spec.ts`) y duplicarlo aquí solo gastaría dos
-  // inicios de sesión más, que es justo lo que agota el limitador.
-  await sql`update users set must_change_password = false where email = ${PUERTA.email}`
+  // Ya no hay alta de cuentas de puerta: la recepción se suma con enlace y PIN.
+  await expect(tarjeta.getByRole('button', { name: 'Dar acceso a la puerta' })).toHaveCount(0)
 
   // --- Esa persona entra y cae en el check-in, no en el resumen.
   const puerta = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.7' } })).newPage()
@@ -72,7 +72,8 @@ test('el admin da de alta a la gente de puerta, y esa gente solo ve el check-in'
   // --- El admin le quita el acceso y deja de entrar.
   await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
   await tarjeta.getByRole('button', { name: 'Quitar' }).click()
-  await expect(tarjeta).toContainText('Todavía no hay nadie asignado')
+  // Sin nadie, la tarjeta desaparece: no queda nada que gestionar ahí.
+  await expect(gestor.getByRole('heading', { name: 'Personal de puerta' })).toHaveCount(0)
 
   expect((await puerta.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(404)
 })

@@ -7,7 +7,7 @@ import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: SupportState = { status: 'idle' }
 
-export type Anfitrion = { readonly userId: string; readonly email: string }
+export type Anfitrion = { readonly userId: string; readonly email: string; readonly phone?: string | null }
 
 /**
  * Restablecer el acceso del cliente, dentro de «Gestionar». Entrar como el cliente vive a la

@@ -2,7 +2,8 @@ import { admin } from '@/app/composition/container'
 import { ShowcaseMusicRow } from '@/modules/admin'
 import { FIESTAS, fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
-import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
+import { CATALOG_LISTOS, seAsigna } from '@/shared/design/theme-catalog'
+import { Ayuda } from '@/shared/design/ui/panel/estados'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
@@ -26,7 +27,8 @@ export default async function AdminModelosPage() {
   await requireAdmin()
 
   const [musica, publicacion, canciones] = await Promise.all([admin.showcaseMusic(), admin.publication(), admin.showcaseSongs()])
-  const modelos = themeDefinitions().filter((tema) => tema.key !== 'clasico')
+  // Ni el clásico ni los retirados: un retirado no vuelve a la web desde aquí.
+  const modelos = themeDefinitions().filter((tema) => seAsigna(tema.key))
   const fiestaDe = (clave: string) => fiestaDeCategoria(CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug ?? '')
   // Un grupo por fiesta, y solo los que tienen algún modelo: los cumpleaños son uno solo y
   // todavía sin publicar, así que el grupo aparece el día que existe.
@@ -45,15 +47,18 @@ export default async function AdminModelosPage() {
 
       <PanelCard>
         <div className="mb-5 flex flex-col gap-2.5">
-          <p className="text-[13px] leading-[1.7] text-ink-soft">
-            Cada modelo del catálogo pinta su reproductor desde el primer día. Sin un archivo detrás, el botón mueve las
-            barras y no suena. Sube aquí su canción y ese modelo sonará en{' '}
-            <span className="font-mono text-[12px]">/modelos</span>.
-          </p>
-          <p className="text-[12px] leading-[1.7] text-ink-mute">
-            Sube la canción entera, en <strong className="font-normal text-ink-soft">MP3, M4A o WAV</strong>: se ajusta
-            sola en un MP3 ligero y suena en bucle hasta que quien mira el modelo la pausa. Y responde por lo que publiques — si la grabación tiene dueño, publicarla es cosa del atelier.
-          </p>
+          <p className="text-[13px] leading-[1.7] text-ink-soft">Publica o retira cada modelo de la web y sube la canción que suena en su muestra.</p>
+          <Ayuda>
+            <p>
+              Cada modelo pinta su reproductor desde el primer día; sin un archivo detrás, el botón mueve las barras y no
+              suena. La canción que subas aquí suena en <span className="font-mono">/modelos</span>, no en las invitaciones
+              de los clientes, que tienen la suya.
+            </p>
+            <p>
+              Sube la canción entera, en MP3, M4A o WAV: se ajusta sola en un MP3 ligero y suena en bucle hasta que quien
+              mira el modelo la pausa. Si la grabación tiene dueño, publicarla es responsabilidad del atelier.
+            </p>
+          </Ayuda>
         </div>
 
         {isErr(musica) || isErr(publicacion) ? (

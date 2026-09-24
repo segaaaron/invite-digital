@@ -14,7 +14,7 @@ import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
 import { SeatingSearchProvider } from '@/modules/venue/ui/SeatingSearchContext'
 import { TableDialog } from '@/modules/venue/ui/TableDialog'
-import { fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
+import { vocabularioDeCategoria } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { ZoneDialog } from '@/modules/venue/ui/ZoneDialog'
 import { SeatViewToggle } from '@/modules/venue/ui/SeatViewToggle'
@@ -67,7 +67,7 @@ export default async function MesasPage({
   const enTarjetas = vista === 'tarjetas'
 
   // La mesa principal se llama según la fiesta: en unos XV no hay novios.
-  const vocabulario = VOCABULARIO[fiestaDeCategoria(themeFor(event.value.themeKey).categorySlug)]
+  const vocabulario = vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug)
 
   return (
     <>

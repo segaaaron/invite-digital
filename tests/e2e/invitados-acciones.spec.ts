@@ -34,7 +34,9 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
   // Cuatro personas: la invitación nace plegada y sus personas no están en el DOM hasta abrirla.
   await desplegarInvitacion(page, 'Familia Rojas Peña')
-  const fila = page.getByRole('row', { name: /Familia Rojas Peña/ }).first()
+  // La fila de la **persona**, no la cabecera de su familia (nombre, «N personas», envío), que
+  // también dice «Familia Rojas Peña» y va primero desde el 16 de septiembre.
+  const fila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Familia Rojas Peña' }) })
 
   // --- Editar: nombre, restricción y correo, en el diálogo de la maqueta.
   await fila.getByRole('link', { name: /^Editar a / }).click()
@@ -45,7 +47,8 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await page.getByRole('button', { name: 'Guardar' }).click()
 
   await page.waitForURL(/invitados$/)
-  await expect(page.getByText('Ana Lucía Vega Rojas')).toBeVisible()
+  // Sale en la cabecera de su familia (que se renombra con ella) y en su fila: basta una.
+  await expect(page.getByText('Ana Lucía Vega Rojas').first()).toBeVisible()
   await expect(page.getByText('Sin gluten')).toBeVisible()
 
   // El correo se guardó de verdad: es el campo que `updatePerson` borraba en silencio.
@@ -56,7 +59,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   // --- Editar otra vez: marcar VIP no puede llevarse el correo por delante.
   // Guardar volvió a la lista, y la invitación —renombrada con su principal— vuelve plegada.
   await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
-  await page.getByRole('row', { name: /Ana Lucía Vega Rojas/ }).getByRole('link', { name: /^Editar a / }).click()
+  await page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega Rojas' }) }).getByRole('link', { name: /^Editar a / }).click()
   await page.getByLabel('Invitado VIP').check()
   await page.getByRole('button', { name: 'Guardar' }).click()
   await page.waitForURL(/invitados$/)
@@ -68,7 +71,8 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
 
   // --- El pase: enseña el QR que ya tiene, sin generar nada.
   await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
-  await page.getByRole('row', { name: /Ana Lucía Vega Rojas/ }).getByRole('link', { name: /^Ver el pase de / }).click()
+  // El pase es de la invitación y va en la cabecera de su familia, una vez, no en cada persona.
+  await page.getByRole('link', { name: /^Ver el pase de Ana Lucía Vega Rojas/ }).click()
   await expect(page.getByRole('button', { name: /generar/i })).toHaveCount(0)
   // La invitación se llama como su principal, y al renombrarlo se renombró con él.
   await expect(page.getByRole('img', { name: /Pase de Ana Lucía Vega Rojas/ })).toBeVisible()
@@ -77,10 +81,13 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   // --- Borrar: pregunta primero, y el segundo clic sí se la lleva.
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
   await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
-  const suFila = page.getByRole('row', { name: /Ana Lucía Vega Rojas/ })
+  const suFila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega Rojas' }) })
   await suFila.getByRole('button', { name: /^Eliminar a / }).click()
-  await expect(suFila.getByRole('button', { name: 'Confirmar' })).toBeVisible()
-  await suFila.getByRole('button', { name: 'Confirmar' }).click()
+  // Sus iconos se cambian por «Confirmar / Cancelar» —el enlace de editar que la localizaba se
+  // va—, y solo hay una confirmación pendiente a la vez: se busca en la página.
+  const confirmar = page.getByRole('button', { name: 'Confirmar' })
+  await expect(confirmar).toHaveCount(1)
+  await confirmar.click()
 
   await expect(page.getByText('Ana Lucía Vega Rojas')).toHaveCount(0)
 })
@@ -95,7 +102,7 @@ test('mover a alguien a una invitación llena le suma el cupo, y la de origen pa
   await desplegarInvitacion(page, 'Padrinos')
   const fila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Padrinos' }) })
   await fila.getByRole('link', { name: /^Editar a / }).click()
-  const invitacion = page.getByLabel('Invitación', { exact: true })
+  const invitacion = page.getByRole('combobox', { name: 'Invitación', exact: true })
   const llena = await invitacion.locator('option', { hasText: 'Grupo lleno' }).getAttribute('value')
   await invitacion.selectOption(llena)
   await page.getByRole('button', { name: 'Guardar' }).click()

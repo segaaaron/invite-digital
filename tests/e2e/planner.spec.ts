@@ -15,7 +15,9 @@ test.afterAll(async () => {
 
 test('un evento de XV crea su plan con la plantilla, cierra una tarea y la ve en el resumen', async ({ page }) => {
   const { eventSlug } = await seedInvitation({ slug: 'planner-xv-e2e' })
-  // Fecha cercana: así la primera etapa ya está atrasada y sale en «Esta semana».
+  // Fecha cercana: la primera etapa ya debería haber pasado. Al sembrar, esas fechas **vencen
+  // hoy**, no en el pasado: abrir el plan con quince tareas vencidas hace meses se leía como un
+  // error. Así que salen en «Esta semana» y «Atrasadas» queda vacía.
   await sql`update events set theme_key = 'xv-isabelle', event_date = (now() + interval '20 days')::date, rsvp_deadline = (now() + interval '10 days')::date where slug = ${eventSlug}`
 
   await page.goto(`/panel/eventos/${eventSlug}/planner/tareas`)
@@ -29,6 +31,9 @@ test('un evento de XV crea su plan con la plantilla, cierra una tarea y la ve en
   await expect(vals.getByRole('button', { name: 'Reabrir «Empezar los ensayos del vals»' })).toBeVisible()
 
   await page.goto(`/panel/eventos/${eventSlug}/planner/tareas?filtro=atrasadas`)
+  await expect(page.getByText('Nada en este filtro')).toBeVisible()
+
+  await page.goto(`/panel/eventos/${eventSlug}/planner/tareas?filtro=semana`)
   await expect(page.getByRole('listitem', { name: 'Empezar los ensayos del vals' })).toHaveCount(0)
   await expect(page.getByRole('listitem', { name: 'Reservar el salón' })).toBeVisible()
 

@@ -36,13 +36,14 @@ export function PrivacyForm({
       <p className={LABEL_CLASS}>Privacidad</p>
 
       <label className="flex items-center gap-2.5 text-[13px] text-ink">
-        <input checked={modo === 'public'} name="privacy" onChange={() => setModo('public')} type="radio" value="public" />
+        <input checked={modo === 'public'} className="accent-ink" name="privacy" onChange={() => setModo('public')} type="radio" value="public" />
         Pública — cualquiera con el enlace
       </label>
 
       <label className="flex items-center gap-2.5 text-[13px] text-ink">
         <input
           checked={modo === 'password'}
+          className="accent-ink"
           disabled={!contrasenaIncluida && !hasPassword}
           name="privacy"
           onChange={() => setModo('password')}

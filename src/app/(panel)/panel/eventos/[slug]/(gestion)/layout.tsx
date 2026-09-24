@@ -2,12 +2,14 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { checkin, events, guests, plans } from '@/app/composition/container'
+import { nombreDePlan } from '../../../_carcasa/nombre-de-plan'
 import { fiestaDeTema } from '@/modules/events'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { AtajoDeBusqueda } from '@/modules/admin'
 import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { hasFeature } from '@/modules/plans'
 import { TIPOS_DE_CORTEJO } from '@/modules/planner'
@@ -61,6 +63,7 @@ export default async function EventoLayout({
   // La capacidad ya leída dice si trae puerta: `requireFeature` la volvía a calcular entera.
   const anfitriones = isAdmin(actor) ? ((await events.staff.hostsOf([id])).get(id) ?? []) : []
   const puerta = !isErr(capacidad) && hasFeature(capacidad.value, 'checkin') ? await checkin.state(id) : null
+  const nombreDelPlan = isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
 
   return (
     <PanelFrame
@@ -73,7 +76,7 @@ export default async function EventoLayout({
       }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, diaD: !isErr(capacidad) && hasFeature(capacidad.value, 'plannerTotal'), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })}
       evento={{
         title: event.value.title,
-        planLabel: isErr(capacidad) ? 'Plan —' : `Plan ${capacidad.value.planSlug}`,
+        planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
         // A dónde vuelve cada uno: el admin a la cartera, el atelier a su bandeja. El cliente y
         // la puerta no tienen «fuera»: su panel es este evento.
         salirHref: isAdmin(actor) ? '/panel/admin/eventos' : actor.role === 'atelier' ? '/panel' : null,
@@ -82,6 +85,7 @@ export default async function EventoLayout({
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
+      {isAdmin(actor) ? <AtajoDeBusqueda /> : null}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

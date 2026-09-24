@@ -99,6 +99,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
             // enseñar una puerta que además abría de más.
             { href: '/panel/pedidos', label: 'Pedidos', icon: 'pedidos', count: counts.pedidos ?? null, countLabel: 'por revisar' },
             { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
+            // Encontrar a alguien —cliente, pedido, consulta, cuenta— sin saber en qué bandeja está. ⌘K lleva aquí.
+            { href: '/panel/admin/buscar', label: 'Buscar', icon: 'buscar' },
           ],
         },
         {

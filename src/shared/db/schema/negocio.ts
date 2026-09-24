@@ -57,6 +57,8 @@ export const orders = pgTable(
     uniqueIndex('orders_extra_abierto_idx')
       .on(t.eventId, t.addonSlug)
       .where(sql`${t.addonSlug} is not null and ${t.eventId} is not null and ${t.status} <> 'approved'`),
+    // `0068`: aprobado es con fecha. El importe no se exige: bloquearía aprobar un pedido antiguo.
+    check('orders_aprobado_con_fecha', sql`${t.status} <> 'approved' or ${t.decidedAt} is not null`),
   ],
 )
 

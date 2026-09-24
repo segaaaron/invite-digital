@@ -2,7 +2,7 @@ import { eq, sql } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import { events, guestGroups, messageNotes, rsvpResponses } from '@/shared/db/schema'
-import { countUnreadMessages, drizzleGuestbookRepository } from './drizzle-guestbook-repository'
+import { drizzleGuestbookRepository } from './drizzle-guestbook-repository'
 
 const eventId = crypto.randomUUID()
 const otroEventId = crypto.randomUUID()
@@ -117,22 +117,6 @@ describe('listMessages', () => {
 
     await db.delete(rsvpResponses).where(eq(rsvpResponses.id, primera))
     await db.delete(rsvpResponses).where(eq(rsvpResponses.id, segunda))
-  })
-})
-
-describe('countUnread', () => {
-  it('cuenta lo mismo que la bandeja sin leer: con texto y sin nota o sin leer', async () => {
-    const antes = await countUnreadMessages(db, eventId)
-    const nueva = await nuevaRespuesta({ message: 'Felicidades' })
-    const leida = await nuevaRespuesta({ message: 'Qué alegría' })
-    const vacia = await nuevaRespuesta({ message: null })
-    await db.insert(messageNotes).values({ rsvpResponseId: leida, readAt: new Date() })
-    try {
-      expect(await countUnreadMessages(db, eventId)).toBe(antes + 1)
-      expect(await countUnreadMessages(db, otroEventId)).toBe(0)
-    } finally {
-      for (const id of [nueva, leida, vacia]) await db.delete(rsvpResponses).where(eq(rsvpResponses.id, id))
-    }
   })
 })
 

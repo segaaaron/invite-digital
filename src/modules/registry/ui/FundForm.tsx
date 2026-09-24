@@ -32,6 +32,7 @@ export function FundForm({
   fund,
   onDone,
   doneHref,
+  ejemplo,
 }: {
   eventId: string
   eventSlug: string
@@ -39,6 +40,8 @@ export function FundForm({
   onDone?: () => void
   /** Adónde volver tras crear. Es lo que cierra el diálogo del alta. */
   doneHref?: string | undefined
+  /** El fondo de ejemplo de esa fiesta (`Vocabulario.ejemplos`): una «Luna de miel» solo en bodas. */
+  ejemplo?: { readonly fondo: string; readonly fondoDetalle: string } | undefined
 }) {
   const editando = fund !== undefined
   // Editar se hace dentro de la tarjeta oscura del fondo; abrir uno nuevo, sobre marfil.
@@ -108,7 +111,7 @@ export function FundForm({
             id={nameId}
             maxLength={160}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Luna de miel"
+            placeholder={ejemplo?.fondo}
             type="text"
             value={name}
           />
@@ -134,7 +137,7 @@ export function FundForm({
           className={campo}
           id={descriptionId}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Para los pasajes y las noches de hotel."
+          placeholder={ejemplo?.fondoDetalle}
           type="text"
           value={description}
         />

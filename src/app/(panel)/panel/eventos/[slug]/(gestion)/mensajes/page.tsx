@@ -4,6 +4,7 @@ import { LibroDeFirmas } from '@/modules/guestbook/ui/LibroDeFirmas'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 export const metadata = { title: 'Mensajes' }
 
@@ -30,6 +31,7 @@ export default async function MensajesPage({ params }: { params: Promise<{ slug:
         meta={libro.value.length === 0 ? 'Las palabras que te dejan tus invitados al confirmar' : `${libro.value.length} ${libro.value.length === 1 ? 'firma' : 'firmas'} de tus invitados`}
         title="Mensajes"
       />
+      <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       <LibroDeFirmas eventId={event.value.id} eventSlug={event.value.slug} messages={libro.value} />
     </>

@@ -6,7 +6,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/P
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { savePaymentSettingsAction, uploadPaymentQrAction } from '@/app/_acciones/admin/cobro-actions'
 import type { PaymentSettings } from '../domain/payment-settings'
-import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ActionFeedback, Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -99,11 +99,13 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
       <form action={subir} className="flex flex-col gap-3.5 border-t border-line-panel pt-6">
         <p className={LABEL_CLASS}>Imagen del QR de cobro</p>
 
-        <p className="text-[12px] leading-[1.7] text-ink-soft">
-          Este QR <strong className="font-normal text-ink">no se genera aquí y no puede generarse</strong>: en
-          Bolivia lo emite el sistema financiero, cifrado y firmado por el banco. Expórtalo de la aplicación de tu
-          banco y súbelo.
-        </p>
+        <p className="text-[12px] leading-[1.7] text-ink-soft">Expórtalo de la aplicación de tu banco y súbelo.</p>
+        <Ayuda titulo="¿Por qué no se genera aquí?">
+          <p>
+            En Bolivia el QR de cobro lo emite el sistema financiero, cifrado y firmado por el banco: no se puede generar
+            fuera de él. Por eso se sube la imagen que exporta tu banco.
+          </p>
+        </Ayuda>
 
         {settings.hasQrImage ? (
           <span className="flex items-center gap-3">

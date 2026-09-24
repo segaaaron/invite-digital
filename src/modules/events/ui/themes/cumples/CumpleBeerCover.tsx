@@ -17,17 +17,6 @@ type Props = {
   readonly cta: string
 }
 
-/**
- * El fondo del diseño con alfa, para el velo de la llamada. Sale del color que ya trae la
- * paleta: un hexadecimal nuevo aquí sería un color que nadie eligió.
- */
-const velo = (hex: string, alfa: number): string => {
-  const limpio = /^#([0-9a-f]{6})$/i.exec(hex.trim())
-  if (limpio === null) return hex
-  const valor = Number.parseInt(limpio[1] ?? '', 16)
-  return `rgba(${(valor >> 16) & 255}, ${(valor >> 8) & 255}, ${valor & 255}, ${alfa})`
-}
-
 /** El tamaño del arte. El nombre se coloca en sus coordenadas, no en las de la pantalla. */
 const ARTE = { ancho: 768, alto: 1376 } as const
 

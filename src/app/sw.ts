@@ -1,6 +1,6 @@
 import { defaultCache } from '@serwist/next/worker'
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { Serwist } from 'serwist'
+import { NetworkOnly, Serwist } from 'serwist'
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -22,7 +22,10 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  runtimeCaching: defaultCache,
+  // Los cambios en vivo (SSE) van **directos a la red**, antes que nada. La regla general de
+  // `defaultCache` para el mismo origen es `NetworkFirst`, que guarda la respuesta en caché:
+  // con un stream que no termina nunca, esa copia se quedaría leyendo y creciendo en memoria.
+  runtimeCaching: [{ matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith('/en-vivo'), handler: new NetworkOnly() }, ...defaultCache],
 })
 
 serwist.addEventListeners()

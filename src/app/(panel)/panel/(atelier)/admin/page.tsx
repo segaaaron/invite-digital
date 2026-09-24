@@ -1,10 +1,13 @@
 import { admin } from '@/app/composition/container'
-import { AvisoGrupo, HoyTile, ProximaFila } from '@/modules/admin/ui/HoyPiezas'
+import { AvisoGrupo, ProximaFila } from '@/modules/admin/ui/HoyPiezas'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { formatAmount } from '@/shared/money'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { CheckIcon } from '@/shared/design/ui/icons'
 
 export const metadata = { title: 'Hoy · Administración' }
 export const dynamic = 'force-dynamic'
@@ -23,9 +26,9 @@ const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', year: '2-digit', 
 export default async function AdminPage() {
   await requireAdmin()
 
-  const [hoy, metricas] = await Promise.all([admin.today(), admin.metrics()])
+  const [hoy, metricas, dinero] = await Promise.all([admin.today(), admin.metrics(), admin.todayMoney()])
 
-  if (isErr(hoy) || isErr(metricas)) {
+  if (isErr(hoy) || isErr(metricas) || isErr(dinero)) {
     return (
       <>
         <PanelHeader kicker="Administración" title="Hoy" />
@@ -39,7 +42,15 @@ export default async function AdminPage() {
   }
 
   const { fecha, hoy: h } = hoy.value
-  const { eventos, usuarios, invitados, pedidosAprobados, porMes, porPlan } = metricas.value
+  const { eventos, porMes, porPlan } = metricas.value
+  const i = dinero.value
+  const bs = (cents: number) => formatAmount(cents, 'BOB')
+  // Solo los grupos con algo: tres listas vacías una debajo de otra esconden la que importa.
+  const grupos = [
+    { id: 'ventas', titulo: 'Ventas', avisos: h.ventas },
+    { id: 'riesgos', titulo: 'Eventos en riesgo', avisos: h.riesgos },
+    { id: 'atascados', titulo: 'Clientes atascados', avisos: h.atascados },
+  ].filter((g) => g.avisos.length > 0)
   const techoMes = Math.max(1, ...porMes.map((m) => m.total))
   const techoPlan = Math.max(1, ...porPlan.map((p) => p.total))
   const dia = HOY.format(new Date(`${fecha}T00:00:00Z`))
@@ -54,38 +65,31 @@ export default async function AdminPage() {
         title="Hoy"
       />
 
-      <div className="grid grid-cols-2 gap-3 min-[560px]:gap-4.5 min-[900px]:grid-cols-4">
-        <HoyTile detail="Transfirieron y esperan" href="/panel/pedidos" label="Comprobantes" value={h.totales.pedidos} />
-        <HoyTile detail="Sin contactar" href="/panel/admin/consultas" label="Consultas nuevas" value={h.totales.consultas} />
-        <HoyTile detail="Por decidir" href="#ventas" label="Cambios de plan" value={h.totales.cambios} />
-        <HoyTile detail="A 30 días o menos" href="#riesgos" label="Eventos en riesgo" value={h.totales.riesgos} />
-      </div>
-
-      <div className="mt-4.5 grid items-start gap-4.5 min-[900px]:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+      {/* Sin fila de cifras encima: repetía los mismos tres grupos de «Por hacer». */}
+      <div className="grid items-start gap-4.5 min-[900px]:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
         <PanelCard title="Por hacer">
-          <div className="flex flex-col gap-7">
-            <div id="ventas" className="scroll-mt-6">
-              <AvisoGrupo
-                avisos={h.ventas}
-                titulo="Ventas"
-                vacio="Ningún comprobante, consulta ni cambio de plan esperando."
-              />
-            </div>
-            <div id="riesgos" className="scroll-mt-6">
-              <AvisoGrupo avisos={h.riesgos} titulo="Eventos en riesgo" vacio="Ningún evento cercano en borrador ni sin invitados." />
-            </div>
-            <AvisoGrupo
-              avisos={h.atascados}
-              titulo="Clientes atascados"
-              vacio="Todos los clientes con acceso ya entraron, y ningún pedido lleva una semana sin pago."
+          {grupos.length === 0 ? (
+            <EmptyState
+              compact
+              description="Ningún comprobante, consulta ni cambio de plan esperando; ningún evento cercano en riesgo y ningún cliente atascado."
+              icon={<CheckIcon />}
+              title="Todo al día"
             />
-          </div>
+          ) : (
+            <div className="flex flex-col gap-7">
+              {grupos.map((g) => (
+                <div className="scroll-mt-6" id={g.id} key={g.id}>
+                  <AvisoGrupo avisos={g.avisos} titulo={g.titulo} vacio="" />
+                </div>
+              ))}
+            </div>
+          )}
         </PanelCard>
 
         <PanelCard title="Próximos eventos">
-          <p className="-mt-2 mb-3 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Los próximos 14 días</p>
+          <p className="-mt-2 mb-3 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Los próximos 30 días</p>
           {h.proximas.length === 0 ? (
-            <p className="py-6 text-center text-[13px] text-ink-mute">Ningún evento en los próximos 14 días.</p>
+            <EmptyState compact title="Ningún evento en los próximos 30 días" />
           ) : (
             <ul className="flex flex-col">
               {h.proximas.map((boda) => (
@@ -99,16 +103,24 @@ export default async function AdminPage() {
       <h2 className="mt-9 mb-4 font-mono text-[10px] tracking-[0.35em] text-ink-mute uppercase">El negocio</h2>
 
       <div className="grid grid-cols-2 gap-3 min-[560px]:gap-4.5 min-[900px]:grid-cols-4">
-        <StatCard label="Eventos" value={eventos} />
-        <StatCard label="Usuarios" value={usuarios} />
-        <StatCard label="Invitados cargados" value={invitados} />
-        <StatCard label="Pedidos aprobados" value={pedidosAprobados} />
+        {/* Lo que dice cómo va el negocio, no cuántas filas hay en la base. */}
+        <StatCard detail="Pedidos aprobados este mes" label="Cobrado este mes" value={bs(i.esteMes)} />
+        <StatCard detail={`${bs(i.sinPago)} en pedidos sin comprobante`} label="Por revisar" value={bs(i.porRevisar)} />
+        <StatCard
+          detail="Consultas que terminaron en venta, último año"
+          label="Cierre de consultas"
+          value={i.cierreDeConsultas === null ? '—' : `${i.cierreDeConsultas} %`}
+        />
+        <StatCard detail="Todos los eventos del sistema" label="Eventos" value={eventos} />
       </div>
 
       <div className="mt-4.5 grid gap-4.5 min-[900px]:grid-cols-2">
         <PanelCard title="Eventos de los próximos doce meses">
           {/* Hacia adelante, no hacia atrás: las bodas están siempre por venir. Y los
               doce meses siempre, con los huecos a cero. */}
+          {porMes.every((fila) => fila.total === 0) ? (
+            <EmptyState compact title="Ningún evento en los próximos doce meses" />
+          ) : (
           <div className="flex flex-col">
             {porMes.map((fila) => (
               <BarRow
@@ -119,11 +131,12 @@ export default async function AdminPage() {
               />
             ))}
           </div>
+          )}
         </PanelCard>
 
         <PanelCard title="Reparto por plan">
           {porPlan.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">Todavía no hay eventos.</p>
+            <EmptyState compact title="Todavía no hay eventos" />
           ) : (
             <div className="flex flex-col">
               {porPlan.map((fila) => (

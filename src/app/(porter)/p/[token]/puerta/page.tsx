@@ -9,6 +9,7 @@ import {
   voidArrivalAsPorterAction,
 } from '@/app/_acciones/checkin/porter-actions'
 import { DoorMode } from '@/modules/checkin/ui/DoorMode'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { isErr } from '@/shared/result'
 
 // Se instala en la pantalla de inicio: es como la va a usar el portero toda la noche.
@@ -38,6 +39,8 @@ export default async function PorterDoorPage({ params }: { params: Promise<{ tok
       <p className="sr-only">
         {portero.value.eventTitle} · {portero.value.gate ?? 'Puerta'} · {portero.value.name}
       </p>
+      {/* Lo que registran las otras puertas entra solo, en vivo. */}
+      <EnVivo modo="auto" oculto tipos={['ingreso']} url={`/p/${token}/en-vivo`} />
       <DoorMode
         acciones={{
           recordScans: recordScansAsPorterAction,

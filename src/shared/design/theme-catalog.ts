@@ -34,6 +34,13 @@ export type CatalogEntry = {
    * el seed no lo vuelve a retirar —`isPublished` no se toca al actualizar—.
    */
   readonly publicar?: boolean
+  /**
+   * Retirado por decisión del usuario, no pendiente de publicar: **ya no se asigna a eventos
+   * nuevos** y los selectores del panel no lo ofrecen —solo al evento que ya lo tiene—. Su
+   * código se queda porque puede haber eventos que lo usen. A diferencia de `publicar: false`
+   * a secas (`cumple-beer`), que no se vende pero el admin sí asigna.
+   */
+  readonly retirado?: boolean
   readonly es: string
   readonly en: string
   readonly palette: { readonly base: string; readonly accent: string }
@@ -153,6 +160,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     listo: true,
     // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
     publicar: false,
+    retirado: true,
     categorySlug: 'boda',
     es: 'Étoile - Nocturna',
     en: 'Étoile - Nocturne',
@@ -164,6 +172,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     listo: true,
     // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
     publicar: false,
+    retirado: true,
     categorySlug: 'boda-civil',
     es: 'Civil - Minimalista',
     en: 'Civil - Minimal',
@@ -175,6 +184,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     listo: true,
     // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
     publicar: false,
+    retirado: true,
     categorySlug: 'boda',
     es: 'Bodas de Oro - Aniversario',
     en: 'Golden Anniversary - Milestone',
@@ -186,6 +196,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     listo: true,
     // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
     publicar: false,
+    retirado: true,
     categorySlug: 'boda',
     es: 'Compromiso - Pedida',
     en: 'Engagement - Proposal',
@@ -197,6 +208,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     listo: true,
     // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
     publicar: false,
+    retirado: true,
     categorySlug: 'boda',
     es: 'Destino - Playa',
     en: 'Destination - Beach',
@@ -277,97 +289,7 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     palette: { base: '#fff8e7', accent: '#8b6914' },
     sample: { monogram: 'I', names: 'Isabelle', dateLabel: '12 · 09 · 2026', venue: 'Salón Elianne' },
   },
-  {
-    key: 'xv-deco',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Art Déco',
-    en: 'Art Deco',
-    palette: { base: '#12100c', accent: '#d4af55' },
-    sample: { monogram: 'A', names: 'Alessandra', dateLabel: '07 · 11 · 2026', venue: 'Gran Salón Imperial' },
-  },  {
-    key: 'xv-realeza',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Realeza Cristal',
-    en: 'Crystal Royalty',
-    palette: { base: '#eaf3fb', accent: '#5a9fd4' },
-    sample: { monogram: 'C', names: 'Camila', dateLabel: '12 · 12 · 2026', venue: 'Salón Castillo Azul' },
-  },  {
-    key: 'xv-vogue',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Rosa Pastel',
-    en: 'Pastel Pink',
-    palette: { base: '#0f0d0f', accent: '#d4566c' },
-    sample: { monogram: 'I', names: 'Isabela', dateLabel: '19 · 09 · 2026', venue: 'Salón Rosa Vogue' },
-  },  {
-    key: 'xv-y2k',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Y2K Galaxy',
-    en: 'Y2K Galaxy',
-    palette: { base: '#0a0220', accent: '#ff6ed4' },
-    sample: { monogram: 'M', names: 'Mariana', dateLabel: '08 · 10 · 2026', venue: 'Sky Lounge' },
-  },  {
-    key: 'xv-boho',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Bohemia',
-    en: 'Bohemian',
-    palette: { base: '#f7ede0', accent: '#a8734a' },
-    sample: { monogram: 'R', names: 'Renata', dateLabel: '24 · 10 · 2026', venue: 'Jardín Las Lomas' },
-  },  {
-    key: 'xv-min',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Editorial',
-    en: 'Editorial',
-    palette: { base: '#f4f4f1', accent: '#7c5cff' },
-    sample: { monogram: 'S', names: 'Sofía', dateLabel: '21 · 11 · 2026', venue: 'Hacienda Lavanda' },
-  },  {
-    key: 'xv-princ',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Princesa Real',
-    en: 'Royal Princess',
-    palette: { base: '#fef0f5', accent: '#d4566c' },
-    sample: { monogram: 'V', names: 'Valentina', dateLabel: '12 · 09 · 2026', venue: 'Hacienda Princesa' },
-  },  {
-    key: 'xv-eleg',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Floral Elegante',
-    en: 'Elegant Floral',
-    palette: { base: '#faf6ef', accent: '#c9a45c' },
-    sample: { monogram: 'X', names: 'Ximena', dateLabel: '14 · 03 · 2026', venue: 'Quinta la Bonita' },
-  },  {
-    key: 'xv-trop',
-    listo: true,
-    // Retirado del escaparate a pedido del usuario (0066).
-    publicar: false,
-    categorySlug: 'xv-anos',
-    es: 'Sunset',
-    en: 'Sunset',
-    palette: { base: '#ff8a5b', accent: '#0d2e28' },
-    sample: { monogram: 'X', names: 'Ximena', dateLabel: '05 · 12 · 2026', venue: 'Terraza Poniente' },
-  },
+
   {
     key: 'xv-papillon',
     listo: true,
@@ -424,3 +346,9 @@ export const CATALOG_EN_VENTA: readonly CatalogEntry[] = CATALOG_LISTOS.filter((
  */
 export const seVende = (key: string): boolean =>
   CATALOG_ENTRIES.find((entrada) => entrada.key === key)?.publicar !== false
+
+/** Si el panel ofrece ese diseño para un evento: está en el catálogo y no lo retiraron. */
+export const seAsigna = (key: string): boolean => {
+  const entrada = CATALOG_ENTRIES.find((e) => e.key === key)
+  return entrada !== undefined && entrada.listo && entrada.retirado !== true
+}

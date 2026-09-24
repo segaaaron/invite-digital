@@ -156,14 +156,15 @@ describe('componerHoy', () => {
     expect(hoy.atascados.map((a) => a.clave)).toEqual(['sin-pago:VIEJO'])
   })
 
-  it('próximas: las de 14 días o menos, por fecha, con su tasa de respuesta', () => {
+  it('próximas: las de 30 días o menos, por fecha, con su tasa de respuesta', () => {
     const hoy = componerHoy(
       {
         ...vacio,
         eventos: [
           evento({ slug: 'dos', eventDate: '2026-09-28', grupos: 0, respondidos: 0, status: 'draft' }),
           evento({ slug: 'uno', eventDate: '2026-09-16' }),
-          evento({ slug: 'lejos', eventDate: '2026-09-29' }),
+          evento({ slug: 'treinta', eventDate: '2026-10-14' }),
+          evento({ slug: 'lejos', eventDate: '2026-10-15' }),
         ],
       },
       HOY,
@@ -171,6 +172,7 @@ describe('componerHoy', () => {
     expect(hoy.proximas.map((p) => [p.slug, p.dias, p.ratio])).toEqual([
       ['uno', 2, 0.4],
       ['dos', 14, null],
+      ['treinta', 30, 0.4],
     ])
   })
 

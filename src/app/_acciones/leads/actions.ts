@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
 import { admin, leads } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
+import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { isErr } from '@/shared/result'
 import { ETIQUETA_ESTADO, parseEstado } from '@/modules/leads/domain/pipeline'
 import { clientIpFrom } from '@/shared/http/client-ip'
@@ -33,7 +34,17 @@ export async function submitConsultationAction(
     forwardedFor: headerBag.get('x-forwarded-for'),
   })
 
-  return submitGuarded({ ip, payload: Object.fromEntries(formData) })
+  const resultado = await submitGuarded({ ip, payload: Object.fromEntries(formData) })
+  if (resultado.status === 'success') {
+    // Va al asunto del correo: una sola línea, sin saltos que escribió quien consulta.
+    const nombre = String(formData.get('name') ?? '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Alguien'
+    avisarAlAdmin({
+      asunto: `Nueva consulta de ${nombre}`,
+      lineas: [`${nombre} escribió desde el formulario de la web. Quien contesta primero se queda la venta.`],
+      ruta: '/panel/admin/consultas',
+    })
+  }
+  return resultado
 }
 
 // ============================================================================

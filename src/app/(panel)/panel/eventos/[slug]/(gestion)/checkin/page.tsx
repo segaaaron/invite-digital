@@ -8,6 +8,7 @@ import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { isErr } from '@/shared/result'
 import { hora } from '@/shared/format/fecha'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 export const metadata = { title: 'Ingreso al evento' }
 
@@ -69,6 +70,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
   return (
     <>
       <PanelHeader kicker="Día del evento" meta="Escanea el QR del pase o escribe su código. Registrar sin pase queda para cuando no trae ninguno." title="Ingreso al evento" />
+      <EnVivo modo="auto" tipos={['ingreso']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
       <ControlDeIngreso
         escanerHref={`/panel/eventos/${event.value.slug}/puerta`}
         eventId={event.value.id}

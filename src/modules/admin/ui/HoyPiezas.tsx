@@ -7,36 +7,6 @@ import type { Aviso, Proxima } from '../domain/hoy'
  * en la pantalla a la que lleva cada enlace, que es donde ya vive la lógica.
  */
 
-/**
- * Una cifra que lleva a su bandeja. **Encendida solo si hay algo**: cuatro tarjetas con el
- * mismo peso y tres de ellas a cero hacen que la que importa no se vea.
- */
-export function HoyTile({ label, value, href, detail }: { label: string; value: number; href: string; detail: string }) {
-  const hayAlgo = value > 0
-  return (
-    <Link
-      className={`group relative flex flex-col overflow-hidden rounded-[18px] border p-4 shadow-card transition-all duration-200 hover:-translate-y-px hover:shadow-float min-[560px]:p-5.5 ${
-        hayAlgo ? 'border-gold/45 bg-linear-to-b from-[rgb(var(--color-gold-rgb)/0.10)] to-white' : 'border-line-panel bg-linear-to-b from-bg-top to-white'
-      }`}
-      href={href}
-    >
-      {hayAlgo ? <span aria-hidden className="absolute inset-x-0 top-0 h-[3px] bg-gold" /> : null}
-      <span className="font-mono text-[9px] tracking-[0.35em] text-ink-mute uppercase">{label}</span>
-      <span
-        className={`mt-2 font-display text-[40px] leading-none font-light [font-variant-numeric:lining-nums] min-[560px]:text-[48px] ${hayAlgo ? 'text-ink' : 'text-ink-mute/60'}`}
-      >
-        {value}
-      </span>
-      <span className="mt-2 flex items-center justify-between gap-2 text-[12px] text-ink-soft">
-        {hayAlgo ? detail : 'Al día'}
-        <span aria-hidden className="text-ink-mute transition-transform group-hover:translate-x-0.5">
-          →
-        </span>
-      </span>
-    </Link>
-  )
-}
-
 /** Cuántos avisos se enseñan por grupo antes de plegar el resto. */
 const TOPE = 5
 

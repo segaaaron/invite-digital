@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, planner, plans } from '@/app/composition/container'
-import { fiestaDeTema } from '@/modules/events'
+import { fiestaDeTema, VOCABULARIO } from '@/modules/events'
 import { requireSession } from '@/app/_acciones/sesion'
 import { buildWhatsAppLink } from '@/modules/leads'
 import { TIPOS_DE_CORTEJO } from '@/modules/planner'
@@ -59,7 +59,7 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
       <div className="flex flex-col gap-4.5">
         {panel === 'miembro' ? (
           <PanelCard title="Nuevo en el cortejo">
-            <NewCourtMemberForm evento={evento} partidas={partidas} tipos={tipos} />
+            <NewCourtMemberForm ejemplo={VOCABULARIO[fiesta].ejemplos.apadrina} evento={evento} partidas={partidas} tipos={tipos} />
           </PanelCard>
         ) : null}
         <CourtBoard evento={evento} miembros={miembros} partidas={partidas} tipos={tipos} />

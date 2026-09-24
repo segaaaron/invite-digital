@@ -1,5 +1,6 @@
 'use server'
 
+import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { admin, events, identity, notifications, orders, plans } from '@/app/composition/container'
@@ -117,6 +118,11 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
   }
 
   revalidatePath(`/panel/pedidos`)
+  avisarAlAdmin({
+    asunto: `Nuevo comprobante · ${result.value.publicRef}`,
+    lineas: [`${result.value.customerName} subió el comprobante del pedido ${result.value.publicRef}. Espera tu revisión.`],
+    ruta: '/panel/pedidos?estado=proof_submitted',
+  })
   return { status: 'success' }
 }
 

@@ -1,6 +1,6 @@
-import { and, count, desc, eq, isNull, sql } from 'drizzle-orm'
+import { and, count, desc, eq, isNull, like, or, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { auditLog, events, guestGroups, guestPeople, orders, plans, planTranslations, rsvpResponses, users } from '@/shared/db/schema'
+import { auditLog, events, guestGroups, invitationViews, plans, planTranslations, rsvpResponses, users } from '@/shared/db/schema'
 import { parseRole } from '@/modules/identity'
 import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
 
@@ -63,15 +63,19 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
     // grupos: 37,8 ms → 5 ms. Un grupo con varias respuestas cuenta una vez (`distinct`), y los
     // revocados no cuentan.
     const respondidos = database.selectDistinct({ guestGroupId: rsvpResponses.guestGroupId }).from(rsvpResponses).as('respondidos')
+    // Quién abrió su invitación: una vez por grupo, aunque la abra diez veces.
+    const abiertos = database.selectDistinct({ guestGroupId: invitationViews.guestGroupId }).from(invitationViews).as('abiertos')
     const conteos = database
       .select({
         eventId: guestGroups.eventId,
         grupos: sql<number>`count(*)::int`.as('grupos'),
         enviados: sql<number>`(count(*) filter (where ${guestGroups.invitationSentAt} is not null))::int`.as('enviados'),
         respondidos: sql<number>`count(${respondidos.guestGroupId})::int`.as('respondidos'),
+        abiertos: sql<number>`count(${abiertos.guestGroupId})::int`.as('abiertos'),
       })
       .from(guestGroups)
       .leftJoin(respondidos, eq(respondidos.guestGroupId, guestGroups.id))
+      .leftJoin(abiertos, eq(abiertos.guestGroupId, guestGroups.id))
       .where(isNull(guestGroups.revokedAt))
       .groupBy(guestGroups.eventId)
       .as('conteos')
@@ -90,6 +94,7 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         grupos: sql<number>`coalesce(${conteos.grupos}, 0)`,
         enviados: sql<number>`coalesce(${conteos.enviados}, 0)`,
         respondidos: sql<number>`coalesce(${conteos.respondidos}, 0)`,
+        abiertos: sql<number>`coalesce(${conteos.abiertos}, 0)`,
       })
       .from(events)
       // `leftJoin` en los dos: un evento sin dueño o sin plan tiene que salir igual en la
@@ -127,16 +132,8 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
   },
 
   async metrics(): Promise<AdminMetrics> {
-    const [totales] = await database.execute<{
-      eventos: number
-      usuarios: number
-      invitados: number
-      pedidos: number
-    }>(sql`
-      select (select count(*)::int from ${events})                             as eventos,
-             (select count(*)::int from ${users})                              as usuarios,
-             (select count(*)::int from ${guestPeople})                        as invitados,
-             (select count(*)::int from ${orders} where status = 'approved')   as pedidos
+    const [totales] = await database.execute<{ eventos: number }>(sql`
+      select count(*)::int as eventos from ${events}
     `)
 
     // Los **doce meses que vienen**, no los doce pasados: en este negocio los eventos
@@ -156,24 +153,35 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
     `)
 
     const porPlan = await database.execute<{ plan: string; total: number }>(sql`
-      select coalesce(p.slug, 'sin plan') as plan, count(*)::int as total
+      select coalesce(t.name, p.slug, 'Sin plan asignado') as plan, count(*)::int as total
         from ${events} e
         left join ${plans} p on p.id = e.plan_id
+        left join ${planTranslations} t on t.plan_id = p.id and t.locale = 'es'
        group by 1
        order by 2 desc
     `)
 
     return {
       eventos: totales?.eventos ?? 0,
-      usuarios: totales?.usuarios ?? 0,
-      invitados: totales?.invitados ?? 0,
-      pedidosAprobados: totales?.pedidos ?? 0,
       porMes: [...porMes],
       porPlan: [...porPlan],
     }
   },
 
-  async listAudit(limit): Promise<AuditRow[]> {
+  async listAudit(limit, filtro = {}): Promise<AuditRow[]> {
+    const condiciones = [
+      filtro.actorEmail === undefined ? undefined : eq(auditLog.actorEmail, filtro.actorEmail),
+      filtro.prefijos === undefined || filtro.prefijos.length === 0
+        ? undefined
+        : or(...filtro.prefijos.map((prefijo) => like(auditLog.action, `${prefijo}%`))),
+      // Sobre qué: asunto o detalle, sin tildes, como el buscador (`0069`).
+      filtro.patron === undefined
+        ? undefined
+        : or(
+            sql`unaccent(coalesce(${auditLog.subject}, '')) ilike unaccent(${filtro.patron})`,
+            sql`unaccent(coalesce(${auditLog.detail}, '')) ilike unaccent(${filtro.patron})`,
+          ),
+    ].filter((c) => c !== undefined)
     return database
       .select({
         id: auditLog.id,
@@ -184,8 +192,14 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         createdAt: auditLog.createdAt,
       })
       .from(auditLog)
+      .where(condiciones.length === 0 ? undefined : and(...condiciones))
       .orderBy(desc(auditLog.createdAt))
       .limit(limit)
+  },
+
+  async listAuditActors(): Promise<string[]> {
+    const filas = await database.selectDistinct({ correo: auditLog.actorEmail }).from(auditLog).orderBy(auditLog.actorEmail)
+    return filas.map((f) => f.correo).filter((c) => c !== '')
   },
 
   async record(entry): Promise<void> {

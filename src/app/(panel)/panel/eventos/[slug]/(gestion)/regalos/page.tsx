@@ -3,7 +3,9 @@ import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { events, plans, registry } from '@/app/composition/container'
+import { vocabularioDeCategoria } from '@/modules/events'
 import { CurrencyPicker } from '@/modules/events/ui/CurrencyPicker'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { formatAmount } from '@/shared/money'
@@ -92,7 +94,7 @@ export default async function RegalosPage({
 
         {abierto === 'fondo' ? (
           <PanelDialog closeHref={base} title="Añadir fondo en efectivo">
-            <FundForm doneHref={base} eventId={event.value.id} eventSlug={event.value.slug} />
+            <FundForm doneHref={base} ejemplo={vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug).ejemplos} eventId={event.value.id} eventSlug={event.value.slug} />
           </PanelDialog>
         ) : null}
 

@@ -1,8 +1,9 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, notifications } from '@/app/composition/container'
+import { admin, events, identity, notifications, orders } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { seAsigna } from '@/shared/design/theme-catalog'
 import { createCredential, parseRole } from '@/modules/identity'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { ALFABETO_SUFIJO, slugDeBoda } from '@/modules/admin/domain/nueva-boda'
@@ -102,6 +103,7 @@ export async function createWeddingForClientAction(
   const pedido = texto(formData, 'themeKey')
   const tema = themeFor(pedido)
   if (tema.key !== pedido) return { status: 'error', message: 'Ese modelo no existe.' }
+  if (!seAsigna(pedido)) return { status: 'error', message: 'Ese modelo está retirado: elige otro.' }
 
   // --- 1. El acceso, antes de crear nada.
   const existente = await admin.findUserByEmail(correo)
@@ -139,6 +141,20 @@ export async function createWeddingForClientAction(
   if (isErr(evento)) {
     console.error('alta de boda desde administración rechazada', evento.error.kind, evento.error.detail)
     return { status: 'error', message: `No se pudo crear el evento: ${evento.error.detail}` }
+  }
+
+  // --- 2b. Si viene de un pedido aprobado que se quedó sin evento, se enlazan: la bandeja deja
+  // de decir «sin evento» e Ingresos lo cuenta con su evento. Solo si sigue sin ninguno.
+  const refDelPedido = texto(formData, 'orderRef')
+  if (refDelPedido !== '') {
+    const leido = await orders.byRef(refDelPedido)
+    if (!isErr(leido) && leido.value.order.status === 'approved' && leido.value.order.addonSlug === null && leido.value.order.eventId === null) {
+      try {
+        await orders.linkEvent(leido.value.order.id, evento.value.id)
+      } catch (causa) {
+        console.error('no se pudo atar el pedido %s a su evento:', refDelPedido, causa)
+      }
+    }
   }
 
   // --- 3. El contenido de muestra del diseño: la invitación se ve terminada desde el

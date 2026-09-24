@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { checkin, events, plans } from '@/app/composition/container'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { DoorMode } from '@/modules/checkin/ui/DoorMode'
 import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
@@ -34,5 +35,11 @@ export default async function DoorPage({ params }: { params: Promise<{ slug: str
   const manifest = await checkin.manifest(event.value.id)
   if (isErr(manifest)) throw new Error(manifest.error.detail)
 
-  return <DoorMode eventId={event.value.id} eventSlug={event.value.slug} manifest={manifest.value} />
+  return (
+    <>
+      {/* Lo que registran las otras puertas entra solo, en vivo. */}
+      <EnVivo modo="auto" oculto tipos={['ingreso']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
+      <DoorMode eventId={event.value.id} eventSlug={event.value.slug} manifest={manifest.value} />
+    </>
+  )
 }

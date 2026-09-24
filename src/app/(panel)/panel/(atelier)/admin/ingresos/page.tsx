@@ -6,6 +6,8 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { BarRow, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { EmbudoDeVentas } from '@/modules/admin'
+import { EmptyState } from '@/shared/design/ui/panel/estados'
 
 export const metadata = { title: 'Ingresos · Administración' }
 export const dynamic = 'force-dynamic'
@@ -62,8 +64,16 @@ export default async function AdminIngresosPage() {
         <StatCard detail={`${bs(i.sinPago)} en pedidos sin comprobante`} label="Por revisar" value={bs(i.porRevisar)} />
       </div>
 
+      <PanelCard className="mt-4.5" title="El recorrido de la venta">
+        <EmbudoDeVentas embudo={i.embudo} />
+      </PanelCard>
+
       <div className="mt-4.5 grid gap-4.5 min-[900px]:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <PanelCard title="Últimos doce meses">
+          {/* Doce barras vacías no dicen nada: sin cobros, un estado vacío. */}
+          {i.porMes.every((m) => m.total === 0) ? (
+            <EmptyState compact description="Cuando apruebes el primer pedido, aquí verás lo cobrado mes a mes." title="Todavía no hay cobros" />
+          ) : (
           <div className="flex flex-col">
             {i.porMes.map((fila) => (
               <BarRow
@@ -75,11 +85,12 @@ export default async function AdminIngresosPage() {
               />
             ))}
           </div>
+          )}
         </PanelCard>
 
         <PanelCard title="Por plan">
           {i.porPlan.length === 0 ? (
-            <p className="text-[13px] text-ink-mute">Todavía no hay pedidos aprobados.</p>
+            <EmptyState compact title="Todavía no hay pedidos aprobados" />
           ) : (
             <div className="flex flex-col">
               {i.porPlan.map((fila) => (
@@ -93,7 +104,7 @@ export default async function AdminIngresosPage() {
 
       <PanelCard className="mt-4.5" title="Últimos cobros">
         {i.ultimos.length === 0 ? (
-          <p className="py-6 text-center text-[13px] text-ink-mute">Todavía no se ha aprobado ningún pedido.</p>
+          <EmptyState compact description="Cada pedido que apruebes aparece aquí con su importe." title="Todavía no se ha aprobado ningún pedido" />
         ) : (
           <ul className="flex flex-col">
             {i.ultimos.map((p) => (

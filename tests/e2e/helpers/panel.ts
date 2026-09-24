@@ -30,8 +30,9 @@ export async function createEvent(page: Page, input: EventInput): Promise<void> 
   await page.goto('/panel/eventos/nuevo')
   await page.getByLabel('Título').fill(input.title)
   await page.getByLabel('Enlace del evento').fill(input.slug)
-  await page.getByLabel('Fecha del evento').fill(input.eventDate ?? '2027-05-15')
-  await page.getByLabel('Fecha límite de confirmación').fill(input.rsvpDeadline ?? '2027-05-01')
+  // Calendario propio, no un `<input type=date>`: se elige como lo haría el atelier.
+  await elegirFecha(page, 'Fecha del evento', input.eventDate ?? '2027-05-15')
+  await elegirFecha(page, 'Fecha límite de confirmación', input.rsvpDeadline ?? '2027-05-01')
   if (input.diseno !== undefined) await page.getByRole('radio', { name: new RegExp(input.diseno) }).check({ force: true })
   await page.getByRole('button', { name: 'Crear evento' }).click()
   await expect(page.getByRole('status')).toContainText('Evento guardado')

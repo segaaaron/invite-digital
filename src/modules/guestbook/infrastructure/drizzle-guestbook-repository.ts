@@ -1,4 +1,4 @@
-import { and, count, desc, eq, isNotNull, isNull } from 'drizzle-orm'
+import { and, desc, eq, isNotNull } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups, messageNotes, rsvpResponses } from '@/shared/db/schema'
 import type { GuestbookRepository, MessageRow, NotePatch, ResponseContext } from '../application/ports'
@@ -108,16 +108,3 @@ export const createDrizzleGuestbookRepository = (database: DbExecutor): Guestboo
 
 export const drizzleGuestbookRepository = createDrizzleGuestbookRepository(db)
 
-/**
- * Cuántos mensajes sin leer tiene el evento, sin traer el libro. La misma regla que la bandeja:
- * con texto, y sin nota o con la nota sin leer (**`leftJoin`**, por la misma razón que arriba).
- */
-export const countUnreadMessages = async (database: DbExecutor, eventId: string): Promise<number> => {
-  const [fila] = await database
-    .select({ total: count() })
-    .from(rsvpResponses)
-    .innerJoin(guestGroups, eq(guestGroups.id, rsvpResponses.guestGroupId))
-    .leftJoin(messageNotes, eq(messageNotes.rsvpResponseId, rsvpResponses.id))
-    .where(and(eq(guestGroups.eventId, eventId), isNotNull(rsvpResponses.message), isNull(messageNotes.readAt)))
-  return fila?.total ?? 0
-}

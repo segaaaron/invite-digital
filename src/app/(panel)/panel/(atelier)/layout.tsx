@@ -5,7 +5,9 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { AtajoDeBusqueda } from '@/modules/admin'
 import { insigniasDeAdmin } from '../_carcasa/insignias-de-admin'
+import { nombreDePlan } from '../_carcasa/nombre-de-plan'
 import { isErr } from '@/shared/result'
 
 /**
@@ -32,6 +34,8 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
     actor.role === 'puerta' || admin ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
   ])
 
+  const nombreDelPlan = capacidad === null || isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
+
   return (
     <PanelFrame
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
@@ -45,7 +49,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
           ? null
           : {
               title: activo.title,
-              planLabel: capacidad === null || isErr(capacidad) ? 'Plan —' : `Plan ${capacidad.value.planSlug}`,
+              planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
               salirHref: null,
               salirLabel: '',
             }
@@ -53,6 +57,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
+      {admin ? <AtajoDeBusqueda /> : null}
       {children}
     </PanelFrame>
   )

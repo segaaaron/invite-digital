@@ -72,7 +72,8 @@ export type Hoy = {
 export const HORIZONTE_RIESGO = 30
 /** Por debajo de esto, el riesgo es urgente. */
 const URGENTE = 7
-const HORIZONTE_PROXIMAS = 14
+/** Lo mismo que «Próximos 30 días» de Eventos: dos ventanas distintas se leían como un error. */
+export const HORIZONTE_PROXIMAS = 30
 const ACCESO_ATASCADO = 3
 const PAGO_ATASCADO = 7
 

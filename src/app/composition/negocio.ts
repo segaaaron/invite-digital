@@ -1,7 +1,7 @@
 import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
 import { attachProof, decideOrder, findOrderByRef, listOrdersPage, placeAddonOrder, placeOrder, readProof } from '@/modules/orders/application/order-use-cases'
 import { createDiskFileStorage } from '@/modules/orders/infrastructure/disk-file-storage'
-import { deleteUser as deleteUserUseCase, listAllEvents, listUsers, readAudit, readMetrics, readIncome, readToday, recordAdminAction, setEventPlan as setEventPlanUseCase, setUserRole as setUserRoleUseCase } from '@/modules/admin/application/admin-use-cases'
+import { deleteUser as deleteUserUseCase, listAllEvents, listUsers, readAudit, readMetrics, readIncome, readToday, readTodayMoney, recordAdminAction, setEventPlan as setEventPlanUseCase, setUserRole as setUserRoleUseCase } from '@/modules/admin/application/admin-use-cases'
 import { readPaymentSettings, savePaymentQr, savePaymentSettings } from '@/modules/admin/application/payment-use-cases'
 import { readShowcaseMusic, readShowcaseSongs, removeShowcaseMusic, renameShowcaseSong, saveShowcaseMusic } from '@/modules/admin/application/showcase-music-use-cases'
 import { createDiskShowcaseStorage } from '@/modules/admin/infrastructure/disk-showcase-storage'
@@ -9,6 +9,7 @@ import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-a
 import { drizzleTodayReader } from '@/modules/admin/infrastructure/drizzle-today-reader'
 import { drizzleCatalogAdmin } from '@/modules/admin/infrastructure/drizzle-catalog-admin'
 import { drizzleIncomeReader } from '@/modules/admin/infrastructure/drizzle-income-reader'
+import { drizzleBuscador } from '@/modules/admin/infrastructure/drizzle-buscador'
 import { drizzleSiteSettingsStore } from '@/modules/admin/infrastructure/drizzle-site-settings-store'
 import { listSiteVersions, restoreSiteVersion, saveSiteSettings } from '@/modules/admin/application/site-settings-use-cases'
 import { listPlansForAdmin, readPublication, savePlan as savePlanUseCase, setTemplatePublished as setTemplatePublishedUseCase } from '@/modules/admin/application/catalog-use-cases'
@@ -111,6 +112,7 @@ export const admin = {
   metrics: readMetrics({ admin: drizzleAdminRepository }),
   today: readToday({ today: drizzleTodayReader, clock: () => new Date() }),
   income: readIncome({ income: drizzleIncomeReader, clock: () => new Date() }),
+  todayMoney: readTodayMoney({ income: drizzleIncomeReader, clock: () => new Date() }),
   /** «La web»: datos del negocio, pruebas sociales, textos legales y SEO, con historial. */
   siteSettings: leerSitio,
   saveSite: saveSiteSettings({ store: drizzleSiteSettingsStore }),
@@ -123,9 +125,14 @@ export const admin = {
   setPublished: setTemplatePublishedUseCase({
     catalog: drizzleCatalogAdmin,
     admin: drizzleAdminRepository,
-    conocidos: () => CATALOG_LISTOS.map((entrada) => entrada.key),
+    // Un retirado no se vuelve a publicar desde el panel: se retiró a propósito.
+    conocidos: () => CATALOG_LISTOS.filter((entrada) => entrada.retirado !== true).map((entrada) => entrada.key),
   }),
   audit: readAudit({ admin: drizzleAdminRepository }),
+  /** Quiénes aparecen en la auditoría, para su filtro. */
+  auditActors: () => drizzleAdminRepository.listAuditActors(),
+  /** La búsqueda del admin en eventos, pedidos, consultas y usuarios. */
+  buscar: drizzleBuscador,
   setRole: setUserRoleUseCase({ admin: drizzleAdminRepository }),
   deleteUser: deleteUserUseCase({ admin: drizzleAdminRepository }),
   setEventPlan: setEventPlanUseCase({ admin: drizzleAdminRepository }),

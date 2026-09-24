@@ -54,3 +54,13 @@ export function resolveArrival(arrivals: readonly Arrival[]): ResolvedArrival | 
     personas,
   }
 }
+
+/**
+ * Lo que la puerta ve al recibir el estado del servidor (otra puerta registró, o volvió la red):
+ * en cada invitación que el servidor conoce **manda el servidor**; las que solo tiene esta
+ * puerta —registradas sin red, todavía en la bandeja de salida— se quedan.
+ */
+export function unirLlegadas(servidor: readonly ResolvedArrival[], locales: readonly ResolvedArrival[]): ResolvedArrival[] {
+  const conocidas = new Set(servidor.map((a) => a.guestGroupId))
+  return [...servidor, ...locales.filter((a) => !conocidas.has(a.guestGroupId))]
+}

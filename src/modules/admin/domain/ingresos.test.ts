@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resumirIngresos, type PedidoCobro } from './ingresos'
+import { embudoDeVentas, resumirIngresos, type PedidoCobro } from './ingresos'
 
 const HOY = '2026-09-14'
 
@@ -73,5 +73,24 @@ describe('resumirIngresos', () => {
     const r = resumirIngresos(muchos, HOY)
     expect(r.ultimos).toHaveLength(10)
     expect(r.ultimos[0]?.ref).toBe('R11')
+  })
+})
+
+describe('embudoDeVentas', () => {
+  it('cuenta cada paso y qué parte llegó desde el anterior', () => {
+    const e = embudoDeVentas({ consultas: 40, consultasGanadas: 10, pedidos: 20, pagados: 15, conEvento: 12 })
+    expect(e.pasos.map((p) => [p.clave, p.total, p.desdeElAnterior])).toEqual([
+      ['consultas', 40, null],
+      ['pedidos', 20, 50],
+      ['pagados', 15, 75],
+      ['eventos', 12, 80],
+    ])
+    expect(e.cierreDeConsultas).toBe(25)
+  })
+
+  it('sin nada que dividir no inventa un 0 %', () => {
+    const e = embudoDeVentas({ consultas: 0, consultasGanadas: 0, pedidos: 3, pagados: 0, conEvento: 0 })
+    expect(e.pasos.map((p) => p.desdeElAnterior)).toEqual([null, null, 0, null])
+    expect(e.cierreDeConsultas).toBeNull()
   })
 })

@@ -417,16 +417,7 @@ export interface DesignDictionary {
   'esencia': Record<'pie' | 'mensaje' | 'ceremonia' | 'recepcion' | 'itinerario' | 'faltan' | 'vestimenta' | 'galeria' | 'confirmacion' | 'regalos' | 'musica' | 'verUbicacion' | 'preguntaRsvp' | 'confirmaAntes' | 'firmas', string>
   'boda-sello': Record<'faltan' | 'historia' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'vestimenta' | 'regalos' | 'confirma' | 'mensaje' | 'fotos', string>
   'boda-perla': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
-  'xv-trop': Record<'coverEyebrow' | 'coverHeadline' | 'misXv' | 'retrato' | 'faltan' | 'cronograma', string>
-  'xv-eleg': Record<'mis' | 'xvAnos' | 'retrato' | 'dalePlay' | 'padrinos' | 'festejar' | 'xvMayus' | 'faltan' | 'granDia' | 'verUbicacion' | 'itinerario' | 'deActividades' | 'vestimenta' | 'confirmar' | 'porFavor' | 'dias', string>
-  'xv-vogue': Record<'coverEyebrow' | 'coverHeadline' | 'coverLabel' | 'edicion' | 'numero' | 'xv' | 'personal' | 'pases' | 'pasesUno' | 'cronograma', string>
-  'xv-y2k': Record<'coverEyebrow' | 'coverHeadline' | 'coverLabel' | 'galaxia' | 'sistema' | 'xv' | 'misXv' | 'retrato' | 'fecha' | 'hora' | 'lugar' | 'vestimenta' | 'vibras', string>
-  'xv-boho': Record<'misQuince' | 'retrato' | 'faltan' | 'cronograma', string>
-  'xv-min': Record<'coverEyebrow' | 'quince' | 'numero' | 'titular' | 'retrato' | 'eventos' | 'lugar' | 'vestimenta' | 'rsvp' | 'confirma' | 'antes' | 'del' | 'mesa', string>
   'xv-papillon': Record<'xvAnos' | 'padrinos' | 'misXv' | 'itinerario' | 'confirmar', string>
-  'xv-deco': Record<'coverEyebrow' | 'coverHeadline' | 'xvAnos' | 'cuenta' | 'cronograma' | 'retrato', string>
-  'xv-princ': Record<'coverEyebrow' | 'coverHeadline' | 'coverLabel' | 'lema' | 'cumple' | 'xv' | 'anios' | 'retrato' | 'faltan' | 'padrinos' | 'vestimenta', string>
-  'xv-realeza': Record<'coverEyebrow' | 'coverHeadline' | 'mis' | 'xvAnos' | 'lema' | 'firma' | 'personal' | 'pases' | 'pasesUno' | 'faltan' | 'dalePlay' | 'cronograma' | 'vestimenta', string>
 }
 
 export interface InvitationDictionary {

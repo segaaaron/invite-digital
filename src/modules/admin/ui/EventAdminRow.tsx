@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { enlaceWhatsapp } from '@/shared/whatsapp'
 import { ETAPAS, type Etapa } from '../domain/cartera'
 import { EntrarComoCliente } from './EntrarComoCliente'
 import type { Anfitrion } from './SoporteDeBoda'
@@ -26,6 +27,8 @@ export type EventAdminView = {
   readonly grupos: number
   readonly enviados: number
   readonly respondidos: number
+  /** Las que se abrieron: entre «enviada» y «respondió» es lo que dice si llegó. */
+  readonly abiertos: number
   readonly etapa: Etapa
   /** «en 12 días», «hoy», «hace 3 meses». Lo compone la página con la fecha de Bolivia. */
   readonly cuando: string
@@ -40,6 +43,9 @@ export type EventAdminView = {
  */
 export function EventAdminRow({ event }: { event: EventAdminView }) {
   const etapa = ETAPAS.find((e) => e.clave === event.etapa) ?? ETAPAS[0]
+  // Todo el negocio pasa por WhatsApp: escribirle al cliente desde su fila, sin buscar el número.
+  const cliente = event.anfitriones.find((a) => (a.phone ?? '') !== '')
+  const whatsapp = cliente?.phone ? enlaceWhatsapp(cliente.phone, `Hola, te escribimos de Luxury Atelier por ${event.title}.`) : null
   const fecha = new Date(`${event.eventDate}T00:00:00Z`)
 
   return (
@@ -53,7 +59,11 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
           href={`/panel/eventos/${event.slug}/vista-previa`}
         >
           {event.portada === null ? (
-            <span aria-hidden className="absolute inset-0 bg-linear-to-br from-shell to-shell-deep" />
+            // Sin portada (el clásico y los temas antiguos): papel claro con la inicial, no un
+            // bloque negro que se leía como una imagen rota.
+            <span aria-hidden className="absolute inset-0 grid place-items-center bg-linear-to-br from-bg-top to-bg-sunken">
+              <span className="font-display text-[44px] text-ink-mute/70 italic">{event.title.slice(0, 1)}</span>
+            </span>
           ) : (
             <Image alt="" className="object-cover object-top transition-transform duration-300 hover:scale-[1.04] motion-reduce:transition-none" fill sizes="(max-width: 700px) 100vw, 168px" src={event.portada} />
           )}
@@ -73,16 +83,18 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
                 <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
               </span>
               <span className="text-[12px] text-ink-soft first-letter:uppercase">
-                {event.cuando} · {event.modelo} · plan {event.planNombre ?? 'sin plan'}
+                {event.cuando} · {event.modelo} · plan {event.planNombre ?? 'sin asignar'}
               </span>
             </span>
             <span className="flex flex-wrap gap-2">
-              {/* Tres destinos distintos, cada uno dice cuál: la ficha que edita el admin, la
-                  invitación tal como la recibe el invitado y el panel del cliente. «Abrir» y
-                  «Ver» no decían qué se abría ni qué se veía. */}
-              <EntrarComoCliente anfitriones={event.anfitriones} eventId={event.id} variant="primary" />
-              <PanelButton href={`/panel/eventos/${event.slug}/configuracion`}>Editar datos</PanelButton>
+              {/* Tres destinos distintos, cada uno dice cuál. Entrar como el cliente es la
+                  excepción (queda registrado y le llega un correo), así que no va en negro: lo
+                  primero de la fila es la ficha. */}
+              <PanelButton href={`/panel/eventos/${event.slug}/configuracion`} variant="primary">
+                Editar datos
+              </PanelButton>
               <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Ver invitación</PanelButton>
+              <EntrarComoCliente anfitriones={event.anfitriones} eventId={event.id} />
             </span>
           </div>
 
@@ -106,6 +118,16 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
                 <span className="truncate text-[11.5px] text-ink-mute">
                   {event.ownerEmail === null ? <Pill tone="no">Sin responsable</Pill> : <>Lo lleva {event.ownerEmail}</>}
                 </span>
+                {whatsapp === null ? null : (
+                  <a
+                    className="w-fit text-[12px] text-sage underline underline-offset-2 hover:text-ink"
+                    href={whatsapp}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    Escribirle por WhatsApp<span className="sr-only"> (se abre en una pestaña nueva)</span>
+                  </a>
+                )}
               </span>
             </span>
 
@@ -123,16 +145,17 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
                   </span>
                 </span>
                 <span
-                  aria-label={`${event.enviados} de ${event.grupos} enlaces repartidos, ${event.respondidos} respondieron`}
+                  aria-label={`${event.enviados} de ${event.grupos} enlaces repartidos, ${event.abiertos} abiertos, ${event.respondidos} respondieron`}
                   className="relative h-2 overflow-hidden rounded-full bg-bg-sunken"
                   role="img"
                 >
                   <span className="absolute inset-y-0 left-0 rounded-full bg-gold/35" style={{ width: `${(event.enviados / event.grupos) * 100}%` }} />
                   <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${(event.respondidos / event.grupos) * 100}%` }} />
                 </span>
-                <span className="flex justify-between font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
+                <span className="flex flex-wrap justify-between gap-x-3 font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
                   <span>{event.grupos} invitaciones</span>
-                  <span>{event.enviados} enviados</span>
+                  <span>{event.enviados} enviadas</span>
+                  <span>{event.abiertos} abiertas</span>
                   <span>{event.respondidos} respondieron</span>
                 </span>
               </span>

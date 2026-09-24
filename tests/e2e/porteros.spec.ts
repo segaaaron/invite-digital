@@ -82,7 +82,7 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
   // Quitarlo lo saca, aunque tenga la puerta abierta.
   await gestor.getByRole('button', { name: 'Quitar a Carlos' }).click()
   await gestor.getByRole('button', { name: /sí, quitar/i }).click()
-  await expect(gestor.getByText(/todavía no sumaste a nadie/i)).toBeVisible()
+  await expect(gestor.getByText('Aún no sumaste a nadie')).toBeVisible()
 
   await portero.goto(`${ruta}/puerta`)
   await expect(portero).toHaveURL(new RegExp(`${ruta}$`))

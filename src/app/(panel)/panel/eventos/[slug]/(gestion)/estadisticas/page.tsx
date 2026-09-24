@@ -9,6 +9,7 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { DonutChart, PanelCard } from '@/shared/design/ui/panel/cards'
 import { BarRow } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 // Los números cambian con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -69,6 +70,7 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
   return (
     <>
       <PanelHeader kicker="Analítica" meta={event.value.title} title="Estadísticas" />
+      <EnVivo modo="aviso" tipos={['rsvp', 'visita']} url={`/panel/eventos/${slug}/en-vivo`} />
 
       {isErr(stats) ? (
         <PanelCard>

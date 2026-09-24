@@ -187,6 +187,6 @@ test.describe('el panel del cliente', () => {
     await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
     // La contraseña no se cambia aquí: con la cuenta compartida, cualquiera la cambiaría. Se recupera desde la entrada.
     await expect(page.getByLabel('Contraseña actual')).toHaveCount(0)
-    await expect(page.getByText('Este dispositivo')).toBeVisible()
+    await expect(page.getByText('Este dispositivo', { exact: true })).toBeVisible()
   })
 })

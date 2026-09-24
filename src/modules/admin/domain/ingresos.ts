@@ -79,3 +79,51 @@ export function resumirIngresos(pedidos: readonly PedidoCobro[], hoy: string): I
     ultimos: [...conImporte].sort((a, b) => (b.decidedAt as Date).getTime() - (a.decidedAt as Date).getTime()).slice(0, ULTIMOS),
   }
 }
+
+/** Lo que entró por cada puerta en los últimos doce meses, contado en la base. */
+export type ConteoDeVenta = {
+  readonly consultas: number
+  readonly consultasGanadas: number
+  readonly pedidos: number
+  readonly pagados: number
+  readonly conEvento: number
+}
+
+export type PasoDelEmbudo = {
+  readonly clave: 'consultas' | 'pedidos' | 'pagados' | 'eventos'
+  readonly titulo: string
+  readonly total: number
+  /** Qué parte del paso anterior llegó a este. `null` en el primero o si el anterior es 0. */
+  readonly desdeElAnterior: number | null
+}
+
+export type Embudo = {
+  readonly pasos: readonly PasoDelEmbudo[]
+  /** Consultas ganadas sobre las recibidas; `null` sin consultas. Es la tasa de cierre del formulario. */
+  readonly cierreDeConsultas: number | null
+}
+
+const tasa = (parte: number, total: number): number | null => (total === 0 ? null : Math.round((parte / total) * 100))
+
+/**
+ * El recorrido de la venta. Consultas y pedidos entran por puertas distintas —el formulario de
+ * contacto y el botón «Pedir» de la web—, así que el paso de consultas a pedidos es orientativo;
+ * de pedido a pagado y de pagado a evento sí es el mismo pedido.
+ */
+export function embudoDeVentas(c: ConteoDeVenta): Embudo {
+  const pasos: PasoDelEmbudo[] = [
+    { clave: 'consultas', titulo: 'Consultas', total: c.consultas, desdeElAnterior: null },
+    { clave: 'pedidos', titulo: 'Pedidos', total: c.pedidos, desdeElAnterior: tasa(c.pedidos, c.consultas) },
+    { clave: 'pagados', titulo: 'Pagados', total: c.pagados, desdeElAnterior: tasa(c.pagados, c.pedidos) },
+    { clave: 'eventos', titulo: 'Con su evento', total: c.conEvento, desdeElAnterior: tasa(c.conEvento, c.pagados) },
+  ]
+  return { pasos, cierreDeConsultas: tasa(c.consultasGanadas, c.consultas) }
+}
+
+/** Las cifras de dinero de «Hoy», sumadas en la base: la portada no lee todos los pedidos. */
+export type CifrasDeHoy = {
+  /** Aprobado en el mes en curso de Bolivia, con el importe congelado. */
+  readonly esteMes: number
+  readonly porRevisar: number
+  readonly sinPago: number
+}

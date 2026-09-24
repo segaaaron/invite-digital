@@ -162,7 +162,9 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
 
                   return (
                     <section
-                      className={`flex flex-col gap-4 rounded-[18px] border bg-white p-4 min-[560px]:p-5 ${
+                      // El buscador del admin enlaza aquí con `#pedido-<ref>`.
+                      id={`pedido-${order.publicRef}`}
+                      className={`flex scroll-mt-6 flex-col gap-4 rounded-[18px] border bg-white p-4 min-[560px]:p-5 ${
                         order.status === 'proof_submitted' ? 'border-ink/40 shadow-float' : 'border-line-panel shadow-card'
                       }`}
                       key={order.id}
@@ -251,11 +253,13 @@ export default async function PedidosPage({ searchParams }: { searchParams: Prom
                         </p>
                       ) : null}
 
-                      {order.status === 'approved' && order.eventSlug === null ? (
-                        <p className="border-t border-line-panel pt-4 text-[12px] text-ink-mute">
-                          Aprobado sin crear el evento: faltaba la fecha o el correo del cliente. Créalo desde «Todos los
-                          eventos» → «+ Evento para un cliente».
-                        </p>
+                      {order.status === 'approved' && order.eventSlug === null && order.addonSlug === null ? (
+                        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-panel pt-4">
+                          <p className="text-[12px] text-ink-mute">Aprobado sin crear el evento: faltaba la fecha o el correo del cliente.</p>
+                          <PanelButton href={`/panel/admin/eventos?panel=nueva&pedido=${order.publicRef}`} variant="primary">
+                            Crear el evento con este pedido
+                          </PanelButton>
+                        </div>
                       ) : null}
 
                       {order.decisionNote === null ? null : (

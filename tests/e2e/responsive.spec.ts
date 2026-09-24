@@ -153,6 +153,8 @@ const VISTAS_ADMIN = [
   ['admin · mi cuenta', '/panel/cuenta'],
   ['admin · cobros', '/panel/admin/pagos'],
   ['admin · auditoría', '/panel/admin/auditoria'],
+  // Con resultados: cuatro grupos que en un teléfono se apilan.
+  ['admin · buscar', '/panel/admin/buscar?q=bo'],
 ] as const
 
 /**

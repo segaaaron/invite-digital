@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import { fakeGuestbookRepository, type FakeResponse } from './fake-guestbook-repository'
-import { getGuestReply, listGuestbook, markRead, replyToMessage, toggleFeatured } from './guestbook-use-cases'
+import { getGuestReply, listGuestbook, replyToMessage } from './guestbook-use-cases'
 
 const EVENTO = 'evento-1'
 const OTRO_EVENTO = 'evento-2'
@@ -79,67 +79,6 @@ describe('listGuestbook', () => {
 
     const mensajes = desempaqueta(await listGuestbook({ guestbook: fake.repo })(EVENTO))
     expect(mensajes.map((m) => m.responseId)).toEqual(['r1'])
-  })
-})
-
-describe('markRead', () => {
-  it('marca leído con el instante del reloj', async () => {
-    const fake = fakeGuestbookRepository({ responses: [respuesta()] })
-
-    expect(isOk(await markRead({ guestbook: fake.repo, clock })({ responseId: 'r1', eventId: EVENTO }))).toBe(true)
-    expect(fake.notes.get('r1')?.readAt).toEqual(AHORA)
-  })
-
-  it('es idempotente: llamarlo dos veces no falla ni escribe otra vez', async () => {
-    const fake = fakeGuestbookRepository({ responses: [respuesta()] })
-    const usar = markRead({ guestbook: fake.repo, clock })
-
-    await usar({ responseId: 'r1', eventId: EVENTO })
-    expect(isOk(await usar({ responseId: 'r1', eventId: EVENTO }))).toBe(true)
-
-    // La segunda no escribe: el instante que vale es el de la primera lectura.
-    expect(fake.upserts).toBe(1)
-    expect(fake.notes.get('r1')?.readAt).toEqual(AHORA)
-  })
-
-  it('un mensaje de otro evento se rechaza con wrong_event', async () => {
-    const fake = fakeGuestbookRepository({ responses: [respuesta({ eventId: OTRO_EVENTO })] })
-
-    const r = await markRead({ guestbook: fake.repo, clock })({ responseId: 'r1', eventId: EVENTO })
-    expect(isErr(r) && r.error.kind).toBe('wrong_event')
-  })
-
-  it('un responseId inexistente da not_found', async () => {
-    const fake = fakeGuestbookRepository({ responses: [] })
-
-    const r = await markRead({ guestbook: fake.repo, clock })({ responseId: 'fantasma', eventId: EVENTO })
-    expect(isErr(r) && r.error.kind).toBe('not_found')
-  })
-})
-
-describe('toggleFeatured', () => {
-  it('destaca el que no lo estaba', async () => {
-    const fake = fakeGuestbookRepository({ responses: [respuesta()] })
-
-    await toggleFeatured({ guestbook: fake.repo, clock })({ responseId: 'r1', eventId: EVENTO })
-    expect(fake.notes.get('r1')?.featuredAt).toEqual(AHORA)
-  })
-
-  it('quita el destacado al que ya lo estaba', async () => {
-    const fake = fakeGuestbookRepository({
-      responses: [respuesta()],
-      notes: [{ responseId: 'r1', readAt: null, featuredAt: AHORA, reply: null, repliedAt: null }],
-    })
-
-    await toggleFeatured({ guestbook: fake.repo, clock })({ responseId: 'r1', eventId: EVENTO })
-    expect(fake.notes.get('r1')?.featuredAt).toBeNull()
-  })
-
-  it('un mensaje de otro evento se rechaza con wrong_event', async () => {
-    const fake = fakeGuestbookRepository({ responses: [respuesta({ eventId: OTRO_EVENTO })] })
-
-    const r = await toggleFeatured({ guestbook: fake.repo, clock })({ responseId: 'r1', eventId: EVENTO })
-    expect(isErr(r) && r.error.kind).toBe('wrong_event')
   })
 })
 

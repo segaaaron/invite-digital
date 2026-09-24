@@ -55,7 +55,9 @@ test('un atelier no ve ni toca el evento de otro; el admin solo su ficha', async
   await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toHaveCount(0)
 
   // La cartera del admin trae el evento del otro con su responsable.
-  await admin.goto('/panel/admin/eventos')
+  // Buscado por su nombre: la cartera pinta de veinte en veinte, y con más eventos en la base
+  // este quedaba detrás de «Ver más» según las fechas de los demás.
+  await admin.goto(`/panel/admin/eventos?q=${encodeURIComponent('Boda del otro atelier')}`)
   const fila = admin.getByRole('listitem').filter({ hasText: 'Boda del otro atelier' })
   await expect(fila).toBeVisible()
   await expect(fila).toContainText(OTRO.email)

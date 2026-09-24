@@ -46,6 +46,15 @@ export function MailIcon({ className }: IconProps) {
   )
 }
 
+export function SearchIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="M15.5 15.5L20 20" />
+    </svg>
+  )
+}
+
 export function ClockIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>

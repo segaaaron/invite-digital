@@ -9,6 +9,7 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
+import { vocabularioDeCategoria } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { iconosDelItinerario } from '@/modules/events/ui/themes/iconos-itinerario'
 
@@ -65,7 +66,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
         title="Cronograma del día"
       />
       {momento === 'nuevo' || editando ? (
-        <MomentoDialog cerrarEn={aqui} evento={evento} iconos={iconos} key={momento} momento={editando} proveedores={proveedores} />
+        <MomentoDialog cerrarEn={aqui} ejemplo={vocabularioDeCategoria(tema.categorySlug).ejemplos.momento} evento={evento} iconos={iconos} key={momento} momento={editando} proveedores={proveedores} />
       ) : null}
       <div className="grid items-start gap-4.5 min-[1200px]:grid-cols-[minmax(0,1fr)_340px]">
         <PanelCard title={proveedor ? `Lo de ${proveedores.find((p) => p.id === proveedor)?.service ?? 'ese proveedor'}` : 'Momento a momento'}>

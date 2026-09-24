@@ -8,6 +8,8 @@ export {
   fiestaDeTema,
   mismaFiesta,
   VOCABULARIO,
+  VOCABULARIO_GENERICO,
+  vocabularioDeCategoria,
   type Fiesta,
   type FiestaPublica,
   type Vocabulario,

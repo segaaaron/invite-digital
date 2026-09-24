@@ -1,8 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { setPaymentPaidAction } from '@/app/_acciones/planner/actions'
 import { setVendorArrivedAction } from '@/app/_acciones/planner/dia-actions'
@@ -20,16 +19,6 @@ export type DiaDVista = {
   readonly mesas: ReadonlyArray<{ id: string; label: string; faltan: readonly string[] }> | null
 }
 
-/** Refresca la pantalla cada medio minuto: las llegadas de la puerta entran solas. */
-function Refresco() {
-  const router = useRouter()
-  useEffect(() => {
-    const t = setInterval(() => router.refresh(), 30_000)
-    return () => clearInterval(t)
-  }, [router])
-  return null
-}
-
 const Bloque = ({ titulo, children }: { titulo: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-2 rounded-[18px] border border-line-panel bg-white px-5 py-4 shadow-card">
     <h2 className="font-mono text-[10px] tracking-[0.3em] text-ink-mute uppercase">{titulo}</h2>
@@ -41,7 +30,9 @@ const Bloque = ({ titulo, children }: { titulo: string; children: React.ReactNod
 export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) {
   return (
     <div className="flex flex-col gap-3">
-      <Refresco />
+      {/* Las llegadas de la puerta y las respuestas entran solas, en vivo (SSE), sin recargar cada
+          medio minuto como antes. «Ahora» se pone al día con cada cambio o con «Actualizar». */}
+      <EnVivo modo="auto" tipos={['ingreso', 'rsvp']} url={`/panel/eventos/${evento.eventSlug}/en-vivo`} />
       <Bloque titulo={`Ahora · ${dia.hora}`}>
         {dia.ahora ? (
           <p className="font-display text-[26px] leading-tight font-light text-ink">

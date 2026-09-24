@@ -2,8 +2,8 @@ import { type Actor, canDeleteUser, canDemote, type Role } from '@/modules/ident
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
 import { componerHoy, fechaEnBolivia, HORIZONTE_RIESGO, type Hoy } from '../domain/hoy'
-import { resumirIngresos, type Ingresos } from '../domain/ingresos'
-import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow, IncomeReader, TodayReader } from './ports'
+import { embudoDeVentas, resumirIngresos, type CifrasDeHoy, type Embudo, type Ingresos } from '../domain/ingresos'
+import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow, FiltroDeAuditoria, IncomeReader, TodayReader } from './ports'
 
 type Deps = { admin: AdminRepository }
 
@@ -27,9 +27,9 @@ export const readMetrics = (deps: Deps) => async (): Promise<Result<AdminMetrics
 
 export const readAudit =
   (deps: Deps) =>
-  async (limit = 200): Promise<Result<AuditRow[], AdminError>> =>
+  async (limit = 200, filtro?: FiltroDeAuditoria): Promise<Result<AuditRow[], AdminError>> =>
     attempt(
-      async () => ok(await deps.admin.listAudit(limit)),
+      async () => ok(await deps.admin.listAudit(limit, filtro)),
       (cause) => adminError('storage_failure', `No se pudo leer la auditoría: ${String(cause)}`),
     )
 
@@ -177,8 +177,30 @@ export const readToday =
 /** Lo cobrado, con la fecha de Bolivia. */
 export const readIncome =
   (deps: { income: IncomeReader; clock: () => Date }) =>
-  async (): Promise<Result<Ingresos, AdminError>> =>
+  async (): Promise<Result<Ingresos & { readonly embudo: Embudo }, AdminError>> =>
     attempt(
-      async () => ok(resumirIngresos(await deps.income.pedidos(), fechaEnBolivia(deps.clock()))),
+      async () => {
+        const ahora = deps.clock()
+        const haceUnAnio = new Date(ahora.getTime() - 365 * 24 * 60 * 60 * 1000)
+        const [pedidos, conteo] = await Promise.all([deps.income.pedidos(), deps.income.conteoDeVenta(haceUnAnio)])
+        return ok({ ...resumirIngresos(pedidos, fechaEnBolivia(ahora)), embudo: embudoDeVentas(conteo) })
+      },
       (cause) => adminError('storage_failure', `No se pudieron leer los ingresos: ${String(cause)}`),
+    )
+
+/** El dinero de «Hoy» y el cierre de consultas, sumados en la base: la portada no lee todos los pedidos. */
+export const readTodayMoney =
+  (deps: { income: IncomeReader; clock: () => Date }) =>
+  async (): Promise<Result<CifrasDeHoy & { readonly cierreDeConsultas: number | null }, AdminError>> =>
+    attempt(
+      async () => {
+        const ahora = deps.clock()
+        const haceUnAnio = new Date(ahora.getTime() - 365 * 24 * 60 * 60 * 1000)
+        const [cifras, conteo] = await Promise.all([
+          deps.income.cifrasDelMes(fechaEnBolivia(ahora).slice(0, 7)),
+          deps.income.conteoDeVenta(haceUnAnio),
+        ])
+        return ok({ ...cifras, cierreDeConsultas: embudoDeVentas(conteo).cierreDeConsultas })
+      },
+      (cause) => adminError('storage_failure', `No se pudieron leer las cifras de hoy: ${String(cause)}`),
     )

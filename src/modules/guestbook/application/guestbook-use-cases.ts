@@ -50,43 +50,6 @@ export const listGuestbook =
     )
 
 /**
- * Marca leído. Si ya lo estaba **no vuelve a escribir**: el instante que vale es el de la
- * primera lectura, y sobrescribirlo cada vez que la bandeja se refresca convertiría el
- * dato en «la última vez que miré la pantalla», que no es lo que la columna dice.
- */
-export const markRead =
-  (deps: WithClock) =>
-  async (target: Target): Promise<Result<void, GuestbookError>> =>
-    attempt<void, GuestbookError>(
-      async () => {
-        const context = await owned(deps, target)
-        if (isErr(context)) return context
-
-        if (context.value.readAt !== null) return ok(undefined)
-
-        await deps.guestbook.upsertNote(target.responseId, { readAt: deps.clock() })
-        return ok(undefined)
-      },
-      (cause) => guestbookError('storage_failure', `No se pudo marcar el mensaje como leído: ${String(cause)}`),
-    )
-
-/** Destaca o deja de destacar. La pareja querrá releer unos pocos, no todos. */
-export const toggleFeatured =
-  (deps: WithClock) =>
-  async (target: Target): Promise<Result<boolean, GuestbookError>> =>
-    attempt<boolean, GuestbookError>(
-      async () => {
-        const context = await owned(deps, target)
-        if (isErr(context)) return context
-
-        const destacar = context.value.featuredAt === null
-        await deps.guestbook.upsertNote(target.responseId, { featuredAt: destacar ? deps.clock() : null })
-        return ok(destacar)
-      },
-      (cause) => guestbookError('storage_failure', `No se pudo destacar el mensaje: ${String(cause)}`),
-    )
-
-/**
  * Responde a un mensaje. Una respuesta por mensaje: volver a responder **sustituye** la
  * anterior. No hay hilo de conversación, y no lo hay a propósito.
  */

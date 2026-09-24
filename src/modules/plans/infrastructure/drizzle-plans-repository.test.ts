@@ -182,7 +182,7 @@ describe('aplicar un extra aprobado', () => {
     const [antes] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
     const [pedido] = await db
       .insert(orders)
-      .values({ publicRef: `A${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`, addonSlug: 'mas-6-meses', eventId, customerName: 'Ana', contact: 'ana@x.bo', status: 'approved' })
+      .values({ publicRef: `A${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`, addonSlug: 'mas-6-meses', eventId, customerName: 'Ana', contact: 'ana@x.bo', status: 'approved', amountCents: 9000, currency: 'BOB', decidedAt: new Date() })
       .returning({ id: orders.id })
 
     expect(await drizzlePlansRepository.applyExtra(pedido!.id)).toBe(true)

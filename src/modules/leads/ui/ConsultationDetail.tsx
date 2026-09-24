@@ -36,6 +36,8 @@ export type ConsultationView = {
   /** «15 sept»: la fecha corta de la lista. */
   readonly shortDateLabel: string
   readonly event: { readonly slug: string; readonly title: string } | null
+  /** Solo en las nuevas: cuánto lleva sin contestar (`esperaDeConsulta`). */
+  readonly espera: { readonly texto: string; readonly urgente: boolean } | null
 }
 
 /**
@@ -194,8 +196,14 @@ export function ConsultationRow({ consulta, href, abierta }: { consulta: Consult
         <span className="truncate text-[12.5px] text-ink-mute">
           {[consulta.category, consulta.message].filter(Boolean).join(' · ') || 'Sin mensaje'}
         </span>
-        <span className="mt-1">
+        <span className="mt-1 flex flex-wrap items-center gap-2">
           <Pill tone={TONO[consulta.status]}>{ETIQUETA_ESTADO[consulta.status]}</Pill>
+          {consulta.espera === null ? null : (
+            // Con palabras y color: pasado el día, «sin contestar» en rojo.
+            <span className={`text-[11.5px] ${consulta.espera.urgente ? 'text-danger' : 'text-ink-mute'}`}>
+              Sin contestar · {consulta.espera.texto}
+            </span>
+          )}
         </span>
       </Link>
     </li>

@@ -103,14 +103,15 @@ function desbordanLaColumna(tope: number): string[] {
 }
 
 test.describe('el escaparate de modelos', () => {
-  test('lista los treinta y cinco diseños portados de la colección', () => {
+  test('lista los veintiséis diseños portados de la colección', () => {
     // Si algún día se publica uno sin portar, esta suite recorre uno más y falla al
     // abrirlo. Es lo que impide que el número se desajuste en silencio.
     //
-    // Son treinta y cinco —dieciséis bodas, dieciocho XV y el cumpleaños— y la web vende
-    // veinte: «cumple-beer» todavía no, ni cinco bodas que V3 retiró ni los nueve XV V2. Se abren por su
-    // dirección —las bodas que ya los usan siguen funcionando— y no salen en el catálogo.
-    expect(CLAVES).toHaveLength(35)
+    // Son veintiséis —dieciséis bodas, nueve XV y el cumpleaños— y la web vende veinte:
+    // «cumple-beer» todavía no, ni las cinco bodas que V3 retiró, que se abren por su dirección
+    // —las bodas que ya los usan siguen funcionando— y no salen en el catálogo. Los nueve XV V2
+    // se borraron de raíz el 24 de septiembre (`0067`).
+    expect(CLAVES).toHaveLength(26)
   })
 
   for (const clave of CLAVES) {

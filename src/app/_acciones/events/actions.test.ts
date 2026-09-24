@@ -122,6 +122,14 @@ describe('updateEventAction y el cambio de modelo según el plan', () => {
     expect(temaGuardado()).toBe('boda-bot')
   })
 
+  // Étoile (`boda`) está retirado: el selector no lo ofrece y un POST manipulado tampoco lo cuela.
+  it('nunca a un diseño retirado, ni para el admin', async () => {
+    conRegla('siempre', false, 'admin')
+    const { updateEventAction } = await import('@/app/_acciones/events/actions')
+    await updateEventAction({ status: 'idle', message: '' }, edicion('boda'))
+    expect(temaGuardado()).toBe('boda-bot')
+  })
+
   // El admin corrige ventas mal cargadas: el modelo equivocado se arregla sin comprar un extra.
   it('el admin lo cambia aunque el plan no lo incluya', async () => {
     conRegla('ninguno', true, 'admin')
@@ -150,6 +158,17 @@ describe('la retención la fija el plan, no el formulario', () => {
 
     await createEventAction({ status: 'idle', message: '' }, formulario())
     expect((create.mock.calls[0]?.[0] as { retentionDays: number }).retentionDays).toBe(60)
+  })
+
+  it('al crear, un diseño retirado se rechaza sin crear nada', async () => {
+    requireSession.mockResolvedValue({ userId: 'u1', role: 'atelier' })
+    cheapestActive.mockResolvedValue({ onlineDays: 60 })
+    const { createEventAction } = await import('@/app/_acciones/events/actions')
+    const fd = formulario()
+    fd.set('themeKey', 'boda')
+
+    expect(await createEventAction({ status: 'idle', message: '' }, fd)).toEqual({ status: 'error', message: 'invalid_theme' })
+    expect(create).not.toHaveBeenCalled()
   })
 
   it('al editar, conserva la que tiene aunque el POST mande otra', async () => {

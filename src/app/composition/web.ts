@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { clientAccessEmail, passwordResetEmail, supportAccessEmail } from '@/modules/notifications'
+import { adminAlertEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, supportAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -91,5 +91,17 @@ export const notifications = {
     emailSender.send({
       to: input.to,
       ...supportAccessEmail({ ...input, siteUrl: sitioPublicoUrl, whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null }),
+    }),
+  /** Lo que le espera al admin. `ruta` es la del panel, sin dominio. Devuelve booleano y no lanza. */
+  sendAdminAlert: (input: { to: string; asunto: string; lineas: readonly string[]; ruta: string }) =>
+    emailSender.send({
+      to: input.to,
+      ...adminAlertEmail({ asunto: input.asunto, lineas: input.lineas, enlace: `${sitioPublicoUrl}${input.ruta}`, siteUrl: sitioPublicoUrl }),
+    }),
+  /** «Ana confirmó · 3 personas» a un anfitrión. `ruta` es la del panel. Devuelve booleano y no lanza. */
+  sendRsvpToHost: (input: { to: string; invitado: string; asistentes: number; mensaje: string | null; evento: string; ruta: string }) =>
+    emailSender.send({
+      to: input.to,
+      ...rsvpHostEmail({ ...input, enlace: `${sitioPublicoUrl}${input.ruta}`, siteUrl: sitioPublicoUrl }),
     }),
 } as const

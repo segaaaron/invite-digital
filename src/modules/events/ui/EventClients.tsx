@@ -4,7 +4,7 @@ import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { addEventClientAction, removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
 import type { StaffMember } from './DoorStaff'
-import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -34,10 +34,15 @@ export function EventClients({
   return (
     <div className="flex flex-col gap-4.5">
       <p className="text-[12px] leading-[1.7] text-ink-soft">
-        Quien esté aquí entra al panel y ve <strong className="font-normal text-ink">solo este evento</strong>: sus
-        invitados, las confirmaciones, las mesas, la mesa de regalos y los mensajes, y reparte sus enlaces. No edita el
-        diseño ni el contenido, no toca el plan y no puede borrar el evento.
+        Quien esté aquí entra al panel y ve <strong className="font-normal text-ink">solo este evento</strong>.
       </p>
+      <Ayuda titulo="¿Qué puede hacer?">
+        <p>
+          Escribe su invitación —textos, fotos y canción—, carga a sus invitados, sigue las confirmaciones, las mesas, la mesa
+          de regalos y los mensajes, y reparte sus enlaces.
+        </p>
+        <p>No cambia el diseño, no toca el plan y no puede borrar el evento.</p>
+      </Ayuda>
 
       {members.length === 0 ? (
         <p className="text-[13px] text-ink-mute">Todavía no le diste acceso a nadie.</p>

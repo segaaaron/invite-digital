@@ -30,7 +30,7 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
   await page.getByLabel('Empresa').fill('Beat')
   await page.getByLabel('Precio (Bs) · crea su partida').fill('3500')
   await page.getByLabel('Categoría del presupuesto').selectOption('dj')
-  await page.getByLabel('Llega el día a las').fill('17:30')
+  await page.getByLabel('Llega el día a las').selectOption('17:30')
   await page.getByLabel('Estado').selectOption('contratado')
   await page.getByRole('button', { name: 'Sumar proveedor' }).click()
 

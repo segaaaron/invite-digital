@@ -57,6 +57,19 @@ export type Vocabulario = {
   readonly producto: string
   /** Ejemplo de nombre de evento para los campos vacíos. */
   readonly ejemploNombre: string
+  /**
+   * Los ejemplos de los campos vacíos del panel que dependen de la fiesta: un «Vals con papá»
+   * en un cumpleaños o una «Luna de miel» en unos XV se leen como un error del sistema.
+   */
+  readonly ejemplos: {
+    /** Un momento del cronograma. */
+    readonly momento: string
+    /** El nombre de un fondo en efectivo y su descripción. */
+    readonly fondo: string
+    readonly fondoDetalle: string
+    /** Lo que apadrina alguien del cortejo. */
+    readonly apadrina: string
+  }
 }
 
 export const VOCABULARIO: Record<Fiesta, Vocabulario> = {
@@ -67,6 +80,12 @@ export const VOCABULARIO: Record<Fiesta, Vocabulario> = {
     mesaPrincipal: 'De los novios',
     producto: 'Wedding Planner',
     ejemploNombre: 'Boda de Ana y Luis',
+    ejemplos: {
+      momento: 'Primer baile',
+      fondo: 'Luna de miel',
+      fondoDetalle: 'Para los pasajes y las noches de hotel.',
+      apadrina: 'Aros, arras, lazo…',
+    },
   },
   xv: {
     plural: 'XV años',
@@ -75,6 +94,12 @@ export const VOCABULARIO: Record<Fiesta, Vocabulario> = {
     mesaPrincipal: 'De la quinceañera',
     producto: 'XV Planner',
     ejemploNombre: 'XV de Valeria',
+    ejemplos: {
+      momento: 'Vals con papá',
+      fondo: 'Viaje de quince años',
+      fondoDetalle: 'Para el viaje que sueña hace tiempo.',
+      apadrina: 'Corona, última muñeca, cojín…',
+    },
   },
   cumple: {
     plural: 'Cumpleaños',
@@ -83,5 +108,40 @@ export const VOCABULARIO: Record<Fiesta, Vocabulario> = {
     mesaPrincipal: 'De quien cumple',
     producto: 'Party Planner',
     ejemploNombre: 'Cumpleaños de Miguel',
+    ejemplos: {
+      momento: 'Soplar las velas',
+      fondo: 'Una experiencia',
+      fondoDetalle: 'Para el regalo que de verdad le hace ilusión.',
+      apadrina: 'Torta, decoración, música…',
+    },
   },
 }
+
+/**
+ * El vocabulario de una fiesta que el panel todavía no conoce —un bautizo, una graduación, un
+ * evento de empresa—. Habla de «el evento» y pone ejemplos que valen para cualquiera, en vez
+ * de caer a los de boda: un evento corporativo no tiene novios.
+ */
+export const VOCABULARIO_GENERICO: Vocabulario = {
+  plural: 'Otros eventos',
+  elEvento: 'el evento',
+  anfitriones: 'los anfitriones',
+  mesaPrincipal: 'Principal',
+  producto: 'Event Planner',
+  ejemploNombre: 'Nombre del evento',
+  ejemplos: {
+    momento: 'Brindis de bienvenida',
+    fondo: 'Regalo en efectivo',
+    fondoDetalle: 'Para lo que más ilusión le haga.',
+    apadrina: 'Torta, decoración, música…',
+  },
+}
+
+const CATEGORIAS_CONOCIDAS: ReadonlySet<string> = new Set(['boda', 'boda-civil', 'xv-anos', 'cumpleanos'])
+
+/**
+ * El vocabulario por la categoría del catálogo. Una categoría que el panel aún no conoce usa
+ * el genérico, no el de boda: es lo que cubre la categoría nueva hasta que tenga el suyo.
+ */
+export const vocabularioDeCategoria = (categoria: string): Vocabulario =>
+  CATEGORIAS_CONOCIDAS.has(categoria) ? VOCABULARIO[fiestaDeCategoria(categoria)] : VOCABULARIO_GENERICO

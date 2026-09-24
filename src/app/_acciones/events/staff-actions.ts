@@ -125,10 +125,6 @@ async function avisarPorCorreo(eventId: string, email: string, password: string 
   }
 }
 
-export async function addDoorStaffAction(_previous: StaffActionState, formData: FormData): Promise<StaffActionState> {
-  return darDeAlta(formData, 'puerta', 'a la puerta de este evento')
-}
-
 /**
  * Da de alta al cliente: los novios, la quinceañera.
  *

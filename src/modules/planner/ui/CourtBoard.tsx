@@ -29,7 +29,7 @@ export type EnsayoVista = { readonly id: string; readonly cuando: string; readon
 
 type Partida = { id: string; concept: string }
 
-function FormularioDeMiembro({ evento, tipos, partidas, miembro }: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; miembro?: MiembroVista }) {
+function FormularioDeMiembro({ evento, tipos, partidas, miembro, ejemplo }: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; miembro?: MiembroVista; ejemplo?: string }) {
   const [estado, enviar, enviando] = useActionState(saveCourtMemberAction, INICIAL)
   const id = useId()
   const e = estado.status === 'error' ? estado.valores : undefined
@@ -54,7 +54,7 @@ function FormularioDeMiembro({ evento, tipos, partidas, miembro }: { evento: Eve
           <input className={FIELD_CLASS} defaultValue={v('whatsapp', miembro?.whatsapp)} id={`${id}-w`} inputMode="tel" name="whatsapp" />
         </Field>
         <Field htmlFor={`${id}-s`} label="Qué apadrina">
-          <input className={FIELD_CLASS} defaultValue={v('sponsors', miembro?.sponsors)} id={`${id}-s`} maxLength={200} name="sponsors" placeholder="Aros, arras, torta…" />
+          <input className={FIELD_CLASS} defaultValue={v('sponsors', miembro?.sponsors)} id={`${id}-s`} maxLength={200} name="sponsors" placeholder={ejemplo} />
         </Field>
         <Field htmlFor={`${id}-t`} label="Talla">
           <input className={FIELD_CLASS} defaultValue={v('size', miembro?.size)} id={`${id}-t`} maxLength={20} name="size" />
@@ -78,7 +78,8 @@ function FormularioDeMiembro({ evento, tipos, partidas, miembro }: { evento: Eve
   )
 }
 
-export function NewCourtMemberForm(props: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[] }) {
+/** `ejemplo`: lo que se apadrina en esa fiesta (`Vocabulario.ejemplos.apadrina`). */
+export function NewCourtMemberForm(props: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; ejemplo: string }) {
   return <FormularioDeMiembro {...props} />
 }
 

@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { adjustArrivalAction, checkInByGroupAction, recordScansAction, voidArrivalAction, type DoorActionState, type ScanInput } from '@/app/_acciones/checkin/actions'
 import type { ScanOutcome } from '../application/check-in-by-scan'
 import type { DoorManifest, DoorManifestGroup } from '../application/get-door-manifest'
-import type { ResolvedArrival } from '../domain/conflict'
+import { unirLlegadas, type ResolvedArrival } from '../domain/conflict'
 import { doorTally } from '../domain/door-tally'
 import { ManualPassDialog } from './ManualPassDialog'
 import { DoorSearchSheet } from './DoorSearchSheet'
@@ -84,6 +84,14 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
   /** Lo que registró el último escaneo por persona, para poder deshacerlo. */
   const ultimoPorPersona = useRef<{ scanId: string; groupId: string; personIds: readonly string[] } | null>(null)
   const [arrivals, setArrivals] = useState<readonly ResolvedArrival[]>(manifest.arrivals)
+  // Cuando llega un estado nuevo del servidor —otra puerta registró (en vivo) o se recargó—, se
+  // adopta sin perder lo registrado aquí sin red que todavía no subió.
+  const manifestoVisto = useRef(manifest.arrivals)
+  useEffect(() => {
+    if (manifestoVisto.current === manifest.arrivals) return
+    manifestoVisto.current = manifest.arrivals
+    setArrivals((locales) => unirLlegadas(manifest.arrivals, locales))
+  }, [manifest.arrivals])
   /**
    * Lo que el servidor rechazó después de que la pantalla ya se hubiera corregido. A la
    * puerta no se la hace esperar, así que el contador de arriba puede quedarse diciendo
@@ -162,9 +170,9 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
   }, [getOutbox])
 
   /**
-   * Sube lo acumulado. Se llama al registrar, al volver la red, al volver a primer
-   * plano y cada treinta segundos mientras quede algo. Un fallo deja el lote donde
-   * está: nada se pierde y nada se descarta.
+   * Sube lo acumulado. Se llama al registrar, al volver la red y al volver a primer plano:
+   * **nunca por reloj** (nada de reintentos cada N segundos que llamen al servidor). Un fallo
+   * deja el lote donde está y sube con el siguiente de esos momentos: nada se pierde.
    */
   const flush = useCallback(async () => {
     const box = await getOutbox()
@@ -194,11 +202,9 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
 
   useEffect(() => {
     const onOnline = () => void flush()
-    const timer = setInterval(() => void flush(), 30_000)
     window.addEventListener('online', onOnline)
     document.addEventListener('visibilitychange', onOnline)
     return () => {
-      clearInterval(timer)
       window.removeEventListener('online', onOnline)
       document.removeEventListener('visibilitychange', onOnline)
     }

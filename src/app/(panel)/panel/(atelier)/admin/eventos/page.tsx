@@ -1,11 +1,12 @@
-import { admin, events } from '@/app/composition/container'
+import Link from 'next/link'
+import { admin, events, orders } from '@/app/composition/container'
 import { ETAPAS, etapaDe, ordenarCartera, type Etapa } from '@/modules/admin/domain/cartera'
 import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { NuevaBodaForm } from '@/modules/admin'
+import { NuevaBodaForm, type DesdePedido } from '@/modules/admin'
 import { EventAdminRow } from '@/modules/admin/ui/EventAdminRow'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
-import { CATALOG_KEYS } from '@/shared/design/theme-catalog'
-import { fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
+import { CATALOG_KEYS, seAsigna } from '@/shared/design/theme-catalog'
+import { vocabularioDeCategoria } from '@/modules/events'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
@@ -39,11 +40,31 @@ const PAGINA = 20
 export default async function AdminEventosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ etapa?: string; q?: string; panel?: string; n?: string }>
+  searchParams: Promise<{ etapa?: string; q?: string; panel?: string; n?: string; pedido?: string }>
 }) {
   await requireAdmin()
 
-  const { etapa: etapaPedida, q = '', panel, n } = await searchParams
+  const { etapa: etapaPedida, q = '', panel, n, pedido: refDelPedido } = await searchParams
+  // «Crear el evento con este pedido»: un pedido aprobado que se quedó sin evento rellena el alta.
+  // Solo si de verdad le falta: uno que ya tiene evento, o de un extra, se ignora.
+  const desdePedido = await (async (): Promise<DesdePedido | undefined> => {
+    if (refDelPedido === undefined || panel !== 'nueva') return undefined
+    const leido = await orders.byRef(refDelPedido)
+    if (isErr(leido)) return undefined
+    const o = leido.value.order
+    if (o.status !== 'approved' || o.addonSlug !== null || o.eventId !== null) return undefined
+    const esCorreo = o.contact.includes('@')
+    return {
+      ref: o.publicRef,
+      modelo: o.templateSlug,
+      plan: o.planSlug,
+      titulo: o.customerName,
+      fecha: o.eventDate,
+      nombre: o.customerName,
+      correo: esCorreo ? o.contact : null,
+      telefono: esCorreo ? null : o.contact,
+    }
+  })()
   const [eventos, planes] = await Promise.all([admin.events(), admin.planOptions()])
   const hoy = fechaEnBolivia(new Date())
   const filtro: Etapa | 'todas' = ETAPAS.find((e) => e.clave === etapaPedida)?.clave ?? 'todas'
@@ -102,14 +123,12 @@ export default async function AdminEventosPage({
     <>
       <PanelHeader
         actions={
-          <>
-            {/* Lo habitual es con cliente —boda, XV años…—, y va primero y en negro. Sin cliente
-                es un evento que lleva el atelier sin dar acceso a nadie. */}
-            <PanelButton href="/panel/admin/eventos?panel=nueva" variant="primary">
-              + Evento para un cliente
-            </PanelButton>
-            <PanelButton href="/panel/eventos/nuevo">Evento sin acceso de cliente</PanelButton>
-          </>
+          // Un solo alta. El evento sin cliente —que lleva el atelier sin dar acceso a nadie— se
+          // ofrece dentro del alta: dos botones gemelos en la cabecera no decían en qué se
+          // diferenciaban.
+          <PanelButton href="/panel/admin/eventos?panel=nueva" variant="primary">
+            + Nuevo evento
+          </PanelButton>
         }
         kicker="Administración"
         meta="Todos los eventos del sistema, de cualquier atelier"
@@ -130,16 +149,29 @@ export default async function AdminEventosPage({
           **antes** de la lista cuando se abre, y abierta sin pedirla si no hay ninguna boda. */}
       {mostrarAlta ? (
       <PanelCard action={<PanelButton href="/panel/admin/eventos">Cerrar</PanelButton>} className="mb-4.5" title="Nuevo evento para un cliente">
+        {desdePedido === undefined ? null : (
+          <p className="-mt-2 mb-4 rounded-[12px] border border-gold/40 bg-gold/10 px-4 py-3 text-[13px] text-ink">
+            Desde el pedido <span className="font-mono">{desdePedido.ref}</span>: lo que eligió el cliente ya está puesto. Al
+            crearlo, el pedido queda enlazado a este evento.
+          </p>
+        )}
+        <p className="-mt-2 mb-5 text-[12px] text-ink-mute">
+          ¿Un evento sin cliente, que llevas tú sin darle acceso a nadie?{' '}
+          <Link className="text-ink underline underline-offset-2 hover:text-ink-soft" href="/panel/eventos/nuevo">
+            Créalo sin acceso
+          </Link>
+        </p>
         <NuevaBodaForm
-          // El clásico no se ofrece: no se publica en el catálogo, es el respaldo de una
-          // clave desconocida. Nadie lo elige mirando la web.
+          // Ni el clásico —el respaldo de una clave desconocida, fuera del catálogo— ni los
+          // retirados: nadie los elige mirando la web.
           modelos={temas
-            .filter((tema) => tema.key !== 'clasico')
+            .filter((tema) => seAsigna(tema.key))
             .map((tema) => ({
               key: tema.key,
               label: tema.label,
-              categoria: VOCABULARIO[fiestaDeCategoria(tema.categorySlug)].plural,
+              categoria: vocabularioDeCategoria(tema.categorySlug).plural,
             }))}
+          pedido={desdePedido}
           planes={opcionesDePlan}
         />
       </PanelCard>
@@ -202,6 +234,7 @@ export default async function AdminEventosPage({
                   grupos: evento.grupos,
                   enviados: evento.enviados,
                   respondidos: evento.respondidos,
+                  abiertos: evento.abiertos,
                   etapa: evento.etapa,
                   cuando: cuando(diasEntre(hoy, evento.eventDate)),
                   anfitriones: anfitriones.get(evento.id) ?? [],

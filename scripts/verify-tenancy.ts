@@ -40,7 +40,6 @@ const EXENTAS: Record<string, string> = {
   setUserRoleAction: 'del admin: cambia un rol',
   reassignEventAction: 'del admin: por definición opera sobre el evento de otro',
   setEventPlanAction: 'del admin: por definición opera sobre el evento de otro',
-  addDoorStaffAction: 'comprueba algo distinto: ser admin, con canManageStaff. Dar de alta crea una cuenta',
   addEventClientAction: 'igual que el alta de puerta: exige ser admin, con canManageStaff',
   removeDoorStaffAction: 'igual que el alta: exige ser admin, no tener acceso a ese evento',
   // Públicas del invitado: se autorizan por el token de su enlace, no por sesión.

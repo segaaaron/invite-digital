@@ -1,4 +1,5 @@
 import { admin, catalog, leads } from '@/app/composition/container'
+import { esperaDeConsulta } from '@/modules/leads/domain/espera'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { ESTADOS_CONSULTA, tasaDeCierre } from '@/modules/leads/domain/pipeline'
 import { ConsultationDetail, ConsultationRow, type ConsultationView } from '@/modules/leads/ui/ConsultationDetail'
@@ -63,6 +64,7 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
   const nombreCategoria = new Map(isErr(categorias) ? [] : categorias.value.map((c) => [c.slug, c.name]))
   const bodas = isErr(eventos) ? [] : eventos.value.map((e) => ({ id: e.id, title: e.title }))
 
+  const ahora = new Date()
   const vistas: ConsultationView[] = filas.map((c) => ({
     id: c.id,
     name: c.name,
@@ -76,6 +78,7 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
     receivedLabel: `Llegó el ${RECIBIDA.format(c.createdAt)}`,
     shortDateLabel: CORTA.format(c.createdAt),
     event: c.event,
+    espera: c.status === 'new' ? esperaDeConsulta(c.createdAt, ahora) : null,
   }))
 
   const enlace = (params: { estado?: string; id?: string }) => {

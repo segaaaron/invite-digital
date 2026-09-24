@@ -159,27 +159,6 @@ export const THEME_ASSETS = {
     'tacon-y-corbata.avif',
     'regalo.avif',
   ],
-  'xv-realeza': [
-    'patron.avif',
-    'carruaje.avif',
-  ],
-  'xv-boho': [
-    'esquina-rosa.avif',
-    'ramo-naranja.avif',
-  ],
-  'xv-princ': [
-    'quinceanera.avif',
-  ],
-  'xv-eleg': [
-    'esquina-izq.avif',
-    'esquina-der.avif',
-    'arco.avif',
-    'atardecer.avif',
-    'columnas.avif',
-    'ramo.avif',
-    'lago.avif',
-    'familia.avif',
-  ],
   'boda-serenidad': [
     'portada-flores.avif',
     'pareja-1.avif',

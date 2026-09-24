@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { resolveArrival } from './conflict'
+import { resolveArrival, unirLlegadas } from './conflict'
 import type { Arrival } from './arrival'
 
 const scan = (scanId: string, arrivedCount: number, iso: string, voidedAt: Date | null = null): Arrival => ({
@@ -94,5 +94,19 @@ describe('resolveArrival · por persona', () => {
     const r = resolveArrival([scan('a', 3, '2026-10-18T21:00:00Z')])
     expect(r?.personas).toEqual({})
     expect(r?.arrivedCount).toBe(3)
+  })
+})
+
+describe('unirLlegadas', () => {
+  const llegada = (guestGroupId: string, arrivedCount: number) => ({ guestGroupId, arrivedAt: new Date('2027-05-15T20:00:00Z'), arrivedCount, scanCount: 1, personas: {} })
+
+  it('en lo que el servidor conoce manda el servidor; lo que solo tiene esta puerta se queda', () => {
+    const servidor = [llegada('a', 3), llegada('b', 2)]
+    const locales = [llegada('a', 1), llegada('c', 4)]
+    expect(unirLlegadas(servidor, locales).map((a) => [a.guestGroupId, a.arrivedCount])).toEqual([
+      ['a', 3],
+      ['b', 2],
+      ['c', 4],
+    ])
   })
 })

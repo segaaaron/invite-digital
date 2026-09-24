@@ -1,6 +1,7 @@
 import { createHash, randomBytes } from 'node:crypto'
 import postgres from 'postgres'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
+import { escribirInvitacion } from './invitacion-minima'
 
 // Conexión propia del fixture, **abierta al usarla y reabrible**: la importan `cliente.spec`
 // y `soporte.spec`, que corren en el mismo proceso y comparten este módulo. Con una conexión
@@ -75,6 +76,10 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
     returning id
   `
   await sql`insert into guest_people (guest_group_id, full_name) values (${grupo!.id}, 'Rosa Vargas')`
+
+  // Con la invitación escrita: sin ella, el cliente entra directo a «Personalizar invitación»
+  // (`loQueFaltaParaInvitar`) y no al resumen de su boda, que es lo que estas pruebas miran.
+  await escribirInvitacion(slug)
 
   return { clienteId: cliente!.id, duenoId: dueno!.id, eventId: evento!.id, token }
 }
