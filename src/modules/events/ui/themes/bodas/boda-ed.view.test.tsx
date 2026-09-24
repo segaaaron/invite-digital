@@ -24,22 +24,18 @@ describe('el tema Editorial', () => {
     // El diseño la compone en tres piezas y en ese orden; es un solo bloque de contenido
     // porque en la maqueta es un solo texto.
     render(<BodaEdView {...conMuestra()} />)
-    expect(screen.getByText(/todo lo que iba a querer/)).toBeInTheDocument()
+    // La última línea del titular va aparte, en oro.
+    expect(screen.getByText(/lo que iba a querer/)).toBeInTheDocument()
     expect(screen.getByText('— ALEX, 28')).toBeInTheDocument()
     expect(screen.getByText(/librería de viejo/)).toBeInTheDocument()
   })
 
-  it('cada fila del itinerario enseña su casilla de la lámina de iconos', () => {
-    // Los seis dibujos vienen en una sola imagen de tres por dos: la fila cuatro está en la
-    // primera columna de la segunda hilera, y eso se consigue moviendo la lámina, no
-    // cambiando de fichero.
-    const { container } = render(<BodaEdView {...conMuestra()} />)
-    const laminas = [...container.querySelectorAll('img')].filter((img) =>
-      (img.getAttribute('src') ?? '').includes('iconos-dorados'),
-    )
-    expect(laminas).toHaveLength(6)
-    expect(laminas[3]?.style.left).toBe('0%')
-    expect(laminas[3]?.style.top).toBe('-100%')
+  it('el itinerario es un camino que va de un lado al otro, con la hora hacia dentro', () => {
+    render(<BodaEdView {...conMuestra()} />)
+    const primera = screen.getByText('13:45').parentElement
+    const segunda = screen.getByText('16:00').parentElement
+    expect(primera?.style.textAlign).toBe('left')
+    expect(segunda?.style.textAlign).toBe('right')
   })
 
   it('pinta el muestrario de color del código de vestimenta', () => {

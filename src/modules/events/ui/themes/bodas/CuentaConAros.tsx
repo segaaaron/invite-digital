@@ -14,6 +14,8 @@ type Props = {
   readonly rotulo: string
   readonly serif: string
   readonly mono: string
+  /** El rótulo de cada aro, cuando no es el de «Noche Estrellada» (10 px, 0,25 em). */
+  readonly rotuloEstilo?: { readonly size: number; readonly tracking: string; readonly opacidad: number }
 }
 
 /** El radio del aro, y su longitud, como en la maqueta (84 × 84, radio 34). */
@@ -26,7 +28,7 @@ const VUELTA = 2 * Math.PI * RADIO
  * Cada aro se llena contra su tope —60 días, 24 horas, 60 minutos, 60 segundos—, que es
  * como lo cuenta la maqueta: con más de sesenta días el de los días va lleno.
  */
-export function CuentaConAros({ targetISO, labels, aro, aroFondo, cifra, rotulo, serif, mono }: Props) {
+export function CuentaConAros({ targetISO, labels, aro, aroFondo, cifra, rotulo, serif, mono, rotuloEstilo }: Props) {
   const partes = useCountdown(targetISO)
   const casillas = [
     { clave: 'days', rotulo: labels.days, valor: partes.days, tope: 60 },
@@ -64,7 +66,18 @@ export function CuentaConAros({ targetISO, labels, aro, aroFondo, cifra, rotulo,
             >
               {pad(casilla.valor)}
             </div>
-            <div style={{ fontFamily: mono, fontSize: 10, letterSpacing: '0.25em', marginTop: 6, color: rotulo }}>{casilla.rotulo}</div>
+            <div
+              style={{
+                fontFamily: mono,
+                fontSize: rotuloEstilo?.size ?? 10,
+                letterSpacing: rotuloEstilo?.tracking ?? '0.25em',
+                opacity: rotuloEstilo?.opacidad,
+                marginTop: 6,
+                color: rotulo,
+              }}
+            >
+              {casilla.rotulo}
+            </div>
           </div>
         )
       })}

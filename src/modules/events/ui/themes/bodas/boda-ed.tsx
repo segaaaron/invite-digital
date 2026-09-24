@@ -3,20 +3,19 @@ import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-ed.content'
 import { PALETA } from './boda-ed.palette'
 
-/** «Editorial» — María & Alex. Verde botánico y oro, con el retrato enmarcado sobre las hojas. */
+/** «Editorial» — María & Alex (maqueta V3). Verde botánico y oro, con el retrato enmarcado sobre las hojas. */
 export const bodaEdDefinition: ThemeDefinition = {
   key: 'boda-ed',
   label: 'Editorial',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'italiana', 'dmSans', 'cinzel'],
-  rsvp: 'botones',
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'montserrat', 'playfairDisplay', 'dmSans'],
+  // «Asistiré» y «No puedo» como las otras editoriales (`primarySecondary`).
+  rsvp: 'pildoras',
   pinta: {
     fotos: { casillas: 2 },
-    // La tarjeta de la ceremonia pinta el rótulo, la hora y el lugar, no la dirección —esa
-    // sale una vez, en la de la recepción—, y los avisos van como párrafo suelto, sin
-    // encabezado. Lo cazó la prueba que exige que todo lo que el editor pregunta salga.
-    sinCampos: { itinerary: ['note'], ceremony: ['address'], notes: ['title'] },
+    // Las tarjetas pintan rótulo, hora y lugar, sin dirección; el itinerario, hora y momento.
+    sinCampos: { itinerary: ['note', 'imageId'], ceremony: ['address'], reception: ['address'], notes: ['title'], map: ['label'] },
     maxAvisos: 4,
   },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'gallery', 'notes', 'closing'],

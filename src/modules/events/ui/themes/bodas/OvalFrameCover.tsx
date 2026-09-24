@@ -2,16 +2,14 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { prefiereMenosMovimiento } from '../kit/motion'
 
 type Props = {
   readonly bgAsset: string
   /** Los anillos, debajo de los nombres. */
   readonly ringsAsset: string
+  /** El oro del filete con rombo. */
   readonly accent: string
   readonly bg: string
-  /** El oro pálido de las iniciales. */
-  readonly initialsColor: string
   readonly textColor: string
   /** «Nuestra Boda», del contenido del diseño. */
   readonly eyebrow: string
@@ -21,42 +19,30 @@ type Props = {
   readonly openLabel: string
 }
 
+/** El resplandor dorado con sombra que la maqueta pone a todo el texto de esta portada. */
+const RESPLANDOR = '0 0 15px rgba(197,150,26,0.6), 0 2px 4px rgba(0,0,0,0.8)'
+
 /**
- * La portada de «Editorial»: la fotografía de hojas con su óvalo dorado, y dentro el
- * rótulo, las iniciales, los nombres y los anillos.
+ * La portada de «Editorial» en V3 (`IntroCover` con `style="ovalFrame"`, `utils.jsx`): la
+ * fotografía de hojas con su óvalo dorado y, dentro, el rótulo, las iniciales y los nombres
+ * en blanco con resplandor dorado, un filete con rombo y los anillos; abajo, la llamada con
+ * su flecha que rebota.
  *
- * **El óvalo lo trae la fotografía**, no se dibuja. Se dibujaba, y salían dos: el de la
- * imagen y un `border-radius: 50%` encima, desalineados entre sí. Por eso el contenido va
- * en una caja al 22 % y al 14 %, que son los márgenes con los que la maqueta lo mete
- * dentro del óvalo que ya está pintado.
- *
- * Tampoco lleva velo oscuro: la fotografía viene con su propio degradado, y el velo que se
- * le ponía apagaba el verde que es la mitad del diseño.
+ * **El óvalo lo trae la fotografía**, no se dibuja: dibujarlo encima salían dos óvalos
+ * desalineados.
  *
  * Es un `<button>` a pantalla completa y no un `<div onClick>` como en la maqueta: con un
  * div, quien navega con teclado no puede abrirla y la invitación se acaba en la portada.
  */
-export function OvalFrameCover({
-  bgAsset,
-  ringsAsset,
-  accent,
-  bg,
-  initialsColor,
-  textColor,
-  eyebrow,
-  names,
-  initials,
-  hint,
-  openLabel,
-}: Props) {
+export function OvalFrameCover({ bgAsset, ringsAsset, accent, bg, textColor, eyebrow, names, initials, hint, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
-  const [reducido] = useState(prefiereMenosMovimiento)
 
   if (abierta) return null
 
   return (
     <button
       aria-label={openLabel}
+      className="theme-quieto-si-reduce"
       data-portada=""
       onClick={() => setAbierta(true)}
       style={{
@@ -70,7 +56,7 @@ export function OvalFrameCover({
         overflow: 'hidden',
         background: bg,
         color: textColor,
-        animation: reducido ? undefined : 'theme-introFade 800ms ease',
+        animation: 'theme-introFade 800ms ease',
       }}
       type="button"
     >
@@ -79,10 +65,10 @@ export function OvalFrameCover({
       <span
         style={{
           position: 'absolute',
-          left: '22%',
-          right: '22%',
-          top: '14%',
-          bottom: '14%',
+          left: 0,
+          right: 0,
+          top: '13%',
+          height: '72%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -92,44 +78,86 @@ export function OvalFrameCover({
       >
         <span
           style={{
-            fontFamily: 'var(--font-cormorant)',
-            fontSize: 15,
-            letterSpacing: '0.25em',
-            color: accent,
+            fontFamily: 'var(--font-montserrat)',
+            fontSize: 17,
+            fontWeight: 500,
+            letterSpacing: '0.3em',
+            color: textColor,
             textTransform: 'uppercase',
+            textShadow: RESPLANDOR,
           }}
         >
           {eyebrow}
         </span>
-        <span style={{ fontFamily: 'var(--font-italiana)', fontSize: 64, lineHeight: 1, color: initialsColor, marginTop: 6 }}>
+        <span
+          style={{
+            fontFamily: 'var(--font-playfair-display)',
+            fontWeight: 700,
+            fontSize: 64,
+            lineHeight: 1,
+            color: textColor,
+            marginTop: 6,
+            textShadow: RESPLANDOR,
+          }}
+        >
           {initials}
         </span>
         <span
-          style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 39, color: textColor, lineHeight: 1, marginTop: 6 }}
+          style={{
+            fontFamily: 'var(--font-playfair-display)',
+            fontStyle: 'italic',
+            fontWeight: 600,
+            fontSize: 32,
+            lineHeight: 1.1,
+            color: textColor,
+            marginTop: 6,
+            maxWidth: '82%',
+            textShadow: RESPLANDOR,
+          }}
         >
           {names}
+        </span>
+        <span aria-hidden style={{ width: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '6px 0' }}>
+          <span style={{ flex: 1, height: 1, background: accent }} />
+          <span style={{ width: 6, height: 6, background: accent, transform: 'rotate(45deg)' }} />
+          <span style={{ flex: 1, height: 1, background: accent }} />
         </span>
         <Image
           alt=""
           aria-hidden
           height={140}
           src={ringsAsset}
-          style={{ width: '45%', height: 'auto', filter: 'drop-shadow(0 4px 10px rgba(0,0,0,.35))' }}
+          style={{
+            width: '45%',
+            height: 'auto',
+            marginTop: 10,
+            filter: 'drop-shadow(0 4px 10px rgba(0,0,0,.35)) drop-shadow(0 0 14px rgba(255,255,255,.5))',
+          }}
           width={140}
         />
+      </span>
+
+      <span style={{ position: 'absolute', left: 0, right: 0, bottom: 40, textAlign: 'center' }}>
         <span
           style={{
+            display: 'block',
             fontFamily: 'var(--font-dm-sans)',
-            fontWeight: 300,
-            fontSize: 9,
+            fontWeight: 600,
+            fontSize: 10.3,
             letterSpacing: '0.15em',
             color: textColor,
             textTransform: 'uppercase',
             whiteSpace: 'nowrap',
-            marginTop: 20,
           }}
         >
           {hint}
+        </span>
+        <span
+          aria-hidden
+          className="theme-quieto-si-reduce"
+          style={{ display: 'block', marginTop: 8, fontSize: 17, color: textColor, animation: 'theme-bounceDown 1.4s ease-in-out infinite' }}
+        >
+          ↓
         </span>
       </span>
     </button>

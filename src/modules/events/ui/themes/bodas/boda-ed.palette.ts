@@ -1,10 +1,4 @@
-/**
- * La paleta de «Editorial».
- *
- * La maqueta la rehízo entera: era una revista en papel crema con tinta negra y acento
- * terracota, y ahora es verde botánico de fondo con oro sobre él. Se repintó aquí en vez
- * de mantener las dos, porque un diseño es uno.
- */
+/** La paleta de «Editorial» (V3): verde botánico de fondo con oro sobre él. */
 export const PALETA = {
   /** El velo verde que va sobre la fotografía de fondo y bajo todo lo demás. */
   fondo: '#16281c',
@@ -18,9 +12,12 @@ export const PALETA = {
   veloHoja: 'rgba(10,20,14,0.35)',
   oroPalido: '#E8D5A8',
   papelSuave: 'rgba(245,239,224,0.82)',
-  veloFuerte: 'rgba(10,25,15,0.4)',
-  veloSuave: 'rgba(15,30,20,0.35)',
-  filete: 'rgba(212,182,120,0.3)',
+  /** Los aros de la cuenta atrás, lleno y de fondo, y su cifra. */
+  aro: '#C5961A',
+  aroFondo: 'rgba(197,150,26,0.25)',
+  blanco: '#FFFFFF',
+  /** El camino punteado del itinerario y sus flores. */
+  camino: '#C9A961',
   fileteSuave: 'rgba(212,182,120,0.25)',
 } as const
 

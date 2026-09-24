@@ -2,13 +2,15 @@ import Image from 'next/image'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { anfitrionesBoda } from '../../../domain/invitation-content'
+import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
-import { Countdown } from '../kit/Countdown'
-import { MapPreview } from '../kit/MapPreview'
+import { CapaFija } from '../kit/CapaFija'
 import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
+import { CuentaConAros } from './CuentaConAros'
+import { ItinerarioOndulado } from './ItinerarioOndulado'
 import { OvalFrameCover } from './OvalFrameCover'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-ed.palette'
 
@@ -17,23 +19,41 @@ const DISPLAY = 'var(--font-spectral)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 
 /**
- * «Editorial» — María & Alex, de `wedding-variants.jsx:558`.
+ * «Editorial» — María & Alex, de `wedding-variants-4.jsx` (maqueta V3).
  *
- * **La maqueta lo rehízo entero.** Era una revista de papel crema con tinta negra y acento
- * terracota; ahora es verde botánico con oro encima: fotografía de hojas de fondo, retrato
- * enmarcado flotando sobre ella, dos tarjetas con iconos dorados, seis dibujos para el
- * itinerario y un muestrario de color para la vestimenta. Se repintó aquí en vez de
- * mantener las dos versiones, porque un diseño es uno.
+ * Verde botánico con oro: la fotografía de hojas fija detrás de todo, hojas doradas cayendo,
+ * la mancheta de revista, el retrato enmarcado, la cuenta atrás con aros bajo el reloj, la
+ * cita con capitular, las dos tarjetas apiladas con su arte «botánica», el itinerario como
+ * un camino punteado que serpentea, el muestrario de la vestimenta y las piezas doradas de
+ * cada bloque.
  *
- * El fondo va **fijo y detrás de todo**, y por eso el artículo no lleva color propio: uno
- * opaco taparía la fotografía entera. Dentro del marco de la vista previa se ancla a la
- * tarjeta, que es lo que se quiere.
- *
- * Los seis iconos del itinerario vienen en **una sola lámina** de tres por dos, y cada fila
- * enseña su casilla moviendo la imagen dentro de una ventana de 56 píxeles. Ahí `imageId`
- * es el número de casilla —`0` a `5`—, no una fotografía del evento; sin él manda el orden
- * de la fila.
+ * El fondo y las hojas van en `CapaFija` (sticky), no `fixed`: dentro del marco del teléfono
+ * un `fixed` se iba con el desplazamiento y el cuerpo se quedaba sin fondo.
  */
+
+/** Las hojas doradas que caen, con los números de la maqueta. */
+const HOJAS = Array.from({ length: 16 }, (_, i) => ({
+  izquierda: (i * 6.4) % 100,
+  tamano: 10 + (i % 5) * 3,
+  duracion: 8 + (i % 7) * 2,
+  retraso: -(i * 0.9),
+}))
+
+/** «Itinerario», «Confirma tu asistencia»: en minúsculas salvo la primera, como la maqueta. */
+const enOracion = (texto: string): string => texto.charAt(0).toUpperCase() + texto.slice(1).toLowerCase()
+
+/** «Código de vestimenta.» con la última palabra en cursiva, como la compone la maqueta. */
+function ConCursivaFinal({ texto }: { readonly texto: string }) {
+  const corte = texto.trimEnd().lastIndexOf(' ')
+  if (corte === -1) return <span style={{ fontStyle: 'italic' }}>{texto}.</span>
+  return (
+    <>
+      {texto.slice(0, corte + 1)}
+      <span style={{ fontStyle: 'italic' }}>{texto.slice(corte + 1).trimEnd()}.</span>
+    </>
+  )
+}
+
 export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
     content
@@ -50,8 +70,10 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
   const nosotros = gallery?.[1]
   const invitacion = notes?.[0]
   const soloAdultos = notes?.[1]
-  const lugar = notes?.[2]
+  const regalos = notes?.[2]
   const fotos = notes?.[3]
+  // La última línea del titular va en oro, como en la maqueta.
+  const lineasTitular = titular.split('\n')
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const fechaLarga =
@@ -72,9 +94,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
     .join('')
 
   const tarjetas = [
-    { lugar: ceremony, icono: 'templo-dorado-sf.avif' as const },
-    { lugar: reception, icono: 'copas-doradas-sf.avif' as const },
+    { lugar: ceremony, icono: 'iglesia-botanica-sf.avif' as const },
+    { lugar: reception, icono: 'copas-botanica-sf.avif' as const },
   ].filter((tarjeta) => tarjeta.lugar !== undefined)
+
+  const llegarA = (lugar: { readonly place?: string; readonly address?: string } | undefined): string | null =>
+    comoLlegar({ href: map?.href, coords: map?.coords }, [lugar?.place, lugar?.address].filter(Boolean).join(', '))
 
   // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del
   // libro de firmas y pase— heredan su paleta por variables CSS, en vez de entrar marfiles.
@@ -89,15 +114,14 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
         eyebrow={hero?.eyebrow ?? ''}
         hint={themes.coverEnterShared}
         initials={iniciales}
-        initialsColor={P.oroPalido}
         names={`${hero?.nameA ?? ''} ${hero?.nameB ?? ''}`.trim()}
         openLabel={themes.coverAria}
         ringsAsset={themeAsset('boda-ed', 'aros-sf.avif')}
         textColor={P.papel}
       />
 
-      {/* La fotografía de hojas, fija y detrás de todo. */}
-      <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1 }}>
+      {/* La fotografía de hojas, quieta y detrás de todo, con su velo verde. */}
+      <CapaFija zIndex={-1}>
         <Image
           alt=""
           fill
@@ -106,21 +130,35 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
           style={{ objectFit: 'cover', objectPosition: 'center 30%' }}
         />
         <div style={{ position: 'absolute', inset: 0, background: P.veloHoja }} />
-      </div>
+      </CapaFija>
+
+      {/* Las hojas doradas que caen por encima. */}
+      <CapaFija zIndex={5}>
+        {HOJAS.map((hoja) => (
+          <span
+            className="theme-quieto-si-reduce"
+            key={hoja.izquierda}
+            style={{
+              position: 'absolute',
+              top: '-6%',
+              left: `${hoja.izquierda}%`,
+              width: hoja.tamano,
+              height: hoja.tamano,
+              opacity: 0.35,
+              animation: `theme-petalFall ${hoja.duracion}s linear ${hoja.retraso}s infinite`,
+            }}
+          >
+            <svg height="100%" viewBox="0 0 24 24" width="100%">
+              <path d="M12 2 C20 8 20 18 12 22 C4 18 4 8 12 2 Z" fill="rgba(197,150,58,0.55)" />
+              <line stroke="rgba(197,150,58,0.4)" strokeWidth="0.8" x1="12" x2="12" y1="4" y2="20" />
+            </svg>
+          </span>
+        ))}
+      </CapaFija>
 
       <ThemeColumn>
         {/* La mancheta. */}
         <div style={{ padding: '22px 24px', borderBottom: `1.5px solid ${P.oro}`, position: 'relative' }}>
-          <div
-            aria-hidden
-            style={{
-              position: 'absolute',
-              inset: '-10px -6px',
-              background: P.veloFuerte,
-              filter: 'blur(10px)',
-              zIndex: -1,
-            }}
-          />
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontFamily: DISPLAY, fontSize: 56, fontWeight: 200, letterSpacing: '0.04em', lineHeight: 0.95 }}>
               {hero?.eyebrow ?? ''}
@@ -182,7 +220,6 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 lineHeight: 0.9,
                 letterSpacing: '-0.01em',
                 margin: 0,
-                textShadow: '0 2px 12px rgba(15,35,24,0.4)',
               }}
             >
               {hero?.nameA ?? ''}
@@ -200,6 +237,37 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
         </div>
 
         <div style={{ padding: '32px 24px 0', position: 'relative' }}>
+          {/* La cuenta atrás: el reloj botánico y cuatro aros que se llenan. */}
+          {schedule === undefined ? null : (
+            <Reveal>
+              <div style={{ padding: '28px 0', borderTop: `1.5px solid ${P.oro}`, borderBottom: `1.5px solid ${P.oro}`, textAlign: 'center' }}>
+                <Image
+                  alt=""
+                  height={130}
+                  src={themeAsset('boda-ed', 'reloj-botanica-sf.avif')}
+                  style={{ width: 130, height: 'auto', display: 'block', margin: '0 auto 22px' }}
+                  width={130}
+                />
+                <CuentaConAros
+                  aro={P.aro}
+                  aroFondo={P.aroFondo}
+                  cifra={P.blanco}
+                  labels={{
+                    days: themes.countdownDays,
+                    hours: themes.countdownHoursLong,
+                    mins: themes.countdownMins,
+                    secs: themes.countdownSecs,
+                  }}
+                  mono={MONO}
+                  rotulo={P.papel}
+                  rotuloEstilo={{ size: 9, tracking: '0.35em', opacidad: 0.65 }}
+                  serif={DISPLAY}
+                  targetISO={schedule.startsAt}
+                />
+              </div>
+            </Reveal>
+          )}
+
           {titular === '' ? null : (
             <Reveal>
               <div
@@ -210,10 +278,14 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   fontWeight: 200,
                   lineHeight: 1.25,
                   letterSpacing: '-0.01em',
-                  padding: '0 24px',
+                  padding: '24px 24px 0',
                 }}
               >
-                {titular}
+                {lineasTitular.map((linea, i) => (
+                  <span key={`${i}-${linea}`} style={{ display: 'block', color: i === lineasTitular.length - 1 && i > 0 ? P.oro : undefined }}>
+                    {linea}
+                  </span>
+                ))}
               </div>
               {firma === '' ? null : (
                 <div
@@ -322,8 +394,8 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                       <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.25em', color: P.oro }}>
                         {grupo.rotulo}
                       </div>
-                      {grupo.nombres.map((nombre) => (
-                        <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: 10, lineHeight: 1.6 }}>
+                      {grupo.nombres.map((nombre, i) => (
+                        <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: i === 0 ? 10 : 0, lineHeight: 1.6 }}>
                           {nombre}
                         </div>
                       ))}
@@ -336,8 +408,8 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.25em', color: P.oro }}>
                     {themes.godparents}
                   </div>
-                  {anfitrionesBoda(hosts).padrinos.map((nombre) => (
-                    <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: 10, lineHeight: 1.6 }}>
+                  {anfitrionesBoda(hosts).padrinos.map((nombre, i) => (
+                    <div key={nombre} style={{ fontFamily: DISPLAY, fontSize: 16, marginTop: i === 0 ? 10 : 0, lineHeight: 1.6 }}>
                       {nombre}
                     </div>
                   ))}
@@ -349,38 +421,42 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
 
         {tarjetas.length === 0 ? null : (
           <Reveal>
-            <div style={{ padding: '36px 20px', display: 'flex', gap: 14, justifyContent: 'center' }}>
+            <div style={{ padding: '36px 20px', display: 'flex', flexDirection: 'column', gap: 20 }}>
               {tarjetas.map((tarjeta) => (
                 <div
                   key={tarjeta.icono}
                   style={{
-                    flex: 1,
                     background: P.velo,
                     border: `1.5px solid ${P.oro}`,
                     borderRadius: 16,
                     padding: '28px 8px 22px',
                     textAlign: 'center',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 16,
+                    display: 'grid',
+                    gridTemplateRows: 'auto 20px auto 10px auto auto 1fr auto',
+                    justifyItems: 'center',
+                    rowGap: 6,
                   }}
                 >
                   <Image
                     alt=""
-                    height={64}
+                    height={120}
                     src={themeAsset('boda-ed', tarjeta.icono)}
-                    style={{ width: '62%', height: 64, objectFit: 'contain' }}
-                    width={64}
+                    style={{ width: '39%', height: 'auto', objectFit: 'contain' }}
+                    width={120}
                   />
-                  <div style={{ fontFamily: CALIGRAFIA, fontSize: 24, color: P.oro }}>{tarjeta.lugar?.label ?? ''}</div>
+                  <div />
+                  <div style={{ fontFamily: CALIGRAFIA, fontSize: 24, color: P.oro, whiteSpace: 'nowrap' }}>{tarjeta.lugar?.label ?? ''}</div>
+                  <div />
                   <div style={{ fontFamily: DISPLAY, fontSize: 30, color: P.papel }}>{tarjeta.lugar?.time ?? ''}</div>
-                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.15em', color: P.papel, opacity: 0.85 }}>
+                  <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.15em', color: P.papel, opacity: 0.85, whiteSpace: 'nowrap' }}>
                     {(tarjeta.lugar?.place ?? '').toUpperCase()}
                   </div>
-                  {map?.href === undefined ? null : (
+                  <div />
+                  {llegarA(tarjeta.lugar) === null ? (
+                    <div />
+                  ) : (
                     <a
-                      href={map.href}
+                      href={llegarA(tarjeta.lugar) ?? ''}
                       rel="noopener noreferrer"
                       style={{
                         background: P.oro,
@@ -391,6 +467,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                         fontWeight: 700,
                         padding: '10px 14px',
                         borderRadius: 20,
+                        whiteSpace: 'nowrap',
                         textDecoration: 'none',
                       }}
                       target="_blank"
@@ -406,104 +483,14 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
 
         {itinerary === undefined ? null : (
           <div style={{ padding: '0 24px', position: 'relative' }}>
-            <div
-              aria-hidden
-              style={{
-                position: 'absolute',
-                top: 0,
-                bottom: 0,
-                left: '50%',
-                width: '60%',
-                transform: 'translateX(-50%)',
-                background: P.veloSuave,
-                zIndex: 0,
-                pointerEvents: 'none',
-              }}
-            />
             <Reveal>
-              <div
-                style={{
-                  fontFamily: DISPLAY,
-                  fontSize: 44,
-                  fontWeight: 200,
-                  lineHeight: 1,
-                  marginTop: 8,
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
-                {themes.itinerary}
+              <div style={{ fontFamily: DISPLAY, fontSize: 44, fontWeight: 200, lineHeight: 1, marginTop: 8, textAlign: 'center' }}>
+                {enOracion(themes.itinerary)}
                 <span style={{ fontStyle: 'italic' }}>.</span>
               </div>
             </Reveal>
-
             <Reveal>
-              <div
-                style={{
-                  marginTop: 28,
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  rowGap: 32,
-                  columnGap: 10,
-                  position: 'relative',
-                }}
-              >
-                {itinerary.map((fila, indice) => {
-                  const casilla = Number.parseInt(fila.imageId ?? '', 10)
-                  const posicion = Number.isNaN(casilla) ? indice : casilla
-                  const columna = posicion % 3
-                  const renglon = Math.floor(posicion / 3) % 2
-
-                  return (
-                    <div
-                      key={`${fila.time}-${fila.label}`}
-                      style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
-                    >
-                      <div aria-hidden style={{ width: 56, height: 56, overflow: 'hidden', position: 'relative' }}>
-                        <Image
-                          alt=""
-                          height={112}
-                          src={themeAsset('boda-ed', 'iconos-dorados-sf.avif')}
-                          style={{
-                            position: 'absolute',
-                            width: '300%',
-                            height: '200%',
-                            left: `${-columna * 100}%`,
-                            top: `${-renglon * 100}%`,
-                            objectFit: 'contain',
-                            filter: 'brightness(1.5) saturate(1.3) drop-shadow(0 1px 3px rgba(0,0,0,.5))',
-                          }}
-                          width={168}
-                        />
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: DISPLAY,
-                          fontSize: 22,
-                          color: P.hueso,
-                          marginTop: 10,
-                          textShadow: '0 1px 4px rgba(0,0,0,.4)',
-                        }}
-                      >
-                        {fila.time}
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: MONO,
-                          fontSize: 8.5,
-                          letterSpacing: '0.12em',
-                          color: P.papelClaro,
-                          marginTop: 6,
-                          lineHeight: 1.5,
-                          textShadow: '0 1px 3px rgba(0,0,0,.4)',
-                        }}
-                      >
-                        {fila.label}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <ItinerarioOndulado filas={itinerary} hora={P.hueso} mono={MONO} oro={P.camino} rotulo={P.papelClaro} serif={DISPLAY} />
             </Reveal>
           </div>
         )}
@@ -560,16 +547,15 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                     textAlign: 'center',
                   }}
                 >
-                  {dressCode.title ?? ''}
-                  <span style={{ fontStyle: 'italic' }}>.</span>
+                  <ConCursivaFinal texto={dressCode.title ?? ''} />
                 </div>
 
                 <Image
                   alt=""
-                  height={260}
-                  src={themeAsset('boda-ed', 'trajes-dorados-sf.avif')}
-                  style={{ width: '70%', height: 'auto', display: 'block', margin: '26px auto' }}
-                  width={260}
+                  height={320}
+                  src={themeAsset('boda-ed', 'codigo-botanica-sf.avif')}
+                  style={{ width: '90%', height: 'auto', display: 'block', margin: '26px auto' }}
+                  width={320}
                 />
 
                 <div style={{ display: 'flex', justifyContent: 'center', gap: 6, width: '58%', margin: '22px auto 0' }}>
@@ -606,111 +592,47 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
             </Reveal>
           )}
 
-          {schedule === undefined ? null : (
-            <Reveal>
-              <div
-                style={{
-                  marginTop: 40,
-                  padding: '28px 0',
-                  borderTop: `1.5px solid ${P.oro}`,
-                  borderBottom: `1.5px solid ${P.oro}`,
-                }}
-              >
-                <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', textAlign: 'center', color: P.oro }}>
-                  · {themes.countdownPrefix.toUpperCase()} ·
-                </div>
-                <Countdown
-                  labels={{
-                    days: themes.countdownDays,
-                    hours: themes.countdownHoursLong,
-                    mins: themes.countdownMins,
-                    secs: themes.countdownSecs,
-                  }}
-                  labelStyle={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.35em', opacity: 0.65, marginTop: 4 }}
-                  rowStyle={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', marginTop: 14 }}
-                  targetISO={schedule.startsAt}
-                  valueStyle={{ fontFamily: DISPLAY, fontSize: 52, fontWeight: 200, lineHeight: 1 }}
-                />
-              </div>
-            </Reveal>
-          )}
-
-          {map === undefined ? null : (
-            <Reveal>
-              <div style={{ marginTop: 36 }}>
-                <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 36, fontWeight: 200, marginTop: 8 }}>
-                  {map.label ?? ''}
-                </div>
-                {lugar?.text === undefined ? null : (
-                  <div style={{ fontSize: 13, marginTop: 6, opacity: 0.75 }}>{lugar.text}</div>
-                )}
-                {reception?.address === undefined ? null : (
-                  <div style={{ fontSize: 12, marginTop: 10, fontFamily: MONO, letterSpacing: '0.2em' }}>
-                    {reception.address}
-                  </div>
-                )}
-                <div style={{ marginTop: 14 }}>
-                  <MapPreview
-                    accent={P.oro}
-                    border={P.filete}
-                    coords={map.coords ?? ''}
-                    directionsLabel={themes.viewLocation}
-                    href={map.href}
-                    respaldo={[reception?.place, reception?.address].filter(Boolean).join(', ')}
-                    coordsColor={P.oro}
-                    label={map.label ?? ''}
-                    pinDot={P.papel}
-                    pinRing={P.fondo}
-                  />
-                </div>
-              </div>
-            </Reveal>
-          )}
-
           {soloAdultos === undefined ? null : (
             <Reveal>
-              <div style={{ marginTop: 60, marginBottom: 20, textAlign: 'center' }}>
-                <Image
-                  alt=""
-                  height={160}
-                  src={themeAsset('boda-ed', 'taco-gato-sf.avif')}
-                  style={{ width: 160, height: 'auto', display: 'block', margin: '0 auto' }}
-                  width={160}
-                />
-                <div style={{ maxWidth: '78%', margin: '26px auto 0' }}>
-                  {soloAdultos.text === undefined ? null : (
-                    <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 18, lineHeight: 1.6 }}>
-                      {soloAdultos.text}
+              <div style={{ marginTop: 60, marginBottom: 20, padding: '0 10px' }}>
+                <div style={{ background: P.velo, border: `1.5px solid ${P.oro}`, borderRadius: 16, padding: '30px 20px', textAlign: 'center' }}>
+                  <Image
+                    alt=""
+                    height={190}
+                    src={themeAsset('boda-ed', 'taco-corbata-botanica-sf.avif')}
+                    style={{ width: 190, height: 'auto', display: 'block', margin: '0 auto' }}
+                    width={190}
+                  />
+                  <div style={{ maxWidth: '88%', margin: '16px auto 0' }}>
+                    {soloAdultos.text === undefined ? null : (
+                      <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 18, lineHeight: 1.6, color: P.papel }}>
+                        {soloAdultos.text}
+                      </div>
+                    )}
+                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oro, marginTop: 14 }}>
+                      {soloAdultos.title}
                     </div>
-                  )}
-                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oro, marginTop: 16 }}>
-                    {soloAdultos.title}
                   </div>
                 </div>
               </div>
             </Reveal>
           )}
 
-          {/* La mesa de regalos: el dibujo y el rótulo son del diseño; la lista, nuestra. */}
+          {/* La mesa de regalos: el dibujo, el rótulo y el texto son del diseño; la lista, nuestra. */}
           <Reveal>
             <div style={{ marginTop: 60, marginBottom: 20, textAlign: 'center' }}>
               <Image
                 alt=""
-                height={160}
-                src={themeAsset('boda-ed', 'regalo-sf.avif')}
-                style={{
-                  width: 160,
-                  height: 'auto',
-                  display: 'block',
-                  margin: '0 auto',
-                  filter: 'brightness(1.15) saturate(1.15)',
-                }}
-                width={160}
+                height={220}
+                src={themeAsset('boda-ed', 'regalo-botanica-sf.avif')}
+                style={{ width: 220, height: 'auto', display: 'block', margin: '0 auto' }}
+                width={220}
               />
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro, marginTop: 32 }}>{themes.gifts}</div>
-              <div style={{ marginTop: 18, textAlign: 'left' }}>
-                {slots.registry}
-              </div>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro, marginTop: 32 }}>{regalos?.title ?? themes.gifts}</div>
+              {regalos?.text === undefined ? null : (
+                <div style={{ fontFamily: DISPLAY, fontSize: 15, lineHeight: 1.7, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
+              )}
+              <div style={{ marginTop: 22 }}>{slots.registry}</div>
             </div>
           </Reveal>
 
@@ -726,8 +648,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   textAlign: 'center',
                 }}
               >
-                {dictionary.title}
-                <span style={{ fontStyle: 'italic' }}>.</span>
+                <ConCursivaFinal texto={enOracion(dictionary.title)} />
               </div>
               <div style={{ marginTop: 18 }}>
                 {slots.rsvp}
@@ -748,16 +669,10 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
               >
                 <Image
                   alt=""
-                  height={150}
-                  src={themeAsset('boda-ed', 'camara-dorada-sf.avif')}
-                  style={{
-                    width: 150,
-                    height: 'auto',
-                    display: 'block',
-                    margin: '0 auto',
-                    filter: 'brightness(1.5) saturate(1.3) drop-shadow(0 1px 3px rgba(0,0,0,.5))',
-                  }}
-                  width={150}
+                  height={220}
+                  src={themeAsset('boda-ed', 'camara-botanica-sf.avif')}
+                  style={{ width: 220, height: 'auto', display: 'block', margin: '0 auto' }}
+                  width={220}
                 />
                 <div
                   style={{
@@ -765,7 +680,6 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                     fontSize: 34,
                     color: P.oroClaro,
                     marginTop: 20,
-                    textShadow: '0 1px 4px rgba(0,0,0,.4)',
                   }}
                 >
                   {fotos.title}
@@ -808,10 +722,6 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 position: 'relative',
               }}
             >
-              <div
-                aria-hidden
-                style={{ position: 'absolute', inset: '-6px 0', background: P.fondo, opacity: 0.75, zIndex: 0 }}
-              />
               <div
                 style={{
                   position: 'relative',
