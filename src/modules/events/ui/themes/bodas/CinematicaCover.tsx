@@ -2,7 +2,6 @@
 
 import Image from 'next/image'
 import { useState } from 'react'
-import { prefiereMenosMovimiento } from '../kit/motion'
 
 type Props = {
   readonly bgAsset: string
@@ -32,13 +31,13 @@ type Props = {
  */
 export function CinematicaCover({ bgAsset, accent, bg, eyebrow, names, fecha, hint, openLabel }: Props) {
   const [abierta, setAbierta] = useState(false)
-  const [reducido] = useState(prefiereMenosMovimiento)
 
   if (abierta) return null
 
   return (
     <button
       aria-label={openLabel}
+      className="theme-quieto-si-reduce"
       data-portada=""
       onClick={() => setAbierta(true)}
       style={{
@@ -51,7 +50,7 @@ export function CinematicaCover({ bgAsset, accent, bg, eyebrow, names, fecha, hi
         width: '100%',
         overflow: 'hidden',
         background: bg,
-        animation: reducido ? undefined : 'theme-introFade 800ms ease',
+        animation: 'theme-introFade 800ms ease',
       }}
       type="button"
     >
@@ -78,7 +77,7 @@ export function CinematicaCover({ bgAsset, accent, bg, eyebrow, names, fecha, hi
             {eyebrow}
           </span>
           <span aria-hidden style={{ display: 'block', width: 46, height: 1, background: accent }} />
-          <span style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 32, lineHeight: 1.15, whiteSpace: 'nowrap' }}>{names}</span>
+          <span style={{ fontFamily: 'var(--font-great-vibes)', fontSize: 32, lineHeight: 1.15, whiteSpace: 'nowrap', paddingLeft: 16 }}>{names}</span>
           <span aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, width: 90 }}>
             <span style={{ display: 'block', flex: 1, height: 1, background: accent }} />
             <span style={{ display: 'block', width: 6, height: 6, background: accent, transform: 'rotate(45deg)' }} />

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { InvitationContent } from '../../domain/invitation-content'
+import { themeAsset } from './assets'
 import { TIMELINE_ICONS, type TimelineIconKey } from './kit/flora/TimelineIcons'
 import type { PielXv } from './xv/piel-xv'
 import { PIEL_XV } from './xv/xv.skin'
@@ -55,6 +56,42 @@ const botanicos = (): OpcionDeIcono[] =>
     return { clave, nombre: NOMBRES[clave] ?? clave, dibujo: <Icono color="currentColor" size={32} /> }
   })
 
+/**
+ * «Cinemática»: la casilla `0` a `5` de la lámina dorada de tres por dos, o las dos piezas
+ * sueltas, `copas` y `auto`.
+ */
+const cinematica = (): OpcionDeIcono[] => [
+  ...['Ceremonia', 'Recepción', 'Baile', 'Cena', 'Torta', 'Novios'].map((nombre, casilla) => ({
+    clave: String(casilla),
+    nombre,
+    dibujo: (
+      <span
+        aria-hidden
+        className="block size-10"
+        style={{
+          backgroundImage: `url(${themeAsset('boda-cin', 'iconos-dorados-sf.avif')})`,
+          backgroundSize: '300% 200%',
+          backgroundPosition: `${(casilla % 3) * 50}% ${Math.floor(casilla / 3) * 100}%`,
+        }}
+      />
+    ),
+  })),
+  ...([
+    ['copas', 'Brindis', 'copas-black-sf.avif'],
+    ['auto', 'Despedida', 'auto-dorado-sf.avif'],
+  ] as const).map(([clave, nombre, archivo]) => ({
+    clave,
+    nombre,
+    dibujo: (
+      <span
+        aria-hidden
+        className="block size-10"
+        style={{ backgroundImage: `url(${themeAsset('boda-cin', archivo)})`, backgroundSize: 'contain', backgroundRepeat: 'no-repeat', backgroundPosition: 'center' }}
+      />
+    ),
+  })),
+]
+
 const POR_DISENO: Record<string, () => OpcionDeIcono[]> = {
   xv: () => deXv(PIEL_XV, XV),
   'xv-fantasia': () => deXv(FANTASIA, XV_FANTASIA),
@@ -62,6 +99,7 @@ const POR_DISENO: Record<string, () => OpcionDeIcono[]> = {
   'xv-valentina': () => deXv(VALENTINA, XV_VALENTINA),
   'xv-isabelle': botanicos,
   'boda-bot': botanicos,
+  'boda-cin': cinematica,
 }
 
 /** Los iconos que este diseño sabe pintar en su itinerario, o vacío si no pinta iconos. */

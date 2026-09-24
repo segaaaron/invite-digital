@@ -20,30 +20,25 @@ describe('el tema Cinemática', () => {
     }
   })
 
-  it('compone la fecha de estreno a partir de la hora del evento', () => {
-    // El diseño la pinta como «12.12 · 2026», no como una fecha con formato local: es el
-    // cartel de un estreno. Sale de `schedule`, así que una boda de verdad enseña la suya.
+  it('parte la cita en titular, firma y columna con capitular', () => {
     render(<BodaCinView {...conMuestra()} />)
-    expect(screen.getByText('12.12')).toBeInTheDocument()
-    expect(screen.getByText('· 2026 ·')).toBeInTheDocument()
+    expect(screen.getByText('que me miraste."')).toBeInTheDocument()
+    expect(screen.getByText('— DIEGO')).toBeInTheDocument()
+    expect(screen.getByText(/os conocimos en una noche/)).toBeInTheDocument()
   })
 
-  it('pinta el desglose de escenas con su línea secundaria', () => {
-    render(<BodaCinView {...conMuestra()} />)
-    expect(screen.getByText('SC.02')).toBeInTheDocument()
-    expect(screen.getByText('INT. CAPILLA. NOCHE.')).toBeInTheDocument()
-    expect(screen.getByText('Ceremonia · 19:00')).toBeInTheDocument()
+  it('el itinerario alterna de lado sobre el eje, con su icono', () => {
+    const { container } = render(<BodaCinView {...conMuestra()} />)
+    expect(screen.getByText('Ceremonia').parentElement?.style.textAlign).toBe('right')
+    expect(screen.getByText('Recepción Social', { selector: 'li div' }).parentElement?.style.textAlign).toBe('left')
+    const srcs = [...container.querySelectorAll('li img')].map((img) => img.getAttribute('src') ?? '')
+    expect(srcs.some((src) => src.includes('copas-black'))).toBe(true)
+    expect(srcs.some((src) => src.includes('auto-dorado'))).toBe(true)
   })
 
-  it('la escena de cierre no inventa una línea secundaria', () => {
+  it('sin canción no pinta reproductor: la maqueta no lo tiene', () => {
     render(<BodaCinView {...conMuestra()} />)
-    expect(screen.getByText('FADE TO BLACK')).toBeInTheDocument()
-  })
-
-  it('parte los créditos por sus saltos de línea', () => {
-    render(<BodaCinView {...conMuestra()} />)
-    expect(screen.getByText('Casting · destino')).toBeInTheDocument()
-    expect(screen.getByText('fin.')).toBeInTheDocument()
+    expect(screen.queryByText('La canción de la noche')).not.toBeInTheDocument()
   })
 
   it('sin contenido no revienta ni escribe «undefined»', () => {

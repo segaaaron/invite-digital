@@ -27,8 +27,6 @@
 /** «Esencia»: la llamada a deslizar, que baja y sube. */
 @keyframes theme-esenciaFloat { 0%,100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(6px); opacity: 1; } }
 
-@keyframes theme-filmBurn { 0%,100% { opacity: 0; transform: translateX(0); } 10% { opacity: 0.6; } 50% { opacity: 0.3; transform: translateX(10px); } 90% { opacity: 0; } }
-
 /** «Sobre Lacrado»: los iconos de acuarela, que flotan despacio. */
 @keyframes theme-floatIcon { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 
