@@ -30,23 +30,6 @@ const PETALOS = Array.from({ length: 22 }, (_, i) => ({
   retraso: -(i * 0.9),
 }))
 
-const ROTULOS = {
-  nuestraBoda: 'NUESTRA BODA',
-  faltan: '· FALTAN ·',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS DE BODA',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  historia: 'Nuestra Historia',
-  soloAdultos: 'CELEBRACIÓN SOLO PARA ADULTOS',
-  confirma: 'CONFIRMA TU ASISTENCIA',
-  firmas: 'Déjanos un mensaje',
-  regalos: 'Mesa de regalos',
-} as const
-
 /**
  * «Glamour» — Valeria & Nicolas, de `wedding-variants.jsx` (`WeddingBotanical`).
  *
@@ -55,6 +38,7 @@ const ROTULOS = {
  * día de la semana, el itinerario de iconos en rejilla de tres, y pétalos guinda cayendo.
  */
 export function BodaGlamourView({ content, event, dictionary, themes, slots, guestInfo, audioSrc, respondida }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-glamour']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const etiquetaLocal = event.locale === 'en' ? 'en-GB' : 'es-BO'

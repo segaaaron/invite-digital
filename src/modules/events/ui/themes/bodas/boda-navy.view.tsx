@@ -21,25 +21,6 @@ const DISPLAY = 'var(--font-playfair-display)'
 /** Las seis fotografías del carrusel, en el orden de la maqueta. */
 const CARRUSEL = ['pareja-1.avif', 'pareja-2.avif', 'pareja-3.avif', 'pareja-4.avif', 'pareja-5.avif', 'pareja-6.avif'] as const
 
-const ROTULOS = {
-  nuestraBoda: 'NUESTRA BODA',
-  invitacion: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  nosotros: 'Nosotros',
-  vestimenta: 'Código de ',
-  vestimentaCursiva: 'vestimenta.',
-  regalos: 'Mesa de regalos',
-  confirma: 'Confirma tu ',
-  confirmaCursiva: 'asistencia.',
-  firmas: 'Déjanos un mensaje',
-} as const
-
 /** La inicial de un nombre, en mayúscula y sin tilde: el monograma de «Óscar» es «O». */
 const inicial = (nombre: string | undefined): string =>
   (nombre ?? '').trim().slice(0, 1).normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase()
@@ -53,6 +34,7 @@ const inicial = (nombre: string | undefined): string =>
  * recepción con marco dorado y el itinerario como la esfera de un reloj.
  */
 export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-navy']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)

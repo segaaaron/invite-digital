@@ -13,25 +13,8 @@ import { PALETA as P } from './civil.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const DISPLAY = 'var(--font-spectral)'
 
-/**
- * «Civil» — Lucía & Andrés, de `invites-3.jsx:7`.
- *
- * La boda civil leída como un acta: sello de lacre, dos círculos enormes de trazo fino
- * saliéndose por los bordes, y los testigos de ley en su propio bloque.
- *
- * Es el único diseño de la colección con dos lugares de peso igual —el registro y el
- * brindis—, así que la ceremonia y la recepción van en dos columnas y no una debajo de la
- * otra.
- */
-/**
- * Cómo llama **este** diseño a sus secciones.
- *
- * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
- * viven con él. Lo que no esté aquí cae al diccionario.
- */
-const ROTULOS = { gifts: 'REGALO DE BODA', seal: '· UNIDOS ·', cover: 'UNIÓN CIVIL' } as const
-
 export function CivilView({ content, dictionary, themes, slots }: ThemeProps) {
+  const ROTULOS = themes.designs['civil']
   const { hero, hosts, schedule, ceremony, reception, map, gallery, closing } = content
 
   // Los cuatro bloques que no dibuja este diseño —RSVP, mesa de regalos, respuesta del

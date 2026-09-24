@@ -16,25 +16,6 @@ const CALIGRAFIA = 'var(--font-great-vibes)'
 /** La didona de los números grandes: solo cursiva, como la maqueta. */
 const NUMERO = 'var(--font-bodoni-moda)'
 
-/** Cómo llama **este** diseño a sus secciones. Es su guion, no una traducción. */
-const ROTULOS = {
-  faltan: '· FALTAN ·',
-  historia: 'NUESTRA HISTORIA',
-  invitacion: 'Nuestro gran día se acerca y nos encantaría que formaras parte de él.',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'ITINERARIO',
-  vestimenta: 'CÓDIGO DE VESTIMENTA',
-  regalos: 'MESA DE REGALOS',
-  confirma: 'CONFIRMA TU ASISTENCIA',
-  mensaje: 'Déjanos un mensaje',
-  fotos: 'Comparte tus fotos',
-} as const
-
 /** Los seis iconos de acuarela del itinerario, en el orden de la maqueta. */
 const ICONOS_ITINERARIO = ['iglesia.avif', 'copas.avif', 'brindis.avif', 'cena.avif', 'bouquet.avif', 'pareja-baile.avif'] as const
 
@@ -55,6 +36,7 @@ const PETALOS = Array.from({ length: 22 }, (_, i) => ({
  * el papel por una onda dibujada, no por un degradado recto.
  */
 export function BodaSelloView({ content, event, themes, slots, guestInfo, audioSrc, respondida }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-sello']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)

@@ -40,26 +40,6 @@ const DESPEGA = '0 1px 2px rgba(255,248,230,0.6)'
 const MASCARA =
   'linear-gradient(to bottom, transparent 0%, black 15%, black 78%, transparent 100%), linear-gradient(to right, transparent 0%, black 8%, black 92%, transparent 100%)'
 
-const ROTULOS = {
-  nuestraBoda: 'NUESTRA BODA',
-  faltan: '· FALTAN ·',
-  invitacion: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  nosotros: 'Nosotros',
-  vestimenta: 'Código de ',
-  vestimentaCursiva: 'vestimenta.',
-  regalos: 'Mesa de regalos',
-  confirma: 'Confirma tu ',
-  confirmaCursiva: 'asistencia.',
-  firmas: 'Déjanos un mensaje',
-} as const
-
 /** La inicial de un nombre, en mayúscula y sin tilde: el monograma de «Óscar» es «O». */
 const inicial = (nombre: string | undefined): string =>
   (nombre ?? '').trim().slice(0, 1).normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase()
@@ -72,6 +52,7 @@ const inicial = (nombre: string | undefined): string =>
  * línea teñidos de café y el itinerario en rejilla de dos columnas.
  */
 export function BodaBohoView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-boho']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)

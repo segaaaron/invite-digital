@@ -11,21 +11,6 @@ import { CARTA_DE_COLOR, PALETA as P } from './xv-min.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const SPECTRAL = 'var(--font-spectral)'
 
-const ROTULOS = {
-  quince: '· QUINCE ·',
-  numero: '· N° 015 ·',
-  titular: 'Quince.',
-  retrato: 'EDITORIAL',
-  eventos: 'P.01 — EVENTOS',
-  lugar: 'P.02 — LUGAR',
-  vestimenta: 'P.03 — VESTIMENTA',
-  rsvp: 'P.04 — RSVP',
-  confirma: 'Confirma',
-  antes: 'antes',
-  del: 'del',
-  mesa: '// MESA DIGITAL',
-} as const
-
 /** Un rótulo de sección de la revista: «P.01 — EVENTOS». */
 function Rotulo({ children }: { readonly children: string }) {
   return <p style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.5em', color: P.iris }}>{children}</p>
@@ -40,6 +25,7 @@ function Rotulo({ children }: { readonly children: string }) {
  * mapa, vestimenta con su paleta y confirmación, la mesa digital en negro y el colofón.
  */
 export function XvMinView({ content, event, themes, slots, respondida }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-min']
   const { hero, quote, schedule, reception, map, itinerary, dressCode, notes } = content
   const nombre = hero?.nameA ?? ''
   const mesa = notes?.[0]
@@ -92,7 +78,7 @@ export function XvMinView({ content, event, themes, slots, respondida }: ThemePr
       <EnvelopeCover
         accent={P.tinta}
         bg={P.papel}
-        eyebrow="YOUR ACCESS"
+        eyebrow={ROTULOS.coverEyebrow}
         headline="VIP"
         headlineFont="var(--font-space-grotesk)"
         hint={themes.coverHint}

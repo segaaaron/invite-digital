@@ -28,26 +28,6 @@ const HOJAS = Array.from({ length: 16 }, (_, i) => ({
   giro: (i * 23) % 360,
 }))
 
-const ROTULOS = {
-  nuestraBoda: 'NUESTRA BODA',
-  faltan: '· FALTAN ·',
-  invitacion: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  nosotros: 'Nosotros',
-  vestimenta: 'Código de ',
-  vestimentaCursiva: 'vestimenta.',
-  regalos: 'Mesa de regalos',
-  confirma: 'Confirma tu ',
-  confirmaCursiva: 'asistencia.',
-  firmas: 'Déjanos un mensaje',
-} as const
-
 /** La inicial de un nombre, en mayúscula y sin tilde: el monograma de «Óscar» es «O». */
 const inicial = (nombre: string | undefined): string =>
   (nombre ?? '').trim().slice(0, 1).normalize('NFD').replace(/\p{Diacritic}/gu, '').toUpperCase()
@@ -63,6 +43,7 @@ const TARJETA: React.CSSProperties = { background: 'rgba(255,255,255,0.55)', bor
  * itinerario en zigzag a los dos lados de un hilo con rombos.
  */
 export function BodaPerlaView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-perla']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)

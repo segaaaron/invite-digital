@@ -30,27 +30,6 @@ const PETALOS = Array.from({ length: 32 }, (_, i) => ({
   retraso: -(i * 0.9),
 }))
 
-const ROTULOS = {
-  nuestraBoda: 'NUESTRA BODA',
-  faltan: '· FALTAN ·',
-  invitacion: 'Nuestro gran día se aproxima y nos encantaría que formaras parte de él.',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  nosotros: 'Nosotros',
-  vestimenta: 'Código de ',
-  vestimentaCursiva: 'vestimenta.',
-  regalos: 'Mesa de regalos',
-  confirma: 'Confirma tu ',
-  confirmaCursiva: 'asistencia.',
-  fotos: 'Comparte tus fotos',
-  firmas: 'Déjanos un mensaje',
-} as const
-
 /**
  * «Royal Blush» — Renata & Pablo, de `wedding-variants-6.jsx`
  * (`WeddingEditorialRoyalBlush`).
@@ -60,6 +39,7 @@ const ROTULOS = {
  * itinerario va en una rejilla de tres columnas con un medallón por hito.
  */
 export function BodaRoyalView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-royal']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)

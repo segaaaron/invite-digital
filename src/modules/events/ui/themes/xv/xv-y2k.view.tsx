@@ -14,20 +14,6 @@ import { PALETA as P } from './xv-y2k.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const ITALIANA = 'var(--font-italiana)'
 
-const BILLETE = { eyebrow: 'YOUR ACCESS', headline: 'VIP', label: 'ENTER THE GALAXY' } as const
-const ROTULOS = {
-  galaxia: '· Y2K · GALAXY ·',
-  sistema: 'SYS · 15.0',
-  xv: 'XV',
-  misXv: 'MIS XV',
-  retrato: 'PRINCESS',
-  fecha: 'DATE',
-  hora: 'TIME',
-  lugar: 'VENUE',
-  vestimenta: 'DRESS',
-  vibras: 'VIBE_STACK',
-} as const
-
 /** Las tres capas del «XV» cromado: rosa desplazada, cian desplazada y el degradado encima. */
 const XV_GRANDE: React.CSSProperties = { fontFamily: ITALIANA, fontSize: 180, fontWeight: 400, lineHeight: 0.85, letterSpacing: '-0.05em' }
 
@@ -41,6 +27,7 @@ const XV_GRANDE: React.CSSProperties = { fontFamily: ITALIANA, fontSize: 180, fo
  * lista de deseos y la confirmación.
  */
 export function XvY2kView({ content, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-y2k']
   const { hero, quote, schedule, reception, map, dressCode, notes, gallery, music } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
   const nombre = hero?.nameA ?? ''
@@ -80,11 +67,11 @@ export function XvY2kView({ content, themes, slots, audioSrc }: ThemeProps) {
       <EnvelopeCover
         accent={P.rosa}
         bg={P.fondo}
-        eyebrow={BILLETE.eyebrow}
-        headline={BILLETE.headline}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
         headlineFont="var(--font-space-grotesk)"
         hint={themes.coverHint}
-        label={BILLETE.label}
+        label={ROTULOS.coverLabel}
         openLabel={themes.coverAria}
         textColor={P.blanco}
         variant="ticket"

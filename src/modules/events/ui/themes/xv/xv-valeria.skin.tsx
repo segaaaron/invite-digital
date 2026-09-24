@@ -59,7 +59,7 @@ export const PIEL: PielXv = {
       openLabel={datos.openLabel}
       textColor={P.tinta}
       tiaraAsset={themeAsset('xv-valeria', 'tiara-vino-sf.avif')}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
     />
   ),
   // Los colores que «Gala Real» reparte distinto de «Bajo el Mar». Su rótulo de anfitriones
@@ -126,7 +126,7 @@ export const PIEL: PielXv = {
     boxShadow: P.sombra,
   },
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
-  rotulos: { itinerary: 'Itinerario' },
+  rotulos: { itinerary: 'itineraryTitle' },
   // Su itinerario en V3 es una esfera de reloj con «XV» al centro, sin panel. Con cinco
   // hitos los reparte como la maqueta: 12, 3, 4 y media, 6 y 9.
   itinerario: (filas) => (

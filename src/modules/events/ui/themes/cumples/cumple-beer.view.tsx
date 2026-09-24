@@ -1,3 +1,4 @@
+import type { DesignDictionary } from '@/shared/i18n/dictionary'
 import { comoLlegar } from '../../../domain/ubicacion'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
@@ -14,38 +15,6 @@ const MONO = 'var(--font-jetbrains-mono)'
 const SANS = 'var(--font-dm-sans)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 const TITULAR = 'var(--font-cinzel)'
-
-/**
- * Cómo llama **este** diseño a sus secciones.
- *
- * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
- * viven con él. Lo que no esté aquí cae al diccionario.
- */
-const ROTULOS = {
-  celebracion: 'La Celebración',
-  // El saludo a quien recibe el enlace, delante del titular. El nombre va debajo, en
-  // versalitas de oro: es lo único de la invitación escrito así, y por eso se lee primero.
-  saludo: 'Llega el gran día y me gustaría compartirlo juntos:',
-  confirma: 'CONFIRMA TU LUGAR EN LA BARRA',
-  // La despedida de quien ya respondió. Es lo único que ve al volver a su enlace: la
-  // invitación no se vuelve a pintar y la música no suena.
-  graciasVieneRotulo: 'TU LUGAR ESTÁ GUARDADO',
-  graciasViene: '¡Gracias por confirmar!',
-  graciasVieneTexto: 'Nos vemos para brindar, cantar y celebrar juntos.',
-  graciasNoRotulo: 'RESPUESTA RECIBIDA',
-  graciasNo: 'Gracias por avisar',
-  graciasNoTexto: 'Sentiremos tu ausencia. Brindaremos por ti y te guardamos la historia para contártela.',
-  // Las dos despedidas cierran igual de bonito: quien no puede venir no se queda con un
-  // «gracias» a secas.
-  graciasVieneCierre: 'Tu cerveza ya tiene nombre',
-  // La dirección, por si el día de la fiesta ya no recuerda dónde era: la invitación ya no
-  // se vuelve a abrir, así que este es el único sitio donde puede mirarla.
-  graciasDondeRotulo: 'DÓNDE ES LA FIESTA',
-  graciasDondeAyuda: 'Guarda la dirección, por si acaso:',
-  graciasComoLlegar: 'CÓMO LLEGAR',
-  graciasNoCierre: 'En otra oportunidad será',
-  guestbook: 'Déjame un Mensaje',
-} as const
 
 /** Las espigas de cebada de las esquinas: el marco del diseño, repetido en tres bloques. */
 function Espigas() {
@@ -81,6 +50,7 @@ function Filete() {
  * piel del diseño para que se siga viendo como su invitación.
  */
 function Gracias({
+  rotulos: ROTULOS,
   invitado,
   viene,
   lugar,
@@ -90,6 +60,7 @@ function Gracias({
   respaldo,
   verUbicacion,
 }: {
+  readonly rotulos: DesignDictionary['cumple-beer']
   invitado: string | null
   viene: boolean
   lugar: string | undefined
@@ -229,6 +200,7 @@ function Gracias({
  * maqueta son dos bloques distintos del diseño, no una lista.
  */
 export function CumpleBeerView({ content, event, themes, slots, guestInfo, audioSrc, respondida = false, asistira = false }: ThemeProps) {
+  const ROTULOS = themes.designs['cumple-beer']
   const { hero, quote, schedule, reception, map, music, notes, closing } = content
 
   // A quién va dirigida: el nombre de su invitación, tal cual —«Pamela», «Carlos Rojas»,
@@ -268,6 +240,7 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
   if (respondida) {
     return (
       <Gracias
+        rotulos={ROTULOS}
         direccion={direccionCorta}
         invitado={invitado}
         llegar={llegar}

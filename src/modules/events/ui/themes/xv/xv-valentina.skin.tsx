@@ -20,7 +20,7 @@ export const PIEL: PielXv = {
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.
-  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
+  rotulos: { itinerary: 'scheduleTitle', gifts: 'giftsEmbrace' },
   // Su maqueta sí pinta «Detalles que Abrazan» con el sobre y el código.
   regalos: true,
   fondoBase: '#2a1140',
@@ -58,7 +58,7 @@ export const PIEL: PielXv = {
       // (`ValentinaIntroCover`, `invites-1.jsx:852`): es el **único** de los ocho que
       // escribe la cifra en la portada. No puede salir del monograma del contenido,
       // porque ese mismo dato pinta el «XV» grande del cuerpo, que sí es XV.
-      title="15 AÑOS"
+      title={`15 ${datos.anios}`}
     />
   ),
   // Los colores que «Mascarada» reparte distinto de «Bajo el Mar»: su fecha va en oro y la

@@ -18,8 +18,6 @@ const SANS = 'var(--font-outfit)'
 const SERIF = 'var(--font-cormorant)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 
-const ROTULOS = { xvAnos: 'XV AÑOS', padrinos: '& MIS PADRINOS', misXv: 'MIS XV AÑOS', itinerario: 'Itinerario', confirmar: 'Confirma tu Asistencia' } as const
-
 /** Las piezas rosas del itinerario, por su clave (`imageId`). */
 const PIEZAS = {
   copa: 'copa-pinki-sf.avif',
@@ -59,6 +57,7 @@ function Franja({ children, centrada = false }: { readonly children: ReactNode; 
  * rosas, canción, vestimenta, lluvia de sobres, confirmación y cierre—.
  */
 export function XvPapillonView({ content, event, themes, slots, audioSrc, respondida }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-papillon']
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, notes, closing } = content
   const nombre = hero?.nameA ?? ''
   const serial = [hero?.eyebrow, hero?.serial].filter(Boolean).join(' ')
@@ -187,7 +186,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
             <Tarjeta style={{ textAlign: 'center' }}>
               <div style={{ fontFamily: SERIF, fontWeight: 600, fontSize: 54, color: P.oro, lineHeight: 1 }}>{dia}</div>
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro, marginTop: 2 }}>{mes}</div>
-              <div style={{ marginTop: 10, fontFamily: SANS, fontSize: 12, letterSpacing: '0.25em', color: P.tintaSuave }}>{hora} HRS</div>
+              <div style={{ marginTop: 10, fontFamily: SANS, fontSize: 12, letterSpacing: '0.25em', color: P.tintaSuave }}>{hora} {themes.hoursShort}</div>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '18px 0' }}>
                 <div aria-hidden style={{ width: 44, height: 1, background: P.oroClaro }} />
                 <Image alt="" aria-hidden height={189} src={themeAsset('xv-papillon', 'reloj-pinki-sf.avif')} style={{ width: 189, height: 189, objectFit: 'contain' }} width={189} />
@@ -216,7 +215,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
               <div style={{ marginTop: 12, fontFamily: CALIGRAFIA, fontSize: '2.5rem', color: P.oro }}>{reception.label ?? themes.reception}</div>
               <div style={{ marginTop: 4, fontFamily: SERIF, fontSize: '1.2rem', color: P.tinta }}>{reception.place ?? ''}</div>
               {reception.time === undefined ? null : (
-                <div style={{ marginTop: 4, fontFamily: SANS, fontSize: 11, letterSpacing: '0.2em', color: P.oro }}>{reception.time} HRS</div>
+                <div style={{ marginTop: 4, fontFamily: SANS, fontSize: 11, letterSpacing: '0.2em', color: P.oro }}>{reception.time} {themes.hoursShort}</div>
               )}
               {map === undefined ? null : (
                 <div style={{ marginTop: 16 }}>
@@ -224,6 +223,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
                     accent={P.rosaHonda}
                     border={P.oroClaro}
                     coords={map.coords ?? ''}
+                    directionsLabel={themes.viewLocation}
                     href={map.href}
                     label={map.label ?? ''}
                     labelColor={P.oro}
@@ -357,7 +357,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
                 </div>
               ))}
             </div>
-            <PaletaDeColores borde={P.oro} colores={dressCode.colors} />
+            <PaletaDeColores etiqueta={themes.suggestedColors} borde={P.oro} colores={dressCode.colors} />
           </Reveal>
         </Franja>
       )}

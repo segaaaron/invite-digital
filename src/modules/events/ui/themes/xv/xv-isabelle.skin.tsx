@@ -80,7 +80,7 @@ export const PIEL: PielXv = {
       name={datos.name}
       openLabel={datos.openLabel}
       serial={`${datos.eyebrow} 2026`.trim()}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
     />
   ),
   // Sin ornamentos: la maqueta no pone ninguno entre bloques ni en el formulario.
@@ -154,7 +154,7 @@ export const PIEL: PielXv = {
     border: `1.5px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
   },
-  rotulos: { itinerary: 'Itinerario' },
+  rotulos: { itinerary: 'itineraryTitle' },
   // Una columna con el dibujo dorado de cada hito, su momento y su hora, en un panel.
   itinerario: (filas) => (
     <div style={{ padding: '26px 22px', borderRadius: 20, background: P.vidrio, border: `1.5px solid ${P.bordeVidrio}`, boxShadow: P.sombra }}>

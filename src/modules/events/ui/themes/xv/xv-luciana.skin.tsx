@@ -71,7 +71,7 @@ export const PIEL: PielXv = {
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
     />
   ),
   // Los colores que «Bosque Encantado» reparte distinto de «Bajo el Mar».
@@ -130,7 +130,7 @@ export const PIEL: PielXv = {
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.
-  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
+  rotulos: { itinerary: 'scheduleTitle', gifts: 'giftsEmbrace' },
   // Su maqueta sí pinta «Detalles que Abrazan» con el sobre y el código.
   regalos: true,
   // Sin pieza entre la cita y los padres, y sin retrato en arco: su maqueta abre con la
@@ -189,7 +189,7 @@ export const PIEL: PielXv = {
    * en Great Vibes de 75. Heredando el compartido, esta invitación abría con un monograma
    * gigante y un año que su maqueta no escribe en ninguna parte.
    */
-  encabezado: ({ name }) => (
+  encabezado: ({ name, titular }) => (
     <div style={{ position: 'relative', marginTop: 10, textAlign: 'center', padding: '10px 0' }}>
       <div
         style={{
@@ -202,7 +202,7 @@ export const PIEL: PielXv = {
           textTransform: 'uppercase',
         }}
       >
-        Mis Quince Años
+        {titular}
       </div>
       <Image
         alt=""

@@ -7,6 +7,7 @@ import { tarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-invitaci
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { medallonDeCompartir, portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
 import { PALETTE } from '@/shared/design/palette'
+import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from '../invitation'
 
@@ -155,7 +156,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
                 </div>
               )}
               <div style={{ display: 'flex', width: 70, height: 1, background: 'rgba(255,255,255,0.8)', margin: '14px 0' }} />
-              <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 18 }}>{tarjeta.fecha ?? (event.locale === 'en' ? 'Tap to open it' : 'Toca para abrirla')}</div>
+              <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 18 }}>{tarjeta.fecha ?? getDictionary(event.locale).themes.shareImageTap}</div>
             </div>
           )}
         </div>

@@ -16,8 +16,6 @@ import { PALETA as P } from './xv-boho.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const NEWSREADER = 'var(--font-newsreader)'
 
-const ROTULOS = { misQuince: '· MIS QUINCE AÑOS ·', retrato: 'LA QUINCEAÑERA', faltan: 'FALTAN', cronograma: 'CRONOGRAMA' } as const
-
 /**
  * «Bohemia» — Renata, de `xv-premium.jsx` (`QuinceBoho`).
  *
@@ -27,6 +25,7 @@ const ROTULOS = { misQuince: '· MIS QUINCE AÑOS ·', retrato: 'LA QUINCEAÑERA
  * la mesa de regalos y la confirmación.
  */
 export function XvBohoView({ content, event, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-boho']
   const { hero, quote, schedule, reception, map, itinerary, gallery, music } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
 

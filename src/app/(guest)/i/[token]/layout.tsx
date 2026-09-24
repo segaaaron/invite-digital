@@ -4,6 +4,8 @@ import { themeFor } from '@/modules/events/ui/themes/registry'
 import { sans, themeFonts } from '@/shared/design/fonts'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
+import { TextosDeError } from './textos-de-error'
+import { getDictionary } from '@/shared/i18n/dictionaries'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
@@ -45,7 +47,9 @@ export default async function InvitationLayout({
       lang={invitation.value.event.locale}
       suppressHydrationWarning
     >
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <TextosDeError textos={getDictionary(invitation.value.event.locale).invitation.error}>{children}</TextosDeError>
+      </body>
     </html>
   )
 }

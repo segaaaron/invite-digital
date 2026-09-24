@@ -23,7 +23,7 @@ type Props = {
   /** La dirección del lugar, si no hay enlace ni coordenadas: «Hacienda Las Estrellas, Km 8». */
   readonly respaldo?: string | undefined
   /** «VER UBICACIÓN», en el idioma del evento. */
-  readonly directionsLabel?: string | undefined
+  readonly directionsLabel: string
 }
 
 /**
@@ -52,7 +52,7 @@ export function MapPreview({
   const [reducido] = useState(prefiereMenosMovimiento)
   const llegar = comoLlegar({ href, coords }, respaldo)
   // Sin coordenadas escritas, la esquina dice que se puede tocar.
-  const esquina = coords !== '' ? coords : llegar === null ? '' : `${directionsLabel ?? 'VER UBICACIÓN'} ↗`
+  const esquina = coords !== '' ? coords : llegar === null ? '' : `${directionsLabel} ↗`
 
   const plano = (
     <div
@@ -162,7 +162,7 @@ export function MapPreview({
   if (llegar === null) return plano
   return (
     <a
-      aria-label={`${directionsLabel ?? 'Ver ubicación'}${label === '' ? '' : `: ${label}`}`}
+      aria-label={`${directionsLabel}${label === '' ? '' : `: ${label}`}`}
       href={llegar}
       rel="noopener noreferrer"
       style={{ display: 'block', color: 'inherit', textDecoration: 'none' }}

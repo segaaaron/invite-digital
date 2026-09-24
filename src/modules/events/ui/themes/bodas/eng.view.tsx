@@ -15,20 +15,8 @@ import { PALETA as P } from './eng.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const SERIF = 'var(--font-newsreader)'
 
-/**
- * «Compromiso» — la pedida de mano, de `invites-3.jsx:206`.
- *
- * El titular va partido en dos tamaños —«Dijo» pequeño, «sí» enorme— y el retrato es
- * circular con un anillo dando vueltas alrededor. Es el único diseño de la colección cuyo
- * hito no es la boda sino el sí, así que la cuenta atrás apunta a la fiesta de compromiso.
- */
-/**
- * La línea que abre el cuerpo, bajo la portada. Es copia del diseño y no del contenido: no
- * la escribe el atelier, la trae el modelo.
- */
-const ROTULOS = { apertura: '· SHE SAID YES ·' } as const
-
 export function EngView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['eng']
   const { hero, hosts, quote, schedule, reception, map, music, gallery, closing } = content
   const propuesta = gallery?.[0]
   const collage = (gallery ?? []).slice(1, 5)

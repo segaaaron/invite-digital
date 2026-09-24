@@ -15,17 +15,6 @@ import { PALETA as P } from './xv-vogue.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const ITALIANA = 'var(--font-italiana)'
 
-/** El billete de la portada y los rótulos: la voz del diseño. */
-const BILLETE = { eyebrow: 'YOUR ACCESS', headline: 'VIP', label: 'VER INVITACIÓN' } as const
-const ROTULOS = {
-  edicion: 'ROSA PASTEL',
-  numero: 'N°15',
-  xv: 'XV',
-  personal: 'INVITACIÓN PERSONAL',
-  pases: (n: number) => `${n} ${n === 1 ? 'pase asignado' : 'pases asignados'}`,
-  cronograma: 'CRONOGRAMA',
-} as const
-
 /**
  * «Rosa Pastel» — Isabela, de `xv-premium.jsx` (`QuinceVogue`).
  *
@@ -35,6 +24,7 @@ const ROTULOS = {
  * casillas, el cronograma, el mosaico, el mapa, la canción y la confirmación.
  */
 export function XvVogueView({ content, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-vogue']
   const { hero, schedule, reception, map, itinerary, gallery, music } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
   const nombre = hero?.nameA ?? ''
@@ -59,11 +49,11 @@ export function XvVogueView({ content, themes, slots, guestInfo, audioSrc }: The
       <EnvelopeCover
         accent={P.rosa}
         bg={P.fondo}
-        eyebrow={BILLETE.eyebrow}
-        headline={BILLETE.headline}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
         headlineFont="var(--font-space-grotesk)"
         hint={themes.coverHint}
-        label={BILLETE.label}
+        label={ROTULOS.coverLabel}
         openLabel={themes.coverAria}
         textColor={P.blanco}
         variant="ticket"
@@ -122,7 +112,7 @@ export function XvVogueView({ content, themes, slots, guestInfo, audioSrc }: The
             ) : (
               <>
                 <p style={{ fontStyle: 'italic', fontSize: 22, marginTop: 8 }}>{guestInfo.label}</p>
-                <p style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{ROTULOS.pases(guestInfo.seats)}</p>
+                <p style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{(guestInfo.seats === 1 ? ROTULOS.pasesUno : ROTULOS.pases.replace('{n}', String(guestInfo.seats)))}</p>
               </>
             )}
           </div>

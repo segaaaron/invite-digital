@@ -14,10 +14,6 @@ import { PALETA as P } from './xv-deco.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const ITALIANA = 'var(--font-italiana)'
 
-/** La línea de la portada del telón: la voz del diseño. */
-const TELON = { eyebrow: 'ESTÁS INVITADO', headline: 'Algo\ninolvidable' } as const
-const ROTULOS = { xvAnos: 'XV AÑOS', cuenta: 'CUENTA REGRESIVA', cronograma: 'CRONOGRAMA', retrato: 'RETRATO GATSBY' } as const
-
 /**
  * «Art Déco» — Alessandra, de `xv-premium.jsx` (`QuinceDeco`).
  *
@@ -26,6 +22,7 @@ const ROTULOS = { xvAnos: 'XV AÑOS', cuenta: 'CUENTA REGRESIVA', cronograma: 'C
  * tira de fotomatón dorada, el mapa, la canción, la mesa de regalos y la confirmación.
  */
 export function XvDecoView({ content, event, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-deco']
   const { hero, schedule, reception, map, itinerary, gallery, music } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
@@ -58,8 +55,8 @@ export function XvDecoView({ content, event, themes, slots, audioSrc }: ThemePro
       <EnvelopeCover
         accent={P.oro}
         bg={P.fondo}
-        eyebrow={TELON.eyebrow}
-        headline={TELON.headline}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
         hint={themes.coverHint}
         label={themes.coverOpen}
         openLabel={themes.coverAria}

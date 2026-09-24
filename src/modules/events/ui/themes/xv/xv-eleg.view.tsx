@@ -35,25 +35,6 @@ const PASOS = ['location', 'toast', 'camera', 'disco', 'clock'] as const
 /** Las fotos del diseño, en el orden de la galería: atardecer, columnas y la tira de cuatro. */
 const FOTOS = ['atardecer.avif', 'columnas.avif', 'ramo.avif', 'lago.avif', 'familia.avif', 'columnas.avif'] as const
 
-const ROTULOS = {
-  mis: 'Mis',
-  xvAnos: 'XV Años',
-  retrato: 'JARDÍN',
-  dalePlay: 'DALE PLAY',
-  padrinos: 'Mis padrinos',
-  festejar: 'a festejar mis',
-  xvMayus: 'XV AÑOS',
-  faltan: 'FALTAN',
-  granDia: 'El Gran Día',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  deActividades: 'de actividades',
-  vestimenta: 'Código de vestimenta',
-  confirmar: 'Confirmar asistencia',
-  porFavor: 'Por favor confirma tu asistencia',
-  dias: ['LUN', 'MAR', 'MIE', 'JUE', 'VIE', 'SAB', 'DOM'],
-} as const
-
 function Icono({ nombre, tamano, color }: { readonly nombre: keyof typeof ICONOS; readonly tamano: number; readonly color: string }) {
   return (
     <svg aria-hidden fill="none" height={tamano} stroke={color} strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24" width={tamano}>
@@ -73,6 +54,7 @@ function Icono({ nombre, tamano, color }: { readonly nombre: keyof typeof ICONOS
  * la confirmación y la tira de fotos.
  */
 export function XvElegView({ content, event, themes, slots, audioSrc, respondida }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-eleg']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
   const nombre = hero?.nameA ?? ''
@@ -226,7 +208,7 @@ export function XvElegView({ content, event, themes, slots, audioSrc, respondida
                 <p style={{ fontFamily: CALIGRAFIA, fontSize: 26, color: P.oro }}>{ROTULOS.granDia}</p>
                 <p style={{ fontFamily: CALIGRAFIA, fontSize: 18, marginTop: -2 }}>{mes}</p>
                 <div style={{ marginTop: 14 }}>
-                  <Calendario fecha={cuando} />
+                  <Calendario dias={ROTULOS.dias.split(',')} fecha={cuando} />
                 </div>
               </div>
             </Reveal>
@@ -443,7 +425,7 @@ export function XvElegView({ content, event, themes, slots, audioSrc, respondida
 }
 
 /** El calendario del mes de la fiesta, de lunes a domingo, con el día dentro de un corazón. */
-function Calendario({ fecha }: { readonly fecha: Date }) {
+function Calendario({ fecha, dias: semana }: { readonly fecha: Date; readonly dias: readonly string[] }) {
   const anio = fecha.getFullYear()
   const mes = fecha.getMonth()
   const dias = new Date(anio, mes + 1, 0).getDate()
@@ -456,7 +438,7 @@ function Calendario({ fecha }: { readonly fecha: Date }) {
   return (
     <div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4, fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', color: P.oro, textAlign: 'center', marginBottom: 6 }}>
-        {ROTULOS.dias.map((dia) => (
+        {semana.map((dia) => (
           <span key={dia}>{dia}</span>
         ))}
       </div>

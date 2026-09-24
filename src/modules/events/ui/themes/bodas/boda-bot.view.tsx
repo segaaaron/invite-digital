@@ -25,28 +25,8 @@ const COLLAGE = ['boda-03-anillos.avif', 'boda-02-arreglo.avif', 'boda-04-pastel
 const SERIF = 'var(--font-cormorant)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 
-/**
- * «Botánica» — Marcia & Ricardo, de `wedding-variants.jsx:6`.
- *
- * Acuarelas florales de verdad —no SVG— en las esquinas y de fondo, caligrafía Great Vibes
- * para los nombres y la fecha, y el itinerario en columna con un icono por hito.
- *
- * La fecha se compone en piezas —día de la semana, mes, número grande, año— porque el
- * diseño la pinta como una hoja de calendario, no como una línea de texto. Sale de
- * `schedule`, así que una boda de verdad enseña la suya.
- */
-/**
- * Cómo llama **este** diseño a sus secciones: el libro de firmas es «déjanos un mensaje» y
- * los regalos llevan su línea propia. Es la voz del diseño, no una traducción.
- */
-const ROTULOS = {
-  guestbook: 'déjanos un mensaje',
-  /** Dos piezas: el titular en caligrafía y la línea pequeña de debajo. */
-  giftsTitle: 'Tu presencia es nuestro mejor regalo',
-  giftsNote: 'Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
-} as const
-
 export function BodaBotView({ content, event, dictionary, themes, slots, guestInfo, audioSrc, respondida = false }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-bot']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, notes, closing } =
     content
   // La fecha límite, en el idioma del evento: la maqueta la pinta bajo el rótulo.
@@ -593,7 +573,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
               />
 
               <div style={{ fontSize: 13, marginTop: 16, fontStyle: 'italic', opacity: 0.7 }}>{dressCode.detail ?? ''}</div>
-              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
+              <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
 
               <div aria-hidden style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 18 }}>
                 {CARTA_DE_COLOR.map((color) => (

@@ -27,27 +27,6 @@ const PETALOS = Array.from({ length: 32 }, (_, i) => ({
   retraso: -(i * 0.9),
 }))
 
-/** Cómo llama **este** diseño a sus secciones. Es su voz, no una traducción. */
-const ROTULOS = {
-  nuestraBoda: 'NUESTRA BODA',
-  faltan: '· FALTAN ·',
-  reservado: 'HEMOS RESERVADO PARA TI',
-  pases: 'PASES',
-  padresNovia: 'PADRES DE LA NOVIA',
-  padresNovio: 'PADRES DEL NOVIO',
-  padrinos: 'PADRINOS',
-  verUbicacion: 'VER UBICACIÓN',
-  itinerario: 'Itinerario',
-  nosotros: 'Nosotros',
-  vestimenta: 'Código de ',
-  vestimentaCursiva: 'vestimenta.',
-  regalos: 'Mesa de regalos',
-  confirma: 'Confirma tu ',
-  confirmaCursiva: 'asistencia.',
-  fotos: 'Comparte tus fotos',
-  firmas: 'Déjanos un mensaje',
-} as const
-
 /**
  * «Jardín de Serenidad» — Sofía & Daniel, de `wedding-variants-5.jsx`
  * (`WeddingEditorialFloralBlue`).
@@ -58,6 +37,7 @@ const ROTULOS = {
  * invitación caen treinta y dos pétalos blancos.
  */
 export function BodaSerenidadView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['boda-serenidad']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, gallery, music, closing } = content
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)

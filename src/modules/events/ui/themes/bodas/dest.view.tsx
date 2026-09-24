@@ -14,30 +14,8 @@ import { PALETA as P } from './dest.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const SERIF = 'var(--font-cormorant)'
 
-/**
- * «Destino» — Alejandra & Pablo en Tulum, de `invites-3.jsx:303`.
- *
- * El fondo es un degradado de mar a arena que ocupa la pieza entera, con el sol puesto a
- * un tercio de la altura y la línea del horizonte a otro. Todos los bloques van sobre
- * cristal esmerilado, que es lo único que deja leer texto sobre ese fondo.
- *
- * El itinerario son **cuatro días, no cuatro horas**: en una boda de destino el invitado
- * reserva vuelo, y lo que necesita saber es qué pasa cada jornada.
- */
-/**
- * Cómo llama **este** diseño a sus secciones: una boda de destino dura cuatro días, y su
- * itinerario lo dice. No es una traducción —para eso está el diccionario—, es la voz del
- * diseño.
- */
-const ROTULOS = {
-  itinerary: '· ITINERARIO · 4 DÍAS ·',
-  apertura: '· DESTINATION · WEDDING ·',
-  /** La portada de este diseño es un billete: «tu acceso» y la clase, como un embarque. */
-  coverEyebrow: 'YOUR ACCESS',
-  coverHeadline: 'VIP',
-} as const
-
 export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
+  const ROTULOS = themes.designs['dest']
   const { hero, quote, schedule, reception, itinerary, dressCode, gallery, closing } = content
   const pareja = gallery?.[0]
   const mosaico = (gallery ?? []).slice(1, 6)
@@ -265,7 +243,7 @@ export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
         {quote === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 24, padding: 18, background: P.velo, borderRadius: 10 }}>
-              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena }}>SAVE THE FLIGHT</div>
+              <div style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.3em', color: P.arena }}>{ROTULOS.saveTheFlight}</div>
               <p style={{ marginTop: 10, fontSize: 14, fontStyle: 'italic', lineHeight: 1.5 }}>{quote.text}</p>
             </div>
           </Reveal>
@@ -278,7 +256,7 @@ export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
                 {dressCode.title ?? themes.dressCode}
               </div>
               <div style={{ fontSize: 14, fontStyle: 'italic', opacity: 0.9 }}>{dressCode.detail ?? ''}</div>
-              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
+              <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

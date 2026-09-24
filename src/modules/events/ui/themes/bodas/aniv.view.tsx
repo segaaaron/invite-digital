@@ -17,34 +17,8 @@ import { PALETA as P } from './aniv.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const SERIF = 'var(--font-cormorant)'
 
-/**
- * «Bodas de Oro» — el aniversario, de `invites-3.jsx:97`.
- *
- * El sol dorado de rayos girando preside la pieza, y la tira de cuatro fotos con sus años
- * —1976, 1986, 2006, 2026— es lo que cuenta la historia sin una línea de texto.
- *
- * Los años que se celebran salen del contenido, no del dibujo: no toda boda de oro son
- * cincuenta, y hay quien celebra las de plata con este mismo diseño.
- */
-/**
- * Cómo llama **este** diseño a sus secciones.
- *
- * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
- * viven con él. Lo que no esté aquí cae al diccionario.
- */
-const ROTULOS = {
-  /**
-   * La portada es un **telón**, no un sobre: la maqueta abre estas bodas de oro con la
-   * cortina y su titular, y el sobre es de las otras cuatro.
-   */
-  cover: '50 AÑOS DE AMOR',
-  coverEyebrow: 'ESTÁS INVITADO',
-  coverHeadline: 'Algo\ninolvidable',
-  gifts: 'NUESTRO MEJOR REGALO',
-  guestbook: 'DEDÍCALES UNAS PALABRAS',
-} as const
-
 export function AnivView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['aniv']
   const { hero, hosts, quote, schedule, reception, map, music, gallery, notes, closing } = content
   const original = gallery?.[0]
   const tira = (gallery ?? []).slice(1, 5)

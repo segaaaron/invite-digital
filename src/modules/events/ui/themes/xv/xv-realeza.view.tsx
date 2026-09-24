@@ -16,19 +16,6 @@ import { PALETA as P } from './xv-realeza.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 
-const TELON = { eyebrow: 'ESTÁS INVITADO', headline: 'Algo\ninolvidable' } as const
-const ROTULOS = {
-  mis: 'Mis',
-  xvAnos: 'XV Años',
-  lema: '· REALEZA CRISTAL ·',
-  personal: 'INVITACIÓN PERSONAL',
-  pases: (n: number) => `${n} ${n === 1 ? 'pase asignado' : 'pases asignados'}`,
-  faltan: 'FALTAN',
-  dalePlay: 'DALE PLAY',
-  cronograma: 'CRONOGRAMA',
-  vestimenta: 'CÓDIGO DE VESTIMENTA',
-} as const
-
 /**
  * «Realeza Cristal» — Camila, de `xv-realeza.jsx` (`QuinceRealezaCristal`).
  *
@@ -39,6 +26,7 @@ const ROTULOS = {
  * mesa de regalos y la confirmación.
  */
 export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-realeza']
   const { hero, quote, schedule, reception, map, itinerary, music, dressCode, gallery, closing } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
   const nombre = hero?.nameA ?? ''
@@ -63,8 +51,8 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
       <EnvelopeCover
         accent={P.cristal}
         bg={P.fondo}
-        eyebrow={TELON.eyebrow}
-        headline={TELON.headline}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
         hint={themes.coverHint}
         label={themes.coverOpen}
         openLabel={themes.coverAria}
@@ -93,7 +81,7 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
 
         <Reveal>
           <div style={{ margin: '14px -10px 0' }}>
-            <Zapatilla />
+            <Zapatilla firma={ROTULOS.firma} />
           </div>
         </Reveal>
 
@@ -130,7 +118,7 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
             ) : (
               <>
                 <p style={{ fontStyle: 'italic', fontSize: 22, marginTop: 8 }}>{guestInfo.label}</p>
-                <p style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{ROTULOS.pases(guestInfo.seats)}</p>
+                <p style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>{(guestInfo.seats === 1 ? ROTULOS.pasesUno : ROTULOS.pases.replace('{n}', String(guestInfo.seats)))}</p>
               </>
             )}
           </div>
@@ -262,7 +250,7 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
 }
 
 /** La zapatilla de cristal que flota con sus chispas (`HeroCristalSlipper` de la maqueta). */
-function Zapatilla() {
+function Zapatilla({ firma }: { readonly firma: string }) {
   return (
     <svg aria-hidden viewBox="0 0 280 180" width="100%">
       <defs>
@@ -295,7 +283,7 @@ function Zapatilla() {
         </text>
       ))}
       <text fill="#3a6fa0" fontFamily="var(--font-jetbrains-mono)" fontSize="9" letterSpacing="5" textAnchor="middle" x="140" y="165">
-        REALEZA · CRISTAL
+        {firma}
       </text>
     </svg>
   )

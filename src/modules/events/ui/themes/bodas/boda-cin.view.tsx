@@ -484,7 +484,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                   ))}
                 </div>
                 <div style={{ marginTop: 14, fontSize: 13, fontStyle: 'italic', color: P.crema, lineHeight: 1.6, textAlign: 'center' }}>{dressCode.detail ?? ''}</div>
-                <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
+                <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
               </div>
             </Reveal>
           )}

@@ -40,7 +40,7 @@ export const PIEL_XV: PielXv = {
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.
-  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
+  rotulos: { itinerary: 'scheduleTitle', gifts: 'giftsEmbrace' },
   // Su maqueta sí pinta «Detalles que Abrazan» con el sobre y el código.
   regalos: true,
   fondoBase: `linear-gradient(160deg, ${P.cielo} 0%, ${P.lavanda} 45%, ${P.rosa} 100%)`,
@@ -66,7 +66,7 @@ export const PIEL_XV: PielXv = {
       line2={datos.line2}
       name={datos.name}
       openLabel={datos.openLabel}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
     />
   ),
   // El código de la mesa de regalos, con el aro lila que le pone la maqueta.

@@ -12,8 +12,6 @@ import { FileteDeEsencia, IconoDeEsencia, RamitaDeOlivo, type ClaveDeIcono } fro
 import { CARTA_DE_COLOR, PALETA as P } from './esencia.palette'
 
 
-/** El rótulo de la franja del pie, delante del nombre de la marca. */
-const ROTULO_DEL_PIE = 'INVITACIÓN DIGITAL'
 const SANS = 'var(--font-outfit)'
 const SERIF = 'var(--font-cormorant)'
 
@@ -34,24 +32,6 @@ const ALTAS = new Set([0, 3, 4])
 /** El icono que acompaña a cada hora del itinerario, por su orden. */
 const ICONOS: readonly ClaveDeIcono[] = ['church', 'glasses', 'glasses', 'plate', 'note', 'bouquet', 'star']
 
-/** Cómo llama **este** diseño a sus secciones. Es su voz, no una traducción. */
-const ROTULOS = {
-  mensaje: 'Un mensaje para ti',
-  ceremonia: 'Ceremonia',
-  recepcion: 'Recepción',
-  itinerario: 'Itinerario',
-  faltan: 'Faltan',
-  vestimenta: 'Código de vestimenta',
-  galeria: 'Nuestra historia',
-  confirmacion: 'Confirmación',
-  regalos: 'Mesa de regalos',
-  musica: 'Música',
-  verUbicacion: 'Ver ubicación ↗',
-  preguntaRsvp: '¿Nos acompañas?',
-  confirmaAntes: 'Confirma tu asistencia',
-  firmas: 'Déjanos un mensaje',
-} as const
-
 /**
  * «Esencia» — Valentina & Mateo, de `esencia.jsx` (`EsenciaWedding`).
  *
@@ -63,6 +43,7 @@ const ROTULOS = {
  * Garamond para los titulares y las horas.
  */
 export function EsenciaView({ content, event, themes, slots, audioSrc, respondida }: ThemeProps) {
+  const ROTULOS = themes.designs['esencia']
   const { hero, quote, schedule, ceremony, reception, map, itinerary, dressCode, gallery, music, closing } = content
   // «#ValentinaYMateo2027»: los dos nombres y el año, sin espacios.
   const anioDeLaBoda = schedule === undefined ? '' : schedule.startsAt.slice(0, 4)
@@ -167,14 +148,14 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
         {/* ── Ceremonia y recepción: el mismo bloque con su icono ── */}
         {ceremony === undefined ? null : (
           <Bloque>
-            <Lugar icono="church" llegar={llegarA(ceremony)} lugar={ceremony} rotulo={ROTULOS.ceremonia} />
+            <Lugar icono="church" verUbicacion={ROTULOS.verUbicacion} llegar={llegarA(ceremony)} lugar={ceremony} rotulo={ROTULOS.ceremonia} />
           </Bloque>
         )}
 
         {reception === undefined ? null : (
           <Bloque>
             <RamitaDeOlivo style={{ bottom: 30, right: -20, transform: 'rotate(30deg)' }} />
-            <Lugar icono="glasses" llegar={llegarA(reception)} lugar={reception} rotulo={ROTULOS.recepcion} />
+            <Lugar icono="glasses" verUbicacion={ROTULOS.verUbicacion} llegar={llegarA(reception)} lugar={reception} rotulo={ROTULOS.recepcion} />
           </Bloque>
         )}
 
@@ -394,7 +375,7 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
 
       {/* La franja del pie: en la maqueta, «Invitación digital — tu marca». */}
       <div style={{ background: P.calido, borderTop: `1px solid ${P.filete}`, padding: 24, textAlign: 'center' }}>
-        <p style={{ fontSize: 8, letterSpacing: '0.18em', color: P.tintaSuave }}>{`${ROTULO_DEL_PIE} — ${BRAND.siteName.toUpperCase()}`}</p>
+        <p style={{ fontSize: 8, letterSpacing: '0.18em', color: P.tintaSuave }}>{`${ROTULOS.pie} — ${BRAND.siteName.toUpperCase()}`}</p>
       </div>
     </article>
   )
@@ -434,12 +415,14 @@ function Rotulo({ children }: { readonly children: React.ReactNode }) {
 /** Ceremonia y recepción: el mismo bloque con su icono, su lugar, su hora y su botón. */
 function Lugar({
   rotulo,
+  verUbicacion,
   icono,
   lugar,
   llegar,
 }: {
   readonly rotulo: string
   readonly icono: ClaveDeIcono
+  readonly verUbicacion: string
   readonly lugar: { readonly label?: string; readonly place?: string; readonly address?: string; readonly time?: string }
   readonly llegar: string | null
 }) {
@@ -482,7 +465,7 @@ function Lugar({
           }}
           target="_blank"
         >
-          {ROTULOS.verUbicacion}
+          {verUbicacion}
         </a>
       )}
     </Reveal>

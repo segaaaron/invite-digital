@@ -17,7 +17,7 @@ export const PIEL_NATALIA: PielXv = {
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.
-  rotulos: { itinerary: 'Cronograma', gifts: 'Detalles que Abrazan' },
+  rotulos: { itinerary: 'scheduleTitle', gifts: 'giftsEmbrace' },
   // Su maqueta sí pinta «Detalles que Abrazan» con el sobre y el código.
   regalos: true,
   fondoBase: '#120c06',
@@ -44,7 +44,7 @@ export const PIEL_NATALIA: PielXv = {
       name={datos.name}
       noteAsset={themeAsset('xv-natalia', 'nota-sol-dorado-sf.avif')}
       openLabel={datos.openLabel}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
     />
   ),
   // Los colores que «Encanto Marino» reparte distinto de «Bajo el Mar», medidos contra su

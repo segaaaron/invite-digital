@@ -378,9 +378,60 @@ export interface ThemeDictionary {
   rsvpBefore: string
   /** «Mis XV Años»: el rótulo del cierre de los quince. */
   myFifteen: string
+  /** «AÑOS», bajo el «XV» de los quince. */
+  years: string
+  /** «HRS», tras una hora. */
+  hoursShort: string
+  /** Los títulos con voz propia de los XV: «Itinerario», «Cronograma», «Detalles que Abrazan». */
+  itineraryTitle: string
+  scheduleTitle: string
+  giftsEmbrace: string
+  /** «Mis Quince Años», el titular de «Encanto Musical». */
+  myFifteenYears: string
+  /** El nombre accesible de la paleta del código de vestimenta. */
+  suggestedColors: string
+  /** El botón del escaparate que lleva a pedir ese modelo. */
+  chooseDesign: string
+  /** La línea de la imagen para compartir cuando la invitación no tiene fecha. */
+  shareImageTap: string
+  designs: DesignDictionary
+}
+
+/**
+ * Lo que cada diseño escribe con su propia voz —«NUESTRA BODA», «Detalles que Abrazan»,
+ * «TU LUGAR ESTÁ GUARDADO»—, por la clave de su vista. `{n}` se sustituye con el número.
+ */
+export interface DesignDictionary {
+  'cumple-beer': Record<'celebracion' | 'saludo' | 'confirma' | 'graciasVieneRotulo' | 'graciasViene' | 'graciasVieneTexto' | 'graciasNoRotulo' | 'graciasNo' | 'graciasNoTexto' | 'graciasVieneCierre' | 'graciasDondeRotulo' | 'graciasDondeAyuda' | 'graciasComoLlegar' | 'graciasNoCierre' | 'guestbook', string>
+  'boda': Record<'guestbook', string>
+  'boda-bot': Record<'guestbook' | 'giftsTitle' | 'giftsNote', string>
+  'aniv': Record<'cover' | 'coverEyebrow' | 'coverHeadline' | 'gifts' | 'guestbook', string>
+  'boda-glamour': Record<'nuestraBoda' | 'faltan' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'historia' | 'soloAdultos' | 'confirma' | 'firmas' | 'regalos', string>
+  'eng': Record<'apertura', string>
+  'dest': Record<'itinerary' | 'apertura' | 'coverEyebrow' | 'coverHeadline' | 'saveTheFlight', string>
+  'boda-boho': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
+  'civil': Record<'gifts' | 'seal' | 'cover', string>
+  'boda-navy': Record<'nuestraBoda' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
+  'boda-royal': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'fotos' | 'firmas', string>
+  'boda-serenidad': Record<'nuestraBoda' | 'faltan' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'fotos' | 'firmas', string>
+  'esencia': Record<'pie' | 'mensaje' | 'ceremonia' | 'recepcion' | 'itinerario' | 'faltan' | 'vestimenta' | 'galeria' | 'confirmacion' | 'regalos' | 'musica' | 'verUbicacion' | 'preguntaRsvp' | 'confirmaAntes' | 'firmas', string>
+  'boda-sello': Record<'faltan' | 'historia' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'vestimenta' | 'regalos' | 'confirma' | 'mensaje' | 'fotos', string>
+  'boda-perla': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
+  'xv-trop': Record<'coverEyebrow' | 'coverHeadline' | 'misXv' | 'retrato' | 'faltan' | 'cronograma', string>
+  'xv-eleg': Record<'mis' | 'xvAnos' | 'retrato' | 'dalePlay' | 'padrinos' | 'festejar' | 'xvMayus' | 'faltan' | 'granDia' | 'verUbicacion' | 'itinerario' | 'deActividades' | 'vestimenta' | 'confirmar' | 'porFavor' | 'dias', string>
+  'xv-vogue': Record<'coverEyebrow' | 'coverHeadline' | 'coverLabel' | 'edicion' | 'numero' | 'xv' | 'personal' | 'pases' | 'pasesUno' | 'cronograma', string>
+  'xv-y2k': Record<'coverEyebrow' | 'coverHeadline' | 'coverLabel' | 'galaxia' | 'sistema' | 'xv' | 'misXv' | 'retrato' | 'fecha' | 'hora' | 'lugar' | 'vestimenta' | 'vibras', string>
+  'xv-boho': Record<'misQuince' | 'retrato' | 'faltan' | 'cronograma', string>
+  'xv-min': Record<'coverEyebrow' | 'quince' | 'numero' | 'titular' | 'retrato' | 'eventos' | 'lugar' | 'vestimenta' | 'rsvp' | 'confirma' | 'antes' | 'del' | 'mesa', string>
+  'xv-papillon': Record<'xvAnos' | 'padrinos' | 'misXv' | 'itinerario' | 'confirmar', string>
+  'xv-deco': Record<'coverEyebrow' | 'coverHeadline' | 'xvAnos' | 'cuenta' | 'cronograma' | 'retrato', string>
+  'xv-princ': Record<'coverEyebrow' | 'coverHeadline' | 'coverLabel' | 'lema' | 'cumple' | 'xv' | 'anios' | 'retrato' | 'faltan' | 'padrinos' | 'vestimenta', string>
+  'xv-realeza': Record<'coverEyebrow' | 'coverHeadline' | 'mis' | 'xvAnos' | 'lema' | 'firma' | 'personal' | 'pases' | 'pasesUno' | 'faltan' | 'dalePlay' | 'cronograma' | 'vestimenta', string>
 }
 
 export interface InvitationDictionary {
+  /** El límite de error de la invitación: no se pudo abrir. */
+  error: { title: string; body: string; cta: string }
   title: string
   /** El título del bloque cuando ya respondió que viene, y cuando dijo que no. */
   titleConfirmed: string

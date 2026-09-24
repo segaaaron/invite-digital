@@ -16,18 +16,6 @@ const MONO = 'var(--font-jetbrains-mono)'
 const SERIF = 'var(--font-cormorant)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
 
-const TELON = { eyebrow: 'ESTÁS INVITADO', headline: 'Algo\ninolvidable', label: 'MIS QUINCE AÑOS' } as const
-const ROTULOS = {
-  lema: '· PRINCESA · POR UN DÍA ·',
-  cumple: 'cumple',
-  xv: 'XV',
-  anios: 'años',
-  retrato: 'LA QUINCEAÑERA',
-  faltan: 'FALTAN',
-  padrinos: 'Padrinos del Vals',
-  vestimenta: 'VESTIMENTA',
-} as const
-
 /**
  * «Princesa Real» — Valentina, de `xv-variants.jsx` (`QuincePrincess`).
  *
@@ -38,6 +26,7 @@ const ROTULOS = {
  * vestimenta, la mesa de regalos y la confirmación.
  */
 export function XvPrincView({ content, event, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-princ']
   const { hero, quote, schedule, ceremony, reception, map, gallery, notes, music, dressCode } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
 
@@ -67,10 +56,10 @@ export function XvPrincView({ content, event, themes, slots, audioSrc }: ThemePr
       <EnvelopeCover
         accent={P.frambuesa}
         bg={P.fondoArriba}
-        eyebrow={TELON.eyebrow}
-        headline={TELON.headline}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
         hint={themes.coverHint}
-        label={TELON.label}
+        label={ROTULOS.coverLabel}
         openLabel={themes.coverAria}
         textColor={P.ciruela}
         variant="curtain"

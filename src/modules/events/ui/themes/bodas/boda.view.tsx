@@ -19,26 +19,6 @@ const MONO = 'var(--font-jetbrains-mono)'
 const DISPLAY = 'var(--font-cormorant)'
 
 /**
- * «Étoile» — la boda oscura elegante, portada de `invites-1.jsx:6`.
- *
- * Todo el color sale de `boda.palette.ts` y todo el texto de `content`; lo que la maqueta
- * traía escrito dentro es ahora el `defaultContent` del tema, así que el escaparate se ve
- * idéntico y una boda real se ve con lo suyo.
- *
- * Las tres piezas de la maqueta que solo hacían `useState` —su RSVP, su mesa de regalos y
- * su libro de firmas— están sustituidas por las ranuras, que son las nuestras y sí
- * guardan.
- */
-/**
- * Cómo llama **este** diseño a sus secciones.
- *
- * No son traducciones —para eso está el diccionario—, son la voz del diseño, y por eso
- * viven con él. Lo que no esté aquí cae al diccionario.
- */
-const ROTULOS = { guestbook: 'LIBRO DE FIRMAS DIGITAL' } as const
-
-
-/**
  * El año en números romanos, que es como este diseño lo pinta en la barra de arriba.
  *
  * Se calcula del año del evento y no se escribe a mano: la maqueta tiene «MMXXVI» clavado,
@@ -72,6 +52,7 @@ function aRomano(anio: number): string {
   return salida
 }
 export function BodaView({ content, event, dictionary, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['boda']
   const romano = aRomano(new Date(`${event.eventDate}T00:00:00`).getFullYear())
   const { hero, schedule, ceremony, reception, map, itinerary, music, dressCode, gallery, closing , notes } = content
 
@@ -385,7 +366,7 @@ export function BodaView({ content, event, dictionary, themes, slots, audioSrc }
                 {dressCode.title ?? ''}
               </div>
               <div style={{ fontSize: 11, marginTop: 6, opacity: 0.6 }}>{dressCode.note ?? ''}</div>
-              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
+              <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}

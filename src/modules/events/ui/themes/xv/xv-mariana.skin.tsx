@@ -87,7 +87,7 @@ export const PIEL: PielXv = {
       name={datos.name}
       nameColor={P.blanco}
       openLabel={datos.openLabel}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
       titleGradient="linear-gradient(180deg, #FFFFFF 0%, #D8DDE3 60%)"
     />
   ),
@@ -184,7 +184,7 @@ export const PIEL: PielXv = {
     />
   ),
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
-  rotulos: { itinerary: 'Itinerario' },
+  rotulos: { itinerary: 'itineraryTitle' },
   corona: themeAsset('xv-mariana', 'micro-notas-opt.avif'),
   reloj: themeAsset('xv-mariana', 'reloj-plata-opt.avif'),
   castillo: themeAsset('xv-mariana', 'castillo-guindo-opt.avif'),

@@ -14,9 +14,6 @@ import { PALETA as P } from './xv-trop.palette'
 const MONO = 'var(--font-jetbrains-mono)'
 const ITALIANA = 'var(--font-italiana)'
 
-const BILLETE = { eyebrow: 'YOUR ACCESS', headline: 'VIP' } as const
-const ROTULOS = { misXv: 'MIS XV', retrato: 'FRENTE AL MAR', faltan: 'FALTAN', cronograma: 'CRONOGRAMA' } as const
-
 /**
  * «Sunset» — Ximena, de `xv-premium.jsx` (`QuinceTropical`).
  *
@@ -26,6 +23,7 @@ const ROTULOS = { misXv: 'MIS XV', retrato: 'FRENTE AL MAR', faltan: 'FALTAN', c
  * confirmación.
  */
 export function XvTropView({ content, themes, slots, audioSrc }: ThemeProps) {
+  const ROTULOS = themes.designs['xv-trop']
   const { hero, schedule, reception, map, itinerary, gallery, music } = content
   const cancion = audioSrc ?? (music?.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)
   const nombre = hero?.nameA ?? ''
@@ -48,8 +46,8 @@ export function XvTropView({ content, themes, slots, audioSrc }: ThemeProps) {
       <EnvelopeCover
         accent={P.marNoche}
         bg={P.coral}
-        eyebrow={BILLETE.eyebrow}
-        headline={BILLETE.headline}
+        eyebrow={ROTULOS.coverEyebrow}
+        headline={ROTULOS.coverHeadline}
         headlineFont="var(--font-space-grotesk)"
         hint={themes.coverHint}
         label={themes.coverOpen}

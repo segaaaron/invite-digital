@@ -42,7 +42,7 @@ export const PIEL: PielXv = {
       name={datos.name}
       openLabel={datos.openLabel}
       textColor={P.tinta}
-      title={`${datos.title} AÑOS`}
+      title={`${datos.title} ${datos.anios}`}
     />
   ),
   // Los colores que «Noche Estrellada» reparte distinto de «Bajo el Mar». Su rótulo de
@@ -129,7 +129,7 @@ export const PIEL: PielXv = {
     boxShadow: P.sombra,
   },
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
-  rotulos: { itinerary: 'Itinerario' },
+  rotulos: { itinerary: 'itineraryTitle' },
   // La pieza entre la cita y los padres es el ramo, y la luna cierra la invitación: en la
   // maqueta van así, y estaban cruzadas.
   corona: themeAsset('xv-fantasia', 'flores-sin-fondo.avif'),

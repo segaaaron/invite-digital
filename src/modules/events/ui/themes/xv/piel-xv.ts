@@ -1,5 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react'
 import type { ItineraryRow } from '../../../domain/invitation-content'
+import type { ThemeDictionary } from '@/shared/i18n/dictionary'
+
+/** La clave de un rótulo de texto del diccionario de temas: la voz del diseño se elige, no se escribe. */
+export type RotuloDelDiccionario = { [K in keyof ThemeDictionary]: ThemeDictionary[K] extends string ? K : never }[keyof ThemeDictionary]
 
 /**
  * Lo que distingue a un diseño de XV de otro.
@@ -55,6 +59,8 @@ export type PielXv = {
     readonly eyebrow: string
     readonly serial: string
     readonly name: string
+    /** «Mis Quince Años», del diccionario. */
+    readonly titular: string
   }) => ReactNode
 
   /**
@@ -132,6 +138,8 @@ export type PielXv = {
     name: string
     title: string
     openLabel: string
+    /** «AÑOS», del diccionario: va tras `title`. */
+    anios: string
     /** «Te invito» y «a celebrar mi fiesta». */
     line1: string
     line2: string
@@ -515,9 +523,9 @@ export type PielXv = {
    * correcto para un diseño que no tenga voz propia.
    */
   readonly rotulos?: {
-    readonly itinerary?: string
-    readonly gifts?: string
-    readonly guestbook?: string
-    readonly dressCode?: string
+    readonly itinerary?: RotuloDelDiccionario
+    readonly gifts?: RotuloDelDiccionario
+    readonly guestbook?: RotuloDelDiccionario
+    readonly dressCode?: RotuloDelDiccionario
   }
 }

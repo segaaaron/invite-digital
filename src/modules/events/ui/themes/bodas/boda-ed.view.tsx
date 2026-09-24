@@ -587,7 +587,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 >
                   {dressCode.detail ?? ''}
                 </div>
-                <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
+                <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
               </div>
             </Reveal>
           )}

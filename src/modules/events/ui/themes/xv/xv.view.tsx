@@ -160,6 +160,7 @@ export function XvSharedView({
         eyebrow: hero?.eyebrow ?? '',
         name: hero?.nameA ?? '',
         title: hero?.monogram ?? 'XV',
+        anios: themes.years,
         foto: fotoDePortada,
         openLabel: themes.coverAria,
         line1: themes.coverInviteLine1,
@@ -290,6 +291,7 @@ export function XvSharedView({
               eyebrow: hero?.eyebrow ?? '',
               name: hero?.nameA ?? '',
               serial: hero?.serial ?? '',
+              titular: themes.myFifteenYears,
             })}
           </Reveal>
         )}
@@ -383,7 +385,7 @@ export function XvSharedView({
                 letterSpacing: '9px',
               }}
             >
-              AÑOS
+              {themes.years}
             </div>
             <h1
               style={{
@@ -947,7 +949,7 @@ export function XvSharedView({
                 marginBottom: 10,
               }}
             >
-              {piel.rotulos?.itinerary ?? themes.itinerary}
+              {themes[piel.rotulos?.itinerary ?? 'itinerary']}
             </div>
             {piel.itinerario?.(itinerary) ?? (
             <div
@@ -1130,7 +1132,7 @@ export function XvSharedView({
               }}
             >
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: UVA_HONDA }}>
-                {dressCode.title ?? piel.rotulos?.dressCode ?? themes.dressCode}
+                {dressCode.title ?? themes[piel.rotulos?.dressCode ?? 'dressCode']}
               </div>
               <div
                 style={{
@@ -1163,7 +1165,7 @@ export function XvSharedView({
               <div style={{ fontSize: 12, opacity: 0.85, marginTop: 10, color: Z.vestimentaDetalle ?? UVA_HONDA, fontWeight: 600 }}>
                 {dressCode.detail ?? ''}
               </div>
-              <PaletaDeColores borde="currentColor" colores={dressCode.colors} />
+              <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
             </div>
           </Reveal>
         )}
@@ -1197,7 +1199,7 @@ export function XvSharedView({
             }}
           >
             <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: TITULO, textShadow: Z.sombraTexto }}>
-              {piel.rotulos?.gifts ?? themes.gifts}
+              {themes[piel.rotulos?.gifts ?? 'gifts']}
             </div>
 
             {introDeRegalos === undefined ? null : (
@@ -1339,7 +1341,7 @@ export function XvSharedView({
           <Reveal>
             <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
-                {piel.rotulos?.guestbook ?? themes.guestbook}
+                {themes[piel.rotulos?.guestbook ?? 'guestbook']}
               </div>
               {slots.guestbook}
             </div>
