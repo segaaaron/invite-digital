@@ -151,6 +151,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'boda',
     listo: true,
+    // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
+    publicar: false,
     categorySlug: 'boda',
     es: 'Étoile - Nocturna',
     en: 'Étoile - Nocturne',
@@ -160,6 +162,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'civil',
     listo: true,
+    // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
+    publicar: false,
     categorySlug: 'boda-civil',
     es: 'Civil - Minimalista',
     en: 'Civil - Minimal',
@@ -169,6 +173,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'aniv',
     listo: true,
+    // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
+    publicar: false,
     categorySlug: 'boda',
     es: 'Bodas de Oro - Aniversario',
     en: 'Golden Anniversary - Milestone',
@@ -178,6 +184,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'eng',
     listo: true,
+    // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
+    publicar: false,
     categorySlug: 'boda',
     es: 'Compromiso - Pedida',
     en: 'Engagement - Proposal',
@@ -187,6 +195,8 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
   {
     key: 'dest',
     listo: true,
+    // V3 lo dejó fuera del catálogo: retirado del escaparate (0065).
+    publicar: false,
     categorySlug: 'boda',
     es: 'Destino - Playa',
     en: 'Destination - Beach',

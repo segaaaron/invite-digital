@@ -9,11 +9,6 @@ const A_LA_VENTA = [
   'boda-bot',
   'boda-ed',
   'boda-cin',
-  'boda',
-  'civil',
-  'aniv',
-  'eng',
-  'dest',
   'xv',
   'xv-natalia',
   'xv-valentina',
@@ -43,8 +38,8 @@ const A_LA_VENTA = [
   'xv-papillon',
 ] as const
 
-/** Lo portado que todavía no se vende: el cumpleaños, hasta que el usuario lo publique. */
-const SIN_VENDER = ['cumple-beer'] as const
+/** Lo portado que no se vende: el cumpleaños, hasta que el usuario lo publique, y los cinco que V3 retiró. */
+const SIN_VENDER = ['cumple-beer', 'boda', 'civil', 'aniv', 'eng', 'dest'] as const
 
 describe('el catálogo de diseños', () => {
   it('lista lo que se vende más lo portado sin vender', () => {

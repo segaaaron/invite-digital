@@ -103,14 +103,13 @@ function desbordanLaColumna(tope: number): string[] {
 }
 
 test.describe('el escaparate de modelos', () => {
-  test('lista los treinta y cuatro diseños portados de la colección', () => {
+  test('lista los treinta y cinco diseños portados de la colección', () => {
     // Si algún día se publica uno sin portar, esta suite recorre uno más y falla al
     // abrirlo. Es lo que impide que el número se desajuste en silencio.
     //
-    // Son treinta y cuatro —dieciséis bodas, diecisiete XV y el cumpleaños— y la web vende
-    // treinta y tres: «cumple-beer» está portado y todavía no se vende, así que se abre por
-    // su dirección —el panel enlaza a ella— y no sale en el catálogo. Lo comprueba la
-    // última prueba de este archivo.
+    // Son treinta y cinco —dieciséis bodas, dieciocho XV y el cumpleaños— y la web vende
+    // veintinueve: «cumple-beer» todavía no y cinco bodas que V3 retiró. Se abren por su
+    // dirección —las bodas que ya los usan siguen funcionando— y no salen en el catálogo.
     expect(CLAVES).toHaveLength(35)
   })
 
