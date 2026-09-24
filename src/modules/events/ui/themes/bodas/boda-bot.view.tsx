@@ -84,7 +84,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
   const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.papel, acento: P.salvia, display: SERIF, tinta: P.tinta }))
 
   return (
-    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}>
       {/* Su portada es la de la maqueta: el sobre lacrado sobre las rosas, con los nombres
           de la pareja escritos encima. Antes salía el sobre **dibujado** del kit. */}
       <BotanicaCover

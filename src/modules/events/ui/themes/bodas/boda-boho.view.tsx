@@ -111,7 +111,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
         color: P.cafe,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

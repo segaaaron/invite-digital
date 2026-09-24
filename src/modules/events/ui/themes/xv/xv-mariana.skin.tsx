@@ -27,7 +27,7 @@ export const PIEL: PielXv = {
         style={{
           position: 'relative',
           width: '100%',
-          height: '42vh',
+          height: 'calc(var(--alto, 100dvh) * 0.42)',
           minHeight: 280,
           overflow: 'hidden',
           clipPath: 'polygon(0 0, 100% 0, 100% 94%, 75% 100%, 50% 94%, 25% 100%, 0 94%)',

@@ -106,7 +106,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
   const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.fondo, acento: P.oro, acentoHondo: P.oroPalido, display: DISPLAY, tinta: P.papel }))
 
   return (
-    <article style={{ ...RANURAS, position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}>
       <OvalFrameCover
         accent={P.oro}
         bg={P.fondo}

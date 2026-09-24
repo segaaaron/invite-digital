@@ -147,7 +147,7 @@ export function XvSharedView({
         background: piel.fondoBase,
         color: P.tinta,
         fontFamily: SANS,
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         // `clip`, no `hidden`. Los dos recortan lo que sangra —las esquinas florales, los
         // ramos de fondo, los círculos que se salen del papel—, pero `hidden` convierte el
         // elemento en **contenedor de scroll**: `overflow-y` pasa a `auto` por
@@ -187,7 +187,7 @@ export function XvSharedView({
       {piel.fondoFijo === true ? (
         <div
           aria-hidden
-          style={{ position: 'sticky', top: 0, height: '100dvh', marginBottom: '-100dvh', overflow: 'hidden' }}
+          style={{ position: 'sticky', top: 0, height: 'var(--alto, 100dvh)', marginBottom: 'calc(var(--alto, 100dvh) * -1)', overflow: 'hidden' }}
         >
           {piel.fondo}
         </div>
@@ -199,7 +199,7 @@ export function XvSharedView({
         style={{
           position: piel.fondoFijo === true ? 'sticky' : 'absolute',
           ...(piel.fondoFijo === true
-            ? { top: 0, height: '100dvh', marginBottom: '-100dvh' }
+            ? { top: 0, height: 'var(--alto, 100dvh)', marginBottom: 'calc(var(--alto, 100dvh) * -1)' }
             : { inset: 0 }),
           background: piel.velo,
           // Sin desenfoque cuando el fondo va fijo: sobre una partitura dorada, el velo
@@ -216,8 +216,8 @@ export function XvSharedView({
               ? {
                   position: 'sticky',
                   top: 0,
-                  height: '100dvh',
-                  marginBottom: '-100dvh',
+                  height: 'var(--alto, 100dvh)',
+                  marginBottom: 'calc(var(--alto, 100dvh) * -1)',
                   background: `linear-gradient(180deg, transparent 55%, ${piel.veloInferior})`,
                   pointerEvents: 'none',
                 }
@@ -265,7 +265,7 @@ export function XvSharedView({
       {piel.particulas === undefined ? null : (
         <div
           aria-hidden
-          style={{ position: 'sticky', top: 0, height: '100dvh', marginBottom: '-100dvh', overflow: 'hidden', pointerEvents: 'none' }}
+          style={{ position: 'sticky', top: 0, height: 'var(--alto, 100dvh)', marginBottom: 'calc(var(--alto, 100dvh) * -1)', overflow: 'hidden', pointerEvents: 'none' }}
         >
           <FloatingParticles
             char={piel.particulas.char}

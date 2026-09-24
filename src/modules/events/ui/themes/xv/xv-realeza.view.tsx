@@ -56,7 +56,7 @@ export function XvRealezaView({ content, themes, slots, guestInfo, audioSrc }: T
         color: P.tinta,
         fontFamily: 'var(--font-cormorant)',
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

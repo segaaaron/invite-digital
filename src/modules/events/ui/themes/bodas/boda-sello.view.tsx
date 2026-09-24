@@ -100,7 +100,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
         color: P.vino,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

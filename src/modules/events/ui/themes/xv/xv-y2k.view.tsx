@@ -73,7 +73,7 @@ export function XvY2kView({ content, themes, slots, audioSrc }: ThemeProps) {
         color: P.blanco,
         fontFamily: 'var(--font-space-grotesk)',
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

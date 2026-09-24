@@ -105,7 +105,7 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
         color: P.crema,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

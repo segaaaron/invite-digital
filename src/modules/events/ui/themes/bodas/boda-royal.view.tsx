@@ -96,7 +96,7 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
         color: P.tinta,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

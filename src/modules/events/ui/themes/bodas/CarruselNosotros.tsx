@@ -59,7 +59,7 @@ export function CarruselNosotros({ fotos, oro, flechaFondo, labels }: Props) {
 
   return (
     <div style={{ marginTop: 20, position: 'relative', width: '100%' }}>
-      <div style={{ position: 'relative', width: '100%', height: '72vh', overflow: 'hidden', padding: '0 14px', boxSizing: 'border-box' }}>
+      <div style={{ position: 'relative', width: '100%', height: 'calc(var(--alto, 100dvh) * 0.72)', overflow: 'hidden', padding: '0 14px', boxSizing: 'border-box' }}>
         <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: 12, overflow: 'hidden', border: `1.5px solid ${oro}` }}>
           {fotos.map((foto, i) => (
             <Image

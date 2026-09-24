@@ -93,7 +93,7 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
         color: P.tinta,
         fontFamily: SANS,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

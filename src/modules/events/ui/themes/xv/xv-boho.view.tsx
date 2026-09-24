@@ -51,7 +51,7 @@ export function XvBohoView({ content, event, themes, slots, audioSrc }: ThemePro
         color: P.tinta,
         fontFamily: NEWSREADER,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

@@ -38,7 +38,7 @@ export function EngView({ content, dictionary, themes, slots, audioSrc }: ThemeP
   const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.blanco, acento: P.rosa, display: SERIF, tinta: P.tinta }))
 
   return (
-    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: SERIF, minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.rosa}
         bg={P.papel}

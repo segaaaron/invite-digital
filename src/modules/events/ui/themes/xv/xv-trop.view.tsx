@@ -41,7 +41,7 @@ export function XvTropView({ content, themes, slots, audioSrc }: ThemeProps) {
         color: P.blanco,
         fontFamily: 'var(--font-dm-sans)',
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

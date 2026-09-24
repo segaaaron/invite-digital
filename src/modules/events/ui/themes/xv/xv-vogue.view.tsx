@@ -52,7 +52,7 @@ export function XvVogueView({ content, themes, slots, guestInfo, audioSrc }: The
         color: P.blanco,
         fontFamily: 'var(--font-spectral)',
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

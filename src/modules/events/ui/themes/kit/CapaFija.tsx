@@ -21,8 +21,8 @@ export function CapaFija({ zIndex, style, children }: { readonly zIndex: number;
       style={{
         position: 'sticky',
         top: 0,
-        height: '100dvh',
-        marginBottom: '-100dvh',
+        height: 'var(--alto, 100dvh)',
+        marginBottom: 'calc(var(--alto, 100dvh) * -1)',
         overflow: 'hidden',
         pointerEvents: 'none',
         zIndex,

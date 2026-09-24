@@ -15,7 +15,7 @@ export const PIEL: PielXv = {
         style={{
           position: 'relative',
           width: '100%',
-          height: '45vh',
+          height: 'calc(var(--alto, 100dvh) * 0.45)',
           minHeight: 280,
           overflow: 'hidden',
           // El borde rasgado de su maqueta, copiado punto por punto (`invites-1.jsx:1333`): son

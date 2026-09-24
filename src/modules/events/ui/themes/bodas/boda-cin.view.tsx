@@ -136,7 +136,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
         background: P.fondo,
         color: P.papel,
         fontFamily: CORMORANT,
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

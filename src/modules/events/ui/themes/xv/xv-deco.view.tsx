@@ -51,7 +51,7 @@ export function XvDecoView({ content, event, themes, slots, audioSrc }: ThemePro
         color: P.marfil,
         fontFamily: 'var(--font-cormorant)',
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

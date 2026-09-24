@@ -39,7 +39,7 @@ export function CivilView({ content, dictionary, themes, slots }: ThemeProps) {
   const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.blanco, acento: P.violeta, display: DISPLAY, tinta: P.tinta }))
 
   return (
-    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.papel, color: P.tinta, fontFamily: DISPLAY, minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.violeta}
         bg={P.papel}

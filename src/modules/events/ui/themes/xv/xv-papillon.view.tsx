@@ -97,7 +97,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
         color: P.tinta,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >
@@ -116,7 +116,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
       {/* ── El retrato en su círculo de flores ── */}
       <div style={{ position: 'relative', padding: '54px 26px 30px', textAlign: 'center' }}>
         <Reveal>
-          <div style={{ position: 'relative', width: '70vw', height: '70vw', maxWidth: 380, maxHeight: 380, margin: '0 auto' }}>
+          <div style={{ position: 'relative', width: 'calc(var(--ancho, 100vw) * 0.7)', height: 'calc(var(--ancho, 100vw) * 0.7)', maxWidth: 380, maxHeight: 380, margin: '0 auto' }}>
             <div style={{ position: 'absolute', left: '18%', right: '18%', top: '20%', bottom: '24%', borderRadius: '50%', overflow: 'hidden' }}>
               <PhotoSlot
                 bg="transparent"
@@ -337,7 +337,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
               aria-hidden
               height={350}
               src={themeAsset('xv-papillon', 'codigo-pinki-sf.avif')}
-              style={{ width: '65vw', maxWidth: 350, height: 'auto', margin: '16px auto 0', display: 'block' }}
+              style={{ width: 'calc(var(--ancho, 100vw) * 0.65)', maxWidth: 350, height: 'auto', margin: '16px auto 0', display: 'block' }}
               width={350}
             />
             <div style={{ marginTop: 48, display: 'flex', justifyContent: 'center', gap: 18 }}>

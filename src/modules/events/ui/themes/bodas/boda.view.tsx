@@ -87,7 +87,7 @@ export function BodaView({ content, event, dictionary, themes, slots, audioSrc }
         background: P.fondo,
         color: P.tinta,
         fontFamily: 'var(--font-space-grotesk)',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         // `clip`, no `hidden`. Los dos recortan lo que sangra —las esquinas florales, los
         // ramos de fondo, los círculos que se salen del papel—, pero `hidden` convierte el
         // elemento en **contenedor de scroll**: `overflow-y` pasa a `auto` por

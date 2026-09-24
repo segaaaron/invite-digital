@@ -101,7 +101,7 @@ export function XvElegView({ content, event, themes, slots, audioSrc, respondida
 
   return (
     <article
-      style={{ ...RANURAS, position: 'relative', background: P.fondo, color: P.musgo, fontFamily: SERIF, lineHeight: 'normal', minHeight: '100dvh', overflowX: 'clip' }}
+      style={{ ...RANURAS, position: 'relative', background: P.fondo, color: P.musgo, fontFamily: SERIF, lineHeight: 'normal', minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}
     >
       <EnvelopeCover accent={P.oro} bg={P.fondo} hint={themes.coverHint} label={themes.coverOpen} openLabel={themes.coverAria} textColor={P.musgo} />
 

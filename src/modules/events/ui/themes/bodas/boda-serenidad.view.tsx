@@ -95,7 +95,7 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         color: P.tinta,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

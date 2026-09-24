@@ -106,7 +106,7 @@ function Gracias({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         padding: '48px 28px',
         background: `linear-gradient(180deg, ${P.madera}, ${P.maderaClara})`,
         color: P.crema,
@@ -309,7 +309,7 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
         // Celebración» medía 60 px contra 50—. Lo que sí lo declara (1, 1.25, 1.35, 1.6, 1.7)
         // manda igual.
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

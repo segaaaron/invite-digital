@@ -228,6 +228,13 @@
     0 2px 6px rgb(0 0 0 / 0.4),
     0 34px 90px rgb(0 0 0 / 0.62);
   transform: translateZ(0);
+  /* El marco es el teléfono: las medidas de pantalla de los diseños (`--alto`, `--ancho`,
+     que fuera del marco valen 100dvh y 100vw) miden el marco, no la ventana. Sin esto, una
+     foto a sangre de «45vh» o un fondo fijo de «100dvh» salían con la altura de la ventana
+     del escritorio dentro de un teléfono más bajo. */
+  container-type: size;
+  --alto: 100cqh;
+  --ancho: 100cqw;
 }
 
 /*
@@ -341,6 +348,13 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
     0 34px 90px rgb(0 0 0 / 0.62);
   /* Bloque contenedor: los fondos y la portada `fixed` se quedan dentro del teléfono. */
   transform: translateZ(0);
+  /* El marco es el teléfono: las medidas de pantalla de los diseños (`--alto`, `--ancho`,
+     que fuera del marco valen 100dvh y 100vw) miden el marco, no la ventana. Sin esto, una
+     foto a sangre de «45vh» o un fondo fijo de «100dvh» salían con la altura de la ventana
+     del escritorio dentro de un teléfono más bajo. */
+  container-type: size;
+  --alto: 100cqh;
+  --ancho: 100cqw;
 }
 .invitacion-marco:has([data-portada]) {
   overflow: hidden;

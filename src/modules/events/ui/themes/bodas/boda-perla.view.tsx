@@ -102,7 +102,7 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
         color: P.cuerpo,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

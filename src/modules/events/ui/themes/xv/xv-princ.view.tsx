@@ -60,7 +60,7 @@ export function XvPrincView({ content, event, themes, slots, audioSrc }: ThemePr
         color: P.ciruela,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

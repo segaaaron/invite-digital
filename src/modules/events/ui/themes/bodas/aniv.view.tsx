@@ -54,7 +54,7 @@ export function AnivView({ content, dictionary, themes, slots, audioSrc }: Theme
   const RANURAS = variablesDeRanuras(pielDeRanuras({ sobreAcento: P.fondo, acento: P.oro, acentoHondo: P.oroOscuro, display: SERIF, tinta: P.tinta }))
 
   return (
-    <article style={{ ...RANURAS, position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: '100dvh', overflowX: 'clip' }}>
+    <article style={{ ...RANURAS, position: 'relative', background: P.fondo, color: P.tinta, fontFamily: SERIF, minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}>
       <EnvelopeCover
         accent={P.oro}
         bg={P.fondo}

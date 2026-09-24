@@ -94,7 +94,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
         color: P.tinta,
         fontFamily: SERIF,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >

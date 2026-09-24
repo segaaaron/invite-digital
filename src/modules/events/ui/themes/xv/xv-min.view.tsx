@@ -85,7 +85,7 @@ export function XvMinView({ content, event, themes, slots, respondida }: ThemePr
         color: P.tinta,
         fontFamily: SPECTRAL,
         lineHeight: 'normal',
-        minHeight: '100dvh',
+        minHeight: 'var(--alto, 100dvh)',
         overflowX: 'clip',
       }}
     >
