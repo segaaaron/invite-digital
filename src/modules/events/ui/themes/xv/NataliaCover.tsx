@@ -87,7 +87,13 @@ export function NataliaCover({ bgAsset, noteAsset, line1, line2, title, name, ba
             aria-hidden
             height={120}
             src={noteAsset}
-            style={{ width: '75%', height: 'auto', marginTop: 10 }}
+            // La maqueta tiñe la nota dorada de pardo oscuro, como la tinta del papel.
+            style={{
+              width: '75%',
+              height: 'auto',
+              marginTop: 10,
+              filter: 'brightness(0) saturate(100%) invert(9%) sepia(28%) saturate(1800%) hue-rotate(2deg) brightness(85%) contrast(95%)',
+            }}
             width={160}
           />
           <span
@@ -97,7 +103,11 @@ export function NataliaCover({ bgAsset, noteAsset, line1, line2, title, name, ba
               fontSize: 19.5,
               letterSpacing: '0.1em',
               marginTop: 10,
-              color: '#B8901F',
+              // El oro en degradado recortado al texto, como la maqueta.
+              background: 'linear-gradient(180deg, #D2A544 0%, #B8901F 65%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
             }}
           >
             {title}

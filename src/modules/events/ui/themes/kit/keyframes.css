@@ -209,7 +209,10 @@
      teléfono y se queda más achatado; es lo correcto, porque es un visor, no un dibujo de
      un aparato. */
   width: min(430px, 100%);
-  height: min(100%, 932px);
+  /* Nunca más alto que 9:16, la proporción del arte de las portadas (1536×2752): más alto,
+     el `cover` amplía la ilustración y le corta los lados —la guitarra y el micrófono de
+     Natalia—, y deja de verse como en la maqueta. */
+  height: min(100%, 932px, calc(min(430px, 100%) * 16 / 9));
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: 26px;
@@ -322,7 +325,10 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   width: min(430px, 100%);
-  height: min(100%, 932px);
+  /* Nunca más alto que 9:16, la proporción del arte de las portadas (1536×2752): más alto,
+     el `cover` amplía la ilustración y le corta los lados —la guitarra y el micrófono de
+     Natalia—, y deja de verse como en la maqueta. */
+  height: min(100%, 932px, calc(min(430px, 100%) * 16 / 9));
   overflow-x: hidden;
   overflow-y: auto;
   border-radius: 26px;
