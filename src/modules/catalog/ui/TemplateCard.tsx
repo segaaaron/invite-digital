@@ -13,7 +13,7 @@ import type { Template } from '../domain/template'
  * cada pasada ensuciaría el repositorio y la base, así que la dirección lleva su versión
  * detrás. **Se sube al recapturar.**
  */
-const VERSION_DE_PORTADAS = '2'
+const VERSION_DE_PORTADAS = '3'
 
 type Props = { template: Template; dictionary: Dictionary; locale: Locale }
 

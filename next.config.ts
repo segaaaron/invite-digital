@@ -70,13 +70,13 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     qualities: [75, 90],
     /**
-     * Las portadas del catálogo llevan su versión en la dirección (`?v=2`) para que
+     * Las portadas del catálogo llevan su versión en la dirección (`?v=3`) para que
      * recapturarlas llegue a quien ya las vio: el optimizador cachea por dirección y
      * durante mucho tiempo. Next exige declarar aquí toda consulta que se le pase, así que
      * **al subir la versión en `TemplateCard` hay que subirla aquí**; si no, la página
      * responde 500 y lo dice.
      */
-    localPatterns: [{ pathname: '/templates/**', search: '?v=2' }, { pathname: '/**', search: '' }],
+    localPatterns: [{ pathname: '/templates/**', search: '?v=3' }, { pathname: '/**', search: '' }],
   },
   async headers() {
     return [
