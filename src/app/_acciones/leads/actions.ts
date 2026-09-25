@@ -41,7 +41,7 @@ export async function submitConsultationAction(
     avisarAlAdmin({
       asunto: `Nueva consulta de ${nombre}`,
       lineas: [`${nombre} escribió desde el formulario de la web. Quien contesta primero se queda la venta.`],
-      ruta: '/panel/admin/consultas',
+      ruta: '/panel/admin/ventas',
     })
   }
   return resultado
@@ -92,5 +92,7 @@ export async function moveConsultationAction(_previous: InboxActionState, formDa
 
   revalidatePath('/panel/admin')
   revalidatePath('/panel/admin/consultas')
+  revalidatePath('/panel/admin/ventas')
+  revalidatePath('/panel/admin/clientes')
   return { status: 'success', message: `${movida.value.name}: ${ETIQUETA_ESTADO[hacia].toLowerCase()}.` }
 }

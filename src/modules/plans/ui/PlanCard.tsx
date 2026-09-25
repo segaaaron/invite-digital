@@ -90,7 +90,7 @@ export function PlanCard({
     >
       <header className="flex flex-col gap-1">
         {current ? (
-          <p className="font-mono text-[9px] tracking-[0.35em] text-gold-deep uppercase">Plan actual</p>
+          <p className="font-mono text-[10.5px] tracking-[0.18em] text-gold-deep uppercase">Plan actual</p>
         ) : null}
         <h3 className="font-display text-[22px] font-light italic text-ink">{name}</h3>
       </header>

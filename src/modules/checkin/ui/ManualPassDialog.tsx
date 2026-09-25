@@ -73,7 +73,7 @@ export function ManualPassDialog({
       <div className="w-full max-w-[420px] rounded-3xl bg-bg-top p-6 text-ink shadow-float" role="dialog" aria-modal>
         {candidato === null ? (
           <>
-            <p className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Código manual</p>
+            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Código manual</p>
             <h2 className="mt-1.5 font-display text-[24px] font-light">Escribe el código del pase</h2>
 
             <input

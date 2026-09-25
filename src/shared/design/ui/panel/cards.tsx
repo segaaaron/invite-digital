@@ -43,7 +43,7 @@ export function StatCard({
           {icon}
         </span>
       ) : null}
-      <p className="font-mono text-[9px] tracking-[0.35em] uppercase text-ink-mute">{label}</p>
+      <p className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-ink-mute">{label}</p>
       <p className="mt-2 font-display text-[32px] leading-none font-light text-ink [font-variant-numeric:lining-nums] min-[560px]:text-[44px]">
         {value}
         {suffix ? <span className="ml-1 text-[18px] text-ink-mute">{suffix}</span> : null}
@@ -147,7 +147,7 @@ export function DonutChart({ slices, big, caption }: { slices: readonly DonutSli
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-display text-[38px] leading-none font-light text-ink [font-variant-numeric:lining-nums]">{big}</span>
-          <span className="mt-0.5 max-w-[130px] text-center font-mono text-[8px] tracking-[0.2em] uppercase text-ink-mute">{caption}</span>
+          <span className="mt-0.5 max-w-[130px] text-center font-mono text-[10px] tracking-[0.2em] uppercase text-ink-mute">{caption}</span>
         </div>
       </div>
 

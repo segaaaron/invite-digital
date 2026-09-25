@@ -69,7 +69,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
           )}
           <span className="absolute top-2.5 left-2.5 flex flex-col items-center rounded-xl bg-white/95 px-2.5 py-1 shadow-card">
             <span className="font-display text-[22px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
-            <span className="font-mono text-[8px] tracking-[0.2em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
+            <span className="font-mono text-[10px] tracking-[0.2em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
           </span>
         </Link>
 

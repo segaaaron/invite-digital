@@ -362,7 +362,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
           type="button"
           disabled={!hayPendientes || guardando}
           onClick={() => void guardar()}
-          className="ml-auto rounded-pill border border-ok px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
+          className="ml-auto rounded-pill border border-ok px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
         >
           Guardar cambios
         </button>
@@ -370,7 +370,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
           type="button"
           disabled={!hayPendientes || guardando}
           onClick={descartar}
-          className="rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+          className="rounded-pill border border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
         >
           Descartar
         </button>
@@ -382,7 +382,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               e.preventDefault()
               intentarSalir(exit)
             }}
-            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
+            className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
           >
             {exit.label}
           </a>
@@ -426,7 +426,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                 width: `${tamActuales[key]?.w ?? zone.w}%`,
                 height: `${tamActuales[key]?.h ?? zone.h}%`,
               }}
-              className={`group/zona absolute touch-none rounded-[12px] border border-dashed border-line-panel-strong/70 p-1 font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase ${TONO_ZONA[zone.kind]}`}
+              className={`group/zona absolute touch-none rounded-[12px] border border-dashed border-line-panel-strong/70 p-1 font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase ${TONO_ZONA[zone.kind]}`}
             >
               {zone.label}
 
@@ -519,7 +519,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   ocupación van debajo, donde caben sin apretarse. */}
               <span
                 aria-hidden
-                className={`absolute top-1/2 left-1/2 flex size-[34px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border bg-linear-to-br from-table-from to-table-to font-mono text-[8px] tracking-[0.1em] text-table-ink shadow-[inset_0_2px_4px_rgb(255_255_255/0.6),inset_0_-3px_6px_rgb(140_110_60/0.25),0_3px_8px_rgb(26_26_26/0.12)] ${bordeDeMesa()} ${
+                className={`absolute top-1/2 left-1/2 flex size-[34px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border bg-linear-to-br from-table-from to-table-to font-mono text-[10px] tracking-[0.1em] text-table-ink shadow-[inset_0_2px_4px_rgb(255_255_255/0.6),inset_0_-3px_6px_rgb(140_110_60/0.25),0_3px_8px_rgb(26_26_26/0.12)] ${bordeDeMesa()} ${
                   table.shape === 'round' ? 'rounded-full' : 'rounded-[12px]'
                 } ${resaltada ? 'ring-4 ring-gold/50' : ''}`}
               >
@@ -529,8 +529,8 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               {/* Etiqueta y ocupación justo debajo del disco, como en la maqueta: 9 px
                   y 8 px, sin recuadro. */}
               <span aria-hidden className="absolute top-full left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
-                <span className="mt-0.5 block text-[9px] font-medium text-ink">{table.label}</span>
-                <span className="block font-mono text-[8px] text-ink-mute">
+                <span className="mt-0.5 block text-[10.5px] font-medium text-ink">{table.label}</span>
+                <span className="block font-mono text-[10px] text-ink-mute">
                   {table.taken}/{table.capacity}
                 </span>
               </span>
@@ -566,7 +566,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                     router.push(destino)
                   })
                 }}
-                className="rounded-pill border border-ok px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
+                className="rounded-pill border border-ok px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
               >
                 Guardar
               </button>
@@ -578,14 +578,14 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   setSalida(null)
                   router.push(destino)
                 }}
-                className="rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
+                className="rounded-pill border border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
               >
                 Descartar y salir
               </button>
               <button
                 type="button"
                 onClick={() => setSalida(null)}
-                className="ml-auto rounded-pill bg-ink px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-bg-top"
+                className="ml-auto rounded-pill bg-ink px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-bg-top"
               >
                 Cancelar
               </button>

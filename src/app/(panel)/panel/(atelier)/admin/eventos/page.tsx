@@ -12,6 +12,7 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, StatCard } from '@/shared/design/ui/panel/cards'
 import { FIELD_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
+import { PanelLateral } from '@/shared/design/ui/panel/PanelLateral'
 import { isErr } from '@/shared/result'
 import { EmptyState, LoadMoreLink } from '@/shared/design/ui/panel/estados'
 
@@ -40,11 +41,11 @@ const PAGINA = 20
 export default async function AdminEventosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ etapa?: string; q?: string; panel?: string; n?: string; pedido?: string }>
+  searchParams: Promise<{ etapa?: string; q?: string; panel?: string; n?: string; pedido?: string; evento?: string }>
 }) {
   await requireAdmin()
 
-  const { etapa: etapaPedida, q = '', panel, n, pedido: refDelPedido } = await searchParams
+  const { etapa: etapaPedida, q = '', panel, n, pedido: refDelPedido, evento } = await searchParams
   // «Crear el evento con este pedido»: un pedido aprobado que se quedó sin evento rellena el alta.
   // Solo si de verdad le falta: uno que ya tiene evento, o de un extra, se ignora.
   const desdePedido = await (async (): Promise<DesdePedido | undefined> => {
@@ -118,6 +119,27 @@ export default async function AdminEventosPage({
     const cadena = params.toString()
     return cadena === '' ? '/panel/admin/eventos' : `/panel/admin/eventos?${cadena}`
   }
+
+  const fila = (evento: (typeof cartera)[number]) => ({
+    id: evento.id,
+    slug: evento.slug,
+    title: evento.title,
+    eventDate: evento.eventDate,
+    ownerEmail: evento.ownerEmail,
+    ownerId: evento.ownerId,
+    planSlug: evento.planSlug,
+    planNombre: evento.planSlug === null ? null : (nombreDePlan.get(evento.planSlug) ?? evento.planSlug),
+    portada: CATALOG_KEYS.includes(evento.themeKey) ? `/templates/${evento.themeKey}.avif` : null,
+    modelo: nombreDeModelo.get(evento.themeKey) ?? 'diseño anterior',
+    grupos: evento.grupos,
+    enviados: evento.enviados,
+    respondidos: evento.respondidos,
+    abiertos: evento.abiertos,
+    etapa: evento.etapa,
+    cuando: cuando(diasEntre(hoy, evento.eventDate)),
+    anfitriones: anfitriones.get(evento.id) ?? [],
+  })
+  const abierto = evento === undefined ? undefined : cartera.find((e) => e.slug === evento)
 
   return (
     <>
@@ -218,33 +240,21 @@ export default async function AdminEventosPage({
         ) : (
           <ul className="mt-2 flex flex-col gap-3.5">
             {pagina.map((evento) => (
-              <EventAdminRow
-                key={evento.id}
-                event={{
-                  id: evento.id,
-                  slug: evento.slug,
-                  title: evento.title,
-                  eventDate: evento.eventDate,
-                  ownerEmail: evento.ownerEmail,
-                  ownerId: evento.ownerId,
-                  planSlug: evento.planSlug,
-                  planNombre: evento.planSlug === null ? null : (nombreDePlan.get(evento.planSlug) ?? evento.planSlug),
-                  portada: CATALOG_KEYS.includes(evento.themeKey) ? `/templates/${evento.themeKey}.avif` : null,
-                  modelo: nombreDeModelo.get(evento.themeKey) ?? 'diseño anterior',
-                  grupos: evento.grupos,
-                  enviados: evento.enviados,
-                  respondidos: evento.respondidos,
-                  abiertos: evento.abiertos,
-                  etapa: evento.etapa,
-                  cuando: cuando(diasEntre(hoy, evento.eventDate)),
-                  anfitriones: anfitriones.get(evento.id) ?? [],
-                }}
-              />
+              <EventAdminRow event={fila(evento)} key={evento.id} />
             ))}
           </ul>
         )}
         <LoadMoreLink href={enlace(filtro, tope + PAGINA)} noun="bodas" remaining={visibles.length - pagina.length} />
       </PanelCard>
+
+      {/* El buscador rápido abre un evento aquí mismo, sin perder la cartera. */}
+      {abierto === undefined ? null : (
+        <PanelLateral closeHref={enlace(filtro)} subtitle={`${nombreDeModelo.get(abierto.themeKey) ?? 'diseño anterior'} · ${cuando(diasEntre(hoy, abierto.eventDate))}`} title={abierto.title}>
+          <ul>
+            <EventAdminRow event={fila(abierto)} />
+          </ul>
+        </PanelLateral>
+      )}
     </>
   )
 }

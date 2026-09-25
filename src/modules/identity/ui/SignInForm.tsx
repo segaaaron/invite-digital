@@ -21,7 +21,7 @@ const MESSAGES = {
 const FIELD_CLASS =
   'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-raised px-4 py-3.5 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(43_39_35/0.04)] outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-mute/70 focus-visible:border-gold focus-visible:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.18)]'
 
-const LABEL_CLASS = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+const LABEL_CLASS = 'font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase'
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(signInAction, INITIAL)
@@ -105,7 +105,7 @@ export function SignInForm() {
       ) : null}
 
       <button
-        className="mt-1 cursor-pointer rounded-[var(--radius-pill)] bg-linear-to-b from-gold to-gold-deep px-7 py-3.5 font-mono text-[10px] tracking-[0.3em] text-bg-raised uppercase shadow-[0_6px_18px_rgb(var(--color-gold-rgb)/0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgb(var(--color-gold-rgb)/0.34)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="mt-1 cursor-pointer rounded-[var(--radius-pill)] bg-linear-to-b from-gold to-gold-deep px-7 py-3.5 font-mono text-[10px] tracking-[0.16em] text-bg-raised uppercase shadow-[0_6px_18px_rgb(var(--color-gold-rgb)/0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgb(var(--color-gold-rgb)/0.34)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         disabled={isPending}
         type="submit" aria-busy={(isPending) || undefined}>
         {isPending ? 'Entrando…' : 'Entrar'}

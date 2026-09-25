@@ -11,7 +11,7 @@ export function EmbudoDeVentas({ embudo }: { embudo: Embudo }) {
       <ol className="grid grid-cols-2 gap-3 min-[760px]:grid-cols-4">
         {embudo.pasos.map((paso, i) => (
           <li className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-white p-4" key={paso.clave}>
-            <span className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">{paso.titulo}</span>
+            <span className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{paso.titulo}</span>
             <span className="font-display text-[32px] leading-none text-ink [font-variant-numeric:lining-nums]">{paso.total}</span>
             <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line-panel">
               <span className="block h-full rounded-full bg-gold" style={{ width: `${(paso.total / techo) * 100}%` }} />

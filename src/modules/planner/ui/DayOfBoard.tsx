@@ -21,7 +21,7 @@ export type DiaDVista = {
 
 const Bloque = ({ titulo, children }: { titulo: string; children: React.ReactNode }) => (
   <section className="flex flex-col gap-2 rounded-[18px] border border-line-panel bg-white px-5 py-4 shadow-card">
-    <h2 className="font-mono text-[10px] tracking-[0.3em] text-ink-mute uppercase">{titulo}</h2>
+    <h2 className="font-mono text-[10px] tracking-[0.16em] text-ink-mute uppercase">{titulo}</h2>
     {children}
   </section>
 )

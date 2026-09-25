@@ -12,7 +12,16 @@ export type NavItem = {
   readonly count?: number | null
   /** Qué cuenta la insignia. Un número suelto no dice nada a quien no ve el color. */
   readonly countLabel?: string
+  /**
+   * Otras rutas que también son esta entrada: «Ventas» sigue marcada en Consultas, Pedidos o
+   * Ingresos, que son sus pestañas. Por prefijo.
+   */
+  readonly activo?: readonly string[]
 }
+
+/** Si la entrada es la de la pantalla actual: su ruta exacta o una de sus pestañas. */
+export const esEntradaActiva = (item: NavItem, pathname: string): boolean =>
+  item.href === pathname || (item.activo ?? []).some((prefijo) => pathname === prefijo || pathname.startsWith(`${prefijo}/`))
 
 export type NavSection = {
   readonly label: string
@@ -82,50 +91,44 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   const base = slug === null ? null : `/panel/eventos/${slug}`
   const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
 
-  // Tres secciones y no una de diez: lo del día, lo del negocio y lo del sistema. Una
-  // lista plana ponía «Auditoría» al mismo nivel que «Hoy».
+  // **Siete entradas, por trabajo y no por tabla** (24 de septiembre): eran quince, una por
+  // entidad —consultas, pedidos, planes, extras, usuarios…—, y el trabajo real cruza varias.
+  // Lo que eran pantallas hermanas son ahora pestañas de su entrada (`activo`).
   const administracion: Borrador[] = esAdmin
     ? [
         {
           label: 'Día a día',
           items: [
-            // Lo que espera decisión hoy. Sustituyó a Panorama: las cifras siguen dentro.
+            // Lo que pide acción hoy, con su botón para resolverlo.
             { href: '/panel/admin', label: 'Hoy', icon: 'hoy' },
-            // Lo que llega del formulario de la web. Se guardaba y nadie lo leía.
-            { href: '/panel/admin/consultas', label: 'Consultas', icon: 'consultas', count: counts.consultas ?? null, countLabel: 'nuevas' },
-            // Los pedidos del Plan B compran planes de Luxury Atelier: el dinero va a una
-            // sola cuenta y las decide el admin. Estaban en «Cuenta», a la vista de
-            // cualquier atelier, y ahora que aprobar crea cuentas y eventos eso era
-            // enseñar una puerta que además abría de más.
-            { href: '/panel/pedidos', label: 'Pedidos', icon: 'pedidos', count: counts.pedidos ?? null, countLabel: 'por revisar' },
-            { href: '/panel/admin/eventos', label: 'Todos los eventos', icon: 'todosLosEventos' },
-            // Encontrar a alguien —cliente, pedido, consulta, cuenta— sin saber en qué bandeja está. ⌘K lleva aquí.
-            { href: '/panel/admin/buscar', label: 'Buscar', icon: 'buscar' },
+            // El recorrido entero de la venta: consulta → pedido → pago → evento, y lo cobrado.
+            {
+              href: '/panel/admin/ventas',
+              label: 'Ventas',
+              icon: 'pedidos',
+              count: (counts.consultas ?? 0) + (counts.pedidos ?? 0) || null,
+              countLabel: 'por atender',
+              activo: ['/panel/admin/ventas', '/panel/admin/consultas', '/panel/pedidos', '/panel/admin/ingresos'],
+            },
+            { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos' },
+            // La persona entera: sus consultas, pedidos, eventos y acceso, en un sitio.
+            { href: '/panel/admin/clientes', label: 'Clientes', icon: 'usuarios', activo: ['/panel/admin/clientes'] },
           ],
         },
         {
           label: 'Negocio',
           items: [
-            // Lo cobrado por mes y por plan, con el importe congelado de cada pedido.
-            { href: '/panel/admin/ingresos', label: 'Ingresos', icon: 'estadisticas' },
-            // Precio, tope y funciones de cada plan, sin SQL ni despliegue.
-            { href: '/panel/admin/planes', label: 'Planes', icon: 'plan' },
-            // Lo que un evento suma sin cambiar de plan. Nacen apagados.
-            { href: '/panel/admin/extras', label: 'Extras', icon: 'presupuesto' },
-            // Publicar o retirar cada modelo de la web, y su música de escaparate. No es la
-            // música de una boda: esa la sube su atelier o su cliente desde Configuración.
-            { href: '/panel/admin/modelos', label: 'Modelos', icon: 'editar' },
-            // WhatsApp, ubicación, redes, cifras, testimonios, textos legales y buscadores:
-            // lo que la web pública enseña del negocio, sin tocar código.
-            { href: '/panel/admin/web', label: 'La web', icon: 'web' },
-            { href: '/panel/admin/pagos', label: 'Datos de cobro', icon: 'qr' },
+            // Lo que se vende: los modelos, los planes y los extras.
+            { href: '/panel/admin/modelos', label: 'Catálogo', icon: 'editar', activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras'] },
+            // Lo que la web pública enseña del negocio, sin tocar código.
+            { href: '/panel/admin/web', label: 'Web', icon: 'web' },
           ],
         },
         {
           label: 'Sistema',
           items: [
-            { href: '/panel/admin/usuarios', label: 'Usuarios', icon: 'usuarios' },
-            { href: '/panel/admin/auditoria', label: 'Auditoría', icon: 'auditoria' },
+            // Equipo, datos de cobro, auditoría y la propia cuenta.
+            { href: '/panel/admin/usuarios', label: 'Ajustes', icon: 'configuracion', activo: ['/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/auditoria', '/panel/cuenta'] },
           ],
         },
       ]
@@ -269,7 +272,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
         // La propia contraseña. Las cuentas las da de alta el admin y la clave inicial
         // viaja por WhatsApp: sin esta pantalla valdría para siempre.
-        { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
+        // El admin la tiene dentro de Ajustes.
+        { href: esAdmin ? null : '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
         // El admin ya tiene «Todos los eventos» en su sección, con todos los ateliers.
         { href: esAdmin ? null : '/panel', label: 'Todos los eventos', icon: 'eventos' },
         // La ayuda es para quien recibe su cuenta del admin; el admin es quien la escribe.

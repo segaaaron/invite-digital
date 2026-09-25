@@ -10,7 +10,7 @@ const INICIAL: PlaceOrderState = { status: 'idle' }
 
 const CAMPO =
   'w-full rounded-[14px] border border-line bg-bg-top/80 px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-gold'
-const ROTULO = 'font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase'
+const ROTULO = 'font-mono text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase'
 
 /**
  * El alta de pedido de la web pública. Es dorado y no tinta: esto lo ve un cliente, no el

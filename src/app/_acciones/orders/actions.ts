@@ -118,10 +118,11 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
   }
 
   revalidatePath(`/panel/pedidos`)
+  revalidatePath('/panel/admin/ventas')
   avisarAlAdmin({
     asunto: `Nuevo comprobante · ${result.value.publicRef}`,
     lineas: [`${result.value.customerName} subió el comprobante del pedido ${result.value.publicRef}. Espera tu revisión.`],
-    ruta: '/panel/pedidos?estado=proof_submitted',
+    ruta: `/panel/admin/ventas?pedido=${result.value.publicRef}`,
   })
   return { status: 'success' }
 }
@@ -177,6 +178,7 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
 
   if (decision === 'rejected') {
     revalidatePath('/panel/pedidos')
+    revalidatePath('/panel/admin/ventas')
     return { status: 'success' }
   }
 
@@ -187,6 +189,7 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   console.info('pedido %s aprobado — %s', orderId, aprovisionado.message)
 
   revalidatePath('/panel/pedidos')
+  revalidatePath('/panel/admin/ventas')
   revalidatePath('/panel')
   return { status: 'success' }
 }

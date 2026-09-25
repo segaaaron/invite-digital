@@ -272,7 +272,7 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
         <div className="relative aspect-[4/3] bg-bg-sunken">
           {elegido ? <Image alt="" className="object-cover object-top" fill sizes="320px" src={`/templates/${elegido.key}.avif`} /> : null}
           <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-shell-deep/85 to-transparent px-4 pt-10 pb-3 text-white">
-            <span className="block font-mono text-[9px] tracking-[0.3em] uppercase opacity-80">{elegido?.categoria}</span>
+            <span className="block font-mono text-[10.5px] tracking-[0.16em] uppercase opacity-80">{elegido?.categoria}</span>
             <span className="block font-display text-[22px] leading-tight">{elegido?.label}</span>
           </span>
         </div>

@@ -74,7 +74,7 @@ export function DoorSearchSheet({ groups, arrivedIds, open, onPick, onClose }: P
                     {g.revoked ? ' · invitación revocada' : ''}
                   </span>
                 </span>
-                <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+                <span className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
                   {llego ? 'Ya llegó' : 'Registrar'}
                 </span>
               </button>

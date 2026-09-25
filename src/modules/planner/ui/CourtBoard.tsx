@@ -186,7 +186,7 @@ export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento;
         </div>
         {miembros.length === 0 ? null : (
           <fieldset className="flex flex-wrap gap-x-4 gap-y-2">
-            <legend className="mb-1 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Quién asiste</legend>
+            <legend className="mb-1 font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Quién asiste</legend>
             {miembros.map((m) => (
               <label className="flex items-center gap-2 text-[13px] text-ink" key={m.id}>
                 <input name="asistentes" type="checkbox" value={m.id} />

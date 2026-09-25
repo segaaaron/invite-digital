@@ -50,7 +50,7 @@ export function ExtrasCard({ eventId, eventSlug, extras, pedidos }: { eventId: s
       )}
       {pedidos.length === 0 ? null : (
         <section className="flex flex-col gap-2">
-          <h3 className="font-mono text-[10px] tracking-[0.3em] text-ink-mute uppercase">Tus pedidos de extras</h3>
+          <h3 className="font-mono text-[10px] tracking-[0.16em] text-ink-mute uppercase">Tus pedidos de extras</h3>
           <ul className="flex flex-col">
             {pedidos.map((p) => (
               <li className="flex flex-wrap items-center justify-between gap-3 border-b border-line-panel py-2.5 last:border-none" key={p.ref}>

@@ -41,7 +41,7 @@ export function AvisoGrupo({ titulo, avisos, vacio }: { titulo: string; avisos: 
   return (
     <section className="flex flex-col">
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h3 className="font-mono text-[10px] tracking-[0.3em] text-ink-mute uppercase">{titulo}</h3>
+        <h3 className="font-mono text-[10px] tracking-[0.16em] text-ink-mute uppercase">{titulo}</h3>
         <span className="font-mono text-[10px] text-ink-mute [font-variant-numeric:lining-nums]">{avisos.length}</span>
       </div>
 
@@ -92,7 +92,7 @@ export function ProximaFila({ boda }: { boda: Proxima }) {
       <Link className="-mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-bg-sunken/50" href={`/panel/eventos/${boda.slug}/configuracion`}>
         <span className="flex w-12 shrink-0 flex-col items-center rounded-xl border border-line-panel bg-white py-1.5 shadow-card">
           <span className="font-display text-[24px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
-          <span className="font-mono text-[8px] tracking-[0.25em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
+          <span className="font-mono text-[10px] tracking-[0.25em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
         </span>
 
         <span className="flex min-w-0 flex-1 flex-col gap-1.5">

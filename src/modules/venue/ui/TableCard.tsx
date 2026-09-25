@@ -113,14 +113,14 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
           <span className="font-mono text-[13px] text-ink-soft">
             {table.taken} / {table.capacity}
           </span>
-          <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] uppercase">{texto}</span>
+          <span className="font-mono text-[10.5px] tracking-[var(--tracking-luxe)] uppercase">{texto}</span>
           <IconButton disabled={pendiente} label={`Editar ${table.label}`} onClick={() => setEditando(true)}>
             ✎
           </IconButton>
           {porBorrar ? (
             <>
               <button
-                className="cursor-pointer rounded-[var(--radius-pill)] border border-danger/40 bg-white px-2.5 py-1 font-mono text-[9px] tracking-[0.2em] text-danger-deep uppercase"
+                className="cursor-pointer rounded-[var(--radius-pill)] border border-danger/40 bg-white px-2.5 py-1 font-mono text-[10.5px] tracking-[0.2em] text-danger-deep uppercase"
                 disabled={pendiente}
                 onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
                 type="button"
@@ -128,7 +128,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
                 Borrar
               </button>
               <button
-                className="cursor-pointer font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase"
+                className="cursor-pointer font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase"
                 onClick={() => setPorBorrar(false)}
                 type="button"
               >
@@ -165,7 +165,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
         {seatRing(table.capacity, table.groups, table.shape).map((silla, indice) => (
           <span
             key={indice}
-            className={`absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[9px] ${
+            className={`absolute flex size-[22px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[10.5px] ${
               silla.occupant === null
                 ? 'border-line-panel bg-bg-sunken text-ink-mute'
                 : silla.vip
@@ -292,7 +292,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
             </label>
           </div>
 
-          <label className="flex flex-col gap-1 font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+          <label className="flex flex-col gap-1 font-mono text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
             Notas
             <input
               className="rounded-pill border border-line-panel-strong bg-white px-3 py-2 text-[13px] text-ink"
@@ -306,7 +306,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
 
           <div className="flex flex-wrap items-center gap-4">
             <button
-              className="rounded-pill border border-line px-4 py-2 font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
+              className="rounded-pill border border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
               disabled={pendiente}
               onClick={guardar}
               type="button"
@@ -314,7 +314,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
               Guardar cambios
             </button>
             <button
-              className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+              className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
               disabled={pendiente}
               onClick={() => setEditando(false)}
               type="button"

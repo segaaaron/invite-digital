@@ -94,7 +94,7 @@ export function Ayuda({ children, titulo = '¿Cómo funciona?' }: { children: Re
   return (
     <details className="group text-[12px] leading-[1.7] text-ink-soft">
       <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 font-mono text-[10px] tracking-[0.2em] text-ink-mute uppercase hover:text-ink [&::-webkit-details-marker]:hidden">
-        <span aria-hidden className="grid size-4 place-items-center rounded-full border border-current text-[9px] leading-none">
+        <span aria-hidden className="grid size-4 place-items-center rounded-full border border-current text-[10.5px] leading-none">
           ?
         </span>
         {titulo}

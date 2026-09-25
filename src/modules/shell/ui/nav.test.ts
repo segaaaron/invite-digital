@@ -1,7 +1,7 @@
 import { readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { panelNav } from './nav'
+import { esEntradaActiva, panelNav } from './nav'
 
 // El atelier dueño y el admin juntos: entre los dos pintan todos los enlaces que existen.
 const enlaces = (slug: string | null): string[] =>
@@ -64,33 +64,35 @@ describe('panelNav', () => {
     expect(secciones[0]?.items.map((item) => item.href)).toEqual(['/panel/cuenta', '/panel', '/panel/ayuda'])
   })
 
-  it('el admin fuera de un evento ve la administración y su cuenta, sin repetir «Todos los eventos»', () => {
+  it('el admin fuera de un evento ve siete entradas, por trabajo y no por tabla', () => {
     const secciones = panelNav(null, {}, true)
-    expect(secciones.map((seccion) => seccion.label)).toEqual(['Día a día', 'Negocio', 'Sistema', 'Cuenta'])
-    const hrefs = secciones.flatMap((seccion) => seccion.items).map((item) => item.href)
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Día a día', 'Negocio', 'Sistema'])
+    const entradas = secciones.flatMap((seccion) => seccion.items)
+    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Eventos', 'Clientes', 'Catálogo', 'Web', 'Ajustes'])
+    const hrefs = entradas.map((item) => item.href)
     expect(hrefs).not.toContain('/panel')
     expect(hrefs).not.toContain('/panel/ayuda')
-    expect(hrefs).toContain('/panel/admin/eventos')
-    // «Hoy» abre la administración y «Consultas» va justo detrás: son lo que se mira cada día.
-    expect(hrefs.slice(0, 2)).toEqual(['/panel/admin', '/panel/admin/consultas'])
-    // Y el buscador, que es donde lleva ⌘K.
-    expect(hrefs).toContain('/panel/admin/buscar')
   })
 
-  it('el admin llega a planes, ingresos y modelos desde la barra', () => {
-    const hrefs = panelNav(null, {}, true).flatMap((seccion) => seccion.items).map((item) => item.href)
-    for (const ruta of ['/panel/admin/planes', '/panel/admin/extras', '/panel/admin/ingresos', '/panel/admin/modelos']) expect(hrefs).toContain(ruta)
-    // Y un atelier no: esas pantallas son del dinero de Luxury Atelier.
+  it('las pantallas hermanas son pestañas de su entrada: la entrada sigue marcada en ellas', () => {
+    const entradas = panelNav(null, {}, true).flatMap((seccion) => seccion.items)
+    const de = (label: string) => entradas.find((item) => item.label === label)!
+    for (const ruta of ['/panel/admin/consultas', '/panel/pedidos', '/panel/admin/ingresos']) expect(esEntradaActiva(de('Ventas'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/planes', '/panel/admin/extras', '/panel/admin/modelos']) expect(esEntradaActiva(de('Catálogo'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/pagos', '/panel/admin/auditoria', '/panel/cuenta']) expect(esEntradaActiva(de('Ajustes'), ruta)).toBe(true)
+    // «Hoy» solo en su ruta: su prefijo es el de toda la administración.
+    expect(esEntradaActiva(de('Hoy'), '/panel/admin/eventos')).toBe(false)
+    // Y un atelier no llega a nada de la administración.
     const delAtelier = panelNav('boda').flatMap((seccion) => seccion.items).map((item) => item.href)
     expect(delAtelier.some((href) => href.startsWith('/panel/admin'))).toBe(false)
   })
 
-  it('la insignia de consultas cuenta las nuevas', () => {
-    const consultas = panelNav(null, { consultas: 3 }, true)
+  it('la insignia de Ventas suma las consultas nuevas y los comprobantes por revisar', () => {
+    const ventas = panelNav(null, { consultas: 3, pedidos: 2 }, true)
       .flatMap((seccion) => seccion.items)
-      .find((item) => item.href === '/panel/admin/consultas')
-    expect(consultas?.count).toBe(3)
-    expect(consultas?.countLabel).toBe('nuevas')
+      .find((item) => item.label === 'Ventas')
+    expect(ventas?.count).toBe(5)
+    expect(ventas?.countLabel).toBe('por atender')
   })
 
   it('el admin dentro de una boda ve solo el menú de esa boda, sin la administración mezclada', () => {

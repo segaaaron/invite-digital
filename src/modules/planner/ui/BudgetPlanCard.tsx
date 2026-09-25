@@ -81,7 +81,7 @@ export function BudgetOverview({ evento, plan, categorias, editable }: { evento:
           [plan.pasado ? 'Te pasaste' : 'Te queda', plan.queda],
         ].map(([k, v]) => (
           <div key={k}>
-            <p className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">{k}</p>
+            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{k}</p>
             <p className={`font-display text-[26px] font-light [font-variant-numeric:lining-nums] ${k === 'Te pasaste' ? 'text-danger-deep' : 'text-ink'}`}>{v}</p>
           </div>
         ))}

@@ -55,7 +55,7 @@ describe('componerHoy', () => {
       HOY,
     )
     expect(hoy.ventas.map((a) => a.titulo)).toEqual(['Ana', 'Beto', 'Boda X', 'María'])
-    expect(hoy.ventas[0]?.href).toBe('/panel/pedidos')
+    expect(hoy.ventas[0]?.href).toBe('/panel/admin/ventas?pedido=A')
     expect(hoy.totales).toMatchObject({ pedidos: 2, consultas: 1, cambios: 1 })
   })
 

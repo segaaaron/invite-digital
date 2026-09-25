@@ -118,7 +118,7 @@ export default async function AdminAuditoriaPage({
           <>
             {/* Rejilla y no tabla: en el celular cada fila se apila —qué, sobre qué, quién y
                 cuándo— en vez de partir el correo en tres líneas dentro de una columna. */}
-            <div className="hidden grid-cols-[168px_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)] gap-3 border-b border-line-panel pb-3 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase min-[760px]:grid">
+            <div className="hidden grid-cols-[168px_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)] gap-3 border-b border-line-panel pb-3 font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase min-[760px]:grid">
               <span>Cuándo</span>
               <span>Quién</span>
               <span>Qué</span>

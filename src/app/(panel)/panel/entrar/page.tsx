@@ -81,7 +81,7 @@ export default function SignInPage() {
 
         {/* El dominio y el alcance, no la ciudad: el panel se abre desde donde sea, y quien
             entra ya sabe dónde está el taller. */}
-        <p className="relative mt-8 hidden font-mono text-[9px] tracking-[0.3em] text-shell-ink/40 uppercase min-[860px]:block">
+        <p className="relative mt-8 hidden font-mono text-[10.5px] tracking-[0.16em] text-shell-ink/40 uppercase min-[860px]:block">
           luxuryatelier.net · invitaciones digitales en todo el mundo
         </p>
       </section>
@@ -90,7 +90,7 @@ export default function SignInPage() {
       <section className="flex items-center justify-center bg-bg-top px-6 py-14 min-[860px]:px-10">
         <div className="flex w-full max-w-[380px] flex-col gap-8">
           <header className="flex flex-col gap-2">
-            <p className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Acceso privado</p>
+            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Acceso privado</p>
             <h1 className="font-display text-[30px] leading-tight font-light text-ink">Panel del atelier</h1>
           </header>
 

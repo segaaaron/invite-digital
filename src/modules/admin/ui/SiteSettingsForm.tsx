@@ -506,7 +506,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
                     {datos.cifras.items.map((c, i) => (
                       <div key={i}>
                         <p className="font-display text-[22px] leading-none text-gold-deep">{c.valor || '—'}</p>
-                        <p className="mt-1 text-[9px] tracking-[0.15em] text-ink-mute uppercase">{c[idioma] || '—'}</p>
+                        <p className="mt-1 text-[10.5px] tracking-[0.15em] text-ink-mute uppercase">{c[idioma] || '—'}</p>
                       </div>
                     ))}
                   </div>

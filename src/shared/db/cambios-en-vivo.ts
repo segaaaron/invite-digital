@@ -1,10 +1,13 @@
 import { pg } from './client'
 
-/** El canal que escriben los disparadores de la `0070`. */
+/** El canal que escriben los disparadores de la `0070` y la `0071`. */
 export const CANAL_DE_CAMBIOS = 'cambio_de_evento'
 
+/** El «evento» de los avisos del admin (`0071`): consultas y pedidos. Ningún evento real se llama así. */
+export const CAMBIOS_DEL_ADMIN = 'admin'
+
 /** `resync`: la escucha se reconectó y pudo perderse algo; quien lo reciba, que se ponga al día. */
-export type TipoDeCambio = 'rsvp' | 'ingreso' | 'visita' | 'resync'
+export type TipoDeCambio = 'rsvp' | 'ingreso' | 'visita' | 'consulta' | 'pedido' | 'resync'
 
 type Oyente = (tipo: TipoDeCambio, version: number) => void
 
@@ -19,7 +22,7 @@ type Bus = {
 const global = globalThis as unknown as { __busDeCambios?: Bus }
 const bus: Bus = (global.__busDeCambios ??= { oyentes: new Map(), versiones: new Map(), escuchando: null })
 
-const TIPOS = new Set<TipoDeCambio>(['rsvp', 'ingreso', 'visita'])
+const TIPOS = new Set<TipoDeCambio>(['rsvp', 'ingreso', 'visita', 'consulta', 'pedido'])
 
 /** El aviso de Postgres, `{"e": "<evento>", "t": "<tipo>"}`. Cualquier otra cosa se ignora. */
 export function leerAviso(texto: string): { eventId: string; tipo: TipoDeCambio } | null {

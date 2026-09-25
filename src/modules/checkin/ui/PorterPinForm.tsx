@@ -16,7 +16,7 @@ export function PorterPinForm({ token }: { token: string }) {
   return (
     <form action={entrar} className="flex w-full max-w-[340px] flex-col gap-4">
       <input name="token" type="hidden" value={token} />
-      <label className="font-mono text-[10px] tracking-[0.3em] text-shell-ink/70 uppercase" htmlFor={`${id}-pin`}>
+      <label className="font-mono text-[10px] tracking-[0.16em] text-shell-ink/70 uppercase" htmlFor={`${id}-pin`}>
         PIN de 6 dígitos
       </label>
       <input
@@ -38,7 +38,7 @@ export function PorterPinForm({ token }: { token: string }) {
         </p>
       ) : null}
       <button
-        className="w-full cursor-pointer rounded-[var(--radius-pill)] bg-gold px-4 py-3.5 font-mono text-[11px] tracking-[0.3em] text-shell-deep uppercase disabled:opacity-50"
+        className="w-full cursor-pointer rounded-[var(--radius-pill)] bg-gold px-4 py-3.5 font-mono text-[11px] tracking-[0.16em] text-shell-deep uppercase disabled:opacity-50"
         disabled={entrando}
         type="submit" aria-busy={(entrando) || undefined}>
         {entrando ? 'Entrando…' : 'Entrar a la puerta'}

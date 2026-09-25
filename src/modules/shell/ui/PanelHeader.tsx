@@ -22,7 +22,7 @@ export function PanelHeader({
   return (
     <header className="mb-6.5 flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
-        {kicker ? <p className="font-mono text-[10px] tracking-[0.35em] uppercase opacity-55">{kicker}</p> : null}
+        {kicker ? <p className="font-mono text-[10px] tracking-[0.18em] uppercase opacity-55">{kicker}</p> : null}
         <h1 className="mt-1.5 font-display text-[26px] leading-none font-light text-ink min-[560px]:text-[38px]">
           {title}
           {highlight === undefined ? null : <b className="font-normal text-sage italic">{highlight}</b>}

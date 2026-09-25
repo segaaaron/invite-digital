@@ -139,6 +139,9 @@ const VISTAS_ADMIN = [
   ['pedidos', '/panel/pedidos'],
   ['admin · hoy', '/panel/admin'],
   ['admin · consultas', '/panel/admin/consultas'],
+  // El tablero de seis etapas: en el teléfono se apilan; en escritorio se desplaza dentro de sí.
+  ['admin · ventas', '/panel/admin/ventas'],
+  ['admin · clientes', '/panel/admin/clientes'],
   ['admin · eventos', '/panel/admin/eventos'],
   // El alta abierta: cinco campos en dos columnas que en un teléfono tienen que apilarse.
   ['admin · eventos · alta', '/panel/admin/eventos?panel=nueva'],

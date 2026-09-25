@@ -144,7 +144,8 @@ function avisosDeConsultas(consultas: HoyCrudo['consultasNuevas'], diasDesde: (i
     etiqueta: 'Consulta',
     titulo: c.name,
     detalle: `Escribió desde la web ${hace(diasDesde(c.createdAt))}${c.eventDate ? ` · evento el ${c.eventDate}` : ''}`,
-    href: '/panel/admin/consultas',
+    // Cada aviso suelto abre su panel en Ventas; los resúmenes, la bandeja filtrada.
+    href: `/panel/admin/ventas?consulta=${c.id}`,
     accion: 'Contactar',
     desde: c.createdAt.getTime(),
   }))
@@ -163,7 +164,7 @@ export function componerHoy(crudo: HoyCrudo, hoy: string): Hoy {
         etiqueta: 'Comprobante',
         titulo: p.customerName,
         detalle: `Pedido ${p.ref} · subió el comprobante ${hace(diasDesde(p.createdAt))}`,
-        href: '/panel/pedidos',
+        href: `/panel/admin/ventas?pedido=${p.ref}`,
         accion: 'Revisar',
         desde: p.createdAt.getTime(),
       })),
@@ -255,7 +256,7 @@ export function componerHoy(crudo: HoyCrudo, hoy: string): Hoy {
           etiqueta: 'Sin pago',
           titulo: p.customerName,
           detalle: `Pedido ${p.ref} abierto ${hace(diasDesde(p.createdAt))} y sin comprobante`,
-          href: '/panel/pedidos',
+          href: `/panel/admin/ventas?pedido=${p.ref}`,
           accion: 'Seguir',
           desde: p.createdAt.getTime(),
         })),

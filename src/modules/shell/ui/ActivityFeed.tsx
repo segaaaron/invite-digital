@@ -52,7 +52,7 @@ export function ActivityFeed({ items }: { items: readonly ActivityItem[] }) {
             <span className="block truncate text-[13px] font-medium text-ink">{item.actor}</span>
             <span className="block text-[12px] text-ink-soft">{item.action}</span>
           </span>
-          <span className="font-mono text-[9px] tracking-[0.2em] whitespace-nowrap text-ink-mute uppercase">
+          <span className="font-mono text-[10.5px] tracking-[0.2em] whitespace-nowrap text-ink-mute uppercase">
             {fecha(item.at)}
           </span>
         </li>

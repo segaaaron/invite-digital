@@ -1,8 +1,8 @@
 import { admin, catalog, leads } from '@/app/composition/container'
-import { esperaDeConsulta } from '@/modules/leads/domain/espera'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { ESTADOS_CONSULTA, tasaDeCierre } from '@/modules/leads/domain/pipeline'
-import { ConsultationDetail, ConsultationRow, type ConsultationView } from '@/modules/leads/ui/ConsultationDetail'
+import { ConsultationDetail, ConsultationRow } from '@/modules/leads/ui/ConsultationDetail'
+import { vistaDeConsulta } from '@/modules/leads/ui/vista-de-consulta'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
@@ -21,9 +21,6 @@ const FILTROS = [
   { key: 'todas', label: 'Todas' },
 ] as const
 
-const FECHA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
-const RECIBIDA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/La_Paz' })
-const CORTA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'short', timeZone: 'America/La_Paz' })
 
 /**
  * Lo que llega del formulario de contacto de la web, como una bandeja de entrada: la lista a
@@ -65,21 +62,7 @@ export default async function AdminConsultasPage({ searchParams }: { searchParam
   const bodas = isErr(eventos) ? [] : eventos.value.map((e) => ({ id: e.id, title: e.title }))
 
   const ahora = new Date()
-  const vistas: ConsultationView[] = filas.map((c) => ({
-    id: c.id,
-    name: c.name,
-    email: c.email,
-    phone: c.phone,
-    category: c.categorySlug === null ? null : (nombreCategoria.get(c.categorySlug) ?? c.categorySlug),
-    eventDateLabel: c.eventDate === null ? null : FECHA.format(new Date(`${c.eventDate}T00:00:00Z`)),
-    message: c.message,
-    status: c.status,
-    note: c.note,
-    receivedLabel: `Llegó el ${RECIBIDA.format(c.createdAt)}`,
-    shortDateLabel: CORTA.format(c.createdAt),
-    event: c.event,
-    espera: c.status === 'new' ? esperaDeConsulta(c.createdAt, ahora) : null,
-  }))
+  const vistas = filas.map((c) => vistaDeConsulta(c, nombreCategoria, ahora))
 
   const enlace = (params: { estado?: string; id?: string }) => {
     const q = new URLSearchParams()

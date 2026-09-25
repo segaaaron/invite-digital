@@ -102,7 +102,7 @@ export function ShowcaseMusicRow({
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div className="flex items-baseline justify-between gap-2">
           <span className="font-display text-[20px] leading-tight text-ink">{label}</span>
-          <span className="font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase">{themeKey}</span>
+          <span className="font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase">{themeKey}</span>
         </div>
 
         {tieneMusica ? (

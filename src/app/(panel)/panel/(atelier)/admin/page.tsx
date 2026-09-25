@@ -87,7 +87,7 @@ export default async function AdminPage() {
         </PanelCard>
 
         <PanelCard title="Próximos eventos">
-          <p className="-mt-2 mb-3 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Los próximos 30 días</p>
+          <p className="-mt-2 mb-3 font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Los próximos 30 días</p>
           {h.proximas.length === 0 ? (
             <EmptyState compact title="Ningún evento en los próximos 30 días" />
           ) : (
@@ -100,7 +100,7 @@ export default async function AdminPage() {
         </PanelCard>
       </div>
 
-      <h2 className="mt-9 mb-4 font-mono text-[10px] tracking-[0.35em] text-ink-mute uppercase">El negocio</h2>
+      <h2 className="mt-9 mb-4 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">El negocio</h2>
 
       <div className="grid grid-cols-2 gap-3 min-[560px]:gap-4.5 min-[900px]:grid-cols-4">
         {/* Lo que dice cómo va el negocio, no cuántas filas hay en la base. */}

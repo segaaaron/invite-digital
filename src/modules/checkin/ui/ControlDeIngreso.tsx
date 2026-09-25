@@ -355,7 +355,7 @@ export function ControlDeIngreso({
                           type="checkbox"
                         />
                         {f.nombre}
-                        {f.vip ? <span className="rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
+                        {f.vip ? <span className="rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[10.5px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
                       </label>
                     </li>
                   ),
@@ -437,7 +437,7 @@ export function ControlDeIngreso({
             />
           ) : (
             <div aria-label="Ingresos" role="table">
-              <div className={`${COLUMNAS} border-b border-line-panel pb-2.5 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase max-[759px]:hidden`} role="row">
+              <div className={`${COLUMNAS} border-b border-line-panel pb-2.5 font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase max-[759px]:hidden`} role="row">
                 <span role="columnheader">Invitado</span>
                 <span role="columnheader">Invitación · Mesa</span>
                 <span role="columnheader">Personas</span>
@@ -540,7 +540,7 @@ export function ControlDeIngreso({
                               <span className="flex min-w-0 flex-col">
                                 <span className="flex min-w-0 items-center gap-2">
                                   <span className="truncate text-[14.5px] text-ink">{f.nombre}</span>
-                                  {f.vip ? <span className="shrink-0 rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
+                                  {f.vip ? <span className="shrink-0 rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[10.5px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
                                 </span>
                                 <span className="truncate text-[11.5px] text-ink-mute min-[760px]:hidden">
                                   {[familia || f.invitacion === f.nombre ? null : f.invitacion, familia ? null : f.mesa, f.estado === 'dentro' ? (f.hora === null ? 'Dentro' : `Entró ${f.hora}`) : null]

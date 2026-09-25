@@ -9,7 +9,7 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
-import { AtajoDeBusqueda } from '@/modules/admin'
+import { BarraDelAdmin } from '@/modules/admin'
 import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { hasFeature } from '@/modules/plans'
 import { TIPOS_DE_CORTEJO } from '@/modules/planner'
@@ -85,7 +85,7 @@ export default async function EventoLayout({
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
-      {isAdmin(actor) ? <AtajoDeBusqueda /> : null}
+      {isAdmin(actor) ? <BarraDelAdmin /> : null}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

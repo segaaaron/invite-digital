@@ -155,7 +155,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
             <thead>
               <tr>
                 {['Invitado', 'Confirmación', 'Restricciones', 'Mesa', 'Invitación'].map((columna) => (
-                  <th className="border-b border-line-panel pt-1 pb-3 pr-4 font-mono text-[9px] font-medium tracking-[0.3em] whitespace-nowrap text-ink-mute uppercase" key={columna} scope="col">
+                  <th className="border-b border-line-panel pt-1 pb-3 pr-4 font-mono text-[10.5px] font-medium tracking-[0.16em] whitespace-nowrap text-ink-mute uppercase" key={columna} scope="col">
                     {columna}
                   </th>
                 ))}
@@ -230,7 +230,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                             <span className="flex items-center gap-2 text-[14.5px] text-ink">
                               {fila.fullName}
                               {fila.vip ? (
-                                <span aria-hidden className="rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[9px] tracking-[0.2em] text-gold-deep" title="VIP">
+                                <span aria-hidden className="rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[10.5px] tracking-[0.2em] text-gold-deep" title="VIP">
                                   VIP
                                 </span>
                               ) : null}

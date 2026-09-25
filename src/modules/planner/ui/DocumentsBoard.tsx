@@ -127,7 +127,7 @@ function ListaDeArchivos({ documentos, evento, proveedores }: { documentos: read
     <ul className="flex flex-col divide-y divide-line-panel">
       {documentos.map((d) => (
         <li className="flex items-center gap-3 py-3" key={d.id}>
-          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-bg-top font-mono text-[9px] tracking-[0.1em] text-ink-soft uppercase">
+          <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-[10px] bg-bg-top font-mono text-[10.5px] tracking-[0.1em] text-ink-soft uppercase">
             {d.esImagen ? 'IMG' : 'PDF'}
           </span>
           <span className="flex min-w-0 flex-1 flex-col gap-0.5">

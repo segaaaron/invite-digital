@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { signOutAction } from '@/app/_acciones/identity/actions'
 import { leaveSupportAction } from '@/app/_acciones/admin/support-actions'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
-import type { NavItem, NavSection } from './nav'
+import { esEntradaActiva, type NavItem, type NavSection } from './nav'
 import { NAV_ICONS } from './nav-icons'
 
 /**
@@ -44,7 +44,7 @@ function Icono({ icon }: { icon: NavItem['icon'] }) {
 function Insignia({ item }: { item: NavItem }) {
   if (!item.count) return null
   return (
-    <span className="ml-auto hidden rounded-full bg-sage px-1.5 py-0.5 font-mono text-[9px] text-white min-[860px]:inline">
+    <span className="ml-auto hidden rounded-full bg-sage px-1.5 py-0.5 font-mono text-[10.5px] text-white min-[860px]:inline">
       {item.count}
       {item.countLabel ? <span className="sr-only"> {item.countLabel}</span> : null}
     </span>
@@ -76,7 +76,7 @@ export function PanelSidebar({
    * y cada pantalla empezaba con medio teléfono de menú antes del contenido.
    */
   const [abierto, setAbierto] = useState(false)
-  const actual = sections.flatMap((s) => s.items).find((item) => item.href === pathname)
+  const actual = sections.flatMap((s) => s.items).find((item) => esEntradaActiva(item, pathname))
 
   return (
     <aside className="sticky top-0 z-50 flex max-h-dvh flex-col gap-y-2 overflow-y-auto bg-linear-to-b from-shell to-shell-deep px-4 py-3 text-shell-ink shadow-[12px_0_40px_rgb(0_0_0/0.18)] min-[860px]:h-dvh min-[860px]:flex-nowrap min-[860px]:items-stretch min-[860px]:gap-0 min-[860px]:px-5 min-[860px]:py-6.5">
@@ -112,13 +112,13 @@ export function PanelSidebar({
         <p className="font-display text-[22px] italic">
           Luxury <b className="font-medium not-italic">Atelier</b>
         </p>
-        <p className="mt-1 mb-7 font-mono text-[9px] tracking-[0.3em] opacity-55">{brandSub}</p>
+        <p className="mt-1 mb-7 font-mono text-[10.5px] tracking-[0.16em] opacity-55">{brandSub}</p>
       </div>
 
       {user.soporte ? (
         // En modo soporte, la salida va lo primero de la barra: abajo quedaba fuera de la vista.
         <div className="mb-5 flex flex-col gap-2 rounded-xl border border-gold/50 bg-gold/15 px-3 py-2.5">
-          <p className="font-mono text-[9px] tracking-[0.25em] text-gold-light uppercase">Modo soporte</p>
+          <p className="font-mono text-[10.5px] tracking-[0.25em] text-gold-light uppercase">Modo soporte</p>
           <p className="text-[12px] leading-snug">
             Estás como <span className="break-all">{user.email}</span>
           </p>
@@ -144,16 +144,16 @@ export function PanelSidebar({
             </Link>
           )}
           <div className="rounded-xl border border-gold/35 bg-white/5 px-3 py-2.5">
-            <p className="font-mono text-[9px] tracking-[0.25em] uppercase opacity-55">Evento</p>
+            <p className="font-mono text-[10.5px] tracking-[0.25em] uppercase opacity-55">Evento</p>
             <p className="mt-0.5 truncate text-[14px]">{evento.title}</p>
-            <p className="font-mono text-[9px] tracking-[0.2em] uppercase opacity-55">{evento.planLabel}</p>
+            <p className="font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-55">{evento.planLabel}</p>
           </div>
         </div>
       )}
 
       {sections.map((section) => (
         <nav key={section.label} aria-label={section.label} className="flex flex-wrap gap-1 min-[860px]:mb-5.5 min-[860px]:flex-col min-[860px]:gap-0">
-          <p className="mb-1 w-full font-mono text-[9px] tracking-[0.3em] uppercase opacity-45 min-[860px]:mb-2">
+          <p className="mb-1 w-full font-mono text-[10.5px] tracking-[0.16em] uppercase opacity-45 min-[860px]:mb-2">
             {section.label}
           </p>
           {section.items.map((item) => (
@@ -161,9 +161,9 @@ export function PanelSidebar({
               key={item.href}
               href={item.href}
               onClick={() => setAbierto(false)}
-              aria-current={item.href === pathname ? 'page' : undefined}
+              aria-current={esEntradaActiva(item, pathname) ? 'page' : undefined}
               className={`${ITEM_BASE} ${
-                item.href === pathname
+                esEntradaActiva(item, pathname)
                   ? 'bg-linear-to-r from-gold/20 to-white/5 shadow-[inset_2px_0_0_var(--color-gold)]'
                   : 'hover:bg-white/7'
               }`}
@@ -186,7 +186,7 @@ export function PanelSidebar({
           </span>
           <div className="min-w-0">
             <p className="truncate text-[12px] min-[860px]:text-[12.5px]">{user.email}</p>
-            <p className="font-mono text-[9px] tracking-[0.2em] uppercase opacity-60">{user.rol}</p>
+            <p className="font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-60">{user.rol}</p>
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export function PanelSidebar({
           description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
           title="Cerrar sesión"
           trigger="Cerrar sesión"
-          triggerClassName="w-full rounded-xl border border-white/10 px-2.5 py-1.5 text-left font-mono text-[9px] tracking-[0.2em] uppercase opacity-70 transition-colors hover:border-gold/50 hover:opacity-100 min-[860px]:px-3.5 min-[860px]:py-2.5"
+          triggerClassName="w-full rounded-xl border border-white/10 px-2.5 py-1.5 text-left font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-70 transition-colors hover:border-gold/50 hover:opacity-100 min-[860px]:px-3.5 min-[860px]:py-2.5"
         />
       </div>
       </div>

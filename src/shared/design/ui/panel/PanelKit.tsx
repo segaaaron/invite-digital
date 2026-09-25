@@ -200,7 +200,11 @@ export function PanelAlert({ tone, children }: { tone: 'error' | 'ok'; children:
 export const FIELD_CLASS =
   'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
 
-export const LABEL_CLASS = 'font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase'
+/**
+ * El rótulo de un campo o dato. **11 px**: el de 9 px en monoespaciada con 0,3 em de espaciado se
+ * veía fino en una captura y costaba leerlo en el trabajo diario, sobre todo en el celular.
+ */
+export const LABEL_CLASS = 'text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase'
 
 /** Lo que `Field` le pasa a su campo cuando se escribe como función: el campo no se ata a mano. */
 export type FieldControlProps = {
@@ -275,7 +279,7 @@ export type PillTone = keyof typeof PILL_TONOS
 export function Pill({ tone, children }: { tone: PillTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[9px] tracking-[0.25em] whitespace-nowrap uppercase ${PILL_TONOS[tone]}`}
+      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[10.5px] tracking-[0.25em] whitespace-nowrap uppercase ${PILL_TONOS[tone]}`}
     >
       {children}
     </span>

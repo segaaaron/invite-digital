@@ -64,7 +64,7 @@ export function ImportPanel({
                   {['Línea', 'Invitación', 'Cupos', 'Resultado'].map((titulo) => (
                     <th
                       key={titulo}
-                      className="border-b border-line-panel py-3 pr-3 font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
+                      className="border-b border-line-panel py-3 pr-3 font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase"
                     >
                       {titulo}
                     </th>

@@ -86,8 +86,8 @@ export function PassDialog({
           <div
             className="mt-5 flex flex-col items-center gap-4 rounded-[18px] border border-gold/40 bg-linear-to-br from-bg-top to-bg-raised p-7 text-center shadow-float"
           >
-            <p className="font-mono text-[9px] tracking-[0.35em] text-gold-deep uppercase">Pase de entrada</p>
-            <p className="font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase">
+            <p className="font-mono text-[10.5px] tracking-[0.18em] text-gold-deep uppercase">Pase de entrada</p>
+            <p className="font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase">
               {eventTitle} · {eventMeta}
             </p>
             <div className="rounded-xl border border-line-panel bg-white p-2.5">
@@ -97,8 +97,8 @@ export function PassDialog({
             <p className="text-[12px] text-ink-soft">{sitio}</p>
             {codigo === null ? null : (
               <p className="flex flex-col items-center gap-0.5">
-                <span className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Código</span>
-                <span className="font-mono text-[20px] tracking-[0.3em] text-ink">{codigo}</span>
+                <span className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Código</span>
+                <span className="font-mono text-[20px] tracking-[0.16em] text-ink">{codigo}</span>
               </p>
             )}
             <span aria-hidden className="h-px w-full bg-[repeating-linear-gradient(90deg,var(--color-line-panel-strong)_0_6px,transparent_6px_12px)]" />

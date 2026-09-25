@@ -369,7 +369,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   {['Nombre', 'Invitación', 'RSVP', 'Acompañantes', 'Mesa'].map((columna) => (
                     <th
                       key={columna}
-                      className="border-b border-line-panel px-3.5 py-3 text-left font-mono text-[9px] font-medium tracking-[0.3em] text-ink-mute uppercase"
+                      className="border-b border-line-panel px-3.5 py-3 text-left font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase"
                       scope="col"
                     >
                       {columna}
@@ -454,7 +454,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                       <span className="font-display text-[16px] font-medium [font-variant-numeric:lining-nums]">
                         {mesa.label.replace(/^mesa\s*/i, '')}
                       </span>
-                      <span className="font-mono text-[8px] tracking-[0.2em] opacity-70">
+                      <span className="font-mono text-[10px] tracking-[0.2em] opacity-70">
                         {mesa.taken}/{cupo}
                       </span>
                     </li>
@@ -518,7 +518,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             </div>
 
             <div className="mt-5 rounded-[14px] bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-4 text-white">
-              <p className="font-mono text-[9px] tracking-[0.3em] opacity-85 uppercase">Recordatorio</p>
+              <p className="font-mono text-[10.5px] tracking-[0.16em] opacity-85 uppercase">Recordatorio</p>
               <p className="mt-1.5 font-display text-[20px] italic">Fecha límite de confirmación</p>
               <p className="mt-1.5 text-[12px] opacity-85">
                 {new Date(`${event.value.rsvpDeadline}T00:00:00`).toLocaleDateString('es-BO', {

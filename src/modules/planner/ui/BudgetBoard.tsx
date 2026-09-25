@@ -168,7 +168,7 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
         <li aria-label={p.concept} className="flex flex-col gap-3 rounded-[18px] border border-line-panel bg-white px-5 py-4 shadow-card" key={p.id}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="flex min-w-0 flex-col">
-              <span className="font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">{p.categoria}</span>
+              <span className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{p.categoria}</span>
               <span className="font-display text-[20px] font-light text-ink">{p.concept}</span>
               <span className="text-[11px] text-ink-mute">Paga: {p.quienPaga}</span>
             </div>
@@ -180,7 +180,7 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
                 ['Falta', p.falta],
               ].map(([k, v]) => (
                 <div className="flex flex-col" key={k}>
-                  <dt className="font-mono text-[9px] tracking-[0.2em] text-ink-mute uppercase">{k}</dt>
+                  <dt className="font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase">{k}</dt>
                   <dd className="text-ink">{v}</dd>
                 </div>
               ))}
