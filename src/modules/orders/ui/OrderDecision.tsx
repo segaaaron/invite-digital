@@ -4,6 +4,7 @@ import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: DecideOrderState = { status: 'idle' }
 
@@ -51,13 +52,12 @@ export function OrderDecision({ orderId, esExtra = false }: { orderId: string; /
 
         <label className="flex flex-col gap-2" htmlFor={`${id}-clave`}>
           <span className={LABEL_CLASS}>Contraseña inicial · mínimo 12</span>
-          <input
+          <CampoContrasena
             autoComplete="new-password"
             className={FIELD_CLASS}
             id={`${id}-clave`}
             minLength={12}
             name="clientPassword"
-            type="text"
           />
         </label>
       </div>

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import type { ThemeProps } from '../contract'
 import { anfitrionesXv } from '../../../domain/invitation-content'
 import { variablesDeRanuras } from '../kit/slot-skin'
@@ -60,6 +60,8 @@ export function XvSharedView({
   // la maqueta, y el orden de `notes` lo fija el diseño, igual que «Editorial» indexa el
   // suyo para la tarjeta de fotografías.
   const [avisoDeSobres, ...avisosSueltos] = notes ?? []
+  // Los regalos por piezas, en una invitación de verdad (ver `ThemeSlots.regalos`).
+  const partes = slots.regalos
 
   // El texto del aviso puede traer dos párrafos: el primero es la intro de la tarjeta —«Que
   // estés ahí, celebrando conmigo…»— y el segundo, la nota corta bajo el sobre. Con uno
@@ -1183,7 +1185,7 @@ export function XvSharedView({
         */}
         {piel.regalos !== true ? (
           <div style={{ marginTop: 28 }}>{slots.registry}</div>
-        ) : (
+        ) : partes !== undefined && !partes.sobres && partes.qr === null && partes.resto === null ? null : (
         <Reveal>
           <div
             style={{
@@ -1220,7 +1222,7 @@ export function XvSharedView({
               </p>
             )}
 
-            {avisoDeSobres === undefined ? null : (
+            {avisoDeSobres === undefined || partes?.sobres === false ? null : (
               <div style={{ marginTop: 40 }}>
                 <SobreDeLinea color={Z.sobreAcento ?? P.lila} />
                 <div
@@ -1247,23 +1249,31 @@ export function XvSharedView({
             {/* El separador de esta tarjeta no es el mismo en los cuatro: ver `separadorRegalos`. */}
             {piel.separadorRegalos ?? <FileteDegradado color={P.lilaFuerte} margin="36px auto" />}
 
-            {/* El código y su pie, como en el diseño. */}
-            <MarcoQr aro={Z.qrAro} bg={P.blanco} fg={Z.qrTinta ?? P.violetaHondo} seed={42} size={110} />
-            <div
-              style={{
-                marginTop: 14,
-                fontFamily: SANS,
-                fontSize: 15,
-                letterSpacing: '0.04em',
-                color: Z.sobresRotulo ?? P.violetaHondo,
-                textShadow: Z.sombraTexto,
-                fontWeight: 700,
-              }}
-            >
-              {themes.scanHere}
-            </div>
+            {/* El código y su pie, como en el diseño. En una invitación de verdad es el QR del banco
+                del cliente, o nada: el de adorno de la maqueta, con «escanea aquí», invitaría a pagar
+                a un código falso. Sin `partes` (escaparate, vista previa) queda el de la maqueta. */}
+            {partes === undefined ? (
+              <>
+                <MarcoQr aro={Z.qrAro} bg={P.blanco} fg={Z.qrTinta ?? P.violetaHondo} seed={42} size={110} />
+                <div
+                  style={{
+                    marginTop: 14,
+                    fontFamily: SANS,
+                    fontSize: 15,
+                    letterSpacing: '0.04em',
+                    color: Z.sobresRotulo ?? P.violetaHondo,
+                    textShadow: Z.sombraTexto,
+                    fontWeight: 700,
+                  }}
+                >
+                  {themes.scanHere}
+                </div>
+              </>
+            ) : partes.qr === null ? null : (
+              <div style={{ marginTop: 8 }}>{partes.qr}</div>
+            )}
 
-            {slots.registry}
+            {partes === undefined ? slots.registry : partes.resto}
           </div>
         </Reveal>
         )}

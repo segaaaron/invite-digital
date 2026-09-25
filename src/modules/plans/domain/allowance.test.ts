@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type Allowance, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, usageRatio } from './allowance'
+import { type Allowance, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, seccionesFueraDelPlan, usageRatio } from './allowance'
 
 const atelier: Allowance = {
   planSlug: 'atelier',
@@ -132,3 +132,26 @@ describe('el planner por plan', () => {
   })
 })
 
+
+describe('seccionesFueraDelPlan', () => {
+  it('el plan básico no ofrece puerta, planner completo, Día D ni equipo; sí mesas y regalos (sobres y transferencia)', () => {
+    expect(seccionesFueraDelPlan(atelier)).toEqual([
+      '/checkin',
+      '/planner/proveedores',
+      '/planner/cronograma',
+      '/planner/cortejo',
+      '/planner/documentos',
+      '/dia-d',
+      '/equipo',
+    ])
+  })
+
+  it('el plan que lo trae todo no deja nada fuera', () => {
+    expect(seccionesFueraDelPlan({ ...altaCostura, plannerSuite: 'total' })).toEqual([])
+  })
+
+  it('con recepción o planner contratable, Equipo se ofrece', () => {
+    expect(seccionesFueraDelPlan({ ...atelier, maxHiredPlanners: 1 })).not.toContain('/equipo')
+    expect(seccionesFueraDelPlan({ ...atelier, maxDoorPorters: 3 })).not.toContain('/equipo')
+  })
+})

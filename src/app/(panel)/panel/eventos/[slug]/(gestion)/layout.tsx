@@ -11,7 +11,7 @@ import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { BarraDelAdmin } from '@/modules/admin'
 import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
-import { hasFeature } from '@/modules/plans'
+import { hasFeature, seccionesFueraDelPlan } from '@/modules/plans'
 import { TIPOS_DE_CORTEJO } from '@/modules/planner'
 import { insigniasDeAdmin } from '../../../_carcasa/insignias-de-admin'
 import { isErr } from '@/shared/result'
@@ -73,7 +73,7 @@ export default async function EventoLayout({
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, diaD: !isErr(capacidad) && hasFeature(capacidad.value, 'plannerTotal'), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })}
       evento={{
         title: event.value.title,
         planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,

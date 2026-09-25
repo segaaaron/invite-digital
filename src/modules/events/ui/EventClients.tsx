@@ -5,6 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/
 import { addEventClientAction, removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
 import type { StaffMember } from './DoorStaff'
 import { Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -78,13 +79,12 @@ export function EventClients({
             <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
               Contraseña inicial
             </label>
-            <input
+            <CampoContrasena
               autoComplete="new-password"
               className={FIELD_CLASS}
               id={`${id}-clave`}
               minLength={12}
               name="password"
-              type="text"
             />
           </div>
         </div>

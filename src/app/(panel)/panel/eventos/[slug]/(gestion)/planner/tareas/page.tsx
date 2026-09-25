@@ -13,6 +13,7 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fecha } from '@/shared/format/fecha'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr, isOk } from '@/shared/result'
+import { seccionesFueraDelPlan } from '@/modules/plans'
 
 export const metadata = { title: 'Plan de tareas' }
 export const dynamic = 'force-dynamic'
@@ -71,11 +72,18 @@ export default async function TareasPage({
     recepcion: recepcion.length > 0,
   }
   const base = `/panel/eventos/${event.value.slug}/planner/tareas`
+  // Una tarea no lleva a una sección que el plan no trae: el atajo se quita y la tarea queda.
+  const capacidad = await plans.allowanceFor(eventId)
+  const fuera = new Set(isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value))
+  const atajoDentro = (titulo: string) => {
+    const atajo = atajoDeTarea(titulo)
+    return atajo === null || fuera.has(atajo.ruta) ? null : atajo
+  }
   const raiz = `/panel/eventos/${event.value.slug}`
   // La tarea resuelta en su pantalla cuenta como hecha también para el avance y los filtros.
   const conApp = todas.map((t) => (t.doneAt === null && resueltaEnLaApp(t.title, ya) ? { ...t, doneAt: new Date(0), doneBy: null } : t))
   const visibles = filtrarTareas(conApp, filtro, { hoy, mias }).map((t) => {
-    const atajo = atajoDeTarea(t.title)
+    const atajo = atajoDentro(t.title)
     const porLaApp = t.doneAt?.getTime() === 0
     return {
       ...t,
@@ -92,7 +100,7 @@ export default async function TareasPage({
     .filter((t) => t.doneAt === null)
     .sort((x, y) => (x.dueDate ?? '9999').localeCompare(y.dueDate ?? '9999'))
     .slice(0, 3)
-    .map((t) => ({ id: t.id, title: t.title, vence: t.dueDate === null ? null : diaLegible(t.dueDate), atrasada: t.dueDate !== null && t.dueDate < hoy, atajo: atajoDeTarea(t.title) }))
+    .map((t) => ({ id: t.id, title: t.title, vence: t.dueDate === null ? null : diaLegible(t.dueDate), atrasada: t.dueDate !== null && t.dueDate < hoy, atajo: atajoDentro(t.title) }))
 
   return (
     <>

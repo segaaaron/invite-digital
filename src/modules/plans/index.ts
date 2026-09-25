@@ -1,6 +1,6 @@
 export type { Allowance, DesignChange, PlanFeature, PlannerSuite } from './domain/allowance'
 export { capacidadDePlan } from './application/plan-capacity'
-export { DESIGN_CHANGES, PLANNER_SUITES, WARNING_RATIO, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, usageRatio } from './domain/allowance'
+export { DESIGN_CHANGES, PLANNER_SUITES, WARNING_RATIO, canAddGroup, hasFeature, planThatIncludes, puedeCambiarDiseno, remainingGroups, seccionesFueraDelPlan, usageRatio } from './domain/allowance'
 export type { PlansError, PlansErrorKind } from './domain/errors'
 export type { PendingRequest } from './application/change-request-use-cases'
 export type { PlanChangeRequestRow, PlanChangeStatus, PlanReader, PlanRow, PlansRepository } from './application/ports'

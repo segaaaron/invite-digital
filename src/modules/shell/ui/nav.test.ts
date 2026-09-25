@@ -204,6 +204,20 @@ describe('panelNav', () => {
     expect(rutas('coanfitrion')).toContain('/panel/eventos/boda/planner/documentos')
   })
 
+  it('lo que el plan no trae no sale en la barra, y lo que trae sí, para el atelier y para el cliente', () => {
+    const fuera = ['/checkin', '/planner/proveedores', '/dia-d']
+    const rutas = (esCliente: boolean, fueraDelPlan?: readonly string[]) =>
+      panelNav('boda', {}, false, false, esCliente, fueraDelPlan === undefined ? {} : { fueraDelPlan }).flatMap((s) => s.items.map((i) => i.href))
+    for (const esCliente of [false, true]) {
+      for (const ruta of fuera) {
+        expect(rutas(esCliente, fuera)).not.toContain(`/panel/eventos/boda${ruta}`)
+        expect(rutas(esCliente)).toContain(`/panel/eventos/boda${ruta}`)
+      }
+      expect(rutas(esCliente, fuera)).toContain('/panel/eventos/boda/mesas')
+      expect(rutas(esCliente, fuera)).toContain('/panel/eventos/boda/planner/tareas')
+    }
+  })
+
   it('quien es planner en algún evento llega a su mesa desde la cuenta', () => {
     const rutas = (secciones: ReturnType<typeof panelNav>) => secciones.flatMap((s) => s.items.map((i) => i.href))
     expect(rutas(panelNav(null, {}, false, false, false, { mesaPlanner: true }))).toContain('/panel/planner')

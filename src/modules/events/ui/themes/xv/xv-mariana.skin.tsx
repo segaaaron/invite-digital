@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { MarianaCover } from './MarianaCover'
 import { TortaDePlata } from './TortaDePlata'

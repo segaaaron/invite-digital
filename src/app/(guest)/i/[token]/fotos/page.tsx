@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { events, plans } from '@/app/composition/container'

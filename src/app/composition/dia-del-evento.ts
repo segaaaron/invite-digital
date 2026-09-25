@@ -23,6 +23,9 @@ import { createEventQrCode, listEventQrCodes, resolveQrCode, toggleEventQrCode, 
 import { drizzleQrRepository } from '@/modules/qr/infrastructure/drizzle-qr-repository'
 import { guests } from './eventos'
 import { clock, minter } from './base'
+import { guardarFormasDeRegalar, leerFormasDeRegalar } from '@/modules/registry/application/formas-use-cases'
+import { drizzleFormasDeRegalar } from '@/modules/registry/infrastructure/drizzle-formas-de-regalar'
+import { sniffMime } from '@/modules/orders/domain/proof'
 
 export const checkin = {
   record: checkInByScan({ groups: drizzleDoorGroupReader, arrivals: drizzleArrivalRepository, minter }),
@@ -81,6 +84,17 @@ export const registry = {
     clock,
   }),
   list: listRegistry({ registry: drizzleRegistryRepository }),
+  /** La lluvia de sobres y la transferencia con su QR (`0072`). En todos los planes. */
+  formas: leerFormasDeRegalar({ formas: drizzleFormasDeRegalar }),
+  guardarFormas: guardarFormasDeRegalar({
+    formas: drizzleFormasDeRegalar,
+    // Solo imágenes: el detector de los comprobantes también admite PDF, y un QR no lo es.
+    tipoDeImagen: (bytes) => {
+      const tipo = sniffMime(bytes)
+      return tipo === null || tipo === 'application/pdf' ? null : tipo
+    },
+  }),
+  qrDeRegalos: (eventId: string) => drizzleFormasDeRegalar.qr(eventId),
 
   // Del invitado, autorizadas por su token. Comparten el mismo `resolveByToken` que el
   // RSVP: la regla de qué enlace vale vive en un solo sitio.

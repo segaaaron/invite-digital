@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'

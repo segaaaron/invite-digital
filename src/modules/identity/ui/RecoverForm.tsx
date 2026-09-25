@@ -3,6 +3,7 @@
 import { useActionState, useId, useState } from 'react'
 import Link from 'next/link'
 import { confirmPasswordResetAction, requestPasswordResetAction, type ResetState } from '@/app/_acciones/identity/actions'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: ResetState = { status: 'idle', message: '' }
 
@@ -105,14 +106,13 @@ export function RecoverForm() {
             <label className={LABEL_CLASS} htmlFor={`${id}-nueva`}>
               Contraseña nueva
             </label>
-            <input
+            <CampoContrasena
               autoComplete="new-password"
               className={FIELD_CLASS}
               id={`${id}-nueva`}
               minLength={12}
               name="password"
               required
-              type="password"
             />
           </div>
 

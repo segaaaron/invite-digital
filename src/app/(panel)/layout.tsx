@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import { BarraDeCarga } from '@/shared/design/ui/BarraDeCarga'
 import { display, panelMono, panelSans } from '@/shared/design/fonts'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../globals.css'
@@ -12,6 +13,11 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
+        {/* El `Suspense` envuelve solo la barra (lee `useSearchParams`), nunca las páginas: alrededor
+            de ellas rompería sus `notFound()`. */}
+        <Suspense fallback={null}>
+          <BarraDeCarga />
+        </Suspense>
         {/* `div`, no `main`: la carcasa del panel emite su propio `main` y dos anidados
             dejan la página con dos regiones principales, que es un error de HTML y hace
             ambiguo el salto al contenido para quien navega con lector de pantalla. */}

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import { SignInForm } from '@/modules/identity/ui/SignInForm'
 
 export const metadata = { title: 'Entrar · Panel' }

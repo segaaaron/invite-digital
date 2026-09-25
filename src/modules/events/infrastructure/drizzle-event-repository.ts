@@ -103,6 +103,9 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
         where fund_id in (select id from gift_funds where event_id = ${eventId})
       `)
 
+      // Las formas de regalar llevan el banco, el titular, la cuenta y el QR de alguien: fuera enteras.
+      await tx.execute(sql`delete from event_gift_ways where event_id = ${eventId}`)
+
       // Los porteros son personas con nombre y teléfono, y su acceso ya no abre nada: se
       // borran. Las llegadas se quedan —son la estadística del evento— sin decir quién
       // las registró.

@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { themeAsset } from '../assets'
 import { CronogramaEsfera } from './CronogramasV3'
 import { ValeriaCover } from './ValeriaCover'

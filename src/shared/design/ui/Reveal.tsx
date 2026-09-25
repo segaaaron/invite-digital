@@ -34,18 +34,15 @@ export function Reveal({
     )
   }
 
+  // **En CSS, no con framer**: framer manda el hero invisible desde el servidor y no lo enseña
+  // hasta que el JavaScript llega y arranca. Con datos lentos la portada se quedaba segundos sin
+  // una palabra. La animación CSS corre desde el primer pintado, y `prefers-reduced-motion` la
+  // apaga en `globals.css` como a las demás.
   if (onMount) {
     return (
-      <motion.div
-        animate="visible"
-        className={className}
-        data-reveal="mount"
-        initial="hidden"
-        transition={{ delay }}
-        variants={fadeUp}
-      >
+      <div className={`${className} anim-aparecer`.trim()} data-reveal="mount" style={delay === 0 ? undefined : { animationDelay: `${delay}s` }}>
         {children}
-      </motion.div>
+      </div>
     )
   }
 

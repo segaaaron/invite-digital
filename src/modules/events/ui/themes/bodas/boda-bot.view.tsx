@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { anfitrionesBoda } from '../../../domain/invitation-content'
@@ -629,6 +629,9 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
           </Reveal>
         )}
 
+        {/* En una invitación de verdad (`slots.regalos`) la tarjeta solo sale si hay algo que ofrecer,
+            y el código es el QR del banco del cliente o ninguno: el de adorno invitaría a pagar a la nada. */}
+        {slots.regalos !== undefined && !slots.regalos.sobres && slots.regalos.qr === null && slots.regalos.resto === null ? null : (
         <Reveal>
           <div style={{ marginTop: 40, padding: 22, background: 'rgba(90,112,92,0.04)', border: `1px solid ${P.fileteSuave}` }}>
             {/* Texto a la izquierda y el código a la derecha, como en la maqueta: el titular
@@ -641,11 +644,13 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
                 </div>
                 <p style={{ marginTop: 10, fontSize: 12, lineHeight: 1.6, opacity: 0.75 }}>{ROTULOS.giftsNote}</p>
               </div>
-              <MarcoQr bg={P.papel} fg={P.tinta} size={88} />
+              {slots.regalos === undefined ? <MarcoQr bg={P.papel} fg={P.tinta} size={88} /> : null}
             </div>
+            {/* El bloque completo: sobres, y la transferencia con su QR dentro. */}
             <div style={{ marginTop: 12 }}>{slots.registry}</div>
           </div>
         </Reveal>
+        )}
 
         {music === undefined ? null : (
           <Reveal>

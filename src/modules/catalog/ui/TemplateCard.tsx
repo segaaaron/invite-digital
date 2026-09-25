@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
 import type { Locale } from '@/shared/i18n/locales'
 import type { Dictionary } from '@/shared/i18n/dictionaries'

@@ -7,6 +7,7 @@ import type { Role } from '@/modules/identity'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { createUserAction, deleteUserAction, setUserRoleAction } from '@/app/_acciones/admin/usuarios-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -54,7 +55,7 @@ export function NewUserForm() {
         <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
           Contraseña inicial
         </label>
-        <input
+        <CampoContrasena
           aria-describedby={`${id}-clave-ayuda`}
           autoComplete="new-password"
           className={FIELD_CLASS}
@@ -62,7 +63,6 @@ export function NewUserForm() {
           minLength={12}
           name="password"
           required
-          type="text"
         />
         <p className="text-[12px] leading-[1.5] text-ink-mute" id={`${id}-clave-ayuda`}>
           Mínimo 12 caracteres. Le llega por correo y la cambia al entrar por primera vez.

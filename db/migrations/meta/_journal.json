@@ -498,6 +498,13 @@
       "when": 1791300000000,
       "tag": "0071_avisos_del_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1791400000000,
+      "tag": "0072_formas_de_regalar",
+      "breakpoints": true
     }
   ]
 }

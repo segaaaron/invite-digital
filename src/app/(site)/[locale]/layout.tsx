@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import { BarraDeCarga } from '@/shared/design/ui/BarraDeCarga'
 import { display, sans } from '@/shared/design/fonts'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { LOCALES } from '@/shared/i18n/locales'
@@ -36,6 +37,9 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body>
+        <Suspense fallback={null}>
+          <BarraDeCarga />
+        </Suspense>
         <SiteHeader locale={locale} dictionary={dictionary} />
         <main id="top">{children}</main>
         <SiteFooter dictionary={dictionary} locale={locale} sitio={sitio} />

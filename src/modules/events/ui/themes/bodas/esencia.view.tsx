@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { BRAND } from '@/shared/config/brand'
 import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'

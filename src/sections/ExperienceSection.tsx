@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import { PlayIcon } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'

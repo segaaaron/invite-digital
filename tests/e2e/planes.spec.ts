@@ -63,16 +63,18 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   expect(await guestGroupCount(eventId)).toBe(2)
 })
 
-test('la mesa de regalos no incluida en el plan queda cerrada, con el plan que sí la trae', async ({ page }) => {
+test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los fondos no', async ({ page }) => {
   await seedPlanEvent(SLUG, 5)
 
   await page.goto(`/panel/eventos/${SLUG}/regalos`)
 
-  await expect(page.getByRole('heading', { name: 'Regalos' })).toBeVisible()
-  await expect(page.getByText(/no incluye la mesa de regalos/i)).toBeVisible()
-  // No basta con cerrar: hay que decir por dónde se pasa.
-  await expect(page.getByRole('link', { name: 'Ver planes' })).toBeVisible()
-  // Y no se cuela ni el formulario de la sección cerrada.
+  await expect(page.getByRole('heading', { name: 'Regalos', exact: true })).toBeVisible()
+  // La lluvia de sobres y la transferencia van en todos los planes.
+  await expect(page.getByText('Formas de regalar')).toBeVisible()
+  await expect(page.getByRole('switch', { name: /Pedir lluvia de sobres/ })).toBeVisible()
+  // Lo que el plan no trae no se ofrece: ni las altas ni el formulario de la lista.
+  await expect(page.getByRole('link', { name: /Añadir regalo/ })).toHaveCount(0)
+  await expect(page.getByRole('link', { name: /Añadir fondo/ })).toHaveCount(0)
   await expect(page.getByLabel('Regalo')).toBeHidden()
 })
 

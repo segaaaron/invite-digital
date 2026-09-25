@@ -76,8 +76,11 @@ export type NavExtra = {
   readonly equipo?: 'anfitrion' | 'coanfitrion' | 'planner' | null
   /** Es planner en algún evento: llega a su mesa desde la cuenta. */
   readonly mesaPlanner?: boolean
-  /** Si el plan trae el Día D. Sin él no se enseña: un enlace a una pantalla cerrada solo confunde. */
-  readonly diaD?: boolean
+  /**
+   * Las secciones que el plan del evento no trae (`seccionesFueraDelPlan`): no se enseñan. Un
+   * plan básico no ve entradas a pantallas que tiene cerradas. Sin decirlo, todas.
+   */
+  readonly fueraDelPlan?: readonly string[]
   /**
    * Si esta fiesta tiene cortejo. Un cumpleaños no lo tiene —ni padrinos, ni chambelanes,
    * ni corte de honor—, y la pantalla responde 404: enseñar el enlace sería llevar ahí.
@@ -89,7 +92,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   const equipo = extra.equipo ?? 'anfitrion'
   const mesa = extra.mesaPlanner ? '/panel/planner' : null
   const base = slug === null ? null : `/panel/eventos/${slug}`
-  const en = (ruta: string) => (base === null ? null : `${base}${ruta}`)
+  const fuera = new Set(extra.fueraDelPlan ?? [])
+  const en = (ruta: string) => (base === null || fuera.has(ruta) ? null : `${base}${ruta}`)
 
   // **Siete entradas, por trabajo y no por tabla** (24 de septiembre): eran quince, una por
   // entidad —consultas, pedidos, planes, extras, usuarios…—, y el trabajo real cruza varias.
@@ -175,7 +179,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           // Quién llegó y quién falta, en vivo; y desde ahí, el modo puerta para escanear.
           { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
-          { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
+          { href: en('/regalos'), label: 'Regalos', icon: 'regalos' },
           { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
           // Co-anfitriones, planner y porteros en una sola pantalla. El anfitrión suma a todos;
           // su planner, solo porteros. El co-anfitrión no suma a nadie.
@@ -194,7 +198,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
           { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
           { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
-          { href: equipo === 'coanfitrion' || extra.diaD === false ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
+          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
         ],
       },
       {
@@ -244,7 +248,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: base, label: 'Resumen', icon: 'resumen' },
         { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
         { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
-        { href: en('/regalos'), label: 'Mesa de regalos', icon: 'regalos' },
+        { href: en('/regalos'), label: 'Regalos', icon: 'regalos' },
         { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
         { href: en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
         { href: en('/equipo'), label: 'Equipo', icon: 'usuarios' },
@@ -259,7 +263,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
         { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
         { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
-        { href: extra.diaD === false ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
+        { href: en('/dia-d'), label: 'Día D', icon: 'diaD' },
       ],
     },
     ...administracion,

@@ -43,6 +43,18 @@ export type ThemeSlots = {
    * texto, que es lo que la maqueta enseña.
    */
   readonly photos?: ReactNode
+  /**
+   * Los regalos por piezas, para los diseños que traen su propia tarjeta de regalos (los XV de
+   * «Detalles que Abrazan»): `sobres` dice si el cliente encendió la lluvia de sobres —si no, su
+   * aviso no se pinta—; `qr` es el **QR real** del banco del cliente, que va donde la maqueta
+   * dibujaba uno de adorno —o nada: un QR falso con «escanea aquí» invita a pagar a la nada—; y
+   * `resto` es la transferencia y la lista, sin repetir los sobres ni el QR.
+   * Botánica solo mira si hay algo que ofrecer, para quitar su QR de adorno, y pinta `registry`.
+   *
+   * Opcional: sin ella (escaparate, vista previa) el diseño se pinta como su maqueta. Los demás
+   * diseños usan `registry`, que ya lo trae todo.
+   */
+  readonly regalos?: { readonly sobres: boolean; readonly qr: ReactNode | null; readonly resto: ReactNode }
 }
 
 export type ThemeProps = {

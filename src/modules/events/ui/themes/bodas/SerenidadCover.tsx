@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
 import { prefiereMenosMovimiento } from '../kit/motion'
 import { PALETA as P } from './boda-serenidad.palette'

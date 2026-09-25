@@ -108,6 +108,62 @@ body {
   animation: girar-lento 46s linear infinite;
 }
 
+/* El hueco de una imagen que aún no llegó (`ImagenConCarga`): un brillo que cruza el relleno
+   hundido. Se quita al cargar —si no, asomaría detrás de las imágenes con transparencia—. */
+@keyframes imagen-cargando {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+.imagen-cargando {
+  background-color: var(--color-bg-sunken);
+  background-image: linear-gradient(100deg, transparent 30%, color-mix(in srgb, var(--color-bg-top) 75%, transparent) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: imagen-cargando 1.4s ease-in-out infinite;
+}
+
+/* La barra de navegación (`BarraDeCarga`): avanza deprisa y se frena cerca del final, porque
+   no sabe cuánto falta; al llegar la página nueva, desaparece. Solo CSS: nada pregunta al servidor. */
+@keyframes barra-de-carga {
+  0% {
+    transform: scaleX(0);
+  }
+  30% {
+    transform: scaleX(0.55);
+  }
+  100% {
+    transform: scaleX(0.92);
+  }
+}
+
+.barra-de-carga {
+  transform-origin: left;
+  animation: barra-de-carga 8s cubic-bezier(0.1, 0.7, 0.2, 1) forwards;
+}
+
+/* La entrada del hero (`Reveal onMount`): el mismo `fadeUp` de framer, pero en CSS para que
+   corra sin esperar al JavaScript. `both` lo deja oculto durante el retraso y visible al final. */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(38px);
+    filter: blur(7px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.anim-aparecer {
+  animation: aparecer 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 /* El barrido dorado del texto en degradado del hero. */
 .anim-brillo {
   background-size: 240% 100%;

@@ -561,6 +561,20 @@ export interface RegistryDictionary {
   fundRaised: string
   fundGoal: string
   fundExceeded: string
+  /** Las formas de regalar (`0072`): la lluvia de sobres y la transferencia con su QR. */
+  sobresTitle: string
+  /** La frase de los sobres cuando el cliente no escribió la suya. */
+  sobresDefault: string
+  transferTitle: string
+  transferIntro: string
+  bank: string
+  holder: string
+  account: string
+  copy: string
+  copied: string
+  qrAlt: string
+  qrHint: string
+  downloadQr: string
   errors: Record<RegistryMessageKey, string>
 }
 

@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
 import { LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { enlaceWhatsapp } from '@/shared/whatsapp'

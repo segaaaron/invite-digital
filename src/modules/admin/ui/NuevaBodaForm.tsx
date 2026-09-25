@@ -1,7 +1,7 @@
 'use client'
 
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
 import { useActionState, useId, useState, type ReactNode } from 'react'
 import { CalendarIcon, CheckIcon, EyeIcon, MailIcon } from '@/shared/design/ui/icons'
@@ -9,6 +9,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/desi
 import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
 import { FIESTAS, VOCABULARIO, VOCABULARIO_GENERICO } from '@/modules/events'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
 
@@ -226,7 +227,8 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
                 Contraseña inicial
               </label>
               <div className="flex gap-2">
-                <input
+                <CampoContrasena
+                  envoltura="min-w-0 flex-1"
                   autoComplete="new-password"
                   className={`${FIELD_CLASS} font-mono`}
                   id={`${id}-clave`}
@@ -237,7 +239,6 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
                     setCopiada(false)
                   }}
                   placeholder="12 caracteres o más"
-                  type="text"
                   value={clave}
                 />
                 <PanelButton

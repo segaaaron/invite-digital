@@ -58,7 +58,7 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
   // Su barra tiene una sola entrada: enseñarle el resto sería enseñarle enlaces que le
   // devuelven 404.
   await expect(puerta.getByRole('link', { name: 'Mesas' })).toHaveCount(0)
-  await expect(puerta.getByRole('link', { name: 'Mesa de regalos' })).toHaveCount(0)
+  await expect(puerta.getByRole('link', { name: 'Regalos', exact: true })).toHaveCount(0)
 
   // Y el resto del evento **no existe** para ella. 404, no 403.
   for (const ruta of ['', '/invitados', '/mesas', '/regalos', '/mensajes', '/configuracion', '/plan', '/planner/tareas', '/planner/presupuesto']) {

@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, useReducedMotion } from 'framer-motion'
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeftIcon, ArrowRightIcon } from '@/shared/design/ui/icons'
 import type { Dictionary } from '@/shared/i18n/dictionaries'

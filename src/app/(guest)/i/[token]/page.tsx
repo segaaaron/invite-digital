@@ -9,6 +9,7 @@ import { tarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-invitaci
 import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
 import { GuestRegistry } from '@/modules/registry/ui/GuestRegistry'
+import { FormasDeRegalarInvitado, hayFormas, QrDeRegalo } from '@/modules/registry'
 import { GuestbookForm } from '@/modules/rsvp/ui/GuestbookForm'
 import { concedePase } from '@/modules/rsvp'
 import { RsvpForm } from '@/modules/rsvp/ui/RsvpForm'
@@ -105,6 +106,43 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   const capacidadDelPlan = await plans.allowanceFor(event.id)
   const fotosDeInvitados = !isErr(capacidadDelPlan) && capacidadDelPlan.value.guestPhotos
 
+  // Los regalos: la lluvia de sobres y la transferencia con su QR (todos los planes) y, debajo, la
+  // lista y los fondos. Sin nada, la ranura no existe: una sección vacía parece rota.
+  const formas = await registry.formas(event.id)
+  const qrSrc = `/i/${token}/regalos-qr`
+  const lista =
+    isErr(mesa) || mesa.value.gifts.length + mesa.value.funds.length === 0 ? null : (
+      <GuestRegistry
+        currency={event.currency}
+        dictionary={registryDictionary}
+        funds={mesa.value.funds}
+        gifts={mesa.value.gifts}
+        groupId={group.id}
+        open={mesaAbierta}
+        token={token}
+      />
+    )
+  const conCuenta = formas.transferencia && formas.cuenta !== null
+  const todosLosRegalos =
+    !hayFormas(formas) && lista === null ? null : (
+      <div className="flex flex-col gap-6">
+        <FormasDeRegalarInvitado dictionary={registryDictionary} formas={formas} qrSrc={qrSrc} />
+        {lista}
+      </div>
+    )
+  // Por piezas, para los diseños con tarjeta de regalos propia (ver `ThemeSlots.regalos`).
+  const regalosPorPiezas = {
+    sobres: formas.sobres,
+    qr: formas.transferencia && formas.tieneQr ? <QrDeRegalo dictionary={registryDictionary} src={qrSrc} /> : null,
+    resto:
+      !conCuenta && lista === null ? null : (
+        <div className="flex flex-col gap-6">
+          <FormasDeRegalarInvitado dictionary={registryDictionary} formas={formas} qr={false} qrSrc={qrSrc} sobres={false} />
+          {lista}
+        </div>
+      ),
+  }
+
   // El pase de entrada: el QR y el botón de abrirlo a solas, en su ranura.
   const pase = (
     <>
@@ -184,17 +222,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               ) : (
                 <p className="text-[14px] leading-[1.7]">{dictionary.closed}</p>
               ),
-              registry: isErr(mesa) ? null : (
-                <GuestRegistry
-                  currency={event.currency}
-                  dictionary={registryDictionary}
-                  funds={mesa.value.funds}
-                  gifts={mesa.value.gifts}
-                  groupId={group.id}
-                  open={mesaAbierta}
-                  token={token}
-                />
-              ),
+              registry: todosLosRegalos,
+              regalos: regalosPorPiezas,
               // El libro de firmas: en los diseños de boda es su propia sección con su campo y
               // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
               guestbook: (

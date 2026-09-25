@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 
 /**
  * La composición del hero, portada de la maqueta: la invitación al frente, el sobre

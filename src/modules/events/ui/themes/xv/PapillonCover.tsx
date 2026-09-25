@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
 
 type Props = {

@@ -7,6 +7,7 @@ export type RegistryErrorKind =
   | 'already_purchased'
   | 'wrong_event'
   | 'not_found'
+  | 'invalid_gift_ways'
   | 'storage_failure'
 
 export type RegistryError = { readonly kind: RegistryErrorKind; readonly detail: string }

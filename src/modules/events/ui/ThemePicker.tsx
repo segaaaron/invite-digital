@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import { useId, useState } from 'react'
 import { FIESTAS, fiestaDeCategoria, VOCABULARIO, type Fiesta } from '../domain/fiesta'
 import type { ThemeDefinition } from './themes/contract'

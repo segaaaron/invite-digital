@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState, type ReactNode } from 'react'
 import { prefiereMenosMovimiento } from '../kit/motion'
 

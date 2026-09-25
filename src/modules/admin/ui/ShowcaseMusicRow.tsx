@@ -1,6 +1,6 @@
 'use client'
 
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import { useActionState, useId, useState } from 'react'
 import { nombreDeCancion } from '@/shared/audio/audio'
 import { leerEtiquetasId3 } from '@/shared/audio/id3'

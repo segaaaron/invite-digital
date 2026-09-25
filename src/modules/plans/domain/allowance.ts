@@ -90,6 +90,25 @@ export const hasFeature = (allowance: Allowance, feature: PlanFeature): boolean 
       : allowance[feature]
 
 /**
+ * Las secciones de un evento que su plan no trae, relativas al evento (`/regalos`).
+ *
+ * La barra, el resumen y los atajos de las tareas **no llevan ahí** (pedido del usuario, 24 de
+ * septiembre): enseñar a un plan básico lo que no tiene es darle entradas a pantallas cerradas.
+ * La protección sigue siendo el corte de cada página y cada acción; esto solo decide qué se ofrece.
+ * Equipo cae cuando no se puede sumar a nadie: ni recepción ni planner. Regalos no cae nunca: la
+ * lluvia de sobres y la transferencia van en todos los planes; lo que el plan corta es la lista.
+ */
+export function seccionesFueraDelPlan(allowance: Allowance): readonly string[] {
+  return [
+    ...(hasFeature(allowance, 'seating') ? [] : ['/mesas']),
+    ...(hasFeature(allowance, 'checkin') ? [] : ['/checkin']),
+    ...(hasFeature(allowance, 'plannerCompleto') ? [] : ['/planner/proveedores', '/planner/cronograma', '/planner/cortejo', '/planner/documentos']),
+    ...(hasFeature(allowance, 'plannerTotal') ? [] : ['/dia-d']),
+    ...(allowance.maxDoorPorters === 0 && allowance.maxHiredPlanners === 0 ? ['/equipo'] : []),
+  ]
+}
+
+/**
  * El plan más barato del catálogo que sí trae la función. `null` si no la trae ninguno.
  *
  * Hace falta para que el rechazo sirva de algo: «no incluido» a secas deja al atelier

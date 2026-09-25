@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import type { ReactNode } from 'react'
 import type { Category } from '@/modules/catalog'
 import { GlassPanel } from '@/shared/design/ui/GlassPanel'

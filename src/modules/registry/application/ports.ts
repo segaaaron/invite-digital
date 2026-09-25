@@ -1,4 +1,5 @@
 import type { Contribution, Fund } from '../domain/fund'
+import type { FormasDeRegalar } from '../domain/formas-de-regalar'
 import type { Gift } from '../domain/gift'
 
 /**
@@ -35,4 +36,22 @@ export interface RegistryRepository {
 
   listContributions(fundId: string): Promise<Contribution[]>
   insertContribution(contribution: Contribution): Promise<void>
+}
+
+/** La imagen del QR del banco, tal cual la subió el cliente (ya comprobada por sus bytes). */
+export type ImagenDeQr = { readonly bytes: Uint8Array; readonly tipo: string }
+
+/**
+ * Las formas de regalar (`event_gift_ways`). Puerto aparte del de la lista: son otra tabla y
+ * otro formulario, y el doble de pruebas de la lista no tiene por qué saber de ellas.
+ */
+export interface FormasDeRegalarStore {
+  leer(eventId: string): Promise<FormasDeRegalar>
+  /** `qr`: una imagen nueva, `'quitar'` para borrarla o `'mantener'` para no tocarla. */
+  guardar(
+    eventId: string,
+    formas: Omit<FormasDeRegalar, 'tieneQr'>,
+    qr: ImagenDeQr | 'quitar' | 'mantener',
+  ): Promise<void>
+  qr(eventId: string): Promise<ImagenDeQr | null>
 }

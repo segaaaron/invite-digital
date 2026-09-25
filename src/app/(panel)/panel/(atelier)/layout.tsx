@@ -9,6 +9,7 @@ import { BarraDelAdmin, PestanasDeAdmin } from '@/modules/admin'
 import { insigniasDeAdmin } from '../_carcasa/insignias-de-admin'
 import { nombreDePlan } from '../_carcasa/nombre-de-plan'
 import { isErr } from '@/shared/result'
+import { seccionesFueraDelPlan } from '@/modules/plans'
 
 /**
  * La carcasa fuera de un evento: la bandeja, el evento nuevo y la ayuda.
@@ -43,7 +44,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
         invitados: grupos,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner })}
+      }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })}
       evento={
         activo === null
           ? null

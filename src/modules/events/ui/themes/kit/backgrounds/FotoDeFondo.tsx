@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 
 /**
  * Una fotografía de fondo a sangre. En pantallas anchas no se estira: la página del invitado

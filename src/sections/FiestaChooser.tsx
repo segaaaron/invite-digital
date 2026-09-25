@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
 import { ArrowRightIcon } from '@/shared/design/ui/icons'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'

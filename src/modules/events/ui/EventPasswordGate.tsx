@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { unlockEventAction, type UnlockState } from '@/app/_acciones/events/actions'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 /**
  * La puerta de un evento protegido con contraseña.
@@ -26,12 +27,11 @@ export function EventPasswordGate({ token }: { token: string }) {
         <input name="token" type="hidden" value={token} />
         <label className="flex flex-col gap-2">
           <span className="sr-only">Contraseña</span>
-          <input
+          <CampoContrasena
             autoComplete="off"
             className="rounded-[14px] border border-line bg-bg-raised px-4 py-3 text-[15px] text-ink"
             name="password"
             required
-            type="password"
           />
         </label>
 

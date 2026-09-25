@@ -1,4 +1,4 @@
-import Image from 'next/image'
+import Image from '@/shared/design/ui/ImagenQueAparece'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { DividerOrnamental } from './DividerOrnamental'
 import { FantasiaCover } from './FantasiaCover'

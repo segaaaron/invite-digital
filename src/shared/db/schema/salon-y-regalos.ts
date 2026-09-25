@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm'
-import { check, index, integer, numeric, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, check, index, integer, numeric, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { bytea } from './base'
 import { events } from './eventos'
 import { guestGroups } from './invitados'
 
@@ -128,3 +129,24 @@ export const fundContributions = pgTable(
     check('fund_contributions_amount_positive', sql`${t.amountCents} > 0`),
   ],
 )
+
+/**
+ * Las formas de regalar de un evento (`0072`): la lluvia de sobres y la transferencia con su QR.
+ * Una fila por evento. El QR va aquí —unos KB— y no en `event_media`: no es una foto del evento
+ * ni cuenta contra el tope de fotos del plan. La retención borra la fila entera.
+ */
+export const eventGiftWays = pgTable('event_gift_ways', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  sobres: boolean('sobres').notNull().default(false),
+  sobresTexto: text('sobres_texto'),
+  transferencia: boolean('transferencia').notNull().default(false),
+  banco: varchar('banco', { length: 80 }),
+  titular: varchar('titular', { length: 120 }),
+  cuenta: varchar('cuenta', { length: 40 }),
+  nota: varchar('nota', { length: 200 }),
+  qrImagen: bytea('qr_imagen'),
+  qrTipo: varchar('qr_tipo', { length: 32 }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})

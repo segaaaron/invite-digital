@@ -4,6 +4,7 @@ import { useActionState, useId, useState } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { setEventPrivacyAction, type PrivacyState } from '@/app/_acciones/events/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 /**
  * Privacidad del evento, como en la maqueta: pública con el enlace, o protegida con
@@ -57,13 +58,12 @@ export function PrivacyForm({
       {modo === 'password' ? (
         <label className="flex flex-col gap-2" htmlFor={campoId}>
           <span className={LABEL_CLASS}>{hasPassword ? 'Nueva contraseña de acceso' : 'Contraseña de acceso'}</span>
-          <input
+          <CampoContrasena
             autoComplete="new-password"
             className={FIELD_CLASS}
             id={campoId}
             name="password"
             required
-            type="text"
           />
           <span className="text-[11px] text-ink-mute">
             Cambiarla cierra la invitación a quien ya la había abierto: tendrá que escribir la nueva.

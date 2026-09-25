@@ -481,12 +481,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
                   t: 'Recordar pendientes',
                   d: `${pendientes} invitaci${pendientes === 1 ? 'ón' : 'ones'} sin responder`,
                 },
-                {
-                  href: `/panel/eventos/${event.value.slug}/checkin`,
-                  icon: <QrIcon />,
-                  t: 'Pases con QR',
-                  d: 'Para la puerta el día del evento',
-                },
+                // Solo si el plan trae la puerta: no se ofrece lo que está cerrado.
+                ...(isErr(conPuerta)
+                  ? []
+                  : [
+                      {
+                        href: `/panel/eventos/${event.value.slug}/checkin`,
+                        icon: <QrIcon />,
+                        t: 'Pases con QR',
+                        d: 'Para la puerta el día del evento',
+                      },
+                    ]),
                 {
                   href: `/panel/eventos/${event.value.slug}/configuracion`,
                   icon: <PenIcon />,
