@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { adminAlertEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, supportAccessEmail } from '@/modules/notifications'
+import { adminAlertEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, supportAccessEmail, teamAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -81,6 +81,19 @@ export const notifications = {
         email: input.to,
         password: input.password,
         eventTitle: input.eventTitle,
+        panelUrl: `${sitioPublicoUrl}/panel/entrar`,
+        siteUrl: sitioPublicoUrl,
+        whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
+      }),
+    }),
+  /** El acceso de quien se da de alta en Ajustes › Equipo. Devuelve booleano y no lanza. */
+  sendTeamAccess: async (input: { to: string; password: string; rol: 'admin' | 'atelier' | 'cliente' | 'puerta' }) =>
+    emailSender.send({
+      to: input.to,
+      ...teamAccessEmail({
+        email: input.to,
+        password: input.password,
+        rol: input.rol,
         panelUrl: `${sitioPublicoUrl}/panel/entrar`,
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,

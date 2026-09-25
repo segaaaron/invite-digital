@@ -1,6 +1,6 @@
 'use server'
 
-import { admin } from '@/app/composition/container'
+import { admin, notifications } from '@/app/composition/container'
 import { createCredential, parseRole } from '@/modules/identity'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -11,7 +11,9 @@ import { refrescar, texto } from '@/app/_acciones/admin/admin-comun'
  * Alta de usuario.
  *
  * La contraseña inicial la escribe el admin y **se enseña una sola vez**, como los
- * enlaces de invitado: de ella solo queda su argon2.
+ * enlaces de invitado: de ella solo queda su argon2. Se le manda por correo con el enlace
+ * —es provisional: la cuenta nace obligada a cambiarla—, y si el correo no sale, la
+ * pantalla lo dice para que el admin se la pase por otra vía.
  */
 export async function createUserAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
   const actor = await requireAdmin()
@@ -32,8 +34,15 @@ export async function createUserAction(_previous: AdminActionState, formData: Fo
   await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role })
   await admin.record(actor, { action: 'usuario.alta', subject: credencial.value.email, detail: role })
 
+  const enviado = await notifications.sendTeamAccess({ to: credencial.value.email, password: credencial.value.password, rol: role })
+
   refrescar()
-  return { status: 'success', message: `Usuario ${credencial.value.email} creado.` }
+  return {
+    status: 'success',
+    message: enviado
+      ? `Usuario ${credencial.value.email} creado. Le enviamos su acceso por correo.`
+      : `Usuario ${credencial.value.email} creado, pero el correo no salió: pásale tú la contraseña.`,
+  }
 }
 
 export async function setUserRoleAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {
