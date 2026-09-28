@@ -173,7 +173,7 @@ test.describe('el panel del cliente', () => {
     const barra = page.getByRole('navigation')
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
     // Su invitación sí: es la pantalla donde escribe sus textos y elige su canción.
-    await expect(barra.getByRole('link', { name: 'Personalizar invitación' })).toBeVisible()
+    await expect(barra.getByRole('link', { name: 'Mi invitación' })).toBeVisible()
     // Lo del atelier, no.
     await expect(barra.getByRole('link', { name: 'Plan', exact: true })).toHaveCount(0)
     await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)

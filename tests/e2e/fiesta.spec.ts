@@ -25,7 +25,7 @@ test.afterAll(async () => {
   await sql.end({ timeout: 5 })
 })
 
-for (const seccion of ['', '/invitados', '/mesas', '/mesas?panel=mesa', '/regalos', '/mensajes', '/checkin', '/porteros', '/estadisticas', '/configuracion']) {
+for (const seccion of ['', '/invitados', '/mesas', '/mesas?panel=mesa', '/regalos', '/mensajes', '/checkin', '/porteros', '/configuracion']) {
   test(`el panel de unos XV no habla de bodas · ${seccion || 'resumen'}`, async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}${seccion}`)
     const principal = page.locator('main')

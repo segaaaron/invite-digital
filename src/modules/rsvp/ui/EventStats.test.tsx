@@ -22,9 +22,9 @@ describe('EventStats', () => {
     expect(screen.getByText(/confirmaron/i)).toBeInTheDocument()
   })
 
-  it('dice los cupos confirmados sobre los invitados', () => {
+  it('no repite los cupos confirmados: ya los dice la tarjeta «Confirmados» del resumen', () => {
     render(<EventStats stats={stats(CUATRO)} />)
-    expect(screen.getByText('5 de 10')).toBeInTheDocument()
+    expect(screen.queryByText('5 de 10')).not.toBeInTheDocument()
   })
 
   it('es el embudo de la maqueta: invitados, respondieron y confirmaron', () => {
@@ -69,9 +69,4 @@ describe('EventStats', () => {
     expect(screen.queryByText(/nan/i)).not.toBeInTheDocument()
   })
 
-  it('sin cupos declarados no pinta el porcentaje de cupos: no hay contra qué medirlo', () => {
-    render(<EventStats stats={stats([{ seats: 0, attending: null }])} />)
-    expect(screen.getByText('0 de 0')).toBeInTheDocument()
-    expect(screen.queryByTestId('cupos-porcentaje')).not.toBeInTheDocument()
-  })
 })

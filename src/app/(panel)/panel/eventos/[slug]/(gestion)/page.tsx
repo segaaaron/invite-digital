@@ -18,9 +18,11 @@ import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { ActivityFeed, mergeActivity, type ActivityItem } from '@/modules/shell/ui/ActivityFeed'
 import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/cards'
 import { TimelineChart } from '@/modules/rsvp/ui/TimelineChart'
-import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { EventStats } from '@/modules/rsvp/ui/EventStats'
+import type { Breakdown } from '@/modules/analytics'
+import { BarRow, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
-import { CheckIcon, ClockIcon, EyeIcon, MailIcon, PenIcon, QrIcon, UsersIcon, TableIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, ClockIcon, EyeIcon, UsersIcon, TableIcon } from '@/shared/design/ui/icons'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 /** Las dos semanas del gráfico de la maqueta. */
@@ -117,6 +119,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   // Las visitas a la invitación, que es la cuarta cifra de la maqueta.
   const visitas = await analytics.tally(event.value.id)
   const vistas = isErr(visitas) ? null : visitas.value
+  // El embudo de las respuestas. Antes vivía en «Estadísticas», una pantalla aparte que repetía
+  // el donut y las visitas de aquí: ahora el resumen lo dice todo en un sitio (28 de septiembre).
+  const embudo = await rsvp.stats(event.value.id)
 
   const conSalon = await plans.requireFeature(event.value.id, 'seating')
   const salon = isErr(conSalon) ? null : await venue.seating(event.value.id)
@@ -188,17 +193,18 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       <PanelHeader
         actions={
           <>
-            <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Compartir enlace</PanelButton>
-            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados#exportar`}>Exportar lista</PanelButton>
+            {/* «Compartir enlace» llevaba a un enlace de solo lectura que ya no existe, y «Exportar lista» a un
+                ancla que nadie tenía: exportar vive en Invitados. Aquí, el envío de verdad. */}
+            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=envio`}>Enviar invitaciones</PanelButton>
             <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=alta`} variant="primary">
               + Invitar persona
             </PanelButton>
           </>
         }
-        highlight={event.value.title}
-        kicker="Dashboard / Evento"
+        kicker="Resumen del evento"
         meta={cuentaAtras === null ? fecha : `${fecha} · ${cuentaAtras}`}
-        title="Bienvenida, "
+        // El nombre del evento, sin saludo: «Bienvenida, Cumpleaños Miguel» saludaba en femenino a todos.
+        title={event.value.title}
       />
       <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
@@ -303,28 +309,43 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
         <PanelCard
           action={
-            <Link href={`/panel/eventos/${event.value.slug}/estadisticas`}>
-              <PanelCardLink>Ver detalle →</PanelCardLink>
+            <Link href={`/panel/eventos/${event.value.slug}/informe`}>
+              <PanelCardLink>Informe del evento →</PanelCardLink>
             </Link>
           }
-          title="Estado de RSVPs"
+          id="invitacion"
+          title="Cómo va tu invitación"
         >
-          <DonutChart
-            big={filas.length === 0 ? '—' : `${Math.round((respondieron / filas.length) * 100)}%`}
-            caption="RESPONDIERON"
-            slices={[
-              { label: 'Asistirán', value: respondieron - noAsisten, color: 'var(--color-sage)' },
-              { label: 'No podrán', value: noAsisten, color: 'var(--color-danger)' },
-              { label: 'Sin responder', value: pendientes, color: 'var(--color-gold-light)' },
-            ]}
-          />
-          {isErr(historial) ? (
-            <p className="mt-4 text-[12px] text-danger" role="alert">
-              No pudimos leer el historial de respuestas. La base no responde; vuelve a intentarlo en un momento.
-            </p>
-          ) : (
-            <TimelineChart bars={historial.value} caption={`RSVPs por día · últimas ${DIAS_DEL_GRAFICO / 7} semanas`} />
-          )}
+          <div className="grid gap-6 min-[1100px]:grid-cols-2">
+            <div>
+              <DonutChart
+                big={filas.length === 0 ? '—' : `${Math.round((respondieron / filas.length) * 100)}%`}
+                caption="RESPONDIERON"
+                slices={[
+                  { label: 'Asistirán', value: respondieron - noAsisten, color: 'var(--color-sage)' },
+                  { label: 'No podrán', value: noAsisten, color: 'var(--color-danger)' },
+                  { label: 'Sin responder', value: pendientes, color: 'var(--color-gold-light)' },
+                ]}
+              />
+              {isErr(historial) ? (
+                <p className="mt-4 text-[12px] text-danger" role="alert">
+                  No pudimos leer el historial de respuestas. La base no responde; vuelve a intentarlo en un momento.
+                </p>
+              ) : (
+                <TimelineChart bars={historial.value} caption={`RSVPs por día · últimas ${DIAS_DEL_GRAFICO / 7} semanas`} />
+              )}
+            </div>
+            <div className="min-[1100px]:border-l min-[1100px]:border-line-panel min-[1100px]:pl-6">
+              <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">Embudo</h3>
+              {isErr(embudo) ? (
+                <p className="text-[13px] text-danger" role="alert">
+                  No pudimos leer las respuestas. La base no responde; vuelve a intentarlo en un momento.
+                </p>
+              ) : (
+                <EventStats stats={embudo.value} />
+              )}
+            </div>
+          </div>
         </PanelCard>
 
         <PanelCard
@@ -336,6 +357,16 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           title="Actividad reciente"
         >
           <ActivityFeed items={actividad} />
+        </PanelCard>
+      </div>
+
+      {/* Quién abre la invitación: desde qué aparato y por dónde le llegó. Antes, en «Estadísticas». */}
+      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-2">
+        <PanelCard title="Desde qué aparato la abren">
+          <Desglose filas={vistas?.devices ?? null} tone="device" total={vistas?.total ?? 0} />
+        </PanelCard>
+        <PanelCard title="Por dónde les llega">
+          <Desglose filas={vistas?.sources ?? null} tone="gold" total={vistas?.total ?? 0} />
         </PanelCard>
       </div>
 
@@ -472,68 +503,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </PanelCard>
 
         <div className="flex flex-col gap-4.5">
-          <PanelCard title="Acciones rápidas">
-            <div className="flex flex-col gap-2">
-              {[
-                {
-                  href: `/panel/eventos/${event.value.slug}/invitados?panel=envio`,
-                  icon: <MailIcon />,
-                  t: 'Recordar pendientes',
-                  d: `${pendientes} invitaci${pendientes === 1 ? 'ón' : 'ones'} sin responder`,
-                },
-                // Solo si el plan trae la puerta: no se ofrece lo que está cerrado.
-                ...(isErr(conPuerta)
-                  ? []
-                  : [
-                      {
-                        href: `/panel/eventos/${event.value.slug}/checkin`,
-                        icon: <QrIcon />,
-                        t: 'Pases con QR',
-                        d: 'Para la puerta el día del evento',
-                      },
-                    ]),
-                {
-                  href: `/panel/eventos/${event.value.slug}/configuracion`,
-                  icon: <PenIcon />,
-                  t: 'Editar la invitación',
-                  d: 'Textos, fotos y música',
-                },
-              ].map((accion) => (
-                <Link
-                  // La clave es el rótulo, no el destino: dos acciones distintas pueden
-                  // llevar al mismo sitio —copiar el enlace y editar la invitación viven
-                  // las dos en Configuración— y React descarta la segunda si comparten
-                  // clave. Se ve como una acción que desaparece de la lista.
-                  key={accion.t}
-                  className="flex items-center gap-3.5 rounded-[14px] border border-line-panel bg-linear-to-b from-bg-top to-white px-4 py-3.5 shadow-card transition-all duration-200 hover:translate-x-[3px] hover:border-gold/40"
-                  href={accion.href}
-                >
-                  <span
-                    aria-hidden
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-bg-sunken text-sage [&>svg]:size-[18px]"
-                  >
-                    {accion.icon}
-                  </span>
-                  <span className="min-w-0">
-                    <span className="block text-[13px] font-medium text-ink">{accion.t}</span>
-                    <span className="block truncate text-[11px] text-ink-mute">{accion.d}</span>
-                  </span>
-                </Link>
-              ))}
-            </div>
-
-            <div className="mt-5 rounded-[14px] bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-4 text-white">
-              <p className="font-mono text-[10.5px] tracking-[0.16em] opacity-85 uppercase">Recordatorio</p>
-              <p className="mt-1.5 font-display text-[20px] italic">Fecha límite de confirmación</p>
-              <p className="mt-1.5 text-[12px] opacity-85">
-                {new Date(`${event.value.rsvpDeadline}T00:00:00`).toLocaleDateString('es-BO', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
-              </p>
-            </div>
-          </PanelCard>
+          {/* Lo único de aquí que no está en otro sitio: la fecha límite. «Acciones rápidas» repetía la
+              cabecera (enviar), la barra (Mi invitación, Ingreso) y se fue (28 de septiembre). */}
+          <div className="rounded-[18px] bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-5 text-white shadow-card">
+            <p className="font-mono text-[10.5px] tracking-[0.16em] opacity-85 uppercase">Recordatorio</p>
+            <p className="mt-1.5 font-display text-[20px] italic">Fecha límite de confirmación</p>
+            <p className="mt-1.5 text-[12px] opacity-85">
+              {new Date(`${event.value.rsvpDeadline}T00:00:00`).toLocaleDateString('es-BO', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+              {pendientes > 0 ? ` · ${pendientes} invitaci${pendientes === 1 ? 'ón' : 'ones'} sin responder` : ''}
+            </p>
+          </div>
 
           {/* La tira de llegadas no está en la maqueta: es del ciclo 4 y se queda, pero
               acomodada a su lenguaje y no ocupando media fila ella sola. */}
@@ -543,5 +526,29 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         </div>
       </div>
     </>
+  )
+}
+
+/**
+ * Un desglose de visitas. Con cero visitas lo dice con palabras: una lista de ceros con sus
+ * porcentajes se lee como «nadie usa esto», y es distinto de «nadie ha mirado todavía».
+ */
+function Desglose({ filas, total, tone }: { filas: readonly Breakdown[] | null; total: number; tone: 'device' | 'gold' }) {
+  if (filas === null) {
+    return (
+      <p className="text-[13px] text-danger" role="alert">
+        No pudimos leer las visitas. La base no responde; vuelve a intentarlo en un momento.
+      </p>
+    )
+  }
+  if (total === 0) return <p className="text-[13px] text-ink-mute">Todavía nadie ha abierto la invitación.</p>
+  return (
+    <ul className="flex flex-col">
+      {filas.map((fila) => (
+        <li key={fila.label}>
+          <BarRow label={fila.label} ratio={fila.percent / 100} tone={tone} value={`${fila.percent} %`} />
+        </li>
+      ))}
+    </ul>
   )
 }

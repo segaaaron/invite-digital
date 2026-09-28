@@ -150,8 +150,6 @@ describe('panelNav', () => {
       '/regalos',
       '/mensajes',
       '/configuracion',
-      '/vista-previa',
-      '/estadisticas',
     ]) {
       expect(delCliente).toContain(`/panel/eventos/boda${suyo}`)
     }
@@ -171,14 +169,18 @@ describe('panelNav', () => {
 
   // Escribir la invitación es lo primero que se hace: su grupo va arriba de la barra.
   it('la invitación va primero, para el cliente y para el atelier', () => {
-    expect(panelNav('boda', {}, false, false, true)[0]?.label).toBe('Mi invitación')
+    expect(panelNav('boda', {}, false, false, true)[0]?.items[0]).toMatchObject({ label: 'Mi invitación', href: '/panel/eventos/boda/configuracion' })
     expect(panelNav('boda')[0]?.label).toBe('Invitación')
   })
 
-  it('la vista previa es su propia pantalla, no un trozo de Configuración', () => {
-    const diseno = panelNav('boda').find((seccion) => seccion.label === 'Invitación')
-    const previa = diseno?.items.find((item) => item.label === 'Vista previa')
-    expect(previa?.href).toBe('/panel/eventos/boda/vista-previa')
+  it('sin entradas sueltas que repiten otra pantalla: ni «Vista previa» ni «Estadísticas»', () => {
+    // La vista previa en vivo y su pantalla completa están en la invitación; quién la abre, en el
+    // Resumen. Como entradas propias eran el mismo flujo dos veces (28 de septiembre).
+    for (const secciones of [panelNav('boda'), panelNav('boda', {}, false, false, true)]) {
+      const hrefs = secciones.flatMap((s) => s.items.map((i) => i.href))
+      expect(hrefs).not.toContain('/panel/eventos/boda/vista-previa')
+      expect(hrefs).not.toContain('/panel/eventos/boda/estadisticas')
+    }
   })
 
   it('el planner sale para quien celebra y para quien lleva el evento, no para la puerta', () => {

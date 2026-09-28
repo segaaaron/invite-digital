@@ -38,14 +38,13 @@ test('abrir la invitación cuenta una visita, con su dispositivo y su camino', a
   await invitado.waitForTimeout(800)
   expect(await viewsOf(eventId)).toHaveLength(1)
 
-  // 3. El panel lo enseña con su desglose.
+  // 3. El resumen lo enseña con su desglose (Estadísticas se unió a él); la dirección vieja lleva ahí.
   const atelier = await browser.newContext({ storageState: AUTH_STATE })
   const panel = await atelier.newPage()
   await panel.goto(`/panel/eventos/${SLUG}/estadisticas`)
+  await expect(panel).toHaveURL(new RegExp(`/panel/eventos/${SLUG}#invitacion$`))
   await expect(panel.getByText('Móvil')).toBeVisible()
   await expect(panel.getByText('Código QR')).toBeVisible()
-
-  await panel.goto(`/panel/eventos/${SLUG}`)
   await expect(panel.getByText('Visitas a la invitación')).toBeVisible()
 })
 

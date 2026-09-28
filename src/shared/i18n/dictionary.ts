@@ -689,7 +689,17 @@ export interface OpinionDictionary {
   errorRateLimited: string
 }
 
+/** El 404 de la web pública: una dirección que no existe. */
+export interface NotFoundDictionary {
+  kicker: string
+  title: string
+  text: string
+  home: string
+  collections: string
+}
+
 export interface Dictionary {
+  notFound: NotFoundDictionary
   opinion: OpinionDictionary
   nav: NavDictionary
   fiestas: FiestasDictionary

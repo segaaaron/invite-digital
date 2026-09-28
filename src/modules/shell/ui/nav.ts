@@ -170,21 +170,13 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   // enseñar que existe algo a lo que no se llega.
   if (esCliente) {
     return [
-      // Lo primero que se hace: escribir la invitación. Va arriba, con nombres que dicen qué pasa.
-      {
-        label: 'Mi invitación',
-        items: [
-          // Su invitación la escribe él: textos, canción e itinerario. La pantalla es la
-          // misma del atelier, con las tarjetas del evento —diseño, contraseña, borrado—
-          // fuera: esas son de quien le vendió la boda.
-          { href: en('/configuracion'), label: 'Personalizar invitación', icon: 'editar' },
-          { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
-          { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
-        ],
-      },
       {
         label: 'Mi evento',
         items: [
+          // Lo primero que se hace: escribir la invitación. Su pantalla lleva la vista previa en
+          // vivo y la pantalla completa; la estadística de quién la abre vive en el Resumen. Eran
+          // tres entradas sueltas —Personalizar, Vista previa, Estadísticas— (28 de septiembre).
+          { href: en('/configuracion'), label: 'Mi invitación', icon: 'editar' },
           { href: base, label: 'Resumen', icon: 'resumen' },
           { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
           // Quién llegó y quién falta, en vivo; y desde ahí, el modo puerta para escanear.
@@ -243,13 +235,9 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
     {
       label: 'Invitación',
       items: [
+        // La vista previa en vivo y su pantalla completa están dentro: no hace falta otra entrada.
         { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
-        // La invitación de esta boda, entera. Era un ancla —`#vista-previa`— que no
-        // existía en ninguna página: pulsarla dejaba al atelier en Configuración
-        // preguntándose qué había pasado.
-        { href: en('/vista-previa'), label: 'Vista previa', icon: 'vistaPrevia' },
         { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
-        { href: en('/estadisticas'), label: 'Estadísticas', icon: 'estadisticas' },
       ],
     },
     {

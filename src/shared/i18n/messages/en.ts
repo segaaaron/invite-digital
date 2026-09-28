@@ -1,6 +1,13 @@
 import type { Dictionary } from '../dictionary'
 
 export const en = {
+  notFound: {
+    kicker: 'Error 404',
+    title: 'This page does not exist',
+    text: 'The link may have changed or been mistyped. From here you can go back home or browse the designs.',
+    home: 'Go home',
+    collections: 'Browse the designs',
+  },
   opinion: {
     kicker: 'Your feedback',
     title: 'How was {evento}?',

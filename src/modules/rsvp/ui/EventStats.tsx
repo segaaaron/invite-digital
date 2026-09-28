@@ -31,33 +31,14 @@ export function EventStats({ stats }: { stats: Stats }) {
     { label: 'Confirmaron', count: stats.groupsAttending, percent: stats.attendingPercent ?? 0 },
   ]
 
+  // Solo el embudo: los cupos confirmados ya los dice la tarjeta «Confirmados» del resumen, arriba.
   return (
-    <div className="flex flex-col gap-5">
-      <ul className="flex flex-col">
-        {pasos.map((paso) => (
-          <li key={paso.label}>
-            <BarRow label={paso.label} ratio={paso.percent / 100} value={String(paso.count)} />
-          </li>
-        ))}
-      </ul>
-
-      <div className="border-t border-line-panel pt-4">
-        <p className="flex items-baseline gap-3">
-          <span className="font-display text-[30px] font-light text-ink [font-variant-numeric:lining-nums]">
-            {stats.seatsConfirmed} de {stats.seatsInvited}
-          </span>
-          {/*
-            Sin cupos invitados no hay contra qué medir los confirmados: no se pinta un
-            porcentaje, que sería una división por cero disfrazada.
-          */}
-          {stats.seatsConfirmedPercent === null ? null : (
-            <span className="font-mono text-[12px] text-ink-soft" data-testid="cupos-porcentaje">
-              {stats.seatsConfirmedPercent} %
-            </span>
-          )}
-        </p>
-        <p className="mt-1 font-mono text-[9px] tracking-[0.3em] text-ink-mute uppercase">Cupos confirmados</p>
-      </div>
-    </div>
+    <ul className="flex flex-col">
+      {pasos.map((paso) => (
+        <li key={paso.label}>
+          <BarRow label={paso.label} ratio={paso.percent / 100} value={String(paso.count)} />
+        </li>
+      ))}
+    </ul>
   )
 }

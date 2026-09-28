@@ -72,7 +72,6 @@ const VISTAS = [
   ['mensajes', '/mensajes'],
   ['check-in', '/checkin'],
   ['códigos qr', '/qr'],
-  ['estadísticas', '/estadisticas'],
   ['configuración', '/configuracion'],
   ['plan', '/plan'],
 ] as const

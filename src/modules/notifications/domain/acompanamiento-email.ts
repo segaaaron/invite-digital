@@ -24,7 +24,7 @@ export function acompanamientoEmail(input: {
    * Su código de recomendación, en la encuesta y el aniversario: quien pida con él recibe el
    * descuento. Es la forma de que un cliente contento traiga al siguiente sin que nadie lo pida a mano.
    */
-  referido?: { readonly codigo: string; readonly descuento: number } | null
+  referido?: { readonly codigo: string; readonly descuento: number; readonly enlace: string } | null
   siteUrl: string
 }): CorreoCompuesto {
   const { asunto, boton } = contenido(input)
@@ -42,7 +42,7 @@ export function acompanamientoEmail(input: {
 function lineaDeReferido(i: Parameters<typeof acompanamientoEmail>[0]): string[] {
   if (i.referido == null || (i.tipo !== 'encuesta' && i.tipo !== 'aniversario')) return []
   const regalo = i.referido.descuento > 0 ? ` y tendrá un ${i.referido.descuento} % de descuento` : ''
-  return [`Si alguien cercano prepara su fiesta, pásale tu código ${i.referido.codigo}: que lo escriba al hacer su pedido${regalo}.`]
+  return [`Si alguien cercano prepara su fiesta, pásale tu código ${i.referido.codigo}: que lo escriba al hacer su pedido${regalo}. O mándale este enlace, que ya lo lleva puesto: ${i.referido.enlace}`]
 }
 
 function contenido(i: Parameters<typeof acompanamientoEmail>[0]): { asunto: string; lineas: string[]; boton: string } {

@@ -313,3 +313,21 @@ test('la entrada del panel carga su JavaScript: sin bloqueos de la CSP y con «M
   expect(bloqueos).toEqual([])
   await anonimo.close()
 })
+
+test('una dirección que no existe responde el 404 de la web, en su idioma y con su JavaScript', async ({ browser }) => {
+  const anonimo = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const page = await anonimo.newPage()
+  const bloqueos: string[] = []
+  page.on('console', (m) => {
+    if (m.type() === 'error' && m.text().includes('Content Security Policy')) bloqueos.push(m.text())
+  })
+  expect((await page.goto('/es/no-existe'))?.status()).toBe(404)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Esta página no existe')
+  await expect(page).toHaveTitle('Esta página no existe · Luxury Atelier')
+  expect((await page.goto('/en/nope'))?.status()).toBe(404)
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('This page does not exist')
+  await page.getByRole('link', { name: 'Go home' }).click()
+  await expect(page).toHaveURL(/\/en$/)
+  expect(bloqueos).toEqual([])
+  await anonimo.close()
+})

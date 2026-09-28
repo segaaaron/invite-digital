@@ -14,9 +14,9 @@ describe('correos de acompañamiento', () => {
   })
 
   it('la encuesta y el aniversario llevan el código de recomendación; los demás, no', () => {
-    const referido = { codigo: 'K7M2QX', descuento: 10 }
-    expect(acompanamientoEmail({ ...base, tipo: 'encuesta', referido }).text).toContain('pásale tu código K7M2QX: que lo escriba al hacer su pedido y tendrá un 10 % de descuento.')
-    expect(acompanamientoEmail({ ...base, tipo: 'aniversario', referido: { codigo: 'K7M2QX', descuento: 0 } }).text).toContain('que lo escriba al hacer su pedido.')
+    const referido = { codigo: 'K7M2QX', descuento: 10, enlace: 'https://x.bo/es?ref=K7M2QX#precios' }
+    expect(acompanamientoEmail({ ...base, tipo: 'encuesta', referido }).text).toContain('pásale tu código K7M2QX: que lo escriba al hacer su pedido y tendrá un 10 % de descuento. O mándale este enlace, que ya lo lleva puesto: https://x.bo/es?ref=K7M2QX#precios')
+    expect(acompanamientoEmail({ ...base, tipo: 'aniversario', referido: { ...referido, descuento: 0 } }).text).toContain('que lo escriba al hacer su pedido. O mándale')
     expect(acompanamientoEmail({ ...base, tipo: 'hito-escribir', referido }).text).not.toContain('K7M2QX')
   })
 

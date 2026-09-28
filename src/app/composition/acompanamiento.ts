@@ -62,7 +62,7 @@ export async function enviarAcompanamiento(ahora: Date): Promise<{ enviados: num
 
 async function referidoDe(eventId: string, descuento: number) {
   const codigo = await admin.ensureReferralCode(eventId)
-  return isErr(codigo) ? null : { codigo: codigo.value, descuento }
+  return isErr(codigo) ? null : { codigo: codigo.value, descuento, enlace: `${sitio()}/es?ref=${codigo.value}#precios` }
 }
 
 /** La encuesta de un enlace de opinión. `null` si el enlace no existe. */
