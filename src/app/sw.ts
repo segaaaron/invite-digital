@@ -1,6 +1,6 @@
 import { defaultCache } from '@serwist/next/worker'
 import type { PrecacheEntry, SerwistGlobalConfig } from 'serwist'
-import { NetworkOnly, Serwist } from 'serwist'
+import { Serwist } from 'serwist'
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -22,10 +22,16 @@ const serwist = new Serwist({
   skipWaiting: true,
   clientsClaim: true,
   navigationPreload: true,
-  // Los cambios en vivo (SSE) van **directos a la red**, antes que nada. La regla general de
-  // `defaultCache` para el mismo origen es `NetworkFirst`, que guarda la respuesta en caché:
-  // con un stream que no termina nunca, esa copia se quedaría leyendo y creciendo en memoria.
-  runtimeCaching: [{ matcher: ({ url, sameOrigin }) => sameOrigin && url.pathname.endsWith('/en-vivo'), handler: new NetworkOnly() }, ...defaultCache],
+  runtimeCaching: defaultCache,
+})
+
+// **Los cambios en vivo (SSE) no pasan por el trabajador**: sin `respondWith`, los maneja el navegador
+// y los corta al salir de la página. Pasándolos por aquí (aunque fuera `NetworkOnly`) el trabajador se
+// quedaba con cada conexión hasta dormirse (~40 s): con HTTP/1.1, unas cuantas navegaciones llenaban las
+// seis conexiones por host y el panel dejaba de cargar. Y `NetworkFirst` los guardaría en caché, un
+// stream que no termina. Va antes que Serwist: `stopImmediatePropagation` le quita el evento.
+self.addEventListener('fetch', (event) => {
+  if (event.request.headers.get('accept')?.includes('text/event-stream')) event.stopImmediatePropagation()
 })
 
 serwist.addEventListeners()

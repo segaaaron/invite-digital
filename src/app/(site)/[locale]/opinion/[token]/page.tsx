@@ -6,8 +6,11 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
-/** Es de una persona: no se indexa. */
-export const metadata = { robots: { index: false, follow: false } }
+/** Es de una persona: no se indexa. El título, «Tu opinión» en el idioma de la página. */
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
+  const locale = parseLocaleParam((await params).locale)
+  return { title: locale ? getDictionary(locale).opinion.kicker : undefined, robots: { index: false, follow: false } }
+}
 
 /**
  * **La opinión del cliente tras su evento**: le llega por correo unos días después. Estrellas, un

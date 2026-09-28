@@ -1,9 +1,11 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { EnVivo } from './EnVivo'
 
 const refresh = vi.fn()
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }))
+// Estable, como el de Next: un objeto nuevo por render reabriría la conexión en cada repintado.
+const router = { refresh }
+vi.mock('next/navigation', () => ({ useRouter: () => router }))
 
 /** Un `EventSource` de mentira: la prueba decide cuándo abre, cuándo llega un aviso y cuándo cae. */
 class FuenteFalsa {
@@ -14,8 +16,10 @@ class FuenteFalsa {
   onerror: (() => void) | null = null
   cerrada = false
   private oyentes: Array<(e: MessageEvent<string>) => void> = []
+  static abiertas = 0
   constructor(readonly url: string) {
     FuenteFalsa.ultima = this
+    FuenteFalsa.abiertas += 1
   }
   addEventListener(_tipo: string, oyente: (e: MessageEvent<string>) => void) {
     this.oyentes.push(oyente)
@@ -30,9 +34,13 @@ class FuenteFalsa {
 
 beforeEach(() => {
   refresh.mockClear()
+  FuenteFalsa.abiertas = 0
   vi.stubGlobal('EventSource', FuenteFalsa)
 })
-afterEach(() => vi.unstubAllGlobals())
+afterEach(() => {
+  cleanup()
+  vi.unstubAllGlobals()
+})
 
 describe('EnVivo', () => {
   it('en la puerta (auto), cada ingreso vuelve a pintar la pantalla', () => {
@@ -80,5 +88,22 @@ describe('EnVivo', () => {
     const fuente = FuenteFalsa.ultima!
     unmount()
     expect(fuente.cerrada).toBe(true)
+  })
+
+  it('al dejar la página cierra la conexión, y si vuelve de la caché del navegador la reabre y se pone al día', () => {
+    render(<EnVivo modo="auto" oculto tipos={['ingreso']} url="/x" />)
+    const primera = FuenteFalsa.ultima!
+    // Sin cerrarla, Chrome guarda la página en su caché de ida y vuelta con la conexión abierta.
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pagehide', { persisted: true }))
+    })
+    expect(primera.cerrada).toBe(true)
+    act(() => {
+      window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true }))
+    })
+    expect(FuenteFalsa.abiertas).toBe(2)
+    expect(FuenteFalsa.ultima).not.toBe(primera)
+    // Pudo perderse algo mientras estaba guardada: se repinta una vez.
+    expect(refresh).toHaveBeenCalledTimes(1)
   })
 })

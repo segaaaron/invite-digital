@@ -1,7 +1,7 @@
 import type { Actor } from '@/modules/identity'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
-import { camposCambiados, leerSiteSettings, parseSiteSettings, SITE_SETTINGS_KEY, type SiteSettings, type Testimonio } from '../domain/site-settings'
+import { camposCambiados, leerSiteSettings, opinionPublicada, parseSiteSettings, SITE_SETTINGS_KEY, type SiteSettings, type Testimonio } from '../domain/site-settings'
 import type { SettingsRepository, SiteSettingsStore, SiteVersionRow } from './ports'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -105,7 +105,7 @@ export const publishTestimonial =
     if (!actual.ok) return actual
     const ajustes = parseSiteSettings(actual.value.crudo)
     const cita = input.cita.trim().slice(0, 400)
-    if (ajustes.testimonios.some((t) => t.cita.es === cita)) return err(adminError('invalid_input', 'Esa opinión ya está publicada en la web.'))
+    if (opinionPublicada(ajustes, cita)) return err(adminError('invalid_input', 'Esa opinión ya está publicada en la web.'))
     if (ajustes.testimonios.length >= 6) return err(adminError('invalid_input', 'La web ya enseña seis testimonios: quita uno en La web antes de sumar este.'))
     const nuevo: Testimonio = { autor: input.autor.trim().slice(0, 80), rol: { es: input.rol, en: '' }, cita: { es: cita, en: '' }, foto: '', confirmado: true }
     return saveSiteSettings(deps)(actor, { ...ajustes, testimonios: [nuevo, ...ajustes.testimonios] }, actual.value.ultimaVersion)

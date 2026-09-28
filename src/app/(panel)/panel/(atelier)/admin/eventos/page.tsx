@@ -168,7 +168,7 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
         </PanelCard>
       ) : (
         <>
-          <ul className="flex flex-col gap-2.5">
+          <ul className="@container flex flex-col gap-2.5">
             {pagina.map((e) => (
               <EventAdminRow event={vista(e)} key={e.id} />
             ))}
@@ -188,7 +188,8 @@ export default async function AdminEventosPage({ searchParams }: { searchParams:
       {abierto === undefined ? null : (
         <PanelLateral closeHref={enlace({})} subtitle={`${diaDelEvento(abierto.eventDate)} · ${faltaPara(diasEntre(hoy, abierto.eventDate))}`} title={abierto.title}>
           <div className="flex flex-col gap-5">
-            <ul className="flex flex-col gap-2.5">
+            {/* `@container`: la fila decide sus columnas por el ancho de su lista, no por la ventana. */}
+            <ul className="@container flex flex-col gap-2.5">
               <EventAdminRow event={vista(abierto)} />
             </ul>
             <section>

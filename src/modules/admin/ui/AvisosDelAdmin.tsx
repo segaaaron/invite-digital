@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { BellIcon } from '@/shared/design/ui/icons'
+import { escucharEnVivo } from '@/shared/design/ui/panel/EnVivo'
 
 /**
  * La campana del admin: consultas y pedidos que llegan **mientras** mira el panel. Una conexión
@@ -17,11 +18,14 @@ export function AvisosDelAdmin() {
   const [, empezar] = useTransition()
 
   useEffect(() => {
-    const fuente = new EventSource('/panel/admin/en-vivo')
-    fuente.onopen = () => setConectado(true)
-    fuente.onerror = () => setConectado(false)
-    fuente.addEventListener('cambio', () => setNovedades((n) => n + 1))
-    return () => fuente.close()
+    // Al volver de la caché del navegador no se inventa una novedad: la campana solo cuenta avisos reales.
+    return escucharEnVivo('/panel/admin/en-vivo', {
+      alAbrir: () => setConectado(true),
+      alFallar: () => setConectado(false),
+      alCambiar: (tipo) => {
+        if (tipo !== 'resync') setNovedades((n) => n + 1)
+      },
+    })
   }, [])
 
   const ver = () =>

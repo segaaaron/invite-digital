@@ -201,7 +201,11 @@ test('la opinión del cliente llega a su ficha y se publica en la web de un toqu
   await page.goto(`/panel/admin/clientes?de=${encodeURIComponent(CLIENTE.email)}`)
   await expect(ficha(page).getByText('5 de 5')).toBeVisible()
   await ficha(page).getByRole('button', { name: 'Publicar en la web' }).click()
-  await expect(ficha(page).getByText('Publicada en la web.')).toBeVisible()
+  // La ficha se repinta y lo dice fijo; y al recargar ya no ofrece publicarla otra vez.
+  await expect(ficha(page).getByText('Publicada en la web', { exact: true })).toBeVisible()
+  await page.reload()
+  await expect(ficha(page).getByText('Publicada en la web', { exact: true })).toBeVisible()
+  await expect(ficha(page).getByRole('button', { name: 'Publicar en la web' })).toHaveCount(0)
 
   await web.goto('/es')
   await expect(web.getByText(OPINION)).toBeVisible()
@@ -254,7 +258,11 @@ test('duplicar un evento lleva a la copia, con su diseño y su plan', async ({ p
 
 test('⌘K lleva a una pantalla con solo escribir', async ({ page }) => {
   await page.goto('/panel/admin')
-  await page.keyboard.press('ControlOrMeta+k')
+  // El atajo existe cuando la página ha hidratado: se pulsa hasta que abre.
+  await expect(async () => {
+    await page.keyboard.press('ControlOrMeta+k')
+    await expect(ficha(page).getByRole('searchbox')).toBeVisible({ timeout: 1_000 })
+  }).toPass({ timeout: 10_000 })
   await ficha(page).getByRole('searchbox').fill('calendario')
   await ficha(page).getByRole('link', { name: /Ir al Calendario/ }).click()
   await expect(page).toHaveURL(/\/panel\/admin\/eventos\/calendario$/)

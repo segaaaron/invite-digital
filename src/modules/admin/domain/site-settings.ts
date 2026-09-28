@@ -427,6 +427,12 @@ export type SitioPublico = {
   readonly terminosPublicados: boolean
 }
 
+/** Si esa opinión ya es un testimonio de la web: el texto se guarda recortado a 400, como al publicarla. */
+export const opinionPublicada = (s: SiteSettings, comentario: string): boolean => {
+  const cita = comentario.trim().slice(0, 400)
+  return s.testimonios.some((t) => t.cita.es === cita)
+}
+
 export function sitioPublico(s: SiteSettings, idioma: 'es' | 'en'): SitioPublico {
   const en = (b: Bilingue) => (idioma === 'en' && b.en !== '' ? b.en : b.es)
   return {

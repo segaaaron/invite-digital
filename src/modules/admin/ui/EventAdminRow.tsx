@@ -55,7 +55,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
   const ratio = event.grupos === 0 ? 0 : event.respondidos / event.grupos
 
   return (
-    <li className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-3 rounded-[18px] border border-line-panel bg-white px-3 py-3 shadow-card transition-[box-shadow,border-color] hover:border-ink/25 hover:shadow-float min-[1000px]:grid-cols-[auto_minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)_40px] min-[1000px]:px-4">
+    <li className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-3 rounded-[18px] border border-line-panel bg-white px-3 py-3 shadow-card transition-[box-shadow,border-color] hover:border-ink/25 hover:shadow-float @min-[760px]:grid-cols-[auto_minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)_40px] @min-[760px]:px-4">
       {/* La portada con la fecha encima: por el título no se reconoce una invitación, por su portada sí. */}
       <span className="relative block h-[78px] w-[58px] shrink-0 overflow-hidden rounded-[12px] bg-bg-sunken ring-1 ring-line-panel">
         {event.portada === null ? (
@@ -89,7 +89,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
         </Semaforo>
       </span>
 
-      <span className="col-span-3 flex min-w-0 flex-col gap-0.5 min-[1000px]:col-span-1">
+      <span className="col-span-3 flex min-w-0 flex-col gap-0.5 @min-[760px]:col-span-1">
         <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Cliente</span>
         <span className="truncate text-[13px] text-ink" title={event.anfitriones.map((a) => a.email).join(', ')}>
           {cliente === undefined ? <span className="text-ink-mute">Sin acceso · lo llevas tú</span> : cliente.email}
@@ -98,7 +98,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
         <span className="truncate text-[11.5px] text-ink-mute">{event.ownerEmail === null ? 'Sin responsable' : `Lo lleva ${event.ownerEmail}`}</span>
       </span>
 
-      <span className="col-span-2 flex min-w-0 flex-col gap-1.5 min-[1000px]:col-span-1">
+      <span className="col-span-2 flex min-w-0 flex-col gap-1.5 @min-[760px]:col-span-1">
         {event.grupos === 0 ? (
           <>
             <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Confirmaciones</span>
@@ -108,7 +108,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
           <>
             <span className="flex items-baseline justify-between">
               <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Confirmaciones</span>
-              <span className="font-display text-[16px] text-ink [font-variant-numeric:lining-nums]">{Math.round(ratio * 100)} %</span>
+              <span className="font-display text-[16px] whitespace-nowrap text-ink [font-variant-numeric:lining-nums]">{Math.round(ratio * 100)} %</span>
             </span>
             <span
               aria-label={`${event.enviados} de ${event.grupos} invitaciones enviadas, ${event.respondidos} respondieron`}
@@ -126,7 +126,7 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
       </span>
 
       {/* «⋯» encima del enlace de la fila (`relative z-10`): lo que no es abrir la ficha. */}
-      <span className="relative z-10 col-start-3 row-start-1 self-start justify-self-end min-[1000px]:col-start-5 min-[1000px]:row-start-auto min-[1000px]:self-center">
+      <span className="relative z-10 col-start-3 row-start-1 self-start justify-self-end @min-[760px]:col-start-5 @min-[760px]:row-start-auto @min-[760px]:self-center">
         <MenuDeAcciones etiqueta={`Más acciones de ${event.title}`}>
           <Link className={opcionDeMenu()} href={`/panel/eventos/${event.slug}/vista-previa`}>
             <EyeIcon className="size-4" /> Ver la invitación

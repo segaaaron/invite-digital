@@ -8,6 +8,8 @@ import { err, isErr, ok, type Result } from '@/shared/result'
 import { catalog, leads } from './web'
 import { admin, orders, plans } from './negocio'
 import { opinionesDe } from './acompanamiento'
+import { leerSitio } from './base'
+import { opinionPublicada } from '@/modules/admin/domain/site-settings'
 
 /** Las categorías del formulario que son una fiesta que el admin vende; bautizo o corporativo, no. */
 const FIESTA_DE_CATEGORIA: Readonly<Record<string, Exclude<FiestaDeVenta, null>>> = {
@@ -107,7 +109,9 @@ export async function cargarHoy(ahora: Date) {
   })
   // Las opiniones de los eventos del último mes: lo que llegó de la encuesta.
   const recientes = conSalud.filter((e) => e.eventDate < hoy && e.eventDate >= new Date(ahora.getTime() - 45 * 86_400_000).toISOString().slice(0, 10))
-  const opiniones = await opinionesDe(recientes.map((e) => e.id))
+  const [opiniones, sitio] = await Promise.all([opinionesDe(recientes.map((e) => e.id)), leerSitio()])
+  // La que ya es testimonio no se vuelve a ofrecer para publicar.
+  const yaPublicada = (comentario: string | null) => comentario !== null && !isErr(sitio) && opinionPublicada(sitio.value, comentario)
   return ok({
     hoy,
     bandeja: componerHoy(
@@ -118,7 +122,7 @@ export async function cargarHoy(ahora: Date) {
         extrasALaVenta: new Set(extras.map((x) => x.effect)),
         opiniones: recientes.flatMap((e) => {
           const o = opiniones.get(e.id)
-          return o === undefined || o.rating === null || o.answeredAt === null ? [] : [{ slug: e.slug, title: e.title, rating: o.rating, comment: o.comment, allowPublish: o.allowPublish, answeredAt: o.answeredAt }]
+          return o === undefined || o.rating === null || o.answeredAt === null ? [] : [{ slug: e.slug, title: e.title, rating: o.rating, comment: o.comment, allowPublish: o.allowPublish && !yaPublicada(o.comment), answeredAt: o.answeredAt }]
         }),
       },
       hoy,

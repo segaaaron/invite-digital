@@ -6,12 +6,13 @@ import { agruparClientes, clavesDeNota, ETAPAS_DE_CLIENTE, etapaDeCliente, event
 import { ETIQUETAS_SUGERIDAS } from '@/modules/admin/application/clientes-use-cases'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { NotaDeCliente, PublicarOpinion } from '@/modules/admin/ui/NotaDeCliente'
+import { opinionPublicada } from '@/modules/admin/domain/site-settings'
 import { BorrarCuentaDeCliente } from '@/modules/admin/ui/UserAdmin'
 import { fiestaDeTema } from '@/modules/events'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { BRAND } from '@/shared/config/brand'
 import { env } from '@/shared/config/env'
-import { MailIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, MailIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { BarraDeFiltros, EncabezadoDeLista, EtiquetaDeFiesta, FilaDeLista, Importe, Monograma, nombreDeFiesta, TiraDeCifras, type FiestaDeLista } from '@/shared/design/ui/panel/lista'
@@ -220,7 +221,7 @@ async function Ficha({
   const claves = clavesDeNota(c)
   const eventosConId = c.eventos.map((e) => ({ ...e, id: eventoPorSlug.get(e.slug)?.id ?? null }))
   const ids = eventosConId.map((e) => e.id).filter((x): x is string => x !== null)
-  const [nota, codigos, opiniones] = await Promise.all([admin.clientNote(claves), admin.referralCodesOf(ids), opinionesDe(ids)])
+  const [nota, codigos, opiniones, laWeb] = await Promise.all([admin.clientNote(claves), admin.referralCodesOf(ids), opinionesDe(ids), admin.siteSettings()])
   const usos = await admin.referralUses([...codigos.values()])
   const telefono = c.telefonos[0]
   const whatsapp = telefono === undefined ? null : enlaceWhatsapp(telefono, `Hola ${c.nombre.split(' ')[0] ?? c.nombre}, te escribimos de ${BRAND.siteName}.`)
@@ -311,7 +312,11 @@ async function Ficha({
                           <b className="font-medium">{o.rating} de 5</b>
                           {o.comment === null ? null : <span className="text-ink-soft"> · «{o.comment}»</span>}
                           {o.allowPublish ? <span className="block text-[11.5px] text-ink-mute">Deja publicar su opinión en la web</span> : null}
-                          {o.allowPublish && o.comment !== null && e.id !== null ? (
+                          {o.allowPublish && o.comment !== null && !isErr(laWeb) && opinionPublicada(laWeb.value, o.comment) ? (
+                            <span className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-sage-deep">
+                              <CheckIcon className="size-3.5" /> Publicada en la web
+                            </span>
+                          ) : o.allowPublish && o.comment !== null && e.id !== null ? (
                             <div className="mt-2">
                               <PublicarOpinion autor={c.nombre.trim().split(/\s+/)[0] ?? c.nombre} eventId={e.id} rol={nombreDeFiesta(fiestaDeTema(eventoPorSlug.get(e.slug)?.themeKey ?? ''))} />
                             </div>

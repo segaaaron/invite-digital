@@ -19,6 +19,52 @@ type Estado = 'conectando' | 'en-vivo' | 'sin-conexion'
  *
  * `tipos`: los avisos que le importan a esta pantalla (a Invitados, las visitas no).
  */
+/**
+ * Abre la conexión SSE y **la cierra al dejar la página** (`pagehide`). Sin eso, Chrome guarda la
+ * página en su caché de ida y vuelta con la conexión viva: con HTTP/1.1 (6 por servidor) unas cuantas
+ * navegaciones dejaban el panel sin conexiones y sin cargar. Si la página vuelve de esa caché
+ * (`pageshow` con `persisted`), se reabre y avisa `resync`: pudo perderse algo mientras estaba guardada.
+ * Devuelve cómo darse de baja.
+ */
+export function escucharEnVivo(
+  url: string,
+  al: { alAbrir: () => void; alFallar: (cerrada: boolean) => void; alCambiar: (tipo: string) => void },
+): () => void {
+  let fuente: EventSource | null = null
+  const abrir = () => {
+    const f = new EventSource(url)
+    f.onopen = al.alAbrir
+    // CONNECTING: el navegador ya está reconectando solo. CLOSED: no hay vuelta (404, sesión caducada).
+    f.onerror = () => al.alFallar(f.readyState === EventSource.CLOSED)
+    f.addEventListener('cambio', (evento) => {
+      try {
+        al.alCambiar((JSON.parse((evento as MessageEvent<string>).data) as { tipo?: string }).tipo ?? '')
+      } catch {
+        // Un aviso que no se entiende no cambia nada.
+      }
+    })
+    fuente = f
+  }
+  const cerrar = () => {
+    fuente?.close()
+    fuente = null
+  }
+  const alOcultar = () => cerrar()
+  const alMostrar = (e: PageTransitionEvent) => {
+    if (!e.persisted || fuente !== null) return
+    abrir()
+    al.alCambiar('resync')
+  }
+  abrir()
+  window.addEventListener('pagehide', alOcultar)
+  window.addEventListener('pageshow', alMostrar)
+  return () => {
+    window.removeEventListener('pagehide', alOcultar)
+    window.removeEventListener('pageshow', alMostrar)
+    cerrar()
+  }
+}
+
 export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipos: readonly Tipo[]; modo: 'auto' | 'aviso'; oculto?: boolean }) {
   const router = useRouter()
   const [estado, setEstado] = useState<Estado>('conectando')
@@ -28,22 +74,15 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
 
   useEffect(() => {
     const importan = new Set(clave.split(','))
-    const fuente = new EventSource(url)
-    fuente.onopen = () => setEstado('en-vivo')
-    // CONNECTING: el navegador ya está reconectando solo. CLOSED: no hay vuelta (404, sesión caducada).
-    fuente.onerror = () => setEstado(fuente.readyState === EventSource.CLOSED ? 'sin-conexion' : 'conectando')
-    fuente.addEventListener('cambio', (evento) => {
-      let tipo = ''
-      try {
-        tipo = (JSON.parse((evento as MessageEvent<string>).data) as { tipo?: string }).tipo ?? ''
-      } catch {
-        return
-      }
-      if (tipo !== 'resync' && !importan.has(tipo)) return
-      if (modo === 'auto') empezar(() => router.refresh())
-      else setNovedades((n) => n + 1)
+    return escucharEnVivo(url, {
+      alAbrir: () => setEstado('en-vivo'),
+      alFallar: (cerrada) => setEstado(cerrada ? 'sin-conexion' : 'conectando'),
+      alCambiar: (tipo) => {
+        if (tipo !== 'resync' && !importan.has(tipo)) return
+        if (modo === 'auto') empezar(() => router.refresh())
+        else setNovedades((n) => n + 1)
+      },
     })
-    return () => fuente.close()
   }, [url, clave, modo, router])
 
   const actualizar = () =>
