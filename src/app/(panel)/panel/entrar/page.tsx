@@ -2,6 +2,11 @@ import Image from '@/shared/design/ui/ImagenConCarga'
 import { SignInForm } from '@/modules/identity/ui/SignInForm'
 
 export const metadata = { title: 'Entrar · Panel' }
+// **Por petición, no prerenderizada.** La CSP lleva un nonce nuevo en cada respuesta y solo lo
+// estampa en los scripts al renderizar: prerenderizada en el build, la página salía con scripts
+// sin nonce, `strict-dynamic` los bloqueaba y la entrada funcionaba sin JavaScript (sin errores
+// en pantalla, sin «Mostrar», y lo escrito se perdía si se enviaba antes de tiempo).
+export const dynamic = 'force-dynamic'
 
 /**
  * La puerta del panel.

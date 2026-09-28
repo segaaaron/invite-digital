@@ -22,7 +22,9 @@ const CLIENTE = { email: `unif-${S}@example.com`, password: 'contrasena-unif-e2e
 const EVENTO_CLIENTE = `unif-cliente-${S}`
 const EVENTO_ADMIN = `unif-admin-${S}`
 const EVENTO_HOY = `unif-hoy-${S}`
-const OPINION = `La invitación encantó a todos ${S}`
+/** Lo que escribe el cliente en su opinión. El prefijo reconoce las de cualquier corrida al limpiar. */
+const PREFIJO_OPINION = 'La invitación encantó a todos'
+const OPINION = `${PREFIJO_OPINION} ${S}`
 
 test.use({ storageState: ADMIN_AUTH_STATE })
 test.describe.configure({ mode: 'serial' })
@@ -67,6 +69,9 @@ test.afterAll(async () => {
   await sql`delete from client_notes where clave like ${`%${S}%`}`
   await sql`delete from events where title like ${`${PREFIJO}%`} or slug like ${`%-${S}`} or title like ${`%${S}%`}`
   await sql`delete from users where email = ${CLIENTE.email}`
+  // Si la prueba de la opinión cae entre publicar y restaurar, su testimonio no se queda en La web; y los de
+  // corridas anteriores tampoco (restaurar «la versión anterior» del historial podría devolverlos).
+  await sql`update app_settings set value = jsonb_set(value::jsonb, '{testimonios}', coalesce((select jsonb_agg(t) from jsonb_array_elements(value::jsonb->'testimonios') t where t->'cita'->>'es' not like ${`${PREFIJO_OPINION}%`}), '[]'::jsonb))::text where key = 'site.settings'`
   if (capacidadAntes === null) await sql`delete from app_settings where key = 'agenda.capacidad'`
   else await sql`update app_settings set value = ${capacidadAntes} where key = 'agenda.capacidad'`
   await sql.end({ timeout: 5 })
@@ -290,4 +295,21 @@ test('el día del evento, «Hoy» cuenta quién entra en vivo, sin recargar', as
     insert into arrivals (scan_id, guest_group_id, arrived_count, scanned_at, recorded_by)
     values (${crypto.randomUUID()}, (select g.id from guest_groups g join events e on e.id = g.event_id where e.slug = ${EVENTO_HOY}), 2, now(), 'porter:e2e')`
   await expect(fila).toContainText('2 de 3 personas dentro', { timeout: 10_000 })
+})
+
+test('la entrada del panel carga su JavaScript: sin bloqueos de la CSP y con «Mostrar» funcionando', async ({ browser }) => {
+  // Prerenderizada en el build, sus scripts salían sin el nonce de la CSP y el navegador los bloqueaba.
+  const anonimo = await browser.newContext({ storageState: { cookies: [], origins: [] } })
+  const page = await anonimo.newPage()
+  const bloqueos: string[] = []
+  page.on('console', (m) => {
+    if (m.type() === 'error' && m.text().includes('Content Security Policy')) bloqueos.push(m.text())
+  })
+  await page.goto('/panel/entrar')
+  const clave = page.getByLabel('Contraseña')
+  await expect(clave).toHaveAttribute('type', 'password')
+  await page.getByRole('button', { name: 'Mostrar' }).click()
+  await expect(clave).toHaveAttribute('type', 'text')
+  expect(bloqueos).toEqual([])
+  await anonimo.close()
 })

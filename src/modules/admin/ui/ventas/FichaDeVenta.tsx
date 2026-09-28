@@ -61,7 +61,8 @@ export function FichaDeVenta({
           </div>
           <p className="mt-2 text-[13px] text-ink-soft">
             {v.fechaEvento === null ? 'Sin fecha de evento' : `Evento el ${diaDelEvento(v.fechaEvento)}`}
-            {' · '}en esta etapa {hace(v.esperaDesde, ahora)}
+            {' · '}
+            <span className="whitespace-nowrap">en esta etapa {hace(v.esperaDesde, ahora)}</span>
           </p>
         </div>
         {v.importeCents === null ? null : (
