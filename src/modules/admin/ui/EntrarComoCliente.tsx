@@ -13,7 +13,18 @@ const INICIAL: SupportState = { status: 'idle' }
  * evento que abre un `<dialog>` con el motivo. Estuvo plegado dentro de «Gestionar» y no lo
  * encontraba nadie. Entrar sigue exigiendo motivo, avisa al cliente y queda registrado.
  */
-export function EntrarComoCliente({ eventId, anfitriones, variant = 'default' }: { eventId: string; anfitriones: readonly Anfitrion[]; variant?: 'default' | 'primary' }) {
+export function EntrarComoCliente({
+  eventId,
+  anfitriones,
+  variant = 'default',
+  claseDelBoton,
+}: {
+  eventId: string
+  anfitriones: readonly Anfitrion[]
+  variant?: 'default' | 'primary'
+  /** Para pintarlo como una opción de un menú «⋯» en vez de como botón. */
+  claseDelBoton?: string
+}) {
   const [estado, entrar, entrando] = useActionState(enterAsClientAction, INICIAL)
   const dialogo = useRef<HTMLDialogElement>(null)
   const id = useId()
@@ -22,7 +33,7 @@ export function EntrarComoCliente({ eventId, anfitriones, variant = 'default' }:
 
   return (
     <>
-      <button aria-haspopup="dialog" className={botonClases(variant)} onClick={() => dialogo.current?.showModal()} type="button">
+      <button aria-haspopup="dialog" className={claseDelBoton ?? botonClases(variant)} onClick={() => dialogo.current?.showModal()} type="button">
         Entrar como el cliente
       </button>
       <dialog

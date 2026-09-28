@@ -7,7 +7,6 @@ test.use({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.5' } })
 
 const CLIENTE = 'Novios del camino completo e2e'
 const CORREO = 'novios-camino-e2e@invitepremium.bo'
-const CLAVE = 'contrasena-del-camino-1'
 const DISENO = 'boda-bot'
 const REFERENCIA = 'E2ECAMIN'
 
@@ -36,32 +35,30 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
       planSlug: 'firma-3d',
     })
 
-    // 1. El **admin** aprueba, dando el correo con el que entrará el cliente. No es el
-    // atelier: aprobar crea la cuenta del cliente y un evento cuyo dueño es quien aprueba.
+    // 1. El **admin** aprueba desde la ficha de la venta. El contacto del pedido es un correo:
+    // no pide nada más —la contraseña provisional se genera sola y le llega por correo—.
     const atelier = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
-    await atelier.goto('/panel/pedidos')
-    const tarjeta = atelier.locator('section', { hasText: REFERENCIA }).first()
+    await atelier.goto(`/panel/admin/ventas?venta=p-${REFERENCIA}`)
+    const ficha = atelier.locator('dialog[open]')
+    await ficha.getByRole('button', { name: 'Aprobar pago' }).click()
 
-    await tarjeta.getByLabel(/Correo del cliente/).fill(CORREO)
-    await tarjeta.getByLabel(/Contraseña inicial/).fill(CLAVE)
-    await tarjeta.getByRole('button', { name: 'Aprobar pago' }).click()
-
-    // 2. La tarjeta dice que la boda existe, y lo dice **leyéndolo de la base**: el
-    // formulario de decisión ya no está: se desmontó al dejar el pedido de estar «por
-    // revisar». Si esto dependiera de su estado, aquí no habría nada.
-    const aprobada = atelier.locator('section', { hasText: REFERENCIA }).first()
-    await expect(aprobada).toContainText('Aprobado')
-    await expect(aprobada).toContainText('Evento creado')
-
-    // Y sobrevive a recargar, que es lo que de verdad hace el atelier.
+    // 2. La venta queda cerrada con su evento, **leído de la base**: sobrevive a recargar.
+    await expect(ficha.getByText('Evento creado')).toBeVisible()
     await atelier.reload()
-    await expect(atelier.locator('section', { hasText: REFERENCIA }).first()).toContainText('Evento creado')
+    await expect(atelier.locator('dialog[open]').getByText('Evento creado')).toBeVisible()
 
     // 3. El admin ve la ficha de la boda nueva, no sus datos: esos son del cliente.
     const slug = `evento-${REFERENCIA.toLowerCase()}`
     await atelier.goto(`/panel/eventos/${slug}/configuracion`)
-    await expect(atelier.getByRole('heading', { name: 'Detalles del evento' })).toBeVisible()
+    await expect(atelier.getByRole('heading', { name: 'Datos y diseño' })).toBeVisible()
     expect((await atelier.goto(`/panel/eventos/${slug}/planner/tareas`))?.status()).toBe(404)
+
+    // Sin proveedor de correo (como aquí), la contraseña provisional no le llegó: el admin la
+    // restablece en la ficha y la ve **una vez**, para pasársela por WhatsApp.
+    await atelier.goto(`/panel/eventos/${slug}/configuracion#acceso`)
+    await atelier.getByRole('button', { name: 'Restablecer acceso' }).click()
+    const CLAVE = (await atelier.locator('code').filter({ hasText: /^[A-Za-z0-9_-]{12,}$/ }).first().innerText()).trim()
+    expect(CLAVE.length).toBeGreaterThanOrEqual(12)
 
     // 4. Los novios entran con lo que les dieron... y lo primero es elegir su contraseña.
     //
@@ -95,7 +92,7 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // sube. Esta línea exigía 404 hasta que el acceso del cliente pasó a incluirla; lo que
     // sigue siendo del atelier son las tarjetas de dentro, no la pantalla.
     expect((await page.goto(`/panel/eventos/${slug}/configuracion`))?.status()).toBe(200)
-    await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Datos y diseño' })).toHaveCount(0)
 
     // La boda nació con el diseño que se eligió en el escaparate. Por rol y no por texto
     // suelto: el título de la tarjeta es un `h2` y es único.

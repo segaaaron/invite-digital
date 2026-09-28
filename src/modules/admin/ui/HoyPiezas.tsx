@@ -1,6 +1,5 @@
-import Link from 'next/link'
 import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import type { Aviso, Proxima } from '../domain/hoy'
+import type { Aviso } from '../domain/hoy'
 
 /**
  * Las piezas de «Hoy». Sin estado y sin acciones: todo lo que se hace desde aquí se hace
@@ -69,58 +68,5 @@ export function AvisoGrupo({ titulo, avisos, vacio }: { titulo: string; avisos: 
         </details>
       ) : null}
     </section>
-  )
-}
-
-const DIA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', timeZone: 'UTC' })
-const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', timeZone: 'UTC' })
-const SEMANA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', timeZone: 'UTC' })
-
-const ESTADO: Record<string, { label: string; tone: 'ok' | 'pending' | 'no' }> = {
-  live: { label: 'Publicada', tone: 'ok' },
-  draft: { label: 'Borrador', tone: 'no' },
-  closed: { label: 'Cerrada', tone: 'pending' },
-}
-
-export function ProximaFila({ boda }: { boda: Proxima }) {
-  const fecha = new Date(`${boda.eventDate}T00:00:00Z`)
-  const estado = ESTADO[boda.status] ?? { label: boda.status, tone: 'pending' as const }
-  const porcentaje = boda.ratio === null ? null : Math.round(boda.ratio * 100)
-
-  return (
-    <li className="border-t border-line-panel first:border-none">
-      <Link className="-mx-2 flex items-center gap-4 rounded-xl px-2 py-3.5 transition-colors hover:bg-bg-sunken/50" href={`/panel/eventos/${boda.slug}/configuracion`}>
-        <span className="flex w-12 shrink-0 flex-col items-center rounded-xl border border-line-panel bg-white py-1.5 shadow-card">
-          <span className="font-display text-[24px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
-          <span className="font-mono text-[10px] tracking-[0.25em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
-        </span>
-
-        <span className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <span className="flex items-center justify-between gap-2">
-            <span className="truncate text-[14px] text-ink">{boda.title}</span>
-            <Pill tone={estado.tone}>{estado.label}</Pill>
-          </span>
-          <span className="text-[11px] text-ink-mute first-letter:uppercase">
-            {SEMANA.format(fecha)} · {boda.dias === 0 ? 'hoy' : boda.dias === 1 ? 'mañana' : `en ${boda.dias} días`}
-          </span>
-          {porcentaje === null ? (
-            <span className="text-[11px] text-danger">Sin invitados cargados</span>
-          ) : (
-            <span className="flex items-center gap-2.5">
-              <span
-                aria-label={`${boda.respondidos} de ${boda.grupos} invitaciones respondieron`}
-                className="h-1.5 flex-1 overflow-hidden rounded-full bg-bg-sunken"
-                role="img"
-              >
-                <span className="block h-full rounded-full bg-sage" style={{ width: `${porcentaje}%` }} />
-              </span>
-              <span className="font-mono text-[10px] text-ink-soft [font-variant-numeric:lining-nums]">
-                {boda.respondidos}/{boda.grupos} RSVP
-              </span>
-            </span>
-          )}
-        </span>
-      </Link>
-    </li>
   )
 }

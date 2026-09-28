@@ -43,7 +43,10 @@ test('retirar un modelo desde el admin lo quita de la colección en la siguiente
   const fila = admin.getByRole('listitem').filter({ has: admin.getByRole('link', { name: 'Abrir el modelo Botánica en una pestaña nueva' }) })
   try {
     await admin.goto('/panel/admin/modelos')
+    // Retirar va en «⋯» y se confirma: es lo que saca un modelo de la venta.
+    await fila.locator('summary[aria-label="Más acciones de Botánica"]').click()
     await fila.getByRole('button', { name: 'Retirar de la web' }).click()
+    await admin.getByRole('dialog', { name: 'Retirar Botánica' }).getByRole('button', { name: 'Retirar de la web' }).click()
     await expect(fila.getByText('Retirado de la web.')).toBeVisible({ timeout: 15_000 })
 
     await page.goto('/es/colecciones')

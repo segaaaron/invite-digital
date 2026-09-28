@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { doorPorters, vendors, events, guestGroups, sessions, users } from '@/shared/db/schema'
+import { doorPorters, eventFeedback, vendors, events, guestGroups, sessions, users } from '@/shared/db/schema'
 import { createTokenMinter } from '@/shared/security/tokens'
 import { isOk } from '@/shared/result'
 import { addGuestGroup } from '../application/add-guest-group'
@@ -73,6 +73,7 @@ describe('el token no se guarda en claro', () => {
       { tabla: 'sessions', columna: sessions.tokenHash },
       { tabla: 'door_porters', columna: doorPorters.tokenHash },
       { tabla: 'vendors', columna: vendors.accessTokenHash },
+      { tabla: 'event_feedback', columna: eventFeedback.tokenHash },
     ] as const
 
     // Si alguien cambiara `token_hash` a `text` para "poder leerlo", el tipo dejaría de

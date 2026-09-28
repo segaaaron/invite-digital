@@ -66,10 +66,10 @@ export default async function LandingPage({
   searchParams,
 }: {
   params: Promise<{ locale: string }>
-  searchParams: Promise<{ modelo?: string }>
+  searchParams: Promise<{ modelo?: string; ref?: string }>
 }) {
   const { locale: raw } = await params
-  const { modelo } = await searchParams
+  const { modelo, ref } = await searchParams
   const locale = parseLocaleParam(raw)
   if (!locale) notFound()
 
@@ -193,6 +193,8 @@ export default async function LandingPage({
           dictionary={dictionary}
           locale={locale}
           modelo={modeloElegido}
+          // El código de quien le recomendó viaja hasta el pedido; allí se valida.
+          referido={ref === undefined ? null : ref.replace(/[^A-Za-z0-9-]/g, '').slice(0, 16)}
           plans={plans}
         />
       ) : null}

@@ -52,3 +52,16 @@ describe('retención de consultas contra Postgres', () => {
     expect(await inbox.find(vieja)).toEqual(antes)
   })
 })
+
+describe('mover una consulta contra Postgres', () => {
+  it('la primera respuesta se escribe una vez y el motivo de pérdida se guarda', async () => {
+    const [fila] = await db.insert(consultationRequests).values({ name: 'Mover Bandeja', locale: 'es', status: 'new' }).returning({ id: consultationRequests.id })
+    ids.push(fila!.id)
+    const primera = new Date('2026-09-28T12:00:00Z')
+    expect(await inbox.move(fila!.id, 'new', { status: 'contacted', note: null, eventId: null, lostReason: null, at: primera })).toBe(true)
+    expect(await inbox.move(fila!.id, 'contacted', { status: 'lost', note: 'se fue', eventId: null, lostReason: 'precio', at: new Date('2026-09-29T12:00:00Z') })).toBe(true)
+    const leida = await inbox.find(fila!.id)
+    expect(leida?.firstContactAt?.toISOString()).toBe(primera.toISOString())
+    expect(leida).toMatchObject({ status: 'lost', lostReason: 'precio', note: 'se fue' })
+  })
+})

@@ -1,26 +1,64 @@
 import { describe, expect, it } from 'vitest'
-import { componerHoy, diasEntre, fechaEnBolivia, type HoyCrudo } from './hoy'
+import { componerHoy, diasEntre, fechaEnBolivia, type EventoDeHoy } from './hoy'
+import { componerVentas, type ConsultaDeVenta, type PedidoDeVenta } from './ventas'
 
 const HOY = '2026-09-14'
+const AHORA = new Date('2026-09-14T15:00:00Z')
+const horasAntes = (h: number) => new Date(AHORA.getTime() - h * 3_600_000)
 
-const vacio: HoyCrudo = {
-  pedidosPorRevisar: [],
-  pedidosSinPago: [],
-  consultasNuevas: [],
-  cambiosDePlan: [],
-  eventos: [],
-  accesosSinEstrenar: [],
-}
+const consulta = (id: string, horas: number): ConsultaDeVenta => ({
+  id,
+  name: `Consulta ${id}`,
+  email: `${id}@x.bo`,
+  phone: null,
+  fiesta: 'boda',
+  categoria: 'Boda',
+  eventDate: '2027-02-14',
+  message: null,
+  status: 'new',
+  note: null,
+  lostReason: null,
+  utm: null,
+  createdAt: horasAntes(horas),
+  statusChangedAt: null,
+  firstContactAt: null,
+  eventSlug: null,
+})
 
-const evento = (over: Partial<HoyCrudo['eventos'][number]>): HoyCrudo['eventos'][number] => ({
+const pedido = (ref: string, parcial: Partial<PedidoDeVenta>): PedidoDeVenta => ({
+  id: ref,
+  publicRef: ref,
+  customerName: `Pedido ${ref}`,
+  contact: `${ref}@y.bo`,
+  fiesta: 'xv',
+  eventDate: '2026-12-05',
+  status: 'pending_payment',
+  origin: 'web',
+  amountCents: 119_000,
+  depositCents: null,
+  balancePaidAt: null,
+  remindedAt: null,
+  producto: 'Firma 3D',
+  esExtra: false,
+  eventSlug: null,
+  consultationId: null,
+  createdAt: horasAntes(2),
+  decidedAt: null,
+  ...parcial,
+})
+
+const evento = (parcial: Partial<EventoDeHoy>): EventoDeHoy => ({
   slug: 'boda-x',
   title: 'Boda X',
-  eventDate: '2026-09-20',
-  status: 'live',
+  eventDate: '2026-10-20',
+  salud: { tono: 'ok', texto: 'Al día', alertas: [] },
   grupos: 10,
-  respondidos: 4,
-  ...over,
+  maxGrupos: 40,
+  plannerSuite: 'esencial',
+  ...parcial,
 })
+
+const nada = { ventas: [], eventos: [], cambiosDePlan: [], extrasALaVenta: new Set<string>() }
 
 describe('fechas de «Hoy»', () => {
   it('cuenta días de calendario, no instantes', () => {
@@ -35,157 +73,65 @@ describe('fechas de «Hoy»', () => {
 })
 
 describe('componerHoy', () => {
-  it('sin nada pendiente no hay avisos', () => {
-    const hoy = componerHoy(vacio, HOY)
+  it('sin nada que hacer, ningún grupo', () => {
+    expect(componerHoy(nada, HOY)).toEqual({ grupos: [], total: 0 })
+  })
+
+  it('las ventas salen de las mismas ventas que el tablero: lo pagado primero, luego comprobantes y consultas', () => {
+    const ventas = componerVentas(
+      {
+        consultas: [consulta('a', 5)],
+        pedidos: [pedido('PAGADO22', { status: 'approved', decidedAt: horasAntes(1) }), pedido('REVISA33', { status: 'proof_submitted' })],
+      },
+      AHORA,
+    )
+    const hoy = componerHoy({ ...nada, ventas }, HOY)
+    expect(hoy.grupos[0]?.avisos.map((a) => [a.etiqueta, a.href])).toEqual([
+      ['Pagado', '/panel/admin/ventas?venta=p-PAGADO22'],
+      ['Comprobante', '/panel/admin/ventas?venta=p-REVISA33'],
+      ['Consulta', '/panel/admin/ventas?venta=c-a'],
+    ])
+    expect(hoy.total).toBe(3)
+  })
+
+  it('más de cuatro de una etapa se resumen en uno que abre su lista', () => {
+    const ventas = componerVentas({ consultas: ['a', 'b', 'c', 'd', 'e'].map((id, i) => consulta(id, i + 1)), pedidos: [] }, AHORA)
+    const [aviso] = componerHoy({ ...nada, ventas }, HOY).grupos[0]?.avisos ?? []
+    expect(aviso).toMatchObject({ titulo: '5 consultas sin contestar', href: '/panel/admin/ventas?vista=lista&etapa=nueva' })
+  })
+
+  it('los eventos en riesgo salen de su salud, en los próximos 90 días', () => {
+    const hoy = componerHoy(
+      {
+        ...nada,
+        eventos: [
+          evento({ slug: 'cerca', salud: { tono: 'risk', texto: 'Invitación sin escribir · faltan 36 días', alertas: [{ clave: 'x', tono: 'risk', texto: '' }] } }),
+          evento({ slug: 'lejos', eventDate: '2027-06-01', salud: { tono: 'risk', texto: 'x', alertas: [] } }),
+        ],
+      },
+      HOY,
+    )
+    expect(hoy.grupos.map((g) => g.id)).toEqual(['riesgos'])
+    expect(hoy.grupos[0]?.avisos.map((a) => a.clave)).toEqual(['riesgo:cerca'])
+  })
+
+  it('las oportunidades solo ofrecen lo que se vende y no suman a lo que espera', () => {
+    const conDiaD = evento({ slug: 'xv', eventDate: '2026-10-20', plannerSuite: 'completo' })
+    expect(componerHoy({ ...nada, eventos: [conDiaD] }, HOY).grupos).toEqual([])
+    const hoy = componerHoy({ ...nada, eventos: [conDiaD, evento({ slug: 'fue', eventDate: '2026-09-11' })], extrasALaVenta: new Set(['dia_d']) }, HOY)
+    expect(hoy.grupos[0]?.avisos.map((a) => a.clave)).toEqual(['op-diad:xv', 'op-gracias:fue'])
     expect(hoy.total).toBe(0)
-    expect(hoy.ventas).toEqual([])
   })
 
-  it('las ventas: comprobantes, cambios de plan y consultas, en ese orden y lo más antiguo primero dentro de cada uno', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        pedidosPorRevisar: [
-          { ref: 'B', customerName: 'Beto', createdAt: new Date('2026-09-13T15:00:00Z') },
-          { ref: 'A', customerName: 'Ana', createdAt: new Date('2026-09-10T15:00:00Z') },
-        ],
-        consultasNuevas: [{ id: 'c1', name: 'María', createdAt: new Date('2026-09-12T15:00:00Z'), eventDate: null }],
-        cambiosDePlan: [{ eventSlug: 'boda-x', eventTitle: 'Boda X', planSlug: 'alta-costura', createdAt: new Date('2026-09-11T15:00:00Z') }],
-      },
-      HOY,
+  it('una opinión que se puede publicar lleva a la ficha de su cliente; la que no, al evento', () => {
+    const opinion = (slug: string, allowPublish: boolean) => ({ slug, title: slug, rating: 5, comment: 'Hermosa', allowPublish, answeredAt: horasAntes(5) })
+    const hoy = componerHoy({ ...nada, opiniones: [opinion('con-permiso', true), opinion('sin-permiso', false)] }, HOY)
+    const avisos = hoy.grupos.find((g) => g.id === 'opiniones')?.avisos ?? []
+    expect(avisos.map((a) => [a.href, a.accion])).toEqual(
+      expect.arrayContaining([
+        ['/panel/admin/clientes?evento=con-permiso', 'Publicar'],
+        ['/panel/admin/eventos?evento=sin-permiso', 'Ver'],
+      ]),
     )
-    expect(hoy.ventas.map((a) => a.titulo)).toEqual(['Ana', 'Beto', 'Boda X', 'María'])
-    expect(hoy.ventas[0]?.href).toBe('/panel/admin/ventas?pedido=A')
-    expect(hoy.totales).toMatchObject({ pedidos: 2, consultas: 1, cambios: 1 })
-  })
-
-  it('más de tres consultas se resumen en un aviso que lleva a la bandeja', () => {
-    const consultas = Array.from({ length: 4 }, (_, i) => ({
-      id: `c${i}`,
-      name: `Persona ${i}`,
-      createdAt: new Date(`2026-09-1${i}T15:00:00Z`),
-      eventDate: null,
-    }))
-    const hoy = componerHoy({ ...vacio, consultasNuevas: consultas }, HOY)
-    expect(hoy.ventas).toHaveLength(1)
-    expect(hoy.ventas[0]).toMatchObject({ clave: 'consultas', titulo: '4 consultas sin contactar', detalle: 'La más antigua escribió hace 4 días' })
-    expect(hoy.totales.consultas).toBe(4)
-    // El total cuenta la cosa que hacer, no las cuatro filas.
-    expect(hoy.total).toBe(1)
-  })
-
-  it('en riesgo: borrador a 30 días o menos, y más urgente a 7', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        eventos: [
-          evento({ slug: 'lejos', eventDate: '2026-10-14', status: 'draft' }),
-          evento({ slug: 'cerca', eventDate: '2026-09-18', status: 'draft' }),
-          evento({ slug: 'fuera', eventDate: '2026-10-15', status: 'draft' }),
-        ],
-      },
-      HOY,
-    )
-    expect(hoy.riesgos.map((a) => [a.clave, a.tono])).toEqual([
-      ['borrador:cerca', 'no'],
-      ['borrador:lejos', 'maybe'],
-    ])
-  })
-
-  it('en riesgo: publicada sin grupos; una cerrada o con grupos no', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        eventos: [
-          evento({ slug: 'vacia', grupos: 0, respondidos: 0 }),
-          evento({ slug: 'cerrada', status: 'closed', grupos: 0, respondidos: 0 }),
-          evento({ slug: 'llena' }),
-        ],
-      },
-      HOY,
-    )
-    expect(hoy.riesgos.map((a) => a.clave)).toEqual(['sin-invitados:vacia'])
-    expect(hoy.riesgos[0]?.href).toBe('/panel/eventos/vacia/configuracion')
-  })
-
-  it('atascados: acceso sin estrenar a los 3 días, no antes', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        accesosSinEstrenar: [
-          { email: 'nuevo@x.bo', createdAt: new Date('2026-09-12T15:00:00Z'), eventSlug: 'boda-x', eventTitle: 'Boda X' },
-          { email: 'viejo@x.bo', createdAt: new Date('2026-09-10T15:00:00Z'), eventSlug: null, eventTitle: null },
-        ],
-      },
-      HOY,
-    )
-    expect(hoy.atascados.map((a) => a.titulo)).toEqual(['viejo@x.bo'])
-    expect(hoy.atascados[0]?.href).toBe('/panel/admin/usuarios')
-  })
-
-  it('muchos comprobantes se resumen en un aviso que abre la bandeja filtrada: «Hoy» no pinta setecientas filas', () => {
-    const pedidosPorRevisar = Array.from({ length: 6 }, (_, i) => ({ ref: `R${i}`, customerName: `Cliente ${i}`, createdAt: new Date(`2026-09-0${i + 1}T15:00:00Z`) }))
-    const hoy = componerHoy({ ...vacio, pedidosPorRevisar }, HOY)
-    expect(hoy.ventas).toEqual([
-      expect.objectContaining({ clave: 'comprobantes', titulo: '6 comprobantes por revisar', detalle: 'El más antiguo espera desde hace 13 días', href: '/panel/pedidos?estado=proof_submitted' }),
-    ])
-    expect(hoy.totales.pedidos).toBe(6)
-    // Hasta cinco van sueltos: cada uno es alguien que ya pagó.
-    expect(componerHoy({ ...vacio, pedidosPorRevisar: pedidosPorRevisar.slice(0, 5) }, HOY).ventas).toHaveLength(5)
-  })
-
-  it('muchos pedidos sin pago se resumen en un aviso que abre la bandeja filtrada', () => {
-    const pedidosSinPago = Array.from({ length: 4 }, (_, i) => ({ ref: `S${i}`, customerName: `Sin pago ${i}`, createdAt: new Date(`2026-08-0${i + 1}T15:00:00Z`) }))
-    const hoy = componerHoy({ ...vacio, pedidosSinPago }, HOY)
-    expect(hoy.atascados).toEqual([
-      expect.objectContaining({ clave: 'sin-pago', titulo: '4 pedidos sin pago', href: '/panel/pedidos?estado=pending_payment' }),
-    ])
-  })
-
-  it('atascados: pedido sin pago a los 7 días, no antes', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        pedidosSinPago: [
-          { ref: 'RECIEN', customerName: 'Recién', createdAt: new Date('2026-09-09T15:00:00Z') },
-          { ref: 'VIEJO', customerName: 'Viejo', createdAt: new Date('2026-09-07T15:00:00Z') },
-        ],
-      },
-      HOY,
-    )
-    expect(hoy.atascados.map((a) => a.clave)).toEqual(['sin-pago:VIEJO'])
-  })
-
-  it('próximas: las de 30 días o menos, por fecha, con su tasa de respuesta', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        eventos: [
-          evento({ slug: 'dos', eventDate: '2026-09-28', grupos: 0, respondidos: 0, status: 'draft' }),
-          evento({ slug: 'uno', eventDate: '2026-09-16' }),
-          evento({ slug: 'treinta', eventDate: '2026-10-14' }),
-          evento({ slug: 'lejos', eventDate: '2026-10-15' }),
-        ],
-      },
-      HOY,
-    )
-    expect(hoy.proximas.map((p) => [p.slug, p.dias, p.ratio])).toEqual([
-      ['uno', 2, 0.4],
-      ['dos', 14, null],
-      ['treinta', 30, 0.4],
-    ])
-  })
-
-  it('el total cuenta los avisos, no las próximas bodas', () => {
-    const hoy = componerHoy(
-      {
-        ...vacio,
-        consultasNuevas: [{ id: 'c1', name: 'María', createdAt: new Date('2026-09-14T15:00:00Z'), eventDate: null }],
-        eventos: [evento({})],
-      },
-      HOY,
-    )
-    expect(hoy.total).toBe(1)
-    expect(hoy.proximas).toHaveLength(1)
   })
 })

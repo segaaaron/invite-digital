@@ -17,8 +17,11 @@ export function PanelLateral({
   subtitle,
   closeHref,
   acciones,
+  ancho = 'normal',
   children,
 }: {
+  /** `amplio` para un formulario de varias columnas (el alta de un evento). */
+  ancho?: 'normal' | 'amplio'
   title: string
   subtitle?: string | undefined
   closeHref: string
@@ -44,7 +47,7 @@ export function PanelLateral({
   return (
     <dialog
       aria-labelledby={id}
-      className="panel-lateral fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/35 min-[640px]:w-[min(580px,100vw)]"
+      className={`panel-lateral fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/35 ${ancho === 'amplio' ? 'min-[640px]:w-[min(1000px,100vw)]' : 'min-[640px]:w-[min(580px,100vw)]'}`}
       onCancel={(e) => {
         e.preventDefault()
         cerrar()

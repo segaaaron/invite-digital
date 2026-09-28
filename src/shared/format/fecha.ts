@@ -50,3 +50,48 @@ export function fechaCorta(instante: Date): string {
   return `${pieza(partes, 'day')}-${pieza(partes, 'month')}`
 }
 
+
+/**
+ * Las fechas **de un día** —la del evento, la del cierre— se guardan como `2026-12-05`, sin
+ * hora. Se leen en UTC a propósito: son un día de calendario, no un instante, y leerlas en la
+ * zona del servidor las correría un día.
+ */
+const DIA_ENTERO = new Intl.DateTimeFormat('es-BO', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })
+
+const sinPunto = (texto: string): string => texto.replace('.', '')
+const deIso = (iso: string): Date => new Date(`${iso}T00:00:00Z`)
+
+/** «sáb 5 dic 2026»: la fecha de un evento, en el panel. Nunca ISO en pantalla. */
+export function diaDelEvento(iso: string): string {
+  const partes = DIA_ENTERO.formatToParts(deIso(iso))
+  return `${sinPunto(pieza(partes, 'weekday'))} ${pieza(partes, 'day')} ${sinPunto(pieza(partes, 'month'))} ${pieza(partes, 'year')}`
+}
+
+/** «5 dic»; con el año si no es el de `hoy` (ISO), para que «14 feb» no engañe. */
+export function diaCorto(iso: string, hoy?: string): string {
+  const partes = DIA_ENTERO.formatToParts(deIso(iso))
+  const base = `${pieza(partes, 'day')} ${sinPunto(pieza(partes, 'month'))}`
+  return hoy === undefined || hoy.slice(0, 4) === iso.slice(0, 4) ? base : `${base} ${pieza(partes, 'year')}`
+}
+
+/** «ahora», «hace 40 min», «hace 3 h», «ayer», «hace 8 días»: cuánto lleva algo esperando. */
+export function hace(instante: Date, ahora: Date): string {
+  const minutos = Math.floor((ahora.getTime() - instante.getTime()) / 60_000)
+  if (minutos < 1) return 'ahora'
+  if (minutos < 60) return `hace ${minutos} min`
+  const horas = Math.floor(minutos / 60)
+  if (horas < 24) return `hace ${horas} h`
+  const dias = Math.floor(horas / 24)
+  return dias === 1 ? 'ayer' : `hace ${dias} días`
+}
+
+/** «hoy», «mañana», «en 14 días», «en 3 meses», «hace 1 año»: la distancia a un evento, en días. */
+export function faltaPara(dias: number): string {
+  if (dias === 0) return 'hoy'
+  if (dias === 1) return 'mañana'
+  if (dias === -1) return 'ayer'
+  const n = Math.abs(dias)
+  const anos = Math.round(n / 365)
+  const texto = n < 45 ? `${n} días` : n < 365 ? `${Math.round(n / 30)} meses` : `${anos} año${anos === 1 ? '' : 's'}`
+  return dias > 0 ? `en ${texto}` : `hace ${texto}`
+}

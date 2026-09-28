@@ -1,6 +1,6 @@
 export type { AdminError, AdminErrorKind } from './domain/errors'
 export { fraseDeAuditoria, GRUPOS_DE_AUDITORIA, prefijosDeGrupo } from './domain/auditoria'
-export type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from './application/ports'
+export type { AdminEventRow, AdminRepository, AdminUserRow, AuditRow } from './application/ports'
 export { EventAdminRow } from './ui/EventAdminRow'
 export { NewUserForm, UserRow } from './ui/UserAdmin'
 export { ShowcaseMusicRow } from './ui/ShowcaseMusicRow'

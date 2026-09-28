@@ -28,7 +28,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
   await admin.goto('/panel/admin/extras')
   const extra = admin.getByRole('form', { name: 'Extra +3 porteros' })
   await extra.getByLabel('A la venta').check()
-  await extra.getByRole('button', { name: 'Guardar extra' }).click()
+  await extra.getByRole('button', { name: 'Guardar' }).click()
   await expect(extra.getByText('Extra guardado.')).toBeVisible({ timeout: 15_000 })
 
   // 2. Quien lleva el evento lo pide y aterriza en la página de su pedido.
@@ -42,8 +42,9 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
 
   // 3. Con el comprobante subido, el admin aprueba sin pedir acceso de cliente.
   await sql`update orders set status = 'proof_submitted' where public_ref = ${ref}`
-  await admin.goto('/panel/pedidos')
-  const tarjeta = admin.locator('section', { hasText: ref }).first()
+  await admin.goto(`/panel/admin/ventas?venta=p-${ref}`)
+  const tarjeta = admin.locator('dialog[open]')
+  // Un extra no crea evento: no pide el correo del cliente.
   await expect(tarjeta.getByLabel(/Correo del cliente/)).toHaveCount(0)
   await tarjeta.getByRole('button', { name: 'Aprobar pago' }).click()
   // Se espera a que el extra esté aplicado en la base, no al texto «Aprobado»: la primera

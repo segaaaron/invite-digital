@@ -47,6 +47,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
     onlineDays: texto(formData, 'onlineDays'),
     designChange: texto(formData, 'designChange'),
     plannerSuite: texto(formData, 'plannerSuite'),
+    depositPct: texto(formData, 'depositPct'),
     includesSeating: marcado('includesSeating'),
     includesRegistry: marcado('includesRegistry'),
     includesCheckin: marcado('includesCheckin'),

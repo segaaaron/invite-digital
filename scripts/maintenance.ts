@@ -4,7 +4,7 @@
  *
  *   DATABASE_URL=… SITE_URL=… pnpm maintenance
  */
-import { events, leads } from '@/app/composition/container'
+import { enviarAcompanamiento, events, leads } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
 
 async function runMaintenance(): Promise<number> {
@@ -30,6 +30,16 @@ async function runMaintenance(): Promise<number> {
     return 1
   }
   console.log(`Retención de consultas: ${consultas.value} anonimizada(s)`)
+
+  // El acompañamiento de los anfitriones: hitos, confirmaciones, opinión y aniversario. Un fallo
+  // aquí no deshace la retención; lo que no salió se reintenta mañana.
+  try {
+    const { enviados, fallidos } = await enviarAcompanamiento(new Date())
+    console.log(`Acompañamiento: ${enviados} aviso(s) enviado(s)${fallidos > 0 ? `, ${fallidos} para reintentar mañana` : ''}`)
+  } catch (causa) {
+    console.error('Acompañamiento fallido —', causa)
+    return 1
+  }
   return 0
 }
 

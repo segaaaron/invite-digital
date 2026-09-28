@@ -46,7 +46,14 @@ export default async function CuentaPage() {
       <PanelHeader kicker="Cuenta" meta="Tus datos de acceso al panel" title="Mi cuenta" />
 
       <PanelCard>
-        <SettingsSection description="Con este correo entras al panel y te llegan los avisos. Si hay que cambiarlo, lo hace un administrador." title="Perfil">
+        <SettingsSection
+          description={
+            actor.role === 'admin'
+              ? 'Con este correo entras al panel y te llegan los avisos. Para cambiarlo, crea la cuenta nueva en Ajustes › Equipo y borra esta.'
+              : 'Con este correo entras al panel y te llegan los avisos. Si hay que cambiarlo, escríbele al atelier.'
+          }
+          title="Perfil"
+        >
           <dl className="grid gap-4 min-[560px]:grid-cols-2">
             <div className="flex flex-col gap-1">
               <dt className="text-[12px] text-ink-mute">Correo</dt>

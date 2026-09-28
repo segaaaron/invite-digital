@@ -3,7 +3,7 @@ import type { Actor } from '@/modules/identity'
 import { isErr, isOk } from '@/shared/result'
 import { DEFAULT_SITE_SETTINGS, SITE_SETTINGS_KEY, type SiteSettings } from '../domain/site-settings'
 import type { SettingsRepository, SiteSettingsStore, SiteVersionRow } from './ports'
-import { readSiteSettings, restoreSiteVersion, saveSiteSettings } from './site-settings-use-cases'
+import { publishTestimonial, readSiteSettings, restoreSiteVersion, saveSiteSettings } from './site-settings-use-cases'
 
 const actor = { userId: 'u1', email: 'admin@x.bo', role: 'admin' } as Actor
 
@@ -98,3 +98,25 @@ describe('site settings', () => {
     expect(isErr(r) && r.error.kind).toBe('not_found')
   })
 })
+
+describe('publicar una opinión como testimonio', () => {
+  const opinion = { autor: 'Carla & Diego', rol: 'Boda', cita: 'Nuestros invitados no paraban de hablar de la invitación.' }
+
+  it('entra la primera, confirmada, con su versión; y la misma no entra dos veces', async () => {
+    const d = dobles()
+    const r = await publishTestimonial(d)(actor, opinion)
+    expect(isOk(r) && r.value.testimonios[0]).toEqual({ autor: 'Carla & Diego', rol: { es: 'Boda', en: '' }, cita: { es: opinion.cita, en: '' }, foto: '', confirmado: true })
+    expect(d.auditoria.at(-1)?.campos).toEqual(['testimonios'])
+    const otra = await publishTestimonial(d)(actor, opinion)
+    expect(isErr(otra) && otra.error.detail).toBe('Esa opinión ya está publicada en la web.')
+  })
+
+  it('con seis en la web no suma el séptimo', async () => {
+    const d = dobles()
+    const seis = Array.from({ length: 6 }, (_, i) => ({ autor: `A${i}`, rol: { es: '', en: '' }, cita: { es: `c${i}`, en: '' }, foto: '', confirmado: true }))
+    await saveSiteSettings(d)(actor, con({ testimonios: seis }), null)
+    const r = await publishTestimonial(d)(actor, opinion)
+    expect(isErr(r) && r.error.kind).toBe('invalid_input')
+  })
+})
+

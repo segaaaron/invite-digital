@@ -197,3 +197,36 @@ describe('aplicar un extra aprobado', () => {
   })
 })
 
+
+describe('los extras de una cotización', () => {
+  it('se aplican al evento del pedido del plan una sola vez, aunque se enlace dos veces', async () => {
+    const [antes] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
+    const [pedido] = await db
+      .insert(orders)
+      .values({
+        publicRef: `Q${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
+        eventId,
+        customerName: 'Ana',
+        contact: 'ana@x.bo',
+        status: 'approved',
+        amountCents: 120000,
+        currency: 'BOB',
+        decidedAt: new Date(),
+        quoteExtras: [
+          { slug: 'mas-6-meses', name: 'Más días', cents: 9000 },
+          { slug: 'no-existe', name: 'Inventado', cents: 100 },
+        ],
+      })
+      .returning({ id: orders.id })
+
+    expect(await drizzlePlansRepository.applyQuoteExtras(pedido!.id)).toBe(1)
+    expect(await drizzlePlansRepository.applyQuoteExtras(pedido!.id)).toBe(0)
+
+    expect(await drizzlePlansRepository.listEventExtras(eventId)).toEqual([{ effect: 'mas_dias', amount: 180 }])
+    const [despues] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
+    expect(despues!.dias).toBe(antes!.dias + 180)
+
+    await db.delete(orders).where(eq(orders.id, pedido!.id))
+    await db.delete(eventAddons).where(eq(eventAddons.eventId, eventId))
+  })
+})

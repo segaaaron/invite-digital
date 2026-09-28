@@ -5,7 +5,6 @@ import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/
 import { addEventClientAction, removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
 import type { StaffMember } from './DoorStaff'
 import { Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'
-import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -67,31 +66,16 @@ export function EventClients({
       )}
 
       <form action={darAlta} className="flex flex-col gap-4">
-        <div className="grid gap-4 min-[560px]:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
-              Correo del cliente
-            </label>
-            <input className={FIELD_CLASS} id={`${id}-correo`} name="email" required type="email" />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
-              Contraseña inicial
-            </label>
-            <CampoContrasena
-              autoComplete="new-password"
-              className={FIELD_CLASS}
-              id={`${id}-clave`}
-              minLength={12}
-              name="password"
-            />
-          </div>
+        <div className="flex flex-col gap-2">
+          <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
+            Correo del cliente
+          </label>
+          <input className={FIELD_CLASS} id={`${id}-correo`} name="email" required type="email" />
         </div>
 
-        <p className="text-[11px] leading-[1.7] text-ink-mute">
-          La contraseña se enseña aquí y no se vuelve a mostrar: en la base solo queda su hash. Cópiala antes de
-          enviársela. Si el correo ya tiene cuenta, se le da acceso sin tocar su contraseña.
+        <p className="text-[11.5px] leading-[1.7] text-ink-mute">
+          Le llega por correo su acceso con una contraseña provisional que se genera sola; la cambia al entrar. Si el correo ya tiene
+          cuenta, se le suma este evento sin tocarle la contraseña.
         </p>
 
         <SubmitButton variant="primary" pending={dandoAlta} pendingLabel={'Dando acceso…'}>{'Dar acceso al cliente'}</SubmitButton>

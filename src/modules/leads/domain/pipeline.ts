@@ -12,8 +12,9 @@ export const inboxError = (kind: InboxErrorKind, detail: string): InboxError => 
 /**
  * El seguimiento de una consulta de la web: un embudo corto, a propósito.
  *
- * Nueva → contactada → ganada o perdida. Un CRM con cotizada y esperando pago duplicaría lo
- * que ya cuentan los pedidos del Plan B: en cuanto hay pedido, el pedido manda.
+ * Nueva → contactada → ganada o perdida. «Cotizada» o «esperando pago» no son estados de la
+ * consulta: son su pedido. La consulta y su pedido son **una venta** (`admin/domain/ventas.ts`) y,
+ * en cuanto hay pedido, el pedido manda la etapa.
  */
 export const ESTADOS_CONSULTA = ['new', 'contacted', 'won', 'lost'] as const
 export type EstadoConsulta = (typeof ESTADOS_CONSULTA)[number]
@@ -41,26 +42,48 @@ export const parseEstado = (valor: string): EstadoConsulta =>
   (ESTADOS_CONSULTA as readonly string[]).includes(valor) ? (valor as EstadoConsulta) : 'new'
 
 /**
+ * Por qué se pierde una venta, de una lista corta (`0073`). Con texto libre, «caro», «precio» y
+ * «muy caro» eran tres motivos, y «¿por qué pierdo?» no tenía respuesta sin leer nota por nota.
+ */
+export const MOTIVOS_DE_PERDIDA = [
+  { clave: 'precio', etiqueta: 'Le pareció caro' },
+  { clave: 'eligio_a_otro', etiqueta: 'Eligió a otra empresa' },
+  { clave: 'no_respondio', etiqueta: 'Dejó de responder' },
+  { clave: 'cambio_fecha', etiqueta: 'Cambió o canceló la fecha' },
+  { clave: 'otro', etiqueta: 'Otro motivo' },
+] as const
+export type MotivoDePerdida = (typeof MOTIVOS_DE_PERDIDA)[number]['clave']
+
+export const parseMotivo = (valor: string | null | undefined): MotivoDePerdida | null =>
+  MOTIVOS_DE_PERDIDA.find((m) => m.clave === valor)?.clave ?? null
+
+export const etiquetaDeMotivo = (motivo: string | null): string | null => MOTIVOS_DE_PERDIDA.find((m) => m.clave === motivo)?.etiqueta ?? null
+
+/**
  * Decide si la consulta puede pasar de un estado a otro.
  *
  * **Perderla exige el motivo**, como rechazar un pedido: sin él, dentro de tres meses nadie
- * sabe si se perdió por precio, por fecha o porque nadie contestó a tiempo.
+ * sabe si se perdió por precio, por fecha o porque nadie contestó a tiempo. El motivo es de
+ * la lista; «Otro» pide la nota. Sin motivo pero con nota, cuenta como «Otro».
  */
 export function mover(
   desde: EstadoConsulta,
   hacia: EstadoConsulta,
   nota: string,
-): Result<{ status: EstadoConsulta; note: string | null }, InboxError> {
+  motivo = '',
+): Result<{ status: EstadoConsulta; note: string | null; lostReason: MotivoDePerdida | null }, InboxError> {
   if (!TRANSICIONES[desde].includes(hacia)) {
     return err(inboxError('invalid_transition', `Una consulta ${ETIQUETA_ESTADO[desde].toLowerCase()} no pasa a ${ETIQUETA_ESTADO[hacia].toLowerCase()}.`))
   }
 
   const limpia = nota.trim()
-  if (hacia === 'lost' && limpia.length === 0) {
-    return err(inboxError('missing_note', 'Escribe por qué se perdió.'))
+  const elegido = parseMotivo(motivo)
+  if (hacia === 'lost') {
+    if (elegido === null && limpia.length === 0) return err(inboxError('missing_note', 'Elige por qué se perdió.'))
+    if (elegido === 'otro' && limpia.length === 0) return err(inboxError('missing_note', 'Cuenta en la nota cuál fue el motivo.'))
   }
 
-  return ok({ status: hacia, note: limpia.length > 0 ? limpia : null })
+  return ok({ status: hacia, note: limpia.length > 0 ? limpia : null, lostReason: hacia === 'lost' ? (elegido ?? 'otro') : null })
 }
 
 /**

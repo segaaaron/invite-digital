@@ -11,9 +11,10 @@ import { type Actor, isAdmin } from '@/modules/identity'
  */
 export async function insigniasDeAdmin(actor: Actor): Promise<{ pedidos: number | null; consultas: number | null }> {
   if (!isAdmin(actor)) return { pedidos: null, consultas: null }
-  const [pedidos, consultas] = await Promise.allSettled([orders.porRevisar(), leads.countNew()])
+  // Lo mismo que «Por atender» de Ventas: consultas nuevas, comprobantes y pagos sin su evento.
+  const [pedidos, consultas, sinEvento] = await Promise.allSettled([orders.porRevisar(), leads.countNew(), orders.porCrearEvento()])
   return {
-    pedidos: pedidos.status === 'fulfilled' ? pedidos.value : null,
+    pedidos: pedidos.status === 'fulfilled' ? pedidos.value + (sinEvento.status === 'fulfilled' ? sinEvento.value : 0) : null,
     consultas: consultas.status === 'fulfilled' ? consultas.value : null,
   }
 }

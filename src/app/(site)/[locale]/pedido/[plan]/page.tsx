@@ -19,10 +19,10 @@ export default async function PedidoPage({
   searchParams,
 }: {
   params: Promise<{ locale: string; plan: string }>
-  searchParams: Promise<{ modelo?: string }>
+  searchParams: Promise<{ modelo?: string; ref?: string }>
 }) {
   const { locale: raw, plan: planSlug } = await params
-  const { modelo } = await searchParams
+  const { modelo, ref } = await searchParams
   const locale = parseLocaleParam(raw)
   if (!locale) notFound()
 
@@ -48,6 +48,7 @@ export default async function PedidoPage({
       </header>
 
       <OrderForm
+        referido={ref === undefined ? null : ref.slice(0, 16)}
         locale={locale}
         textos={dictionary.orders.form}
         planName={plan.name}

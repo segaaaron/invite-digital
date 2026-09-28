@@ -7,7 +7,7 @@ import type { Breakdown } from '@/modules/analytics'
 import { EventStats } from '@/modules/rsvp/ui/EventStats'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { DonutChart, PanelCard } from '@/shared/design/ui/panel/cards'
-import { BarRow } from '@/shared/design/ui/panel/PanelKit'
+import { BarRow, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 
@@ -69,7 +69,12 @@ export default async function EventStatsPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      <PanelHeader kicker="Analítica" meta={event.value.title} title="Estadísticas" />
+      <PanelHeader
+        actions={<PanelButton href={`/panel/eventos/${slug}/informe`}>Informe del evento</PanelButton>}
+        kicker="Analítica"
+        meta={event.value.title}
+        title="Estadísticas"
+      />
       <EnVivo modo="aviso" tipos={['rsvp', 'visita']} url={`/panel/eventos/${slug}/en-vivo`} />
 
       {isErr(stats) ? (

@@ -22,9 +22,12 @@ export function OrderForm({
   priceLabel,
   templateSlug = null,
   templateName = null,
+  referido = null,
   textos,
   locale,
 }: {
+  /** El código que llegó en el enlace de quien le recomendó (`?ref=`). */
+  referido?: string | null
   /** Los rótulos y avisos del formulario, en el idioma de la página. */
   textos: OrderFormDictionary
   locale: Locale
@@ -98,6 +101,11 @@ export function OrderForm({
       <label className="flex flex-col gap-2" htmlFor={`${id}-notas`}>
         <span className={ROTULO}>{textos.notes}</span>
         <textarea className={`${CAMPO} min-h-[110px]`} id={`${id}-notas`} maxLength={1000} name="notes" />
+      </label>
+
+      <label className="flex flex-col gap-2" htmlFor={`${id}-referido`}>
+        <span className={ROTULO}>{textos.referral}</span>
+        <input autoCapitalize="characters" className={`${CAMPO} uppercase`} defaultValue={referido ?? ''} id={`${id}-referido`} maxLength={16} name="referido" type="text" />
       </label>
 
       <button

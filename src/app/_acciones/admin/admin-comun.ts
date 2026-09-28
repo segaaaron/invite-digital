@@ -30,6 +30,8 @@ export const refrescar = () => {
   revalidatePath('/panel/admin/usuarios')
   revalidatePath('/panel/admin/eventos')
   revalidatePath('/panel/admin/auditoria')
+  revalidatePath('/panel/admin/ventas')
+  revalidatePath('/panel/admin/clientes')
 }
 
 export const texto = (formData: FormData, clave: string): string => {

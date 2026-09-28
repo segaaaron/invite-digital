@@ -1,6 +1,6 @@
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { ordersError, type OrdersError } from '../domain/errors'
-import { canDecide, canReceiveProof, newPublicRef, normalizeRef, type Order, type OrderStatus } from '../domain/order'
+import { canCancel, canDecide, canReceiveProof, canRemind, newPublicRef, normalizeRef, saldoPendiente, type Order, type OrderStatus, type QuoteExtra } from '../domain/order'
 import { checkProof } from '../domain/proof'
 import type { FileStorage, OrderRepository, ProofRow } from './ports'
 
@@ -31,6 +31,9 @@ export const placeOrder =
     contact: string
     eventDate: string | null
     notes: string | null
+    /** El código de recomendación, ya validado en la frontera, y su descuento. */
+    referralCode?: string | null
+    descuentoPct?: number
   }): Promise<Result<Order, OrdersError>> => {
     // Los errores del pedido público son **códigos** (`name`, `contact`…): la web los
     // traduce con su diccionario, en el idioma de quien pide.
@@ -69,6 +72,8 @@ export const placeOrder =
               contact: contacto,
               eventDate: input.eventDate,
               notes: notas === '' ? null : notas,
+              referralCode: input.referralCode ?? null,
+              descuentoPct: input.referralCode ? (input.descuentoPct ?? 0) : 0,
             }),
           )
         }
@@ -151,7 +156,10 @@ export const attachProof =
       async () => {
         const order = await deps.orders.findByRef(publicRef)
         if (order === null) return err(ordersError('not_found', `No existe el pedido ${publicRef}.`))
-        if (!canReceiveProof(order.status)) {
+        // Aprobado con anticipo, lo que sube es **el saldo**: se guarda sin tocar el estado —el
+        // evento ya existe— y el admin lo registra desde la venta.
+        const esSaldo = saldoPendiente(order)
+        if (!canReceiveProof(order.status) && !esSaldo) {
           return err(ordersError('wrong_status', 'Este pedido ya está aprobado: no admite más comprobantes.'))
         }
 
@@ -167,6 +175,7 @@ export const attachProof =
           mime: veredicto.mime,
           sizeBytes: input.bytes.length,
         })
+        if (esSaldo) return ok(order)
         await deps.orders.setStatus({ id: order.id, status: 'proof_submitted', decisionNote: null, decidedAt: null })
 
         return ok({ ...order, status: 'proof_submitted' as const, decisionNote: null, decidedAt: null })
@@ -253,4 +262,113 @@ export const readProof =
         return ok({ proof, bytes })
       },
       (cause) => ordersError('storage_failure', `No se pudo leer el comprobante: ${String(cause)}`),
+    )
+
+/**
+ * **La cotización**: el admin arma el pedido para un cliente —plan, diseño, extras y su precio
+ * final— y le manda el enlace. Es un pedido más (`origin = 'cotizacion'`): el cliente paga y
+ * sube su comprobante por el mismo camino que si lo hubiera pedido él.
+ *
+ * El precio lo pone el admin, pero **no por debajo de cero ni por encima de lista más extras**:
+ * lo que se cobra de más no es un descuento, es un error de tecleo.
+ */
+export const quoteOrder =
+  (deps: Deps) =>
+  async (input: {
+    planSlug: string
+    templateSlug: string | null
+    customerName: string
+    contact: string
+    eventDate: string | null
+    notes: string | null
+    consultationId: string | null
+    listaCents: number
+    finalCents: number
+    extras: readonly QuoteExtra[]
+  }): Promise<Result<Order, OrdersError>> => {
+    const nombre = input.customerName.trim()
+    const contacto = input.contact.trim()
+    if (nombre === '' || nombre.length > MAX_NAME) return err(ordersError('invalid_input', 'Escribe el nombre del cliente.'))
+    if (contacto === '' || contacto.length > MAX_NAME) return err(ordersError('invalid_input', 'Falta cómo contactarle: correo o WhatsApp.'))
+    if (input.planSlug.trim() === '') return err(ordersError('invalid_input', 'Elige un plan.'))
+    const tope = input.listaCents + input.extras.reduce((suma, x) => suma + x.cents, 0)
+    if (!Number.isInteger(input.finalCents) || input.finalCents <= 0) return err(ordersError('invalid_input', 'El precio final tiene que ser mayor que cero.'))
+    if (input.finalCents > tope) return err(ordersError('invalid_input', 'El precio final no puede pasar del de lista más los extras.'))
+    const notas = input.notes?.trim() ?? ''
+    if (notas.length > MAX_NOTES) return err(ordersError('invalid_input', 'La nota es demasiado larga.'))
+
+    return attempt(
+      async () => {
+        for (let intento = 0; intento < 5; intento += 1) {
+          const publicRef = newPublicRef()
+          if ((await deps.orders.findByRef(publicRef)) !== null) continue
+          return ok(
+            await deps.orders.createQuote({
+              publicRef,
+              planSlug: input.planSlug.trim(),
+              templateSlug: input.templateSlug,
+              customerName: nombre,
+              contact: contacto,
+              eventDate: input.eventDate,
+              notes: notas === '' ? null : notas,
+              consultationId: input.consultationId,
+              amountCents: input.finalCents,
+              discountCents: tope - input.finalCents > 0 ? tope - input.finalCents : null,
+              extras: input.extras,
+            }),
+          )
+        }
+        return err(ordersError('storage_failure', 'No se pudo acuñar una referencia libre.'))
+      },
+      (cause) => ordersError('storage_failure', `No se pudo crear la cotización: ${String(cause)}`),
+    )
+  }
+
+/** Cancelar un pedido que no se cobró. **Exige motivo**, como perder una consulta. */
+export const cancelOrder =
+  (deps: Deps) =>
+  async (input: { orderId: string; reason: string }): Promise<Result<Order, OrdersError>> => {
+    const motivo = input.reason.trim()
+    if (motivo === '') return err(ordersError('invalid_input', 'Escribe por qué se cancela.'))
+    return attempt(
+      async () => {
+        const order = await deps.orders.findById(input.orderId)
+        if (order === null) return err(ordersError('not_found', `No existe el pedido ${input.orderId}.`))
+        if (!canCancel(order.status)) return err(ordersError('wrong_status', 'Un pedido cobrado o ya cancelado no se cancela.'))
+        if (!(await deps.orders.cancel(order.id, motivo.slice(0, MAX_NOTES), deps.clock()))) {
+          return err(ordersError('wrong_status', 'Alguien cambió este pedido mientras tanto.'))
+        }
+        return ok(order)
+      },
+      (cause) => ordersError('storage_failure', `No se pudo cancelar el pedido: ${String(cause)}`),
+    )
+  }
+
+/** Anota que se le recordó el pago. El mensaje lo abre la pantalla: aquí solo se deja constancia. */
+export const remindOrder =
+  (deps: Deps) =>
+  async (orderId: string): Promise<Result<Order, OrdersError>> =>
+    attempt(
+      async () => {
+        const order = await deps.orders.findById(orderId)
+        if (order === null) return err(ordersError('not_found', `No existe el pedido ${orderId}.`))
+        if (!canRemind(order.status)) return err(ordersError('wrong_status', 'Este pedido no espera un pago.'))
+        await deps.orders.markReminded(order.id, deps.clock())
+        return ok(order)
+      },
+      (cause) => ordersError('storage_failure', `No se pudo anotar el recordatorio: ${String(cause)}`),
+    )
+
+/** Registra el saldo de un pedido con anticipo: con esto queda cobrado entero. */
+export const registerBalance =
+  (deps: Deps) =>
+  async (orderId: string): Promise<Result<null, OrdersError>> =>
+    attempt(
+      async () => {
+        if (!(await deps.orders.markBalancePaid(orderId, deps.clock()))) {
+          return err(ordersError('wrong_status', 'Este pedido no tiene saldo pendiente.'))
+        }
+        return ok(null)
+      },
+      (cause) => ordersError('storage_failure', `No se pudo registrar el saldo: ${String(cause)}`),
     )

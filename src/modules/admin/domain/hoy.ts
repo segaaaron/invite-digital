@@ -1,37 +1,31 @@
+import { diaCorto } from '@/shared/format/fecha'
+import type { Venta } from './ventas'
+import type { Salud } from './salud'
+
 /**
- * «Hoy»: lo que le espera al admin, decidido sin base y sin reloj.
+ * **«Hoy»: la bandeja única del admin** (28 de septiembre). Lo que pide acción, sacado de **las
+ * mismas ventas y la misma salud** que enseñan Ventas y Eventos: antes Hoy leía sus propias filas
+ * crudas y podía contar distinto que el tablero. Ahora no puede contradecirlos.
  *
- * El repositorio trae filas crudas; aquí se decide qué es un aviso. **La fecha llega como
- * argumento**, igual que en `dueReminders`: así «a 30 días», «más de 3 días» y «más de 7»
- * se prueban sin tocar el reloj del sistema.
+ * Cuatro grupos: ventas que esperan, eventos en riesgo, cambios de plan y **oportunidades** (el
+ * extra justo en el momento justo). Puro: la fecha llega como argumento.
  */
 
-export type HoyCrudo = {
-  /** Pedidos con comprobante subido y sin decidir. Alguien transfirió y espera. */
-  readonly pedidosPorRevisar: readonly { ref: string; customerName: string; createdAt: Date }[]
-  /** Pedidos abiertos sin comprobante. */
-  readonly pedidosSinPago: readonly { ref: string; customerName: string; createdAt: Date }[]
-  readonly consultasNuevas: readonly { id: string; name: string; createdAt: Date; eventDate: string | null }[]
-  readonly cambiosDePlan: readonly { eventSlug: string; eventTitle: string; planSlug: string; createdAt: Date }[]
-  /** Eventos de hoy a `HORIZONTE_RIESGO` días, con sus grupos y cuántos respondieron. */
-  readonly eventos: readonly {
-    slug: string
-    title: string
-    eventDate: string
-    status: string
-    grupos: number
-    respondidos: number
-  }[]
-  /** Cuentas de cliente que siguen con la contraseña provisional. */
-  readonly accesosSinEstrenar: readonly {
-    email: string
-    createdAt: Date
-    eventSlug: string | null
-    eventTitle: string | null
-  }[]
+/** Una solicitud de cambio de plan pendiente: la única fila cruda que Hoy lee aparte. */
+export type CambioDePlan = { readonly eventSlug: string; readonly eventTitle: string; readonly planSlug: string; readonly createdAt: Date }
+
+/** Un evento, con su salud ya calculada y lo que hace falta para ofrecerle un extra. */
+export type EventoDeHoy = {
+  readonly slug: string
+  readonly title: string
+  readonly eventDate: string
+  readonly salud: Salud
+  readonly grupos: number
+  readonly maxGrupos: number | null
+  readonly plannerSuite: string | null
 }
 
-export type TonoAviso = 'no' | 'pending' | 'maybe'
+export type TonoAviso = 'no' | 'pending' | 'maybe' | 'ok'
 
 export type Aviso = {
   /** Estable y única: sirve de `key` y de ancla en las pruebas. */
@@ -46,36 +40,6 @@ export type Aviso = {
   /** Para ordenar: lo que más lleva esperando, primero. */
   readonly desde: number
 }
-
-export type Proxima = {
-  readonly slug: string
-  readonly title: string
-  readonly eventDate: string
-  readonly dias: number
-  readonly status: string
-  readonly grupos: number
-  readonly respondidos: number
-  /** Respondidos sobre grupos; `null` sin grupos, que no es un 0 %. */
-  readonly ratio: number | null
-}
-
-export type Hoy = {
-  readonly ventas: readonly Aviso[]
-  readonly riesgos: readonly Aviso[]
-  readonly atascados: readonly Aviso[]
-  readonly proximas: readonly Proxima[]
-  readonly totales: { pedidos: number; consultas: number; cambios: number; riesgos: number; atascados: number }
-  readonly total: number
-}
-
-/** Hasta dónde mira el repositorio, y hasta dónde un borrador es un riesgo. */
-export const HORIZONTE_RIESGO = 30
-/** Por debajo de esto, el riesgo es urgente. */
-const URGENTE = 7
-/** Lo mismo que «Próximos 30 días» de Eventos: dos ventanas distintas se leían como un error. */
-export const HORIZONTE_PROXIMAS = 30
-const ACCESO_ATASCADO = 3
-const PAGO_ATASCADO = 7
 
 const DIA = 86_400_000
 
@@ -97,209 +61,166 @@ const FORMATO_BOLIVIA = new Intl.DateTimeFormat('en-CA', {
 export const fechaEnBolivia = (instante: Date): string => FORMATO_BOLIVIA.format(instante)
 
 const hace = (dias: number): string => (dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias} días`)
-const faltan = (dias: number): string => (dias <= 0 ? 'es hoy' : dias === 1 ? 'es mañana' : `faltan ${dias} días`)
 
 const porAntiguedad = (a: Aviso, b: Aviso) => a.desde - b.desde
 
-/** Por encima de esto las consultas se resumen en un aviso: veinte filas iguales no se leen. */
-const CONSULTAS_SUELTAS = 3
-/**
- * Lo mismo con los pedidos. Además de leerse mal, cada fila se pinta: con setecientos pedidos
- * pendientes «Hoy» pesaba 1,8 MB de HTML. Los comprobantes admiten más sueltos que el resto
- * porque cada uno es alguien que ya pagó.
- */
-const COMPROBANTES_SUELTOS = 5
-const SIN_PAGO_SUELTOS = 3
+/** Por encima de esto, un tipo de aviso se resume en uno solo que lleva a su lista filtrada. */
+const SUELTOS = 4
+/** Hasta cuántos días por delante un evento en riesgo sube a Hoy. */
+export const HORIZONTE_RIESGO = 90
 
-/** Si son más de `max`, un solo aviso que resume y lleva a donde se atienden. */
-function resumirSiSonMuchos(avisos: Aviso[], max: number, resumen: (masAntiguo: Aviso, cuantos: number) => Aviso): Aviso[] {
-  const ordenados = [...avisos].sort(porAntiguedad)
-  const masAntiguo = ordenados[0]
-  return masAntiguo !== undefined && ordenados.length > max ? [resumen(masAntiguo, ordenados.length)] : ordenados
+export type Hoy = {
+  readonly grupos: readonly { readonly id: string; readonly titulo: string; readonly avisos: readonly Aviso[] }[]
+  readonly total: number
 }
 
-function avisosDeConsultas(consultas: HoyCrudo['consultasNuevas'], diasDesde: (instante: Date) => number): Aviso[] {
-  const ordenadas = [...consultas].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
-  const primera = ordenadas[0]
-  if (primera === undefined) return []
+const VENTAS = '/panel/admin/ventas'
 
-  if (ordenadas.length > CONSULTAS_SUELTAS) {
+/** Los avisos de una etapa, sueltos o resumidos en uno que abre la lista de esa etapa. */
+function deEtapa(
+  ventas: readonly Venta[],
+  clave: Venta['etapa'],
+  forma: { etiqueta: string; tono: TonoAviso; accion: string; detalle: (v: Venta, dias: number) => string; resumen: (n: number) => string },
+  diasDesde: (d: Date) => number,
+): Aviso[] {
+  const deAqui = ventas.filter((v) => v.etapa === clave).toSorted((a, b) => a.esperaDesde.getTime() - b.esperaDesde.getTime())
+  const primera = deAqui[0]
+  if (primera === undefined) return []
+  if (deAqui.length > SUELTOS) {
     return [
       {
-        clave: 'consultas',
-        tono: 'maybe',
-        etiqueta: 'Consultas',
-        titulo: `${ordenadas.length} consultas sin contactar`,
-        detalle: `La más antigua escribió ${hace(diasDesde(primera.createdAt))}`,
-        href: '/panel/admin/consultas',
-        accion: 'Abrir bandeja',
-        desde: primera.createdAt.getTime(),
+        clave: `resumen:${clave}`,
+        tono: forma.tono,
+        etiqueta: forma.etiqueta,
+        titulo: forma.resumen(deAqui.length),
+        detalle: `La que más espera, ${hace(diasDesde(primera.esperaDesde))}`,
+        href: `${VENTAS}?vista=lista&etapa=${clave}`,
+        accion: 'Abrir la lista',
+        desde: primera.esperaDesde.getTime(),
       },
     ]
   }
-
-  return ordenadas.map((c) => ({
-    clave: `consulta:${c.id}`,
-    tono: 'maybe',
-    etiqueta: 'Consulta',
-    titulo: c.name,
-    detalle: `Escribió desde la web ${hace(diasDesde(c.createdAt))}${c.eventDate ? ` · evento el ${c.eventDate}` : ''}`,
-    // Cada aviso suelto abre su panel en Ventas; los resúmenes, la bandeja filtrada.
-    href: `/panel/admin/ventas?consulta=${c.id}`,
-    accion: 'Contactar',
-    desde: c.createdAt.getTime(),
+  return deAqui.map((v) => ({
+    clave: `venta:${v.clave}`,
+    tono: forma.tono,
+    etiqueta: forma.etiqueta,
+    titulo: v.nombre,
+    detalle: forma.detalle(v, diasDesde(v.esperaDesde)),
+    href: `${VENTAS}?venta=${v.clave}`,
+    accion: forma.accion,
+    desde: v.esperaDesde.getTime(),
   }))
 }
 
-export function componerHoy(crudo: HoyCrudo, hoy: string): Hoy {
+export function componerHoy(
+  input: {
+    ventas: readonly Venta[]
+    eventos: readonly EventoDeHoy[]
+    cambiosDePlan: readonly CambioDePlan[]
+    /** Los efectos de extra que están a la venta: solo se ofrece lo que se vende. */
+    extrasALaVenta: ReadonlySet<string>
+    /** Las opiniones recién llegadas de los clientes (encuesta tras el evento). */
+    opiniones?: readonly { slug: string; title: string; rating: number; comment: string | null; allowPublish: boolean; answeredAt: Date }[]
+  },
+  hoy: string,
+): Hoy {
   const diasDesde = (instante: Date) => diasEntre(fechaEnBolivia(instante), hoy)
+  const fechaDe = (v: Venta) => (v.fechaEvento === null ? '' : ` · evento el ${diaCorto(v.fechaEvento, hoy)}`)
 
-  // Por tipo primero y por antigüedad dentro: un comprobante es alguien que **ya pagó** y
-  // espera; con doscientas consultas sin atender delante, no se vería nunca.
+  // Ventas: primero lo que ya es dinero (pagado sin evento, comprobantes), luego quien espera respuesta.
   const ventas: Aviso[] = [
-    ...resumirSiSonMuchos(
-      crudo.pedidosPorRevisar.map((p) => ({
-        clave: `pedido:${p.ref}`,
-        tono: 'pending' as const,
-        etiqueta: 'Comprobante',
-        titulo: p.customerName,
-        detalle: `Pedido ${p.ref} · subió el comprobante ${hace(diasDesde(p.createdAt))}`,
-        href: `/panel/admin/ventas?pedido=${p.ref}`,
-        accion: 'Revisar',
-        desde: p.createdAt.getTime(),
-      })),
-      COMPROBANTES_SUELTOS,
-      (masAntiguo, cuantos) => ({
-        clave: 'comprobantes',
-        tono: 'pending',
-        etiqueta: 'Comprobantes',
-        titulo: `${cuantos} comprobantes por revisar`,
-        detalle: `El más antiguo espera desde ${hace(diasDesde(new Date(masAntiguo.desde)))}`,
-        href: '/panel/pedidos?estado=proof_submitted',
-        accion: 'Abrir bandeja',
-        desde: masAntiguo.desde,
-      }),
+    ...deEtapa(input.ventas, 'por_crear_evento', { etiqueta: 'Pagado', tono: 'no', accion: 'Crear el evento', detalle: (v) => `Pagó y espera su evento${fechaDe(v)}`, resumen: (n) => `${n} pagos sin su evento` }, diasDesde),
+    ...deEtapa(input.ventas, 'por_revisar', { etiqueta: 'Comprobante', tono: 'pending', accion: 'Revisar', detalle: (_v, d) => `Subió su comprobante ${hace(d)}`, resumen: (n) => `${n} comprobantes por revisar` }, diasDesde),
+    ...deEtapa(input.ventas, 'nueva', { etiqueta: 'Consulta', tono: 'maybe', accion: 'Contestar', detalle: (v, d) => `Escribió ${hace(d)}${fechaDe(v)}`, resumen: (n) => `${n} consultas sin contestar` }, diasDesde),
+    ...deEtapa(
+      input.ventas.filter((v) => v.urgente),
+      'esperando_pago',
+      { etiqueta: 'Sin pago', tono: 'maybe', accion: 'Recordar', detalle: (_v, d) => `Sin comprobante desde ${hace(d)}`, resumen: (n) => `${n} pedidos sin pago` },
+      diasDesde,
     ),
-    ...crudo.cambiosDePlan.map((c) => ({
+  ]
+  const conSaldo = input.ventas.filter((v) => v.etapa === 'saldo_pendiente' && v.fechaEvento !== null && diasEntre(hoy, v.fechaEvento) <= 30)
+  for (const v of conSaldo) {
+    ventas.push({
+      clave: `saldo:${v.clave}`,
+      tono: 'pending',
+      etiqueta: 'Saldo',
+      titulo: v.nombre,
+      detalle: `El evento es en ${diasEntre(hoy, v.fechaEvento ?? hoy)} días y falta cobrar el saldo`,
+      href: `${VENTAS}?venta=${v.clave}`,
+      accion: 'Cobrar',
+      desde: v.esperaDesde.getTime(),
+    })
+  }
+
+  // Eventos en riesgo: lo de la salud, lo más cercano arriba.
+  const riesgos: Aviso[] = input.eventos
+    .filter((e) => e.salud.tono !== 'ok')
+    .map((e) => ({ e, dias: diasEntre(hoy, e.eventDate) }))
+    .filter(({ dias }) => dias >= 0 && dias <= HORIZONTE_RIESGO)
+    .map(({ e }) => ({
+      clave: `riesgo:${e.slug}`,
+      tono: e.salud.tono === 'risk' ? ('no' as const) : ('maybe' as const),
+      etiqueta: e.salud.tono === 'risk' ? 'En riesgo' : 'Atención',
+      titulo: e.title,
+      detalle: e.salud.alertas.length > 1 ? `${e.salud.texto} · y ${e.salud.alertas.length - 1} más` : e.salud.texto,
+      href: `/panel/admin/eventos?evento=${e.slug}`,
+      accion: 'Ver',
+      desde: Date.parse(`${e.eventDate}T00:00:00Z`),
+    }))
+    .sort(porAntiguedad)
+
+  const cambios: Aviso[] = input.cambiosDePlan
+    .map((c) => ({
       clave: `plan:${c.eventSlug}`,
       tono: 'pending' as const,
       etiqueta: 'Cambio de plan',
       titulo: c.eventTitle,
       detalle: `Pide pasar a ${c.planSlug} · ${hace(diasDesde(c.createdAt))}`,
-      href: `/panel/eventos/${c.eventSlug}/plan`,
+      href: `/panel/eventos/${c.eventSlug}/configuracion`,
       accion: 'Decidir',
       desde: c.createdAt.getTime(),
-    })).sort(porAntiguedad),
-    ...avisosDeConsultas(crudo.consultasNuevas, diasDesde),
-  ]
-
-  const conDias = crudo.eventos.map((e) => ({ ...e, dias: diasEntre(hoy, e.eventDate) }))
-
-  const riesgos: Aviso[] = conDias
-    .filter((e) => e.dias >= 0 && e.dias <= HORIZONTE_RIESGO)
-    .flatMap((e): Aviso[] => {
-      const tono: TonoAviso = e.dias <= URGENTE ? 'no' : 'maybe'
-      // `desde` ordena por fecha del evento: lo que llega antes, arriba.
-      const desde = Date.parse(`${e.eventDate}T00:00:00Z`)
-      if (e.status === 'draft') {
-        return [
-          {
-            clave: `borrador:${e.slug}`,
-            tono,
-            etiqueta: 'En borrador',
-            titulo: e.title,
-            detalle: `${faltan(e.dias)} y la invitación no está publicada`,
-            href: `/panel/eventos/${e.slug}/configuracion`,
-            accion: 'Publicar',
-            desde,
-          },
-        ]
-      }
-      if (e.status === 'live' && e.grupos === 0) {
-        return [
-          {
-            clave: `sin-invitados:${e.slug}`,
-            tono,
-            etiqueta: 'Sin invitados',
-            titulo: e.title,
-            detalle: `Publicada, ${faltan(e.dias)} y sin ningún grupo cargado`,
-            // Los invitados los carga el cliente: el admin revisa su acceso, no entra a su lista.
-            href: `/panel/eventos/${e.slug}/configuracion`,
-            accion: 'Revisar',
-            desde,
-          },
-        ]
-      }
-      return []
-    })
+    }))
     .sort(porAntiguedad)
 
-  const atascados: Aviso[] = [
-    ...crudo.accesosSinEstrenar
-      .filter((a) => diasDesde(a.createdAt) >= ACCESO_ATASCADO)
-      .map((a) => ({
-        clave: `acceso:${a.email}`,
-        tono: 'maybe' as const,
-        etiqueta: 'No ha entrado',
-        titulo: a.email,
-        detalle: `Recibió su acceso ${hace(diasDesde(a.createdAt))}${a.eventTitle ? ` para ${a.eventTitle}` : ''} y no ha entrado`,
-        href: a.eventSlug ? `/panel/eventos/${a.eventSlug}/configuracion` : '/panel/admin/usuarios',
-        accion: 'Escribirle',
-        desde: a.createdAt.getTime(),
-      })),
-    ...resumirSiSonMuchos(
-      crudo.pedidosSinPago
-        .filter((p) => diasDesde(p.createdAt) >= PAGO_ATASCADO)
-        .map((p) => ({
-          clave: `sin-pago:${p.ref}`,
-          tono: 'maybe' as const,
-          etiqueta: 'Sin pago',
-          titulo: p.customerName,
-          detalle: `Pedido ${p.ref} abierto ${hace(diasDesde(p.createdAt))} y sin comprobante`,
-          href: `/panel/admin/ventas?pedido=${p.ref}`,
-          accion: 'Seguir',
-          desde: p.createdAt.getTime(),
-        })),
-      SIN_PAGO_SUELTOS,
-      (masAntiguo, cuantos) => ({
-        clave: 'sin-pago',
-        tono: 'maybe',
-        etiqueta: 'Sin pago',
-        titulo: `${cuantos} pedidos sin pago`,
-        detalle: `El más antiguo se abrió ${hace(diasDesde(new Date(masAntiguo.desde)))}`,
-        href: '/panel/pedidos?estado=pending_payment',
-        accion: 'Abrir bandeja',
-        desde: masAntiguo.desde,
-      }),
-    ),
-  ].sort(porAntiguedad)
-
-  const proximas: Proxima[] = conDias
-    .filter((e) => e.dias >= 0 && e.dias <= HORIZONTE_PROXIMAS)
-    .sort((a, b) => a.dias - b.dias)
-    .map((e) => ({
-      slug: e.slug,
-      title: e.title,
-      eventDate: e.eventDate,
-      dias: e.dias,
-      status: e.status,
-      grupos: e.grupos,
-      respondidos: e.respondidos,
-      ratio: e.grupos === 0 ? null : e.respondidos / e.grupos,
-    }))
-
-  return {
-    ventas,
-    riesgos,
-    atascados,
-    proximas,
-    totales: {
-      pedidos: crudo.pedidosPorRevisar.length,
-      consultas: crudo.consultasNuevas.length,
-      cambios: crudo.cambiosDePlan.length,
-      riesgos: riesgos.length,
-      atascados: atascados.length,
-    },
-    total: ventas.length + riesgos.length + atascados.length,
+  // Oportunidades: el extra justo en el momento justo, solo si se vende.
+  const oportunidades: Aviso[] = []
+  for (const e of input.eventos) {
+    const dias = diasEntre(hoy, e.eventDate)
+    if (input.extrasALaVenta.has('dia_d') && e.plannerSuite === 'completo' && dias >= 15 && dias <= 60) {
+      oportunidades.push({ clave: `op-diad:${e.slug}`, tono: 'ok', etiqueta: 'Oportunidad', titulo: e.title, detalle: `Faltan ${dias} días: el Día D ordena proveedores y horarios`, href: `/panel/admin/eventos?evento=${e.slug}`, accion: 'Ofrecer', desde: dias })
+    }
+    if (input.extrasALaVenta.has('mas_grupos') && e.maxGrupos !== null && dias >= 0 && e.grupos >= e.maxGrupos * 0.85) {
+      oportunidades.push({ clave: `op-grupos:${e.slug}`, tono: 'ok', etiqueta: 'Oportunidad', titulo: e.title, detalle: `Lleva ${e.grupos} de ${e.maxGrupos} invitaciones: ofrécele más`, href: `/panel/admin/eventos?evento=${e.slug}`, accion: 'Ofrecer', desde: dias })
+    }
+    if (dias <= -1 && dias >= -7) {
+      oportunidades.push({ clave: `op-gracias:${e.slug}`, tono: 'ok', etiqueta: 'Gracias', titulo: e.title, detalle: `Fue ${hace(-dias)}: pídele su opinión y un testimonio`, href: `/panel/admin/eventos?evento=${e.slug}`, accion: 'Escribir', desde: -dias })
+    }
   }
+
+  // Las opiniones de las dos últimas semanas; con permiso y buena nota, se ofrece publicarla.
+  const opiniones: Aviso[] = (input.opiniones ?? [])
+    .filter((o) => diasDesde(o.answeredAt) <= 14)
+    .map((o) => ({
+      clave: `opinion:${o.slug}`,
+      tono: o.rating >= 4 ? ('ok' as const) : ('no' as const),
+      etiqueta: `${o.rating} de 5`,
+      titulo: o.title,
+      detalle: o.comment === null ? `Opinó ${hace(diasDesde(o.answeredAt))}, sin comentario` : `«${o.comment.slice(0, 90)}${o.comment.length > 90 ? '…' : ''}»`,
+      // Con permiso, a la ficha de su cliente: ahí se publica de un toque.
+      href: o.allowPublish && o.rating >= 4 ? `/panel/admin/clientes?evento=${o.slug}` : `/panel/admin/eventos?evento=${o.slug}`,
+      accion: o.allowPublish && o.rating >= 4 ? 'Publicar' : 'Ver',
+      desde: -o.answeredAt.getTime(),
+    }))
+    .sort(porAntiguedad)
+
+  const grupos = [
+    { id: 'ventas', titulo: 'Ventas', avisos: ventas },
+    { id: 'riesgos', titulo: 'Eventos en riesgo', avisos: riesgos },
+    { id: 'planes', titulo: 'Cambios de plan', avisos: cambios },
+    { id: 'oportunidades', titulo: 'Oportunidades', avisos: oportunidades },
+    { id: 'opiniones', titulo: 'Opiniones de clientes', avisos: opiniones },
+  ].filter((g) => g.avisos.length > 0)
+  // Cuántas cosas esperan: lo que pide hacer algo. Las oportunidades son un extra, no una deuda.
+  return { grupos, total: ventas.length + riesgos.length + cambios.length }
 }

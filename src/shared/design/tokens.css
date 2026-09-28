@@ -90,6 +90,18 @@
   --color-table-ink: #6b5a35;
   --color-line-panel-strong: rgb(26 26 26 / 0.15);
 
+  /* La fiesta de cada evento en el admin: boda, XV y cumpleaños se distinguen de un vistazo
+     en la cartera, el tablero de ventas y el calendario. Fondo suave, tinta y el punto. */
+  --color-fiesta-boda: #7a8c64;
+  --color-fiesta-boda-soft: #e6ecdc;
+  --color-fiesta-boda-ink: #3f5340;
+  --color-fiesta-xv: #a0708f;
+  --color-fiesta-xv-soft: #f1e3ec;
+  --color-fiesta-xv-ink: #6b3f5c;
+  --color-fiesta-cumple: #c98a4b;
+  --color-fiesta-cumple-soft: #f5e6d3;
+  --color-fiesta-cumple-ink: #7d4f22;
+
   --color-shell: #1f1f1d;
   --color-shell-deep: #141412;
   --color-shell-ink: #f8f6f1;

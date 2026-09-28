@@ -1,5 +1,5 @@
 import type { Role } from '@/modules/identity'
-import type { HoyCrudo } from '../domain/hoy'
+import type { CambioDePlan } from '../domain/hoy'
 import type { CifrasDeHoy, ConteoDeVenta, PedidoCobro } from '../domain/ingresos'
 import type { PlanLimpio, TextoPlanLimpio } from '../domain/plan-editable'
 
@@ -10,6 +10,10 @@ export type AdminUserRow = {
   readonly createdAt: Date
   /** Cuántos eventos gestiona. Es lo que decide si se puede borrar. */
   readonly eventos: number
+  /** Su nombre, si se sabe (`users.full_name`). */
+  readonly fullName?: string | null
+  /** La última vez que usó el panel, de sus sesiones. */
+  readonly ultimoAcceso?: Date | null
 }
 
 export type AdminEventRow = {
@@ -31,6 +35,16 @@ export type AdminEventRow = {
   readonly respondidos: number
   /** Invitaciones (grupos) que se abrieron al menos una vez. */
   readonly abiertos: number
+  /** El cierre de las confirmaciones (`YYYY-MM-DD`). */
+  readonly rsvpDeadline: string
+  /** Si la invitación trae lo mínimo para repartirla: fecha y hora, y lugar de la recepción. */
+  readonly invitacionEscrita: boolean
+  /** Si alguien entra como anfitrión (cliente) a este evento. */
+  readonly conCliente: boolean
+  /** Su cliente recibió el acceso y todavía no entró (sigue con la contraseña provisional). */
+  readonly clienteSinEntrar: boolean
+  /** Un pedido de este evento aprobado con anticipo y el saldo sin registrar. */
+  readonly saldoPendiente: boolean
 }
 
 export type AuditRow = {
@@ -49,13 +63,6 @@ export type FiltroDeAuditoria = {
   readonly patron?: string | undefined
 }
 
-export type AdminMetrics = {
-  readonly eventos: number
-  /** Eventos por mes, de los **doce que vienen**: en este negocio están por delante. */
-  readonly porMes: readonly { readonly mes: string; readonly total: number }[]
-  readonly porPlan: readonly { readonly plan: string; readonly total: number }[]
-}
-
 export interface SettingsRepository {
   readAll(): Promise<Record<string, string>>
   write(entries: Record<string, string>): Promise<void>
@@ -72,7 +79,6 @@ export interface AdminRepository {
   listPlanSlugs(): Promise<string[]>
   /** Los planes para un selector: su clave y el nombre que se lee, en orden de venta. */
   listPlanOptions(): Promise<{ slug: string; nombre: string; priceCents: number }[]>
-  metrics(): Promise<AdminMetrics>
   listAudit(limit: number, filtro?: FiltroDeAuditoria): Promise<AuditRow[]>
   /** Quiénes aparecen en el registro, para el filtro «Quién». */
   listAuditActors(): Promise<string[]>
@@ -115,7 +121,8 @@ export interface FileStore {
  * argumento.
  */
 export interface TodayReader {
-  snapshot(hoy: string, horizonteDias: number): Promise<HoyCrudo>
+  /** Las solicitudes de cambio de plan pendientes: lo único de «Hoy» que no sale de ventas ni eventos. */
+  cambiosDePlan(): Promise<CambioDePlan[]>
 }
 
 export type PlanAdminRow = {
@@ -137,6 +144,8 @@ export type PlanAdminRow = {
   readonly onlineDays: number
   readonly designChange: string
   readonly plannerSuite: string
+  /** El anticipo que pide, en porcentaje. 0: se paga entero. */
+  readonly depositPct: number
   readonly highlighted: boolean
   readonly isActive: boolean
   /** Cuántos eventos lo tienen: es lo que pesa antes de cambiarle el tope. */
@@ -205,4 +214,59 @@ export interface SiteSettingsStore {
   }): Promise<{ ok: true } | { ok: false; ultima: SiteVersionRow }>
   list(limit: number): Promise<SiteVersionRow[]>
   find(id: string): Promise<SiteVersionRow | null>
+}
+
+/** La nota y las etiquetas de un cliente (`client_notes`), por cualquiera de sus claves de contacto. */
+export type NotaDeCliente = { readonly clave: string; readonly note: string | null; readonly tags: readonly string[]; readonly updatedAt: Date }
+
+export interface ClientNotes {
+  /** Las notas guardadas bajo cualquiera de estas claves. */
+  leer(claves: readonly string[]): Promise<NotaDeCliente[]>
+  guardar(clave: string, note: string | null, tags: readonly string[]): Promise<void>
+}
+
+/** Los códigos de referido de los eventos y cuántas compras trajo cada uno. */
+export interface Referidos {
+  deEventos(eventIds: readonly string[]): Promise<Map<string, string>>
+  /** Crea el código del evento si no tiene; si ya lo tenía, devuelve el suyo. */
+  crear(eventId: string, codigo: string): Promise<string>
+  existe(codigo: string): Promise<boolean>
+  /** Cuántos pedidos no cancelados llegaron con cada código. */
+  usos(codigos: readonly string[]): Promise<Map<string, number>>
+  /** El evento del código y los correos de sus anfitriones, para darles las gracias. */
+  anfitrionesDe(codigo: string): Promise<{ readonly evento: string; readonly correos: readonly string[] } | null>
+}
+
+/** Un evento que el mantenimiento diario mira para acompañar a sus anfitriones. */
+export type EventoAcompanado = {
+  readonly id: string
+  readonly slug: string
+  readonly title: string
+  readonly eventDate: string
+  readonly rsvpDeadline: string
+  readonly themeKey: string
+  readonly grupos: number
+  readonly enviados: number
+  readonly respondidos: number
+  readonly invitacionEscrita: boolean
+  /** Los correos de sus anfitriones (clientes con acceso). */
+  readonly anfitriones: readonly string[]
+  readonly yaEnviados: readonly string[]
+}
+
+export type OpinionDeEvento = { readonly rating: number | null; readonly comment: string | null; readonly allowPublish: boolean; readonly answeredAt: Date | null }
+
+export interface Acompanamiento {
+  /** Los eventos vivos entre un año atrás y once semanas por delante: los únicos que pueden tocar. */
+  eventos(hoy: string): Promise<EventoAcompanado[]>
+  /** Aparta el aviso antes de mandarlo: `false` si ya estaba (otro pase lo mandó). */
+  reservar(eventId: string, kind: string): Promise<boolean>
+  /** Lo devuelve si el correo no salió, para reintentar mañana. */
+  liberar(eventId: string, kind: string): Promise<void>
+  /** La encuesta del evento con el hash de su enlace; si había una sin responder, la sustituye. */
+  crearEncuesta(eventId: string, tokenHash: Buffer): Promise<void>
+  encuesta(tokenHash: Buffer): Promise<{ readonly eventTitle: string; readonly respondida: boolean } | null>
+  /** Guarda la respuesta una sola vez. `false` si ya estaba respondida o no existe. */
+  responder(tokenHash: Buffer, respuesta: { rating: number; comment: string | null; allowPublish: boolean }): Promise<boolean>
+  opiniones(eventIds: readonly string[]): Promise<Map<string, OpinionDeEvento>>
 }

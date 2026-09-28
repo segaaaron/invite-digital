@@ -1,4 +1,7 @@
+import Link from 'next/link'
 import { admin } from '@/app/composition/container'
+import { themeDefinitions } from '@/modules/events/ui/themes/registry'
+import { fechaHora } from '@/shared/format/fecha'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
@@ -8,15 +11,9 @@ import { fraseDeAuditoria, GRUPOS_DE_AUDITORIA, prefijosDeGrupo } from '@/module
 import { patronDeBusqueda } from '@/modules/admin/domain/busqueda'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 
-export const metadata = { title: 'Auditoría' }
+export const metadata = { title: 'Auditoría · Administración' }
 export const dynamic = 'force-dynamic'
 
-const CUANDO = new Intl.DateTimeFormat('es-BO', {
-  day: '2-digit',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-})
 
 /** De cuántas en cuántas filas se enseña el registro. */
 const PAGINA = 50
@@ -34,6 +31,10 @@ export default async function AdminAuditoriaPage({
 }) {
   await requireAdmin()
   const params = await searchParams
+  // «Sobre qué» se lee con nombres: la clave de un evento o de un modelo no le dice nada a nadie.
+  const todos = await admin.events()
+  const eventos = new Map(isErr(todos) ? [] : todos.value.map((e) => [e.slug, e.title]))
+  const modelos = new Map(themeDefinitions().map((t) => [t.key, t.label]))
   // «Ver más» sube el tope en la dirección. Se pide una fila de más para saber si queda algo
   // detrás sin contar la tabla entera.
   const pedido = Number(params.n)
@@ -63,7 +64,7 @@ export default async function AdminAuditoriaPage({
   return (
     <>
       <PanelHeader
-        kicker="Administración"
+        kicker="Ajustes"
         meta="Solo escrituras: quién creó, cambió o borró algo. Las lecturas no se registran."
         title="Auditoría"
       />
@@ -130,15 +131,13 @@ export default async function AdminAuditoriaPage({
                   className="grid gap-1 border-b border-line-panel py-3 min-[760px]:grid-cols-[168px_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)] min-[760px]:items-baseline min-[760px]:gap-3"
                   key={fila.id}
                 >
-                  <span className="order-3 font-mono text-[11px] whitespace-nowrap text-ink-mute min-[760px]:order-none">
-                    {CUANDO.format(fila.createdAt)}
-                  </span>
+                  <span className="order-3 font-mono text-[11px] whitespace-nowrap text-ink-mute min-[760px]:order-none">{fechaHora(fila.createdAt)}</span>
                   <span className="order-3 truncate text-[12px] text-ink-mute min-[760px]:order-none min-[760px]:text-[13px] min-[760px]:text-ink-soft">
                     {fila.actorEmail}
                   </span>
                   <span className="order-1 text-[14px] text-ink min-[760px]:order-none min-[760px]:text-[13px]">{fraseDeAuditoria(fila.action)}</span>
                   <span className="order-2 text-[13px] break-words text-ink-soft min-[760px]:order-none">
-                    {fila.subject ?? '—'}
+                    <Sobre modelos={modelos} eventos={eventos} sujeto={fila.subject} />
                     {fila.detail === null ? null : <span className="text-ink-mute"> · {fila.detail}</span>}
                   </span>
                 </li>
@@ -150,4 +149,18 @@ export default async function AdminAuditoriaPage({
       </PanelCard>
     </>
   )
+}
+
+/** El sujeto de una fila con su nombre: un evento enlaza a su ficha; un modelo dice cómo se llama. */
+function Sobre({ sujeto, eventos, modelos }: { sujeto: string | null; eventos: ReadonlyMap<string, string>; modelos: ReadonlyMap<string, string> }) {
+  if (sujeto === null) return <>—</>
+  const evento = eventos.get(sujeto)
+  if (evento !== undefined) {
+    return (
+      <Link className="text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${sujeto}/configuracion`}>
+        {evento}
+      </Link>
+    )
+  }
+  return <>{modelos.get(sujeto) ?? sujeto}</>
 }

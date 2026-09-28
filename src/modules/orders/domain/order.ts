@@ -13,8 +13,11 @@ import { randomInt } from 'node:crypto'
  * `rejected` **no es terminal**: se rechaza con una nota —«la transferencia es de otro
  * importe»— y el cliente sube otro comprobante. Un rechazo terminal obligaría a abrir un
  * pedido nuevo y a perder el hilo. `approved` sí lo es.
+ *
+ * `cancelled` (`0073`) también es terminal: el cliente eligió a otro, cambió la fecha o nunca
+ * pagó. Sale del embudo **con su motivo**; sin él, un pedido estancado no tenía salida.
  */
-export const ORDER_STATUSES = ['pending_payment', 'proof_submitted', 'approved', 'rejected'] as const
+export const ORDER_STATUSES = ['pending_payment', 'proof_submitted', 'approved', 'rejected', 'cancelled'] as const
 export type OrderStatus = (typeof ORDER_STATUSES)[number]
 
 /**
@@ -43,12 +46,49 @@ export function normalizeRef(raw: string): string | null {
 }
 
 export function canReceiveProof(status: OrderStatus): boolean {
-  return status !== 'approved'
+  return status !== 'approved' && status !== 'cancelled'
 }
 
 export function canDecide(status: OrderStatus): boolean {
   return status === 'proof_submitted'
 }
+
+/** Se cancela lo que no está cobrado: aprobado es dinero recibido, y cancelado ya lo está. */
+export function canCancel(status: OrderStatus): boolean {
+  return status !== 'approved' && status !== 'cancelled'
+}
+
+/** Se recuerda el pago de lo que espera un pago: sin comprobante o con uno rechazado. */
+export function canRemind(status: OrderStatus): boolean {
+  return status === 'pending_payment' || status === 'rejected'
+}
+
+/** De dónde salió: lo pidió el cliente en la web o lo armó el admin y le mandó el enlace. */
+export type OrderOrigin = 'web' | 'cotizacion'
+export const parseOrigin = (valor: string): OrderOrigin => (valor === 'cotizacion' ? 'cotizacion' : 'web')
+
+export type QuoteExtra = { readonly slug: string; readonly name: string; readonly cents: number }
+
+/**
+ * El anticipo de un precio con el porcentaje del plan, en centavos enteros. `null` sin anticipo
+ * (0 % o 100 %): se paga entero de una vez. Se redondea al boliviano: nadie transfiere centavos.
+ */
+export function anticipoDe(precioCents: number, porcentaje: number): number | null {
+  if (!Number.isInteger(porcentaje) || porcentaje <= 0 || porcentaje >= 100) return null
+  return Math.round((precioCents * porcentaje) / 100 / 100) * 100
+}
+
+/** Lo que el cliente tiene que transferir **ahora**: el anticipo si lo hay y está sin aprobar; si no, todo. */
+export function montoAPagar(order: Pick<Order, 'amountCents' | 'depositCents' | 'status' | 'balancePaidAt'>): number | null {
+  if (order.amountCents === null) return null
+  if (order.depositCents === null) return order.status === 'approved' ? 0 : order.amountCents
+  if (order.status !== 'approved') return order.depositCents
+  return order.balancePaidAt === null ? order.amountCents - order.depositCents : 0
+}
+
+/** Aprobado con anticipo y el saldo todavía sin registrar. */
+export const saldoPendiente = (order: Pick<Order, 'amountCents' | 'depositCents' | 'status' | 'balancePaidAt'>): boolean =>
+  order.status === 'approved' && order.depositCents !== null && order.amountCents !== null && order.balancePaidAt === null && order.depositCents < order.amountCents
 
 export type Order = {
   readonly id: string
@@ -81,4 +121,18 @@ export type Order = {
   readonly decisionNote: string | null
   readonly decidedAt: Date | null
   readonly createdAt: Date
+  /** El importe congelado al pedirse (`0037`), ya con el descuento de una cotización. */
+  readonly amountCents: number | null
+  readonly currency: string | null
+  /** La consulta de la que salió: consulta y pedido son la misma venta (`0073`). */
+  readonly consultationId: string | null
+  readonly origin: OrderOrigin
+  readonly quoteExtras: readonly QuoteExtra[]
+  readonly discountCents: number | null
+  /** El anticipo, si el plan lo pide. Con él aprobado nace el evento. */
+  readonly depositCents: number | null
+  readonly balancePaidAt: Date | null
+  readonly remindedAt: Date | null
+  readonly cancelReason: string | null
+  readonly referralCode: string | null
 }

@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { adminAlertEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, supportAccessEmail, teamAccessEmail } from '@/modules/notifications'
+import { acompanamientoEmail, adminAlertEmail, graciasPorRecomendarEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, supportAccessEmail, teamAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -11,7 +11,7 @@ import { drizzlePlanRepository } from '@/modules/catalog/infrastructure/drizzle-
 import { drizzleTemplateRepository } from '@/modules/catalog/infrastructure/drizzle-template-repository'
 import { submitConsultation } from '@/modules/leads/application/submit-consultation'
 import { drizzleConsultationRepository } from '@/modules/leads/infrastructure/drizzle-consultation-repository'
-import { anonymizeExpiredConsultations, countNewConsultations, listConsultations, moveConsultation } from '@/modules/leads/application/inbox-use-cases'
+import { anonymizeExpiredConsultations, countNewConsultations, listConsultations, moveConsultation, readConsultation, winConsultation } from '@/modules/leads/application/inbox-use-cases'
 import { drizzleConsultationInbox } from '@/modules/leads/infrastructure/drizzle-consultation-inbox'
 import { lecturaCacheada, ETIQUETAS_WEB } from '@/shared/cache/lectura-cacheada'
 import { leerSitio } from './base'
@@ -28,6 +28,9 @@ export const leads = {
   list: listConsultations({ inbox: drizzleConsultationInbox }),
   countNew: countNewConsultations({ inbox: drizzleConsultationInbox }),
   move: moveConsultation({ inbox: drizzleConsultationInbox, clock: () => new Date() }),
+  find: readConsultation({ inbox: drizzleConsultationInbox }),
+  /** La consulta de la que nació un evento, ganada y enlazada a él. */
+  win: winConsultation({ inbox: drizzleConsultationInbox, clock: () => new Date() }),
   anonymizeExpired: anonymizeExpiredConsultations({ inbox: drizzleConsultationInbox, clock: () => new Date() }),
 } as const
 
@@ -63,6 +66,11 @@ export const site = {
 }
 
 export const notifications = {
+  /** Un correo de acompañamiento del mantenimiento diario (hitos, confirmaciones, opinión, aniversario). */
+  sendAcompanamiento: (to: string, input: Omit<Parameters<typeof acompanamientoEmail>[0], 'siteUrl'>) =>
+    emailSender.send({ to, ...acompanamientoEmail({ ...input, siteUrl: sitioPublicoUrl }) }),
+  sendGraciasPorRecomendar: (to: string, input: { evento: string; quien: string }) =>
+    emailSender.send({ to, ...graciasPorRecomendarEmail({ ...input, siteUrl: sitioPublicoUrl }) }),
   /** El código de recuperación. Sin enlace dentro: se teclea donde ya se pidió el cambio. */
   sendPasswordCode: async (input: { to: string; code: string }) =>
     emailSender.send({

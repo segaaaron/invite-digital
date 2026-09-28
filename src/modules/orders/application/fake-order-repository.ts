@@ -1,5 +1,20 @@
 import type { Order, OrderStatus } from '../domain/order'
-import type { FileStorage, NewOrder, OrderRepository, ProofRow } from './ports'
+import type { FileStorage, NewOrder, NewQuote, OrderRepository, ProofRow } from './ports'
+
+/** Lo que un pedido nuevo trae sin decir nada (`0073`): sin cotización, sin anticipo, sin recordar. */
+export const SIN_EXTRAS_DE_PEDIDO = {
+  amountCents: null,
+  currency: null,
+  consultationId: null,
+  origin: 'web',
+  quoteExtras: [],
+  discountCents: null,
+  depositCents: null,
+  balancePaidAt: null,
+  remindedAt: null,
+  cancelReason: null,
+  referralCode: null,
+} as const satisfies Partial<Order>
 
 /** Doble en memoria del repositorio de pedidos. */
 export class FakeOrderRepository implements OrderRepository {
@@ -25,9 +40,51 @@ export class FakeOrderRepository implements OrderRepository {
       decisionNote: null,
       decidedAt: null,
       createdAt: new Date('2026-08-25T00:00:00Z'),
+      ...SIN_EXTRAS_DE_PEDIDO,
+      referralCode: order.referralCode ?? null,
     }
     this.orders.push(fila)
     return fila
+  }
+
+  async createQuote(q: NewQuote): Promise<Order> {
+    const fila: Order = {
+      ...(await this.create({ publicRef: q.publicRef, planSlug: q.planSlug, templateSlug: q.templateSlug, customerName: q.customerName, contact: q.contact, eventDate: q.eventDate, notes: q.notes })),
+      amountCents: q.amountCents,
+      currency: 'BOB',
+      discountCents: q.discountCents,
+      quoteExtras: q.extras,
+      consultationId: q.consultationId,
+      origin: 'cotizacion',
+    }
+    this.orders[this.orders.length - 1] = fila
+    return fila
+  }
+
+  async cancel(id: string, reason: string, at: Date): Promise<boolean> {
+    const i = this.orders.findIndex((o) => o.id === id && o.status !== 'approved' && o.status !== 'cancelled')
+    const o = this.orders[i]
+    if (o === undefined) return false
+    this.orders[i] = { ...o, status: 'cancelled', cancelReason: reason, decidedAt: at }
+    return true
+  }
+
+  async countPaidWithoutEvent(): Promise<number> {
+    return this.orders.filter((o) => o.status === 'approved' && o.eventId === null && o.addonSlug === null).length
+  }
+
+  async markReminded(id: string, at: Date): Promise<void> {
+    const i = this.orders.findIndex((o) => o.id === id)
+    const o = this.orders[i]
+    if (o !== undefined) this.orders[i] = { ...o, remindedAt: at }
+  }
+
+  async markBalancePaid(id: string, at: Date): Promise<boolean> {
+    const i = this.orders.findIndex((o) => o.id === id && o.status === 'approved' && o.depositCents !== null && o.balancePaidAt === null)
+    const o = this.orders[i]
+    if (o === undefined) return false
+    this.orders[i] = { ...o, balancePaidAt: at }
+    return true
   }
 
   /** Los extras a la venta en esta prueba. */
@@ -55,6 +112,7 @@ export class FakeOrderRepository implements OrderRepository {
       decisionNote: null,
       decidedAt: null,
       createdAt: new Date('2026-08-25T00:00:00Z'),
+      ...SIN_EXTRAS_DE_PEDIDO,
     }
     this.orders.push(fila)
     return fila
@@ -69,7 +127,7 @@ export class FakeOrderRepository implements OrderRepository {
   }
 
   async countByStatusAll(): Promise<Record<Order['status'], number>> {
-    const conteo = { pending_payment: 0, proof_submitted: 0, approved: 0, rejected: 0 }
+    const conteo = { pending_payment: 0, proof_submitted: 0, approved: 0, rejected: 0, cancelled: 0 }
     for (const o of this.orders) conteo[o.status] += 1
     return conteo
   }

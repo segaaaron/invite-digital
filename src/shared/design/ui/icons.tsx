@@ -486,3 +486,65 @@ export function BellIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+export function PlusIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  )
+}
+
+/** Tres puntos: «más acciones» de una fila o de una ficha. */
+export function DotsIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" fill="currentColor">
+      <circle cx="5" cy="12" r="1.6" />
+      <circle cx="12" cy="12" r="1.6" />
+      <circle cx="19" cy="12" r="1.6" />
+    </svg>
+  )
+}
+
+/** Un billete: lo que se cobra y lo que queda por cobrar. */
+export function CoinIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <rect height="12" rx="2" width="18" x="3" y="6" />
+      <circle cx="12" cy="12" r="2.6" />
+      <path d="M6.5 9.5v.01M17.5 14.5v.01" />
+    </svg>
+  )
+}
+
+/** Cuatro cuadros: la vista de tablero. */
+export function BoardIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <rect height="16" rx="1.6" width="5" x="3" y="4" />
+      <rect height="11" rx="1.6" width="5" x="9.5" y="4" />
+      <rect height="7" rx="1.6" width="5" x="16" y="4" />
+    </svg>
+  )
+}
+
+/** Tres renglones: la vista de lista. */
+export function ListIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <path d="M8 6h13M8 12h13M8 18h13" />
+      <path d="M3.5 6h.01M3.5 12h.01M3.5 18h.01" />
+    </svg>
+  )
+}
+
+/** Una chispa: una oportunidad de venta. */
+export function SparkIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <path d="M12 3l1.8 5.4L19 10l-5.2 1.6L12 17l-1.8-5.4L5 10l5.2-1.6z" />
+      <path d="M19 16l.7 2.1L22 19l-2.3.9L19 22l-.7-2.1L16 19l2.3-.9z" />
+    </svg>
+  )
+}

@@ -1,6 +1,11 @@
 import { notFound } from 'next/navigation'
 import { admin, events, guests, plans } from '@/app/composition/container'
 import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
+import { ResumenDelEvento } from '@/modules/admin/ui/ResumenDelEvento'
+import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
+import { saludDelEvento } from '@/modules/admin/domain/salud'
+import { fiestaDeTema } from '@/modules/events'
+import { diaDelEvento, faltaPara } from '@/shared/format/fecha'
 import { SoporteDeBoda } from '@/modules/admin/ui/SoporteDeBoda'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { InvitacionEnVivo } from '@/modules/events/ui/InvitacionEnVivo'
@@ -20,7 +25,16 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr, isOk } from '@/shared/result'
 
-export const metadata = { title: 'Configuración' }
+/**
+ * El título de la pestaña dice **qué evento** es: con varias fichas abiertas, «Configuración» en
+ * todas no distinguía ninguna. Se lee con la misma guardia que la página: sin acceso, genérico.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
+  const actor = await requireSession()
+  const event = await events.getFor(actor, (await params).slug, { section: 'configuracion' })
+  if (isErr(event)) return { title: 'Configuración' }
+  return { title: isAdmin(actor) ? `${event.value.title} · Ficha` : `${event.value.title} · Mi invitación` }
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -132,12 +146,101 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     : [null, [], null]
   const responsables = usuarios === null || isErr(usuarios) ? [] : usuarios.value.filter((u) => u.role === 'atelier' || u.role === 'admin')
 
+  // **La ficha del admin**: el resumen arriba —fiesta, fecha, salud, cliente— y cada bloque con su
+  // entrada en un índice fijo al lado. Era una columna de tarjetas donde guardar quedaba muy abajo.
+  if (esAdmin) {
+    const hostsDelEvento = anfitriones?.get(event.value.id) ?? []
+    // La fila del evento con sus cifras, la misma que usa la cartera: así la salud dice lo mismo aquí y allí.
+    const todos = await admin.events()
+    const fila = isErr(todos) ? undefined : todos.value.find((e) => e.id === event.value.id)
+    const hoy = fechaEnBolivia(new Date())
+    const secciones = [
+      { id: 'datos', titulo: 'Datos y diseño' },
+      { id: 'acceso', titulo: 'Acceso del cliente' },
+      { id: 'plan', titulo: 'Plan y responsable' },
+      ...(personal.length > 0 ? [{ id: 'puerta', titulo: 'Personal de puerta' }] : []),
+      { id: 'riesgo', titulo: 'Zona de riesgo' },
+    ]
+    return (
+      <>
+        <PanelHeader kicker="Evento" title={event.value.title} />
+        <ResumenDelEvento
+          anfitriones={hostsDelEvento}
+          confirmaciones={fila === undefined ? null : { respondidos: fila.respondidos, grupos: fila.grupos }}
+          cuando={faltaPara(diasEntre(hoy, event.value.eventDate))}
+          eventId={event.value.id}
+          fecha={diaDelEvento(event.value.eventDate)}
+          fiesta={fiestaDeTema(event.value.themeKey)}
+          planNombre={isErr(capacidad) ? null : (opcionesDePlan.find((p) => p.slug === capacidad.value.planSlug)?.nombre ?? null)}
+          salud={fila === undefined ? null : saludDelEvento({ ...fila, fiesta: fiestaDeTema(fila.themeKey) }, hoy)}
+          slug={event.value.slug}
+          tema={themeFor(event.value.themeKey).key === event.value.themeKey ? tema.label : 'Un diseño retirado'}
+        />
+        <div className="grid items-start gap-6 min-[1100px]:grid-cols-[190px_minmax(0,1fr)]">
+          <nav aria-label="Secciones de la ficha" className="hidden min-[1100px]:sticky min-[1100px]:top-24 min-[1100px]:block">
+            <ul className="flex flex-col gap-0.5 border-l border-line-panel">
+              {secciones.map((sec) => (
+                <li key={sec.id}>
+                  <a className="-ml-px block border-l-2 border-transparent py-1.5 pl-4 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink" href={`#${sec.id}`}>
+                    {sec.titulo}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="flex min-w-0 flex-col gap-4.5">
+            <section className="scroll-mt-24" id="datos">
+              <PanelCard title="Datos y diseño">
+                <div className="flex flex-col gap-6">
+                  <EventForm diseno={diseno} event={event.value} />
+                  <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
+                </div>
+              </PanelCard>
+            </section>
+            <section className="scroll-mt-24" id="acceso">
+              <PanelCard title="Acceso del cliente">
+                <div className="flex flex-col gap-5">
+                  <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
+                  <div className="border-t border-line-panel pt-4">
+                    <SoporteDeBoda anfitriones={hostsDelEvento} eventId={event.value.id} />
+                  </div>
+                </div>
+              </PanelCard>
+            </section>
+            <section className="scroll-mt-24" id="plan">
+              <PanelCard title="Plan y responsable">
+                <ResponsableYPlan
+                  eventId={event.value.id}
+                  eventSlug={event.value.slug}
+                  ownerId={event.value.userId}
+                  owners={responsables.map((u) => ({ id: u.id, email: u.email }))}
+                  planSlug={isErr(capacidad) ? null : capacidad.value.planSlug}
+                  plans={opcionesDePlan.map((p) => ({ slug: p.slug, nombre: p.nombre }))}
+                />
+              </PanelCard>
+            </section>
+            {personal.length > 0 ? (
+              <section className="scroll-mt-24" id="puerta">
+                <PanelCard title="Personal de puerta">
+                  <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />
+                </PanelCard>
+              </section>
+            ) : null}
+            <section className="scroll-mt-24" id="riesgo">
+              <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
+            </section>
+          </div>
+        </div>
+      </>
+    )
+  }
+
   return (
     <>
       <PanelHeader
         kicker="Evento"
-        {...(esAdmin ? {} : { meta: 'Completa cada paso y mira a la derecha cómo queda. Se guarda sección por sección.' })}
-        title={esAdmin ? 'Ficha del evento' : esDelAtelier ? 'Configuración del evento' : 'Personalizar invitación'}
+        meta="Completa cada paso y mira a la derecha cómo queda. Se guarda sección por sección."
+        title={esDelAtelier ? 'Configuración del evento' : 'Personalizar invitación'}
       />
 
       {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se

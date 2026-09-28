@@ -1,7 +1,7 @@
 import { and, count, desc, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { addons, events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
-import { ORDER_STATUSES, type Order, type OrderStatus } from '../domain/order'
+import { ORDER_STATUSES, parseOrigin, type Order, type OrderStatus, type QuoteExtra } from '../domain/order'
 import type { NewOrder, OrderRepository, ProofRow } from '../application/ports'
 
 const esEstado = (valor: string): valor is OrderStatus => (ORDER_STATUSES as readonly string[]).includes(valor)
@@ -24,6 +24,17 @@ type Fila = {
   decisionNote: string | null
   decidedAt: Date | null
   createdAt: Date
+  amountCents: number | null
+  currency: string | null
+  consultationId: string | null
+  origin: string
+  quoteExtras: readonly QuoteExtra[] | null
+  discountCents: number | null
+  depositCents: number | null
+  balancePaidAt: Date | null
+  remindedAt: Date | null
+  cancelReason: string | null
+  referralCode: string | null
 }
 
 /**
@@ -33,7 +44,7 @@ type Fila = {
  */
 const aOrder = (fila: Fila): Order => {
   if (!esEstado(fila.status)) throw new Error(`El pedido ${fila.id} tiene un estado desconocido: ${fila.status}`)
-  return { ...fila, status: fila.status }
+  return { ...fila, status: fila.status, origin: parseOrigin(fila.origin), quoteExtras: fila.quoteExtras ?? [] }
 }
 
 export const createDrizzleOrderRepository = (database: DbExecutor): OrderRepository => {
@@ -62,6 +73,17 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
     decisionNote: orders.decisionNote,
     decidedAt: orders.decidedAt,
     createdAt: orders.createdAt,
+    amountCents: orders.amountCents,
+    currency: orders.currency,
+    consultationId: orders.consultationId,
+    origin: orders.origin,
+    quoteExtras: orders.quoteExtras,
+    discountCents: orders.discountCents,
+    depositCents: orders.depositCents,
+    balancePaidAt: orders.balancePaidAt,
+    remindedAt: orders.remindedAt,
+    cancelReason: orders.cancelReason,
+    referralCode: orders.referralCode,
   }
 
   const conPlan = () =>
@@ -84,6 +106,7 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
 
   return {
     async create(order: NewOrder): Promise<Order> {
+      const descuento = Math.min(50, Math.max(0, Math.round(order.descuentoPct ?? 0)))
       const [fila] = await database
         .insert(orders)
         .values({
@@ -98,8 +121,13 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           planId: sql`(select id from plans where slug = ${order.planSlug} and is_active)`,
           // El precio se congela en el mismo `insert` y por la misma razón: leído antes, un
           // cambio de precio entre medias dejaría el pedido con el importe de otro momento.
-          amountCents: sql`(select price_cents from plans where slug = ${order.planSlug} and is_active)`,
+          // Con recomendación, el descuento se aplica en la misma escritura y se congela con él.
+          amountCents: sql`(select round(price_cents * (100 - ${descuento}::integer) / 100.0)::integer from plans where slug = ${order.planSlug} and is_active)`,
+          discountCents: descuento === 0 ? null : sql`(select price_cents - round(price_cents * (100 - ${descuento}::integer) / 100.0)::integer from plans where slug = ${order.planSlug} and is_active)`,
           currency: sql`(select currency from plans where slug = ${order.planSlug} and is_active)`,
+          // El anticipo, con el porcentaje del plan en ese mismo instante, redondeado al boliviano.
+          depositCents: sql`(select case when deposit_pct between 1 and 99 then round(round(price_cents * (100 - ${descuento}::integer) / 100.0) * deposit_pct / 10000.0) * 100 end from plans where slug = ${order.planSlug} and is_active)`,
+          referralCode: order.referralCode ?? null,
           templateSlug: order.templateSlug,
           customerName: order.customerName,
           contact: order.contact,
@@ -113,6 +141,57 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
       const creado = await this.findById(fila.id)
       if (creado === null) throw new Error('El pedido recién creado no se pudo releer.')
       return creado
+    },
+
+    async createQuote(q) {
+      // La cotización la arma el admin: el importe es el suyo (con descuento), no el de lista. El
+      // anticipo sale del porcentaje del plan **sobre ese importe**.
+      const [fila] = await database
+        .insert(orders)
+        .values({
+          publicRef: q.publicRef,
+          planId: sql`(select id from plans where slug = ${q.planSlug} and is_active)`,
+          amountCents: q.amountCents,
+          currency: sql`(select currency from plans where slug = ${q.planSlug} and is_active)`,
+          depositCents: sql`(select case when deposit_pct between 1 and 99 then round(${q.amountCents}::integer * deposit_pct / 10000.0) * 100 end from plans where slug = ${q.planSlug} and is_active)`,
+          discountCents: q.discountCents,
+          quoteExtras: q.extras,
+          templateSlug: q.templateSlug,
+          customerName: q.customerName,
+          contact: q.contact,
+          eventDate: q.eventDate,
+          notes: q.notes,
+          consultationId: q.consultationId,
+          origin: 'cotizacion',
+        })
+        .returning({ id: orders.id })
+      if (!fila) throw new Error('No se pudo crear la cotización.')
+      const creado = await this.findById(fila.id)
+      if (creado === null) throw new Error('La cotización recién creada no se pudo releer.')
+      return creado
+    },
+
+    async cancel(id, reason, at) {
+      // Solo lo que no está cobrado ni cancelado: lo decide el `where`, no una lectura previa.
+      const filas = await database
+        .update(orders)
+        .set({ status: 'cancelled', cancelReason: reason, decidedAt: at })
+        .where(and(eq(orders.id, id), sql`${orders.status} not in ('approved', 'cancelled')`))
+        .returning({ id: orders.id })
+      return filas.length > 0
+    },
+
+    async markReminded(id, at) {
+      await database.update(orders).set({ remindedAt: at }).where(eq(orders.id, id))
+    },
+
+    async markBalancePaid(id, at) {
+      const filas = await database
+        .update(orders)
+        .set({ balancePaidAt: at })
+        .where(and(eq(orders.id, id), eq(orders.status, 'approved'), isNotNull(orders.depositCents), sql`${orders.balancePaidAt} is null`))
+        .returning({ id: orders.id })
+      return filas.length > 0
     },
 
     async createForAddon(order) {
@@ -174,6 +253,14 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
         .orderBy(orden, desc(orders.createdAt))
         .limit(limit)
       return filas.map(aOrder)
+    },
+
+    async countPaidWithoutEvent(): Promise<number> {
+      const [fila] = await database
+        .select({ total: count() })
+        .from(orders)
+        .where(and(eq(orders.status, 'approved'), sql`${orders.eventId} is null`, sql`${orders.addonSlug} is null`))
+      return fila?.total ?? 0
     },
 
     async countByStatus(status): Promise<number> {

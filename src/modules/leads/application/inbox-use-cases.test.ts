@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
 import type { EstadoConsulta } from '../domain/pipeline'
 import type { ConsultationInbox, ConsultationRow } from './ports'
-import { moveConsultation } from './inbox-use-cases'
+import { moveConsultation, readConsultation, winConsultation } from './inbox-use-cases'
 
 const ID = '11111111-2222-4333-8444-555555555555'
 const BODA = '99999999-2222-4333-8444-555555555555'
@@ -19,6 +19,9 @@ const fila = (status: EstadoConsulta): ConsultationRow => ({
   status,
   note: null,
   statusChangedAt: null,
+  firstContactAt: null,
+  lostReason: null,
+  utm: null,
   event: null,
   createdAt: new Date('2026-09-10T12:00:00Z'),
 })
@@ -46,7 +49,7 @@ describe('moveConsultation', () => {
     const { inbox, escrituras } = bandeja(fila('new'))
     const r = await moveConsultation({ inbox, clock: () => AHORA })({ id: ID, to: 'contacted', note: '', eventId: '' })
     expect(isOk(r)).toBe(true)
-    expect(escrituras).toEqual([{ id: ID, from: 'new', status: 'contacted', note: null, eventId: null, at: AHORA }])
+    expect(escrituras).toEqual([{ id: ID, from: 'new', status: 'contacted', note: null, eventId: null, lostReason: null, at: AHORA }])
   })
 
   it('un identificador que no es UUID es «no existe», no un fallo de la base', async () => {
@@ -86,5 +89,27 @@ describe('moveConsultation', () => {
     const ganada = bandeja(fila('contacted'))
     await moveConsultation({ inbox: ganada.inbox, clock: () => AHORA })({ id: ID, to: 'won', note: '', eventId: BODA })
     expect(ganada.escrituras).toMatchObject([{ status: 'won', eventId: BODA }])
+  })
+})
+
+describe('winConsultation', () => {
+  it('la deja ganada y enlazada al evento que nació de ella', async () => {
+    const { inbox, escrituras } = bandeja(fila('contacted'))
+    expect(await winConsultation({ inbox, clock: () => AHORA })(ID, BODA)).toBe(true)
+    expect(escrituras).toEqual([{ id: ID, from: 'contacted', status: 'won', note: null, eventId: BODA, lostReason: null, at: AHORA }])
+  })
+
+  it('una ya ganada se queda como estaba, sin fallar hacia arriba', async () => {
+    const { inbox, escrituras } = bandeja(fila('won'))
+    expect(await winConsultation({ inbox, clock: () => AHORA })(ID, BODA)).toBe(false)
+    expect(escrituras).toEqual([])
+  })
+})
+
+describe('readConsultation', () => {
+  it('un id que no es UUID no llega a la base', async () => {
+    const { inbox } = bandeja(fila('new'))
+    expect(await readConsultation({ inbox })('x')).toBeNull()
+    expect((await readConsultation({ inbox })(ID))?.id).toBe(ID)
   })
 })

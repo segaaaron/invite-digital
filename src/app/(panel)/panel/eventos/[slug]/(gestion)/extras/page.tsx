@@ -16,6 +16,7 @@ const ESTADO = {
   proof_submitted: { estado: 'Comprobante en revisión', tono: 'maybe' },
   approved: { estado: 'Activo', tono: 'ok' },
   rejected: { estado: 'Rechazado', tono: 'no' },
+  cancelled: { estado: 'Cancelado', tono: 'no' },
 } as const
 
 export default async function ExtrasPage({ params }: { params: Promise<{ slug: string }> }) {

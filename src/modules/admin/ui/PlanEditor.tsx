@@ -29,6 +29,7 @@ export type PlanEditorView = {
   readonly onlineDays: number
   readonly designChange: string
   readonly plannerSuite: string
+  readonly depositPct: number
   readonly highlighted: boolean
   readonly isActive: boolean
   readonly eventos: number
@@ -82,8 +83,17 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
       </header>
 
       <SettingsSection description="Lo que paga el cliente y si el plan aparece en la web." title="Precio y venta">
-        <div className="max-w-[260px]">
+        <div className="grid max-w-[540px] gap-4 min-[560px]:grid-cols-2">
           <UnitField decimal defaultValue={txt('price', plan.price)} id={`${id}-precio`} label="Precio" name="price" prefix="Bs" required />
+          <UnitField
+            defaultValue={txt('depositPct', plan.depositPct === 0 ? '' : String(plan.depositPct))}
+            hint="Con anticipo, el evento nace al aprobarlo y el saldo se registra después. Vacío: pago entero."
+            id={`${id}-anticipo`}
+            label="Anticipo para reservar"
+            name="depositPct"
+            placeholder="Sin anticipo"
+            unit="%"
+          />
         </div>
         <div className="flex flex-col divide-y divide-line-panel">
           <SwitchRow defaultChecked={chk('isActive', plan.isActive)} description="Apagado, deja de venderse. Los eventos que ya lo tienen lo conservan." label="A la venta" name="isActive" />
@@ -93,7 +103,15 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
 
       <SettingsSection description="Deja vacío lo que no tiene tope. El servidor corta al llegar al límite." title="Límites">
         <div className="grid gap-4 min-[560px]:grid-cols-2 min-[1200px]:grid-cols-3">
-          <UnitField defaultValue={txt('maxGuestGroups', vacioSiNulo(plan.maxGuestGroups))} id={`${id}-tope`} label="Invitaciones" name="maxGuestGroups" placeholder="Sin límite" unit="invitaciones" />
+          <UnitField
+            defaultValue={txt('maxGuestGroups', vacioSiNulo(plan.maxGuestGroups))}
+            hint="Cada invitación es un enlace: una familia o un grupo, no una persona."
+            id={`${id}-tope`}
+            label="Invitaciones"
+            name="maxGuestGroups"
+            placeholder="Sin límite"
+            unit="invitaciones"
+          />
           <UnitField defaultValue={txt('maxGalleryPhotos', vacioSiNulo(plan.maxGalleryPhotos))} id={`${id}-fotos`} label="Fotos del evento" name="maxGalleryPhotos" placeholder="Sin límite" unit="fotos" />
           <UnitField defaultValue={txt('onlineDays', String(plan.onlineDays))} id={`${id}-dias`} label="En línea tras la fiesta" name="onlineDays" required unit="días" />
           <UnitField

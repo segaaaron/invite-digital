@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { agruparClientes, filtrarClientes } from './clientes'
+import { agruparClientes, clavesDeNota, etapaDeCliente, filtrarClientes, tieneContacto, valorDeCliente } from './clientes'
 
 const d = (dia: number) => new Date(Date.UTC(2026, 8, dia))
 
@@ -20,6 +20,13 @@ describe('agruparClientes', () => {
     expect(ana?.eventos.map((e) => e.slug)).toEqual(['boda-ana'])
     expect(ana?.ultima).toEqual(d(4))
     expect(ana?.telefonos).toEqual(['+591 7123 4567'])
+  })
+
+  it('una cuenta dada de alta a mano se llama por el nombre que se le puso, no por su correo', () => {
+    const [carla] = agruparClientes({ consultas: [], pedidos: [], cuentas: [{ email: 'carla@mail.bo', phone: null, createdAt: d(2), nombre: 'Carla Rojas' }], eventos: [] })
+    expect(carla?.nombre).toBe('Carla Rojas')
+    const [sinNombre] = agruparClientes({ consultas: [], pedidos: [], cuentas: [{ email: 'beto@mail.bo', phone: null, createdAt: d(2) }], eventos: [] })
+    expect(sinNombre?.nombre).toBe('beto@mail.bo')
   })
 
   it('no mezcla a dos personas distintas y ordena por última actividad', () => {
@@ -61,5 +68,29 @@ describe('agruparClientes', () => {
     expect(filtrarClientes(clientes, 'JOSE@')).toHaveLength(1)
     expect(filtrarClientes(clientes, '1111')).toHaveLength(1)
     expect(filtrarClientes(clientes, 'maria')).toHaveLength(0)
+  })
+})
+
+describe('etapa, valor y contactos de un cliente', () => {
+  const base = { clave: 'e:a@b.bo', nombre: 'Ana', correos: ['a@b.bo'], telefonos: ['+591 70000001'], cuenta: false, consultas: [], pedidos: [], eventos: [], ultima: new Date() }
+  const pedido = (status: string, amountCents: number | null = 100_000) => ({ publicRef: 'R', customerName: 'Ana', contact: 'a@b.bo', status, createdAt: new Date(), eventSlug: null, producto: 'Firma 3D', amountCents })
+  const consulta = (status: string) => ({ id: 'c', name: 'Ana', email: 'a@b.bo', phone: null, status, createdAt: new Date() })
+  const evento = (eventDate: string) => ({ slug: 's', title: 'Boda', eventDate, anfitriones: [] })
+
+  it('pedir un plan no es ser cliente: se es cliente al pagar o al tener evento', () => {
+    expect(etapaDeCliente({ ...base, consultas: [consulta('new')] }, '2026-09-28')).toBe('prospecto')
+    expect(etapaDeCliente({ ...base, pedidos: [pedido('pending_payment')] }, '2026-09-28')).toBe('pidio_plan')
+    expect(etapaDeCliente({ ...base, pedidos: [pedido('approved')] }, '2026-09-28')).toBe('cliente')
+    expect(etapaDeCliente({ ...base, eventos: [evento('2026-12-05')] }, '2026-09-28')).toBe('cliente')
+    expect(etapaDeCliente({ ...base, eventos: [evento('2026-05-05')] }, '2026-09-28')).toBe('celebrado')
+    expect(etapaDeCliente({ ...base, consultas: [consulta('lost')], pedidos: [pedido('cancelled')] }, '2026-09-28')).toBe('perdido')
+  })
+
+  it('su valor es lo aprobado, y su nota se encuentra por cualquier contacto', () => {
+    expect(valorDeCliente({ ...base, pedidos: [pedido('approved'), pedido('approved', 50_000), pedido('pending_payment')] })).toBe(150_000)
+    expect(clavesDeNota(base)).toEqual(['e:a@b.bo', 't:70000001'])
+    expect(tieneContacto(base, '70000001')).toBe(true)
+    expect(tieneContacto(base, 'A@B.BO')).toBe(true)
+    expect(tieneContacto(base, 'otra@b.bo')).toBe(false)
   })
 })

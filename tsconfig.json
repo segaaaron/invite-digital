@@ -42,11 +42,13 @@
     ".next-e2e/types/**/*.ts",
     ".next-e2e/dev/types/**/*.ts",
     ".next-revision/types/**/*.ts",
-    ".next-revision/dev/types/**/*.ts"
+    ".next-revision/dev/types/**/*.ts",
+    ".next-fresh/types/**/*.ts",
+    ".next-fresh/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
-    ".next-e2e",
+    ".next-*",
     "src/app/sw.ts"
   ]
 }

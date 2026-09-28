@@ -45,3 +45,20 @@ describe('embudo de consultas', () => {
     expect(tasaDeCierre({ new: 4, contacted: 0, won: 0, lost: 0 })).toBe(null)
   })
 })
+
+describe('motivo de pérdida', () => {
+  it('con un motivo de la lista no hace falta nota; con «Otro», sí', () => {
+    const r = mover('contacted', 'lost', '', 'precio')
+    expect(isOk(r) && r.value.lostReason).toBe('precio')
+    expect(isErr(mover('contacted', 'lost', '', 'otro'))).toBe(true)
+    const conNota = mover('new', 'lost', 'se mudó', 'otro')
+    expect(isOk(conNota) && conNota.value.note).toBe('se mudó')
+  })
+
+  it('solo una nota, sin motivo, cuenta como «Otro»; y lo que no se pierde no lleva motivo', () => {
+    const r = mover('contacted', 'lost', 'eligió otra empresa')
+    expect(isOk(r) && r.value.lostReason).toBe('otro')
+    const contactada = mover('new', 'contacted', '', 'precio')
+    expect(isOk(contactada) && contactada.value.lostReason).toBeNull()
+  })
+})

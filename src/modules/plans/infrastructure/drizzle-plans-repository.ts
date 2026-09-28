@@ -74,7 +74,13 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
   },
 
   async updateExtra(slug, extra) {
-    const filas = await database.update(addons).set(extra).where(eq(addons.slug, slug)).returning({ slug: addons.slug })
+    // **Lo que hace un extra no cambia** una vez creado (28 de septiembre): el efecto no se
+    // escribe. Cambiárselo a uno que se está vendiendo cambiaría lo que el cliente cree que compró.
+    const filas = await database
+      .update(addons)
+      .set({ name: extra.name, priceCents: extra.priceCents, amount: extra.amount, isActive: extra.isActive })
+      .where(eq(addons.slug, slug))
+      .returning({ slug: addons.slug })
     return filas.length > 0
   },
 
@@ -96,6 +102,31 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
         await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${fila.amount}` }).where(eq(events.id, fila.event_id))
       }
       return true
+    })
+  },
+
+  async applyQuoteExtras(orderId): Promise<number> {
+    return database.transaction(async (tx) => {
+      // Los extras de una cotización van **en el pedido del plan**, no en pedidos propios: se
+      // aplican sin `order_id` (ese índice es único, uno por pedido) y una sola vez por evento y
+      // extra, así volver a enlazar el pedido no los suma dos veces.
+      const aplicados = (await tx.execute(sql`
+        insert into event_addons (event_id, addon_slug, effect, amount)
+        select o.event_id, a.slug, a.effect, a.amount
+        from orders o
+        cross join lateral jsonb_array_elements(coalesce(o.quote_extras, '[]'::jsonb)) as x(extra)
+        join addons a on a.slug = x.extra->>'slug'
+        where o.id = ${orderId} and o.event_id is not null
+          and not exists (
+            select 1 from event_addons e where e.event_id = o.event_id and e.addon_slug = a.slug and e.order_id is null
+          )
+        returning event_id, effect, amount
+      `)) as unknown as Array<{ event_id: string; effect: string; amount: number }>
+      const dias = aplicados.filter((f) => f.effect === 'mas_dias')
+      for (const f of dias) {
+        await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${f.amount}` }).where(eq(events.id, f.event_id))
+      }
+      return aplicados.length
     })
   },
 

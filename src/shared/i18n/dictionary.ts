@@ -609,7 +609,13 @@ export interface OrdersDictionary {
   qrAlt: string
   proofHeading: string
   statusHeading: string
-  status: Record<'pending_payment' | 'proof_submitted' | 'approved' | 'rejected', string>
+  status: Record<'pending_payment' | 'proof_submitted' | 'approved' | 'rejected' | 'cancelled', string>
+  /** El monto exacto que toca transferir ahora, encima de los datos de cobro. */
+  amountDue: string
+  /** Debajo del monto, cuando es el anticipo: el resto se paga después. */
+  amountDueDeposit: string
+  /** El título de la sección de pago cuando lo que queda es el saldo. */
+  balanceHeading: string
   decisionNote: string
   proofsHeading: string
   keepRef: string
@@ -625,6 +631,7 @@ export type OrderErrorCode =
   | 'contact'
   | 'plan'
   | 'notes'
+  | 'referral'
   | 'invalid'
   | 'proofRateLimited'
   | 'proofMissing'
@@ -642,6 +649,8 @@ export interface OrderFormDictionary {
   contact: string
   eventDate: string
   notes: string
+  /** El código de quien le recomendó, opcional: con él, el descuento de recomendación. */
+  referral: string
   submit: string
   submitting: string
   successTitle: string
@@ -657,7 +666,31 @@ export interface OrderFormDictionary {
   errors: Record<OrderErrorCode, string>
 }
 
+/** La opinión del cliente después de su evento (`/opinion/<enlace>`). */
+export interface OpinionDictionary {
+  kicker: string
+  /** «¿Cómo te fue en {evento}?» */
+  title: string
+  intro: string
+  rating: string
+  /** Los cinco rótulos de las estrellas, de 1 a 5. */
+  stars: readonly [string, string, string, string, string]
+  comment: string
+  commentPlaceholder: string
+  allowPublish: string
+  submit: string
+  submitting: string
+  thanksTitle: string
+  thanksText: string
+  answeredTitle: string
+  answeredText: string
+  errorRating: string
+  errorFailed: string
+  errorRateLimited: string
+}
+
 export interface Dictionary {
+  opinion: OpinionDictionary
   nav: NavDictionary
   fiestas: FiestasDictionary
   hero: HeroDictionary

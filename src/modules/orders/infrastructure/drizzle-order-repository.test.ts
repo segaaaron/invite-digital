@@ -134,7 +134,7 @@ describe('drizzleOrderRepository', () => {
 
     const conteo = await repo.countByStatusAll()
     expect(conteo.proof_submitted).toBeGreaterThanOrEqual(2)
-    expect(Object.keys(conteo).sort()).toEqual(['approved', 'pending_payment', 'proof_submitted', 'rejected'])
+    expect(Object.keys(conteo).sort()).toEqual(['approved', 'cancelled', 'pending_payment', 'proof_submitted', 'rejected'])
 
     // Todos: primero lo que pide acción y lo más nuevo dentro; el tope se aplica en la base.
     const mios = (await repo.listPage({ status: null, limit: 5000, prioridad })).filter((o) => o.customerName === cliente).map((o) => o.id)
@@ -202,5 +202,67 @@ describe('drizzleOrderRepository', () => {
       await db.delete(events).where(eq(events.id, evento!.id))
     }
   })
-})
 
+  it('con anticipo en el plan, el pedido nace con su anticipo; sin él, sin anticipo', async () => {
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    await db.update(plans).set({ depositPct: 40 }).where(eq(plans.slug, 'firma-3d'))
+    try {
+      const con = await nuevo()
+      expect(con.depositCents).toBe(Math.round((plan!.precio * 40) / 10000) * 100)
+    } finally {
+      await db.update(plans).set({ depositPct: 0 }).where(eq(plans.slug, 'firma-3d'))
+    }
+    expect((await nuevo()).depositCents).toBeNull()
+  })
+
+  it('la cotización guarda el precio del admin, sus extras, el descuento y la consulta', async () => {
+    const q = await repo.createQuote({
+      publicRef: `Q${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
+      planSlug: 'firma-3d',
+      templateSlug: 'boda-bot',
+      customerName: 'Lucía (cotización)',
+      contact: 'lucia@x.bo',
+      eventDate: '2027-02-14',
+      notes: null,
+      consultationId: null,
+      amountCents: 100_000,
+      discountCents: 19_000,
+      extras: [{ slug: 'dia-d', name: 'Día D', cents: 15_000 }],
+    })
+    creados.push(q.id)
+    expect(q.origin).toBe('cotizacion')
+    expect(q.amountCents).toBe(100_000)
+    expect(q.discountCents).toBe(19_000)
+    expect(q.quoteExtras).toEqual([{ slug: 'dia-d', name: 'Día D', cents: 15_000 }])
+    expect(q.currency).toBe('BOB')
+  })
+
+  it('cancelar pide que no esté cobrado, y el saldo solo se registra con anticipo aprobado', async () => {
+    const o = await nuevo()
+    expect(await repo.cancel(o.id, 'eligió a otra empresa', new Date())).toBe(true)
+    expect(await repo.cancel(o.id, 'otra vez', new Date())).toBe(false)
+    expect((await repo.findById(o.id))?.cancelReason).toBe('eligió a otra empresa')
+
+    const cobrado = await nuevo()
+    await db.update(orders).set({ status: 'approved', decidedAt: new Date() }).where(eq(orders.id, cobrado.id))
+    expect(await repo.cancel(cobrado.id, 'no', new Date())).toBe(false)
+    expect(await repo.markBalancePaid(cobrado.id, new Date())).toBe(false)
+    await db.update(orders).set({ depositCents: 50_000 }).where(eq(orders.id, cobrado.id))
+    expect(await repo.markBalancePaid(cobrado.id, new Date())).toBe(true)
+    expect(await repo.markBalancePaid(cobrado.id, new Date())).toBe(false)
+
+    await repo.markReminded(o.id, new Date('2026-09-28T12:00:00Z'))
+    expect((await repo.findById(o.id))?.remindedAt?.toISOString()).toBe('2026-09-28T12:00:00.000Z')
+  })
+
+  it('con recomendación, el descuento se aplica y se congela en el mismo alta', async () => {
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const o = await nuevo({ referralCode: 'ABC234', descuentoPct: 10 })
+    expect(o.referralCode).toBe('ABC234')
+    expect(o.amountCents).toBe(Math.round(plan!.precio * 0.9))
+    expect(o.discountCents).toBe(plan!.precio - Math.round(plan!.precio * 0.9))
+    const sin = await nuevo()
+    expect(sin.discountCents).toBeNull()
+    expect(sin.amountCents).toBe(plan!.precio)
+  })
+})

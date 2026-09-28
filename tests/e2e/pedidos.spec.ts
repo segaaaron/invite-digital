@@ -41,17 +41,20 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
 
   // 3. El **admin** lo ve y lo aprueba: los pedidos del Plan B compran planes de
   // Luxury Atelier, y aprobar crea cuentas y eventos. Un atelier recibe 404.
+  // Los pedidos viven en Ventas: la bandeja vieja redirige a la lista, y la venta se abre en su ficha.
   const atelier = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
-  await atelier.goto('/panel/pedidos')
-  const tarjeta = atelier.locator('section', { hasText: referencia }).first()
-  await expect(tarjeta).toContainText('Por revisar')
+  await atelier.goto('/panel/pedidos?estado=proof_submitted')
+  await expect(atelier).toHaveURL(/\/panel\/admin\/ventas\?vista=lista&etapa=por_revisar/)
+  await atelier.goto(`/panel/admin/ventas?venta=p-${referencia}`)
+  const ficha = atelier.locator('dialog[open]')
+  await expect(ficha).toContainText('Por revisar')
 
   // El comprobante se descarga, no se pinta: viene con `attachment`.
-  const enlace = tarjeta.getByRole('link', { name: 'comprobante.png' })
-  await expect(enlace).toBeVisible()
+  await expect(ficha.getByRole('link', { name: /comprobante\.png/ })).toBeVisible()
 
-  await tarjeta.getByRole('button', { name: 'Aprobar pago' }).click()
-  await expect(atelier.locator('section', { hasText: referencia }).first()).toContainText('Aprobado')
+  // El contacto es un teléfono: sin correo se aprueba igual y queda «por crear evento».
+  await ficha.getByRole('button', { name: 'Aprobar pago' }).click()
+  await expect(ficha).toContainText('Por crear evento')
 
   // 4. Y el cliente lo ve aprobado en su misma dirección. Se recarga hasta verlo: la espera de
   // arriba puede darse por buena en una sección contenedora que ya dice «Aprobado» por otro

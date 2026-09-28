@@ -61,14 +61,14 @@ describe('panelNav', () => {
   it('el atelier sin evento ve su cuenta, no las secciones del evento', () => {
     const secciones = panelNav(null)
     expect(secciones.map((seccion) => seccion.label)).toEqual(['Cuenta'])
-    expect(secciones[0]?.items.map((item) => item.href)).toEqual(['/panel/cuenta', '/panel', '/panel/ayuda'])
+    expect(secciones[0]?.items.map((item) => item.href)).toEqual(['/panel', '/panel/ayuda'])
   })
 
-  it('el admin fuera de un evento ve siete entradas, por trabajo y no por tabla', () => {
+  it('el admin fuera de un evento ve seis entradas, una por trabajo', () => {
     const secciones = panelNav(null, {}, true)
     expect(secciones.map((seccion) => seccion.label)).toEqual(['Día a día', 'Negocio', 'Sistema'])
     const entradas = secciones.flatMap((seccion) => seccion.items)
-    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Eventos', 'Clientes', 'Catálogo', 'Web', 'Ajustes'])
+    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Eventos', 'Clientes', 'Escaparate', 'Ajustes'])
     const hrefs = entradas.map((item) => item.href)
     expect(hrefs).not.toContain('/panel')
     expect(hrefs).not.toContain('/panel/ayuda')
@@ -78,8 +78,11 @@ describe('panelNav', () => {
     const entradas = panelNav(null, {}, true).flatMap((seccion) => seccion.items)
     const de = (label: string) => entradas.find((item) => item.label === label)!
     for (const ruta of ['/panel/admin/consultas', '/panel/pedidos', '/panel/admin/ingresos']) expect(esEntradaActiva(de('Ventas'), ruta)).toBe(true)
-    for (const ruta of ['/panel/admin/planes', '/panel/admin/extras', '/panel/admin/modelos']) expect(esEntradaActiva(de('Catálogo'), ruta)).toBe(true)
-    for (const ruta of ['/panel/admin/pagos', '/panel/admin/auditoria', '/panel/cuenta']) expect(esEntradaActiva(de('Ajustes'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/planes', '/panel/admin/extras', '/panel/admin/modelos', '/panel/admin/web']) expect(esEntradaActiva(de('Escaparate'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/auditoria']) expect(esEntradaActiva(de('Ajustes'), ruta)).toBe(true)
+    // La cuenta propia vive en el menú del usuario: ninguna entrada la marca.
+    expect(entradas.some((item) => esEntradaActiva(item, '/panel/cuenta'))).toBe(false)
+    for (const ruta of ['/panel/admin/eventos', '/panel/admin/eventos/calendario']) expect(esEntradaActiva(de('Eventos'), ruta)).toBe(true)
     // «Hoy» solo en su ruta: su prefijo es el de toda la administración.
     expect(esEntradaActiva(de('Hoy'), '/panel/admin/eventos')).toBe(false)
     // Y un atelier no llega a nada de la administración.

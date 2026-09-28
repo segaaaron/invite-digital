@@ -9,6 +9,8 @@ import { FIELD_CLASS, LABEL_CLASS, PanelAlert, Pill } from '@/shared/design/ui/p
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { removeShowcaseMusicAction, renameShowcaseSongAction, setTemplatePublishedAction, uploadShowcaseMusicAction } from '@/app/_acciones/admin/modelos-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
+import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -32,6 +34,7 @@ export function ShowcaseMusicRow({
   tieneMusica,
   cancion,
   publicado,
+  ventas,
 }: {
   themeKey: string
   label: string
@@ -41,6 +44,8 @@ export function ShowcaseMusicRow({
   cancion: { track: string; artist: string } | null
   /** Si sale en el catálogo de la web. Retirado no borra: sus enlaces siguen abriendo. */
   publicado: boolean
+  /** Cuántas veces se vendió y cuándo la última (ya en palabras): qué destacar y qué retirar. */
+  ventas: { readonly veces: number; readonly ultima: string | null }
 }) {
   const [alta, subir, subiendo] = useActionState<AdminActionState, FormData>(uploadShowcaseMusicAction, INICIAL)
   const [baja, quitar, quitando] = useActionState<AdminActionState, FormData>(removeShowcaseMusicAction, INICIAL)
@@ -100,88 +105,109 @@ export function ShowcaseMusicRow({
       </a>
 
       <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-baseline justify-between gap-2">
-          <span className="font-display text-[20px] leading-tight text-ink">{label}</span>
-          <span className="font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase">{themeKey}</span>
+        <div className="flex items-start justify-between gap-2">
+          <span className="min-w-0">
+            <span className="block font-display text-[20px] leading-tight text-ink">{label}</span>
+            {/* Lo que dice si merece estar en la vitrina: cuánto se vende. La clave interna no le dice nada al admin. */}
+            <span className="mt-0.5 block text-[12px] text-ink-mute">
+              {ventas.veces === 0 ? 'Sin ventas todavía' : `Vendido ${ventas.veces === 1 ? '1 vez' : `${ventas.veces} veces`}${ventas.ultima === null ? '' : ` · la última ${ventas.ultima}`}`}
+            </span>
+          </span>
+          <MenuDeAcciones etiqueta={`Más acciones de ${label}`}>
+            <a className={opcionDeMenu()} href={`/modelos/es/${themeKey}`} rel="noopener noreferrer" target="_blank">
+              Ver el modelo
+            </a>
+            {publicado ? (
+              <ConfirmAction
+                action={cambiarPublicacion}
+                confirmLabel="Retirar de la web"
+                description="Deja de salir en el catálogo y en los precios. No se borra: sus enlaces siguen abriendo y los eventos que lo tienen no cambian."
+                title={`Retirar ${label}`}
+                trigger="Retirar de la web"
+                triggerClassName={opcionDeMenu(true)}
+              >
+                <input name="themeKey" type="hidden" value={themeKey} />
+                <input name="publicar" type="hidden" value="no" />
+              </ConfirmAction>
+            ) : null}
+          </MenuDeAcciones>
         </div>
 
-        {tieneMusica ? (
-          // La sirve la misma ruta pública que el escaparate, así que si aquí suena, ahí
-          // también; y si aquí no, ahí tampoco.
-          <>
-            <audio className="h-9 w-full" controls preload="none" src={`/modelos/musica/${themeKey}`} />
-            {/* El nombre que dice el reproductor del modelo, editable sin volver a subir la
-                canción. La clave lo remonta cuando cambia en el servidor: React no refresca
-                un `defaultValue` ya pintado. */}
-            <form action={renombrar} className="flex flex-col gap-2" key={JSON.stringify(cancion)}>
-              <input name="themeKey" type="hidden" value={themeKey} />
-              {cancion === null ? (
-                <p className="text-[12px] leading-[1.5] text-ink-mute">
-                  Esta canción se subió antes de que guardáramos su nombre. Escríbelo, o vuelve a subirla y lo tomamos del archivo.
-                </p>
-              ) : null}
-              <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
-              <p className="text-[11px] text-ink-mute">El artista es opcional.</p>
-              <SubmitButton variant="default" pending={renombrando} pendingLabel={'Guardando…'}>{'Guardar nombre'}</SubmitButton>
-            </form>
-          </>
-        ) : (
-          <p className="text-[12px] text-ink-mute">El reproductor se ve pero no suena.</p>
-        )}
-
-        <form action={subir} className="mt-auto flex flex-col gap-2.5">
-          <input name="themeKey" type="hidden" value={themeKey} />
-          <FilePicker
-            accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"
-            hint="MP3, M4A o WAV · la ajustamos sola"
-            label={tieneMusica ? 'Elegir otra canción' : 'Elegir canción'}
-            name="musica"
-            onElegir={(archivo) => void alElegir(archivo)}
-          />
-          {nombreNuevo === null ? null : (
-            <div className="grid gap-2 @[380px]:grid-cols-2">
-              <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-track`}>
-                <span className={LABEL_CLASS}>Canción</span>
-                <input
-                  className={FIELD_CLASS}
-                  id={`${id}-alta-track`}
-                  maxLength={120}
-                  name="track"
-                  onChange={(e) => setNombreNuevo({ ...nombreNuevo, track: e.target.value })}
-                  value={nombreNuevo.track}
-                />
-              </label>
-              <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-artist`}>
-                <span className={LABEL_CLASS}>Artista</span>
-                <input
-                  className={FIELD_CLASS}
-                  id={`${id}-alta-artist`}
-                  maxLength={120}
-                  name="artist"
-                  onChange={(e) => setNombreNuevo({ ...nombreNuevo, artist: e.target.value })}
-                  value={nombreNuevo.artist}
-                />
-              </label>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-2">
-            <SubmitButton variant={tieneMusica ? 'default' : 'primary'} pending={subiendo} pendingLabel={'Subiendo y ajustando…'}>{tieneMusica ? 'Reemplazar' : 'Subir'}</SubmitButton>
+        {/* La canción, plegada: se toca una vez y ocupaba media tarjeta en cada modelo. */}
+        <details className="group rounded-[14px] border border-line-panel bg-bg-top/60" open={alta.status === 'error' || nombreNuevo !== null}>
+          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-[13px] [&::-webkit-details-marker]:hidden">
+            <span className="min-w-0 truncate text-ink">{tieneMusica ? (cancion === null ? 'Canción sin nombre' : [cancion.track, cancion.artist].filter(Boolean).join(' · ')) : 'Sin canción'}</span>
+            <span className="shrink-0 text-[12px] text-ink-mute group-open:hidden">{tieneMusica ? 'Cambiar' : 'Subir'}</span>
+          </summary>
+          <div className="flex flex-col gap-3 border-t border-line-panel px-3.5 pt-3 pb-3.5">
             {tieneMusica ? (
-              // Va a su propio formulario por `form`: con `formAction` se reenviaría el MP3
-              // elegido solo para borrar la canción.
-              <SubmitButton form={`${id}-quitar`} variant="danger" pending={quitando} pendingLabel={'Quitando…'}>{'Quitar'}</SubmitButton>
-            ) : null}
-          </div>
-        </form>
-        <form action={quitar} hidden id={`${id}-quitar`}>
-          <input name="themeKey" type="hidden" value={themeKey} />
-        </form>
+              <>
+                <audio className="h-9 w-full" controls preload="none" src={`/modelos/musica/${themeKey}`} />
+                <form action={renombrar} className="flex flex-col gap-2" key={JSON.stringify(cancion)}>
+                  <input name="themeKey" type="hidden" value={themeKey} />
+                  {cancion === null ? (
+                    <p className="text-[12px] leading-[1.5] text-ink-mute">
+                      Esta canción se subió antes de que guardáramos su nombre. Escríbelo, o vuelve a subirla y lo tomamos del archivo.
+                    </p>
+                  ) : null}
+                  <NombreDeCancion cancion={cancion} id={`${id}-nombre`} />
+                  <SubmitButton variant="default" pending={renombrando} pendingLabel={'Guardando…'}>
+                    {'Guardar nombre'}
+                  </SubmitButton>
+                </form>
+              </>
+            ) : (
+              <p className="text-[12px] text-ink-mute">Sin archivo, el reproductor del modelo se ve pero no suena.</p>
+            )}
 
-        <form action={cambiarPublicacion} className="border-t border-line-panel pt-3">
-          <input name="themeKey" type="hidden" value={themeKey} />
-          <input name="publicar" type="hidden" value={publicado ? 'no' : 'si'} />
-          <SubmitButton className="w-full" variant={publicado ? 'default' : 'primary'} aria-busy={(cambiando) || undefined} pending={cambiando} pendingLabel={'Cambiando…'}>{publicado ? 'Retirar de la web' : 'Publicar en la web'}</SubmitButton>
-        </form>
+            <form action={subir} className="flex flex-col gap-2.5">
+              <input name="themeKey" type="hidden" value={themeKey} />
+              <FilePicker
+                accept="audio/*,.mp3,.m4a,.wav,.aac,.ogg"
+                hint="MP3, M4A o WAV · la ajustamos sola"
+                label={tieneMusica ? 'Elegir otra canción' : 'Elegir canción'}
+                name="musica"
+                onElegir={(archivo) => void alElegir(archivo)}
+              />
+              {nombreNuevo === null ? null : (
+                <div className="grid gap-2 @[380px]:grid-cols-2">
+                  <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-track`}>
+                    <span className={LABEL_CLASS}>Canción</span>
+                    <input className={FIELD_CLASS} id={`${id}-alta-track`} maxLength={120} name="track" onChange={(e) => setNombreNuevo({ ...nombreNuevo, track: e.target.value })} value={nombreNuevo.track} />
+                  </label>
+                  <label className="flex min-w-0 flex-col gap-1.5" htmlFor={`${id}-alta-artist`}>
+                    <span className={LABEL_CLASS}>Artista</span>
+                    <input className={FIELD_CLASS} id={`${id}-alta-artist`} maxLength={120} name="artist" onChange={(e) => setNombreNuevo({ ...nombreNuevo, artist: e.target.value })} value={nombreNuevo.artist} />
+                  </label>
+                </div>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <SubmitButton variant="default" pending={subiendo} pendingLabel={'Subiendo y ajustando…'}>
+                  {tieneMusica ? 'Reemplazar' : 'Subir'}
+                </SubmitButton>
+                {tieneMusica ? (
+                  // Va a su propio formulario por `form`: con `formAction` se reenviaría el MP3 elegido solo para borrar la canción.
+                  <SubmitButton form={`${id}-quitar`} variant="danger" pending={quitando} pendingLabel={'Quitando…'}>
+                    {'Quitar'}
+                  </SubmitButton>
+                ) : null}
+              </div>
+            </form>
+            <form action={quitar} hidden id={`${id}-quitar`}>
+              <input name="themeKey" type="hidden" value={themeKey} />
+            </form>
+          </div>
+        </details>
+
+        {publicado ? null : (
+          <form action={cambiarPublicacion} className="mt-auto">
+            <input name="themeKey" type="hidden" value={themeKey} />
+            <input name="publicar" type="hidden" value="si" />
+            <SubmitButton className="w-full" pending={cambiando} pendingLabel={'Publicando…'} variant="primary">
+              {'Publicar en la web'}
+            </SubmitButton>
+          </form>
+        )}
 
         <ActionFeedback errorsOnly state={estado} />
         {estado.status === 'success' && estado.message !== undefined ? (

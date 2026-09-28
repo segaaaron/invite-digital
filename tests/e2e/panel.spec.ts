@@ -81,6 +81,8 @@ test.describe('cierre de sesión', () => {
   test('cierra la sesión y el panel vuelve a exigirla', async ({ page }) => {
     await signIn(page)
 
+    // La cuenta vive en el menú de la tarjeta del usuario.
+    await page.locator('summary', { hasText: 'Menú de la cuenta' }).click()
     await page.getByRole('button', { name: 'Cerrar sesión' }).click()
     // Pide confirmación: el botón de dentro del diálogo es el que cierra la sesión.
     await page.getByRole('dialog', { name: 'Cerrar sesión' }).getByRole('button', { name: 'Cerrar sesión' }).click()

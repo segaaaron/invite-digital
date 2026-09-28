@@ -28,6 +28,23 @@ export const countNewConsultations = (deps: Deps) => async (): Promise<number | 
   }
 }
 
+/** Una consulta por su id; `null` si no existe o el id no es un UUID. */
+export const readConsultation =
+  (deps: Deps) =>
+  async (id: string): Promise<ConsultationRow | null> =>
+    UUID.test(id) ? deps.inbox.find(id) : null
+
+/**
+ * Cierra como ganada la consulta de la que nació un evento, enlazada a él. Sin error hacia
+ * arriba: el evento ya existe, y una consulta que ya estaba ganada se queda como estaba.
+ */
+export const winConsultation =
+  (deps: Deps & { clock: () => Date }) =>
+  async (id: string, eventId: string): Promise<boolean> => {
+    const r = await moveConsultation(deps)({ id, to: 'won', note: '', eventId })
+    return !isErr(r)
+  }
+
 /**
  * Mueve una consulta por el embudo.
  *
@@ -36,7 +53,7 @@ export const countNewConsultations = (deps: Deps) => async (): Promise<number | 
  */
 export const moveConsultation =
   (deps: Deps & { clock: () => Date }) =>
-  async (input: { id: string; to: string; note: string; eventId: string }): Promise<Result<ConsultationRow, InboxError>> =>
+  async (input: { id: string; to: string; note: string; eventId: string; reason?: string }): Promise<Result<ConsultationRow, InboxError>> =>
     attempt(
       async () => {
         // Un identificador que no es UUID no es «la base falló»: Postgres lo rechazaría con
@@ -46,7 +63,7 @@ export const moveConsultation =
         if (actual === null) return err(inboxError('not_found', `No existe la consulta ${input.id}`))
 
         const hacia: EstadoConsulta = parseEstado(input.to)
-        const decision = mover(actual.status, hacia, input.note)
+        const decision = mover(actual.status, hacia, input.note, input.reason ?? '')
         if (isErr(decision)) return decision
 
         const boda = input.eventId.trim()

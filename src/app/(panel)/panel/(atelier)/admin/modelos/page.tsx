@@ -1,4 +1,6 @@
-import { admin } from '@/app/composition/container'
+import { admin, orders } from '@/app/composition/container'
+import { BarraDeFiltros } from '@/shared/design/ui/panel/lista'
+import { hace } from '@/shared/format/fecha'
 import { ShowcaseMusicRow } from '@/modules/admin'
 import { FIESTAS, fiestaDeCategoria, VOCABULARIO } from '@/modules/events'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
@@ -23,27 +25,60 @@ export const dynamic = 'force-dynamic'
  * El clásico no sale: no se publica en el catálogo, es el respaldo de una clave
  * desconocida.
  */
-export default async function AdminModelosPage() {
-  await requireAdmin()
+const FILTROS = [
+  { key: 'todos', label: 'Todos' },
+  { key: 'web', label: 'En la web' },
+  { key: 'retirados', label: 'Retirados' },
+  { key: 'sin-musica', label: 'Sin música' },
+] as const
 
-  const [musica, publicacion, canciones] = await Promise.all([admin.showcaseMusic(), admin.publication(), admin.showcaseSongs()])
+export default async function AdminModelosPage({ searchParams }: { searchParams: Promise<{ filtro?: string }> }) {
+  await requireAdmin()
+  const pedido = (await searchParams).filtro
+  const filtro = FILTROS.find((f) => f.key === pedido)?.key ?? 'todos'
+  const ahora = new Date()
+
+  const [musica, publicacion, canciones, aprobados] = await Promise.all([
+    admin.showcaseMusic(),
+    admin.publication(),
+    admin.showcaseSongs(),
+    orders.page({ status: 'approved', tope: 5000, prioridad: ['approved'] }),
+  ])
+  // Cuánto se vende cada modelo: lo que decide qué destacar y qué retirar.
+  const ventas = new Map<string, { veces: number; ultima: Date | null }>()
+  if (!isErr(aprobados)) {
+    for (const { order: o } of aprobados.value.pedidos) {
+      if (o.templateSlug === null) continue
+      const a = ventas.get(o.templateSlug) ?? { veces: 0, ultima: null }
+      ventas.set(o.templateSlug, { veces: a.veces + 1, ultima: a.ultima === null || (o.decidedAt ?? o.createdAt) > a.ultima ? (o.decidedAt ?? o.createdAt) : a.ultima })
+    }
+  }
   // Ni el clásico ni los retirados: un retirado no vuelve a la web desde aquí.
   const modelos = themeDefinitions().filter((tema) => seAsigna(tema.key))
   const fiestaDe = (clave: string) => fiestaDeCategoria(CATALOG_LISTOS.find((entrada) => entrada.key === clave)?.categorySlug ?? '')
   // Un grupo por fiesta, y solo los que tienen algún modelo: los cumpleaños son uno solo y
   // todavía sin publicar, así que el grupo aparece el día que existe.
+  const pasa = (clave: string) => {
+    if (isErr(musica) || isErr(publicacion)) return true
+    if (filtro === 'web') return publicacion.value[clave] === true
+    if (filtro === 'retirados') return publicacion.value[clave] !== true
+    if (filtro === 'sin-musica') return (musica.value[clave] ?? '') === ''
+    return true
+  }
   const grupos = FIESTAS.map((fiesta) => ({
     titulo: VOCABULARIO[fiesta].plural,
-    temas: modelos.filter((tema) => fiestaDe(tema.key) === fiesta),
+    temas: modelos.filter((tema) => fiestaDe(tema.key) === fiesta && pasa(tema.key)),
   })).filter((grupo) => grupo.temas.length > 0)
 
   return (
     <>
       <PanelHeader
-        kicker="Administración"
-        meta="Qué modelos vende la web y qué suena en cada uno"
+        kicker="Escaparate"
+        meta="Qué modelos vende la web, cuánto se venden y qué suena en cada uno"
         title="Modelos"
       />
+
+      <BarraDeFiltros actual={filtro} etiqueta="Mostrar" opciones={FILTROS.map((f) => ({ key: f.key, label: f.label, href: f.key === 'todos' ? '/panel/admin/modelos' : `/panel/admin/modelos?filtro=${f.key}` }))} />
 
       <PanelCard>
         <div className="mb-5 flex flex-col gap-2.5">
@@ -88,6 +123,10 @@ export default async function AdminModelosPage() {
                         tieneMusica={(musica.value[tema.key] ?? '') !== ''}
                         // Sin fila en la base no sale en el catálogo: se lee como retirado.
                         publicado={publicacion.value[tema.key] ?? false}
+                        ventas={(() => {
+                          const v = ventas.get(tema.key)
+                          return { veces: v?.veces ?? 0, ultima: v?.ultima == null ? null : hace(v.ultima, ahora) }
+                        })()}
                       />
                     ))}
                   </ul>

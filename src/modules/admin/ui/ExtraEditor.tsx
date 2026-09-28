@@ -1,8 +1,7 @@
 'use client'
 
-import { useActionState, useId, useState } from 'react'
-import { EFECTOS_DE_EXTRA, NOMBRE_DE_EFECTO } from '@/modules/plans'
-import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { useActionState, useId } from 'react'
+import { NOMBRE_DE_EFECTO } from '@/modules/plans'
 import { SwitchRow, UnitField } from '@/shared/design/ui/panel/ajustes'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { saveExtraAction } from '@/app/_acciones/admin/planes-actions'
@@ -16,71 +15,60 @@ export type ExtraEditable = { readonly slug: string; readonly name: string; read
 const UNIDAD: Partial<Record<string, string>> = { mas_grupos: 'invitaciones', mas_dias: 'días', mas_porteros: 'personas', sumar_planner: 'planners' }
 
 /**
- * Un extra del catálogo: su resumen de un vistazo —qué hace, cuánto cuesta, si se vende— y los
- * datos en una fila que se despliega. Antes eran cuatro campos iguales por extra y ocho bloques
- * idénticos seguidos, sin distinguir cuál estaba a la venta.
+ * **Un extra, una fila**: qué hace, el precio, si está a la venta y cuántas veces se vendió, con su
+ * botón. Eran formularios enteros de cuatro campos —ocho bloques iguales seguidos—. **Qué hace ya
+ * no se cambia** una vez creado: cambiarle el efecto a un extra que se está vendiendo cambiaría lo
+ * que el cliente cree que compró.
  */
-export function ExtraEditor({ extra }: { extra: ExtraEditable }) {
+export function ExtraEditor({ extra, vendidos }: { extra: ExtraEditable; vendidos: number }) {
   const [estado, guardar, guardando] = useActionState(saveExtraAction, INICIAL)
   const id = useId()
   const e = estado.status === 'error' ? estado.valores : undefined
-  const [efecto, setEfecto] = useState(e?.effect ?? extra.effect)
-  const unidad = UNIDAD[efecto]
+  const unidad = UNIDAD[extra.effect]
 
   return (
     <form
       action={guardar}
       aria-label={`Extra ${extra.name}`}
-      className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-white p-5"
+      className="grid items-center gap-x-5 gap-y-3 border-b border-line-panel py-4 last:border-none min-[900px]:grid-cols-[minmax(0,1.5fr)_150px_140px_120px_auto]"
       key={e ? JSON.stringify(e) : 'base'}
     >
       <input name="slug" readOnly type="hidden" value={extra.slug} />
+      <input name="effect" type="hidden" value={extra.effect} />
 
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="font-display text-[22px] leading-tight text-ink">{extra.name}</p>
-          <p className="text-[12.5px] text-ink-mute">
-            {NOMBRE_DE_EFECTO[extra.effect as keyof typeof NOMBRE_DE_EFECTO] ?? extra.effect}
-            {UNIDAD[extra.effect] && extra.amount > 0 ? ` · +${extra.amount} ${UNIDAD[extra.effect]}` : ''}
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="font-display text-[22px] text-ink [font-variant-numeric:lining-nums]">Bs {extra.precio}</span>
-          <Pill tone={extra.isActive ? 'ok' : 'no'}>{extra.isActive ? 'A la venta' : 'Apagado'}</Pill>
-        </div>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <label className="sr-only" htmlFor={`${id}-n`}>
+          Nombre
+        </label>
+        <input className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-[19px] leading-tight text-ink outline-none hover:border-line-panel-strong focus:border-ink" defaultValue={e?.name ?? extra.name} id={`${id}-n`} maxLength={80} name="name" required />
+        <span className="text-[12px] text-ink-mute">{NOMBRE_DE_EFECTO[extra.effect as keyof typeof NOMBRE_DE_EFECTO] ?? extra.effect}</span>
       </div>
 
-      <div className="grid gap-4 min-[700px]:grid-cols-[1.4fr_1fr_1.4fr_1fr]">
-        <Field htmlFor={`${id}-n`} label="Nombre">
-          <input className={FIELD_CLASS} defaultValue={e?.name ?? extra.name} id={`${id}-n`} maxLength={80} name="name" required />
-        </Field>
-        <UnitField decimal defaultValue={e?.price ?? extra.precio} id={`${id}-p`} label="Precio" name="price" prefix="Bs" required />
-        <Field htmlFor={`${id}-e`} label="Qué hace">
-          <select className={FIELD_CLASS} id={`${id}-e`} name="effect" onChange={(ev) => setEfecto(ev.target.value)} value={efecto}>
-            {EFECTOS_DE_EXTRA.map((x) => (
-              <option key={x} value={x}>
-                {NOMBRE_DE_EFECTO[x]}
-              </option>
-            ))}
-          </select>
-        </Field>
-        {unidad ? (
-          <UnitField defaultValue={e?.amount ?? String(extra.amount)} id={`${id}-a`} label="Cuánto suma" name="amount" unit={unidad} />
-        ) : (
-          // Sin cantidad que sumar, se manda 0 para que la acción no lea un valor viejo.
+      <UnitField decimal defaultValue={e?.price ?? extra.precio} id={`${id}-p`} label="Precio" name="price" prefix="Bs" required />
+
+      {unidad ? (
+        <UnitField defaultValue={e?.amount ?? String(extra.amount)} id={`${id}-a`} label="Suma" name="amount" unit={unidad} />
+      ) : (
+        // Sin cantidad que sumar, se manda 0 para que la acción no lea un valor viejo.
+        <span className="max-[899px]:hidden">
           <input name="amount" type="hidden" value="0" />
-        )}
+        </span>
+      )}
+
+      <div className="flex flex-col gap-1">
+        <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Vendido</span>
+        <span className="font-display text-[18px] text-ink [font-variant-numeric:lining-nums]">{vendidos === 0 ? '—' : `${vendidos} ${vendidos === 1 ? 'vez' : 'veces'}`}</span>
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line-panel pt-3">
-        <div className="min-w-[260px] flex-1">
-          <SwitchRow defaultChecked={e ? e.isActive === 'on' : extra.isActive} description="El anfitrión lo ve en su evento y la web lo lista con su precio." label="A la venta" name="isActive" />
-        </div>
+      <div className="flex items-center justify-end gap-3">
+        <SwitchRow defaultChecked={e ? e.isActive === 'on' : extra.isActive} description="" label="A la venta" name="isActive" />
         <SubmitButton pending={guardando} pendingLabel="Guardando…" variant="default">
-          Guardar extra
+          Guardar
         </SubmitButton>
       </div>
-      <ActionFeedback state={estado} />
+      <div className="min-[900px]:col-span-5">
+        <ActionFeedback state={estado} />
+      </div>
     </form>
   )
 }

@@ -19,13 +19,16 @@ type Props = {
    * el invitado. Sin esto, el catálogo y la compra eran dos caminos que no se tocaban.
    */
   modelo?: string | null
+  /** El código de recomendación que llegó en el enlace (`?ref=`), para que llegue al pedido. */
+  referido?: string | null
   /** El WhatsApp y la plantilla del mensaje de plan, de «La web». */
   contacto: { whatsapp: string; mensajePlan: string }
   /** La tabla comparativa, debajo de las tarjetas. La compone quien lee los límites. */
   comparativa?: ReactNode
 }
 
-export function PricingSection({ plans, locale, dictionary, modelo = null, contacto, comparativa = null }: Props) {
+export function PricingSection({ plans, locale, dictionary, modelo = null, referido = null, contacto, comparativa = null }: Props) {
+  const consulta = new URLSearchParams({ ...(modelo === null ? {} : { modelo }), ...(referido === null || referido === '' ? {} : { ref: referido }) }).toString()
   const { pricing } = dictionary
 
   // El plan más caro no se compra de un clic: en la maqueta ese botón agenda una llamada.
@@ -57,7 +60,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, conta
                 ctaHref={
                   agendaLlamada
                     ? (llamada ?? `/${locale}#contacto`)
-                    : `/${locale}/pedido/${plan.slug}${modelo === null ? '' : `?modelo=${encodeURIComponent(modelo)}`}`
+                    : `/${locale}/pedido/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`
                 }
                 ctaLabel={agendaLlamada ? pricing.bookCall : pricing.choose.replace('{plan}', plan.name)}
                 dictionary={dictionary}

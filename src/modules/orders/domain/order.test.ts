@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { PUBLIC_REF_ALPHABET, PUBLIC_REF_LENGTH, canDecide, canReceiveProof, newPublicRef, normalizeRef } from './order'
+import { PUBLIC_REF_ALPHABET, PUBLIC_REF_LENGTH, anticipoDe, canCancel, canDecide, canReceiveProof, canRemind, montoAPagar, newPublicRef, normalizeRef, saldoPendiente } from './order'
 
 describe('newPublicRef', () => {
   it('no usa caracteres que se confunden al dictarla por teléfono', () => {
@@ -65,5 +65,33 @@ describe('canDecide', () => {
 
   it('lo rechazado tampoco, hasta que llegue otro comprobante', () => {
     expect(canDecide('rejected')).toBe(false)
+  })
+})
+
+describe('anticipo y saldo', () => {
+  it('redondea el anticipo al boliviano y no lo pide con 0 % ni con 100 %', () => {
+    expect(anticipoDe(119_000, 50)).toBe(59_500)
+    expect(anticipoDe(119_050, 30)).toBe(35_700)
+    expect(anticipoDe(119_000, 0)).toBeNull()
+    expect(anticipoDe(119_000, 100)).toBeNull()
+  })
+
+  it('lo que toca pagar ahora depende del anticipo y de si ya se aprobó', () => {
+    const base = { amountCents: 100_000, depositCents: 40_000, balancePaidAt: null }
+    expect(montoAPagar({ ...base, status: 'pending_payment' })).toBe(40_000)
+    expect(montoAPagar({ ...base, status: 'approved' })).toBe(60_000)
+    expect(montoAPagar({ ...base, status: 'approved', balancePaidAt: new Date() })).toBe(0)
+    expect(montoAPagar({ ...base, depositCents: null, status: 'pending_payment' })).toBe(100_000)
+    expect(saldoPendiente({ ...base, status: 'approved' })).toBe(true)
+    expect(saldoPendiente({ ...base, status: 'pending_payment' })).toBe(false)
+  })
+
+  it('se cancela y se recuerda solo lo que no está cobrado', () => {
+    expect(canCancel('pending_payment')).toBe(true)
+    expect(canCancel('approved')).toBe(false)
+    expect(canCancel('cancelled')).toBe(false)
+    expect(canRemind('rejected')).toBe(true)
+    expect(canRemind('proof_submitted')).toBe(false)
+    expect(canReceiveProof('cancelled')).toBe(false)
   })
 })

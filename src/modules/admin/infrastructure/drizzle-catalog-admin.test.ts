@@ -16,6 +16,7 @@ const plan: PlanLimpio = {
   onlineDays: 90,
   designChange: 'siempre',
   plannerSuite: 'esencial',
+  depositPct: 0,
   includesSeating: true,
   includesRegistry: true,
   includesCheckin: true,

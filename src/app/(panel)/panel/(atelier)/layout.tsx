@@ -5,7 +5,7 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
-import { BarraDelAdmin, PestanasDeAdmin } from '@/modules/admin'
+import { BarraDelAdmin } from '@/modules/admin'
 import { insigniasDeAdmin } from '../_carcasa/insignias-de-admin'
 import { nombreDePlan } from '../_carcasa/nombre-de-plan'
 import { isErr } from '@/shared/result'
@@ -39,6 +39,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
 
   return (
     <PanelFrame
+      barraInferior={admin && actor.soporte === undefined}
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
       sections={panelNav(activo?.slug ?? null, {
         invitados: grupos,
@@ -59,7 +60,6 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
       {admin ? <BarraDelAdmin /> : null}
-      {admin ? <PestanasDeAdmin /> : null}
       {children}
     </PanelFrame>
   )

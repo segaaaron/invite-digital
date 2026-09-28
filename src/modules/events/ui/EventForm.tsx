@@ -224,7 +224,16 @@ function Campo({ etiqueta, htmlFor, ayuda, children }: { etiqueta: string; htmlF
  * salvo el que el evento ya tiene (`actual`): quitárselo de la vista lo cambiaría sin querer.
  */
 function opcionesDeDiseno(definiciones: readonly ThemeDefinition[], actual?: string) {
-  return definiciones
+  // Un evento con un diseño que ya no existe en el registro (anterior al catálogo): se ofrece
+  // igual, **marcado**, como «su diseño actual». Sin esto el selector marcaba el primero de la
+  // lista y guardar cualquier otro dato le cambiaba el diseño sin que nadie lo pidiera.
+  const huerfano =
+    actual !== undefined && actual !== '' && !definiciones.some((d) => d.key === actual)
+      ? [{ key: actual, label: 'Su diseño actual (ya no está en el catálogo)', categorySlug: themeFor(actual).categorySlug, palette: themeFor(actual).palette, cover: null, sample: null }]
+      : []
+  return [
+    ...huerfano,
+    ...definiciones
     .filter((definicion) => seAsigna(definicion.key) || definicion.key === actual)
     .map((definicion) => ({
       key: definicion.key,
@@ -241,5 +250,6 @@ function opcionesDeDiseno(definiciones: readonly ThemeDefinition[], actual?: str
                 .filter((nombre): nombre is string => nombre !== undefined)
                 .join('\n'),
             },
-    }))
+    })),
+  ]
 }

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { signOutAction } from '@/app/_acciones/identity/actions'
 import { leaveSupportAction } from '@/app/_acciones/admin/support-actions'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
@@ -176,30 +176,60 @@ export function PanelSidebar({
         </nav>
       ))}
 
-      <div className="flex items-center gap-2.5 min-[860px]:mt-auto min-[860px]:flex-col min-[860px]:items-stretch">
-        <div className="flex items-center gap-2.5 rounded-xl border border-white/8 bg-linear-to-br from-white/8 to-white/3 px-2.5 py-1.5 min-[860px]:px-3.5 min-[860px]:py-3">
-          <span
-            aria-hidden
-            className="hidden size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[17px] text-white uppercase min-[860px]:flex"
-          >
-            {user.email.slice(0, 1)}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-[12px] min-[860px]:text-[12.5px]">{user.email}</p>
-            <p className="font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-60">{user.rol}</p>
-          </div>
-        </div>
+      <MenuDeUsuario user={user} alElegir={() => setAbierto(false)} />
+      </div>
+    </aside>
+  )
+}
 
+/**
+ * **La cuenta propia en un solo sitio**: la tarjeta de quien ha entrado abre su menú —«Mi cuenta»
+ * y «Cerrar sesión»—. Eran tres cosas sueltas: la tarjeta, un botón de cerrar sesión debajo y una
+ * entrada «Mi cuenta» en la barra (en el admin, una pestaña de Ajustes).
+ */
+export function MenuDeUsuario({ user, alElegir, hacia = 'arriba' }: { user: PanelUser; alElegir?: () => void; hacia?: 'arriba' | 'abajo' }) {
+  const menu = useRef<HTMLDetailsElement>(null)
+  const cerrar = () => {
+    menu.current?.removeAttribute('open')
+    alElegir?.()
+  }
+  return (
+    <details className="group relative min-[860px]:mt-auto" ref={menu}>
+      <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-xl border border-white/8 bg-linear-to-br from-white/8 to-white/3 px-2.5 py-2 transition-colors hover:border-gold/40 min-[860px]:px-3.5 min-[860px]:py-3 [&::-webkit-details-marker]:hidden">
+        <span
+          aria-hidden
+          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[17px] text-white uppercase"
+        >
+          {user.email.slice(0, 1)}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-[12px] min-[860px]:text-[12.5px]">{user.email}</span>
+          <span className="block font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-60">{user.rol}</span>
+        </span>
+        <svg aria-hidden className="size-3.5 shrink-0 opacity-60 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
+          <path d="M6 15l6-6 6 6" />
+        </svg>
+        <span className="sr-only">Menú de la cuenta</span>
+      </summary>
+      <div
+        className={`absolute right-0 left-0 z-50 flex flex-col gap-1 rounded-xl border border-white/10 bg-shell-deep p-1.5 shadow-[0_18px_40px_rgb(0_0_0/0.45)] ${
+          hacia === 'arriba' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'
+        }`}
+      >
+        {user.soporte ? null : (
+          <Link className="rounded-lg px-3 py-2.5 text-[13px] transition-colors hover:bg-white/8" href="/panel/cuenta" onClick={cerrar}>
+            Mi cuenta
+          </Link>
+        )}
         <ConfirmAction
           action={signOutAction}
           confirmLabel="Cerrar sesión"
           description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
           title="Cerrar sesión"
           trigger="Cerrar sesión"
-          triggerClassName="w-full rounded-xl border border-white/10 px-2.5 py-1.5 text-left font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-70 transition-colors hover:border-gold/50 hover:opacity-100 min-[860px]:px-3.5 min-[860px]:py-2.5"
+          triggerClassName="w-full rounded-lg px-3 py-2.5 text-left text-[13px] text-[var(--color-pill-no)] transition-colors hover:bg-white/8"
         />
       </div>
-      </div>
-    </aside>
+    </details>
   )
 }

@@ -1,8 +1,11 @@
 import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
-import { attachProof, decideOrder, findOrderByRef, listOrdersPage, placeAddonOrder, placeOrder, readProof } from '@/modules/orders/application/order-use-cases'
+import { attachProof, cancelOrder, decideOrder, findOrderByRef, listOrdersPage, placeAddonOrder, placeOrder, quoteOrder, readProof, registerBalance, remindOrder } from '@/modules/orders/application/order-use-cases'
 import { createDiskFileStorage } from '@/modules/orders/infrastructure/disk-file-storage'
-import { deleteUser as deleteUserUseCase, listAllEvents, listUsers, readAudit, readMetrics, readIncome, readToday, readTodayMoney, recordAdminAction, setEventPlan as setEventPlanUseCase, setUserRole as setUserRoleUseCase } from '@/modules/admin/application/admin-use-cases'
+import { deleteUser as deleteUserUseCase, listAllEvents, listUsers, readAudit, readIncome, readPlanChanges, readTodayMoney, recordAdminAction, setEventPlan as setEventPlanUseCase, setUserRole as setUserRoleUseCase } from '@/modules/admin/application/admin-use-cases'
 import { readPaymentSettings, savePaymentQr, savePaymentSettings } from '@/modules/admin/application/payment-use-cases'
+import { readMensajes, saveMensajes } from '@/modules/admin/application/mensajes-use-cases'
+import { ensureReferralCode, readClientNote, saveClientNote, validReferralCode } from '@/modules/admin/application/clientes-use-cases'
+import { drizzleClientNotes, drizzleReferidos } from '@/modules/admin/infrastructure/drizzle-clientes'
 import { readShowcaseMusic, readShowcaseSongs, removeShowcaseMusic, renameShowcaseSong, saveShowcaseMusic } from '@/modules/admin/application/showcase-music-use-cases'
 import { createDiskShowcaseStorage } from '@/modules/admin/infrastructure/disk-showcase-storage'
 import { drizzleAdminRepository } from '@/modules/admin/infrastructure/drizzle-admin-repository'
@@ -11,7 +14,7 @@ import { drizzleCatalogAdmin } from '@/modules/admin/infrastructure/drizzle-cata
 import { drizzleIncomeReader } from '@/modules/admin/infrastructure/drizzle-income-reader'
 import { drizzleBuscador } from '@/modules/admin/infrastructure/drizzle-buscador'
 import { drizzleSiteSettingsStore } from '@/modules/admin/infrastructure/drizzle-site-settings-store'
-import { listSiteVersions, restoreSiteVersion, saveSiteSettings } from '@/modules/admin/application/site-settings-use-cases'
+import { listSiteVersions, publishTestimonial, restoreSiteVersion, saveSiteSettings } from '@/modules/admin/application/site-settings-use-cases'
 import { listPlansForAdmin, readPublication, savePlan as savePlanUseCase, setTemplatePublished as setTemplatePublishedUseCase } from '@/modules/admin/application/catalog-use-cases'
 import { CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzle-settings-repository'
@@ -43,6 +46,8 @@ export const plans = {
   pendingChange: getPendingRequest({ plans: drizzlePlansRepository }),
   /** Aplica el extra de un pedido aprobado. Una sola vez por pedido. */
   applyExtra: (orderId: string) => drizzlePlansRepository.applyExtra(orderId),
+  /** Los extras de la cotización, al evento que nace de su pedido. */
+  applyQuoteExtras: (orderId: string) => drizzlePlansRepository.applyQuoteExtras(orderId),
   /** Los extras a la venta, del más barato de orden. */
   listActiveExtras: () => drizzlePlansRepository.listExtras(true),
   /** Todo el catálogo de extras, para el admin. */
@@ -75,6 +80,8 @@ export const orders = {
   placeAddon: placeAddonOrder({ orders: drizzleOrderRepository, clock }),
   /** Los que esperan decisión, contados en la base: la insignia de la barra no trae la bandeja. */
   porRevisar: () => drizzleOrderRepository.countByStatus('proof_submitted'),
+  /** Cobrados sin su evento: suman a la insignia de Ventas igual que en «Por atender». */
+  porCrearEvento: () => drizzleOrderRepository.countPaidWithoutEvent(),
   /** Los pedidos de extras de un evento, para su pantalla de extras. */
   extrasDe: (eventId: string) => drizzleOrderRepository.listAddonOrdersOf(eventId),
   byRef: findOrderByRef({ orders: drizzleOrderRepository, clock }),
@@ -103,14 +110,18 @@ export const orders = {
    */
   linkEvent: (orderId: string, eventId: string) => drizzleOrderRepository.linkEvent(orderId, eventId),
   decide: decideOrder({ orders: drizzleOrderRepository, clock }),
+  /** La cotización del admin: un pedido con su precio, sus extras y su descuento. */
+  quote: quoteOrder({ orders: drizzleOrderRepository, clock }),
+  cancel: cancelOrder({ orders: drizzleOrderRepository, clock }),
+  remind: remindOrder({ orders: drizzleOrderRepository, clock }),
+  registerBalance: registerBalance({ orders: drizzleOrderRepository, clock }),
   readProof: readProof({ orders: drizzleOrderRepository, storage: proofStorage, clock }),
 }
 
 export const admin = {
   users: listUsers({ admin: drizzleAdminRepository }),
   events: listAllEvents({ admin: drizzleAdminRepository }),
-  metrics: readMetrics({ admin: drizzleAdminRepository }),
-  today: readToday({ today: drizzleTodayReader, clock: () => new Date() }),
+  planChanges: readPlanChanges({ today: drizzleTodayReader }),
   income: readIncome({ income: drizzleIncomeReader, clock: () => new Date() }),
   todayMoney: readTodayMoney({ income: drizzleIncomeReader, clock: () => new Date() }),
   /** «La web»: datos del negocio, pruebas sociales, textos legales y SEO, con historial. */
@@ -118,6 +129,7 @@ export const admin = {
   saveSite: saveSiteSettings({ store: drizzleSiteSettingsStore }),
   siteVersions: listSiteVersions({ store: drizzleSiteSettingsStore }),
   restoreSite: restoreSiteVersion({ store: drizzleSiteSettingsStore }),
+  publishTestimonial: publishTestimonial({ store: drizzleSiteSettingsStore }),
   /** Lo comercial del catálogo: planes y qué modelos se publican. */
   plans: listPlansForAdmin({ catalog: drizzleCatalogAdmin }),
   savePlan: savePlanUseCase({ catalog: drizzleCatalogAdmin, admin: drizzleAdminRepository }),
@@ -153,6 +165,18 @@ export const admin = {
    * hecha para que la vea quien va a pagar.
    */
   payment: readPaymentSettings({ settings: drizzleSettingsRepository }),
+  /** Las plantillas de los mensajes al cliente y cuántos eventos por día se atienden. */
+  mensajes: readMensajes({ settings: drizzleSettingsRepository }),
+  saveMensajes: saveMensajes({ settings: drizzleSettingsRepository, admin: drizzleAdminRepository }),
+  /** La nota y las etiquetas de un cliente, por sus claves de contacto. */
+  clientNote: readClientNote({ notes: drizzleClientNotes }),
+  saveClientNote: saveClientNote({ notes: drizzleClientNotes, admin: drizzleAdminRepository }),
+  /** Los referidos: el código de cada evento y cuántas compras trajo. */
+  referralCodesOf: (eventIds: readonly string[]) => drizzleReferidos.deEventos(eventIds),
+  referralUses: (codigos: readonly string[]) => drizzleReferidos.usos(codigos),
+  referralHosts: (codigo: string) => drizzleReferidos.anfitrionesDe(codigo),
+  ensureReferralCode: ensureReferralCode({ referidos: drizzleReferidos }),
+  validReferralCode: validReferralCode({ referidos: drizzleReferidos }),
   savePayment: savePaymentSettings({ settings: drizzleSettingsRepository, admin: drizzleAdminRepository }),
   savePaymentQr: savePaymentQr({
     settings: drizzleSettingsRepository,

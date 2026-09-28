@@ -5,13 +5,33 @@ import { useEffect, useRef, useState, useTransition } from 'react'
 import { buscarAction } from '@/app/_acciones/admin/buscar-actions'
 import { SearchIcon } from '@/shared/design/ui/icons'
 import type { ResultadosDeBusqueda } from '../domain/busqueda'
+import { diaCorto } from '@/shared/format/fecha'
+import { CREAR } from './MenuCrear'
 
 const ESTADO_DE_PEDIDO: Record<string, string> = {
   pending_payment: 'Esperando pago',
   proof_submitted: 'Por revisar',
   approved: 'Aprobado',
   rejected: 'Rechazado',
+  cancelled: 'Cancelado',
 }
+
+/**
+ * **Acciones de ⌘K**: crear o ir a cualquier sección escribiendo, sin tocar el ratón. Se filtran
+ * mientras se escribe **en el navegador** —son una lista fija—; buscar datos sigue siendo con Enter.
+ */
+const ACCIONES: readonly { titulo: string; detalle: string; href: string; palabras: string }[] = [
+  ...CREAR.map((c) => ({ titulo: `Crear ${c.titulo.toLowerCase()}`, detalle: c.detalle, href: c.href, palabras: `crear nuevo nueva alta ${c.titulo}` })),
+  { titulo: 'Ir a Hoy', detalle: 'Lo que espera por ti', href: '/panel/admin', palabras: 'hoy inicio pendiente' },
+  { titulo: 'Ir a Ventas', detalle: 'El embudo, de la consulta al evento', href: '/panel/admin/ventas', palabras: 'ventas embudo consultas pedidos tablero' },
+  { titulo: 'Ir a Ingresos', detalle: 'Lo cobrado y lo que falta cobrar', href: '/panel/admin/ingresos', palabras: 'ingresos cobros dinero csv' },
+  { titulo: 'Ir a Eventos', detalle: 'La cartera con su salud', href: '/panel/admin/eventos', palabras: 'eventos cartera bodas xv riesgo' },
+  { titulo: 'Ir al Calendario', detalle: 'Qué fin de semana queda libre', href: '/panel/admin/eventos/calendario', palabras: 'calendario agenda sabado fin de semana' },
+  { titulo: 'Ir a Clientes', detalle: 'La persona entera', href: '/panel/admin/clientes', palabras: 'clientes personas' },
+  { titulo: 'Ir al Escaparate', detalle: 'Modelos, planes, extras y la web', href: '/panel/admin/modelos', palabras: 'escaparate modelos disenos planes extras web catalogo' },
+  { titulo: 'Ir a Ajustes', detalle: 'Equipo, cobros, mensajes y auditoría', href: '/panel/admin/usuarios', palabras: 'ajustes equipo usuarios cobros mensajes agenda auditoria' },
+]
+const plano = (t: string) => t.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
 
 /**
  * ⌘K (Ctrl+K) desde cualquier pantalla del admin: una capa encima, no una página. Busca al pulsar
@@ -24,6 +44,8 @@ export function BuscadorRapido() {
   const [resultados, setResultados] = useState<ResultadosDeBusqueda | null>(null)
   const [buscado, setBuscado] = useState('')
   const [buscando, empezar] = useTransition()
+  const [escrito, setEscrito] = useState('')
+  const acciones = ACCIONES.filter((a) => escrito.trim() === '' || plano(`${a.titulo} ${a.palabras}`).includes(plano(escrito.trim())))
 
   const abrir = () => {
     dialogo.current?.showModal()
@@ -48,18 +70,19 @@ export function BuscadorRapido() {
     cerrar()
     if (campo.current) campo.current.value = ''
     setResultados(null)
+    setEscrito('')
   }
   const total = resultados === null ? 0 : resultados.eventos.length + resultados.pedidos.length + resultados.consultas.length + resultados.usuarios.length
 
   return (
     <>
       <button
-        className="inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-line-panel-strong bg-white/80 px-3.5 py-2 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+        className="inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-line-panel-strong bg-white/80 px-3 py-2 min-[560px]:px-3.5 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink"
         onClick={abrir}
         type="button"
       >
         <SearchIcon className="size-4" />
-        <span>Buscar</span>
+        <span className="max-[559px]:sr-only">Buscar</span>
         <kbd className="hidden rounded-md border border-line-panel px-1.5 py-0.5 font-sans text-[11px] text-ink-mute min-[560px]:inline">⌘K</kbd>
       </button>
 
@@ -95,7 +118,8 @@ export function BuscadorRapido() {
                 cerrar()
               }
             }}
-            placeholder="Nombre, correo, teléfono, referencia o evento · Enter"
+            onChange={(e) => setEscrito(e.target.value)}
+            placeholder="Busca a alguien y pulsa Enter, o escribe «crear», «calendario»…"
             ref={campo}
             type="search"
           />
@@ -106,13 +130,17 @@ export function BuscadorRapido() {
           {buscando ? (
             <p className="px-3 py-6 text-center text-[13px] text-ink-mute">Buscando…</p>
           ) : resultados === null ? (
-            <p className="px-3 py-6 text-center text-[13px] text-ink-mute">Escribe y pulsa Enter.</p>
+            acciones.length === 0 ? (
+              <p className="px-3 py-6 text-center text-[13px] text-ink-mute">Pulsa Enter para buscar «{escrito.trim()}».</p>
+            ) : (
+              <Grupo titulo="Acciones" filas={acciones.map((a) => ({ clave: a.href, titulo: a.titulo, detalle: a.detalle, href: a.href }))} alElegir={alElegir} />
+            )
           ) : total === 0 ? (
             <p className="px-3 py-6 text-center text-[13px] text-ink-mute">Nada con «{buscado}».</p>
           ) : (
             <>
-              <Grupo titulo="Eventos" filas={resultados.eventos.map((e) => ({ clave: e.slug, titulo: e.title, detalle: e.eventDate, href: `/panel/admin/eventos?evento=${e.slug}` }))} alElegir={alElegir} />
-              <Grupo titulo="Pedidos" filas={resultados.pedidos.map((p) => ({ clave: p.ref, titulo: p.customerName, detalle: `${p.ref} · ${ESTADO_DE_PEDIDO[p.status] ?? p.status}`, href: `/panel/admin/ventas?pedido=${p.ref}` }))} alElegir={alElegir} />
+              <Grupo titulo="Eventos" filas={resultados.eventos.map((e) => ({ clave: e.slug, titulo: e.title, detalle: diaCorto(e.eventDate), href: `/panel/admin/eventos?evento=${e.slug}` }))} alElegir={alElegir} />
+              <Grupo titulo="Pedidos" filas={resultados.pedidos.map((p) => ({ clave: p.ref, titulo: p.customerName, detalle: `${p.ref} · ${ESTADO_DE_PEDIDO[p.status] ?? p.status}`, href: `/panel/admin/ventas?venta=p-${p.ref}` }))} alElegir={alElegir} />
               <Grupo titulo="Consultas" filas={resultados.consultas.map((c) => ({ clave: c.id, titulo: c.name, detalle: 'Consulta', href: `/panel/admin/ventas?consulta=${c.id}` }))} alElegir={alElegir} />
               <Grupo titulo="Cuentas" filas={resultados.usuarios.map((u) => ({ clave: u.email, titulo: u.email, detalle: u.role, // Clientes solo junta cuentas de cliente; el resto del equipo vive en Ajustes › Equipo.
                 href: u.role === 'cliente' ? `/panel/admin/clientes?q=${encodeURIComponent(u.email)}` : '/panel/admin/usuarios' }))} alElegir={alElegir} />

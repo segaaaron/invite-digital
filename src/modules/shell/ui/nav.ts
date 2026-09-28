@@ -95,9 +95,9 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   const fuera = new Set(extra.fueraDelPlan ?? [])
   const en = (ruta: string) => (base === null || fuera.has(ruta) ? null : `${base}${ruta}`)
 
-  // **Siete entradas, por trabajo y no por tabla** (24 de septiembre): eran quince, una por
-  // entidad —consultas, pedidos, planes, extras, usuarios…—, y el trabajo real cruza varias.
-  // Lo que eran pantallas hermanas son ahora pestañas de su entrada (`activo`).
+  // **Seis entradas, una por trabajo** (28 de septiembre). Eran siete, y antes quince —una por
+  // tabla—. Cada cosa vive en un solo sitio: las pantallas hermanas son pestañas de su entrada
+  // (`activo`), y lo que el público ve —modelos, planes, extras y la web— es el Escaparate.
   const administracion: Borrador[] = esAdmin
     ? [
         {
@@ -105,7 +105,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
           items: [
             // Lo que pide acción hoy, con su botón para resolverlo.
             { href: '/panel/admin', label: 'Hoy', icon: 'hoy' },
-            // El recorrido entero de la venta: consulta → pedido → pago → evento, y lo cobrado.
+            // Cada venta una sola vez: la consulta y su pedido son la misma fila, de la primera
+            // pregunta a la boda creada. Ingresos es su pestaña.
             {
               href: '/panel/admin/ventas',
               label: 'Ventas',
@@ -114,25 +115,35 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
               countLabel: 'por atender',
               activo: ['/panel/admin/ventas', '/panel/admin/consultas', '/panel/pedidos', '/panel/admin/ingresos'],
             },
-            { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos' },
-            // La persona entera: sus consultas, pedidos, eventos y acceso, en un sitio.
+            // La cartera y el calendario: qué evento está en riesgo y qué fin de semana queda libre.
+            { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos', activo: ['/panel/admin/eventos'] },
+            // La persona entera: sus consultas, pedidos, eventos, acceso y notas.
             { href: '/panel/admin/clientes', label: 'Clientes', icon: 'usuarios', activo: ['/panel/admin/clientes'] },
           ],
         },
         {
           label: 'Negocio',
           items: [
-            // Lo que se vende: los modelos, los planes y los extras.
-            { href: '/panel/admin/modelos', label: 'Catálogo', icon: 'editar', activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras'] },
-            // Lo que la web pública enseña del negocio, sin tocar código.
-            { href: '/panel/admin/web', label: 'Web', icon: 'web' },
+            // Todo lo que ve el público: modelos, planes, extras y la web.
+            {
+              href: '/panel/admin/modelos',
+              label: 'Escaparate',
+              icon: 'web',
+              activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras', '/panel/admin/web'],
+            },
           ],
         },
         {
           label: 'Sistema',
           items: [
-            // Equipo, datos de cobro, auditoría y la propia cuenta.
-            { href: '/panel/admin/usuarios', label: 'Ajustes', icon: 'configuracion', activo: ['/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/auditoria', '/panel/cuenta'] },
+            // Equipo, datos de cobro, mensajes y agenda, y auditoría. La cuenta propia va en el
+            // menú de la tarjeta del usuario, no aquí.
+            {
+              href: '/panel/admin/usuarios',
+              label: 'Ajustes',
+              icon: 'configuracion',
+              activo: ['/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/auditoria'],
+            },
           ],
         },
       ]
@@ -205,7 +216,6 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         label: 'Cuenta',
         items: [
           { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
-          { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
         ],
       },
     ]
@@ -270,14 +280,11 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
     {
       label: 'Cuenta',
       items: [
-        { href: en('/configuracion'), label: 'Configuración', icon: 'configuracion' },
+        // «Configuración» ya es «Editar invitación», arriba: la misma pantalla dos veces.
         { href: en('/plan'), label: 'Plan', icon: 'plan' },
         { href: en('/extras'), label: 'Extras', icon: 'presupuesto' },
         { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
-        // La propia contraseña. Las cuentas las da de alta el admin y la clave inicial
-        // viaja por WhatsApp: sin esta pantalla valdría para siempre.
-        // El admin la tiene dentro de Ajustes.
-        { href: esAdmin ? null : '/panel/cuenta', label: 'Mi cuenta', icon: 'configuracion' },
+        // «Mi cuenta» no va aquí: vive en el menú de la tarjeta del usuario, para todos.
         // El admin ya tiene «Todos los eventos» en su sección, con todos los ateliers.
         { href: esAdmin ? null : '/panel', label: 'Todos los eventos', icon: 'eventos' },
         // La ayuda es para quien recibe su cuenta del admin; el admin es quien la escribe.

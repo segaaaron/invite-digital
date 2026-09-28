@@ -1,5 +1,6 @@
 'use server'
 
+import { randomBytes } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
 import { admin, events, notifications } from '@/app/composition/container'
 import { canManageStaff, createCredential } from '@/modules/identity'
@@ -80,7 +81,8 @@ async function darDeAlta(
     }
   }
 
-  const credencial = createCredential({ email, password: texto(formData, 'password') })
+  // La contraseña provisional **se genera**: nadie la inventa ni la escribe (28 de septiembre).
+  const credencial = createCredential({ email, password: texto(formData, 'password') || randomBytes(12).toString('base64url') })
   if (isErr(credencial)) return { status: 'error', message: credencial.error.detail }
 
   const { id } = await admin.createUser({
@@ -99,8 +101,8 @@ async function darDeAlta(
   return {
     status: 'success',
     message: avisado
-      ? `${credencial.value.email} puede entrar con la contraseña que escribiste. Se la mandamos por correo, y aquí no se vuelve a mostrar.`
-      : `${credencial.value.email} puede entrar con la contraseña que escribiste. No se vuelve a mostrar: cópiala antes de salir.`,
+      ? `${credencial.value.email} ya tiene acceso: le mandamos por correo su contraseña provisional, que cambia al entrar.`
+      : `${credencial.value.email} ya tiene acceso, pero el correo no salió. Pásale esta contraseña provisional, que no se vuelve a mostrar: ${credencial.value.password}`,
   }
 }
 

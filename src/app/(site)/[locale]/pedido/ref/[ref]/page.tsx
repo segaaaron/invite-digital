@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation'
 import { admin, orders } from '@/app/composition/container'
 import { ProofUpload } from '@/modules/orders/ui/ProofUpload'
+import { montoAPagar, saldoPendiente } from '@/modules/orders/domain/order'
+import { formatAmount } from '@/shared/money'
 import { isPayable } from '@/modules/admin/domain/payment-settings'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
@@ -40,6 +42,11 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
   const ajustes = await admin.payment()
   const pago = isErr(ajustes) ? null : ajustes.value
   const sePuedePagar = pago !== null && isPayable(pago)
+  // Lo que toca transferir **ahora**: todo, el anticipo o el saldo. Con el monto exacto a la
+  // vista, el cliente no transfiere de menos ni de más, y el admin compara una sola cifra.
+  const esSaldo = saldoPendiente(order)
+  const aPagar = montoAPagar(order)
+  const porPagar = order.status !== 'cancelled' && (order.status !== 'approved' || esSaldo)
 
   return (
     <main className="mx-auto flex w-full max-w-[640px] flex-col gap-7 px-6 pt-32 pb-16">
@@ -67,10 +74,17 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
         )}
       </section>
 
-      {order.status === 'approved' ? null : (
+      {!porPagar ? null : (
         <>
           <section className="flex flex-col gap-3 rounded-[18px] border border-line bg-bg-top/60 p-6">
-            <h2 className="font-display text-[22px] font-light text-ink">{dictionary.orders.payHeading}</h2>
+            <h2 className="font-display text-[22px] font-light text-ink">{esSaldo ? dictionary.orders.balanceHeading : dictionary.orders.payHeading}</h2>
+            {aPagar === null || aPagar === 0 ? null : (
+              <div className="flex flex-col gap-1 border-b border-line pb-4">
+                <p className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{dictionary.orders.amountDue}</p>
+                <p className="font-display text-[34px] leading-none text-ink [font-variant-numeric:lining-nums]">{formatAmount(aPagar, order.currency ?? 'BOB')}</p>
+                {order.depositCents !== null && !esSaldo ? <p className="text-[12px] text-ink-mute">{dictionary.orders.amountDueDeposit}</p> : null}
+              </div>
+            )}
 
             {/* Media ficha de transferencia es peor que ninguna: quien la ve cree que
                 puede pagar y lo descubre cuando ya escribió. Sin los tres datos, se dice

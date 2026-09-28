@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { boolean, char, date, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, char, date, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { events } from './eventos'
 import { timestamps } from './base'
 
@@ -59,6 +59,8 @@ export const plans = pgTable('plans', {
   onlineDays: integer('online_days').notNull().default(90),
   /** `ninguno` · `antes_de_repartir` · `siempre`: cuándo se cambia el modelo dentro de su fiesta. */
   designChange: varchar('design_change', { length: 24 }).notNull().default('antes_de_repartir'),
+  /** El anticipo que se pide al comprar, en porcentaje (`0073`). 0: se paga entero de una vez. */
+  depositPct: smallint('deposit_pct').notNull().default(0),
   ...timestamps,
 })
 
@@ -136,6 +138,10 @@ export const consultationRequests = pgTable(
     status: varchar('status', { length: 16 }).notNull().default('new'),
     note: text('note'),
     statusChangedAt: timestamp('status_changed_at', { withTimezone: true }),
+    /** Cuándo se contestó por primera vez (`0073`): el tiempo de respuesta sale de aquí. */
+    firstContactAt: timestamp('first_contact_at', { withTimezone: true }),
+    /** Por qué se perdió, de una lista corta (`leads/domain/pipeline.ts`). La nota cuenta el resto. */
+    lostReason: varchar('lost_reason', { length: 24 }),
     // La boda que salió de la consulta. `set null`: borrar la boda no borra que hubo venta.
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

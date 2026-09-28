@@ -84,6 +84,11 @@ export interface PlansRepository extends PlanReader, PlanChangeRequests {
    * veces no lo suma dos veces. `false` si ya estaba o el pedido no es de un extra.
    */
   applyExtra(orderId: string): Promise<boolean>
+  /**
+   * Aplica al evento del pedido los extras que llevaba su cotización. Una vez por evento y extra.
+   * Devuelve cuántos aplicó.
+   */
+  applyQuoteExtras(orderId: string): Promise<number>
   /** El catálogo de extras; con `soloActivos`, los que están a la venta. */
   listExtras(soloActivos: boolean): Promise<Extra[]>
   /** Edita un extra. `false` si no existe. */

@@ -51,7 +51,7 @@ test.describe('soporte como el cliente', () => {
 
   test('pero sí su ficha: configuración sin el contenido del cliente, plan y vista previa', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
-    await expect(page.getByRole('heading', { name: 'Detalles del evento' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Datos y diseño' })).toBeVisible()
     await expect(page.getByRole('heading', { name: /Tu invitación ·/ })).toHaveCount(0)
     expect((await page.goto(`/panel/eventos/${SLUG}/plan`))?.status()).toBe(200)
     expect((await page.goto(`/panel/eventos/${SLUG}/vista-previa`))?.status()).toBe(200)
@@ -60,7 +60,8 @@ test.describe('soporte como el cliente', () => {
   test('entra como el cliente con motivo, cambia algo firmado a su nombre y regresa', async () => {
     await page.goto(`/panel/admin/eventos?q=${SLUG}`)
     const fila = page.getByRole('listitem').filter({ has: page.locator(`a[href="/panel/eventos/${SLUG}/configuracion"]`) }).first()
-    // A la vista en la fila, no plegado en «Gestionar».
+    // En el «⋯» de la fila: la fila entera abre la ficha, y lo demás va en su menú.
+    await fila.locator('summary[aria-label^="Más acciones de"]').click()
     await fila.getByRole('button', { name: 'Entrar como el cliente' }).click()
     const dialogo = page.getByRole('dialog', { name: 'Entrar como el cliente' })
     await dialogo.getByLabel('Motivo (se le envía al cliente)').fill('La canción no suena en la invitación')

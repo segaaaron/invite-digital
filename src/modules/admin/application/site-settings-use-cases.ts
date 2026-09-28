@@ -1,7 +1,7 @@
 import type { Actor } from '@/modules/identity'
 import { attempt, err, ok, type Result } from '@/shared/result'
 import { adminError, type AdminError } from '../domain/errors'
-import { camposCambiados, leerSiteSettings, parseSiteSettings, SITE_SETTINGS_KEY, type SiteSettings } from '../domain/site-settings'
+import { camposCambiados, leerSiteSettings, parseSiteSettings, SITE_SETTINGS_KEY, type SiteSettings, type Testimonio } from '../domain/site-settings'
 import type { SettingsRepository, SiteSettingsStore, SiteVersionRow } from './ports'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -86,4 +86,27 @@ export const restoreSiteVersion =
     if (!version.ok) return version
     if (version.value === null) return err(adminError('not_found', 'Esa versión ya no existe.'))
     return saveSiteSettings(deps)(actor, parseSiteSettings(JSON.stringify(version.value.data)), base, 'web.restaurada')
+  }
+
+/**
+ * **Publica una opinión como testimonio** (28 de septiembre): la que el cliente dejó con permiso
+ * para publicarla. Entra la primera y confirmada —el permiso es el respaldo—, y se guarda como
+ * cualquier cambio de La web: con su versión y su auditoría, sobre la última que hay.
+ *
+ * La web enseña hasta seis: con seis, hay que quitar uno antes en La web.
+ */
+export const publishTestimonial =
+  (deps: { store: SiteSettingsStore }) =>
+  async (actor: Actor, input: { autor: string; rol: string; cita: string }): Promise<Result<SiteSettings, SiteSaveError>> => {
+    const actual = await attempt(
+      async () => ok(await deps.store.current()),
+      (cause) => adminError('storage_failure', `No se pudieron leer los datos de la web: ${String(cause)}`),
+    )
+    if (!actual.ok) return actual
+    const ajustes = parseSiteSettings(actual.value.crudo)
+    const cita = input.cita.trim().slice(0, 400)
+    if (ajustes.testimonios.some((t) => t.cita.es === cita)) return err(adminError('invalid_input', 'Esa opinión ya está publicada en la web.'))
+    if (ajustes.testimonios.length >= 6) return err(adminError('invalid_input', 'La web ya enseña seis testimonios: quita uno en La web antes de sumar este.'))
+    const nuevo: Testimonio = { autor: input.autor.trim().slice(0, 80), rol: { es: input.rol, en: '' }, cita: { es: cita, en: '' }, foto: '', confirmado: true }
+    return saveSiteSettings(deps)(actor, { ...ajustes, testimonios: [nuevo, ...ajustes.testimonios] }, actual.value.ultimaVersion)
   }

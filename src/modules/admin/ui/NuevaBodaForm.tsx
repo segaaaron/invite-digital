@@ -5,11 +5,10 @@ import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
 import { useActionState, useId, useState, type ReactNode } from 'react'
 import { CalendarIcon, CheckIcon, EyeIcon, MailIcon } from '@/shared/design/ui/icons'
-import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
 import { FIESTAS, VOCABULARIO, VOCABULARIO_GENERICO } from '@/modules/events'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
-import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
 
@@ -23,7 +22,10 @@ export type PlanElegible = { readonly slug: string; readonly nombre: string; rea
 
 /** Lo que trae un pedido aprobado sin evento: el alta nace rellena y, al crearse, lo enlaza. */
 export type DesdePedido = {
-  readonly ref: string
+  /** El pedido pagado del que nace, o `null` si nace de una consulta cerrada fuera del sistema. */
+  readonly ref: string | null
+  /** La consulta que queda ganada al crearse. */
+  readonly consultaId: string | null
   readonly modelo: string | null
   readonly plan: string | null
   readonly titulo: string
@@ -35,12 +37,6 @@ export type DesdePedido = {
 
 const FECHA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
-/** Sin 0/O ni 1/l/I: la contraseña se dicta por teléfono o se copia de un mensaje. */
-const ALFABETO = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-function generarClave(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(14))
-  return [...bytes].map((b) => ALFABETO[b % ALFABETO.length]).join('')
-}
 
 /**
  * Crear el evento de un cliente —boda, XV años o cumpleaños— con su modelo, su plan y su
@@ -68,8 +64,7 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
   const [fecha, setFecha] = useState(pedido?.fecha ?? '')
   const [plan, setPlan] = useState(planes.find((p) => p.slug === pedido?.plan)?.slug ?? planes[0]?.slug ?? '')
   const [correo, setCorreo] = useState(pedido?.correo ?? '')
-  const [clave, setClave] = useState('')
-  const [copiada, setCopiada] = useState(false)
+  const [sinAcceso, setSinAcceso] = useState(false)
 
   const elegido = modelos.find((m) => m.key === modelo)
   const planElegido = planes.find((p) => p.slug === plan)
@@ -78,7 +73,8 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
   return (
     <form action={crear} className="grid items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]">
       <input name="themeKey" type="hidden" value={modelo} />
-      {pedido === undefined ? null : <input name="orderRef" type="hidden" value={pedido.ref} />}
+      {pedido?.ref ? <input name="orderRef" type="hidden" value={pedido.ref} /> : null}
+      {pedido?.consultaId ? <input name="consultaId" type="hidden" value={pedido.consultaId} /> : null}
       <input name="planSlug" type="hidden" value={plan} />
 
       <div className="flex min-w-0 flex-col gap-7">
@@ -192,78 +188,48 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
           </div>
         </Paso>
 
-        <Paso numero={4} titulo="Su acceso al panel" ayuda="Le mandamos el acceso por correo. La primera vez que entre, el panel le pide elegir su propia contraseña.">
-          <div className="grid gap-4 min-[560px]:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <label className={LABEL_CLASS} htmlFor={`${id}-nombre-cliente`}>
-                Nombre del cliente
-              </label>
-              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-nombre-cliente`} maxLength={160} defaultValue={pedido?.nombre} name="clientName" placeholder="María Rojas" required />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className={LABEL_CLASS} htmlFor={`${id}-telefono-cliente`}>
-                WhatsApp del cliente
-              </label>
-              <input autoComplete="off" className={FIELD_CLASS} id={`${id}-telefono-cliente`} defaultValue={pedido?.telefono ?? undefined} inputMode="tel" name="clientPhone" placeholder="+591 700 12345" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
-                Correo del cliente
-              </label>
-              <input
-                autoComplete="off"
-                className={FIELD_CLASS}
-                id={`${id}-correo`}
-                name="clientEmail"
-                onChange={(e) => setCorreo(e.target.value)}
-                placeholder="cliente@correo.com"
-                required
-                type="email"
-                value={correo}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
-                Contraseña inicial
-              </label>
-              <div className="flex gap-2">
-                <CampoContrasena
-                  envoltura="min-w-0 flex-1"
-                  autoComplete="new-password"
-                  className={`${FIELD_CLASS} font-mono`}
-                  id={`${id}-clave`}
-                  minLength={12}
-                  name="clientPassword"
-                  onChange={(e) => {
-                    setClave(e.target.value)
-                    setCopiada(false)
-                  }}
-                  placeholder="12 caracteres o más"
-                  value={clave}
-                />
-                <PanelButton
-                  onClick={() => {
-                    setClave(generarClave())
-                    setCopiada(false)
-                  }}
-                >
-                  Generar
-                </PanelButton>
+        <Paso numero={4} titulo="Su acceso al panel" ayuda="Le llega su acceso por correo con una contraseña provisional que se genera sola; la primera vez que entre elige la suya.">
+          {/* Un solo alta para los dos casos. Sin acceso, el evento lo lleva el atelier y nadie más entra. */}
+          <label className="flex cursor-pointer items-start gap-3 rounded-[14px] border border-line-panel bg-white px-4 py-3 has-[:checked]:border-ink">
+            <input checked={sinAcceso} className="mt-1 accent-ink" name="sinAcceso" onChange={(e) => setSinAcceso(e.target.checked)} type="checkbox" />
+            <span>
+              <span className="block text-[13.5px] text-ink">Lo llevo yo, sin acceso del cliente</span>
+              <span className="block text-[12px] text-ink-mute">El cliente no entra al panel. Se le puede dar acceso después, desde la ficha del evento.</span>
+            </span>
+          </label>
+          {sinAcceso ? null : (
+            <div className="grid gap-4 min-[560px]:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label className={LABEL_CLASS} htmlFor={`${id}-nombre-cliente`}>
+                  Nombre del cliente
+                </label>
+                <input autoComplete="off" className={FIELD_CLASS} id={`${id}-nombre-cliente`} maxLength={160} defaultValue={pedido?.nombre} name="clientName" placeholder="María Rojas" required />
               </div>
-              {clave === '' ? null : (
-                <button
-                  className="w-fit cursor-pointer text-[11px] text-ink-soft underline underline-offset-4 hover:text-ink"
-                  onClick={() => void navigator.clipboard?.writeText(clave).then(() => setCopiada(true))}
-                  type="button"
-                >
-                  {copiada ? 'Copiada' : 'Copiar la contraseña'}
-                </button>
-              )}
-              <p className="text-[11px] leading-[1.5] text-ink-mute">
-                No se vuelve a mostrar. Si ese correo ya tiene cuenta, se le da acceso sin tocarle la contraseña.
-              </p>
+              <div className="flex flex-col gap-2">
+                <label className={LABEL_CLASS} htmlFor={`${id}-telefono-cliente`}>
+                  WhatsApp del cliente
+                </label>
+                <input autoComplete="off" className={FIELD_CLASS} id={`${id}-telefono-cliente`} defaultValue={pedido?.telefono ?? undefined} inputMode="tel" name="clientPhone" placeholder="+591 700 12345" />
+              </div>
+              <div className="flex flex-col gap-2 min-[560px]:col-span-2">
+                <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
+                  Correo del cliente
+                </label>
+                <input
+                  autoComplete="off"
+                  className={FIELD_CLASS}
+                  id={`${id}-correo`}
+                  name="clientEmail"
+                  onChange={(e) => setCorreo(e.target.value)}
+                  placeholder="cliente@correo.com"
+                  required
+                  type="email"
+                  value={correo}
+                />
+                <p className="text-[11px] leading-[1.5] text-ink-mute">Si ese correo ya tiene cuenta, se le suma este evento sin tocarle la contraseña.</p>
+              </div>
             </div>
-          </div>
+          )}
         </Paso>
       </div>
 
@@ -287,8 +253,8 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
           <Resumen etiqueta="Plan" vacio={planElegido === undefined}>
             {planElegido ? `${planElegido.nombre} · ${planElegido.precio}` : 'Sin plan'}
           </Resumen>
-          <Resumen etiqueta="Acceso" icono={<MailIcon className="size-3.5" />} vacio={correo.trim() === ''}>
-            {correo.trim() || 'Sin correo'}
+          <Resumen etiqueta="Acceso" icono={<MailIcon className="size-3.5" />} vacio={!sinAcceso && correo.trim() === ''}>
+            {sinAcceso ? 'Lo llevas tú, sin acceso' : correo.trim() || 'Sin correo'}
           </Resumen>
         </dl>
         <div className="flex flex-col gap-3 border-t border-line-panel p-5">
@@ -301,7 +267,7 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
               </Link>
             </PanelAlert>
           ) : null}
-          <SubmitButton className="w-full" variant="primary" pending={creando} pendingLabel={'Creando…'}>{'Crear el evento y su acceso'}</SubmitButton>
+          <SubmitButton className="w-full" variant="primary" pending={creando} pendingLabel={'Creando…'}>{sinAcceso ? 'Crear el evento' : 'Crear el evento y su acceso'}</SubmitButton>
         </div>
       </aside>
     </form>

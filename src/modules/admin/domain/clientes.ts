@@ -8,8 +8,20 @@
  */
 
 export type ConsultaDeCliente = { readonly id: string; readonly name: string; readonly email: string | null; readonly phone: string | null; readonly status: string; readonly createdAt: Date }
-export type PedidoDeCliente = { readonly publicRef: string; readonly customerName: string; readonly contact: string; readonly status: string; readonly createdAt: Date; readonly eventSlug: string | null; readonly producto: string }
-export type CuentaDeCliente = { readonly email: string; readonly phone: string | null; readonly createdAt: Date }
+export type PedidoDeCliente = {
+  readonly publicRef: string
+  readonly customerName: string
+  readonly contact: string
+  readonly status: string
+  readonly createdAt: Date
+  readonly eventSlug: string | null
+  readonly producto: string
+  /** Lo que vale el pedido, congelado. Sin él (pedidos antiguos), no suma al valor del cliente. */
+  readonly amountCents?: number | null
+  readonly decidedAt?: Date | null
+}
+/** `nombre`: el que el admin escribió al darle de alta (`users.full_name`), si lo hay. */
+export type CuentaDeCliente = { readonly email: string; readonly phone: string | null; readonly createdAt: Date; readonly nombre?: string | null }
 export type EventoDeCliente = { readonly slug: string; readonly title: string; readonly eventDate: string; readonly anfitriones: readonly { readonly email: string; readonly phone: string | null }[] }
 
 export type Cliente = {
@@ -98,7 +110,7 @@ export function agruparClientes(entrada: {
   for (const { u, k } of cuentas) {
     if (k === null) continue
     de(k).cuenta = true
-    anotar(de(k), '', u.createdAt, u.email, u.phone)
+    anotar(de(k), u.nombre ?? '', u.createdAt, u.email, u.phone)
   }
   for (const { e, k } of eventos) if (k !== null) de(k).eventos.set(e.slug, e)
 
@@ -129,4 +141,69 @@ export function filtrarClientes(clientes: readonly Cliente[], texto: string): re
       c.correos.some((e) => e.includes(q)) ||
       (digitos.length >= 4 && c.telefonos.some((t) => t.replace(/\D/g, '').includes(digitos))),
   )
+}
+
+/**
+ * **En qué punto está la persona**, derivado de lo que ya se guarda (28 de septiembre). Antes
+ * «Comprador» se le decía a quien solo había pedido un plan sin pagarlo.
+ *
+ * Celebrado si todos sus eventos pasaron; cliente si tiene evento o un pago aprobado; pidió plan si
+ * tiene un pedido abierto; perdido si todo lo suyo se perdió o se canceló; si no, prospecto.
+ */
+export const ETAPAS_DE_CLIENTE = [
+  { clave: 'prospecto', etiqueta: 'Prospecto', tono: 'pending' },
+  { clave: 'pidio_plan', etiqueta: 'Pidió plan', tono: 'maybe' },
+  { clave: 'cliente', etiqueta: 'Cliente', tono: 'ok' },
+  { clave: 'celebrado', etiqueta: 'Celebrado', tono: 'ok' },
+  { clave: 'perdido', etiqueta: 'Perdido', tono: 'no' },
+] as const
+export type EtapaDeCliente = (typeof ETAPAS_DE_CLIENTE)[number]['clave']
+
+export function etapaDeCliente(c: Cliente, hoy: string): EtapaDeCliente {
+  if (c.eventos.length > 0) return c.eventos.every((e) => e.eventDate < hoy) ? 'celebrado' : 'cliente'
+  if (c.pedidos.some((p) => p.status === 'approved')) return 'cliente'
+  if (c.pedidos.some((p) => p.status === 'pending_payment' || p.status === 'proof_submitted' || p.status === 'rejected')) return 'pidio_plan'
+  const todoPerdido = c.pedidos.every((p) => p.status === 'cancelled') && c.consultas.every((k) => k.status === 'lost')
+  if (todoPerdido && (c.pedidos.length > 0 || c.consultas.length > 0)) return 'perdido'
+  return c.cuenta ? 'cliente' : 'prospecto'
+}
+
+/** Lo que ha pagado: la suma de sus pedidos aprobados. */
+export const valorDeCliente = (c: Cliente): number => c.pedidos.filter((p) => p.status === 'approved').reduce((s, p) => s + (p.amountCents ?? 0), 0)
+
+/** Su próximo evento, o el último si ya pasaron todos. */
+export function eventoPrincipal(c: Cliente, hoy: string): EventoDeCliente | null {
+  const ordenados = [...c.eventos].sort((a, b) => a.eventDate.localeCompare(b.eventDate))
+  return ordenados.find((e) => e.eventDate >= hoy) ?? ordenados.at(-1) ?? null
+}
+
+/**
+ * Las claves con las que se guarda y se encuentra su nota: cada correo y cada teléfono. Se lee por
+ * cualquiera de ellas y se escribe con la primera, así la nota sigue a la persona aunque su
+ * grupo se una con otro después.
+ */
+export function clavesDeNota(c: Cliente): string[] {
+  return [...c.correos.map((e) => `e:${e}`), ...c.telefonos.map((t) => telefono(t)).filter((t): t is string => t !== null).map((t) => `t:${t}`)]
+}
+
+/** Si alguno de sus contactos es el que se busca (correo o teléfono, escrito como sea). */
+export function tieneContacto(c: Cliente, contacto: string): boolean {
+  const e = correo(contacto)
+  const t = telefono(contacto)
+  return (e !== null && c.correos.includes(e)) || (t !== null && c.telefonos.some((x) => telefono(x) === t))
+}
+
+export type HitoDeCliente = { readonly cuando: Date; readonly texto: string; readonly href: string | null }
+
+/** Lo que ha pasado con esta persona, en orden: consultas, pedidos, pagos y eventos. */
+export function lineaDeTiempo(c: Cliente): HitoDeCliente[] {
+  const hitos: HitoDeCliente[] = [
+    ...c.consultas.map((k) => ({ cuando: k.createdAt, texto: 'Escribió desde la web', href: `/panel/admin/ventas?venta=c-${k.id}` })),
+    ...c.pedidos.map((p) => ({ cuando: p.createdAt, texto: `Pedido ${p.producto}`, href: `/panel/admin/ventas?venta=p-${p.publicRef}` })),
+    ...c.pedidos
+      .filter((p): p is typeof p & { decidedAt: Date } => p.status === 'approved' && p.decidedAt instanceof Date)
+      .map((p) => ({ cuando: p.decidedAt, texto: 'Pago aprobado', href: `/panel/admin/ventas?venta=p-${p.publicRef}` })),
+    ...c.eventos.map((e) => ({ cuando: new Date(`${e.eventDate}T12:00:00Z`), texto: e.title, href: `/panel/eventos/${e.slug}/configuracion` })),
+  ]
+  return hitos.sort((a, b) => a.cuando.getTime() - b.cuando.getTime())
 }

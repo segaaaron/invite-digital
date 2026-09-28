@@ -130,6 +130,10 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
       await tx.execute(sql`update run_of_show set owner = null, notes = null where event_id = ${eventId}`)
       await tx.execute(sql`update rehearsals set place = null, notes = null where event_id = ${eventId}`)
 
+      // La opinión del cliente: el comentario es texto de una persona; las estrellas se quedan
+      // —son la estadística— sin el enlace, que ya no abre nada.
+      await tx.execute(sql`update event_feedback set comment = null where event_id = ${eventId}`)
+
       await tx.update(events).set({ anonymizedAt: at }).where(eq(events.id, eventId))
     })
   },

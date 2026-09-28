@@ -53,6 +53,7 @@ const EXENTAS: Record<string, string> = {
   voidArrivalAsPorterAction: 'del portero: se autoriza con su enlace en cada petición y el evento sale del portero',
   claimGiftAction: 'del invitado: reserva un regalo desde su propia invitación',
   releaseGiftAction: 'del invitado: libera lo que él mismo había reservado',
+  responderOpinionAction: 'pública: la opinión del cliente tras su evento, autorizada por el enlace de su correo (solo el hash en la base) y con límite de tasa por IP',
   uploadGuestPhotoAction:
     'del invitado: sube una fotografía desde su propia invitación, autorizada por el token de su enlace, con el candado de la contraseña del evento y límite de tasa por IP',
 }

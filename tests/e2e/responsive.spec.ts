@@ -144,20 +144,24 @@ const VISTAS_ADMIN = [
   ['admin · clientes', '/panel/admin/clientes'],
   ['admin · eventos', '/panel/admin/eventos'],
   // El alta abierta: cinco campos en dos columnas que en un teléfono tienen que apilarse.
-  ['admin · eventos · alta', '/panel/admin/eventos?panel=nueva'],
+  ['admin · eventos · alta', '/panel/admin/eventos?crear=evento'],
+  ['admin · calendario', '/panel/admin/eventos/calendario'],
+  ['admin · ventas', '/panel/admin/ventas'],
+  ['admin · ventas · lista', '/panel/admin/ventas?vista=lista'],
+  ['admin · ventas · cotizador', '/panel/admin/ventas?crear=cotizacion'],
+  ['admin · clientes', '/panel/admin/clientes'],
+  ['admin · mensajes y agenda', '/panel/admin/mensajes'],
   ['admin · ingresos', '/panel/admin/ingresos'],
   ['admin · planes', '/panel/admin/planes'],
   ['admin · extras', '/panel/admin/extras'],
   ['admin · modelos', '/panel/admin/modelos'],
   ['admin · la web', '/panel/admin/web'],
   ['admin · usuarios', '/panel/admin/usuarios'],
-  // El alta abierta: el rol en tarjetas y la contraseña inicial, que en un teléfono se apilan.
-  ['admin · usuarios · alta', '/panel/admin/usuarios?panel=alta'],
+  // El alta abierta: el rol en tarjetas, que en un teléfono se apilan.
+  ['admin · usuarios · alta', '/panel/admin/usuarios?crear=persona'],
   ['admin · mi cuenta', '/panel/cuenta'],
   ['admin · cobros', '/panel/admin/pagos'],
   ['admin · auditoría', '/panel/admin/auditoria'],
-  // Con resultados: cuatro grupos que en un teléfono se apilan.
-  ['admin · buscar', '/panel/admin/buscar?q=bo'],
 ] as const
 
 /**

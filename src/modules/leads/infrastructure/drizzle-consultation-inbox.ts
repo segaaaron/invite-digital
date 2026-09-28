@@ -1,4 +1,4 @@
-import { and, count, desc, eq, lt, ne, or, isNotNull } from 'drizzle-orm'
+import { and, count, desc, eq, lt, ne, or, isNotNull, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { consultationRequests, eventCategories, events } from '@/shared/db/schema'
 import { ESTADOS_CONSULTA, NOMBRE_ANONIMO, parseEstado, type EstadoConsulta } from '../domain/pipeline'
@@ -19,6 +19,9 @@ const columnas = {
   status: consultationRequests.status,
   note: consultationRequests.note,
   statusChangedAt: consultationRequests.statusChangedAt,
+  firstContactAt: consultationRequests.firstContactAt,
+  lostReason: consultationRequests.lostReason,
+  utm: consultationRequests.utm,
   eventSlug: events.slug,
   eventTitle: events.title,
   createdAt: consultationRequests.createdAt,
@@ -38,6 +41,9 @@ const aFila = (f: Fila): ConsultationRow => ({
   status: parseEstado(f.status),
   note: f.note,
   statusChangedAt: f.statusChangedAt,
+  firstContactAt: f.firstContactAt,
+  lostReason: f.lostReason,
+  utm: f.utm,
   event: f.eventSlug !== null && f.eventTitle !== null ? { slug: f.eventSlug, title: f.eventTitle } : null,
   createdAt: f.createdAt,
 })
@@ -79,7 +85,15 @@ export const createDrizzleConsultationInbox = (database: DbExecutor): Consultati
     async move(id, from, patch) {
       const escritas = await database
         .update(consultationRequests)
-        .set({ status: patch.status, note: patch.note, eventId: patch.eventId, statusChangedAt: patch.at })
+        .set({
+          status: patch.status,
+          note: patch.note,
+          eventId: patch.eventId,
+          statusChangedAt: patch.at,
+          lostReason: patch.lostReason,
+          // La primera respuesta se escribe una vez: salir de «nueva» es haber contestado.
+          firstContactAt: sql`coalesce(${consultationRequests.firstContactAt}, ${patch.at.toISOString()}::timestamptz)`,
+        })
         .where(and(eq(consultationRequests.id, id), eq(consultationRequests.status, from)))
         .returning({ id: consultationRequests.id })
       return escritas.length > 0

@@ -33,7 +33,7 @@ export default async function AdminWebPage() {
 
   return (
     <>
-      <PanelHeader kicker="Administración" meta="Lo que la web pública enseña del negocio, sin tocar código" title="La web" />
+      <PanelHeader kicker="Escaparate" meta="Lo que la web pública enseña del negocio, sin tocar código" title="La web" />
 
       {isErr(ajustes) ? (
         <PanelCard>

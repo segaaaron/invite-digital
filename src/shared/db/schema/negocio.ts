@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
-import { boolean, char, check, date, index, integer, pgTable, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
-import { plans } from './catalogo'
+import { boolean, char, check, date, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { bytea } from './base'
+import { consultationRequests, plans } from './catalogo'
 import { events } from './eventos'
 
 /**
@@ -48,9 +49,28 @@ export const orders = pgTable(
     status: varchar('status', { length: 24 }).notNull().default('pending_payment'),
     decisionNote: text('decision_note'),
     decidedAt: timestamp('decided_at', { withTimezone: true }),
+    /** La consulta de la que salió (`0073`): consulta y pedido son **la misma venta**. */
+    consultationId: uuid('consultation_id').references(() => consultationRequests.id, { onDelete: 'set null' }),
+    /** `web` lo pidió el cliente; `cotizacion` lo armó el admin y le mandó el enlace. */
+    origin: varchar('origin', { length: 16 }).notNull().default('web'),
+    /** Los extras de una cotización, congelados como el importe. */
+    quoteExtras: jsonb('quote_extras').$type<readonly { slug: string; name: string; cents: number }[]>(),
+    /** Lo rebajado del precio de lista; el importe ya lo lleva descontado. */
+    discountCents: integer('discount_cents'),
+    /** El anticipo: aprobado, nace el evento; el saldo se registra con `balance_paid_at`. */
+    depositCents: integer('deposit_cents'),
+    balancePaidAt: timestamp('balance_paid_at', { withTimezone: true }),
+    /** Cuándo se le recordó el pago por última vez. */
+    remindedAt: timestamp('reminded_at', { withTimezone: true }),
+    /** Cancelar es terminal y dice por qué (restricción `orders_cancelado_con_motivo`). */
+    cancelReason: text('cancel_reason'),
+    /** El código de quien lo recomendó. */
+    referralCode: varchar('referral_code', { length: 16 }),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [
+    index('orders_consultation_idx').on(t.consultationId),
+    check('orders_cancelado_con_motivo', sql`${t.status} <> 'cancelled' or ${t.cancelReason} is not null`),
     index('orders_status_idx').on(t.status, t.createdAt.desc()),
     index('orders_decided_idx').on(t.status, t.decidedAt),
     // Un pedido abierto por evento y extra (`0048`): pedir otra vez devuelve el mismo.
@@ -124,3 +144,56 @@ export const eventAddons = pgTable(
   },
   (t) => [index('event_addons_event_idx').on(t.eventId), uniqueIndex('event_addons_order_idx').on(t.orderId)],
 )
+
+/**
+ * Notas y etiquetas de cada cliente (`0073`). El cliente no es una tabla —se deriva de consultas,
+ * pedidos y cuentas en `agruparClientes`—, así que la nota cuelga de su clave: correo o teléfono.
+ */
+export const clientNotes = pgTable('client_notes', {
+  clave: varchar('clave', { length: 220 }).primaryKey(),
+  note: text('note'),
+  tags: text('tags').array().notNull().default(sql`'{}'::text[]`),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+/** Lo que el mantenimiento diario ya mandó de cada evento: una fila por aviso, nunca dos. */
+export const eventNotices = pgTable(
+  'event_notices',
+  {
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    kind: varchar('kind', { length: 32 }).notNull(),
+    sentAt: timestamp('sent_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.kind] })],
+)
+
+/** La opinión del cliente tras su evento. El enlace va sin sesión: del token solo vive el hash. */
+export const eventFeedback = pgTable(
+  'event_feedback',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .unique()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    tokenHash: bytea('token_hash').notNull().unique(),
+    rating: smallint('rating'),
+    comment: text('comment'),
+    allowPublish: boolean('allow_publish').notNull().default(false),
+    answeredAt: timestamp('answered_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [check('event_feedback_estrellas', sql`${t.rating} is null or ${t.rating} between 1 and 5`)],
+)
+
+/** El código de referido de cada evento celebrado. */
+export const referralCodes = pgTable('referral_codes', {
+  code: varchar('code', { length: 16 }).primaryKey(),
+  eventId: uuid('event_id')
+    .notNull()
+    .unique()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})

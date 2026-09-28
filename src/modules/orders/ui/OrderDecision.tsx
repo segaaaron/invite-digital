@@ -4,7 +4,6 @@ import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
-import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: DecideOrderState = { status: 'idle' }
 
@@ -20,13 +19,32 @@ const INICIAL: DecideOrderState = { status: 'idle' }
  * al cliente sin saber si transfirió de menos, a otra cuenta o subió la foto equivocada,
  * y la única salida que le queda es llamar por teléfono.
  */
-export function OrderDecision({ orderId, esExtra = false }: { orderId: string; /** Un extra no crea boda: no pide acceso. */ esExtra?: boolean }) {
+export function OrderDecision({
+  orderId,
+  esExtra = false,
+  importe = null,
+  correo = null,
+}: {
+  orderId: string
+  /** Un extra no crea boda: no pide acceso. */
+  esExtra?: boolean
+  /** Lo que tiene que decir la transferencia, para compararlo antes de aprobar. */
+  importe?: string | null
+  /** El correo del cliente si ya se sabe (del pedido o de su consulta). Sin él, se pide aquí. */
+  correo?: string | null
+}) {
   const [estado, accion, pendiente] = useActionState<DecideOrderState, FormData>(decideOrderAction, INICIAL)
   const id = useId()
 
   return (
     <form action={accion} className="flex flex-col gap-3">
       <input name="orderId" type="hidden" value={orderId} />
+
+      {importe === null ? null : (
+        <p className="rounded-[12px] border border-gold/40 bg-gold/8 px-4 py-3 text-[13px] text-ink">
+          Comprueba que la transferencia sea de <b className="font-medium">{importe}</b> antes de aprobar.
+        </p>
+      )}
 
       <label className="flex flex-col gap-2" htmlFor={id}>
         <span className={LABEL_CLASS}>Nota para el cliente · obligatoria si rechazas</span>
@@ -40,27 +58,16 @@ export function OrderDecision({ orderId, esExtra = false }: { orderId: string; /
         />
       </label>
 
-      {/* Al aprobar se crea la boda con el diseño que eligió y el plan que pagó, y estos
-          dos campos le dan su acceso. Si el correo ya tiene cuenta, no se le toca la
-          contraseña: solo se le añade esta boda. */}
-      {esExtra ? null : (
-      <div className="grid gap-3 min-[560px]:grid-cols-2">
+      {/* Al aprobar nace el evento con el diseño que eligió y el plan que pagó, y su acceso: la
+          contraseña **se genera sola** y le llega por correo. Nadie la inventa ni la escribe. Si
+          el correo no se sabe todavía, se pide aquí; si ya tiene cuenta, solo se le suma el evento. */}
+      {esExtra ? null : correo !== null ? (
+        <input name="clientEmail" type="hidden" value={correo} />
+      ) : (
         <label className="flex flex-col gap-2" htmlFor={`${id}-correo`}>
-          <span className={LABEL_CLASS}>Correo del cliente · para crearle su acceso</span>
-          <input className={FIELD_CLASS} id={`${id}-correo`} maxLength={160} name="clientEmail" type="email" />
+          <span className={LABEL_CLASS}>Correo del cliente · le llega ahí su acceso</span>
+          <input className={FIELD_CLASS} id={`${id}-correo`} maxLength={160} name="clientEmail" placeholder="novios@correo.com" type="email" />
         </label>
-
-        <label className="flex flex-col gap-2" htmlFor={`${id}-clave`}>
-          <span className={LABEL_CLASS}>Contraseña inicial · mínimo 12</span>
-          <CampoContrasena
-            autoComplete="new-password"
-            className={FIELD_CLASS}
-            id={`${id}-clave`}
-            minLength={12}
-            name="clientPassword"
-          />
-        </label>
-      </div>
       )}
 
       {estado.status === 'error' ? (

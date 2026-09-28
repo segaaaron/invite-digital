@@ -1,13 +1,14 @@
 'use client'
 
 import { useActionState, useId } from 'react'
-import { botonClases, FIELD_CLASS, LABEL_CLASS, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, LABEL_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
+import { plural } from '@/shared/format/plural'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
 import type { Role } from '@/modules/identity'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { createUserAction, deleteUserAction, setUserRoleAction } from '@/app/_acciones/admin/usuarios-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
-import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -19,7 +20,13 @@ export type UserView = {
   readonly esUnoMismo: boolean
   /** Ya formateada en la página. */
   readonly alta: string
+  readonly nombre: string | null
+  /** «hace 3 h», ya formateado; `null` si nunca entró. */
+  readonly ultimoAcceso: string | null
 }
+
+/** Las columnas del equipo, las mismas en su encabezado. */
+export const COLUMNAS_DE_EQUIPO = 'min-[860px]:grid-cols-[minmax(0,1.6fr)_150px_110px_130px_40px]'
 
 const ROL: Record<Role, { etiqueta: string; tono: 'ok' | 'maybe' | 'pending' | 'no'; que: string }> = {
   admin: { etiqueta: 'Administrador', tono: 'ok', que: 'Todo el sistema' },
@@ -51,45 +58,27 @@ export function NewUserForm() {
         <input autoComplete="off" className={FIELD_CLASS} defaultValue={enviado?.email ?? ''} id={`${id}-correo`} name="email" placeholder="nombre@correo.com" required type="email" />
       </div>
 
-      <div className="flex flex-col gap-2">
-        <label className={LABEL_CLASS} htmlFor={`${id}-clave`}>
-          Contraseña inicial
-        </label>
-        <CampoContrasena
-          aria-describedby={`${id}-clave-ayuda`}
-          autoComplete="new-password"
-          className={FIELD_CLASS}
-          id={`${id}-clave`}
-          minLength={12}
-          name="password"
-          required
-        />
-        <p className="text-[12px] leading-[1.5] text-ink-mute" id={`${id}-clave-ayuda`}>
-          Mínimo 12 caracteres. Le llega por correo y la cambia al entrar por primera vez.
-        </p>
-      </div>
+      <p className="rounded-[12px] bg-bg-sunken/60 px-4 py-3 text-[12.5px] leading-[1.5] text-ink-soft">
+        Le llega su acceso por correo con una contraseña provisional que se genera sola; la cambia al entrar por primera vez.
+      </p>
 
       <fieldset className="flex flex-col gap-2">
         <legend className={`${LABEL_CLASS} mb-2`}>Rol</legend>
-        {(['cliente', 'atelier', 'admin'] as const).map((rol) => (
+        {(['atelier', 'admin'] as const).map((rol) => (
           <label
             className="flex cursor-pointer items-start gap-3 rounded-[12px] border border-line-panel-strong bg-white px-3.5 py-3 has-checked:border-ink has-checked:bg-bg-top"
             key={rol}
           >
-            <input className="mt-1 accent-ink" defaultChecked={(enviado?.role || 'cliente') === rol} name="role" type="radio" value={rol} />
+            <input className="mt-1 accent-ink" defaultChecked={(enviado?.role || 'atelier') === rol} name="role" type="radio" value={rol} />
             <span className="flex flex-col">
               <span className="text-[13.5px] text-ink">{ROL[rol].etiqueta}</span>
               <span className="text-[12px] text-ink-mute">
-                {rol === 'cliente'
-                  ? 'Entra solo al evento al que se le dé acceso desde Todos los eventos.'
-                  : rol === 'atelier'
-                    ? 'Crea y lleva sus propios eventos.'
-                    : 'Acceso completo a la administración.'}
+                {rol === 'atelier' ? 'Crea y lleva sus propios eventos.' : 'Acceso completo a la administración.'}
               </span>
             </span>
           </label>
         ))}
-        {/* El personal de puerta se da de alta desde el propio evento: sin evento no puede hacer nada. */}
+        {/* El personal de puerta se da de alta desde el propio evento, y el cliente nace con su evento. */}
       </fieldset>
 
       <ActionFeedback state={estado} />
@@ -118,17 +107,17 @@ export function UserRow({ user }: { user: UserView }) {
   const puedeSerAdmin = user.role === 'admin' || user.role === 'atelier'
 
   return (
-    <li className="flex flex-wrap items-center gap-x-6 gap-y-3 border-b border-line-panel py-4 last:border-none">
-      <div className="flex min-w-[240px] flex-1 items-center gap-3">
+    <li className={`grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-2 border-b border-line-panel px-1 py-3.5 last:border-none ${COLUMNAS_DE_EQUIPO}`}>
+      <div className="flex min-w-0 items-center gap-3">
         <span aria-hidden className="grid size-9 shrink-0 place-items-center rounded-full bg-bg-sunken font-display text-[16px] text-ink-soft uppercase">
-          {user.email.slice(0, 1)}
+          {(user.nombre ?? user.email).slice(0, 1)}
         </span>
         <div className="flex min-w-0 flex-col">
-          <span className="flex items-center gap-2 truncate text-[14px] text-ink">
-            {user.email}
-            {user.esUnoMismo ? <span className="rounded-full bg-bg-sunken px-2 py-0.5 text-[10.5px] text-ink-soft">Tú</span> : null}
+          <span className="flex min-w-0 items-center gap-2 text-[14px] text-ink">
+            <span className="truncate">{user.nombre ?? user.email}</span>
+            {user.esUnoMismo ? <span className="shrink-0 rounded-full bg-bg-sunken px-2 py-0.5 text-[10.5px] text-ink-soft">Tú</span> : null}
           </span>
-          <span className="text-[12px] text-ink-mute">Alta {user.alta}</span>
+          <span className="truncate text-[12px] text-ink-mute">{user.nombre === null ? `Alta ${user.alta}` : user.email}</span>
           {error && error.status === 'error' ? (
             <span className="mt-1 text-[12px] text-danger" role="alert">
               {error.message}
@@ -137,25 +126,26 @@ export function UserRow({ user }: { user: UserView }) {
         </div>
       </div>
 
-      <div className="flex w-[180px] flex-col gap-1">
+      <div className="max-[859px]:col-start-2 max-[859px]:row-start-1 max-[859px]:justify-self-end">
         <Pill tone={ROL[user.role].tono}>{ROL[user.role].etiqueta}</Pill>
-        <span className="text-[12px] text-ink-mute">{ROL[user.role].que}</span>
       </div>
 
-      <div className="w-[110px] text-[13px] text-ink-soft [font-variant-numeric:lining-nums]">
-        {user.eventos === 0 ? <span className="text-ink-mute">Sin eventos</span> : `${user.eventos} evento${user.eventos === 1 ? '' : 's'}`}
+      <div className="text-[13px] text-ink-soft [font-variant-numeric:lining-nums] max-[859px]:hidden">
+        {user.eventos === 0 ? <span className="text-ink-mute">—</span> : plural(user.eventos, 'evento', 'eventos')}
       </div>
 
-      <div className="ml-auto flex flex-col items-end gap-1.5">
+      <div className="text-[12px] text-ink-mute max-[859px]:hidden">{user.ultimoAcceso ?? 'Nunca entró'}</div>
+
+      <div className="justify-self-end max-[859px]:col-start-2">
         {user.esUnoMismo ? null : (
-          <span className="flex gap-2">
+          <MenuDeAcciones etiqueta={`Más acciones de ${user.email}`}>
             {puedeSerAdmin ? (
               <form action={cambiarRol}>
                 <input name="userId" type="hidden" value={user.id} />
                 <input name="role" type="hidden" value={user.role === 'admin' ? 'atelier' : 'admin'} />
-                <PanelButton disabled={cambiando} type="submit">
-                  {user.role === 'admin' ? 'Quitar admin' : 'Hacer admin'}
-                </PanelButton>
+                <button className={opcionDeMenu()} disabled={cambiando} type="submit">
+                  {user.role === 'admin' ? 'Quitar el rol de administrador' : 'Hacer administrador'}
+                </button>
               </form>
             ) : null}
             <ConfirmAction
@@ -171,19 +161,49 @@ export function UserRow({ user }: { user: UserView }) {
               disabled={user.eventos > 0}
               title="Borrar usuario"
               tone="danger"
-              trigger="Borrar"
-              triggerClassName={botonClases('danger')}
+              trigger="Borrar la cuenta"
+              triggerClassName={opcionDeMenu(true)}
             >
               <input name="userId" type="hidden" value={user.id} />
             </ConfirmAction>
-          </span>
+            {user.eventos > 0 ? (
+              <p className="px-3 pb-2 text-[11.5px] leading-[1.4] text-ink-mute" id={`${id}-borrar`}>
+                Para borrarla, reasigna o borra antes sus eventos.
+              </p>
+            ) : null}
+          </MenuDeAcciones>
         )}
-        {!user.esUnoMismo && user.eventos > 0 ? (
-          <span className="max-w-[260px] text-right text-[11.5px] leading-[1.4] text-ink-mute" id={`${id}-borrar`}>
-            Para borrarlo, reasigna o borra antes sus eventos.
-          </span>
-        ) : null}
       </div>
     </li>
+  )
+}
+
+/** Borrar la cuenta de un cliente, desde su ficha en Clientes: el único sitio donde vive. */
+export function BorrarCuentaDeCliente({ userId, email }: { userId: string; email: string }) {
+  const [estado, borrar] = useActionState<AdminActionState, FormData>(deleteUserAction, INICIAL)
+  return (
+    <div className="flex flex-col gap-1.5">
+      <ConfirmAction
+        action={borrar}
+        confirmLabel="Borrar la cuenta"
+        description={
+          <>
+            <strong className="font-normal text-ink">{email}</strong> deja de poder entrar al panel y pierde el acceso a sus eventos. Los eventos no se
+            borran. No se puede deshacer.
+          </>
+        }
+        title="Borrar la cuenta del cliente"
+        tone="danger"
+        trigger="Borrar su cuenta"
+        triggerClassName="w-fit text-[12.5px] text-danger-deep underline underline-offset-4 hover:text-danger"
+      >
+        <input name="userId" type="hidden" value={userId} />
+      </ConfirmAction>
+      {estado.status === 'error' ? (
+        <p className="text-[12px] text-danger" role="alert">
+          {estado.message}
+        </p>
+      ) : null}
+    </div>
   )
 }

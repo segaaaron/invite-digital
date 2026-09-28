@@ -24,7 +24,7 @@ export default async function AdminPlanesPage() {
 
   return (
     <>
-      <PanelHeader kicker="Administración" meta="Precio, tope, funciones y textos de lo que vende la web" title="Planes" />
+      <PanelHeader kicker="Escaparate" meta="Precio, tope, funciones y textos de lo que vende la web" title="Planes" />
 
       {isErr(planes) ? (
         <PanelCard>
@@ -61,6 +61,7 @@ export default async function AdminPlanesPage() {
                   onlineDays: plan.onlineDays,
                   designChange: plan.designChange,
                   plannerSuite: plan.plannerSuite,
+                  depositPct: plan.depositPct,
                   includesSeating: plan.includesSeating,
                   includesRegistry: plan.includesRegistry,
                   includesCheckin: plan.includesCheckin,

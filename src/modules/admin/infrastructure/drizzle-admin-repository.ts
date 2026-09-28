@@ -2,7 +2,7 @@ import { and, count, desc, eq, isNull, like, or, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { auditLog, events, guestGroups, invitationViews, plans, planTranslations, rsvpResponses, users } from '@/shared/db/schema'
 import { parseRole } from '@/modules/identity'
-import type { AdminEventRow, AdminMetrics, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
+import type { AdminEventRow, AdminRepository, AdminUserRow, AuditRow } from '../application/ports'
 
 export const createDrizzleAdminRepository = (database: DbExecutor): AdminRepository => ({
   async listUsers(): Promise<AdminUserRow[]> {
@@ -21,11 +21,14 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         role: users.role,
         createdAt: users.createdAt,
         eventos: sql<number>`(select count(*)::int from events where events.user_id = users.id)`,
+        fullName: users.fullName,
+        ultimoAcceso: sql<Date | null>`(select max(coalesce(s.last_seen_at, s.created_at)) from sessions s where s.user_id = users.id)`,
       })
       .from(users)
       .orderBy(users.createdAt)
 
-    return filas.map((fila) => ({ ...fila, role: parseRole(fila.role) }))
+    // `execute` de una subconsulta puede dar la fecha como texto: se normaliza aquí.
+    return filas.map((fila) => ({ ...fila, role: parseRole(fila.role), ultimoAcceso: fila.ultimoAcceso === null ? null : new Date(fila.ultimoAcceso) }))
   },
 
   async countAdmins(): Promise<number> {
@@ -95,6 +98,13 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
         enviados: sql<number>`coalesce(${conteos.enviados}, 0)`,
         respondidos: sql<number>`coalesce(${conteos.respondidos}, 0)`,
         abiertos: sql<number>`coalesce(${conteos.abiertos}, 0)`,
+        rsvpDeadline: events.rsvpDeadline,
+        // Nombres escritos a mano y cualificados: dentro de un `sql` interpolado Drizzle emite las
+        // columnas sin tabla, y en una subconsulta `"id"` sería de la tabla de dentro.
+        invitacionEscrita: sql<boolean>`coalesce((select nullif(trim(ec.blocks->'schedule'->>'startsAt'), '') is not null and nullif(trim(ec.blocks->'reception'->>'place'), '') is not null from event_content ec where ec.event_id = events.id), false)`,
+        conCliente: sql<boolean>`exists (select 1 from event_staff es where es.event_id = events.id and es.membership = 'cliente')`,
+        clienteSinEntrar: sql<boolean>`exists (select 1 from event_staff es join users u on u.id = es.user_id where es.event_id = events.id and es.membership = 'cliente' and u.must_change_password)`,
+        saldoPendiente: sql<boolean>`exists (select 1 from orders o where o.event_id = events.id and o.status = 'approved' and o.deposit_cents is not null and o.balance_paid_at is null and o.addon_slug is null)`,
       })
       .from(events)
       // `leftJoin` en los dos: un evento sin dueño o sin plan tiene que salir igual en la
@@ -129,43 +139,6 @@ export const createDrizzleAdminRepository = (database: DbExecutor): AdminReposit
   async listPlanSlugs(): Promise<string[]> {
     const filas = await database.select({ slug: plans.slug }).from(plans).orderBy(plans.sortOrder)
     return filas.map((f) => f.slug)
-  },
-
-  async metrics(): Promise<AdminMetrics> {
-    const [totales] = await database.execute<{ eventos: number }>(sql`
-      select count(*)::int as eventos from ${events}
-    `)
-
-    // Los **doce meses que vienen**, no los doce pasados: en este negocio los eventos
-    // están siempre por delante. La primera versión miraba hacia atrás y enseñaba doce
-    // ceros con dos bodas en la base, que es una gráfica que miente por omisión.
-    //
-    // Con los huecos incluidos: un mes sin bodas sale con cero, o la serie miente sobre
-    // la forma del año.
-    const porMes = await database.execute<{ mes: string; total: number }>(sql`
-      select to_char(m.mes, 'YYYY-MM') as mes,
-             (select count(*)::int from ${events} e
-               where date_trunc('month', e.event_date::date) = m.mes) as total
-        from generate_series(date_trunc('month', current_date),
-                             date_trunc('month', current_date) + interval '11 months',
-                             interval '1 month') as m(mes)
-       order by m.mes
-    `)
-
-    const porPlan = await database.execute<{ plan: string; total: number }>(sql`
-      select coalesce(t.name, p.slug, 'Sin plan asignado') as plan, count(*)::int as total
-        from ${events} e
-        left join ${plans} p on p.id = e.plan_id
-        left join ${planTranslations} t on t.plan_id = p.id and t.locale = 'es'
-       group by 1
-       order by 2 desc
-    `)
-
-    return {
-      eventos: totales?.eventos ?? 0,
-      porMes: [...porMes],
-      porPlan: [...porPlan],
-    }
   },
 
   async listAudit(limit, filtro = {}): Promise<AuditRow[]> {

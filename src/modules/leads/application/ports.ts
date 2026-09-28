@@ -18,6 +18,12 @@ export type ConsultationRow = {
   readonly status: EstadoConsulta
   readonly note: string | null
   readonly statusChangedAt: Date | null
+  /** Cuándo se contestó por primera vez (`0073`). */
+  readonly firstContactAt: Date | null
+  /** Por qué se perdió, de `MOTIVOS_DE_PERDIDA`. */
+  readonly lostReason: string | null
+  /** De dónde llegó: `utm_source`, `utm_medium`… tal como vinieron en la URL. */
+  readonly utm: Readonly<Record<string, string>> | null
   readonly event: { readonly slug: string; readonly title: string } | null
   readonly createdAt: Date
 }
@@ -39,7 +45,7 @@ export interface ConsultationInbox {
    * Escribe la transición **solo si sigue en `from`**, y dice si la escribió. Con dos
    * admins mirando la misma consulta, el segundo recibe `false` en vez de pisar al primero.
    */
-  move(id: string, from: EstadoConsulta, patch: { status: EstadoConsulta; note: string | null; eventId: string | null; at: Date }): Promise<boolean>
+  move(id: string, from: EstadoConsulta, patch: { status: EstadoConsulta; note: string | null; eventId: string | null; lostReason: string | null; at: Date }): Promise<boolean>
   countNew(): Promise<number>
   /** Borra el dato personal de las consultas anteriores a `antesDe`. Devuelve cuántas. */
   anonymizeBefore(antesDe: Date): Promise<number>

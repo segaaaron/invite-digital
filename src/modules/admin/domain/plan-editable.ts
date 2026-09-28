@@ -26,6 +26,8 @@ export type PlanCrudo = {
   /** `ninguno` · `antes_de_repartir` · `siempre`. */
   designChange: string
   plannerSuite: string
+  /** El anticipo en porcentaje, como texto del formulario. Vacío o 0: se paga entero de una vez. */
+  depositPct?: string
   includesSeating: boolean
   includesRegistry: boolean
   includesCheckin: boolean
@@ -37,7 +39,8 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'depositPct' | 'es' | 'en'> & {
+  depositPct: number
   maxGuestGroups: number | null
   maxDoorPorters: number
   maxCohosts: number | null
@@ -125,6 +128,12 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     return err(adminError('invalid_input', 'Elige qué parte del planner trae el plan.'))
   }
 
+  // El anticipo: hasta el 90 %. Un 100 % no es anticipo, es el pago entero.
+  const anticipo = (crudo.depositPct ?? '').trim()
+  if (anticipo !== '' && (!/^\d+$/.test(anticipo) || Number(anticipo) > 90)) {
+    return err(adminError('invalid_input', 'El anticipo es un porcentaje de 0 a 90; vacío o 0 es pagar entero de una vez.'))
+  }
+
   const es = leerTexto(crudo.es, 'es')
   if (!es.ok) return es
   const en = leerTexto(crudo.en, 'en')
@@ -140,6 +149,7 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     onlineDays: Number(dias),
     designChange: regla,
     plannerSuite: suite,
+    depositPct: anticipo === '' ? 0 : Number(anticipo),
     es: es.value,
     en: en.value,
   })

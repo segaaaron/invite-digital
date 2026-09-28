@@ -1,9 +1,10 @@
 'use server'
 
+import { randomBytes } from 'node:crypto'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, notifications, orders, plans } from '@/app/composition/container'
+import { admin, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { type Actor, createCredential, parseRole } from '@/modules/identity'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -59,7 +60,16 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
 
   const fecha = texto('eventDate').trim()
 
+  // El código de recomendación, si lo trae: uno que no existe se dice, no se ignora en silencio.
+  const tecleado = texto('referido').trim()
+  const referralCode = tecleado === '' ? null : await admin.validReferralCode(tecleado)
+  if (tecleado !== '' && referralCode === null) return { status: 'error', code: 'referral' }
+  const ajustes = referralCode === null ? null : await admin.mensajes()
+  const descuentoPct = ajustes === null || isErr(ajustes) ? 0 : ajustes.value.descuentoReferido
+
   const result = await orders.place({
+    referralCode,
+    descuentoPct,
     planSlug: texto('planSlug'),
     // Ya viene validado contra el registro de temas por la página que pinta el formulario:
     // aquí solo viaja.
@@ -187,11 +197,28 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   // se aprobó sin crearla.
   const aprovisionado = await aprovisionar(actor, orderId, formData)
   console.info('pedido %s aprobado — %s', orderId, aprovisionado.message)
+  await agradecerRecomendacion(orderId)
 
   revalidatePath('/panel/pedidos')
   revalidatePath('/panel/admin/ventas')
   revalidatePath('/panel')
   return { status: 'success' }
+}
+
+/**
+ * Si el pedido llegó con un código de recomendación, sus anfitriones reciben las gracias. Nunca
+ * falla hacia arriba: el pago ya está aprobado.
+ */
+async function agradecerRecomendacion(orderId: string): Promise<void> {
+  try {
+    const order = await orders.byId(orderId)
+    if (order === null || order.referralCode === null || order.addonSlug !== null) return
+    const quien = await admin.referralHosts(order.referralCode)
+    if (quien === null) return
+    await Promise.all(quien.correos.map((to) => notifications.sendGraciasPorRecomendar(to, { evento: quien.evento, quien: order.customerName })))
+  } catch (causa) {
+    console.error('no se pudieron mandar las gracias por la recomendación del pedido %s:', orderId, causa)
+  }
 }
 
 /**
@@ -225,14 +252,17 @@ async function aprovisionar(
     return { message: aplicado ? `Extra «${order.addonName ?? order.addonSlug}» aplicado.` : 'El extra ya estaba aplicado.', eventSlug: order.eventSlug }
   }
 
-  const correo = campo(formData, 'clientEmail').trim().toLowerCase()
-  const clave = campo(formData, 'clientPassword')
+  // El correo: el que viene de la ficha (del pedido o de su consulta) o, si es un correo, el
+  // contacto del propio pedido. La contraseña **se genera**: nadie la inventa ni la escribe.
+  const escrito = campo(formData, 'clientEmail').trim().toLowerCase()
+  const correo = escrito !== '' ? escrito : order.contact.includes('@') ? order.contact.trim().toLowerCase() : ''
+  const clave = randomBytes(12).toString('base64url')
 
   if (order.eventDate === null) {
     return { message: 'Pedido aprobado. Sin fecha de evento no se puede crear el evento: créalo a mano.', eventSlug: null }
   }
   if (correo === '') {
-    return { message: 'Pedido aprobado. Escribe el correo del cliente para crearle el evento y su acceso.', eventSlug: null }
+    return { message: 'Pedido aprobado. Falta el correo del cliente: créale el evento desde «Crear el evento».', eventSlug: null }
   }
 
   // **El acceso del cliente se comprueba ANTES de crear nada.**
@@ -296,6 +326,11 @@ async function aprovisionar(
   // mensaje dentro y el atelier no llega a ver ni el enlace ni el aviso.
   try {
     await orders.linkEvent(orderId, evento.value.id)
+    // Lo que se cotizó con el plan se entrega con él: antes del plan, que recalcula la retención
+    // con los días comprados.
+    if (order.quoteExtras.length > 0) await plans.applyQuoteExtras(orderId)
+    // La consulta de la que salió la cotización queda ganada, con su evento.
+    if (order.consultationId !== null) await leads.win(order.consultationId, evento.value.id)
   } catch (causa) {
     console.error('no se pudo atar el pedido %s a su boda:', orderId, causa)
   }
@@ -332,7 +367,7 @@ async function aprovisionar(
     }
     const creado = await admin.createUser({ email: credencial.value.email, password: credencial.value.password, role: 'cliente' })
     clienteId = creado.id
-    avisoDeClave = `${correo} entra con la contraseña que escribiste. No se vuelve a mostrar.`
+    avisoDeClave = `${correo} recibe por correo su contraseña provisional; la cambia al entrar.`
   }
 
   await events.staff.add(evento.value.id, clienteId, 'cliente')

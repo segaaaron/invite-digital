@@ -82,7 +82,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
         <div className="flex flex-col gap-3" key={categoria}>
 
           {/* `auto-fill minmax`, no breakpoints: es la regla de las rejillas del panel. */}
-          <div className="grid gap-4 [grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
+          <div className="grid gap-3 [grid-template-columns:repeat(auto-fill,minmax(128px,1fr))] min-[560px]:gap-4 min-[560px]:[grid-template-columns:repeat(auto-fill,minmax(150px,1fr))]">
             {temas.map((tema) => {
               const acento = tema.palette.oro ?? tema.palette.accent ?? tema.palette.lila ?? '#8d7a52'
               const papel = tema.palette.fondo ?? tema.palette.papel ?? tema.palette.marfil ?? '#f4f1ec'
