@@ -362,11 +362,13 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
     const roles = papeles(crudo.hosts.roles)
     // Con papeles, la lista sale de ellos; sin papeles es la lista de antes.
     const nombres = roles === undefined ? lista(crudo.hosts.names, MAXIMOS.hosts, (n) => texto(n, LIMITES.corto)) : nombresDe(roles)
-    if (nombres !== undefined && nombres.length > 0) {
+    // Con el título solo también se guarda: los diseños que no pintan los nombres («Bodas de Oro») solo piden
+    // el título, y exigir nombres descartaba el bloque entero sin decir nada.
+    if ((nombres !== undefined && nombres.length > 0) || etiqueta !== undefined) {
       salida.hosts = {
         ...(etiqueta === undefined ? {} : { label: etiqueta }),
         ...(roles === undefined ? {} : { roles }),
-        names: nombres,
+        names: nombres ?? [],
       }
     }
   }
@@ -413,7 +415,8 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
     const base = bloque<{ title?: string; note?: string; detail?: string }>([
       ['title', texto(dc.title, LIMITES.corto)],
       ['note', texto(dc.note, LIMITES.corto)],
-      ['detail', texto(dc.detail)],
+      // Un párrafo, como la frase y la despedida: con el tope de una línea (240) se cortaba.
+      ['detail', texto(dc.detail, LIMITES.largo)],
     ])
     if (base !== undefined || imagenes !== undefined || colores !== undefined) {
       salida.dressCode = {
@@ -532,5 +535,30 @@ export function loQueSePerderia(seccion: SectionKey, enviado: unknown): Perdida[
   }
   recorrer(enviado, guardado, '')
   return perdidas
+}
+
+/**
+ * **El tope de un campo de texto, sacado del propio dominio**: se guarda un texto larguísimo en ese campo y se
+ * mide lo que queda. Así el editor pone el mismo `maxLength` que el guardado aplica, sin una segunda tabla de
+ * límites que se descuadre (pasó: «Detalle» del código de vestimenta dejaba escribir un párrafo y guardaba 240).
+ * `fila`: las claves de la fila, en los bloques que son listas (las demás van con un valor corto válido).
+ * `undefined` si el campo no es un texto con tope (un enlace, una fecha).
+ */
+export function topeDeTexto(seccion: SectionKey, clave: string, fila?: readonly string[]): number | undefined {
+  const largo = 'x'.repeat(5000)
+  const valor =
+    fila !== undefined
+      ? [Object.fromEntries(fila.map((k) => [k, k === clave ? largo : '19:00']))]
+      : seccion === 'hosts' && clave === 'godparents'
+        ? { roles: { godparents: [largo] } }
+        : seccion === 'hosts' && clave !== 'label'
+          ? { roles: { [clave]: largo } }
+          : { [clave]: largo }
+  const salida = (parseInvitationContent({ [seccion]: valor }) as Record<string, unknown>)[seccion]
+  const destino = Array.isArray(salida) ? salida[0] : salida
+  const bloque = destino !== null && typeof destino === 'object' ? (destino as Record<string, unknown>) : {}
+  const papel = seccion === 'hosts' && clave !== 'label' ? (bloque.roles as Record<string, unknown> | undefined)?.[clave] : bloque[clave]
+  const leido = Array.isArray(papel) ? papel[0] : papel
+  return typeof leido === 'string' && leido.length < largo.length ? leido.length : undefined
 }
 

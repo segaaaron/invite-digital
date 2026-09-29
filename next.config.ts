@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
     // tres megas. 10 MB son los 8 del fichero más el sobre del multipart, y el mismo
     // techo que Next ya pone por defecto al proxy.
     serverActions: { bodySizeLimit: '32mb' },
+    // **Y el proxy, al mismo tope.** Toda petición pasa por `src/proxy.ts`, y Next le corta el cuerpo en
+    // 10 MB: una foto de celular grande o una canción llegaban cortadas, la acción reventaba con
+    // «Unexpected end of form» y el panel enseñaba «This page couldn't load» (28 de septiembre, en
+    // producción). Las fotos además se reducen en el navegador antes de subir (`reducirFoto`).
+    proxyClientMaxBodySize: '32mb',
     // **Esta línea es la que baja el heap.** Next compila webpack en un worker aparte
     // para no cargar el proceso principal, pero lo apaga solo en cuanto detecta
     // configuración de webpack propia:
@@ -104,6 +109,16 @@ const nextConfig: NextConfig = {
         // ruta que hoy responde 404. Sin esta excepción la política
         // global deja `getUserMedia` en un fallo de permiso que ninguna prueba
         // unitaria ve, porque la cabecera solo existe en el servidor.
+        // El arte de los diseños: una imagen que cambia de contenido **cambia de nombre** (regla en
+        // `themes/assets.ts`), así que se guarda un año en el navegador. La de la web y el catálogo, un día.
+        source: '/temas/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/(site|templates)/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
+      },
+      {
         source: '/panel/eventos/:slug/puerta',
         headers: [
           { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },

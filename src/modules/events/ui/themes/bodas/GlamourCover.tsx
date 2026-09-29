@@ -33,6 +33,7 @@ export function GlamourCover({ bgAsset, ringsAsset, eyebrow, names, cta, openLab
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{ position: 'fixed', inset: 0, zIndex: 50, cursor: 'pointer', border: 'none', padding: 0, width: '100%', overflow: 'hidden', background: P.guinda }}
       type="button"

@@ -45,6 +45,7 @@ export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openL
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       className="theme-quieto-si-reduce"
       style={{

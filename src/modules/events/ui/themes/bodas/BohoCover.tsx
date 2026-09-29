@@ -35,6 +35,7 @@ export function BohoCover({ bgAsset, eyebrow, initials, names, cta, openLabel }:
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

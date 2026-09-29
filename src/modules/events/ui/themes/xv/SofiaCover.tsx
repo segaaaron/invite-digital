@@ -40,6 +40,7 @@ export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hin
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

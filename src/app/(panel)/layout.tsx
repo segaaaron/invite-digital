@@ -4,6 +4,7 @@ import { display, panelMono, panelSans } from '@/shared/design/fonts'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../globals.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
+import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
 
 export const viewport = VIEWPORT
 
@@ -23,6 +24,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
     <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
         <CapturaDeFallos />
+        <PortadasQueEsperan />
         {/* El `Suspense` envuelve solo la barra (lee `useSearchParams`), nunca las páginas: alrededor
             de ellas rompería sus `notFound()`. */}
         <Suspense fallback={null}>

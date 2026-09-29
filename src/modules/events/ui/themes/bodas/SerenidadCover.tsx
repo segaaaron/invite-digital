@@ -38,6 +38,7 @@ export function SerenidadCover({ bgAsset, eyebrow, names, fecha, cta, openLabel 
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

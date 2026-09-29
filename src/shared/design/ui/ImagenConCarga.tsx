@@ -1,5 +1,6 @@
 'use client'
 
+import { esImagenPropia } from './ImagenQueAparece'
 import Image, { type ImageProps } from 'next/image'
 import { useCallback, useState } from 'react'
 
@@ -22,6 +23,7 @@ export default function ImagenConCarga({ alt, className = '', onLoad, onError, .
   return (
     <Image
       {...props}
+      unoptimized={props.unoptimized ?? esImagenPropia(props.src)}
       alt={alt}
       className={`${className} ${cargada ? '' : 'imagen-cargando'}`.trim()}
       onError={(e) => {

@@ -3,6 +3,8 @@
 import { useActionState, useId, useRef } from 'react'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
 import { type GuestPhotoState, uploadGuestPhotoAction } from '@/app/_acciones/events/actions'
+import { reducirEnElCampo } from '@/shared/design/ui/reducir-foto'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: GuestPhotoState = { status: 'idle', message: '' }
 
@@ -24,8 +26,11 @@ type Props = {
  * El tope y el tipo los decide el servidor, no esto: `accept` y la cuenta de aquí son
  * cortesía —un teléfono que ofrece solo fotos—, y quien mande el POST a mano no las ve.
  */
+const SUBIR_SIN_CAERSE = sinCaerse(uploadGuestPhotoAction, { status: 'error', message: 'storage_failure' })
+
 export function GuestPhotoUpload({ dictionary, token, remaining }: Props) {
-  const [estado, formAction, enviando] = useActionState(uploadGuestPhotoAction, INICIAL)
+  // Una subida que falla en el servidor sale como aviso, no como pantalla de error delante del invitado.
+  const [estado, formAction, enviando] = useActionState(SUBIR_SIN_CAERSE, INICIAL)
   const formulario = useRef<HTMLFormElement>(null)
   const campoId = useId()
 
@@ -53,7 +58,8 @@ export function GuestPhotoUpload({ dictionary, token, remaining }: Props) {
         disabled={enviando}
         id={campoId}
         name="file"
-        onChange={() => formulario.current?.requestSubmit()}
+        // La foto del celular se reduce antes de subirla: con datos móviles sube en segundos, no en minutos.
+        onChange={(e) => void reducirEnElCampo(e.currentTarget).then(() => formulario.current?.requestSubmit())}
         type="file"
       />
 

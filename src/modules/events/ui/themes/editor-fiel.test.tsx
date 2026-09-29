@@ -175,3 +175,84 @@ describe('guardar no pierde nada de lo que el editor manda', () => {
   })
 })
 
+describe('los topes del editor son los del guardado, en todos los diseños', () => {
+  // Lo más largo que el editor deja escribir se guarda entero; uno más, se avisa (nunca se corta en silencio).
+  it.each(CON_VISTA)('«$tema.key»: cada campo de texto guarda exactamente hasta su tope', ({ tema }) => {
+    const fiesta = fiestaDeCategoria(tema.categorySlug)
+    const { contenido } = contenidoConTodo(tema)
+    let probados = 0
+    for (const seccion of tema.sections) {
+      const forma = formaPara(seccion, tema.pinta, fiesta)
+      for (const campo of forma.fields) {
+        if (campo.max === undefined) continue
+        const con = (largo: number): unknown => {
+          const base = structuredClone(contenido[seccion]) as unknown
+          if (forma.form === 'filas') {
+            const filas = base as Record<string, unknown>[]
+            filas[0] = { ...filas[0], [campo.key]: 'y'.repeat(largo) }
+            return filas
+          }
+          const bloque = (base ?? {}) as Record<string, unknown>
+          if (seccion === 'hosts' && campo.key !== 'label') return { ...bloque, roles: { ...(bloque.roles as object), [campo.key]: 'y'.repeat(largo) } }
+          return { ...bloque, [campo.key]: 'y'.repeat(largo) }
+        }
+        expect(loQueSePerderia(seccion, con(campo.max)), `${seccion}.${campo.key} con ${campo.max}`).toEqual([])
+        expect(loQueSePerderia(seccion, con(campo.max + 1)).map((p) => p.motivo), `${seccion}.${campo.key} con ${campo.max + 1}`).toContain('largo')
+        probados += 1
+      }
+    }
+    // Los nombres de una lista (los padrinos): también con su tope.
+    for (const seccion of tema.sections) {
+      const forma = formaPara(seccion, tema.pinta, fiesta)
+      if (forma.form !== 'campos' || forma.list?.maxTexto === undefined) continue
+      const lista = (largo: number) => ({ ...(contenido[seccion] as object), roles: { ...((contenido[seccion] as { roles?: object }).roles ?? {}), [forma.list!.key]: ['y'.repeat(largo)] } })
+      expect(loQueSePerderia(seccion, lista(forma.list.maxTexto)), `${seccion}.${forma.list.key}`).toEqual([])
+      expect(loQueSePerderia(seccion, lista(forma.list.maxTexto + 1)).map((p) => p.motivo)).toContain('largo')
+      probados += 1
+    }
+    expect(probados).toBeGreaterThan(0)
+  })
+
+  it.each(CON_VISTA)('«$tema.key» pinta los anfitriones con título y sin nombres sin romperse', ({ tema, Vista }) => {
+    const content = { ...tema.defaultContent, hosts: { label: 'CON LA BENDICIÓN DE', names: [] } }
+    expect(() => render(<Vista {...propsDePrueba({ content })} />).unmount()).not.toThrow()
+  })
+
+  it('el título de los anfitriones se guarda aunque el diseño no pida nombres', () => {
+    expect(loQueSePerderia('hosts', { label: 'CON LA BENDICIÓN DE' })).toEqual([])
+  })
+})
+
+describe('cada foto que el editor pide sale en su invitación', () => {
+  // Cada diseño es autónomo: pide sus propias fotos (portada, retrato, casillas de galería, momentos) y las
+  // pinta a su manera. Si un campo de foto no llegara a la vista, «subo la foto y no cambia»: se prueba en todos.
+  it.each(CON_VISTA)('«$tema.key» pinta cada foto de su editor', ({ tema, Vista }) => {
+    const fiesta = fiestaDeCategoria(tema.categorySlug)
+    const contenido = structuredClone(tema.defaultContent) as Record<string, unknown>
+    const esperadas: string[] = []
+    for (const seccion of tema.sections) {
+      const forma = formaPara(seccion, tema.pinta, fiesta)
+      const fotos = forma.fields.filter((c) => c.kind === 'imagen')
+      if (fotos.length === 0) continue
+      if (forma.form === 'filas') {
+        const previas = (contenido[seccion] as Record<string, unknown>[] | undefined) ?? []
+        const n = Math.max(1, Math.min(forma.max, previas.length || 1))
+        contenido[seccion] = Array.from({ length: n }, (_, i) => ({
+          ...(previas[i] ?? { label: `Casilla ${i}`, time: '19:00', title: `Momento ${i}` }),
+          ...Object.fromEntries(fotos.map((c) => [c.key, `foto-${seccion}-${c.key}-${i}`])),
+        }))
+        for (let i = 0; i < n; i++) for (const c of fotos) esperadas.push(`foto-${seccion}-${c.key}-${i}`)
+      } else {
+        contenido[seccion] = { ...((contenido[seccion] as object | undefined) ?? {}), ...Object.fromEntries(fotos.map((c) => [c.key, `foto-${seccion}-${c.key}`])) }
+        for (const c of fotos) esperadas.push(`foto-${seccion}-${c.key}`)
+      }
+    }
+    if (esperadas.length === 0) return
+    const { container, unmount } = render(<Vista {...propsDePrueba({ content: contenido as InvitationContent })} />)
+    const html = container.innerHTML
+    unmount()
+    const faltan = esperadas.filter((id) => !html.includes(`/media/${id}`) && !html.includes(encodeURIComponent(`/media/${id}`)))
+    expect(faltan).toEqual([])
+  })
+})
+

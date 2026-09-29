@@ -43,6 +43,7 @@ export function EsenciaCover({ bgAsset, retrato, monogram, eyebrow, nameA, nameB
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

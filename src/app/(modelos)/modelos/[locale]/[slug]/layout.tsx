@@ -6,6 +6,8 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
+import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
+import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 
 export const viewport = VIEWPORT
 
@@ -36,7 +38,11 @@ export default async function ModelPreviewLayout({
 
   return (
     <html className={variables} lang={locale} suppressHydrationWarning>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <CapturaDeFallos />
+        <PortadasQueEsperan />
+        {children}
+      </body>
     </html>
   )
 }

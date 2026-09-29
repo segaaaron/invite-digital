@@ -37,6 +37,7 @@ export function PapillonCover({ bgAsset, crownAsset, title, name, serial, hint, 
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

@@ -100,8 +100,9 @@ describe('parseInvitationContent', () => {
     expect(hosts?.names).toEqual(['Juan', 'Rosa'])
   })
 
-  it('descarta los anfitriones sin ningún nombre', () => {
-    expect(parseInvitationContent({ hosts: { label: 'Junto a mis padres', names: [] } }).hosts).toBeUndefined()
+  it('guarda el título de los anfitriones aunque no haya nombres (los diseños que solo piden el título), y sin nada, nada', () => {
+    expect(parseInvitationContent({ hosts: { label: 'Junto a mis padres', names: [] } }).hosts).toEqual({ label: 'Junto a mis padres', names: [] })
+    expect(parseInvitationContent({ hosts: { names: [] } }).hosts).toBeUndefined()
   })
 
   it('acepta la fecha y hora de la cuenta atrás solo si es legible', () => {

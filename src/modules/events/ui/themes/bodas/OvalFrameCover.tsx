@@ -44,6 +44,7 @@ export function OvalFrameCover({ bgAsset, ringsAsset, accent, bg, textColor, eye
       aria-label={openLabel}
       className="theme-quieto-si-reduce"
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

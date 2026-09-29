@@ -45,6 +45,7 @@ export function BotanicaCover({ bg, textColor, bgAsset, line1, line2, names, hin
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

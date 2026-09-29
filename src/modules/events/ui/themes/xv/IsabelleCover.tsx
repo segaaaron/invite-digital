@@ -34,6 +34,7 @@ export function IsabelleCover({ bgAsset, title, name, serial, hint, openLabel }:
       aria-label={openLabel}
       className="theme-quieto-si-reduce"
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

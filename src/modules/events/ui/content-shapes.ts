@@ -24,6 +24,7 @@ import {
   type NoteCard,
   type PlaceBlock,
   type SectionKey,
+  topeDeTexto,
 } from '../domain/invitation-content'
 
 /**
@@ -44,6 +45,8 @@ export type Campo = {
   readonly hint?: string
   /** Ocupa la fila entera: lo que se lee mejor largo, como el título de los anfitriones. */
   readonly anchoCompleto?: boolean
+  /** Cuántos caracteres guarda el dominio (`topeDeTexto`): el campo no deja escribir más. */
+  readonly max?: number
 }
 
 /** Una lista de valores sueltos dentro de un bloque: los anfitriones, las telas del código. */
@@ -53,6 +56,8 @@ export type ListaSuelta = {
   readonly itemLabel: string
   readonly kind: 'texto' | 'imagen' | 'color'
   readonly max: number
+  /** El tope de cada nombre de la lista, cuando es de textos (`topeDeTexto`). */
+  readonly maxTexto?: number
 }
 
 export type FormaBloque =
@@ -187,14 +192,22 @@ export const formaPara = (section: SectionKey, pinta: LoQuePinta, fiesta: Fiesta
   // pidiera serían los de una boda: un nombre y otro.
   const anfitriones: Anfitriones = fiesta === 'xv' ? 'xv' : 'boda'
   // Un diseño que no pinta los nombres —«Bodas de Oro»— solo pide el título.
-  if (section === 'hosts') return fuera.includes('names') ? { form: 'campos', fields: [TITULO_DE_ANFITRIONES] } : ANFITRIONES[anfitriones]
+  if (section === 'hosts') {
+    const base = fuera.includes('names') ? ({ form: 'campos', fields: [TITULO_DE_ANFITRIONES] } as FormaBloque) : ANFITRIONES[anfitriones]
+    const conTopes = { ...base, fields: base.fields.map((c) => conMaximo('hosts', c)) } as FormaBloque
+    if (conTopes.form !== 'campos' || conTopes.list === undefined || conTopes.list.kind !== 'texto') return conTopes
+    const maxTexto = topeDeTexto('hosts', conTopes.list.key)
+    return maxTexto === undefined ? conTopes : { ...conTopes, list: { ...conTopes.list, maxTexto } }
+  }
   const forma = FORMAS[section]
   const ejemplos = EJEMPLOS[fiesta]?.[section]
+  const claves = forma.fields.map((c) => c.key)
   const fields = forma.fields
     .filter((campo) => !fuera.includes(campo.key) && (PIDE[campo.key]?.(pinta.fotos) ?? true))
     .map((campo) => {
       const ejemplo = ejemplos?.[campo.key]
-      return ejemplo === undefined ? campo : { ...campo, hint: ejemplo }
+      const conTope = conMaximo(section, campo, forma.form === 'filas' ? claves : undefined)
+      return ejemplo === undefined ? conTope : { ...conTope, hint: ejemplo }
     })
   if (forma.form === 'filas') return { ...forma, fields, max: filas(section, forma.max, pinta) }
   // La lista suelta —los nombres de los anfitriones— se quita como cualquier otro campo.
@@ -202,6 +215,12 @@ export const formaPara = (section: SectionKey, pinta: LoQuePinta, fiesta: Fiesta
     return { form: 'campos', fields }
   }
   return { ...forma, fields }
+}
+
+const conMaximo = (section: SectionKey, campo: Campo, fila?: readonly string[]): Campo => {
+  if (campo.kind !== 'texto' && campo.kind !== 'parrafo') return campo
+  const max = topeDeTexto(section, campo.key, fila)
+  return max === undefined ? campo : { ...campo, max }
 }
 
 /** Ata las claves declaradas a las del bloque del dominio. Su único trabajo es no compilar. */

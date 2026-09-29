@@ -39,6 +39,7 @@ export function CinematicaCover({ bgAsset, accent, bg, eyebrow, names, fecha, hi
       aria-label={openLabel}
       className="theme-quieto-si-reduce"
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

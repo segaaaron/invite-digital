@@ -2,6 +2,10 @@
 
 import { useId, useRef, useState } from 'react'
 import { CheckIcon, CloseIcon, UploadIcon } from '../icons'
+import { reducirEnElCampo } from '../reducir-foto'
+
+/** Lo más que admite cualquier subida del sitio (el tope del servidor es 32 MB con el sobre del envío). */
+const MAXIMO_POR_ARCHIVO = 30 * 1024 * 1024
 
 const tamano = (bytes: number): string =>
   bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} KB` : `${(bytes / (1024 * 1024)).toFixed(1)} MB`
@@ -32,6 +36,7 @@ export function FilePicker({
   /** Para quien quiera leer el archivo al elegirlo —el nombre de una canción, por ejemplo—. */
   onElegir?: (archivo: File | null) => void
 }) {
+  const [demasiado, setDemasiado] = useState(false)
   const id = useId()
   const [elegido, setElegido] = useState<{ nombre: string; bytes: number } | null>(null)
   const campo = useRef<HTMLInputElement>(null)
@@ -64,9 +69,27 @@ export function FilePicker({
         ref={campo}
         name={name}
         onChange={(evento) => {
-          const archivo = evento.currentTarget.files?.[0]
+          const input = evento.currentTarget
+          const archivo = input.files?.[0]
+          // Más de 30 MB no sale del teléfono: el servidor no lo aceptaría y cortaría el envío a medias. Una foto
+          // se reduce antes (abajo), así que esto solo detiene lo que de verdad no cabe (un vídeo, un PDF enorme).
+          if (archivo !== undefined && archivo.size > MAXIMO_POR_ARCHIVO && !archivo.type.startsWith('image/')) {
+            input.value = ''
+            setElegido(null)
+            setDemasiado(true)
+            onElegir?.(null)
+            return
+          }
+          setDemasiado(false)
           setElegido(archivo ? { nombre: archivo.name, bytes: archivo.size } : null)
           onElegir?.(archivo ?? null)
+          // Una foto se cambia por su versión reducida en el propio campo: la de un celular (5–25 MB) sube en
+          // cientos de KB y no choca con ningún tope. Todos los formularios del panel que suben imágenes pasan por aquí.
+          if (archivo?.type.startsWith('image/')) {
+            void reducirEnElCampo(input).then((final) => {
+              if (final !== null && final !== archivo) setElegido({ nombre: final.name, bytes: final.size })
+            })
+          }
         }}
         type="file"
       />
@@ -85,6 +108,11 @@ export function FilePicker({
         >
           <CloseIcon className="size-3" />
         </button>
+      ) : null}
+      {demasiado ? (
+        <p className="mt-2 text-[12px] text-danger" role="alert">
+          Ese archivo pesa más de 30 MB. Elige uno más liviano.
+        </p>
       ) : null}
     </div>
   )

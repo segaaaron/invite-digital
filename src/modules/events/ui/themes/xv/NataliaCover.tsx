@@ -36,6 +36,7 @@ export function NataliaCover({ bgAsset, noteAsset, line1, line2, title, name, ba
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useActionState, useContext, useId, useMemo, useState, useTransition } from 'react'
+import { createContext, useActionState, useContext, useEffect, useId, useMemo, useRef, useState, useTransition } from 'react'
 import { FIELD_CLASS, IconButton, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { type ContentActionState, removeMediaAction, saveContentBlockAction } from '@/app/_acciones/events/actions'
 import type { InvitationContent, SectionKey } from '../domain/invitation-content'
@@ -30,11 +30,12 @@ import {
 import type { ComponentType } from 'react'
 import { CampoFechaHora } from '@/shared/design/ui/panel/CampoFechaHora'
 import { type AvisoDeSeccion, EVENTO_SECCION, textosDeSeccion } from './seguir-seccion'
-import { SubidaEnElCampo } from './SubidaEnElCampo'
+import { GuardarLaSeccion, SubidaEnElCampo } from './SubidaEnElCampo'
 import { enlaceDeUbicacion, mapaIncrustado } from '../domain/ubicacion'
 import { COLORES_DE_VESTIMENTA } from '../domain/paleta-vestimenta'
 import { iconosDelItinerario, type OpcionDeIcono } from './themes/iconos-itinerario'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -100,7 +101,11 @@ const ICONO_DE_CAMPO: Record<string, Icono> = {
   signature: PersonIcon,
 }
 
+/** Guardar una sección nunca tumba la pantalla: un fallo del servidor sale como aviso en la propia tarjeta. */
+const GUARDAR_SIN_CAERSE = sinCaerse(saveContentBlockAction, { status: 'error', message: 'network' })
+
 const ERRORES: Record<string, string> = {
+  network: 'No se pudo guardar: se cortó la conexión o el servidor no respondió. Vuelve a intentarlo; ya quedó anotado.',
   unknown_section: 'Esa sección no existe en este diseño.',
   invalid_payload: 'No se pudo leer lo que enviaste. Vuelve a intentarlo.',
   storage_failure: 'No se pudo guardar. La base no respondió.',
@@ -111,12 +116,16 @@ const ERRORES: Record<string, string> = {
  * lo que no cabía se recortaba en silencio. `campo` es la ruta (`href`, `rows.2.title`); de la última
  * parte sale el rótulo del formulario, y el número de fila si lo hay.
  */
-function errorDeGuardado(state: { message: string; campo?: string; maximo?: number }, forma: { fields: readonly { key: string; label: string }[] }, formaAnexo?: { fields: readonly { key: string; label: string }[] }): string {
+type FormaConRotulos = { readonly fields: readonly { key: string; label: string }[]; readonly list?: { readonly key: string; readonly label: string } | undefined }
+
+function errorDeGuardado(state: { message: string; campo?: string; maximo?: number }, forma: FormaConRotulos, formaAnexo?: FormaConRotulos): string {
   if (state.message !== 'texto_largo' && state.message !== 'valor_invalido') return ERRORES[state.message] ?? ERRORES.storage_failure!
   const partes = (state.campo ?? '').split('.')
-  const clave = partes[partes.length - 1] ?? ''
+  // Un nombre de una lista (`roles.godparents.1`): el rótulo es el de la lista.
+  const clave = [...partes].reverse().find((p) => !/^\d+$/.test(p)) ?? ''
   const fila = partes.find((p) => /^\d+$/.test(p))
-  const rotulo = [...forma.fields, ...(formaAnexo?.fields ?? [])].find((f) => f.key === clave)?.label ?? 'Un campo'
+  const listas = [forma.list, formaAnexo?.list].flatMap((l) => (l === undefined ? [] : [l]))
+  const rotulo = [...forma.fields, ...(formaAnexo?.fields ?? []), ...listas].find((f) => f.key === clave)?.label ?? 'Un campo'
   const donde = fila === undefined ? `«${rotulo}»` : `«${rotulo}» de la fila ${Number(fila) + 1}`
   return state.message === 'texto_largo'
     ? `${donde} es demasiado largo: acórtalo a ${state.maximo ?? ''} caracteres. No se guardó nada.`
@@ -364,7 +373,7 @@ function BloqueDeContenido({
   const forma = formaPara(section, pinta, fiesta)
   const cuerpoId = useId()
   const listo = escrito(content, section)
-  const [state, formAction, isPending] = useActionState(saveContentBlockAction, INICIAL)
+  const [state, formAction, isPending] = useActionState(GUARDAR_SIN_CAERSE, INICIAL)
   const [estado, setEstado] = useState<EstadoBloque>(() => estadoInicial(forma, content[section]))
   const formaAnexo = anexo === undefined ? undefined : formaPara(anexo, pinta, fiesta)
   const [estadoAnexo, setEstadoAnexo] = useState<EstadoBloque | undefined>(() =>
@@ -396,9 +405,28 @@ function BloqueDeContenido({
   const escribirCampo = (clave: string, valor: string) =>
     setEstado((previo) => ({ ...previo, campos: { ...previo.campos, [clave]: valor } }))
 
+  // Una foto recién subida pide guardar la sección: se envía **después** de pintar el campo con ella, para
+  // que el formulario lleve la foto nueva y no la de antes.
+  // (Una marca y no un estado: el campo ya se vuelve a pintar con la foto, y en ese pintado se envía.)
+  const formulario = useRef<HTMLFormElement>(null)
+  const guardarAhora = useRef(false)
+  useEffect(() => {
+    if (!guardarAhora.current) return
+    guardarAhora.current = false
+    formulario.current?.requestSubmit()
+  })
+  const pedirGuardado = useMemo(
+    () => () => {
+      guardarAhora.current = true
+    },
+    [],
+  )
+
   return (
+    <GuardarLaSeccion.Provider value={pedirGuardado}>
     <form
       action={formAction}
+      ref={formulario}
       className={`scroll-mt-6 rounded-[18px] border bg-white transition-shadow ${
         abierta ? 'border-line-panel-strong shadow-[0_12px_40px_-24px_rgb(0_0_0/0.35)]' : 'border-line-panel hover:border-line-panel-strong'
       }`}
@@ -535,6 +563,7 @@ function BloqueDeContenido({
       </div>
       </div>
     </form>
+    </GuardarLaSeccion.Provider>
   )
 }
 
@@ -604,6 +633,7 @@ function CampoDeBloque({
           aria-describedby={campo.hint === undefined ? undefined : pistaId}
           className={`${FIELD_CLASS} leading-[1.6]`}
           id={id}
+          maxLength={campo.max}
           onChange={(evento) => onChange(evento.target.value)}
           placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `Ej.: ${ejemplo}`}
           rows={3}
@@ -618,6 +648,7 @@ function CampoDeBloque({
             aria-describedby={campo.hint === undefined ? undefined : pistaId}
             className={`${FIELD_CLASS} ${ICONO_DE_CAMPO[campo.key] === undefined ? '' : 'pl-10'}`}
             id={id}
+            maxLength={campo.max}
             onChange={(evento) => onChange(evento.target.value)}
             placeholder={ejemplo === undefined || ejemplo === '' ? undefined : `Ej.: ${ejemplo}`}
             type="text"
@@ -625,6 +656,12 @@ function CampoDeBloque({
           />
         </div>
       )}
+      {/* Cerca del tope, cuánto queda: el campo no deja pasarse (el tope es el del guardado, `topeDeTexto`). */}
+      {campo.max !== undefined && valor.length >= campo.max * 0.8 ? (
+        <p aria-live="polite" className={`text-right font-mono text-[10.5px] ${valor.length >= campo.max ? 'text-gold-deep' : 'text-ink-mute'}`}>
+          {valor.length} / {campo.max}
+        </p>
+      ) : null}
 
       {campo.hint === undefined ? null : (
         <p className="text-[11px] leading-[1.5] text-ink-mute" id={pistaId}>
@@ -768,7 +805,7 @@ function SelectorDeImagen({
       datos.set('eventId', eventId)
       datos.set('eventSlug', eventSlug)
       datos.set('mediaId', mediaId)
-      const r = await removeMediaAction({ status: 'idle' }, datos)
+      const r = await sinCaerse(removeMediaAction, { status: 'error', message: 'network' })({ status: 'idle' }, datos)
       if (r.status === 'error') setAviso(ERRORES_AL_QUITAR[r.message] ?? 'No se pudo quitar la foto.')
     })
   }
@@ -912,7 +949,7 @@ function ListaSueltaDeBloque({
   media: readonly MediaItem[]
 }) {
   if (lista.kind === 'color') return <SelectorDePaleta max={lista.max} onChange={onChange} rotulo={lista.label} valores={valores} />
-  const campo: Campo = { key: lista.key, label: lista.itemLabel, kind: lista.kind === 'imagen' ? 'imagen' : 'texto' }
+  const campo: Campo = { key: lista.key, label: lista.itemLabel, kind: lista.kind === 'imagen' ? 'imagen' : 'texto', ...(lista.maxTexto === undefined ? {} : { max: lista.maxTexto }) }
 
   return (
     <div className="flex flex-col gap-2.5">

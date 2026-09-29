@@ -46,7 +46,7 @@ test.describe('registro de fallos', () => {
 test.describe('guardar la invitación no pierde nada', () => {
   test.use({ storageState: AUTH_STATE })
 
-  test('el enlace largo de Google Maps se guarda entero; un texto que no cabe se avisa y no se guarda', async ({ page }) => {
+  test('el enlace largo de Google Maps se guarda entero; un texto no pasa de lo que se guarda', async ({ page }) => {
     await seedInvitation({ slug: SLUG })
     await sql`update events set theme_key = 'boda' where slug = ${SLUG}`
     await escribirInvitacion(SLUG)
@@ -60,11 +60,13 @@ test.describe('guardar la invitación no pierde nada', () => {
     const [guardado] = await sql<{ href: string }[]>`select blocks->'map'->>'href' as href from event_content c join events e on e.id = c.event_id where e.slug = ${SLUG}`
     expect(guardado!.href.length).toBeGreaterThan(300)
 
-    await recepcion.getByLabel('Lugar', { exact: true }).fill('x'.repeat(260))
-    await recepcion.getByRole('button', { name: 'Guardar' }).click()
-    await expect(recepcion.getByRole('alert')).toContainText('«Lugar» es demasiado largo: acórtalo a 240 caracteres. No se guardó nada.')
-    const [lugar] = await sql<{ place: string }[]>`select blocks->'reception'->>'place' as place from event_content c join events e on e.id = c.event_id where e.slug = ${SLUG}`
-    expect(lugar!.place).toBe('Salón Los Ceibos')
+    // El campo no deja pasar de lo que se guarda: 240 para «Lugar». (Si algo llegara más largo por otra vía, la
+    // acción lo rechaza diciendo el campo: lo cubren las unitarias de `loQueSePerderia`.)
+    const lugar = recepcion.getByLabel('Lugar', { exact: true })
+    await expect(lugar).toHaveAttribute('maxlength', '240')
+    await lugar.fill('')
+    await lugar.pressSequentially('x'.repeat(250), { delay: 0 })
+    expect((await lugar.inputValue()).length).toBe(240)
   })
 
   test('cada sección del editor se guarda y responde: «Guardado» o el motivo, nunca silencio', async ({ page }) => {
@@ -85,6 +87,26 @@ test.describe('guardar la invitación no pierde nada', () => {
       await expect(seccion.getByRole('alert'), `${titulo}: no debería fallar con su propio contenido`).toHaveCount(0)
     }
     expect((await sql<{ n: number }[]>`select count(*)::int as n from service_failures where created_at > now() - interval '2 minutes' and service like 'events/%'`)[0]!.n).toBe(0)
+  })
+
+  test('código de vestimenta: un detalle de un párrafo se guarda entero y el campo no deja pasar del tope', async ({ page }) => {
+    // Editorial pide el detalle (no todos los diseños lo pintan).
+    await sql`update events set theme_key = 'boda-ed' where slug = ${SLUG}`
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    const vestimenta = await abrirSeccion(page, 'Código de vestimenta')
+    const detalle = vestimenta.getByLabel('Detalle', { exact: true })
+    await detalle.fill('Traje oscuro y vestido largo. '.repeat(17))
+    await expect(detalle).toHaveAttribute('maxlength', '600')
+    await vestimenta.getByRole('button', { name: 'Guardar' }).click()
+    await expect(vestimenta.getByText('Guardado.')).toBeVisible()
+    await expect(vestimenta.getByRole('alert')).toHaveCount(0)
+    const [fila] = await sql<{ d: string }[]>`select blocks->'dressCode'->>'detail' as d from event_content c join events e on e.id = c.event_id where e.slug = ${SLUG}`
+    expect(fila!.d.length).toBeGreaterThan(400)
+
+    await detalle.fill('')
+    await detalle.pressSequentially('x'.repeat(610), { delay: 0 })
+    expect((await detalle.inputValue()).length).toBe(600)
+    await expect(vestimenta.getByText('600 / 600')).toBeVisible()
   })
 })
 

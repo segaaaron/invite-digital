@@ -36,6 +36,7 @@ export function PerlaCover({ bgAsset, eyebrow, initials, names, fecha, cta, open
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       className="theme-quieto-si-reduce"
       style={{

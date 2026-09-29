@@ -9,6 +9,9 @@ function raices(dir: string): string[] {
     const ruta = join(dir, entrada.name)
     if (entrada.isDirectory()) return raices(ruta)
     // Al principio de línea: el JSX, no un comentario que lo nombre entre comillas.
+    // `global-error.tsx` también emite `<html>`, pero no es una raíz de layout: es la pantalla de error de último
+    // recurso, de cliente, y no puede exportar `viewport`.
+    if (entrada.name === 'global-error.tsx') return []
     return /\.tsx$/.test(entrada.name) && /^\s*<html\b/m.test(readFileSync(ruta, 'utf8')) ? [ruta] : []
   })
 }

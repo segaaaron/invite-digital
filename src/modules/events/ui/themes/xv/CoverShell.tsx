@@ -51,6 +51,7 @@ export function CoverShell({ bg, bgAsset, foto, imageFilter, objectPosition, vei
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

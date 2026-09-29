@@ -302,6 +302,47 @@ html:not(:has(.theme-phone-frame)):has([data-portada]) {
   overflow: hidden;
 }
 
+/* **La portada no se ve a medias** (29 de septiembre). Llega del servidor con `data-cargando`: se ve su fondo
+   con un indicador y nada más. Cuando todas sus imágenes han llegado (`PortadasQueEsperan` quita la marca),
+   aparece entera de una vez. Antes salían primero los textos sobre un fondo liso y la corona o el marco segundos
+   después, y la portada parecía rota. `!important` porque las piezas traen su opacidad en línea. */
+[data-portada] > * {
+  transition: opacity 600ms ease-out;
+}
+[data-portada][data-cargando] > * {
+  opacity: 0 !important;
+}
+[data-portada][data-cargando]::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border: 1.5px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  opacity: 0.55;
+  animation: theme-portada-gira 900ms linear infinite;
+  pointer-events: none;
+}
+@keyframes theme-portada-gira {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-portada] > * {
+    transition: none;
+  }
+  [data-portada][data-cargando]::after {
+    animation: none;
+    border-top-color: currentColor;
+    opacity: 0.35;
+  }
+}
+
 /*
  * La página del invitado en tablet, laptop y escritorio: la invitación dentro de un teléfono
  * centrado, como el escaparate. **Lo decide el aparato, no el ancho**: la página pone estas

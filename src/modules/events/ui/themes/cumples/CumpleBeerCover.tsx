@@ -82,6 +82,7 @@ export function CumpleBeerCover({ bg, accent, bgAsset, name, openLabel, cta }: P
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

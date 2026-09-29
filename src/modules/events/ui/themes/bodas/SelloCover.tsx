@@ -34,6 +34,7 @@ export function SelloCover({ bgAsset, eyebrow, names, hint, openLabel }: Props) 
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

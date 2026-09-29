@@ -34,6 +34,7 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
     <button
       aria-label={openLabel}
       data-portada=""
+      data-cargando=""
       onClick={() => setAbierta(true)}
       style={{
         position: 'fixed',

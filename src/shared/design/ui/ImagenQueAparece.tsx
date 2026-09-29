@@ -6,6 +6,13 @@ import { useCallback, useState } from 'react'
 type Estado = 'inicial' | 'esperando' | 'lista'
 
 /**
+ * Las imágenes propias del sitio (el arte de los diseños, la web, el catálogo) **ya están optimizadas en AVIF**
+ * y pesan decenas de KB: se sirven tal cual. Pasarlas por el optimizador de Next las recodificaba en la VPS
+ * a cada tamaño —1 a 1,5 s por imagen, y una invitación lleva decenas—, y la portada tardaba en verse.
+ */
+export const esImagenPropia = (src: unknown): boolean => typeof src === 'string' && /^\/(temas|site|templates)\//.test(src)
+
+/**
  * `next/image` que **aparece con un fundido** si llega tarde, en vez de saltar de golpe sobre
  * el diseño. Para las invitaciones: cada una tiene su propio fondo y un hueco gris encima
  * (`ImagenConCarga`) desentonaría. Misma API que `Image`.
@@ -32,6 +39,7 @@ export default function ImagenQueAparece({ alt, style, onLoad, onError, ...props
   return (
     <Image
       {...props}
+      unoptimized={props.unoptimized ?? esImagenPropia(props.src)}
       alt={alt}
       onError={(e) => {
         setEstado('lista')
