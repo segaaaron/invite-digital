@@ -31,6 +31,7 @@ export const createDrizzleGuestbookRepository = (database: DbExecutor): Guestboo
         featuredAt: messageNotes.featuredAt,
         reply: messageNotes.reply,
         repliedAt: messageNotes.repliedAt,
+        attending: rsvpResponses.attending,
       })
       .from(rsvpResponses)
       .innerJoin(guestGroups, eq(guestGroups.id, rsvpResponses.guestGroupId))

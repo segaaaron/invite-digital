@@ -2,6 +2,7 @@
 
 import { useActionState, useId } from 'react'
 import { enterAsPorterAction, type PinState } from '@/app/_acciones/checkin/porter-actions'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PinState = { status: 'idle' }
 
@@ -10,7 +11,7 @@ const INICIAL: PinState = { status: 'idle' }
  * tenga el enlace sin el PIN no debe saber de qué fiesta es, como la puerta de contraseña.
  */
 export function PorterPinForm({ token }: { token: string }) {
-  const [estado, entrar, entrando] = useActionState(enterAsPorterAction, INICIAL)
+  const [estado, entrar, entrando] = useActionState(sinCaerse(enterAsPorterAction), INICIAL)
   const id = useId()
 
   return (

@@ -17,6 +17,7 @@ import {
 import type { EstadoDeTarea, Responsable, Tarea } from '../domain/tareas'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -83,7 +84,7 @@ function CamposDeTarea({ etapas, inicial }: { etapas: readonly Etapa[]; inicial:
 }
 
 function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Evento; etapas: readonly Etapa[] }) {
-  const [edicion, guardar, guardando] = useActionState(editTaskAction, INICIAL)
+  const [edicion, guardar, guardando] = useActionState(sinCaerse(editTaskAction), INICIAL)
   const id = useId()
   const enviados = edicion.status === 'error' ? edicion.valores : undefined
   const estado = ESTADO[tarea.estado]
@@ -202,7 +203,7 @@ export function TaskBoard({
 
 /** Sumar una tarea propia. */
 export function NewTaskForm({ eventId, eventSlug, etapas }: Evento & { etapas: readonly Etapa[] }) {
-  const [estado, enviar, enviando] = useActionState(addTaskAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(addTaskAction), INICIAL)
   return (
     <form action={enviar} className="flex flex-col gap-3">
       <Ocultos eventId={eventId} eventSlug={eventSlug} />
@@ -218,7 +219,7 @@ export function NewTaskForm({ eventId, eventSlug, etapas }: Evento & { etapas: r
 
 /** El plan está vacío hasta que se pide: la plantilla de su fiesta, con un toque. */
 export function SeedTasksButton({ eventId, eventSlug }: Evento) {
-  const [estado, enviar, enviando] = useActionState(seedTasksAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(seedTasksAction), INICIAL)
   return (
     <form action={enviar} className="flex flex-col items-center gap-3">
       <Ocultos eventId={eventId} eventSlug={eventSlug} />

@@ -3,11 +3,14 @@
 import Link from 'next/link'
 import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { addGuestsFromAssistantAction } from '@/app/_acciones/guests/actions'
-import type { InvitacionPropuesta } from '../domain/herramientas'
+import { addTaskAction, saveItemAction } from '@/app/_acciones/planner/actions'
+import { saveCitaAction } from '@/app/_acciones/planner/agenda-actions'
+import { saveMomentAction } from '@/app/_acciones/planner/dia-actions'
+import type { Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
 
-type Propuesta = { invitaciones: readonly InvitacionPropuesta[]; estado: 'pendiente' | 'guardando' | 'guardada' | 'descartada'; resultado?: string }
+type Propuesta = { contenido: Contenido; estado: 'pendiente' | 'guardando' | 'guardada' | 'descartada'; resultado?: string }
 type Burbuja = { rol: 'usuario' | 'asistente'; texto: string; propuesta?: Propuesta; error?: boolean }
 
 const SUGERENCIAS = ['¿Qué me falta esta semana?', '¿Quién falta por responder?', 'Quiero registrar invitados', '¿Cómo mando las invitaciones?']
@@ -22,6 +25,101 @@ const CONSULTANDO: Record<string, string> = {
   cronograma: 'Revisando el cronograma…',
   como_se_hace: 'Buscando cómo se hace…',
   proponer_invitados: 'Preparando la lista…',
+  proponer_tareas: 'Preparando las tareas…',
+  proponer_partidas: 'Preparando el presupuesto…',
+  proponer_momentos: 'Preparando el cronograma…',
+  agenda: 'Revisando tu agenda…',
+  proponer_citas: 'Preparando las citas…',
+}
+
+const bs = (n: number) => `Bs ${n.toLocaleString('es-BO', { maximumFractionDigits: 2 })}`
+const plural = (n: number, uno: string, varios: string) => (n === 1 ? `1 ${uno}` : `${n} ${varios}`)
+
+/** Lo que dice la cabecera de la tarjeta y lo que Luxury oye tras guardar. */
+function cuantos(c: Contenido): string {
+  switch (c.clase) {
+    case 'invitados': {
+      const personas = c.invitaciones.reduce((s, i) => s + i.personas.length, 0)
+      return `${plural(c.invitaciones.length, 'invitación', 'invitaciones')} · ${plural(personas, 'persona', 'personas')}`
+    }
+    case 'tareas':
+      return plural(c.tareas.length, 'tarea', 'tareas')
+    case 'partidas':
+      return `${plural(c.partidas.length, 'partida', 'partidas')} · ${bs(c.partidas.reduce((s, p) => s + p.previsto_bs, 0))}`
+    case 'momentos':
+      return plural(c.momentos.length, 'momento', 'momentos')
+    case 'citas':
+      return plural(c.citas.length, 'cita', 'citas')
+  }
+}
+
+const DONDE: Record<Contenido['clase'], { ruta: string; nombre: string }> = {
+  invitados: { ruta: 'invitados?panel=envio', nombre: 'mandarles su invitación' },
+  tareas: { ruta: 'planner/tareas', nombre: 'verlas en tu plan de tareas' },
+  partidas: { ruta: 'planner/presupuesto', nombre: 'verlas en tu presupuesto' },
+  momentos: { ruta: 'planner/cronograma', nombre: 'verlos en tu cronograma' },
+  citas: { ruta: 'planner/agenda', nombre: 'verlas en tu agenda' },
+}
+
+type Hecho = { ok: true } | { ok: false; mensaje: string }
+type Estado = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
+
+/**
+ * Guarda una por una con **las mismas acciones de la pantalla** (su guardia, su plan y sus reglas): lo que
+ * Luxury propone no tiene un camino propio a la base. Si una falla, para y dice cuál; las anteriores quedan.
+ */
+async function guardarEnSerie(filas: readonly FormData[], accion: (previo: Estado, fd: FormData) => Promise<Estado>, nombreDe: (i: number) => string): Promise<Hecho> {
+  for (const [i, fd] of filas.entries()) {
+    const hecho = await accion({ status: 'idle' }, fd).catch(() => ({ status: 'error' as const, message: 'se cortó la conexión' }))
+    if (hecho.status === 'error') {
+      const antes = i === 0 ? '' : ` Las ${i} anteriores sí quedaron.`
+      return { ok: false, mensaje: `No se guardó «${nombreDe(i)}»: ${hecho.message}${antes}` }
+    }
+  }
+  return { ok: true }
+}
+
+function formulario(base: { eventId: string; eventSlug: string }, campos: Record<string, string>): FormData {
+  const fd = new FormData()
+  for (const [k, v] of Object.entries({ ...base, ...campos })) fd.set(k, v)
+  return fd
+}
+
+async function guardarPropuesta(c: Contenido, base: { eventId: string; eventSlug: string }): Promise<Hecho> {
+  switch (c.clase) {
+    case 'invitados': {
+      const hecho = await addGuestsFromAssistantAction({ eventSlug: base.eventSlug, invitaciones: c.invitaciones }).catch(() => ({ status: 'error' as const, message: 'No se pudo guardar. Vuelve a intentarlo.' }))
+      return hecho.status === 'success' ? { ok: true } : { ok: false, mensaje: hecho.message }
+    }
+    case 'tareas':
+      return guardarEnSerie(
+        c.tareas.map((t) => formulario(base, { title: t.titulo, stage: 'propias', dueDate: t.vence ?? '', assignee: t.responsable })),
+        addTaskAction,
+        (i) => c.tareas[i]!.titulo,
+      )
+    case 'partidas':
+      return guardarEnSerie(
+        c.partidas.map((p) => formulario(base, { itemId: '', category: p.categoria, concept: p.concepto, estimated: String(p.previsto_bs), contracted: '', payer: 'anfitriones', padrinoLabel: '', notes: '' })),
+        saveItemAction,
+        (i) => c.partidas[i]!.concepto,
+      )
+    case 'momentos':
+      return guardarEnSerie(
+        c.momentos.map((m) => {
+          const fd = formulario(base, { momentId: '', startsAt: m.hora, durationMin: '30', title: m.momento, place: '', owner: '', cue: '', notes: '', icono: '' })
+          if (m.en_invitacion) fd.set('enInvitacion', 'on')
+          return fd
+        }),
+        saveMomentAction,
+        (i) => c.momentos[i]!.momento,
+      )
+    case 'citas':
+      return guardarEnSerie(
+        c.citas.map((x) => formulario(base, { citaId: '', title: x.titulo, dia: x.dia, hora: x.hora, durationMin: String(x.minutos), place: x.lugar ?? '', vendorId: '', notes: '' })),
+        saveCitaAction,
+        (i) => c.citas[i]!.titulo,
+      )
+  }
 }
 
 /** Los enlaces del propio evento que Luxury escribe se vuelven enlaces de verdad; nada de fuera. */
@@ -50,7 +148,7 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNo
  * respuesta llega por trozos y se va escribiendo. Cuando propone invitados, pinta la tarjeta: nada se
  * guarda sin «Confirmar».
  */
-export function Asistente({ slug }: { slug: string }) {
+export function Asistente({ eventId, slug }: { eventId: string; slug: string }) {
   const [burbujas, setBurbujas] = useState<Burbuja[]>([])
   const [texto, setTexto] = useState('')
   const [ocupado, setOcupado] = useState(false)
@@ -116,7 +214,7 @@ export function Asistente({ slug }: { slug: string }) {
             setConsultando(null)
             enLaUltima((b) => ({ ...b, texto: b.texto + salida.delta }))
           } else if (salida.tipo === 'consultando') setConsultando(CONSULTANDO[salida.herramienta] ?? 'Consultando…')
-          else if (salida.tipo === 'propuesta') enLaUltima((b) => ({ ...b, propuesta: { invitaciones: salida.invitaciones, estado: 'pendiente' } }))
+          else if (salida.tipo === 'propuesta') enLaUltima((b) => ({ ...b, propuesta: { contenido: salida.propuesta, estado: 'pendiente' } }))
           else if (salida.tipo === 'error') enLaUltima((b) => ({ ...b, texto: b.texto === '' ? salida.mensaje : `${b.texto}\n\n${salida.mensaje}`, error: b.texto === '' }))
         }
       }
@@ -133,13 +231,14 @@ export function Asistente({ slug }: { slug: string }) {
     const marcar = (cambio: Partial<Propuesta>) =>
       setBurbujas((todas) => todas.map((b, i) => (i === indice && b.propuesta ? { ...b, propuesta: { ...b.propuesta, ...cambio } } : b)))
     marcar({ estado: 'guardando' })
-    const hecho = await addGuestsFromAssistantAction({ eventSlug: slug, invitaciones: propuesta.invitaciones }).catch(() => ({ status: 'error' as const, message: 'No se pudo guardar. Vuelve a intentarlo.' }))
-    if (hecho.status === 'success') {
-      const resultado = `Listo: ${hecho.creadas === 1 ? '1 invitación' : `${hecho.creadas} invitaciones`} (${hecho.personas === 1 ? '1 persona' : `${hecho.personas} personas`}) en tu lista.`
-      marcar({ estado: 'guardada', resultado: 'Guardada en tu lista.' })
+    const c = propuesta.contenido
+    const hecho = await guardarPropuesta(c, { eventId, eventSlug: slug })
+    if (hecho.ok) {
+      const donde = DONDE[c.clase]
+      marcar({ estado: 'guardada', resultado: 'Guardado.' })
       // Que Luxury lo sepa en el siguiente mensaje: la conversación es lo único que recuerda.
-      setBurbujas((todas) => [...todas, { rol: 'asistente', texto: `${resultado} Ya puedes mandarles su invitación desde /panel/eventos/${slug}/invitados?panel=envio` }])
-    } else marcar({ estado: 'pendiente', resultado: hecho.message })
+      setBurbujas((todas) => [...todas, { rol: 'asistente', texto: `Listo: ${cuantos(c)} guardado. Puedes ${donde.nombre} en /panel/eventos/${slug}/${donde.ruta}` }])
+    } else marcar({ estado: 'pendiente', resultado: hecho.mensaje })
   }
 
   const corregir = (indice: number) => {
@@ -286,21 +385,12 @@ export function Asistente({ slug }: { slug: string }) {
 }
 
 function TarjetaDePropuesta({ propuesta, alConfirmar, alCorregir }: { propuesta: Propuesta; alConfirmar: () => void; alCorregir: () => void }) {
-  const personas = propuesta.invitaciones.reduce((s, i) => s + i.personas.length, 0)
-  const n = propuesta.invitaciones.length
+  const c = propuesta.contenido
   return (
-    <section aria-label="Invitados para confirmar" className="rounded-[16px] border border-gold/40 bg-bg-top px-4 py-3.5">
-      <p className="font-mono text-[10.5px] tracking-[0.14em] text-gold-deep uppercase">
-        {n === 1 ? '1 invitación' : `${n} invitaciones`} · {personas === 1 ? '1 persona' : `${personas} personas`}
-      </p>
+    <section aria-label={ROTULO[c.clase]} className="rounded-[16px] border border-gold/40 bg-bg-top px-4 py-3.5">
+      <p className="font-mono text-[10.5px] tracking-[0.14em] text-gold-deep uppercase">{cuantos(c)}</p>
       <ul className="mt-2 flex flex-col gap-1.5">
-        {propuesta.invitaciones.map((inv, i) => (
-          <li className="text-[13px] leading-snug text-ink" key={i}>
-            <span className="font-medium">{inv.personas[0]}</span>
-            {inv.personas.length > 1 ? <span className="text-ink-soft"> y {inv.personas.slice(1).join(', ')}</span> : null}
-            {inv.telefono === null ? null : <span className="block text-[12px] text-ink-mute">WhatsApp {inv.telefono}</span>}
-          </li>
-        ))}
+        <Filas contenido={c} />
       </ul>
       {propuesta.estado === 'guardada' ? (
         <p className="mt-3 text-[12.5px] text-sage-deep" role="status">
@@ -333,6 +423,68 @@ function TarjetaDePropuesta({ propuesta, alConfirmar, alCorregir }: { propuesta:
       )}
     </section>
   )
+}
+
+const ROTULO: Record<Contenido['clase'], string> = {
+  invitados: 'Invitados para confirmar',
+  tareas: 'Tareas para confirmar',
+  partidas: 'Partidas para confirmar',
+  momentos: 'Momentos para confirmar',
+  citas: 'Citas para confirmar',
+}
+
+const fila = 'text-[13px] leading-snug text-ink'
+const detalle = 'block text-[12px] text-ink-mute'
+const RESPONSABLE = { anfitrion: 'Anfitriones', planner: 'Planner', familia: 'Familia' } as const
+
+function Filas({ contenido: c }: { contenido: Contenido }) {
+  switch (c.clase) {
+    case 'invitados':
+      return c.invitaciones.map((inv, i) => (
+        <li className={fila} key={i}>
+          <span className="font-medium">{inv.personas[0]}</span>
+          {inv.personas.length > 1 ? <span className="text-ink-soft"> y {inv.personas.slice(1).join(', ')}</span> : null}
+          {inv.telefono === null ? null : <span className={detalle}>WhatsApp {inv.telefono}</span>}
+        </li>
+      ))
+    case 'tareas':
+      return c.tareas.map((t, i) => (
+        <li className={fila} key={i}>
+          <span className="font-medium">{t.titulo}</span>
+          <span className={detalle}>
+            {RESPONSABLE[t.responsable]}
+            {t.vence === null ? '' : ` · vence ${t.vence.split('-').reverse().join('/')}`}
+          </span>
+        </li>
+      ))
+    case 'partidas':
+      return c.partidas.map((p, i) => (
+        <li className={`${fila} flex justify-between gap-3`} key={i}>
+          <span className="font-medium">{p.concepto}</span>
+          <span className="shrink-0 text-ink-soft tabular-nums">{bs(p.previsto_bs)}</span>
+        </li>
+      ))
+    case 'citas':
+      return c.citas.map((x, i) => (
+        <li className={fila} key={i}>
+          <span className="font-medium">{x.titulo}</span>
+          <span className={detalle}>
+            {x.dia.split('-').reverse().join('/')} · {x.hora}
+            {x.lugar ? ` · ${x.lugar}` : ''}
+          </span>
+        </li>
+      ))
+    case 'momentos':
+      return c.momentos.map((m, i) => (
+        <li className={`${fila} flex gap-3`} key={i}>
+          <span className="w-11 shrink-0 font-mono text-[12px] text-gold-deep tabular-nums">{m.hora}</span>
+          <span>
+            <span className="font-medium">{m.momento}</span>
+            {m.en_invitacion ? <span className={detalle}>Sale en la invitación</span> : null}
+          </span>
+        </li>
+      ))
+  }
 }
 
 function Chispa({ className }: { className?: string }) {

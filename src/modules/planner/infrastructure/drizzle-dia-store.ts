@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
-import { courtMembers, eventDocuments, rehearsalAttendees, rehearsals, runOfShow, vendors } from '@/shared/db/schema'
+import { calendarFeeds, courtMembers, eventAppointments, eventDocuments, rehearsalAttendees, rehearsals, runOfShow, vendors } from '@/shared/db/schema'
 import type { DiaStore } from '../application/dia-ports'
 import type { TipoDeDocumento } from '../domain/dia-d'
 import type { EstadoDeProveedor, TipoDeCortejo } from '../domain/equipo-del-dia'
@@ -161,6 +161,50 @@ export function createDrizzleDiaStore(database: DbExecutor = db): DiaStore {
     async removeRehearsal(eventId, id) {
       const filas = await database.delete(rehearsals).where(and(eq(rehearsals.id, id), eq(rehearsals.eventId, eventId))).returning({ id: rehearsals.id })
       return filas.length > 0
+    },
+
+    async listCitas(eventId) {
+      return database
+        .select({
+          id: eventAppointments.id,
+          title: eventAppointments.title,
+          startsAt: eventAppointments.startsAt,
+          durationMin: eventAppointments.durationMin,
+          place: eventAppointments.place,
+          vendorId: eventAppointments.vendorId,
+          notes: eventAppointments.notes,
+        })
+        .from(eventAppointments)
+        .where(eq(eventAppointments.eventId, eventId))
+        .orderBy(asc(eventAppointments.startsAt))
+    },
+    async insertCita(eventId, cita) {
+      await database.insert(eventAppointments).values({ ...cita, eventId })
+    },
+    async updateCita(eventId, id, cita) {
+      const filas = await database
+        .update(eventAppointments)
+        .set(cita)
+        .where(and(eq(eventAppointments.id, id), eq(eventAppointments.eventId, eventId)))
+        .returning({ id: eventAppointments.id })
+      return filas.length > 0
+    },
+    async removeCita(eventId, id) {
+      const filas = await database
+        .delete(eventAppointments)
+        .where(and(eq(eventAppointments.id, id), eq(eventAppointments.eventId, eventId)))
+        .returning({ id: eventAppointments.id })
+      return filas.length > 0
+    },
+    async setFeed(eventId, userId, hash) {
+      await database
+        .insert(calendarFeeds)
+        .values({ eventId, userId, tokenHash: hash })
+        .onConflictDoUpdate({ target: [calendarFeeds.eventId, calendarFeeds.userId], set: { tokenHash: hash, createdAt: new Date() } })
+    },
+    async findFeed(hash) {
+      const [fila] = await database.select({ eventId: calendarFeeds.eventId, userId: calendarFeeds.userId }).from(calendarFeeds).where(eq(calendarFeeds.tokenHash, hash))
+      return fila ?? null
     },
   }
 }

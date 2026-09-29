@@ -10,6 +10,8 @@ import { RevokeInvitationForm } from './RevokeInvitationForm'
  */
 const estado = vi.fn<() => RevokeInvitationState>(() => ({ status: 'idle' }))
 
+// `useActionState` se simula por la acción: el envoltorio `sinCaerse` la devuelve tal cual.
+vi.mock('@/shared/design/ui/sin-caerse', () => ({ sinCaerse: <T,>(accion: T) => accion }))
 vi.mock('react', async () => {
   const react = await vi.importActual<typeof import('react')>('react')
   return {

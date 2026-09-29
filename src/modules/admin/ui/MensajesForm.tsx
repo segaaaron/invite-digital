@@ -6,6 +6,7 @@ import { MENSAJES, rellenar, type Mensajes } from '../domain/mensajes'
 import { SettingsSection, UnitField } from '@/shared/design/ui/panel/ajustes'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { FIELD_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: MensajesState = { status: 'idle' }
 /** Lo que se ve en la muestra de cada mensaje: una venta cualquiera. */
@@ -17,7 +18,7 @@ const EJEMPLO = { nombre: 'Carla', fecha: 'sáb 14 feb 2027', importe: 'Bs 1.190
  * quien compra recomendado.
  */
 export function MensajesForm({ mensajes, capacidad, descuento }: { mensajes: Mensajes; capacidad: number; descuento: number }) {
-  const [estado, guardar] = useActionState(guardarMensajesAction, INICIAL)
+  const [estado, guardar] = useActionState(sinCaerse(guardarMensajesAction), INICIAL)
   const [textos, setTextos] = useState<Mensajes>(mensajes)
   return (
     <form action={guardar} className="flex flex-col">

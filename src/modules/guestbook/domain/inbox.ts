@@ -19,6 +19,8 @@ export type GuestMessage = {
   readonly featuredAt: Date | null
   readonly reply: string | null
   readonly repliedAt: Date | null
+  /** Cuántos dijo que vienen al firmar (0: no viene). */
+  readonly attending?: number
 }
 
 export const INBOX_FILTERS = ['all', 'unread', 'featured'] as const

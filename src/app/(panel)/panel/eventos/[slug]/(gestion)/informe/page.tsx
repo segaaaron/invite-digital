@@ -76,7 +76,7 @@ export default async function InformePage({ params }: { params: Promise<{ slug: 
         )}
       </PanelCard>
 
-      <PanelCard title="El libro de firmas">
+      <PanelCard id="libro" title="El libro de firmas">
         {mensajes.length === 0 ? (
           <EmptyState compact title="Nadie dejó un mensaje" />
         ) : (

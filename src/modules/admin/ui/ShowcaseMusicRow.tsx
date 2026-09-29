@@ -11,6 +11,7 @@ import { removeShowcaseMusicAction, renameShowcaseSongAction, setTemplatePublish
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
 import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -47,11 +48,11 @@ export function ShowcaseMusicRow({
   /** Cuántas veces se vendió y cuándo la última (ya en palabras): qué destacar y qué retirar. */
   ventas: { readonly veces: number; readonly ultima: string | null }
 }) {
-  const [alta, subir, subiendo] = useActionState<AdminActionState, FormData>(uploadShowcaseMusicAction, INICIAL)
-  const [baja, quitar, quitando] = useActionState<AdminActionState, FormData>(removeShowcaseMusicAction, INICIAL)
-  const [renombre, renombrar, renombrando] = useActionState<AdminActionState, FormData>(renameShowcaseSongAction, INICIAL)
+  const [alta, subir, subiendo] = useActionState<AdminActionState, FormData>(sinCaerse(uploadShowcaseMusicAction), INICIAL)
+  const [baja, quitar, quitando] = useActionState<AdminActionState, FormData>(sinCaerse(removeShowcaseMusicAction), INICIAL)
+  const [renombre, renombrar, renombrando] = useActionState<AdminActionState, FormData>(sinCaerse(renameShowcaseSongAction), INICIAL)
   const [publicacion, cambiarPublicacion, cambiando] = useActionState<AdminActionState, FormData>(
-    setTemplatePublishedAction,
+    sinCaerse(setTemplatePublishedAction),
     INICIAL,
   )
   const id = useId()

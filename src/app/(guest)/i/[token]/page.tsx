@@ -18,6 +18,8 @@ import { env } from '@/shared/config/env'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from './invitation'
+import { eventoDeLaInvitacion } from './calendario'
+import { enlaceDeGoogle } from '@/shared/calendario/ics'
 import { ViewBeacon } from '@/modules/analytics/ui/ViewBeacon'
 import { classifyDevice } from '@/modules/analytics'
 import { headers } from 'next/headers'
@@ -143,6 +145,10 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
       ),
   }
 
+  // «Agregar a mi calendario» va con el pase: quien confirmó que viene es quien quiere guardarlo.
+  const alCalendario = eventoDeLaInvitacion(event, await eventos.contenidoParaInvitados(event.id, {}), invitationUrl(token, env.SITE_URL))
+  const boton = 'inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase'
+
   // El pase de entrada: el QR y el botón de abrirlo a solas, en su ranura.
   const pase = (
     <>
@@ -155,11 +161,16 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
       {/* El pase, a solas y a un toque. En la puerta, de noche y con gente detrás,
           nadie se desplaza hasta el final de la invitación. */}
       <p className="mt-5 text-center">
-        <a
-          className="inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase"
-          href={`/i/${token}/pase`}
-        >
+        <a className={boton} href={`/i/${token}/pase`}>
           {dictionary.passOpen}
+        </a>
+      </p>
+      <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-center font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase">
+        <a className="underline underline-offset-4" href={`/i/${token}/calendario`}>
+          {dictionary.calendarAdd}
+        </a>
+        <a className="underline underline-offset-4" href={enlaceDeGoogle(alCalendario)} rel="noopener noreferrer" target="_blank">
+          {dictionary.calendarGoogle}
         </a>
       </p>
     </>

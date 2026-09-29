@@ -7,6 +7,7 @@ import { QrCodeSvg } from '@/shared/design/ui/QrCodeSvg'
 import { printMarkedOnly } from '@/shared/design/ui/print'
 import { createQrCodeAction, toggleQrCodeAction, updateQrCodeAction, type QrActionState } from '@/app/_acciones/qr/actions'
 import { SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: QrActionState = { status: 'idle' }
 
@@ -45,7 +46,7 @@ export function QrManager({
   eventTitle: string
   codes: readonly QrView[]
 }) {
-  const [alta, crear, creando] = useActionState<QrActionState, FormData>(createQrCodeAction, INICIAL)
+  const [alta, crear, creando] = useActionState<QrActionState, FormData>(sinCaerse(createQrCodeAction), INICIAL)
   const id = useId()
 
   return (
@@ -154,8 +155,8 @@ export function QrManager({
 }
 
 function QrRow({ code, eventId, eventSlug }: { code: QrView; eventId: string; eventSlug: string }) {
-  const [edicion, editar, editando] = useActionState<QrActionState, FormData>(updateQrCodeAction, INICIAL)
-  const [estado, alternar, alternando] = useActionState<QrActionState, FormData>(toggleQrCodeAction, INICIAL)
+  const [edicion, editar, editando] = useActionState<QrActionState, FormData>(sinCaerse(updateQrCodeAction), INICIAL)
+  const [estado, alternar, alternando] = useActionState<QrActionState, FormData>(sinCaerse(toggleQrCodeAction), INICIAL)
   const [abierto, setAbierto] = useState(false)
   const id = useId()
 

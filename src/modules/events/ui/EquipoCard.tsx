@@ -6,6 +6,7 @@ import { addPorterAction, removePorterAction, type PorterActionState } from '@/a
 import { addTeamMemberAction, removeTeamMemberAction, type TeamActionState } from '@/app/_acciones/events/team-actions'
 import { FIELD_CLASS, Field, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 export type MiembroVista = {
   readonly userId: string
@@ -67,8 +68,8 @@ export function EquipoCard({
   topes: { planners: number | null }
   porteros: { lista: readonly PorteroVista[]; limite: number } | null
 }) {
-  const [altaEquipo, sumarEquipo, sumandoEquipo] = useActionState(addTeamMemberAction, EQUIPO_INICIAL)
-  const [altaPortero, sumarPortero, sumandoPortero] = useActionState(addPorterAction, PORTERO_INICIAL)
+  const [altaEquipo, sumarEquipo, sumandoEquipo] = useActionState(sinCaerse(addTeamMemberAction), EQUIPO_INICIAL)
+  const [altaPortero, sumarPortero, sumandoPortero] = useActionState(sinCaerse(addPorterAction), PORTERO_INICIAL)
   const id = useId()
   const cuantos = (p: MiembroVista['papel']) => miembros.filter((m) => m.papel === p).length
 
@@ -240,12 +241,12 @@ export function EquipoCard({
 }
 
 function QuitarMiembro({ campos, nombre }: { campos: Record<string, string>; nombre: string }) {
-  const [estado, enviar, enviando] = useActionState(removeTeamMemberAction, EQUIPO_INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(removeTeamMemberAction), EQUIPO_INICIAL)
   return <Quitar campos={campos} enviando={enviando} enviar={enviar} error={estado.status === 'error' ? estado.message : null} nombre={nombre} />
 }
 
 function QuitarPortero({ campos, nombre }: { campos: Record<string, string>; nombre: string }) {
-  const [estado, enviar, enviando] = useActionState(removePorterAction, PORTERO_INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(removePorterAction), PORTERO_INICIAL)
   return <Quitar campos={campos} enviando={enviando} enviar={enviar} error={estado.status === 'error' ? estado.message : null} nombre={nombre} />
 }
 

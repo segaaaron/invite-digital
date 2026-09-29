@@ -5,6 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { setEventPrivacyAction, type PrivacyState } from '@/app/_acciones/events/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
  * Privacidad del evento, como en la maqueta: pública con el enlace, o protegida con
@@ -25,7 +26,7 @@ export function PrivacyForm({
   /** Si el plan trae la contraseña. Sin ella la opción se ve apagada y dice por qué: se puede subir de plan. */
   contrasenaIncluida?: boolean
 }) {
-  const [state, action, pending] = useActionState<PrivacyState, FormData>(setEventPrivacyAction, { status: 'idle' })
+  const [state, action, pending] = useActionState<PrivacyState, FormData>(sinCaerse(setEventPrivacyAction), { status: 'idle' })
   const [modo, setModo] = useState<'public' | 'password'>(hasPassword ? 'password' : 'public')
   const campoId = useId()
 

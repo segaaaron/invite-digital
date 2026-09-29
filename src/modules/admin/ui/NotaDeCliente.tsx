@@ -4,6 +4,7 @@ import { useActionState, useId } from 'react'
 import { guardarNotaClienteAction, publicarOpinionAction, type ClienteActionState } from '@/app/_acciones/admin/clientes-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: ClienteActionState = { status: 'idle' }
 
@@ -13,7 +14,7 @@ const INICIAL: ClienteActionState = { status: 'idle' }
  * Se marca de un toque y se guarda con un botón.
  */
 export function NotaDeCliente({ clave, nombre, nota, etiquetas, sugeridas }: { clave: string; nombre: string; nota: string | null; etiquetas: readonly string[]; sugeridas: readonly string[] }) {
-  const [estado, guardar] = useActionState(guardarNotaClienteAction, INICIAL)
+  const [estado, guardar] = useActionState(sinCaerse(guardarNotaClienteAction), INICIAL)
   const id = useId()
   const todas = [...new Set([...sugeridas, ...etiquetas])]
   return (
@@ -51,7 +52,7 @@ export function NotaDeCliente({ clave, nombre, nota, etiquetas, sugeridas }: { c
 
 /** La opinión que el cliente dejó publicar, a los testimonios de la web de un toque. */
 export function PublicarOpinion({ eventId, autor, rol }: { eventId: string; autor: string; rol: string }) {
-  const [estado, publicar] = useActionState(publicarOpinionAction, INICIAL)
+  const [estado, publicar] = useActionState(sinCaerse(publicarOpinionAction), INICIAL)
   if (estado.status === 'success') return <ActionFeedback state={estado} />
   return (
     <form action={publicar} className="flex flex-wrap items-center gap-2">

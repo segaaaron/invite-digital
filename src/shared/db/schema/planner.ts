@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm'
 import { boolean, check, date, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { events } from './eventos'
+import { users } from './identidad'
 import { bytea } from './base'
 
 /**
@@ -213,4 +214,39 @@ export const eventDocuments = pgTable(
     index('event_documents_event_idx').on(t.eventId),
     check('event_documents_kind_check', sql`${t.kind} in ('contrato', 'cotizacion', 'factura', 'referencia')`),
   ],
+)
+
+/** Las citas de la agenda: lo que no es tarea, pago ni momento. Hora de Bolivia sin zona (`0077`). */
+export const eventAppointments = pgTable(
+  'event_appointments',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    title: varchar('title', { length: 200 }).notNull(),
+    startsAt: varchar('starts_at', { length: 16 }).notNull(),
+    durationMin: integer('duration_min').notNull().default(60),
+    place: varchar('place', { length: 200 }),
+    vendorId: uuid('vendor_id').references(() => vendors.id, { onDelete: 'set null' }),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('event_appointments_event_idx').on(t.eventId, t.startsAt), check('event_appointments_duration_check', sql`${t.durationMin} between 5 and 1440`)],
+)
+
+/** La suscripción `.ics` de cada persona a la agenda de un evento. Solo el hash del token. */
+export const calendarFeeds = pgTable(
+  'calendar_feeds',
+  {
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    tokenHash: bytea('token_hash').notNull().unique(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.userId] })],
 )

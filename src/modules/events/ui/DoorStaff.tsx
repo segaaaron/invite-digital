@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -26,7 +27,7 @@ export function DoorStaff({
   eventSlug: string
   members: readonly StaffMember[]
 }) {
-  const [baja, darBaja, dandoBaja] = useActionState<StaffActionState, FormData>(removeDoorStaffAction, INICIAL)
+  const [baja, darBaja, dandoBaja] = useActionState<StaffActionState, FormData>(sinCaerse(removeDoorStaffAction), INICIAL)
 
   return (
     <div className="flex flex-col gap-4.5">

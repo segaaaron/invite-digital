@@ -41,22 +41,28 @@ test('sobres y transferencia con QR: se guardan en el panel y el invitado los ve
   await expect(page.getByText('Tu invitación no muestra regalos todavía')).toBeVisible()
 
   // 2. Una transferencia sin cuenta ni QR no se guarda: el invitado no tendría cómo pagar.
+  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=transferencia`)
   await page.getByRole('switch', { name: /Recibir por transferencia/ }).check()
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.getByText('carga los datos de tu cuenta o sube el QR')).toBeVisible()
 
-  // 3. Sobres con su frase, la cuenta y el QR del banco.
+  // 3. Sobres con su frase (su tarjeta), y luego la cuenta y el QR del banco (la suya): guardar una no apaga la otra.
+  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=sobres`)
   await page.getByRole('switch', { name: /Pedir lluvia de sobres/ }).check()
   await page.getByLabel('La frase (opcional)').fill('Tu presencia es lo más importante; si quieres, trae tu sobre.')
+  await page.getByRole('button', { name: 'Guardar' }).click()
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
+  await page.getByRole('link', { name: 'Encender: Transferencia o QR' }).click()
   await page.getByRole('switch', { name: /Recibir por transferencia/ }).check()
   await page.getByLabel('Banco').fill('Banco Nacional de Bolivia')
   await page.getByLabel('Titular').fill('Ana Vega Rojas')
   await page.getByLabel('Número de cuenta').fill('1000-2000-3000')
   await page.getByLabel(/Subir el QR/).setInputFiles({ name: 'qr.png', mimeType: 'image/png', buffer: qrPng })
   await page.getByRole('button', { name: 'Guardar' }).click()
-  await expect(page.getByText('Guardado. Ya lo ven tus invitados')).toBeVisible()
-  await page.reload()
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
   await expect(page.getByText('Tu invitación muestra: lluvia de sobres, transferencia.')).toBeVisible()
+  await expect(page.getByText('Activa · con QR')).toBeVisible()
+  await page.goto(`/panel/eventos/${SLUG}/regalos?panel=transferencia`)
   await expect(page.getByRole('img', { name: 'Tu QR para recibir transferencias' })).toBeVisible()
 
   // 4. El invitado lo ve en su invitación, con la cuenta para copiar y el QR para descargar.

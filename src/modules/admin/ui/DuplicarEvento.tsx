@@ -2,10 +2,11 @@
 
 import { useActionState } from 'react'
 import { duplicarEventoAction } from '@/app/_acciones/admin/bodas-actions'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /** Mismo diseño, plan y fecha, sin invitados. Al acertar, la acción lleva a la copia; si falla, lo dice aquí. */
 export function DuplicarEvento({ eventId }: { eventId: string }) {
-  const [estado, duplicar, pendiente] = useActionState(duplicarEventoAction, { status: 'idle' })
+  const [estado, duplicar, pendiente] = useActionState(sinCaerse(duplicarEventoAction), { status: 'idle' })
   return (
     <form action={duplicar} className="ml-auto flex flex-col items-end">
       <input name="eventId" type="hidden" value={eventId} />

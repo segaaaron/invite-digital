@@ -490,6 +490,9 @@ export interface InvitationDictionary {
   passCode: string
   passAlt: string
   passOpen: string
+  /** «Agregar a mi calendario» (el `.ics`) y su variante para Google Calendar, junto al pase. */
+  calendarAdd: string
+  calendarGoogle: string
   /** Antes de confirmar: el pase llega al decir que asiste. */
   passPending: string
   /** Al confirmar que asiste, dentro del formulario: el pase ya está, más abajo. */

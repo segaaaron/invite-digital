@@ -5,6 +5,7 @@ import { useActionState, useId, useState } from 'react'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
 import { respondByPersonAction, type RsvpActionState } from '@/app/_acciones/rsvp/actions'
 import { ConfettiBurst } from '@/shared/design/ui/ConfettiBurst'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: RsvpActionState = { status: 'idle' }
 
@@ -43,7 +44,7 @@ export function RsvpPorPersona({
   /** Su pase de entrada, que se entrega al confirmar que viene alguien. */
   paseHref: string
 }) {
-  const [estado, confirmar, enviando] = useActionState(respondByPersonAction, INICIAL)
+  const [estado, confirmar, enviando] = useActionState(sinCaerse(respondByPersonAction, { status: 'error', message: 'storage_failure' }), INICIAL)
   const id = useId()
   const [vienen, setVienen] = useState<Record<string, boolean>>({})
   const [extra, setExtra] = useState(0)

@@ -6,6 +6,7 @@ import { MOTIVOS_DE_PERDIDA } from '@/modules/leads'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { FIELD_CLASS, LABEL_CLASS, botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { CheckIcon, PlusIcon } from '@/shared/design/ui/icons'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
  * **Abre y anota a la vez**: el WhatsApp, el correo o el enlace se abre en el mismo clic —Safari
@@ -57,7 +58,7 @@ const INICIAL: VentaActionState = { status: 'idle' }
  * sin cobrar, se cancela; sin él, la consulta pasa a perdida. Plegada: es la última opción.
  */
 export function PerderVenta({ consultaId, orderId }: { consultaId: string | null; orderId: string | null }) {
-  const [estado, accion] = useActionState(perderVentaAction, INICIAL)
+  const [estado, accion] = useActionState(sinCaerse(perderVentaAction), INICIAL)
   const [motivo, setMotivo] = useState('')
   const id = useId()
   return (
@@ -100,7 +101,7 @@ export function PerderVenta({ consultaId, orderId }: { consultaId: string | null
 
 /** El saldo de un pedido con anticipo, recibido. */
 export function RegistrarSaldo({ orderId, nombre, publicRef, saldo }: { orderId: string; nombre: string; publicRef: string; saldo: string }) {
-  const [estado, accion] = useActionState(registrarSaldoAction, INICIAL)
+  const [estado, accion] = useActionState(sinCaerse(registrarSaldoAction), INICIAL)
   return (
     <form action={accion} className="flex flex-col gap-2">
       <input name="orderId" type="hidden" value={orderId} />

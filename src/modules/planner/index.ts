@@ -17,5 +17,7 @@ export type { Ensayo, EstadoDeProveedor, MiembroDelCortejo, Proveedor, TipoDeCor
 export { avisosDelCronograma, itinerarioDeInvitacion, momentoActual } from './domain/cronograma'
 export type { Momento } from './domain/cronograma'
 export type { EstadoDeTarea, Etapa, FiltroDeTareas, Responsable, Tarea } from './domain/tareas'
-export { avanceDeTareas, estadoDeTarea, etapasDe, FILTROS_DE_TAREAS, filtrarTareas, RESPONSABLES } from './domain/tareas'
+export { avanceDeTareas, estadoDeTarea, etapasDe, sembrarTareas, FILTROS_DE_TAREAS, filtrarTareas, RESPONSABLES } from './domain/tareas'
 export type { PlannerStore } from './application/ports'
+export { componerAgenda, NOMBRE_DE_CLASE, proximasDeLaAgenda, semanasDelMes } from './domain/agenda'
+export type { Cita, ClaseDeAgenda, EntradaDeAgenda } from './domain/agenda'

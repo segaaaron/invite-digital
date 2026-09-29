@@ -1,4 +1,5 @@
 import type { Fiesta } from '@/modules/events'
+import { leerCita } from '../domain/agenda'
 import { extensionDeDocumento, leerDocumento } from '../domain/dia-d'
 import { horaValida } from '../domain/cronograma'
 import { leerProveedor, type ProveedorInput, TIPOS_DE_CORTEJO, type TipoDeCortejo } from '../domain/equipo-del-dia'
@@ -18,7 +19,6 @@ type Deps = {
   ids: () => string
   clock: () => Date
 }
-
 const fallo = (mensaje: string): PlannerResult => ({ ok: false, mensaje })
 const NO_ESTA = 'Ya no está. Recarga la página.'
 const opcional = (v: string, max: number) => v.trim().slice(0, max) || null
@@ -288,3 +288,42 @@ export const purgeDocuments =
     for (const doc of docs) await removeDocument(deps)(eventId, doc.id)
     return docs.length
   }
+
+// ─── Agenda ──────────────────────────────────────────────────────────────────
+
+/** Crea o edita una cita. El proveedor, si viene, tiene que ser de este evento. */
+export const saveCita =
+  ({ dia }: Deps) =>
+  async (eventId: string, id: string | null, input: Parameters<typeof leerCita>[0]): Promise<PlannerResult> => {
+    const leida = leerCita(input)
+    if (!leida.ok) return fallo(leida.mensaje)
+    const { vendorId } = leida.valor
+    if (vendorId !== null && !(await dia.listVendors(eventId)).some((v) => v.id === vendorId)) return fallo('Ese proveedor no es de este evento.')
+    if (id === null) {
+      await dia.insertCita(eventId, leida.valor)
+      return { ok: true }
+    }
+    return (await dia.updateCita(eventId, id, leida.valor)) ? { ok: true } : fallo(NO_ESTA)
+  }
+
+export const removeCita =
+  ({ dia }: Deps) =>
+  async (eventId: string, id: string): Promise<PlannerResult> =>
+    (await dia.removeCita(eventId, id)) ? { ok: true } : fallo(NO_ESTA)
+
+/**
+ * El enlace privado de la suscripción. Del token solo se guarda el hash, así que no se puede volver a
+ * enseñar: pedirlo otra vez emite uno nuevo y el anterior deja de actualizarse.
+ */
+export const emitirSuscripcion =
+  ({ dia, minter }: Deps) =>
+  async (eventId: string, userId: string): Promise<string> => {
+    const { token, hash } = minter.mint()
+    await dia.setFeed(eventId, userId, hash)
+    return token
+  }
+
+export const resolverSuscripcion =
+  ({ dia, minter }: Deps) =>
+  async (token: string) =>
+    /^[\w-]{8,128}$/.test(token) ? dia.findFeed(minter.hashOf(token)) : null

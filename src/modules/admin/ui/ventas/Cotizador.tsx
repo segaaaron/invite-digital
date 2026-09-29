@@ -8,6 +8,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CheckIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { Copiar } from './AccionesDeVenta'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 type Fiesta = 'boda' | 'xv' | 'cumple'
 
@@ -52,7 +53,7 @@ export function Cotizador({
   hoy: string
   cerrarHref: string
 }) {
-  const [estado, accion] = useActionState(cotizarAction, INICIAL)
+  const [estado, accion] = useActionState(sinCaerse(cotizarAction), INICIAL)
   const [fiesta, setFiesta] = useState<Fiesta>(consulta?.fiesta ?? 'boda')
   const [plan, setPlan] = useState(planes[1]?.slug ?? planes[0]?.slug ?? '')
   const [elegidos, setElegidos] = useState<readonly string[]>([])

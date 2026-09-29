@@ -10,6 +10,7 @@ import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { HelpIcon, LaptopIcon, PhoneIcon, TabletIcon } from '@/shared/design/ui/icons'
 import type { TipoDeDispositivo } from '../domain/dispositivo'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const ICONO = { computadora: LaptopIcon, celular: PhoneIcon, tablet: TabletIcon, desconocido: HelpIcon } as const
 const CLASE = { computadora: 'Computadora', celular: 'Celular', tablet: 'Tablet', desconocido: 'Dispositivo' } as const
@@ -32,7 +33,7 @@ export type SesionVista = {
  * cuenta: el correo es lo único que distingue a quien la compró.
  */
 function PedirCodigo({ texto }: { texto: string }) {
-  const [pedido, pedir, pidiendo] = useActionState(requestAccountCodeAction, INICIAL)
+  const [pedido, pedir, pidiendo] = useActionState(sinCaerse(requestAccountCodeAction), INICIAL)
   return (
     <form action={pedir} className="flex flex-col gap-2">
       <div>
@@ -51,7 +52,7 @@ function PedirCodigo({ texto }: { texto: string }) {
 
 /** Las sesiones abiertas de la cuenta y el botón para cerrar las demás. */
 export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[] }) {
-  const [estado, cerrar, cerrando] = useActionState(closeOtherSessionsAction, INICIAL)
+  const [estado, cerrar, cerrando] = useActionState(sinCaerse(closeOtherSessionsAction), INICIAL)
   const id = useId()
   const otras = sesiones.filter((s) => !s.esta).length
   // Cada inicio de sesión abre una y duran 30 días: la lista crece. Se enseñan las más recientes.

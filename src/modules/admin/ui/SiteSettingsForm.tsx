@@ -9,6 +9,7 @@ import { restoreSiteVersionAction, saveSiteSettingsAction, type SiteActionState 
 import type { Bilingue, SiteSettings } from '../domain/site-settings'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { LegalText } from '@/shared/design/ui/LegalText'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: SiteActionState = { status: 'idle' }
 
@@ -72,7 +73,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
   const base = versiones[0]?.id ?? ''
   const [datos, setDatos] = useState<SiteSettings>(inicial)
   const [idioma, setIdioma] = useState<Idioma>('es')
-  const [estado, guardar, guardando] = useActionState(saveSiteSettingsAction, INICIAL)
+  const [estado, guardar, guardando] = useActionState(sinCaerse(saveSiteSettingsAction), INICIAL)
   // Lo último guardado. Tras un guardado correcto, lo que se envió pasa a serlo y la barra
   // deja de avisar; se ajusta durante el render, que es como React pide derivar de una acción.
   const [guardado, setGuardado] = useState({ json: JSON.stringify(inicial), estado })
@@ -591,7 +592,7 @@ function Campo({
 }
 
 function VersionRow({ version, actual, base }: { version: VersionView; actual: boolean; base: string }) {
-  const [estado, restaurar, restaurando] = useActionState(restoreSiteVersionAction, INICIAL)
+  const [estado, restaurar, restaurando] = useActionState(sinCaerse(restoreSiteVersionAction), INICIAL)
   const bloques = [...new Set(version.campos.map((c) => BLOQUES[c]?.titulo ?? c))]
   return (
     <li className="flex flex-col gap-2 border-t border-line-panel py-3 first:border-none">

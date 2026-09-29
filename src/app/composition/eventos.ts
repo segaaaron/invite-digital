@@ -12,6 +12,7 @@ import * as diaUseCases from '@/modules/planner/application/dia-use-cases'
 import * as plannerUseCases from '@/modules/planner/application/planner-use-cases'
 import { drizzleDiaStore } from '@/modules/planner/infrastructure/drizzle-dia-store'
 import { itinerarioDeInvitacion } from '@/modules/planner/domain/cronograma'
+import { componerAgenda } from '@/modules/planner/domain/agenda'
 import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
@@ -130,6 +131,26 @@ export const planner = {
     readDocument: diaUseCases.readDocument(diaDeps),
     removeDocument: diaUseCases.removeDocument(diaDeps),
     purgeDocuments: diaUseCases.purgeDocuments(diaDeps),
+    /**
+     * La agenda del evento: todo lo que tiene fecha, leído de su sitio. La hora del evento sale de lo
+     * **escrito** en la invitación (sin la muestra del diseño).
+     */
+    agenda: async (evento: { id: string; title: string; eventDate: string; rsvpDeadline: string }) => {
+      const [escrito, tareas, partidas, momentos, ensayos, citas] = await Promise.all([
+        contentFor(drizzleContentRepository)(evento.id, {}),
+        drizzlePlannerStore.listTasks(evento.id),
+        drizzlePlannerStore.listBudget(evento.id),
+        drizzleDiaStore.listMoments(evento.id),
+        drizzleDiaStore.listRehearsals(evento.id),
+        drizzleDiaStore.listCitas(evento.id),
+      ])
+      return componerAgenda({ evento: { ...evento, inicio: escrito.schedule?.startsAt ?? null }, tareas, partidas, momentos, ensayos, citas })
+    },
+    listCitas: (eventId: string) => drizzleDiaStore.listCitas(eventId),
+    saveCita: diaUseCases.saveCita(diaDeps),
+    removeCita: diaUseCases.removeCita(diaDeps),
+    emitirSuscripcion: diaUseCases.emitirSuscripcion(diaDeps),
+    resolverSuscripcion: diaUseCases.resolverSuscripcion(diaDeps),
   },
 } as const
 

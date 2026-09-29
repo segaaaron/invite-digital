@@ -5,6 +5,7 @@ import type { Category } from '@/modules/catalog'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 import { submitConsultationAction, type ConsultationActionState } from '@/app/_acciones/leads/actions'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 type Props = { categories: readonly Category[]; dictionary: Dictionary; locale: Locale }
 
@@ -23,7 +24,7 @@ const LABEL_CLASS = 'flex flex-col gap-2'
 const LABEL_TEXT = 'sr-only'
 
 export function ConsultationForm({ categories, dictionary, locale }: Props) {
-  const [state, formAction, isPending] = useActionState(submitConsultationAction, INITIAL_STATE)
+  const [state, formAction, isPending] = useActionState(sinCaerse(submitConsultationAction), INITIAL_STATE)
   // Every action result is a fresh object, so remembering the acknowledged one brings
   // the form back on "send another" and still shows the panel after the next success.
   const [acknowledged, setAcknowledged] = useState<ConsultationActionState | null>(null)

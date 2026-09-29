@@ -533,6 +533,13 @@
       "when": 1791800000000,
       "tag": "0076_registro_de_fallos",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1791900000000,
+      "tag": "0077_agenda",
+      "breakpoints": true
     }
   ]
 }

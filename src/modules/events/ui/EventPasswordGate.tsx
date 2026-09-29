@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { unlockEventAction, type UnlockState } from '@/app/_acciones/events/actions'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
  * La puerta de un evento protegido con contraseña.
@@ -13,7 +14,7 @@ import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
  * incorrecta».
  */
 export function EventPasswordGate({ token }: { token: string }) {
-  const [state, action, pending] = useActionState<UnlockState, FormData>(unlockEventAction, { status: 'idle' })
+  const [state, action, pending] = useActionState<UnlockState, FormData>(sinCaerse(unlockEventAction), { status: 'idle' })
 
   return (
     <main className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6">

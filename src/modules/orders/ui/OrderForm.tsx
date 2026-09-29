@@ -5,6 +5,7 @@ import { useActionState, useId } from 'react'
 import { placeOrderAction, type PlaceOrderState } from '@/app/_acciones/orders/actions'
 import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
 import type { Locale } from '@/shared/i18n/locales'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PlaceOrderState = { status: 'idle' }
 
@@ -38,7 +39,7 @@ export function OrderForm({
   templateSlug?: string | null
   templateName?: string | null
 }) {
-  const [estado, accion, pendiente] = useActionState<PlaceOrderState, FormData>(placeOrderAction, INICIAL)
+  const [estado, accion, pendiente] = useActionState<PlaceOrderState, FormData>(sinCaerse(placeOrderAction), INICIAL)
   const id = useId()
 
   if (estado.status === 'success') {

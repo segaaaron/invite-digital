@@ -3,6 +3,7 @@
 import { useActionState, useId } from 'react'
 import { type PlanChangeState, requestPlanChangeAction } from '@/app/_acciones/plans/actions'
 import type { PlansErrorKind } from '../domain/errors'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INITIAL: PlanChangeState = { status: 'idle' }
 
@@ -33,7 +34,7 @@ export function PlanChangeForm({
   /** El plan que se pulsó en su tarjeta, ya elegido en el desplegable. */
   defaultPlanSlug?: string | null
 }) {
-  const [state, formAction, isPending] = useActionState(requestPlanChangeAction, INITIAL)
+  const [state, formAction, isPending] = useActionState(sinCaerse(requestPlanChangeAction, { status: 'error', kind: 'storage_failure' }), INITIAL)
   const planId = useId()
   const noteId = useId()
 

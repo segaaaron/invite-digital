@@ -10,7 +10,7 @@ import { drizzleUsoDelAsistente } from '@/modules/asistente/infrastructure/drizz
 import { modeloFalso } from '@/modules/asistente/infrastructure/modelo-falso'
 import { crearModeloOpenAI } from '@/modules/asistente/infrastructure/openai'
 import { fiestaDeTema } from '@/modules/events'
-import { cuentasDePartida, estadoDeTarea, NOMBRE_DE_ESTADO, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
+import { categoriasDe, cuentasDePartida, estadoDeTarea, NOMBRE_DE_CLASE, NOMBRE_DE_ESTADO, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
 import { hasFeature, type Allowance } from '@/modules/plans'
 import { env } from '@/shared/config/env'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
@@ -27,7 +27,7 @@ const FIESTA: Record<string, string> = { boda: 'boda', xv: 'XV años', cumple: '
 const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
 const sinTildes = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
-type EventoDelAsistente = { readonly id: string; readonly slug: string; readonly title: string; readonly eventDate: string; readonly themeKey: string }
+type EventoDelAsistente = { readonly id: string; readonly slug: string; readonly title: string; readonly eventDate: string; readonly rsvpDeadline: string; readonly themeKey: string }
 
 /** Las herramientas de lectura sobre **este** evento: el `eventId` lo pone el servidor, nunca el modelo. */
 function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Date): Ejecutor {
@@ -100,6 +100,8 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
             return { concepto: p.concept, categoria: p.category, previsto: bs(c.previsto), pagado: bs(c.pagado), falta: bs(c.falta) }
           }),
           pagos_que_vencen: pagosQueVencen(partidas, hoy).map((g) => ({ concepto: g.concepto, importe: bs(g.amountCents), vence: g.dueDate })),
+          // Para `proponer_partidas`: la clave de cada categoría de esta fiesta.
+          categorias_disponibles: categoriasDe(fiestaDeTema(evento.themeKey)).map((c) => ({ clave: c.clave, nombre: c.nombre })),
           enlace: ruta('/planner/presupuesto'),
         }
       }
@@ -115,7 +117,22 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
       }
       case 'como_se_hace':
         return { como: GUIAS[llamada.tema].texto, enlace: ruta(GUIAS[llamada.tema].ruta) }
+      case 'agenda': {
+        const desde = llamada.desde ?? hoy
+        const hasta = llamada.hasta ?? new Date(Date.parse(`${desde}T00:00:00Z`) + 30 * 86_400_000).toISOString().slice(0, 10)
+        const entradas = (await planner.dia.agenda(evento)).filter((e) => e.dia >= desde && e.dia <= hasta)
+        return {
+          desde,
+          hasta,
+          agenda: entradas.slice(0, 60).map((e) => ({ dia: e.dia, hora: e.hora, que: e.titulo, tipo: NOMBRE_DE_CLASE[e.clase], detalle: e.detalle, hecho: e.hecha })),
+          enlace: ruta('/planner/agenda'),
+        }
+      }
+      case 'proponer_citas':
       case 'proponer_invitados':
+      case 'proponer_tareas':
+      case 'proponer_partidas':
+      case 'proponer_momentos':
         // Lo resuelve `conversar` sin llegar aquí: proponer no guarda.
         return { error: 'No disponible.' }
     }

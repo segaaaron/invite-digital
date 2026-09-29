@@ -18,6 +18,8 @@ export type MessageRow = {
   readonly featuredAt: Date | null
   readonly reply: string | null
   readonly repliedAt: Date | null
+  /** Cuántos dijo que vienen al firmar (0: no viene). Sin el dato, `undefined`. */
+  readonly attending?: number
 }
 
 /** El evento al que pertenece una respuesta, y el estado que ya tenga su nota. */

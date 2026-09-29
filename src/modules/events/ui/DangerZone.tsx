@@ -2,6 +2,7 @@
 
 import { useActionState, useId, useState } from 'react'
 import { deleteEventAction, type DeleteEventState } from '@/app/_acciones/events/actions'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
  * La zona de riesgo de la maqueta.
@@ -12,7 +13,7 @@ import { deleteEventAction, type DeleteEventState } from '@/app/_acciones/events
  * formulario es cortesía y la acción es un extremo público.
  */
 export function DangerZone({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
-  const [state, action, pending] = useActionState<DeleteEventState, FormData>(deleteEventAction, { status: 'idle' })
+  const [state, action, pending] = useActionState<DeleteEventState, FormData>(sinCaerse(deleteEventAction), { status: 'idle' })
   const [escrito, setEscrito] = useState('')
   const campoId = useId()
 

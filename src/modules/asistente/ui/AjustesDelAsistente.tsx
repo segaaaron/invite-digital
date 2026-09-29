@@ -5,12 +5,13 @@ import { guardarAsistenteAction, type AsistenteState } from '@/app/_acciones/adm
 import type { ConfigDelAsistente } from '../domain/config'
 import { SettingsSection, SwitchRow, UnitField } from '@/shared/design/ui/panel/ajustes'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AsistenteState = { status: 'idle' }
 
 /** Admin › Asistente: qué planes traen a Luxury y sus dos topes. */
 export function AjustesDelAsistente({ config, planes }: { config: ConfigDelAsistente; planes: readonly { slug: string; nombre: string }[] }) {
-  const [estado, guardar] = useActionState(guardarAsistenteAction, INICIAL)
+  const [estado, guardar] = useActionState(sinCaerse(guardarAsistenteAction), INICIAL)
   return (
     <form action={guardar} className="flex flex-col">
       <SettingsSection description="Los eventos de estos planes ven el botón de Luxury. El corte está en el servidor." title="Planes con Luxury">

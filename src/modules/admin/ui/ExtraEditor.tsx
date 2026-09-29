@@ -6,6 +6,7 @@ import { SwitchRow, UnitField } from '@/shared/design/ui/panel/ajustes'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { saveExtraAction } from '@/app/_acciones/admin/planes-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -21,7 +22,7 @@ const UNIDAD: Partial<Record<string, string>> = { mas_grupos: 'invitaciones', ma
  * que el cliente cree que compró.
  */
 export function ExtraEditor({ extra, vendidos }: { extra: ExtraEditable; vendidos: number }) {
-  const [estado, guardar, guardando] = useActionState(saveExtraAction, INICIAL)
+  const [estado, guardar, guardando] = useActionState(sinCaerse(saveExtraAction), INICIAL)
   const id = useId()
   const e = estado.status === 'error' ? estado.valores : undefined
   const unidad = UNIDAD[extra.effect]

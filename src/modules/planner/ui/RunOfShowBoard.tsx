@@ -10,6 +10,7 @@ import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { Accion, type Evento, Ocultos } from './Accion'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -68,7 +69,7 @@ export function MomentoDialog({
   ejemplo: string
 }) {
   const router = useRouter()
-  const [estado, enviar, enviando] = useActionState(saveMomentAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveMomentAction), INICIAL)
   const id = useId()
   useEffect(() => {
     if (estado.status === 'success') router.replace(cerrarEn)

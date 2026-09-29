@@ -25,6 +25,9 @@ test('el invitado firma el libro, se le agradece, y él ve la respuesta', async 
   await page.goto(`/panel/eventos/${SLUG}/mensajes`)
   await expect(page.getByText('Qué ganas de celebrar con ustedes.')).toBeVisible()
   await expect(page.getByRole('button', { name: /Marcar leído|Destacar/ })).toHaveCount(0)
+  // Dice si viene, y cuántas quedan por agradecer.
+  await expect(page.getByText(/^Vienen? /).first()).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Sin agradecer · 1' })).toBeVisible()
 
   // 3. Se le agradece, y la respuesta llega a la base.
   await page.getByRole('button', { name: 'Agradecer' }).first().click()
@@ -35,6 +38,10 @@ test('el invitado firma el libro, se le agradece, y él ve la respuesta', async 
   await expect
     .poll(async () => (await noteOf(eventId))?.reply)
     .toBe('Gracias, los esperamos con muchas ganas.')
+
+  // Agradecida, sale del filtro «Sin agradecer».
+  await page.goto(`/panel/eventos/${SLUG}/mensajes?filtro=sin-agradecer`)
+  await expect(page.getByText('Nada por agradecer')).toBeVisible()
 
   // 4. El invitado recarga su enlace y ve la respuesta.
   await page.goto(`/i/${token}`)

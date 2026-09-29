@@ -3,6 +3,7 @@
 import { useActionState } from 'react'
 import { revokeInvitationAction, type RevokeInvitationState } from '@/app/_acciones/guests/actions'
 import type { GuestErrorKind } from '../domain/errors'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INITIAL: RevokeInvitationState = { status: 'idle' }
 
@@ -21,7 +22,7 @@ const MENSAJES: Record<GuestErrorKind, string> = {
  * que decir, porque es lo que el atelier daría por hecho que no pasó.
  */
 export function RevokeInvitationForm({ groupId, eventSlug }: { groupId: string; eventSlug: string }) {
-  const [state, formAction, isPending] = useActionState(revokeInvitationAction, INITIAL)
+  const [state, formAction, isPending] = useActionState(sinCaerse(revokeInvitationAction, { status: 'error', message: 'storage_failure' }), INITIAL)
 
   return (
     <div className="flex flex-col items-end gap-1">

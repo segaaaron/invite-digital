@@ -8,6 +8,8 @@ const rejectPlanChangeAction = vi.fn()
 /** Reparte por la acción, no por el orden de las llamadas a `useActionState`. */
 const estados = new Map<unknown, unknown>()
 
+// `useActionState` se simula por la acción: el envoltorio `sinCaerse` la devuelve tal cual.
+vi.mock('@/shared/design/ui/sin-caerse', () => ({ sinCaerse: <T,>(accion: T) => accion }))
 vi.mock('react', async () => {
   const react = await vi.importActual<typeof import('react')>('react')
   return {

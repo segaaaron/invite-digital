@@ -4,6 +4,8 @@ import { EquipoCard } from './EquipoCard'
 
 /** El estado que devuelve cada acción, por su nombre. */
 const estados = vi.hoisted(() => ({ porteros: { status: 'idle' } as Record<string, unknown>, equipo: { status: 'idle' } as Record<string, unknown> }))
+// `useActionState` se simula por la acción: el envoltorio `sinCaerse` la devuelve tal cual.
+vi.mock('@/shared/design/ui/sin-caerse', () => ({ sinCaerse: <T,>(accion: T) => accion }))
 vi.mock('react', async (original) => {
   const react = await original<typeof import('react')>()
   return {

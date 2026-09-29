@@ -129,6 +129,9 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
       await tx.execute(sql`update court_members set name = 'Anónimo', whatsapp = null, size = null where event_id = ${eventId}`)
       await tx.execute(sql`update run_of_show set owner = null, notes = null where event_id = ${eventId}`)
       await tx.execute(sql`update rehearsals set place = null, notes = null where event_id = ${eventId}`)
+      // La agenda: las citas se quedan sin lugar ni notas, y las suscripciones al calendario se cortan.
+      await tx.execute(sql`update event_appointments set place = null, notes = null, vendor_id = null where event_id = ${eventId}`)
+      await tx.execute(sql`delete from calendar_feeds where event_id = ${eventId}`)
 
       // La opinión del cliente: el comentario es texto de una persona; las estrellas se quedan
       // —son la estadística— sin el enlace, que ya no abre nada.

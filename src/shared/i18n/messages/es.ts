@@ -497,6 +497,8 @@ export const es = {
     passSaveHint: 'Guarda esta pantalla en tu teléfono: en la entrada solo tendrás que abrirla y mostrarla.',
     passBack: 'Volver a la invitación',
     passOpen: 'Abrir mi pase',
+    calendarAdd: 'Agregar a mi calendario',
+    calendarGoogle: 'Google Calendar',
     passPending: 'Tu pase de entrada aparecerá aquí en cuanto confirmes tu asistencia.',
     passReady: 'Tu pase de entrada ya está listo: lo tienes más abajo.',
     passDeclined: 'Nos avisaste que no podrás asistir, así que no hay pase de entrada.',

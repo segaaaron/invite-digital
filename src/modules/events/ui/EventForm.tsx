@@ -12,6 +12,7 @@ import { ThemePicker } from './ThemePicker'
 import type { ThemeDefinition } from './themes/contract'
 import { themeDefinitions, themeFor } from './themes/registry'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INITIAL: EventActionState = { status: 'idle', message: '' }
 
@@ -41,7 +42,7 @@ export function EventForm({
   /** Si el plan fija el modelo, el motivo. Sin esto se ofrecen los de su misma fiesta. */
   diseno?: { fijo: string } | undefined
 }) {
-  const [state, formAction, isPending] = useActionState(event ? updateEventAction : createEventAction, INITIAL)
+  const [state, formAction, isPending] = useActionState(sinCaerse(event ? updateEventAction : createEventAction), INITIAL)
   const slugId = useId()
   const titleId = useId()
   const venueId = useId()

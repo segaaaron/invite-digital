@@ -9,6 +9,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/P
 import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
 import { FIESTAS, VOCABULARIO, VOCABULARIO_GENERICO } from '@/modules/events'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: NuevaBodaState = { status: 'idle' }
 
@@ -52,7 +53,7 @@ const FECHA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric'
  * `planSlug`, `clientName`, `clientPhone`, `clientEmail`, `clientPassword`).
  */
 export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly ModeloElegible[]; planes: readonly PlanElegible[]; pedido?: DesdePedido | undefined }) {
-  const [estado, crear, creando] = useActionState<NuevaBodaState, FormData>(createWeddingForClientAction, INICIAL)
+  const [estado, crear, creando] = useActionState<NuevaBodaState, FormData>(sinCaerse(createWeddingForClientAction), INICIAL)
   const id = useId()
 
   const categorias = [...new Set(modelos.map((m) => m.categoria))]

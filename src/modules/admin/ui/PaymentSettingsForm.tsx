@@ -7,6 +7,7 @@ import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { savePaymentSettingsAction, uploadPaymentQrAction } from '@/app/_acciones/admin/cobro-actions'
 import type { PaymentSettings } from '../domain/payment-settings'
 import { ActionFeedback, Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -19,8 +20,8 @@ const INICIAL: AdminActionState = { status: 'idle' }
  * bancaria. Decirlo en la propia pantalla evita que alguien la busque durante media hora.
  */
 export function PaymentSettingsForm({ settings }: { settings: PaymentSettings }) {
-  const [datos, guardar, guardando] = useActionState<AdminActionState, FormData>(savePaymentSettingsAction, INICIAL)
-  const [imagen, subir, subiendo] = useActionState<AdminActionState, FormData>(uploadPaymentQrAction, INICIAL)
+  const [datos, guardar, guardando] = useActionState<AdminActionState, FormData>(sinCaerse(savePaymentSettingsAction), INICIAL)
+  const [imagen, subir, subiendo] = useActionState<AdminActionState, FormData>(sinCaerse(uploadPaymentQrAction), INICIAL)
   const id = useId()
 
   return (

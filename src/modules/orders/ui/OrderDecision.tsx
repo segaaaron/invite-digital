@@ -4,6 +4,7 @@ import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: DecideOrderState = { status: 'idle' }
 
@@ -33,7 +34,7 @@ export function OrderDecision({
   /** El correo del cliente si ya se sabe (del pedido o de su consulta). Sin él, se pide aquí. */
   correo?: string | null
 }) {
-  const [estado, accion, pendiente] = useActionState<DecideOrderState, FormData>(decideOrderAction, INICIAL)
+  const [estado, accion, pendiente] = useActionState<DecideOrderState, FormData>(sinCaerse(decideOrderAction), INICIAL)
   const id = useId()
 
   return (

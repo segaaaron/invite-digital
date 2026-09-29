@@ -112,7 +112,7 @@ export default async function EventoLayout({
         </div>
       ) : null}
       {children}
-      {conAsistente ? <Asistente slug={event.value.slug} /> : null}
+      {conAsistente ? <Asistente eventId={event.value.id} slug={event.value.slug} /> : null}
     </PanelFrame>
   )
 }

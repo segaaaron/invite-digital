@@ -497,6 +497,8 @@ export const en = {
     passSaveHint: 'Save this screen to your phone: at the door you will only need to open it and show it.',
     passBack: 'Back to the invitation',
     passOpen: 'Open my pass',
+    calendarAdd: 'Add to my calendar',
+    calendarGoogle: 'Google Calendar',
     passPending: 'Your entry pass will appear here as soon as you confirm your attendance.',
     passReady: 'Your entry pass is ready: you will find it below.',
     passDeclined: 'You let us know you cannot attend, so there is no entry pass.',

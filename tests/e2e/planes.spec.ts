@@ -70,8 +70,9 @@ test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los
 
   await expect(page.getByRole('heading', { name: 'Regalos', exact: true })).toBeVisible()
   // La lluvia de sobres y la transferencia van en todos los planes.
-  await expect(page.getByText('Formas de regalar')).toBeVisible()
-  await expect(page.getByRole('switch', { name: /Pedir lluvia de sobres/ })).toBeVisible()
+  await expect(page.getByRole('region', { name: 'Formas de regalar' })).toBeVisible()
+  await expect(page.getByRole('link', { name: /Lluvia de sobres/ })).toBeVisible()
+  await expect(page.getByText('No incluida en tu plan')).toBeVisible()
   // Lo que el plan no trae no se ofrece: ni las altas ni el formulario de la lista.
   await expect(page.getByRole('link', { name: /Añadir regalo/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Añadir fondo/ })).toHaveCount(0)

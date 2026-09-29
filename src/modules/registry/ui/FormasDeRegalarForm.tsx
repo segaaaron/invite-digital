@@ -1,32 +1,47 @@
 'use client'
 
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
-import { useActionState, useId, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useActionState, useEffect, useId, useState } from 'react'
 import { guardarFormasDeRegalarAction, type FormasState } from '@/app/_acciones/registry/formas-actions'
 import { SettingsSection, SwitchRow } from '@/shared/design/ui/panel/ajustes'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { TOPES, type FormasDeRegalar } from '../domain/formas-de-regalar'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: FormasState = { status: 'idle' }
 
 /**
- * La lluvia de sobres y la transferencia con su QR, en el panel. En todos los planes: es como más
- * se regala en Bolivia. El dinero va directo a la cuenta del cliente; nosotros no cobramos nada.
+ * La lluvia de sobres o la transferencia con su QR, en el panel: **una por diálogo** (`seccion`), desde su
+ * tarjeta. En todos los planes: es como más se regala en Bolivia. El dinero va directo a la cuenta del
+ * cliente; nosotros no cobramos nada.
+ *
+ * La acción guarda las dos a la vez, así que lo de la otra sección viaja oculto con su valor de ahora:
+ * guardar los sobres no apaga la transferencia. El QR sin fichero nuevo se conserva.
  */
 export function FormasDeRegalarForm({
   eventId,
   eventSlug,
   formas,
   sobresPorDefecto,
+  seccion,
+  cerrarEn,
 }: {
   eventId: string
   eventSlug: string
   formas: FormasDeRegalar
   /** La frase que ve el invitado si no se escribe otra. */
   sobresPorDefecto: string
+  seccion: 'sobres' | 'transferencia'
+  /** Adónde volver al guardar bien (cierra el diálogo). */
+  cerrarEn: string
 }) {
-  const [estado, accion, pendiente] = useActionState(guardarFormasDeRegalarAction, INICIAL)
+  const router = useRouter()
+  const [estado, accion, pendiente] = useActionState(sinCaerse(guardarFormasDeRegalarAction), INICIAL)
+  useEffect(() => {
+    if (estado.status === 'success') router.replace(cerrarEn)
+  }, [estado, router, cerrarEn])
   const id = useId()
   const [quitarQr, setQuitarQr] = useState(false)
   // Tras un error, lo escrito vuelve de la acción: React vacía el formulario igual.
@@ -53,7 +68,21 @@ export function FormasDeRegalarForm({
     <form action={accion} className="flex flex-col gap-2" encType="multipart/form-data" key={JSON.stringify(v) + String(formas.tieneQr)}>
       <input name="eventId" type="hidden" value={eventId} />
       <input name="eventSlug" type="hidden" value={eventSlug} />
+      {seccion === 'sobres' ? (
+        <>
+          {formas.transferencia ? <input name="transferencia" type="hidden" value="on" /> : null}
+          {(['banco', 'titular', 'cuenta', 'nota'] as const).map((c) => (
+            <input key={c} name={c} type="hidden" value={formas[c] ?? ''} />
+          ))}
+        </>
+      ) : (
+        <>
+          {formas.sobres ? <input name="sobres" type="hidden" value="on" /> : null}
+          <input name="sobresTexto" type="hidden" value={formas.sobresTexto ?? ''} />
+        </>
+      )}
 
+      {seccion !== 'sobres' ? null : (
       <SettingsSection description="El efectivo que tus invitados entregan en la fiesta, en su sobre. La invitación lo avisa con una frase." title="Lluvia de sobres">
         <SwitchRow defaultChecked={encendido('sobres')} description="Muestra la tarjeta de sobres en tu invitación." label="Pedir lluvia de sobres" name="sobres" />
         <label className="flex flex-col gap-2" htmlFor={`${id}-sobres-texto`}>
@@ -68,7 +97,9 @@ export function FormasDeRegalarForm({
           />
         </label>
       </SettingsSection>
+      )}
 
+      {seccion !== 'transferencia' ? null : (
       <SettingsSection
         description={
           <>
@@ -108,6 +139,7 @@ export function FormasDeRegalarForm({
           <FilePicker accept="image/png,image/jpeg,image/webp" hint="JPG, PNG o WEBP, hasta 2 MB" label={formas.tieneQr ? 'Subir otro QR' : 'Subir el QR'} name="qr" />
         </div>
       </SettingsSection>
+      )}
 
       <div className="flex flex-wrap items-center gap-3 pt-2">
         <SubmitButton pending={pendiente} pendingLabel="Guardando…">

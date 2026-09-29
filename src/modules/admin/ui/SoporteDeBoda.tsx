@@ -4,6 +4,7 @@ import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { resetClientAccessAction, type SupportState } from '@/app/_acciones/admin/support-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: SupportState = { status: 'idle' }
 
@@ -15,7 +16,7 @@ export type Anfitrion = { readonly userId: string; readonly email: string; reado
  */
 export function SoporteDeBoda({ eventId, anfitriones }: { eventId: string; anfitriones: readonly Anfitrion[] }) {
   const id = useId()
-  const [reinicio, restablecer, restableciendo] = useActionState(resetClientAccessAction, INICIAL)
+  const [reinicio, restablecer, restableciendo] = useActionState(sinCaerse(resetClientAccessAction), INICIAL)
 
   if (anfitriones.length === 0) {
     return <p className="text-[12px] text-ink-mute">Sin anfitrión todavía: da el acceso del cliente para poder darle soporte.</p>

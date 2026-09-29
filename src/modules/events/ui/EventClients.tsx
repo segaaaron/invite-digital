@@ -5,6 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/
 import { addEventClientAction, removeDoorStaffAction, type StaffActionState } from '@/app/_acciones/events/staff-actions'
 import type { StaffMember } from './DoorStaff'
 import { Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: StaffActionState = { status: 'idle' }
 
@@ -27,8 +28,8 @@ export function EventClients({
   eventSlug: string
   members: readonly StaffMember[]
 }) {
-  const [alta, darAlta, dandoAlta] = useActionState<StaffActionState, FormData>(addEventClientAction, INICIAL)
-  const [baja, darBaja, dandoBaja] = useActionState<StaffActionState, FormData>(removeDoorStaffAction, INICIAL)
+  const [alta, darAlta, dandoAlta] = useActionState<StaffActionState, FormData>(sinCaerse(addEventClientAction), INICIAL)
+  const [baja, darBaja, dandoBaja] = useActionState<StaffActionState, FormData>(sinCaerse(removeDoorStaffAction), INICIAL)
   const id = useId()
 
   return (

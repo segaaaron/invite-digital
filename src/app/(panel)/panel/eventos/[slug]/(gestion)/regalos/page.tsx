@@ -15,7 +15,7 @@ import { RegistryTabs } from '@/modules/registry/ui/RegistryTabs'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
-import { PanelAlert, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { FormasDeRegalarForm } from '@/modules/registry/ui/FormasDeRegalarForm'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
@@ -94,20 +94,42 @@ export default async function RegalosPage({
         title="Regalos"
       />
 
-      <div className="mb-4.5">
-        {muestra.length === 0 ? (
-          <PanelAlert tone="info">Tu invitación no muestra regalos todavía: enciende la lluvia de sobres o la transferencia aquí abajo.</PanelAlert>
-        ) : (
-          <PanelAlert tone="ok">Tu invitación muestra: {muestra.join(', ')}.</PanelAlert>
-        )}
-      </div>
+      {/* Tres formas de regalar, cada una con su estado; se configura en su diálogo. */}
+      <section aria-label="Formas de regalar" className="mb-4.5 grid gap-4 min-[900px]:grid-cols-3">
+        <FormaCard
+          accion={formas.sobres ? 'Editar' : 'Encender'}
+          descripcion="El efectivo que te entregan en la fiesta, en su sobre."
+          estado={formas.sobres ? { tono: 'ok', texto: 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
+          href={`${base}?panel=sobres`}
+          titulo="Lluvia de sobres"
+        />
+        <FormaCard
+          accion={formas.transferencia ? 'Editar' : 'Encender'}
+          descripcion="Te transfieren directo a tu cuenta o con el QR de tu banco."
+          estado={formas.transferencia ? { tono: 'ok', texto: formas.tieneQr ? 'Activa · con QR' : 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
+          href={`${base}?panel=transferencia`}
+          titulo="Transferencia o QR"
+        />
+        <FormaCard
+          accion={conMesa ? 'Ver la lista' : null}
+          descripcion={conMesa ? 'Regalos que reservan de tu lista y fondos para algo grande.' : 'Viene con Firma 3D y Alta Costura.'}
+          estado={conMesa ? { tono: gifts.length + funds.length > 0 ? 'ok' : 'pending', texto: `${gifts.length} ${gifts.length === 1 ? 'regalo' : 'regalos'} · ${funds.length} ${funds.length === 1 ? 'fondo' : 'fondos'}` } : { tono: 'pending', texto: 'No incluida en tu plan' }}
+          href="#lista"
+          titulo="Lista de regalos"
+        />
+      </section>
+      <p className="mb-4.5 text-[13px] text-ink-soft">
+        {muestra.length === 0 ? 'Tu invitación no muestra regalos todavía: enciende la lluvia de sobres o la transferencia.' : `Tu invitación muestra: ${muestra.join(', ')}.`}
+      </p>
 
-      <PanelCard className="mb-4.5" title="Formas de regalar">
-        <FormasDeRegalarForm eventId={event.value.id} eventSlug={event.value.slug} formas={formas} sobresPorDefecto={getDictionary(event.value.locale).registry.sobresDefault} />
-      </PanelCard>
+      {panel === 'sobres' || panel === 'transferencia' ? (
+        <PanelDialog closeHref={base} title={panel === 'sobres' ? 'Lluvia de sobres' : 'Transferencia o QR'}>
+          <FormasDeRegalarForm cerrarEn={base} eventId={event.value.id} eventSlug={event.value.slug} formas={formas} seccion={panel} sobresPorDefecto={getDictionary(event.value.locale).registry.sobresDefault} />
+        </PanelDialog>
+      ) : null}
 
       {conMesa ? (
-      <div className="flex flex-col gap-4.5">
+      <div className="flex scroll-mt-6 flex-col gap-4.5" id="lista">
         {/* Las altas son los modales de la maqueta (`#modal-gift`, `#modal-fund`), no
             paneles desplegados sobre la lista. */}
         {abierto === 'regalo' ? (
@@ -165,5 +187,22 @@ export default async function RegalosPage({
       </div>
       ) : null}
     </>
+  )
+}
+
+function FormaCard({ titulo, descripcion, estado, accion, href }: { titulo: string; descripcion: string; estado: { tono: PillTone; texto: string }; accion: string | null; href: string }) {
+  return (
+    <article className="flex flex-col gap-3 rounded-[18px] border border-line-panel bg-white p-5 shadow-card">
+      <div className="flex items-start justify-between gap-3">
+        <h2 className="font-display text-[22px] leading-tight font-light text-ink">{titulo}</h2>
+        <Pill tone={estado.tono}>{estado.texto}</Pill>
+      </div>
+      <p className="flex-1 text-[13px] leading-relaxed text-ink-soft">{descripcion}</p>
+      {accion === null ? null : (
+        <PanelButton aria-label={`${accion}: ${titulo}`} href={href}>
+          {accion}
+        </PanelButton>
+      )}
+    </article>
   )
 }

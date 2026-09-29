@@ -58,6 +58,7 @@ export const NAV_ICONS = {
   proveedores: <BuildingIcon />,
   cortejo: <UsersIcon />,
   diaD: <CalendarIcon />,
+  agenda: <CalendarIcon />,
   documentos: <PenIcon />,
 } as const satisfies Record<string, ReactNode>
 

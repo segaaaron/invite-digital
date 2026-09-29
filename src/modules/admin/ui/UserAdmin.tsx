@@ -9,6 +9,7 @@ import type { Role } from '@/modules/identity'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { createUserAction, deleteUserAction, setUserRoleAction } from '@/app/_acciones/admin/usuarios-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -43,7 +44,7 @@ const ROL: Record<Role, { etiqueta: string; tono: 'ok' | 'maybe' | 'pending' | '
  * evento, no de la cuenta.
  */
 export function NewUserForm() {
-  const [estado, accion, pendiente] = useActionState<AdminActionState, FormData>(createUserAction, INICIAL)
+  const [estado, accion, pendiente] = useActionState<AdminActionState, FormData>(sinCaerse(createUserAction), INICIAL)
   const id = useId()
   // Tras un error vuelve lo enviado: React vacía el formulario al acabar la acción.
   const enviado = estado.status === 'error' ? estado.valores : undefined
@@ -100,8 +101,8 @@ export function NewUserForm() {
  * pierde.
  */
 export function UserRow({ user }: { user: UserView }) {
-  const [rol, cambiarRol, cambiando] = useActionState<AdminActionState, FormData>(setUserRoleAction, INICIAL)
-  const [borrado, borrar] = useActionState<AdminActionState, FormData>(deleteUserAction, INICIAL)
+  const [rol, cambiarRol, cambiando] = useActionState<AdminActionState, FormData>(sinCaerse(setUserRoleAction), INICIAL)
+  const [borrado, borrar] = useActionState<AdminActionState, FormData>(sinCaerse(deleteUserAction), INICIAL)
   const id = useId()
   const error = [rol, borrado].find((e) => e.status === 'error')
   const puedeSerAdmin = user.role === 'admin' || user.role === 'atelier'
@@ -180,7 +181,7 @@ export function UserRow({ user }: { user: UserView }) {
 
 /** Borrar la cuenta de un cliente, desde su ficha en Clientes: el único sitio donde vive. */
 export function BorrarCuentaDeCliente({ userId, email }: { userId: string; email: string }) {
-  const [estado, borrar] = useActionState<AdminActionState, FormData>(deleteUserAction, INICIAL)
+  const [estado, borrar] = useActionState<AdminActionState, FormData>(sinCaerse(deleteUserAction), INICIAL)
   return (
     <div className="flex flex-col gap-1.5">
       <ConfirmAction

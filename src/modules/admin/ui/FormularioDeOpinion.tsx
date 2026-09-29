@@ -3,6 +3,7 @@
 import { useActionState, useId } from 'react'
 import { responderOpinionAction, type OpinionState } from '@/app/_acciones/events/opinion-actions'
 import type { OpinionDictionary } from '@/shared/i18n/dictionary'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: OpinionState = { status: 'idle' }
 
@@ -12,7 +13,7 @@ const INICIAL: OpinionState = { status: 'idle' }
  * una dice su palabra al lector de pantalla.
  */
 export function FormularioDeOpinion({ token, textos: t }: { token: string; textos: OpinionDictionary }) {
-  const [estado, enviar, enviando] = useActionState(responderOpinionAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(responderOpinionAction), INICIAL)
   const id = useId()
   if (estado.status === 'success') {
     return (

@@ -5,6 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { importGuestsAction, type ImportState } from '@/app/_acciones/guests/actions'
 import { DeliverySheet } from './DeliverySheet'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
  * Importación masiva desde un CSV.
@@ -22,7 +23,7 @@ export function ImportPanel({
   eventSlug: string
   eventTitle: string
 }) {
-  const [state, action, pending] = useActionState<ImportState, FormData>(importGuestsAction, { status: 'idle' })
+  const [state, action, pending] = useActionState<ImportState, FormData>(sinCaerse(importGuestsAction), { status: 'idle' })
 
   return (
     <div className="flex flex-col gap-4">

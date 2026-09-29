@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import { EyeIcon, EyeOffIcon } from '@/shared/design/ui/icons'
 import { signInAction, type SignInActionState } from '@/app/_acciones/identity/actions'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INITIAL: SignInActionState = { status: 'idle', message: '' }
 
@@ -24,7 +25,7 @@ const FIELD_CLASS =
 const LABEL_CLASS = 'font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase'
 
 export function SignInForm() {
-  const [state, formAction, isPending] = useActionState(signInAction, INITIAL)
+  const [state, formAction, isPending] = useActionState(sinCaerse(signInAction, { status: 'error', message: 'storage_failure' }), INITIAL)
   const emailId = useId()
   const passwordId = useId()
   const errorId = useId()

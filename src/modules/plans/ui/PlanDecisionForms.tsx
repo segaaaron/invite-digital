@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { applyPlanChangeAction, type PlanDecisionState, rejectPlanChangeAction } from '@/app/_acciones/plans/actions'
 import type { PlansErrorKind } from '../domain/errors'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INITIAL: PlanDecisionState = { status: 'idle' }
 
@@ -24,8 +25,8 @@ const MENSAJES: Record<PlansErrorKind, string> = {
  * aplicado se leía exactamente igual que uno aplicado.
  */
 export function PlanDecisionForms({ requestId, eventSlug }: { requestId: string; eventSlug: string }) {
-  const [aplicar, aplicarAction, aplicando] = useActionState(applyPlanChangeAction, INITIAL)
-  const [descartar, descartarAction, descartando] = useActionState(rejectPlanChangeAction, INITIAL)
+  const [aplicar, aplicarAction, aplicando] = useActionState(sinCaerse(applyPlanChangeAction, { status: 'error', kind: 'storage_failure' }), INITIAL)
+  const [descartar, descartarAction, descartando] = useActionState(sinCaerse(rejectPlanChangeAction, { status: 'error', kind: 'storage_failure' }), INITIAL)
 
   const fallo =
     aplicar.status === 'error' ? aplicar.kind : descartar.status === 'error' ? descartar.kind : null

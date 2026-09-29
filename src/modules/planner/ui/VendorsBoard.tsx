@@ -8,6 +8,7 @@ import { type DiaActionState, emitVendorLinkAction, removeVendorAction, revokeVe
 import { ESTADOS_DE_PROVEEDOR, type EstadoDeProveedor, NOMBRE_DE_ESTADO } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -33,7 +34,7 @@ type Categoria = { clave: string; nombre: string }
 const TONO: Record<EstadoDeProveedor, 'pending' | 'maybe' | 'ok'> = { cotizando: 'pending', reservado: 'maybe', contratado: 'maybe', confirmado: 'ok' }
 
 function FormularioDeProveedor({ evento, categorias, proveedor }: { evento: Evento; categorias: readonly Categoria[]; proveedor?: ProveedorVista }) {
-  const [estado, enviar, enviando] = useActionState(saveVendorAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveVendorAction), INICIAL)
   const id = useId()
   const e = estado.status === 'error' ? estado.valores : undefined
   const v = (campo: string, base: string | null | undefined) => e?.[campo] ?? base ?? ''
@@ -98,7 +99,7 @@ export function NewVendorForm(props: { evento: Evento; categorias: readonly Cate
 }
 
 function EnlaceDeProveedor({ evento, proveedor, incluido }: { evento: Evento; proveedor: ProveedorVista; incluido: boolean }) {
-  const [estado, emitir, emitiendo] = useActionState(emitVendorLinkAction, INICIAL)
+  const [estado, emitir, emitiendo] = useActionState(sinCaerse(emitVendorLinkAction), INICIAL)
   if (!incluido) return <p className="text-[11px] text-ink-mute">Los enlaces para proveedores vienen con Alta Costura.</p>
   return (
     <div className="flex flex-col gap-2">

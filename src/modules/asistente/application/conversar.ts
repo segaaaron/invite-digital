@@ -1,5 +1,5 @@
 import type { UsoDeTokens } from '../domain/config'
-import { interpretarLlamada, type DefinicionDeHerramienta, type InvitacionPropuesta, type LlamadaValida } from '../domain/herramientas'
+import { interpretarLlamada, propuestaDe, type DefinicionDeHerramienta, type LlamadaValida, type Propuesta } from '../domain/herramientas'
 import type { Mensaje } from '../domain/historial'
 import { registrarFallo } from '@/shared/observability/fallos'
 
@@ -25,7 +25,7 @@ export type Ejecutor = (llamada: LlamadaValida) => Promise<unknown>
 export type Salida =
   | { readonly tipo: 'texto'; readonly delta: string }
   | { readonly tipo: 'consultando'; readonly herramienta: string }
-  | { readonly tipo: 'propuesta'; readonly invitaciones: readonly InvitacionPropuesta[] }
+  | { readonly tipo: 'propuesta'; readonly propuesta: Propuesta }
   | { readonly tipo: 'error'; readonly mensaje: string }
   | { readonly tipo: 'fin' }
 
@@ -67,9 +67,10 @@ export const conversar = (deps: { modelo: ModeloDeLenguaje; herramientas: readon
           if (!interpretada.ok) resultado = { error: interpretada.error }
           else {
             yield { tipo: 'consultando', herramienta: llamada.nombre }
-            if (interpretada.llamada.nombre === 'proponer_invitados') {
+            const propuesta = propuestaDe(interpretada.llamada)
+            if (propuesta !== null) {
               // No guarda nada: la tarjeta la confirma la persona.
-              yield { tipo: 'propuesta', invitaciones: interpretada.llamada.invitaciones }
+              yield { tipo: 'propuesta', propuesta }
               resultado = { mostrada: true, nota: 'La persona ve una tarjeta con Confirmar. Todavía no se guardó nada.' }
             } else {
               resultado = await deps.ejecutar(interpretada.llamada).catch((causa: unknown) => {

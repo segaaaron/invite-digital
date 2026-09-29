@@ -2,6 +2,7 @@
 
 import { useActionState, type ReactNode } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 type Estado = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
 export type Evento = { eventId: string; eventSlug: string }
@@ -35,7 +36,7 @@ export function Accion({
   children: ReactNode
   variant?: 'default' | 'danger' | 'primary'
 }) {
-  const [estado, enviar, enviando] = useActionState<Estado, FormData>(action as (s: Estado, fd: FormData) => Promise<Estado>, { status: 'idle' })
+  const [estado, enviar, enviando] = useActionState<Estado, FormData>(sinCaerse(action as (s: Estado, fd: FormData) => Promise<Estado>), { status: 'idle' })
   return (
     <form action={enviar} className="inline-flex flex-col items-start gap-1">
       <Ocultos {...evento} extra={extra} />

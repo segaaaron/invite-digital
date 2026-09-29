@@ -5,6 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { changePasswordAction, type ChangePasswordState } from '@/app/_acciones/identity/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
 
@@ -14,7 +15,7 @@ const INICIAL: ChangePasswordState = { status: 'idle', message: '' }
  * Al guardar entra directo al panel.
  */
 export function ChangePasswordForm() {
-  const [estado, accion, pendiente] = useActionState<ChangePasswordState, FormData>(changePasswordAction, INICIAL)
+  const [estado, accion, pendiente] = useActionState<ChangePasswordState, FormData>(sinCaerse(changePasswordAction), INICIAL)
   const id = useId()
 
   return (

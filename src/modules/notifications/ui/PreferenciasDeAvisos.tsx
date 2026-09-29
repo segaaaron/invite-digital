@@ -4,12 +4,13 @@ import { useActionState } from 'react'
 import { guardarPreferenciasAction, type PreferenciasState } from '@/app/_acciones/notifications/avisos-actions'
 import { SwitchRow } from '@/shared/design/ui/panel/ajustes'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PreferenciasState = { status: 'idle' }
 
 /** Qué avisos van a tus aparatos. Lo apagado se sigue viendo en la campana: silenciar no es perderlo. */
 export function PreferenciasDeAvisos({ tipos, silenciados }: { tipos: readonly { tipo: string; titulo: string; ayuda: string }[]; silenciados: readonly string[] }) {
-  const [estado, guardar] = useActionState(guardarPreferenciasAction, INICIAL)
+  const [estado, guardar] = useActionState(sinCaerse(guardarPreferenciasAction), INICIAL)
   return (
     <form action={guardar} className="flex flex-col gap-1">
       {tipos.map((t) => (

@@ -7,6 +7,7 @@ import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { savePlanAction } from '@/app/_acciones/admin/planes-actions'
 import { MAX_FUNCIONES, type TextoPlanLimpio } from '../domain/plan-editable'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -54,7 +55,7 @@ const vacioSiNulo = (n: number | null) => (n === null ? '' : String(n))
  * los otros. Los nombres de los campos son los que lee `savePlanAction`.
  */
 export function PlanEditor({ plan }: { plan: PlanEditorView }) {
-  const [estado, guardar, guardando] = useActionState(savePlanAction, INICIAL)
+  const [estado, guardar, guardando] = useActionState(sinCaerse(savePlanAction), INICIAL)
   const id = useId()
   // Tras un error, lo enviado manda sobre lo guardado: React vacía el formulario al acabar la
   // acción y lo devuelve a sus `defaultValue`, así que esos tienen que ser lo que se escribió.

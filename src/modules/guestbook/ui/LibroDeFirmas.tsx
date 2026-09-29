@@ -5,6 +5,7 @@ import { replyAction } from '@/app/_acciones/guestbook/actions'
 import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { MessageIcon, QuoteIcon } from '@/shared/design/ui/icons'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { fecha } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { createReply } from '../domain/message-note'
@@ -17,7 +18,10 @@ import type { GuestMessage } from '../domain/inbox'
  * Sin «leído» ni «destacado» (pedido por el usuario): un mensaje de un invitado se lee y basta.
  * Queda **agradecer**, porque el invitado ve la respuesta al volver a su invitación.
  */
-export function LibroDeFirmas({ eventId, eventSlug, messages }: { eventId: string; eventSlug: string; messages: readonly GuestMessage[] }) {
+export function LibroDeFirmas({ eventId, eventSlug, messages, vacioFiltrado = false }: { eventId: string; eventSlug: string; messages: readonly GuestMessage[]; vacioFiltrado?: boolean }) {
+  if (messages.length === 0 && vacioFiltrado) {
+    return <EmptyState compact description="Ya les agradeciste a todos los que firmaron." icon={<MessageIcon />} title="Nada por agradecer" />
+  }
   if (messages.length === 0) {
     return (
       <EmptyState
@@ -73,6 +77,11 @@ function Firma({ eventId, eventSlug, message }: { eventId: string; eventSlug: st
             {[message.responderName !== null && message.responderName !== message.groupLabel ? message.groupLabel : null, fecha(message.writtenAt)].filter(Boolean).join(' · ')}
           </span>
         </span>
+        {message.attending === undefined ? null : message.attending > 0 ? (
+          <Pill tone="ok">{message.attending === 1 ? 'Viene' : `Vienen · ${message.attending}`}</Pill>
+        ) : (
+          <Pill tone="no">No viene</Pill>
+        )}
       </footer>
 
       {message.reply !== null && !abierta ? (
@@ -109,8 +118,12 @@ function Firma({ eventId, eventSlug, message }: { eventId: string; eventSlug: st
           </div>
         </div>
       ) : (
-        <button className="w-fit cursor-pointer text-[12.5px] text-ink-soft underline underline-offset-4 hover:text-ink" onClick={() => setAbierta(true)} type="button">
-          {message.reply === null ? 'Agradecer' : 'Editar agradecimiento'}
+        <button
+          className={`w-fit cursor-pointer rounded-full px-4 py-2 text-[12.5px] transition-colors ${message.reply === null ? 'bg-ink text-white hover:bg-ink/90' : 'border border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'}`}
+          onClick={() => setAbierta(true)}
+          type="button"
+        >
+          {message.reply === null ? `Agradecer a ${firma.split(' ')[0]}` : 'Editar agradecimiento'}
         </button>
       )}
 

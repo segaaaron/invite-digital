@@ -4,6 +4,7 @@ import { useActionState, useId, useState } from 'react'
 import Link from 'next/link'
 import { confirmPasswordResetAction, requestPasswordResetAction, type ResetState } from '@/app/_acciones/identity/actions'
 import { CampoContrasena } from '@/shared/design/ui/panel/CampoContrasena'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: ResetState = { status: 'idle', message: '' }
 
@@ -28,8 +29,8 @@ const BOTON =
  */
 export function RecoverForm() {
   const [correo, setCorreo] = useState('')
-  const [pedido, pedirCodigo, pidiendo] = useActionState<ResetState, FormData>(requestPasswordResetAction, INICIAL)
-  const [cambio, confirmar, confirmando] = useActionState<ResetState, FormData>(confirmPasswordResetAction, INICIAL)
+  const [pedido, pedirCodigo, pidiendo] = useActionState<ResetState, FormData>(sinCaerse(requestPasswordResetAction), INICIAL)
+  const [cambio, confirmar, confirmando] = useActionState<ResetState, FormData>(sinCaerse(confirmPasswordResetAction), INICIAL)
   const id = useId()
 
   const yaSePidio = pedido.status === 'sent'

@@ -1,10 +1,11 @@
 import { createHash } from 'node:crypto'
 import { describe, expect, it, vi } from 'vitest'
+import type { Cita } from '../domain/agenda'
 import type { Momento } from '../domain/cronograma'
 import type { MiembroDelCortejo, Proveedor } from '../domain/equipo-del-dia'
 import type { Partida } from '../domain/presupuesto'
 import type { DiaStore, Documento } from './dia-ports'
-import { emitirEnlaceDeProveedor, purgeDocuments, readDocument, saveDocument, setVendorArrived, fechaDeEnsayo, saveCourtMember, saveMoment, saveRehearsal, saveVendor, verComoProveedor } from './dia-use-cases'
+import { emitirEnlaceDeProveedor, emitirSuscripcion, resolverSuscripcion, saveCita, purgeDocuments, readDocument, saveDocument, setVendorArrived, fechaDeEnsayo, saveCourtMember, saveMoment, saveRehearsal, saveVendor, verComoProveedor } from './dia-use-cases'
 import type { PlannerStore } from './ports'
 
 function memoria() {
@@ -15,6 +16,8 @@ function memoria() {
   const ensayos: Array<{ eventId: string; date: Date; asistentes: readonly string[] }> = []
   const documentos: Array<Documento & { eventId: string }> = []
   const disco = new Map<string, Uint8Array>()
+  const citas: Array<Cita & { eventId: string }> = []
+  const feeds = new Map<string, Buffer>()
   let n = 0
   const id = () => `id${++n}`
   const dia: DiaStore = {
@@ -74,6 +77,24 @@ function memoria() {
       documentos.splice(k, 1)
       return true
     },
+    listCitas: async (e) => citas.filter((c) => c.eventId === e),
+    insertCita: async (e, c) => {
+      citas.push({ ...c, id: id(), eventId: e })
+    },
+    updateCita: async (e, i, c) => {
+      const x = citas.find((y) => y.id === i && y.eventId === e)
+      if (!x) return false
+      Object.assign(x, c)
+      return true
+    },
+    removeCita: async () => true,
+    setFeed: async (e, u, hash) => {
+      feeds.set(`${e}|${u}`, hash)
+    },
+    findFeed: async (hash) => {
+      for (const [clave, h] of feeds) if (h.equals(hash)) return { eventId: clave.split('|')[0]!, userId: clave.split('|')[1]! }
+      return null
+    },
   }
   const store = {
     listBudget: async (e: string) => partidas.filter((p) => p.eventId === e),
@@ -100,7 +121,7 @@ function memoria() {
     },
   }
   const sniff = (b: Uint8Array) => (b[0] === 0x25 ? ('application/pdf' as const) : null)
-  return { deps: { dia, store, minter, archivos, sniff, ids: id, clock: () => new Date('2027-05-15T23:00:00Z') }, vendors, momentos, cortejo, partidas, ensayos, documentos, disco }
+  return { deps: { dia, store, minter, archivos, sniff, ids: id, clock: () => new Date('2027-05-15T23:00:00Z') }, citas, vendors, momentos, cortejo, partidas, ensayos, documentos, disco }
 }
 
 const proveedor = { service: 'DJ', company: 'Beat', contactName: '', whatsapp: '', email: '', status: 'contratado', arrivalTime: '17:30', setupNotes: '' }
@@ -218,3 +239,22 @@ describe('documentos', () => {
   })
 })
 
+
+describe('agenda', () => {
+  const cita = { title: 'Degustación', dia: '2027-04-10', hora: '16:30', durationMin: '90', place: 'Catering', vendorId: '', notes: '' }
+
+  it('guarda la cita y rechaza un proveedor de otro evento', async () => {
+    const { deps, citas, vendors } = memoria()
+    await saveVendor(deps)('e2', 'xv', null, proveedor, { precioCents: null, categoria: 'dj' })
+    expect(await saveCita(deps)('e1', null, cita)).toEqual({ ok: true })
+    expect(citas[0]).toMatchObject({ eventId: 'e1', startsAt: '2027-04-10T16:30', durationMin: 90 })
+    expect(await saveCita(deps)('e1', null, { ...cita, vendorId: vendors[0]!.id })).toEqual({ ok: false, mensaje: 'Ese proveedor no es de este evento.' })
+  })
+
+  it('la suscripción se resuelve por su token, y uno con forma rara ni se busca', async () => {
+    const { deps } = memoria()
+    const token = await emitirSuscripcion(deps)('e1', 'u1')
+    expect(await resolverSuscripcion(deps)(token)).toEqual({ eventId: 'e1', userId: 'u1' })
+    expect(await resolverSuscripcion(deps)('../x')).toBeNull()
+  })
+})

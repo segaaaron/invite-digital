@@ -195,6 +195,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         label: 'Planner',
         items: [
           { href: en('/planner/tareas'), label: 'Plan de tareas', icon: 'tareas' },
+          { href: equipo === 'coanfitrion' ? null : en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
           { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
           // Proveedores y cronograma los llevan el anfitrión y su planner; el cortejo, todos.
           { href: equipo === 'coanfitrion' ? null : en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
@@ -256,6 +257,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       label: 'Planner',
       items: [
         { href: en('/planner/tareas'), label: 'Plan de tareas', icon: 'tareas' },
+        { href: en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
         { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
         { href: en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
         { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },

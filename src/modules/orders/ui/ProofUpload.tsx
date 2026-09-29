@@ -5,6 +5,7 @@ import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { uploadProofAction, type UploadProofState } from '@/app/_acciones/orders/actions'
 import { ACCEPTED_MIMES, MAX_PROOF_BYTES } from '../domain/proof'
 import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: UploadProofState = { status: 'idle' }
 
@@ -17,7 +18,7 @@ const INICIAL: UploadProofState = { status: 'idle' }
  */
 export function ProofUpload({ publicRef, textos }: { publicRef: string; textos: OrderFormDictionary }) {
   const megas = String(Math.round(MAX_PROOF_BYTES / 1024 / 1024))
-  const [estado, accion, pendiente] = useActionState<UploadProofState, FormData>(uploadProofAction, INICIAL)
+  const [estado, accion, pendiente] = useActionState<UploadProofState, FormData>(sinCaerse(uploadProofAction), INICIAL)
 
   return (
     <form action={accion} className="flex flex-col gap-3">

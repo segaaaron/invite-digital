@@ -45,7 +45,7 @@ test('Luxury registra un invitado solo cuando se confirma, responde con los dato
   expect(await cuantos()).toBe(0)
 
   await tarjeta.getByRole('button', { name: 'Confirmar' }).click()
-  await expect(tarjeta).toContainText('Guardada en tu lista.')
+  await expect(tarjeta).toContainText('Guardado.')
   expect(await cuantos()).toBe(1)
   const [grupo] = await sql<{ phone: string }[]>`select g.phone from guest_groups g join events e on e.id = g.event_id where e.slug = ${SLUG} and g.label = 'Ramón Pérez'`
   expect(grupo!.phone).toBe('+59170012345')
@@ -62,6 +62,23 @@ test('Luxury registra un invitado solo cuando se confirma, responde con los dato
   // Cada mensaje cuenta para la cuota del evento.
   const [uso] = await sql<{ messages: number }[]>`select u.messages from assistant_usage u join events e on e.id = u.event_id where e.slug = ${SLUG}`
   expect(uso!.messages).toBe(3)
+})
+
+test('Luxury propone una tarea y solo la crea al confirmar, con la acción de la pantalla', async ({ page }) => {
+  await page.goto(`/panel/eventos/${SLUG}/planner/tareas`)
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+  const panel = page.locator('dialog[open]')
+  await panel.getByLabel('Escríbele a Luxury').fill('Agrega la tarea Probar el menú con el catering')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
+  const tarjeta = panel.getByRole('region', { name: 'Tareas para confirmar' })
+  await expect(tarjeta).toContainText('Probar el menú con el catering')
+  const cuantas = async () => (await sql<{ n: number }[]>`select count(*)::int as n from planner_tasks t join events e on e.id = t.event_id where e.slug = ${SLUG} and t.title = 'Probar el menú con el catering'`)[0]!.n
+  expect(await cuantas()).toBe(0)
+
+  await tarjeta.getByRole('button', { name: 'Confirmar' }).click()
+  await expect(tarjeta).toContainText('Guardado.')
+  expect(await cuantas()).toBe(1)
+  await expect(panel.getByRole('link', { name: '/planner/tareas' })).toBeVisible()
 })
 
 test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {

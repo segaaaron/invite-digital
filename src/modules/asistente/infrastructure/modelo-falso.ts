@@ -2,8 +2,8 @@ import type { EventoDelModelo, ModeloDeLenguaje } from '../application/conversar
 
 /**
  * Un modelo **guionizado** para las e2e (`ASISTENTE_MODELO=falso`): las pruebas recorren el camino
- * entero —ruta, cuota, herramientas, tarjeta, confirmar— sin llamar a OpenAI. Entiende tres pedidos:
- * «Crea a <nombre>, <teléfono>», «¿quién falta?» y cualquier otra cosa, que rechaza como fuera de tema.
+ * entero —ruta, cuota, herramientas, tarjeta, confirmar— sin llamar a OpenAI. Entiende cuatro pedidos:
+ * «Crea a <nombre>, <teléfono>», «Agrega la tarea <título>», «¿quién falta?» y cualquier otra cosa, que rechaza como fuera de tema.
  */
 export const modeloFalso: ModeloDeLenguaje = {
   async *responder({ entrada }): AsyncGenerator<EventoDelModelo> {
@@ -22,6 +22,9 @@ export const modeloFalso: ModeloDeLenguaje = {
     let guion: EventoDelModelo[]
     if (alta !== null) {
       guion = resultado === undefined ? llamar('proponer_invitados', { invitaciones: [{ personas: [alta[1]!.trim()], telefono: alta[2]?.trim() ?? null }] }) : texto(`Te dejé a ${alta[1]!.trim()} listo para confirmar.`)
+    } else if (/^agrega la tarea (.+)$/i.test(pregunta.trim())) {
+      const titulo = /^agrega la tarea (.+)$/i.exec(pregunta.trim())![1]!
+      guion = resultado === undefined ? llamar('proponer_tareas', { tareas: [{ titulo, vence: null, responsable: 'anfitrion' }] }) : texto('Te la dejé lista para confirmar.')
     } else if (/falta/i.test(pregunta)) {
       if (resultado === undefined) guion = llamar('buscar_invitados', { texto: null, estado: 'sin_responder' })
       else {

@@ -8,6 +8,7 @@ import { type DiaActionState, removeCourtMemberAction, removeRehearsalAction, sa
 import { nombreDelCortejo, type TipoDeCortejo } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: DiaActionState = { status: 'idle' }
 
@@ -30,7 +31,7 @@ export type EnsayoVista = { readonly id: string; readonly cuando: string; readon
 type Partida = { id: string; concept: string }
 
 function FormularioDeMiembro({ evento, tipos, partidas, miembro, ejemplo }: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; miembro?: MiembroVista; ejemplo?: string }) {
-  const [estado, enviar, enviando] = useActionState(saveCourtMemberAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveCourtMemberAction), INICIAL)
   const id = useId()
   const e = estado.status === 'error' ? estado.valores : undefined
   const v = (campo: string, base: string | null | undefined) => e?.[campo] ?? base ?? ''
@@ -146,7 +147,7 @@ export function CourtBoard({ evento, tipos, partidas, miembros }: { evento: Even
 
 /** Los ensayos —el vals, la entrada— con quién asiste. */
 export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento; miembros: readonly MiembroVista[]; ensayos: readonly EnsayoVista[] }) {
-  const [estado, enviar, enviando] = useActionState(saveRehearsalAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveRehearsalAction), INICIAL)
   const id = useId()
   const e = estado.status === 'error' ? estado.valores : undefined
   return (

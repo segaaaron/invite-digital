@@ -1,3 +1,4 @@
+import type { Cita } from '../domain/agenda'
 import type { Momento } from '../domain/cronograma'
 import type { TipoDeDocumento } from '../domain/dia-d'
 import type { Ensayo, MiembroDelCortejo, Proveedor, ProveedorLimpio, TipoDeCortejo } from '../domain/equipo-del-dia'
@@ -30,6 +31,15 @@ export interface DiaStore {
   /** Crea el ensayo con sus asistentes; solo cuentan los del cortejo de este evento. */
   insertRehearsal(eventId: string, ensayo: { date: Date; place: string | null; notes: string | null; asistentes: readonly string[] }): Promise<void>
   removeRehearsal(eventId: string, id: string): Promise<boolean>
+
+  /** Las citas de la agenda. */
+  listCitas(eventId: string): Promise<Cita[]>
+  insertCita(eventId: string, cita: Omit<Cita, 'id'>): Promise<void>
+  updateCita(eventId: string, id: string, cita: Omit<Cita, 'id'>): Promise<boolean>
+  removeCita(eventId: string, id: string): Promise<boolean>
+  /** La suscripción `.ics` de una persona a un evento: una por persona; emitir otra reemplaza. */
+  setFeed(eventId: string, userId: string, hash: Buffer): Promise<void>
+  findFeed(hash: Buffer): Promise<{ eventId: string; userId: string } | null>
 
   listDocuments(eventId: string): Promise<Documento[]>
   insertDocument(eventId: string, doc: Omit<Documento, 'createdAt'>): Promise<void>

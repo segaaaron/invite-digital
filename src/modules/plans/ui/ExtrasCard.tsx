@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { type ExtraActionState, orderExtraAction } from '@/app/_acciones/plans/extra-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: ExtraActionState = { status: 'idle' }
 
@@ -11,7 +12,7 @@ export type ExtraVista = { readonly slug: string; readonly name: string; readonl
 export type PedidoDeExtraVista = { readonly ref: string; readonly name: string; readonly estado: string; readonly tono: 'ok' | 'no' | 'pending' | 'maybe' }
 
 function Pedir({ eventId, eventSlug, extra }: { eventId: string; eventSlug: string; extra: ExtraVista }) {
-  const [estado, pedir, pidiendo] = useActionState(orderExtraAction, INICIAL)
+  const [estado, pedir, pidiendo] = useActionState(sinCaerse(orderExtraAction), INICIAL)
   return (
     <form action={pedir} className="flex flex-col items-end gap-1">
       <input name="eventId" readOnly type="hidden" value={eventId} />

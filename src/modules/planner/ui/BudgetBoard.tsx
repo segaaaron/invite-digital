@@ -8,6 +8,7 @@ import { addPaymentAction, type PlannerActionState, removeItemAction, removePaym
 import type { Pagador } from '../domain/presupuesto'
 import { Accion, type Evento, Ocultos } from './Accion'
 import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -89,7 +90,7 @@ function CamposDePartida({ opciones, inicial }: { opciones: Opciones; inicial: V
  * error, los campos se vuelven a montar con lo que se envió: React vacía el formulario.
  */
 export function ItemForm({ evento, opciones, partida, categoria }: { evento: Evento; opciones: Opciones; partida?: PartidaVista; categoria?: string | undefined }) {
-  const [estado, enviar, enviando] = useActionState(saveItemAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveItemAction), INICIAL)
   const enviados = estado.status === 'error' ? estado.valores : undefined
   const inicial: ValoresPartida = enviados
     ? {
@@ -124,7 +125,7 @@ export function ItemForm({ evento, opciones, partida, categoria }: { evento: Eve
 }
 
 function NuevoPago({ evento, itemId, concepto }: { evento: Evento; itemId: string; concepto: string }) {
-  const [estado, enviar, enviando] = useActionState(addPaymentAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(addPaymentAction), INICIAL)
   const id = useId()
   const enviados = estado.status === 'error' ? estado.valores : undefined
   return (

@@ -7,6 +7,7 @@ import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import type { EstadoDeCategoria } from '../domain/presupuesto'
 import { type Evento, Ocultos } from './Accion'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
 
@@ -45,7 +46,7 @@ const ESTADO: Record<EstadoDeCategoria, { texto: string; tono: 'ok' | 'maybe' | 
 
 /** El primer paso: cuánto se quiere gastar. Con eso se reparte solo por categorías. */
 export function BudgetStart({ evento }: { evento: Evento }) {
-  const [estado, enviar, enviando] = useActionState(saveBudgetPlanAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveBudgetPlanAction), INICIAL)
   const id = useId()
   return (
     <form action={enviar} className="flex flex-col items-start gap-4">
@@ -69,7 +70,7 @@ export function BudgetStart({ evento }: { evento: Evento }) {
 
 /** El presupuesto de un vistazo: cuánto hay, cuánto va comprometido y qué categoría se pasa. */
 export function BudgetOverview({ evento, plan, categorias, editable }: { evento: Evento; plan: PlanVista; categorias: readonly CategoriaVista[]; editable: boolean }) {
-  const [estado, enviar, enviando] = useActionState(saveBudgetPlanAction, INICIAL)
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveBudgetPlanAction), INICIAL)
   const id = useId()
   return (
     <div className="flex flex-col gap-5">

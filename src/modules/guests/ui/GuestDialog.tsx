@@ -6,6 +6,7 @@ import { FIELD_CLASS, Field, LABEL_CLASS, PanelButton } from '@/shared/design/ui
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { addGuestAction, type GuestActionState } from '@/app/_acciones/guests/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 export type GroupChoice = {
   readonly id: string
@@ -45,7 +46,7 @@ export function GuestDialog({
 }) {
   const router = useRouter()
   const dialogo = useRef<HTMLDialogElement>(null)
-  const [estado, accion, pendiente] = useActionState<GuestActionState, FormData>(addGuestAction, INICIAL)
+  const [estado, accion, pendiente] = useActionState<GuestActionState, FormData>(sinCaerse(addGuestAction), INICIAL)
   /**
    * Personal o familiar, y ya está.
    *

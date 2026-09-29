@@ -58,7 +58,31 @@ describe('conversar', () => {
     const invitaciones = [{ personas: ['Ramón Pérez'], telefono: '70012345' }]
     const { salidas, ejecutadas } = await correr([llamada('proponer_invitados', { invitaciones }), [{ tipo: 'texto', delta: 'Listo para confirmar.' }, { tipo: 'fin', uso: USO }]])
     expect(ejecutadas).toEqual([])
-    expect(salidas).toContainEqual({ tipo: 'propuesta', invitaciones })
+    expect(salidas).toContainEqual({ tipo: 'propuesta', propuesta: { clase: 'invitados', invitaciones } })
+  })
+
+  it('proponer tareas, partidas, momentos y citas tampoco guarda: cada una sale como su tarjeta', async () => {
+    const tareas = [{ titulo: 'Probar el menú', vence: '2026-11-01', responsable: 'anfitrion' }]
+    const partidas = [{ concepto: 'Salón', categoria: 'lugar', previsto_bs: 12000 }]
+    const momentos = [{ hora: '21:00', momento: 'Vals', en_invitacion: true }]
+    const citas = [{ titulo: 'Degustación', dia: '2026-11-03', hora: '16:30', minutos: 90, lugar: null }]
+    const fin = [{ tipo: 'texto' as const, delta: 'Confírmalo.' }, { tipo: 'fin' as const, uso: USO }]
+    for (const [nombre, clase, args] of [
+      ['proponer_tareas', 'tareas', { tareas }],
+      ['proponer_partidas', 'partidas', { partidas }],
+      ['proponer_momentos', 'momentos', { momentos }],
+      ['proponer_citas', 'citas', { citas }],
+    ] as const) {
+      const { salidas, ejecutadas } = await correr([llamada(nombre, args), fin])
+      expect(ejecutadas).toEqual([])
+      expect(salidas).toContainEqual({ tipo: 'propuesta', propuesta: { clase, ...args } })
+    }
+  })
+
+  it('una hora mal escrita no llega a la tarjeta: vuelve al modelo como error', async () => {
+    const { salidas, entradas } = await correr([llamada('proponer_momentos', { momentos: [{ hora: '9pm', momento: 'Vals', en_invitacion: false }] }), [{ tipo: 'fin', uso: USO }]])
+    expect(salidas.some((s) => s.tipo === 'propuesta')).toBe(false)
+    expect(JSON.stringify(entradas[1])).toContain('proponer_momentos')
   })
 
   it('una herramienta inventada o con argumentos malos vuelve como error al modelo, sin ejecutarse', async () => {

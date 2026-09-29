@@ -6,7 +6,7 @@ import { themeFor } from '@/modules/events/ui/themes/registry'
 import { atajoDeTarea, type LoQueYaHay, resueltaEnLaApp } from '@/modules/planner/domain/atajos'
 import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { avanceDeTareas, estadoDeTarea, etapasDe, FILTROS_DE_TAREAS, filtrarTareas, type FiltroDeTareas } from '@/modules/planner'
+import { avanceDeTareas, estadoDeTarea, etapasDe, sembrarTareas, FILTROS_DE_TAREAS, filtrarTareas, type FiltroDeTareas } from '@/modules/planner'
 import { NewTaskForm, SeedTasksButton, TaskBoard } from '@/modules/planner/ui/TaskBoard'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
@@ -130,6 +130,24 @@ export default async function TareasPage({
                 fotógrafo, invitaciones—, con fechas contadas hacia atrás desde el {diaLegible(event.value.eventDate)}. Lo que ya pasó vence hoy; puedes
                 editar, quitar o sumar tareas.
               </p>
+              {/* Qué se va a crear, antes de pulsar: las primeras de la plantilla con su fecha. */}
+              {(() => {
+                const plantilla = sembrarTareas(fiesta, event.value.eventDate, hoy)
+                return (
+                  <div className="w-full max-w-[460px] rounded-[16px] border border-line-panel bg-bg-top/40 p-4 text-left">
+                    <p className="mb-2 text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase">Así empieza · {plantilla.length} tareas</p>
+                    <ul aria-label="Vista previa de la plantilla" className="flex flex-col gap-1.5">
+                      {plantilla.slice(0, 4).map((t) => (
+                        <li className="flex items-baseline justify-between gap-3 text-[13px] text-ink" key={t.sortOrder}>
+                          <span>{t.title}</span>
+                          <span className="shrink-0 text-[12px] text-ink-mute">{t.dueDate === null ? '' : fecha(new Date(`${t.dueDate}T12:00:00Z`))}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {plantilla.length > 4 ? <p className="mt-2 text-[12px] text-ink-mute">y {plantilla.length - 4} más, hasta el día de la fiesta.</p> : null}
+                  </div>
+                )
+              })()}
               <SeedTasksButton eventId={event.value.id} eventSlug={event.value.slug} />
             </div>
           </PanelCard>

@@ -5,6 +5,7 @@ import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { reassignEventAction, setEventPlanAction } from '@/app/_acciones/admin/bodas-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: AdminActionState = { status: 'idle' }
 
@@ -28,8 +29,8 @@ export function ResponsableYPlan({
   owners: readonly { id: string; email: string }[]
   plans: readonly { slug: string; nombre: string }[]
 }) {
-  const [reasignado, reasignar, reasignando] = useActionState<AdminActionState, FormData>(reassignEventAction, INICIAL)
-  const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(setEventPlanAction, INICIAL)
+  const [reasignado, reasignar, reasignando] = useActionState<AdminActionState, FormData>(sinCaerse(reassignEventAction), INICIAL)
+  const [plan, cambiarPlan, cambiandoPlan] = useActionState<AdminActionState, FormData>(sinCaerse(setEventPlanAction), INICIAL)
   const id = useId()
 
   return (
