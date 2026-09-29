@@ -72,11 +72,13 @@ test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los
   // La lluvia de sobres y la transferencia van en todos los planes.
   await expect(page.getByRole('region', { name: 'Formas de regalar' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Lluvia de sobres/ })).toBeVisible()
-  await expect(page.getByText('No incluida en tu plan')).toBeVisible()
+  await expect(page.getByText('No incluida', { exact: true })).toBeVisible()
+  // El atelier tiene salida: cambiar de plan (el anfitrión no, la lista no se vende como extra).
+  await expect(page.getByRole('link', { name: 'Ver planes: Lista de regalos' })).toHaveAttribute('href', `/panel/eventos/${SLUG}/plan`)
   // Lo que el plan no trae no se ofrece: ni las altas ni el formulario de la lista.
   await expect(page.getByRole('link', { name: /Añadir regalo/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Añadir fondo/ })).toHaveCount(0)
-  await expect(page.getByLabel('Regalo')).toBeHidden()
+  await expect(page.getByLabel('Regalo', { exact: true })).toBeHidden()
 })
 
 test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {

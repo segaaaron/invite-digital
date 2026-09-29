@@ -68,7 +68,9 @@ export default async function RegalosPage({
 
   const base = `/panel/eventos/${event.value.slug}/regalos`
   // Sin lista en el plan, la tarjeta dice cómo tenerla (el atelier, al plan; el anfitrión, a Extras).
-  const mejorar = conMesa ? null : await mejorarPara(actor, event.value.slug)
+  const mejorarAlgo = conMesa ? null : await mejorarPara(actor, event.value.slug)
+  // La lista no se vende como extra: al anfitrión, Extras no se la da. Solo el cambio de plan.
+  const mejorar = mejorarAlgo?.href.endsWith('/extras') === true ? null : mejorarAlgo
   const abierto = panel === 'fondo' || panel === 'regalo' ? panel : null
 
   return (

@@ -19,8 +19,8 @@ export async function luxuryParaMejorar(actor: Actor, slug: string) {
   if (isErr(capacidad) || tieneLuxury(capacidad.value, config)) return null
   const [mejorar, planes, extras] = await Promise.all([mejorarPara(actor, slug, 'Ver extras'), Promise.all(config.planes.map(nombreDePlan)), plans.listActiveExtras()])
   const comoExtra = extras.some((x) => x.effect === 'asistente')
-  // El anfitrión mejora comprando extras: sin Luxury a la venta como extra, Extras no le sirve, y se lo pide al atelier.
-  const destino = mejorar?.href.endsWith('/extras') === true && !comoExtra ? { href: '/contacto/whatsapp', label: 'Pedirlo por WhatsApp' } : mejorar
+  // El anfitrión mejora comprando extras: sin Luxury a la venta como extra, Extras no le sirve (se lo pide al atelier).
+  const destino = mejorar?.href.endsWith('/extras') === true && !comoExtra ? null : mejorar
   return { mejorar: destino, planes, comoExtra }
 }
 
