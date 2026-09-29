@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { TEMAS_DE_AYUDA, type TemaDeAyuda } from './guias'
 
 /**
- * Lo que Arturo puede pedir. **El modelo no toca la base**: pide una herramienta por su nombre, el
+ * Lo que Luxury puede pedir. **El modelo no toca la base**: pide una herramienta por su nombre, el
  * servidor valida los argumentos aquí, la ejecuta con los permisos de quien pregunta y le devuelve
  * el resultado. El evento nunca es un argumento: sale de la sesión y de la dirección.
  *

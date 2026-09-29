@@ -1,6 +1,6 @@
 import { asistente } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
-import { accesoAArturo } from '../../../_carcasa/arturo'
+import { accesoAlAsistente } from '../../../_carcasa/asistente'
 import { leerHistorial } from '@/modules/asistente/domain/historial'
 import { MENSAJE_DE_CIERRE, puedeConversar, type Salida } from '@/modules/asistente'
 import { createRateLimiter } from '@/shared/http/rate-limit'
@@ -12,17 +12,17 @@ export const runtime = 'nodejs'
 const limite = createRateLimiter({ windowMs: 60_000, max: 10 })
 
 /**
- * **Arturo responde**, en trozos: una línea JSON por evento (`application/x-ndjson`), que el panel va
+ * **Luxury responde**, en trozos: una línea JSON por evento (`application/x-ndjson`), que el panel va
  * pintando según llegan. Route handler y no Server Action porque devuelve un flujo.
  *
- * Las guardias van en orden y todas en el servidor: sesión → evento propio con su plan (`accesoAArturo`;
+ * Las guardias van en orden y todas en el servidor: sesión → evento propio con su plan (`accesoAlAsistente`;
  * si no, 404 como un evento ajeno) → límite por minuto → conversación válida → cuota del evento y techo
  * del mes. El evento sale de la sesión y de la dirección, **nunca** del modelo ni del cuerpo.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ slug: string }> }) {
   const actor = await requireSession()
   const { slug } = await params
-  const acceso = await accesoAArturo(actor, slug)
+  const acceso = await accesoAlAsistente(actor, slug)
   if (acceso === null) return new Response('No encontrado', { status: 404 })
 
   if (limite.isLimited(actor.userId, Date.now())) return new Response('Demasiados mensajes seguidos', { status: 429 })

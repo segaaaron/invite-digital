@@ -70,7 +70,7 @@ describe('historial', () => {
 describe('reglas', () => {
   it('llevan los límites y el contexto del evento al final (lo fijo primero, para la caché)', () => {
     const r = reglasDelSistema({ evento: 'Boda de Ana', fiesta: 'boda', fecha: '2027-05-15', plan: 'Alta Costura', rol: 'anfitrión', hoy: '2026-09-28', slug: 'boda-ana' })
-    expect(r.startsWith('Eres Arturo')).toBe(true)
+    expect(r.startsWith('Eres Luxury')).toBe(true)
     expect(r).toContain('fin del mundo')
     expect(r).toContain('Nunca inventas datos')
     expect(r.indexOf('CONTEXTO (datos')).toBeGreaterThan(r.indexOf('EJEMPLOS'))

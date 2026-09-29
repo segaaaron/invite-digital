@@ -1,8 +1,8 @@
 /**
- * Las reglas de Arturo (el prompt de sistema), versión 1. **Van primero y siempre iguales** —el contexto
+ * Las reglas de Luxury (el prompt de sistema), versión 1. **Van primero y siempre iguales** —el contexto
  * del evento va al final— para que OpenAI cobre la parte fija en caché, al 10 % del precio.
  */
-export const NOMBRE_DEL_ASISTENTE = 'Arturo'
+export const NOMBRE_DEL_ASISTENTE = 'Luxury'
 
 const REGLAS = `Eres ${NOMBRE_DEL_ASISTENTE}, el planner digital de Luxury Atelier. Ayudas a organizar UN evento, el que se describe al final en CONTEXTO.
 

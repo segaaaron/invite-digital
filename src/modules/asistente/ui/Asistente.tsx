@@ -12,7 +12,7 @@ type Burbuja = { rol: 'usuario' | 'asistente'; texto: string; propuesta?: Propue
 
 const SUGERENCIAS = ['¿Qué me falta esta semana?', '¿Quién falta por responder?', 'Quiero registrar invitados', '¿Cómo mando las invitaciones?']
 
-/** Lo que se ve mientras Arturo consulta: dice qué está mirando, no «pensando…». */
+/** Lo que se ve mientras Luxury consulta: dice qué está mirando, no «pensando…». */
 const CONSULTANDO: Record<string, string> = {
   resumen_del_evento: 'Mirando las cifras de tu evento…',
   buscar_invitados: 'Revisando tu lista de invitados…',
@@ -24,7 +24,7 @@ const CONSULTANDO: Record<string, string> = {
   proponer_invitados: 'Preparando la lista…',
 }
 
-/** Los enlaces del propio evento que Arturo escribe se vuelven enlaces de verdad; nada de fuera. */
+/** Los enlaces del propio evento que Luxury escribe se vuelven enlaces de verdad; nada de fuera. */
 function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNode {
   const base = `/panel/eventos/${slug}`
   const partes = texto.split(/(\/panel\/eventos\/[a-z0-9-]+(?:\/[\w\-/?=&]*)?)/g)
@@ -45,7 +45,7 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNo
 }
 
 /**
- * **Arturo**: el botón flotante del panel del evento y su conversación. La conversación vive aquí (no se
+ * **Luxury**: el botón flotante del panel del evento y su conversación. La conversación vive aquí (no se
  * guarda en ningún sitio) y viaja entera a `/panel/eventos/<slug>/asistente` en cada mensaje; la
  * respuesta llega por trozos y se va escribiendo. Cuando propone invitados, pinta la tarjeta: nada se
  * guarda sin «Confirmar».
@@ -72,7 +72,7 @@ export function Asistente({ slug }: { slug: string }) {
   }
   const cerrar = () => dialogo.current?.close()
 
-  /** Cambia la última burbuja de Arturo (la que se está escribiendo). */
+  /** Cambia la última burbuja de Luxury (la que se está escribiendo). */
   const enLaUltima = (cambio: (b: Burbuja) => Burbuja) =>
     setBurbujas((todas) => {
       const copia = [...todas]
@@ -137,7 +137,7 @@ export function Asistente({ slug }: { slug: string }) {
     if (hecho.status === 'success') {
       const resultado = `Listo: ${hecho.creadas === 1 ? '1 invitación' : `${hecho.creadas} invitaciones`} (${hecho.personas === 1 ? '1 persona' : `${hecho.personas} personas`}) en tu lista.`
       marcar({ estado: 'guardada', resultado: 'Guardada en tu lista.' })
-      // Que Arturo lo sepa en el siguiente mensaje: la conversación es lo único que recuerda.
+      // Que Luxury lo sepa en el siguiente mensaje: la conversación es lo único que recuerda.
       setBurbujas((todas) => [...todas, { rol: 'asistente', texto: `${resultado} Ya puedes mandarles su invitación desde /panel/eventos/${slug}/invitados?panel=envio` }])
     } else marcar({ estado: 'pendiente', resultado: hecho.message })
   }
@@ -260,7 +260,7 @@ export function Asistente({ slug }: { slug: string }) {
                     void enviar(texto)
                   }
                 }}
-                placeholder="Escríbele a Arturo…"
+                placeholder={`Escríbele a ${NOMBRE_DEL_ASISTENTE}…`}
                 ref={campo}
                 rows={1}
                 value={texto}
@@ -276,7 +276,7 @@ export function Asistente({ slug }: { slug: string }) {
                 </svg>
               </button>
             </div>
-            <p className="text-[11px] text-ink-mute">Arturo puede equivocarse. Nada se guarda sin que lo confirmes.</p>
+            <p className="text-[11px] text-ink-mute">{NOMBRE_DEL_ASISTENTE} puede equivocarse. Nada se guarda sin que lo confirmes.</p>
           </form>
         </div>
       </dialog>

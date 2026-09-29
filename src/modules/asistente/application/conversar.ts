@@ -34,7 +34,7 @@ export const MAX_RONDAS = 5
 const ERROR_GENERICO = 'No pude responder ahora. Vuelve a intentarlo en un momento.'
 
 /**
- * Una respuesta de Arturo: manda la conversación al modelo; si pide herramientas, las valida, las ejecuta
+ * Una respuesta de Luxury: manda la conversación al modelo; si pide herramientas, las valida, las ejecuta
  * y le devuelve el resultado, hasta que responde con texto (o se acaban las rondas). Lo que escribe llega
  * al navegador según sale. `registrarUso` recibe los tokens de todas las rondas, **también si algo falla**:
  * lo gastado se cuenta.

@@ -1,5 +1,5 @@
 /**
- * Cómo se hace cada cosa en el panel, **escrito por nosotros**: Arturo no se inventa pantallas ni
+ * Cómo se hace cada cosa en el panel, **escrito por nosotros**: Luxury no se inventa pantallas ni
  * botones, los lee de aquí (`como_se_hace`). La ruta es relativa al evento (`/invitados`).
  */
 export const TEMAS_DE_AYUDA = [

@@ -6,14 +6,14 @@ import { isErr } from '@/shared/result'
 import { nombreDePlan } from './nombre-de-plan'
 
 /**
- * Quién puede hablar con Arturo en un evento, **en un solo sitio**: la carcasa lo usa para pintar el
+ * Quién puede hablar con Luxury en un evento, **en un solo sitio**: la carcasa lo usa para pintar el
  * botón y la ruta para responder (el botón es cortesía; el corte es la ruta).
  *
  * Hace falta modelo (clave de OpenAI), abrir la sección del anfitrión (dueño, anfitrión, planner), no ser
  * admin ni recepción ni estar en modo soporte (decidido el 28 de septiembre), y que el plan del evento
  * esté entre los que lo traen (Admin › Asistente).
  */
-export async function accesoAArturo(actor: Actor, slug: string) {
+export async function accesoAlAsistente(actor: Actor, slug: string) {
   if (!asistente.disponible || actor.role === 'admin' || actor.role === 'puerta' || actor.soporte !== undefined) return null
   const evento = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(evento)) return null

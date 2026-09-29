@@ -1,7 +1,7 @@
 import { z } from 'zod'
 
 /**
- * Los ajustes de Arturo, editables en Admin › Asistente (`app_settings['asistente.config']`):
+ * Los ajustes de Luxury, editables en Admin › Asistente (`app_settings['asistente.config']`):
  * qué planes lo traen, cuántos mensajes por evento y mes, y el techo de gasto del mes para todo el
  * sitio. Decidido el 28 de septiembre: solo Alta Costura, 300 mensajes y 20 USD.
  */

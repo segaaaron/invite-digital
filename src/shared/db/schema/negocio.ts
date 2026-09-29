@@ -198,7 +198,7 @@ export const referralCodes = pgTable('referral_codes', {
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
 
-/** Lo que gasta Arturo por evento y mes (`0075`): la cuota del evento y el techo global salen de aquí. */
+/** Lo que gasta Luxury por evento y mes (`0075`): la cuota del evento y el techo global salen de aquí. */
 export const assistantUsage = pgTable(
   'assistant_usage',
   {

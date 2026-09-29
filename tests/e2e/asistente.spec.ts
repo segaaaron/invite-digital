@@ -5,7 +5,7 @@ import { escribirInvitacion } from './fixtures/invitacion-minima'
 import { invitationFixtures } from './fixtures/invitation'
 
 /**
- * **Arturo** (28 de septiembre) con el modelo guionizado (`ASISTENTE_MODELO=falso`): nunca se llama a
+ * **Luxury** (28 de septiembre) con el modelo guionizado (`ASISTENTE_MODELO=falso`): nunca se llama a
  * OpenAI. Se recorre el camino entero: el botón solo en Alta Costura, la respuesta por trozos, la
  * propuesta de invitados que no guarda nada hasta «Confirmar», la consulta con datos reales, el rechazo
  * de lo que no es del evento, la cuota contada y el 404 para un plan que no lo trae.
@@ -25,17 +25,17 @@ test.afterAll(async () => {
   await sql.end({ timeout: 5 })
 })
 
-test('Arturo registra un invitado solo cuando se confirma, responde con los datos y rechaza lo que no es del evento', async ({ page }) => {
+test('Luxury registra un invitado solo cuando se confirma, responde con los datos y rechaza lo que no es del evento', async ({ page }) => {
   await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
   await escribirInvitacion(SLUG)
 
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
-  await page.getByRole('button', { name: 'Abrir a Arturo, tu asistente' }).click()
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
-  await expect(panel.getByRole('heading', { name: 'Arturo' })).toBeVisible()
+  await expect(panel.getByRole('heading', { name: 'Luxury' })).toBeVisible()
 
-  await panel.getByLabel('Escríbele a Arturo').fill('Crea a Ramón Pérez, 70012345')
-  await panel.getByLabel('Escríbele a Arturo').press('Enter')
+  await panel.getByLabel('Escríbele a Luxury').fill('Crea a Ramón Pérez, 70012345')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
   const tarjeta = panel.getByRole('region', { name: 'Invitados para confirmar' })
   await expect(tarjeta).toContainText('Ramón Pérez')
   await expect(tarjeta).toContainText('WhatsApp 70012345')
@@ -51,11 +51,11 @@ test('Arturo registra un invitado solo cuando se confirma, responde con los dato
   expect(grupo!.phone).toBe('+59170012345')
 
   // Con los datos reales: Ramón acaba de entrar y no respondió.
-  await panel.getByLabel('Escríbele a Arturo').fill('¿Quién falta por responder?')
+  await panel.getByLabel('Escríbele a Luxury').fill('¿Quién falta por responder?')
   await panel.getByRole('button', { name: 'Enviar' }).click()
   await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/)
 
-  await panel.getByLabel('Escríbele a Arturo').fill('¿Cuándo es el fin del mundo?')
+  await panel.getByLabel('Escríbele a Luxury').fill('¿Cuándo es el fin del mundo?')
   await panel.getByRole('button', { name: 'Enviar' }).click()
   await expect(panel).toContainText('Eso no lo puedo resolver yo; lo mío es tu evento.')
 
@@ -73,12 +73,12 @@ test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {
   expect(await respuesta.text()).toContain('ya usaste todos los mensajes')
 })
 
-test('un plan sin Arturo no ve el botón y la ruta responde 404', async ({ page }) => {
+test('un plan sin Luxury no ve el botón y la ruta responde 404', async ({ page }) => {
   await seedInvitation({ slug: SLUG_BASICO, plan: 'atelier' })
   await escribirInvitacion(SLUG_BASICO)
   await page.goto(`/panel/eventos/${SLUG_BASICO}`)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Abrir a Arturo, tu asistente' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' })).toHaveCount(0)
   const respuesta = await page.request.post(`/panel/eventos/${SLUG_BASICO}/asistente`, { data: { mensajes: [{ rol: 'usuario', texto: 'Hola' }] } })
   expect(respuesta.status()).toBe(404)
 })

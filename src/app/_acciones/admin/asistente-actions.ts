@@ -8,7 +8,7 @@ import { campo } from '@/shared/forms/campo'
 
 export type AsistenteState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
 
-/** Admin › Asistente: qué planes traen a Arturo, cuántos mensajes por evento y mes, y el techo del mes. */
+/** Admin › Asistente: qué planes traen a Luxury, cuántos mensajes por evento y mes, y el techo del mes. */
 export async function guardarAsistenteAction(_previo: AsistenteState, formData: FormData): Promise<AsistenteState> {
   const actor = await requireAdmin()
   const config = validarConfig({

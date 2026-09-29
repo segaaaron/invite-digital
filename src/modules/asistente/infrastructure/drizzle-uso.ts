@@ -3,7 +3,7 @@ import { db } from '@/shared/db/client'
 import { assistantUsage } from '@/shared/db/schema'
 import { costeMicroUsd, type UsoDeTokens } from '../domain/config'
 
-/** Lo que gasta Arturo, por evento y mes (`assistant_usage`). */
+/** Lo que gasta Luxury, por evento y mes (`assistant_usage`). */
 export const drizzleUsoDelAsistente = {
   /** Mensajes del evento este mes y gasto del mes de todo el sitio: lo que decide si se responde. */
   async usoDe(eventId: string, mes: string): Promise<{ mensajesDelMes: number; gastoDelMesMicroUsd: number }> {

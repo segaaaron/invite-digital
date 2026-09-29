@@ -19,7 +19,7 @@ import { analytics, guests, planner, rsvp } from './eventos'
 
 /**
  * El modelo: OpenAI con la clave de producción, o el guionizado de las e2e (`ASISTENTE_MODELO=falso`, que
- * el compose de producción no pasa). Sin ninguno de los dos, Arturo no existe: el botón no aparece.
+ * el compose de producción no pasa). Sin ninguno de los dos, Luxury no existe: el botón no aparece.
  */
 const modelo = env.ASISTENTE_MODELO === 'falso' ? modeloFalso : env.OPENAI_API_KEY === undefined ? null : crearModeloOpenAI({ clave: env.OPENAI_API_KEY, modelo: env.ASISTENTE_MODELO })
 
@@ -127,7 +127,7 @@ async function leerLaConfig(): Promise<ConfigDelAsistente> {
   return leerConfig(ajustes[CLAVE_DE_CONFIG])
 }
 
-/** **Arturo**, el asistente del panel del evento. */
+/** **Luxury**, el asistente del panel del evento. */
 export const asistente = {
   /** Si hay modelo (clave de OpenAI en producción). Sin él, ni botón ni ruta. */
   disponible: modelo !== null,
@@ -137,7 +137,7 @@ export const asistente = {
   resumenDelMes: (ahora: Date) => drizzleUsoDelAsistente.resumenDelMes(mesEnBolivia(ahora)),
   /** Una respuesta, en trozos. Quien llama ya comprobó sesión, evento, plan y cuota. */
   responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date }): AsyncGenerator<Salida> {
-    if (modelo === null) throw new Error('Arturo no tiene modelo configurado')
+    if (modelo === null) throw new Error('Luxury no tiene modelo configurado')
     const mes = mesEnBolivia(p.ahora)
     const instrucciones = reglasDelSistema({
       evento: p.evento.title,

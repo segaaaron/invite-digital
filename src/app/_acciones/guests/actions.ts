@@ -386,20 +386,20 @@ export async function setGroupPhoneAction(input: {
   return { status: 'success' }
 }
 
-export type AltaDeArturoState = { status: 'success'; creadas: number; personas: number } | { status: 'error'; message: string }
+export type AltaDelAsistenteState = { status: 'success'; creadas: number; personas: number } | { status: 'error'; message: string }
 
 /**
- * «Confirmar» en la tarjeta de Arturo: las invitaciones que propuso, guardadas **por la persona**, con las
+ * «Confirmar» en la tarjeta de Luxury: las invitaciones que propuso, guardadas **por la persona**, con las
  * mismas guardias que el alta a mano (invitación escrita, tope del plan). Se valida otra vez lo que llega:
  * es un extremo público y la propuesta pasó por el navegador. Todo o nada no: lo creado se queda y la
  * pantalla dice dónde se paró, como la importación.
  */
-export async function addGuestsFromAssistantAction(input: { eventSlug: string; invitaciones: unknown }): Promise<AltaDeArturoState> {
+export async function addGuestsFromAssistantAction(input: { eventSlug: string; invitaciones: unknown }): Promise<AltaDelAsistenteState> {
   const actor = await requireSession()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
 
   const propuesta = esquemaDePropuesta.safeParse(input.invitaciones)
-  if (!propuesta.success) return { status: 'error', message: 'La propuesta no es válida. Pídesela otra vez a Arturo.' }
+  if (!propuesta.success) return { status: 'error', message: 'La propuesta no es válida. Pídesela otra vez a Luxury.' }
 
   const sinEscribir = await invitacionSinEscribir(eventId)
   if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
