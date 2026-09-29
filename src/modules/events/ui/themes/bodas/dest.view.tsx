@@ -10,11 +10,12 @@ import { ThemeColumn } from '../kit/ThemeColumn'
 import { FallingRosePetals } from '../kit/flora/FallingRosePetals'
 import { EnvelopeCover } from '../kit/covers/EnvelopeCover'
 import { PALETA as P } from './dest.palette'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const SERIF = 'var(--font-cormorant)'
 
-export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
+export function DestView({ content, dictionary, themes, slots, audioSrc }: ThemeProps) {
   const ROTULOS = themes.designs['dest']
   const { hero, quote, schedule, reception, itinerary, dressCode, gallery, closing } = content
   const pareja = gallery?.[0]
@@ -57,6 +58,13 @@ export function DestView({ content, dictionary, themes, slots }: ThemeProps) {
         overflowX: 'clip',
       }}
     >
+      {/* Este diseño no pinta reproductor: la canción va en el botón flotante, primera
+          hija del artículo: se pega con `sticky` como `CapaFija`. */}
+      <MusicaFlotante
+        artist={content.music?.artist}
+        audioSrc={audioSrc ?? (content.music?.audioMediaId === undefined ? undefined : `/media/${content.music.audioMediaId}`)}
+        track={content.music?.track}
+      />
       <EnvelopeCover
         accent={P.arena}
         bg={P.marProfundo}

@@ -6,13 +6,13 @@ import type { PasswordHasher, SessionRepository, UserRepository } from './ports'
 const HASH_ACTUAL = 'hash-de-la-actual'
 
 /** Doble que recuerda lo que se le escribió: es lo único que hay que comprobar. */
-function dobles(existe = true) {
+function dobles(existe = true, provisional = false) {
   const escrito: { userId: string; passwordHash: string }[] = []
   const cerradas: string[] = []
 
   const users: UserRepository = {
     findByEmail: async (email) => (existe ? { id: 'u1', email, passwordHash: HASH_ACTUAL } : null),
-    findActor: async () => ({ id: 'u1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: false }),
+    findActor: async () => ({ id: 'u1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: provisional }),
     create: async () => ({ id: 'u1' }),
     updatePassword: async (userId, passwordHash) => {
       escrito.push({ userId, passwordHash })
@@ -94,5 +94,16 @@ describe('changePassword', () => {
 
     expect(isErr(salida) && salida.error.kind).toBe('invalid_credentials')
     expect(d.escrito).toEqual([])
+  })
+
+  it('sin la actual solo cambia la provisional: la sesión ya la probó', async () => {
+    const provisional = dobles(true, true)
+    expect(isOk(await changePassword(provisional)({ ...ACTOR, current: null, next: 'una-nueva-larga-1' }))).toBe(true)
+    expect(provisional.escrito).toHaveLength(1)
+
+    const definitiva = dobles()
+    const salida = await changePassword(definitiva)({ ...ACTOR, current: null, next: 'una-nueva-larga-1' })
+    expect(isErr(salida) && salida.error.kind).toBe('invalid_credentials')
+    expect(definitiva.escrito).toEqual([])
   })
 })

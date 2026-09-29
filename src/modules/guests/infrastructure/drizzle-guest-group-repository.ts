@@ -114,10 +114,13 @@ export const createDrizzleGuestGroupRepository = (database: DbExecutor): GuestGr
     // `isNull` en el where: una segunda apertura no debe reescribir la marca, y así la
     // condición vive en la base y no en una lectura previa que otra petición podría
     // adelantar.
-    await database
+    // Y devuelve la fila solo si la marcó esta llamada: es lo que dice «primera apertura» sin carreras.
+    const [fila] = await database
       .update(guestGroups)
       .set({ openedAt: at })
       .where(and(eq(guestGroups.id, id), isNull(guestGroups.openedAt)))
+      .returning({ eventId: guestGroups.eventId, label: guestGroups.label })
+    return fila ?? null
   },
 })
 

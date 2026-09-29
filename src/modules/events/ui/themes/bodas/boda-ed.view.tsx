@@ -13,6 +13,7 @@ import { CuentaConAros } from './CuentaConAros'
 import { ItinerarioOndulado } from './ItinerarioOndulado'
 import { OvalFrameCover } from './OvalFrameCover'
 import { CARTA_DE_COLOR, PALETA as P } from './boda-ed.palette'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const DISPLAY = 'var(--font-spectral)'
@@ -54,7 +55,7 @@ function ConCursivaFinal({ texto }: { readonly texto: string }) {
   )
 }
 
-export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo }: ThemeProps) {
+export function BodaEdView({ content, event, dictionary, themes, slots, guestInfo, audioSrc }: ThemeProps) {
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, closing } =
     content
 
@@ -107,6 +108,13 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
 
   return (
     <article style={{ ...RANURAS, position: 'relative', color: P.papel, fontFamily: DISPLAY, minHeight: 'var(--alto, 100dvh)', overflowX: 'clip' }}>
+      {/* Este diseño no pinta reproductor: la canción va en el botón flotante, primera
+          hija del artículo: se pega con `sticky` como `CapaFija`. */}
+      <MusicaFlotante
+        artist={content.music?.artist}
+        audioSrc={audioSrc ?? (content.music?.audioMediaId === undefined ? undefined : `/media/${content.music.audioMediaId}`)}
+        track={content.music?.track}
+      />
       <OvalFrameCover
         accent={P.oro}
         bg={P.fondo}

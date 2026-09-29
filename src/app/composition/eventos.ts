@@ -1,3 +1,6 @@
+import { enSegundoPlano } from '@/shared/http/en-segundo-plano'
+import { avisoDeApertura } from '@/modules/notifications'
+import { avisos } from './avisos'
 import { enExclusiva } from '@/shared/db/candado'
 import { enTransaccion } from '@/shared/db/transaccion'
 import { db, type DbExecutor } from '@/shared/db/client'
@@ -310,13 +313,29 @@ const invitadosEn = (database: DbExecutor) => {
   }
 }
 
+/**
+ * El repositorio del invitado, con un aviso en la **primera** apertura de su invitación: la base dice si
+ * fue la primera (sin carreras), y la campana y la push de quienes llevan el evento se enteran después
+ * de responder (`after`), sin hacer esperar al invitado.
+ */
+const gruposQueAvisan: typeof drizzleGuestGroupRepository = {
+  ...drizzleGuestGroupRepository,
+  async markOpened(id, at) {
+    const primera = await drizzleGuestGroupRepository.markOpened(id, at)
+    if (primera !== null) {
+      enSegundoPlano(() => avisos.delEvento(primera.eventId, (ev) => avisoDeApertura({ ...ev, invitado: primera.label })))
+    }
+    return primera
+  },
+}
+
 export const guests = {
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   /** Cuántas invitaciones, sin traerlas: el tope del plan se cuenta en invitaciones. */
   contar: (eventId: string) => countGroupsByEvent(db, eventId),
   /** Cuántas personas, para la insignia de «Invitados» de la barra. */
   contarPersonas: (eventId: string) => countPeopleByEvent(eventId),
-  resolveByToken: resolveByToken({ groups: drizzleGuestGroupRepository, minter, clock }),
+  resolveByToken: resolveByToken({ groups: gruposQueAvisan, minter, clock }),
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   reopenRsvp: reopenRsvp({ groups: drizzleGuestGroupRepository, clock }),

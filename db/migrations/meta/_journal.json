@@ -512,6 +512,13 @@
       "when": 1791500000000,
       "tag": "0073_admin_unificado",
       "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1791600000000,
+      "tag": "0074_avisos",
+      "breakpoints": true
     }
   ]
 }

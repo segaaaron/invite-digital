@@ -95,6 +95,8 @@
 @keyframes theme-leafSway { 0%,100% { transform: rotate(-1.5deg) translateY(0); } 50% { transform: rotate(1.5deg) translateY(-3px); } }
 
 @keyframes theme-eq { 0%,100% { height: 25%; } 50% { height: 100%; } }
+/* El botón flotante de la música mientras suena (`MusicaFlotante`); sin movimiento reducido. */
+@keyframes theme-latido { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(1.5); opacity: 0; } }
 
 /*
  * El balanceo de las acuarelas florales. Va por clase y no en línea para que la

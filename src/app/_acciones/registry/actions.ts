@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { guests, plans, registry } from '@/app/composition/container'
+import { enSegundoPlano } from '@/shared/http/en-segundo-plano'
+import { avisos, guests, plans, registry } from '@/app/composition/container'
+import { avisoDeRegalo } from '@/modules/notifications'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
@@ -298,6 +300,16 @@ export async function claimGiftAction(input: { token: string; giftId: string }):
     console.error('reserva rechazada', result.error.kind, result.error.detail)
     return { ok: false, kind: result.error.kind, message: result.error.kind }
   }
+
+  // Quienes llevan el evento se enteran (campana y push) cuando la respuesta ya salió.
+  enSegundoPlano(async () => {
+    const grupo = await guests.resolveByToken(input.token)
+    if (isErr(grupo)) return
+    const lista = await registry.list(grupo.value.eventId)
+    const regalo = isErr(lista) ? undefined : lista.value.gifts.find((g) => g.id === input.giftId)
+    if (regalo === undefined) return
+    await avisos.delEvento(grupo.value.eventId, (ev) => avisoDeRegalo({ ...ev, invitado: grupo.value.label, regalo: regalo.name }))
+  })
 
   revalidatePath(`/i/${input.token}`)
   return { ok: true }

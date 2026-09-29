@@ -35,6 +35,21 @@ const envSchema = z.object({
     // distintas y el adaptador tendría que saberlo.
     .transform((valor) => (valor === '' ? undefined : valor)),
   /**
+   * Las claves VAPID de las notificaciones push web (`pnpm dlx web-push generate-vapid-keys`).
+   *
+   * **Opcionales, como la de Resend**: sin ellas la campana funciona y la push no sale. La pública
+   * se le pasa al navegador **por petición** (no `NEXT_PUBLIC_…`, que se hornearía en la imagen).
+   * No se rotan: cambiarlas obliga a cada aparato a volver a activar los avisos.
+   */
+  VAPID_PUBLIC_KEY: z
+    .string()
+    .optional()
+    .transform((valor) => (valor === '' ? undefined : valor)),
+  VAPID_PRIVATE_KEY: z
+    .string()
+    .optional()
+    .transform((valor) => (valor === '' ? undefined : valor)),
+  /**
    * El remitente, en el dominio raíz: Resend verificó `luxuryatelier.net` (la clave DKIM
    * vive en `resend._domainkey.luxuryatelier.net`). El subdominio `send` que aparece en el
    * DNS es solo la dirección de rebotes (MX y SPF del Return-Path), **no** va en el From.

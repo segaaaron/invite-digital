@@ -15,7 +15,7 @@ function repo() {
     findById: async (eventId, id) =>
       eventId === 'e1' && id === 'g1' ? { id, eventId, label: 'Ana', seats: 1, revokedAt: null, openedAt: null } : null,
     revoke: async (eventId, id) => void revocadas.push({ eventId, id }),
-    markOpened: async () => {},
+    markOpened: async () => null,
     remove: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},

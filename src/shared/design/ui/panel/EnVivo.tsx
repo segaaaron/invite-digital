@@ -93,35 +93,34 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
 
   if (oculto) return null
 
+  // Una píldora pequeña a la derecha, no una fila entera: estaba en cada pantalla y empujaba el contenido.
   return (
-    <div aria-live="polite" className="mb-4 flex flex-wrap items-center justify-between gap-2">
-      <span className="flex items-center gap-2 text-[12px] text-ink-mute">
-        <span
-          aria-hidden
-          className={`size-2 rounded-full ${estado === 'en-vivo' ? 'bg-sage' : estado === 'conectando' ? 'bg-gold' : 'bg-ink-mute/50'}`}
-        />
-        {estado === 'en-vivo' ? 'En vivo' : estado === 'conectando' ? 'Conectando…' : 'Sin actualización automática'}
-      </span>
-      {novedades > 0 ? (
-        <button
-          className="cursor-pointer rounded-full bg-ink px-4 py-1.5 text-[12.5px] text-white transition-colors hover:bg-ink/90"
-          onClick={actualizar}
-          type="button"
-        >
-          {novedades === 1 ? '1 novedad' : `${novedades} novedades`} · Ver
-        </button>
-      ) : (
-        <button
-          aria-busy={actualizando}
-          className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-line-panel-strong bg-white px-3 py-1.5 text-[12px] text-ink transition-colors hover:border-ink disabled:opacity-60"
-          disabled={actualizando}
-          onClick={actualizar}
-          type="button"
-        >
-          <RefreshIcon className={`size-3.5 ${actualizando ? 'animate-spin motion-reduce:animate-none' : ''}`} />
-          Actualizar
-        </button>
-      )}
+    <div aria-live="polite" className="-mt-2 mb-3 flex justify-end">
+      <div className="inline-flex items-center gap-1 rounded-full border border-line-panel bg-white/70 py-0.5 pr-0.5 pl-3 text-[12px] text-ink-mute shadow-card backdrop-blur-sm">
+        <span className="flex items-center gap-1.5 pr-1.5">
+          <span
+            aria-hidden
+            className={`size-1.5 rounded-full ${estado === 'en-vivo' ? 'bg-sage' : estado === 'conectando' ? 'bg-gold' : 'bg-ink-mute/50'}`}
+          />
+          {estado === 'en-vivo' ? 'En vivo' : estado === 'conectando' ? 'Conectando…' : 'Sin actualización automática'}
+        </span>
+        {novedades > 0 ? (
+          <button className="cursor-pointer rounded-full bg-ink px-3 py-1 text-[12px] text-white transition-colors hover:bg-ink/90" onClick={actualizar} type="button">
+            {novedades === 1 ? '1 novedad' : `${novedades} novedades`} · Ver
+          </button>
+        ) : (
+          <button
+            aria-busy={actualizando}
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[12px] text-ink-soft transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-60"
+            disabled={actualizando}
+            onClick={actualizar}
+            type="button"
+          >
+            <RefreshIcon className={`size-3.5 ${actualizando ? 'animate-spin motion-reduce:animate-none' : ''}`} />
+            Actualizar
+          </button>
+        )}
+      </div>
     </div>
   )
 }

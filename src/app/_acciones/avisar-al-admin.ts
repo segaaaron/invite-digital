@@ -1,5 +1,6 @@
 import { after } from 'next/server'
-import { admin, notifications } from '@/app/composition/container'
+import { admin, avisos, notifications } from '@/app/composition/container'
+import { avisoDeVenta } from '@/modules/notifications'
 import { isErr } from '@/shared/result'
 
 /**
@@ -10,6 +11,8 @@ import { isErr } from '@/shared/result'
  */
 export function avisarAlAdmin(aviso: { asunto: string; lineas: readonly string[]; ruta: string }): void {
   after(async () => {
+    // La campana y la push de cada admin, además del correo.
+    await avisos.alAdmin(avisoDeVenta({ titulo: aviso.asunto, detalle: aviso.lineas[0] ?? '', ruta: aviso.ruta }))
     try {
       const usuarios = await admin.users()
       if (isErr(usuarios)) return

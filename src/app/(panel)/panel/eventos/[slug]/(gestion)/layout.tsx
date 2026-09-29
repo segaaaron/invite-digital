@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { checkin, events, guests, plans } from '@/app/composition/container'
+import { avisos, checkin, events, guests, plans } from '@/app/composition/container'
+import { Campana } from '@/modules/notifications/ui/Campana'
+import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { nombreDePlan } from '../../../_carcasa/nombre-de-plan'
 import { fiestaDeTema } from '@/modules/events'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
@@ -51,7 +53,9 @@ export default async function EventoLayout({
   // se pinta sin ella: un contador no es motivo para tumbar la página que lo rodea.
   const id = event.value.id
   const dueno = gestionaElEvento(actor, event.value)
-  const [personas, capacidad, insignias, equipo, mesaPlanner] = await Promise.all([
+  // La campana: la recepción no recibe avisos, y en modo soporte abrirla dejaría vistos los del cliente.
+  const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
+  const [personas, capacidad, insignias, equipo, mesaPlanner, sinVer] = await Promise.all([
     // Personas, no grupos: la insignia dice «Invitados» y un grupo sin nadie dentro no lo es.
     guests.contarPersonas(id).catch(() => null),
     plans.allowanceFor(id),
@@ -59,7 +63,9 @@ export default async function EventoLayout({
     // Quien entra por pertenencia ve la barra de su papel en el equipo.
     dueno || actor.role === 'puerta' ? null : events.staff.membershipsOf(id, actor.userId).then(rolEnEquipo),
     actor.role === 'puerta' ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
+    conCampana ? avisos.sinVer(actor.userId).catch(() => 0) : 0,
   ])
+  const campana = conCampana ? <Campana clavePublica={avisos.clavePublica} sinVer={sinVer} /> : null
   // La capacidad ya leída dice si trae puerta: `requireFeature` la volvía a calcular entera.
   const anfitriones = isAdmin(actor) ? ((await events.staff.hostsOf([id])).get(id) ?? []) : []
   const puerta = !isErr(capacidad) && hasFeature(capacidad.value, 'checkin') ? await checkin.state(id) : null
@@ -85,7 +91,7 @@ export default async function EventoLayout({
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
-      {isAdmin(actor) ? <BarraDelAdmin /> : null}
+      {isAdmin(actor) ? <BarraDelAdmin campana={campana} /> : campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

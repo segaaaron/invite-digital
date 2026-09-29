@@ -85,6 +85,9 @@ services:
       # El remitente, en el subdominio verificado en Resend. Va por variable para poder
       # cambiarlo sin desplegar; sin ella se usa el valor por defecto de `env.ts`.
       EMAIL_FROM: ${EMAIL_FROM:-}
+      # Las notificaciones push web. Opcionales: sin ellas la campana funciona y la push no sale.
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos
@@ -123,6 +126,12 @@ services:
       # Solo para `pnpm preflight`, que comprueba su longitud. Ya viaja dentro de
       # DATABASE_URL: no expone nada que el contenedor no tuviera.
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # El mantenimiento manda los correos de acompañamiento y los avisos de lo que vence: sin estas
+      # líneas no salía ninguno (el contenedor solo recibe lo que declara este bloque).
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
     command: sh -c 'while true; do pnpm maintenance || echo "FALLO DE MANTENIMIENTO — se reintenta en 24 h" >&2; sleep 86400; done'
     depends_on:
       migrate:

@@ -24,7 +24,8 @@ export interface GuestGroupRepository {
   insert(group: GuestGroup, tokenHash: Buffer, token: string): Promise<void>
   listByEvent(eventId: string): Promise<GuestGroupRow[]>
   findByTokenHash(tokenHash: Buffer): Promise<GuestGroupRow | null>
-  markOpened(id: string, at: Date): Promise<void>
+  /** Marca la primera apertura. Devuelve su evento y etiqueta si fue la primera; `null` si ya estaba abierta. */
+  markOpened(id: string, at: Date): Promise<{ eventId: string; label: string } | null>
   findById(eventId: string, id: string): Promise<GuestGroupRow | null>
   revoke(eventId: string, id: string, at: Date): Promise<void>
   /** Marca el reparto de la invitación. */

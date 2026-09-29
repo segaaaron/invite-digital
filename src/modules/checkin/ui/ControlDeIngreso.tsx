@@ -2,9 +2,9 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 import { checkInByGroupAction, undoCheckInAction } from '@/app/_acciones/checkin/actions'
-import { CheckIcon, ChevronIcon, RefreshIcon, ScanIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, ChevronIcon, ScanIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
@@ -84,7 +84,6 @@ export function ControlDeIngreso({
   const [aviso, setAviso] = useState<string | null>(null)
   /** Lo que hay que decir sin que sea un fallo: «ya estaba dentro». Rojo aquí sería mentir. */
   const [nota, setNota] = useState<string | null>(null)
-  const [actualizando, actualizar] = useTransition()
 
   // Lo registrado aquí cuenta ya, aunque el servidor aún no haya vuelto a pintar.
   const vistas = filas.map((f) => {
@@ -416,17 +415,8 @@ export function ControlDeIngreso({
             <div className="min-w-0 flex-1">
               <SearchField className="w-full" label="Buscar invitado" onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre…" value={busqueda} />
             </div>
-            {/* Traer lo que registró la recepción desde otro teléfono. A mano: quien mira decide cuándo. */}
-            <button
-              aria-busy={actualizando}
-              className="flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-4 py-2 text-[12.5px] text-ink transition hover:border-ink disabled:opacity-50"
-              disabled={actualizando}
-              onClick={() => actualizar(() => router.refresh())}
-              type="button"
-            >
-              <RefreshIcon className={`size-4 ${actualizando ? 'animate-spin' : ''}`} />
-              {actualizando ? 'Actualizando…' : 'Actualizar'}
-            </button>
+            {/* Lo que registra la recepción desde otro teléfono llega solo («En vivo», arriba): aquí no hace
+                falta otro «Actualizar». */}
           </div>
 
           {porInvitacion.length === 0 ? (
@@ -549,8 +539,13 @@ export function ControlDeIngreso({
                                 </span>
                               </span>
                             </span>
-                            <span className="min-w-0 truncate text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
-                              {familia ? '' : [f.invitacion ?? f.nombre, f.mesa ?? 'Sin mesa'].join(' · ')}
+                            <span
+                              className="min-w-0 truncate text-[13px] text-ink-soft max-[759px]:hidden"
+                              role="cell"
+                              title={familia ? undefined : [f.invitacion ?? f.nombre, f.mesa ?? 'Sin mesa'].join(' · ')}
+                            >
+                              {/* Si la invitación lleva el nombre de la persona, decirlo otra vez solo corta la mesa. */}
+                              {familia ? '' : f.invitacion && !f.invitacion.startsWith(f.nombre) ? `${f.invitacion} · ${f.mesa ?? 'Sin mesa'}` : (f.mesa ?? 'Sin mesa')}
                             </span>
                             <span className="text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
                               {familia ? '' : '1 persona'}

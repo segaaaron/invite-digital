@@ -40,7 +40,11 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
 
   const jar = await cookies()
   jar.set(SESSION_COOKIE, outcome.token, sessionCookieOptions(outcome.expiresAt))
+  return entrarCon(outcome.token)
+}
 
+/** Adónde lleva entrar con esta sesión. `redirect` lanza: siempre es lo último. */
+async function entrarCon(token: string): Promise<never> {
   // Entrar deja al atelier en el resumen del evento activo —el de fecha más próxima—,
   // que es la pantalla de la maqueta y la que se mira todos los días. La bandeja de
   // eventos sigue en `/panel`, en «Todos los eventos» de la barra, y es adonde se cae
@@ -48,7 +52,7 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   // El actor se resuelve del token recién acuñado, no de la cookie: escribirla y leerla
   // en la misma petición funciona, pero apoyarse en eso es apoyarse en un detalle del
   // framework para decidir qué eventos enseñar.
-  const sesion = await identity.authenticateSession(outcome.token)
+  const sesion = await identity.authenticateSession(token)
   const usuario = isErr(sesion) ? null : await identity.actorOf(sesion.value.userId)
   const listados =
     usuario === null
@@ -90,9 +94,9 @@ export type ChangePasswordState = { status: 'idle' | 'error'; message: string }
  * Cambia la contraseña de **quien la pide**, nunca la de otro: el correo sale de la
  * sesión y no del formulario.
  *
- * Al terminar, todas las sesiones de ese usuario están cerradas —la suya incluida—, así
- * que redirige a la puerta para volver a entrar con la nueva. Es la mitad del trabajo:
- * cambiar una contraseña filtrada sin echar al que la tiene no cierra nada.
+ * Solo la provisional, y sin volver a pedirla: acaba de entrar con ella. Al guardar se cierran
+ * todas sus sesiones —la clave viajó por correo— y se le abre una nueva con la suya, así que
+ * entra directo al panel sin escribirla otra vez.
  */
 export async function changePasswordAction(
   _previous: ChangePasswordState,
@@ -107,7 +111,7 @@ export async function changePasswordAction(
   const result = await identity.changePassword({
     userId: actor.userId,
     email: actor.email,
-    current: campo(formData, 'current'),
+    current: null,
     next: campo(formData, 'next'),
   })
 
@@ -118,16 +122,20 @@ export async function changePasswordAction(
       message:
         result.error.kind === 'weak_password'
           ? 'La contraseña nueva necesita al menos 12 caracteres.'
-          : result.error.kind === 'invalid_credentials'
-            ? 'La contraseña actual no es correcta.'
-            : 'No pudimos guardarla. Inténtalo en un momento.',
+          : 'No pudimos guardarla. Inténtalo en un momento.',
     }
   }
 
+  const bolsa = await headers()
   const jar = await cookies()
-  jar.delete(SESSION_COOKIE)
-  // `redirect` lanza para hacer su trabajo: va al final y nunca dentro de un try.
-  redirect('/panel/entrar')
+  const nueva = await identity.signIn({ email: actor.email, password: campo(formData, 'next'), device: describirDispositivo(bolsa.get('user-agent') ?? '') })
+  if (isErr(nueva)) {
+    // Guardada sí; la sesión no se abrió. Que entre con la suya.
+    jar.delete(SESSION_COOKIE)
+    redirect('/panel/entrar')
+  }
+  jar.set(SESSION_COOKIE, nueva.value.token, sessionCookieOptions(nueva.value.expiresAt))
+  return entrarCon(nueva.value.token)
 }
 
 // ============================================================================

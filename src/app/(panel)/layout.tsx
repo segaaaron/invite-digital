@@ -7,7 +7,15 @@ import '../globals.css'
 export const viewport = VIEWPORT
 
 // El panel no negocia idioma: lo usa el atelier y está en español.
-export const metadata = { title: 'Panel · Luxury Atelier', robots: { index: false, follow: false } }
+//
+// Instalable: con el manifiesto el panel se añade a la pantalla de inicio y abre como app. En iPhone es
+// la única forma de recibir notificaciones push (iOS 16.4+); en Android y computadoras, además, se ve mejor.
+export const metadata = {
+  title: 'Panel · Luxury Atelier',
+  robots: { index: false, follow: false },
+  manifest: '/panel.webmanifest',
+  appleWebApp: { capable: true, title: 'Luxury Atelier', statusBarStyle: 'black-translucent' as const },
+}
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (

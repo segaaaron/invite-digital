@@ -26,13 +26,13 @@ export default async function NuevaContrasenaPage() {
         </p>
         <h1 className="mt-6 font-display text-[28px] leading-tight text-ink">Elige tu contraseña</h1>
         <p className="mt-2 text-[13.5px] leading-[1.7] text-ink-soft">
-          La que acabas de usar te la dio otra persona y viajó por correo, así que no puede ser la definitiva. Elige una tuya y entras al
+          La que acabas de usar te la dio otra persona y viajó por correo, así que no puede ser la definitiva. Elige una tuya y entras directo al
           panel.
         </p>
         <p className="mt-1 text-[12.5px] text-ink-mute">Entrando como {actor.email}</p>
 
         <div className="mt-6">
-          <ChangePasswordForm inicial />
+          <ChangePasswordForm />
         </div>
       </div>
     </main>

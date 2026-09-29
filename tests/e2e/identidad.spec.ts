@@ -68,21 +68,13 @@ test.describe('la contraseña provisional', () => {
     await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
 
     // La cambia.
-    await page.getByLabel('La contraseña que te dieron').fill(PROVISIONAL.password)
     await page.getByLabel('Tu contraseña nueva').fill(NUEVA_PASSWORD)
     await page.getByRole('button', { name: 'Guardar y entrar' }).click()
 
-    // Cambiarla cierra todas las sesiones —incluida esta—, así que devuelve a la puerta.
-    await expect(page).toHaveURL(/\/panel\/entrar/)
-    expect(await debeCambiarla()).toBe(false)
-
-    // Y ahora sí entra al panel con la suya.
-    await page.getByLabel('Correo').fill(PROVISIONAL.email)
-    await page.getByLabel('Contraseña').fill(NUEVA_PASSWORD)
-    await page.getByRole('button', { name: 'Entrar' }).click()
-    // Margen largo: entrar son dos argon2 (comprobar y, antes, el cambio) y en el runner del
-    // CI tardan más que los cinco segundos por defecto. En local pasaba; allí no.
+    // Sin pedir la provisional otra vez y sin volver a la puerta: entra directo con la suya.
+    // Margen largo: son dos argon2 (el cambio y la sesión nueva) y en el CI tardan más.
     await expect(page).toHaveURL(/\/panel(\/eventos\/[a-z0-9-]+|\/admin)?$/, { timeout: 20_000 })
+    expect(await debeCambiarla()).toBe(false)
   })
 })
 

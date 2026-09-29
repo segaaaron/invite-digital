@@ -19,7 +19,7 @@ function base(grupos: GuestGroupRow[], gente: GuestPerson[]) {
     insert: async () => {},
     listByEvent: async (eventId) => filasGrupo.filter((g) => g.eventId === eventId),
     findByTokenHash: async () => null,
-    markOpened: async () => {},
+    markOpened: async () => null,
     findById: async (eventId, id) => deEvento(eventId, id) ?? null,
     revoke: async () => {},
     markSent: async () => {},

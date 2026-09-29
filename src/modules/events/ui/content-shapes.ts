@@ -292,7 +292,7 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
         key: 'audioMediaId',
         label: 'Archivo que suena',
         kind: 'audio',
-        hint: 'La canción que suena. Súbela aquí mismo: MP3, M4A o WAV, entera. Sin archivo, el reproductor se ve pero no suena.',
+        hint: 'La canción que suena. Súbela aquí mismo: MP3, M4A o WAV, entera. Sin archivo, la invitación no suena.',
       },
     ),
   },

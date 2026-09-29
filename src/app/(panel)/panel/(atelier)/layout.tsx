@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
-import { events, guests, plans } from '@/app/composition/container'
+import { avisos, events, guests, plans } from '@/app/composition/container'
+import { Campana } from '@/modules/notifications/ui/Campana'
+import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
@@ -27,13 +29,16 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   const activo = listed === null || isErr(listed) ? null : (listed.value[0] ?? null)
 
   // Todo lo de la barra en paralelo: eran nueve lecturas en fila antes de pintar nada.
-  const [grupos, capacidad, insignias, rolEquipo, mesaPlanner] = await Promise.all([
+  const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
+  const [grupos, capacidad, insignias, rolEquipo, mesaPlanner, sinVer] = await Promise.all([
     activo === null ? null : guests.contar(activo.id).catch(() => null),
     activo === null ? null : plans.allowanceFor(activo.id),
     insigniasDeAdmin(actor),
     actor.role === 'cliente' && activo !== null ? events.staff.membershipsOf(activo.id, actor.userId).then(rolEnEquipo) : null,
     actor.role === 'puerta' || admin ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
+    conCampana ? avisos.sinVer(actor.userId).catch(() => 0) : 0,
   ])
+  const campana = conCampana ? <Campana clavePublica={avisos.clavePublica} sinVer={sinVer} /> : null
 
   const nombreDelPlan = capacidad === null || isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
 
@@ -59,7 +64,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
-      {admin ? <BarraDelAdmin /> : null}
+      {admin ? <BarraDelAdmin campana={campana} /> : campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>}
       {children}
     </PanelFrame>
   )

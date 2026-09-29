@@ -4,7 +4,7 @@
  *
  *   DATABASE_URL=… SITE_URL=… pnpm maintenance
  */
-import { enviarAcompanamiento, events, leads } from '@/app/composition/container'
+import { avisarLoQueVence, enviarAcompanamiento, events, leads } from '@/app/composition/container'
 import { isErr } from '@/shared/result'
 
 async function runMaintenance(): Promise<number> {
@@ -38,6 +38,14 @@ async function runMaintenance(): Promise<number> {
     console.log(`Acompañamiento: ${enviados} aviso(s) enviado(s)${fallidos > 0 ? `, ${fallidos} para reintentar mañana` : ''}`)
   } catch (causa) {
     console.error('Acompañamiento fallido —', causa)
+    return 1
+  }
+
+  // Lo que vence mañana y la semana del evento, a la campana y a los aparatos. Nunca lanza por un aviso.
+  try {
+    console.log(`Avisos de agenda: ${await avisarLoQueVence(new Date())}`)
+  } catch (causa) {
+    console.error('Avisos de agenda fallidos —', causa)
     return 1
   }
   return 0

@@ -54,6 +54,11 @@ const EXENTAS: Record<string, string> = {
   claimGiftAction: 'del invitado: reserva un regalo desde su propia invitación',
   releaseGiftAction: 'del invitado: libera lo que él mismo había reservado',
   responderOpinionAction: 'pública: la opinión del cliente tras su evento, autorizada por el enlace de su correo (solo el hash en la base) y con límite de tasa por IP',
+  abrirCampanaAction: 'la campana del propio actor: lee y marca vistos solo sus avisos; no toca un evento',
+  activarAparatoAction: 'activa las push en el aparato del propio actor; no toca un evento',
+  desactivarAparatoAction: 'desactiva un aparato solo si es del propio actor; no toca un evento',
+  probarAvisosAction: 'manda una push de prueba a los aparatos del propio actor; no toca un evento',
+  guardarPreferenciasAction: 'guarda qué avisos quiere recibir el propio actor; no toca un evento',
   uploadGuestPhotoAction:
     'del invitado: sube una fotografía desde su propia invitación, autorizada por el token de su enlace, con el candado de la contraseña del evento y límite de tasa por IP',
 }

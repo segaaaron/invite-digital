@@ -104,17 +104,18 @@ describe('ControlDeIngreso', () => {
   })
 })
 
-/** Nada se refresca solo: quien mira decide cuándo traer lo que registró la recepción. */
+/**
+ * Nada se refresca por reloj, y la lista no lleva su propio «Actualizar»: lo que registra otra puerta
+ * llega por «En vivo» (SSE) y su botón está en la página. Eran dos «Actualizar» en la misma pantalla.
+ */
 describe('ControlDeIngreso · actualizar', () => {
-  it('el botón trae lo del servidor, y sin él no se recarga nada', () => {
+  it('no se recarga solo ni repite el botón de «En vivo»', () => {
     vi.useFakeTimers()
     pinta()
     vi.advanceTimersByTime(120_000)
     expect(refrescar).not.toHaveBeenCalled()
     vi.useRealTimers()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Actualizar' }))
-    expect(refrescar).toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'Actualizar' })).toBeNull()
   })
 })
 

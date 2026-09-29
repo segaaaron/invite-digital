@@ -45,49 +45,12 @@ type Props = {
 }
 
 /**
- * La canción del evento, con su ecualizador.
- *
- * **Suena sola al abrir la invitación y solo la para quien la escucha** (pedido por el
- * usuario el 14 de septiembre). Pero ningún navegador deja sonar audio sin un gesto: Safari
- * en iOS lo exige siempre y Chrome solo lo concede en escritorio a sitios con historial de
- * reproducción (Media Engagement Index). Así que se hace en dos tiempos:
- *
- * 1. Al montar se intenta `play()`. Donde el navegador lo permite, suena ya.
- * 2. Si lo rechaza (`NotAllowedError`), arranca con **el primer toque, clic o tecla en
- *    cualquier parte de la página** —abrir el sobre de la portada ya lo es—. `play()` se
- *    llama dentro del propio manejador: tras un `await` el navegador deja de contarlo
- *    como gesto.
- *
- * Ese primer gesto **no** cuenta si cae sobre el propio botón: el botón ya lo arranca con su
- * clic, y dejar pasar los dos lo encendería y lo apagaría en el mismo toque.
- *
- * **Pausar es definitivo**: tras una pausa del usuario no hay nada que vuelva a arrancarla.
- * Si la pausa la hace el navegador —una llamada, otra pestaña con audio— tampoco se reanuda
- * sola: no se distingue de fuera y sonar por sorpresa es peor que quedarse callada.
- *
- * **Es `<audio>` y no la Web Audio API, y esa es la decisión que hace que se oiga.** En
- * iOS el interruptor físico de silencio calla a Web Audio —va por el canal ambiental— y
- * **no** calla a un elemento `<audio>`, que va por el canal de medios. Con media boda
- * mirando la invitación desde un teléfono en silencio, cualquier otra opción no suena.
- *
- * El estado del dibujo lo marcan los eventos del propio elemento, no el clic: si la
- * canción termina, el navegador la pausa o falla la red, las barras tienen que pararse.
+ * Lo que hace sonar la canción, compartido por el reproductor y el botón flotante: intenta al montar,
+ * si el navegador no deja arranca con el primer gesto (salvo el que cae en el propio botón) y
+ * `alternar` pausa o reanuda. `audioProps` va en el `<audio>`: el estado lo marcan sus eventos.
  */
-export function MusicPlayer({
-  accent,
-  track,
-  artist,
-  eyebrow,
-  audioSrc,
-  soloAlAbrir = false,
-  textColor = 'currentColor',
-  playBg,
-  playIconColor,
-  trackColor,
-  artistColor,
-}: Props) {
+export function useCancion(audioSrc: string | undefined, soloAlAbrir: boolean) {
   const [sonando, setSonando] = useState(false)
-  const [reducido] = useState(prefiereMenosMovimiento)
   const audio = useRef<HTMLAudioElement | null>(null)
   const boton = useRef<HTMLButtonElement | null>(null)
 
@@ -140,6 +103,64 @@ export function MusicPlayer({
     elemento.pause()
   }
 
+  const audioProps = {
+    loop: true,
+    onEnded: () => setSonando(false),
+    onPause: () => setSonando(false),
+    onPlay: () => setSonando(true),
+    playsInline: true,
+    // `auto`: va a sonar en cuanto se abra o se toque la invitación, así que se baja ya.
+    preload: 'auto',
+    ref: audio,
+  } as const
+  return { sonando, alternar, boton, audioProps }
+}
+
+/**
+ * La canción del evento, con su ecualizador.
+ *
+ * **Suena sola al abrir la invitación y solo la para quien la escucha** (pedido por el
+ * usuario el 14 de septiembre). Pero ningún navegador deja sonar audio sin un gesto: Safari
+ * en iOS lo exige siempre y Chrome solo lo concede en escritorio a sitios con historial de
+ * reproducción (Media Engagement Index). Así que se hace en dos tiempos:
+ *
+ * 1. Al montar se intenta `play()`. Donde el navegador lo permite, suena ya.
+ * 2. Si lo rechaza (`NotAllowedError`), arranca con **el primer toque, clic o tecla en
+ *    cualquier parte de la página** —abrir el sobre de la portada ya lo es—. `play()` se
+ *    llama dentro del propio manejador: tras un `await` el navegador deja de contarlo
+ *    como gesto.
+ *
+ * Ese primer gesto **no** cuenta si cae sobre el propio botón: el botón ya lo arranca con su
+ * clic, y dejar pasar los dos lo encendería y lo apagaría en el mismo toque.
+ *
+ * **Pausar es definitivo**: tras una pausa del usuario no hay nada que vuelva a arrancarla.
+ * Si la pausa la hace el navegador —una llamada, otra pestaña con audio— tampoco se reanuda
+ * sola: no se distingue de fuera y sonar por sorpresa es peor que quedarse callada.
+ *
+ * **Es `<audio>` y no la Web Audio API, y esa es la decisión que hace que se oiga.** En
+ * iOS el interruptor físico de silencio calla a Web Audio —va por el canal ambiental— y
+ * **no** calla a un elemento `<audio>`, que va por el canal de medios. Con media boda
+ * mirando la invitación desde un teléfono en silencio, cualquier otra opción no suena.
+ *
+ * El estado del dibujo lo marcan los eventos del propio elemento, no el clic: si la
+ * canción termina, el navegador la pausa o falla la red, las barras tienen que pararse.
+ */
+export function MusicPlayer({
+  accent,
+  track,
+  artist,
+  eyebrow,
+  audioSrc,
+  soloAlAbrir = false,
+  textColor = 'currentColor',
+  playBg,
+  playIconColor,
+  trackColor,
+  artistColor,
+}: Props) {
+  const { sonando, alternar, boton, audioProps } = useCancion(audioSrc, soloAlAbrir)
+  const [reducido] = useState(prefiereMenosMovimiento)
+
   return (
     <div
       style={{
@@ -154,22 +175,9 @@ export function MusicPlayer({
       }}
     >
       {audioSrc === undefined || audioSrc === '' ? null : (
-        <audio
-          loop
-          onEnded={() => setSonando(false)}
-          onPause={() => setSonando(false)}
-          onPlay={() => setSonando(true)}
-          playsInline
-          // `auto`: va a sonar en cuanto se abra o se toque la invitación, así que se baja
-          // ya y arranca sin esperar a la red en ese primer toque.
-          preload="auto"
-          ref={audio}
-          // Quien la compone sabe de dónde sale: `/media/<id>` en una boda —con la puerta
-          // de contraseña del evento— y `/modelos/musica/<modelo>` en el escaparate. Las
-          // dos responden a peticiones por rango, que es lo que Safari exige para
-          // reproducir.
-          src={audioSrc}
-        />
+        // Quien la compone sabe de dónde sale: `/media/<id>` en una boda y `/modelos/musica/<modelo>`
+        // en el escaparate. Las dos responden por rango, que es lo que Safari exige para reproducir.
+        <audio {...audioProps} src={audioSrc} />
       )}
 
       <button

@@ -1,5 +1,6 @@
 'use client'
 
+import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { useActionState, useId, useState } from 'react'
 import { guardarFormasDeRegalarAction, type FormasState } from '@/app/_acciones/registry/formas-actions'
 import { SettingsSection, SwitchRow } from '@/shared/design/ui/panel/ajustes'
@@ -102,10 +103,9 @@ export function FormasDeRegalarForm({
               </label>
             </div>
           ) : null}
-          <label className="flex flex-col gap-2" htmlFor={`${id}-qr`}>
-            <span className="text-[13px] text-ink-soft">{formas.tieneQr ? 'Subir otro QR' : 'Subir el QR'} · JPG, PNG o WEBP, hasta 2 MB</span>
-            <input accept="image/png,image/jpeg,image/webp" className="text-[13px]" id={`${id}-qr`} name="qr" type="file" />
-          </label>
+          {/* `FilePicker` y no el selector nativo: el nativo dice «Choose File · No file chosen» en el idioma
+              del navegador, en inglés en muchos celulares. */}
+          <FilePicker accept="image/png,image/jpeg,image/webp" hint="JPG, PNG o WEBP, hasta 2 MB" label={formas.tieneQr ? 'Subir otro QR' : 'Subir el QR'} name="qr" />
         </div>
       </SettingsSection>
 

@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { MusicaFlotante } from './MusicaFlotante'
 import { MusicPlayer } from './MusicPlayer'
 
 const props = { accent: 'currentColor', track: 'Perfect', artist: 'Ed Sheeran', eyebrow: 'Nuestra canción', playIconColor: 'currentColor', audioSrc: '/media/x' }
@@ -87,5 +88,23 @@ describe('MusicPlayer', () => {
     simular(false)
     const { container } = render(<MusicPlayer {...props} />)
     expect(container.querySelector('audio')?.loop).toBe(true)
+  })
+})
+
+describe('MusicaFlotante', () => {
+  it('suena al abrir y el botón de la nota la pausa y la reanuda', async () => {
+    simular(false)
+    render(<MusicaFlotante artist="Ed Sheeran" audioSrc="/media/x" track="Perfect" />)
+    await act(async () => {})
+    fireEvent.click(screen.getByRole('button', { name: 'Pausar Perfect · Ed Sheeran' }))
+    expect(screen.getByRole('button', { name: 'Reproducir Perfect · Ed Sheeran' })).toHaveAttribute('aria-pressed', 'false')
+    fireEvent.click(screen.getByRole('button', { name: 'Reproducir Perfect · Ed Sheeran' }))
+    await act(async () => {})
+    expect(screen.getByRole('button', { name: 'Pausar Perfect · Ed Sheeran' })).toBeInTheDocument()
+  })
+
+  it('sin archivo no pinta nada', () => {
+    const { container } = render(<MusicaFlotante audioSrc={undefined} track="Perfect" />)
+    expect(container).toBeEmptyDOMElement()
   })
 })

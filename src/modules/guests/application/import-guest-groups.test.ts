@@ -14,7 +14,7 @@ function repo() {
     findByTokenHash: async () => null,
     findById: async () => null,
     revoke: async () => {},
-    markOpened: async () => {},
+    markOpened: async () => null,
     remove: async () => {},
     markSent: async () => {},
     replaceToken: async () => {},

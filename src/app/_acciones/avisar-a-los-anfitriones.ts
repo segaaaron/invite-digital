@@ -1,9 +1,11 @@
 import { after } from 'next/server'
-import { events, notifications } from '@/app/composition/container'
+import { avisos, events, notifications } from '@/app/composition/container'
+import { avisoDeMensaje, avisoDeRespuesta } from '@/modules/notifications'
 import { isErr } from '@/shared/result'
 
 /**
- * Le escribe a cada anfitrión del evento que un invitado respondió, si lo tienen encendido.
+ * Avisa a quienes llevan el evento que un invitado respondió: en la campana y en sus aparatos (push)
+ * siempre, y por correo a cada anfitrión si lo tienen encendido.
  *
  * Con `after`, **cuando la respuesta ya salió**: el invitado no espera al correo y, si Resend
  * falla, su confirmación no se entera. Nunca lanza. Los anfitriones son quienes tienen acceso
@@ -11,6 +13,12 @@ import { isErr } from '@/shared/result'
  */
 export function avisarALosAnfitriones(respuesta: { eventId: string; invitado: string; asistentes: number; mensaje: string | null }): void {
   after(async () => {
+    // La campana y la push, siempre: el interruptor del evento es solo del correo.
+    await avisos.delEvento(respuesta.eventId, (ev) => avisoDeRespuesta({ ...ev, invitado: respuesta.invitado, lugares: respuesta.asistentes }))
+    if (respuesta.mensaje !== null && respuesta.mensaje.trim() !== '') {
+      const texto = respuesta.mensaje
+      await avisos.delEvento(respuesta.eventId, (ev) => avisoDeMensaje({ ...ev, invitado: respuesta.invitado, texto }))
+    }
     try {
       if (!(await events.avisoDeRespuestas(respuesta.eventId))) return
       const evento = await events.getByIdUnscoped(respuesta.eventId)

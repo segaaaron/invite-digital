@@ -157,7 +157,7 @@ export function ShowcaseMusicRow({
                 </form>
               </>
             ) : (
-              <p className="text-[12px] text-ink-mute">Sin archivo, el reproductor del modelo se ve pero no suena.</p>
+              <p className="text-[12px] text-ink-mute">Sin archivo, el modelo no suena.</p>
             )}
 
             <form action={subir} className="flex flex-col gap-2.5">

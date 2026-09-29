@@ -101,8 +101,9 @@ describe('repositorio de grupos', () => {
       await repo.insert({ id, eventId, label: 'Familia Rojas', seats: 4, revokedAt: null, invitationSentAt: null, phone: null, createdAt: new Date(0) }, hash, token)
 
       const primera = new Date('2026-08-19T12:00:00Z')
-      await repo.markOpened(id, primera)
-      await repo.markOpened(id, new Date('2026-08-20T12:00:00Z'))
+      // La primera dice de qué evento y quién era (para avisar); la segunda, nada.
+      expect(await repo.markOpened(id, primera)).toEqual({ eventId, label: 'Familia Rojas' })
+      expect(await repo.markOpened(id, new Date('2026-08-20T12:00:00Z'))).toBeNull()
       expect((await repo.findByTokenHash(hash))?.openedAt?.toISOString()).toBe(primera.toISOString())
 
       await repo.revoke(eventId, id, new Date('2026-08-21T12:00:00Z'))

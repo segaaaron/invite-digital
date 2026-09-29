@@ -72,16 +72,11 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     await expect(page).toHaveURL(/\/panel\/nueva-contrasena$/)
 
     const SUYA = 'la-que-eligen-los-novios-1'
-    await page.getByLabel('La contraseña que te dieron').fill(CLAVE)
     await page.getByLabel('Tu contraseña nueva').fill(SUYA)
     await page.getByRole('button', { name: 'Guardar y entrar' }).click()
 
-    // Cambiarla cierra todas las sesiones, así que vuelven a entrar — ahora sí, a su boda.
-    await expect(page).toHaveURL(/\/panel\/entrar/)
-    await page.getByLabel('Correo').fill(CORREO)
-    await page.getByLabel('Contraseña').fill(SUYA)
-    await page.getByRole('button', { name: 'Entrar' }).click()
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${slug}$`))
+    // Entran directo a su boda, sin volver a escribirla.
+    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${slug}(/configuracion)?$`), { timeout: 20_000 })
 
     // Lo suyo sí; lo del atelier, no.
     await page.goto(`/panel/eventos/${slug}/invitados`)

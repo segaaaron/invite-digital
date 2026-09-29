@@ -15,3 +15,15 @@ export { adminAlertEmail } from './domain/admin-alert-email'
 export { rsvpHostEmail } from './domain/rsvp-host-email'
 export type { EmailSender } from './application/ports'
 export { acompanamientoEmail, graciasPorRecomendarEmail, type TipoDeAcompanamiento } from './domain/acompanamiento-email'
+export {
+  avisoDeAgenda,
+  avisoDeApertura,
+  avisoDeMensaje,
+  avisoDeRegalo,
+  avisoDeRespuesta,
+  avisoDeVenta,
+  TIPOS_DE_AVISO,
+  TIPOS_DE_AVISO_EXPLICADOS,
+  type Aviso,
+  type TipoDeAviso,
+} from './domain/avisos'

@@ -22,7 +22,11 @@ export const changePassword =
   async (input: {
     userId: string
     email: string
-    current: string
+    /**
+     * La actual. `null` solo con la provisional: quien la cambia acaba de entrar con ella y la sesión ya
+     * lo prueba; pedírsela otra vez era escribir la misma clave dos veces seguidas.
+     */
+    current: string | null
     next: string
   }): Promise<Result<null, IdentityError>> =>
     attempt(
@@ -30,7 +34,10 @@ export const changePassword =
         // El correo sale de la sesión, nunca del formulario: si viniera de fuera, esto
         // sería una forma de cambiarle la contraseña a otro conociendo la suya.
         const user = await deps.users.findByEmail(input.email)
-        const matches = await deps.hasher.verify(input.current, user?.passwordHash ?? '')
+        const matches =
+          input.current === null
+            ? (await deps.users.findActor(input.userId))?.mustChangePassword === true
+            : await deps.hasher.verify(input.current, user?.passwordHash ?? '')
 
         if (user === null || !matches) {
           return err(identityError('invalid_credentials', `Contraseña actual incorrecta para ${input.email}`))

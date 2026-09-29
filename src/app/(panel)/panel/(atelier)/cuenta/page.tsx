@@ -1,5 +1,8 @@
 import { cookies } from 'next/headers'
-import { identity } from '@/app/composition/container'
+import { avisos, identity } from '@/app/composition/container'
+import { TIPOS_DE_AVISO_EXPLICADOS } from '@/modules/notifications'
+import { ActivarAvisos } from '@/modules/notifications/ui/ActivarAvisos'
+import { PreferenciasDeAvisos } from '@/modules/notifications/ui/PreferenciasDeAvisos'
 import { SesionesAbiertas } from '@/modules/identity/ui/SeguridadDeCuenta'
 import { fechaHora } from '@/shared/format/fecha'
 import { tipoDeDispositivo } from '@/modules/identity/domain/dispositivo'
@@ -66,6 +69,21 @@ export default async function CuentaPage() {
           </dl>
         </SettingsSection>
 
+
+        {actor.role === 'puerta' ? null : (
+          <div className="scroll-mt-24" id="avisos">
+            <SettingsSection
+              description="Te avisamos en la campana y, si los activas, en tu celular o computadora: aunque no tengas el panel abierto. En iPhone, con el panel instalado en la pantalla de inicio."
+              title="Avisos"
+            >
+              <ActivarAvisos clavePublica={avisos.clavePublica} />
+              <PreferenciasDeAvisos
+                silenciados={await avisos.silenciados(actor.userId)}
+                tipos={TIPOS_DE_AVISO_EXPLICADOS.filter((t) => t.soloAdmin === (actor.role === 'admin'))}
+              />
+            </SettingsSection>
+          </div>
+        )}
 
         <SettingsSection description="Dónde está abierta tu cuenta. Si alguien más entra con tu contraseña, ciérrale la sesión con el código de tu correo." title="Sesiones abiertas">
           <SesionesAbiertas sesiones={sesiones} />

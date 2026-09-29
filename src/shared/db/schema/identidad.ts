@@ -21,6 +21,8 @@ export const users = pgTable('users', {
   /** Quién es y cómo se le llama. Lo trae el pedido o el alta del admin; sin él, el correo. */
   fullName: varchar('full_name', { length: 160 }),
   phone: varchar('phone', { length: 32 }),
+  /** Los tipos de aviso que no quiere en sus aparatos (`0074`). La campana los guarda igual. */
+  avisosSilenciados: text('avisos_silenciados').array().notNull().default(sql`'{}'::text[]`),
   // El plan que compró. Lo asigna el admin al darlo de alta. `set null`: retirar un plan no
   // borra la cuenta.
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -146,4 +148,44 @@ export const supportSessions = pgTable(
     endedAt: timestamp('ended_at', { withTimezone: true }),
   },
   (t) => [index('support_sessions_event_idx').on(t.eventId)],
+)
+
+/**
+ * Los avisos de la campana (`0074`): uno por destinatario. Se borran con su usuario y con su evento.
+ * Las push son solo el canal de entrega: viven en `pushSubscriptions`.
+ */
+export const avisos = pgTable(
+  'avisos',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    eventId: uuid('event_id').references(() => events.id, { onDelete: 'cascade' }),
+    kind: varchar('kind', { length: 24 }).notNull(),
+    title: varchar('title', { length: 160 }).notNull(),
+    body: varchar('body', { length: 400 }).notNull().default(''),
+    href: varchar('href', { length: 400 }).notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    seenAt: timestamp('seen_at', { withTimezone: true }),
+  },
+  (t) => [index('avisos_usuario_idx').on(t.userId, t.createdAt)],
+)
+
+/** Un aparato con las notificaciones push activadas (`0074`). El `endpoint` es único: re-suscribirse lo pisa. */
+export const pushSubscriptions = pgTable(
+  'push_subscriptions',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    endpoint: text('endpoint').notNull().unique(),
+    p256dh: text('p256dh').notNull(),
+    auth: text('auth').notNull(),
+    device: varchar('device', { length: 80 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
+  },
+  (t) => [index('push_subscriptions_usuario_idx').on(t.userId)],
 )

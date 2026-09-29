@@ -18,3 +18,4 @@ export {
 export type { Actor, DeleteUserVerdict, EventSection, Membership, RolEnEquipo, Role } from './domain/access'
 export { createCredential } from './domain/credential'
 export { actorDeSesion, leerMotivo, MOTIVO_MAX, MOTIVO_MIN } from './domain/support'
+export { describirDispositivo } from './domain/dispositivo'
