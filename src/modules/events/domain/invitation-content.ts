@@ -28,7 +28,6 @@ export type HeroBlock = {
   readonly nameB?: string
   readonly monogram?: string
   readonly serial?: string
-  readonly coverImageId?: string
   readonly portraitImageId?: string
 }
 
@@ -347,7 +346,6 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
       ['nameB', texto(hero.nameB, LIMITES.corto)],
       ['monogram', texto(hero.monogram, 40)],
       ['serial', texto(hero.serial, 32)],
-      ['coverImageId', texto(hero.coverImageId, LIMITES.corto)],
       ['portraitImageId', texto(hero.portraitImageId, LIMITES.corto)],
     ])
   }

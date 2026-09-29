@@ -4,6 +4,8 @@ import { avisos } from './avisos'
 import { enExclusiva } from '@/shared/db/candado'
 import { enTransaccion } from '@/shared/db/transaccion'
 import { db, type DbExecutor } from '@/shared/db/client'
+import { eventContent } from '@/shared/db/schema'
+import { eq, sql } from 'drizzle-orm'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { randomBytes } from 'node:crypto'
 import { addTeamMember, removeTeamMember } from '@/modules/events/application/team-use-cases'
@@ -154,7 +156,31 @@ export const planner = {
   },
 } as const
 
+/**
+ * **La portada no se personaliza en ninguna invitación** (decisión del usuario, 29 sep). Quita de cada
+ * contenido la foto de portada que se subió antes (`hero.coverImageId`) y la borra —disco y fila— si
+ * nada más del contenido la usa. Idempotente: lo corre el mantenimiento y, tras el primer pase, no
+ * encuentra nada. Devuelve cuántas fotos borró.
+ */
+async function quitarFotosDePortada(): Promise<{ contenidos: number; fotos: number }> {
+  const filas = await db
+    .select({ eventId: eventContent.eventId, blocks: eventContent.blocks })
+    .from(eventContent)
+    .where(sql`${eventContent.blocks} -> 'hero' ->> 'coverImageId' is not null`)
+  let fotos = 0
+  for (const fila of filas) {
+    const { coverImageId: portada, ...hero } = fila.blocks.hero as Record<string, unknown>
+    const blocks = { ...fila.blocks, hero }
+    await db.update(eventContent).set({ blocks }).where(eq(eventContent.eventId, fila.eventId))
+    if (typeof portada === 'string' && !JSON.stringify(blocks).includes(portada)) {
+      if ((await removeMedia(mediaDeps)(fila.eventId, portada, [])).ok) fotos++
+    }
+  }
+  return { contenidos: filas.length, fotos }
+}
+
 export const events = {
+  quitarFotosDePortada,
   /**
    * Crear un evento no siembra tareas: un plan de ejemplo en un evento real se lee como datos
    * inventados. La pantalla de tareas ofrece la plantilla con un toque.

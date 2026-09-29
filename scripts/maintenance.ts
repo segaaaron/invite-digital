@@ -40,6 +40,15 @@ async function runMaintenance(): Promise<number> {
     return 1
   }
 
+  // La portada no se personaliza: lo que se subió como portada se borra (idempotente).
+  try {
+    const portadas = await events.quitarFotosDePortada()
+    console.log(`Fotos de portada: ${portadas.contenidos} contenido(s) limpiado(s), ${portadas.fotos} foto(s) borrada(s)`)
+  } catch (causa) {
+    console.error('Limpieza de fotos de portada fallida —', causa)
+    return 1
+  }
+
   // El registro de fallos guarda 30 días.
   try {
     console.log(`Registro de fallos: ${await borrarFallosViejos(new Date())} borrado(s)`)

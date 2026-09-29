@@ -42,12 +42,3 @@ describe('el tema Noche Estrellada', () => {
   })
 })
 
-describe('la portada de Noche Estrellada', () => {
-  // La portada es el arte del diseño y no se personaliza: una foto guardada antes no la cambia.
-  it('ignora una foto de portada guardada', () => {
-    const { container } = render(
-      <XvFantasiaView {...propsDePrueba({ content: { ...CONTENIDO_DE_MUESTRA, hero: { ...CONTENIDO_DE_MUESTRA.hero, coverImageId: 'foto-1' } } })} />,
-    )
-    expect(container.querySelector('img[src="/media/foto-1"]')).not.toBeInTheDocument()
-  })
-})

@@ -134,6 +134,13 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      # Los mismos ficheros que `web`: sin ellos, la retención borraba las fotos de una carpeta vacía
+      # dentro del contenedor y las de verdad se quedaban para siempre en el volumen.
+      ORDERS_DIR: /var/lib/invitepremium/comprobantes
+      EVENT_MEDIA_DIR: /var/lib/invitepremium/eventos
+    volumes:
+      - proofs:/var/lib/invitepremium/comprobantes
+      - media:/var/lib/invitepremium/eventos
     command: sh -c 'while true; do pnpm maintenance || echo "FALLO DE MANTENIMIENTO — se reintenta en 24 h" >&2; sleep 86400; done'
     depends_on:
       migrate:
