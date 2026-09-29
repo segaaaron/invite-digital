@@ -26,6 +26,7 @@ import { TestimonialsSection } from '@/sections/TestimonialsSection'
 import { ContactSection } from '@/modules/leads'
 import { aLaVenta } from '@/modules/catalog'
 import { PrivacyNotice } from '@/sections/LegalPage'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // Rendered per request, not prerendered: the pages read Postgres and the image is
 // built in CI/Docker where the database is unreachable. The queries are indexed and
@@ -102,13 +103,13 @@ export default async function LandingPage({
   ])
 
   if (!isOk(plansResult)) {
-    console.error('No se pudieron cargar los planes de precios:', plansResult.error.detail)
+    registrarFallo('[locale]/page', 'No se pudieron cargar los planes de precios:', plansResult.error.detail)
   }
   if (!isOk(templatesResult)) {
-    console.error('No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
+    registrarFallo('[locale]/page', 'No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
   }
   if (!isOk(categoriesResult)) {
-    console.error('No se pudieron cargar las categorías de evento:', categoriesResult.error.detail)
+    registrarFallo('[locale]/page', 'No se pudieron cargar las categorías de evento:', categoriesResult.error.detail)
   }
 
   const plans = isOk(plansResult) ? plansResult.value : []

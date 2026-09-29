@@ -1,6 +1,7 @@
 import { MAX_AUDIO_UPLOAD_BYTES, type AudioProcessor, nombreDeCancion } from '@/shared/audio/audio'
 import { MAX_GUEST_PHOTOS, MAX_MEDIA_BYTES, type MediaType, esAudio, mediaTypeOf, storageKeyFor } from '../domain/media'
 import type { ImageProcessor, MediaRepository, MediaStorage } from './ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type MediaError = 'too_large' | 'unsupported_type' | 'storage_failure' | 'too_many' | 'photo_limit'
 
@@ -118,7 +119,7 @@ export const saveMedia =
         }
       }
     } catch (cause) {
-      console.error('No se pudo guardar el archivo del evento %s:', eventId, cause)
+      registrarFallo('events/media-use-cases', 'No se pudo guardar el archivo del evento %s:', eventId, cause)
       return { ok: false, error: 'storage_failure' }
     }
 
@@ -160,7 +161,7 @@ export const removeMedia =
       await storage.remove(storageKeyFor(fila.id, fila.contentType as MediaType))
       await media.remove(fila.id)
     } catch (cause) {
-      console.error('No se pudo quitar el archivo %s del evento %s:', id, eventId, cause)
+      registrarFallo('events/media-use-cases', 'No se pudo quitar el archivo %s del evento %s:', id, eventId, cause)
       return { ok: false, error: 'storage_failure' }
     }
     return { ok: true }

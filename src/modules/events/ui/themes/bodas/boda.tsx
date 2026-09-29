@@ -24,7 +24,7 @@ export const bodaDefinition: ThemeDefinition = {
     sinCampos: { hero: ['monogram'], dressCode: ['detail'], closing: ['signature'], itinerary: ['note', 'imageId'], notes: ['title'] },
     maxAvisos: 1,
   },
-  sections: ['hero', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],
+  sections: ['hero', 'schedule', 'gallery', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing', 'notes'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda.view').then((modulo) => modulo.BodaView)),
 }

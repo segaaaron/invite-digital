@@ -186,7 +186,7 @@ export default async function InvitadosPage({
           </>
         }
         kicker="Gestión"
-        meta={`${filasPersona.length} invitados en total`}
+        meta={`${filasPersona.length} ${filasPersona.length === 1 ? 'invitado' : 'invitados'} en total`}
         title="Invitados"
       />
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />

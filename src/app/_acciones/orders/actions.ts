@@ -16,6 +16,7 @@ import { MAX_PROOF_BYTES } from '@/modules/orders/domain/proof'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 import type { OrderErrorCode } from '@/shared/i18n/dictionary'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ============================================================================
 // Este fichero tiene DOS bloques, y la diferencia importa.
@@ -81,7 +82,7 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
   })
 
   if (isErr(result)) {
-    console.error('pedido rechazado', result.error.kind, result.error.detail)
+    registrarFallo('orders/actions', 'pedido rechazado', result.error.kind, result.error.detail)
     if (result.error.kind !== 'invalid_input') return { status: 'error', code: 'failed' }
     return { status: 'error', code: CODIGOS_DE_PEDIDO.has(result.error.detail) ? (result.error.detail as OrderErrorCode) : 'invalid' }
   }
@@ -120,7 +121,7 @@ export async function uploadProofAction(_previous: UploadProofState, formData: F
   })
 
   if (isErr(result)) {
-    console.error('comprobante rechazado', result.error.kind, result.error.detail)
+    registrarFallo('orders/actions', 'comprobante rechazado', result.error.kind, result.error.detail)
     if (result.error.kind === 'proof_rejected') {
       return { status: 'error', code: MOTIVO[result.error.detail] ?? 'proofRejected' }
     }
@@ -174,7 +175,7 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   })
 
   if (isErr(result)) {
-    console.error('decisión de pedido rechazada', result.error.kind, result.error.detail)
+    registrarFallo('orders/actions', 'decisión de pedido rechazada', result.error.kind, result.error.detail)
     return {
       status: 'error',
       message:
@@ -217,7 +218,7 @@ async function agradecerRecomendacion(orderId: string): Promise<void> {
     if (quien === null) return
     await Promise.all(quien.correos.map((to) => notifications.sendGraciasPorRecomendar(to, { evento: quien.evento, quien: order.customerName })))
   } catch (causa) {
-    console.error('no se pudieron mandar las gracias por la recomendación del pedido %s:', orderId, causa)
+    registrarFallo('orders/actions', 'no se pudieron mandar las gracias por la recomendación del pedido %s:', orderId, causa)
   }
 }
 
@@ -310,7 +311,7 @@ async function aprovisionar(
   })
 
   if (isErr(evento)) {
-    console.error('alta de evento desde pedido rechazada', evento.error.kind, evento.error.detail)
+    registrarFallo('orders/actions', 'alta de evento desde pedido rechazada', evento.error.kind, evento.error.detail)
     return {
       message:
         evento.error.kind === 'duplicate_slug'
@@ -332,7 +333,7 @@ async function aprovisionar(
     // La consulta de la que salió la cotización queda ganada, con su evento.
     if (order.consultationId !== null) await leads.win(order.consultationId, evento.value.id)
   } catch (causa) {
-    console.error('no se pudo atar el pedido %s a su boda:', orderId, causa)
+    registrarFallo('orders/actions', 'no se pudo atar el pedido %s a su boda:', orderId, causa)
   }
 
   // El contenido de muestra del diseño, como en el alta normal: la invitación se ve
@@ -340,7 +341,7 @@ async function aprovisionar(
   try {
     await events.seedContent(evento.value.id)
   } catch (causa) {
-    console.error('no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
+    registrarFallo('orders/actions', 'no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
   }
 
   // El plan que compró. Sin esto el evento cae al más barato, que no trae mesa de regalos
@@ -351,7 +352,7 @@ async function aprovisionar(
       eventSlug: evento.value.slug,
       planSlug: order.planSlug,
     })
-    if (isErr(plan)) console.error('no se pudo asignar el plan del pedido', plan.error.kind, plan.error.detail)
+    if (isErr(plan)) registrarFallo('orders/actions', 'no se pudo asignar el plan del pedido', plan.error.kind, plan.error.detail)
   }
 
   // La cuenta del cliente. Ya sabemos que se puede crear —se comprobó antes de tocar la

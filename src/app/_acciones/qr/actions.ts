@@ -5,6 +5,7 @@ import { qr } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import { QR_KINDS, type QrKind } from '@/modules/qr/domain/qr-code'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type QrActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
@@ -39,7 +40,7 @@ export async function createQrCodeAction(_previous: QrActionState, formData: For
   })
 
   if (isErr(result)) {
-    console.error('alta de código QR rechazada', result.error.kind, result.error.detail)
+    registrarFallo('qr/actions', 'alta de código QR rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -62,7 +63,7 @@ export async function updateQrCodeAction(_previous: QrActionState, formData: For
   })
 
   if (isErr(result)) {
-    console.error('edición de código QR rechazada', result.error.kind, result.error.detail)
+    registrarFallo('qr/actions', 'edición de código QR rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -80,7 +81,7 @@ export async function toggleQrCodeAction(_previous: QrActionState, formData: For
   const result = await qr.toggle({ eventId, id: texto(formData, 'id'), active: texto(formData, 'active') === 'true' })
 
   if (isErr(result)) {
-    console.error('cambio de estado de código QR rechazado', result.error.kind, result.error.detail)
+    registrarFallo('qr/actions', 'cambio de estado de código QR rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 

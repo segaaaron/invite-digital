@@ -9,6 +9,7 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
+import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 
 export const viewport = VIEWPORT
 
@@ -48,6 +49,7 @@ export default async function InvitationLayout({
       suppressHydrationWarning
     >
       <body className="antialiased">
+        <CapturaDeFallos />
         <TextosDeError textos={getDictionary(invitation.value.event.locale).invitation.error}>{children}</TextosDeError>
       </body>
     </html>

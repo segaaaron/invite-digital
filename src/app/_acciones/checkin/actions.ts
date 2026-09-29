@@ -10,6 +10,7 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { CheckinErrorKind } from '@/modules/checkin/domain/errors'
 import type { ScanOutcome } from '@/modules/checkin/application/check-in-by-scan'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * El modo puerta solo lo traen algunos planes. Lanza en vez de devolver un resultado
@@ -22,7 +23,7 @@ import type { ScanOutcome } from '@/modules/checkin/application/check-in-by-scan
 const exigirModoPuerta = async (eventId: string): Promise<void> => {
   const permitido = await plans.requireFeature(eventId, 'checkin')
   if (isErr(permitido)) {
-    console.error('modo puerta no incluido en el plan', permitido.error.detail)
+    registrarFallo('checkin/actions', 'modo puerta no incluido en el plan', permitido.error.detail)
     throw new Error(permitido.error.kind)
   }
 }
@@ -64,7 +65,7 @@ export async function recordScansAction(input: {
   })
 
   if (isErr(result)) {
-    console.error('registro de escaneos rechazado', result.error.kind, result.error.detail)
+    registrarFallo('checkin/actions', 'registro de escaneos rechazado', result.error.kind, result.error.detail)
     throw new Error(result.error.kind)
   }
 
@@ -102,7 +103,7 @@ export async function checkInByGroupAction(input: {
   })
 
   if (isErr(result)) {
-    console.error('registro por grupo rechazado', result.error.kind, result.error.detail)
+    registrarFallo('checkin/actions', 'registro por grupo rechazado', result.error.kind, result.error.detail)
     throw new Error(result.error.kind)
   }
 
@@ -132,7 +133,7 @@ export async function adjustArrivalAction(input: {
 
   const result = await checkin.adjust({ eventId: input.eventId, scanId: input.scanId, arrivedCount: input.arrivedCount })
   if (isErr(result)) {
-    console.error('corrección rechazada', result.error.kind, result.error.detail)
+    registrarFallo('checkin/actions', 'corrección rechazada', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
   }
 
@@ -151,7 +152,7 @@ export async function voidArrivalAction(input: {
 
   const result = await checkin.void({ eventId: input.eventId, scanId: input.scanId })
   if (isErr(result)) {
-    console.error('deshacer rechazado', result.error.kind, result.error.detail)
+    registrarFallo('checkin/actions', 'deshacer rechazado', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
   }
 
@@ -167,7 +168,7 @@ export async function undoCheckInAction(input: { eventId: string; eventSlug: str
 
   const result = await checkin.deshacer({ eventId: input.eventId, groupId: input.groupId, personId: input.personId })
   if (isErr(result)) {
-    console.error('deshacer ingreso rechazado', result.error.kind, result.error.detail)
+    registrarFallo('checkin/actions', 'deshacer ingreso rechazado', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
   }
 

@@ -44,6 +44,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
 
   return (
     <PanelFrame
+      conAcciones={campana !== null && !admin}
       barraInferior={admin && actor.soporte === undefined}
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
       sections={panelNav(activo?.slug ?? null, {

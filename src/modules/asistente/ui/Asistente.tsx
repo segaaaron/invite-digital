@@ -152,12 +152,13 @@ export function Asistente({ slug }: { slug: string }) {
     <>
       <button
         aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`}
-        className="fixed right-5 bottom-5 z-30 inline-flex h-13 cursor-pointer items-center gap-2 rounded-full bg-ink pr-5 pl-4 text-[13.5px] font-medium text-white shadow-float ring-1 ring-gold/40 transition-transform hover:-translate-y-0.5 print:hidden"
+        // En el celular, solo el círculo: con el nombre tapaba tarjetas y buscadores al desplazarse.
+        className="fixed right-4 bottom-4 z-30 inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[13.5px] font-medium text-white shadow-float ring-1 ring-gold/40 transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
         onClick={abrir}
         type="button"
       >
         <Chispa className="size-5 text-gold" />
-        {NOMBRE_DEL_ASISTENTE}
+        <span className="max-[859px]:sr-only">{NOMBRE_DEL_ASISTENTE}</span>
       </button>
 
       <dialog

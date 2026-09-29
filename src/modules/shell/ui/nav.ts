@@ -142,7 +142,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
               href: '/panel/admin/usuarios',
               label: 'Ajustes',
               icon: 'configuracion',
-              activo: ['/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/asistente', '/panel/admin/auditoria'],
+              activo: ['/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/asistente', '/panel/admin/fallos', '/panel/admin/auditoria'],
             },
           ],
         },

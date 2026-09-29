@@ -1,6 +1,7 @@
 import type { UsoDeTokens } from '../domain/config'
 import { interpretarLlamada, type DefinicionDeHerramienta, type InvitacionPropuesta, type LlamadaValida } from '../domain/herramientas'
 import type { Mensaje } from '../domain/historial'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /** Lo que va diciendo el modelo mientras responde. `item` es cada pieza de su salida, que se le devuelve tal cual. */
 export type EventoDelModelo =
@@ -72,7 +73,7 @@ export const conversar = (deps: { modelo: ModeloDeLenguaje; herramientas: readon
               resultado = { mostrada: true, nota: 'La persona ve una tarjeta con Confirmar. Todavía no se guardó nada.' }
             } else {
               resultado = await deps.ejecutar(interpretada.llamada).catch((causa: unknown) => {
-                console.error('herramienta del asistente %s:', llamada.nombre, causa)
+                registrarFallo('asistente/conversar', 'herramienta del asistente %s:', llamada.nombre, causa)
                 return { error: 'No se pudo leer ese dato ahora.' }
               })
             }
@@ -83,9 +84,9 @@ export const conversar = (deps: { modelo: ModeloDeLenguaje; herramientas: readon
       yield { tipo: 'texto', delta: 'Necesito que me lo pidas de otra forma: esto se me hizo largo.' }
       yield { tipo: 'fin' }
     } catch (causa) {
-      console.error('el asistente no respondió:', causa)
+      registrarFallo('asistente/conversar', 'el asistente no respondió:', causa)
       yield { tipo: 'error', mensaje: ERROR_GENERICO }
     } finally {
-      await deps.registrarUso(uso).catch((causa: unknown) => console.error('no se pudo registrar el uso del asistente:', causa))
+      await deps.registrarUso(uso).catch((causa: unknown) => registrarFallo('asistente/conversar', 'no se pudo registrar el uso del asistente:', causa))
     }
   }

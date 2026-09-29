@@ -11,7 +11,6 @@ import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { InvitacionEnVivo } from '@/modules/events/ui/InvitacionEnVivo'
 import '@/modules/events/ui/themes/kit/keyframes.css'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
-import { AvisoDeRespuestas } from '@/modules/events/ui/AvisoDeRespuestas'
 import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
@@ -116,7 +115,6 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
   }))
 
   const conContrasena = (await events.passwordHashOf(event.value.id)) !== null
-  const avisoDeRespuestas = contenido === null ? false : await events.avisoDeRespuestas(event.value.id)
   // Si el plan trae la contraseña. Una lectura fallida no la concede.
   const capacidad = await plans.allowanceFor(event.value.id)
   const contrasenaIncluida = !isErr(capacidad) && capacidad.value.eventPassword
@@ -266,9 +264,6 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
             media={imagenes}
             sections={tema.sections}
           />
-        </PanelCard>
-        <PanelCard title="Avisos">
-          <AvisoDeRespuestas avisar={avisoDeRespuestas} eventId={event.value.id} eventSlug={event.value.slug} />
         </PanelCard>
         </div>
         )}

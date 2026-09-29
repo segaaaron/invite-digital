@@ -101,8 +101,6 @@ export const events = pgTable('events', {
   // Plantilla del mensaje de reparto, con {nombre} y {enlace}. Nunca guarda un enlace
   // dentro: el enlace se pega al abrir WhatsApp, no aquí.
   messageTemplate: text('message_template'),
-  /** Correo a los anfitriones con cada respuesta (`0070`). Lo apagan en Configuración. */
-  avisarRespuestas: boolean('avisar_respuestas').notNull().default(true),
   anonymizedAt: timestamp('anonymized_at', { withTimezone: true }),
   /**
    * Anulable a propósito: los eventos creados antes de esta rebanada no tienen plan, y

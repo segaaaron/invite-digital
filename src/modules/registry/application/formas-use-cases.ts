@@ -2,6 +2,7 @@ import { attempt, err, isErr, ok, type Result } from '@/shared/result'
 import { registryError, type RegistryError } from '../domain/errors'
 import { leerFormas, SIN_FORMAS, type FormasDeRegalar } from '../domain/formas-de-regalar'
 import type { FormasDeRegalarStore, ImagenDeQr } from './ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /** El QR de un banco pesa unos KB; dos megas dejan margen para una captura de pantalla. */
 export const MAX_QR_BYTES = 2 * 1024 * 1024
@@ -19,7 +20,7 @@ export const leerFormasDeRegalar =
     try {
       return await deps.formas.leer(eventId)
     } catch (causa) {
-      console.error('no se pudieron leer las formas de regalar:', causa)
+      registrarFallo('registry/formas-use-cases', 'no se pudieron leer las formas de regalar:', causa)
       return SIN_FORMAS
     }
   }

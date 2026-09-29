@@ -13,6 +13,7 @@ import { formatAmount, parseAmount } from '@/shared/money'
 import { diaDelEvento } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ============================================================================
 // Las acciones de **una venta** (Ventas › panel lateral). Todas del admin: empiezan por
@@ -40,7 +41,7 @@ export async function contactarVentaAction(formData: FormData): Promise<void> {
   const id = campo(formData, 'consultaId')
   const movida = await leads.move({ id, to: 'contacted', note: '', eventId: '' })
   if (isErr(movida)) {
-    if (movida.error.kind === 'storage_failure') console.error('contactarVentaAction', movida.error.detail)
+    if (movida.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'contactarVentaAction', movida.error.detail)
     return
   }
   await admin.record(actor, { action: 'consulta.estado', subject: movida.value.name, detail: 'Nueva → Contactada' })
@@ -93,7 +94,7 @@ export async function cotizarAction(_previo: CotizacionState, formData: FormData
   })
   if (isErr(creada)) {
     if (creada.error.kind === 'storage_failure') {
-      console.error('cotizarAction', creada.error.detail)
+      registrarFallo('admin/ventas-actions', 'cotizarAction', creada.error.detail)
       return { status: 'error', message: 'No pudimos guardar la cotización. Vuelve a intentarlo en un momento.' }
     }
     return { status: 'error', message: creada.error.detail }
@@ -125,7 +126,7 @@ export async function recordarPagoAction(formData: FormData): Promise<void> {
   const actor = await requireAdmin()
   const recordado = await orders.remind(campo(formData, 'orderId'))
   if (isErr(recordado)) {
-    if (recordado.error.kind === 'storage_failure') console.error('recordarPagoAction', recordado.error.detail)
+    if (recordado.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'recordarPagoAction', recordado.error.detail)
     return
   }
   await admin.record(actor, { action: 'pedido.recordado', subject: recordado.value.customerName, detail: recordado.value.publicRef })
@@ -138,7 +139,7 @@ export async function registrarSaldoAction(_previo: VentaActionState, formData: 
   const orderId = campo(formData, 'orderId')
   const hecho = await orders.registerBalance(orderId)
   if (isErr(hecho)) {
-    if (hecho.error.kind === 'storage_failure') console.error('registrarSaldoAction', hecho.error.detail)
+    if (hecho.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'registrarSaldoAction', hecho.error.detail)
     return { status: 'error', message: hecho.error.kind === 'wrong_status' ? 'Este pedido ya no tiene saldo pendiente.' : 'No pudimos registrarlo. Vuelve a intentarlo.' }
   }
   await admin.record(actor, { action: 'pedido.saldo', subject: campo(formData, 'nombre'), detail: campo(formData, 'ref') })
@@ -163,7 +164,7 @@ export async function perderVentaAction(_previo: VentaActionState, formData: For
   if (orderId !== '') {
     const cancelado = await orders.cancel({ orderId, reason: [etiquetaDeMotivo(motivo), nota].filter(Boolean).join(' · ') })
     if (isErr(cancelado)) {
-      if (cancelado.error.kind === 'storage_failure') console.error('perderVentaAction', cancelado.error.detail)
+      if (cancelado.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'perderVentaAction', cancelado.error.detail)
       return { status: 'error', message: cancelado.error.kind === 'wrong_status' ? 'Este pedido ya está cobrado o cancelado.' : 'No pudimos guardarlo. Vuelve a intentarlo.' }
     }
     await admin.record(actor, { action: 'pedido.cancelado', subject: cancelado.value.customerName, detail: etiquetaDeMotivo(motivo) ?? motivo })
@@ -173,7 +174,7 @@ export async function perderVentaAction(_previo: VentaActionState, formData: For
     const movida = await leads.move({ id: consultaId, to: 'lost', note: nota, eventId: '', reason: motivo })
     // Con pedido, la consulta es secundaria: si ya no se podía mover, la venta ya quedó perdida.
     if (isErr(movida) && orderId === '') {
-      if (movida.error.kind === 'storage_failure') console.error('perderVentaAction', movida.error.detail)
+      if (movida.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'perderVentaAction', movida.error.detail)
       return { status: 'error', message: movida.error.kind === 'storage_failure' ? 'No pudimos guardarlo. Vuelve a intentarlo.' : movida.error.detail }
     }
     if (!isErr(movida)) await admin.record(actor, { action: 'consulta.estado', subject: movida.value.name, detail: `Perdida · ${etiquetaDeMotivo(motivo)}` })
@@ -188,7 +189,7 @@ export async function reabrirVentaAction(formData: FormData): Promise<void> {
   const actor = await requireAdmin()
   const movida = await leads.move({ id: campo(formData, 'consultaId'), to: 'contacted', note: '', eventId: '' })
   if (isErr(movida)) {
-    if (movida.error.kind === 'storage_failure') console.error('reabrirVentaAction', movida.error.detail)
+    if (movida.error.kind === 'storage_failure') registrarFallo('admin/ventas-actions', 'reabrirVentaAction', movida.error.detail)
     return
   }
   await admin.record(actor, { action: 'consulta.estado', subject: movida.value.name, detail: 'Perdida → Contactada' })

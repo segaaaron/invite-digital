@@ -1,4 +1,5 @@
 import { cargaPush, destinatariosDelEvento, leEnviamosPush, type Aviso, type CargaPush } from '../domain/avisos'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /** Un aparato con las push activadas, con lo que su dueño tiene silenciado. */
 export type AparatoPush = {
@@ -66,7 +67,7 @@ export const avisarDelEvento =
       await entregar(deps, destinatariosDelEvento(evento), eventId, aviso)
       return true
     } catch (causa) {
-      console.error('no se pudo avisar del evento %s:', eventId, causa)
+      registrarFallo('notifications/avisos', 'no se pudo avisar del evento %s:', eventId, causa)
       return false
     }
   }
@@ -78,6 +79,6 @@ export const avisarAlAdmin =
     try {
       await entregar(deps, await deps.store.admins(), null, aviso)
     } catch (causa) {
-      console.error('no se pudo avisar al admin:', causa)
+      registrarFallo('notifications/avisos', 'no se pudo avisar al admin:', causa)
     }
   }

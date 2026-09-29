@@ -5,6 +5,7 @@ import { admin, events, notifications, plans } from '@/app/composition/container
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import { campo } from '@/shared/forms/campo'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type TeamActionState =
   | { status: 'idle' }
@@ -47,7 +48,7 @@ export async function addTeamMemberAction(_previo: TeamActionState, fd: FormData
     const evento = await events.getByIdUnscoped(eventId)
     if (!isErr(evento)) avisado = await notifications.sendClientAccess({ to: alta.email, password: alta.password, eventTitle: evento.value.title })
   } catch (causa) {
-    console.error('no se pudo avisar por correo a %s:', alta.email, causa)
+    registrarFallo('events/team-actions', 'no se pudo avisar por correo a %s:', alta.email, causa)
   }
 
   revalidatePath(`/panel/eventos/${eventSlug}/equipo`)

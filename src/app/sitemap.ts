@@ -3,6 +3,7 @@ import { site, webPublica } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
 import { attempt, isOk } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // Same reason as the pages: it queries the catalog, so it cannot be built without a
 // reachable database.
@@ -46,6 +47,6 @@ async function listTemplatesSafely(locale: (typeof LOCALES)[number]): Promise<re
 
   if (isOk(result)) return result.value
 
-  console.error('Sitemap sin colecciones para', locale, result.error.detail)
+  registrarFallo('sitemap', 'Sitemap sin colecciones para', locale, result.error.detail)
   return []
 }

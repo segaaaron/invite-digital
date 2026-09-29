@@ -16,7 +16,7 @@ export const bodaBotDefinition: ThemeDefinition = {
     sinCampos: { hero: ['monogram', 'serial'], itinerary: ['note'] },
     maxAvisos: 3,
   },
-  sections: ['hero', 'quote', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'closing'],
+  sections: ['hero', 'gallery', 'quote', 'schedule', 'ceremony', 'reception', 'itinerary', 'map', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-bot.view').then((modulo) => modulo.BodaBotView)),
 }

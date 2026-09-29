@@ -4,6 +4,18 @@
 html { scroll-behavior: smooth; }
 
 /*
+ * **Una rejilla sin columnas declaradas no crece más que su caja** (28 de septiembre). Sin plantilla, la
+ * columna implícita es `auto` y se estira hasta el ancho mínimo de lo que lleva dentro: en el celular, un
+ * campo o una fila larga sacaba la tarjeta entera por la derecha (Ingreso al evento cortaba «Buscar»), y
+ * `overflow-x: clip` lo escondía en vez de avisar. En `base`: cualquier `grid-cols-*` lo sigue pisando.
+ */
+@layer base {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/*
  * **El recorte lateral va en la raíz, y en las dos.**
  *
  * Estaba solo en `body`, y por eso no contenía nada: `html` seguía desplazándose y la

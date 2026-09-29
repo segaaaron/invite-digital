@@ -36,7 +36,7 @@ export const bodaSelloDefinition: ThemeDefinition = {
     // Tres avisos, y cada uno tiene su sitio: la historia, «solo para adultos» y los regalos.
     maxAvisos: 3,
   },
-  sections: ['hero', 'quote', 'schedule', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'notes', 'music', 'closing'],
+  sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-sello.view').then((modulo) => modulo.BodaSelloView)),
 }

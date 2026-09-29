@@ -11,6 +11,7 @@ import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { ContributionMethod } from '@/modules/registry/domain/fund'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * Lo que la UI recibe de vuelta. Que un regalo ya esté reservado no es excepcional: es
@@ -297,7 +298,7 @@ export async function claimGiftAction(input: { token: string; giftId: string }):
   const result = await registry.claim(input)
   if (isErr(result)) {
     // El detalle puede llevar identificadores: se queda en el registro del servidor.
-    console.error('reserva rechazada', result.error.kind, result.error.detail)
+    registrarFallo('registry/actions', 'reserva rechazada', result.error.kind, result.error.detail)
     return { ok: false, kind: result.error.kind, message: result.error.kind }
   }
 
@@ -325,7 +326,7 @@ export async function releaseGiftAction(input: { token: string; giftId: string }
 
   const result = await registry.release(input)
   if (isErr(result)) {
-    console.error('liberación rechazada', result.error.kind, result.error.detail)
+    registrarFallo('registry/actions', 'liberación rechazada', result.error.kind, result.error.detail)
     return { ok: false, kind: result.error.kind, message: result.error.kind }
   }
 

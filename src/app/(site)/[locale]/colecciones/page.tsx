@@ -14,6 +14,7 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 import { attempt, isOk } from '@/shared/result'
 import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
 import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // Rendered per request, not prerendered: the pages read Postgres and the image is
 // built in CI/Docker where the database is unreachable. The queries are indexed and
@@ -75,7 +76,7 @@ export default async function CollectionsPage({
   )
 
   if (!isOk(templatesResult)) {
-    console.error('No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
+    registrarFallo('[locale]/colecciones/page', 'No se pudieron cargar las plantillas del catálogo:', templatesResult.error.detail)
 
     const ajustes = await site.settings()
     const whatsappHref = enlaceWhatsapp(ajustes.whatsapp, ajustes.mensajes.general[locale])

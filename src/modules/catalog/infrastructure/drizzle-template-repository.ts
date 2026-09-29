@@ -5,6 +5,7 @@ import type { Locale } from '@/shared/i18n/locales'
 import type { TemplateInput } from '../domain/template'
 import type { TemplateRepository } from '../application/ports'
 import { partitionTemplateRows, toTemplateInput } from './mappers'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 const selectTemplate = {
   id: templates.id,
@@ -24,7 +25,7 @@ const selectTemplate = {
 
 const logMissingTranslations = (locale: Locale, slugs: readonly string[]): void => {
   if (slugs.length === 0) return
-  console.error(
+  registrarFallo('catalog/drizzle-template-repository', 
     `Traducción faltante en "${locale}" para las plantillas: ${slugs.join(', ')}. No se muestran en ese idioma.`,
   )
 }

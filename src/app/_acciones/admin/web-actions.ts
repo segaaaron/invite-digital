@@ -7,6 +7,7 @@ import { parseSiteSettings } from '@/modules/admin/domain/site-settings'
 import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { invalidarLaWeb, texto } from '@/app/_acciones/admin/admin-comun'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // «La web»: datos del negocio, pruebas sociales, legal y SEO. El formulario viaja como un
@@ -47,7 +48,7 @@ export async function saveSiteSettingsAction(_previous: SiteActionState, formDat
   if (isErr(guardado)) {
     if (guardado.error.kind === 'conflict') return conflicto(guardado.error)
     if (guardado.error.kind === 'invalid_field') return { status: 'error', message: guardado.error.detail, campo: guardado.error.campo }
-    console.error('saveSiteSettingsAction', guardado.error.detail)
+    registrarFallo('admin/web-actions', 'saveSiteSettingsAction', guardado.error.detail)
     return { status: 'error', message: 'No pudimos guardar. Vuelve a intentarlo en un momento.' }
   }
 
@@ -63,7 +64,7 @@ export async function restoreSiteVersionAction(_previous: SiteActionState, formD
   const restaurado = await admin.restoreSite(actor, texto(formData, 'versionId'), baseDe(formData))
   if (isErr(restaurado)) {
     if (restaurado.error.kind === 'conflict') return conflicto(restaurado.error)
-    if (restaurado.error.kind === 'storage_failure') console.error('restoreSiteVersionAction', restaurado.error.detail)
+    if (restaurado.error.kind === 'storage_failure') registrarFallo('admin/web-actions', 'restoreSiteVersionAction', restaurado.error.detail)
     return { status: 'error', message: restaurado.error.kind === 'storage_failure' ? 'No pudimos restaurar. Vuelve a intentarlo.' : restaurado.error.detail }
   }
 

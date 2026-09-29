@@ -106,8 +106,8 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
         expect(afterEs.some((t) => t.slug === 'prueba-solo-es')).toBe(true)
         expect(afterEn.some((t) => t.slug === 'prueba-solo-es')).toBe(false)
 
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Traducción faltante en "en"'))
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('prueba-solo-es'))
+        expect(errorSpy).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('Traducción faltante en "en"'))
+        expect(errorSpy).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('prueba-solo-es'))
       })
 
     })
@@ -146,8 +146,8 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
         expect(afterEs.some((p) => p.slug === 'prueba-plan-solo-es')).toBe(true)
         expect(afterEn.some((p) => p.slug === 'prueba-plan-solo-es')).toBe(false)
 
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Traducción faltante en "en"'))
-        expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('prueba-plan-solo-es'))
+        expect(errorSpy).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('Traducción faltante en "en"'))
+        expect(errorSpy).toHaveBeenCalledWith(expect.any(String), expect.stringContaining('prueba-plan-solo-es'))
       })
 
       const after = await drizzlePlanRepository.listActive('es')

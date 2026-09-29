@@ -63,11 +63,14 @@ export function PanelSidebar({
   brandSub,
   user,
   evento,
+  conAcciones = false,
 }: {
   sections: readonly NavSection[]
   brandSub: string
   user: PanelUser
   evento: PanelEvento | null
+  /** La campana flota a la derecha de «Menú» en el celular: el botón le deja su sitio. */
+  conAcciones?: boolean
 }) {
   const pathname = usePathname()
   /**
@@ -91,7 +94,7 @@ export function PanelSidebar({
         <button
           aria-controls="menu-panel"
           aria-expanded={abierto}
-          className="ml-auto flex shrink-0 items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50"
+          className={`ml-auto flex shrink-0 items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50 ${conAcciones ? 'mr-12' : ''}`}
           onClick={() => setAbierto((a) => !a)}
           type="button"
         >
@@ -179,7 +182,11 @@ export function PanelSidebar({
         </nav>
       ))}
 
-      <MenuDeUsuario user={user} alElegir={() => setAbierto(false)} />
+      {/* Pegada abajo en la computadora: con todas las entradas del evento la barra no cabía y la tarjeta
+          de quien entró quedaba cortada por el borde de la ventana. */}
+      <div className="min-[860px]:sticky min-[860px]:-bottom-6.5 min-[860px]:-mx-5 min-[860px]:mt-auto min-[860px]:bg-shell-deep min-[860px]:px-5 min-[860px]:pt-3 min-[860px]:pb-6.5">
+        <MenuDeUsuario user={user} alElegir={() => setAbierto(false)} />
+      </div>
       </div>
     </aside>
   )

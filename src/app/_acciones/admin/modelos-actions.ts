@@ -7,6 +7,7 @@ import { MAX_AUDIO_UPLOAD_BYTES } from '@/shared/audio/audio'
 import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { invalidarLaWeb, refrescar, texto } from '@/app/_acciones/admin/admin-comun'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // La música de los modelos del escaparate.
@@ -42,7 +43,7 @@ export async function uploadShowcaseMusicAction(
     nombre: { track: texto(formData, 'track'), artist: texto(formData, 'artist') },
   })
   if (isErr(result)) {
-    console.error('música del escaparate rechazada', result.error.kind, result.error.detail)
+    registrarFallo('admin/modelos-actions', 'música del escaparate rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -63,7 +64,7 @@ export async function renameShowcaseSongAction(_previous: AdminActionState, form
     artist: texto(formData, 'artist'),
   })
   if (isErr(result)) {
-    if (result.error.kind === 'storage_failure') console.error('nombre de canción', result.error.detail)
+    if (result.error.kind === 'storage_failure') registrarFallo('admin/modelos-actions', 'nombre de canción', result.error.detail)
     return { status: 'error', message: result.error.kind === 'storage_failure' ? 'No pudimos guardar el nombre.' : result.error.detail }
   }
 
@@ -82,7 +83,7 @@ export async function removeShowcaseMusicAction(
 
   const result = await admin.removeShowcaseMusic(actor, texto(formData, 'themeKey'))
   if (isErr(result)) {
-    console.error('no se pudo quitar la música', result.error.kind, result.error.detail)
+    registrarFallo('admin/modelos-actions', 'no se pudo quitar la música', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -100,7 +101,7 @@ export async function setTemplatePublishedAction(_previous: AdminActionState, fo
   const publicar = texto(formData, 'publicar') === 'si'
   const hecho = await admin.setPublished(actor, texto(formData, 'themeKey'), publicar)
   if (isErr(hecho)) {
-    if (hecho.error.kind === 'storage_failure') console.error('setTemplatePublishedAction', hecho.error.detail)
+    if (hecho.error.kind === 'storage_failure') registrarFallo('admin/modelos-actions', 'setTemplatePublishedAction', hecho.error.detail)
     return { status: 'error', message: hecho.error.kind === 'storage_failure' ? 'No pudimos cambiarlo. Vuelve a intentarlo.' : hecho.error.detail }
   }
 

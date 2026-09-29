@@ -14,6 +14,9 @@ export type DiaDVista = {
   readonly llegadas: { grupos: number; esperados: number; personas: number } | null
   /** Donde se escanean los pases y se ve la lista entera. */
   readonly ingreso: string
+  /** Si hay proveedores con trato y mesas creadas: sin ellos, «llegaron todos» y «mesas completas» no son verdad. */
+  readonly conProveedores: boolean
+  readonly conMesas: boolean
   readonly porLlegar: ReadonlyArray<{ id: string; service: string; arrivalTime: string | null; telHref: string | null }>
   readonly pagos: ReadonlyArray<{ id: string; concepto: string; importe: string }>
   readonly mesas: ReadonlyArray<{ id: string; label: string; faltan: readonly string[] }> | null
@@ -64,7 +67,7 @@ export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) 
 
       <Bloque titulo="Proveedores por llegar">
         {dia.porLlegar.length === 0 ? (
-          <p className="text-[14px] text-ink-soft">Llegaron todos.</p>
+          <p className="text-[14px] text-ink-soft">{dia.conProveedores ? 'Llegaron todos.' : 'Todavía no hay proveedores contratados.'}</p>
         ) : (
           <ul className="flex flex-col">
             {dia.porLlegar.map((p) => (
@@ -109,7 +112,7 @@ export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) 
       {dia.mesas === null ? null : (
         <Bloque titulo="Quién falta en cada mesa">
           {dia.mesas.length === 0 ? (
-            <p className="text-[14px] text-ink-soft">Todas las mesas están completas.</p>
+            <p className="text-[14px] text-ink-soft">{dia.conMesas ? 'Todas las mesas están completas.' : 'Todavía no hay mesas.'}</p>
           ) : (
             <ul className="flex flex-col">
               {dia.mesas.map((m) => (

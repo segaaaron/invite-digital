@@ -12,6 +12,7 @@ import { SiteHeader } from '@/sections/SiteHeader'
 import { WhatsAppFloat } from '@/sections/WhatsAppFloat'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../../globals.css'
+import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 
 export const viewport = VIEWPORT
 
@@ -37,6 +38,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} className={`${display.variable} ${sans.variable}`} suppressHydrationWarning>
       <body>
+        <CapturaDeFallos />
         <Suspense fallback={null}>
           <BarraDeCarga />
         </Suspense>

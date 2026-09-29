@@ -16,6 +16,7 @@ import { normalizarWhatsapp } from '@/shared/whatsapp'
 import { fiestaDeCategoria } from '@/modules/events'
 import { rsvpDeadlineFor } from '@/modules/orders/domain/provisioning'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /** Días antes del evento en que cierran las confirmaciones, por fiesta: el catering necesita la lista. */
 const CIERRE_POR_FIESTA = { boda: 21, xv: 14, cumple: 10 } as const
@@ -49,7 +50,7 @@ export async function setEventPlanAction(_previous: AdminActionState, formData: 
     planSlug: texto(formData, 'planSlug'),
   })
   if (isErr(result)) {
-    console.error('cambio de plan rechazado', result.error.kind, result.error.detail)
+    registrarFallo('admin/bodas-actions', 'cambio de plan rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -160,7 +161,7 @@ export async function createWeddingForClientAction(
   })
 
   if (isErr(evento)) {
-    console.error('alta de boda desde administración rechazada', evento.error.kind, evento.error.detail)
+    registrarFallo('admin/bodas-actions', 'alta de boda desde administración rechazada', evento.error.kind, evento.error.detail)
     return { status: 'error', message: `No se pudo crear el evento: ${evento.error.detail}` }
   }
 
@@ -175,7 +176,7 @@ export async function createWeddingForClientAction(
         if (leido.value.order.quoteExtras.length > 0) await plans.applyQuoteExtras(leido.value.order.id)
         if (leido.value.order.consultationId !== null) await leads.win(leido.value.order.consultationId, evento.value.id)
       } catch (causa) {
-        console.error('no se pudo atar el pedido %s a su evento:', refDelPedido, causa)
+        registrarFallo('admin/bodas-actions', 'no se pudo atar el pedido %s a su evento:', refDelPedido, causa)
       }
     }
   }
@@ -189,7 +190,7 @@ export async function createWeddingForClientAction(
   try {
     await events.seedContent(evento.value.id)
   } catch (causa) {
-    console.error('no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
+    registrarFallo('admin/bodas-actions', 'no se pudo sembrar el contenido del evento %s:', evento.value.id, causa)
   }
 
   // --- 4. El plan. Sin esto cae al más barato, que no trae mesa de regalos ni modo puerta.
@@ -205,7 +206,7 @@ export async function createWeddingForClientAction(
       planSlug,
     })
     if (isErr(plan)) {
-      console.error('no se pudo asignar el plan', plan.error.kind, plan.error.detail)
+      registrarFallo('admin/bodas-actions', 'no se pudo asignar el plan', plan.error.kind, plan.error.detail)
       avisoDePlan = ` Ojo: no se pudo asignar el plan «${planSlug}» y quedó con el más barato; cámbialo en su fila, en «Gestionar».`
     }
   }
@@ -286,18 +287,18 @@ export async function duplicarEventoAction(_previo: { status: 'idle' | 'error'; 
     retentionDays: o.retentionDays,
   })
   if (isErr(copia)) {
-    console.error('duplicarEventoAction', copia.error.kind, copia.error.detail)
+    registrarFallo('admin/bodas-actions', 'duplicarEventoAction', copia.error.kind, copia.error.detail)
     return { status: 'error', message: 'No pudimos duplicarlo. Vuelve a intentarlo en un momento.' }
   }
   try {
     await events.seedContent(copia.value.id)
   } catch (causa) {
-    console.error('no se pudo sembrar el contenido de la copia %s:', copia.value.id, causa)
+    registrarFallo('admin/bodas-actions', 'no se pudo sembrar el contenido de la copia %s:', copia.value.id, causa)
   }
   const capacidad = await plans.allowanceFor(o.id)
   if (!isErr(capacidad)) {
     const plan = await admin.setEventPlan(actor, { eventId: copia.value.id, eventSlug: copia.value.slug, planSlug: capacidad.value.planSlug })
-    if (isErr(plan)) console.error('no se pudo copiar el plan', plan.error.detail)
+    if (isErr(plan)) registrarFallo('admin/bodas-actions', 'no se pudo copiar el plan', plan.error.detail)
   }
   await admin.record(actor, { action: 'evento.duplicado', subject: copia.value.slug, detail: `Copia de ${o.slug}` })
   refrescar()

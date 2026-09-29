@@ -13,6 +13,7 @@ import { enlaceWhatsapp } from '@/shared/whatsapp'
 import type { DoorActionState, ScanInput } from '@/app/_acciones/checkin/actions'
 import type { ScanOutcome } from '@/modules/checkin/application/check-in-by-scan'
 import type { PorterAccessError, PorterSession } from '@/modules/checkin/application/porter-use-cases'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Del panel: sumar y quitar porteros. Las pide el anfitrión, su dueño o el admin, con la
@@ -158,7 +159,7 @@ export async function recordScansAsPorterAction(input: { scans: ScanInput[] }): 
     scans: input.scans.map((s) => ({ scanId: s.scanId, scanned: s.scanned, arrivedCount: s.arrivedCount, scannedAt: new Date(s.scannedAtMs), personIds: s.personIds ?? null })),
   })
   if (isErr(result)) {
-    console.error('registro del portero rechazado', result.error.kind, result.error.detail)
+    registrarFallo('checkin/porter-actions', 'registro del portero rechazado', result.error.kind, result.error.detail)
     throw new Error(result.error.kind)
   }
   return result.value
@@ -180,7 +181,7 @@ export async function checkInByGroupAsPorterAction(input: {
     scan: { scanId: input.scanId, groupId: input.groupId, arrivedCount: input.arrivedCount, scannedAt: new Date(input.scannedAtMs), personIds: input.personIds ?? null },
   })
   if (isErr(result)) {
-    console.error('registro por grupo del portero rechazado', result.error.kind, result.error.detail)
+    registrarFallo('checkin/porter-actions', 'registro por grupo del portero rechazado', result.error.kind, result.error.detail)
     throw new Error(result.error.kind)
   }
   return result.value

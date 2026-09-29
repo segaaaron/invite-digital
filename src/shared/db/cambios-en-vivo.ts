@@ -1,4 +1,5 @@
 import { pg } from './client'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /** El canal que escriben los disparadores de la `0070` y la `0071`. */
 export const CANAL_DE_CAMBIOS = 'cambio_de_evento'
@@ -69,7 +70,7 @@ function asegurarEscucha(): void {
     )
     .catch((causa: unknown) => {
       // Sin escucha no hay tiempo real, pero el panel sigue funcionando con «Actualizar».
-      console.error('no se pudo escuchar los cambios en vivo:', causa)
+      registrarFallo('shared/db/cambios-en-vivo', 'no se pudo escuchar los cambios en vivo:', causa)
       bus.escuchando = null
     })
 }

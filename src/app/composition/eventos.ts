@@ -28,7 +28,7 @@ import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-med
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
 import { sharpImageProcessor } from '@/modules/events/infrastructure/sharp-image-processor'
 import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
-import { drizzleEventRepository, guardarAvisoDeRespuestas, leerAvisoDeRespuestas, publicarSiBorrador } from '@/modules/events/infrastructure/drizzle-event-repository'
+import { drizzleEventRepository, publicarSiBorrador } from '@/modules/events/infrastructure/drizzle-event-repository'
 import { createDrizzleStaffRepository, drizzleStaffRepository } from '@/modules/events/infrastructure/drizzle-staff-repository'
 import { recordView } from '@/modules/analytics/application/record-view'
 import { getViewTally } from '@/modules/analytics/application/get-view-tally'
@@ -155,8 +155,6 @@ export const events = {
   /** Al preparar un enlace: la invitación sale publicada, sin que nadie la apruebe. */
   publicarSiBorrador: (eventId: string) => publicarSiBorrador(db, eventId),
   /** El correo a los anfitriones con cada respuesta: si está encendido y cambiarlo. */
-  avisoDeRespuestas: (eventId: string) => leerAvisoDeRespuestas(db, eventId),
-  guardarAvisoDeRespuestas: (eventId: string, avisar: boolean) => guardarAvisoDeRespuestas(db, eventId, avisar),
   /**
    * El contenido rico de la invitación: lo que los dieciséis diseños pintan y `events` no
    * guarda. `contentFor` no escribe —una invitación se abre cientos de veces—; quien

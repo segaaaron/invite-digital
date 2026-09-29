@@ -4,10 +4,11 @@ import { planTranslations, plans } from '@/shared/db/schema'
 import type { Locale } from '@/shared/i18n/locales'
 import type { PlanInput } from '../domain/plan'
 import type { PlanRepository } from '../application/ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 const logMissingTranslations = (locale: Locale, slugs: readonly string[]): void => {
   if (slugs.length === 0) return
-  console.error(
+  registrarFallo('catalog/drizzle-plan-repository', 
     `Traducción faltante en "${locale}" para los planes: ${slugs.join(', ')}. No se muestran en ese idioma.`,
   )
 }

@@ -1,5 +1,7 @@
 'use server'
 
+import { loQueSePerderia } from '@/modules/events'
+
 import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -18,6 +20,7 @@ import { mismaFiesta } from '@/modules/events/domain/fiesta'
 import { puedeCambiarDiseno } from '@/modules/plans'
 import type { EventErrorKind } from '@/modules/events/domain/errors'
 import { campo } from '@/shared/forms/campo'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
 
@@ -50,7 +53,7 @@ export async function createEventAction(_previous: EventActionState, formData: F
   if (!seAsigna(datos.themeKey)) return { status: 'error', message: 'invalid_theme' }
   const result = await eventUseCases.create({ ...datos, retentionDays, userId: actor.userId })
   if (isErr(result)) {
-    console.error('alta de evento rechazada', result.error.kind, result.error.detail)
+    registrarFallo('events/actions', 'alta de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
   }
 
@@ -77,7 +80,7 @@ async function sembrarContenido(eventId: string): Promise<void> {
   try {
     await eventUseCases.seedContent(eventId)
   } catch (cause) {
-    console.error('No se pudo sembrar el contenido del evento %s:', eventId, cause)
+    registrarFallo('events/actions', 'No se pudo sembrar el contenido del evento %s:', eventId, cause)
   }
 }
 
@@ -115,7 +118,7 @@ export async function updateEventAction(_previous: EventActionState, formData: F
   // La retención no se edita aquí: la fija el plan del evento.
   const result = await eventUseCases.update({ ...readForm(formData), themeKey, retentionDays: anterior.value.retentionDays, id: eventId })
   if (isErr(result)) {
-    console.error('edición de evento rechazada', result.error.kind, result.error.detail)
+    registrarFallo('events/actions', 'edición de evento rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
   }
 
@@ -153,7 +156,7 @@ export async function deleteEventAction(
   })
 
   if (isErr(result)) {
-    console.error('borrado de evento rechazado', result.error.kind, result.error.detail)
+    registrarFallo('events/actions', 'borrado de evento rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -273,7 +276,7 @@ export async function setEventPrivacyAction(_previous: PrivacyState, formData: F
 
   const result = await eventUseCases.setPassword({ eventId, password: publica ? null : password })
   if (isErr(result)) {
-    console.error('privacidad rechazada', result.error.kind, result.error.detail)
+    registrarFallo('events/actions', 'privacidad rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -301,7 +304,7 @@ export async function setEventCurrencyAction(input: {
 
   const result = await eventUseCases.update({ ...row.value, currency: input.currency })
   if (isErr(result)) {
-    console.error('cambio de moneda rechazado', result.error.kind, result.error.detail)
+    registrarFallo('events/actions', 'cambio de moneda rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -317,7 +320,7 @@ export type ContentActionState =
   | { status: 'idle' }
   /** `mediaId`: lo recién subido, para que el campo que lo pidió lo elija solo. */
   | { status: 'success'; mediaId?: string }
-  | { status: 'error'; message: string }
+  | { status: 'error'; message: string; campo?: string; maximo?: number }
 
 /**
  * Guarda un bloque del contenido de la invitación.
@@ -359,7 +362,7 @@ async function enlaceLargoDeMapa(href: string): Promise<string | null> {
       if (!CORTOS_DE_MAPA.has(url.hostname)) return url.toString()
     }
   } catch (causa) {
-    console.error('no se pudo resolver el enlace del mapa', causa)
+    registrarFallo('events/actions', 'no se pudo resolver el enlace del mapa', causa)
   }
   return null
 }
@@ -399,6 +402,14 @@ export async function saveContentBlockAction(
       const largo = await enlaceLargoDeMapa((valor as { href: string }).href)
       if (largo !== null) valor = { ...valor, href: largo }
     }
+    // Nada se recorta ni se descarta en silencio: si algo escrito no se guardaría entero, no se guarda
+    // nada y la pantalla dice qué campo y por qué (antes el enlace de Maps se cortaba a 240 sin avisar).
+    const [perdida] = loQueSePerderia(section as SectionKey, valor)
+    if (perdida !== undefined) {
+      return perdida.motivo === 'largo'
+        ? { status: 'error', message: 'texto_largo', campo: perdida.campo, maximo: perdida.maximo }
+        : { status: 'error', message: 'valor_invalido', campo: perdida.campo }
+    }
     aGuardar.push([section as SectionKey, valor])
   }
 
@@ -406,7 +417,7 @@ export async function saveContentBlockAction(
     try {
       await eventUseCases.saveContentBlock(eventId, section, valor)
     } catch (cause) {
-      console.error('No se pudo guardar el bloque %s del evento %s:', section, eventId, cause)
+      registrarFallo('events/actions', 'No se pudo guardar el bloque %s del evento %s:', section, eventId, cause)
       return { status: 'error', message: 'storage_failure' }
     }
   }
@@ -567,19 +578,4 @@ export async function uploadGuestPhotoAction(_previo: GuestPhotoState, formData:
 
   revalidatePath(`/i/${token}/fotos`)
   return { status: 'success', message: '' }
-}
-
-export type AvisoDeRespuestasState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
-
-/**
- * Enciende o apaga el correo a los anfitriones con cada respuesta. Lo cambian quienes abren la
- * sección del anfitrión: el dueño, el anfitrión y su planner.
- */
-export async function setAvisoDeRespuestasAction(_previous: AvisoDeRespuestasState, formData: FormData): Promise<AvisoDeRespuestasState> {
-  const actor = await requireSession()
-  const eventSlug = campo(formData, 'eventSlug')
-  const eventId = await requireEventAccess(actor, { eventId: campo(formData, 'eventId'), eventSlug, section: 'cliente' })
-  await eventUseCases.guardarAvisoDeRespuestas(eventId, formData.get('avisar') === 'on')
-  revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
-  return { status: 'success', message: 'Guardado.' }
 }

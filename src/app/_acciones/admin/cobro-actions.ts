@@ -6,6 +6,7 @@ import { requireAdmin } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { QR_MIMES, refrescar, texto } from '@/app/_acciones/admin/admin-comun'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ============================================================================
 // DATOS DE COBRO DEL PLAN B
@@ -29,7 +30,7 @@ export async function savePaymentSettingsAction(
   })
 
   if (isErr(result)) {
-    console.error('datos de cobro rechazados', result.error.kind, result.error.detail)
+    registrarFallo('admin/cobro-actions', 'datos de cobro rechazados', result.error.kind, result.error.detail)
     return { status: 'error', message: 'No pudimos guardar los datos. Inténtalo en un momento.' }
   }
 
@@ -63,7 +64,7 @@ export async function uploadPaymentQrAction(
 
   const result = await admin.savePaymentQr(actor, { bytes, mime })
   if (isErr(result)) {
-    console.error('QR de cobro rechazado', result.error.kind, result.error.detail)
+    registrarFallo('admin/cobro-actions', 'QR de cobro rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: 'No pudimos guardar la imagen. Inténtalo en un momento.' }
   }
 

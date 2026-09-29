@@ -267,8 +267,14 @@ function coloresDePaleta(valor: unknown): readonly string[] | undefined {
 }
 
 /** Un enlace que pulsará el invitado: solo `http` y `https`. */
+/**
+ * Un enlace de Google Maps resuelto (el largo que sale de un `maps.app.goo.gl`) pasa de 300 caracteres. Con
+ * el tope de un texto (240) se cortaba por la mitad **sin decir nada** y la ubicación quedaba rota.
+ */
+const MAX_ENLACE = 2048
+
 function enlaceSeguro(valor: unknown): string | undefined {
-  const crudo = texto(valor)
+  const crudo = texto(valor, MAX_ENLACE)
   if (crudo === undefined) return undefined
   try {
     const url = new URL(crudo)
@@ -339,7 +345,7 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
       ['eyebrow', texto(hero.eyebrow, LIMITES.corto)],
       ['nameA', texto(hero.nameA, LIMITES.corto)],
       ['nameB', texto(hero.nameB, LIMITES.corto)],
-      ['monogram', texto(hero.monogram, 16)],
+      ['monogram', texto(hero.monogram, 40)],
       ['serial', texto(hero.serial, 32)],
       ['coverImageId', texto(hero.coverImageId, LIMITES.corto)],
       ['portraitImageId', texto(hero.portraitImageId, LIMITES.corto)],
@@ -482,3 +488,49 @@ export function mergeContent(delDiseno: InvitationContent, delAtelier: Invitatio
   }
   return salida as InvitationContent
 }
+
+/** Lo que **se perdería** al guardar un bloque: un texto que no cabe o un valor que no es válido. */
+export type Perdida = { readonly campo: string; readonly motivo: 'largo'; readonly maximo: number } | { readonly campo: string; readonly motivo: 'invalido' }
+
+/**
+ * Compara lo que se envía de una sección con lo que quedaría guardado y dice qué **se perdería**: un
+ * texto que se recortaría (por su tope) o un valor que se descartaría (un enlace que no es web, una fecha
+ * que no existe, un color que no es color). El guardado **no recorta ni descarta en silencio**: con algo
+ * aquí, la acción no guarda y la pantalla dice qué campo y por qué.
+ *
+ * Solo mira los textos escritos (no vacíos); lo que el dominio compone por su cuenta —los nombres de los
+ * anfitriones desde sus papeles— no cuenta como pérdida. `campo` es la ruta: `href`, `rows.2.title`.
+ */
+const tieneTexto = (valor: unknown): boolean =>
+  typeof valor === 'string' ? valor.trim() !== '' : Array.isArray(valor) ? valor.some(tieneTexto) : valor !== null && typeof valor === 'object' ? Object.values(valor).some(tieneTexto) : false
+
+export function loQueSePerderia(seccion: SectionKey, enviado: unknown): Perdida[] {
+  const guardado = (parseInvitationContent({ [seccion]: enviado }) as Record<string, unknown>)[seccion]
+  const perdidas: Perdida[] = []
+  const recorrer = (entrada: unknown, salida: unknown, ruta: string) => {
+    if (typeof entrada === 'string') {
+      const limpio = entrada.trim()
+      if (limpio === '') return
+      if (salida === undefined || salida === null) perdidas.push({ campo: ruta, motivo: 'invalido' })
+      else if (typeof salida === 'string' && salida.length < limpio.length && limpio.startsWith(salida)) perdidas.push({ campo: ruta, motivo: 'largo', maximo: salida.length })
+      return
+    }
+    if (Array.isArray(entrada)) {
+      const filas = Array.isArray(salida) ? salida : []
+      // Una fila entera vacía se descarta a propósito (y corre a las de detrás): se compara sin ellas.
+      entrada.filter(tieneTexto).forEach((fila, i) => recorrer(fila, filas[i], ruta === '' ? String(i) : `${ruta}.${i}`))
+      return
+    }
+    if (entrada !== null && typeof entrada === 'object') {
+      const destino = salida !== null && typeof salida === 'object' ? (salida as Record<string, unknown>) : {}
+      for (const [clave, valor] of Object.entries(entrada)) {
+        // Los nombres de los anfitriones salen de sus papeles: el dominio los recompone.
+        if (seccion === 'hosts' && clave === 'names') continue
+        recorrer(valor, destino[clave], ruta === '' ? clave : `${ruta}.${clave}`)
+      }
+    }
+  }
+  recorrer(enviado, guardado, '')
+  return perdidas
+}
+

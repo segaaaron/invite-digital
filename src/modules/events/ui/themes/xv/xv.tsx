@@ -11,7 +11,7 @@ export const xvDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: { fotos: { casillas: 1 }, sinCampos: { hero: ['nameB'], itinerary: ['note'] } },
-  sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'gallery', 'closing'],
+  sections: ['hero', 'quote', 'gallery', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./xv.view').then((modulo) => modulo.XvView)),
 }

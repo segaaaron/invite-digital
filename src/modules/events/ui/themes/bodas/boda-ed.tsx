@@ -18,7 +18,7 @@ export const bodaEdDefinition: ThemeDefinition = {
     sinCampos: { itinerary: ['note', 'imageId'], ceremony: ['address'], reception: ['address'], notes: ['title'], map: ['label'] },
     maxAvisos: 4,
   },
-  sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'gallery', 'notes', 'music', 'closing'],
+  sections: ['hero', 'gallery', 'quote', 'notes', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-ed.view').then((modulo) => modulo.BodaEdView)),
 }

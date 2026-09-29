@@ -5,6 +5,7 @@ import {
   parseInvitationContent,
 } from '../domain/invitation-content'
 import type { ContentRepository } from './ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * El contenido con el que se pinta la invitación.
@@ -33,7 +34,7 @@ export const contentFor =
       const crudo = await repo.find(eventId)
       return crudo === null ? defaultContent : parseInvitationContent(crudo)
     } catch (cause) {
-      console.error('No se pudo leer el contenido del evento %s:', eventId, cause)
+      registrarFallo('events/content-use-cases', 'No se pudo leer el contenido del evento %s:', eventId, cause)
       return defaultContent
     }
   }
@@ -56,7 +57,7 @@ export const contentForPreview =
       const crudo = await repo.find(eventId)
       return mergeContent(defaultContent, crudo === null ? {} : parseInvitationContent(crudo))
     } catch (cause) {
-      console.error('No se pudo leer el contenido del evento %s:', eventId, cause)
+      registrarFallo('events/content-use-cases', 'No se pudo leer el contenido del evento %s:', eventId, cause)
       return defaultContent
     }
   }

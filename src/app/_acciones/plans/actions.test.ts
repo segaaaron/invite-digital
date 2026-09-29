@@ -53,7 +53,7 @@ describe('applyPlanChangeAction', () => {
       status: 'error',
       kind: 'already_resolved',
     })
-    expect(spy).toHaveBeenCalledWith('cambio de plan no aplicado', 'already_resolved', 'La solicitud r1 ya estaba resuelta.')
+    expect(spy).toHaveBeenCalledWith('[plans/actions]', 'cambio de plan no aplicado', 'already_resolved', 'La solicitud r1 ya estaba resuelta.')
     spy.mockRestore()
   })
 })

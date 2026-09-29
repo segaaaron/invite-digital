@@ -3,6 +3,7 @@ import { BarraDeCarga } from '@/shared/design/ui/BarraDeCarga'
 import { display, panelMono, panelSans } from '@/shared/design/fonts'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../globals.css'
+import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 
 export const viewport = VIEWPORT
 
@@ -21,6 +22,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
+        <CapturaDeFallos />
         {/* El `Suspense` envuelve solo la barra (lee `useSearchParams`), nunca las páginas: alrededor
             de ellas rompería sus `notFound()`. */}
         <Suspense fallback={null}>

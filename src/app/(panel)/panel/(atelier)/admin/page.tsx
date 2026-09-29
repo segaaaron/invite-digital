@@ -12,6 +12,7 @@ import { ArrowRightIcon, CheckIcon } from '@/shared/design/ui/icons'
 import { formatAmount } from '@/shared/money'
 import { faltaPara } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export const metadata = { title: 'Hoy · Administración' }
 export const dynamic = 'force-dynamic'
@@ -35,7 +36,7 @@ export default async function AdminPage() {
   const [cargado, dinero] = await Promise.all([cargarHoy(ahora), admin.todayMoney()])
 
   if (isErr(cargado)) {
-    console.error('Hoy', cargado.error)
+    registrarFallo('panel/admin/page', 'Hoy', cargado.error)
     return (
       <>
         <PanelHeader kicker="Administración" title="Hoy" />

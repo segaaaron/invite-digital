@@ -18,11 +18,11 @@ export function ArrivalStrip({ tally }: { tally: DoorTally | null }) {
   ] as const
 
   return (
-    <div className="flex flex-col gap-3 border-y border-[var(--color-line)] py-6">
+    <div className="flex flex-col gap-3 border-y border-line-panel py-6">
       <div className="grid grid-cols-2 gap-6">
         {cifras.map((cifra) => (
           <div key={cifra.label}>
-            <p className="font-mono text-[28px] font-light text-gold-deep">{cifra.value}</p>
+            <p className="font-display text-[34px] leading-none font-light text-ink lining-nums">{cifra.value}</p>
             <p className="mt-1 text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">{cifra.label}</p>
           </div>
         ))}

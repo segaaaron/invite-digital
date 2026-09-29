@@ -1,6 +1,7 @@
 import sharp from 'sharp'
 import { MAX_IMAGE_EDGE } from '../domain/media'
 import type { ImageProcessor } from '../application/ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * Cuánto se comprime. Es una decisión de codificación, no de producto, y por eso vive aquí
@@ -41,7 +42,7 @@ export const sharpImageProcessor: ImageProcessor = {
 
       return { bytes: new Uint8Array(salida), contentType: 'image/webp' }
     } catch (cause) {
-      console.error('No se pudo procesar la imagen subida:', cause)
+      registrarFallo('events/sharp-image-processor', 'No se pudo procesar la imagen subida:', cause)
       return null
     }
   },

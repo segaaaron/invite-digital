@@ -2,6 +2,7 @@ import { inArray, sql } from 'drizzle-orm'
 import { db } from './client'
 import { CATALOG_ENTRIES, CATALOG_EN_VENTA, CATALOG_LISTOS } from '@/shared/design/theme-catalog'
 import { eventCategories, eventCategoryTranslations, planTranslations, plans, templateTranslations, templates } from './schema'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 const CATEGORIES = [
   { slug: 'boda', order: 1, es: 'Boda', en: 'Wedding' },
@@ -238,6 +239,6 @@ async function seed() {
 seed()
   .then(() => process.exit(0))
   .catch((error: unknown) => {
-    console.error(error)
+    registrarFallo('shared/db/seed', error)
     process.exit(1)
   })

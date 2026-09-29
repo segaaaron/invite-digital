@@ -141,7 +141,8 @@ export default async function MesasPage({
             vez** que el plano: en el diseño el `hidden` de la rejilla lo anula su propio
             `display: grid`, así que lo que enseña es el plano arriba y las tarjetas
             debajo. El conmutador sirve para quedarse solo con las tarjetas. */}
-        {enTarjetas ? null : (
+        {/* Sin mesas ni zonas, el plano era una cuadrícula vacía de un metro encima del aviso de que no hay mesas. */}
+        {enTarjetas || (tables.length === 0 && zones.length === 0) ? null : (
           <PanelCard
             action={<PanelButton href={`${base}?panel=zona`}>+ Elemento del salón</PanelButton>}
             title="Plano del salón"

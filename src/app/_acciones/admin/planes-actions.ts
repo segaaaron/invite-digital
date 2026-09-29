@@ -8,6 +8,7 @@ import { parseAmount } from '@/shared/money'
 import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { invalidarLaWeb, refrescar, texto } from '@/app/_acciones/admin/admin-comun'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Catálogo: planes y publicación de modelos. La web pública es `force-dynamic`, así que
@@ -58,7 +59,7 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   })
   if (isErr(guardado)) {
     if (guardado.error.kind === 'storage_failure') {
-      console.error('savePlanAction', guardado.error.detail)
+      registrarFallo('admin/planes-actions', 'savePlanAction', guardado.error.detail)
       return { status: 'error', message: 'No pudimos guardar el plan. Vuelve a intentarlo en un momento.', valores }
     }
     return { status: 'error', message: guardado.error.detail, valores }

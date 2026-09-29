@@ -12,6 +12,7 @@ import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type RevokeInvitationState =
   | { status: 'idle' }
@@ -37,7 +38,7 @@ export async function revokeInvitationAction(
 
   const result = await guests.revoke({ eventId, id: campo(formData, 'groupId') })
   if (isErr(result)) {
-    console.error('revocación rechazada', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'revocación rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.kind }
   }
 
@@ -85,7 +86,7 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
   if (isErr(capacidad) || isErr(grupos)) {
     // Tratar un fallo de lectura como «sin límite» convertiría un error pasajero en un
     // salto del tope del plan.
-    console.error('alta de invitado sin capacidad legible')
+    registrarFallo('guests/actions', 'alta de invitado sin capacidad legible')
     return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
   }
 
@@ -107,7 +108,7 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
   })
 
   if (isErr(result)) {
-    console.error('alta de invitado rechazada', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'alta de invitado rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -127,7 +128,7 @@ export async function addPersonAction(input: {
 
   const result = await guests.addPerson({ eventId, guestGroupId: input.guestGroupId, fullName: input.fullName, isCompanion: true })
   if (isErr(result)) {
-    console.error('alta de acompañante rechazada', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'alta de acompañante rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -152,7 +153,7 @@ export async function updatePersonAction(input: {
   const result = await guests.updatePerson({ ...patch, eventId })
 
   if (isErr(result)) {
-    console.error('edición de persona rechazada', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'edición de persona rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -167,7 +168,7 @@ export async function removePersonAction(input: { eventSlug: string; id: string 
   // Si era la última persona de su invitación, la invitación se va con ella.
   const result = await guests.removePerson({ eventId, id: input.id })
   if (isErr(result)) {
-    console.error('baja de persona rechazada', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'baja de persona rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -187,7 +188,7 @@ export async function reopenRsvpAction(input: { eventSlug: string; id: string })
 
   const result = await guests.reopenRsvp({ eventId, id: input.id })
   if (isErr(result)) {
-    console.error('no se pudo reabrir la confirmación', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'no se pudo reabrir la confirmación', result.error.kind, result.error.detail)
     return { status: 'error', message: 'No se pudo reabrir la confirmación.' }
   }
 
@@ -238,7 +239,7 @@ export async function ensureInvitationLinkAction(input: { eventSlug: string; gro
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
   const result = await guests.enlaceDe({ eventId, id: input.groupId })
   if (isErr(result)) {
-    console.error('enlace no disponible', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'enlace no disponible', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
   return { status: 'success', url: invitationUrl(result.value.token, env.SITE_URL) }
@@ -256,7 +257,7 @@ async function repartir(eventId: string, eventSlug: string, formData: FormData, 
   const result = modo === 'rotar' ? await guests.resend({ eventId, id: groupId }) : await guests.enviar({ eventId, id: groupId })
 
   if (isErr(result)) {
-    console.error('reenvío rechazado', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'reenvío rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -310,7 +311,7 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
   // tope del plan, en silencio y con cincuenta grupos de golpe. El alta de uno en uno ya
   // corta así; la vía masiva no puede ser la más laxa.
   if (isErr(capacidad) || isErr(actuales)) {
-    console.error('importación abortada: no se pudo leer el plan o los grupos actuales')
+    registrarFallo('guests/actions', 'importación abortada: no se pudo leer el plan o los grupos actuales')
     return {
       status: 'error',
       message: 'No pudimos comprobar el límite de tu plan. Vuelve a intentarlo en un momento.',
@@ -325,7 +326,7 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
   })
 
   if (isErr(result)) {
-    console.error('importación rechazada', result.error.kind, result.error.detail)
+    registrarFallo('guests/actions', 'importación rechazada', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -378,7 +379,7 @@ export async function setGroupPhoneAction(input: {
   try {
     await guests.setPhone(eventId, input.id, limpio)
   } catch (cause) {
-    console.error('no se pudo guardar el teléfono', cause)
+    registrarFallo('guests/actions', 'no se pudo guardar el teléfono', cause)
     return { status: 'error', message: 'No se pudo guardar el teléfono.' }
   }
 
@@ -425,7 +426,7 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
       currentGroups: grupos.value.length + creadas,
     })
     if (isErr(result)) {
-      console.error('alta desde el asistente rechazada', result.error.kind, result.error.detail)
+      registrarFallo('guests/actions', 'alta desde el asistente rechazada', result.error.kind, result.error.detail)
       if (creadas > 0) await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones` })
       revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
       return { status: 'error', message: creadas === 0 ? result.error.detail : `Se añadieron ${creadas}; ${principal} no: ${result.error.detail}` }

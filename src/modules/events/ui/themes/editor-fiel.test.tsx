@@ -7,6 +7,8 @@ import { formaPara } from '../content-shapes'
 import type { ThemeDefinition, ThemeProps } from './contract'
 import { conMovimientoReducido, conObservadorQueNuncaDispara } from './kit/test-helpers'
 import { themeDefinitions } from './registry'
+import { buscarEnInvitacion } from '../seguir-seccion'
+import { loQueSePerderia } from '../../domain/invitation-content'
 import { propsDePrueba } from './test-props'
 
 /**
@@ -134,3 +136,42 @@ describe('lo que el editor pide de cada diseño', () => {
     expect(esperados.filter(([, texto]) => !pintado.includes(texto)).map(([campo]) => campo)).toEqual([])
   })
 })
+
+/**
+ * El orden en que se pinta cada sección, sacado de la vista: la primera aparición de cualquiera de sus
+ * campos. Lo que no pinta texto (la fecha, la música sin rótulo) no tiene posición y no cuenta.
+ */
+function ordenPintado(tema: ThemeDefinition, Vista: ComponentType<ThemeProps>): string[] {
+  const { contenido, esperados } = contenidoConTodo(tema)
+  const { container, unmount } = render(<Vista {...propsDePrueba({ content: contenido })} audioSrc="/modelos/musica/prueba" />)
+  const primero = new Map<string, Element>()
+  for (const [campo, texto] of esperados) {
+    const seccion = campo.split('.')[0]!
+    const nodo = buscarEnInvitacion(container, [texto])
+    if (nodo === null || nodo.closest('[data-flotante]') !== null) continue
+    const antes = primero.get(seccion)
+    if (antes === undefined || nodo.compareDocumentPosition(antes) & Node.DOCUMENT_POSITION_FOLLOWING) primero.set(seccion, nodo)
+  }
+  unmount()
+  return [...primero.entries()].sort(([, a], [, b]) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)).map(([s]) => s)
+}
+
+describe('el editor va en el orden de la invitación', () => {
+  it.each(CON_VISTA)('«$tema.key» declara sus secciones de arriba abajo', ({ tema, Vista }) => {
+    const pintado = ordenPintado(tema, Vista)
+    const declarado = tema.sections.filter((s) => pintado.includes(s))
+    expect(declarado).toEqual(pintado)
+  })
+})
+
+describe('guardar no pierde nada de lo que el editor manda', () => {
+  // Sin falsos avisos: el ejemplo de cada diseño y un valor en cada campo del editor se guardan enteros.
+  it.each(CON_VISTA)('«$tema.key»: su ejemplo y todos sus campos se guardan sin recortes', ({ tema }) => {
+    const { contenido } = contenidoConTodo(tema)
+    for (const seccion of tema.sections) {
+      expect(loQueSePerderia(seccion, tema.defaultContent[seccion]), `ejemplo · ${seccion}`).toEqual([])
+      expect(loQueSePerderia(seccion, contenido[seccion]), `editor · ${seccion}`).toEqual([])
+    }
+  })
+})
+

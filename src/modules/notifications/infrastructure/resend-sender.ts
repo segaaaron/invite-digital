@@ -1,5 +1,6 @@
 import { Resend } from 'resend'
 import type { EmailSender } from '../application/ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * Entrega por Resend.
@@ -34,13 +35,13 @@ export function createResendSender(config: { apiKey: string | undefined; from: s
         // Resend devuelve el fallo en el cuerpo, no lanzando: sin mirarlo, un rechazo del
         // proveedor pasaría por envío correcto.
         if (error) {
-          console.error('Resend rechazó el correo a %s: %s', input.to, error.message)
+          registrarFallo('notifications/resend-sender', 'Resend rechazó el correo a %s: %s', input.to, error.message)
           return false
         }
 
         return true
       } catch (causa) {
-        console.error('no se pudo enviar el correo a %s:', input.to, causa)
+        registrarFallo('notifications/resend-sender', 'no se pudo enviar el correo a %s:', input.to, causa)
         return false
       }
     },

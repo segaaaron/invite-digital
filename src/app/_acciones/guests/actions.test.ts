@@ -100,7 +100,7 @@ describe('revokeInvitationAction', () => {
     const state = await revokeInvitationAction({ status: 'idle' }, form())
 
     expect(state).toEqual({ status: 'error', message: 'storage_failure' })
-    expect(spy).toHaveBeenCalledWith('revocación rechazada', 'storage_failure', 'La base no responde en 127.0.0.1.')
+    expect(spy).toHaveBeenCalledWith('[guests/actions]', 'revocación rechazada', 'storage_failure', 'La base no responde en 127.0.0.1.')
     spy.mockRestore()
   })
 

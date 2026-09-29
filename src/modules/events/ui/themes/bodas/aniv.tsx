@@ -18,7 +18,7 @@ export const anivDefinition: ThemeDefinition = {
     sinCampos: { hosts: ['names'], reception: ['time'], notes: ['title'] },
     maxAvisos: 1,
   },
-  sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'notes', 'closing'],
+  sections: ['hero', 'hosts', 'gallery', 'closing', 'quote', 'schedule', 'reception', 'map', 'music', 'notes'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./aniv.view').then((modulo) => modulo.AnivView)),
 }

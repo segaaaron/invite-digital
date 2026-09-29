@@ -30,7 +30,7 @@ export const bodaRoyalDefinition: ThemeDefinition = {
     },
     maxAvisos: 3,
   },
-  sections: ['hero', 'quote', 'schedule', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'notes', 'music', 'closing'],
+  sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-royal.view').then((modulo) => modulo.BodaRoyalView)),
 }

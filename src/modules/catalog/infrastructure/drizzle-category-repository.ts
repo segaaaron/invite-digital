@@ -4,6 +4,7 @@ import { eventCategories, eventCategoryTranslations } from '@/shared/db/schema'
 import type { Locale } from '@/shared/i18n/locales'
 import type { CategoryInput } from '../domain/category'
 import type { CategoryRepository } from '../application/ports'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export const createDrizzleCategoryRepository = (database: DbExecutor): CategoryRepository => ({
   // Mismo trato que las plantillas: la traducción se une con LEFT JOIN y una categoría
@@ -25,7 +26,7 @@ export const createDrizzleCategoryRepository = (database: DbExecutor): CategoryR
 
     const missing = rows.filter((row) => row.name === null).map((row) => row.slug)
     if (missing.length > 0) {
-      console.error(
+      registrarFallo('catalog/drizzle-category-repository', 
         `Traducción faltante en "${locale}" para las categorías: ${missing.join(', ')}. No se muestran en ese idioma.`,
       )
     }

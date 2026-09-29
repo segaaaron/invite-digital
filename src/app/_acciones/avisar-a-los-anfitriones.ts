@@ -1,43 +1,20 @@
 import { after } from 'next/server'
-import { avisos, events, notifications } from '@/app/composition/container'
+import { avisos } from '@/app/composition/container'
 import { avisoDeMensaje, avisoDeRespuesta } from '@/modules/notifications'
-import { isErr } from '@/shared/result'
 
 /**
- * Avisa a quienes llevan el evento que un invitado respondió: en la campana y en sus aparatos (push)
- * siempre, y por correo a cada anfitrión si lo tienen encendido.
+ * Avisa a quienes llevan el evento que un invitado respondió: en la campana y en sus aparatos (push).
  *
- * Con `after`, **cuando la respuesta ya salió**: el invitado no espera al correo y, si Resend
- * falla, su confirmación no se entera. Nunca lanza. Los anfitriones son quienes tienen acceso
- * de cliente al evento; sin ninguno, no hay a quién avisar.
+ * **Sin correo** (28 de septiembre, pedido del usuario): el correo queda para las cuentas —altas,
+ * accesos del equipo, códigos y contraseñas—; lo del día a día llega por la campana y la push.
+ * Con `after`, cuando la respuesta ya salió. Nunca lanza.
  */
 export function avisarALosAnfitriones(respuesta: { eventId: string; invitado: string; asistentes: number; mensaje: string | null }): void {
   after(async () => {
-    // La campana y la push, siempre: el interruptor del evento es solo del correo.
     await avisos.delEvento(respuesta.eventId, (ev) => avisoDeRespuesta({ ...ev, invitado: respuesta.invitado, lugares: respuesta.asistentes }))
     if (respuesta.mensaje !== null && respuesta.mensaje.trim() !== '') {
       const texto = respuesta.mensaje
       await avisos.delEvento(respuesta.eventId, (ev) => avisoDeMensaje({ ...ev, invitado: respuesta.invitado, texto }))
-    }
-    try {
-      if (!(await events.avisoDeRespuestas(respuesta.eventId))) return
-      const evento = await events.getByIdUnscoped(respuesta.eventId)
-      if (isErr(evento)) return
-      const anfitriones = await events.staff.listWithEmail(respuesta.eventId, 'cliente')
-      await Promise.all(
-        anfitriones.map((anfitrion) =>
-          notifications.sendRsvpToHost({
-            to: anfitrion.email,
-            invitado: respuesta.invitado,
-            asistentes: respuesta.asistentes,
-            mensaje: respuesta.mensaje,
-            evento: evento.value.title,
-            ruta: `/panel/eventos/${evento.value.slug}/invitados`,
-          }),
-        ),
-      )
-    } catch (causa) {
-      console.error('no se pudo avisar a los anfitriones:', causa)
     }
   })
 }

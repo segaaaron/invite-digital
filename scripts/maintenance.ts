@@ -5,6 +5,7 @@
  *   DATABASE_URL=… SITE_URL=… pnpm maintenance
  */
 import { avisarLoQueVence, enviarAcompanamiento, events, leads } from '@/app/composition/container'
+import { borrarFallosViejos } from '@/shared/observability/lectura'
 import { isErr } from '@/shared/result'
 
 async function runMaintenance(): Promise<number> {
@@ -46,6 +47,14 @@ async function runMaintenance(): Promise<number> {
     console.log(`Avisos de agenda: ${await avisarLoQueVence(new Date())}`)
   } catch (causa) {
     console.error('Avisos de agenda fallidos —', causa)
+    return 1
+  }
+
+  // El registro de fallos guarda 30 días.
+  try {
+    console.log(`Registro de fallos: ${await borrarFallosViejos(new Date())} borrado(s)`)
+  } catch (causa) {
+    console.error('Limpieza del registro de fallos fallida —', causa)
     return 1
   }
   return 0

@@ -77,6 +77,7 @@ export default async function EventoLayout({
 
   return (
     <PanelFrame
+      conAcciones={campana !== null && !isAdmin(actor)}
       brandSub={isAdmin(actor) ? 'FICHA DEL EVENTO · ADMIN' : 'PANEL'}
       sections={panelNav(event.value.slug, {
         invitados: personas,

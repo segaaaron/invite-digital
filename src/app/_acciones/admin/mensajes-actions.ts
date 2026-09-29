@@ -6,6 +6,7 @@ import { requireAdmin } from '@/app/_acciones/sesion'
 import { MENSAJES } from '@/modules/admin/domain/mensajes'
 import { campo } from '@/shared/forms/campo'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type MensajesState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
 
@@ -18,7 +19,7 @@ export async function guardarMensajesAction(_previo: MensajesState, formData: Fo
     descuentoReferido: Number(campo(formData, 'descuento')),
   })
   if (isErr(guardado)) {
-    console.error('guardarMensajesAction', guardado.error.detail)
+    registrarFallo('admin/mensajes-actions', 'guardarMensajesAction', guardado.error.detail)
     return { status: 'error', message: 'No pudimos guardar. Vuelve a intentarlo en un momento.' }
   }
   for (const ruta of ['/panel/admin/mensajes', '/panel/admin/ventas', '/panel/admin/eventos/calendario']) revalidatePath(ruta)

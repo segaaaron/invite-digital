@@ -10,6 +10,7 @@ import { createRateLimiter } from '@/shared/http/rate-limit'
 import { guardedRespond, type RsvpOutcome } from '@/modules/rsvp/application/guarded-respond'
 import { campo } from '@/shared/forms/campo'
 import { avisarALosAnfitriones } from '@/app/_acciones/avisar-a-los-anfitriones'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type RsvpActionState = RsvpOutcome | { status: 'idle' }
 
@@ -19,7 +20,7 @@ const respond = guardedRespond({
   limiter: createRateLimiter({ windowMs: 60_000, max: 10 }),
   respond: (input) => rsvp.respond(input),
   clock: () => Date.now(),
-  log: (message, kind, detail) => console.error(message, kind, detail),
+  log: (message, kind, detail) => registrarFallo('rsvp/actions', message, kind, detail),
 })
 
 /** Mismo cupo que la respuesta de siempre: diez por minuto y por IP. */
@@ -83,7 +84,7 @@ export async function respondByPersonAction(_previous: RsvpActionState, formData
 
   if (isErr(resultado)) {
     // El detalle puede llevar identificadores: se queda en el registro del servidor.
-    console.error('confirmación por persona rechazada', resultado.error.kind, resultado.error.detail)
+    registrarFallo('rsvp/actions', 'confirmación por persona rechazada', resultado.error.kind, resultado.error.detail)
     return { status: 'error', message: resultado.error.kind }
   }
 

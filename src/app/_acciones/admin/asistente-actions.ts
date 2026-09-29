@@ -5,6 +5,7 @@ import { admin, asistente } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { validarConfig } from '@/modules/asistente'
 import { campo } from '@/shared/forms/campo'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type AsistenteState = { status: 'idle' } | { status: 'success'; message: string } | { status: 'error'; message: string }
 
@@ -20,7 +21,7 @@ export async function guardarAsistenteAction(_previo: AsistenteState, formData: 
   try {
     await asistente.guardarConfig(config)
   } catch (causa) {
-    console.error('guardarAsistenteAction', causa)
+    registrarFallo('admin/asistente-actions', 'guardarAsistenteAction', causa)
     return { status: 'error', message: 'No pudimos guardar. Vuelve a intentarlo en un momento.' }
   }
   await admin.record(actor, { action: 'asistente.ajustes', subject: 'asistente', detail: `${config.planes.join(', ') || 'ningún plan'} · ${config.mensajesPorMes} mensajes · ${config.presupuestoUsd} USD` })

@@ -53,7 +53,7 @@ describe('voidArrivalAction', () => {
     const { voidArrivalAction } = await import('@/app/_acciones/checkin/actions')
 
     expect(await voidArrivalAction(entrada)).toEqual({ status: 'error', kind: 'not_found' })
-    expect(spy).toHaveBeenCalledWith('deshacer rechazado', 'not_found', 'No existe el escaneo s1.')
+    expect(spy).toHaveBeenCalledWith('[checkin/actions]', 'deshacer rechazado', 'not_found', 'No existe el escaneo s1.')
     spy.mockRestore()
   })
 })

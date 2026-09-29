@@ -85,18 +85,6 @@ const BLOQUES_DE_FIESTA: Partial<Record<Fiesta, Partial<Record<SectionKey, { tit
 /** El nombre y la descripción de un bloque en esta fiesta. */
 const bloqueDe = (section: SectionKey, fiesta: Fiesta) => ({ ...BLOQUES[section], ...BLOQUES_DE_FIESTA[fiesta]?.[section] })
 
-/**
- * El orden en que se rellena una invitación, por pasos. Primero lo que se ve —portada y
- * fotos—, después cuándo y dónde, la familia, los detalles y la música.
- */
-const PASOS: ReadonlyArray<{ titulo: string; secciones: readonly SectionKey[] }> = [
-  { titulo: 'Portada y fotos', secciones: ['hero', 'gallery'] },
-  { titulo: 'Fecha y lugar', secciones: ['schedule', 'ceremony', 'reception', 'map'] },
-  { titulo: 'Familia y palabras', secciones: ['hosts', 'quote', 'closing'] },
-  { titulo: 'Detalles de la fiesta', secciones: ['itinerary', 'dressCode', 'notes'] },
-  { titulo: 'Música', secciones: ['music'] },
-]
-
 /** El icono que acompaña a un campo, cuando ayuda a saber qué se escribe ahí. */
 const ICONO_DE_CAMPO: Record<string, Icono> = {
   nameA: PersonIcon,
@@ -116,6 +104,23 @@ const ERRORES: Record<string, string> = {
   unknown_section: 'Esa sección no existe en este diseño.',
   invalid_payload: 'No se pudo leer lo que enviaste. Vuelve a intentarlo.',
   storage_failure: 'No se pudo guardar. La base no respondió.',
+}
+
+/**
+ * El motivo de no guardar, **con el campo por su nombre** («Lugar», «Ubicación en Google Maps»): antes
+ * lo que no cabía se recortaba en silencio. `campo` es la ruta (`href`, `rows.2.title`); de la última
+ * parte sale el rótulo del formulario, y el número de fila si lo hay.
+ */
+function errorDeGuardado(state: { message: string; campo?: string; maximo?: number }, forma: { fields: readonly { key: string; label: string }[] }, formaAnexo?: { fields: readonly { key: string; label: string }[] }): string {
+  if (state.message !== 'texto_largo' && state.message !== 'valor_invalido') return ERRORES[state.message] ?? ERRORES.storage_failure!
+  const partes = (state.campo ?? '').split('.')
+  const clave = partes[partes.length - 1] ?? ''
+  const fila = partes.find((p) => /^\d+$/.test(p))
+  const rotulo = [...forma.fields, ...(formaAnexo?.fields ?? [])].find((f) => f.key === clave)?.label ?? 'Un campo'
+  const donde = fila === undefined ? `«${rotulo}»` : `«${rotulo}» de la fila ${Number(fila) + 1}`
+  return state.message === 'texto_largo'
+    ? `${donde} es demasiado largo: acórtalo a ${state.maximo ?? ''} caracteres. No se guardó nada.`
+    : `${donde} no es válido${clave === 'href' ? ': pega el enlace de Google Maps o escribe la dirección' : ''}. No se guardó nada.`
 }
 
 type Props = {
@@ -248,7 +253,7 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
 }
 
 /**
- * Las secciones como tarjetas que se abren de una en una.
+ * Las secciones como tarjetas que se abren de una en una, numeradas en el orden de la invitación.
  *
  * Doce formularios abiertos uno debajo de otro, con un índice de puntos al lado, no decían
  * por dónde empezar ni qué faltaba. Aquí cada tarjeta plegada dice qué tiene escrito y si
@@ -256,72 +261,61 @@ const resumen = (content: InvitationContent, seccion: SectionKey, forma: FormaBl
  * había. Lo escrito en una tarjeta plegada no se pierde: sigue montada, oculta.
  */
 function Acordeon({ sections: todas, content, ejemplo, hechos, ...resto }: Props & { hechos: number }) {
-  const sections = visibles(todas)
-  const pasos = PASOS.map((paso) => ({ ...paso, secciones: paso.secciones.filter((s) => sections.includes(s)) })).filter((paso) => paso.secciones.length > 0)
-  // Lo que un diseño pinte y no esté en ningún paso no se pierde: va al último.
-  const sueltas = sections.filter((s) => !PASOS.some((paso) => paso.secciones.includes(s)))
-  if (sueltas.length > 0) pasos.push({ titulo: 'Más', secciones: sueltas })
-  const enOrden = pasos.flatMap((paso) => paso.secciones)
+  // **En el orden de la invitación, de arriba abajo** (28 de septiembre): el diseño declara sus
+  // secciones como las pinta —lo vigila `editor-fiel.test`—, así que cada tarjeta que se abre lleva
+  // la vista previa un poco más abajo, nunca de vuelta arriba. Antes iban por pasos fijos («portada y
+  // fotos», «fecha y lugar»…) y la vista previa saltaba de la galería del final a la portada.
+  const enOrden = visibles(todas)
 
   const [abierta, setAbierta] = useState<SectionKey | null>(() => enOrden.find((seccion) => !escrito(content, seccion)) ?? enOrden[0] ?? null)
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2">
-        <p className="text-[13px] text-ink">{`${hechos} de ${sections.length} secciones listas`}</p>
+        <p className="text-[13px] text-ink">{`${hechos} de ${enOrden.length} secciones listas`}</p>
         <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-bg-top">
-          <div className="h-full rounded-full bg-sage transition-[width]" style={{ width: `${(hechos / Math.max(1, sections.length)) * 100}%` }} />
+          <div className="h-full rounded-full bg-sage transition-[width]" style={{ width: `${(hechos / Math.max(1, enOrden.length)) * 100}%` }} />
         </div>
+        <p className="text-[12px] text-ink-mute">En el orden en que se ve tu invitación, de arriba abajo.</p>
       </div>
 
-      {pasos.map((paso, i) => {
-        const listas = paso.secciones.filter((s) => escrito(content, s)).length
-        const completo = listas === paso.secciones.length
-        const tituloId = `paso-${i + 1}`
-        return (
-          <section aria-labelledby={tituloId} className="flex flex-col gap-3" key={paso.titulo}>
-            <h2 className="m-0 flex items-center gap-3 pt-2" id={tituloId}>
-              <span
-                aria-hidden
-                className={`grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-medium ${completo ? 'bg-sage text-white' : 'bg-ink text-white'}`}
-              >
-                {completo ? <CheckIcon className="size-3.5" /> : i + 1}
-              </span>
-              <span className="sr-only">{`${i + 1}. `}</span>
-              <span className="font-display text-[20px] leading-tight text-ink">{paso.titulo}</span>
-              <span className="ml-auto text-[12px] font-normal text-ink-mute">{`${listas} de ${paso.secciones.length} listas`}</span>
-            </h2>
-            <div className="flex flex-col gap-3 border-l border-line-panel pl-3 min-[560px]:ml-3.5 min-[560px]:pl-6">
-              {paso.secciones.map((seccion) => (
-                <BloqueDeContenido
-                  {...resto}
-                  anexo={anexoDe(todas, seccion)}
-                  abierta={abierta === seccion}
-                  content={content}
-                  ejemplo={ejemplo}
-                  key={seccion}
-                  onAlternar={() => {
-                    const abre = abierta !== seccion
-                    setAbierta(abre ? seccion : null)
-                    // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
-                    if (abre) {
-                      // Con el bloque escrito se busca su texto; vacío, el del ejemplo, que
-                      // es justo lo que la vista previa está pintando. Con el texto escrito
-                      // en un bloque vacío no se encontraba nada y la invitación no se movía.
-                      const aviso: AvisoDeSeccion = {
-                        seccion,
-                        textos: textosDeSeccion(escrito(content, seccion) ? content : ejemplo, seccion),
-                      }
-                      window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
+      <ol className="m-0 flex list-none flex-col gap-3 p-0">
+        {enOrden.map((seccion, i) => (
+          <li className="flex items-start gap-3" key={seccion}>
+            <span
+              aria-hidden
+              className={`mt-5 grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-medium max-[419px]:hidden ${escrito(content, seccion) ? 'bg-sage text-white' : 'bg-ink text-white'}`}
+            >
+              {escrito(content, seccion) ? <CheckIcon className="size-3.5" /> : i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <BloqueDeContenido
+                {...resto}
+                anexo={anexoDe(todas, seccion)}
+                abierta={abierta === seccion}
+                content={content}
+                ejemplo={ejemplo}
+                onAlternar={() => {
+                  const abre = abierta !== seccion
+                  setAbierta(abre ? seccion : null)
+                  // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
+                  if (abre) {
+                    // Con el bloque escrito se busca su texto; vacío, el del ejemplo, que
+                    // es justo lo que la vista previa está pintando. Con el texto escrito
+                    // en un bloque vacío no se encontraba nada y la invitación no se movía.
+                    const aviso: AvisoDeSeccion = {
+                      seccion,
+                      textos: textosDeSeccion(escrito(content, seccion) ? content : ejemplo, seccion),
                     }
-                  }}
-                  section={seccion}
-                />
-              ))}
+                    window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
+                  }
+                }}
+                section={seccion}
+              />
             </div>
-          </section>
-        )
-      })}
+          </li>
+        ))}
+      </ol>
     </div>
   )
 }
@@ -390,7 +384,7 @@ function BloqueDeContenido({
     if (anexo !== undefined && formaAnexo !== undefined) setEstadoAnexo(estadoInicial(formaAnexo, content[anexo]))
   }
 
-  const error = state.status === 'error' ? (ERRORES[state.message] ?? ERRORES.storage_failure) : null
+  const error = state.status === 'error' ? errorDeGuardado(state, forma, formaAnexo) : null
 
   // Lo que el diseño trae escrito en este bloque: es el ejemplo de cada campo.
   const muestra: Record<string, string> = (() => {
@@ -681,10 +675,19 @@ function SelectorDeIcono({ id, rotulo, valor, onChange }: { id: string; rotulo: 
  * que verán los invitados. Una dirección escrita se guarda como búsqueda de Google Maps; un
  * enlace corto de «Compartir» (`maps.app.goo.gl`) lo resuelve el servidor al guardar.
  */
+/**
+ * La ubicación: un enlace de Google Maps o una dirección escrita.
+ *
+ * **Lo escrito pasa al formulario en cada tecla** y el mapa de muestra se refresca al salir del campo,
+ * **en un hueco ya reservado**. Antes el valor se pasaba solo al salir del campo: al pulsar «Guardar» el
+ * formulario se enviaba con la ubicación vieja y, en el mismo clic, aparecía el mapa (200 px) entre el
+ * campo y el botón, que saltaba hacia abajo; el clic caía en el vacío y no se guardaba nada.
+ */
 function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valor: string; onChange: (v: string) => void; describedBy?: string | undefined }) {
   const [escrito, setEscrito] = useState(valor)
-  const mapa = mapaIncrustado({ href: valor })
-  const corto = /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl)\//i.test(valor)
+  const [vista, setVista] = useState(valor)
+  const mapa = mapaIncrustado({ href: vista })
+  const corto = /^https?:\/\/(maps\.app\.goo\.gl|goo\.gl)\//i.test(vista)
   return (
     <div className="flex flex-col gap-2">
       <div className="relative">
@@ -693,18 +696,26 @@ function CampoUbicacion({ id, valor, onChange, describedBy }: { id: string; valo
           aria-describedby={describedBy}
           className={`${FIELD_CLASS} pl-10`}
           id={id}
-          onBlur={() => onChange(enlaceDeUbicacion(escrito))}
-          onChange={(e) => setEscrito(e.target.value)}
+          onBlur={() => setVista(enlaceDeUbicacion(escrito))}
+          onChange={(e) => {
+            setEscrito(e.target.value)
+            onChange(enlaceDeUbicacion(e.target.value))
+          }}
           placeholder="https://maps.app.goo.gl/… o Av. Arce 2020, La Paz"
           type="text"
           value={escrito}
         />
       </div>
-      {mapa !== null ? (
-        <iframe className="h-[200px] w-full rounded-[12px] border border-line-panel" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={mapa} title="Vista del mapa" />
-      ) : corto ? (
-        <p className="text-[12px] text-ink-soft">Al guardar buscamos el lugar de ese enlace y aparece el mapa.</p>
-      ) : null}
+      {/* Siempre del mismo alto: que aparezca el mapa no mueve el botón de guardar. */}
+      <div className="grid h-[200px] w-full place-items-center overflow-hidden rounded-[12px] border border-line-panel bg-bg-top">
+        {mapa !== null ? (
+          <iframe className="size-full" loading="lazy" referrerPolicy="no-referrer-when-downgrade" src={mapa} title="Vista del mapa" />
+        ) : (
+          <p className="px-6 text-center text-[12px] text-ink-mute">
+            {corto ? 'Al guardar buscamos el lugar de ese enlace y aparece el mapa.' : 'Aquí verás el mapa de la ubicación.'}
+          </p>
+        )}
+      </div>
     </div>
   )
 }

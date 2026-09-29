@@ -59,7 +59,7 @@ test.describe('el panel del cliente', () => {
   test('y el recuento de su lista', async () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
-    await expect(page.getByText('1 invitados en total')).toBeVisible()
+    await expect(page.getByText('1 invitado en total')).toBeVisible()
   })
 
   test('abre su planner y suma una tarea propia', async () => {

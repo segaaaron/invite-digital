@@ -1,6 +1,7 @@
 import webpush, { WebPushError } from 'web-push'
 import type { CargaPush } from '../domain/avisos'
 import type { AparatoPush, EmisorPush } from '../application/avisos'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * Entrega las notificaciones push web con `web-push`, que firma con VAPID y cifra el contenido
@@ -31,7 +32,7 @@ export function createWebPushSender(config: { publicKey: string | undefined; pri
       } catch (causa) {
         // 404 y 410: el aparato se dio de baja o caducó. Hay que olvidarlo, o cada aviso lo reintenta.
         if (causa instanceof WebPushError && (causa.statusCode === 404 || causa.statusCode === 410)) return 'caducada'
-        console.error('push no entregada a %s:', new URL(aparato.endpoint).host, causa instanceof WebPushError ? causa.statusCode : causa)
+        registrarFallo('notifications/web-push-sender', 'push no entregada a %s:', new URL(aparato.endpoint).host, causa instanceof WebPushError ? causa.statusCode : causa)
         return 'error'
       }
     },

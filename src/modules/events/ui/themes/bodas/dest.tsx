@@ -12,7 +12,7 @@ export const destDefinition: ThemeDefinition = {
   fonts: ['cormorant', 'jetbrainsMono', 'spaceGrotesk'],
   rsvp: 'botones',
   pinta: { fotos: { casillas: 6 }, sinCampos: { reception: ['time'], dressCode: ['note'], itinerary: ['note', 'imageId'] } },
-  sections: ['hero', 'quote', 'schedule', 'reception', 'itinerary', 'dressCode', 'gallery', 'music', 'closing'],
+  sections: ['hero', 'gallery', 'itinerary', 'reception', 'quote', 'schedule', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./dest.view').then((modulo) => modulo.DestView)),
 }

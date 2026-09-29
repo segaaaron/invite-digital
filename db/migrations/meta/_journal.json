@@ -526,6 +526,13 @@
       "when": 1791700000000,
       "tag": "0075_asistente",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1791800000000,
+      "tag": "0076_registro_de_fallos",
+      "breakpoints": true
     }
   ]
 }

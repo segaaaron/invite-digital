@@ -12,6 +12,7 @@ import { parseRole } from '@/modules/identity/domain/access'
 import { describirDispositivo } from '@/modules/identity/domain/dispositivo'
 import { SESSION_COOKIE, requireSession, sessionCookieOptions } from '@/app/_acciones/sesion'
 import { campo } from '@/shared/forms/campo'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type SignInActionState = {
   status: 'idle' | 'error'
@@ -28,7 +29,7 @@ const attemptSignIn = (device: string) =>
     accountLimiter: limiteCuenta,
     signIn: (input) => identity.signIn({ ...input, device }),
     clock: () => Date.now(),
-    log: (message, kind, detail) => console.error(message, kind, detail),
+    log: (message, kind, detail) => registrarFallo('identity/actions', message, kind, detail),
   })
 
 export async function signInAction(_previous: SignInActionState, formData: FormData): Promise<SignInActionState> {
@@ -116,7 +117,7 @@ export async function changePasswordAction(
   })
 
   if (isErr(result)) {
-    console.error('cambio de contraseña rechazado', result.error.kind, result.error.detail)
+    registrarFallo('identity/actions', 'cambio de contraseña rechazado', result.error.kind, result.error.detail)
     return {
       status: 'error',
       message:
@@ -171,7 +172,7 @@ export async function requestPasswordResetAction(_previo: ResetState, formData: 
   const emitido = await identity.requestPasswordReset(email)
 
   if (isErr(emitido)) {
-    console.error('no se pudo emitir el código', emitido.error.kind, emitido.error.detail)
+    registrarFallo('identity/actions', 'no se pudo emitir el código', emitido.error.kind, emitido.error.detail)
     return { status: 'error', message: 'No pudimos enviarte el código. Inténtalo en un momento.' }
   }
 
@@ -196,7 +197,7 @@ export async function confirmPasswordResetAction(_previo: ResetState, formData: 
   })
 
   if (isErr(result)) {
-    console.error('recuperación rechazada', result.error.kind, result.error.detail)
+    registrarFallo('identity/actions', 'recuperación rechazada', result.error.kind, result.error.detail)
     return {
       status: 'error',
       message:
@@ -226,7 +227,7 @@ export async function requestAccountCodeAction(): Promise<CodigoDeCuentaState> {
   }
   const emitido = await identity.requestAccountCode(actor.userId)
   if (isErr(emitido)) {
-    console.error('no se pudo emitir el código de cuenta', emitido.error.kind, emitido.error.detail)
+    registrarFallo('identity/actions', 'no se pudo emitir el código de cuenta', emitido.error.kind, emitido.error.detail)
     return { status: 'error', message: 'No pudimos enviarte el código. Inténtalo en un momento.' }
   }
   const enviado = await notifications.sendPasswordCode({ to: actor.email, code: emitido.value })

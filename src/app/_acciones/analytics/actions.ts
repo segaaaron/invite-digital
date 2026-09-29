@@ -4,6 +4,7 @@ import { headers } from 'next/headers'
 import { analytics, guests } from '@/app/composition/container'
 import { classifyDevice, classifySource } from '@/modules/analytics/domain/view'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * Registra una visita a una invitación.
@@ -45,6 +46,6 @@ export async function recordInvitationViewAction(input: {
       viewedAt: new Date(),
     })
   } catch (cause) {
-    console.error('no se pudo registrar la visita', cause)
+    registrarFallo('analytics/actions', 'no se pudo registrar la visita', cause)
   }
 }

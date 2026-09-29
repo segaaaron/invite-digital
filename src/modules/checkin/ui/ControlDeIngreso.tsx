@@ -199,7 +199,9 @@ export function ControlDeIngreso({
   const encontrada = porCodigo === null ? [] : vistas.filter((f) => f.invitacionId === porCodigo.invitacionId)
 
   return (
-    <div className="grid items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1fr)_340px]">
+    // `minmax(0,1fr)` también en el celular: sin columnas declaradas la rejilla crecía con el campo del
+    // código y la tarjeta se salía por la derecha («Buscar» y «Sin pase» cortados).
+    <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1fr)_340px]">
       <aside className="flex flex-col gap-4.5 max-[1099px]:contents min-[1100px]:sticky min-[1100px]:top-6 min-[1100px]:order-2">
         <section aria-label="Cómo va el ingreso" className="flex flex-col gap-5 rounded-[18px] border border-line-panel bg-white p-5 shadow-card max-[1099px]:order-2">
           <div className="flex items-center gap-5">
@@ -539,13 +541,15 @@ export function ControlDeIngreso({
                                 </span>
                               </span>
                             </span>
-                            <span
-                              className="min-w-0 truncate text-[13px] text-ink-soft max-[759px]:hidden"
-                              role="cell"
-                              title={familia ? undefined : [f.invitacion ?? f.nombre, f.mesa ?? 'Sin mesa'].join(' · ')}
-                            >
-                              {/* Si la invitación lleva el nombre de la persona, decirlo otra vez solo corta la mesa. */}
-                              {familia ? '' : f.invitacion && !f.invitacion.startsWith(f.nombre) ? `${f.invitacion} · ${f.mesa ?? 'Sin mesa'}` : (f.mesa ?? 'Sin mesa')}
+                            <span className="flex min-w-0 flex-col max-[759px]:hidden" role="cell" title={familia ? undefined : [f.invitacion ?? f.nombre, f.mesa ?? 'Sin mesa'].join(' · ')}>
+                              {/* Invitación y mesa en dos líneas: en una, la mesa quedaba cortada («Familia Vargas · Sin …»).
+                                  Si la invitación lleva el nombre de la persona, no se repite. */}
+                              {familia ? null : (
+                                <>
+                                  {f.invitacion && !f.invitacion.startsWith(f.nombre) ? <span className="truncate text-[13px] text-ink-soft">{f.invitacion}</span> : null}
+                                  <span className="truncate text-[12px] text-ink-mute">{f.mesa ?? 'Sin mesa'}</span>
+                                </>
+                              )}
                             </span>
                             <span className="text-[13px] text-ink-soft max-[759px]:hidden" role="cell">
                               {familia ? '' : '1 persona'}

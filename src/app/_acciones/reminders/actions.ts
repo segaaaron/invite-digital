@@ -5,6 +5,7 @@ import { reminders } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { ReminderKind } from '@/modules/reminders/domain/due'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type ReminderActionState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: string }
 
@@ -36,7 +37,7 @@ export async function markReminderSentAction(input: {
     // El detalle —que lleva identificadores— al registro del servidor; a la pantalla, lo
     // que el atelier puede hacer al respecto. Un fallo mudo dejaría la fila en la cola y
     // al atelier creyendo que ya la había atendido.
-    console.error('recordatorio no anotado', result.error.kind, result.error.detail)
+    registrarFallo('reminders/actions', 'recordatorio no anotado', result.error.kind, result.error.detail)
     return {
       status: 'error',
       message:

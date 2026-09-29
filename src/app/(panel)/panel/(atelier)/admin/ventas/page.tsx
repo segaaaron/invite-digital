@@ -35,6 +35,7 @@ import { formatAmount } from '@/shared/money'
 import { plural } from '@/shared/format/plural'
 import { isErr } from '@/shared/result'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export const metadata = { title: 'Ventas · Administración' }
 export const dynamic = 'force-dynamic'
@@ -71,7 +72,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
 
   const [cargadas, cobro, plantillas] = await Promise.all([cargarVentas(ahora), admin.payment(), admin.mensajes()])
   if (isErr(cargadas)) {
-    console.error('VentasPage', cargadas.error)
+    registrarFallo('panel/admin/ventas/page', 'VentasPage', cargadas.error)
     return (
       <>
         <PanelHeader kicker="Ventas" title="Embudo" />

@@ -40,13 +40,17 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
   const salon = isErr(await plans.requireFeature(event.value.id, 'seating')) ? null : await venue.seating(event.value.id)
   const mesas = salon === null || isErr(salon) || estadoPuerta === null ? null : mesasConFaltantes(salon.value.tables, new Set(estadoPuerta.arrivals.map((a) => a.guestGroupId)))
 
+  const proveedores = await planner.dia.listVendors(event.value.id)
   const dia = {
     hora,
     ahora: momentoAhora ? { title: momentoAhora.title, startsAt: momentoAhora.startsAt, cue: momentoAhora.cue, owner: momentoAhora.owner } : null,
     sigue: momentoSigue ? { title: momentoSigue.title, startsAt: momentoSigue.startsAt } : null,
     ingreso: `/panel/eventos/${event.value.slug}/checkin`,
     llegadas: estadoPuerta ? { grupos: estadoPuerta.tally.arrivedGroups, esperados: estadoPuerta.tally.expectedGroups, personas: estadoPuerta.tally.headsInside } : null,
-    porLlegar: proveedoresPorLlegar(await planner.dia.listVendors(event.value.id)).map((p) => ({ id: p.id, service: p.service, arrivalTime: p.arrivalTime, telHref: p.whatsapp ? `tel:${p.whatsapp}` : null })),
+    // Con trato (no los que cotizan): sin ninguno, «llegaron todos» era mentira.
+    conProveedores: proveedores.some((p) => p.status !== 'cotizando'),
+    conMesas: salon !== null && !isErr(salon) && salon.value.tables.length > 0,
+    porLlegar: proveedoresPorLlegar(proveedores).map((p) => ({ id: p.id, service: p.service, arrivalTime: p.arrivalTime, telHref: p.whatsapp ? `tel:${p.whatsapp}` : null })),
     pagos: pagosDelDia(await planner.listBudget(event.value.id), hoy).map((g) => ({ id: g.id, concepto: g.concepto, importe: formatAmount(g.amountCents, DEFAULT_CURRENCY) })),
     mesas,
   }

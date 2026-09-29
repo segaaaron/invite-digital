@@ -6,6 +6,7 @@ import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { guardedSubmit, type ConsultationOutcome } from '@/modules/leads/application/guarded-submit'
 import { createRateLimiter } from '@/shared/http/rate-limit'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ============================================================================
 // PÚBLICA: el formulario de contacto de la web, sin sesión y con límite de tasa por IP.
@@ -17,7 +18,7 @@ const submitGuarded = guardedSubmit({
   limiter: createRateLimiter({ windowMs: 60_000, max: 3 }),
   submit: (payload) => leads.submitConsultation(payload),
   clock: () => Date.now(),
-  log: (message, kind, detail) => console.error(message, kind, detail),
+  log: (message, kind, detail) => registrarFallo('leads/actions', message, kind, detail),
 })
 
 export async function submitConsultationAction(

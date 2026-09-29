@@ -339,8 +339,8 @@ describe('ContentBlockForms', () => {
     expect(valorEnviado(cancion)).toEqual({ track: 'At Last' })
   })
 
-  // Doce tarjetas seguidas no decían por dónde empezar, y la galería quedaba al fondo.
-  it('agrupa las secciones en pasos numerados, con las fotos en el primero', () => {
+  // En el orden de la invitación: abrir la siguiente lleva la vista previa más abajo, nunca arriba.
+  it('lista las secciones en el orden del diseño, numeradas, con el mapa dentro de la recepción', () => {
     render(
       <ContentBlockForms
         ejemplo={{}} pinta={TODO}
@@ -348,19 +348,12 @@ describe('ContentBlockForms', () => {
         eventId="e1"
         eventSlug="b"
         media={SIN_IMAGENES}
-        sections={['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'gallery', 'notes', 'closing']}
+        sections={['hero', 'gallery', 'quote', 'schedule', 'reception', 'map', 'music', 'closing']}
       />,
     )
-    const pasos = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
-    expect(pasos).toEqual([
-      expect.stringMatching(/^1.*Portada y fotos/),
-      expect.stringMatching(/^2.*Fecha y lugar/),
-      expect.stringMatching(/^3.*Familia y palabras/),
-      expect.stringMatching(/^4.*Detalles de la fiesta/),
-      expect.stringMatching(/^5.*Música/),
-    ])
-    const primero = screen.getByRole('region', { name: /Portada y fotos/ })
-    expect(within(primero).getByRole('button', { name: 'Galería' })).toBeInTheDocument()
+    const tarjetas = [...document.querySelectorAll('ol > li form')].map((f) => f.id)
+    expect(tarjetas).toEqual(['bloque-hero', 'bloque-gallery', 'bloque-quote', 'bloque-schedule', 'bloque-reception', 'bloque-music', 'bloque-closing'])
+    expect(screen.getByText('0 de 7 secciones listas')).toBeInTheDocument()
   })
 
   it('en la portada, las fotos van justo después de los nombres', () => {

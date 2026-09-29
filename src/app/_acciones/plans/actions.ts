@@ -6,6 +6,7 @@ import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { PlansErrorKind } from '@/modules/plans/domain/errors'
 import { campo } from '@/shared/forms/campo'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type PlanChangeState = { status: 'idle' } | { status: 'success'; planSlug: string } | { status: 'error'; kind: PlansErrorKind }
 
@@ -27,7 +28,7 @@ export async function requestPlanChangeAction(_previous: PlanChangeState, formDa
   })
 
   if (isErr(result)) {
-    console.error('solicitud de cambio de plan rechazada', result.error.kind, result.error.detail)
+    registrarFallo('plans/actions', 'solicitud de cambio de plan rechazada', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
   }
 
@@ -55,7 +56,7 @@ export async function applyPlanChangeAction(
   await requireEventAccess(actor, { eventSlug, section: 'ficha' })
   const result = await plans.applyChange(campo(formData, 'requestId'))
   if (isErr(result)) {
-    console.error('cambio de plan no aplicado', result.error.kind, result.error.detail)
+    registrarFallo('plans/actions', 'cambio de plan no aplicado', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
   }
 
@@ -74,7 +75,7 @@ export async function rejectPlanChangeAction(
   await requireEventAccess(actor, { eventSlug, section: 'ficha' })
   const result = await plans.rejectChange(campo(formData, 'requestId'))
   if (isErr(result)) {
-    console.error('solicitud no rechazada', result.error.kind, result.error.detail)
+    registrarFallo('plans/actions', 'solicitud no rechazada', result.error.kind, result.error.detail)
     return { status: 'error', kind: result.error.kind }
   }
 

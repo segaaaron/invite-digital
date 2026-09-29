@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type { AudioProcessor } from './audio'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /** Una canción entera se codifica en segundos; pasado esto, algo va mal. */
 const TIEMPO_MAXIMO_MS = 90_000
@@ -112,12 +113,12 @@ function ejecutar(programa: string, argumentos: string[], alSalir?: (trozo: stri
     const reloj = setTimeout(() => proceso.kill('SIGKILL'), TIEMPO_MAXIMO_MS)
     proceso.on('error', (causa) => {
       clearTimeout(reloj)
-      console.error(`${programa} no se pudo ejecutar:`, causa)
+      registrarFallo('shared/audio/ffmpeg-audio-processor', `${programa} no se pudo ejecutar:`, causa)
       resolve(false)
     })
     proceso.on('close', (codigo) => {
       clearTimeout(reloj)
-      if (codigo !== 0) console.error(`${programa} rechazó el archivo:`, errores.trim().slice(0, 500))
+      if (codigo !== 0) registrarFallo('shared/audio/ffmpeg-audio-processor', `${programa} rechazó el archivo:`, errores.trim().slice(0, 500))
       resolve(codigo === 0)
     })
   })

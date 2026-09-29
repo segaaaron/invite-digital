@@ -12,7 +12,7 @@ export const engDefinition: ThemeDefinition = {
   fonts: ['newsreader', 'jetbrainsMono', 'cormorant', 'cinzel'],
   rsvp: 'botones',
   pinta: { fotos: { casillas: 5 }, sinCampos: { hero: ['monogram', 'serial'], reception: ['time'] } },
-  sections: ['hero', 'hosts', 'quote', 'schedule', 'reception', 'map', 'music', 'gallery', 'closing'],
+  sections: ['hero', 'gallery', 'hosts', 'closing', 'quote', 'schedule', 'reception', 'map', 'music'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./eng.view').then((modulo) => modulo.EngView)),
 }

@@ -176,11 +176,14 @@ export function PanelSkeleton({ cards = 2 }: { cards?: number }) {
  * `role="alert"` para el fallo —interrumpe al lector de pantalla, que es lo que toca
  * cuando algo no se hizo— y `role="status"` para el acierto, que no debe interrumpir.
  */
-export function PanelAlert({ tone, children }: { tone: 'error' | 'ok'; children: ReactNode }) {
+export function PanelAlert({ tone, children }: { tone: 'error' | 'ok' | 'info'; children: ReactNode }) {
+  // `info`: algo pendiente que no es un fallo («aún no enciendes…»). En rojo parecía que algo se había roto.
   const piel =
     tone === 'error'
       ? 'border-danger/30 bg-danger/8 text-danger-deep'
-      : 'border-sage/35 bg-sage/10 text-sage-deep'
+      : tone === 'info'
+        ? 'border-gold/35 bg-gold/8 text-ink-soft'
+        : 'border-sage/35 bg-sage/10 text-sage-deep'
 
   return (
     <p
@@ -190,7 +193,7 @@ export function PanelAlert({ tone, children }: { tone: 'error' | 'ok'; children:
     >
       {/* El símbolo acompaña; quien no distingue el color lee la palabra igual. */}
       <span aria-hidden className="mt-px font-mono text-[11px]">
-        {tone === 'error' ? '!' : '✓'}
+        {tone === 'error' ? '!' : tone === 'info' ? 'i' : '✓'}
       </span>
       <span>{children}</span>
     </p>

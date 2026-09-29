@@ -25,6 +25,8 @@ export function MusicaFlotante({ audioSrc, track, artist }: { readonly audioSrc:
     <>
       <audio {...audioProps} src={audioSrc} />
       <div
+        // Flota: no ocupa un lugar en el orden de la invitación (lo mide `editor-fiel.test`).
+        data-flotante=""
         style={{
           position: 'sticky',
           top: 0,

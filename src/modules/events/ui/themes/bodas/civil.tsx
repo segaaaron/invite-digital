@@ -12,7 +12,7 @@ export const civilDefinition: ThemeDefinition = {
   fonts: ['spectral', 'jetbrainsMono', 'cormorant', 'cinzel'],
   rsvp: 'botones',
   pinta: { fotos: { casillas: 6 }, sinCampos: {} },
-  sections: ['hero', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'gallery', 'music', 'closing'],
+  sections: ['hero', 'gallery', 'ceremony', 'reception', 'map', 'hosts', 'schedule', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./civil.view').then((modulo) => modulo.CivilView)),
 }

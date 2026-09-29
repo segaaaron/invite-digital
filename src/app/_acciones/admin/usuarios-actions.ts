@@ -7,6 +7,7 @@ import { requireAdmin } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { refrescar, texto } from '@/app/_acciones/admin/admin-comun'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * Alta de usuario.
@@ -55,7 +56,7 @@ export async function setUserRoleAction(_previous: AdminActionState, formData: F
 
   const result = await admin.setRole(actor, { userId: texto(formData, 'userId'), role: parseRole(texto(formData, 'role')) })
   if (isErr(result)) {
-    console.error('cambio de rol rechazado', result.error.kind, result.error.detail)
+    registrarFallo('admin/usuarios-actions', 'cambio de rol rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 
@@ -68,7 +69,7 @@ export async function deleteUserAction(_previous: AdminActionState, formData: Fo
 
   const result = await admin.deleteUser(actor, texto(formData, 'userId'))
   if (isErr(result)) {
-    console.error('borrado de usuario rechazado', result.error.kind, result.error.detail)
+    registrarFallo('admin/usuarios-actions', 'borrado de usuario rechazado', result.error.kind, result.error.detail)
     return { status: 'error', message: result.error.detail }
   }
 

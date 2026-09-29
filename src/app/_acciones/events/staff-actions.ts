@@ -6,6 +6,7 @@ import { admin, events, notifications } from '@/app/composition/container'
 import { canManageStaff, createCredential } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type StaffActionState =
   | { status: 'idle' }
@@ -41,7 +42,7 @@ async function adminSobre(formData: FormData) {
   // El rol **antes** de tocar la base: a quien no puede gestionar accesos no se le confirma
   // siquiera si ese evento existe.
   if (!canManageStaff(actor)) {
-    console.error('alta de acceso denegada', actor.email, eventSlug)
+    registrarFallo('events/staff-actions', 'alta de acceso denegada', actor.email, eventSlug)
     return { error: 'Solo el administrador da de alta accesos.' as const }
   }
 
@@ -122,7 +123,7 @@ async function avisarPorCorreo(eventId: string, email: string, password: string 
 
     return await notifications.sendClientAccess({ to: email, password, eventTitle: evento.value.title })
   } catch (causa) {
-    console.error('no se pudo avisar por correo a %s:', email, causa)
+    registrarFallo('events/staff-actions', 'no se pudo avisar por correo a %s:', email, causa)
     return false
   }
 }

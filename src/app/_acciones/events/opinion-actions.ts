@@ -5,6 +5,7 @@ import { responderEncuesta } from '@/app/composition/container'
 import { campo } from '@/shared/forms/campo'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ============================================================================
 // PÚBLICA: la opinión del cliente tras su evento. Sin sesión: se autoriza con el enlace de su
@@ -29,7 +30,7 @@ export async function responderOpinionAction(_previo: OpinionState, formData: Fo
     await responderEncuesta(campo(formData, 'token'), { rating, comment: comentario === '' ? null : comentario, allowPublish: formData.get('publicar') === 'on' })
     return { status: 'success' }
   } catch (causa) {
-    console.error('responderOpinionAction', causa)
+    registrarFallo('events/opinion-actions', 'responderOpinionAction', causa)
     return { status: 'error', code: 'failed' }
   }
 }

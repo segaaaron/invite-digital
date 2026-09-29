@@ -5,6 +5,7 @@ import { registry } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { MAX_QR_BYTES } from '@/modules/registry/application/formas-use-cases'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export type FormasState =
   | { status: 'idle' }
@@ -49,7 +50,7 @@ export async function guardarFormasDeRegalarAction(_previo: FormasState, formDat
     qr,
   })
   if (isErr(guardado)) {
-    if (guardado.error.kind === 'storage_failure') console.error('formas de regalar:', guardado.error.detail)
+    if (guardado.error.kind === 'storage_failure') registrarFallo('registry/formas-actions', 'formas de regalar:', guardado.error.detail)
     return {
       status: 'error',
       message: guardado.error.kind === 'storage_failure' ? 'No pudimos guardar. Vuelve a intentarlo en un momento.' : guardado.error.detail,

@@ -14,6 +14,7 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { attempt, isOk } from '@/shared/result'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
  * La ruta de cada fiesta que la web vende. Una sola fuente para la página, el sitemap y la
@@ -42,7 +43,7 @@ export async function metadataDeFiesta(raw: string, fiesta: FiestaPublica): Prom
  */
 export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary) {
   const leidas = await webPublica.planesActivos().catch((cause: unknown) => {
-    console.error('Precios sin tabla comparativa:', cause)
+    registrarFallo('[locale]/fiesta-page', 'Precios sin tabla comparativa:', cause)
     return null
   })
   const filas = leidas === null || !leidas.ok ? [] : leidas.value
@@ -72,8 +73,8 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
     attempt(() => webPublica.planes(locale), fallo),
     attempt(() => webPublica.modelos(locale), fallo),
   ])
-  if (!isOk(planes)) console.error('Página de fiesta sin planes:', planes.error.detail)
-  if (!isOk(plantillas)) console.error('Página de fiesta sin modelos:', plantillas.error.detail)
+  if (!isOk(planes)) registrarFallo('[locale]/fiesta-page', 'Página de fiesta sin planes:', planes.error.detail)
+  if (!isOk(plantillas)) registrarFallo('[locale]/fiesta-page', 'Página de fiesta sin modelos:', plantillas.error.detail)
 
   return (
     <FiestaLanding

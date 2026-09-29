@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { boolean, index, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, char, index, integer, jsonb, pgTable, text, timestamp, uuid, varchar } from 'drizzle-orm/pg-core'
 import { events } from './eventos'
 import { bytea, citext } from './base'
 
@@ -188,4 +188,21 @@ export const pushSubscriptions = pgTable(
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
   },
   (t) => [index('push_subscriptions_usuario_idx').on(t.userId)],
+)
+
+/** El registro de fallos de los servicios (`0076`): qué falló, dónde y por qué. Se borra a los 30 días. */
+export const serviceFailures = pgTable(
+  'service_failures',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    service: varchar('service', { length: 160 }).notNull(),
+    message: text('message').notNull(),
+    detail: text('detail').notNull().default(''),
+    fingerprint: char('fingerprint', { length: 16 }).notNull(),
+    origin: varchar('origin', { length: 12 }).notNull().default('servidor'),
+    path: varchar('path', { length: 400 }),
+    action: varchar('action', { length: 120 }),
+  },
+  (t) => [index('service_failures_created_idx').on(t.createdAt), index('service_failures_fingerprint_idx').on(t.fingerprint, t.createdAt)],
 )

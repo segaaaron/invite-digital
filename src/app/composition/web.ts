@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { acompanamientoEmail, adminAlertEmail, graciasPorRecomendarEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, teamAccessEmail } from '@/modules/notifications'
+import { acompanamientoEmail, graciasPorRecomendarEmail, clientAccessEmail, passwordResetEmail, teamAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -15,6 +15,7 @@ import { anonymizeExpiredConsultations, countNewConsultations, listConsultations
 import { drizzleConsultationInbox } from '@/modules/leads/infrastructure/drizzle-consultation-inbox'
 import { lecturaCacheada, ETIQUETAS_WEB } from '@/shared/cache/lectura-cacheada'
 import { leerSitio } from './base'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export const catalog = {
   listPlans: listPlans({ plans: drizzlePlanRepository }),
@@ -60,7 +61,7 @@ const leerSitioCacheado = lecturaCacheada(() => leerSitio(), { clave: 'ajustes',
 export const site = {
   settings: cache(async () => {
     const leido = await leerSitioCacheado()
-    if (!leido.ok) console.error('«La web» no se pudo leer; se usan los valores por defecto:', leido.error.detail)
+    if (!leido.ok) registrarFallo('composition/web', '«La web» no se pudo leer; se usan los valores por defecto:', leido.error.detail)
     return leido.ok ? leido.value : DEFAULT_SITE_SETTINGS
   }),
 }
@@ -106,17 +107,5 @@ export const notifications = {
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
       }),
-    }),
-  /** Lo que le espera al admin. `ruta` es la del panel, sin dominio. Devuelve booleano y no lanza. */
-  sendAdminAlert: (input: { to: string; asunto: string; lineas: readonly string[]; ruta: string }) =>
-    emailSender.send({
-      to: input.to,
-      ...adminAlertEmail({ asunto: input.asunto, lineas: input.lineas, enlace: `${sitioPublicoUrl}${input.ruta}`, siteUrl: sitioPublicoUrl }),
-    }),
-  /** «Ana confirmó · 3 personas» a un anfitrión. `ruta` es la del panel. Devuelve booleano y no lanza. */
-  sendRsvpToHost: (input: { to: string; invitado: string; asistentes: number; mensaje: string | null; evento: string; ruta: string }) =>
-    emailSender.send({
-      to: input.to,
-      ...rsvpHostEmail({ ...input, enlace: `${sitioPublicoUrl}${input.ruta}`, siteUrl: sitioPublicoUrl }),
     }),
 } as const

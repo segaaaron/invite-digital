@@ -96,7 +96,7 @@ export default async function RegalosPage({
 
       <div className="mb-4.5">
         {muestra.length === 0 ? (
-          <PanelAlert tone="error">Tu invitación no muestra regalos todavía: enciende la lluvia de sobres o la transferencia aquí abajo.</PanelAlert>
+          <PanelAlert tone="info">Tu invitación no muestra regalos todavía: enciende la lluvia de sobres o la transferencia aquí abajo.</PanelAlert>
         ) : (
           <PanelAlert tone="ok">Tu invitación muestra: {muestra.join(', ')}.</PanelAlert>
         )}

@@ -7,6 +7,7 @@ import { isErr } from '@/shared/result'
 import { type Actor, type EventSection, isAdmin, parseRole } from '@/modules/identity/domain/access'
 import { actorDeSesion } from '@/modules/identity/domain/support'
 import { describirDispositivo } from '@/modules/identity/domain/dispositivo'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 export const SESSION_COOKIE = 'invite_session'
 
@@ -131,7 +132,7 @@ export async function requireEventAccess(
 ): Promise<string> {
   const eventId = await events.canTouch(actor, ref)
   if (eventId === null) {
-    console.error('acceso denegado a evento ajeno', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
+    registrarFallo('sesion', 'acceso denegado a evento ajeno', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
     throw new Error('Evento no encontrado')
   }
   return eventId

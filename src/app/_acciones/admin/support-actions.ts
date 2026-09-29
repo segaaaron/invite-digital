@@ -7,6 +7,7 @@ import type { Actor } from '@/modules/identity'
 import { requireAdmin, requireSession, SESSION_COOKIE } from '@/app/_acciones/sesion'
 import { campo } from '@/shared/forms/campo'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // ============================================================================
 // Modo soporte: el admin entra **como el cliente** a su evento, sin conocer su contraseña, y regresa
@@ -84,7 +85,7 @@ export async function resetClientAccessAction(_previo: SupportState, fd: FormDat
 
   const hecho = await identity.resetClientAccess(clientUserId)
   if (isErr(hecho)) {
-    console.error('restablecer acceso rechazado', hecho.error.kind, hecho.error.detail)
+    registrarFallo('admin/support-actions', 'restablecer acceso rechazado', hecho.error.kind, hecho.error.detail)
     return { status: 'error', message: 'No se pudo restablecer ese acceso.' }
   }
 
@@ -94,7 +95,7 @@ export async function resetClientAccessAction(_previo: SupportState, fd: FormDat
   try {
     avisado = await notifications.sendClientAccess({ to: hecho.value.email, password: hecho.value.password, eventTitle: evento.value.title })
   } catch (causa) {
-    console.error('no se pudo mandar el acceso restablecido a %s:', hecho.value.email, causa)
+    registrarFallo('admin/support-actions', 'no se pudo mandar el acceso restablecido a %s:', hecho.value.email, causa)
   }
 
   return avisado

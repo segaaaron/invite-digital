@@ -6,6 +6,7 @@ import { invalidarLaWeb } from '@/app/_acciones/admin/admin-comun'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { campo } from '@/shared/forms/campo'
 import { isErr } from '@/shared/result'
+import { registrarFallo } from '@/shared/observability/fallos'
 
 // Las acciones de la ficha de un cliente. Del admin: empiezan por `await requireAdmin()`.
 
@@ -23,7 +24,7 @@ export async function guardarNotaClienteAction(_previo: ClienteActionState, form
     tags: [...marcadas, ...nuevas],
   })
   if (isErr(guardada)) {
-    if (guardada.error.kind === 'storage_failure') console.error('guardarNotaClienteAction', guardada.error.detail)
+    if (guardada.error.kind === 'storage_failure') registrarFallo('admin/clientes-actions', 'guardarNotaClienteAction', guardada.error.detail)
     return { status: 'error', message: guardada.error.kind === 'storage_failure' ? 'No pudimos guardar la nota. Vuelve a intentarlo.' : guardada.error.detail }
   }
   revalidatePath('/panel/admin/clientes')
@@ -34,7 +35,7 @@ export async function guardarNotaClienteAction(_previo: ClienteActionState, form
 export async function generarReferidoAction(formData: FormData): Promise<void> {
   await requireAdmin()
   const creado = await admin.ensureReferralCode(campo(formData, 'eventId'))
-  if (isErr(creado)) console.error('generarReferidoAction', creado.error.detail)
+  if (isErr(creado)) registrarFallo('admin/clientes-actions', 'generarReferidoAction', creado.error.detail)
   revalidatePath('/panel/admin/clientes')
 }
 
@@ -54,7 +55,7 @@ export async function publicarOpinionAction(_previo: ClienteActionState, formDat
   }
   const publicada = await admin.publishTestimonial(actor, { autor: campo(formData, 'autor'), rol: campo(formData, 'rol'), cita: opinion.comment })
   if (isErr(publicada)) {
-    if (publicada.error.kind === 'storage_failure') console.error('publicarOpinionAction', publicada.error.detail)
+    if (publicada.error.kind === 'storage_failure') registrarFallo('admin/clientes-actions', 'publicarOpinionAction', publicada.error.detail)
     return {
       status: 'error',
       message:

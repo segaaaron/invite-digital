@@ -20,7 +20,7 @@ export const bodaCinDefinition: ThemeDefinition = {
     sinCampos: { itinerary: ['note'], ceremony: ['address'], reception: ['address'], notes: ['title'], map: ['label'] },
     maxAvisos: 4,
   },
-  sections: ['hero', 'quote', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'gallery', 'notes', 'closing'],
+  sections: ['hero', 'gallery', 'quote', 'notes', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-cin.view').then((modulo) => modulo.BodaCinView)),
 }
