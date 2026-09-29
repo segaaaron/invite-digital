@@ -122,11 +122,14 @@ export function PanelSidebar({
           <p className="text-[12px] leading-snug">
             Estás como <span className="break-all">{user.email}</span>
           </p>
-          <form action={leaveSupportAction}>
-            <button className="w-full rounded-lg bg-gold px-3 py-2 text-[12px] text-shell-deep transition-colors hover:bg-gold-light" type="submit">
-              Regresar al panel de admin
-            </button>
-          </form>
+          {/* Navega el navegador con el destino de la acción: con `redirect` se pintaba con el actor de antes. */}
+          <button
+            className="w-full rounded-lg bg-gold px-3 py-2 text-[12px] text-shell-deep transition-colors hover:bg-gold-light"
+            onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
+            type="button"
+          >
+            Regresar al panel de admin
+          </button>
         </div>
       ) : null}
 

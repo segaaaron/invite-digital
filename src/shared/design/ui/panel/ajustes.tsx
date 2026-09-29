@@ -31,11 +31,14 @@ export function SwitchRow({
   label,
   description,
   defaultChecked,
+  value,
 }: {
   name: string
   label: string
   description?: string
   defaultChecked: boolean
+  /** Varios interruptores con el mismo `name` (una lista): cada uno manda su valor. */
+  value?: string
 }) {
   return (
     <label className="flex cursor-pointer items-start justify-between gap-4 rounded-[12px] px-1 py-2.5 hover:bg-bg-top/60">
@@ -44,7 +47,7 @@ export function SwitchRow({
         {description ? <span className="text-[12px] leading-[1.5] text-ink-mute">{description}</span> : null}
       </span>
       <span className="relative mt-0.5 inline-flex h-6 w-11 shrink-0">
-        <input className="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0" defaultChecked={defaultChecked} name={name} role="switch" type="checkbox" />
+        <input className="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0" defaultChecked={defaultChecked} name={name} role="switch" type="checkbox" value={value} />
         <span
           aria-hidden
           className="h-6 w-11 rounded-full bg-line-panel-strong transition-colors peer-checked:bg-ink peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-gold"

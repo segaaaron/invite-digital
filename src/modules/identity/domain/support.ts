@@ -25,13 +25,4 @@ export function actorDeSesion(
 
 const sinMarca = (a: Actor): Actor => ({ userId: a.userId, email: a.email, role: a.role, mustChangePassword: a.mustChangePassword })
 
-export const MOTIVO_MIN = 10
-export const MOTIVO_MAX = 500
 
-/** El motivo de entrar como el cliente: se le manda al cliente y queda en la auditoría. */
-export function leerMotivo(raw: string): { ok: true; motivo: string } | { ok: false; mensaje: string } {
-  const motivo = raw.trim()
-  if (motivo.length < MOTIVO_MIN) return { ok: false, mensaje: 'Escribe el motivo: al menos 10 caracteres.' }
-  if (motivo.length > MOTIVO_MAX) return { ok: false, mensaje: 'El motivo pasa de 500 caracteres.' }
-  return { ok: true, motivo }
-}

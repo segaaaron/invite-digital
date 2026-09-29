@@ -88,6 +88,8 @@ services:
       # Las notificaciones push web. Opcionales: sin ellas la campana funciona y la push no sale.
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+      # Arturo, el asistente del panel. Sin clave, no aparece.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos

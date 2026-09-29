@@ -32,6 +32,7 @@ export const GRUPOS_DEL_ADMIN: readonly (readonly Pestana[])[] = [
     { href: '/panel/admin/usuarios', label: 'Equipo' },
     { href: '/panel/admin/pagos', label: 'Cobros' },
     { href: '/panel/admin/mensajes', label: 'Mensajes y agenda', corta: 'Mensajes' },
+    { href: '/panel/admin/asistente', label: 'Asistente' },
     { href: '/panel/admin/auditoria', label: 'Auditoría' },
   ],
 ]

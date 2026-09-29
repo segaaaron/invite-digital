@@ -19,6 +19,8 @@ export const FRASE_DE_AUDITORIA: Readonly<Record<string, string>> = {
   'boda.alta': 'Creó un evento para un cliente',
   'acceso.restablecido': 'Restableció el acceso de un cliente',
   'equipo.alta': 'Sumó a alguien al equipo de un evento',
+  'asistente.invitados': 'Añadió invitados con el asistente',
+  'asistente.ajustes': 'Cambió los ajustes del asistente',
   'equipo.baja': 'Quitó a alguien del equipo de un evento',
   'pagos.datos': 'Cambió los datos de cobro',
   'pagos.qr': 'Subió el QR de cobro',
@@ -50,7 +52,7 @@ export const fraseDeAuditoria = (accion: string): string => FRASE_DE_AUDITORIA[a
  */
 export const GRUPOS_DE_AUDITORIA = [
   { clave: 'cuentas', titulo: 'Cuentas y accesos', prefijos: ['usuario.', 'acceso.', 'equipo.'] },
-  { clave: 'eventos', titulo: 'Eventos', prefijos: ['evento.', 'boda.'] },
+  { clave: 'eventos', titulo: 'Eventos', prefijos: ['evento.', 'boda.', 'asistente.'] },
   { clave: 'ventas', titulo: 'Ventas y cobros', prefijos: ['pagos.', 'plan.', 'extra.', 'consulta.', 'pedido.', 'cliente.', 'mensajes.'] },
   { clave: 'web', titulo: 'La web y los modelos', prefijos: ['web.', 'modelo.', 'escaparate.'] },
   { clave: 'soporte', titulo: 'Modo soporte', prefijos: ['soporte.'] },

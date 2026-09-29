@@ -5,7 +5,6 @@ const open = vi.fn()
 const close = vi.fn()
 const record = vi.fn()
 const membershipsOf = vi.fn()
-const sendSupportAccess = vi.fn()
 const sendClientAccess = vi.fn()
 const resetClientAccess = vi.fn()
 const requireSession = vi.fn()
@@ -35,14 +34,13 @@ vi.mock('@/app/composition/container', () => ({
     staff: { membershipsOf: (...a: unknown[]) => membershipsOf(...a) },
   },
   admin: { record: (...a: unknown[]) => record(...a) },
-  notifications: { sendSupportAccess: (...a: unknown[]) => sendSupportAccess(...a), sendClientAccess: (...a: unknown[]) => sendClientAccess(...a) },
+  notifications: { sendClientAccess: (...a: unknown[]) => sendClientAccess(...a) },
 }))
 
-const form = (motivo: string): FormData => {
+const form = (): FormData => {
   const fd = new FormData()
   fd.set('eventId', 'e1')
   fd.set('clientUserId', 'c1')
-  fd.set('motivo', motivo)
   return fd
 }
 
@@ -50,30 +48,22 @@ beforeEach(() => {
   vi.clearAllMocks()
   membershipsOf.mockResolvedValue(['cliente'])
   open.mockResolvedValue('sp1')
-  sendSupportAccess.mockResolvedValue(true)
 })
 
 describe('enterAsClientAction', () => {
-  it('sin motivo suficiente no entra', async () => {
-    const { enterAsClientAction } = await import('@/app/_acciones/admin/support-actions')
-    expect((await enterAsClientAction({ status: 'idle' }, form('corto'))).status).toBe('error')
-    expect(open).not.toHaveBeenCalled()
-  })
-
-  it('solo como el anfitrión de ese evento: un id cualquiera del formulario no abre nada', async () => {
+  it('solo como el anfitrión de ese evento: un id cualquiera del navegador no abre nada', async () => {
     membershipsOf.mockResolvedValue(['puerta'])
     const { enterAsClientAction } = await import('@/app/_acciones/admin/support-actions')
-    expect((await enterAsClientAction({ status: 'idle' }, form('La lista no carga desde ayer'))).status).toBe('error')
+    expect((await enterAsClientAction({ eventId: 'e1', clientUserId: 'c1' })).status).toBe('error')
     expect(open).not.toHaveBeenCalled()
   })
 
-  it('con motivo y anfitrión: abre en su sesión, registra, avisa al cliente y entra a su boda', async () => {
+  it('sin motivo: abre en su sesión, lo deja en la auditoría y devuelve el evento (navega el navegador, no `redirect`)', async () => {
     const { enterAsClientAction } = await import('@/app/_acciones/admin/support-actions')
-    await expect(enterAsClientAction({ status: 'idle' }, form('La lista no carga desde ayer'))).rejects.toThrow('NEXT_REDIRECT')
-    expect(open).toHaveBeenCalledWith({ sessionId: 'ses1', adminUserId: 'a1', adminEmail: 'admin@x.bo', clientUserId: 'c1', eventId: 'e1', reason: 'La lista no carga desde ayer' })
-    expect(record).toHaveBeenCalledWith(expect.objectContaining({ userId: 'a1' }), expect.objectContaining({ action: 'soporte.entrada', subject: 'boda-ana' }))
-    expect(sendSupportAccess).toHaveBeenCalledWith(expect.objectContaining({ to: 'novios@x.bo', motivo: 'La lista no carga desde ayer' }))
-    expect(redirect).toHaveBeenCalledWith('/panel/eventos/boda-ana')
+    expect(await enterAsClientAction({ eventId: 'e1', clientUserId: 'c1' })).toEqual({ status: 'ok', href: '/panel/eventos/boda-ana' })
+    expect(open).toHaveBeenCalledWith(expect.objectContaining({ sessionId: 'ses1', adminUserId: 'a1', clientUserId: 'c1', eventId: 'e1' }))
+    expect(record).toHaveBeenCalledWith(expect.objectContaining({ userId: 'a1' }), { action: 'soporte.entrada', subject: 'boda-ana', detail: 'como novios@x.bo' })
+    expect(redirect).not.toHaveBeenCalled()
   })
 })
 
@@ -88,10 +78,9 @@ describe('leaveSupportAction', () => {
   it('en modo soporte, cierra, registra como el admin y vuelve a la cartera', async () => {
     requireSession.mockResolvedValue({ userId: 'c1', email: 'novios@x.bo', role: 'cliente', mustChangePassword: false, soporte: { id: 'sp1', adminUserId: 'a1', adminEmail: 'admin@x.bo' } })
     const { leaveSupportAction } = await import('@/app/_acciones/admin/support-actions')
-    await expect(leaveSupportAction()).rejects.toThrow('NEXT_REDIRECT')
+    expect(await leaveSupportAction()).toEqual({ status: 'ok', href: '/panel/admin/eventos' })
     expect(close).toHaveBeenCalledWith('ses1', expect.any(Date))
     expect(record).toHaveBeenCalledWith(expect.objectContaining({ userId: 'a1', role: 'admin' }), expect.objectContaining({ action: 'soporte.salida' }))
-    expect(redirect).toHaveBeenCalledWith('/panel/admin/eventos')
   })
 })
 
@@ -99,7 +88,7 @@ describe('resetClientAccessAction', () => {
   it('solo sobre el anfitrión de esa boda', async () => {
     membershipsOf.mockResolvedValue([])
     const { resetClientAccessAction } = await import('@/app/_acciones/admin/support-actions')
-    expect((await resetClientAccessAction({ status: 'idle' }, form(''))).status).toBe('error')
+    expect((await resetClientAccessAction({ status: 'idle' }, form())).status).toBe('error')
     expect(resetClientAccess).not.toHaveBeenCalled()
   })
 
@@ -107,13 +96,13 @@ describe('resetClientAccessAction', () => {
     resetClientAccess.mockResolvedValue(ok({ email: 'novios@x.bo', password: 'prov-123' }))
     sendClientAccess.mockResolvedValue(false)
     const { resetClientAccessAction } = await import('@/app/_acciones/admin/support-actions')
-    const r = await resetClientAccessAction({ status: 'idle' }, form(''))
+    const r = await resetClientAccessAction({ status: 'idle' }, form())
     expect(r).toEqual({ status: 'success', message: expect.any(String), password: 'prov-123' })
     expect(sendClientAccess).toHaveBeenCalledWith({ to: 'novios@x.bo', password: 'prov-123', eventTitle: 'Boda de Ana' })
     expect(record).toHaveBeenCalledWith(expect.objectContaining({ userId: 'a1' }), expect.objectContaining({ action: 'acceso.restablecido' }))
 
     sendClientAccess.mockResolvedValue(true)
-    const conCorreo = await resetClientAccessAction({ status: 'idle' }, form(''))
+    const conCorreo = await resetClientAccessAction({ status: 'idle' }, form())
     expect(conCorreo.status === 'success' && 'password' in conCorreo).toBe(false)
   })
 })

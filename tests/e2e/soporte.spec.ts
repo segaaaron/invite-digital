@@ -11,7 +11,7 @@ const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@local
  * El admin y los datos de una boda de cliente (decisión del usuario, 15 de septiembre).
  *
  * Sin modo soporte el admin solo ve la ficha —configuración administrativa, plan y vista
- * previa—: invitados, mensajes y el contenido son 404. Entra **como el cliente** con motivo,
+ * previa—: invitados, mensajes y el contenido son 404. Entra **como el cliente** de un clic,
  * lo que cambie queda firmado a su nombre, y «Regresar como admin» le devuelve a la cartera.
  *
  * **Sesión propia, no la de `auth.setup.ts`.** El modo soporte vive en la sesión: con la
@@ -57,18 +57,20 @@ test.describe('soporte como el cliente', () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/vista-previa`))?.status()).toBe(200)
   })
 
-  test('entra como el cliente con motivo, cambia algo firmado a su nombre y regresa', async () => {
+  test('entra como el cliente de un clic, cambia algo firmado a su nombre y regresa', async () => {
     await page.goto(`/panel/admin/eventos?q=${SLUG}`)
     const fila = page.getByRole('listitem').filter({ has: page.locator(`a[href="/panel/eventos/${SLUG}/configuracion"]`) }).first()
     // En el «⋯» de la fila: la fila entera abre la ficha, y lo demás va en su menú.
     await fila.locator('summary[aria-label^="Más acciones de"]').click()
+    // Un clic, sin motivo (28 de septiembre): la entrada queda en la auditoría.
     await fila.getByRole('button', { name: 'Entrar como el cliente' }).click()
-    const dialogo = page.getByRole('dialog', { name: 'Entrar como el cliente' })
-    await dialogo.getByLabel('Motivo (se le envía al cliente)').fill('La canción no suena en la invitación')
-    await dialogo.getByRole('button', { name: 'Entrar', exact: true }).click()
 
-    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}$`), { timeout: 30_000 })
+    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}(/configuracion)?$`), { timeout: 30_000 })
     await expect(page.getByRole('status').filter({ hasText: CLIENTE.email })).toBeVisible()
+    // Entra de verdad, a la primera: antes la URL era la buena y la página un 404 (el actor de la
+    // petición seguía siendo el admin), y solo al volver atrás se veía el panel del cliente.
+    await expect(page.getByRole('heading', { name: 'Esta página no está disponible' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
 
     // Ve lo que ve el cliente.
     expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(200)
@@ -91,6 +93,7 @@ test.describe('soporte como el cliente', () => {
     await expect(page.getByRole('button', { name: 'Regresar al panel de admin' })).toBeVisible()
     await page.getByRole('button', { name: 'Regresar como admin' }).click()
     await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
+    await expect(page.getByRole('heading', { name: 'Esta página no está disponible' })).toHaveCount(0)
     expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
 
     const [entrada] = await sql<{ n: number }[]>`select count(*)::int as n from audit_log where action in ('soporte.entrada', 'soporte.salida') and actor_email = ${ADMIN.email} and (subject = ${SLUG} or detail = ${`como ${CLIENTE.email}`})`

@@ -1,5 +1,5 @@
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { leaveSupportAction } from '@/app/_acciones/admin/support-actions'
+import { botonClases } from '@/shared/design/ui/panel/PanelKit'
+import { RegresarComoAdmin } from './RegresarComoAdmin'
 
 /**
  * La franja del modo soporte: fija arriba en todo el panel mientras el admin actúa como el
@@ -13,11 +13,7 @@ export function SupportBanner({ clienteEmail }: { clienteEmail: string }) {
         <span className="font-mono text-[10px] tracking-[0.25em] text-gold uppercase">Soporte</span> · Estás como{' '}
         <strong className="font-normal">{clienteEmail}</strong>. Lo que cambies queda registrado a tu nombre.
       </p>
-      <form action={leaveSupportAction}>
-        <PanelButton type="submit" variant="default">
-          Regresar como admin
-        </PanelButton>
-      </form>
+      <RegresarComoAdmin className={botonClases('default')}>Regresar como admin</RegresarComoAdmin>
     </div>
   )
 }

@@ -50,6 +50,16 @@ const envSchema = z.object({
     .optional()
     .transform((valor) => (valor === '' ? undefined : valor)),
   /**
+   * La clave de OpenAI para Arturo, el asistente del panel. **Opcional**: sin ella el botón no aparece
+   * y todo lo demás funciona igual.
+   */
+  OPENAI_API_KEY: z
+    .string()
+    .optional()
+    .transform((valor) => (valor === '' ? undefined : valor)),
+  /** El modelo de Arturo. gpt-6-luna por decisión del usuario (28 de septiembre). */
+  ASISTENTE_MODELO: z.string().min(1).default('gpt-6-luna'),
+  /**
    * El remitente, en el dominio raíz: Resend verificó `luxuryatelier.net` (la clave DKIM
    * vive en `resend._domainkey.luxuryatelier.net`). El subdominio `send` que aparece en el
    * DNS es solo la dirección de rebotes (MX y SPF del Return-Path), **no** va en el From.

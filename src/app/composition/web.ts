@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { acompanamientoEmail, adminAlertEmail, graciasPorRecomendarEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, supportAccessEmail, teamAccessEmail } from '@/modules/notifications'
+import { acompanamientoEmail, adminAlertEmail, graciasPorRecomendarEmail, clientAccessEmail, passwordResetEmail, rsvpHostEmail, teamAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -106,12 +106,6 @@ export const notifications = {
         siteUrl: sitioPublicoUrl,
         whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null,
       }),
-    }),
-  /** El aviso al cliente de que el equipo entró a su panel. Devuelve booleano y no lanza. */
-  sendSupportAccess: async (input: { to: string; eventTitle: string; motivo: string; hora: string }) =>
-    emailSender.send({
-      to: input.to,
-      ...supportAccessEmail({ ...input, siteUrl: sitioPublicoUrl, whatsapp: formatoWhatsapp((await site.settings()).whatsapp) || null }),
     }),
   /** Lo que le espera al admin. `ruta` es la del panel, sin dominio. Devuelve booleano y no lanza. */
   sendAdminAlert: (input: { to: string; asunto: string; lineas: readonly string[]; ruta: string }) =>

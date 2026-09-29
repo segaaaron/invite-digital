@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { boolean, char, check, date, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { bigint, boolean, char, check, date, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { bytea } from './base'
 import { consultationRequests, plans } from './catalogo'
 import { events } from './eventos'
@@ -197,3 +197,19 @@ export const referralCodes = pgTable('referral_codes', {
     .references(() => events.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
 })
+
+/** Lo que gasta Arturo por evento y mes (`0075`): la cuota del evento y el techo global salen de aquí. */
+export const assistantUsage = pgTable(
+  'assistant_usage',
+  {
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    month: char('month', { length: 7 }).notNull(),
+    messages: integer('messages').notNull().default(0),
+    inputTokens: bigint('input_tokens', { mode: 'number' }).notNull().default(0),
+    outputTokens: bigint('output_tokens', { mode: 'number' }).notNull().default(0),
+    costMicroUsd: bigint('cost_micro_usd', { mode: 'number' }).notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.eventId, t.month] }), index('assistant_usage_month_idx').on(t.month)],
+)

@@ -1,7 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { events, guests, plans } from '@/app/composition/container'
+import { admin, events, guests, plans } from '@/app/composition/container'
+import { esquemaDePropuesta } from '@/modules/asistente'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
@@ -383,4 +384,58 @@ export async function setGroupPhoneAction(input: {
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   return { status: 'success' }
+}
+
+export type AltaDeArturoState = { status: 'success'; creadas: number; personas: number } | { status: 'error'; message: string }
+
+/**
+ * «Confirmar» en la tarjeta de Arturo: las invitaciones que propuso, guardadas **por la persona**, con las
+ * mismas guardias que el alta a mano (invitación escrita, tope del plan). Se valida otra vez lo que llega:
+ * es un extremo público y la propuesta pasó por el navegador. Todo o nada no: lo creado se queda y la
+ * pantalla dice dónde se paró, como la importación.
+ */
+export async function addGuestsFromAssistantAction(input: { eventSlug: string; invitaciones: unknown }): Promise<AltaDeArturoState> {
+  const actor = await requireSession()
+  const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+
+  const propuesta = esquemaDePropuesta.safeParse(input.invitaciones)
+  if (!propuesta.success) return { status: 'error', message: 'La propuesta no es válida. Pídesela otra vez a Arturo.' }
+
+  const sinEscribir = await invitacionSinEscribir(eventId)
+  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
+
+  const capacidad = await plans.allowanceFor(eventId)
+  const grupos = await guests.list(eventId)
+  if (isErr(capacidad) || isErr(grupos)) return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+
+  let creadas = 0
+  let personas = 0
+  for (const invitacion of propuesta.data) {
+    const [principal, ...acompanantes] = invitacion.personas
+    const result = await guests.addGuest({
+      eventId,
+      fullName: principal!,
+      companionNames: acompanantes,
+      attending: null,
+      dietaryNote: null,
+      phone: telefono(invitacion.telefono ?? ''),
+      email: null,
+      vip: false,
+      allowance: { maxGuestGroups: capacidad.value.maxGuestGroups },
+      currentGroups: grupos.value.length + creadas,
+    })
+    if (isErr(result)) {
+      console.error('alta desde el asistente rechazada', result.error.kind, result.error.detail)
+      if (creadas > 0) await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones` })
+      revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+      return { status: 'error', message: creadas === 0 ? result.error.detail : `Se añadieron ${creadas}; ${principal} no: ${result.error.detail}` }
+    }
+    creadas += 1
+    personas += invitacion.personas.length
+  }
+
+  await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones, ${personas} personas` })
+  revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
+  revalidatePath(`/panel/eventos/${input.eventSlug}`)
+  return { status: 'success', creadas, personas }
 }

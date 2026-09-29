@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Actor } from './access'
-import { actorDeSesion, leerMotivo } from './support'
+import { actorDeSesion } from './support'
 
 const admin: Actor = { userId: 'a1', email: 'admin@ejemplo.bo', role: 'admin', mustChangePassword: false }
 const cliente: Actor = { userId: 'c1', email: 'novios@ejemplo.bo', role: 'cliente', mustChangePassword: true }
@@ -29,13 +29,5 @@ describe('actorDeSesion', () => {
 
   it('un cliente que llegara con la marca no la conserva: el soporte lo pone solo esta función', () => {
     expect(actorDeSesion({ ...cliente, soporte: { id: 'x', adminUserId: 'a1', adminEmail: 'x' } }, null).actor.soporte).toBeUndefined()
-  })
-})
-
-describe('leerMotivo', () => {
-  it('exige entre 10 y 500 caracteres, recortados', () => {
-    expect(leerMotivo('  corto  ')).toEqual({ ok: false, mensaje: 'Escribe el motivo: al menos 10 caracteres.' })
-    expect(leerMotivo('  No carga la lista  ')).toEqual({ ok: true, motivo: 'No carga la lista' })
-    expect(leerMotivo('x'.repeat(501)).ok).toBe(false)
   })
 })

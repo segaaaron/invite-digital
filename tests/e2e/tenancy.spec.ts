@@ -45,7 +45,7 @@ test('un atelier no ve ni toca el evento de otro; el admin solo su ficha', async
   await expect(bandeja.getByText('María & Alejandro')).toHaveCount(0)
 
   // --- El admin abre la ficha del evento del otro, no sus datos (15 de septiembre): esos
-  // los ve entrando como el cliente, con motivo y registro.
+  // los ve entrando como el cliente, con registro en la auditoría.
   const admin = await (await browser.newContext({ extraHTTPHeaders: { 'x-real-ip': '10.99.0.6' } })).newPage()
   await entrar(admin, ADMIN)
   expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(404)

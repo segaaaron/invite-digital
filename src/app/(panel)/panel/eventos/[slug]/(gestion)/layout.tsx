@@ -16,6 +16,8 @@ import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { hasFeature, seccionesFueraDelPlan } from '@/modules/plans'
 import { TIPOS_DE_CORTEJO } from '@/modules/planner'
 import { insigniasDeAdmin } from '../../../_carcasa/insignias-de-admin'
+import { accesoAArturo } from '../../../_carcasa/arturo'
+import { Asistente } from '@/modules/asistente/ui/Asistente'
 import { isErr } from '@/shared/result'
 
 /**
@@ -70,6 +72,8 @@ export default async function EventoLayout({
   const anfitriones = isAdmin(actor) ? ((await events.staff.hostsOf([id])).get(id) ?? []) : []
   const puerta = !isErr(capacidad) && hasFeature(capacidad.value, 'checkin') ? await checkin.state(id) : null
   const nombreDelPlan = isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
+  // Arturo: solo si el plan lo trae y quien entra lleva el evento (la ruta vuelve a comprobarlo todo).
+  const conArturo = (await accesoAArturo(actor, slug)) !== null
 
   return (
     <PanelFrame
@@ -107,6 +111,7 @@ export default async function EventoLayout({
         </div>
       ) : null}
       {children}
+      {conArturo ? <Asistente slug={event.value.slug} /> : null}
     </PanelFrame>
   )
 }

@@ -1,24 +1,31 @@
 'use server'
 
 import { cookies } from 'next/headers'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { admin, events, identity, notifications } from '@/app/composition/container'
-import { type Actor, leerMotivo } from '@/modules/identity'
+import type { Actor } from '@/modules/identity'
 import { requireAdmin, requireSession, SESSION_COOKIE } from '@/app/_acciones/sesion'
 import { campo } from '@/shared/forms/campo'
-import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 
 // ============================================================================
-// Modo soporte: el admin entra **como el cliente** a su boda, sin conocer su contraseña, con
-// motivo, aviso por correo al cliente y registro; y regresa como admin. Sin límite de tiempo
-// (decisión del usuario, 15 de septiembre de 2026). Vive en la sesión del admin.
+// Modo soporte: el admin entra **como el cliente** a su evento, sin conocer su contraseña, y regresa
+// como admin. **Sin motivo** (pedido del usuario, 28 de septiembre): un clic, y cada entrada y salida
+// queda en la auditoría («Entró como el cliente» · evento · cuenta). Sin límite de tiempo. Vive en la
+// sesión del admin.
+//
+// **Las dos acciones devuelven adónde ir y navega el navegador** (`location.assign`), nunca `redirect()`:
+// con `redirect` la página de destino se pinta **en la misma petición**, y `requireSession` (en `cache`
+// de React) seguía devolviendo al actor de antes. Entrar daba 404 —el admin no abre los datos de una
+// boda— y solo al volver atrás, ya en otra petición, se veía el panel del cliente.
 // ============================================================================
 
 export type SupportState =
   | { status: 'idle' }
   | { status: 'error'; message: string }
   | { status: 'success'; message: string; password?: string }
+
+export type Navegar = { status: 'ok'; href: string } | { status: 'error'; message: string }
 
 /** La sesión de la cookie: el modo soporte se abre y se cierra en ella, no en el actor. */
 async function sesionActual(): Promise<string | null> {
@@ -27,40 +34,27 @@ async function sesionActual(): Promise<string | null> {
   return isErr(sesion) ? null : sesion.value.sessionId
 }
 
-export async function enterAsClientAction(_previo: SupportState, fd: FormData): Promise<SupportState> {
+export async function enterAsClientAction(input: { eventId: string; clientUserId: string }): Promise<Navegar> {
   const actor = await requireAdmin()
 
-  const motivo = leerMotivo(campo(fd, 'motivo'))
-  if (!motivo.ok) return { status: 'error', message: motivo.mensaje }
-
-  const evento = await events.getByIdUnscoped(campo(fd, 'eventId'))
+  const evento = await events.getByIdUnscoped(input.eventId)
   if (isErr(evento)) return { status: 'error', message: 'Ese evento ya no existe.' }
 
-  // Solo como **el anfitrión de ese evento**: el id llega del formulario y no se le cree.
-  const clientUserId = campo(fd, 'clientUserId')
-  const clases = await events.staff.membershipsOf(evento.value.id, clientUserId)
-  if (!clases.includes('cliente')) return { status: 'error', message: 'Esa persona no es anfitriona de esta boda.' }
-  const cliente = await identity.actorOf(clientUserId)
+  // Solo como **el anfitrión de ese evento**: el id llega del navegador y no se le cree.
+  const clases = await events.staff.membershipsOf(evento.value.id, input.clientUserId)
+  if (!clases.includes('cliente')) return { status: 'error', message: 'Esa persona no es anfitriona de este evento.' }
+  const cliente = await identity.actorOf(input.clientUserId)
   if (cliente === null) return { status: 'error', message: 'Esa cuenta ya no existe.' }
 
   const sessionId = await sesionActual()
-  if (sessionId === null) redirect('/panel/entrar')
+  if (sessionId === null) return { status: 'ok', href: '/panel/entrar' }
 
-  await identity.support.open({ sessionId, adminUserId: actor.userId, adminEmail: actor.email, clientUserId, eventId: evento.value.id, reason: motivo.motivo })
-  await admin.record(actor, { action: 'soporte.entrada', subject: evento.value.slug, detail: `como ${cliente.email} · ${motivo.motivo}` })
-
-  // El aviso nunca impide entrar: si no sale, igual queda en la auditoría.
-  try {
-    await notifications.sendSupportAccess({ to: cliente.email, eventTitle: evento.value.title, motivo: motivo.motivo, hora: fechaHora(new Date()) })
-  } catch (causa) {
-    console.error('no se pudo avisar del soporte a %s:', cliente.email, causa)
-  }
-
-  // `redirect` lanza: fuera de cualquier try, después de escribir.
-  redirect(`/panel/eventos/${evento.value.slug}`)
+  await identity.support.open({ sessionId, adminUserId: actor.userId, adminEmail: actor.email, clientUserId: cliente.id, eventId: evento.value.id, reason: 'Entrada del admin' })
+  await admin.record(actor, { action: 'soporte.entrada', subject: evento.value.slug, detail: `como ${cliente.email}` })
+  return { status: 'ok', href: `/panel/eventos/${evento.value.slug}` }
 }
 
-export async function leaveSupportAction(): Promise<void> {
+export async function leaveSupportAction(): Promise<Navegar> {
   const actor = await requireSession()
   // Solo existe en modo soporte. Un cliente de verdad no llega aquí a nada: 404.
   if (actor.soporte === undefined) notFound()
@@ -70,8 +64,7 @@ export async function leaveSupportAction(): Promise<void> {
 
   const elAdmin: Actor = { userId: actor.soporte.adminUserId, email: actor.soporte.adminEmail, role: 'admin', mustChangePassword: false }
   await admin.record(elAdmin, { action: 'soporte.salida', subject: null, detail: `como ${actor.email}` })
-
-  redirect('/panel/admin/eventos')
+  return { status: 'ok', href: '/panel/admin/eventos' }
 }
 
 /**

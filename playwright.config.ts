@@ -55,6 +55,8 @@ export default defineConfig({
       DATABASE_URL: process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite',
       // La aplicación construye URLs absolutas con SITE_URL: debe apuntar a este puerto.
       SITE_URL: BASE_URL,
+      // Arturo con su modelo guionizado: las e2e nunca llaman a OpenAI.
+      ASISTENTE_MODELO: 'falso',
       // La suya, para no pelearse con el `pnpm dev` que ya esté abierto.
       ...(CONTRA_DEV ? { NEXT_DIST_DIR: '.next-e2e' } : {}),
     },
