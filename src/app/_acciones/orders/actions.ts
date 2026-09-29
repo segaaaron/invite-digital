@@ -198,7 +198,6 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   // se aprobó sin crearla.
   const aprovisionado = await aprovisionar(actor, orderId, formData)
   console.info('pedido %s aprobado — %s', orderId, aprovisionado.message)
-  await agradecerRecomendacion(orderId)
 
   revalidatePath('/panel/pedidos')
   revalidatePath('/panel/admin/ventas')
@@ -206,21 +205,6 @@ export async function decideOrderAction(_previous: DecideOrderState, formData: F
   return { status: 'success' }
 }
 
-/**
- * Si el pedido llegó con un código de recomendación, sus anfitriones reciben las gracias. Nunca
- * falla hacia arriba: el pago ya está aprobado.
- */
-async function agradecerRecomendacion(orderId: string): Promise<void> {
-  try {
-    const order = await orders.byId(orderId)
-    if (order === null || order.referralCode === null || order.addonSlug !== null) return
-    const quien = await admin.referralHosts(order.referralCode)
-    if (quien === null) return
-    await Promise.all(quien.correos.map((to) => notifications.sendGraciasPorRecomendar(to, { evento: quien.evento, quien: order.customerName })))
-  } catch (causa) {
-    registrarFallo('orders/actions', 'no se pudieron mandar las gracias por la recomendación del pedido %s:', orderId, causa)
-  }
-}
 
 /**
  * El pedido aprobado se convierte en una boda: cuenta del cliente, evento con **su**

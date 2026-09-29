@@ -4,7 +4,7 @@
  *
  *   DATABASE_URL=… SITE_URL=… pnpm maintenance
  */
-import { avisarLoQueVence, enviarAcompanamiento, events, leads } from '@/app/composition/container'
+import { avisarLoQueVence, events, leads } from '@/app/composition/container'
 import { borrarFallosViejos } from '@/shared/observability/lectura'
 import { isErr } from '@/shared/result'
 
@@ -31,16 +31,6 @@ async function runMaintenance(): Promise<number> {
     return 1
   }
   console.log(`Retención de consultas: ${consultas.value} anonimizada(s)`)
-
-  // El acompañamiento de los anfitriones: hitos, confirmaciones, opinión y aniversario. Un fallo
-  // aquí no deshace la retención; lo que no salió se reintenta mañana.
-  try {
-    const { enviados, fallidos } = await enviarAcompanamiento(new Date())
-    console.log(`Acompañamiento: ${enviados} aviso(s) enviado(s)${fallidos > 0 ? `, ${fallidos} para reintentar mañana` : ''}`)
-  } catch (causa) {
-    console.error('Acompañamiento fallido —', causa)
-    return 1
-  }
 
   // Lo que vence mañana y la semana del evento, a la campana y a los aparatos. Nunca lanza por un aviso.
   try {

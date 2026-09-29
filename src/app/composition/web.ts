@@ -1,6 +1,6 @@
 import { DEFAULT_SITE_SETTINGS, formatoWhatsapp } from '@/modules/admin/domain/site-settings'
 import { cache } from 'react'
-import { acompanamientoEmail, graciasPorRecomendarEmail, clientAccessEmail, passwordResetEmail, teamAccessEmail } from '@/modules/notifications'
+import { clientAccessEmail, passwordResetEmail, teamAccessEmail } from '@/modules/notifications'
 import { createResendSender } from '@/modules/notifications/infrastructure/resend-sender'
 import { env } from '@/shared/config/env'
 import { listCategories } from '@/modules/catalog/application/list-categories'
@@ -68,10 +68,6 @@ export const site = {
 
 export const notifications = {
   /** Un correo de acompañamiento del mantenimiento diario (hitos, confirmaciones, opinión, aniversario). */
-  sendAcompanamiento: (to: string, input: Omit<Parameters<typeof acompanamientoEmail>[0], 'siteUrl'>) =>
-    emailSender.send({ to, ...acompanamientoEmail({ ...input, siteUrl: sitioPublicoUrl }) }),
-  sendGraciasPorRecomendar: (to: string, input: { evento: string; quien: string }) =>
-    emailSender.send({ to, ...graciasPorRecomendarEmail({ ...input, siteUrl: sitioPublicoUrl }) }),
   /** El código de recuperación. Sin enlace dentro: se teclea donde ya se pidió el cambio. */
   sendPasswordCode: async (input: { to: string; code: string }) =>
     emailSender.send({

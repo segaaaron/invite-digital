@@ -11,7 +11,6 @@ export { clientAccessEmail, type AccesoDeCliente, type CorreoCompuesto } from '.
 export { teamAccessEmail, type AccesoDelEquipo } from './domain/team-access-email'
 export { passwordResetEmail } from './domain/password-reset-email'
 export type { EmailSender } from './application/ports'
-export { acompanamientoEmail, graciasPorRecomendarEmail, type TipoDeAcompanamiento } from './domain/acompanamiento-email'
 export {
   avisoDeAgenda,
   avisoDeApertura,
