@@ -93,11 +93,16 @@ services:
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos
+    # Solo espera a la base, **no a `migrate`**. Dokploy despliega el compose parando `web` al
+    # principio del `up` (fase «Recreate») y, con la espera a `migrate`, no la volvía a arrancar
+    # hasta terminar migraciones y seed: más de un minuto sin web en cada despliegue (medido el 29
+    # sep, 404 en todas las páginas), y la web apagada del todo si una migración fallaba. Ahora
+    # arranca en segundos y las migraciones corren a la vez. Por eso **una migración nueva no puede
+    # romper el código anterior ni dejar al nuevo sin lo que necesita más que unos segundos**:
+    # columnas nuevas con valor por defecto o nulas, y nada que se borre en el mismo despliegue.
     depends_on:
       db:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
     expose:
       - '3000'
     healthcheck:
@@ -108,7 +113,8 @@ services:
           '-e',
           "fetch('http://127.0.0.1:3000/es').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
         ]
-      interval: 15s
+      # Cada 5 s: el tráfico vuelve en cuanto responde, sin esperar un intervalo largo.
+      interval: 5s
       timeout: 5s
       retries: 5
       start_period: 20s
