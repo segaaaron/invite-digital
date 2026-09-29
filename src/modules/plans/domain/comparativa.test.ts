@@ -9,7 +9,7 @@ const TEXTOS: TextosComparativa = {
   hasta: 'Hasta {n}',
   dias: '{n} días',
   filas: {
-    grupos: 'Grupos de invitados',
+    grupos: 'Invitaciones',
     fotos: 'Fotos del evento',
     fotosInvitados: 'Fotos de los invitados',
     contrasena: 'Contraseña',
@@ -53,7 +53,7 @@ describe('filasComparativas', () => {
     const filas = filasComparativas([atelier, alta], TEXTOS)
     const de = (etiqueta: string) => filas.find((f) => f.etiqueta === etiqueta)?.valores.map((v) => v.texto)
 
-    expect(de('Grupos de invitados')).toEqual(['Hasta 40', 'Sin límite'])
+    expect(de('Invitaciones')).toEqual(['Hasta 40', 'Sin límite'])
     expect(de('Fotos del evento')).toEqual(['Hasta 8', 'Sin límite'])
     expect(de('Puerta con QR')).toEqual(['No', 'Sí'])
     expect(de('Recepción')).toEqual(['No', 'Hasta 10'])

@@ -170,7 +170,7 @@ export const es = {
       hasta: 'Hasta {n}',
       dias: '{n} días',
       filas: {
-        grupos: 'Grupos de invitados',
+        grupos: 'Invitaciones',
         fotos: 'Fotos del evento',
         fotosInvitados: 'Los invitados suben sus fotos',
         contrasena: 'Invitación con contraseña',
