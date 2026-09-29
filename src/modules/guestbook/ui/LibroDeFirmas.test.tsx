@@ -30,7 +30,7 @@ describe('LibroDeFirmas', () => {
 
   it('agradecer guarda la respuesta que el invitado verá', async () => {
     render(<LibroDeFirmas eventId="e1" eventSlug="xv" messages={[firma({})]} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Agradecer' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Agradecer a Ana' }))
     fireEvent.change(screen.getByLabelText('Agradecer a Ana Rojas'), { target: { value: 'Gracias, te esperamos.' } })
     fireEvent.click(screen.getByRole('button', { name: 'Guardar' }))
     await waitFor(() => expect(responder).toHaveBeenCalledWith({ responseId: 'r1', eventId: 'e1', eventSlug: 'xv', text: 'Gracias, te esperamos.' }))

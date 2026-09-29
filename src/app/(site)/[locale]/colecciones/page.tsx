@@ -84,7 +84,7 @@ export default async function CollectionsPage({
     return (
       <section className="px-6 py-24" id="modelos">
         <div className="mx-auto flex max-w-[520px] flex-col items-center gap-6 text-center">
-          <SectionHeading eyebrow={dictionary.collections.eyebrow} title={dictionary.collections.title} />
+          <SectionHeading eyebrow={dictionary.collections.eyebrow} nivel="h1" title={dictionary.collections.title} />
           <p className="text-[14px] leading-[1.7] text-ink-soft">{dictionary.collections.errorMessage}</p>
           {whatsappHref === null ? null : (
             <a
@@ -114,7 +114,7 @@ export default async function CollectionsPage({
       <script dangerouslySetInnerHTML={{ __html: jsonLdScript(breadcrumb) }} nonce={nonce} type="application/ld+json" />
       <div className="mx-auto max-w-[1240px]">
         <div className="flex flex-col items-center gap-4 text-center">
-          <SectionHeading eyebrow={dictionary.collections.eyebrow} title={dictionary.collections.title} />
+          <SectionHeading eyebrow={dictionary.collections.eyebrow} nivel="h1" title={dictionary.collections.title} />
           <p className="max-w-[46ch] text-[15px] text-ink-soft">{dictionary.models.subtitle}</p>
         </div>
 

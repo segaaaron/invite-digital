@@ -26,8 +26,8 @@ const leerFuentes = () =>
   ]))
 
 /**
- * La imagen que WhatsApp enseña al pegar el enlace de una invitación: la foto de la portada
- * —o la del diseño, si no hay— a sangre, con los nombres y la fecha encima.
+ * La imagen que WhatsApp enseña al pegar el enlace de una invitación: el arte de portada del
+ * diseño a sangre, con los nombres y la fecha encima.
  *
  * JPEG y no PNG: WhatsApp deja sin imagen las vistas previas pesadas, y una foto en PNG pasa de
  * medio mega. Con contraseña, solo el diseño y «Tienes una invitación».
@@ -42,20 +42,12 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   const contenido = protegida ? {} : await events.contenidoParaInvitados(event.id, {})
   const tarjeta = tarjetaDeInvitacion({ evento: event, contenido, invitado: group.label, protegida })
 
-  // La portada de la invitación comprada: la foto que subió el cliente para la portada o, si no,
-  // el arte de portada del diseño. Los nombres del cliente van encima, como al abrirla.
-  const id = protegida ? undefined : contenido.hero?.coverImageId
-  const propia = id === undefined ? null : await events.media.read(id)
-  const original =
-    propia !== null && propia.eventId === event.id && propia.contentType.startsWith('image/')
-      ? Buffer.from(propia.bytes)
-      : await readFile(join(process.cwd(), 'public', portadaParaCompartir(themeFor(event.themeKey).key))).catch(() => null)
+  // La portada de la invitación comprada: el arte de portada del diseño (la portada no se
+  // personaliza), con los nombres del cliente encima, como al abrirla.
+  const original = await readFile(join(process.cwd(), 'public', portadaParaCompartir(themeFor(event.themeKey).key))).catch(() => null)
 
-  /**
-   * El hueco del arte donde va rotulado el nombre, para el diseño cuyo arte lo tiene (hoy
-   * «Cervecería Vintage»). Con la portada propia del cliente no hay medallón que rellenar.
-   */
-  const hueco = propia === null ? medallonDeCompartir(themeFor(event.themeKey).key) : null
+  /** El hueco del arte donde va rotulado el nombre, para el diseño cuyo arte lo tiene (hoy «Cervecería Vintage»). */
+  const hueco = medallonDeCompartir(themeFor(event.themeKey).key)
 
   // La miniatura es 380×570 salvo cuando el arte lleva medallón: ahí toma **la proporción
   // del propio arte**, para que entre entero. Con el recorte de 380×570 se le iban los

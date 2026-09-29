@@ -48,6 +48,10 @@ export type UsoDeTokens = { readonly entrada: number; readonly enCache: number; 
 export const costeMicroUsd = (uso: UsoDeTokens): number =>
   Math.ceil(Math.max(0, uso.entrada - uso.enCache) * PRECIO_POR_MILLON.entrada + uso.enCache * PRECIO_POR_MILLON.enCache + uso.salida * PRECIO_POR_MILLON.salida)
 
+/** Si el evento tiene Luxury: porque su plan lo trae (Admin › Asistente) o porque lo compró como extra. */
+export const tieneLuxury = (capacidad: { readonly planSlug: string; readonly asistente?: boolean }, config: ConfigDelAsistente): boolean =>
+  capacidad.asistente === true || config.planes.includes(capacidad.planSlug)
+
 export type MotivoDeCierre = 'fuera_del_plan' | 'cuota' | 'presupuesto'
 
 /**
@@ -58,8 +62,10 @@ export function puedeConversar(
   config: ConfigDelAsistente,
   planSlug: string,
   uso: { readonly mensajesDelMes: number; readonly gastoDelMesMicroUsd: number },
+  /** Si el evento lo compró como extra: entonces vale aunque su plan no lo traiga. */
+  comprado = false,
 ): { ok: true } | { ok: false; motivo: MotivoDeCierre } {
-  if (!config.planes.includes(planSlug)) return { ok: false, motivo: 'fuera_del_plan' }
+  if (!comprado && !config.planes.includes(planSlug)) return { ok: false, motivo: 'fuera_del_plan' }
   if (uso.mensajesDelMes >= config.mensajesPorMes) return { ok: false, motivo: 'cuota' }
   if (uso.gastoDelMesMicroUsd >= config.presupuestoUsd * 1_000_000) return { ok: false, motivo: 'presupuesto' }
   return { ok: true }

@@ -5,8 +5,8 @@ import type { Allowance } from './allowance'
  * demás encienden algo. `servicio` es trabajo nuestro —la entrega exprés—: se cobra y no
  * toca la capacidad.
  */
-export type EfectoDeExtra = 'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'servicio'
-export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'servicio']
+export type EfectoDeExtra = 'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio'
+export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'asistente', 'servicio']
 export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   cambio_modelo: 'Cambiar de modelo hasta repartir',
   fotos_invitados: 'Fotos de los invitados',
@@ -15,6 +15,7 @@ export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   mas_porteros: 'Más personal de recepción',
   sumar_planner: 'Sumar un planner',
   dia_d: 'Día D y enlaces para proveedores',
+  asistente: 'Luxury, el planner con IA',
   servicio: 'Servicio (sin cambio en el panel)',
 }
 
@@ -52,6 +53,9 @@ export function aplicarExtras(base: Allowance, extras: readonly ExtraAplicado[])
         // de comprarlo) regalaría proveedores, cronograma y cortejo.
         a = a.plannerSuite === 'completo' ? { ...a, plannerSuite: 'total' } : a
         break
+      case 'asistente':
+        a = { ...a, asistente: true }
+        break
       case 'servicio':
         break
     }
@@ -74,6 +78,8 @@ export function extraDisponible(a: Allowance, effect: EfectoDeExtra): { ok: true
       return a.plannerSuite === 'total' ? incluido : a.plannerSuite === 'completo' ? { ok: true } : { ok: false, motivo: 'requiere_plan' }
     case 'fotos_invitados':
       return a.guestPhotos ? incluido : { ok: true }
+    case 'asistente':
+      return a.asistente === true ? incluido : { ok: true }
     case 'cambio_modelo':
       return a.designChange === 'ninguno' ? { ok: true } : incluido
     case 'mas_grupos':

@@ -237,7 +237,7 @@ export default async function ConfiguracionPage({ params }: { params: Promise<{ 
     <>
       <PanelHeader
         kicker="Evento"
-        meta="Completa cada paso y mira a la derecha cómo queda. Se guarda sección por sección."
+        meta="Completa cada sección y mira a la derecha cómo queda. Se guarda sección por sección."
         title={esDelAtelier ? 'Configuración del evento' : 'Personalizar invitación'}
       />
 

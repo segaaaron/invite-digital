@@ -21,7 +21,7 @@ export const bodaGlamourDefinition: ThemeDefinition = {
     fotos: { casillas: 5, retrato: true },
     sinCampos: {
       // Sin monograma, ni número de edición, ni portada propia: la portada es el marco del diseño.
-      hero: ['monogram', 'serial', 'coverImageId'],
+      hero: ['monogram', 'serial'],
       ceremony: ['address'],
       reception: ['address'],
       map: ['label'],

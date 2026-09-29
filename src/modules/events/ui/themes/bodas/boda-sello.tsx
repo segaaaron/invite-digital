@@ -19,24 +19,25 @@ export const bodaSelloDefinition: ThemeDefinition = {
   fonts: ['cormorant', 'greatVibes', 'bodoniModa', 'jetbrainsMono'],
   rsvp: 'uniformes',
   pinta: {
-    // Este diseño no tiene galería: sus fotografías son las del arte, a sangre. Lo que sí
-    // pide es el retrato de la pareja... que también es del diseño, así que ninguna casilla.
-    fotos: { casillas: 0 },
+    // Seis fotos de la pareja repartidas por la invitación (la fecha, la historia, la
+    // invitación, los anillos, la canción y el cierre): cada una es una casilla, sin rótulo.
+    fotos: { casillas: 6 },
     sinCampos: {
       // La portada es el sobre: ni fotografía, ni iniciales, ni línea bajo los nombres.
-      hero: ['monogram', 'serial', 'coverImageId', 'portraitImageId'],
+      hero: ['monogram', 'serial', 'portraitImageId'],
       // Cada lugar lleva su nombre, su hora y su rótulo; la dirección va en el mapa.
       ceremony: ['address'],
       reception: ['address'],
       map: ['label'],
       itinerary: ['note', 'imageId'],
+      gallery: ['label'],
       // El código de vestimenta es el rótulo, el titular y la nota: no hay paleta de colores.
       dressCode: ['detail', 'colors'],
     },
     // Tres avisos, y cada uno tiene su sitio: la historia, «solo para adultos» y los regalos.
     maxAvisos: 3,
   },
-  sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'closing'],
+  sections: ['hero', 'gallery', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   Component: dynamic(() => import('./boda-sello.view').then((modulo) => modulo.BodaSelloView)),
 }

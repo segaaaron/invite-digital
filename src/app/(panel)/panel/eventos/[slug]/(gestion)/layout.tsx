@@ -16,8 +16,9 @@ import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { hasFeature, seccionesFueraDelPlan } from '@/modules/plans'
 import { TIPOS_DE_CORTEJO } from '@/modules/planner'
 import { insigniasDeAdmin } from '../../../_carcasa/insignias-de-admin'
-import { accesoAlAsistente } from '../../../_carcasa/asistente'
+import { accesoAlAsistente, luxuryParaMejorar } from '../../../_carcasa/asistente'
 import { Asistente } from '@/modules/asistente/ui/Asistente'
+import { LuxuryBloqueado } from '@/modules/asistente/ui/LuxuryBloqueado'
 import { isErr } from '@/shared/result'
 
 /**
@@ -74,6 +75,8 @@ export default async function EventoLayout({
   const nombreDelPlan = isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
   // Luxury: solo si el plan lo trae y quien entra lleva el evento (la ruta vuelve a comprobarlo todo).
   const conAsistente = (await accesoAlAsistente(actor, slug)) !== null
+  // Sin Luxury en su evento, quien podría usarlo lo ve con candado y sabe cómo conseguirlo.
+  const luxuryBloqueado = conAsistente ? null : await luxuryParaMejorar(actor, slug)
 
   return (
     <PanelFrame
@@ -113,6 +116,7 @@ export default async function EventoLayout({
       ) : null}
       {children}
       {conAsistente ? <Asistente eventId={event.value.id} slug={event.value.slug} /> : null}
+      {luxuryBloqueado === null ? null : <LuxuryBloqueado comoExtra={luxuryBloqueado.comoExtra} mejorar={luxuryBloqueado.mejorar} planes={luxuryBloqueado.planes} />}
     </PanelFrame>
   )
 }

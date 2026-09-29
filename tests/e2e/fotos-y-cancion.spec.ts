@@ -32,7 +32,7 @@ test.beforeAll(async () => {
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anoisesrc=d=70:a=0.1', '-ac', '2', '-ar', '44100', CANCION])
   await sql`delete from service_failures where created_at > now() - interval '1 hour'`
   await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
-  await sql`update events set theme_key = 'xv-valeria' where slug = ${SLUG}`
+  await sql`update events set theme_key = 'xv-valentina' where slug = ${SLUG}`
   await escribirInvitacion(SLUG)
 })
 
@@ -46,9 +46,10 @@ test.afterAll(async () => {
 const bloque = async (seccion: string) =>
   (await sql<{ b: Record<string, string> | null }[]>`select blocks->${seccion} as b from event_content c join events e on e.id = c.event_id where e.slug = ${SLUG}`)[0]?.b ?? null
 
-test('una foto de 24 MB en la portada se reduce, se sube, se guarda sola y la invitación la usa', async ({ page }) => {
+test('una foto de 24 MB en la galería se reduce, se sube, se guarda sola y la invitación la usa', async ({ page }) => {
   await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-  const portada = await abrirSeccion(page, 'Portada y nombres')
+  // «Mascarada» pinta una foto: la del arco (la portada es el arte del diseño y no se toca).
+  const portada = await abrirSeccion(page, 'Galería')
   await portada.getByRole('button', { name: 'Subir una fotografía' }).click()
   const dialogo = page.locator('dialog[open]')
   await dialogo.getByLabel('Elegir fotografía').setInputFiles(FOTO)
@@ -57,7 +58,7 @@ test('una foto de 24 MB en la portada se reduce, se sube, se guarda sola y la in
   await expect(dialogo).toHaveCount(0, { timeout: 60_000 })
   // Sin pulsar «Guardar»: la sección se guarda sola con la foto.
   await expect(portada.getByText('Guardado.')).toBeVisible({ timeout: 20_000 })
-  await expect.poll(async () => (await bloque('hero'))?.coverImageId ?? null).not.toBeNull()
+  await expect.poll(async () => ((await bloque('gallery')) as unknown as { imageId?: string }[] | null)?.[0]?.imageId ?? null).not.toBeNull()
   const [foto] = await sql<{ bytes: number }[]>`select m.byte_size as bytes from event_media m join events e on e.id = m.event_id where e.slug = ${SLUG} and m.content_type like 'image/%'`
   expect(foto!.bytes).toBeLessThan(3_000_000)
   // La invitación de la vista previa ya la pinta.

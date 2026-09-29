@@ -70,9 +70,6 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
         <span className={`font-display text-[46px] leading-none font-light ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>
           {formatMoney(plan.price, locale)}
         </span>
-        <span className={`text-[10px] tracking-[var(--tracking-luxe)] uppercase ${destacado ? 'text-bg-sunken/70' : 'text-ink-mute'}`}>
-          {plan.price.currency}
-        </span>
       </p>
 
       <p className={`mt-5 text-[14px] leading-[1.7] ${destacado ? 'text-bg-sunken/90' : 'text-ink-soft'}`}>

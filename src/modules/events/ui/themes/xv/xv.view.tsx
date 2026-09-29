@@ -82,7 +82,8 @@ export function XvSharedView({
   // es de quien salió este esqueleto.
   const Z = piel.piezas ?? {}
   const F = Z.formulario ?? {}
-  const fotoDePortada = hero?.coverImageId === undefined ? undefined : `/media/${hero.coverImageId}`
+  // La portada no se personaliza; la foto que abre «Palacio Griego» a sangre es el retrato.
+  const fotoDeApertura = hero?.portraitImageId === undefined ? undefined : `/media/${hero.portraitImageId}`
   /** La recepción centrada y compacta de «Gala Real» en V3. */
   const C = Z.recepcionCentrada === 'compacta'
   const SERIAL = Z.serial ?? P.orquidea
@@ -163,7 +164,6 @@ export function XvSharedView({
         name: hero?.nameA ?? '',
         title: hero?.monogram ?? 'XV',
         anios: themes.years,
-        foto: fotoDePortada,
         openLabel: themes.coverAria,
         line1: themes.coverInviteLine1,
         line2: themes.coverInviteLine2,
@@ -236,7 +236,7 @@ export function XvSharedView({
       {piel.burbujas}
 
       {/* Lo que el diseño abre a sangre, antes de la barra. */}
-      {typeof piel.apertura === 'function' ? piel.apertura(fotoDePortada) : piel.apertura}
+      {typeof piel.apertura === 'function' ? piel.apertura(fotoDeApertura) : piel.apertura}
       {/*
         Las burbujas **solo las trae «Bajo el Mar»**, que es el diseño del fondo del mar.
         En la maqueta aparecen una vez, en `QuinceInvite` (`invites-1.jsx:351-352`), y en

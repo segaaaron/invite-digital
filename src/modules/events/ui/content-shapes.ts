@@ -71,7 +71,14 @@ export type FormaBloque =
        */
       readonly anfitriones?: Anfitriones
     }
-  | { readonly form: 'filas'; readonly itemLabel: string; readonly max: number; readonly fields: readonly Campo[] }
+  | {
+      readonly form: 'filas'
+      readonly itemLabel: string
+      readonly max: number
+      readonly fields: readonly Campo[]
+      /** Las filas son los huecos fijos del diseño (la galería): se enseñan todas, sin añadir ni quitar. */
+      readonly fijas?: boolean
+    }
 
 /**
  * Qué fotografías pinta un diseño, que es lo mismo que decir cuáles se le piden.
@@ -84,8 +91,6 @@ export type FormaBloque =
  * fija igual para los dieciséis.
  */
 export type FotosDelDiseno = {
-  /** La portada a pantalla completa: `hero.coverImageId`. */
-  readonly portada?: boolean
   /** El retrato del bloque de arriba: `hero.portraitImageId`. */
   readonly retrato?: boolean
   /** Cuántas casillas de la galería pinta. Cero es un diseño sin galería. */
@@ -171,7 +176,6 @@ const ANFITRIONES: Record<Anfitriones, FormaBloque> = {
 
 /** Qué declaración hace falta para que se pregunte por este campo de imagen. */
 const PIDE: Record<string, (fotos: FotosDelDiseno) => boolean> = {
-  coverImageId: (fotos) => fotos.portada === true,
   portraitImageId: (fotos) => fotos.retrato === true,
 }
 
@@ -242,7 +246,6 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
       // Las fotos justo después de los nombres: al fondo del bloque no se encontraban.
       { key: 'nameA', label: 'Primer nombre', kind: 'texto' },
       { key: 'nameB', label: 'Segundo nombre', kind: 'texto' },
-      { key: 'coverImageId', label: 'Fotografía de portada', kind: 'imagen' },
       { key: 'portraitImageId', label: 'Retrato', kind: 'imagen' },
       { key: 'eyebrow', label: 'Texto sobre los nombres', kind: 'texto', hint: 'La línea de arriba: «MIS QUINCE» o «¡NOS CASAMOS!».' },
       { key: 'monogram', label: 'Iniciales', kind: 'texto', hint: 'Las que adornan la portada: «XV» o «M & R».' },
@@ -317,11 +320,12 @@ export const FORMAS: Record<SectionKey, FormaBloque> = {
   },
   gallery: {
     form: 'filas',
-    itemLabel: 'casilla',
+    itemLabel: 'foto',
     max: MAXIMOS.gallery,
+    fijas: true,
     fields: campos<GalleryRow>(
-      { key: 'label', label: 'Rótulo', kind: 'texto', required: true },
       { key: 'imageId', label: 'Fotografía', kind: 'imagen' },
+      { key: 'label', label: 'Rótulo', kind: 'texto', hint: 'Opcional: describe la foto («Nosotros en Sucre»).' },
     ),
   },
   notes: {

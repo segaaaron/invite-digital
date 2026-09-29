@@ -23,6 +23,7 @@ import {
   MusicIcon,
   PersonIcon,
   PinIcon,
+  PlusIcon,
   QuoteIcon,
   TrashIcon,
   UsersIcon,
@@ -1072,7 +1073,7 @@ function SelectorDePaleta({ rotulo, valores, onChange, max }: { rotulo: string; 
  */
 function FilasDeBloque({
   forma,
-  filas,
+  filas: guardadas,
   onChange,
   media,
   eventId,
@@ -1085,6 +1086,13 @@ function FilasDeBloque({
   onChange: (filas: readonly Readonly<Record<string, string>>[]) => void
   media: readonly MediaItem[]
 }) {
+  // La galería enseña todos los huecos que pinta el diseño —uno en «Mascarada», seis en
+  // «Botánica»—, cada uno con su foto, sin añadir ni quitar casillas.
+  const fijas = forma.fijas === true
+  const filas =
+    fijas && guardadas.length < forma.max
+      ? [...guardadas, ...Array.from({ length: forma.max - guardadas.length }, () => filaVacia(forma.fields))]
+      : guardadas
   const mover = (desde: number, hasta: number) => {
     if (hasta < 0 || hasta >= filas.length) return
     const copia = [...filas]
@@ -1093,6 +1101,8 @@ function FilasDeBloque({
     copia.splice(hasta, 0, movida)
     onChange(copia)
   }
+
+  if (fijas) return <GaleriaDeFotos eventId={eventId} eventSlug={eventSlug} filas={filas} forma={forma} media={media} onChange={onChange} />
 
   return (
     <div className="flex flex-col gap-3">
@@ -1151,6 +1161,148 @@ function FilasDeBloque({
         >
           {`Añadir ${forma.itemLabel}`}
         </PanelButton>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * La galería: los huecos de foto que pinta el diseño, como una rejilla de casillas.
+ *
+ * Se ve de un vistazo qué casillas tienen foto y cuáles no; al tocar una, debajo se abre su
+ * selector (la biblioteca del evento y «Subir una fotografía») y su rótulo, si el diseño lo pinta.
+ */
+function GaleriaDeFotos({
+  forma,
+  filas,
+  onChange,
+  media,
+  eventId,
+  eventSlug,
+}: {
+  eventId: string
+  eventSlug: string
+  forma: Extract<FormaBloque, { form: 'filas' }>
+  filas: readonly Readonly<Record<string, string>>[]
+  onChange: (filas: readonly Readonly<Record<string, string>>[]) => void
+  media: readonly MediaItem[]
+}) {
+  const [activa, setActiva] = useState(0)
+  const fila = filas[activa] ?? {}
+  const conFoto = filas.filter((f) => (f.imageId ?? '') !== '').length
+  const cambiar = (clave: string, valor: string) => onChange(filas.map((f, i) => (i === activa ? { ...f, [clave]: valor } : f)))
+  const mover = (hasta: number) => {
+    if (hasta < 0 || hasta >= filas.length) return
+    const copia = [...filas]
+    const [movida] = copia.splice(activa, 1)
+    if (movida === undefined) return
+    copia.splice(hasta, 0, movida)
+    onChange(copia)
+    setActiva(hasta)
+  }
+  const nombre = (i: number) => `Foto ${i + 1}`
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[12.5px] text-ink-soft">
+          {filas.length === 1 ? 'Tu invitación tiene una foto. Toca la casilla para elegirla.' : `Tu invitación tiene ${filas.length} fotos, en este orden. Toca una casilla para elegir la suya.`}
+        </p>
+        <span className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${conFoto === filas.length ? 'bg-sage/15 text-sage' : 'bg-bg-top text-ink-soft'}`}>
+          {`${conFoto} de ${filas.length} con foto`}
+        </span>
+      </div>
+
+      <ul className={`grid gap-2 min-[560px]:gap-3 ${filas.length === 1 ? 'max-w-[160px]' : 'grid-cols-3 min-[560px]:[grid-template-columns:repeat(auto-fill,minmax(112px,1fr))]'}`}>
+        {filas.map((f, i) => {
+          const id = f.imageId ?? ''
+          const elegida = i === activa
+          return (
+            <li key={i}>
+              <button
+                aria-label={`${nombre(i)}${id === '' ? ', sin foto' : ''}`}
+                aria-pressed={elegida}
+                className={`group relative block aspect-[3/4] w-full cursor-pointer overflow-hidden rounded-[14px] border transition ${
+                  elegida ? 'border-ink ring-2 ring-ink ring-offset-2' : id === '' ? 'border-dashed border-line-panel-strong hover:border-ink' : 'border-line-panel hover:-translate-y-0.5 hover:shadow-md'
+                } ${id === '' ? 'bg-bg-top' : 'bg-white'}`}
+                onClick={() => setActiva(i)}
+                type="button"
+              >
+                {id === '' ? (
+                  <span className="flex size-full flex-col items-center justify-center gap-2 text-ink-mute">
+                    <span className="grid size-10 place-items-center rounded-full border border-line-panel bg-white text-ink-soft transition group-hover:text-ink">
+                      <PlusIcon className="size-4" />
+                    </span>
+                    <span className="hidden text-[11px] tracking-[0.12em] uppercase min-[560px]:inline">Añadir</span>
+                  </span>
+                ) : (
+                  <>
+                    {/* La sirve /media/[id], que no pasa por el optimizador: lleva la puerta de contraseña del evento. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img alt="" className="size-full object-cover transition duration-300 group-hover:scale-[1.03]" loading="lazy" src={`/media/${id}`} />
+                    <span aria-hidden className="absolute top-2 right-2 grid size-5 place-items-center rounded-full bg-white/95 text-sage shadow">
+                      <CheckIcon className="size-3" />
+                    </span>
+                  </>
+                )}
+                <span
+                  aria-hidden
+                  className={`absolute inset-x-0 bottom-0 px-2.5 pt-6 pb-2 text-left text-[11px] font-medium ${id === '' ? 'text-ink-soft' : 'bg-gradient-to-t from-black/60 to-transparent text-white'}`}
+                >
+                  {nombre(i)}
+                </span>
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+
+      <div className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-white p-4 shadow-[0_1px_0_rgb(0_0_0/0.02)]">
+        <div className="flex items-center gap-2 border-b border-line-panel pb-3">
+          <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-[10px] border border-line-panel bg-bg-top text-ink-mute">
+            {(fila.imageId ?? '') === '' ? (
+              <CameraIcon className="size-4" />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img alt="" className="size-full object-cover" src={`/media/${fila.imageId}`} />
+            )}
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <span className="text-[14px] text-ink">{nombre(activa)}</span>
+            <span className="text-[11.5px] text-ink-mute">{(fila.imageId ?? '') === '' ? 'Elige una de tus fotos o sube una nueva.' : 'Toca otra de tus fotos para cambiarla.'}</span>
+          </span>
+          <span className="ml-auto flex shrink-0 gap-1.5">
+            {(fila.imageId ?? '') === '' ? null : (
+              <IconButton className="hover:border-danger hover:text-danger" label={`Quitar la foto de la ${nombre(activa).toLowerCase()}`} onClick={() => cambiar('imageId', '')}>
+                <TrashIcon className="size-4" />
+              </IconButton>
+            )}
+            {filas.length > 1 ? (
+              <>
+              <IconButton disabled={activa === 0} label={`Mover la ${nombre(activa).toLowerCase()} antes`} onClick={() => mover(activa - 1)}>
+                <ChevronIcon className="size-4 rotate-90" />
+              </IconButton>
+              <IconButton disabled={activa === filas.length - 1} label={`Mover la ${nombre(activa).toLowerCase()} después`} onClick={() => mover(activa + 1)}>
+                <ChevronIcon className="size-4 -rotate-90" />
+              </IconButton>
+              </>
+            ) : null}
+          </span>
+        </div>
+        <div className="grid gap-3 min-[560px]:grid-cols-2">
+          {forma.fields.map((campo) => (
+            <CampoDeBloque
+              campo={campo}
+              eventId={eventId}
+              eventSlug={eventSlug}
+              etiqueta={`${campo.label} · ${forma.itemLabel} ${activa + 1}`}
+              key={`${campo.key}-${activa}`}
+              media={media}
+              onChange={(valor) => cambiar(campo.key, valor)}
+              valor={fila[campo.key] ?? ''}
+            />
+          ))}
+        </div>
       </div>
     </div>
   )

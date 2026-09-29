@@ -111,3 +111,17 @@ describe('extraDisponible', () => {
     }
   })
 })
+
+describe('Luxury como extra', () => {
+  it('lo enciende, y no se vende a quien ya lo tiene (por el plan o por un extra aprobado)', () => {
+    expect(atelier.asistente ?? false).toBe(false)
+    const conLuxury = aplicarExtras(atelier, [{ effect: 'asistente', amount: 0 }])
+    expect(conLuxury.asistente).toBe(true)
+    expect(extraDisponible(atelier, 'asistente')).toEqual({ ok: true })
+    expect(extraDisponible(conLuxury, 'asistente')).toEqual({ ok: false, motivo: 'incluido' })
+  })
+
+  it('el admin puede crearlo', () => {
+    expect(leerExtra({ name: 'Luxury', priceCents: 10000, effect: 'asistente', amount: '', isActive: true }).ok).toBe(true)
+  })
+})

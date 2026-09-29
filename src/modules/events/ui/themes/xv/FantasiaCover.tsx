@@ -5,8 +5,6 @@ import { CoverShell } from './CoverShell'
 
 type Props = {
   readonly bgAsset: string
-  /** La fotografía del evento, cuando la subieron: sustituye a la del modelo. */
-  readonly foto?: string | undefined
   /** El sobre con la corona: el nombre va escrito **encima**, a su altura. */
   readonly envelopeAsset: string
   readonly accent: string
@@ -31,7 +29,6 @@ const SOMBRA = '0 2px 10px rgba(0,0,0,.8), 0 0 20px rgba(0,0,0,.6)'
  */
 export function FantasiaCover({
   bgAsset,
-  foto,
   envelopeAsset,
   accent,
   textColor,
@@ -45,7 +42,6 @@ export function FantasiaCover({
     <CoverShell
       bg={bg}
       bgAsset={bgAsset}
-      foto={foto}
       openLabel={openLabel}
       veils={[
         'rgba(10,20,45,.42)',

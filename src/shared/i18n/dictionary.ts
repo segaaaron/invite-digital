@@ -241,6 +241,10 @@ export interface SeoDictionary {
   collectionsTitle: string
   collectionsDescription: string
   breadcrumbHome: string
+  /** La página de un modelo: `{nombre}` y `{fiesta}` («boda», «XV años»). */
+  modelTitle: string
+  modelDescription: string
+  fiestaDeModelo: Record<'boda' | 'xv' | 'cumple', string>
 }
 
 export interface FooterDictionary {

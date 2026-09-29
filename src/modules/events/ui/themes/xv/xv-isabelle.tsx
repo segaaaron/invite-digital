@@ -11,8 +11,8 @@ export const xvIsabelleDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: {
-    // La foto de portada es la que abre la invitación a sangre, entre columnas.
-    fotos: { portada: true, casillas: 0 },
+    // Su retrato es la foto que abre la invitación a sangre, entre columnas (la portada no se toca).
+    fotos: { retrato: true, casillas: 0 },
     sinCampos: { hero: ['nameB'], itinerary: ['note'] },
   },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],

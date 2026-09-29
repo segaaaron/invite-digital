@@ -16,7 +16,7 @@ export const xvPapillonDefinition: ThemeDefinition = {
     // El retrato va dentro del círculo de flores y mariposas.
     fotos: { casillas: 0, retrato: true },
     sinCampos: {
-      hero: ['nameB', 'monogram', 'coverImageId'],
+      hero: ['nameB', 'monogram'],
       reception: ['address'],
       itinerary: ['note'],
       dressCode: ['detail'],

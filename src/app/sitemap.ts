@@ -21,13 +21,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push({ url: `${env.SITE_URL}/${locale}/bodas`, changeFrequency: 'weekly', priority: 0.9 })
     entries.push({ url: `${env.SITE_URL}/${locale}/xv-anos`, changeFrequency: 'weekly', priority: 0.9 })
 
-    // Only published routes belong here. The per-template detail page does not exist
-    // yet, and announcing 16 URLs that answer 404 costs crawl trust across the site.
-    // Add them back together with `colecciones/[slug]/page.tsx`.
+    // Solo lo publicado: el catálogo lista los modelos a la venta, no los retirados.
     const templates = await listTemplatesSafely(locale)
     if (templates.length > 0) {
       entries.push({ url: `${env.SITE_URL}/${locale}/colecciones`, changeFrequency: 'weekly', priority: 0.8 })
     }
+    // Cada modelo publicado tiene su página: es lo que se busca («invitación de XV mascarada»).
+    for (const t of templates) entries.push({ url: `${env.SITE_URL}/modelos/${locale}/${t.slug}`, changeFrequency: 'monthly', priority: 0.7 })
     if (legal.privacidad.publicada) entries.push({ url: `${env.SITE_URL}/${locale}/privacidad`, changeFrequency: 'yearly', priority: 0.2 })
     if (legal.terminos.publicada) entries.push({ url: `${env.SITE_URL}/${locale}/terminos`, changeFrequency: 'yearly', priority: 0.2 })
   }
@@ -39,7 +39,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
  * The repository throws on a connection failure — it does not return an `err` — so the
  * `isOk` guard alone would let a database outage turn the sitemap into a 500.
  */
-async function listTemplatesSafely(locale: (typeof LOCALES)[number]): Promise<readonly unknown[]> {
+async function listTemplatesSafely(locale: (typeof LOCALES)[number]): Promise<readonly { readonly slug: string }[]> {
   const result = await attempt(
     () => webPublica.modelos(locale),
     (cause) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' }),

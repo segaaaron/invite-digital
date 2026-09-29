@@ -437,10 +437,11 @@ export function parseInvitationContent(crudo: unknown): InvitationContent {
 
   const galeria = lista<GalleryRow>(crudo.gallery, MAXIMOS.gallery, (fila) => {
     if (!esObjeto(fila)) return undefined
+    // Una casilla vale con foto o con rótulo: la foto sola es lo normal.
     const etiqueta = texto(fila.label, LIMITES.corto)
-    if (etiqueta === undefined) return undefined
     const imagen = texto(fila.imageId, LIMITES.corto)
-    return imagen === undefined ? { label: etiqueta } : { label: etiqueta, imageId: imagen }
+    if (etiqueta === undefined && imagen === undefined) return undefined
+    return imagen === undefined ? { label: etiqueta ?? '' } : { label: etiqueta ?? '', imageId: imagen }
   })
   if (galeria !== undefined) salida.gallery = galeria
 

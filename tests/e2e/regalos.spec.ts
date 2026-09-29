@@ -24,7 +24,7 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   await page.getByRole('button', { name: 'Añadir regalo' }).click()
   // El diálogo se cierra solo al crear y vuelve a la lista, como en la maqueta.
   await page.waitForURL(/regalos$/)
-  await page.getByRole('link', { name: 'Lista de regalos' }).click()
+  await page.getByRole('link', { name: 'Lista de regalos', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Cafetera italiana' })).toBeVisible()
 
   // El importe llegó a la base como centavos exactos, sin perder el céntimo por el
@@ -63,7 +63,7 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
 
   // 4. El panel lo ve reservado, con el nombre del grupo.
   await page.goto(`/panel/eventos/${SLUG}/regalos`)
-  await page.getByRole('link', { name: 'Lista de regalos' }).click()
+  await page.getByRole('link', { name: 'Lista de regalos', exact: true }).click()
   await expect(page.getByText('Reservado', { exact: true })).toBeVisible()
   await expect(page.getByText('Reservado por Familia Rojas Peña')).toBeVisible()
 
@@ -84,7 +84,7 @@ test('un enlace revocado no reserva nada: la página ni siquiera existe', async 
   await page.getByLabel('Precio').fill('300')
   await page.getByRole('button', { name: 'Añadir regalo' }).click()
   await page.waitForURL(/regalos$/)
-  await page.getByRole('link', { name: 'Lista de regalos' }).click()
+  await page.getByRole('link', { name: 'Lista de regalos', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Batidora' })).toBeVisible()
 
   // El enlace todavía vale: el bloque de regalos se ve.

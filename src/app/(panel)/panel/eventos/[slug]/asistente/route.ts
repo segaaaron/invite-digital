@@ -2,7 +2,7 @@ import { asistente } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { accesoAlAsistente } from '../../../_carcasa/asistente'
 import { leerHistorial } from '@/modules/asistente/domain/historial'
-import { MENSAJE_DE_CIERRE, puedeConversar, type Salida } from '@/modules/asistente'
+import { idiomaDe, MENSAJE_DE_CIERRE, puedeConversar, type Salida } from '@/modules/asistente'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 
 export const dynamic = 'force-dynamic'
@@ -27,14 +27,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
   if (limite.isLimited(actor.userId, Date.now())) return new Response('Demasiados mensajes seguidos', { status: 429 })
 
-  const cuerpo = (await request.json().catch(() => null)) as { mensajes?: unknown } | null
+  const cuerpo = (await request.json().catch(() => null)) as { mensajes?: unknown; idioma?: unknown; porVoz?: unknown } | null
   const mensajes = leerHistorial(cuerpo?.mensajes)
   if (mensajes === null) return new Response('Conversación no válida', { status: 400 })
 
   const ahora = new Date()
-  const permiso = puedeConversar(acceso.config, acceso.capacidad.planSlug, await asistente.usoDe(acceso.evento.id, ahora))
+  const permiso = puedeConversar(acceso.config, acceso.capacidad.planSlug, await asistente.usoDe(acceso.evento.id, ahora), acceso.capacidad.asistente === true)
   const salidas: AsyncIterable<Salida> = permiso.ok
-    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora })
+    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true })
     : (async function* () {
         yield { tipo: 'texto', delta: permiso.motivo === 'fuera_del_plan' ? MENSAJE_DE_CIERRE.presupuesto : MENSAJE_DE_CIERRE[permiso.motivo] }
         yield { tipo: 'fin' }

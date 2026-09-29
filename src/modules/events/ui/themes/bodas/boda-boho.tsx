@@ -20,7 +20,6 @@ export const bodaBohoDefinition: ThemeDefinition = {
     // Seis en el carrusel y el retrato grande de arriba.
     fotos: { casillas: 6, retrato: true },
     sinCampos: {
-      hero: ['coverImageId'],
       ceremony: ['address'],
       reception: ['address'],
       map: ['label'],

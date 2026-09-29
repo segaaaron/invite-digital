@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from 'react'
+import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { addGuestsFromAssistantAction } from '@/app/_acciones/guests/actions'
 import { addTaskAction, saveItemAction } from '@/app/_acciones/planner/actions'
 import { saveCitaAction } from '@/app/_acciones/planner/agenda-actions'
@@ -157,6 +157,12 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   const final = useRef<HTMLDivElement>(null)
   const campo = useRef<HTMLTextAreaElement>(null)
   const titulo = useId()
+  // Lo dictado queda en el campo para revisarlo; al enviarlo, Luxury sabe que llegó por voz.
+  const [porVoz, setPorVoz] = useState(false)
+  const dictado = useDictado(texto, (dicho) => {
+    setTexto(dicho)
+    setPorVoz(true)
+  })
 
   // Con llaves: en Chrome reciente `scrollIntoView` devuelve una promesa, y un efecto que devuelve algo que
   // no es una función revienta React al limpiarlo («i is not a function»).
@@ -179,18 +185,20 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
       return copia
     })
 
-  async function enviar(pregunta: string) {
+  async function enviar(pregunta: string, porVoz = false) {
     const limpia = pregunta.trim()
     if (limpia === '' || ocupado) return
     const historial = [...burbujas.filter((b) => !b.error && b.texto !== ''), { rol: 'usuario' as const, texto: limpia }]
     setBurbujas([...burbujas, { rol: 'usuario', texto: limpia }, { rol: 'asistente', texto: '' }])
     setTexto('')
+    setPorVoz(false)
     setOcupado(true)
     try {
       const respuesta = await fetch(`/panel/eventos/${slug}/asistente`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ mensajes: historial.map((b) => ({ rol: b.rol, texto: b.texto })) }),
+        // El idioma del aparato: Luxury responde en inglés si el celular o la computadora está en inglés.
+        body: JSON.stringify({ mensajes: historial.map((b) => ({ rol: b.rol, texto: b.texto })), idioma: navigator.language, porVoz }),
       })
       if (!respuesta.ok || respuesta.body === null) {
         const aviso = respuesta.status === 429 ? 'Vas muy rápido: espera un momento y vuelve a escribirme.' : 'No pude responder ahora. Vuelve a intentarlo en un momento.'
@@ -296,7 +304,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
               <div className="flex flex-col gap-4">
                 <p className="text-[14px] leading-relaxed text-ink-soft">
                   Hola, soy {NOMBRE_DEL_ASISTENTE}. Pregúntame por tus invitados, tus tareas o tu presupuesto, o dime a quién quieres invitar y lo dejo listo para
-                  que lo confirmes.
+                  que lo confirmes. {dictado.disponible ? 'Puedes escribirme o tocar el micrófono y hablarme.' : null}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {SUGERENCIAS.map((s) => (
@@ -342,7 +350,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
             className="flex flex-col gap-2 border-t border-line-panel px-5 py-4"
             onSubmit={(e) => {
               e.preventDefault()
-              void enviar(texto)
+              void enviar(texto, porVoz)
             }}
           >
             <div className="flex items-end gap-2">
@@ -357,17 +365,40 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault()
-                    void enviar(texto)
+                    void enviar(texto, porVoz)
                   }
                 }}
-                placeholder={`Escríbele a ${NOMBRE_DEL_ASISTENTE}…`}
+                placeholder={dictado.disponible ? `Escríbele o háblale a ${NOMBRE_DEL_ASISTENTE}…` : `Escríbele a ${NOMBRE_DEL_ASISTENTE}…`}
                 ref={campo}
                 rows={1}
                 value={texto}
               />
+              {dictado.disponible ? (
+                dictado.estado === 'escuchando' ? (
+                  <button
+                    aria-label="Terminar de hablar"
+                    className="relative grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-danger text-white"
+                    onClick={dictado.terminar}
+                    type="button"
+                  >
+                    <span aria-hidden className="absolute inset-0 animate-ping rounded-full bg-danger/40 motion-reduce:animate-none" />
+                    <span aria-hidden className="relative size-3.5 rounded-[3px] bg-white" />
+                  </button>
+                ) : (
+                  <button
+                    aria-label={`Hablarle a ${NOMBRE_DEL_ASISTENTE}`}
+                    className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-line-panel-strong bg-white text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
+                    disabled={ocupado}
+                    onClick={dictado.empezar}
+                    type="button"
+                  >
+                    <Microfono className="size-[18px]" />
+                  </button>
+                )
+              ) : null}
               <button
                 className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-ink text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-                disabled={ocupado || texto.trim() === ''}
+                disabled={ocupado || texto.trim() === '' || dictado.estado === 'escuchando'}
                 type="submit"
               >
                 <span className="sr-only">Enviar</span>
@@ -376,6 +407,19 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
                 </svg>
               </button>
             </div>
+            {dictado.estado === 'escuchando' ? (
+              <p aria-live="polite" className="flex items-center gap-2 text-[12px] text-ink-soft" role="status">
+                <span aria-hidden className="size-2 animate-pulse rounded-full bg-danger" />
+                Te escucho… Revisa el texto y toca enviar.
+              </p>
+            ) : dictado.estado === 'quieto' && porVoz && texto.trim() !== '' ? (
+              <p className="text-[12px] text-ink-soft">Revisa cómo quedó escrito (sobre todo los nombres) y toca enviar.</p>
+            ) : null}
+            {dictado.aviso === null ? null : (
+              <p className="text-[12px] text-danger" role="alert">
+                {dictado.aviso}
+              </p>
+            )}
             <p className="text-[11px] text-ink-mute">{NOMBRE_DEL_ASISTENTE} puede equivocarse. Nada se guarda sin que lo confirmes.</p>
           </form>
         </div>
@@ -494,4 +538,94 @@ function Chispa({ className }: { className?: string }) {
       <path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7z" />
     </svg>
   )
+}
+
+function Microfono({ className }: { className?: string }) {
+  return (
+    <svg aria-hidden className={className} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" viewBox="0 0 24 24">
+      <rect height="12" rx="3" width="6" x="9" y="3" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" />
+    </svg>
+  )
+}
+
+const sinCambios = () => () => {}
+
+/** Lo mínimo del reconocimiento de voz del navegador (Web Speech API), que TypeScript no trae. */
+type Reconocedor = {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  start(): void
+  stop(): void
+  abort(): void
+  onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
+  onerror: ((e: { error: string }) => void) | null
+  onend: (() => void) | null
+}
+type ConstructorDeReconocedor = new () => Reconocedor
+const reconocedorDelNavegador = (): ConstructorDeReconocedor | null => {
+  const w = window as unknown as { SpeechRecognition?: ConstructorDeReconocedor; webkitSpeechRecognition?: ConstructorDeReconocedor }
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
+}
+
+/** Lo que se le dice a la persona cuando el navegador no puede escuchar, según su error. */
+const AVISO_DE_VOZ: Record<string, string> = {
+  'no-speech': 'No te oí. Toca el micrófono y vuelve a hablar.',
+  'not-allowed': 'Para hablarme, permite el micrófono: toca el candado junto a la dirección y activa «Micrófono».',
+  'service-not-allowed':
+    'Tu aparato no deja dictar aquí. En iPhone, activa Ajustes › General › Teclado › Dictado; o usa el micrófono de tu teclado para dictar.',
+  'audio-capture': 'No encontré un micrófono en este aparato. Puedes escribirme.',
+  network: 'Tu navegador no pudo escucharte ahora (sin conexión). Usa el micrófono de tu teclado o escríbeme.',
+}
+
+/**
+ * **Hablarle a Luxury** con el reconocimiento de voz **del propio navegador** (Web Speech API): gratis, sin
+ * mandar audio a nuestro servidor, y con el permiso del micrófono que pide el navegador, como Google Meet.
+ * Lo dicho aparece en el campo mientras se habla y **se envía a mano**, tras revisarlo. Donde el navegador
+ * no lo trae (Firefox), no hay botón: se escribe, o se dicta con el micrófono del teclado del celular.
+ */
+function useDictado(textoActual: string, alTexto: (texto: string) => void) {
+  const disponible = useSyncExternalStore(sinCambios, () => reconocedorDelNavegador() !== null, () => false)
+  const [estado, setEstado] = useState<'quieto' | 'escuchando'>('quieto')
+  const [aviso, setAviso] = useState<string | null>(null)
+  const reconocedor = useRef<Reconocedor | null>(null)
+
+  // Si se cierra el panel a mitad, se suelta el micrófono.
+  useEffect(() => () => reconocedor.current?.abort(), [])
+
+  function empezar() {
+    const Reconocer = reconocedorDelNavegador()
+    if (Reconocer === null) return
+    setAviso(null)
+    const base = textoActual.trim()
+    // Uno nuevo cada vez: en iPhone, reusar el anterior lo deja callado a la segunda.
+    const r = new Reconocer()
+    r.lang = navigator.language || 'es-BO'
+    r.interimResults = true
+    // Una frase por toque: en Android, el modo continuo repite lo ya dicho. Otro toque, y se agrega.
+    r.continuous = false
+    r.onresult = (e) => {
+      const dicho = Array.from(e.results, (resultado) => resultado[0]?.transcript ?? '').join('').trim()
+      alTexto([base, dicho].filter((t) => t !== '').join(' '))
+    }
+    r.onerror = (e) => {
+      if (e.error !== 'aborted') setAviso(AVISO_DE_VOZ[e.error] ?? 'Tu navegador no pudo escucharte. Puedes escribirme.')
+    }
+    r.onend = () => {
+      if (reconocedor.current === r) reconocedor.current = null
+      setEstado('quieto')
+    }
+    reconocedor.current = r
+    setEstado('escuchando')
+    try {
+      r.start()
+    } catch {
+      reconocedor.current = null
+      setEstado('quieto')
+      setAviso('Tu navegador no pudo escucharte. Puedes escribirme.')
+    }
+  }
+
+  return { disponible, estado, aviso, empezar, terminar: () => reconocedor.current?.stop() }
 }

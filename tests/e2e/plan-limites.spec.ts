@@ -33,8 +33,7 @@ test('con las fotos del plan agotadas, subir otra se rechaza y lo dice', async (
   await sql`update events set theme_key = 'boda-bot' where id = ${evento!.id}`
   await page.goto(`/panel/eventos/${eventSlug}/configuracion`)
   const galeria = await abrirSeccion(page, 'Galería')
-  await galeria.getByRole('button', { name: 'Añadir casilla' }).click()
-  await galeria.getByRole('button', { name: 'Subir una fotografía' }).click()
+  await galeria.getByRole('button', { name: 'Subir una fotografía' }).first().click()
   const subida = page.locator('dialog[open]')
   await subida.getByLabel('Elegir fotografía').setInputFiles({ name: 'una-mas.png', mimeType: 'image/png', buffer: PNG })
   await subida.getByRole('button', { name: 'Subir', exact: true }).click()

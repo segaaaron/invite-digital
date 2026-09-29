@@ -19,6 +19,7 @@ import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/Panel
 import { FormasDeRegalarForm } from '@/modules/registry/ui/FormasDeRegalarForm'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 
 export const metadata = { title: 'Regalos' }
 
@@ -66,6 +67,8 @@ export default async function RegalosPage({
     .reduce((suma, regalo) => suma + (regalo.priceCents ?? 0), 0)
 
   const base = `/panel/eventos/${event.value.slug}/regalos`
+  // Sin lista en el plan, la tarjeta dice cómo tenerla (el atelier, al plan; el anfitrión, a Extras).
+  const mejorar = conMesa ? null : await mejorarPara(actor, event.value.slug)
   const abierto = panel === 'fondo' || panel === 'regalo' ? panel : null
 
   return (
@@ -111,10 +114,10 @@ export default async function RegalosPage({
           titulo="Transferencia o QR"
         />
         <FormaCard
-          accion={conMesa ? 'Ver la lista' : null}
-          descripcion={conMesa ? 'Regalos que reservan de tu lista y fondos para algo grande.' : 'Viene con Firma 3D y Alta Costura.'}
-          estado={conMesa ? { tono: gifts.length + funds.length > 0 ? 'ok' : 'pending', texto: `${gifts.length} ${gifts.length === 1 ? 'regalo' : 'regalos'} · ${funds.length} ${funds.length === 1 ? 'fondo' : 'fondos'}` } : { tono: 'pending', texto: 'No incluida en tu plan' }}
-          href="#lista"
+          accion={conMesa ? 'Ver la lista' : (mejorar?.label ?? null)}
+          descripcion={conMesa ? 'Regalos que reservan de tu lista y fondos para algo grande.' : 'Regalos que tus invitados reservan de tu lista, y fondos para algo grande. Viene con Firma 3D y Alta Costura.'}
+          estado={conMesa ? { tono: gifts.length + funds.length > 0 ? 'ok' : 'pending', texto: `${gifts.length} ${gifts.length === 1 ? 'regalo' : 'regalos'} · ${funds.length} ${funds.length === 1 ? 'fondo' : 'fondos'}` } : { tono: 'pending', texto: 'No incluida' }}
+          href={conMesa ? '#lista' : (mejorar?.href ?? base)}
           titulo="Lista de regalos"
         />
       </section>
@@ -193,9 +196,10 @@ export default async function RegalosPage({
 function FormaCard({ titulo, descripcion, estado, accion, href }: { titulo: string; descripcion: string; estado: { tono: PillTone; texto: string }; accion: string | null; href: string }) {
   return (
     <article className="flex flex-col gap-3 rounded-[18px] border border-line-panel bg-white p-5 shadow-card">
-      <div className="flex items-start justify-between gap-3">
-        <h2 className="font-display text-[22px] leading-tight font-light text-ink">{titulo}</h2>
+      {/* El estado arriba del título: al lado, en tres columnas estrechas se salía de la tarjeta. */}
+      <div className="flex flex-col items-start gap-2">
         <Pill tone={estado.tono}>{estado.texto}</Pill>
+        <h2 className="font-display text-[22px] leading-tight font-light text-ink">{titulo}</h2>
       </div>
       <p className="flex-1 text-[13px] leading-relaxed text-ink-soft">{descripcion}</p>
       {accion === null ? null : (

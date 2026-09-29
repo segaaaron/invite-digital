@@ -66,8 +66,9 @@ describe('parseInvitationContent', () => {
     expect(parseInvitationContent({ gallery: [{ label: 'Italia' }] }).gallery).toEqual([{ label: 'Italia' }])
   })
 
-  it('descarta una casilla de galería sin rótulo', () => {
-    expect(parseInvitationContent({ gallery: [{ imageId: 'abc' }] }).gallery).toBeUndefined()
+  it('guarda una casilla de galería con solo la foto; descarta la vacía', () => {
+    expect(parseInvitationContent({ gallery: [{ imageId: 'abc' }] }).gallery).toEqual([{ label: '', imageId: 'abc' }])
+    expect(parseInvitationContent({ gallery: [{ label: ' ' }] }).gallery).toBeUndefined()
   })
 
   it('corta el itinerario en doce', () => {

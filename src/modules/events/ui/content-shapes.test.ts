@@ -14,9 +14,8 @@ describe('formaPara', () => {
       .fields.filter((campo) => campo.kind === 'imagen')
       .map((campo) => campo.key)
 
-  it('no pregunta por la portada si el diseño no la pinta', () => {
+  it('nunca pregunta por la portada: es el arte del diseño', () => {
     expect(imagenes('hero', { fotos: { casillas: 0 } })).toEqual([])
-    expect(imagenes('hero', { fotos: { portada: true, casillas: 0 } })).toEqual(['coverImageId'])
   })
 
   it('no pregunta por el retrato si el diseño no lo pinta', () => {
@@ -26,6 +25,7 @@ describe('formaPara', () => {
   it('acota la galería a las casillas que el diseño pinta', () => {
     const forma = formaPara('gallery', { fotos: { casillas: 2 } })
     expect(forma.form === 'filas' && forma.max).toBe(2)
+    expect(forma.form === 'filas' && forma.fijas).toBe(true)
   })
 
   it('no acota las listas que no son de fotografías', () => {

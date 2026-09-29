@@ -26,9 +26,9 @@ describe('el tema Palacio Griego', () => {
     expect(screen.getByText('Baile Sorpresa')).toBeInTheDocument()
   })
 
-  it('abre con la foto de portada del evento cuando la hay', () => {
+  it('abre con el retrato del evento cuando lo hay', () => {
     const { container } = render(
-      <XvIsabelleView {...propsDePrueba({ content: { ...CONTENIDO_DE_MUESTRA, hero: { ...CONTENIDO_DE_MUESTRA.hero, coverImageId: 'abc' } } })} />,
+      <XvIsabelleView {...propsDePrueba({ content: { ...CONTENIDO_DE_MUESTRA, hero: { ...CONTENIDO_DE_MUESTRA.hero, portraitImageId: 'abc' } } })} />,
     )
     expect(container.querySelector('img[src="/media/abc"]')).not.toBeNull()
   })

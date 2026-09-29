@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
-import { events, orders, plans } from '@/app/composition/container'
+import { asistente, events, orders, plans } from '@/app/composition/container'
+import { tieneLuxury } from '@/modules/asistente'
 import { requireSession } from '@/app/_acciones/sesion'
 import { extraDisponible, NOMBRE_DE_EFECTO } from '@/modules/plans/domain/extras'
 import { ExtrasCard } from '@/modules/plans/ui/ExtrasCard'
@@ -31,11 +32,14 @@ export default async function ExtrasPage({ params }: { params: Promise<{ slug: s
 
   // Solo se ofrece lo que este evento puede comprar: ni lo que su plan ya trae, ni el Día D a un
   // plan sin el planner completo. La acción vuelve a comprobarlo. Sin capacidad, no se ofrece nada.
-  const capacidad = await plans.allowanceFor(event.value.id)
-  const extras = isErr(capacidad)
-    ? []
-    : (await plans.listActiveExtras())
-        .filter((x) => extraDisponible(capacidad.value, x.effect).ok)
+  const [capacidad, configDeLuxury] = await Promise.all([plans.allowanceFor(event.value.id), asistente.config()])
+  // Luxury cuenta como incluido si su plan lo trae (Admin › Asistente), y no se ofrece sin modelo configurado.
+  const conLuxury = isErr(capacidad) ? null : { ...capacidad.value, asistente: tieneLuxury(capacidad.value, configDeLuxury) }
+  const extras =
+    conLuxury === null
+      ? []
+      : (await plans.listActiveExtras())
+          .filter((x) => (x.effect !== 'asistente' || asistente.disponible) && extraDisponible(conLuxury, x.effect).ok)
         .map((x) => ({ slug: x.slug, name: x.name, precio: formatAmount(x.priceCents, x.currency), que: NOMBRE_DE_EFECTO[x.effect] }))
   // Solo los de este evento: antes se leía la bandeja entera del negocio, con comprobantes, y
   // se filtraba aquí. Si la lectura falla, la lista sale vacía como antes.

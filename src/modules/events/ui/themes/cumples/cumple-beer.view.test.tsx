@@ -164,7 +164,6 @@ describe('el tema Cervecería Vintage', () => {
 
   it('no pide ninguna fotografía: no tiene dónde ponerla', () => {
     expect(cumpleBeerDefinition.pinta.fotos.casillas).toBe(0)
-    expect(cumpleBeerDefinition.pinta.fotos.portada ?? false).toBe(false)
     expect(cumpleBeerDefinition.pinta.fotos.retrato ?? false).toBe(false)
   })
 

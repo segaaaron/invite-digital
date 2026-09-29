@@ -7,8 +7,9 @@ import { PALETA as P } from './xv-valeria.palette'
 
 /** La piel de «Gala Real». */
 export const PIEL: PielXv = {
-  // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta.
-  apertura: (
+  // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta, con el retrato
+  // del evento si lo subieron.
+  apertura: (foto) => (
     <>
       <div
         style={{
@@ -25,7 +26,7 @@ export const PIEL: PielXv = {
           fill
           priority
           sizes="480px"
-          src={themeAsset('xv-valeria', 'xv-guindo-photo.avif')}
+          src={foto ?? themeAsset('xv-valeria', 'xv-guindo-photo.avif')}
           style={{ objectFit: 'cover', objectPosition: 'center top' }}
         />
       </div>
@@ -53,7 +54,6 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#3a0e1c"
       bgAsset={themeAsset('xv-valeria', 'marco-guindo-portada.avif')}
-      foto={datos.foto}
       hint={datos.enter}
       name={datos.name}
       openLabel={datos.openLabel}

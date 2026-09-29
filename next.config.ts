@@ -99,6 +99,12 @@ const nextConfig: NextConfig = {
         ],
       },
       {
+        // Luxury se dicta: el micrófono se abre, solo para el propio origen, en las páginas de un evento
+        // (ahí vive su botón). Va antes de la regla de la puerta, que es la última y fija la suya.
+        source: '/panel/eventos/:slug/:path*',
+        headers: [{ key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' }],
+      },
+      {
         // El check-in del día del evento lee el QR del pase con la cámara del
         // dispositivo de la puerta. La política global la niega, así que se reabre
         // solo para esta ruta y solo para el propio origen: esta regla va después a

@@ -26,7 +26,7 @@ export const esenciaDefinition: ThemeDefinition = {
     sinCampos: {
       // La portada no pinta ni la línea bajo los nombres ni una fotografía a sangre: lo que
       // enseña es el retrato redondo.
-      hero: ['serial', 'coverImageId'],
+      hero: ['serial'],
       // El itinerario del diseño es hora y qué pasa; el icono lo pone él, por el orden.
       itinerary: ['note', 'imageId'],
       // El mapa se abre desde los botones de cada lugar: no hay bloque de plano, así que

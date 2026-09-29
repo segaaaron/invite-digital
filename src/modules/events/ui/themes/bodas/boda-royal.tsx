@@ -20,7 +20,7 @@ export const bodaRoyalDefinition: ThemeDefinition = {
   pinta: {
     fotos: { casillas: 5, retrato: true },
     sinCampos: {
-      hero: ['monogram', 'coverImageId'],
+      hero: ['monogram'],
       ceremony: ['address'],
       reception: ['address'],
       map: ['label'],

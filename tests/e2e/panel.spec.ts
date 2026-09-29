@@ -157,14 +157,14 @@ test.describe('contenido de la invitación', () => {
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
     await expect(page.getByRole('group', { name: 'Fotografía de portada' })).toHaveCount(0)
     const galeria = await abrirSeccion(page, 'Galería')
-    await galeria.getByRole('button', { name: 'Añadir casilla' }).click()
-    await galeria.getByRole('button', { name: 'Subir una fotografía' }).click()
+    // Una casilla por cada foto que pinta el diseño, ya puestas.
+    await galeria.getByRole('button', { name: 'Subir una fotografía' }).first().click()
     const subida = page.locator('dialog[open]')
     await subida.getByLabel('Elegir fotografía').setInputFiles({ name: 'retrato.jpg', mimeType: 'image/jpeg', buffer: original })
     await subida.getByRole('button', { name: 'Subir', exact: true }).click()
 
     // Queda elegida en la casilla, y se ve: una miniatura, no un nombre de archivo.
-    const elegida = galeria.getByRole('group', { name: 'Fotografía · casilla 1' }).getByRole('button', { name: 'Usar retrato.jpg' })
+    const elegida = galeria.getByRole('group', { name: 'Fotografía · foto 1' }).getByRole('button', { name: 'Usar retrato.jpg' })
     await expect(elegida).toHaveAttribute('aria-pressed', 'true')
 
     const fuente = await elegida.locator('img').getAttribute('src')

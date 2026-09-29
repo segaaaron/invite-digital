@@ -695,13 +695,16 @@ export const es = {
     },
   },
   seo: {
-    homeTitle: 'Invitaciones digitales de lujo y 3D interactivas | Luxury Atelier',
+    homeTitle: 'Invitaciones digitales de lujo para bodas y XV años | Luxury Atelier',
     homeDescription:
       'Invitaciones digitales para bodas y XV años en Bolivia. Sobre animado, confirmación de asistencia en vivo, mesas, regalos y pases con QR.',
-    collectionsTitle: 'Colecciones de invitaciones digitales 3D | Luxury Atelier',
+    collectionsTitle: 'Colecciones de invitaciones digitales para bodas y XV años | Luxury Atelier',
     collectionsDescription:
       'Modelos de invitación digital para bodas y XV años en Bolivia, con confirmación de asistencia en vivo.',
     breadcrumbHome: 'Inicio',
+    modelTitle: '{nombre} · Invitación digital de {fiesta} | Luxury Atelier',
+    modelDescription: 'Mira la invitación digital «{nombre}» para {fiesta} tal como la recibirán tus invitados: portada animada, música y confirmación de asistencia en vivo. Hecha en Bolivia.',
+    fiestaDeModelo: { boda: 'boda', xv: 'XV años', cumple: 'cumpleaños' },
   },
   footer: { rights: 'Todos los derechos reservados', privacy: 'Privacidad', terms: 'Términos', onNetwork: 'Luxury Atelier en {red}', builtBy: 'Desarrollado por', whatsappFloat: 'Escríbenos por WhatsApp' },
   legal: {

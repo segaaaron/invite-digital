@@ -24,6 +24,7 @@ export function HeroStack({ alt }: { alt: string }) {
         aria-hidden
         className="anim-flotar-lento absolute top-[2%] left-0 w-[40%] -rotate-9 object-contain drop-shadow-[0_26px_34px_rgb(104_80_36/0.28)]"
         height={992}
+        loading="eager"
         sizes="220px"
         src="/site/hero/sobre-abierto.avif"
         width={1060}
@@ -33,6 +34,7 @@ export function HeroStack({ alt }: { alt: string }) {
         aria-hidden
         className="anim-flotar-lento absolute bottom-[-4%] left-[2%] z-2 w-[34%] -rotate-6 object-contain drop-shadow-[0_30px_40px_rgb(104_80_36/0.32)] [animation-delay:0.3s]"
         height={747}
+        loading="eager"
         sizes="200px"
         src="/site/hero/sobre-cerrado.avif"
         width={1000}

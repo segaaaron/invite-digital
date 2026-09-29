@@ -5,7 +5,7 @@ import { CLAVE_DE_CONFIG, leerConfig, mesEnBolivia, type ConfigDelAsistente } fr
 import { GUIAS } from '@/modules/asistente/domain/guias'
 import { HERRAMIENTAS } from '@/modules/asistente/domain/herramientas'
 import type { Mensaje } from '@/modules/asistente/domain/historial'
-import { reglasDelSistema } from '@/modules/asistente/domain/reglas'
+import { reglasDelSistema, type Idioma } from '@/modules/asistente/domain/reglas'
 import { drizzleUsoDelAsistente } from '@/modules/asistente/infrastructure/drizzle-uso'
 import { modeloFalso } from '@/modules/asistente/infrastructure/modelo-falso'
 import { crearModeloOpenAI } from '@/modules/asistente/infrastructure/openai'
@@ -153,7 +153,7 @@ export const asistente = {
   usoDe: (eventId: string, ahora: Date) => drizzleUsoDelAsistente.usoDe(eventId, mesEnBolivia(ahora)),
   resumenDelMes: (ahora: Date) => drizzleUsoDelAsistente.resumenDelMes(mesEnBolivia(ahora)),
   /** Una respuesta, en trozos. Quien llama ya comprobó sesión, evento, plan y cuota. */
-  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date }): AsyncGenerator<Salida> {
+  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean }): AsyncGenerator<Salida> {
     if (modelo === null) throw new Error('Luxury no tiene modelo configurado')
     const mes = mesEnBolivia(p.ahora)
     const instrucciones = reglasDelSistema({
@@ -164,6 +164,8 @@ export const asistente = {
       rol: p.rol,
       hoy: fechaEnBolivia(p.ahora),
       slug: p.evento.slug,
+      idioma: p.idioma,
+      porVoz: p.porVoz,
     })
     return conversar({
       modelo,

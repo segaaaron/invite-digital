@@ -30,6 +30,11 @@ export type Allowance = {
   readonly designChange: DesignChange
   /** Qué parte del planner trae. */
   readonly plannerSuite: PlannerSuite
+  /**
+   * Luxury, **comprado como extra**. El que viene con el plan no está aquí: lo decide Admin › Asistente
+   * (`asistente.config.planes`), y quien pregunta junta las dos cosas.
+   */
+  readonly asistente?: boolean
 }
 
 /**

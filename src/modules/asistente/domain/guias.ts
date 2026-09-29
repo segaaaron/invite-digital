@@ -31,7 +31,7 @@ export const GUIAS: Record<TemaDeAyuda, { readonly texto: string; readonly ruta:
     texto: 'En Invitados, «Enviar invitaciones»: cada invitado tiene su botón que abre tu WhatsApp con el mensaje y su enlace ya escritos. También puedes copiar el enlace o compartir su QR.',
   },
   recordatorios: { ruta: '/invitados', texto: 'Cuando hay a quién recordar, Invitados enseña la tarjeta «Recordatorios» con un botón de WhatsApp por persona.' },
-  mi_invitacion: { ruta: '/configuracion', texto: 'En «Mi invitación» escribes los textos por pasos (portada, fecha y lugar, familia, detalles y música) y ves la vista previa al lado.' },
+  mi_invitacion: { ruta: '/configuracion', texto: 'En «Personalizar invitación» completas cada sección en el orden en que se ve tu invitación (nombres, fecha y lugar, familia, detalles, fotos y música) y ves la vista previa al lado. Las fotos son las que tiene tu diseño; la portada es la del diseño y no se cambia.' },
   mesas: { ruta: '/mesas', texto: 'En Mesas creas las mesas con su cupo, sientas a cada invitación y puedes repartir automáticamente lo que falta.' },
   regalos: { ruta: '/regalos', texto: 'En Regalos eliges las formas de regalar (lluvia de sobres, transferencia con el QR de tu banco) y, si tu plan la trae, la lista de regalos.' },
   mensajes: { ruta: '/mensajes', texto: 'En Mensajes está el libro de firmas: lo que te escriben al confirmar. Con «Agradecer» les respondes y lo ven en su invitación.' },

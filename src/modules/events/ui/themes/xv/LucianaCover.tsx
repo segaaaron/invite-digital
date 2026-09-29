@@ -5,8 +5,6 @@ import { CoverShell } from './CoverShell'
 
 type Props = {
   readonly bgAsset: string
-  /** La fotografía del evento, cuando la subieron: sustituye a la del modelo. */
-  readonly foto?: string | undefined
   /** El faro verde, que en este diseño cierra la portada en vez de presidirla. */
   readonly lanternAsset: string
   readonly accent: string
@@ -32,7 +30,6 @@ const SOMBRA = '0 2px 8px rgba(0,0,0,.75)'
  */
 export function LucianaCover({
   bgAsset,
-  foto,
   lanternAsset,
   accent,
   textColor,
@@ -52,7 +49,7 @@ export function LucianaCover({
   )
 
   return (
-    <CoverShell bg={bg} bgAsset={bgAsset} foto={foto} openLabel={openLabel} veils={['rgba(10,25,16,.5)']}>
+    <CoverShell bg={bg} bgAsset={bgAsset} openLabel={openLabel} veils={['rgba(10,25,16,.5)']}>
       <span
         style={{
           position: 'absolute',

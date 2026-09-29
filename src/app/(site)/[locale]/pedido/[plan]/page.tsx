@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { site, webPublica } from '@/app/composition/container'
 import { PrivacyNotice } from '@/sections/LegalPage'
@@ -9,6 +10,13 @@ import { parseLocaleParam } from '@/shared/i18n/server'
 import { isErr } from '@/shared/result'
 
 export const dynamic = 'force-dynamic'
+
+/** El título de la pestaña (y de lo que se comparte): sin él salía la dirección en crudo. No se indexa: es un formulario. */
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
+  const locale = parseLocaleParam((await params).locale)
+  if (!locale) return {}
+  return { title: `${getDictionary(locale).orders.orderTitle} | Luxury Atelier`, robots: { index: false, follow: false } }
+}
 
 /**
  * El alta de pedido. Un plan que no existe es **404**: enseñar el formulario para un plan
@@ -53,7 +61,7 @@ export default async function PedidoPage({
         textos={dictionary.orders.form}
         planName={plan.name}
         planSlug={plan.slug}
-        priceLabel={`${formatMoney(plan.price, locale)} ${plan.price.currency}`}
+        priceLabel={formatMoney(plan.price, locale)}
         templateName={disenoElegido?.label ?? null}
         templateSlug={disenoElegido?.key ?? null}
       />

@@ -202,7 +202,7 @@ describe('ContentBlockForms', () => {
     )
 
     // Se elige mirándola: una miniatura por fotografía, no un desplegable de nombres de archivo.
-    const selector = screen.getByRole('group', { name: 'Fotografía · casilla 1' })
+    const selector = screen.getByRole('group', { name: 'Fotografía · foto 1' })
     fireEvent.click(within(selector).getByRole('button', { name: 'Usar anillos.jpg' }))
 
     expect(valorEnviado(container)).toEqual([{ label: 'ANILLOS', imageId: 'img-1' }])
@@ -222,7 +222,7 @@ describe('ContentBlockForms', () => {
         sections={['gallery']}
       />,
     )
-    expect(within(screen.getByRole('group', { name: 'Fotografía · casilla 1' })).getByRole('button', { name: 'Usar la fotografía guardada' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(screen.getByRole('group', { name: 'Fotografía · foto 1' })).getByRole('button', { name: 'Usar la fotografía guardada' })).toHaveAttribute('aria-pressed', 'true')
     expect(valorEnviado(container)).toEqual([{ label: 'ANILLOS', imageId: 'borrada' }])
   })
 
@@ -359,7 +359,7 @@ describe('ContentBlockForms', () => {
   it('en la portada, las fotos van justo después de los nombres', () => {
     render(<ContentBlockForms ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['hero']} />)
     const rotulos = [...document.querySelectorAll('#bloque-hero label, #bloque-hero p[id$="-rotulo"]')].map((n) => n.textContent)
-    expect(rotulos.slice(0, 4)).toEqual(['Primer nombre', 'Segundo nombre', 'Fotografía de portada', 'Retrato'])
+    expect(rotulos.slice(0, 4)).toEqual(['Primer nombre', 'Segundo nombre', 'Retrato', 'Texto sobre los nombres'])
   })
 
   it('cada sección es una tarjeta que se abre de una en una, empezando por la que falta', () => {

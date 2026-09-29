@@ -1,5 +1,5 @@
 import Image from '@/shared/design/ui/ImagenQueAparece'
-import { themeAsset } from '../assets'
+import { THEME_ASSETS, themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { comoLlegar } from '../../../domain/ubicacion'
@@ -37,7 +37,13 @@ const PETALOS = Array.from({ length: 22 }, (_, i) => ({
  */
 export function BodaSelloView({ content, event, themes, slots, guestInfo, audioSrc, respondida }: ThemeProps) {
   const ROTULOS = themes.designs['boda-sello']
-  const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, music, closing } = content
+  const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, music, closing, gallery } = content
+  // Sus seis fotos de la pareja, en orden de aparición: cada una es una casilla de la galería
+  // y, sin foto del evento, la de la maqueta.
+  const foto = (indice: number, archivo: (typeof THEME_ASSETS)['boda-sello'][number]): string => {
+    const id = gallery?.[indice]?.imageId
+    return id === undefined ? themeAsset('boda-sello', archivo) : `/media/${id}`
+  }
 
   const cuando = schedule === undefined ? null : new Date(schedule.startsAt)
   const etiquetaLocal = event.locale === 'en' ? 'en-US' : 'es-BO'
@@ -116,7 +122,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
 
       {/* ── La fecha, con la pareja a sangre ── */}
       <Seccion estilo={{ padding: '0 26px 68px' }}>
-        <FotoConOnda alto={560} posicion="20% 15%" src={themeAsset('boda-sello', 'pareja-fecha.avif')} />
+        <FotoConOnda alto={560} posicion="20% 15%" src={foto(0, 'pareja-fecha.avif')} />
         <div style={{ textAlign: 'center', marginTop: -8, marginBottom: 8 }}>
           <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 44, lineHeight: 1.1, color: P.vino }}>{nombres}</h1>
         </div>
@@ -175,7 +181,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
             <p style={{ fontSize: 19, fontStyle: 'italic', lineHeight: 1.7, marginTop: 26, color: P.vino, opacity: 0.9 }}>{historia.text}</p>
           </div>
           <div style={{ margin: '36px -34px 0', width: 'calc(100% + 68px)' }}>
-            <FotoConOnda alto={300} src={themeAsset('boda-sello', 'pareja-historia.avif')} />
+            <FotoConOnda alto={300} src={foto(1, 'pareja-historia.avif')} />
           </div>
         </Seccion>
       )}
@@ -186,7 +192,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
           <Arte
             ancho={260}
             estilo={{ width: '60%', borderRadius: 14, border: `1.5px solid ${P.oro}`, margin: '0 auto 20px' }}
-            src={themeAsset('boda-sello', 'pareja-invitacion.avif')}
+            src={foto(2, 'pareja-invitacion.avif')}
           />
           <p style={{ fontSize: 19, lineHeight: 1.7, color: P.vino, maxWidth: '88%', margin: '0 auto' }}>{ROTULOS.invitacion}</p>
           {guestInfo === undefined ? (
@@ -236,7 +242,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
           aria-hidden
           fill
           sizes="480px"
-          src={themeAsset('boda-sello', 'pareja-anillos.avif')}
+          src={foto(3, 'pareja-anillos.avif')}
           style={{ objectFit: 'cover', objectPosition: '50% 58%' }}
         />
         <span
@@ -411,7 +417,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
           <Arte
             ancho={420}
             estilo={{ width: '90%', borderRadius: 14, border: `1.5px solid ${P.oro}`, margin: '0 auto 28px' }}
-            src={themeAsset('boda-sello', 'pareja-musica.avif')}
+            src={foto(4, 'pareja-musica.avif')}
           />
           <MusicPlayer
             accent={P.oro}
@@ -460,7 +466,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       {/* ── El cierre, sobre ciruela ── */}
       <Seccion ciruela estilo={{ paddingTop: 0, paddingBottom: 80 }}>
         <div style={{ margin: '0 -34px 34px', width: 'calc(100% + 68px)' }}>
-          <FotoConOnda alto={300} fondo={P.ciruela} posicion="center 20%" src={themeAsset('boda-sello', 'pareja-cierre.avif')} />
+          <FotoConOnda alto={300} fondo={P.ciruela} posicion="center 20%" src={foto(5, 'pareja-cierre.avif')} />
         </div>
         <div style={{ textAlign: 'center' }}>
           {closing?.text === undefined ? null : (

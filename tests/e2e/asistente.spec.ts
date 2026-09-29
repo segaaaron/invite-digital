@@ -81,6 +81,53 @@ test('Luxury propone una tarea y solo la crea al confirmar, con la acción de la
   await expect(panel.getByRole('link', { name: '/planner/tareas' })).toBeVisible()
 })
 
+test.describe('hablarle', () => {
+  test.use({ permissions: ['microphone'] })
+
+  test('con el reconocimiento del navegador, lo dicho aparece en el campo, se revisa y se envía', async ({ page }) => {
+    // Un reconocedor de mentira: «oye» la pregunta en dos trozos, como el de verdad.
+    await page.addInitScript(() => {
+      class Falso {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: '¿Quién falta' }]] }), 50)
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: '¿Quién falta por responder?' }]] }), 100)
+        }
+        stop() {
+          this.onend?.()
+        }
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Falso, SpeechRecognition: undefined })
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+    await expect(panel.getByLabel('Escríbele a Luxury')).toHaveValue('¿Quién falta por responder?')
+    await panel.getByRole('button', { name: 'Terminar de hablar' }).click()
+    await expect(panel.getByText('Revisa cómo quedó escrito')).toBeVisible()
+    await panel.getByRole('button', { name: 'Enviar' }).click()
+    await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/)
+  })
+
+  test('sin reconocimiento en el navegador (Firefox) no hay micrófono: se escribe', async ({ page }) => {
+    await page.addInitScript(() => Object.assign(window, { webkitSpeechRecognition: undefined, SpeechRecognition: undefined }))
+    const respuesta = await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    // El micrófono solo se abre al propio sitio y en las páginas del evento: sin esto, el navegador lo niega.
+    expect(respuesta!.headers()['permissions-policy']).toContain('microphone=(self)')
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await expect(panel.getByLabel('Escríbele a Luxury')).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Hablarle a Luxury' })).toHaveCount(0)
+  })
+})
+
 test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {
   const [evento] = await sql<{ id: string }[]>`select id from events where slug = ${SLUG}`
   await sql`update assistant_usage set messages = 300 where event_id = ${evento!.id}`
@@ -90,14 +137,31 @@ test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {
   expect(await respuesta.text()).toContain('ya usaste todos los mensajes')
 })
 
-test('un plan sin Luxury no ve el botón y la ruta responde 404', async ({ page }) => {
+test('un plan sin Luxury lo ve con candado y cómo conseguirlo; la ruta responde 404', async ({ page }) => {
   await seedInvitation({ slug: SLUG_BASICO, plan: 'atelier' })
   await escribirInvitacion(SLUG_BASICO)
   await page.goto(`/panel/eventos/${SLUG_BASICO}`)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
   await expect(page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Conocer a Luxury, tu planner con IA' }).click()
+  const dialogo = page.locator('dialog[open]')
+  await expect(dialogo).toContainText('Carga a tus invitados')
+  // El atelier dueño mejora cambiando de plan.
+  await expect(dialogo.getByRole('link', { name: 'Ver planes' })).toHaveAttribute('href', `/panel/eventos/${SLUG_BASICO}/plan`)
   const respuesta = await page.request.post(`/panel/eventos/${SLUG_BASICO}/asistente`, { data: { mensajes: [{ rol: 'usuario', texto: 'Hola' }] } })
   expect(respuesta.status()).toBe(404)
+})
+
+test('con Luxury comprado como extra, un plan que no lo trae lo usa', async ({ page }) => {
+  const [evento] = await sql<{ id: string }[]>`select id from events where slug = ${SLUG_BASICO}`
+  await sql`insert into event_addons (event_id, addon_slug, effect, amount) values (${evento!.id}, 'luxury', 'asistente', 0)`
+  await page.goto(`/panel/eventos/${SLUG_BASICO}`)
+  await expect(page.getByRole('button', { name: 'Conocer a Luxury, tu planner con IA' })).toHaveCount(0)
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+  const panel = page.locator('dialog[open]')
+  await panel.getByLabel('Escríbele a Luxury').fill('¿Quién falta por responder?')
+  await panel.getByRole('button', { name: 'Enviar' }).click()
+  await expect(panel).toContainText(/Faltan por responder|Ya respondieron todos/)
 })
 
 test.describe('Admin › Asistente', () => {

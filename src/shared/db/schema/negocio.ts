@@ -123,7 +123,7 @@ export const addons = pgTable(
     sortOrder: integer('sort_order').notNull().default(0),
   },
   (t) => [
-    check('addons_effect_check', sql`${t.effect} in ('cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'servicio')`),
+    check('addons_effect_check', sql`${t.effect} in ('cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'asistente', 'servicio')`),
     check('addons_price_check', sql`${t.priceCents} >= 0 and ${t.amount} >= 0`),
   ],
 )

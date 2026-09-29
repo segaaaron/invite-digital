@@ -86,7 +86,7 @@ export function OrderForm({
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-nombre`}>
         <span className={ROTULO}>{textos.name}</span>
-        <input className={CAMPO} id={`${id}-nombre`} maxLength={160} name="customerName" required type="text" />
+        <input autoComplete="name" className={CAMPO} id={`${id}-nombre`} maxLength={160} name="customerName" required type="text" />
       </label>
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-contacto`}>
@@ -110,7 +110,7 @@ export function OrderForm({
       </label>
 
       <button
-        className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
+        className="w-full cursor-pointer rounded-[var(--radius-pill)] bg-gold px-7 py-3.5 text-[12px] tracking-[var(--tracking-luxe)] text-bg-raised uppercase transition-colors hover:bg-gold-deep disabled:opacity-50 min-[560px]:w-fit"
         disabled={pendiente}
         type="submit" aria-busy={(pendiente) || undefined}>
         {pendiente ? textos.submitting : textos.submit}

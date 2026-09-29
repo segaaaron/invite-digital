@@ -695,13 +695,16 @@ export const en = {
     },
   },
   seo: {
-    homeTitle: 'Luxury 3D digital wedding invitations | Luxury Atelier',
+    homeTitle: 'Luxury digital invitations for weddings and quinceañeras | Luxury Atelier',
     homeDescription:
       'Digital invitations for weddings and quinceañeras in Bolivia. Animated envelope, live RSVP, seating, gift registry and QR passes.',
-    collectionsTitle: '3D digital invitation collections | Luxury Atelier',
+    collectionsTitle: 'Digital invitation collections for weddings and quinceañeras | Luxury Atelier',
     collectionsDescription:
       'Digital invitation models for weddings and quinceañeras in Bolivia, with live RSVP.',
     breadcrumbHome: 'Home',
+    modelTitle: '{nombre} · Digital {fiesta} invitation | Luxury Atelier',
+    modelDescription: 'See the «{nombre}» digital {fiesta} invitation exactly as your guests will receive it: animated cover, music and live RSVP. Made in Bolivia.',
+    fiestaDeModelo: { boda: 'wedding', xv: 'quinceañera', cumple: 'birthday' },
   },
   footer: { rights: 'All rights reserved', privacy: 'Privacy', terms: 'Terms', onNetwork: 'Luxury Atelier on {red}', builtBy: 'Built by', whatsappFloat: 'Message us on WhatsApp' },
   legal: {

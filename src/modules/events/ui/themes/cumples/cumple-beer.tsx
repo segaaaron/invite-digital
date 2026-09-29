@@ -30,7 +30,7 @@ export const cumpleBeerDefinition: ThemeDefinition = {
       // De la portada, solo el nombre de quien cumple: va rotulado dentro del medallón del
       // arte. Las dos líneas de texto, las iniciales y el segundo nombre no se pintan —el
       // arte trae «CELEBRAMOS» y «MI CUMPLEAÑOS» dibujados—, y una fiesta es de uno.
-      hero: ['nameB', 'monogram', 'serial', 'eyebrow', 'coverImageId', 'portraitImageId'],
+      hero: ['nameB', 'monogram', 'serial', 'eyebrow', 'portraitImageId'],
     },
 
     // Los dos avisos del diseño: la frase de bienvenida y el karaoke. Un tercero no tendría

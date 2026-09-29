@@ -8,8 +8,9 @@ import { PALETA as P } from './xv-luciana.palette'
 
 /** La piel de «Bosque Encantado». */
 export const PIEL: PielXv = {
-  // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta.
-  apertura: (
+  // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta, con el retrato
+  // del evento si lo subieron.
+  apertura: (foto) => (
     <>
       <div
         style={{
@@ -31,7 +32,7 @@ export const PIEL: PielXv = {
           fill
           priority
           sizes="480px"
-          src={themeAsset('xv-luciana', 'quinceanera-verde.avif')}
+          src={foto ?? themeAsset('xv-luciana', 'quinceanera-verde.avif')}
           style={{ objectFit: 'cover', objectPosition: 'center top' }}
         />
       </div>
@@ -63,7 +64,6 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#0f2a1f"
       bgAsset={themeAsset('xv-luciana', 'bosque-verdee.avif')}
-      foto={datos.foto}
       hint={datos.enter}
       lanternAsset={themeAsset('xv-luciana', 'faro-verde.avif')}
       line1={datos.line1}

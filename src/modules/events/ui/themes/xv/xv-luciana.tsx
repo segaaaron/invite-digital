@@ -11,7 +11,7 @@ export const xv_lucianaDefinition: ThemeDefinition = {
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: {
-    fotos: { portada: true, casillas: 0 },
+    fotos: { retrato: true, casillas: 0 },
     // Su portada es la fotografía con «XV AÑOS» y el nombre encima: ni la línea de arriba
     // ni la de debajo de los nombres se pintan en ninguna parte.
     sinCampos: { hero: ['nameB', 'eyebrow', 'serial'], itinerary: ['note', 'imageId'] },

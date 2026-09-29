@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CONFIG_POR_DEFECTO, costeMicroUsd, leerConfig, mesEnBolivia, puedeConversar } from './config'
+import { CONFIG_POR_DEFECTO, costeMicroUsd, leerConfig, mesEnBolivia, puedeConversar, tieneLuxury } from './config'
 import { HERRAMIENTAS, interpretarLlamada } from './herramientas'
 import { leerHistorial, TURNOS_QUE_SE_MANDAN } from './historial'
 import { reglasDelSistema } from './reglas'
@@ -28,6 +28,17 @@ describe('config y cuota', () => {
   it('el mes es el de Bolivia: las 23:00 del 31 en La Paz siguen siendo ese mes', () => {
     expect(mesEnBolivia(new Date('2026-11-01T02:30:00Z'))).toBe('2026-10')
     expect(mesEnBolivia(new Date('2026-11-01T04:30:00Z'))).toBe('2026-11')
+  })
+})
+
+describe('Luxury por plan o por extra', () => {
+  it('lo tiene el plan que lo trae o el evento que lo compró; comprado, conversa aunque el plan no lo traiga', () => {
+    const c = CONFIG_POR_DEFECTO
+    expect(tieneLuxury({ planSlug: 'alta-costura' }, c)).toBe(true)
+    expect(tieneLuxury({ planSlug: 'atelier' }, c)).toBe(false)
+    expect(tieneLuxury({ planSlug: 'atelier', asistente: true }, c)).toBe(true)
+    expect(puedeConversar(c, 'atelier', { mensajesDelMes: 0, gastoDelMesMicroUsd: 0 }, true)).toEqual({ ok: true })
+    expect(puedeConversar(c, 'atelier', { mensajesDelMes: 300, gastoDelMesMicroUsd: 0 }, true)).toEqual({ ok: false, motivo: 'cuota' })
   })
 })
 
@@ -69,7 +80,7 @@ describe('historial', () => {
 
 describe('reglas', () => {
   it('llevan los límites y el contexto del evento al final (lo fijo primero, para la caché)', () => {
-    const r = reglasDelSistema({ evento: 'Boda de Ana', fiesta: 'boda', fecha: '2027-05-15', plan: 'Alta Costura', rol: 'anfitrión', hoy: '2026-09-28', slug: 'boda-ana' })
+    const r = reglasDelSistema({ evento: 'Boda de Ana', fiesta: 'boda', fecha: '2027-05-15', plan: 'Alta Costura', rol: 'anfitrión', hoy: '2026-09-28', slug: 'boda-ana', idioma: 'es', porVoz: false })
     expect(r.startsWith('Eres Luxury')).toBe(true)
     expect(r).toContain('fin del mundo')
     expect(r).toContain('Nunca inventas datos')
@@ -77,5 +88,25 @@ describe('reglas', () => {
     // Lo fijo no cambia de un evento a otro: es lo que OpenAI cobra en caché.
     expect(r.slice(0, r.indexOf('CONTEXTO (datos'))).not.toContain('boda-ana')
     expect(r).toContain('/panel/eventos/boda-ana/')
+  })
+
+  it('responde en el idioma del aparato, y si la persona escribe en otro, en el suyo; lo fijo no cambia', () => {
+    const base = { evento: 'Boda de Ana', fiesta: 'boda', fecha: '2027-05-15', plan: 'Alta Costura', rol: 'anfitrión', hoy: '2026-09-28', slug: 'boda-ana' }
+    const es = reglasDelSistema({ ...base, idioma: 'es', porVoz: false })
+    const en = reglasDelSistema({ ...base, idioma: 'en', porVoz: false })
+    expect(en).toContain('Idioma: inglés')
+    expect(es).toContain('Idioma: español')
+    expect(en.slice(0, en.indexOf('CONTEXTO (datos'))).toBe(es.slice(0, es.indexOf('CONTEXTO (datos')))
+    expect(es).toContain('en el idioma en que te escriba')
+  })
+
+  it('sabe cuándo el mensaje llegó dictado: cuida nombres y números, sin cambiar lo fijo', () => {
+    const base = { evento: 'Boda de Ana', fiesta: 'boda', fecha: '2027-05-15', plan: 'Alta Costura', rol: 'anfitrión', hoy: '2026-09-28', slug: 'boda-ana', idioma: 'es' as const }
+    const voz = reglasDelSistema({ ...base, porVoz: true })
+    const escrito = reglasDelSistema({ ...base, porVoz: false })
+    expect(voz).toContain('llegó dictado por voz')
+    expect(escrito).not.toContain('llegó dictado por voz')
+    expect(voz).toContain('SI TE HABLAN POR VOZ')
+    expect(voz.slice(0, voz.indexOf('CONTEXTO (datos'))).toBe(escrito.slice(0, escrito.indexOf('CONTEXTO (datos')))
   })
 })

@@ -22,7 +22,7 @@ export const bodaSerenidadDefinition: ThemeDefinition = {
     fotos: { casillas: 6, retrato: true },
     sinCampos: {
       // La portada es la fotografía del diseño con el rótulo de la revista encima.
-      hero: ['monogram', 'serial', 'coverImageId'],
+      hero: ['monogram', 'serial'],
       ceremony: ['address'],
       reception: ['address'],
       map: ['label'],

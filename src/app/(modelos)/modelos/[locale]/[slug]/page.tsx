@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { webPublica } from '@/app/composition/container'
 import type { Event } from '@/modules/events/domain/event'
+import { fiestaDeTema } from '@/modules/events'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
@@ -47,11 +48,13 @@ export async function generateMetadata({
   if (tema.key !== slug) return {}
 
   const diccionario = getDictionary(locale)
+  const fiesta = diccionario.seo.fiestaDeModelo[fiestaDeTema(tema.key)]
   const metadatos = buildPageMetadata({
     locale,
     path: `/modelos/${locale}/${slug}`,
-    title: `${tema.label} · ${diccionario.seo.collectionsTitle}`,
-    description: diccionario.seo.collectionsDescription,
+    // Título y descripción propios de cada modelo: con los del catálogo, los veinte competían entre sí en Google.
+    title: diccionario.seo.modelTitle.replace('{nombre}', tema.label).replace('{fiesta}', fiesta),
+    description: diccionario.seo.modelDescription.replace('{nombre}', tema.label).replace('{fiesta}', fiesta),
   })
   // Un modelo que todavía no se vende no se indexa: la dirección existe porque el panel
   // enlaza a ella para verlo, y el catálogo no lo enseña.

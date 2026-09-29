@@ -20,7 +20,6 @@ export const bodaPerlaDefinition: ThemeDefinition = {
     // Cinco en el carrusel y el retrato grande de arriba.
     fotos: { casillas: 5, retrato: true },
     sinCampos: {
-      hero: ['coverImageId'],
       ceremony: ['address'],
       reception: ['address'],
       map: ['label'],
