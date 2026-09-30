@@ -93,6 +93,10 @@ services:
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos
+    # Al desplegar, Docker espera a que la web vieja se apague sola antes de matarla (10 s por
+    # defecto): las conexiones en vivo (SSE) del panel la mantienen abierta hasta ese tope, y eran
+    # 10 s más sin web. Con 3 s basta: el navegador reconecta solo (`Last-Event-ID`).
+    stop_grace_period: 3s
     # Solo espera a la base, **no a `migrate`**. Dokploy despliega el compose parando `web` al
     # principio del `up` (fase «Recreate») y, con la espera a `migrate`, no la volvía a arrancar
     # hasta terminar migraciones y seed: más de un minuto sin web en cada despliegue (medido el 29
