@@ -47,6 +47,10 @@ services:
 
   migrate:
     build: *tools-build
+    # La imagen de herramientas se construye **una vez** por despliegue y la usa también
+    # `maintenance`: construirla dos veces (idénticas) duplicaba el trabajo de disco y CPU que
+    # frena la web de la misma VPS mientras se despliega.
+    image: luxuryatelier-tools:latest
     restart: 'no'
     environment:
       DATABASE_URL: *database-url
@@ -129,7 +133,8 @@ services:
   # También es la consola: `pnpm user:create`, `pnpm preflight` y un pase de
   # mantenimiento a mano se lanzan con `docker exec` dentro de este contenedor.
   maintenance:
-    build: *tools-build
+    image: luxuryatelier-tools:latest
+    pull_policy: never
     restart: unless-stopped
     logging: *logging
     environment:
