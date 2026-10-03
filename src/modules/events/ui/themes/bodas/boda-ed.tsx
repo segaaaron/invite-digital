@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-ed.content'
-import { PALETA } from './boda-ed.palette'
+import { ACENTO, PALETA } from './boda-ed.palette'
 
 /** «Editorial» — María & Alex (maqueta V3). Verde botánico y oro, con el retrato enmarcado sobre las hojas. */
 export const bodaEdDefinition: ThemeDefinition = {
@@ -20,5 +20,6 @@ export const bodaEdDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'gallery', 'quote', 'notes', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-ed.view').then((modulo) => modulo.BodaEdView)),
 }

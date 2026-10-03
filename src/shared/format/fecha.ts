@@ -16,6 +16,19 @@ const PIEZAS = new Intl.DateTimeFormat('es-BO', {
   hourCycle: 'h23',
 })
 
+const DIA_EN_BOLIVIA = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/La_Paz',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+})
+
+/**
+ * El día de hoy **en Bolivia**, `aaaa-mm-dd`. El servidor corre en UTC: a las ocho de la noche
+ * de La Paz ya es mañana allí, y un plazo «hasta el 20» se cerraría cuatro horas antes.
+ */
+export const fechaEnBolivia = (instante: Date): string => DIA_EN_BOLIVIA.format(instante)
+
 const pieza = (partes: Intl.DateTimeFormatPart[], tipo: Intl.DateTimeFormatPartTypes): string =>
   partes.find((p) => p.type === tipo)?.value ?? ''
 

@@ -2,7 +2,7 @@ import Image from '@/shared/design/ui/ImagenQueAparece'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { IsabelleCover } from './IsabelleCover'
 import type { PielXv } from './piel-xv'
-import { PALETA as P } from './xv-isabelle.palette'
+import { alfaDe, colorDeAcento, PALETA as P } from './xv-isabelle.palette'
 
 type Archivo = (typeof THEME_ASSETS)['xv-isabelle'][number]
 
@@ -86,7 +86,7 @@ export const PIEL: PielXv = {
   // Sin ornamentos: la maqueta no pone ninguno entre bloques ni en el formulario.
   ornamento: <></>,
   piezas: {
-    formulario: { boton: '#C5961A', campo: 'rgba(255,255,255,.75)', linea: '#C5961A', tinta: P.tinta, etiqueta: P.uva },
+    formulario: { boton: colorDeAcento.lila, campo: 'rgba(255,255,255,.75)', linea: colorDeAcento.lila, tinta: P.tinta, etiqueta: P.uva },
     botonTinta: P.crema,
     tituloFormulario: P.uva,
     plazo: P.tinta,
@@ -138,11 +138,11 @@ export const PIEL: PielXv = {
   },
   arte: {
     coronaWidth: 220,
-    coronaFiltro: 'drop-shadow(0 10px 20px rgba(139,105,20,.2))',
+    coronaFiltro: `drop-shadow(0 10px 20px ${alfaDe('orquidea', 0.2)})`,
     relojWidth: 100,
-    relojFiltro: 'drop-shadow(0 4px 10px rgba(139,105,20,.25))',
+    relojFiltro: `drop-shadow(0 4px 10px ${alfaDe('orquidea', 0.25)})`,
     castilloWidth: 220,
-    castilloFiltro: 'drop-shadow(0 4px 10px rgba(139,105,20,.2))',
+    castilloFiltro: `drop-shadow(0 4px 10px ${alfaDe('orquidea', 0.2)})`,
     vestimentaWidth: '100%',
     cierreWidth: 180,
   },

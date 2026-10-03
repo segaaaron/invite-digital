@@ -4,9 +4,15 @@ import postgres from 'postgres'
 // escribiendo contra una conexión que ya cerró su `afterAll`.
 const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
 
-/** Borra los pedidos de la prueba por el nombre que usa, no todos: la base es compartida. */
-export async function deleteTestOrders(customerName: string): Promise<void> {
+/**
+ * Borra los pedidos de la prueba por el nombre que usa, no todos: la base es compartida. Con
+ * correo y fecha, aprobar crea el evento y la cuenta del cliente: se van también.
+ */
+export async function deleteTestOrders(customerName: string, email?: string): Promise<void> {
+  const eventos = await sql<{ event_id: string }[]>`select event_id from orders where customer_name = ${customerName} and event_id is not null`
   await sql`delete from orders where customer_name = ${customerName}`
+  for (const { event_id } of eventos) await sql`delete from events where id = ${event_id}`
+  if (email !== undefined) await sql`delete from users where email = ${email} and role = 'cliente'`
 }
 
 export async function closePedidosDb(): Promise<void> {

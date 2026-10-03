@@ -16,6 +16,7 @@ import { DividerOrnamental } from './DividerOrnamental'
 import { FileteDegradado, SobreDeLinea } from './PiezasXv'
 import type { PielXv } from './piel-xv'
 import { PIEL_XV } from './xv.skin'
+import { colorDeAcento } from './xv.palette'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const SANS = 'var(--font-dm-sans)'
@@ -555,7 +556,7 @@ export function XvSharedView({
                 position: 'absolute',
                 inset: -6,
                 borderRadius: '50% 50% 20px 20px / 40% 40% 20px 20px',
-                background: piel.arte?.marcoRetrato ?? 'linear-gradient(160deg, #f8d7c8, #e8b3d0, #c98ad0)',
+                background: piel.arte?.marcoRetrato ?? `linear-gradient(160deg, #f8d7c8, #e8b3d0, ${colorDeAcento.orquidea})`,
                 filter: piel.arte?.marcoRetratoFiltro ?? (piel.arte?.marcoRetrato === undefined ? 'blur(1px)' : undefined),
               }}
             />
@@ -770,7 +771,7 @@ export function XvSharedView({
                 <div style={{ fontFamily: DISPLAY, fontSize: 40, marginTop: 4, color: P.tinta, fontWeight: 700 }}>
                   {guestInfo.seats}
                 </div>
-                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 4, color: ROTULO_TENUE }}>{themes.seatForYou}</div>
+                <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 4, color: ROTULO_TENUE }}>{guestInfo.seats === 1 ? themes.seatForYou : themes.seatsForYou}</div>
               </div>
             )}
           </div>

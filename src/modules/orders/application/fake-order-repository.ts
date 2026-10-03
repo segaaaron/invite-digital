@@ -34,6 +34,7 @@ export class FakeOrderRepository implements OrderRepository {
       eventSlug: null,
       customerName: order.customerName,
       contact: order.contact,
+      email: order.email ?? null,
       eventDate: order.eventDate,
       notes: order.notes,
       status: 'pending_payment',
@@ -106,6 +107,7 @@ export class FakeOrderRepository implements OrderRepository {
       eventSlug: null,
       customerName: order.customerName,
       contact: order.contact,
+      email: null,
       eventDate: null,
       notes: null,
       status: 'pending_payment',
@@ -138,6 +140,10 @@ export class FakeOrderRepository implements OrderRepository {
       .filter((o) => input.status === null || o.status === input.status)
       .sort((a, b) => rango(a.status) - rango(b.status) || b.createdAt.getTime() - a.createdAt.getTime())
       .slice(0, input.limit)
+  }
+
+  async planOrderOf(eventId: string): Promise<Order | null> {
+    return [...this.orders].reverse().find((o) => o.eventId === eventId && o.addonSlug === null) ?? null
   }
 
   async listAddonOrdersOf(eventId: string): Promise<Order[]> {

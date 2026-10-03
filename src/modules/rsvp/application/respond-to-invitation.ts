@@ -1,9 +1,11 @@
+import { fechaEnBolivia } from '@/shared/format/fecha'
 import { attempt, err, isErr, ok, type Result } from '@/shared/result'
 import { acceptsResponses, type Event } from '@/modules/events'
 import type { EventError } from '@/modules/events'
 import type { GuestError, GuestGroup } from '@/modules/guests'
 import { rsvpError, type RsvpError } from '../domain/errors'
 import { createRsvpResponse, type RsvpResponse } from '../domain/rsvp-response'
+import { leerExtras, SIN_PREGUNTAS, type PreguntasDelRsvp } from '../domain/preguntas'
 import type { RsvpRepository } from './ports'
 
 export const respondToInvitation =
@@ -11,6 +13,8 @@ export const respondToInvitation =
     resolveGroup: (token: string) => Promise<Result<GuestGroup, GuestError>>
     findEventById: (id: string) => Promise<Result<Event, EventError>>
     rsvp: RsvpRepository
+    /** Lo que se pregunta al confirmar en ese evento (canción, menú, actos). Sin dar, nada. */
+    preguntasDe?: (eventId: string) => Promise<PreguntasDelRsvp>
     /** Las personas de la invitación, para marcar quién viene. */
     peopleOf: (guestGroupId: string) => Promise<readonly { readonly id: string }[]>
     setAttendance: (eventId: string, personId: string, attending: 'yes' | 'no') => Promise<void>
@@ -22,6 +26,8 @@ export const respondToInvitation =
     attending: number
     responderName: string | null
     message: string | null
+    /** Canción, menú y actos tal como llegan del formulario: se validan contra las preguntas. */
+    extras?: { song?: string | null; menu?: string | null; acts?: readonly string[] }
   }): Promise<Result<RsvpResponse, RsvpError>> =>
     attempt<RsvpResponse, RsvpError>(
       async () => {
@@ -39,8 +45,8 @@ export const respondToInvitation =
 
         const now = deps.clock()
         // El plazo se mide en días de calendario, no en el instante del servidor: el
-        // corte es el día completo de la fecha límite.
-        const today = now.toISOString().slice(0, 10)
+        // corte es el día completo de la fecha límite, en Bolivia (UTC cerraba a las 20:00).
+        const today = fechaEnBolivia(now)
         if (!acceptsResponses(event.value, today)) {
           return err(rsvpError('rsvp_closed', `Evento ${event.value.slug} cerrado el ${event.value.rsvpDeadline}`))
         }
@@ -64,6 +70,11 @@ export const respondToInvitation =
           return err(rsvpError('already_answered', `El grupo ${group.value.id} ya respondió el ${anterior.respondedAt.toISOString()}`))
         }
 
+        const preguntas = deps.preguntasDe === undefined ? SIN_PREGUNTAS : await deps.preguntasDe(group.value.eventId)
+        // Quien no viene no elige menú ni pide canción: no cuenta en lo que contestaron.
+        const extras = leerExtras(input.attending > 0 ? (input.extras ?? {}) : {}, preguntas)
+        if (isErr(extras)) return extras
+
         const response = createRsvpResponse(
           {
             id: deps.ids(),
@@ -72,6 +83,7 @@ export const respondToInvitation =
             responderName: input.responderName,
             message: input.message,
             respondedAt: now,
+            extras: extras.value,
           },
           { seats: group.value.seats },
         )

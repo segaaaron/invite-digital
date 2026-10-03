@@ -22,7 +22,7 @@ export default async function AsistentePage() {
         <PanelCard>
           {!asistente.disponible ? (
             <p className="mb-4 rounded-[12px] bg-bg-top px-3.5 py-2.5 text-[12.5px] text-ink-soft" role="status">
-              Luxury está apagado: falta <code className="font-mono text-[11.5px]">OPENAI_API_KEY</code> en el entorno del servidor (Dokploy).
+              Luxury está apagado: falta <code className="font-codigo text-[11.5px]">OPENAI_API_KEY</code> en el entorno del servidor (Dokploy).
             </p>
           ) : null}
           <dl className="grid gap-4 min-[560px]:grid-cols-3">

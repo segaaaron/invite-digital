@@ -4,7 +4,7 @@ import { BotanicalWreath } from '../kit/flora/BotanicalWreath'
 import { LucianaCover } from './LucianaCover'
 import { CronogramaEsfera } from './CronogramasV3'
 import type { PielXv } from './piel-xv'
-import { PALETA as P } from './xv-luciana.palette'
+import { alfaDe, colorDeAcento, PALETA as P } from './xv-luciana.palette'
 
 /** La piel de «Bosque Encantado». */
 export const PIEL: PielXv = {
@@ -77,15 +77,15 @@ export const PIEL: PielXv = {
   // Los colores que «Bosque Encantado» reparte distinto de «Bajo el Mar».
   piezas: {
     // El «ENVIAR» de su formulario en la maqueta.
-    formulario: { boton: '#D9B85C' },
+    formulario: { boton: colorDeAcento.lilaFuerte },
     botonTinta: '#0f2a1f',
     // El plano como su maqueta: calles del oro del borde y aro del fondo.
-    mapaBorde: '#D9B85C',
+    mapaBorde: colorDeAcento.lilaFuerte,
     mapaAro: '#0f2a1f',
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
-    firma: '#E8C87A',
+    firma: colorDeAcento.orquidea,
     // Disco de oro al 10 % y la lámina del borde entre el rótulo y la hora.
-    discoItinerario: 'rgba(217,184,92,.10)',
+    discoItinerario: alfaDe('lilaFuerte', 0.1),
     itinerarioSeparador: 'ornamento',
     // Su maqueta escribe **toda** la invitación con sombra negra, y el titular no lleva
     // halo: el fondo es una fotografía oscura, no el papel claro de la marina.
@@ -101,21 +101,21 @@ export const PIEL: PielXv = {
     // Como en Mascarada: el sobre con el borde del panel y el texto con sombra negra.
     sobreAcento: P.lilaFuerte,
     sombraTexto: '0 2px 8px rgba(0,0,0,.75)',
-    musicaAcento: '#E8C87A',
-    musicaPista: '#E8C87A',
-    musicaArtista: '#9BC48A',
-    vestimentaNota: '#9BC48A',
+    musicaAcento: colorDeAcento.orquidea,
+    musicaPista: colorDeAcento.orquidea,
+    musicaArtista: colorDeAcento.amatista,
+    vestimentaNota: colorDeAcento.amatista,
     vestimentaDetalle: '#EAF3E4',
     regalosIntro: '#EAF3E4',
-    sobresRotulo: '#E8C87A',
-    sobresNota: '#9BC48A',
+    sobresRotulo: colorDeAcento.orquidea,
+    sobresNota: colorDeAcento.amatista,
     plazo: '#EAF3E4',
-    fecha: '#E8C87A',
+    fecha: colorDeAcento.orquidea,
     invitadoTitulo: '#EAF3E4',
-    tituloSeccion: '#E8C87A',
+    tituloSeccion: colorDeAcento.orquidea,
     tituloRecepcionSize: 32,
-    mapa: '#E8C87A',
-    itinerarioRotulo: '#E8C87A',
+    mapa: colorDeAcento.orquidea,
+    itinerarioRotulo: colorDeAcento.orquidea,
     itinerarioHora: '#EAF3E4',
   },
   // Los tamaños de su maqueta: el faro cierra a 110 y el reloj mide 90.
@@ -148,9 +148,9 @@ export const PIEL: PielXv = {
           size: 208,
           salida: 24,
           anillo: P.bordeVidrio,
-          acento: '#E8C87A',
+          acento: colorDeAcento.orquidea,
           hora: { color: '#EAF3E4', size: 16, peso: 700 },
-          momento: { color: '#E8C87A', size: 8, tracking: '0.1em' },
+          momento: { color: colorDeAcento.orquidea, size: 8, tracking: '0.1em' },
           centro: { font: 'var(--font-great-vibes)', size: 26, dy: 6 },
           sombra: '0 2px 8px rgba(0,0,0,.75)',
           pie: 30,
@@ -165,7 +165,7 @@ export const PIEL: PielXv = {
       aria-hidden
       fill="none"
       height="62"
-      stroke="#D9B85C"
+      stroke={colorDeAcento.lilaFuerte}
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.4"

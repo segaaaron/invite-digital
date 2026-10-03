@@ -12,7 +12,7 @@ export default function PorterLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
-        <div className="min-h-dvh bg-shell-deep">{children}</div>
+        <div className="panel-sin-mono min-h-dvh bg-shell-deep">{children}</div>
       </body>
     </html>
   )

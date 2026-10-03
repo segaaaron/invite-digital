@@ -37,6 +37,8 @@ export const orders = pgTable(
     eventId: uuid('event_id').references(() => events.id, { onDelete: 'set null' }),
     customerName: varchar('customer_name', { length: 160 }).notNull(),
     contact: varchar('contact', { length: 160 }).notNull(),
+    /** El correo del pedido de la web (`0080`): ahí le llega su acceso al aprobarlo. */
+    email: varchar('email', { length: 160 }),
     /**
      * Lo que costaba el plan **cuando se pidió**. Anulable solo por los pedidos anteriores
      * a la `0037` sin plan. Sin esta columna, editar un precio reescribiría lo ya cobrado.

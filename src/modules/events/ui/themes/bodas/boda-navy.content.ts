@@ -7,7 +7,7 @@ import type { InvitationContent } from '../../../domain/invitation-content'
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: { eyebrow: 'Nuestra Boda', nameA: 'Maya', nameB: 'Anderson', serial: '· NOS CASAMOS · 20.09.2026 ·' },
   quote: { text: '"Te ví y supe\nque era todo\nlo que iba a querer."' },
-  schedule: { startsAt: '2026-09-20T18:00:00' },
+  schedule: { startsAt: '2026-09-20T13:00:00' },
   hosts: {
     label: 'Con la bendición de Dios y de nuestros padres',
     names: [

@@ -16,6 +16,7 @@ vi.mock('@/app/_acciones/sesion', () => ({
 }))
 vi.mock('@/app/composition/container', () => ({
   orders: { placeAddon: (...args: unknown[]) => placeAddon(...args) },
+  diseno: { leer: async () => null },
   plans: {
     allowanceFor: (...args: unknown[]) => allowanceFor(...args),
     listActiveExtras: async () => [{ slug: 'dia-d', name: 'Día D', priceCents: 15000, currency: 'BOB', effect: 'dia_d', amount: 0, isActive: true }],

@@ -17,6 +17,7 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { FormasDeRegalarForm } from '@/modules/registry/ui/FormasDeRegalarForm'
+import { hayFormas } from '@/modules/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
@@ -43,11 +44,13 @@ export default async function RegalosPage({
     throw new Error(event.error.detail)
   }
 
-  // Sobres y transferencia van en todos los planes; la lista y los fondos, solo en los que traen
-  // la mesa de regalos (y sus acciones lo cortan en el servidor).
+  // La lista y los fondos, solo en los planes que traen la mesa de regalos; sobres y transferencia,
+  // en los que traen las formas de regalar (`0084`). Las acciones lo cortan en el servidor.
   const conMesa = !isErr(await plans.requireFeature(event.value.id, 'registry'))
   const [mesa, formas] = await Promise.all([registry.list(event.value.id), registry.formas(event.value.id)])
   if (isErr(mesa)) throw new Error(mesa.error.detail)
+  // Quien ya las configuró las conserva aunque su plan ya no las traiga.
+  const conFormas = !isErr(await plans.requireFeature(event.value.id, 'giftWays')) || hayFormas(formas)
 
   const { gifts, funds, tally } = mesa.value
   // Lo que el invitado ve hoy, dicho: sin nada, la invitación no enseña la sección y conviene saberlo.
@@ -72,6 +75,7 @@ export default async function RegalosPage({
   // La lista no se vende como extra: al anfitrión, Extras no se la da. Solo el cambio de plan.
   const mejorar = mejorarAlgo?.href.endsWith('/extras') === true ? null : mejorarAlgo
   const abierto = panel === 'fondo' || panel === 'regalo' ? panel : null
+  const mejorarFormas = conFormas ? null : (mejorarAlgo ?? (await mejorarPara(actor, event.value.slug)))
 
   return (
     <>
@@ -102,22 +106,22 @@ export default async function RegalosPage({
       {/* Tres formas de regalar, cada una con su estado; se configura en su diálogo. */}
       <section aria-label="Formas de regalar" className="mb-4.5 grid gap-4 min-[900px]:grid-cols-3">
         <FormaCard
-          accion={formas.sobres ? 'Editar' : 'Encender'}
+          accion={conFormas ? (formas.sobres ? 'Editar' : 'Encender') : (mejorarFormas?.label ?? null)}
           descripcion="El efectivo que te entregan en la fiesta, en su sobre."
-          estado={formas.sobres ? { tono: 'ok', texto: 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
-          href={`${base}?panel=sobres`}
+          estado={!conFormas ? { tono: 'pending', texto: 'No incluida' } : formas.sobres ? { tono: 'ok', texto: 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
+          href={conFormas ? `${base}?panel=sobres` : (mejorarFormas?.href ?? base)}
           titulo="Lluvia de sobres"
         />
         <FormaCard
-          accion={formas.transferencia ? 'Editar' : 'Encender'}
+          accion={conFormas ? (formas.transferencia ? 'Editar' : 'Encender') : (mejorarFormas?.label ?? null)}
           descripcion="Te transfieren directo a tu cuenta o con el QR de tu banco."
-          estado={formas.transferencia ? { tono: 'ok', texto: formas.tieneQr ? 'Activa · con QR' : 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
-          href={`${base}?panel=transferencia`}
+          estado={!conFormas ? { tono: 'pending', texto: 'No incluida' } : formas.transferencia ? { tono: 'ok', texto: formas.tieneQr ? 'Activa · con QR' : 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
+          href={conFormas ? `${base}?panel=transferencia` : (mejorarFormas?.href ?? base)}
           titulo="Transferencia o QR"
         />
         <FormaCard
           accion={conMesa ? 'Ver la lista' : (mejorar?.label ?? null)}
-          descripcion={conMesa ? 'Regalos que reservan de tu lista y fondos para algo grande.' : 'Regalos que tus invitados reservan de tu lista, y fondos para algo grande. Viene con Firma 3D y Alta Costura.'}
+          descripcion={conMesa ? 'Regalos que reservan de tu lista y fondos para algo grande.' : 'Regalos que tus invitados reservan de tu lista, y fondos para algo grande. No viene en tu plan.'}
           estado={conMesa ? { tono: gifts.length + funds.length > 0 ? 'ok' : 'pending', texto: `${gifts.length} ${gifts.length === 1 ? 'regalo' : 'regalos'} · ${funds.length} ${funds.length === 1 ? 'fondo' : 'fondos'}` } : { tono: 'pending', texto: 'No incluida' }}
           href={conMesa ? '#lista' : (mejorar?.href ?? base)}
           titulo="Lista de regalos"
@@ -127,7 +131,7 @@ export default async function RegalosPage({
         {muestra.length === 0 ? 'Tu invitación no muestra regalos todavía: enciende la lluvia de sobres o la transferencia.' : `Tu invitación muestra: ${muestra.join(', ')}.`}
       </p>
 
-      {panel === 'sobres' || panel === 'transferencia' ? (
+      {conFormas && (panel === 'sobres' || panel === 'transferencia') ? (
         <PanelDialog closeHref={base} title={panel === 'sobres' ? 'Lluvia de sobres' : 'Transferencia o QR'}>
           <FormasDeRegalarForm cerrarEn={base} eventId={event.value.id} eventSlug={event.value.slug} formas={formas} seccion={panel} sobresPorDefecto={getDictionary(event.value.locale).registry.sobresDefault} />
         </PanelDialog>

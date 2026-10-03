@@ -34,11 +34,20 @@ export function SiteHeader({ locale, dictionary }: Props) {
           ))}
         </nav>
 
-        <Link className="flex flex-col items-center px-2 leading-none" href={`/${locale}`}>
-          <span className="bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text font-display text-[27px] font-medium tracking-[0.13em] text-transparent">
-            LUXURY
+        {/* El logotipo horizontal de la marca: el sello de lacre «LA» y el nombre en una línea. */}
+        <Link aria-label="Luxury Atelier" className="flex items-center gap-2.5 px-1 leading-none" href={`/${locale}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt=""
+            className="size-9 shrink-0 drop-shadow-[0_2px_4px_rgb(104_80_36/0.25)]"
+            height={36}
+            src="/site/marca/sello-9882c5a6.avif"
+            srcSet="/site/marca/sello-9882c5a6.avif 1x, /site/marca/sello@2x-7fb6a36a.avif 2x"
+            width={36}
+          />
+          <span className="bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text font-display text-[19px] font-medium tracking-[0.16em] whitespace-nowrap text-transparent min-[440px]:text-[21px]">
+            LUXURY ATELIER
           </span>
-          <span className="mt-1 text-[9px] uppercase tracking-[0.3em] text-ink-mute">Atelier</span>
         </Link>
 
         <nav className="hidden flex-1 items-center gap-8 text-[11.5px] uppercase tracking-[var(--tracking-luxe)] md:flex">

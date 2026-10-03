@@ -3,6 +3,7 @@ import { ADMIN_AUTH_STATE } from './fixtures/atelier'
 import { closePedidosDb, deleteTestOrders } from './fixtures/pedidos'
 
 const CLIENTE = 'Cliente de prueba e2e'
+const CORREO = 'pedido-e2e@ejemplo.bo'
 
 // Un PNG mínimo de verdad: la validación mira los primeros bytes, así que un fichero de
 // texto renombrado no serviría para probar el camino feliz.
@@ -13,17 +14,19 @@ const PNG = Buffer.from(
 )
 
 test.afterAll(async () => {
-  await deleteTestOrders(CLIENTE)
+  await deleteTestOrders(CLIENTE, CORREO)
   await closePedidosDb()
 })
 
 test('el pedido va de la web al panel: referencia, comprobante y aprobación', async ({ page, browser }) => {
-  await deleteTestOrders(CLIENTE)
+  await deleteTestOrders(CLIENTE, CORREO)
 
   // 1. El cliente pide desde la web pública, sin sesión.
   await page.goto('/es/pedido/firma-3d')
   await page.getByLabel('Tu nombre').fill(CLIENTE)
-  await page.getByLabel('WhatsApp o correo').fill('+59170099988')
+  await page.getByLabel('WhatsApp', { exact: true }).fill('+59170099988')
+  await page.getByLabel(/^Correo/).fill(CORREO)
+  await page.getByLabel('Fecha del evento').fill('2027-03-20')
   await page.getByRole('button', { name: 'Registrar pedido' }).click()
 
   const referencia = await page.getByText(/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$/).innerText()
@@ -52,9 +55,9 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
   // El comprobante se descarga, no se pinta: viene con `attachment`.
   await expect(ficha.getByRole('link', { name: /comprobante\.png/ })).toBeVisible()
 
-  // El contacto es un teléfono: sin correo se aprueba igual y queda «por crear evento».
+  // Con WhatsApp, correo y fecha, aprobar crea el evento y la cuenta del cliente de una vez.
   await ficha.getByRole('button', { name: 'Aprobar pago' }).click()
-  await expect(ficha).toContainText('Por crear evento')
+  await expect(ficha).toContainText('Evento creado')
 
   // 4. Y el cliente lo ve aprobado en su misma dirección. Se recarga hasta verlo: la espera de
   // arriba puede darse por buena en una sección contenedora que ya dice «Aprobado» por otro
@@ -76,11 +79,13 @@ test('el comprobante no se descarga sin sesión, y una referencia inventada es 4
 })
 
 test('un archivo que miente sobre su tipo se rechaza en el servidor', async ({ page }) => {
-  await deleteTestOrders(CLIENTE)
+  await deleteTestOrders(CLIENTE, CORREO)
 
   await page.goto('/es/pedido/firma-3d')
   await page.getByLabel('Tu nombre').fill(CLIENTE)
-  await page.getByLabel('WhatsApp o correo').fill('+59170099988')
+  await page.getByLabel('WhatsApp', { exact: true }).fill('+59170099988')
+  await page.getByLabel(/^Correo/).fill(CORREO)
+  await page.getByLabel('Fecha del evento').fill('2027-03-20')
   await page.getByRole('button', { name: 'Registrar pedido' }).click()
   await page.getByRole('link', { name: 'Ir a pagar' }).click()
 

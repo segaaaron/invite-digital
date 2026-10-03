@@ -1,9 +1,21 @@
 import type { Allowance } from '../domain/allowance'
 import { filasComparativas, type TextosComparativa } from '../domain/comparativa'
 
+/** Lo del diseño por encargo de cada plan: rondas y días de entrega. `null`: autoservicio. */
+export type EncargoDePlan = { rondas: number; dias: number } | null
+
 type Props = {
-  planes: ReadonlyArray<{ nombre: string; limites: Allowance }>
-  textos: TextosComparativa & { title: string; feature: string; extrasTitle: string }
+  planes: ReadonlyArray<{ nombre: string; limites: Allowance; encargo?: EncargoDePlan }>
+  textos: TextosComparativa & {
+    title: string
+    feature: string
+    extrasTitle: string
+    /** Las filas del encargo: «Rondas de corrección», «Entrega», «{n} días», «Tú la escribes». */
+    rondas: string
+    entrega: string
+    entregaDias: string
+    autoservicio: string
+  }
   /** Los extras a la venta, ya con su precio en palabras. Sin ninguno, no hay bloque. */
   extras?: ReadonlyArray<{ name: string; precio: string }>
 }
@@ -18,6 +30,16 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
     planes.map((p) => p.limites),
     textos,
   )
+  // Si algún plan es por encargo, la tabla dice cuántas rondas y en cuánto se entrega: son
+  // datos de la base, los mismos que copia el encargo al empezar.
+  if (planes.some((p) => p.encargo != null)) {
+    const celda = (p: (typeof planes)[number], valor: (e: NonNullable<EncargoDePlan>) => string) =>
+      p.encargo == null ? { texto: textos.autoservicio, incluido: false } : { texto: valor(p.encargo), incluido: true }
+    filas.unshift(
+      { clave: 'grupos', etiqueta: textos.entrega, valores: planes.map((p) => celda(p, (e) => textos.entregaDias.replace('{n}', String(e.dias)))) },
+      { clave: 'grupos', etiqueta: textos.rondas, valores: planes.map((p) => celda(p, (e) => String(e.rondas))) },
+    )
+  }
 
   return (
     <div className="mt-16">
@@ -38,7 +60,7 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
           </thead>
           <tbody>
             {filas.map((fila) => (
-              <tr className="border-b border-line last:border-none" key={fila.clave}>
+              <tr className="border-b border-line last:border-none" key={fila.etiqueta}>
                 <th className="sticky left-0 max-w-[42vw] bg-bg py-3 pr-4 pl-5 font-normal text-ink-soft" scope="row">
                   {fila.etiqueta}
                 </th>

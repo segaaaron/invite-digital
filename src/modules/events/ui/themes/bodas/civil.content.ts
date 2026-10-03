@@ -16,7 +16,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   schedule: { startsAt: '2026-05-18T13:00:00' },
   ceremony: { label: 'FIRMA', time: '13:00', place: 'Registro Civil', address: 'Plaza Cívica 4' },
   reception: { label: 'BRINDIS', time: '14:30', place: 'Casa Lucía', address: 'Terraza · Centro' },
-  map: { label: 'REGISTRO CIVIL', coords: '19.43°N · 99.13°W' },
+  map: { label: 'REGISTRO CIVIL', coords: '17.39°S · 66.15°W' },
   gallery: [{ label: '1ª cita' }, { label: 'viaje' }, { label: 'el sí' }],
   closing: { text: 'Nos casamos entre los que nos quieren.', signature: 'L & A' },
 }

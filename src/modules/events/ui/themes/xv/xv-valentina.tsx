@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-valentina.content'
-import { PALETA } from './xv-valentina.palette'
+import { ACENTO, PALETA } from './xv-valentina.palette'
 
 /** «Mascarada» — Valentina. */
 export const xv_valentinaDefinition: ThemeDefinition = {
@@ -13,5 +13,6 @@ export const xv_valentinaDefinition: ThemeDefinition = {
   pinta: { fotos: { casillas: 1 }, sinCampos: { hero: ['nameB'], itinerary: ['note'] } },
   sections: ['hero', 'quote', 'gallery', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-valentina.view').then((modulo) => modulo.XvValentinaView)),
 }

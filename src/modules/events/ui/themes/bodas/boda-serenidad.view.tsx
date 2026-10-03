@@ -10,7 +10,7 @@ import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
 import { CarruselDePerla } from './CarruselDePerla'
 import { SerenidadCover } from './SerenidadCover'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-serenidad.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-serenidad.palette'
 
 const SERIF = 'var(--font-spectral)'
 const MONO = 'var(--font-jetbrains-mono)'
@@ -348,12 +348,12 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         <Reveal>
           <CarruselDePerla
             borde={P.oro}
-            flechaFondo="rgba(26,43,74,0.7)"
+            flechaFondo={alfaDe('titular', 0.7)}
             flechaTinta="#ffffff"
             fotos={fotos}
             labels={{ anterior: themes.galleryPrev, siguiente: themes.galleryNext }}
             puntoActivo={P.titular}
-            puntoInactivo="rgba(26,43,74,0.35)"
+            puntoInactivo={alfaDe('titular', 0.35)}
             sombra="rgba(184,150,12,0.3)"
           />
         </Reveal>

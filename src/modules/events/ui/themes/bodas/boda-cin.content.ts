@@ -29,7 +29,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
       'Gonzalo Prado Vega',
     ],
   },
-  schedule: { startsAt: '2026-12-12T19:00:00' },
+  schedule: { startsAt: '2026-12-12T13:00:00' },
   ceremony: { label: 'Ceremonia Religiosa', place: 'Parroquia San Rafael', time: '13:00' },
   reception: { label: 'Recepción Social', place: 'Salón Los Cedros', time: '15:00' },
   itinerary: [

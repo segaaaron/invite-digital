@@ -10,7 +10,7 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { Reveal } from '../kit/Reveal'
 import { CarruselDePerla } from './CarruselDePerla'
 import { PerlaCover } from './PerlaCover'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-perla.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-perla.palette'
 
 const SERIF = 'var(--font-spectral)'
 const MONO = 'var(--font-jetbrains-mono)'
@@ -429,7 +429,7 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
               <div style={{ display: 'flex', justifyContent: 'center', gap: 6, width: '58%', margin: '22px auto 0' }}>
                 {(dressCode.colors ?? CARTA_DE_COLOR.map((c) => c.color)).map((color) => (
                   <span key={color} style={{ textAlign: 'center', flex: 1 }}>
-                    <span style={{ display: 'block', width: '100%', aspectRatio: '1/1', background: color, border: '1px solid rgba(212,182,120,0.25)' }} />
+                    <span style={{ display: 'block', width: '100%', aspectRatio: '1/1', background: color, border: `1px solid ${alfaDe('perla', 0.25)}` }} />
                     <span style={{ display: 'block', marginTop: 3, fontFamily: MONO, fontSize: 8, letterSpacing: '0.15em', color: P.guinda }}>
                       {(CARTA_DE_COLOR.find((c) => c.color === color.toLowerCase())?.nombre ?? '').toUpperCase()}
                     </span>

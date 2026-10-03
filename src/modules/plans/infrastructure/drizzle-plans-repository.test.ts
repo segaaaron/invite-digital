@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
-import { eventAddons, events, orders, planChangeRequests, plans } from '@/shared/db/schema'
+import { eventAddons, eventDesign, events, orders, planChangeRequests, plans } from '@/shared/db/schema'
 import { drizzlePlansRepository } from './drizzle-plans-repository'
 
 const eventId = crypto.randomUUID()
@@ -194,6 +194,22 @@ describe('aplicar un extra aprobado', () => {
 
     await db.delete(orders).where(eq(orders.id, pedido!.id))
     await db.delete(eventAddons).where(eq(eventAddons.eventId, eventId))
+  })
+  it('un cambio adicional suma una ronda al diseño por encargo', async () => {
+    await db.insert(eventDesign).values({ eventId, roundsIncluded: 2, roundsUsed: 2 })
+    const [pedido] = await db
+      .insert(orders)
+      .values({ publicRef: `R${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`, addonSlug: 'cambio-adicional', eventId, customerName: 'Ana', contact: 'ana@x.bo', status: 'approved', amountCents: 5000, currency: 'BOB', decidedAt: new Date() })
+      .returning({ id: orders.id })
+    try {
+      expect(await drizzlePlansRepository.applyExtra(pedido!.id)).toBe(true)
+      const [d] = await db.select({ incluidas: eventDesign.roundsIncluded }).from(eventDesign).where(eq(eventDesign.eventId, eventId))
+      expect(d!.incluidas).toBe(3)
+    } finally {
+      await db.delete(orders).where(eq(orders.id, pedido!.id))
+      await db.delete(eventAddons).where(eq(eventAddons.eventId, eventId))
+      await db.delete(eventDesign).where(eq(eventDesign.eventId, eventId))
+    }
   })
 })
 

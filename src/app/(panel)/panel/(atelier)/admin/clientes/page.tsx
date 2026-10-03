@@ -336,10 +336,10 @@ async function Ficha({
                     ) : (
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[12.5px]">
                         <span className="text-ink-soft">
-                          Código <b className="font-mono font-medium tracking-[0.12em] text-ink">{codigo}</b>
+                          Código <b className="font-codigo font-medium tracking-[0.12em] text-ink">{codigo}</b>
                         </span>
                         <span className="text-ink-mute">{plural(usos.get(codigo) ?? 0, 'compra con su código', 'compras con su código')}</span>
-                        <span className="w-full truncate font-mono text-[11px] text-ink-mute">{`${sitio}/es?ref=${codigo}#precios`}</span>
+                        <span className="w-full truncate font-codigo text-[11px] text-ink-mute">{`${sitio}/es?ref=${codigo}#precios`}</span>
                       </div>
                     )}
                   </li>

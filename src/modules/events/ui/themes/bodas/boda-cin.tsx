@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-cin.content'
-import { PALETA } from './boda-cin.palette'
+import { ACENTO, PALETA } from './boda-cin.palette'
 
 /** «Cinemática» — Sofía & Diego (maqueta V3). El póster de cine abre a un programa de gala negro y oro. */
 export const bodaCinDefinition: ThemeDefinition = {
@@ -22,5 +22,6 @@ export const bodaCinDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'gallery', 'quote', 'notes', 'hosts', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-cin.view').then((modulo) => modulo.BodaCinView)),
 }

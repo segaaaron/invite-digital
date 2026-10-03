@@ -80,7 +80,7 @@ export function ManualPassDialog({
               ref={campo}
               autoComplete="off"
               autoCapitalize="characters"
-              className="mt-4 w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3.5 font-mono text-[18px] tracking-[0.2em] text-ink uppercase outline-none placeholder:text-[13px] placeholder:tracking-normal placeholder:normal-case focus-visible:border-ink"
+              className="mt-4 w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3.5 font-codigo text-[18px] tracking-[0.2em] text-ink uppercase outline-none placeholder:text-[13px] placeholder:tracking-normal placeholder:normal-case focus-visible:border-ink"
               onChange={(e) => setCodigo(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') void buscar()

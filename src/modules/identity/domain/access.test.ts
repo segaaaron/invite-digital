@@ -7,6 +7,7 @@ import {
   gestionaElEvento,
   isAdmin,
   parseRole,
+  puedeCrearEventos,
   sectionForRole,
   rolEnEquipo,
   type Actor,
@@ -44,7 +45,7 @@ describe('canAccessEvent · el admin', () => {
     expect(canAccessEvent(admin, suya, { section })).toBe(false)
   })
 
-  it.each(['ficha', 'configuracion', 'vistaPrevia'] as const)('entra a «%s»', (section) => {
+  it.each(['ficha', 'configuracion', 'vistaPrevia', 'invitacion'] as const)('entra a «%s»', (section) => {
     expect(canAccessEvent(admin, suya, { section })).toBe(true)
   })
 
@@ -52,6 +53,12 @@ describe('canAccessEvent · el admin', () => {
     expect(canAccessEvent(clienteActor, suya, { section: 'configuracion', memberships: ['cliente'] })).toBe(true)
     expect(canAccessEvent(clienteActor, suya, { section: 'vistaPrevia', memberships: ['coanfitrion'] })).toBe(true)
     expect(canAccessEvent(clienteActor, suya, { section: 'ficha', memberships: ['cliente'] })).toBe(false)
+  })
+
+  it('la invitación la escribe el equipo del cliente y el admin (servicio hecho por nosotros); la puerta no', () => {
+    expect(canAccessEvent(clienteActor, suya, { section: 'invitacion', memberships: ['cliente'] })).toBe(true)
+    expect(canAccessEvent(clienteActor, suya, { section: 'invitacion', memberships: ['planner'] })).toBe(true)
+    expect(canAccessEvent({ ...clienteActor, role: 'puerta' }, suya, { section: 'invitacion', memberships: ['puerta'] })).toBe(false)
   })
 
   it('el atelier dueño sigue entrando a todo', () => {
@@ -319,5 +326,14 @@ describe('gestionaElEvento', () => {
   it('un evento sin dueño solo lo gestiona el admin', () => {
     expect(gestionaElEvento(admin, { userId: null })).toBe(true)
     expect(gestionaElEvento(atelier, { userId: null })).toBe(false)
+  })
+})
+
+describe('puedeCrearEventos', () => {
+  it('solo el atelier y el admin dan de alta eventos', () => {
+    expect(puedeCrearEventos(atelier)).toBe(true)
+    expect(puedeCrearEventos(admin)).toBe(true)
+    expect(puedeCrearEventos({ ...atelier, role: 'cliente' })).toBe(false)
+    expect(puedeCrearEventos({ ...atelier, role: 'puerta' })).toBe(false)
   })
 })

@@ -13,6 +13,8 @@ type Props = {
   ctaExternal?: boolean
   /** Texto del botón. Lo decide quien conoce el catálogo entero, no la tarjeta. */
   ctaLabel?: string
+  /** «Reserva con Bs 100 · el resto cuando esté lista», si el plan tiene reserva fija. */
+  reserva?: string | null
 }
 
 /** El check dorado de la maqueta. Un punto no dice «incluido»; una marca sí. */
@@ -31,7 +33,7 @@ function Check({ gold = false }: { gold?: boolean }) {
   )
 }
 
-export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel }: Props) {
+export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null }: Props) {
   const cta = ctaLabel ?? dictionary.pricing.choose.replace('{plan}', plan.name)
   // El plan más elegido es una tarjeta oscura y elevada, como en la maqueta: es lo que
   // separa «recomendado» de «uno más de la fila». Un borde dorado no se ve a un metro.
@@ -71,6 +73,14 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
           {formatMoney(plan.price, locale)}
         </span>
       </p>
+      {plan.priceUsdCents === null ? null : (
+        <p className={`mt-1.5 text-[12.5px] [font-variant-numeric:lining-nums] ${destacado ? 'text-bg-sunken/80' : 'text-ink-mute'}`}>
+          {dictionary.pricing.usd.replace('{monto}', String(Math.round(plan.priceUsdCents / 100)))}
+        </p>
+      )}
+      {reserva === null ? null : (
+        <p className={`mt-2 text-[12.5px] ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>{reserva}</p>
+      )}
 
       <p className={`mt-5 text-[14px] leading-[1.7] ${destacado ? 'text-bg-sunken/90' : 'text-ink-soft'}`}>
         {plan.description}

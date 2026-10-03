@@ -5,8 +5,8 @@ import type { Allowance } from './allowance'
  * demás encienden algo. `servicio` es trabajo nuestro —la entrega exprés—: se cobra y no
  * toca la capacidad.
  */
-export type EfectoDeExtra = 'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio'
-export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'asistente', 'servicio']
+export type EfectoDeExtra = 'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas'
+export const EFECTOS_DE_EXTRA: readonly EfectoDeExtra[] = ['cambio_modelo', 'fotos_invitados', 'mas_grupos', 'mas_dias', 'mas_porteros', 'sumar_planner', 'dia_d', 'asistente', 'servicio', 'mas_rondas']
 export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   cambio_modelo: 'Cambiar de modelo hasta repartir',
   fotos_invitados: 'Fotos de los invitados',
@@ -17,6 +17,7 @@ export const NOMBRE_DE_EFECTO: Record<EfectoDeExtra, string> = {
   dia_d: 'Día D y enlaces para proveedores',
   asistente: 'Luxury, el planner con IA',
   servicio: 'Servicio (sin cambio en el panel)',
+  mas_rondas: 'Más rondas de corrección (diseño por encargo)',
 }
 
 export type ExtraAplicado = { readonly effect: EfectoDeExtra; readonly amount: number }
@@ -57,6 +58,8 @@ export function aplicarExtras(base: Allowance, extras: readonly ExtraAplicado[])
         a = { ...a, asistente: true }
         break
       case 'servicio':
+      case 'mas_rondas':
+        // Las rondas viven en el encargo (`event_design`), no en la capacidad: las suma `applyExtra`.
         break
     }
   }
@@ -71,7 +74,11 @@ export type ExtraNoDisponible = 'incluido' | 'requiere_plan'
  * D sube el planner a `total`, que trae también lo de `completo`: a un plan esencial le
  * regalaría proveedores, cronograma y cortejo, así que solo se vende sobre `completo`.
  */
-export function extraDisponible(a: Allowance, effect: EfectoDeExtra): { ok: true } | { ok: false; motivo: ExtraNoDisponible } {
+export function extraDisponible(
+  a: Allowance,
+  effect: EfectoDeExtra,
+  contexto: { encargo: boolean } = { encargo: false },
+): { ok: true } | { ok: false; motivo: ExtraNoDisponible } {
   const incluido = { ok: false, motivo: 'incluido' } as const
   switch (effect) {
     case 'dia_d':
@@ -86,6 +93,9 @@ export function extraDisponible(a: Allowance, effect: EfectoDeExtra): { ok: true
       return a.maxGuestGroups === null ? incluido : { ok: true }
     case 'sumar_planner':
       return a.maxHiredPlanners === null ? incluido : { ok: true }
+    // Más rondas solo tienen sentido si lo diseñamos nosotros.
+    case 'mas_rondas':
+      return contexto.encargo ? { ok: true } : { ok: false, motivo: 'requiere_plan' }
     case 'mas_porteros':
     case 'mas_dias':
     case 'servicio':

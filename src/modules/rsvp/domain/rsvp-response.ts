@@ -1,5 +1,6 @@
 import { err, ok, type Result } from '@/shared/result'
 import { rsvpError, type RsvpError } from './errors'
+import { SIN_EXTRAS, type ExtrasDeRespuesta } from './preguntas'
 
 const MAX_MESSAGE = 500
 /** El nombre de quien contesta: cabe un nombre y dos apellidos con holgura. */
@@ -13,6 +14,8 @@ export type RsvpResponse = {
   readonly responderName: string | null
   readonly message: string | null
   readonly respondedAt: Date
+  /** Canción, menú y actos, si se preguntaron (`0085`). Ya validados contra las preguntas. */
+  readonly extras?: ExtrasDeRespuesta
 }
 
 export type RsvpResponseInput = {
@@ -22,6 +25,7 @@ export type RsvpResponseInput = {
   responderName: string | null
   message: string | null
   respondedAt: Date
+  extras?: ExtrasDeRespuesta
 }
 
 export function createRsvpResponse(input: RsvpResponseInput, limits: { seats: number }): Result<RsvpResponse, RsvpError> {
@@ -49,6 +53,7 @@ export function createRsvpResponse(input: RsvpResponseInput, limits: { seats: nu
     responderName: nombre.length === 0 ? null : nombre,
     message: trimmed.length === 0 ? null : trimmed,
     respondedAt: input.respondedAt,
+    extras: input.extras ?? SIN_EXTRAS,
   })
 }
 

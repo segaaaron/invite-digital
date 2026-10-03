@@ -1,8 +1,9 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Noche Estrellada» (`wedding-variants-7.jsx`, `WeddingEditorialNavy`):
  * azul marino de medianoche con los cuatro oros de la maqueta, sobre la lluvia de purpurina.
  */
-export const PALETA = {
+const BASE = {
   /** El azul marino del fondo y del degradado que funde el retrato. */
   marino: '#0a1628',
   /** El oro de los filetes, los aros y los titulares. */
@@ -19,6 +20,18 @@ export const PALETA = {
   marfil: '#fff8e7',
   /** La tinta: blanco. */
   tinta: '#ffffff',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('oro', { oro: BASE.oro, oroVivo: BASE.oroVivo, oroPalido: BASE.oroPalido, oroBrillo: BASE.oroBrillo, oroTitular: BASE.oroTitular }, BASE.marino)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** Los cinco colores del código de vestimenta, con su nombre, como los pinta la maqueta. */

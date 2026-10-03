@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-glamour.content'
-import { PALETA } from './boda-glamour.palette'
+import { ACENTO, PALETA } from './boda-glamour.palette'
 
 /**
  * «Glamour» — Valeria & Nicolas, de `wedding-variants.jsx` (`WeddingBotanical`).
@@ -37,5 +37,6 @@ export const bodaGlamourDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-glamour.view').then((modulo) => modulo.BodaGlamourView)),
 }

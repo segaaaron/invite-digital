@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-natalia.content'
-import { PALETA } from './xv-natalia.palette'
+import { ACENTO, PALETA } from './xv-natalia.palette'
 
 /** «Encanto Musical» — Natalia. La composición marina en blanco y oro sobre una partitura. */
 export const xvNataliaDefinition: ThemeDefinition = {
@@ -13,5 +13,6 @@ export const xvNataliaDefinition: ThemeDefinition = {
   pinta: { fotos: { casillas: 0 }, sinCampos: { hero: ['nameB'], itinerary: ['note', 'imageId'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-natalia.view').then((modulo) => modulo.XvNataliaView)),
 }

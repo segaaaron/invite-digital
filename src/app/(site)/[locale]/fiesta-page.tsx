@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { site, webPublica } from '@/app/composition/container'
-import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import type { Plan } from '@/modules/catalog'
 import type { FiestaPublica } from '@/modules/events'
@@ -49,12 +48,29 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
   const filas = leidas === null || !leidas.ok ? [] : leidas.value
   const columnas = planes.flatMap((plan) => {
     const fila = filas.find((f) => f.slug === plan.slug)
-    return fila === undefined ? [] : [{ nombre: plan.name, limites: capacidadDePlan(fila) }]
+    if (fila === undefined) return []
+    const encargo = fila.correctionRounds != null && fila.deliveryDays != null ? { rondas: fila.correctionRounds, dias: fila.deliveryDays } : null
+    return [{ nombre: plan.name, limites: capacidadDePlan(fila), encargo }]
   })
   const extrasLeidos = await webPublica.extrasActivos().catch(() => null)
   const extras = extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value
   return columnas.length === 0 ? null : (
     <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: formatAmount(x.priceCents, x.currency) }))} planes={columnas} textos={dictionary.pricing.comparison} />
+  )
+}
+
+/** Si algún plan activo es de diseño por encargo (tiene rondas y días de entrega). */
+export async function hayEncargo(): Promise<boolean> {
+  const leidas = await webPublica.planesActivos().catch(() => null)
+  return leidas !== null && leidas.ok && leidas.value.some((f) => f.correctionRounds != null && f.deliveryDays != null)
+}
+
+/** La reserva fija de cada plan activo (centavos), por su `slug`. Sin leer la base, ninguna. */
+export async function reservasDePlanes(): Promise<Record<string, number>> {
+  const leidas = await webPublica.planesActivos().catch(() => null)
+  if (leidas === null || !leidas.ok) return {}
+  return Object.fromEntries(
+    leidas.value.flatMap((f) => (f.depositFixedCents != null && f.priceCents !== undefined && f.depositFixedCents < f.priceCents ? [[f.slug, f.depositFixedCents] as const] : [])),
   )
 }
 
@@ -66,8 +82,6 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
   const locale = parseLocaleParam(raw)
   if (!locale) notFound()
   const dictionary = getDictionary(locale)
-  const sitio = sitioPublico(await site.settings(), locale)
-
   const fallo = (cause: unknown) => ({ kind: 'not_found' as const, detail: cause instanceof Error ? cause.message : 'error desconocido' })
   const [planes, plantillas] = await Promise.all([
     attempt(() => webPublica.planes(locale), fallo),
@@ -85,7 +99,7 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
         isOk(planes) && planes.value.length > 0 ? (
           <PricingSection
             comparativa={await comparativaDePlanes(planes.value, dictionary)}
-            contacto={{ whatsapp: sitio.whatsapp, mensajePlan: sitio.mensajePlan }}
+            reservas={await reservasDePlanes()}
             dictionary={dictionary}
             locale={locale}
             modelo={null}

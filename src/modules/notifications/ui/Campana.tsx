@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from 'react'
 import { abrirCampanaAction, type AvisoDeLaCampana } from '@/app/_acciones/notifications/avisos-actions'
-import { BellIcon, CalendarIcon, CheckIcon, EyeIcon, GiftIcon, MessageIcon, ReceiptIcon } from '@/shared/design/ui/icons'
+import { BellIcon, CalendarIcon, CheckIcon, EyeIcon, GiftIcon, MessageIcon, PenIcon, ReceiptIcon } from '@/shared/design/ui/icons'
 import { escucharEnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { hace } from '@/shared/format/fecha'
 import { ActivarAvisos } from './ActivarAvisos'
@@ -14,6 +14,7 @@ const ICONO: Record<string, ReactNode> = {
   apertura: <EyeIcon className="size-4" />,
   regalo: <GiftIcon className="size-4" />,
   agenda: <CalendarIcon className="size-4" />,
+  diseno: <PenIcon className="size-4" />,
   venta: <ReceiptIcon className="size-4" />,
 }
 

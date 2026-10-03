@@ -78,6 +78,17 @@ describe('respondToInvitation', () => {
     expect(isOk(result)).toBe(true)
   })
 
+  it('el último día cierra a medianoche de Bolivia, no de UTC', async () => {
+    // 21 nov 03:30 UTC = 20 nov 23:30 en La Paz: todavía es el día límite allí.
+    const result = await respondToInvitation(deps({ clock: () => new Date('2026-11-21T03:30:00Z') }))({
+      token: 'tok',
+      attending: 1,
+      responderName: null,
+      message: null,
+    })
+    expect(isOk(result)).toBe(true)
+  })
+
   it('rechaza un evento que no está en marcha', async () => {
     const result = await respondToInvitation(deps({ findEventById: async () => ok({ ...evento, status: 'draft' }) }))({
       token: 'tok',
@@ -170,5 +181,36 @@ describe('respondToInvitation · las personas de la invitación', () => {
     const { d, marcadas } = conPersonas(3)
     await respondToInvitation(d)({ token: 'tok', attending: 2, responderName: null, message: null })
     expect(marcadas).toEqual([])
+  })
+})
+
+describe('las preguntas al confirmar', () => {
+  const preguntasDe = async () => ({ cancion: true, menus: ['Carne', 'Pollo'], actos: ['Civil', 'Fiesta'] })
+
+  it('guarda canción, menú y actos contra lo que se preguntó', async () => {
+    const store = repo()
+    const r = await respondToInvitation(deps({ rsvp: store.rsvp, preguntasDe }))({
+      token: 'tok',
+      attending: 2,
+      responderName: null,
+      message: null,
+      extras: { song: 'La bomba', menu: 'Pollo', acts: ['Fiesta'] },
+    })
+    expect(isOk(r)).toBe(true)
+    expect(store.appended[0]?.extras).toEqual({ song: 'La bomba', menu: 'Pollo', acts: ['Fiesta'] })
+  })
+
+  it('un menú que no está en la lista no guarda nada', async () => {
+    const store = repo()
+    const r = await respondToInvitation(deps({ rsvp: store.rsvp, preguntasDe }))({ token: 'tok', attending: 2, responderName: null, message: null, extras: { menu: 'Langosta' } })
+    expect(isErr(r) && r.error.kind).toBe('invalid_payload')
+    expect(store.appended).toEqual([])
+  })
+
+  it('quien no viene no deja menú ni canción', async () => {
+    const store = repo()
+    const r = await respondToInvitation(deps({ rsvp: store.rsvp, preguntasDe }))({ token: 'tok', attending: 0, responderName: null, message: null, extras: { song: 'La bomba', menu: 'Pollo', acts: ['Fiesta'] } })
+    expect(isOk(r)).toBe(true)
+    expect(store.appended[0]?.extras).toEqual({ song: null, menu: null, acts: [] })
   })
 })

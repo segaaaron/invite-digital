@@ -698,7 +698,7 @@ function DocumentoLegal({
               value={texto}
             />
             <p className="mt-2 text-[12px] text-ink-mute">
-              Una línea que empieza por <code className="font-mono">## </code> es un título. Deja una línea en blanco entre párrafos.
+              Una línea que empieza por <code className="font-codigo">## </code> es un título. Deja una línea en blanco entre párrafos.
             </p>
           </>
         ) : (

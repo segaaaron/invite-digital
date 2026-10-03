@@ -1,10 +1,11 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Sobre Lacrado», la boda de acuarela crema y guinda (`boda-sobre-lacrado.jsx`).
  *
  * Son los seis colores que la maqueta declara en su constante `SL`, con su nombre en
  * castellano: crema, ciruela, vino, rosa viejo, crema de texto y oro del lacre.
  */
-export const PALETA = {
+const BASE = {
   /** `cream`: el papel de acuarela. */
   crema: '#f2ede4',
   /** `plum`: el fondo de los bloques oscuros. */
@@ -21,4 +22,17 @@ export const PALETA = {
   velo: 'rgba(90,30,51,0.06)',
   /** El filete del oro al 44 %, como lo escribe la maqueta (`${gold}70`). */
   filete: 'rgba(201,169,97,0.44)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('vino', { vino: BASE.vino, ciruela: BASE.ciruela, rosa: BASE.rosa }, BASE.crema)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  velo: A.alfa('vino', 0.06),
 } as const

@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './esencia.content'
-import { PALETA } from './esencia.palette'
+import { ACENTO, PALETA } from './esencia.palette'
 
 /**
  * «Esencia» — Valentina & Mateo, de `esencia.jsx`.
@@ -40,5 +40,6 @@ export const esenciaDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'gallery', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, titulares: 'cormorant' },
   Component: dynamic(() => import('./esencia.view').then((modulo) => modulo.EsenciaView)),
 }

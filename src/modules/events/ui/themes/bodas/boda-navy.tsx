@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-navy.content'
-import { PALETA } from './boda-navy.palette'
+import { ACENTO, PALETA } from './boda-navy.palette'
 
 /**
  * «Noche Estrellada» — Maya & Anderson, de `wedding-variants-7.jsx`.
@@ -31,5 +31,6 @@ export const bodaNavyDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'playfairDisplay' },
   Component: dynamic(() => import('./boda-navy.view').then((modulo) => modulo.BodaNavyView)),
 }

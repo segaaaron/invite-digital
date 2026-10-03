@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { rsvp } from '@/app/composition/container'
+import { plans, rsvp } from '@/app/composition/container'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 import { RsvpPorPersona } from '@/modules/rsvp/ui/RsvpPorPersona'
 import { getDictionary } from '@/shared/i18n/dictionaries'
-import { isErr } from '@/shared/result'
+import { isErr, isOk } from '@/shared/result'
 import { resolveInvitation } from '../invitation'
 
 export const dynamic = 'force-dynamic'
@@ -60,6 +60,8 @@ export default async function ConfirmarPage({ params }: { params: Promise<{ toke
       {/* Ya contestaron: se ve lo dicho, no el formulario. Se confirma una sola vez. */}
       {puedeResponder ? (
         <RsvpPorPersona
+          conMensaje={isOk(await plans.requireFeature(event.id, 'guestbook'))}
+          preguntas={await rsvp.preguntas.leer(event.id)}
           dictionary={dictionary}
           guestName={group.label}
           paseHref={`/i/${token}/pase`}

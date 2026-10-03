@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
-import { events, guestbook } from '@/app/composition/container'
+import { events, guestbook, plans } from '@/app/composition/container'
+import { FeatureLocked } from '@/modules/plans'
+import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import { LibroDeFirmas } from '@/modules/guestbook/ui/LibroDeFirmas'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -27,6 +29,11 @@ export default async function MensajesPage({ params, searchParams }: { params: P
   if (isErr(libro)) throw new Error(libro.error.detail)
 
   const total = libro.value.length
+  // Sin libro de firmas en el plan, la pantalla lo dice; quien ya tiene mensajes los sigue viendo.
+  const conLibro = await plans.requireFeature(event.value.id, 'guestbook')
+  if (isErr(conLibro) && total === 0) {
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason={conLibro.error.detail} title="Mensajes" />
+  }
   const sinAgradecer = libro.value.filter((m) => m.reply === null).length
   const soloSinAgradecer = filtro === 'sin-agradecer'
   const base = `/panel/eventos/${event.value.slug}/mensajes`

@@ -61,6 +61,18 @@ export const plans = pgTable('plans', {
   designChange: varchar('design_change', { length: 24 }).notNull().default('antes_de_repartir'),
   /** El anticipo que se pide al comprar, en porcentaje (`0073`). 0: se paga entero de una vez. */
   depositPct: smallint('deposit_pct').notNull().default(0),
+  /** La reserva de importe fijo, en centavos. Si está, manda sobre el porcentaje (`0079`). */
+  depositFixedCents: integer('deposit_fixed_cents'),
+  /** El precio en dólares que fija el admin (`0082`). Nulo: solo bolivianos. */
+  priceUsdCents: integer('price_usd_cents'),
+  /** Libro de firmas y formas de regalar (`0084`). Encendidos por defecto: como fue siempre. */
+  includesGuestbook: boolean('includes_guestbook').notNull().default(true),
+  includesGiftWays: boolean('includes_gift_ways').notNull().default(true),
+  includesStyle: boolean('includes_style').notNull().default(false),
+  /** Rondas de corrección del diseño por encargo (`0081`). Nulas: el plan es de autoservicio. */
+  correctionRounds: smallint('correction_rounds'),
+  /** Días para entregar la primera versión. Nulos: autoservicio. */
+  deliveryDays: smallint('delivery_days'),
   ...timestamps,
 })
 

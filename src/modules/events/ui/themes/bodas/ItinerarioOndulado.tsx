@@ -1,4 +1,5 @@
 import type { ItineraryRow } from '../../../domain/invitation-content'
+import { alfaDe } from './boda-ed.palette'
 
 const PASO = 62
 const ARRIBA = 30
@@ -59,7 +60,7 @@ export function ItinerarioOndulado({ filas, oro, hora, rotulo, serif, mono }: Pr
                 left: `${punto.x}%`,
                 top: '50%',
                 transform: 'translate(-50%,-50%)',
-                filter: `drop-shadow(0 0 5px ${oro}) drop-shadow(0 0 9px rgba(201,169,97,0.7))`,
+                filter: `drop-shadow(0 0 5px ${oro}) drop-shadow(0 0 9px ${alfaDe('camino', 0.7)})`,
               }}
               viewBox="0 0 24 24"
               width="30"

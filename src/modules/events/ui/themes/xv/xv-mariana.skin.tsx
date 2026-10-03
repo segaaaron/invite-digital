@@ -3,7 +3,7 @@ import { THEME_ASSETS, themeAsset } from '../assets'
 import { MarianaCover } from './MarianaCover'
 import { TortaDePlata } from './TortaDePlata'
 import type { PielXv } from './piel-xv'
-import { PALETA as P } from './xv-mariana.palette'
+import { colorDeAcento, PALETA as P } from './xv-mariana.palette'
 
 type Archivo = (typeof THEME_ASSETS)['xv-mariana'][number]
 
@@ -98,7 +98,7 @@ export const PIEL: PielXv = {
     botonTinta: '#000000',
     // El plano como su maqueta: aro negro, rótulo y coordenadas en plata.
     mapaAro: '#000000',
-    mapaRotulo: '#B8BFC7',
+    mapaRotulo: colorDeAcento.amatista,
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
     firma: '#D8DDE3',
     // Su recepción también va centrada, con el castillo en plata arriba.
@@ -137,20 +137,20 @@ export const PIEL: PielXv = {
     lugarHora: '#D8DDE3',
     lugarHoraSize: 14,
     lugarHoraPeso: 400,
-    mapa: '#B8BFC7',
-    itinerarioRotulo: '#B8BFC7',
+    mapa: colorDeAcento.amatista,
+    itinerarioRotulo: colorDeAcento.amatista,
     itinerarioRotuloSize: 13,
     itinerarioHora: '#D8DDE3',
     itinerarioHoraSize: 24,
-    serial: '#B8BFC7',
+    serial: colorDeAcento.amatista,
     monogramaDegradado: 'linear-gradient(180deg, #FFFFFF 0%, #D8DDE3 60%)',
     nombre: '#FFFFFF',
     // Su nombre lleva sombra negra **y** un resplandor blanco, como en la maqueta.
     sombraNombre: '0 2px 10px rgba(0,0,0,.7), 0 0 24px rgba(255,255,255,.35)',
-    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#B8BFC7', mayusculas: true },
+    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: colorDeAcento.amatista, mayusculas: true },
     anfitrionesNombres: '#FFFFFF',
     fecha: '#D8DDE3',
-    rotuloTenue: '#B8BFC7',
+    rotuloTenue: colorDeAcento.amatista,
     faltan: '#D8DDE3',
   },
   // Los tamaños de su maqueta, y el castillo en plata: llega en guindo y ahí se

@@ -1,4 +1,5 @@
 import { attempt, err, ok, type Result } from '@/shared/result'
+import { normalizarWhatsapp } from '@/shared/whatsapp'
 import { ordersError, type OrdersError } from '../domain/errors'
 import { canCancel, canDecide, canReceiveProof, canRemind, newPublicRef, normalizeRef, saldoPendiente, type Order, type OrderStatus, type QuoteExtra } from '../domain/order'
 import { checkProof } from '../domain/proof'
@@ -9,6 +10,8 @@ type WithStorage = Deps & { storage: FileStorage; newKey: () => string }
 
 const MAX_NAME = 160
 const MAX_NOTES = 1000
+/** La misma forma que pide el formulario de consultas (`leads`). */
+const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 /**
  * Alta de pedido desde la web pública.
@@ -28,7 +31,11 @@ export const placeOrder =
      */
     templateSlug?: string | null
     customerName: string
+    /** El WhatsApp. Es por donde se atiende al cliente en Bolivia. */
     contact: string
+    /** El correo: al aprobar el pedido, ahí le llega su acceso al panel. */
+    email: string
+    /** Obligatoria: sin fecha, al aprobar no nace el evento. */
     eventDate: string | null
     notes: string | null
     /** El código de recomendación, ya validado en la frontera, y su descuento. */
@@ -38,14 +45,19 @@ export const placeOrder =
     // Los errores del pedido público son **códigos** (`name`, `contact`…): la web los
     // traduce con su diccionario, en el idioma de quien pide.
     const nombre = input.customerName.trim()
-    const contacto = input.contact.trim()
+    // WhatsApp y correo por separado, y la fecha, obligatorios: con «WhatsApp o correo» y la fecha
+    // opcional, el pedido se aprobaba y no se podía crear ni la cuenta ni el evento.
+    const contacto = normalizarWhatsapp(input.contact)
+    const correo = input.email.trim().toLowerCase()
 
     if (nombre === '' || nombre.length > MAX_NAME) {
       return err(ordersError('invalid_input', 'name'))
     }
-    if (contacto === '' || contacto.length > MAX_NAME) {
+    if (contacto === null || contacto === '') {
       return err(ordersError('invalid_input', 'contact'))
     }
+    if (correo.length > MAX_NAME || !CORREO.test(correo)) return err(ordersError('invalid_input', 'email'))
+    if (input.eventDate === null || !/^\d{4}-\d{2}-\d{2}$/.test(input.eventDate)) return err(ordersError('invalid_input', 'eventDate'))
     if (input.planSlug.trim() === '') return err(ordersError('invalid_input', 'plan'))
 
     const notas = input.notes?.trim() ?? ''
@@ -70,6 +82,7 @@ export const placeOrder =
               templateSlug,
               customerName: nombre,
               contact: contacto,
+              email: correo,
               eventDate: input.eventDate,
               notes: notas === '' ? null : notas,
               referralCode: input.referralCode ?? null,

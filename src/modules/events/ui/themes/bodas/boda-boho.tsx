@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-boho.content'
-import { PALETA } from './boda-boho.palette'
+import { ACENTO, PALETA } from './boda-boho.palette'
 
 /**
  * «Pampas y Flores Secas» — Sara & Óscar, de `wedding-variants-10.jsx`.
@@ -31,5 +31,6 @@ export const bodaBohoDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-boho.view').then((modulo) => modulo.BodaBohoView)),
 }

@@ -46,6 +46,7 @@ export const aPedidoDeVenta = (o: Order): PedidoDeVenta => ({
   publicRef: o.publicRef,
   customerName: o.customerName,
   contact: o.contact,
+  email: o.email,
   fiesta: o.templateSlug === null ? null : fiestaDeTema(o.templateSlug),
   eventDate: o.eventDate,
   status: o.status,

@@ -13,6 +13,12 @@ const create = vi.fn()
 const cheapestActive = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/navigation', () => ({
+  redirect: vi.fn(),
+  notFound: () => {
+    throw new Error('NEXT_NOT_FOUND')
+  },
+}))
 // La guardia de multitenencia se deja pasar en estas pruebas: lo que comprueban es el
 // comportamiento de la acción, y que la guardia esté puesta lo vigila `pnpm verify:tenancy`
 // y la e2e con dos usuarios de verdad.
@@ -158,6 +164,16 @@ describe('la retención la fija el plan, no el formulario', () => {
 
     await createEventAction({ status: 'idle', message: '' }, formulario())
     expect((create.mock.calls[0]?.[0] as { retentionDays: number }).retentionDays).toBe(60)
+  })
+
+  it('un cliente o la puerta no crean eventos: un evento suyo no lo podrían abrir', async () => {
+    cheapestActive.mockResolvedValue({ onlineDays: 60 })
+    const { createEventAction } = await import('@/app/_acciones/events/actions')
+    for (const role of ['cliente', 'puerta']) {
+      requireSession.mockResolvedValue({ userId: 'u1', role })
+      await expect(createEventAction({ status: 'idle', message: '' }, formulario())).rejects.toThrow('NEXT_NOT_FOUND')
+    }
+    expect(create).not.toHaveBeenCalled()
   })
 
   it('al crear, un diseño retirado se rechaza sin crear nada', async () => {

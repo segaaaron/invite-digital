@@ -408,7 +408,7 @@ async function Cotizacion({ venta, cerrar, hoy }: { venta: Venta | undefined; ce
         hoy={hoy}
         modelos={modelos}
         ocupacion={ocupacion}
-        planes={isErr(planesAdmin) ? [] : planesAdmin.value.filter((pl) => pl.isActive).map((pl) => ({ slug: pl.slug, nombre: pl.es?.name ?? pl.slug, priceCents: pl.priceCents, depositPct: pl.depositPct }))}
+        planes={isErr(planesAdmin) ? [] : planesAdmin.value.filter((pl) => pl.isActive).map((pl) => ({ slug: pl.slug, nombre: pl.es?.name ?? pl.slug, priceCents: pl.priceCents, depositPct: pl.depositPct, depositFixedCents: pl.depositFixedCents }))}
       />
     </PanelLateral>
   )

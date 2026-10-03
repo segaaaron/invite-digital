@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import {
+  designRounds,
   arrivals,
   budgetItems,
   courtMembers,
@@ -281,6 +282,16 @@ describe('anonimización', () => {
       const [ajena] = await tx.select().from(fundContributions).where(eq(fundContributions.fundId, fondoAjeno!.id))
       expect(ajena?.displayName).toBe('Abuela Rosa Quiroga')
       expect(ajena?.message).toBe('Enhorabuena.')
+    })
+  })
+
+  it('al vencer, se borran los mensajes de las rondas de diseño', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleEventRepository(tx)
+      const evento = await seedEvent(tx, { eventDate: '2026-01-01', retentionDays: 30 })
+      await tx.insert(designRounds).values({ eventId: evento.id, message: 'Corrige el nombre de mi mamá: Rosa Vargas' })
+      await repo.anonymize(evento.id, NOW)
+      expect(await tx.select().from(designRounds).where(eq(designRounds.eventId, evento.id))).toEqual([])
     })
   })
 

@@ -20,6 +20,9 @@ export type PlanEditorView = {
   readonly includesSeating: boolean
   readonly includesRegistry: boolean
   readonly includesCheckin: boolean
+  readonly includesGuestbook: boolean
+  readonly includesGiftWays: boolean
+  readonly includesStyle: boolean
   readonly maxDoorPorters: number
   readonly maxCohosts: number | null
   readonly maxHiredPlanners: number | null
@@ -31,6 +34,11 @@ export type PlanEditorView = {
   readonly designChange: string
   readonly plannerSuite: string
   readonly depositPct: number
+  /** La reserva fija en Bs como texto del campo; vacía, no hay. */
+  readonly depositFixed: string
+  readonly priceUsd: string
+  readonly correctionRounds: string
+  readonly deliveryDays: string
   readonly highlighted: boolean
   readonly isActive: boolean
   readonly eventos: number
@@ -42,6 +50,9 @@ const FUNCIONES = [
   { name: 'includesSeating', label: 'Mesas y plano del salón', description: 'Sentar a cada invitado y dibujar el salón.' },
   { name: 'includesRegistry', label: 'Mesa de regalos y fondos', description: 'Regalos que se reservan y fondos en efectivo con meta.' },
   { name: 'includesCheckin', label: 'Modo puerta', description: 'Pases QR en la entrada. El personal de recepción se topa arriba.' },
+  { name: 'includesGuestbook', label: 'Libro de firmas', description: 'Los invitados dejan un mensaje al confirmar. Apagado, quien ya tiene mensajes los conserva.' },
+  { name: 'includesGiftWays', label: 'Lluvia de sobres y QR de transferencia', description: 'Las formas de regalar en la invitación. Apagado, quien ya las configuró las conserva.' },
+  { name: 'includesStyle', label: 'Colores y letra a su gusto', description: 'El cliente elige el color de acento y la caligrafía de su diseño. Apagado, quien ya los eligió los conserva.' },
   { name: 'guestPhotos', label: 'Fotos de los invitados', description: 'Cada invitado sube sus fotos desde su invitación.' },
   { name: 'eventPassword', label: 'Invitación con contraseña', description: 'La invitación pide una contraseña antes de abrirse.' },
   { name: 'csvImport', label: 'Importar la lista desde Excel (CSV)', description: 'Cargar todos los invitados de una vez.' },
@@ -87,6 +98,16 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
         <div className="grid max-w-[540px] gap-4 min-[560px]:grid-cols-2">
           <UnitField decimal defaultValue={txt('price', plan.price)} id={`${id}-precio`} label="Precio" name="price" prefix="Bs" required />
           <UnitField
+            decimal
+            defaultValue={txt('priceUsd', plan.priceUsd)}
+            hint="Lo fijas tú: la web lo enseña junto al precio en bolivianos. Vacío, solo bolivianos."
+            id={`${id}-usd`}
+            label="Precio en dólares"
+            name="priceUsd"
+            placeholder="Sin precio en dólares"
+            prefix="USD"
+          />
+          <UnitField
             defaultValue={txt('depositPct', plan.depositPct === 0 ? '' : String(plan.depositPct))}
             hint="Con anticipo, el evento nace al aprobarlo y el saldo se registra después. Vacío: pago entero."
             id={`${id}-anticipo`}
@@ -95,10 +116,30 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
             placeholder="Sin anticipo"
             unit="%"
           />
+          <UnitField
+            decimal
+            defaultValue={txt('depositFixed', plan.depositFixed)}
+            hint="Un importe fijo para reservar (p. ej. Bs 100). Si lo pones, manda sobre el porcentaje."
+            id={`${id}-reserva`}
+            label="Reserva fija"
+            name="depositFixed"
+            placeholder="Sin reserva fija"
+            prefix="Bs"
+          />
         </div>
         <div className="flex flex-col divide-y divide-line-panel">
           <SwitchRow defaultChecked={chk('isActive', plan.isActive)} description="Apagado, deja de venderse. Los eventos que ya lo tienen lo conservan." label="A la venta" name="isActive" />
           <SwitchRow defaultChecked={chk('highlighted', plan.highlighted)} description="La tarjeta oscura con «Más elegido» en los precios." label="Destacado en la web" name="highlighted" />
+        </div>
+      </SettingsSection>
+
+      <SettingsSection
+        description="Si lo diseñamos nosotros: cuántas rondas de corrección trae y en cuántos días entregamos la primera versión. Vacíos los dos, el cliente escribe su invitación solo."
+        title="Diseño por encargo"
+      >
+        <div className="grid max-w-[540px] gap-4 min-[560px]:grid-cols-2">
+          <UnitField defaultValue={txt('correctionRounds', plan.correctionRounds)} id={`${id}-rondas`} label="Rondas de corrección" name="correctionRounds" placeholder="Autoservicio" unit="rondas" />
+          <UnitField defaultValue={txt('deliveryDays', plan.deliveryDays)} id={`${id}-entrega`} label="Entrega de la primera versión" name="deliveryDays" placeholder="Autoservicio" unit="días" />
         </div>
       </SettingsSection>
 

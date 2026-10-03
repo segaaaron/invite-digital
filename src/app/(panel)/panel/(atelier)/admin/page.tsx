@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { admin, cargarHoy, checkin } from '@/app/composition/container'
+import { admin, cargarHoy, checkin, diseno } from '@/app/composition/container'
 import { AvisoGrupo } from '@/modules/admin/ui/HoyPiezas'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { diasEntre } from '@/modules/admin/domain/hoy'
@@ -10,7 +10,7 @@ import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { EtiquetaDeFiesta, Semaforo } from '@/shared/design/ui/panel/lista'
 import { ArrowRightIcon, CheckIcon } from '@/shared/design/ui/icons'
 import { formatAmount } from '@/shared/money'
-import { faltaPara } from '@/shared/format/fecha'
+import { diaDelEvento, faltaPara } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { registrarFallo } from '@/shared/observability/fallos'
 
@@ -33,7 +33,7 @@ const MES_DIAS = 30
 export default async function AdminPage() {
   await requireAdmin()
   const ahora = new Date()
-  const [cargado, dinero] = await Promise.all([cargarHoy(ahora), admin.todayMoney()])
+  const [cargado, dinero, disenos] = await Promise.all([cargarHoy(ahora), admin.todayMoney(), diseno.porEntregar().catch(() => [])])
 
   if (isErr(cargado)) {
     registrarFallo('panel/admin/page', 'Hoy', cargado.error)
@@ -140,6 +140,30 @@ export default async function AdminPage() {
             })}
           </ul>
         </section>
+      )}
+
+      {disenos.length === 0 ? null : (
+        <PanelCard className="mb-4.5" title="Diseños por entregar">
+          <ul className="flex flex-col divide-y divide-line-panel">
+            {disenos.map((d) => {
+              const atrasado = d.entregaHasta !== null && d.entregaHasta < hoy
+              return (
+                <li className="flex flex-wrap items-baseline justify-between gap-2 py-2.5" key={d.slug}>
+                  <Link className="text-[14px] text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${d.slug}/configuracion#diseno`}>
+                    {d.title}
+                  </Link>
+                  <span className={`text-[12.5px] ${atrasado ? 'text-danger' : 'text-ink-soft'}`}>
+                    {d.estado === 'esperando_datos'
+                      ? 'Esperando sus datos'
+                      : d.entregaHasta === null
+                        ? 'En diseño'
+                        : `${atrasado ? 'Atrasado · era para el' : 'Entrega'} ${diaDelEvento(d.entregaHasta)}`}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </PanelCard>
       )}
 
       <div className="grid items-start gap-4.5 min-[1000px]:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">

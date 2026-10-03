@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './cumple-beer.content'
-import { PALETA } from './cumple-beer.palette'
+import { ACENTO, PALETA } from './cumple-beer.palette'
 
 /**
  * «Cervecería Vintage» — el cumpleaños de Miguel. Taberna de barrica, cebada y karaoke.
@@ -39,5 +39,6 @@ export const cumpleBeerDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'schedule', 'notes', 'reception', 'map', 'music', 'quote', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'cinzel' },
   Component: dynamic(() => import('./cumple-beer.view').then((modulo) => modulo.CumpleBeerView)),
 }

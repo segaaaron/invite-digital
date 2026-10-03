@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-royal.content'
-import { PALETA } from './boda-royal.palette'
+import { ACENTO, PALETA } from './boda-royal.palette'
 
 /**
  * «Royal Blush» — Renata & Pablo, de `wedding-variants-6.jsx`.
@@ -32,5 +32,6 @@ export const bodaRoyalDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-royal.view').then((modulo) => modulo.BodaRoyalView)),
 }

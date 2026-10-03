@@ -9,7 +9,7 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { Reveal } from '../kit/Reveal'
 import { EsenciaCover } from './EsenciaCover'
 import { FileteDeEsencia, IconoDeEsencia, RamitaDeOlivo, type ClaveDeIcono } from './esencia-ornamentos'
-import { CARTA_DE_COLOR, PALETA as P } from './esencia.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './esencia.palette'
 
 
 const SANS = 'var(--font-outfit)'
@@ -204,7 +204,7 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
               <Countdown
                 cellStyle={{
                   background: P.calido,
-                  border: '1px solid rgba(196,168,130,0.15)',
+                  border: `1px solid ${alfaDe('oroBorde', 0.15)}`,
                   borderRadius: 4,
                   padding: '16px 13px',
                   minWidth: 65,

@@ -50,8 +50,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   // que no tenerlo—.
   map: {
     label: 'HACIENDA LA AURORA',
-    coords: '19.32°N · 99.18°W',
-    href: 'https://maps.google.com/?q=19.32,-99.18',
+    coords: '17.39°S · 66.16°W',
+    href: 'https://maps.google.com/?q=-17.39,-66.16',
   },
   itinerary: [
     { time: '16:00 h', label: 'Ceremonia Religiosa', imageId: 'church' },

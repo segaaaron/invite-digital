@@ -49,3 +49,13 @@ describe('parseGuestCsv', () => {
     expect(parseGuestCsv('\n\n')).toEqual([])
   })
 })
+
+describe('pegado desde Excel', () => {
+  it('lee las columnas copiadas de Excel (tabuladores) y salta la fila de títulos', () => {
+    const filas = parseGuestCsv('Invitación\tCupos\tWhatsApp\nFamilia Rojas\t4\t70011122\nAna Vega\t2\t')
+    expect(filas.map((f) => [f.label, f.seats, f.phone, f.problem])).toEqual([
+      ['Familia Rojas', 4, '70011122', null],
+      ['Ana Vega', 2, null, null],
+    ])
+  })
+})

@@ -1,6 +1,8 @@
 import type { Event } from '../domain/event'
 import type { InvitationContent } from '../domain/invitation-content'
 import { MarcoQueSigue } from './MarcoQueSigue'
+import { EstiloDeLaInvitacion } from './EstiloDeLaInvitacion'
+import type { EstiloDelEvento } from '../domain/estilo'
 import { themeFor } from './themes/registry'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from './themes/kit/preview-slots'
 import { EyeIcon } from '@/shared/design/ui/icons'
@@ -20,7 +22,7 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
  * aquí el primer gesto es escribir en un campo del editor. La canción suena en «Pantalla
  * completa».
  */
-export function InvitacionEnVivo({ event, content }: { event: Event; content: InvitationContent }) {
+export function InvitacionEnVivo({ event, content, estilo }: { event: Event; content: InvitationContent; estilo: EstiloDelEvento }) {
   const definicion = themeFor(event.themeKey)
   const { Component: Tema } = definicion
   const diccionario = getDictionary(event.locale)
@@ -41,8 +43,9 @@ export function InvitacionEnVivo({ event, content }: { event: Event; content: In
         </p>
         <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Pantalla completa</PanelButton>
       </div>
-      <div className="mx-auto h-[min(780px,calc(100dvh-150px))] w-full max-w-[400px]">
+      <div className="con-mono mx-auto h-[min(780px,calc(100dvh-150px))] w-full max-w-[400px]">
         <MarcoQueSigue>
+          <EstiloDeLaInvitacion estilo={estilo} tema={definicion}>
           <Tema
             content={sinSonido}
             dictionary={diccionario.invitation}
@@ -51,6 +54,7 @@ export function InvitacionEnVivo({ event, content }: { event: Event; content: In
             slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp)}
             themes={diccionario.themes}
           />
+          </EstiloDeLaInvitacion>
         </MarcoQueSigue>
       </div>
       <p className="text-center text-[11.5px] text-ink-mute">Al abrir una sección, la invitación va a ella. Se actualiza al guardar. La canción suena en pantalla completa.</p>

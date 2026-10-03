@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-serenidad.content'
-import { PALETA } from './boda-serenidad.palette'
+import { ACENTO, PALETA } from './boda-serenidad.palette'
 
 /**
  * «Jardín de Serenidad» — Sofía & Daniel, de `wedding-variants-5.jsx`.
@@ -34,5 +34,6 @@ export const bodaSerenidadDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-serenidad.view').then((modulo) => modulo.BodaSerenidadView)),
 }

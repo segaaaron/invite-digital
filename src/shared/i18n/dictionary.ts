@@ -43,6 +43,8 @@ export interface FiestasDictionary {
 
 export interface HeroDictionary {
   eyebrow: string
+  /** El cuerpo cuando la diseñamos nosotros (algún plan por encargo). */
+  bodyEncargo: string
   /** El rótulo de la tarjeta de muestra que sustituye al sobre de la portada. */
   envelopeLabel: string
   titleLine1: string
@@ -130,6 +132,19 @@ export interface FaqDictionary {
   eyebrow: string
   title: string
   items: readonly [FaqItem, FaqItem, FaqItem, FaqItem, FaqItem]
+  /** Las del diseño por encargo: van primero si algún plan es por encargo (y sustituyen a la de la entrega). */
+  encargoItems: readonly FaqItem[]
+}
+
+/** «Cómo funciona» del diseño por encargo: reservas, la diseñamos, pagas el saldo y la compartes. */
+export interface HowItWorksDictionary {
+  eyebrow: string
+  title: string
+  steps: readonly [FaqStep, FaqStep, FaqStep]
+}
+export interface FaqStep {
+  title: string
+  body: string
 }
 
 export interface TestimonialsDictionary {
@@ -143,14 +158,21 @@ export interface PricingDictionary {
   mostChosen: string
   /** «Elegir Atelier →». El nombre del plan entra donde dice {plan}. */
   choose: string
-  /** El plan más caro no se elige de un clic: se agenda una llamada. */
-  bookCall: string
+  /** «Reserva con {monto} · el resto cuando tu invitación esté lista». */
+  reserve: string
+  /** El precio en dólares que fija el admin: «USD {monto}». */
+  usd: string
   /** La tabla que compara los planes. Sus filas salen de los límites de la base. */
   comparison: PlanComparisonDictionary
 }
 
 export interface PlanComparisonDictionary {
   title: string
+  /** Diseño por encargo: «Rondas de corrección», «Entrega», «{n} días», «Tú la escribes». */
+  rondas: string
+  entrega: string
+  entregaDias: string
+  autoservicio: string
   /** Los extras sueltos a la venta, debajo de la tabla. */
   extrasTitle: string
   /** Cabecera de la primera columna. */
@@ -170,6 +192,9 @@ export interface PlanComparisonDictionary {
     csv: string
     mesas: string
     regalos: string
+    formas: string
+    libro: string
+    estilo: string
     puerta: string
     porteros: string
     planners: string
@@ -367,6 +392,8 @@ export interface ThemeDictionary {
   weSaved: string
   /** «Lugar para ti», debajo del número, en los XV. */
   seatForYou: string
+  /** «Lugares para ti», con más de un lugar: «Reservamos 2 Lugar para ti» no concuerda. */
+  seatsForYou: string
   /** «Tu presencia hará este día más especial», la línea que abre el saludo. */
   yourPresence: string
   /** «Escanea aquí», sobre el código del fondo de regalos. */
@@ -422,6 +449,31 @@ export interface DesignDictionary {
   'boda-sello': Record<'faltan' | 'historia' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'vestimenta' | 'regalos' | 'confirma' | 'mensaje' | 'fotos', string>
   'boda-perla': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
   'xv-papillon': Record<'xvAnos' | 'padrinos' | 'misXv' | 'itinerario' | 'confirmar', string>
+}
+
+/** La página del «save the date» (`/guarda/<enlace>`). */
+export interface SaveTheDateDictionary {
+  eyebrow: string
+  /** «Faltan {n} días». */
+  faltan: string
+  faltaUno: string
+  hoy: string
+  soon: string
+  addCalendar: string
+  /** La descripción de la vista previa en WhatsApp: «{fecha}. La invitación formal llega pronto.» */
+  shareDescription: string
+}
+
+/** La página del enlace general (`/abierta/<enlace>`): nombre y acompañantes → su invitación. */
+export interface OpenLinkDictionary {
+  heading: string
+  intro: string
+  name: string
+  companions: string
+  companionsHint: string
+  submit: string
+  sending: string
+  errors: Record<'cerrado' | 'lleno' | 'nombre' | 'acompanantes' | 'limite' | 'fallo', string>
 }
 
 export interface InvitationDictionary {
@@ -518,6 +570,12 @@ export interface InvitationDictionary {
   /** Lo que puede salir mal al subir, ya en la voz del invitado. */
   photoErrors: Record<GuestPhotoMessageKey, string>
   errors: Record<RsvpMessageKey, string>
+  /** Las preguntas extra al confirmar (canción, menú, actos), si el anfitrión las eligió. */
+  songLabel: string
+  songPlaceholder: string
+  menuLabel: string
+  menuChoose: string
+  actsLabel: string
 }
 
 /** Lo que puede salir mal cuando un invitado sube una fotografía. */
@@ -636,6 +694,8 @@ export type OrderErrorCode =
   | 'failed'
   | 'name'
   | 'contact'
+  | 'email'
+  | 'eventDate'
   | 'plan'
   | 'notes'
   | 'referral'
@@ -654,6 +714,8 @@ export interface OrderFormDictionary {
   design: string
   name: string
   contact: string
+  /** El correo, aparte del WhatsApp: ahí le llega su acceso al panel. */
+  email: string
   eventDate: string
   notes: string
   /** El código de quien le recomendó, opcional: con él, el descuento de recomendación. */
@@ -664,6 +726,10 @@ export interface OrderFormDictionary {
   /** «Tu referencia es {ref}. Guárdala: …» — `{ref}` se pinta en negrita. */
   successText: string
   goPay: string
+  /** «Seguir por WhatsApp», tras registrar el pedido. */
+  followWhatsapp: string
+  /** El mensaje que se abre en WhatsApp: `{ref}` y `{plan}`. */
+  whatsappMessage: string
   proofLabel: string
   /** «Una foto o un PDF, hasta {mb} MB». */
   proofHint: string
@@ -724,6 +790,9 @@ export interface Dictionary {
   orders: OrdersDictionary
   testimonials: TestimonialsDictionary
   faq: FaqDictionary
+  howItWorks: HowItWorksDictionary
+  openLink: OpenLinkDictionary
+  saveTheDate: SaveTheDateDictionary
   contact: ContactDictionary
   seo: SeoDictionary
   footer: FooterDictionary

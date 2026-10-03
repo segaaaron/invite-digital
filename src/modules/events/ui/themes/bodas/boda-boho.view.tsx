@@ -10,7 +10,7 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { Reveal } from '../kit/Reveal'
 import { BohoCover } from './BohoCover'
 import { CarruselDePerla } from './CarruselDePerla'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-boho.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-boho.palette'
 
 const SERIF = 'var(--font-spectral)'
 const MONO = 'var(--font-jetbrains-mono)'
@@ -27,7 +27,7 @@ const TENIDO_CAFE = 'brightness(0) saturate(100%) invert(28%) sepia(24%) saturat
 
 /** Las cajas de vidrio dorado de la cabecera, la cuenta atrás, la invitación y «solo adultos». */
 const VIDRIO: React.CSSProperties = {
-  background: 'rgba(201,169,110,0.08)',
+  background: alfaDe('oro', 0.08),
   backdropFilter: 'blur(2px)',
   WebkitBackdropFilter: 'blur(2px)',
   border: `1.5px solid ${P.oro}`,
@@ -294,7 +294,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
                   width: '100%',
                   maxWidth: 340,
                   background: 'rgba(245,237,227,0.25)',
-                  border: '1.5px solid rgba(201,169,110,0.5)',
+                  border: `1.5px solid ${alfaDe('oro', 0.5)}`,
                   borderRadius: 16,
                   padding: '28px 8px 22px',
                   textAlign: 'center',
@@ -398,7 +398,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
               <div style={{ display: 'flex', justifyContent: 'center', gap: 6, width: '58%', margin: '22px auto 0' }}>
                 {(dressCode.colors ?? CARTA_DE_COLOR.map((c) => c.color)).map((color) => (
                   <span key={color} style={{ textAlign: 'center', flex: 1 }}>
-                    <span style={{ display: 'block', width: '100%', aspectRatio: '1/1', background: color, border: '1px solid rgba(184,121,90,0.25)' }} />
+                    <span style={{ display: 'block', width: '100%', aspectRatio: '1/1', background: color, border: `1px solid ${alfaDe('terracota', 0.25)}` }} />
                     <span style={{ display: 'block', marginTop: 3, fontFamily: MONO, fontSize: 8, letterSpacing: '0.15em' }}>
                       {(CARTA_DE_COLOR.find((c) => c.color === color.toLowerCase())?.nombre ?? '').toUpperCase()}
                     </span>

@@ -173,7 +173,7 @@ function QrRow({ code, eventId, eventSlug }: { code: QrView; eventId: string; ev
             <Pill tone={code.active ? 'ok' : 'no'}>{code.active ? 'Activo' : 'Apagado'}</Pill>
             <Pill tone="pending">{TIPO[code.kind] ?? code.kind}</Pill>
           </span>
-          <span className="mt-1 block truncate font-mono text-[11px] text-ink-mute">{code.target}</span>
+          <span className="mt-1 block truncate font-codigo text-[11px] text-ink-mute">{code.target}</span>
           <span className="mt-0.5 block text-[11px] text-ink-mute">
             {code.scanCount} escaneo{code.scanCount === 1 ? '' : 's'}
           </span>

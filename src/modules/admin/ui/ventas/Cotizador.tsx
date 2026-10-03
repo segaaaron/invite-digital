@@ -12,7 +12,7 @@ import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 type Fiesta = 'boda' | 'xv' | 'cumple'
 
-export type PlanCotizable = { readonly slug: string; readonly nombre: string; readonly priceCents: number; readonly depositPct: number }
+export type PlanCotizable = { readonly slug: string; readonly nombre: string; readonly priceCents: number; readonly depositPct: number; readonly depositFixedCents: number | null }
 export type ModeloCotizable = { readonly key: string; readonly label: string; readonly fiesta: Fiesta }
 export type ExtraCotizable = { readonly slug: string; readonly name: string; readonly priceCents: number; readonly que: string }
 
@@ -67,7 +67,11 @@ export function Cotizador({
   const escrito = precioEscrito === null ? null : Math.round(Number(precioEscrito.replace(',', '.')) * 100)
   const final = escrito !== null && Number.isFinite(escrito) && escrito > 0 ? escrito : lista
   const descuento = lista - final
-  const anticipo = elPlan !== undefined && elPlan.depositPct > 0 && elPlan.depositPct < 100 ? Math.round((final * elPlan.depositPct) / 10000) * 100 : null
+  // La misma regla que el `insert` de la cotización (`drizzle-order-repository.ts`): la reserva fija
+  // si es menor que el total; si no, el porcentaje redondeado al boliviano.
+  const reservaFija = elPlan !== undefined && elPlan.depositFixedCents !== null && elPlan.depositFixedCents < final ? elPlan.depositFixedCents : null
+  const anticipo =
+    reservaFija ?? (elPlan !== undefined && elPlan.depositPct > 0 && elPlan.depositPct < 100 ? Math.round((final * elPlan.depositPct) / 10000) * 100 : null)
   const modelosDeFiesta = useMemo(() => modelos.filter((m) => m.fiesta === fiesta), [modelos, fiesta])
   const ocupados = fecha === '' ? 0 : (ocupacion[fecha] ?? 0)
 
@@ -77,7 +81,7 @@ export function Cotizador({
         <div className="flex items-center gap-3 rounded-[18px] border border-sage/30 bg-pill-ok px-5 py-4 text-pill-ok-ink">
           <CheckIcon className="size-5 shrink-0" />
           <p className="text-[14px]">
-            Cotización <b className="font-mono font-medium">{estado.ref}</b> lista. Mándasela y, cuando pague, llega a «Por revisar».
+            Cotización <b className="font-codigo font-medium">{estado.ref}</b> lista. Mándasela y, cuando pague, llega a «Por revisar».
           </p>
         </div>
         <div className="rounded-[16px] border border-line-panel bg-white px-4 py-3.5 text-[13px] leading-relaxed text-ink-soft">{estado.mensaje}</div>
@@ -151,7 +155,11 @@ export function Cotizador({
                 <input checked={plan === p.slug} className="sr-only" name="plan" onChange={() => setPlan(p.slug)} required type="radio" value={p.slug} />
                 <span className="font-display text-[18px] leading-tight text-ink">{p.nombre}</span>
                 <span className="font-mono text-[11px] text-ink-mute">{bs(p.priceCents)}</span>
-                {p.depositPct > 0 && p.depositPct < 100 ? <span className="text-[11px] text-ink-mute">Anticipo {p.depositPct} %</span> : null}
+                {p.depositFixedCents !== null ? (
+                  <span className="text-[11px] text-ink-mute">Reserva {bs(p.depositFixedCents)}</span>
+                ) : p.depositPct > 0 && p.depositPct < 100 ? (
+                  <span className="text-[11px] text-ink-mute">Anticipo {p.depositPct} %</span>
+                ) : null}
               </label>
             ))}
           </div>
@@ -227,7 +235,7 @@ export function Cotizador({
             <dt className="font-mono text-[10px] tracking-[0.16em] text-ink-mute uppercase">Total</dt>
             <dd className="font-display text-[26px] leading-none text-ink [font-variant-numeric:lining-nums]">{bs(final)}</dd>
           </div>
-          {anticipo === null ? null : <Linea etiqueta={`Anticipo para reservar (${elPlan?.depositPct} %)`} valor={bs(anticipo)} />}
+          {anticipo === null ? null : <Linea etiqueta={reservaFija !== null ? 'Reserva' : `Anticipo para reservar (${elPlan?.depositPct} %)`} valor={bs(anticipo)} />}
         </dl>
       </Seccion>
 

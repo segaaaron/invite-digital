@@ -7,9 +7,11 @@ export type RsvpOutcome =
   | { status: 'success'; attending: number; responderName: string | null }
   | { status: 'error'; message: RsvpErrorKind }
 
-const readAnswer = (payload: unknown): { attending: number; responderName: string | null; message: string | null } | null => {
+type Extras = { song?: string | null; menu?: string | null; acts?: readonly string[] }
+
+const readAnswer = (payload: unknown): { attending: number; responderName: string | null; message: string | null; extras: Extras } | null => {
   if (typeof payload !== 'object' || payload === null) return null
-  const { attending, message, name } = payload as Record<string, unknown>
+  const { attending, message, name, song, menu, acts } = payload as Record<string, unknown>
 
   // El formulario llega como texto; `Number('')` daría 0, que es una respuesta válida
   // ("no vamos") y no un campo vacío. Por eso se comprueba antes de convertir.
@@ -21,6 +23,12 @@ const readAnswer = (payload: unknown): { attending: number; responderName: strin
     attending: parsed,
     responderName: typeof name === 'string' ? name : null,
     message: typeof message === 'string' ? message : null,
+    // Lo que se preguntó al confirmar: el caso de uso lo valida contra las preguntas del evento.
+    extras: {
+      song: typeof song === 'string' ? song : null,
+      menu: typeof menu === 'string' ? menu : null,
+      acts: Array.isArray(acts) ? acts.filter((a): a is string => typeof a === 'string') : typeof acts === 'string' ? [acts] : [],
+    },
   }
 }
 
@@ -32,6 +40,7 @@ export const guardedRespond =
       attending: number
       responderName: string | null
       message: string | null
+      extras?: Extras
     }) => Promise<Result<RsvpResponse, RsvpError>>
     clock: () => number
     log: (message: string, kind: string, detail: string) => void

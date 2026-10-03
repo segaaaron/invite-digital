@@ -1,5 +1,7 @@
 'use client'
 
+import { hayPreguntas, SIN_PREGUNTAS, type PreguntasDelRsvp } from '../domain/preguntas'
+import { PreguntasExtra } from './PreguntasExtra'
 import Link from 'next/link'
 import { useActionState, useId, useState } from 'react'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
@@ -33,6 +35,8 @@ export function RsvpPorPersona({
   volverHref,
   guestName,
   paseHref,
+  conMensaje = true,
+  preguntas = SIN_PREGUNTAS,
 }: {
   dictionary: InvitationDictionary
   token: string
@@ -43,6 +47,10 @@ export function RsvpPorPersona({
   guestName: string
   /** Su pase de entrada, que se entrega al confirmar que viene alguien. */
   paseHref: string
+  /** Si el plan trae el libro de firmas. Sin él, no hay campo de mensaje. */
+  conMensaje?: boolean
+  /** Lo que el anfitrión pregunta además (canción, menú, actos). */
+  preguntas?: PreguntasDelRsvp
 }) {
   const [estado, confirmar, enviando] = useActionState(sinCaerse(respondByPersonAction, { status: 'error', message: 'storage_failure' }), INICIAL)
   const id = useId()
@@ -156,17 +164,21 @@ export function RsvpPorPersona({
 
       <input name="name" readOnly type="hidden" value={guestName} />
 
-      <label className="flex flex-col gap-2" htmlFor={`${id}-mensaje`}>
-        <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase">{dictionary.messageLabel}</span>
-        <textarea
-          className="w-full rounded-[10px] border border-[var(--color-line)] bg-[var(--color-bg-raised)] px-4 py-3 text-[15px] leading-[1.6] text-ink"
-          id={`${id}-mensaje`}
-          maxLength={500}
-          name="message"
-          placeholder={dictionary.messagePlaceholder}
-          rows={3}
-        />
-      </label>
+      {hayPreguntas(preguntas) ? <PreguntasExtra dictionary={dictionary} preguntas={preguntas} /> : null}
+
+      {conMensaje ? (
+        <label className="flex flex-col gap-2" htmlFor={`${id}-mensaje`}>
+          <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-soft uppercase">{dictionary.messageLabel}</span>
+          <textarea
+            className="w-full rounded-[10px] border border-[var(--color-line)] bg-[var(--color-bg-raised)] px-4 py-3 text-[15px] leading-[1.6] text-ink"
+            id={`${id}-mensaje`}
+            maxLength={500}
+            name="message"
+            placeholder={dictionary.messagePlaceholder}
+            rows={3}
+          />
+        </label>
+      ) : null}
 
       {estado.status === 'error' ? (
         <p className="text-[13.5px] text-danger" role="alert">

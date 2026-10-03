@@ -64,3 +64,33 @@ test('un plan sin cambio de modelo lo enseña fijo, y un POST con otro modelo no
 
   await deleteEvent(eventSlug)
 })
+
+// Un plan sin libro de firmas ni formas de regalar (`0084`): el panel lo dice y el invitado no
+// encuentra dónde dejar un mensaje. Plan propio, copia de `atelier` y sin vender.
+test('un plan sin libro ni formas de regalar: el panel lo dice y la invitación no pide mensaje', async ({ page }) => {
+  const PLAN = 'sin-libro-e2e'
+  await sql`delete from plans where slug = ${PLAN}`
+  await sql`
+    insert into plans
+    select (jsonb_populate_record(null::plans, to_jsonb(p) || jsonb_build_object(
+      'id', gen_random_uuid(), 'slug', ${PLAN}::text, 'is_active', false, 'includes_guestbook', false, 'includes_gift_ways', false))).*
+    from plans p where p.slug = 'atelier'`
+  const { eventSlug, token } = await seedInvitation({ slug: 'plan-sin-libro-e2e', plan: PLAN })
+  try {
+    await page.goto(`/panel/eventos/${eventSlug}/mensajes`)
+    await expect(page.getByText(/no incluye el libro de firmas/)).toBeVisible()
+
+    await page.goto(`/panel/eventos/${eventSlug}/regalos`)
+    // Sobres, transferencia y —porque `atelier` tampoco la trae— la lista de regalos.
+    await expect(page.getByRole('region', { name: 'Formas de regalar' }).getByText('No incluida')).toHaveCount(3)
+
+    const invitado = await (await page.context().browser()!.newContext()).newPage()
+    await invitado.goto(`/i/${token}`)
+    await expect(invitado.getByRole('button', { name: 'ENVIAR' })).toBeAttached()
+    await expect(invitado.locator('textarea[name=message]')).toHaveCount(0)
+    await invitado.context().close()
+  } finally {
+    await deleteEvent(eventSlug)
+    await sql`delete from plans where slug = ${PLAN}`
+  }
+})

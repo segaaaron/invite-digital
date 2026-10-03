@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-papillon.content'
-import { PALETA } from './xv-papillon.palette'
+import { ACENTO, PALETA } from './xv-papillon.palette'
 
 /** «Papillon» — Emilia, de `xv-papillon.jsx` (maqueta V3). Mariposas acuarela en un jardín rosa. */
 export const xvPapillonDefinition: ThemeDefinition = {
@@ -25,5 +25,6 @@ export const xvPapillonDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./xv-papillon.view').then((modulo) => modulo.XvPapillonView)),
 }

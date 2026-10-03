@@ -46,6 +46,16 @@ body {
   font-weight: 300;
 }
 
+/*
+ * **El panel sin monoespaciada** (1 de octubre, pedido del usuario): rótulos, botones y píldoras
+ * pasan a la sans sin tocar cada `font-mono`. Lo que es un código —pase, referencia, PIN, `<code>`—
+ * lleva `font-codigo`; y la invitación pintada dentro del panel (`.con-mono`: vista previa)
+ * conserva la suya, que es la del invitado.
+ */
+.panel-sin-mono { --font-mono: var(--font-sans); }
+.panel-sin-mono .con-mono { --font-mono: var(--font-codigo); }
+.panel-sin-mono :where(code, kbd, samp, pre) { font-family: var(--font-codigo); }
+
 ::selection { background: rgb(var(--color-gold-rgb) / 0.24); color: var(--color-ink-selection); }
 :focus-visible { outline: 1px solid var(--color-gold); outline-offset: 3px; }
 

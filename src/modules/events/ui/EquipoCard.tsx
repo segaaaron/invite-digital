@@ -157,7 +157,7 @@ export function EquipoCard({
             </div>
             <div className="flex flex-col gap-1">
               <dt className={LABEL_CLASS}>PIN</dt>
-              <dd className="font-mono text-[22px] tracking-[0.2em] text-ink">{altaPortero.pin}</dd>
+              <dd className="font-codigo text-[22px] tracking-[0.2em] text-ink">{altaPortero.pin}</dd>
             </div>
           </dl>
           <p className="text-[12px] text-ink-soft">Cópialos ahora: el PIN no se vuelve a mostrar.</p>

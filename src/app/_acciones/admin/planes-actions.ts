@@ -26,6 +26,12 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
   const valores = Object.fromEntries([...formData.entries()].filter((par): par is [string, string] => typeof par[1] === 'string'))
   const precio = parseAmount(texto(formData, 'price'))
   if (isErr(precio)) return { status: 'error', message: precio.error.detail, valores }
+  const reservaTexto = texto(formData, 'depositFixed').trim()
+  const reserva = reservaTexto === '' ? null : parseAmount(reservaTexto)
+  if (reserva !== null && isErr(reserva)) return { status: 'error', message: `Reserva fija: ${reserva.error.detail}`, valores }
+  const usdTexto = texto(formData, 'priceUsd').trim()
+  const usd = usdTexto === '' ? null : parseAmount(usdTexto)
+  if (usd !== null && isErr(usd)) return { status: 'error', message: `Precio en dólares: ${usd.error.detail}`, valores }
 
   const marcado = (clave: string) => formData.get(clave) === 'on'
   const textoDe = (locale: 'es' | 'en') => ({
@@ -49,9 +55,16 @@ export async function savePlanAction(_previous: AdminActionState, formData: Form
     designChange: texto(formData, 'designChange'),
     plannerSuite: texto(formData, 'plannerSuite'),
     depositPct: texto(formData, 'depositPct'),
+    depositFixedCents: reserva === null ? null : reserva.value,
+    priceUsdCents: usd === null ? null : usd.value,
+    correctionRounds: texto(formData, 'correctionRounds'),
+    deliveryDays: texto(formData, 'deliveryDays'),
     includesSeating: marcado('includesSeating'),
     includesRegistry: marcado('includesRegistry'),
     includesCheckin: marcado('includesCheckin'),
+    includesGuestbook: marcado('includesGuestbook'),
+    includesGiftWays: marcado('includesGiftWays'),
+    includesStyle: marcado('includesStyle'),
     highlighted: marcado('highlighted'),
     isActive: marcado('isActive'),
     es: textoDe('es'),

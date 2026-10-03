@@ -303,7 +303,7 @@ export function EditPersonDialog({
             )}
             {invitacion.codigo ? (
               <p className="m-0 text-[12px] text-ink-soft">
-                Código del pase para la puerta: <span className="font-mono text-[14px] tracking-[0.2em] text-ink">{invitacion.codigo}</span>
+                Código del pase para la puerta: <span className="font-codigo text-[14px] tracking-[0.2em] text-ink">{invitacion.codigo}</span>
               </p>
             ) : null}
           </div>

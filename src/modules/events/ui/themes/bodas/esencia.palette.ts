@@ -1,10 +1,11 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Esencia», la boda de lino y olivo (`esencia.jsx`).
  *
  * Son los mismos colores que declara la maqueta en su cabecera —`ink`, `sub`, `gold`,
  * `goldBorder`, `line`, `goldLight`, `warm`, `paper`—, con su nombre en castellano.
  */
-export const PALETA = {
+const BASE = {
   /** `paper`: el lino del fondo. */
   papel: '#faf7f2',
   /** `warm`: el papel un punto más cálido de las cajas de la cuenta atrás. */
@@ -21,6 +22,18 @@ export const PALETA = {
   oroClaro: '#e8dece',
   /** `line`: el filete neutro de los campos y los botones. */
   filete: '#ddd8ce',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('oro', { oro: BASE.oro, oroBorde: BASE.oroBorde, oroClaro: BASE.oroClaro }, BASE.papel)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** Los cuatro colores del código de vestimenta, con su nombre, como los pinta la maqueta. */

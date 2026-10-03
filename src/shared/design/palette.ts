@@ -12,9 +12,9 @@ export const PALETTE = {
   ink: '#2b2723',
   inkSoft: '#58514a',
   inkMute: '#9a917f',
-  gold: '#c19b4a',
-  goldDeep: '#a8823a',
-  goldLight: '#e2c584',
+  gold: '#b8894f',
+  goldDeep: '#9d6e3a',
+  goldLight: '#d7a871',
 } as const
 
 export type PaletteColor = keyof typeof PALETTE

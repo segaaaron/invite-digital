@@ -26,6 +26,15 @@ export type PlanRow = {
    * suscripción: el conmutador solo aparece si hay precio anual cargado.
    */
   readonly priceAnnualCents?: number | null
+  /** La reserva de importe fijo, en centavos (`0079`). */
+  readonly depositFixedCents?: number | null
+  /** Diseño por encargo (`0081`): rondas de corrección y días de entrega. Nulos: autoservicio. */
+  readonly correctionRounds?: number | null
+  readonly deliveryDays?: number | null
+  /** Libro de firmas y formas de regalar (`0084`). */
+  readonly includesGuestbook?: boolean
+  readonly includesGiftWays?: boolean
+  readonly includesStyle?: boolean
 }
 
 export type PlanChangeStatus = 'pending' | 'applied' | 'rejected'

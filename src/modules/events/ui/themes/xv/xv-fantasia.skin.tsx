@@ -4,7 +4,7 @@ import { DividerOrnamental } from './DividerOrnamental'
 import { FantasiaCover } from './FantasiaCover'
 import { iconoGala } from './IconosLineaXv'
 import type { PielXv } from './piel-xv'
-import { PALETA as P } from './xv-fantasia.palette'
+import { alfaDe, colorDeAcento, PALETA as P } from './xv-fantasia.palette'
 
 type Archivo = (typeof THEME_ASSETS)['xv-fantasia'][number]
 
@@ -50,14 +50,14 @@ export const PIEL: PielXv = {
     // El «ENVIAR» de su formulario en la maqueta.
     formulario: { boton: '#C9A24A' },
     // El plano como su maqueta: calles del oro del borde y aro del fondo.
-    mapaBorde: '#D9B85C',
+    mapaBorde: colorDeAcento.orquidea,
     mapaAro: '#0c1830',
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
-    firma: '#D9B85C',
+    firma: colorDeAcento.orquidea,
     // Su tarjeta de la fecha va desnuda: la maqueta no le pone ornamento.
     fechaOrnamento: false,
     // Disco del color del diseño, y sin línea bajo el rótulo del cronograma.
-    discoItinerario: 'rgba(217,184,92,.10)',
+    discoItinerario: alfaDe('orquidea', 0.1),
     discoBorde: '#C9A24A',
     itinerarioSeparador: 'ninguno',
     // Los tres diseños de gala: sombra negra, sin halo, la cita dentro de un panel en
@@ -85,17 +85,17 @@ export const PIEL: PielXv = {
     qrTinta: '#1a1208',
     itinerarioHora: '#F3EDD8',
     itinerarioHoraSize: 20,
-    vestimentaNota: '#C9B78A',
+    vestimentaNota: colorDeAcento.amatista,
     vestimentaDetalle: '#F3EDD8',
     tituloFormulario: '#C9A24A',
     botonTinta: '#0C1830',
-    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#C9B78A', mayusculas: true },
+    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: colorDeAcento.amatista, mayusculas: true },
     anfitrionesNombres: '#F3EDD8',
-    fecha: '#D9B85C',
-    tituloSeccion: '#D9B85C',
+    fecha: colorDeAcento.orquidea,
+    tituloSeccion: colorDeAcento.orquidea,
     lugarNombre: '#F3EDD8',
-    mapa: '#D9B85C',
-    itinerarioRotulo: '#D9B85C',
+    mapa: colorDeAcento.orquidea,
+    itinerarioRotulo: colorDeAcento.orquidea,
     itinerarioRotuloSize: 11,
   },
   // Los tamaños de su maqueta: el ramo y la luna a 260, el reloj a 100.
@@ -106,7 +106,7 @@ export const PIEL: PielXv = {
       aria-hidden
       fill="none"
       height="40"
-      stroke="#D9B85C"
+      stroke={colorDeAcento.orquidea}
       strokeLinecap="round"
       strokeLinejoin="round"
       strokeWidth="1.7"
@@ -138,18 +138,18 @@ export const PIEL: PielXv = {
   // Su código de vestimenta son dos siluetas de línea, como en la maqueta.
   vestimentaNodo: (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 18 }}>
-      <svg aria-hidden fill="none" height="70" stroke="#D9B85C" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="50">
+      <svg aria-hidden fill="none" height="70" stroke={colorDeAcento.orquidea} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="50">
         <path d="M9 3 L9 6 L6 9 L6 20 L18 20 L18 9 L15 6 L15 3 Z" />
         <path d="M9 3 a3 3 0 0 0 6 0" />
       </svg>
-      <svg aria-hidden fill="none" height="70" stroke="#D9B85C" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="50">
+      <svg aria-hidden fill="none" height="70" stroke={colorDeAcento.orquidea} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="50">
         <path d="M8 3 L12 6 L16 3 L18 8 L15 9 L15 20 L9 20 L9 9 L6 8 Z" />
       </svg>
     </div>
   ),
   cierre: themeAsset('xv-fantasia', 'luna-estrella-opt.avif'),
   // Su cronograma no lleva fotografías: son trazos dorados, como en la maqueta.
-  iconoNodo: (clave) => iconoGala(clave, { color: '#D9B85C' }),
+  iconoNodo: (clave) => iconoGala(clave, { color: colorDeAcento.orquidea }),
   icono: (clave) => themeAsset('xv-fantasia', ICONOS[clave ?? ''] ?? 'luna-estrella-opt.avif'),
   ornamento: <DividerOrnamental color={P.lila} />,
 }

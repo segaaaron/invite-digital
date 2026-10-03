@@ -36,9 +36,13 @@ export type ClienteFixture = {
  * El plan es `alta-costura` porque un evento sin plan cae al más barato, que no trae mesa
  * de regalos ni modo puerta: la misma trampa que ya documentan los demás fixtures.
  */
-export async function seedCliente(slug: string): Promise<ClienteFixture> {
+/**
+ * `cuenta`: una propia por suite cuando la suite inicia sesión. El límite es de tres intentos por
+ * cuenta y minuto: varias suites seguidas con la misma cuenta se quedan en la puerta.
+ */
+export async function seedCliente(slug: string, cuenta: { email: string; password: string } = CLIENTE): Promise<ClienteFixture> {
   const sql = db()
-  await deleteClienteFixture(slug)
+  await deleteClienteFixture(slug, cuenta)
 
   const [dueno] = await sql<{ id: string }[]>`
     -- Con la marca apagada: esta contraseña la pone el fixture, no ha viajado por correo.
@@ -51,7 +55,7 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
 
   const [cliente] = await sql<{ id: string }[]>`
     insert into users (email, password_hash, role, must_change_password)
-    values (${CLIENTE.email}, ${await argon2Hasher.hash(CLIENTE.password)}, 'cliente', false)
+    values (${cuenta.email}, ${await argon2Hasher.hash(cuenta.password)}, 'cliente', false)
     on conflict (email) do update set role = 'cliente', must_change_password = false
     returning id
   `
@@ -84,10 +88,10 @@ export async function seedCliente(slug: string): Promise<ClienteFixture> {
   return { clienteId: cliente!.id, duenoId: dueno!.id, eventId: evento!.id, token }
 }
 
-export async function deleteClienteFixture(slug: string): Promise<void> {
+export async function deleteClienteFixture(slug: string, cuenta: { email: string } = CLIENTE): Promise<void> {
   const sql = db()
   await sql`delete from events where slug = ${slug}`
-  await sql`delete from users where email in (${CLIENTE.email}, ${DUENO.email}, ${EQUIPO.planner}, ${EQUIPO.coanfitriona})`
+  await sql`delete from users where email in (${CLIENTE.email}, ${cuenta.email}, ${DUENO.email}, ${EQUIPO.planner}, ${EQUIPO.coanfitriona})`
 }
 
 /** Una co-anfitriona de antes: ya no se suman desde Equipo, pero las que existen siguen entrando. */

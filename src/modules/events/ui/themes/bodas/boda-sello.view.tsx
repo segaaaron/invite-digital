@@ -9,7 +9,7 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
 import { SelloCover } from './SelloCover'
-import { PALETA as P } from './boda-sello.palette'
+import { alfaDe, PALETA as P } from './boda-sello.palette'
 
 const SERIF = 'var(--font-cormorant)'
 const CALIGRAFIA = 'var(--font-great-vibes)'
@@ -81,7 +81,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       style={{
         ...RANURAS,
         // Los dos botones iguales del RSVP (`uniformBg` en la maqueta): velo vino y filete de oro.
-        ['--rsvp-fondo' as string]: 'rgba(90,30,51,0.06)',
+        ['--rsvp-fondo' as string]: alfaDe('vino', 0.06),
         ['--rsvp-borde' as string]: P.oro,
         position: 'relative',
         background: P.crema,

@@ -2,7 +2,7 @@
 
 import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
-import { PALETA as P } from './boda-navy.palette'
+import { alfaDe, PALETA as P } from './boda-navy.palette'
 
 type Props = {
   readonly bgAsset: string
@@ -22,7 +22,7 @@ type Props = {
 const MOTAS = Array.from({ length: 10 }, (_, i) => ({ izquierda: i * 10 + 5, duracion: 8 + (i % 3) * 2, retraso: i * 0.8 }))
 
 /** El resplandor dorado con sombra que la maqueta pone a todo el texto blanco de la portada. */
-const RESPLANDOR = '0 0 15px rgba(197,150,26,0.6), 0 2px 4px rgba(0,0,0,0.8)'
+const RESPLANDOR = `0 0 15px ${alfaDe('oroVivo', 0.6)}, 0 2px 4px rgba(0,0,0,0.8)`
 
 /**
  * La portada de «Noche Estrellada»: la lluvia de purpurina sobre el azul de medianoche.
@@ -135,7 +135,7 @@ export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openL
           style={{
             display: 'inline-block',
             padding: '12px 26px',
-            border: '1px solid rgba(212,175,55,0.6)',
+            border: `1px solid ${alfaDe('oroBrillo', 0.6)}`,
             borderRadius: 999,
             background: 'rgba(10,20,40,0.25)',
             color: P.oroVivo,

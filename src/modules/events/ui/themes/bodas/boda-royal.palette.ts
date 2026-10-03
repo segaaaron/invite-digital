@@ -1,8 +1,9 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Royal Blush» (`wedding-variants-6.jsx`, `WeddingEditorialRoyalBlush`):
  * rosa palo y borgoña con oro viejo, sobre la fotografía del palacio.
  */
-export const PALETA = {
+const BASE = {
   /** El rosa del degradado que funde la fotografía con la página. */
   rosa: '#f5d6d0',
   /** El rosa más claro de las cajas. */
@@ -21,6 +22,18 @@ export const PALETA = {
   oroHondo: '#7a5c28',
   /** El azul de la línea de nombres bajo la cabecera, que la maqueta hereda de su hermana. */
   medio: '#3a5a8c',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('borgona', { borgona: BASE.borgona, borgonaHondo: BASE.borgonaHondo }, BASE.rosaClaro)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** Los cinco colores del código de vestimenta, con su nombre, como los pinta la maqueta. */

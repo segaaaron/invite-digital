@@ -1,8 +1,9 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Jardín de Serenidad» (`wedding-variants-5.jsx`, `WeddingEditorialFloralBlue`):
  * azules de tinta china sobre un cielo empolvado, con el oro viejo del filete.
  */
-export const PALETA = {
+const BASE = {
   /** El fondo de la invitación: azul empolvado. */
   cielo: '#d6dce8',
   /** La tinta de los párrafos. */
@@ -23,6 +24,18 @@ export const PALETA = {
   tintaTenue: '#6b7b8d',
   /** El fondo del marco de la fotografía grande. */
   marco: '#edeff5',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('medio', { medio: BASE.medio, titular: BASE.titular, marino: BASE.marino }, BASE.papel)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** Los cinco colores del código de vestimenta, con su nombre, como los pinta la maqueta. */

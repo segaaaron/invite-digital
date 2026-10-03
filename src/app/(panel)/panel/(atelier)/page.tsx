@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 import { events } from '@/app/composition/container'
-import { isAdmin } from '@/modules/identity'
+import { isAdmin, puedeCrearEventos } from '@/modules/identity'
 import { EventList } from '@/modules/events/ui/EventList'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -16,14 +16,17 @@ export default async function PanelHomePage() {
 
   return (
     <>
+      {/* El alta es del atelier: a un cliente o a la puerta un evento suyo no se les abriría. */}
       <PanelHeader
         actions={
-          <PanelButton href="/panel/eventos/nuevo" variant="primary">
-            + Nuevo evento
-          </PanelButton>
+          puedeCrearEventos(actor) ? (
+            <PanelButton href="/panel/eventos/nuevo" variant="primary">
+              + Nuevo evento
+            </PanelButton>
+          ) : undefined
         }
-        kicker="Atelier"
-        title="Eventos"
+        kicker={actor.role === 'atelier' ? 'Atelier' : 'Panel'}
+        title={actor.role === 'atelier' ? 'Eventos' : 'Tus eventos'}
       />
 
       <PanelCard>

@@ -1,4 +1,5 @@
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { EnlaceGeneral } from '@/modules/guests/ui/EnlaceGeneral'
 import Link from 'next/link'
 import { invitationUrl } from '@/modules/guests'
 import { env } from '@/shared/config/env'
@@ -21,7 +22,7 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/cards'
-import { CheckIcon, ClockIcon, MailIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, ClockIcon, MailIcon, UploadIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
@@ -123,6 +124,7 @@ export default async function InvitadosPage({
   const capacidad = await plans.allowanceFor(event.value.id)
   const limite = isErr(capacidad) ? null : capacidad.value.maxGuestGroups
 
+  const enlaceGeneral = await guests.general.leer(event.value.id)
   const base = `/panel/eventos/${event.value.slug}/invitados`
   // El enlace de cada invitación, guardado cifrado: el envío y el pase lo vuelven a enseñar.
   const [enlaces, codigos] = await Promise.all([guests.enlaces(event.value.id), guests.codigos(event.value.id)])
@@ -154,6 +156,8 @@ export default async function InvitadosPage({
       <PanelHeader
         actions={
           <>
+            {/* Con la lista vacía, una sola salida: añadir. Exportar o enviar nada solo despista. */}
+            {filas.length === 0 ? null : (
             <ExportCsvButton
               eventSlug={event.value.slug}
               people={filasPersona.map((p) => ({
@@ -167,14 +171,19 @@ export default async function InvitadosPage({
               }))}
               rows={filas}
             />
+            )}
             <PanelButton
               disabled={invitacionVacia}
               href={abierto === 'importar' ? base : `${base}?panel=importar`}
               title={invitacionVacia ? 'Termina tu invitación antes de cargar invitados' : undefined}
             >
-              ↑ Importar CSV
+              <UploadIcon className="size-3.5" /> Importar CSV
             </PanelButton>
-            <PanelButton href={abierto === 'envio' ? base : `${base}?panel=envio`}>✉ Enviar invitaciones</PanelButton>
+            {filas.length === 0 ? null : (
+              <PanelButton href={abierto === 'envio' ? base : `${base}?panel=envio`}>
+                <MailIcon className="size-3.5" /> Enviar invitaciones
+              </PanelButton>
+            )}
             <PanelButton
               disabled={invitacionVacia}
               href={`${base}?panel=alta`}
@@ -384,6 +393,13 @@ export default async function InvitadosPage({
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
           )}
         </PanelCard>
+
+        {/* Sin la invitación escrita no se ofrece: nadie podría darse de alta. */}
+        {invitacionVacia ? null : (
+          <PanelCard title="Enlace general">
+            <EnlaceGeneral eventId={event.value.id} eventSlug={event.value.slug} url={enlaceGeneral === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${enlaceGeneral}`} />
+          </PanelCard>
+        )}
       </div>
     </>
   )

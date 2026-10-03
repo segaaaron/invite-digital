@@ -6,6 +6,7 @@ import { placeOrderAction, type PlaceOrderState } from '@/app/_acciones/orders/a
 import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
 import type { Locale } from '@/shared/i18n/locales'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { enlaceWhatsapp } from '@/shared/whatsapp'
 
 const INICIAL: PlaceOrderState = { status: 'idle' }
 
@@ -24,11 +25,14 @@ export function OrderForm({
   templateSlug = null,
   templateName = null,
   referido = null,
+  whatsapp = null,
   textos,
   locale,
 }: {
   /** El código que llegó en el enlace de quien le recomendó (`?ref=`). */
   referido?: string | null
+  /** El WhatsApp del atelier («La web»). Con él, tras el pedido se sigue la conversación allí. */
+  whatsapp?: string | null
   /** Los rótulos y avisos del formulario, en el idioma de la página. */
   textos: OrderFormDictionary
   locale: Locale
@@ -43,6 +47,7 @@ export function OrderForm({
   const id = useId()
 
   if (estado.status === 'success') {
+    const seguir = enlaceWhatsapp(whatsapp, textos.whatsappMessage.replace('{ref}', estado.publicRef).replace('{plan}', planName))
     return (
       <div className="flex flex-col gap-4 rounded-[18px] border border-gold/50 bg-gold/10 p-6" role="status">
         <p className="font-display text-[24px] font-light text-ink">{textos.successTitle}</p>
@@ -57,6 +62,16 @@ export function OrderForm({
         >
           {textos.goPay}
         </Link>
+        {seguir === null ? null : (
+          <a
+            className="w-fit rounded-[var(--radius-pill)] border border-gold/60 px-5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase"
+            href={seguir}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            {textos.followWhatsapp}
+          </a>
+        )}
       </div>
     )
   }
@@ -91,12 +106,17 @@ export function OrderForm({
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-contacto`}>
         <span className={ROTULO}>{textos.contact}</span>
-        <input className={CAMPO} id={`${id}-contacto`} maxLength={160} name="contact" required type="text" />
+        <input autoComplete="tel" className={CAMPO} id={`${id}-contacto`} inputMode="tel" maxLength={40} name="contact" placeholder="+591 7…" required type="tel" />
+      </label>
+
+      <label className="flex flex-col gap-2" htmlFor={`${id}-correo`}>
+        <span className={ROTULO}>{textos.email}</span>
+        <input autoComplete="email" className={CAMPO} id={`${id}-correo`} maxLength={160} name="email" required type="email" />
       </label>
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-fecha`}>
         <span className={ROTULO}>{textos.eventDate}</span>
-        <input className={CAMPO} id={`${id}-fecha`} name="eventDate" type="date" />
+        <input className={CAMPO} id={`${id}-fecha`} name="eventDate" required type="date" />
       </label>
 
       <label className="flex flex-col gap-2" htmlFor={`${id}-notas`}>

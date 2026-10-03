@@ -11,7 +11,7 @@ import { CarruselDePerla } from './CarruselDePerla'
 import { CuentaConAros } from './CuentaConAros'
 import { NavyCover } from './NavyCover'
 import { RelojDeItinerario } from './RelojDeItinerario'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-navy.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-navy.palette'
 
 const SERIF = 'var(--font-spectral)'
 const MONO = 'var(--font-jetbrains-mono)'
@@ -154,7 +154,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
               <Arte ancho={84} estilo={{ margin: '0 auto 20px' }} src={themeAsset('boda-navy', 'reloj.avif')} />
               <CuentaConAros
                 aro={P.oro}
-                aroFondo="rgba(197,150,58,0.25)"
+                aroFondo={alfaDe('oro', 0.25)}
                 cifra={P.tinta}
                 labels={{ days: themes.countdownDays, hours: themes.countdownHours, mins: themes.countdownMins, secs: themes.countdownSecs }}
                 mono={MONO}
@@ -352,8 +352,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
             fotos={fotos}
             labels={{ anterior: themes.galleryPrev, siguiente: themes.galleryNext }}
             puntoActivo={P.oroTitular}
-            puntoInactivo="rgba(212,168,75,0.4)"
-            sombra="rgba(197,150,58,0.35)"
+            puntoInactivo={alfaDe('oroTitular', 0.4)}
+            sombra={alfaDe('oro', 0.35)}
           />
         </Reveal>
         <div style={{ marginTop: 18 }}>{slots.photos}</div>

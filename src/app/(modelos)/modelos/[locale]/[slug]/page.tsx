@@ -2,8 +2,11 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { webPublica } from '@/app/composition/container'
 import type { Event } from '@/modules/events/domain/event'
-import { fiestaDeTema } from '@/modules/events'
+import { fechasDeMuestra, fiestaDeTema } from '@/modules/events'
+import { fechaEnBolivia } from '@/shared/format/fecha'
 import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
+import { EstiloDeLaInvitacion } from '@/modules/events/ui/EstiloDeLaInvitacion'
+import { leerEstilo, SIN_ESTILO } from '@/modules/events/domain/estilo'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -63,8 +66,10 @@ export async function generateMetadata({
 
 export default async function ModelPreviewPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ locale: string; slug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const { locale: crudo, slug } = await params
   const locale = parseLocaleParam(crudo)
@@ -78,6 +83,16 @@ export default async function ModelPreviewPage({
 
   const diccionario = getDictionary(locale)
   const { Component: Tema } = tema
+  // El modelo con otro acento o letra (`?acento=%237a2335&caligrafia=allura`): lo mismo que
+  // Gala deja elegir, y solo eso (`leerEstilo`). Cualquier otro valor, el del diseño.
+  const consulta = await searchParams
+  const texto = (k: string) => (typeof consulta[k] === 'string' ? consulta[k] : '')
+  const estilo =
+    leerEstilo(
+      // Lo que el diseño no admite se ignora (el escaparate no es un formulario).
+      { acento: texto('acento'), caligrafia: tema.estilo?.caligrafia ? texto('caligrafia') : '', titulares: tema.estilo?.titulares ? texto('titulares') : '' },
+      { acento: tema.estilo?.acento ?? null, caligrafia: tema.estilo?.caligrafia !== undefined, titulares: tema.estilo?.titulares !== undefined },
+    ) ?? SIN_ESTILO
 
   /**
    * Si este modelo tiene canción, de las que el admin sube en la administración.
@@ -95,17 +110,20 @@ export default async function ModelPreviewPage({
   // Con canción subida, el reproductor dice la que suena y no la del contenido de muestra.
   // Una subida anterior a guardar el nombre no lo tiene: sin él se deja en blanco, que es
   // mejor que anunciar a Chayanne sonando otra cosa.
+  // Fechas siempre por delante de hoy: con las fijas del modelo, la cuenta regresiva quedaba en cero.
+  const fechas = fechasDeMuestra(fechaEnBolivia(new Date()), tema.defaultContent.schedule?.startsAt)
+  const base = { ...tema.defaultContent, schedule: { startsAt: fechas.startsAt } }
   const contenido = tieneMusica
-    ? { ...tema.defaultContent, music: { ...tema.defaultContent.music, track: cancion?.track ?? '', artist: cancion?.artist ?? '' } }
-    : tema.defaultContent
+    ? { ...base, music: { ...base.music, track: cancion?.track ?? '', artist: cancion?.artist ?? '' } }
+    : base
 
   const eventoDeMuestra: Event = {
     id: 'muestra',
     userId: null,
     slug,
     title: tema.label,
-    eventDate: '2026-11-14',
-    rsvpDeadline: '2026-10-30',
+    eventDate: fechas.eventDate,
+    rsvpDeadline: fechas.rsvpDeadline,
     locale,
     themeKey: slug,
     status: 'live',
@@ -123,6 +141,7 @@ export default async function ModelPreviewPage({
       action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#precios`, label: diccionario.themes.chooseDesign }}
       exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}
     >
+      <EstiloDeLaInvitacion estilo={estilo} tema={tema}>
       <Tema
         // La canción de **este modelo**, la que el admin subió desde la administración.
         // No sale del contenido —el de muestra no tiene archivo detrás— porque no es de
@@ -136,6 +155,7 @@ export default async function ModelPreviewPage({
         slots={ranurasDeVistaPrevia(diccionario, tema.rsvp)}
         themes={diccionario.themes}
       />
+      </EstiloDeLaInvitacion>
     </PhonePreview>
   )
 }

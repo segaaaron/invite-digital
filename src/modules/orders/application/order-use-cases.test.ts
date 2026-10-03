@@ -12,6 +12,7 @@ const ALTA = {
   planSlug: 'firma-3d',
   customerName: 'María Aguilar',
   contact: '+59170011122',
+  email: 'maria@correo.bo',
   eventDate: '2026-12-05',
   notes: null,
 }
@@ -41,6 +42,24 @@ describe('placeOrder', () => {
     expect(isErr(await crear({ ...ALTA, customerName: '   ' }))).toBe(true)
     expect(isErr(await crear({ ...ALTA, contact: '' }))).toBe(true)
     expect(orders.orders).toEqual([])
+  })
+
+  it('pide WhatsApp, correo y fecha: sin ellos, al aprobar no se puede crear el evento', async () => {
+    const orders = new FakeOrderRepository()
+    const crear = placeOrder({ orders, clock })
+    const codigo = async (cambio: { contact?: string; email?: string; eventDate?: string | null }) => {
+      const r = await crear({ ...ALTA, ...cambio })
+      return isErr(r) ? r.error.detail : 'ok'
+    }
+
+    expect(await codigo({ contact: 'maria@correo.bo' })).toBe('contact')
+    expect(await codigo({ email: '' })).toBe('email')
+    expect(await codigo({ email: 'maria-sin-arroba' })).toBe('email')
+    expect(await codigo({ eventDate: null })).toBe('eventDate')
+    expect(orders.orders).toEqual([])
+
+    const bien = await crear({ ...ALTA, contact: '70011122', email: '  Maria@Correo.BO ' })
+    expect(isOk(bien) && [bien.value.contact, bien.value.email]).toEqual(['+59170011122', 'maria@correo.bo'])
   })
 
   it('guarda el diseño que eligió en el escaparate', async () => {

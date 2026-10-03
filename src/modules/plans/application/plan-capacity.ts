@@ -24,4 +24,7 @@ export const capacidadDePlan = (row: PlanRow): Allowance => ({
   onlineDays: row.onlineDays,
   plannerSuite: (PLANNER_SUITES as readonly string[]).includes(row.plannerSuite) ? (row.plannerSuite as PlannerSuite) : 'esencial',
   designChange: (DESIGN_CHANGES as readonly string[]).includes(row.designChange) ? (row.designChange as DesignChange) : 'ninguno',
+  ...(row.includesGuestbook === undefined ? {} : { guestbook: row.includesGuestbook }),
+  ...(row.includesGiftWays === undefined ? {} : { giftWays: row.includesGiftWays }),
+  ...(row.includesStyle === undefined ? {} : { estilo: row.includesStyle }),
 })

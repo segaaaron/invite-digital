@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
+import { admin, diseno, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { type Actor, createCredential, parseRole } from '@/modules/identity'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -47,7 +47,7 @@ export type PlaceOrderState =
   | { status: 'success'; publicRef: string }
   | { status: 'error'; code: OrderErrorCode }
 
-const CODIGOS_DE_PEDIDO: ReadonlySet<string> = new Set(['name', 'contact', 'plan', 'notes'])
+const CODIGOS_DE_PEDIDO: ReadonlySet<string> = new Set(['name', 'contact', 'email', 'eventDate', 'plan', 'notes'])
 
 export async function placeOrderAction(_previous: PlaceOrderState, formData: FormData): Promise<PlaceOrderState> {
   if (limitePedido.isLimited(await ipDeLaPeticion(), Date.now())) {
@@ -77,6 +77,7 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
     templateSlug: texto('templateSlug'),
     customerName: texto('customerName'),
     contact: texto('contact'),
+    email: texto('email'),
     eventDate: fecha === '' ? null : fecha,
     notes: texto('notes'),
   })
@@ -237,10 +238,10 @@ async function aprovisionar(
     return { message: aplicado ? `Extra «${order.addonName ?? order.addonSlug}» aplicado.` : 'El extra ya estaba aplicado.', eventSlug: order.eventSlug }
   }
 
-  // El correo: el que viene de la ficha (del pedido o de su consulta) o, si es un correo, el
-  // contacto del propio pedido. La contraseña **se genera**: nadie la inventa ni la escribe.
+  // El correo: el que viene de la ficha, el del pedido (`0080`) o, en los anteriores, el contacto
+  // si era un correo. La contraseña **se genera**: nadie la inventa ni la escribe.
   const escrito = campo(formData, 'clientEmail').trim().toLowerCase()
-  const correo = escrito !== '' ? escrito : order.contact.includes('@') ? order.contact.trim().toLowerCase() : ''
+  const correo = escrito !== '' ? escrito : (order.email ?? (order.contact.includes('@') ? order.contact.trim().toLowerCase() : ''))
   const clave = randomBytes(12).toString('base64url')
 
   if (order.eventDate === null) {
@@ -337,6 +338,8 @@ async function aprovisionar(
       planSlug: order.planSlug,
     })
     if (isErr(plan)) registrarFallo('orders/actions', 'no se pudo asignar el plan del pedido', plan.error.kind, plan.error.detail)
+    // Un plan por encargo (con rondas y días): lo diseñamos nosotros a partir de sus datos.
+    else await diseno.empezarSegunPlan(evento.value.id, order.planSlug)
   }
 
   // La cuenta del cliente. Ya sabemos que se puede crear —se comprobó antes de tocar la
@@ -360,8 +363,9 @@ async function aprovisionar(
   const telefono = order.contact.includes('@') ? null : normalizarWhatsapp(order.contact)
   await admin.completarContacto(clienteId, { fullName: order.customerName, phone: telefono === '' ? null : telefono })
 
-  // Y se le manda su acceso. Como en el alta desde Configuración: si el correo no sale, el
-  // alta sigue siendo válida y la contraseña está en pantalla.
+  // Y se le manda su acceso. Si el correo no sale, la contraseña generada **no está en ningún
+  // otro sitio**: aquí no hay pantalla que la enseñe (la decisión se desmonta al aprobar) y no se
+  // escribe en registros. Se avisa al admin para que use «Restablecer acceso», que sí la enseña.
   const avisado = await notifications.sendClientAccess({
     to: correo,
     // Solo si acabamos de crearla: a quien ya tenía cuenta no se le manda una contraseña
@@ -369,6 +373,14 @@ async function aprovisionar(
     password: existente === null ? clave : null,
     eventTitle: evento.value.title,
   })
+  if (!avisado && existente === null) {
+    registrarFallo('orders/actions', 'no se pudo enviar por correo el acceso del pedido %s', order.publicRef)
+    avisarAlAdmin({
+      asunto: `El acceso de ${correo} no salió por correo`,
+      lineas: ['Abre su evento y usa «Restablecer acceso»: la contraseña nueva sale en pantalla para pasársela por WhatsApp.'],
+      ruta: `/panel/admin/eventos?evento=${evento.value.slug}`,
+    })
+  }
 
   return {
     message: `Evento creado con el diseño «${themeFor(themeKey).label}». ${avisoDeClave}${avisado ? ' Le mandamos su acceso por correo.' : ''}`,

@@ -29,7 +29,9 @@ describe('ConsultationForm', () => {
 
     expect(screen.getByLabelText(/^Nombre/)).toBeRequired()
     expect(screen.getByLabelText(/Apellido/)).toBeRequired()
-    expect(screen.getByLabelText(/Correo electrónico/)).toBeRequired()
+    // WhatsApp primero: en Bolivia es por donde se atiende. El correo, opcional.
+    expect(screen.getByLabelText(/^WhatsApp/)).toBeRequired()
+    expect(screen.getByLabelText(/Correo electrónico/)).not.toBeRequired()
     expect(screen.getByLabelText(/Tipo de evento/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Fecha del evento/)).toBeInTheDocument()
     expect(screen.getByLabelText(/Cuéntanos sobre tu evento/)).toBeInTheDocument()

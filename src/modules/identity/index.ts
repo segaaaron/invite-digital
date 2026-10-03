@@ -11,6 +11,7 @@ export {
   canManageStaff,
   gestionaElEvento,
   isAdmin,
+  puedeCrearEventos,
   parseRole,
   rolEnEquipo,
   sectionForRole,

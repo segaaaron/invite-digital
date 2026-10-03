@@ -6,7 +6,7 @@
  * Puro: sin base, sin reloj y sin red. Quién lo recibe también se decide aquí.
  */
 
-export const TIPOS_DE_AVISO = ['rsvp', 'mensaje', 'apertura', 'regalo', 'agenda', 'venta'] as const
+export const TIPOS_DE_AVISO = ['rsvp', 'mensaje', 'apertura', 'regalo', 'agenda', 'diseno', 'venta'] as const
 export type TipoDeAviso = (typeof TIPOS_DE_AVISO)[number]
 
 /** Para las preferencias de Mi cuenta: qué es cada tipo, dicho para quien lo recibe. */
@@ -16,6 +16,7 @@ export const TIPOS_DE_AVISO_EXPLICADOS: readonly { tipo: TipoDeAviso; titulo: st
   { tipo: 'apertura', titulo: 'Invitaciones abiertas', ayuda: 'La primera vez que un invitado abre su invitación.', soloAdmin: false },
   { tipo: 'regalo', titulo: 'Regalos', ayuda: 'Cuando alguien reserva un regalo de tu lista.', soloAdmin: false },
   { tipo: 'agenda', titulo: 'Lo que vence', ayuda: 'Tareas y pagos que vencen mañana, y la semana del evento.', soloAdmin: false },
+  { tipo: 'diseno', titulo: 'Tu invitación', ayuda: 'Cuando tenemos lista una versión de tu invitación para que la revises.', soloAdmin: false },
   { tipo: 'venta', titulo: 'Ventas', ayuda: 'Consultas nuevas y comprobantes por revisar.', soloAdmin: true },
 ]
 
@@ -46,6 +47,11 @@ export function avisoDeApertura(i: DelEvento & { invitado: string }): Aviso {
 
 export function avisoDeRegalo(i: DelEvento & { invitado: string; regalo: string }): Aviso {
   return { kind: 'regalo', title: recortar(`${i.invitado} reservó «${i.regalo}»`, 160), body: i.titulo, href: enEvento(i.slug, '/regalos') }
+}
+
+/** El diseño por encargo: hay una versión lista para revisar. Lleva a «Personalizar invitación». */
+export function avisoDeVersionLista(i: DelEvento): Aviso {
+  return { kind: 'diseno', title: 'Tu invitación está lista para revisar', body: i.titulo, href: enEvento(i.slug, '/configuracion') }
 }
 
 /** `cuando`: «mañana», «en 7 días»… `ruta`: la pantalla del evento donde se atiende. */

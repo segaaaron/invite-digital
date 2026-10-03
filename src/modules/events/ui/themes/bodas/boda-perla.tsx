@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-perla.content'
-import { PALETA } from './boda-perla.palette'
+import { ACENTO, PALETA } from './boda-perla.palette'
 
 /**
  * «Marco Perlado» — Emma & Gael, de `wedding-variants-8.jsx`.
@@ -31,5 +31,6 @@ export const bodaPerlaDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'gallery', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-perla.view').then((modulo) => modulo.BodaPerlaView)),
 }

@@ -5,6 +5,7 @@ import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/t
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
 import { themeFonts } from '@/shared/design/fonts'
+import { EstiloDeLaInvitacion } from '@/modules/events/ui/EstiloDeLaInvitacion'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
 import '@/modules/events/ui/themes/kit/keyframes.css'
@@ -48,18 +49,19 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   // El mismo contenido y la misma caída que la página del invitado: sin fila sembrada, la
   // muestra del diseño. Si aquí se viera otra cosa, esta pantalla no serviría para nada.
   // Como en el editor: lo escrito, y el ejemplo del modelo en lo que todavía está en blanco.
-  const contenido = await events.contenidoParaVistaPrevia(event.value.id, definicion.defaultContent)
+  const contenido = await events.contenidoParaVistaPrevia(event.value.id, definicion.defaultContent, event.value.eventDate)
 
   const diccionario = getDictionary(event.value.locale)
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')
 
   return (
-    <div className={variables}>
+    <div className={`con-mono ${variables}`}>
       {/* Dentro de un teléfono, como el escaparate y como la maqueta: es la pantalla para
           la que están dibujados, y a lo ancho el fondo se derrama por los lados. */}
       <PhonePreview
         exit={{ href: `/panel/eventos/${event.value.slug}/configuracion`, label: 'Volver al panel' }}
       >
+        <EstiloDeLaInvitacion estilo={await events.estilo.leer(event.value.id)} tema={definicion}>
         <Tema
           content={contenido}
           dictionary={diccionario.invitation}
@@ -68,6 +70,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
           slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp)}
           themes={diccionario.themes}
         />
+        </EstiloDeLaInvitacion>
       </PhonePreview>
     </div>
   )

@@ -1,3 +1,4 @@
+import type { AcentoDelDiseno } from '../../domain/estilo'
 import type { ComponentType, ReactNode } from 'react'
 import type { FontKey } from '@/shared/design/font-manifest'
 import type { InvitationDictionary, ThemeDictionary } from '@/shared/i18n/dictionary'
@@ -147,6 +148,16 @@ export type ThemeDefinition = {
    */
   readonly pinta: LoQuePinta
   readonly defaultContent: InvitationContent
+  /**
+   * Lo que este diseño deja cambiar en Gala (`0088`): la familia de su acento (`acentoDe`) y
+   * qué letras son su caligrafía y sus titulares. Sin declarar, no admite estilo.
+   */
+  readonly estilo?: {
+    readonly acento?: AcentoDelDiseno
+    readonly caligrafia?: FontKey
+    /** Solo si los titulares llevan una letra que no es la del texto corrido. */
+    readonly titulares?: FontKey
+  }
   readonly Component: ComponentType<ThemeProps>
 }
 

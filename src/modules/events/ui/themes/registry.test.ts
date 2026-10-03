@@ -3,6 +3,7 @@ import { MAXIMOS } from '../../domain/invitation-content'
 import { FORMAS } from '../content-shapes'
 import { describe, expect, it } from 'vitest'
 import { THEME_KEYS, themeDefinitions, themeFor } from './registry'
+import { seAsigna } from '@/shared/design/theme-catalog'
 
 describe('registro de plantillas', () => {
   it('devuelve la plantilla pedida', () => {
@@ -65,6 +66,19 @@ describe('los campos que declara cada diseño', () => {
       for (const seccion of Object.keys(tema.pinta.sinCampos ?? {})) {
         expect(tema.sections, `${tema.key} · ${seccion}`).toContain(seccion)
       }
+    }
+  })
+})
+
+describe('los colores y la letra (Gala)', () => {
+  // Un diseño nuevo que se vende sin declarar su estilo deja a quien compró Gala sin lo que pagó.
+  it('todo diseño que se asigna los admite, con su principal dentro de la familia y sus letras cargadas', () => {
+    const asignables = themeDefinitions().filter((t) => seAsigna(t.key))
+    expect(asignables.length).toBeGreaterThan(0)
+    for (const t of asignables) {
+      expect(t.estilo?.acento, t.key).toBeDefined()
+      expect(Object.values(t.estilo!.acento!.familia), t.key).toContain(t.estilo!.acento!.principal)
+      for (const letra of [t.estilo?.caligrafia, t.estilo?.titulares]) if (letra !== undefined) expect(t.fonts, t.key).toContain(letra)
     }
   })
 })

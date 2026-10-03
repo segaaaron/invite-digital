@@ -1,5 +1,6 @@
+import { acentoDe } from '../kit/acento'
 /** La paleta de «Editorial» (V3): verde botánico de fondo con oro sobre él. */
-export const PALETA = {
+const BASE = {
   /** El velo verde que va sobre la fotografía de fondo y bajo todo lo demás. */
   fondo: '#16281c',
   oro: '#D4B678',
@@ -19,6 +20,20 @@ export const PALETA = {
   /** El camino punteado del itinerario y sus flores. */
   camino: '#C9A961',
   fileteSuave: 'rgba(212,182,120,0.25)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('oro', { oro: BASE.oro, oroClaro: BASE.oroClaro, oroPalido: BASE.oroPalido, aro: BASE.aro, camino: BASE.camino }, BASE.fondo)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  aroFondo: A.alfa('aro', 0.25),
+  fileteSuave: A.alfa('oro', 0.25),
 } as const
 
 /**

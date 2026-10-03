@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-luciana.content'
-import { PALETA } from './xv-luciana.palette'
+import { ACENTO, PALETA } from './xv-luciana.palette'
 
 /** «Bosque Encantado» — Luciana. */
 export const xv_lucianaDefinition: ThemeDefinition = {
@@ -18,5 +18,6 @@ export const xv_lucianaDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-luciana.view').then((modulo) => modulo.XvLucianaView)),
 }

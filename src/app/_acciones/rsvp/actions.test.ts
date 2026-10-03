@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { ok } from '@/shared/result'
+import { err, ok } from '@/shared/result'
 
 /**
  * El candado de la contraseña del evento tiene que cerrar **las escrituras**, no solo la
@@ -17,9 +17,12 @@ vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
 vi.mock('@/app/composition/container', () => ({
   rsvp: { respond: (...args: unknown[]) => respond(...args) },
   guests: { resolveByToken: (...args: unknown[]) => resolveByToken(...args) },
+  plans: { requireFeature: (...args: unknown[]) => requireFeature(...args) },
 }))
 vi.mock('@/app/_acciones/events/actions', () => ({ eventUnlocked: (...args: unknown[]) => eventUnlocked(...args) }))
 vi.mock('@/app/_acciones/avisar-a-los-anfitriones', () => ({ avisarALosAnfitriones: (...args: unknown[]) => avisar(...args) }))
+
+const requireFeature = vi.fn()
 
 const form = (): FormData => {
   const fd = new FormData()
@@ -32,6 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   resolveByToken.mockResolvedValue(ok({ id: 'g1', eventId: 'e1', label: 'Familia Vargas' }))
   respond.mockResolvedValue(ok({ attending: 2 }))
+  requireFeature.mockResolvedValue(ok({}))
 })
 
 describe('respondAction con un evento protegido', () => {
@@ -55,5 +59,19 @@ describe('respondAction con un evento protegido', () => {
     expect(respond).toHaveBeenCalled()
     // Y los anfitriones reciben su aviso: quién, de qué evento y cuántos vienen.
     expect(avisar).toHaveBeenCalledWith({ eventId: 'e1', invitado: 'Familia Vargas', asistentes: 2, mensaje: null })
+  })
+
+  it('sin libro de firmas en el plan, la confirmación llega sin el mensaje', async () => {
+    eventUnlocked.mockResolvedValue(true)
+    requireFeature.mockResolvedValue(err({ kind: 'feature_not_included', detail: 'guestbook' }))
+    const { respondAction } = await import('@/app/_acciones/rsvp/actions')
+    const fd = form()
+    fd.set('message', 'Felicidades, Amanda')
+
+    await respondAction({ status: 'idle' }, fd)
+
+    // Ni se guarda ni se avisa: el mensaje no llega a ninguna parte.
+    expect(JSON.stringify(respond.mock.calls)).not.toContain('Felicidades')
+    expect(avisar).toHaveBeenCalledWith(expect.objectContaining({ mensaje: null }))
   })
 })

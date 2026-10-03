@@ -1,5 +1,6 @@
+import { acentoDe } from '../kit/acento'
 /** La paleta de «Cervecería Vintage»: madera, oro de cebada y crema de espuma. */
-export const PALETA = {
+const BASE = {
   /** La madera del barril: el fondo de arriba. */
   madera: '#1c140c',
   /** El fondo del degradado, un punto más claro: la taberna se aclara hacia abajo. */
@@ -14,4 +15,20 @@ export const PALETA = {
   vidrioFuerte: 'rgba(212,169,75,0.06)',
   /** Las duelas verticales sobre el fondo, que es lo que lo hace madera y no marrón. */
   duelas: 'rgba(0,0,0,0.15)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('oro', { oro: BASE.oro }, BASE.madera)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  filete: A.alfa('oro', 0.4),
+  fileteSuave: A.alfa('oro', 0.35),
+  vidrio: A.alfa('oro', 0.05),
+  vidrioFuerte: A.alfa('oro', 0.06),
 } as const

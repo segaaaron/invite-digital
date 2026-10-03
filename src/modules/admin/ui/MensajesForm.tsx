@@ -32,10 +32,10 @@ export function MensajesForm({ mensajes, capacidad, descuento }: { mensajes: Men
       <SettingsSection
         description={
           <>
-            Lo que se abre escrito en WhatsApp desde Ventas. Se rellenan <code className="font-mono text-[11px]">{'{nombre}'}</code>,{' '}
-            <code className="font-mono text-[11px]">{'{fecha}'}</code>, <code className="font-mono text-[11px]">{'{importe}'}</code>,{' '}
-            <code className="font-mono text-[11px]">{'{plan}'}</code>, <code className="font-mono text-[11px]">{'{enlace}'}</code> y{' '}
-            <code className="font-mono text-[11px]">{'{marca}'}</code>. Vacío vuelve al mensaje de siempre.
+            Lo que se abre escrito en WhatsApp desde Ventas. Se rellenan <code className="font-codigo text-[11px]">{'{nombre}'}</code>,{' '}
+            <code className="font-codigo text-[11px]">{'{fecha}'}</code>, <code className="font-codigo text-[11px]">{'{importe}'}</code>,{' '}
+            <code className="font-codigo text-[11px]">{'{plan}'}</code>, <code className="font-codigo text-[11px]">{'{enlace}'}</code> y{' '}
+            <code className="font-codigo text-[11px]">{'{marca}'}</code>. Vacío vuelve al mensaje de siempre.
           </>
         }
         title="Mensajes al cliente"

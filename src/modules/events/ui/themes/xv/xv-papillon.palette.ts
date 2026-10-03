@@ -1,5 +1,6 @@
+import { acentoDe } from '../kit/acento'
 /** La paleta de «Papillon» (Emilia, `xv-papillon.jsx`): jardín rosa, mariposas y oro. */
-export const PALETA = {
+const BASE = {
   rosa: '#E8B4B8',
   rosaHonda: '#C9929A',
   rosaSuave: 'rgba(242,209,213,0.55)',
@@ -17,6 +18,18 @@ export const PALETA = {
   fondo: '#F8E0E4',
   /** El cristal esmerilado de todas las tarjetas. */
   cristal: 'rgba(255,245,248,0.4)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('oro', { oro: BASE.oro, oroClaro: BASE.oroClaro }, BASE.crema)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** La carta de color del código de vestimenta, como la maqueta. */

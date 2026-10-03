@@ -101,6 +101,10 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
       if (fila.effect === 'mas_dias') {
         await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${fila.amount}` }).where(eq(events.id, fila.event_id))
       }
+      // Un cambio adicional suma rondas al encargo. Sin encargo no hay rondas que sumar.
+      if (fila.effect === 'mas_rondas') {
+        await tx.execute(sql`update event_design set rounds_included = rounds_included + ${fila.amount}, updated_at = now() where event_id = ${fila.event_id}`)
+      }
       return true
     })
   },
@@ -125,6 +129,10 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
       const dias = aplicados.filter((f) => f.effect === 'mas_dias')
       for (const f of dias) {
         await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${f.amount}` }).where(eq(events.id, f.event_id))
+      }
+      // Con el encargo ya empezado se suman aquí; si aún no existe, lo cuenta al crearse.
+      for (const f of aplicados.filter((a) => a.effect === 'mas_rondas')) {
+        await tx.execute(sql`update event_design set rounds_included = rounds_included + ${f.amount}, updated_at = now() where event_id = ${f.event_id}`)
       }
       return aplicados.length
     })

@@ -17,6 +17,8 @@ export const FRASE_DE_AUDITORIA: Readonly<Record<string, string>> = {
   'evento.borrado': 'Borró un evento',
   'evento.duplicado': 'Duplicó un evento',
   'boda.alta': 'Creó un evento para un cliente',
+  'evento.invitacion': 'Escribió en la invitación de un cliente',
+  'evento.diseno': 'Movió el diseño por encargo de un evento',
   'acceso.restablecido': 'Restableció el acceso de un cliente',
   'equipo.alta': 'Sumó a alguien al equipo de un evento',
   'asistente.invitados': 'Añadió invitados con el asistente',

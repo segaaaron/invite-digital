@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-isabelle.content'
-import { PALETA } from './xv-isabelle.palette'
+import { ACENTO, PALETA } from './xv-isabelle.palette'
 
 /** «Palacio Griego» — Isabelle (maqueta V3). Mármol crema, oro viejo y la quinceañera entre columnas. */
 export const xvIsabelleDefinition: ThemeDefinition = {
@@ -17,5 +17,6 @@ export const xvIsabelleDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-isabelle.view').then((modulo) => modulo.XvIsabelleView)),
 }

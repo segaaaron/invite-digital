@@ -51,7 +51,7 @@ export async function PassQr({
       {codigo === null ? null : (
         <p className="flex flex-col items-center gap-0.5">
           <span className="font-mono text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{labels.code ?? 'Código'}</span>
-          <span className="font-mono text-[22px] tracking-[0.16em] text-ink">{codigo}</span>
+          <span className="font-codigo text-[22px] tracking-[0.16em] text-ink">{codigo}</span>
         </p>
       )}
       <p className="text-center text-[12px] text-ink-soft">{labels.hint}</p>

@@ -1,8 +1,9 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Pampas y Flores Secas» (`wedding-variants-10.jsx`, `WeddingBohoPampas`):
  * terracota, café y crema sobre la fotografía de pampas.
  */
-export const PALETA = {
+const BASE = {
   /** El terracota de los botones. */
   terracota: '#b8795a',
   /** El café de toda la tinta. */
@@ -15,6 +16,18 @@ export const PALETA = {
   oro: '#c9a96e',
   /** El beige de la línea «nos casamos». */
   beige: '#e4c9a8',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('terracota', { terracota: BASE.terracota, oro: BASE.oro, beige: BASE.beige }, BASE.crema)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** Los cinco colores del código de vestimenta, con su nombre, como los pinta la maqueta. */

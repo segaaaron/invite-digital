@@ -205,7 +205,8 @@ describe('drizzleOrderRepository', () => {
 
   it('con anticipo en el plan, el pedido nace con su anticipo; sin él, sin anticipo', async () => {
     const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
-    await db.update(plans).set({ depositPct: 40 }).where(eq(plans.slug, 'firma-3d'))
+    // Sin reserva fija, explícito: si la base trae una, manda sobre el porcentaje.
+    await db.update(plans).set({ depositPct: 40, depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
     try {
       const con = await nuevo()
       expect(con.depositCents).toBe(Math.round((plan!.precio * 40) / 10000) * 100)
@@ -213,6 +214,40 @@ describe('drizzleOrderRepository', () => {
       await db.update(plans).set({ depositPct: 0 }).where(eq(plans.slug, 'firma-3d'))
     }
     expect((await nuevo()).depositCents).toBeNull()
+  })
+
+  it('con reserva fija, el pedido y la cotización nacen con esa reserva aunque haya porcentaje', async () => {
+    await db.update(plans).set({ depositPct: 40, depositFixedCents: 10_000 }).where(eq(plans.slug, 'firma-3d'))
+    try {
+      expect((await nuevo()).depositCents).toBe(10_000)
+      const q = await repo.createQuote({
+        publicRef: `Q${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
+        planSlug: 'firma-3d',
+        templateSlug: 'boda-bot',
+        customerName: 'Reserva fija',
+        contact: 'reserva@x.bo',
+        eventDate: '2027-02-14',
+        notes: null,
+        consultationId: null,
+        amountCents: 100_000,
+        discountCents: null,
+        extras: [],
+      })
+      creados.push(q.id)
+      expect(q.depositCents).toBe(10_000)
+    } finally {
+      await db.update(plans).set({ depositPct: 0, depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
+    }
+  })
+
+  it('una reserva fija que no es menor que el importe no se aplica: se paga entero', async () => {
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    await db.update(plans).set({ depositFixedCents: plan!.precio }).where(eq(plans.slug, 'firma-3d'))
+    try {
+      expect((await nuevo()).depositCents).toBeNull()
+    } finally {
+      await db.update(plans).set({ depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
+    }
   })
 
   it('la cotización guarda el precio del admin, sus extras, el descuento y la consulta', async () => {

@@ -35,6 +35,14 @@ export type Allowance = {
    * (`asistente.config.planes`), y quien pregunta junta las dos cosas.
    */
   readonly asistente?: boolean
+  /**
+   * El libro de firmas y las formas de regalar (lluvia de sobres, QR de transferencia), por plan
+   * (`0084`). Opcionales: sin decirlo, vienen, que es como fue siempre.
+   */
+  readonly guestbook?: boolean
+  readonly giftWays?: boolean
+  /** Acento y letra a elección (`0088`, Gala o más). Sin decirlo, no: es lo nuevo. */
+  readonly estilo?: boolean
 }
 
 /**
@@ -57,7 +65,7 @@ export type PlannerSuite = 'esencial' | 'completo' | 'total'
 export const PLANNER_SUITES: readonly PlannerSuite[] = ['esencial', 'completo', 'total']
 
 /** Las funciones que un plan puede incluir o no. Las dos del planner salen de su nivel. */
-export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport' | 'plannerCompleto' | 'plannerTotal'
+export type PlanFeature = 'seating' | 'registry' | 'checkin' | 'guestPhotos' | 'eventPassword' | 'csvImport' | 'plannerCompleto' | 'plannerTotal' | 'guestbook' | 'giftWays' | 'estilo'
 
 /** Umbral del aviso: por debajo no se dice nada, chocar sin verlo venir es peor. */
 export const WARNING_RATIO = 0.8
@@ -92,7 +100,11 @@ export const hasFeature = (allowance: Allowance, feature: PlanFeature): boolean 
     ? allowance.plannerSuite !== 'esencial'
     : feature === 'plannerTotal'
       ? allowance.plannerSuite === 'total'
-      : allowance[feature]
+      : feature === 'guestbook' || feature === 'giftWays'
+        ? allowance[feature] !== false
+        : feature === 'estilo'
+          ? allowance.estilo === true
+          : allowance[feature]
 
 /**
  * Las secciones de un evento que su plan no trae, relativas al evento (`/regalos`).

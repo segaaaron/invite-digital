@@ -18,6 +18,7 @@ export {
   avisoDeRegalo,
   avisoDeRespuesta,
   avisoDeVenta,
+  avisoDeVersionLista,
   TIPOS_DE_AVISO,
   TIPOS_DE_AVISO_EXPLICADOS,
   type Aviso,

@@ -1,5 +1,6 @@
 'use client'
 
+import { DownloadIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 
 export type CsvRow = {
@@ -97,7 +98,7 @@ export function ExportCsvButton({
         URL.revokeObjectURL(url)
       }}
     >
-      Exportar CSV ↓
+      <DownloadIcon className="size-3.5" /> Exportar CSV
     </PanelButton>
   )
 }

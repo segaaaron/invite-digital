@@ -2,6 +2,7 @@
 
 import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
+import { alfaDe } from './boda-ed.palette'
 
 type Props = {
   readonly bgAsset: string
@@ -20,7 +21,7 @@ type Props = {
 }
 
 /** El resplandor dorado con sombra que la maqueta pone a todo el texto de esta portada. */
-const RESPLANDOR = '0 0 15px rgba(197,150,26,0.6), 0 2px 4px rgba(0,0,0,0.8)'
+const RESPLANDOR = `0 0 15px ${alfaDe('aro', 0.6)}, 0 2px 4px rgba(0,0,0,0.8)`
 
 /**
  * La portada de «Editorial» en V3 (`IntroCover` con `style="ovalFrame"`, `utils.jsx`): la

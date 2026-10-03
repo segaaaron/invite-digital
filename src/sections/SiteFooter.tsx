@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { BRAND } from '@/shared/config/brand'
-import { FacebookIcon, InstagramIcon, TikTokIcon } from '@/shared/design/ui/icons'
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { enlaceWhatsapp } from '@/shared/whatsapp'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 
@@ -10,6 +11,10 @@ export type PieDelSitio = {
   readonly ciudad: string
   readonly pais: string
   readonly cobertura: string
+  /** El WhatsApp del negocio y cómo se lee (`+591 700 12345`). Vacío, no se pinta. */
+  readonly whatsapp: string
+  readonly whatsappVisible: string
+  readonly mensajeGeneral: string
   readonly redes: { readonly instagram: string; readonly facebook: string; readonly tiktok: string }
   readonly privacidadPublicada: boolean
   readonly terminosPublicados: boolean
@@ -31,6 +36,8 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
   const year = new Date().getUTCFullYear()
   const ubicacion = [sitio.direccion, sitio.ciudad, sitio.pais].filter((parte) => parte !== '').join(', ')
   const redes = REDES.filter((red) => sitio.redes[red.clave] !== '')
+  // En Bolivia se atiende por WhatsApp: el número, a la vista en cada página.
+  const whatsapp = enlaceWhatsapp(sitio.whatsapp, sitio.mensajeGeneral)
 
   return (
     // Una sola línea de tres bloques, como la maqueta: marca a la izquierda, cobertura en
@@ -56,6 +63,16 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
             </span>
           )}
         </span>
+        {whatsapp === null ? null : (
+          <a
+            className="flex items-center gap-2 text-[13px] text-gold-deep tabular-nums transition-colors hover:text-ink"
+            href={whatsapp}
+            rel="noopener noreferrer"
+            target="_blank"
+          >
+            <WhatsAppIcon /> {sitio.whatsappVisible}
+          </a>
+        )}
         <span className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
           {ubicacion}
           {sitio.cobertura === '' ? '' : ` · ${sitio.cobertura}`}

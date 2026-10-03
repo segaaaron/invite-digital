@@ -105,6 +105,8 @@ export const createDrizzleEventRepository = (database: DbExecutor): EventReposit
 
       // Las formas de regalar llevan el banco, el titular, la cuenta y el QR de alguien: fuera enteras.
       await tx.execute(sql`delete from event_gift_ways where event_id = ${eventId}`)
+      // Las rondas de diseño son mensajes del cliente sobre su fiesta: nombres, horas, familia.
+      await tx.execute(sql`delete from design_rounds where event_id = ${eventId}`)
 
       // Los porteros son personas con nombre y teléfono, y su acceso ya no abre nada: se
       // borran. Las llegadas se quedan —son la estadística del evento— sin decir quién

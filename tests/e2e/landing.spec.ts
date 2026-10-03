@@ -33,7 +33,7 @@ test('muestra los tres planes con precios en bolivianos', async ({ page }) => {
   await expect(page.getByText('Bs 1.990')).toBeVisible()
 })
 
-test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada', async ({ browser, page }) => {
+test('todos los planes se reservan con el pedido, y el WhatsApp sale en el pie', async ({ browser, page }) => {
   // El WhatsApp se cambia **desde «La web» del admin**, no con SQL: la web pública cachea sus
   // datos y es guardar en el admin lo que la invalida. Con SQL la portada seguiría enseñando
   // el número de antes, que es justo el comportamiento correcto.
@@ -57,16 +57,14 @@ test('el CTA de un plan que se compra abre el pedido; el más caro, una llamada'
   try {
     await page.goto('/es')
 
-    // Desde el Plan B, «Firma 3D» se compra: su botón abre el pedido. Dejarlo en WhatsApp
-    // sería tener el flujo construido y sin ninguna puerta que lo alcance.
-    await expect(page.getByRole('link', { name: 'Firma 3D' }).first()).toHaveAttribute('href', '/es/pedido/firma-3d')
+    // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia
+    // y desde allí se sigue por WhatsApp. Ya no hay plan que «agende una llamada».
+    await expect(page.getByRole('link', { name: 'Reservar Firma 3D' })).toHaveAttribute('href', '/es/pedido/firma-3d')
+    await expect(page.getByRole('link', { name: 'Reservar Alta Costura' })).toHaveAttribute('href', '/es/pedido/alta-costura')
+    await expect(page.getByRole('link', { name: 'Agendar llamada' })).toHaveCount(0)
 
-    // El más caro se cotiza, no se compra de un clic: sigue agendando la llamada, como en
-    // la maqueta.
-    await expect(page.getByRole('link', { name: 'Agendar llamada' }).first()).toHaveAttribute(
-      'href',
-      new RegExp(`wa\\.me/${WHATSAPP_DIGITS}\\?text=`),
-    )
+    // En Bolivia se atiende por WhatsApp: el número, a la vista en el pie de cada página.
+    await expect(page.locator('footer').getByRole('link', { name: /\+591/ })).toHaveAttribute('href', new RegExp(`wa\\.me/${WHATSAPP_DIGITS}`))
   } finally {
     await guardarWhatsapp(previo)
     await admin.context().close()
@@ -112,21 +110,22 @@ test('envía una consulta y muestra la confirmación', async ({ page }) => {
   // Nombre y apellido van separados, como en la maqueta, y se guardan como un nombre.
   await page.getByLabel('Nombre', { exact: true }).fill('María')
   await page.getByLabel('Apellido').fill('Rojas E2E')
-  await page.getByLabel('Correo electrónico').fill('e2e@example.com')
+  await page.getByLabel('WhatsApp', { exact: true }).fill('+591 70000002')
+  await page.getByLabel(/Correo electrónico/).fill('e2e@example.com')
   await page.getByRole('button', { name: 'Solicitar consulta' }).click()
   await expect(page.getByText('Solicitud recibida')).toBeVisible()
 })
 
-test('el navegador no deja enviar una consulta sin correo', async ({ page }) => {
-  // El correo es el único camino de vuelta desde que el formulario dejó de pedir
-  // teléfono: es obligatorio, y el navegador corta antes de gastar una petición.
+test('el navegador no deja enviar una consulta sin WhatsApp', async ({ page }) => {
+  // El WhatsApp es el camino de vuelta (en Bolivia se atiende por ahí): es obligatorio, y el
+  // navegador corta antes de gastar una petición. El correo es opcional.
   await page.goto('/en#contacto')
   await page.getByLabel('Name', { exact: true }).fill('No contact')
   await page.getByLabel('Last name').fill('E2E')
   await page.getByRole('button', { name: 'Request a consultation' }).click()
 
   await expect(page.getByText('Request received')).toHaveCount(0)
-  await expect(page.getByLabel('Email address')).toHaveJSProperty('validity.valueMissing', true)
+  await expect(page.getByLabel('WhatsApp', { exact: true })).toHaveJSProperty('validity.valueMissing', true)
 })
 
 test('publica hreflang para ambos idiomas y x-default', async ({ page }) => {

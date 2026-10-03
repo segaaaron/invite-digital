@@ -5,6 +5,7 @@ import { events as eventos, guestbook, plans, registry, rsvp } from '@/app/compo
 import { PassQr } from '@/modules/checkin/ui/PassQr'
 import { acceptsResponses } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
+import { EstiloDeLaInvitacion } from '@/modules/events/ui/EstiloDeLaInvitacion'
 import { tarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-invitacion'
 import { GuestReply } from '@/modules/guestbook'
 import { invitationUrl } from '@/modules/guests'
@@ -25,6 +26,7 @@ import { classifyDevice } from '@/modules/analytics'
 import { headers } from 'next/headers'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
+import { fechaEnBolivia } from '@/shared/format/fecha'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -99,7 +101,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   const respuestaDelAtelier = await guestbook.replyForGroup(group.id)
   const definicion = themeFor(event.themeKey)
   const { Component: Theme } = definicion
-  const abierto = acceptsResponses(event, new Date().toISOString().slice(0, 10))
+  const abierto = acceptsResponses(event, fechaEnBolivia(new Date()))
 
   // El contenido rico que pinta el diseño, ya fusionado con el de muestra del tema: lo que
   // el atelier no haya escrito se ve con lo que traía el diseño, en vez de dejar un hueco.
@@ -107,6 +109,9 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   // «Comparte tus fotos» solo si el plan lo trae: un botón que lleva a un rechazo no se ofrece.
   const capacidadDelPlan = await plans.allowanceFor(event.id)
   const fotosDeInvitados = !isErr(capacidadDelPlan) && capacidadDelPlan.value.guestPhotos
+  // El libro de firmas, si el plan lo trae: sin él no hay campo de mensaje ni «firmar el libro».
+  // Si no se puede leer el plan, se ofrece: perder un mensaje es peor que guardar uno de más.
+  const conLibro = isErr(capacidadDelPlan) || capacidadDelPlan.value.guestbook !== false
 
   // Los regalos: la lluvia de sobres y la transferencia con su QR (todos los planes) y, debajo, la
   // lista y los fondos. Sin nada, la ranura no existe: una sección vacía parece rota.
@@ -186,6 +191,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           para esa pantalla. En el celular, a pantalla completa. Lo decide el aparato. */}
       <div className={enMarco ? 'invitacion-escenario' : undefined}>
         <div className={enMarco ? 'invitacion-marco' : undefined}>
+          <EstiloDeLaInvitacion estilo={await eventos.estilo.leer(event.id)} tema={definicion}>
           <Theme
             content={contenido}
             // Con la respuesta dada, el bloque deja de pedir que confirme: da las gracias y no
@@ -222,6 +228,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
                   </div>
                 ) : (
                 <RsvpForm
+                  conMensaje={conLibro}
+                  preguntas={await rsvp.preguntas.leer(event.id)}
                   dictionary={dictionary}
                   guestName={group.label}
                   previous={sinResponder ? null : latest}
@@ -239,7 +247,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
               guestbook: (
                 <>
-                  {definicion.rsvp !== undefined && definicion.rsvp !== 'campos' ? (
+                  {conLibro && definicion.rsvp !== undefined && definicion.rsvp !== 'campos' ? (
                     <GuestbookForm dictionary={dictionary} guestName={group.label} previous={latest} seats={group.seats} token={token} />
                   ) : null}
                   <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
@@ -265,6 +273,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               ),
             }}
           />
+          </EstiloDeLaInvitacion>
         </div>
       </div>
     </>

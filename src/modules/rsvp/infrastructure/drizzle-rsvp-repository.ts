@@ -12,6 +12,9 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
       responderName: response.responderName,
       message: response.message,
       respondedAt: response.respondedAt,
+      song: response.extras?.song ?? null,
+      menu: response.extras?.menu ?? null,
+      acts: [...(response.extras?.acts ?? [])],
     })
   },
 

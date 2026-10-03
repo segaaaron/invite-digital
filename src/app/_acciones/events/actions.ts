@@ -4,8 +4,8 @@ import { loQueSePerderia } from '@/modules/events'
 
 import { revalidatePath } from 'next/cache'
 import { cookies, headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { events as eventUseCases, guests, plans } from '@/app/composition/container'
+import { notFound, redirect } from 'next/navigation'
+import { admin, events as eventUseCases, guests, plans } from '@/app/composition/container'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { guardedUnlock } from '@/modules/events/application/guarded-unlock'
@@ -20,6 +20,7 @@ import { mismaFiesta } from '@/modules/events/domain/fiesta'
 import { puedeCambiarDiseno } from '@/modules/plans'
 import type { EventErrorKind } from '@/modules/events/domain/errors'
 import { campo } from '@/shared/forms/campo'
+import { isAdmin, puedeCrearEventos } from '@/modules/identity'
 import { registrarFallo } from '@/shared/observability/fallos'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
@@ -41,6 +42,7 @@ const readForm = (formData: FormData) => ({
 // y que el formulario viva tras el inicio de sesión no la protege.
 export async function createEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
   const actor = await requireSession()
+  if (!puedeCrearEventos(actor)) notFound()
 
   // El evento nace con dueño. Sin esta línea la multitenencia sería un adorno: cada alta
   // dejaría un evento huérfano que solo vería el admin.
@@ -96,6 +98,27 @@ async function planDejaCambiarDiseno(role: string, eventId: string): Promise<boo
   const grupos = await guests.list(eventId)
   if (isErr(grupos)) return false
   return puedeCambiarDiseno('antes_de_repartir', { enlacesRepartidos: grupos.value.some((g) => g.invitationSentAt !== null) })
+}
+
+export type RenombrarState = { status: 'idle' | 'success' | 'error'; message: string }
+
+/**
+ * El cliente (y su equipo) le pone nombre a su evento: «XV de Amanda» en vez de «VALERIA», que es
+ * quien hizo el pedido. Solo el título; `updateEventAction` le está cerrada a propósito.
+ */
+export async function renombrarEventoAction(_previous: RenombrarState, formData: FormData): Promise<RenombrarState> {
+  const actor = await requireSession()
+  const eventId = campo(formData, 'eventId')
+  await requireEventAccess(actor, { eventId, section: 'cliente' })
+
+  const hecho = await eventUseCases.renombrar({ eventId, title: campo(formData, 'title') })
+  if (isErr(hecho)) {
+    if (hecho.error.kind === 'invalid_title') return { status: 'error', message: 'El nombre va de 1 a 160 caracteres.' }
+    registrarFallo('events/actions', 'no se pudo renombrar el evento', hecho.error.kind, hecho.error.detail)
+    return { status: 'error', message: 'No se pudo guardar el nombre. Vuelve a intentarlo en un momento.' }
+  }
+  revalidatePath('/panel', 'layout')
+  return { status: 'success', message: 'Nombre guardado.' }
 }
 
 export async function updateEventAction(_previous: EventActionState, formData: FormData): Promise<EventActionState> {
@@ -374,12 +397,12 @@ export async function saveContentBlockAction(
   const actor = await requireSession()
   const eventId = campo(formData, 'eventId')
   const eventSlug = campo(formData, 'eventSlug')
-  // **`cliente` y no `full`**: los novios y la quinceañera escriben el contenido de su
-  // propia invitación —los textos, la canción, el itinerario—, que es para lo que el admin
-  // les dio acceso. Lo que sigue cerrado es el evento en sí: el diseño, el `slug`, la
-  // contraseña y el borrado. La pertenencia se comprueba igual, así que esto no abre nada
-  // de la boda de otro.
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  // **`invitacion` y no `full`**: los novios y la quinceañera escriben el contenido de su
+  // propia invitación —los textos, la canción, el itinerario—, y el admin también (servicio
+  // hecho por nosotros), con registro. Lo que sigue cerrado es el evento en sí: el diseño, el
+  // `slug`, la contraseña y el borrado. La pertenencia se comprueba igual, así que esto no
+  // abre nada de la boda de otro.
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'invitacion' })
 
   // Una tarjeta puede guardar dos bloques: la recepción lleva dentro su mapa.
   const bloques: Array<[string, FormDataEntryValue | null]> = [[campo(formData, 'section'), formData.get('value')]]
@@ -422,6 +445,7 @@ export async function saveContentBlockAction(
     }
   }
 
+  if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: eventSlug, detail: aGuardar.map(([s]) => s).join(', ') })
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
   return { status: 'success' }
 }
@@ -443,7 +467,7 @@ export async function uploadMediaAction(
   // `cliente`, como el contenido: el MP3 de su primer baile y sus fotografías las sube
   // quien celebra la boda. El tope de tamaño y la comprobación por bytes son los mismos
   // para todos.
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'invitacion' })
 
   const archivo = formData.get('file')
   if (!(archivo instanceof File) || archivo.size === 0) {
@@ -500,7 +524,7 @@ export async function removeMediaAction(_previo: ContentActionState, formData: F
   const actor = await requireSession()
   const eventId = campo(formData, 'eventId')
   const eventSlug = campo(formData, 'eventSlug')
-  await requireEventAccess(actor, { eventId, eventSlug, section: 'cliente' })
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'invitacion' })
 
   // Los identificadores son UUID: que aparezca dentro del contenido es que algún bloque lo usa.
   const contenido = JSON.stringify(await eventUseCases.contentFor(eventId, {}))

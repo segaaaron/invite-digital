@@ -2,8 +2,11 @@ import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 
-export function FaqSection({ dictionary }: { dictionary: Dictionary }) {
+export function FaqSection({ dictionary, encargo = false }: { dictionary: Dictionary; encargo?: boolean }) {
   const { faq } = dictionary
+  // Con diseño por encargo, sus preguntas van primero y sustituyen a la de la entrega (la primera),
+  // que habla del autoservicio.
+  const items = encargo ? [...faq.encargoItems, ...faq.items.slice(1)] : faq.items
 
   return (
     <section className="px-6 py-24" id="faq">
@@ -11,7 +14,7 @@ export function FaqSection({ dictionary }: { dictionary: Dictionary }) {
         <SectionHeading eyebrow={faq.eyebrow} title={faq.title} />
 
         <div className="mt-12 flex flex-col divide-y divide-[var(--color-line)] border-y border-[var(--color-line)]">
-          {faq.items.map((item, index) => (
+          {items.map((item, index) => (
             <Reveal delay={index * 0.05} key={item.question}>
               <details className="group py-6">
                 <summary className="flex cursor-pointer list-none items-center justify-between gap-6 text-[16px] text-ink marker:content-none">

@@ -113,6 +113,21 @@
 }
 
 /*
+ * **Con movimiento reducido, cada bloque de `Reveal` se ve desde el primer pintado** (1 oct).
+ * `Reveal` lo decidía en su estado inicial, pero el servidor no sabe la preferencia: pintaba
+ * `opacity: 0` y la hidratación no corrige un estilo distinto, así que el bloque se quedaba
+ * invisible para siempre. Pasaba en «Royal Blush», «Perla» y «Esencia» (en las demás un
+ * remontaje lo tapaba). En CSS no hay hidratación que perder.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .revelar {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/*
  * Las ilustraciones de `themes/art/`: anillos, sello, sol de aniversario y atardecer.
  *
  * Se apagan enteras con movimiento reducido, y aquí sí vale el `animation: none` global:

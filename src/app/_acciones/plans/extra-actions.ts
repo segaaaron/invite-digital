@@ -1,7 +1,7 @@
 'use server'
 
 import { redirect } from 'next/navigation'
-import { asistente, orders, plans } from '@/app/composition/container'
+import { asistente, diseno, orders, plans } from '@/app/composition/container'
 import { tieneLuxury } from '@/modules/asistente'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -36,7 +36,7 @@ export async function orderExtraAction(_previo: ExtraActionState, fd: FormData):
   // Luxury: no se vende sin modelo configurado ni a un plan que ya lo trae (Admin › Asistente).
   if (extra.effect === 'asistente' && !asistente.disponible) return { status: 'error', message: 'Ese extra no está a la venta.' }
   const conLuxury = extra.effect === 'asistente' ? { ...capacidad.value, asistente: tieneLuxury(capacidad.value, await asistente.config()) } : capacidad.value
-  const disponible = extraDisponible(conLuxury, extra.effect)
+  const disponible = extraDisponible(conLuxury, extra.effect, { encargo: (await diseno.leer(eventId)) !== null })
   if (!disponible.ok) return { status: 'error', message: NO_DISPONIBLE[disponible.motivo] }
 
   // Con un pedido abierto del mismo extra, `placeAddon` devuelve ese: pedir dos veces lleva al mismo.

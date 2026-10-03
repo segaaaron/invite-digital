@@ -10,6 +10,7 @@ const plan: Plan = {
   id: '11111111-1111-1111-1111-111111111111',
   slug: 'firma-3d',
   price: { cents: 145000, currency: 'BOB' },
+  priceUsdCents: null,
   highlighted: true,
   sortOrder: 2,
   name: 'Firma 3D',

@@ -1,8 +1,9 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Marco Perlado» (`wedding-variants-8.jsx`, `WeddingEditorialPearl`): marfil y
  * perla con oro viejo, sobre el marco de flores blancas.
  */
-export const PALETA = {
+const BASE = {
   /** El marfil del fondo, detrás del marco. */
   marfil: '#ede0c8',
   /** El oro pálido de los filetes y los marcos. */
@@ -29,6 +30,18 @@ export const PALETA = {
   crema: '#f1ede4',
   /** El oro claro de la línea «nos casamos». */
   oroClaro: '#e8d5a8',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('perla', { perla: BASE.perla, oliva: BASE.oliva, oroBoton: BASE.oroBoton, bronce: BASE.bronce, oroClaro: BASE.oroClaro }, BASE.marfil)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
 } as const
 
 /** Los cinco colores del código de vestimenta, con su nombre, como los pinta la maqueta. */

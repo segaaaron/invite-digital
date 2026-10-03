@@ -162,6 +162,34 @@ test.describe('el panel del cliente', () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/qr`))?.status()).toBe(404)
   })
 
+  test('le pone nombre a su evento sin tocar el enlace', async () => {
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    const campo = page.getByLabel('Cómo se llama en tu panel')
+    const antes = await campo.inputValue()
+    await campo.fill('XV de Amanda e2e')
+    await page.getByRole('button', { name: 'Guardar nombre' }).click()
+    await expect(page.getByText('Nombre guardado.')).toBeVisible()
+    await page.goto(`/panel/eventos/${SLUG}`)
+    await expect(page.getByRole('heading', { name: 'XV de Amanda e2e' })).toBeVisible()
+    // Y se deja como estaba: la suite comparte el evento.
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.getByLabel('Cómo se llama en tu panel').fill(antes)
+    await page.getByRole('button', { name: 'Guardar nombre' }).click()
+    await expect(page.getByText('Nombre guardado.')).toBeVisible()
+  })
+
+  test('no da de alta eventos: no ve el botón y la dirección es 404', async () => {
+    // Un evento creado por un cliente quedaría suyo y sin poder abrirlo (solo el atelier entra como dueño).
+    await page.goto('/panel')
+    await expect(page.getByRole('link', { name: '+ Nuevo evento' })).toHaveCount(0)
+    expect((await page.goto('/panel/eventos/nuevo'))?.status()).toBe(404)
+  })
+
+  test('el 404 del admin no dice qué página es', async () => {
+    expect((await page.goto('/panel/admin'))?.status()).toBe(404)
+    await expect(page).toHaveTitle('Página no disponible · Luxury Atelier')
+  })
+
   test('ve las llegadas de su evento', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/checkin`))?.status()).toBe(200)
     await expect(page.getByRole('heading', { name: 'Ingreso al evento' })).toBeVisible()

@@ -60,6 +60,10 @@ export const rsvpResponses = pgTable(
      */
     responderName: varchar('responder_name', { length: 120 }),
     message: text('message'),
+    /** Lo que se preguntó al confirmar (`0085`): canción, menú y actos. */
+    song: varchar('song', { length: 200 }),
+    menu: varchar('menu', { length: 60 }),
+    acts: text('acts').array().notNull().default(sql`'{}'::text[]`),
     respondedAt: timestamp('responded_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index('rsvp_responses_group_recent_idx').on(t.guestGroupId, t.respondedAt.desc())],
@@ -208,4 +212,29 @@ export const guestPeople = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => [index('guest_people_group_idx').on(t.guestGroupId)],
+)
+
+/** Lo que se pregunta al confirmar, por evento (`0085`). Sin fila, el formulario de siempre. */
+export const eventRsvpQuestions = pgTable('event_rsvp_questions', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  askSong: boolean('ask_song').notNull().default(false),
+  menus: text('menus').array().notNull().default(sql`'{}'::text[]`),
+  acts: text('acts').array().notNull().default(sql`'{}'::text[]`),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+/** El enlace general de un evento (`0086`): uno, del que cada invitado saca su invitación personal. */
+export const eventOpenLinks = pgTable(
+  'event_open_links',
+  {
+    eventId: uuid('event_id')
+      .primaryKey()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    tokenHash: bytea('token_hash').notNull(),
+    tokenSealed: text('token_sealed').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex('event_open_links_token_idx').on(t.tokenHash)],
 )

@@ -1,4 +1,6 @@
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { hayPreguntas } from '@/modules/rsvp/domain/preguntas'
+import { LoQueContestaron } from '@/modules/rsvp/ui/LoQueContestaron'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
@@ -162,6 +164,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     : historial.value.slice(-7).reduce((suma, barra) => suma + barra.count, 0)
 
   // «Esta semana» del planner: tareas y pagos que vencen en siete días o ya vencieron.
+  const preguntas = await rsvp.preguntas.leer(event.value.id)
   const hoyBolivia = fechaEnBolivia(hoy)
   const tareas = await planner.listTasks(event.value.id)
   const partidas = await planner.listBudget(event.value.id)
@@ -195,7 +198,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <>
             {/* «Compartir enlace» llevaba a un enlace de solo lectura que ya no existe, y «Exportar lista» a un
                 ancla que nadie tenía: exportar vive en Invitados. Aquí, el envío de verdad. */}
-            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=envio`}>Enviar invitaciones</PanelButton>
+            {filas.length === 0 ? null : (
+              <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=envio`}>Enviar invitaciones</PanelButton>
+            )}
             <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=alta`} variant="primary">
               + Invitar persona
             </PanelButton>
@@ -300,6 +305,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           icon={<EyeIcon />}
         />
       </div>
+
+      {/* Lo que contestaron a las preguntas extra (canción, menú, actos), si se hicieron. */}
+      {hayPreguntas(preguntas) ? (
+        <PanelCard
+          action={<PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Cambiar preguntas</PanelButton>}
+          className="mb-5.5"
+          title="Lo que contestaron"
+        >
+          <LoQueContestaron resultados={await rsvp.preguntas.resultados(event.value.id)} />
+        </PanelCard>
+      ) : null}
 
       <PanelCard className="mb-5.5" title="Esta semana">
         <ThisWeekCard evento={{ eventId: event.value.id, eventSlug: event.value.slug }} semana={semana} />

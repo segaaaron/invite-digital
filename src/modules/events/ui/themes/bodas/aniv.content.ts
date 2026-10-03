@@ -21,7 +21,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     place: 'Hacienda San Joaquín',
     address: 'Km 5 Carretera Tepoztlán · Morelos',
   },
-  map: { label: 'HACIENDA SAN JOAQUÍN', coords: '18.98°N · 99.10°W' },
+  map: { label: 'HACIENDA SAN JOAQUÍN', coords: '17.42°S · 66.11°W' },
   music: { track: 'Bésame Mucho', artist: 'Consuelo Velázquez · su canción' },
   gallery: [
     { label: 'FOTO ORIGINAL · 1976' },

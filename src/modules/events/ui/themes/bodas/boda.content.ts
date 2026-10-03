@@ -28,7 +28,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     place: 'Viñedo La Aurora',
     address: 'Km 12, Ruta del Vino',
   },
-  map: { label: 'VIÑEDO LA AURORA', coords: '20.71°N · 100.45°W' },
+  map: { label: 'VIÑEDO LA AURORA', coords: '17.44°S · 66.20°W' },
   itinerary: [
     { time: '17:00', label: 'Ceremonia religiosa' },
     { time: '18:30', label: 'Cóctel de bienvenida' },

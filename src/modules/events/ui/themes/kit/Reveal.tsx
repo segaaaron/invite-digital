@@ -89,7 +89,7 @@ export function Reveal({ children, delay = 0, y = 24, scale = 1, duration = 800,
 
   return (
     <div
-      className={className}
+      className={className === undefined ? 'revelar' : `revelar ${className}`}
       ref={nodo}
       style={{
         opacity: visible ? 1 : 0,

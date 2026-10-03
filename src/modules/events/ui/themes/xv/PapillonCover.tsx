@@ -20,6 +20,11 @@ type Props = {
 
 const HALO = '0 0 15px rgba(255,255,255,0.9)'
 const RESPLANDOR_ORO = '0 0 10px rgba(197,165,90,0.8), 0 0 25px rgba(197,165,90,0.4)'
+/**
+ * La llamada blanca sobre mariposas rosa claro casi no se leía en un celular al sol. Una sombra
+ * corta frambuesa debajo del resplandor de la maqueta la separa del fondo sin cambiar su color.
+ */
+const LLAMADA_LEGIBLE = `0 1px 2px rgba(110,50,70,0.6), 0 0 6px rgba(110,50,70,0.35), ${RESPLANDOR_ORO}`
 
 /**
  * La portada de «Papillon» (`PapillonCover`, `xv-papillon.jsx`): las mariposas rosas a
@@ -136,7 +141,7 @@ export function PapillonCover({ bgAsset, crownAsset, title, name, serial, hint, 
               letterSpacing: '0.2em',
               color: '#FFFFFF',
               textTransform: 'uppercase',
-              textShadow: RESPLANDOR_ORO,
+              textShadow: LLAMADA_LEGIBLE,
             }}
           >
             {hint}
@@ -145,7 +150,7 @@ export function PapillonCover({ bgAsset, crownAsset, title, name, serial, hint, 
         <span
           aria-hidden
           className="theme-quieto-si-reduce"
-          style={{ display: 'block', marginTop: 8, fontSize: '1.2rem', color: '#FFFFFF', textShadow: RESPLANDOR_ORO, animation: 'theme-bounceDown 2s ease-in-out infinite' }}
+          style={{ display: 'block', marginTop: 8, fontSize: '1.2rem', color: '#FFFFFF', textShadow: LLAMADA_LEGIBLE, animation: 'theme-bounceDown 2s ease-in-out infinite' }}
         >
           ↓
         </span>

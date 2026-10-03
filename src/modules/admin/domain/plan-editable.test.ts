@@ -109,3 +109,39 @@ describe('límites nuevos del plan', () => {
     expect(isOk(r) && r.value).toMatchObject({ guestPhotos: true, eventPassword: true, csvImport: false })
   })
 })
+
+describe('la reserva fija', () => {
+  it('sin reserva fija queda en null y manda el porcentaje', () => {
+    const r = leerPlan(crudo)
+    expect(isOk(r) && r.value.depositFixedCents).toBeNull()
+  })
+
+  it('una reserva de Bs 100 sobre un plan de Bs 490 se acepta', () => {
+    const r = leerPlan({ ...crudo, priceCents: 49_000, depositFixedCents: 10_000 })
+    expect(isOk(r) && r.value.depositFixedCents).toBe(10_000)
+  })
+
+  it('una reserva igual o mayor que el precio no es reserva', () => {
+    const r = leerPlan({ ...crudo, priceCents: 49_000, depositFixedCents: 49_000 })
+    expect(isErr(r) && r.error.detail).toContain('reserva')
+  })
+})
+
+describe('el diseño por encargo del plan', () => {
+  it('vacío es autoservicio: sin rondas ni días', () => {
+    const r = leerPlan(crudo)
+    expect(isOk(r) && [r.value.correctionRounds, r.value.deliveryDays]).toEqual([null, null])
+  })
+
+  it('Atelier: 2 rondas y 3 días', () => {
+    const r = leerPlan({ ...crudo, correctionRounds: '2', deliveryDays: '3' })
+    expect(isOk(r) && [r.value.correctionRounds, r.value.deliveryDays]).toEqual([2, 3])
+  })
+
+  it('días sin rondas o rondas sin días no tienen sentido, ni números fuera de rango', () => {
+    expect(isErr(leerPlan({ ...crudo, correctionRounds: '2', deliveryDays: '' }))).toBe(true)
+    expect(isErr(leerPlan({ ...crudo, correctionRounds: '', deliveryDays: '3' }))).toBe(true)
+    expect(isErr(leerPlan({ ...crudo, correctionRounds: '21', deliveryDays: '3' }))).toBe(true)
+    expect(isErr(leerPlan({ ...crudo, correctionRounds: '2', deliveryDays: '0' }))).toBe(true)
+  })
+})

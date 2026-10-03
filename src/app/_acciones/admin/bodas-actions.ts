@@ -2,7 +2,7 @@
 
 import { randomBytes } from 'node:crypto'
 import { revalidatePath } from 'next/cache'
-import { admin, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
+import { admin, diseno, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
 import { redirect } from 'next/navigation'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { seAsigna } from '@/shared/design/theme-catalog'
@@ -208,6 +208,9 @@ export async function createWeddingForClientAction(
     if (isErr(plan)) {
       registrarFallo('admin/bodas-actions', 'no se pudo asignar el plan', plan.error.kind, plan.error.detail)
       avisoDePlan = ` Ojo: no se pudo asignar el plan «${planSlug}» y quedó con el más barato; cámbialo en su fila, en «Gestionar».`
+    } else if (await diseno.empezarSegunPlan(evento.value.id, planSlug)) {
+      // Plan por encargo: lo diseñamos nosotros; el cliente ve los pasos en su invitación.
+      avisoDePlan = ' Lo diseñamos nosotros: el cliente manda sus datos desde «Personalizar invitación».'
     }
   }
 

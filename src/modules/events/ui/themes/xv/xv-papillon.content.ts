@@ -12,9 +12,9 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     names: ['Marcela Ríos', 'Fernando Ortega', 'Rosa Delgado', 'Adrián Solís'],
     roles: { mother: 'Marcela Ríos', father: 'Fernando Ortega', godparents: ['Rosa Delgado', 'Adrián Solís'] },
   },
-  schedule: { startsAt: '2026-09-12T19:00:00' },
+  schedule: { startsAt: '2026-09-12T18:00:00' },
   reception: { label: 'Recepción Social', place: 'Jardín Botánico Le Blanc', time: '18:00' },
-  map: { label: 'RECEPCIÓN', coords: '19.30°N · 99.14°W' },
+  map: { label: 'RECEPCIÓN', coords: '17.37°S · 66.15°W' },
   itinerary: [
     { time: '18:00', label: 'RECEPCIÓN', imageId: 'copa' },
     { time: '21:00', label: 'CENA', imageId: 'cena' },

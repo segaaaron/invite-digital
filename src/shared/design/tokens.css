@@ -7,9 +7,11 @@
   --color-ink-soft: #58514a;
   --color-ink-mute: #9a917f;
   --color-ink-selection: #26221e;
-  --color-gold: #c19b4a;
-  --color-gold-deep: #a8823a;
-  --color-gold-light: #e2c584;
+  /* Un solo dorado, el del sello de lacre de la marca (documento de cambios del 30 sep):
+     medio, sombra y brillo. */
+  --color-gold: #b8894f;
+  --color-gold-deep: #9d6e3a;
+  --color-gold-light: #d7a871;
   /* El azul de los títulos de Google, solo para la vista previa de «Buscadores». */
   --color-link: #1a0dab;
   /* La tinta que va **encima** del acento: el texto de un botón dorado macizo.
@@ -25,7 +27,7 @@
   --color-on-cta: var(--color-on-gold);
   /* El rótulo de un campo del formulario del invitado. */
   --color-form-label: var(--color-ink-mute);
-  --color-gold-rgb: 193 155 74;
+  --color-gold-rgb: 184 137 79;
   --color-shadow-rgb: 90 66 26;
   --color-line: rgb(var(--color-gold-rgb) / 0.22);
 
@@ -124,7 +126,10 @@
      `--font-mono-raw`, y un `var()` sin respaldo invalida la declaración entera en tiempo
      de cálculo. La invitación se quedaba sin monoespaciada y volvía el 1 que se lee como
      I y el 0 como paréntesis, que es justo lo que este token existe para evitar. */
-  --font-mono: var(--font-mono-raw, ui-monospace), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  --font-codigo: var(--font-mono-raw, ui-monospace), ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  /* El panel la cambia por la sans (`.panel-sin-mono` en `globals.css`): rótulos y botones ya no
+     van en monoespaciada (1 oct). Los códigos —pase, referencia, PIN— usan `font-codigo`. */
+  --font-mono: var(--font-codigo);
 
   --radius-pill: 999px;
   --radius-card: 22px;

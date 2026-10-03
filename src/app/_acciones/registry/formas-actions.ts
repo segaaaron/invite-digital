@@ -1,7 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { registry } from '@/app/composition/container'
+import { plans, registry } from '@/app/composition/container'
+import { hayFormas } from '@/modules/registry'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { MAX_QR_BYTES } from '@/modules/registry/application/formas-use-cases'
 import { isErr } from '@/shared/result'
@@ -22,6 +23,10 @@ const texto = (formData: FormData, campo: string): string => String(formData.get
 export async function guardarFormasDeRegalarAction(_previo: FormasState, formData: FormData): Promise<FormasState> {
   const actor = await requireSession()
   const eventId = await requireEventAccess(actor, { eventId: texto(formData, 'eventId'), eventSlug: texto(formData, 'eventSlug'), section: 'cliente' })
+  // Sin formas de regalar en el plan no se encienden; quien ya las tenía, las sigue editando.
+  if (isErr(await plans.requireFeature(eventId, 'giftWays')) && !hayFormas(await registry.formas(eventId))) {
+    return { status: 'error', message: 'Tu plan no incluye la lluvia de sobres ni el QR de transferencia.' }
+  }
 
   // React vacía el formulario al terminar, también con error: vuelven los textos (nunca el fichero).
   const valores = Object.fromEntries(['sobresTexto', 'banco', 'titular', 'cuenta', 'nota'].map((c) => [c, texto(formData, c)]))

@@ -2,6 +2,8 @@
 
 import { useId, useState } from 'react'
 import { ConfettiBurst } from '@/shared/design/ui/ConfettiBurst'
+import { hayPreguntas, SIN_PREGUNTAS, type PreguntasDelRsvp } from '../domain/preguntas'
+import { PreguntasExtra } from './PreguntasExtra'
 import type { InvitationDictionary } from '@/shared/i18n/dictionary'
 import { useRsvp } from './use-rsvp'
 
@@ -15,6 +17,10 @@ type Props = {
   dictionary: InvitationDictionary
   seats: number
   token: string
+  /** Si el plan trae el libro de firmas. Sin él, no hay campo de mensaje (y el servidor no lo guarda). */
+  conMensaje?: boolean
+  /** Lo que el anfitrión pregunta además (canción, menú, actos). Sin dar, nada. */
+  preguntas?: PreguntasDelRsvp
   /**
    * Cómo lo pinta el diseño.
    *
@@ -77,7 +83,8 @@ function ParaQuien({ dictionary, guestName, seats }: { dictionary: InvitationDic
   )
 }
 
-export function RsvpForm({ dictionary, seats, token, previous, guestName, variant = 'campos' }: Props) {
+export function RsvpForm({ dictionary, seats, token, previous, guestName, variant = 'campos', conMensaje = true, preguntas = SIN_PREGUNTAS }: Props) {
+  const extras = hayPreguntas(preguntas) ? <PreguntasExtra dictionary={dictionary} preguntas={preguntas} /> : null
   const rsvp = useRsvp({ dictionary, previous, seats })
   const goingId = useId()
   const messageId = useId()
@@ -235,6 +242,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
             </span>
           </div>
         ) : null}
+        {respondido && viene ? extras : null}
 
         {rsvp.error === null ? null : (
           <p className="text-[13px] text-danger" role="alert">
@@ -280,18 +288,23 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
           <option value="no">{dictionary.goingNo}</option>
         </select>
 
-        <label className="sr-only" htmlFor={messageId}>
-          {dictionary.messageLabel}
-        </label>
-        <input
-          className={SUBRAYADO}
-          defaultValue={rsvp.defaultMessage}
-          id={messageId}
-          maxLength={500}
-          name="message"
-          placeholder={dictionary.messageLabel}
-          type="text"
-        />
+        {eleccion === 'si' ? extras : null}
+        {conMensaje ? (
+          <>
+            <label className="sr-only" htmlFor={messageId}>
+              {dictionary.messageLabel}
+            </label>
+            <input
+              className={SUBRAYADO}
+              defaultValue={rsvp.defaultMessage}
+              id={messageId}
+              maxLength={500}
+              name="message"
+              placeholder={dictionary.messageLabel}
+              type="text"
+            />
+          </>
+        ) : null}
 
         {rsvp.error === null ? null : (
           <p className="text-[13px] text-danger" role="alert">
@@ -338,18 +351,21 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
       */}
       <input name="attending" type="hidden" value={viene ? String(seats) : '0'} readOnly />
 
-      <label className={LABEL_CLASS} htmlFor={messageId}>
-        {dictionary.messageLabel}
-        <textarea
-          className={`${FIELD_CLASS} min-h-[90px]`}
-          defaultValue={rsvp.defaultMessage}
-          id={messageId}
-          maxLength={500}
-          name="message"
-          placeholder={dictionary.messagePlaceholder}
-          rows={3}
-        />
-      </label>
+      {viene ? extras : null}
+      {conMensaje ? (
+        <label className={LABEL_CLASS} htmlFor={messageId}>
+          {dictionary.messageLabel}
+          <textarea
+            className={`${FIELD_CLASS} min-h-[90px]`}
+            defaultValue={rsvp.defaultMessage}
+            id={messageId}
+            maxLength={500}
+            name="message"
+            placeholder={dictionary.messagePlaceholder}
+            rows={3}
+          />
+        </label>
+      ) : null}
 
       {rsvp.error === null ? null : (
         <p className="text-[13px] text-danger" role="alert">

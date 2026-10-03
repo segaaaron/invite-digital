@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-mariana.content'
-import { PALETA } from './xv-mariana.palette'
+import { ACENTO, PALETA } from './xv-mariana.palette'
 
 /** «Encanto Musical» — Mariana. */
 export const xv_marianaDefinition: ThemeDefinition = {
@@ -13,5 +13,6 @@ export const xv_marianaDefinition: ThemeDefinition = {
   pinta: { fotos: { casillas: 0 }, sinCampos: { hero: ['nameB'], itinerary: ['note'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-mariana.view').then((modulo) => modulo.XvMarianaView)),
 }

@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react'
+import { conAlfa as mezclaConAlfa } from './acento'
 
 /**
  * La piel que un diseño le presta a **lo que no dibuja él**: el formulario de RSVP, la
@@ -120,9 +121,12 @@ function canales(hex: string): string | null {
   return `${(valor >> 16) & 255}, ${(valor >> 8) & 255}, ${valor & 255}`
 }
 
-const conAlfa = (hex: string, alfa: number): string => {
-  const rgb = canales(hex)
-  return rgb === null ? hex : `rgba(${rgb}, ${alfa})`
+// Un hexadecimal sale como siempre (`rgba`); un `var(--acento-…)` de Gala, con `color-mix`; lo
+// demás (el vidrio ya en `rgba()` de las pieles de XV) pasa tal cual.
+const conAlfa = (color: string, alfa: number): string => {
+  const rgb = canales(color)
+  if (rgb !== null) return `rgba(${rgb}, ${alfa})`
+  return color.startsWith('var(') ? mezclaConAlfa(color, alfa) : color
 }
 
 /**

@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './xv-fantasia.content'
-import { PALETA } from './xv-fantasia.palette'
+import { ACENTO, PALETA } from './xv-fantasia.palette'
 
 /** «Noche Estrellada» — Alicia. */
 export const xv_fantasiaDefinition: ThemeDefinition = {
@@ -13,5 +13,6 @@ export const xv_fantasiaDefinition: ThemeDefinition = {
   pinta: { fotos: { casillas: 0 }, sinCampos: { hero: ['nameB'], itinerary: ['note'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-fantasia.view').then((modulo) => modulo.XvFantasiaView)),
 }

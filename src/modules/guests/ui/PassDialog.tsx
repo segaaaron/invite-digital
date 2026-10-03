@@ -98,7 +98,7 @@ export function PassDialog({
             {codigo === null ? null : (
               <p className="flex flex-col items-center gap-0.5">
                 <span className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Código</span>
-                <span className="font-mono text-[20px] tracking-[0.16em] text-ink">{codigo}</span>
+                <span className="font-codigo text-[20px] tracking-[0.16em] text-ink">{codigo}</span>
               </p>
             )}
             <span aria-hidden className="h-px w-full bg-[repeating-linear-gradient(90deg,var(--color-line-panel-strong)_0_6px,transparent_6px_12px)]" />

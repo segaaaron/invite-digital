@@ -54,6 +54,11 @@ describe('la piel de las ranuras', () => {
     expect(piel.panel).toBe('rgba(255,255,255,.42)')
   })
 
+  it('un acento de Gala (`var(--acento-…)`) lleva su transparencia con color-mix', () => {
+    const piel = pielDeRanuras({ acento: 'var(--acento-oro, #c19b4a)', sobreAcento: '#fff', tinta: '#000000' })
+    expect(piel.panel).toBe('color-mix(in srgb, var(--acento-oro, #c19b4a) 7%, transparent)')
+  })
+
   it('escribe los mismos nombres que declara la hoja de tokens', () => {
     // Ese es todo el mecanismo: el diseño los redefine en su `<article>` y las cuatro
     // piezas que no dibuja él —RSVP, regalos, respuesta, pase— heredan su paleta sin que

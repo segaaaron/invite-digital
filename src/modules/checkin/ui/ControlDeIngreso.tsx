@@ -310,7 +310,7 @@ export function ControlDeIngreso({
               <input
                 autoCapitalize="characters"
                 autoComplete="off"
-                className="min-w-0 flex-1 rounded-[14px] border border-line-panel-strong bg-bg-top/40 px-4 py-3 font-mono text-[16px] tracking-[0.25em] text-ink uppercase outline-none placeholder:font-sans placeholder:text-[13px] placeholder:tracking-normal placeholder:normal-case focus-visible:border-ink"
+                className="min-w-0 flex-1 rounded-[14px] border border-line-panel-strong bg-bg-top/40 px-4 py-3 font-codigo text-[16px] tracking-[0.25em] text-ink uppercase outline-none placeholder:font-sans placeholder:text-[13px] placeholder:tracking-normal placeholder:normal-case focus-visible:border-ink"
                 id="codigo-del-pase"
                 maxLength={8}
                 onChange={(e) => setCodigo(e.target.value)}

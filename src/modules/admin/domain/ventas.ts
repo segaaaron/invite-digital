@@ -36,6 +36,8 @@ export type PedidoDeVenta = {
   readonly publicRef: string
   readonly customerName: string
   readonly contact: string
+  /** El correo del pedido de la web (`0080`); los anteriores lo traían en `contact`, o nada. */
+  readonly email?: string | null
   readonly fiesta: FiestaDeVenta
   readonly eventDate: string | null
   readonly status: 'pending_payment' | 'proof_submitted' | 'approved' | 'rejected' | 'cancelled'
@@ -188,7 +190,7 @@ export function componerVentas(input: { consultas: readonly ConsultaDeVenta[]; p
       const enlazada = porId.get(p.consultationId)
       if (enlazada !== undefined && !usadas.has(enlazada.id)) c = enlazada
     } else if (!p.esExtra) {
-      const correo = correoClave(p.contact)
+      const correo = correoClave(p.email ?? p.contact)
       const tel = telefonoClave(p.contact)
       const candidatas = [...(correo === null ? [] : (porContacto.get(correo) ?? [])), ...(tel === null ? [] : (porContacto.get(tel) ?? []))]
       c = candidatas.find((k) => !usadas.has(k.id) && k.status !== 'lost') ?? null
@@ -199,7 +201,7 @@ export function componerVentas(input: { consultas: readonly ConsultaDeVenta[]; p
     ventas.push({
       clave: `p-${p.publicRef}`,
       nombre: c?.name ?? p.customerName,
-      correo: c?.email ?? correoClave(p.contact),
+      correo: c?.email ?? correoClave(p.email ?? p.contact),
       telefono: c?.phone ?? (correoClave(p.contact) === null ? p.contact : null),
       fiesta: p.fiesta ?? c?.fiesta ?? null,
       fechaEvento: p.eventDate ?? c?.eventDate ?? null,

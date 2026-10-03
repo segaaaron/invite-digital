@@ -8,7 +8,8 @@ import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
- * Importación masiva desde un CSV.
+ * Importación masiva: se pega la lista. Copiada de Excel o Google Sheets llega separada por
+ * tabuladores, y el lector la entiende igual que un CSV (`parseGuestCsv`); la fila de títulos se salta.
  *
  * El resultado se enseña **fila por fila**, con su enlace o su motivo de rechazo. Un «se
  * importaron 37 de 50» obliga a comparar dos listas a mano para saber quién falta, y esos
@@ -32,14 +33,17 @@ export function ImportPanel({
         <input name="eventSlug" type="hidden" value={eventSlug} />
 
         <label className="flex flex-col gap-2">
-          <span className={LABEL_CLASS}>Pega el listado en CSV</span>
+          <span className={LABEL_CLASS}>Copia las columnas de tu Excel y pégalas aquí</span>
           <textarea
-            className={`${FIELD_CLASS} min-h-[120px] font-mono text-[12px]`}
+            className={`${FIELD_CLASS} min-h-[120px] font-codigo text-[12px]`}
             name="csv"
             placeholder={'Familia Rojas Peña;4;+59170011122\nAna Lucía Vega;2;'}
             title="Una fila por invitación: nombre, número de cupos y teléfono opcional"
             required
           />
+          <span className="text-[11.5px] text-ink-mute">
+            Tres columnas: nombre de la invitación, cupos y WhatsApp (opcional). Sirve copiar desde Excel o Google Sheets, o escribir separando con punto y coma.
+          </span>
         </label>
 
         <SubmitButton className="w-fit" variant="primary" pending={pending} pendingLabel={'Importando…'}>{'Importar invitados'}</SubmitButton>
@@ -88,7 +92,7 @@ export function ImportPanel({
                       ) : (
                         <input
                           aria-label={`Enlace de ${fila.label}`}
-                          className="w-full min-w-[240px] rounded-[10px] border border-line-panel-strong bg-white px-2 py-1 font-mono text-[11px] text-ink"
+                          className="w-full min-w-[240px] rounded-[10px] border border-line-panel-strong bg-white px-2 py-1 font-codigo text-[11px] text-ink"
                           readOnly
                           value={fila.url}
                         />

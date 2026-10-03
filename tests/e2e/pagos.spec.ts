@@ -18,7 +18,9 @@ test('los datos de cobro se editan sin desplegar y llegan a la página del pedid
   const cliente = await (await browser.newContext()).newPage()
   await cliente.goto('/es/pedido/firma-3d')
   await cliente.getByLabel('Tu nombre').fill('Cliente de cobros e2e')
-  await cliente.getByLabel('WhatsApp o correo').fill('+59170055566')
+  await cliente.getByLabel('WhatsApp', { exact: true }).fill('+59170055566')
+  await cliente.getByLabel(/^Correo/).fill('pedido-e2e@ejemplo.bo')
+  await cliente.getByLabel('Fecha del evento').fill('2027-03-20')
   await cliente.getByRole('button', { name: 'Registrar pedido' }).click()
   await cliente.getByRole('link', { name: 'Ir a pagar' }).click()
 

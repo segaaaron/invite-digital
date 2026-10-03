@@ -17,7 +17,7 @@ import { BotanicalTimeline } from '../kit/flora/BotanicalTimeline'
 import { FallingPetals } from '../kit/flora/FallingPetals'
 import { FloralCorner, FloralDivider, FloralSpray } from '../kit/flora/FloralArt'
 import { TIMELINE_ICONS } from '../kit/flora/TimelineIcons'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-bot.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-bot.palette'
 
 /** Las tres del collage, en el orden en que las pone la maqueta. */
 const COLLAGE = ['boda-03-anillos.avif', 'boda-02-arreglo.avif', 'boda-04-pastel.avif'] as const
@@ -263,9 +263,9 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
           <Reveal>
             <div style={{ marginTop: 40, position: 'relative' }}>
               <PhotoSlot
-                bg="rgba(90,112,92,0.05)"
+                bg={alfaDe('salvia', 0.05)}
                 border="none"
-                color="rgba(90,112,92,0.5)"
+                color={alfaDe('salvia', 0.5)}
                 height={340}
                 label={momento.label}
                 radius={4}
@@ -318,9 +318,9 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
             <div style={{ marginTop: 40, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
               {trio.map((foto, indice) => (
                 <PhotoSlot
-                  bg="rgba(90,112,92,0.05)"
+                  bg={alfaDe('salvia', 0.05)}
                   border="none"
-                  color="rgba(90,112,92,0.5)"
+                  color={alfaDe('salvia', 0.5)}
                   height={120}
                   key={foto.label}
                   label={foto.label}
@@ -536,7 +536,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
             <div style={{ marginTop: 32 }}>
               <MapPreview
                 accent={P.salvia}
-                border="rgba(90,112,92,0.3)"
+                border={alfaDe('salvia', 0.3)}
                 coords={map.coords ?? ''}
                 directionsLabel={themes.viewLocation}
                 href={map.href}
@@ -633,7 +633,7 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
             y el código es el QR del banco del cliente o ninguno: el de adorno invitaría a pagar a la nada. */}
         {slots.regalos !== undefined && !slots.regalos.sobres && slots.regalos.qr === null && slots.regalos.resto === null ? null : (
         <Reveal>
-          <div style={{ marginTop: 40, padding: 22, background: 'rgba(90,112,92,0.04)', border: `1px solid ${P.fileteSuave}` }}>
+          <div style={{ marginTop: 40, padding: 22, background: alfaDe('salvia', 0.04), border: `1px solid ${P.fileteSuave}` }}>
             {/* Texto a la izquierda y el código a la derecha, como en la maqueta: el titular
                 en caligrafía y la línea pequeña debajo, no un solo párrafo. */}
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>

@@ -28,9 +28,23 @@ export type PlanCrudo = {
   plannerSuite: string
   /** El anticipo en porcentaje, como texto del formulario. Vacío o 0: se paga entero de una vez. */
   depositPct?: string
+  /**
+   * La reserva de importe fijo, **en centavos** (la parsea la acción como el precio). Si está,
+   * manda sobre el porcentaje: «Reserva con Bs 100, el saldo al entregar». `null` o ausente: no hay.
+   */
+  depositFixedCents?: number | null
+  /** El precio en dólares, en centavos (lo parsea la acción). `null`: la web enseña solo bolivianos. */
+  priceUsdCents?: number | null
+  /** Diseño por encargo: rondas de corrección y días de entrega, como texto. Vacíos: autoservicio. */
+  correctionRounds?: string
+  deliveryDays?: string
   includesSeating: boolean
   includesRegistry: boolean
   includesCheckin: boolean
+  /** Libro de firmas y formas de regalar. Ausentes: encendidos, como siempre. */
+  includesGuestbook?: boolean
+  includesGiftWays?: boolean
+  includesStyle?: boolean
   highlighted: boolean
   isActive: boolean
   es: TextoPlan
@@ -39,8 +53,12 @@ export type PlanCrudo = {
 
 export type TextoPlanLimpio = { name: string; tagline: string; description: string; features: string[] }
 
-export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'depositPct' | 'es' | 'en'> & {
+export type PlanLimpio = Omit<PlanCrudo, 'maxGuestGroups' | 'maxDoorPorters' | 'maxCohosts' | 'maxHiredPlanners' | 'maxGalleryPhotos' | 'onlineDays' | 'designChange' | 'plannerSuite' | 'depositPct' | 'depositFixedCents' | 'priceUsdCents' | 'correctionRounds' | 'deliveryDays' | 'es' | 'en'> & {
   depositPct: number
+  depositFixedCents: number | null
+  priceUsdCents: number | null
+  correctionRounds: number | null
+  deliveryDays: number | null
   maxGuestGroups: number | null
   maxDoorPorters: number
   maxCohosts: number | null
@@ -134,6 +152,21 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     return err(adminError('invalid_input', 'El anticipo es un porcentaje de 0 a 90; vacío o 0 es pagar entero de una vez.'))
   }
 
+  const reserva = crudo.depositFixedCents ?? null
+  if (reserva !== null && (!Number.isInteger(reserva) || reserva <= 0 || reserva >= crudo.priceCents)) {
+    return err(adminError('invalid_input', 'La reserva fija tiene que ser menor que el precio del plan; vacía, no hay reserva fija.'))
+  }
+
+  const rondas = (crudo.correctionRounds ?? '').trim()
+  const diasEntrega = (crudo.deliveryDays ?? '').trim()
+  if ((rondas === '') !== (diasEntrega === '')) {
+    return err(adminError('invalid_input', 'Para el diseño por encargo pon las rondas y los días de entrega; vacíos los dos, el plan es de autoservicio.'))
+  }
+  if (rondas !== '' && (!/^\d+$/.test(rondas) || Number(rondas) > 20)) return err(adminError('invalid_input', 'Las rondas de corrección van de 0 a 20.'))
+  if (diasEntrega !== '' && (!/^\d+$/.test(diasEntrega) || Number(diasEntrega) < 1 || Number(diasEntrega) > 60)) {
+    return err(adminError('invalid_input', 'Los días de entrega van de 1 a 60.'))
+  }
+
   const es = leerTexto(crudo.es, 'es')
   if (!es.ok) return es
   const en = leerTexto(crudo.en, 'en')
@@ -150,6 +183,10 @@ export function leerPlan(crudo: PlanCrudo): Result<PlanLimpio, AdminError> {
     designChange: regla,
     plannerSuite: suite,
     depositPct: anticipo === '' ? 0 : Number(anticipo),
+    depositFixedCents: reserva,
+    priceUsdCents: crudo.priceUsdCents != null && crudo.priceUsdCents > 0 ? crudo.priceUsdCents : null,
+    correctionRounds: rondas === '' ? null : Number(rondas),
+    deliveryDays: diasEntrega === '' ? null : Number(diasEntrega),
     es: es.value,
     en: en.value,
   })

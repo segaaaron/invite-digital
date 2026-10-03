@@ -5,6 +5,10 @@ import { drizzleCatalogAdmin as catalog } from './drizzle-catalog-admin'
 const texto = { name: 'x', tagline: '', description: '', features: ['x'] }
 const plan: PlanLimpio = {
   priceCents: 100,
+  depositFixedCents: null,
+  priceUsdCents: null,
+  correctionRounds: null,
+  deliveryDays: null,
   maxGuestGroups: null,
   maxDoorPorters: 0,
   maxCohosts: 1,

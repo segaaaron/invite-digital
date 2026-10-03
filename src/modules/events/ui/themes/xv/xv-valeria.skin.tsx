@@ -3,7 +3,7 @@ import { themeAsset } from '../assets'
 import { CronogramaEsfera } from './CronogramasV3'
 import { ValeriaCover } from './ValeriaCover'
 import type { PielXv } from './piel-xv'
-import { PALETA as P } from './xv-valeria.palette'
+import { alfaDe, colorDeAcento, PALETA as P } from './xv-valeria.palette'
 
 /** La piel de «Gala Real». */
 export const PIEL: PielXv = {
@@ -69,14 +69,14 @@ export const PIEL: PielXv = {
     formulario: { boton: '#C9A24A' },
     botonTinta: '#0c1830',
     // El plano como su maqueta: calles del oro del borde y aro del fondo.
-    mapaBorde: '#D9B85C',
+    mapaBorde: colorDeAcento.orquidea,
     mapaAro: '#3A0E1C',
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
-    firma: '#D9B85C',
+    firma: colorDeAcento.orquidea,
     // Su tarjeta de la fecha va desnuda: la maqueta no le pone ornamento.
     fechaOrnamento: false,
     // Disco del color del diseño, y sin línea bajo el rótulo del cronograma.
-    discoItinerario: 'rgba(217,184,92,.10)',
+    discoItinerario: alfaDe('orquidea', 0.1),
     discoBorde: '#C9A24A',
     itinerarioSeparador: 'ninguno',
     // Los tres diseños de gala: sombra negra, sin halo, la cita dentro de un panel en
@@ -106,13 +106,13 @@ export const PIEL: PielXv = {
     itinerarioHora: '#F3EDD8',
     // V3: la recepción centrada, castillo arriba, sin dirección ni ornamento.
     recepcionCentrada: 'compacta',
-    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: '#C9B78A', mayusculas: true },
+    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: colorDeAcento.amatista, mayusculas: true },
     anfitrionesNombres: '#F3EDD8',
-    fecha: '#D9B85C',
-    tituloSeccion: '#D9B85C',
+    fecha: colorDeAcento.orquidea,
+    tituloSeccion: colorDeAcento.orquidea,
     lugarNombre: '#F3EDD8',
-    mapa: '#D9B85C',
-    itinerarioRotulo: '#D9B85C',
+    mapa: colorDeAcento.orquidea,
+    itinerarioRotulo: colorDeAcento.orquidea,
   },
   // Los tamaños de su maqueta: el candelabro a 260, el castillo a 90, el traje a 135 y la
   // tiara vino del cierre a 200.

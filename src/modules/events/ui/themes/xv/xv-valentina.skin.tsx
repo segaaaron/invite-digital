@@ -3,7 +3,7 @@ import { THEME_ASSETS, themeAsset } from '../assets'
 import { AbanicoOrnamental } from './AbanicoOrnamental'
 import { ValentinaCover } from './ValentinaCover'
 import type { PielXv } from './piel-xv'
-import { PALETA as P } from './xv-valentina.palette'
+import { colorDeAcento, PALETA as P } from './xv-valentina.palette'
 
 type Archivo = (typeof THEME_ASSETS)['xv-valentina'][number]
 
@@ -64,14 +64,14 @@ export const PIEL: PielXv = {
   // hora de su cronograma en marfil, justo al revés que la marina.
   piezas: {
     // El «ENVIAR» de su formulario en la maqueta.
-    formulario: { boton: '#C9A227' },
+    formulario: { boton: colorDeAcento.lilaFuerte },
     botonTinta: '#2A1140',
     // El plano como su maqueta: calles del oro del borde y aro del fondo.
-    mapaBorde: '#C9A227',
+    mapaBorde: colorDeAcento.lilaFuerte,
     mapaAro: '#2A1140',
     recepcionFilete: P.lilaFuerte,
     // La firma del cierre va con el oro del diseño, no con su tinta clara.
-    firma: '#E8C87A',
+    firma: colorDeAcento.orquidea,
     // El disco del cronograma es morado translúcido, y lo que separa el rótulo de la hora
     // es su ornamento, no la línea de la marina.
     discoItinerario: 'rgba(20,10,35,.5)',
@@ -85,7 +85,7 @@ export const PIEL: PielXv = {
     // borde del panel —no con el oro—, la nota del buzón en el tono apagado, y todo el
     // texto con la sombra negra que lleva sobre la fotografía.
     sobreAcento: P.lilaFuerte,
-    sobresNota: '#C9B78A',
+    sobresNota: colorDeAcento.amatista,
     sombraTexto: '0 2px 8px rgba(0,0,0,.75)',
     // La cita de «Mascarada» va dentro de un panel, no suelta: texto claro sobre la
     // fotografía morada, con su sombra negra y sin la opacidad de la marina.
@@ -99,19 +99,19 @@ export const PIEL: PielXv = {
       opacidad: 1,
       sombra: '0 2px 8px rgba(0,0,0,.75)',
     },
-    musicaAcento: '#E8C87A',
-    musicaPista: '#E8C87A',
-    musicaArtista: '#C9B78A',
-    vestimentaNota: '#C9B78A',
+    musicaAcento: colorDeAcento.orquidea,
+    musicaPista: colorDeAcento.orquidea,
+    musicaArtista: colorDeAcento.amatista,
+    vestimentaNota: colorDeAcento.amatista,
     vestimentaDetalle: '#F5EFE0',
     regalosIntro: '#F5EFE0',
-    sobresRotulo: '#E8C87A',
-    fecha: '#E8C87A',
-    tituloSeccion: '#E8C87A',
+    sobresRotulo: colorDeAcento.orquidea,
+    fecha: colorDeAcento.orquidea,
+    tituloSeccion: colorDeAcento.orquidea,
     lugarNombre: '#F5EFE0',
-    lugarDireccion: '#C9B78A',
-    mapa: '#E8C87A',
-    itinerarioRotulo: '#E8C87A',
+    lugarDireccion: colorDeAcento.amatista,
+    mapa: colorDeAcento.orquidea,
+    itinerarioRotulo: colorDeAcento.orquidea,
     itinerarioHora: '#F5EFE0',
   },
   // Los tamaños y filtros de su maqueta: el castillo de la recepción va a 52, y la corona

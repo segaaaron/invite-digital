@@ -33,6 +33,9 @@ async function runPreflight(): Promise<number> {
     postgresPassword: process.env.POSTGRES_PASSWORD ?? '',
     trustBrands: isErr(sitio) ? [] : sitio.value.marcas,
     payment,
+    legal: isErr(sitio)
+      ? { privacidad: false, terminos: false }
+      : { privacidad: sitio.value.legal.privacidad.publicada, terminos: sitio.value.legal.terminos.publicada },
   })
 
   // Toda plantilla publicada tiene que apuntar a un tema que el motor sepa pintar. Vender

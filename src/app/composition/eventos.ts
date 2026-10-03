@@ -26,6 +26,11 @@ import { listGuestPhotos, listMedia, purgeMedia, readMedia, removeMedia, saveGue
 import { drizzleAccessRepository } from '@/modules/events/infrastructure/drizzle-access-repository'
 import { listEvents } from '@/modules/events/application/list-events'
 import { updateEventUseCase } from '@/modules/events/application/update-event'
+import { renombrarEvento } from '@/modules/events/application/rename-event'
+import { drizzleSaveTheDate } from '@/modules/events/infrastructure/drizzle-save-the-date'
+import { drizzleEstilo } from '@/modules/events/infrastructure/drizzle-estilo'
+import { drizzleDisenoRepository } from '@/modules/events/infrastructure/drizzle-diseno-repository'
+import { aprobarVersion, enviarADiseno, marcarVersionEnviada, pedirCambios } from '@/modules/events/domain/diseno'
 import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
 import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
@@ -59,6 +64,8 @@ import { getTally } from '@/modules/rsvp/application/get-tally'
 import { getRsvpTimeline } from '@/modules/rsvp/application/get-rsvp-timeline'
 import { respondToInvitation } from '@/modules/rsvp/application/respond-to-invitation'
 import { respondByPerson } from '@/modules/rsvp/application/respond-by-person'
+import { drizzlePreguntas } from '@/modules/rsvp/infrastructure/drizzle-preguntas'
+import { drizzleEnlaceGeneral } from '@/modules/guests/infrastructure/drizzle-enlace-general'
 import { drizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
@@ -187,6 +194,12 @@ export const events = {
    */
   create: createEventUseCase({ events: drizzleEventRepository, ids: () => crypto.randomUUID() }),
   update: updateEventUseCase({ events: drizzleEventRepository }),
+  /** Solo el título: el nombre con el que el cliente ve su evento en el panel. */
+  renombrar: renombrarEvento({ events: drizzleEventRepository }),
+  /** El «save the date» (`0087`): su enlace y si el evento compró el extra. */
+  saveTheDate: drizzleSaveTheDate,
+  /** Acento y letra sobre la piel del diseño (`0088`, Gala o más). */
+  estilo: drizzleEstilo,
   /**
    * `getBySlug`, `getById` y `list` **sin actor** solo los usan la ruta del invitado —que
    * se autoriza por token—, el mantenimiento y el propio admin. Todo lo del panel pasa
@@ -223,8 +236,11 @@ export const events = {
    * Lo que se pinta en **las vistas previas del panel**: lo escrito, con el ejemplo del
    * modelo en lo que aún está en blanco. El invitado nunca ve esto.
    */
-  contenidoParaVistaPrevia: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1]) => {
-    const contenido = await contentForPreview(drizzleContentRepository)(eventId, muestra)
+  contenidoParaVistaPrevia: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1], fechaDelEvento: string) => {
+    // Sin fecha escrita, el ejemplo pone la del evento (con la hora del modelo), no la fija del
+    // catálogo: con esa, ya pasada, la cuenta regresiva de la vista previa salía en cero.
+    const hora = /T(\d{2}:\d{2}(:\d{2})?)/.exec(muestra.schedule?.startsAt ?? '')?.[1] ?? '19:00:00'
+    const contenido = await contentForPreview(drizzleContentRepository)(eventId, { ...muestra, schedule: { startsAt: `${fechaDelEvento}T${hora}` } })
     if (isErr(await plans.requireFeature(eventId, 'plannerCompleto'))) return contenido
     const itinerario = itinerarioDeInvitacion(await drizzleDiaStore.listMoments(eventId))
     return itinerario === null ? contenido : { ...contenido, itinerary: itinerario }
@@ -375,6 +391,8 @@ const gruposQueAvisan: typeof drizzleGuestGroupRepository = {
 }
 
 export const guests = {
+  /** El enlace general del evento (`0086`): uno, del que cada invitado saca el suyo. */
+  general: drizzleEnlaceGeneral,
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   /** Cuántas invitaciones, sin traerlas: el tope del plan se cuenta en invitaciones. */
   contar: (eventId: string) => countGroupsByEvent(db, eventId),
@@ -400,10 +418,13 @@ export const guests = {
 } as const
 
 export const rsvp = {
+  /** Lo que se pregunta al confirmar (canción, menú, actos) y lo contestado (`0085`). */
+  preguntas: drizzlePreguntas,
   respond: respondToInvitation({
     resolveGroup: (token) => guests.resolveByToken(token),
     findEventById: (id) => events.getByIdUnscoped(id),
     rsvp: drizzleRsvpRepository,
+    preguntasDe: (eventId) => drizzlePreguntas.leer(eventId),
     peopleOf: (guestGroupId) => drizzleGuestPersonRepository.listByGroup(guestGroupId),
     setAttendance: async (eventId, personId, attending) => {
       await guests.updatePerson({ eventId, id: personId, attending })
@@ -420,6 +441,7 @@ export const rsvp = {
       await guests.updatePerson({ eventId, id: personId, attending })
     },
     rsvp: drizzleRsvpRepository,
+    preguntasDe: (eventId) => drizzlePreguntas.leer(eventId),
     ids: () => crypto.randomUUID(),
     clock,
   }),
@@ -457,3 +479,38 @@ export const guestbook = {
   // Lo único que el invitado usa, y es de solo lectura.
   replyForGroup: getGuestReply({ guestbook: drizzleGuestbookRepository }),
 } as const
+
+/**
+ * El diseño por encargo (`0081`): reservar → datos → diseño → versión → cambios (rondas) → aprobada.
+ * Las reglas son de `events/domain/diseno`; aquí se lee, se aplica el paso y se escribe con el
+ * estado de origen en el `where` (dos clics a la vez no se pisan).
+ */
+export type PasoDeDiseno = 'enviar' | 'version' | 'cambios' | 'aprobar'
+export type ResultadoDePaso = 'ok' | 'sin_encargo' | 'paso_invalido' | 'sin_rondas' | 'cambiado'
+
+export const diseno = {
+  leer: (eventId: string) => drizzleDisenoRepository.leer(eventId),
+  rondas: (eventId: string) => drizzleDisenoRepository.rondas(eventId),
+  porEntregar: () => drizzleDisenoRepository.porEntregar(),
+  empezarSegunPlan: (eventId: string, planSlug: string) => drizzleDisenoRepository.empezarSegunPlan(eventId, planSlug),
+  empezar: (eventId: string, plan: { rondas: number; dias: number }) => drizzleDisenoRepository.empezar(eventId, plan),
+  noCuenta: (eventId: string, rondaId: string) => drizzleDisenoRepository.noCuenta(eventId, rondaId),
+  async paso(eventId: string, paso: PasoDeDiseno, opciones: { hoy: string; mensaje?: string; autor?: string | null }): Promise<ResultadoDePaso> {
+    const actual = await drizzleDisenoRepository.leer(eventId)
+    if (actual === null) return 'sin_encargo'
+    const r =
+      paso === 'enviar'
+        ? enviarADiseno(actual, opciones.hoy)
+        : paso === 'version'
+          ? marcarVersionEnviada(actual)
+          : paso === 'aprobar'
+            ? aprobarVersion(actual)
+            : pedirCambios(actual, opciones.hoy)
+    if (isErr(r)) return r.error
+    const escrito =
+      paso === 'cambios'
+        ? await drizzleDisenoRepository.cambiarConRonda(eventId, actual.estado, r.value, opciones.mensaje ?? '', opciones.autor ?? null)
+        : await drizzleDisenoRepository.cambiar(eventId, actual.estado, r.value)
+    return escrito ? 'ok' : 'cambiado'
+  },
+}

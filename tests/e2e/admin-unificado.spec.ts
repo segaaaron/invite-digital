@@ -178,7 +178,9 @@ test('el cliente entero: etiquetas y nota, su código de recomendación y la com
   await web.goto(`/es/pedido/atelier?ref=${codigo}`)
   await expect(web.getByLabel('Código de recomendación (si alguien te recomendó)')).toHaveValue(codigo)
   await web.getByLabel('Tu nombre').fill(`${PREFIJO} referida`)
-  await web.getByLabel('WhatsApp o correo').fill('+591 7555 0606')
+  await web.getByLabel('WhatsApp', { exact: true }).fill('+591 7555 0606')
+  await web.getByLabel(/^Correo/).fill('pedido-e2e@ejemplo.bo')
+  await web.getByLabel('Fecha del evento').fill('2027-03-20')
   await web.getByRole('button', { name: 'Registrar pedido' }).click()
   await expect(web.getByText(/^[2-9A-Z]{8}$/)).toBeVisible()
   const [pedido] = await sql<{ referral_code: string | null; discount_cents: number | null }[]>`select referral_code, discount_cents from orders where customer_name = ${`${PREFIJO} referida`}`

@@ -1,3 +1,4 @@
+import { colorDeAcento } from './xv-mariana.palette'
 /**
  * La torta de tres pisos de «Gala Real», con su vela.
  *
@@ -22,13 +23,13 @@ export function TortaDePlata({ size = 54 }: { readonly size?: number }) {
         </linearGradient>
         <linearGradient id="torta-plata-2" x1="0" x2="0" y1="0" y2="1">
           <stop offset="0%" stopColor="#FFFFFF" />
-          <stop offset="100%" stopColor="#B8BFC7" />
+          <stop offset="100%" stopColor={colorDeAcento.amatista} />
         </linearGradient>
       </defs>
       <rect fill="url(#torta-plata-1)" height="9" rx="2" width="30" x="8" y="26" />
       <rect fill="url(#torta-plata-2)" height="9" rx="2" stroke="#8B929B" strokeWidth="0.5" width="24" x="11" y="18" />
       <rect fill="url(#torta-plata-1)" height="8" rx="2" width="16" x="15" y="11" />
-      <rect fill="#B8BFC7" height="6" width="2" x="22" y="5" />
+      <rect fill={colorDeAcento.amatista} height="6" width="2" x="22" y="5" />
       <path d="M20 5c0-2 3-2 3 0s3 2 3 0" fill="none" stroke="#E4E7EB" strokeLinecap="round" strokeWidth="1" />
     </svg>
   )

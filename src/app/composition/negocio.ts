@@ -1,6 +1,7 @@
 import { ffmpegAudioProcessor } from '@/shared/audio/ffmpeg-audio-processor'
 import { attachProof, cancelOrder, decideOrder, findOrderByRef, listOrdersPage, placeAddonOrder, placeOrder, quoteOrder, readProof, registerBalance, remindOrder } from '@/modules/orders/application/order-use-cases'
 import { createDiskFileStorage } from '@/modules/orders/infrastructure/disk-file-storage'
+import { saldoPendiente } from '@/modules/orders/domain/order'
 import { deleteUser as deleteUserUseCase, listAllEvents, listUsers, readAudit, readIncome, readPlanChanges, readTodayMoney, recordAdminAction, setEventPlan as setEventPlanUseCase, setUserRole as setUserRoleUseCase } from '@/modules/admin/application/admin-use-cases'
 import { readPaymentSettings, savePaymentQr, savePaymentSettings } from '@/modules/admin/application/payment-use-cases'
 import { readMensajes, saveMensajes } from '@/modules/admin/application/mensajes-use-cases'
@@ -84,6 +85,11 @@ export const orders = {
   porCrearEvento: () => drizzleOrderRepository.countPaidWithoutEvent(),
   /** Los pedidos de extras de un evento, para su pantalla de extras. */
   extrasDe: (eventId: string) => drizzleOrderRepository.listAddonOrdersOf(eventId),
+  /** Si el pedido del plan del evento tiene el saldo sin pagar: sin pagarlo no se reparte (diseño por encargo). */
+  saldoPendienteDe: async (eventId: string) => {
+    const pedido = await drizzleOrderRepository.planOrderOf(eventId)
+    return pedido !== null && saldoPendiente(pedido)
+  },
   byRef: findOrderByRef({ orders: drizzleOrderRepository, clock }),
   attachProof: attachProof({
     orders: drizzleOrderRepository,

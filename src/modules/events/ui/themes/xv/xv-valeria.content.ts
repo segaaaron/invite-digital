@@ -13,13 +13,13 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     label: 'Junto a mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],
   },
-  schedule: { startsAt: '2026-09-12T19:00:00' },
+  schedule: { startsAt: '2026-09-12T18:00:00' },
   reception: {
     label: 'Recepción Social',
     place: 'Salón de Eventos Elianne',
     time: '18:00',
   },
-  map: { label: 'SALÓN ELIANNE', coords: '19.32°N · 99.18°W' },
+  map: { label: 'SALÓN ELIANNE', coords: '17.39°S · 66.16°W' },
   itinerary: [
     { time: '18:00', label: 'Recepción' },
     { time: '21:00', label: 'Acto Principal' },

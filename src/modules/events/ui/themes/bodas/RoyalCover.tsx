@@ -3,7 +3,7 @@
 import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
 import { prefiereMenosMovimiento } from '../kit/motion'
-import { PALETA as P } from './boda-royal.palette'
+import { alfaDe, PALETA as P } from './boda-royal.palette'
 
 type Props = {
   readonly bgAsset: string
@@ -89,7 +89,7 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
             lineHeight: 1.1,
             maxWidth: '82%',
             color: '#c4788a',
-            textShadow: '0 0 10px rgba(212,175,55,0.5), 1px 1px 2px rgba(139,34,82,0.3)',
+            textShadow: `0 0 10px rgba(212,175,55,0.5), 1px 1px 2px ${alfaDe('borgona', 0.3)}`,
           }}
         >
           {names}

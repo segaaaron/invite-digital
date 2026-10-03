@@ -2,14 +2,13 @@
 
 import { revalidatePath } from 'next/cache'
 import { admin, events, guests, plans } from '@/app/composition/container'
+import { encargoSinTerminar, invitacionSinEscribir } from './puede-invitar'
 import { esquemaDePropuesta } from '@/modules/asistente'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import type { GuestErrorKind } from '@/modules/guests/domain/errors'
 import { invitationUrl } from '@/modules/guests/domain/invitation-url'
-import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
-import { themeFor } from '@/modules/events/ui/themes/registry'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -237,6 +236,8 @@ export async function sendInvitationAction(_previous: ResendState, formData: For
 export async function ensureInvitationLinkAction(input: { eventSlug: string; groupId: string }): Promise<{ status: 'success'; url: string } | { status: 'error'; message: string }> {
   const actor = await requireSession()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
+  const encargo = await encargoSinTerminar(eventId)
+  if (encargo !== null) return { status: 'error', message: encargo }
   const result = await guests.enlaceDe({ eventId, id: input.groupId })
   if (isErr(result)) {
     registrarFallo('guests/actions', 'enlace no disponible', result.error.kind, result.error.detail)
@@ -248,6 +249,8 @@ export async function ensureInvitationLinkAction(input: { eventSlug: string; gro
 async function repartir(eventId: string, eventSlug: string, formData: FormData, modo: 'rotar' | 'mismo'): Promise<ResendState> {
   const sinEscribir = await invitacionSinEscribir(eventId)
   if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
+  const encargo = await encargoSinTerminar(eventId)
+  if (encargo !== null) return { status: 'error', message: encargo }
 
   // Preparar el enlace es mandar la invitación: con ella escrita no hace falta que nadie la
   // apruebe. Se publica aquí, antes del enlace, para que abra desde el primer momento.
@@ -343,20 +346,6 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
       problem: fila.problem,
     })),
   }
-}
-
-/**
- * Sin la invitación escrita —quién, cuándo y dónde— no se invita a nadie: el invitado abriría
- * una invitación que no dice de quién es. La pantalla ya apaga los botones; esto es el corte
- * de verdad, porque cada acción es un extremo HTTP público. `null` si está lista.
- */
-const invitacionSinEscribir = async (eventId: string): Promise<string | null> => {
-  // Qué hace falta depende del diseño: hay portadas que traen el nombre rotulado dentro y
-  // no ofrecen ese campo, y exigirlo dejaría su reparto bloqueado sin nada que rellenar.
-  const evento = await events.getByIdUnscoped(eventId)
-  const tema = themeFor(isErr(evento) ? '' : evento.value.themeKey)
-  const falta = loQueFaltaParaInvitar(await events.contentFor(eventId, {}), { pideNombres: pideNombres(tema) })
-  return falta.length === 0 ? null : `Antes de invitar, termina tu invitación en Configuración. Falta: ${falta.join(', ').toLowerCase()}.`
 }
 
 /** Un teléfono como se escribe aquí: `70012345` se guarda `+59170012345`. Vacío, `null`. */

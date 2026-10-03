@@ -78,7 +78,7 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
                   <span className={`mt-0.5 grid min-w-9 shrink-0 place-items-center rounded-full px-2 py-1 font-mono text-[11.5px] ${t.veces > 9 ? 'bg-danger/12 text-danger-deep' : 'bg-bg-top text-ink-soft'}`}>{t.veces}×</span>
                   <span className="flex min-w-0 flex-1 flex-col gap-1">
                     <span className="text-[14px] leading-snug text-ink">{t.mensaje}</span>
-                    <span className="font-mono text-[11px] tracking-[0.04em] text-ink-mute">
+                    <span className="font-codigo text-[11px] tracking-[0.04em] text-ink-mute">
                       {t.servicio} · {t.origen} · último {hace(t.ultimo, ahora)}
                       {t.veces > 1 ? ` · primero ${hace(t.primero, ahora)}` : ''}
                     </span>
@@ -87,11 +87,11 @@ export default async function FallosPage({ searchParams }: { searchParams: Promi
                 <div className="flex flex-col gap-3 border-t border-line-panel px-5 py-4">
                   <dl className="grid gap-2 text-[12.5px] min-[640px]:grid-cols-[110px_minmax(0,1fr)]">
                     <dt className="text-ink-mute">Ruta</dt>
-                    <dd className="m-0 font-mono break-all text-ink">{t.ruta ?? '—'}</dd>
+                    <dd className="m-0 font-codigo break-all text-ink">{t.ruta ?? '—'}</dd>
                     <dt className="text-ink-mute">Acción</dt>
-                    <dd className="m-0 font-mono break-all text-ink">{t.accion ?? '—'}</dd>
+                    <dd className="m-0 font-codigo break-all text-ink">{t.accion ?? '—'}</dd>
                   </dl>
-                  <pre className="max-h-96 overflow-auto rounded-[12px] bg-shell-deep p-4 font-mono text-[11.5px] leading-relaxed whitespace-pre-wrap text-shell-ink">{t.detalle || 'Sin más detalle.'}</pre>
+                  <pre className="max-h-96 overflow-auto rounded-[12px] bg-shell-deep p-4 font-codigo text-[11.5px] leading-relaxed whitespace-pre-wrap text-shell-ink">{t.detalle || 'Sin más detalle.'}</pre>
                   <form action={borrarTipoDeFalloAction} className="flex justify-end">
                     <input name="huella" type="hidden" value={t.huella} />
                     <button className="rounded-full border border-line-panel-strong bg-white px-4 py-2 text-[12.5px] text-ink hover:border-ink" type="submit">

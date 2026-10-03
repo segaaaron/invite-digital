@@ -21,6 +21,9 @@ export type TextosComparativa = {
     csv: string
     mesas: string
     regalos: string
+    formas: string
+    libro: string
+    estilo: string
     puerta: string
     porteros: string
     planners: string
@@ -50,6 +53,9 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     csv: (a) => siNo(a.csvImport),
     mesas: (a) => siNo(a.seating),
     regalos: (a) => siNo(a.registry),
+    formas: (a) => siNo(hasFeature(a, 'giftWays')),
+    libro: (a) => siNo(hasFeature(a, 'guestbook')),
+    estilo: (a) => siNo(hasFeature(a, 'estilo')),
     puerta: (a) => siNo(a.checkin),
     porteros: (a) => tope(a.maxDoorPorters),
     planners: (a) => tope(a.maxHiredPlanners),

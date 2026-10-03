@@ -50,6 +50,15 @@ export function isAdmin(actor: Actor): boolean {
 }
 
 /**
+ * Quién da de alta eventos: el atelier y el admin. Un cliente o la puerta quedarían como
+ * dueños de un evento que `canAccessEvent` no les deja abrir —el dueño solo entra si es
+ * atelier—, y el evento acabaría en la cartera como basura sin plan pagado.
+ */
+export function puedeCrearEventos(actor: Actor): boolean {
+  return actor.role === 'atelier' || isAdmin(actor)
+}
+
+/**
  * Las secciones de un evento, a efectos de permisos.
  *
  * `full` es todo lo del atelier; `checkin` es la puerta; `cliente` es lo que ve el equipo
@@ -58,7 +67,7 @@ export function isAdmin(actor: Actor): boolean {
  * dice nada**, y `full` deniega a todo el que entra por pertenencia: el olvido cae del lado
  * seguro, que es la única forma de que una regla de permisos sobreviva a la siguiente sesión.
  */
-export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planner' | 'equipo' | 'ficha' | 'configuracion' | 'vistaPrevia'
+export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planner' | 'equipo' | 'ficha' | 'configuracion' | 'vistaPrevia' | 'invitacion'
 
 /**
  * Lo único del evento que abre el admin: la **ficha** —publicar, fecha, diseño, contraseña,
@@ -66,8 +75,12 @@ export type EventSection = 'full' | 'checkin' | 'cliente' | 'porteros' | 'planne
  * administrativas) y la vista previa (lo que ve cualquier invitado). Invitados, mensajes,
  * mesas, regalos y planner son datos del cliente: para verlos entra **como el cliente**, con
  * motivo y registro (decisión del usuario, 15 de septiembre de 2026).
+ *
+ * **`invitacion`** (2 oct): el texto, las fotos y la canción de la invitación. Con el servicio
+ * hecho por nosotros, el equipo la diseña sin hacerse pasar por el cliente. Invitados y demás
+ * datos siguen cerrados. Cada guardado del admin queda en la auditoría.
  */
-const SECCIONES_DEL_ADMIN: readonly EventSection[] = ['ficha', 'configuracion', 'vistaPrevia']
+const SECCIONES_DEL_ADMIN: readonly EventSection[] = ['ficha', 'configuracion', 'vistaPrevia', 'invitacion']
 
 /**
  * Cómo pertenece alguien a un evento que no es suyo.
@@ -86,6 +99,8 @@ const QUIEN_ENTRA: Record<Exclude<EventSection, 'full'>, readonly Membership[]> 
   cliente: ['cliente', 'coanfitrion', 'planner'],
   configuracion: ['cliente', 'coanfitrion', 'planner'],
   vistaPrevia: ['cliente', 'coanfitrion', 'planner'],
+  // Escribir la invitación: textos, fotos y canción.
+  invitacion: ['cliente', 'coanfitrion', 'planner'],
   // La ficha no se abre por pertenencia: es del admin y del atelier dueño.
   ficha: [],
   // El anfitrión y su planner suman porteros; el co-anfitrión no.

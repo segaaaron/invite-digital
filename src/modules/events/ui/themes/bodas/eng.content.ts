@@ -21,7 +21,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     place: 'Casa Aurora · Roof Garden',
     address: 'Av. Constitución 120, Centro',
   },
-  map: { label: 'CASA AURORA', coords: '19.43°N · 99.13°W' },
+  map: { label: 'CASA AURORA', coords: '17.39°S · 66.15°W' },
   music: { track: 'Marry Me', artist: 'Train · porque sí' },
   gallery: [
     { label: 'LA PROPUESTA' },

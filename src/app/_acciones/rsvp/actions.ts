@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { headers } from 'next/headers'
-import { guests, rsvp } from '@/app/composition/container'
+import { guests, plans, rsvp } from '@/app/composition/container'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { clientIpFrom } from '@/shared/http/client-ip'
 import { isErr } from '@/shared/result'
@@ -23,6 +23,15 @@ const respond = guardedRespond({
   log: (message, kind, detail) => registrarFallo('rsvp/actions', message, kind, detail),
 })
 
+/**
+ * Sin libro de firmas en el plan, la confirmación llega **sin mensaje**: el campo no se pinta, y
+ * esto es el corte de verdad (la acción es un extremo público). Si no se puede leer el plan, se
+ * deja pasar: perder un mensaje es peor que guardar uno de más.
+ */
+async function sinMensajeSiNoHayLibro(eventId: string, formData: FormData): Promise<void> {
+  if (isErr(await plans.requireFeature(eventId, 'guestbook'))) formData.delete('message')
+}
+
 /** Mismo cupo que la respuesta de siempre: diez por minuto y por IP. */
 const limitePorPersona = createRateLimiter({ windowMs: 60_000, max: 10 })
 
@@ -40,8 +49,10 @@ export async function respondAction(_previous: RsvpActionState, formData: FormDa
     // cerrado» de «no existe» confirmaría que el enlace es bueno.
     return { status: 'error', message: 'invitation_not_found' }
   }
+  if (!isErr(group)) await sinMensajeSiNoHayLibro(group.value.eventId, formData)
 
-  const outcome = await respond({ ip, token, payload: Object.fromEntries(formData) })
+  // `acts` son casillas: llegan varias con el mismo nombre y `fromEntries` se quedaría con la última.
+  const outcome = await respond({ ip, token, payload: { ...Object.fromEntries(formData), acts: formData.getAll('acts') } })
   if (outcome.status === 'success') {
     revalidatePath(`/i/${token}`)
     if (!isErr(group)) {
@@ -69,6 +80,7 @@ export async function respondByPersonAction(_previous: RsvpActionState, formData
   if (!isErr(group) && !(await eventUnlocked(group.value.eventId))) {
     return { status: 'error', message: 'invitation_not_found' }
   }
+  if (!isErr(group)) await sinMensajeSiNoHayLibro(group.value.eventId, formData)
 
   const extra = Number(campo(formData, 'extra'))
   const resultado = await rsvp.respondByPerson({
@@ -80,6 +92,7 @@ export async function respondByPersonAction(_previous: RsvpActionState, formData
     extra: Number.isFinite(extra) ? extra : 0,
     responderName: campo(formData, 'name') || null,
     message: campo(formData, 'message') || null,
+    extras: { song: campo(formData, 'song') || null, menu: campo(formData, 'menu') || null, acts: formData.getAll('acts').filter((a): a is string => typeof a === 'string') },
   })
 
   if (isErr(resultado)) {

@@ -1,3 +1,4 @@
+import { acentoDe } from '../kit/acento'
 /**
  * La paleta de «Encanto Musical» (Natalia) en V3: blanco y oro sobre cristal café.
  *
@@ -5,7 +6,7 @@
  * esqueleto: lo que en una es lila, aquí es oro. El cristal lleva un brillo dorado arriba
  * sobre café translúcido, porque debajo hay una partitura dorada.
  */
-export const PALETA = {
+const BASE = {
   tinta: '#ffffff',
   orquidea: '#c5961a',
   uva: '#c5961a',
@@ -33,4 +34,21 @@ export const PALETA = {
   bordeVidrio: '#c5961a',
   sombra: '0 4px 20px rgba(197,150,26,.12)',
   sombraFuerte: '0 4px 20px rgba(197,150,26,.18)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('orquidea', { orquidea: BASE.orquidea, uva: BASE.uva, amatista: BASE.amatista, violetaHondo: BASE.violetaHondo, violeta: BASE.violeta, malva: BASE.malva, lila: BASE.lila, lilaFuerte: BASE.lilaFuerte, bordeVidrio: BASE.bordeVidrio, oroClaro: BASE.oroClaro }, '#120c06')
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  fileteTenue: A.alfa('orquidea', 0.27),
+  vidrio: `radial-gradient(120% 100% at 50% 0%, ${A.alfa('orquidea', 0.16)}, transparent 60%), rgba(44,26,14,.72)`,
+  vidrioFuerte: `radial-gradient(120% 100% at 50% 0%, ${A.alfa('orquidea', 0.16)}, transparent 60%), rgba(44,26,14,.72)`,
+  sombra: `0 4px 20px ${A.alfa('orquidea', 0.12)}`,
+  sombraFuerte: `0 4px 20px ${A.alfa('orquidea', 0.18)}`,
 } as const

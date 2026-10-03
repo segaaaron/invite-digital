@@ -547,6 +547,76 @@
       "when": 1792000000000,
       "tag": "0078_luxury_extra",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1792001000000,
+      "tag": "0079_reserva_fija",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1792002000000,
+      "tag": "0080_pedido_correo",
+      "breakpoints": true
+    },
+    {
+      "idx": 80,
+      "version": "7",
+      "when": 1792003000000,
+      "tag": "0081_diseno_por_encargo",
+      "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1792004000000,
+      "tag": "0082_precio_en_dolares",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792005000000,
+      "tag": "0083_extras_de_servicio",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1792006000000,
+      "tag": "0084_libro_y_formas_por_plan",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1792007000000,
+      "tag": "0085_preguntas_al_confirmar",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1792008000000,
+      "tag": "0086_enlace_general",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1792009000000,
+      "tag": "0087_save_the_date",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1792010000000,
+      "tag": "0088_estilo_del_evento",
+      "breakpoints": true
     }
   ]
 }

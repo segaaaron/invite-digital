@@ -12,7 +12,7 @@ export default function VendorLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
-        <div className="min-h-dvh bg-bg px-4 py-8">{children}</div>
+        <div className="panel-sin-mono min-h-dvh bg-bg px-4 py-8">{children}</div>
       </body>
     </html>
   )

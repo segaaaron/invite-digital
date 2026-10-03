@@ -59,6 +59,13 @@ describe('remainingGroups', () => {
 })
 
 describe('hasFeature', () => {
+  it('libro de firmas y formas de regalar: sin decirlo el plan, vienen (como hasta ahora); apagados, no', () => {
+    expect(hasFeature(atelier, 'guestbook')).toBe(true)
+    expect(hasFeature(atelier, 'giftWays')).toBe(true)
+    expect(hasFeature({ ...atelier, guestbook: false, giftWays: false }, 'guestbook')).toBe(false)
+    expect(hasFeature({ ...atelier, guestbook: false, giftWays: false }, 'giftWays')).toBe(false)
+  })
+
   it('respeta cada bandera', () => {
     expect(hasFeature(atelier, 'seating')).toBe(true)
     expect(hasFeature(atelier, 'registry')).toBe(false)

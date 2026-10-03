@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { prefiereMenosMovimiento } from './motion'
+import { conAlfa } from './acento'
 
 type Props = {
   readonly accent: string
@@ -168,9 +169,9 @@ export function MusicPlayer({
         alignItems: 'center',
         gap: 14,
         padding: '14px 16px',
-        border: `1px solid ${accent}40`,
+        border: `1px solid ${conAlfa(accent, 0x40 / 255)}`,
         borderRadius: 999,
-        background: `${accent}08`,
+        background: conAlfa(accent, 0x08 / 255),
         color: textColor,
       }}
     >

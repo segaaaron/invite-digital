@@ -24,7 +24,7 @@ export function PorterPinForm({ token }: { token: string }) {
         aria-describedby={estado.status === 'error' ? `${id}-error` : undefined}
         autoComplete="one-time-code"
         autoFocus
-        className="w-full rounded-[14px] border border-shell-ink/25 bg-transparent px-4 py-4 text-center font-mono text-[28px] tracking-[0.4em] text-shell-ink outline-none focus-visible:border-gold"
+        className="w-full rounded-[14px] border border-shell-ink/25 bg-transparent px-4 py-4 text-center font-codigo text-[28px] tracking-[0.4em] text-shell-ink outline-none focus-visible:border-gold"
         id={`${id}-pin`}
         inputMode="numeric"
         maxLength={6}

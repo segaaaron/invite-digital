@@ -303,3 +303,18 @@ test.describe('el catálogo público', () => {
     await expect(page.locator('article')).toBeVisible()
   })
 })
+
+// Con «reducir movimiento» (accesibilidad del iPhone), `Reveal` dejaba bloques en opacidad 0:
+// el servidor no conoce la preferencia y la hidratación no corrige el estilo. Playwright da por
+// visible un elemento transparente, así que se mide la opacidad.
+test.describe('los modelos, con movimiento reducido', () => {
+  test.use({ contextOptions: { reducedMotion: 'reduce' } })
+  for (const clave of CLAVES) {
+    test(`${clave}: ningún bloque queda invisible`, async ({ page }) => {
+      await page.goto(`/modelos/es/${clave}`)
+      await page.locator('[data-portada]').first().click({ force: true, timeout: 3_000 }).catch(() => {})
+      const ocultos = await page.locator('.revelar').evaluateAll((nodos) => nodos.filter((n) => getComputedStyle(n).opacity === '0').length)
+      expect(ocultos).toBe(0)
+    })
+  }
+})

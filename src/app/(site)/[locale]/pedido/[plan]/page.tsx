@@ -57,6 +57,7 @@ export default async function PedidoPage({
 
       <OrderForm
         referido={ref === undefined ? null : ref.slice(0, 16)}
+        whatsapp={(await site.settings()).whatsapp || null}
         locale={locale}
         textos={dictionary.orders.form}
         planName={plan.name}

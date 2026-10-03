@@ -1,7 +1,7 @@
 import dynamic from 'next/dynamic'
 import type { ThemeDefinition } from '../contract'
 import { CONTENIDO_DE_MUESTRA } from './boda-sello.content'
-import { PALETA } from './boda-sello.palette'
+import { ACENTO, PALETA } from './boda-sello.palette'
 
 /**
  * «Sobre Lacrado» — Camila & Sebastián, de `boda-sobre-lacrado.jsx`.
@@ -39,5 +39,6 @@ export const bodaSelloDefinition: ThemeDefinition = {
   },
   sections: ['hero', 'gallery', 'quote', 'schedule', 'notes', 'hosts', 'ceremony', 'reception', 'map', 'itinerary', 'dressCode', 'music', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
+  estilo: { acento: ACENTO, caligrafia: 'greatVibes' },
   Component: dynamic(() => import('./boda-sello.view').then((modulo) => modulo.BodaSelloView)),
 }

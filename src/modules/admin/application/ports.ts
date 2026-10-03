@@ -146,6 +146,15 @@ export type PlanAdminRow = {
   readonly plannerSuite: string
   /** El anticipo que pide, en porcentaje. 0: se paga entero. */
   readonly depositPct: number
+  /** La reserva fija en centavos; si está, manda sobre el porcentaje. */
+  readonly depositFixedCents: number | null
+  readonly priceUsdCents: number | null
+  readonly includesGuestbook: boolean
+  readonly includesGiftWays: boolean
+  readonly includesStyle: boolean
+  /** Diseño por encargo: rondas y días de entrega. Nulos: autoservicio. */
+  readonly correctionRounds: number | null
+  readonly deliveryDays: number | null
   readonly highlighted: boolean
   readonly isActive: boolean
   /** Cuántos eventos lo tienen: es lo que pesa antes de cambiarle el tope. */

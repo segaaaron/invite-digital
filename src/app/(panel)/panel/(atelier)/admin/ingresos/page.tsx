@@ -207,7 +207,7 @@ export default async function AdminIngresosPage() {
               <li className="border-t border-line-panel first:border-none" key={p.ref}>
                 {/* En el celular: nombre e importe arriba; referencia, plan y fecha debajo. */}
                 <Link className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-bg-sunken/50 min-[700px]:grid-cols-[6rem_minmax(0,1fr)_auto_7rem]" href={`/panel/admin/ventas?venta=p-${p.ref}`}>
-                  <span className="order-3 font-mono text-[11px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
+                  <span className="order-3 font-codigo text-[11px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
                   <span className="order-1 min-w-0 truncate text-[14px] text-ink min-[700px]:order-none">
                     {p.customerName}
                     <span className="ml-2 text-[12px] text-ink-mute">{p.planName ?? 'Sin plan'}</span>

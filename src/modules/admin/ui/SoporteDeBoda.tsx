@@ -47,7 +47,7 @@ export function SoporteDeBoda({ eventId, anfitriones }: { eventId: string; anfit
           {reinicio.password === undefined ? null : (
             <>
               {' '}
-              <code className="font-mono">{reinicio.password}</code>
+              <code className="font-codigo">{reinicio.password}</code>
             </>
           )}
         </PanelAlert>

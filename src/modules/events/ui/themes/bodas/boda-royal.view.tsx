@@ -10,7 +10,7 @@ import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
 import { CarruselDePerla } from './CarruselDePerla'
 import { RoyalCover } from './RoyalCover'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-royal.palette'
+import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-royal.palette'
 
 const SERIF = 'var(--font-spectral)'
 const MONO = 'var(--font-jetbrains-mono)'
@@ -385,12 +385,12 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
         <Reveal>
           <CarruselDePerla
             borde={P.oroClaro}
-            flechaFondo="rgba(139,34,82,0.6)"
+            flechaFondo={alfaDe('borgona', 0.6)}
             flechaTinta="#ffffff"
             fotos={fotos}
             labels={{ anterior: themes.galleryPrev, siguiente: themes.galleryNext }}
             puntoActivo={P.borgona}
-            puntoInactivo="rgba(139,34,82,0.35)"
+            puntoInactivo={alfaDe('borgona', 0.35)}
             sombra="rgba(184,134,11,0.3)"
           />
         </Reveal>

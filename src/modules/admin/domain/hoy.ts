@@ -1,4 +1,4 @@
-import { diaCorto } from '@/shared/format/fecha'
+import { diaCorto, fechaEnBolivia } from '@/shared/format/fecha'
 import type { Venta } from './ventas'
 import type { Salud } from './salud'
 
@@ -47,18 +47,7 @@ const DIA = 86_400_000
 export const diasEntre = (desde: string, hasta: string): number =>
   Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / DIA)
 
-const FORMATO_BOLIVIA = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'America/La_Paz',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-})
-
-/**
- * El día de hoy **en Bolivia**. El servidor corre en UTC: a las ocho de la noche de La Paz
- * ya es mañana allí, y «faltan 3 días» saldría como «faltan 2».
- */
-export const fechaEnBolivia = (instante: Date): string => FORMATO_BOLIVIA.format(instante)
+export { fechaEnBolivia }
 
 const hace = (dias: number): string => (dias <= 0 ? 'hoy' : dias === 1 ? 'ayer' : `hace ${dias} días`)
 

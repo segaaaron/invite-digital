@@ -7,7 +7,8 @@ import { sitioPublico } from '@/modules/admin/domain/site-settings'
 import { CollectionsCarousel } from '@/modules/catalog/ui/CollectionsCarousel'
 import { ModelsSection } from '@/modules/catalog/ui/ModelsSection'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
-import { comparativaDePlanes } from './fiesta-page'
+import { comparativaDePlanes, hayEncargo, reservasDePlanes } from './fiesta-page'
+import { ComoFunciona } from '@/sections/ComoFunciona'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -95,6 +96,8 @@ export default async function LandingPage({
 
   const ajustes = await site.settings()
   const sitio = sitioPublico(ajustes, locale)
+  // Si algún plan es por encargo: «Cómo funciona» y sus preguntas solo existen entonces.
+  const encargo = await hayEncargo()
 
   const [plansResult, templatesResult, categoriesResult] = await Promise.all([
     attempt(() => webPublica.planes(locale), asOutage),
@@ -146,6 +149,8 @@ export default async function LandingPage({
       <HeroSection
         cifras={sitio.cifras}
         dictionary={dictionary}
+        encargo={encargo}
+        locale={locale}
         marcas={sitio.marcas}
         slot={
           // La composición de sobres, sin botón de «Abrir el sobre» (pedido por el usuario).
@@ -187,10 +192,12 @@ export default async function LandingPage({
 
       <ComparisonSection dictionary={dictionary} />
 
+      {encargo ? <ComoFunciona dictionary={dictionary} /> : null}
+
       {plans.length > 0 ? (
         <PricingSection
           comparativa={await comparativaDePlanes(plans, dictionary)}
-          contacto={{ whatsapp: sitio.whatsapp, mensajePlan: sitio.mensajePlan }}
+          reservas={await reservasDePlanes()}
           dictionary={dictionary}
           locale={locale}
           modelo={modeloElegido}
@@ -203,7 +210,7 @@ export default async function LandingPage({
       {templates.length > 0 ? <ModelsSection dictionary={dictionary} locale={locale} templates={templates} /> : null}
 
       <TestimonialsSection dictionary={dictionary} testimonios={sitio.testimonios} />
-      <FaqSection dictionary={dictionary} />
+      <FaqSection dictionary={dictionary} encargo={encargo} />
       <ContactSection
         categories={categories}
         contacto={{

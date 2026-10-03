@@ -35,6 +35,7 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
   const nameId = useId()
   const lastNameId = useId()
   const emailId = useId()
+  const phoneId = useId()
   const categoryId = useId()
   const dateId = useId()
   const messageId = useId()
@@ -116,20 +117,40 @@ export function ConsultationForm({ categories, dictionary, locale }: Props) {
         </label>
       </div>
 
-      <label className={LABEL_CLASS} htmlFor={emailId}>
-        <span className={LABEL_TEXT}>{contact.fields.email}</span>
-        <input
-          aria-describedby={describedBy('email')}
-          aria-invalid={invalid('email')}
-          className={FIELD_CLASS}
-          id={emailId}
-          maxLength={200}
-          name="email"
-          placeholder={contact.fields.email}
-          required
-          type="email"
-        />
-      </label>
+      {/* En Bolivia se atiende por WhatsApp: es el contacto que se pide; el correo, si quiere. */}
+      <div className="grid gap-5 sm:grid-cols-2">
+        <label className={LABEL_CLASS} htmlFor={phoneId}>
+          <span className={LABEL_TEXT}>{contact.fields.phone}</span>
+          <input
+            aria-describedby={describedBy('phone')}
+            aria-invalid={invalid('phone')}
+            autoComplete="tel"
+            className={FIELD_CLASS}
+            id={phoneId}
+            inputMode="tel"
+            maxLength={32}
+            name="phone"
+            placeholder="+591 7…"
+            required
+            type="tel"
+          />
+        </label>
+
+        <label className={LABEL_CLASS} htmlFor={emailId}>
+          <span className={LABEL_TEXT}>{`${contact.fields.email} (${contact.fields.optional})`}</span>
+          <input
+            aria-describedby={describedBy('email')}
+            aria-invalid={invalid('email')}
+            autoComplete="email"
+            className={FIELD_CLASS}
+            id={emailId}
+            maxLength={200}
+            name="email"
+            placeholder={contact.fields.email}
+            type="email"
+          />
+        </label>
+      </div>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <label className={LABEL_CLASS} htmlFor={dateId}>

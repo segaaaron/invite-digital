@@ -96,7 +96,7 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
           <PedirCodigo texto="Enviarme el código" />
           <form action={cerrar} className="flex flex-wrap items-end gap-3">
             <Field htmlFor={`${id}-codigo`} label="Código del correo">
-              <input autoComplete="one-time-code" className={`${FIELD_CLASS} w-[160px] font-mono tracking-[0.2em]`} id={`${id}-codigo`} inputMode="numeric" maxLength={9} name="code" required />
+              <input autoComplete="one-time-code" className={`${FIELD_CLASS} w-[160px] font-codigo tracking-[0.2em]`} id={`${id}-codigo`} inputMode="numeric" maxLength={9} name="code" required />
             </Field>
             <SubmitButton pending={cerrando} pendingLabel="Cerrando…" variant="danger">
               Cerrar las demás sesiones

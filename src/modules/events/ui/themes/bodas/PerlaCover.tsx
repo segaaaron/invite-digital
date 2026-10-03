@@ -2,7 +2,7 @@
 
 import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
-import { PALETA as P } from './boda-perla.palette'
+import { alfaDe, PALETA as P } from './boda-perla.palette'
 
 type Props = {
   readonly bgAsset: string
@@ -89,7 +89,7 @@ export function PerlaCover({ bgAsset, eyebrow, initials, names, fecha, cta, open
             marginTop: 6,
             maxWidth: '82%',
             color: P.cafe,
-            textShadow: '1px 1px 3px rgba(184,134,11,0.3)',
+            textShadow: `1px 1px 3px ${alfaDe('oroBoton', 0.3)}`,
           }}
         >
           {names}

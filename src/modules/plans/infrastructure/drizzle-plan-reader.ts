@@ -23,6 +23,12 @@ const columnas = {
   designChange: plans.designChange,
   priceCents: plans.priceCents,
   priceAnnualCents: plans.priceAnnualCents,
+  depositFixedCents: plans.depositFixedCents,
+  correctionRounds: plans.correctionRounds,
+  deliveryDays: plans.deliveryDays,
+  includesGuestbook: plans.includesGuestbook,
+  includesGiftWays: plans.includesGiftWays,
+  includesStyle: plans.includesStyle,
 }
 
 export const createDrizzlePlanReader = (database: DbExecutor): PlanReader => ({

@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react'
-import { buildWhatsAppLink, fillPlanMessage } from '@/modules/leads'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -21,21 +20,15 @@ type Props = {
   modelo?: string | null
   /** El código de recomendación que llegó en el enlace (`?ref=`), para que llegue al pedido. */
   referido?: string | null
-  /** El WhatsApp y la plantilla del mensaje de plan, de «La web». */
-  contacto: { whatsapp: string; mensajePlan: string }
+  /** La reserva de cada plan por su `slug` (centavos), si tiene reserva fija. */
+  reservas?: Readonly<Record<string, number>>
   /** La tabla comparativa, debajo de las tarjetas. La compone quien lee los límites. */
   comparativa?: ReactNode
 }
 
-export function PricingSection({ plans, locale, dictionary, modelo = null, referido = null, contacto, comparativa = null }: Props) {
+export function PricingSection({ plans, locale, dictionary, modelo = null, referido = null, reservas = {}, comparativa = null }: Props) {
   const consulta = new URLSearchParams({ ...(modelo === null ? {} : { modelo }), ...(referido === null || referido === '' ? {} : { ref: referido }) }).toString()
   const { pricing } = dictionary
-
-  // El plan más caro no se compra de un clic: en la maqueta ese botón agenda una llamada.
-  const masCaro = plans.reduce<Plan | null>(
-    (mayor, plan) => (mayor && mayor.price.cents >= plan.price.cents ? mayor : plan),
-    null,
-  )
 
   return (
     <section aria-labelledby="pricing-title" className="px-6 py-24" id="precios">
@@ -44,25 +37,15 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
 
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {plans.map((plan, index) => {
-            // El más caro agenda una llamada, como en la maqueta: se cotiza, no se
-            // compra de un clic. Los demás abren el pedido, que desde el Plan B existe:
-            // dejarlos en WhatsApp sería tener el flujo construido y sin puerta.
-            const agendaLlamada = plan.id === masCaro?.id
-            // Sin WhatsApp configurado, «agendar llamada» lleva al formulario de contacto.
-            const llamada = agendaLlamada
-              ? buildWhatsAppLink(contacto.whatsapp, fillPlanMessage(contacto.mensajePlan, { name: plan.name, price: formatMoney(plan.price, locale) }))
-              : null
-
+            // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia
+            // y desde ahí se sigue por WhatsApp. Ya no hay plan que «agende una llamada».
+            const reserva = reservas[plan.slug]
             return (
             <Reveal key={plan.id} delay={index * 0.08}>
               <PlanCard
-                ctaExternal={llamada !== null}
-                ctaHref={
-                  agendaLlamada
-                    ? (llamada ?? `/${locale}#contacto`)
-                    : `/${locale}/pedido/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`
-                }
-                ctaLabel={agendaLlamada ? pricing.bookCall : pricing.choose.replace('{plan}', plan.name)}
+                ctaHref={`/${locale}/pedido/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`}
+                ctaLabel={pricing.choose.replace('{plan}', plan.name)}
+                reserva={reserva === undefined ? null : pricing.reserve.replace('{monto}', formatMoney({ cents: reserva, currency: plan.price.currency }, locale))}
                 dictionary={dictionary}
                 locale={locale}
                 plan={plan}

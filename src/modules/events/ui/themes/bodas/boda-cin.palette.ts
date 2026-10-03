@@ -1,5 +1,6 @@
+import { acentoDe } from '../kit/acento'
 /** La paleta de «Cinemática» (V3): negro con oro, como un programa de gala. */
-export const PALETA = {
+const BASE = {
   fondo: '#0a0805',
   oro: '#C9A96E',
   papel: '#F5EFE0',
@@ -10,6 +11,19 @@ export const PALETA = {
   flechaFondo: 'rgba(0,0,0,0.45)',
   fileteMuestra: 'rgba(197,150,26,0.4)',
   guion: 'rgba(201,169,110,0.5)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('oro', { oro: BASE.oro }, BASE.fondo)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  guion: A.alfa('oro', 0.5),
 } as const
 
 /** La carta de color del código de vestimenta, como la maqueta. */

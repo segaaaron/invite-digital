@@ -1,5 +1,6 @@
+import { acentoDe } from '../kit/acento'
 /** La paleta de «Botánica», la boda de acuarelas y verde salvia. */
-export const PALETA = {
+const BASE = {
   papel: '#fafaf6',
   /** El crema de la caligrafía sobre la fotografía: la tinta oscura se la come. */
   crema: '#F5EFE0',
@@ -13,6 +14,20 @@ export const PALETA = {
   durazno: '#fce8d8',
   filete: 'rgba(90,112,92,0.27)',
   fileteSuave: 'rgba(90,112,92,0.2)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('salvia', { salvia: BASE.salvia }, BASE.papel)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  filete: A.alfa('salvia', 0.27),
+  fileteSuave: A.alfa('salvia', 0.2),
 } as const
 
 /** La carta de color del código de vestimenta: cinco círculos de paleta neutra. */

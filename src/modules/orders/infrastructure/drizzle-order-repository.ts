@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, isNull, ne, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { addons, events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
 import { ORDER_STATUSES, parseOrigin, type Order, type OrderStatus, type QuoteExtra } from '../domain/order'
@@ -18,6 +18,7 @@ type Fila = {
   eventSlug: string | null
   customerName: string
   contact: string
+  email: string | null
   eventDate: string | null
   notes: string | null
   status: string
@@ -67,6 +68,7 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
     eventSlug: events.slug,
     customerName: orders.customerName,
     contact: orders.contact,
+    email: orders.email,
     eventDate: orders.eventDate,
     notes: orders.notes,
     status: orders.status,
@@ -125,12 +127,14 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           amountCents: sql`(select round(price_cents * (100 - ${descuento}::integer) / 100.0)::integer from plans where slug = ${order.planSlug} and is_active)`,
           discountCents: descuento === 0 ? null : sql`(select price_cents - round(price_cents * (100 - ${descuento}::integer) / 100.0)::integer from plans where slug = ${order.planSlug} and is_active)`,
           currency: sql`(select currency from plans where slug = ${order.planSlug} and is_active)`,
-          // El anticipo, con el porcentaje del plan en ese mismo instante, redondeado al boliviano.
-          depositCents: sql`(select case when deposit_pct between 1 and 99 then round(round(price_cents * (100 - ${descuento}::integer) / 100.0) * deposit_pct / 10000.0) * 100 end from plans where slug = ${order.planSlug} and is_active)`,
+          // El anticipo, con el plan en ese mismo instante: la reserva fija si la hay y es menor que
+          // el importe; si no, el porcentaje redondeado al boliviano; si tampoco, se paga entero.
+          depositCents: sql`(select case when deposit_fixed_cents < round(price_cents * (100 - ${descuento}::integer) / 100.0) then deposit_fixed_cents when deposit_pct between 1 and 99 then round(round(price_cents * (100 - ${descuento}::integer) / 100.0) * deposit_pct / 10000.0) * 100 end from plans where slug = ${order.planSlug} and is_active)`,
           referralCode: order.referralCode ?? null,
           templateSlug: order.templateSlug,
           customerName: order.customerName,
           contact: order.contact,
+          email: order.email ?? null,
           eventDate: order.eventDate,
           notes: order.notes,
         })
@@ -145,7 +149,7 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
 
     async createQuote(q) {
       // La cotización la arma el admin: el importe es el suyo (con descuento), no el de lista. El
-      // anticipo sale del porcentaje del plan **sobre ese importe**.
+      // anticipo es la reserva fija del plan o su porcentaje **sobre ese importe**.
       const [fila] = await database
         .insert(orders)
         .values({
@@ -153,7 +157,7 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           planId: sql`(select id from plans where slug = ${q.planSlug} and is_active)`,
           amountCents: q.amountCents,
           currency: sql`(select currency from plans where slug = ${q.planSlug} and is_active)`,
-          depositCents: sql`(select case when deposit_pct between 1 and 99 then round(${q.amountCents}::integer * deposit_pct / 10000.0) * 100 end from plans where slug = ${q.planSlug} and is_active)`,
+          depositCents: sql`(select case when deposit_fixed_cents < ${q.amountCents}::integer then deposit_fixed_cents when deposit_pct between 1 and 99 then round(${q.amountCents}::integer * deposit_pct / 10000.0) * 100 end from plans where slug = ${q.planSlug} and is_active)`,
           discountCents: q.discountCents,
           quoteExtras: q.extras,
           templateSlug: q.templateSlug,
@@ -224,6 +228,14 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
 
     async findById(id): Promise<Order | null> {
       const [fila] = await conPlan().where(eq(orders.id, id)).limit(1)
+      return fila === undefined ? null : aOrder(fila)
+    },
+
+    async planOrderOf(eventId): Promise<Order | null> {
+      const [fila] = await conPlan()
+        .where(and(eq(orders.eventId, eventId), isNull(orders.addonSlug)))
+        .orderBy(desc(orders.createdAt))
+        .limit(1)
       return fila === undefined ? null : aOrder(fila)
     },
 

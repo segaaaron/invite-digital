@@ -3,10 +3,15 @@ import { Button } from '@/shared/design/ui/Button'
 import { ArrowRightIcon, METRIC_ICONS, type MetricIcon } from '@/shared/design/ui/icons'
 import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
+import type { Locale } from '@/shared/i18n/locales'
 import { HeroEnvelope } from './HeroEnvelope'
 
 type Props = {
   dictionary: Dictionary
+  /** «Ver los modelos» lleva a la colección de su idioma: cada modelo abre su invitación de verdad. */
+  locale: Locale
+  /** Si la diseñamos nosotros (algún plan por encargo): cambia el «tú escribes tu invitación». */
+  encargo?: boolean
   slot?: ReactNode
   /**
    * Las cifras de la franja, de «La web». `null` —el admin no las ha confirmado— no pinta la
@@ -20,7 +25,7 @@ type Props = {
 /** El icono de cada posición de la franja: entregas, plazo, confirmaciones, alcance. */
 const ICONOS: readonly MetricIcon[] = ['mail', 'clock', 'check', 'globe']
 
-export function HeroSection({ dictionary, slot, cifras, marcas }: Props) {
+export function HeroSection({ dictionary, locale, encargo = false, slot, cifras, marcas }: Props) {
   const { hero } = dictionary
 
   return (
@@ -46,13 +51,13 @@ export function HeroSection({ dictionary, slot, cifras, marcas }: Props) {
               {hero.titleAccent}
             </em>
           </h1>
-          <p className="max-w-[46ch] text-[15px] leading-[1.75] text-ink-soft">{hero.body}</p>
+          <p className="max-w-[46ch] text-[15px] leading-[1.75] text-ink-soft">{encargo ? hero.bodyEncargo : hero.body}</p>
           <div className="flex flex-wrap gap-4">
             <Button href="#precios">
               {hero.ctaPrimary}
               <ArrowRightIcon className="ml-1" />
             </Button>
-            <Button href="#experiencia" variant="ghost">
+            <Button href={`/${locale}/colecciones`} variant="ghost">
               {hero.ctaSecondary}
             </Button>
           </div>

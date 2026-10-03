@@ -33,7 +33,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
         {/* `div`, no `main`: la carcasa del panel emite su propio `main` y dos anidados
             dejan la página con dos regiones principales, que es un error de HTML y hace
             ambiguo el salto al contenido para quien navega con lector de pantalla. */}
-        <div className="min-h-dvh bg-bg-top">{children}</div>
+        <div className="panel-sin-mono min-h-dvh bg-bg-top">{children}</div>
       </body>
     </html>
   )

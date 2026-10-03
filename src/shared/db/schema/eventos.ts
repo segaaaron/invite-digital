@@ -1,9 +1,9 @@
 import { relations, sql } from 'drizzle-orm'
-import { boolean, date, index, integer, jsonb, pgTable, primaryKey, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
+import { boolean, date, index, integer, jsonb, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid, varchar } from 'drizzle-orm/pg-core'
 import { plans } from './catalogo'
 import { users } from './identidad'
 import { guestGroups } from './invitados'
-import { timestamps } from './base'
+import { bytea, timestamps } from './base'
 
 /**
  * Quién entra en qué evento sin ser su dueño: el personal de puerta y el cliente.
@@ -219,3 +219,57 @@ export const invitationViews = pgTable(
   },
   (t) => [index('invitation_views_event_time_idx').on(t.eventId, t.viewedAt.desc())],
 )
+
+/** El diseño por encargo de un evento (`0081`). Sin fila, el evento es de autoservicio. */
+export const eventDesign = pgTable('event_design', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  status: varchar('status', { length: 20 }).notNull().default('esperando_datos'),
+  roundsIncluded: smallint('rounds_included').notNull().default(2),
+  roundsUsed: smallint('rounds_used').notNull().default(0),
+  deliveryDays: smallint('delivery_days').notNull().default(3),
+  dueDate: date('due_date'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+/** Cada ronda de cambios: un mensaje del cliente con todo junto. `counts = false`: error nuestro. */
+export const designRounds = pgTable(
+  'design_rounds',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    eventId: uuid('event_id')
+      .notNull()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    message: text('message').notNull(),
+    counts: boolean('counts').notNull().default(true),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index('design_rounds_event_idx').on(t.eventId, t.createdAt)],
+)
+
+/** El «save the date» de un evento (`0087`): su enlace, por hash y sellado para volver a enseñarlo. */
+export const eventSaveDates = pgTable(
+  'event_save_dates',
+  {
+    eventId: uuid('event_id')
+      .primaryKey()
+      .references(() => events.id, { onDelete: 'cascade' }),
+    tokenHash: bytea('token_hash').notNull(),
+    tokenSealed: text('token_sealed').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex('event_save_dates_token_idx').on(t.tokenHash)],
+)
+
+/** El estilo de un evento (`0088`, Gala o más): acento y letra sobre la piel del diseño. */
+export const eventStyles = pgTable('event_styles', {
+  eventId: uuid('event_id')
+    .primaryKey()
+    .references(() => events.id, { onDelete: 'cascade' }),
+  accent: varchar('accent', { length: 7 }),
+  scriptFont: varchar('script_font', { length: 30 }),
+  titleFont: varchar('title_font', { length: 30 }),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})

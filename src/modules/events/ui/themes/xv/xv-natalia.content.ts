@@ -20,7 +20,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     address: 'Km 8, Carretera al Cielo',
     time: '19:00',
   },
-  map: { label: 'HACIENDA LAS ESTRELLAS', coords: '19.32°N · 99.18°W' },
+  map: { label: 'HACIENDA LAS ESTRELLAS', coords: '17.39°S · 66.16°W' },
   itinerary: [
     { time: '18:00', label: 'Recepción' },
     { time: '20:30', label: 'Acto Central' },

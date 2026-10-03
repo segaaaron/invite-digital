@@ -29,6 +29,8 @@ export type ReleaseConfig = {
   postgresPassword: string
   /** Banco, titular y cuenta que se le enseñan a quien hace un pedido. */
   payment: { bank: string; accountHolder: string; accountNumber: string }
+  /** Si la política de privacidad y los términos están publicados en «La web». */
+  legal: { privacidad: boolean; terminos: boolean }
 }
 
 export function checkReleaseReadiness(config: ReleaseConfig): string[] {
@@ -64,6 +66,15 @@ export function checkReleaseReadiness(config: ReleaseConfig): string[] {
     blockers.push(
       'Faltan los datos de transferencia del Plan B: cárgalos en /panel/admin/pagos, o un pedido no podrá pagarse.',
     )
+  }
+
+  // Se cobra, se guardan teléfonos y restricciones alimentarias (dato de salud) de invitados y
+  // Luxury envía nombres a OpenAI: sin estas dos páginas no se vende.
+  if (!config.legal.privacidad) {
+    blockers.push('La política de privacidad no está publicada: escríbela y publícala en /panel/admin/web.')
+  }
+  if (!config.legal.terminos) {
+    blockers.push('Los términos y condiciones no están publicados (reserva, saldo, rondas, días en línea): publícalos en /panel/admin/web.')
   }
 
   blockers.push(...checkPassword(config.postgresPassword))

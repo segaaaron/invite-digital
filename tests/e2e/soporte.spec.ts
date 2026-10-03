@@ -57,6 +57,19 @@ test.describe('soporte como el cliente', () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/vista-previa`))?.status()).toBe(200)
   })
 
+  test('escribe la invitación del cliente sin entrar como él, y queda en la auditoría', async () => {
+    // Servicio hecho por nosotros: el equipo diseña la invitación. Solo la invitación.
+    await page.goto(`/panel/eventos/${SLUG}/configuracion?vista=invitacion`)
+    await expect(page.getByRole('heading', { name: /Tu invitación ·/ })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Datos y diseño' })).toHaveCount(0)
+    const cancion = await abrirSeccion(page, 'Canción')
+    await cancion.getByLabel('Título de la canción', { exact: true }).fill('Canción puesta por el equipo')
+    await cancion.getByRole('button', { name: 'Guardar' }).click()
+    await expect(cancion.getByText('Guardado.')).toBeVisible()
+    const [fila] = await sql<{ n: number }[]>`select count(*)::int as n from audit_log where action = 'evento.invitacion' and subject = ${SLUG}`
+    expect(fila!.n).toBeGreaterThan(0)
+  })
+
   test('entra como el cliente de un clic, cambia algo firmado a su nombre y regresa', async () => {
     await page.goto(`/panel/admin/eventos?q=${SLUG}`)
     const fila = page.getByRole('listitem').filter({ has: page.locator(`a[href="/panel/eventos/${SLUG}/configuracion"]`) }).first()

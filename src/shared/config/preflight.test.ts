@@ -9,6 +9,7 @@ const REAL = {
   postgresPassword: 'CDwYGpyOXaB6mgTd1TVKbg',
   trustBrands: [] as readonly string[],
   payment: { bank: 'Banco de ejemplo', accountHolder: 'Atelier de ejemplo SRL', accountNumber: '1234567890' },
+  legal: { privacidad: true, terminos: true },
 }
 
 describe('comprobación previa al despliegue', () => {
@@ -73,8 +74,9 @@ describe('comprobación previa al despliegue', () => {
       postgresPassword: 'invite',
       trustBrands: ['Marca aliada 1'],
       payment: { bank: '', accountHolder: '', accountNumber: '' },
+      legal: { privacidad: false, terminos: false },
     })
-    expect(blockers.length).toBeGreaterThanOrEqual(6)
+    expect(blockers.length).toBeGreaterThanOrEqual(8)
   })
 })
 
@@ -104,5 +106,17 @@ describe('los datos de transferencia del Plan B', () => {
   it('sin WhatsApp configurado en «La web» también bloquea', () => {
     const blockers = checkReleaseReadiness({ ...REAL, whatsapp: '' })
     expect(blockers.some((b) => b.includes('La web'))).toBe(true)
+  })
+})
+
+describe('los textos legales', () => {
+  it('sin privacidad ni términos publicados no se despliega: se cobra y se guardan datos de invitados', () => {
+    const bloqueos = checkReleaseReadiness({ ...REAL, legal: { privacidad: false, terminos: false } })
+    expect(bloqueos.some((b) => /privacidad/i.test(b))).toBe(true)
+    expect(bloqueos.some((b) => /términos/i.test(b))).toBe(true)
+  })
+
+  it('publicados, no dicen nada', () => {
+    expect(checkReleaseReadiness(REAL)).toEqual([])
   })
 })

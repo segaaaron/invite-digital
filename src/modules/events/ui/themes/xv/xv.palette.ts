@@ -1,5 +1,6 @@
+import { acentoDe } from '../kit/acento'
 /** La paleta de «Bajo el Mar», los XV de sirena en pasteles. */
-export const PALETA = {
+const BASE = {
   cielo: '#eaf6ff',
   lavanda: '#f3ecff',
   rosa: '#ffeef7',
@@ -29,4 +30,17 @@ export const PALETA = {
   bordeVidrio: 'rgba(255,255,255,.7)',
   sombra: '0 4px 20px rgba(74,26,110,.12)',
   sombraFuerte: '0 4px 20px rgba(74,26,110,.18)',
+} as const
+
+/** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */
+const A = acentoDe('uva', { orquidea: BASE.orquidea, uva: BASE.uva, uvaHonda: BASE.uvaHonda, amatista: BASE.amatista, violetaHondo: BASE.violetaHondo, violeta: BASE.violeta, malva: BASE.malva, lila: BASE.lila, lilaFuerte: BASE.lilaFuerte, ciruela: BASE.ciruela, morado: BASE.morado, lilaCampo: BASE.lilaCampo, bruma: BASE.bruma }, BASE.lavanda)
+const C = A.colores
+export const ACENTO = A.definicion
+export const alfaDe = A.alfa
+export const colorDeAcento = C
+
+export const PALETA = {
+  ...BASE,
+  ...C,
+  botonMorado: A.alfa('morado', 0.75),
 } as const

@@ -114,7 +114,10 @@ export type Order = {
   /** El `slug` de esa boda, para poder enlazarla desde la bandeja. */
   readonly eventSlug: string | null
   readonly customerName: string
+  /** El WhatsApp en los pedidos de la web; en los anteriores a `0080`, «WhatsApp o correo». */
   readonly contact: string
+  /** El correo del pedido de la web (`0080`). Al aprobarlo, ahí le llega su acceso. */
+  readonly email: string | null
   readonly eventDate: string | null
   readonly notes: string | null
   readonly status: OrderStatus

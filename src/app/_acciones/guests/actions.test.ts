@@ -29,6 +29,8 @@ const INVITACION_LISTA = { hero: { nameA: 'Camila' }, schedule: { startsAt: '202
 const contentFor = vi.fn()
 const getByIdUnscoped = vi.fn()
 const publicarSiBorrador = vi.fn()
+const leerDiseno = vi.fn()
+const saldoPendienteDe = vi.fn()
 
 vi.mock('@/app/composition/container', () => ({
   guests: {
@@ -47,6 +49,8 @@ vi.mock('@/app/composition/container', () => ({
     getByIdUnscoped: (...args: unknown[]) => getByIdUnscoped(...args),
   },
   plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: (...args: unknown[]) => requireFeature(...args) },
+  diseno: { leer: (...args: unknown[]) => leerDiseno(...args) },
+  orders: { saldoPendienteDe: (...args: unknown[]) => saldoPendienteDe(...args) },
 }))
 
 const form = (): FormData => {
@@ -63,6 +67,8 @@ beforeEach(() => {
   getByIdUnscoped.mockResolvedValue(ok({ themeKey: 'boda' }))
   requireFeature.mockResolvedValue(ok({}))
   contentFor.mockResolvedValue(INVITACION_LISTA)
+  leerDiseno.mockResolvedValue(null)
+  saldoPendienteDe.mockResolvedValue(false)
 })
 
 describe('revokeInvitationAction', () => {
@@ -241,6 +247,23 @@ describe('preparar un enlace publica la invitación', () => {
     expect(estado.status).toBe('success')
     expect(publicarSiBorrador).toHaveBeenCalledWith('e1')
     expect(orden).toEqual(['publicar', 'enlace'])
+  })
+
+  it('por encargo, no se reparte sin la versión aprobada ni sin el saldo', async () => {
+    const encargo = { estado: 'version_enviada', rondasIncluidas: 2, rondasUsadas: 0, diasDeEntrega: 3, entregaHasta: null }
+    const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
+
+    leerDiseno.mockResolvedValue(encargo)
+    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('error')
+
+    leerDiseno.mockResolvedValue({ ...encargo, estado: 'aprobada' })
+    saldoPendienteDe.mockResolvedValue(true)
+    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('error')
+    expect(publicarSiBorrador).not.toHaveBeenCalled()
+
+    saldoPendienteDe.mockResolvedValue(false)
+    resend.mockResolvedValue(ok({ token: 't', label: 'Yasmin' }))
+    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('success')
   })
 
   it('sin la invitación escrita no publica nada', async () => {
