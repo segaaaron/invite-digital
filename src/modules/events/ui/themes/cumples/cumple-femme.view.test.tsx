@@ -53,15 +53,29 @@ describe('el tema Femme Fatale', () => {
     expect(screen.getByText('#Tentación')).toBeInTheDocument()
   })
 
-  it('quien ya respondió ve su respuesta en vez de los botones', () => {
+  it('quien confirmó ve las gracias en el sitio de los botones, con la invitación entera', () => {
     render(
       <CumpleFemmeView
         {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: 'Vania', seats: 1 }, respondida: true, asistira: true })}
       />,
     )
-    expect(screen.getByText('¡Te espero, amiga!')).toBeInTheDocument()
-    expect(screen.getByText('Vania')).toBeInTheDocument()
+    expect(screen.getByText('¡Gracias por confirmar!')).toBeInTheDocument()
+    expect(screen.getByText(/Te espero, amiga!/)).toBeInTheDocument()
     expect(screen.queryByText('ranura-rsvp')).not.toBeInTheDocument()
+    // La invitación no se cambia por una pantalla de gracias: sigue ahí.
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Femme Fatale')
+    expect(screen.getByText('#EntreAmigas')).toBeInTheDocument()
+  })
+
+  it('quien no puede venir recibe una despedida cariñosa', () => {
+    render(
+      <CumpleFemmeView
+        {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA, guestInfo: { label: 'Pamela', seats: 1 }, respondida: true, asistira: false })}
+      />,
+    )
+    expect(screen.getByText('¡Qué pena que no puedas venir!')).toBeInTheDocument()
+    expect(screen.getByText(/Te vamos a extrañar/)).toBeInTheDocument()
+    expect(screen.queryByText('¡Gracias por confirmar!')).not.toBeInTheDocument()
   })
 
   it('emite un solo encabezado de nivel 1', () => {

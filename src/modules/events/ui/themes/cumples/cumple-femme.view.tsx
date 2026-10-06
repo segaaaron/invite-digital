@@ -375,9 +375,20 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
             )}
             <div style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 40, color: P.crema }}>{ROTULOS.vienes}</div>
             {respondida ? (
-              <div style={{ ...TARJETA, marginTop: 14, padding: '20px 16px' }} role="status">
-                <div style={{ fontFamily: CALIGRAFIA, fontSize: 32, color: P.crema }}>{asistira ? ROTULOS.graciasViene : ROTULOS.graciasNo}</div>
-                <div style={{ fontSize: 15, color: P.oro, marginTop: 6 }}>{ROTULOS.enviada}</div>
+              // Ya respondió: en el sitio de los botones, las gracias. La invitación sigue entera.
+              <div style={{ ...TARJETA, marginTop: 14, padding: '24px 20px' }} role="status">
+                <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', color: P.oro }}>
+                  {asistira ? ROTULOS.graciasVieneRotulo : ROTULOS.graciasNoRotulo}
+                </div>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, lineHeight: 1.2, color: P.crema, marginTop: 10, textWrap: 'balance' }}>
+                  {asistira ? ROTULOS.graciasViene : ROTULOS.graciasNo}
+                </div>
+                <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 19, lineHeight: 1.4, color: P.oro, marginTop: 12, textWrap: 'pretty' }}>
+                  {asistira ? ROTULOS.graciasVieneTexto : ROTULOS.graciasNoTexto}
+                </div>
+                <div aria-hidden style={{ fontSize: 26, marginTop: 12 }}>
+                  {asistira ? '🥂' : '🌹'}
+                </div>
               </div>
             ) : (
               <div style={{ marginTop: 14, textShadow: 'none' }}>{slots.rsvp}</div>
