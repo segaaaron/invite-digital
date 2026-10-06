@@ -161,4 +161,17 @@ describe('RsvpForm', () => {
     expect(screen.getByText(invitation.successBody)).toBeInTheDocument()
     expect(screen.queryByText(invitation.passReady)).not.toBeInTheDocument()
   })
+
+  it('con «fiesta» (Femme Fatale): sin enviar hasta elegir, y con el «sí» van los cupos del grupo', () => {
+    const { container } = pinta({ variant: 'fiesta' })
+    expect(screen.queryByRole('button', { name: invitation.submitParty })).not.toBeInTheDocument()
+    expect(screen.queryByText('Invitación para')).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: invitation.goingYesParty }))
+    expect(screen.getByRole('button', { name: invitation.submitParty })).toBeInTheDocument()
+    expect(container.querySelector('input[name="attending"]')).toHaveValue('4')
+
+    fireEvent.click(screen.getByRole('button', { name: invitation.goingNoParty }))
+    expect(container.querySelector('input[name="attending"]')).toHaveValue('0')
+  })
 })

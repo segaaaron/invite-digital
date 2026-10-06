@@ -29,8 +29,8 @@ const A_LA_VENTA = [
   'xv-papillon',
 ] as const
 
-/** Lo portado que no se vende: el cumpleaños, hasta que el usuario lo publique, los cinco que V3 retiró y los nueve XV V2. */
-const SIN_VENDER = ['cumple-beer', 'boda', 'civil', 'aniv', 'eng', 'dest'] as const
+/** Lo portado que no se vende: los dos cumpleaños (solo el admin los asigna), hasta que el usuario lo publique, los cinco que V3 retiró y los nueve XV V2. */
+const SIN_VENDER = ['cumple-beer', 'cumple-femme', 'boda', 'civil', 'aniv', 'eng', 'dest'] as const
 
 describe('el catálogo de diseños', () => {
   it('lista lo que se vende más lo portado sin vender', () => {

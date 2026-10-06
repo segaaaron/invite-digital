@@ -103,15 +103,15 @@ function desbordanLaColumna(tope: number): string[] {
 }
 
 test.describe('el escaparate de modelos', () => {
-  test('lista los veintiséis diseños portados de la colección', () => {
+  test('lista los veintisiete diseños portados de la colección', () => {
     // Si algún día se publica uno sin portar, esta suite recorre uno más y falla al
     // abrirlo. Es lo que impide que el número se desajuste en silencio.
     //
-    // Son veintiséis —dieciséis bodas, nueve XV y el cumpleaños— y la web vende veinte:
-    // «cumple-beer» todavía no, ni las cinco bodas que V3 retiró, que se abren por su dirección
+    // Son veintisiete —dieciséis bodas, nueve XV y dos cumpleaños— y la web vende veinte:
+    // los cumpleaños no (solo el admin los asigna), ni las cinco bodas que V3 retiró, que se abren por su dirección
     // —las bodas que ya los usan siguen funcionando— y no salen en el catálogo. Los nueve XV V2
     // se borraron de raíz el 24 de septiembre (`0067`).
-    expect(CLAVES).toHaveLength(26)
+    expect(CLAVES).toHaveLength(27)
   })
 
   for (const clave of CLAVES) {
@@ -277,7 +277,7 @@ test.describe('el catálogo público', () => {
     for (const href of await enlaces.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
   })
 
-  test('el cumpleaños no se vende todavía: no está en el catálogo, ni indexado', async ({ page }) => {
+  test('los cumpleaños no se venden: no están en el catálogo, ni indexados', async ({ page }) => {
     // Está portado y solo el admin lo asigna. La dirección existe —el panel enlaza a ella
     // para verlo— y por eso lleva `noindex`; lo que no puede es salir en la web.
     for (const fiesta of ['', '?fiesta=xv']) {
@@ -286,9 +286,11 @@ test.describe('el catálogo público', () => {
       expect(hrefs.filter((href) => href.includes('cumple'))).toEqual([])
     }
 
-    const respuesta = await page.goto('/modelos/es/cumple-beer')
-    expect(respuesta?.status()).toBe(200)
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+    for (const clave of ['cumple-beer', 'cumple-femme']) {
+      const respuesta = await page.goto(`/modelos/es/${clave}`)
+      expect(respuesta?.status()).toBe(200)
+      await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
+    }
   })
 
   test('cada tarjeta abre la invitación de verdad', async ({ page }) => {

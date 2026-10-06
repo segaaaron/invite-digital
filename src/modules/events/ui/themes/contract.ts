@@ -144,7 +144,7 @@ export type ThemeDefinition = {
    * «sí» macizo (`pildoras`), «Sobre Lacrado» dos botones iguales (`uniformes`) y «Esencia»
    * campos subrayados (`linea`). No es una piel del mismo: son seis composiciones.
    */
-  readonly rsvp?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea'
+  readonly rsvp?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | 'fiesta'
   readonly sections: readonly SectionKey[]
   /**
    * Lo que pinta de cada bloque, y por eso lo único que el panel le pide al cliente.

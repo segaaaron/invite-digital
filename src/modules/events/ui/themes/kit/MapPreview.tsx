@@ -25,6 +25,8 @@ type Props = {
   readonly respaldo?: string | undefined
   /** «VER UBICACIÓN», en el idioma del evento. */
   readonly directionsLabel: string
+  /** Sin el «VER UBICACIÓN ↗» de la esquina: para el diseño que pone su propio botón debajo. */
+  readonly sinEsquina?: boolean
 }
 
 /**
@@ -49,11 +51,12 @@ export function MapPreview({
   href,
   respaldo,
   directionsLabel,
+  sinEsquina = false,
 }: Props) {
   const [reducido] = useState(prefiereMenosMovimiento)
   const llegar = comoLlegar({ href, coords }, respaldo)
   // Sin coordenadas escritas, la esquina dice que se puede tocar.
-  const esquina = coords !== '' ? coords : llegar === null ? '' : `${directionsLabel} ↗`
+  const esquina = coords !== '' ? coords : llegar === null || sinEsquina ? '' : `${directionsLabel} ↗`
 
   const plano = (
     <div

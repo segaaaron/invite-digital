@@ -17,6 +17,7 @@ const PORTADAS: Partial<Record<string, string>> = {
   'boda-ed': themeAsset('boda-ed', 'novios-verde.avif'),
   'boda-bot': themeAsset('boda-bot', 'wedding-couple.avif'),
   'cumple-beer': themeAsset('cumple-beer', 'portada-medallon.avif'),
+  'cumple-femme': themeAsset('cumple-femme', 'portada-cabaret.avif'),
 }
 
 /** La ruta pública (`/temas/…` o `/templates/…`) de la portada de ese diseño. */

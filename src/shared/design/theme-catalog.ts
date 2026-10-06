@@ -321,6 +321,17 @@ export const CATALOG_ENTRIES: readonly CatalogEntry[] = [
     palette: { base: '#1c140c', accent: '#d4a94b' },
     sample: { monogram: 'M', names: 'Miguel', dateLabel: '26 · 09 · 2026', venue: 'El Bar de Miki' },
   },
+  {
+    key: 'cumple-femme',
+    listo: true,
+    // Como «Cervecería Vintage»: no se vende en la web; solo el admin lo ve y lo asigna.
+    publicar: false,
+    categorySlug: 'cumpleanos',
+    es: 'Femme Fatale',
+    en: 'Femme Fatale',
+    palette: { base: '#05020a', accent: '#d8b98a' },
+    sample: { monogram: 'F', names: 'Femme\nFatale', dateLabel: '17 · 10 · 2026', venue: 'Fiesta de disfraces' },
+  },
 ]
 
 /** Las claves del catálogo, en el orden en que se enseñan. Las dieciséis, portadas o no. */

@@ -40,6 +40,8 @@
 @keyframes theme-haloPulse { 0%,100% { opacity: 0.06; transform: scale(1); } 50% { opacity: 0.18; transform: scale(1.15); } }
 
 @keyframes theme-introFade { from { opacity: 0; } to { opacity: 1; } }
+/* La placa «ENTRA A LA INVITACIÓN» de «Femme Fatale»: el brillo dorado que late (`posterCtaGlow`). */
+@keyframes theme-posterCtaGlow { 0%,100% { box-shadow: 0 0 8px rgba(232,196,110,.35), inset 0 0 6px rgba(232,196,110,.15); } 50% { box-shadow: 0 0 22px rgba(232,196,110,.85), inset 0 0 10px rgba(232,196,110,.3); } }
 
 @keyframes theme-petalDrop {
   0% { transform: translate3d(0, -15vh, 0) rotate(0deg); }

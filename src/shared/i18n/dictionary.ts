@@ -478,6 +478,7 @@ export interface ThemeDictionary {
  */
 export interface DesignDictionary {
   'cumple-beer': Record<'celebracion' | 'saludo' | 'confirma' | 'graciasVieneRotulo' | 'graciasViene' | 'graciasVieneTexto' | 'graciasNoRotulo' | 'graciasNo' | 'graciasNoTexto' | 'graciasVieneCierre' | 'graciasDondeRotulo' | 'graciasDondeAyuda' | 'graciasComoLlegar' | 'graciasNoCierre' | 'guestbook', string>
+  'cumple-femme': Record<'entrar' | 'esHoy' | 'fecha' | 'hora' | 'lugar' | 'vestimenta' | 'nosVemos' | 'verMaps' | 'vienes' | 'graciasViene' | 'graciasNo' | 'enviada' | 'guestbook', string>
   'boda': Record<'guestbook', string>
   'boda-bot': Record<'guestbook' | 'giftsTitle' | 'giftsNote', string>
   'aniv': Record<'cover' | 'coverEyebrow' | 'coverHeadline' | 'gifts' | 'guestbook', string>
@@ -563,6 +564,10 @@ export interface InvitationDictionary {
   /** Los dos botones del RSVP de los diseños de boda: «ASISTIRÉ» y «NO PUEDO». */
   goingYesShort: string
   goingNoShort: string
+  /** Los botones de «Femme Fatale» (`rsvp: 'fiesta'`). */
+  goingYesParty: string
+  goingNoParty: string
+  submitParty: string
   /** «INVITADOS», sobre el contador de ese mismo formulario. */
   guestsLabel: string
   /** «ENVIAR RESPUESTA →», su botón de envío. */

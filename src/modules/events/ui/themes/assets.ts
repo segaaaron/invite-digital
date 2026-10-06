@@ -24,6 +24,7 @@ export const THEME_ASSETS = {
     'portada-medallon.avif',
     'reloj-beer.avif',
   ],
+  'cumple-femme': ['amigas-disfraces.avif', 'brindis-copas.avif', 'fondo-tocador.avif', 'portada-cabaret.avif'],
   'boda-bot': [
     'boda-01-pareja.avif',
     // La portada de la maqueta (`wedding-variants-2.jsx`): el sobre lacrado sobre las rosas.

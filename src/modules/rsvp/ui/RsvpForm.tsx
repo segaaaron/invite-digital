@@ -46,7 +46,7 @@ type Props = {
    * opción que se ve hasta elegir, y sin elegirla el formulario no sale; y el botón dice
    * «Confirmar asistencia», con el color que pone el diseño (`--rsvp-fondo`, `--rsvp-tinta`).
    */
-  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | undefined
+  variant?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | 'fiesta' | undefined
   /**
    * El nombre del invitado, que ya se sabe: cada enlace es de alguien. Se manda oculto con
    * la respuesta, para que la pareja lea quién contestó sin pedírselo otra vez.
@@ -148,7 +148,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
 
             Con `botones-oro` no se dice nada: ese diseño —el cumpleaños— no pinta la ranura
             del pase, así que anunciar uno que no existe mandaría a buscarlo más abajo. */}
-        {viene && variant !== 'botones-oro' ? <p className="text-[13.5px] font-medium text-ink">{dictionary.passReady}</p> : null}
+        {viene && variant !== 'botones-oro' && variant !== 'fiesta' ? <p className="text-[13.5px] font-medium text-ink">{dictionary.passReady}</p> : null}
       </div>
     )
   }
@@ -261,6 +261,54 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
             type="submit"
           >
             {rsvp.isPending ? dictionary.sending : dictionary.submitLong}
+          </button>
+        ) : null}
+      </form>
+    )
+  }
+
+  if (variant === 'fiesta') {
+    // «Femme Fatale»: los dos botones iguales, huecos sobre el vidrio del diseño (`--rsvp-fondo`)
+    // con el filete del oro; el elegido se llena de oro. Debajo, «ENVIAR RESPUESTA →» en el color
+    // que pone el diseño (`--rsvp-enviar`). Sin contador ni saludo: la maqueta no los dibuja, y
+    // con el «sí» van los cupos del grupo, como en los campos.
+    const ELECCION =
+      'flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--color-cta)] px-1 py-[15px] [font-family:var(--font-dm-sans)] text-[16px] font-bold tracking-[0.04em] transition-all duration-200'
+    const elegido = 'bg-[var(--color-cta)] text-[var(--color-on-cta)]'
+    const libre = 'bg-[var(--rsvp-fondo,transparent)] text-ink'
+    return (
+      <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
+        <input name="token" type="hidden" value={token} readOnly />
+        <input name="attending" type="hidden" value={viene ? String(seats) : '0'} readOnly />
+        <input name="name" type="hidden" value={guestName} readOnly />
+        <div className="flex gap-2.5">
+          {([true, false] as const).map((si) => (
+            <button
+              className={`${ELECCION} ${respondido && viene === si ? elegido : libre}`}
+              key={String(si)}
+              onClick={() => {
+                setViene(si)
+                setRespondido(true)
+              }}
+              type="button"
+            >
+              {si ? dictionary.goingYesParty : dictionary.goingNoParty}
+            </button>
+          ))}
+        </div>
+        {respondido && viene ? extras : null}
+        {rsvp.error === null ? null : (
+          <p className="text-[13px] text-danger" role="alert">
+            {rsvp.error}
+          </p>
+        )}
+        {respondido ? (
+          <button
+            className="cursor-pointer rounded-[8px] border-0 bg-[var(--rsvp-enviar,var(--color-cta))] px-0 py-[14px] [font-family:var(--font-dm-sans)] text-[16px] font-bold tracking-[0.06em] text-[var(--rsvp-enviar-tinta,var(--color-on-cta))] disabled:opacity-60"
+            disabled={rsvp.isPending}
+            type="submit"
+          >
+            {rsvp.isPending ? dictionary.sending : dictionary.submitParty}
           </button>
         ) : null}
       </form>
