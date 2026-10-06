@@ -1,14 +1,14 @@
 import { and, asc, eq, sql } from 'drizzle-orm'
 import { db } from '@/shared/db/client'
 import { designRounds, eventDesign, events } from '@/shared/db/schema'
-import { esEstadoDeDiseno, type Diseno, type EstadoDeDiseno } from '../domain/diseno'
+import { esEstadoDeDiseno, type BriefDelEncargo, type Diseno, type EstadoDeDiseno } from '../domain/diseno'
 
 export type RondaDeDiseno = { readonly id: string; readonly message: string; readonly counts: boolean; readonly createdAt: Date }
 export type DisenoPorEntregar = { readonly slug: string; readonly title: string; readonly estado: EstadoDeDiseno; readonly entregaHasta: string | null }
 
 const aDiseno = (f: typeof eventDesign.$inferSelect): Diseno => {
   if (!esEstadoDeDiseno(f.status)) throw new Error(`El diseño del evento ${f.eventId} tiene un estado desconocido: ${f.status}`)
-  return { estado: f.status, rondasIncluidas: f.roundsIncluded, rondasUsadas: f.roundsUsed, diasDeEntrega: f.deliveryDays, entregaHasta: f.dueDate }
+  return { estado: f.status, rondasIncluidas: f.roundsIncluded, rondasUsadas: f.roundsUsed, diasDeEntrega: f.deliveryDays, entregaHasta: f.dueDate, brief: f.brief ?? null }
 }
 
 /**
@@ -77,6 +77,11 @@ export const drizzleDisenoRepository = {
       await tx.insert(designRounds).values({ eventId, message: mensaje, createdBy: autor })
       return true
     })
+  },
+
+  /** Guarda lo que el cliente contó en el formulario de su plan (sustituye lo anterior). */
+  async guardarBrief(eventId: string, brief: BriefDelEncargo): Promise<void> {
+    await db.update(eventDesign).set({ brief, updatedAt: new Date() }).where(eq(eventDesign.eventId, eventId))
   },
 
   async rondas(eventId: string): Promise<RondaDeDiseno[]> {

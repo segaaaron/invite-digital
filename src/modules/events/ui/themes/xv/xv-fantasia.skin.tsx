@@ -89,7 +89,9 @@ export const PIEL: PielXv = {
     vestimentaDetalle: '#F3EDD8',
     tituloFormulario: '#C9A24A',
     botonTinta: '#0C1830',
-    anfitriones: { font: 'var(--font-dm-sans)', size: 12, color: colorDeAcento.amatista, mayusculas: true },
+    // V4: el rótulo de los padres pasa a caligrafía, en oro.
+    anfitriones: { font: 'var(--font-great-vibes)', size: 30, color: colorDeAcento.orquidea, mayusculas: false },
+    anios: colorDeAcento.orquidea,
     anfitrionesNombres: '#F3EDD8',
     fecha: colorDeAcento.orquidea,
     tituloSeccion: colorDeAcento.orquidea,

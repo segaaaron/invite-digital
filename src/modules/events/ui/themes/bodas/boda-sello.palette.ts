@@ -18,6 +18,9 @@ const BASE = {
   cremaTinta: '#f5efe0',
   /** `gold`: el oro del lacre, los filetes y los números. */
   oro: '#c9a961',
+  /** El aro del alfiler del plano, sobre ciruela, y su punto. */
+  aroAlfiler: '#3a1f2b',
+  alfiler: '#000000',
   /** El velo de los botones y los campos: vino al 6 %. */
   velo: 'rgba(90,30,51,0.06)',
   /** El filete del oro al 44 %, como lo escribe la maqueta (`${gold}70`). */

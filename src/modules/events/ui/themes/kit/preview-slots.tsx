@@ -38,6 +38,7 @@ export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 
         seats={INVITADO_DE_MUESTRA.seats}
         token=""
         variant={rsvp}
+        conMensaje={false}
       />,
     ),
     // La mesa de regalos **no lleva muestra**: el diseño pone ahí un código y nada más, y
@@ -46,18 +47,15 @@ export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 
     registry: null,
     // Sin respuesta de los anfitriones: en una invitación real solo aparece si la pareja
     // contestó, y el diseño no la pinta.
-    guestbook:
-      rsvp !== 'campos' && rsvp !== undefined
-        ? envuelta(
-            <GuestbookForm
-              dictionary={diccionario.invitation}
-              guestName={INVITADO_DE_MUESTRA.label}
-              previous={null}
-              seats={INVITADO_DE_MUESTRA.seats}
-              token=""
-            />,
-          )
-        : null,
+    // V4: el mensaje se escribe siempre en el libro de firmas; los XV lo firman con «FIRMAR EL LIBRO».
+    guestbook: envuelta(
+      <GuestbookForm
+        boton={rsvp === 'campos' || rsvp === undefined ? diccionario.invitation.signTheBook : undefined}
+        dictionary={diccionario.invitation}
+        firmado={null}
+        token=""
+      />,
+    ),
     pass: null,
     // El botón de «Comparte tus fotos»: el escaparate tiene que enseñarlo, que es parte
     // del diseño. Va inerte, como el resto.

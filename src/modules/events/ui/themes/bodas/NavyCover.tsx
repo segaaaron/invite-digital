@@ -21,9 +21,6 @@ type Props = {
 /** Las diez motas doradas que suben por la portada: el `deluxe` de la maqueta. */
 const MOTAS = Array.from({ length: 10 }, (_, i) => ({ izquierda: i * 10 + 5, duracion: 8 + (i % 3) * 2, retraso: i * 0.8 }))
 
-/** El resplandor dorado con sombra que la maqueta pone a todo el texto blanco de la portada. */
-const RESPLANDOR = `0 0 15px ${alfaDe('oroVivo', 0.6)}, 0 2px 4px rgba(0,0,0,0.8)`
-
 /**
  * La portada de «Noche Estrellada»: la lluvia de purpurina sobre el azul de medianoche.
  *
@@ -98,9 +95,25 @@ export function NavyCover({ bgAsset, eyebrow, initials, names, fecha, cta, openL
           justifyContent: 'center',
           textAlign: 'center',
           color: P.tinta,
-          textShadow: RESPLANDOR,
+          textShadow: P.sombraLegible,
+          isolation: 'isolate',
         }}
       >
+        {/* El velo azul detrás del texto (V4, `legibleVeil`): lo despega de la purpurina. */}
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '4%',
+            right: '4%',
+            top: '-6%',
+            bottom: '-6%',
+            background: `radial-gradient(ellipse 62% 58% at 50% 50%, ${P.veloPortada} 0%, ${P.veloPortada} 40%, transparent 78%)`,
+            filter: 'blur(8px)',
+            zIndex: -1,
+            pointerEvents: 'none',
+          }}
+        />
         <span style={{ fontFamily: 'var(--font-montserrat)', fontSize: 18.7, fontWeight: 500, letterSpacing: '0.3em', textTransform: 'uppercase' }}>
           {eyebrow}
         </span>

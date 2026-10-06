@@ -15,6 +15,8 @@ type Props = {
   ctaLabel?: string
   /** «Reserva con Bs 100 · el resto cuando esté lista», si el plan tiene reserva fija. */
   reserva?: string | null
+  /** El plan de abajo, para «Todo lo de Atelier, más:» (V4). El primero no lleva. */
+  anterior?: string | null
 }
 
 /** El check dorado de la maqueta. Un punto no dice «incluido»; una marca sí. */
@@ -33,7 +35,7 @@ function Check({ gold = false }: { gold?: boolean }) {
   )
 }
 
-export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null }: Props) {
+export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = false, ctaLabel, reserva = null, anterior = null }: Props) {
   const cta = ctaLabel ?? dictionary.pricing.choose.replace('{plan}', plan.name)
   // El plan más elegido es una tarjeta oscura y elevada, como en la maqueta: es lo que
   // separa «recomendado» de «uno más de la fila». Un borde dorado no se ve a un metro.
@@ -68,16 +70,24 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
         {plan.tagline}
       </p>
 
+      {/* El precio en bolivianos, y en dólares cuando el selector de la sección lo pide (V4). */}
       <p className="mt-7 flex items-baseline gap-2">
-        <span className={`font-display text-[46px] leading-none font-light ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>
+        <span
+          className={`font-display text-[46px] leading-none font-light [font-variant-numeric:lining-nums] ${destacado ? 'text-gold-light' : 'text-gold-deep'} ${
+            plan.priceUsdCents === null ? '' : 'group-data-[moneda=usd]/precios:hidden'
+          }`}
+        >
           {formatMoney(plan.price, locale)}
         </span>
+        {plan.priceUsdCents === null ? null : (
+          <span
+            className={`hidden font-display text-[46px] leading-none font-light [font-variant-numeric:lining-nums] group-data-[moneda=usd]/precios:inline ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}
+          >
+            {dictionary.pricing.usd.replace('{monto}', String(Math.round(plan.priceUsdCents / 100)))}
+          </span>
+        )}
+        <span className={`text-[12.5px] ${destacado ? 'text-bg-sunken/80' : 'text-ink-mute'}`}>{dictionary.pricing.perEvent}</span>
       </p>
-      {plan.priceUsdCents === null ? null : (
-        <p className={`mt-1.5 text-[12.5px] [font-variant-numeric:lining-nums] ${destacado ? 'text-bg-sunken/80' : 'text-ink-mute'}`}>
-          {dictionary.pricing.usd.replace('{monto}', String(Math.round(plan.priceUsdCents / 100)))}
-        </p>
-      )}
       {reserva === null ? null : (
         <p className={`mt-2 text-[12.5px] ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>{reserva}</p>
       )}
@@ -88,7 +98,12 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
 
       <span aria-hidden className={`mt-7 block h-px ${destacado ? 'bg-gold/40' : 'bg-[var(--color-line)]'}`} />
 
-      <ul className="mt-6 flex flex-1 flex-col gap-3">
+      {anterior === null ? null : (
+        <p className={`mt-6 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase ${destacado ? 'text-gold-light' : 'text-gold-deep'}`}>
+          {dictionary.pricing.inherits.replace('{plan}', anterior)}
+        </p>
+      )}
+      <ul className={`${anterior === null ? 'mt-6' : 'mt-4'} flex flex-1 flex-col gap-3`}>
         {plan.features.map((feature) => (
           <li
             key={feature}
@@ -107,7 +122,11 @@ export function PlanCard({ plan, locale, dictionary, ctaHref, ctaExternal = fals
         href={ctaHref}
         variant={destacado ? 'gold' : 'ghost'}
       >
-        {cta}
+        <span>
+          {cta}
+          {/* El botón dice «Quiero reservar» en los tres; para un lector de pantalla, cuál. */}
+          <span className="sr-only"> {plan.name}</span>
+        </span>
         <ArrowRightIcon />
       </Button>
     </article>

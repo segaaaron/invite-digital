@@ -608,12 +608,14 @@ export function CumpleBeerView({ content, event, themes, slots, guestInfo, audio
           {slots.rsvp}
         </Reveal>
 
-        <Reveal>
-          <div style={{ marginTop: 30, textAlign: 'center' }}>
-            <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.oro, marginBottom: 14 }}>{ROTULOS.guestbook}</div>
-            {slots.guestbook}
-          </div>
-        </Reveal>
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 30, textAlign: 'center' }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.oro, marginBottom: 14 }}>{ROTULOS.guestbook}</div>
+              {slots.guestbook}
+            </div>
+          </Reveal>
+        )}
 
         {/* La mesa de regalos no está en la maqueta —un cumpleaños entre amigos no la suele
             tener—, pero es nuestra y el atelier puede cargarla: va con la piel del diseño y

@@ -59,7 +59,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
   await expect(atelier.getByText('0 de 3')).toBeVisible({ timeout: 15_000 })
 })
 
-test('el Día D solo se ofrece sobre Firma 3D, y pedirlo dos veces lleva al mismo pedido', async ({ browser }) => {
+test('el Día D solo se ofrece sobre Gala, y pedirlo dos veces lleva al mismo pedido', async ({ browser }) => {
   await seedInvitation({ slug: SLUG_FIRMA, plan: 'firma-3d' })
   await seedInvitation({ slug: SLUG_ATELIER, plan: 'atelier' })
   await sql`update addons set is_active = true where slug = 'dia-d'`
@@ -70,7 +70,7 @@ test('el Día D solo se ofrece sobre Firma 3D, y pedirlo dos veces lleva al mism
   await expect(atelier.getByRole('heading', { name: 'Extras' })).toBeVisible()
   await expect(atelier.getByRole('button', { name: /^Pedir Día D/ })).toHaveCount(0)
 
-  // Firma 3D sí, y el segundo «Pedir» aterriza en el pedido que ya estaba abierto.
+  // Gala sí, y el segundo «Pedir» aterriza en el pedido que ya estaba abierto.
   const pedir = async () => {
     await atelier.goto(`/panel/eventos/${SLUG_FIRMA}/extras`)
     await atelier.getByRole('button', { name: /^Pedir Día D/ }).click()

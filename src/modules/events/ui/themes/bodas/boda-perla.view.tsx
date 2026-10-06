@@ -8,6 +8,7 @@ import { CapaFija } from '../kit/CapaFija'
 import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { Reveal } from '../kit/Reveal'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { CarruselDePerla } from './CarruselDePerla'
 import { PerlaCover } from './PerlaCover'
 import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-perla.palette'
@@ -74,8 +75,10 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
 
   return (
     <article
+      className="theme-halo"
       style={{
         ...RANURAS,
+        ['--halo' as string]: P.halo,
         // Las píldoras del RSVP, algo más grandes que en las demás Editorial.
         ['--rsvp-py' as string]: '15.5px',
         ['--rsvp-fs' as string]: '11px',
@@ -108,9 +111,11 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
         }}
         zIndex={-1}
       />
+      {/* V4: el velo que aclara el centro bajo el texto. */}
+      <CapaFija style={{ background: P.veloCuerpo }} zIndex={-1} />
 
-      {/* Las hojas blancas, por encima de todo. */}
-      <CapaFija zIndex={50}>
+      {/* Las hojas blancas, detrás del texto (V4). */}
+      <CapaFija zIndex={-1}>
         {HOJAS.map((hoja) => (
           <span
             className="theme-quieto-si-reduce"
@@ -249,11 +254,12 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
           <p
             style={{
               fontFamily: SERIF,
-              fontSize: 17,
-              lineHeight: 1.9,
+              fontSize: 19.5,
+              fontWeight: 500,
+              lineHeight: 1.8,
               maxWidth: '76%',
               margin: '0 auto',
-              color: '#2c2c2c',
+              color: P.tintaInvitacion,
               background: 'rgba(255,255,255,0.6)',
               borderRadius: 12,
               padding: '18px 20px',
@@ -311,7 +317,7 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
                   padding: '28px 8px 22px',
                   textAlign: 'center',
                   display: 'grid',
-                  gridTemplateRows: '184px auto auto auto 1fr auto',
+                  gridTemplateRows: '184px auto auto auto 1fr auto auto',
                   justifyItems: 'center',
                   rowGap: 16,
                 }}
@@ -348,6 +354,19 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
                     {ROTULOS.verUbicacion}
                   </a>
                 )}
+                <MapaDeLaTarjeta
+                  accent={P.oroBoton}
+                  border={alfaDe('perla', 0.6)}
+                  coords={map?.coords ?? ''}
+                  coordsColor={P.oroBoton}
+                  directionsLabel={ROTULOS.verUbicacion}
+                  href={map?.href}
+                  label={lugar.place ?? ''}
+                  labelColor={P.cafe}
+                  pinDot={P.alfiler}
+                  pinRing={P.blanco}
+                  respaldo={[lugar.place, lugar.address].filter(Boolean).join(', ')}
+                />
               </div>
             ),
           )}
@@ -437,7 +456,7 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
                 ))}
               </div>
               {dressCode.note === undefined ? null : (
-                <p style={{ marginTop: 14, fontSize: 13, fontStyle: 'italic', color: P.guinda, lineHeight: 1.6, textAlign: 'center' }}>{dressCode.note}</p>
+                <p style={{ marginTop: 14, fontSize: 15, fontStyle: 'italic', fontWeight: 500, color: P.guindaHondo, lineHeight: 1.8, textAlign: 'center' }}>{dressCode.note}</p>
               )}
             </div>
           </Reveal>
@@ -448,14 +467,14 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
           <Reveal>
             <div style={{ marginTop: 60, marginBottom: 20, padding: '0 10px' }}>
               <div style={{ ...TARJETA, padding: '30px 20px', textAlign: 'center' }}>
+                {soloAdultos.title === undefined ? null : (
+                  <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', color: P.guindaVivo, fontWeight: 700, marginBottom: 18, textTransform: 'uppercase' }}>
+                    {soloAdultos.title}
+                  </p>
+                )}
                 <Arte ancho={156} flota estilo={{ margin: '0 auto' }} src={themeAsset('boda-perla', 'tacon-y-corbata.avif')} />
                 <div style={{ maxWidth: '88%', margin: '16px auto 0' }}>
-                  <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 20, lineHeight: 1.7, color: P.guinda }}>{soloAdultos.text}</p>
-                  {soloAdultos.title === undefined ? null : (
-                    <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', color: P.guindaVivo, fontWeight: 700, marginTop: 14, textTransform: 'uppercase' }}>
-                      {soloAdultos.title}
-                    </p>
-                  )}
+                  <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 23, fontWeight: 500, lineHeight: 1.8, color: P.guindaHondo }}>{soloAdultos.text}</p>
                 </div>
               </div>
             </div>
@@ -468,7 +487,7 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
             <Arte ancho={240} flota estilo={{ margin: '0 auto' }} src={themeAsset('boda-perla', 'regalo.avif')} />
             <p style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.cafe, marginTop: 32 }}>{regalos?.title ?? ROTULOS.regalos}</p>
             {regalos?.text === undefined ? null : (
-              <p style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, color: P.tinta, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
+              <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.tintaHonda, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
             <div style={{ marginTop: 22 }}>{slots.registry}</div>
           </div>
@@ -510,19 +529,21 @@ export function BodaPerlaView({ content, event, dictionary, themes, slots, guest
             <div style={{ marginTop: 50, padding: '32px 24px', borderTop: `1.5px solid ${P.perla}`, textAlign: 'center' }}>
               <Arte ancho={225} flota estilo={{ margin: '0 auto' }} src={themeAsset('boda-perla', 'camara.avif')} />
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.cafe, marginTop: 20 }}>{dictionary.photosTitle}</p>
-              <p style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.tinta }}>{dictionary.photosIntro}</p>
+              <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.tintaHonda }}>{dictionary.photosIntro}</p>
               <div style={{ marginTop: 22 }}>{slots.photos}</div>
             </div>
           </Reveal>
         )}
 
         {/* ── El libro de firmas ── */}
-        <Reveal>
-          <div style={{ marginTop: 50, padding: '32px 0', borderTop: `1.5px solid ${P.perla}`, textAlign: 'center' }}>
-            <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.cafe }}>{ROTULOS.firmas}</p>
-            <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
-          </div>
-        </Reveal>
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 50, padding: '32px 0', borderTop: `1.5px solid ${P.perla}`, textAlign: 'center' }}>
+              <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.cafe }}>{ROTULOS.firmas}</p>
+              <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
+            </div>
+          </Reveal>
+        )}
 
         {/* ── El cierre ── */}
         <Reveal>

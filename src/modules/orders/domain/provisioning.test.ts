@@ -18,16 +18,16 @@ describe('eventSlugFor', () => {
 })
 
 describe('rsvpDeadlineFor', () => {
-  it('cierra las confirmaciones quince días antes', () => {
-    expect(rsvpDeadlineFor('2027-06-20')).toBe('2027-06-05')
+  it('cierra las confirmaciones tres semanas antes', () => {
+    expect(rsvpDeadlineFor('2027-06-20')).toBe('2027-05-30')
   })
 
   it('cruza el cambio de mes sin inventarse días', () => {
-    expect(rsvpDeadlineFor('2027-03-10')).toBe('2027-02-23')
+    expect(rsvpDeadlineFor('2027-03-10')).toBe('2027-02-17')
   })
 
   it('y el cambio de año', () => {
-    expect(rsvpDeadlineFor('2027-01-05')).toBe('2026-12-21')
+    expect(rsvpDeadlineFor('2027-01-05')).toBe('2026-12-15')
   })
 
   it('nunca queda después del evento, que es lo único que el dominio prohíbe', () => {

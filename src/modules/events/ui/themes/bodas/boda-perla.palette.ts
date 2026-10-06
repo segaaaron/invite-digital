@@ -30,6 +30,18 @@ const BASE = {
   crema: '#f1ede4',
   /** El oro claro de la línea «nos casamos». */
   oroClaro: '#e8d5a8',
+  /** V4: la tinta más honda de los párrafos largos. */
+  tintaHonda: '#2b1e12',
+  guindaHondo: '#341220',
+  /** La invitación personal, sobre su caja blanca. */
+  tintaInvitacion: '#1f1f1f',
+  blanco: '#ffffff',
+  /** El punto del alfiler del plano. */
+  alfiler: '#000000',
+  /** V4, legibilidad: el halo marfil del texto sobre el marco de flores (`.lg-pe`). */
+  halo: 'rgba(250,244,232,0.95)',
+  /** El velo que aclara el centro de la fotografía bajo el cuerpo. */
+  veloCuerpo: 'linear-gradient(90deg, rgba(248,242,230,0) 0%, rgba(248,242,230,.5) 18%, rgba(248,242,230,.5) 82%, rgba(248,242,230,0) 100%)',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

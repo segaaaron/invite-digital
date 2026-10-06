@@ -40,9 +40,9 @@ describe('esquema', () => {
       .orderBy(plans.sortOrder)
     if (rows.length === 0) throw new Error('No hay planes en la base — ¿corriste `pnpm db:seed`?')
     expect(rows).toEqual([
-      { slug: 'atelier', priceCents: 69000, currency: 'BOB' },
-      { slug: 'firma-3d', priceCents: 119000, currency: 'BOB' },
-      { slug: 'alta-costura', priceCents: 199000, currency: 'BOB' },
+      { slug: 'atelier', priceCents: 49000, currency: 'BOB' },
+      { slug: 'firma-3d', priceCents: 69000, currency: 'BOB' },
+      { slug: 'alta-costura', priceCents: 95000, currency: 'BOB' },
     ])
   })
 
@@ -406,8 +406,9 @@ describe('límites del plan', () => {
       .orderBy(plans.sortOrder)
 
     expect(rows).toEqual([
-      { slug: 'atelier', maxGuestGroups: 40, seating: true, registry: false, checkin: false },
-      { slug: 'firma-3d', maxGuestGroups: 120, seating: true, registry: true, checkin: true },
+      // Documento de cambios (30 sep): envíos ilimitados en los tres; mesa + QR solo en Imperial.
+      { slug: 'atelier', maxGuestGroups: null, seating: false, registry: false, checkin: false },
+      { slug: 'firma-3d', maxGuestGroups: null, seating: false, registry: true, checkin: false },
       { slug: 'alta-costura', maxGuestGroups: null, seating: true, registry: true, checkin: true },
     ])
   })

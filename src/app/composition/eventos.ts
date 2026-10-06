@@ -30,7 +30,7 @@ import { renombrarEvento } from '@/modules/events/application/rename-event'
 import { drizzleSaveTheDate } from '@/modules/events/infrastructure/drizzle-save-the-date'
 import { drizzleEstilo } from '@/modules/events/infrastructure/drizzle-estilo'
 import { drizzleDisenoRepository } from '@/modules/events/infrastructure/drizzle-diseno-repository'
-import { aprobarVersion, enviarADiseno, marcarVersionEnviada, pedirCambios } from '@/modules/events/domain/diseno'
+import { aprobarVersion, enviarADiseno, marcarVersionEnviada, pedirCambios, type BriefDelEncargo } from '@/modules/events/domain/diseno'
 import { drizzleContentRepository } from '@/modules/events/infrastructure/drizzle-content-repository'
 import { createDiskMediaStorage } from '@/modules/events/infrastructure/disk-media-storage'
 import { drizzleMediaRepository } from '@/modules/events/infrastructure/drizzle-media-repository'
@@ -66,7 +66,7 @@ import { respondToInvitation } from '@/modules/rsvp/application/respond-to-invit
 import { respondByPerson } from '@/modules/rsvp/application/respond-by-person'
 import { drizzlePreguntas } from '@/modules/rsvp/infrastructure/drizzle-preguntas'
 import { drizzleEnlaceGeneral } from '@/modules/guests/infrastructure/drizzle-enlace-general'
-import { drizzleRsvpRepository } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
+import { drizzleRsvpRepository, firmarLibro } from '@/modules/rsvp/infrastructure/drizzle-rsvp-repository'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
 import { createDrizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
@@ -458,6 +458,8 @@ export const rsvp = {
     rsvp: drizzleRsvpRepository,
   }),
   latestFor: (guestGroupId: string) => drizzleRsvpRepository.latestFor(guestGroupId),
+  /** El libro de firmas: el mensaje en la respuesta ya dada, sin volver a responder. */
+  firmarLibro: (guestGroupId: string, mensaje: string) => firmarLibro(guestGroupId, mensaje),
   /** La última respuesta de cada grupo del evento, en una sola consulta. */
   latestByEvent: (eventId: string) => drizzleRsvpRepository.latestByEvent(eventId),
 } as const
@@ -491,6 +493,7 @@ export type ResultadoDePaso = 'ok' | 'sin_encargo' | 'paso_invalido' | 'sin_rond
 export const diseno = {
   leer: (eventId: string) => drizzleDisenoRepository.leer(eventId),
   rondas: (eventId: string) => drizzleDisenoRepository.rondas(eventId),
+  guardarBrief: (eventId: string, brief: BriefDelEncargo) => drizzleDisenoRepository.guardarBrief(eventId, brief),
   porEntregar: () => drizzleDisenoRepository.porEntregar(),
   empezarSegunPlan: (eventId: string, planSlug: string) => drizzleDisenoRepository.empezarSegunPlan(eventId, planSlug),
   empezar: (eventId: string, plan: { rondas: number; dias: number }) => drizzleDisenoRepository.empezar(eventId, plan),

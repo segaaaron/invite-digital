@@ -2,7 +2,7 @@
 
 import { useActionState, useId } from 'react'
 import { aprobarVersionAction, enviarADisenoAction, pedirCambiosAction, type DisenoState } from '@/app/_acciones/events/diseno-actions'
-import type { Diseno } from '@/modules/events/domain/diseno'
+import { MAX_RESPUESTA_DEL_ENCARGO, type Diseno, type PreguntaDelEncargo } from '@/modules/events/domain/diseno'
 import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
@@ -11,6 +11,15 @@ import { diaDelEvento } from '@/shared/format/fecha'
 const INICIAL: DisenoState = { status: 'idle', message: '' }
 
 const PASOS = ['Tus datos', 'La diseñamos', 'La revisas', 'Aprobada'] as const
+
+/** Las preguntas del formulario según el plan (documento de cambios, sección 7). */
+const PREGUNTA: Record<PreguntaDelEncargo, { titulo: string; ejemplo: string }> = {
+  secciones: { titulo: '¿Qué secciones quieres quitar, agregar u ordenar?', ejemplo: 'Quitar la mesa de regalos, poner el cronograma antes del mapa…' },
+  tematica: { titulo: 'La temática de tu fiesta', ejemplo: 'Jardín encantado con mariposas, en verde esmeralda y dorado.' },
+  vestido: { titulo: 'Tu vestido', ejemplo: 'Color esmeralda con mariposas bordadas. Manda la foto por WhatsApp.' },
+  decoracion: { titulo: 'La decoración del salón', ejemplo: 'Arcos de flores, velas y mesas de madera.' },
+  flores: { titulo: 'Las flores', ejemplo: 'Peonías y rosas blancas.' },
+}
 const PASO_DE: Record<Diseno['estado'], number> = { esperando_datos: 0, en_diseno: 1, version_enviada: 2, aprobada: 3 }
 
 /**
@@ -24,6 +33,7 @@ export function EncargoDelCliente({
   saldoPendiente,
   vistaPrevia,
   extras,
+  preguntas = [],
 }: {
   eventId: string
   encargo: Diseno
@@ -34,6 +44,8 @@ export function EncargoDelCliente({
   vistaPrevia: string
   /** Donde se piden cambios fuera de las rondas. */
   extras: string
+  /** Lo que su plan le pregunta además de la invitación: secciones (Gala), temática y más (Imperial). */
+  preguntas?: readonly PreguntaDelEncargo[]
 }) {
   const [enviado, enviar] = useActionState(sinCaerse(enviarADisenoAction), INICIAL)
   const [cambios, pedir] = useActionState(sinCaerse(pedirCambiosAction), INICIAL)
@@ -64,6 +76,18 @@ export function EncargoDelCliente({
             Escribe aquí abajo los datos de tu fiesta y sube tus fotos. Cuando termines, envíanoslos y diseñamos tu invitación en{' '}
             {encargo.diasDeEntrega} {encargo.diasDeEntrega === 1 ? 'día' : 'días'}.
           </p>
+          {preguntas.map((pregunta) => (
+            <label className="flex flex-col gap-2" key={pregunta}>
+              <span className={LABEL_CLASS}>{PREGUNTA[pregunta].titulo}</span>
+              <textarea
+                className={`${FIELD_CLASS} min-h-[80px]`}
+                defaultValue={encargo.brief?.[pregunta] ?? ''}
+                maxLength={MAX_RESPUESTA_DEL_ENCARGO}
+                name={`brief_${pregunta}`}
+                placeholder={PREGUNTA[pregunta].ejemplo}
+              />
+            </label>
+          ))}
           <ActionFeedback state={enviado} />
           <div>
             <SubmitButton>Enviar mis datos para diseñar</SubmitButton>

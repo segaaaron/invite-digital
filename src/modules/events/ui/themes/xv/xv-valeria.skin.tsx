@@ -65,6 +65,7 @@ export const PIEL: PielXv = {
   // Los colores que «Gala Real» reparte distinto de «Bajo el Mar». Su rótulo de anfitriones
   // no va en caligrafía grande: es una línea pequeña en DM Sans.
   piezas: {
+    anios: colorDeAcento.orquidea,
     // El «ENVIAR» de su formulario en la maqueta.
     formulario: { boton: '#C9A24A' },
     botonTinta: '#0c1830',
@@ -153,7 +154,7 @@ export const PIEL: PielXv = {
   // dentro del arco rosa de la marina la enseñaba dos veces.
   reloj: themeAsset('xv-valeria', 'reloj-conteo-sf.avif'),
   castillo: themeAsset('xv-valeria', 'castillo-guindo-opt.avif'),
-  vestimenta: themeAsset('xv-valeria', 'traje1-opt.avif'),
+  vestimenta: themeAsset('xv-valeria', 'vestimenta-v4.avif'),
   cierre: themeAsset('xv-valeria', 'tiara-vino-sf.avif'),
   // La esfera no pinta iconos; el esqueleto pide uno igual.
   icono: () => themeAsset('xv-valeria', 'reloj-conteo-sf.avif'),

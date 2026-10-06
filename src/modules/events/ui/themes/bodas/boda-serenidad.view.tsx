@@ -8,6 +8,7 @@ import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { CarruselDePerla } from './CarruselDePerla'
 import { SerenidadCover } from './SerenidadCover'
 import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-serenidad.palette'
@@ -303,6 +304,18 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
                     {ROTULOS.verUbicacion}
                   </a>
                 )}
+                <MapaDeLaTarjeta
+                  accent={P.titular}
+                  border={alfaDe('titular', 0.35)}
+                  coords={map?.coords ?? ''}
+                  coordsColor={P.titular}
+                  directionsLabel={ROTULOS.verUbicacion}
+                  href={map?.href}
+                  label={lugar.place ?? ''}
+                  pinDot={P.alfiler}
+                  pinRing={P.cielo}
+                  respaldo={[lugar.place, lugar.address].filter(Boolean).join(', ')}
+                />
               </div>
             ),
           )}
@@ -359,8 +372,6 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         </Reveal>
       </div>
 
-      <Cenefa />
-
       <div style={{ padding: '0 24px' }}>
         {/* ── El código de vestimenta ── */}
         {dressCode === undefined ? null : (
@@ -387,7 +398,7 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
                 ))}
               </div>
               {dressCode.note === undefined ? null : (
-                <p style={{ marginTop: 14, fontSize: 13, fontStyle: 'italic', color: P.tinta, lineHeight: 1.6, textAlign: 'center' }}>
+                <p style={{ marginTop: 14, fontSize: 15, fontStyle: 'italic', fontWeight: 500, color: P.tintaHonda, lineHeight: 1.8, textAlign: 'center' }}>
                   {dressCode.note}
                 </p>
               )}
@@ -399,14 +410,14 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         {soloAdultos === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 60, marginBottom: 20 }}>
+              {soloAdultos.title === undefined ? null : (
+                <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.3em', color: P.titular, fontWeight: 700, marginBottom: 18, textAlign: 'center', textTransform: 'uppercase' }}>
+                  {soloAdultos.title}
+                </p>
+              )}
               <Arte ancho={240} estilo={{ margin: '0 auto' }} src={themeAsset('boda-serenidad', 'tacon-y-corbatin.avif')} />
               <div style={{ maxWidth: '88%', margin: '16px auto 0', textAlign: 'center' }}>
-                <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 18, lineHeight: 1.6, color: P.tinta }}>{soloAdultos.text}</p>
-                {soloAdultos.title === undefined ? null : (
-                  <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.3em', color: P.titular, fontWeight: 700, marginTop: 14, textTransform: 'uppercase' }}>
-                    {soloAdultos.title}
-                  </p>
-                )}
+                <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.tintaHonda }}>{soloAdultos.text}</p>
               </div>
             </div>
           </Reveal>
@@ -420,7 +431,7 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
             <Arte ancho={220} estilo={{ margin: '0 auto' }} src={themeAsset('boda-serenidad', 'regalo.avif')} />
             <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.titular, marginTop: 32 }}>{regalos?.title ?? ROTULOS.regalos}</p>
             {regalos?.text === undefined ? null : (
-              <p style={{ fontFamily: SERIF, fontSize: 16, lineHeight: 1.8, color: P.tinta, maxWidth: '72%', margin: '18px auto 0' }}>
+              <p style={{ fontFamily: SERIF, fontSize: 18.5, fontWeight: 500, lineHeight: 1.8, color: P.tintaHonda, maxWidth: '72%', margin: '18px auto 0' }}>
                 {regalos.text}
               </p>
             )}
@@ -428,6 +439,7 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
           </div>
         </Reveal>
 
+        <div style={{ height: 36 }} />
         <Cenefa reflejada />
 
         {/* ── La canción ── */}
@@ -451,7 +463,7 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
 
         {/* ── Confirmación ── */}
         <Reveal>
-          <div style={{ marginTop: 8 }}>
+          <div style={{ marginTop: 36 }}>
             <p style={{ fontFamily: SERIF, fontSize: 32, fontWeight: 500, lineHeight: 1, marginTop: 8, textAlign: 'center', color: P.titular }}>
               {ROTULOS.confirma}
               <span style={{ fontStyle: 'italic' }}>{ROTULOS.confirmaCursiva}</span>
@@ -463,12 +475,11 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         {/* ── Comparte tus fotos, con su cámara: solo si el plan trae las fotos de invitados ── */}
         {slots.photos === undefined ? null : (
           <>
-            <Cenefa />
             <Reveal>
               <div style={{ marginTop: 8, padding: '32px 24px', textAlign: 'center' }}>
                 <Arte ancho={220} estilo={{ margin: '0 auto' }} src={themeAsset('boda-serenidad', 'camara.avif')} />
                 <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.titular, marginTop: 20 }}>{dictionary.photosTitle}</p>
-                <p style={{ fontFamily: SERIF, fontSize: 16, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.tinta }}>{dictionary.photosIntro}</p>
+                <p style={{ fontFamily: SERIF, fontSize: 18.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.tintaHonda }}>{dictionary.photosIntro}</p>
                 <div style={{ marginTop: 22 }}>{slots.photos}</div>
               </div>
             </Reveal>
@@ -478,12 +489,14 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         <Cenefa />
 
         {/* ── El libro de firmas ── */}
-        <Reveal>
-          <div style={{ marginTop: 8, padding: '32px 0', textAlign: 'center' }}>
-            <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.titular }}>{ROTULOS.firmas}</p>
-            <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
-          </div>
-        </Reveal>
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 8, padding: '32px 0', textAlign: 'center' }}>
+              <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.titular }}>{ROTULOS.firmas}</p>
+              <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
+            </div>
+          </Reveal>
+        )}
 
         <Cenefa reflejada />
 

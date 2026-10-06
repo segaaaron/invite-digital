@@ -3,7 +3,7 @@
 import Image from '@/shared/design/ui/ImagenQueAparece'
 import { useState } from 'react'
 import { prefiereMenosMovimiento } from '../kit/motion'
-import { alfaDe, PALETA as P } from './boda-royal.palette'
+import { PALETA as P } from './boda-royal.palette'
 
 type Props = {
   readonly bgAsset: string
@@ -65,8 +65,24 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
           justifyContent: 'center',
           gap: 6,
           textAlign: 'center',
+          isolation: 'isolate',
         }}
       >
+        {/* El velo rosado detrás del texto (V4, `legibleVeil`): lo despega del palacio. */}
+        <span
+          aria-hidden
+          style={{
+            position: 'absolute',
+            left: '4%',
+            right: '4%',
+            top: '-6%',
+            bottom: '-6%',
+            background: `radial-gradient(ellipse 62% 58% at 50% 50%, ${P.veloPortada} 0%, ${P.veloPortada} 40%, transparent 78%)`,
+            filter: 'blur(8px)',
+            zIndex: -1,
+            pointerEvents: 'none',
+          }}
+        />
         <span
           style={{
             fontFamily: 'var(--font-cormorant)',
@@ -75,7 +91,7 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
             letterSpacing: '0.3em',
             textTransform: 'uppercase',
             color: P.oroClaro,
-            textShadow: '0 1px 3px rgba(245,182,193,0.45)',
+            textShadow: P.sombraLegible,
           }}
         >
           {eyebrow}
@@ -89,7 +105,7 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
             lineHeight: 1.1,
             maxWidth: '82%',
             color: '#c4788a',
-            textShadow: `0 0 10px rgba(212,175,55,0.5), 1px 1px 2px ${alfaDe('borgona', 0.3)}`,
+            textShadow: P.sombraLegible,
           }}
         >
           {names}
@@ -107,7 +123,7 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
               fontSize: 12.5,
               letterSpacing: '0.25em',
               color: P.oroClaro,
-              textShadow: '0 1px 3px rgba(245,182,193,0.45)',
+              textShadow: P.sombraLegible,
             }}
           >
             {fecha}

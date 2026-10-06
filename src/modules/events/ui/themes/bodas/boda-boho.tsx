@@ -11,10 +11,10 @@ import { ACENTO, PALETA } from './boda-boho.palette'
  */
 export const bodaBohoDefinition: ThemeDefinition = {
   key: 'boda-boho',
-  label: 'Pampas y Flores Secas',
+  label: 'Boho elegante',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes'],
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cinzel', 'cormorant'],
   rsvp: 'pildoras',
   pinta: {
     // Seis en el carrusel y el retrato grande de arriba.

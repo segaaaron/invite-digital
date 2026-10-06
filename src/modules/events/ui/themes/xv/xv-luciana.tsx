@@ -16,7 +16,7 @@ export const xv_lucianaDefinition: ThemeDefinition = {
     // ni la de debajo de los nombres se pintan en ninguna parte.
     sinCampos: { hero: ['nameB', 'eyebrow', 'serial'], itinerary: ['note', 'imageId'] },
   },
-  sections: ['hero', 'quote', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
+  sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },
   Component: dynamic(() => import('./xv-luciana.view').then((modulo) => modulo.XvLucianaView)),

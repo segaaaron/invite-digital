@@ -34,6 +34,14 @@ const BASE = {
   bordeVidrio: '#c5961a',
   sombra: '0 4px 20px rgba(197,150,26,.12)',
   sombraFuerte: '0 4px 20px rgba(197,150,26,.18)',
+  /** La portada V4: la tinta del papel, el nombre, el oro del «XV» y la píldora de entrar. */
+  tintaPapel: '#2a1a0c',
+  tintaNombre: '#2a1d10',
+  oroPapel: '#7a5610',
+  pildora: '#1e150c',
+  brilloPildora: '#4a3514',
+  oroPildora: '#b8901f',
+  tintaPildora: '#f6e7c1',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

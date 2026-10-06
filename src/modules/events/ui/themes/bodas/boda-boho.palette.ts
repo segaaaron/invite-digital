@@ -16,6 +16,11 @@ const BASE = {
   oro: '#c9a96e',
   /** El beige de la línea «nos casamos». */
   beige: '#e4c9a8',
+  /** V4: la tinta más honda de los párrafos largos. */
+  cafeLectura: '#402d24',
+  /** El aro del alfiler del plano y su punto. */
+  aroAlfiler: '#f5ede3',
+  alfiler: '#000000',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

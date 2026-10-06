@@ -19,7 +19,8 @@ import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { registrarFallo } from '@/shared/observability/fallos'
 
 /** Días antes del evento en que cierran las confirmaciones, por fiesta: el catering necesita la lista. */
-const CIERRE_POR_FIESTA = { boda: 21, xv: 14, cumple: 10 } as const
+// Documento de cambios: el plazo se sugiere solo, 3 semanas antes (también en XV).
+const CIERRE_POR_FIESTA = { boda: 21, xv: 21, cumple: 10 } as const
 
 /** Reasignar el dueño de un evento. Es la salida cuando hay que borrar a alguien. */
 export async function reassignEventAction(_previous: AdminActionState, formData: FormData): Promise<AdminActionState> {

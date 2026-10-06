@@ -48,7 +48,7 @@ test('la campana se entera en vivo de que un invitado abrió su invitación y co
   // La primera apertura ya avisa, y la cuenta sube sin recargar el panel.
   await expect(campana).toHaveAccessibleName('Avisos: 1 nuevo', { timeout: 10_000 })
 
-  await invitado.getByRole('button', { name: 'ENVIAR' }).click()
+  await invitado.getByRole('button', { name: 'ENVIAR', exact: true }).click()
   await expect(invitado.getByRole('status')).toContainText('Confirmación enviada')
   await expect(campana).toHaveAccessibleName('Avisos: 2 nuevos', { timeout: 10_000 })
   await invitado.context().close()

@@ -18,6 +18,8 @@ type Props = {
   /** «INGRESA A MI INVITACIÓN». */
   readonly hint: string
   readonly openLabel: string
+  /** V4: «SÁBADO 12 DE SEPTIEMBRE». */
+  readonly fecha?: string
 }
 
 /**
@@ -30,7 +32,7 @@ type Props = {
  * con teclado no puede abrirla y quien usa lector de pantalla no oye que haya nada que
  * tocar, y la invitación se acaba aquí.
  */
-export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hint, openLabel }: Props) {
+export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hint, openLabel, fecha = '' }: Props) {
   const [abierta, setAbierta] = useState(false)
   const [reducido] = useState(prefiereMenosMovimiento)
 
@@ -162,6 +164,21 @@ export function SofiaCover({ bgAsset, crownAsset, line1, line2, title, name, hin
           {name}
         </span>
         <span aria-hidden style={{ display: 'block', width: 90, height: 2, background: '#FFFDF8', margin: '22px auto' }} />
+        {/* V4: la fecha donde iba la placa, sin marco: es dato, no otro botón. */}
+        {fecha === '' ? null : (
+          <span
+            style={{
+              display: 'block',
+              fontFamily: 'var(--font-jetbrains-mono)',
+              fontSize: 10,
+              letterSpacing: '0.3em',
+              color: '#FFFDF8',
+              textShadow: '0 0 12px rgba(15,8,40,.85), 0 2px 4px rgba(15,8,40,.85)',
+            }}
+          >
+            {fecha}
+          </span>
+        )}
         <span
           style={{
             display: 'block',

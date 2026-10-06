@@ -12,8 +12,9 @@ import { ThemeColumn } from '../kit/ThemeColumn'
 import { CuentaConAros } from './CuentaConAros'
 import { ItinerarioOndulado } from './ItinerarioOndulado'
 import { OvalFrameCover } from './OvalFrameCover'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-ed.palette'
+import { CARTA_DE_COLOR, PALETA as P, alfaDe } from './boda-ed.palette'
 import { MusicaFlotante } from '../kit/MusicaFlotante'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const DISPLAY = 'var(--font-spectral)'
@@ -341,7 +342,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
         <Reveal>
           <div style={{ padding: '56px 24px', textAlign: 'center' }}>
             {invitacion?.text === undefined ? null : (
-              <div style={{ fontFamily: DISPLAY, fontSize: 15, lineHeight: 1.8, maxWidth: '70%', margin: '0 auto' }}>
+              <div style={{ fontFamily: DISPLAY, fontSize: 17.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '70%', margin: '0 auto' }}>
                 {invitacion.text}
               </div>
             )}
@@ -440,7 +441,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                     padding: '28px 8px 22px',
                     textAlign: 'center',
                     display: 'grid',
-                    gridTemplateRows: 'auto 20px auto 10px auto auto 1fr auto',
+                    gridTemplateRows: 'auto 20px auto 10px auto auto 1fr auto auto',
                     justifyItems: 'center',
                     rowGap: 6,
                   }}
@@ -483,6 +484,19 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                       {themes.viewLocation}
                     </a>
                   )}
+                  <MapaDeLaTarjeta
+                    accent={P.oro}
+                    border={alfaDe('oro', 0.5)}
+                    coords={map?.coords ?? ''}
+                    coordsColor={P.oro}
+                    directionsLabel={themes.viewLocation}
+                    href={map?.href}
+                    label={tarjeta.lugar?.place ?? ''}
+                    labelColor={P.papel}
+                    pinDot={P.alfiler}
+                    pinRing={P.fondo}
+                    respaldo={[tarjeta.lugar?.place, tarjeta.lugar?.address].filter(Boolean).join(', ')}
+                  />
                 </div>
               ))}
             </div>
@@ -586,10 +600,10 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                 <div
                   style={{
                     marginTop: 14,
-                    fontSize: 12,
+                    fontSize: 14,
                     fontStyle: 'italic',
-                    opacity: 0.75,
-                    lineHeight: 1.5,
+                    fontWeight: 500,
+                    lineHeight: 1.8,
                     textAlign: 'center',
                   }}
                 >
@@ -604,6 +618,9 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
             <Reveal>
               <div style={{ marginTop: 60, marginBottom: 20, padding: '0 10px' }}>
                 <div style={{ background: P.velo, border: `1.5px solid ${P.oro}`, borderRadius: 16, padding: '30px 20px', textAlign: 'center' }}>
+                  <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oro, marginBottom: 18 }}>
+                    {soloAdultos.title}
+                  </div>
                   <Image
                     alt=""
                     height={190}
@@ -613,13 +630,10 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   />
                   <div style={{ maxWidth: '88%', margin: '16px auto 0' }}>
                     {soloAdultos.text === undefined ? null : (
-                      <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 18, lineHeight: 1.6, color: P.papel }}>
+                      <div style={{ fontFamily: DISPLAY, fontStyle: 'italic', fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.papelAdultos }}>
                         {soloAdultos.text}
                       </div>
                     )}
-                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oro, marginTop: 14 }}>
-                      {soloAdultos.title}
-                    </div>
                   </div>
                 </div>
               </div>
@@ -638,7 +652,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
               />
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro, marginTop: 32 }}>{regalos?.title ?? themes.gifts}</div>
               {regalos?.text === undefined ? null : (
-                <div style={{ fontFamily: DISPLAY, fontSize: 15, lineHeight: 1.7, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: 17.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
               )}
               <div style={{ marginTop: 22 }}>{slots.registry}</div>
             </div>
@@ -696,11 +710,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
                   <div
                     style={{
                       fontFamily: DISPLAY,
-                      fontSize: 15,
-                      lineHeight: 1.7,
+                      fontSize: 17.5,
+                      fontWeight: 500,
+                      lineHeight: 1.8,
                       maxWidth: '72%',
                       margin: '18px auto 0',
-                      color: P.papelClaro,
+                      color: P.papelFotos,
                     }}
                   >
                     {fotos.text}

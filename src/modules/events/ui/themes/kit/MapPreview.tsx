@@ -101,7 +101,7 @@ export function MapPreview({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: pinRing === undefined ? `0 6px 16px ${conAlfa(accent, 0x40 / 255)}` : `0 0 0 3px ${pinRing}, 0 6px 16px ${accent}40`,
+            boxShadow: `${pinRing === undefined ? '' : `0 0 0 3px ${pinRing}, `}0 6px 16px ${conAlfa(accent, 0x40 / 255)}`,
           }}
         >
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: pinDot, transform: 'rotate(45deg)' }} />

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm'
-import { afterAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import { addons, events, orderProofs, orders, plans } from '@/shared/db/schema'
 import { drizzleOrderRepository as repo } from './drizzle-order-repository'
@@ -23,8 +23,17 @@ const nuevo = async (patch: Partial<Parameters<typeof repo.create>[0]> = {}) => 
   return order
 }
 
+// La reserva de Gala tal como está en la base: las pruebas de anticipo la tocan y al final se
+// devuelve (dejarla en nulo borraba la reserva fija de Bs 100 de la base de desarrollo).
+let reservaDeGala: { depositPct: number; depositFixedCents: number | null } = { depositPct: 0, depositFixedCents: null }
+beforeAll(async () => {
+  const [fila] = await db.select({ depositPct: plans.depositPct, depositFixedCents: plans.depositFixedCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+  if (fila !== undefined) reservaDeGala = fila
+})
+
 afterAll(async () => {
   for (const id of creados) await db.delete(orders).where(eq(orders.id, id))
+  await db.update(plans).set(reservaDeGala).where(eq(plans.slug, 'firma-3d'))
 })
 
 describe('drizzleOrderRepository', () => {
@@ -33,7 +42,7 @@ describe('drizzleOrderRepository', () => {
 
     expect(order.status).toBe('pending_payment')
     expect(order.planSlug).toBe('firma-3d')
-    expect(order.planName).toBe('Firma 3D')
+    expect(order.planName).toBe('Gala')
   })
 
   it('congela el importe del plan al pedir: cambiar el precio después no lo mueve', async () => {
@@ -204,16 +213,18 @@ describe('drizzleOrderRepository', () => {
   })
 
   it('con anticipo en el plan, el pedido nace con su anticipo; sin él, sin anticipo', async () => {
-    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const [plan] = await db.select({ precio: plans.priceCents, fija: plans.depositFixedCents, pct: plans.depositPct }).from(plans).where(eq(plans.slug, 'firma-3d'))
     // Sin reserva fija, explícito: si la base trae una, manda sobre el porcentaje.
     await db.update(plans).set({ depositPct: 40, depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
     try {
       const con = await nuevo()
       expect(con.depositCents).toBe(Math.round((plan!.precio * 40) / 10000) * 100)
-    } finally {
       await db.update(plans).set({ depositPct: 0 }).where(eq(plans.slug, 'firma-3d'))
+      expect((await nuevo()).depositCents).toBeNull()
+    } finally {
+      // Se deja el plan como estaba: la base de desarrollo es la de verdad (reserva fija de Bs 100).
+      await db.update(plans).set({ depositPct: plan!.pct, depositFixedCents: plan!.fija }).where(eq(plans.slug, 'firma-3d'))
     }
-    expect((await nuevo()).depositCents).toBeNull()
   })
 
   it('con reserva fija, el pedido y la cotización nacen con esa reserva aunque haya porcentaje', async () => {

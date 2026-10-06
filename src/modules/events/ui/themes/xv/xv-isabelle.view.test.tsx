@@ -20,7 +20,7 @@ describe('el tema Palacio Griego', () => {
 
   it('pinta la recepción centrada y el itinerario con una pieza dorada por hito', () => {
     const { container } = render(<XvIsabelleView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    expect(screen.getByText('Salón de Eventos Elianne')).toBeInTheDocument()
+    expect(screen.getByText("Salón de Eventos D' La Rossa")).toBeInTheDocument()
     const piezas = [...container.querySelectorAll('li img')].map((img) => img.getAttribute('src') ?? '')
     expect(piezas.some((src) => src.includes('carrosa-dorada'))).toBe(true)
     expect(screen.getByText('Baile Sorpresa')).toBeInTheDocument()

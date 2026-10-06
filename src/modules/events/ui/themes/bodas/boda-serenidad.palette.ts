@@ -8,6 +8,10 @@ const BASE = {
   cielo: '#d6dce8',
   /** La tinta de los párrafos. */
   tinta: '#0f1d38',
+  /** V4: los párrafos largos, un punto más hondos para leerse mejor. */
+  tintaHonda: '#0b1427',
+  /** El punto del alfiler del plano. */
+  alfiler: '#000000',
   /** El azul de los titulares. */
   titular: '#1a2b4a',
   /** El azul de los rótulos y los filetes secundarios. */

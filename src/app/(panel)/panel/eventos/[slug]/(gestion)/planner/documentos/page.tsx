@@ -21,7 +21,7 @@ export default async function DocumentosPage({ params }: { params: Promise<{ slu
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los documentos y las referencias vienen con Firma 3D y Alta Costura." title="Documentos" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los documentos y las referencias vienen con Gala e Imperial." title="Documentos" />
   }
 
   const proveedores = (await planner.dia.listVendors(event.value.id)).map((v) => ({ id: v.id, nombre: v.company ? `${v.service} · ${v.company}` : v.service }))

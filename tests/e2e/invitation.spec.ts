@@ -18,7 +18,7 @@ test('el invitado confirma sin escribir su nombre, y su enlace pasa a ser el res
 
   // No se pide el nombre: el enlace es de un invitado y responde con el suyo.
   await expect(page.getByLabel('Nombre completo')).toHaveCount(0)
-  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  await page.getByRole('button', { name: 'ENVIAR', exact: true }).click()
   // Saluda por su nombre, dice que se envió y no ofrece modificarla.
   const hecho = page.getByRole('status')
   await expect(hecho).toContainText('¡Gracias, Familia Rojas Peña!')
@@ -62,7 +62,7 @@ test('pasado el plazo se muestra la invitación sin formulario', async ({ page }
 
   await page.goto(`/i/${token}`)
   await expect(page.getByText('El plazo para confirmar ya cerró')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'ENVIAR' })).toHaveCount(0)
+  await expect(page.getByRole('button', { name: 'ENVIAR', exact: true })).toHaveCount(0)
 
   await deleteEvent(eventSlug)
 })
@@ -106,7 +106,7 @@ test('el pase vive a solas, a un toque de la invitación', async ({ page }) => {
 
   // Al confirmar que asiste, el pase se entrega en el acto.
   await page.goto(`/i/${token}`)
-  await page.getByRole('button', { name: 'ENVIAR' }).click()
+  await page.getByRole('button', { name: 'ENVIAR', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('Confirmación enviada')
 
   // En la puerta, de noche y con gente detrás, nadie se desplaza hasta el final de la

@@ -25,7 +25,7 @@ describe('el tema Bajo el Mar', () => {
     // contenido los guarda como lista y no como campos con nombre.
     render(<XvView {...conMuestra()} />)
     expect(screen.getByText('Lluvia de Sobres')).toBeInTheDocument()
-    expect(screen.getByText('Solo Adultos')).toBeInTheDocument()
+    expect(screen.getByText('Una noche sin niños')).toBeInTheDocument()
   })
 
   it('pinta el cronograma con sus cuatro hitos', () => {
@@ -43,15 +43,15 @@ describe('el tema Bajo el Mar', () => {
     // doce horas o doce minutos para el evento, y esta prueba se caía sola según el día en
     // que se corriera.
     expect(screen.getAllByText('12').length).toBeGreaterThan(0)
-    expect(screen.getByText(/septiembre/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/septiembre/i).length).toBeGreaterThan(0)
     const horas = screen.getAllByText('19:00')
     expect(horas.some((nodo) => nodo.style.fontSize === '56px')).toBe(true)
   })
 
   it('pinta a los padres con su dedicatoria', () => {
     render(<XvView {...conMuestra()} />)
-    expect(screen.getByText('Angel Pereira Rojas')).toBeInTheDocument()
-    expect(screen.getByText('Ivana Torrico Valencia')).toBeInTheDocument()
+    expect(screen.getByText('Ricardo Salinas Vega')).toBeInTheDocument()
+    expect(screen.getByText('Mariela Duarte de Salinas')).toBeInTheDocument()
   })
 
   it('sin contenido no revienta ni escribe «undefined»', () => {

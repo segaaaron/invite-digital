@@ -7,6 +7,7 @@ import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { CarruselDePerla } from './CarruselDePerla'
 import { CuentaConAros } from './CuentaConAros'
 import { NavyCover } from './NavyCover'
@@ -70,8 +71,10 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
 
   return (
     <article
+      className="theme-halo"
       style={{
         ...RANURAS,
+        ['--halo' as string]: P.halo,
         position: 'relative',
         color: P.tinta,
         fontFamily: SERIF,
@@ -101,6 +104,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
         }}
         zIndex={-1}
       />
+      {/* V4: el velo que oscurece la purpurina bajo el texto. */}
+      <CapaFija style={{ background: P.veloCuerpo }} zIndex={-1} />
 
       {/* ── La cabecera de revista, con la luna ── */}
       <div style={{ padding: '22px 24px', borderBottom: `1.5px solid ${P.oro}` }}>
@@ -210,7 +215,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
           <p
             style={{
               fontFamily: SERIF,
-              fontSize: 18,
+              fontSize: 20.5,
+              fontWeight: 500,
               lineHeight: 1.8,
               maxWidth: '76%',
               margin: '0 auto',
@@ -267,7 +273,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
                 style={{
                   textAlign: 'center',
                   display: 'grid',
-                  gridTemplateRows: '267px auto auto auto 1fr auto',
+                  gridTemplateRows: '267px auto auto auto 1fr auto auto',
                   justifyItems: 'center',
                   rowGap: 16,
                   border: `1.5px solid ${P.oroVivo}`,
@@ -307,6 +313,19 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
                     {ROTULOS.verUbicacion}
                   </a>
                 )}
+                <MapaDeLaTarjeta
+                  accent={P.oroVivo}
+                  border={alfaDe('oroVivo', 0.5)}
+                  coords={map?.coords ?? ''}
+                  coordsColor={P.oroVivo}
+                  directionsLabel={ROTULOS.verUbicacion}
+                  href={map?.href}
+                  label={lugar.place ?? ''}
+                  labelColor={P.marfil}
+                  pinDot={P.alfiler}
+                  pinRing={P.marino}
+                  respaldo={[lugar.place, lugar.address].filter(Boolean).join(', ')}
+                />
               </div>
             ),
           )}
@@ -383,7 +402,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
                 ))}
               </div>
               {dressCode.note === undefined ? null : (
-                <p style={{ marginTop: 14, fontSize: 14.3, fontStyle: 'italic', lineHeight: 1.6, textAlign: 'center' }}>{dressCode.note}</p>
+                <p style={{ marginTop: 14, fontSize: 16.5, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.8, textAlign: 'center' }}>{dressCode.note}</p>
               )}
             </div>
           </Reveal>
@@ -393,14 +412,14 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
         {soloAdultos === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 60, marginBottom: 20, padding: '0 10px' }}>
+              {soloAdultos.title === undefined ? null : (
+                <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', fontWeight: 700, marginBottom: 18, textAlign: 'center', textTransform: 'uppercase' }}>
+                  {soloAdultos.title}
+                </p>
+              )}
               <Arte ancho={156} estilo={{ margin: '0 auto' }} src={themeAsset('boda-navy', 'tacon-y-corbata.avif')} />
               <div style={{ maxWidth: '88%', margin: '16px auto 0', textAlign: 'center' }}>
-                <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 22, lineHeight: 1.7 }}>{soloAdultos.text}</p>
-                {soloAdultos.title === undefined ? null : (
-                  <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', fontWeight: 700, marginTop: 14, textTransform: 'uppercase' }}>
-                    {soloAdultos.title}
-                  </p>
-                )}
+                <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 25.5, fontWeight: 500, lineHeight: 1.8 }}>{soloAdultos.text}</p>
               </div>
             </div>
           </Reveal>
@@ -412,7 +431,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
             <Arte ancho={240} estilo={{ margin: '0 auto' }} src={themeAsset('boda-navy', 'regalo.avif')} />
             <p style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oroTitular, marginTop: 32 }}>{regalos?.title ?? ROTULOS.regalos}</p>
             {regalos?.text === undefined ? null : (
-              <p style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
+              <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
             <div style={{ marginTop: 22 }}>{slots.registry}</div>
           </div>
@@ -449,12 +468,14 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
         </Reveal>
 
         {/* ── El libro de firmas ── */}
-        <Reveal>
-          <div style={{ marginTop: 50, padding: '32px 0', borderTop: `1.5px solid ${P.oro}`, textAlign: 'center' }}>
-            <p style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oroTitular }}>{ROTULOS.firmas}</p>
-            <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
-          </div>
-        </Reveal>
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 50, padding: '32px 0', borderTop: `1.5px solid ${P.oro}`, textAlign: 'center' }}>
+              <p style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oroTitular }}>{ROTULOS.firmas}</p>
+              <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
+            </div>
+          </Reveal>
+        )}
 
         {/* ── El cierre ── */}
         <Reveal>

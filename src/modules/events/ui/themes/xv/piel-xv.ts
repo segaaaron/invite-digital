@@ -31,6 +31,15 @@ export type PielXv = {
    * el velo: es lo que apaga la fotografía justo donde va el cierre.
    */
   readonly veloInferior?: string
+  /**
+   * V4, legibilidad: el halo del color del fondo que despega cada texto de la fotografía
+   * (`.lg-nat` de la maqueta). Sin declarar, no lo lleva.
+   */
+  readonly halo?: string
+  /** V4: el cierre ya no lleva despedida; un solo párrafo es la bendición del final. */
+  readonly cierreSoloBendicion?: boolean
+  /** V4: un velo más, fijo, que oscurece el centro de la fotografía bajo el texto. */
+  readonly veloCentral?: string
   /** La capa de fondo: la fotografía a sangre de este diseño. */
   readonly fondo: ReactNode
   /**
@@ -145,6 +154,10 @@ export type PielXv = {
     line2: string
     /** «INGRESA A MI INVITACIÓN». */
     enter: string
+    /** V4: «SÁBADO 12 DE SEPTIEMBRE», la fecha que la portada escribe sobre la llamada. */
+    fecha: string
+    /** El año del evento: «· MIS QUINCE · 2026» de «Palacio Griego». */
+    anio: string
   }) => ReactNode
   /**
    * El color de **cada pieza**, cuando este diseño no lo reparte como «Bajo el Mar».
@@ -164,6 +177,19 @@ export type PielXv = {
     readonly monogramaDegradado?: string
     /** «AÑOS». */
     readonly anios?: string
+    /** La sombra de «AÑOS» (V4, en Cinzel), cuando no es la del resto del texto. */
+    readonly aniosSombra?: string
+    /**
+     * Las pestañas de regalos de V4 (`F3GiftTabs`): el color de la elegida y de su tinta, y la
+     * tinta, el filete y la sombra del resto. Lo que no se declare cae en la paleta.
+     */
+    readonly pestanas?: {
+      readonly acento?: string
+      readonly sobreAcento?: string
+      readonly tinta?: string
+      readonly borde?: string
+      readonly sombra?: string
+    }
     /** El nombre de la quinceañera en la cabecera. */
     readonly nombre?: string
     /** La cita de portada: tamaño, peso y color. */
@@ -217,6 +243,10 @@ export type PielXv = {
     readonly lugarHora?: string
     readonly lugarHoraSize?: number
     readonly lugarHoraPeso?: number
+    /** La letra de la hora de la recepción, si no es la monoespaciada (Natalia V4: DM Sans). */
+    readonly lugarHoraLetra?: string
+    /** V4: la píldora «Ver ubicación» bajo la dirección de la recepción, con su filete y su tinta. */
+    readonly verUbicacion?: { readonly borde: string; readonly tinta: string }
     /** El titular de la tarjeta de recepción, que un diseño pinta dos puntos más grande. */
     readonly tituloRecepcionSize?: number
     /** El acento del plano: el punto, el nombre y las coordenadas. */
@@ -473,6 +503,8 @@ export type PielXv = {
     readonly cierreWidth?: number | string
     /** El degradado del marco del retrato, cuando el diseño no lo pinta en rosa. */
     readonly marcoRetrato?: string
+    /** Dónde se centra el retrato de muestra (V4: la máscara de «Mascarada» va al 35 % 78 %). */
+    readonly retratoPosicion?: string
     /** El desenfoque del marco, que solo lleva el arco rosa de la marina. */
     readonly marcoRetratoFiltro?: string
   }

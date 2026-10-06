@@ -100,7 +100,7 @@ export function NewVendorForm(props: { evento: Evento; categorias: readonly Cate
 
 function EnlaceDeProveedor({ evento, proveedor, incluido }: { evento: Evento; proveedor: ProveedorVista; incluido: boolean }) {
   const [estado, emitir, emitiendo] = useActionState(sinCaerse(emitVendorLinkAction), INICIAL)
-  if (!incluido) return <p className="text-[11px] text-ink-mute">Los enlaces para proveedores vienen con Alta Costura.</p>
+  if (!incluido) return <p className="text-[11px] text-ink-mute">Los enlaces para proveedores vienen con Imperial.</p>
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-start gap-2">

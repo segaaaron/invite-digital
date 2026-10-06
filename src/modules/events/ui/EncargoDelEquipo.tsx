@@ -23,6 +23,15 @@ export type RondaVista = { readonly id: string; readonly message: string; readon
  * El diseño por encargo visto por el equipo, en la ficha del evento: en qué paso está, para
  * cuándo se prometió, las rondas que pidió y los botones del siguiente paso.
  */
+/** El rótulo de cada respuesta del formulario del plan, para el equipo. */
+const RESPUESTA: Record<string, string> = {
+  secciones: 'Secciones (quitar, agregar u ordenar)',
+  tematica: 'Temática',
+  vestido: 'Vestido',
+  decoracion: 'Decoración',
+  flores: 'Flores',
+}
+
 export function EncargoDelEquipo({
   eventId,
   encargo,
@@ -82,6 +91,18 @@ export function EncargoDelEquipo({
           · rondas {encargo.rondasUsadas} de {encargo.rondasIncluidas}
         </span>
       </div>
+
+      {/* Lo que el cliente contó en el formulario de su plan: con esto se diseña «creado para ti». */}
+      {encargo.brief == null || Object.keys(encargo.brief).length === 0 ? null : (
+        <dl className="grid gap-2 rounded-[12px] border border-line-panel p-3 text-[13px]">
+          {Object.entries(encargo.brief).map(([pregunta, respuesta]) => (
+            <div key={pregunta}>
+              <dt className="text-[11px] text-ink-mute">{RESPUESTA[pregunta] ?? pregunta}</dt>
+              <dd className="whitespace-pre-line text-ink">{respuesta}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <PanelButton href={escribir} variant={encargo.estado === 'en_diseno' ? 'primary' : 'default'}>

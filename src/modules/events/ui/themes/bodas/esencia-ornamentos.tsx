@@ -59,7 +59,7 @@ const HOJAS: readonly (readonly [number, number])[] = [
 ]
 
 /** La ramita que asoma por las esquinas de un bloque. Va posicionada por quien la pone. */
-export function RamitaDeOlivo({ style, ancho = 140, opacidad = 0.12 }: { readonly style?: CSSProperties; readonly ancho?: number; readonly opacidad?: number }) {
+export function RamitaDeOlivo({ style, ancho = 140, opacidad = 0.4 }: { readonly style?: CSSProperties; readonly ancho?: number; readonly opacidad?: number }) {
   return (
     <svg
       aria-hidden
@@ -97,22 +97,35 @@ const RAMITA: readonly (readonly [number, number, number, number, number])[] = [
 ]
 
 /** El filete que separa: dos rayas y un rombo, en el oro del diseño. */
-export function FileteDeEsencia({ margen = '16px 0' }: { readonly margen?: string }) {
+export function FileteDeEsencia({ margen = '16px 0', grande = false }: { readonly margen?: string; readonly grande?: boolean }) {
+  // El del itinerario es más ancho (V4): rayas de 48 y rombo de 8.
+  const raya = grande ? 48 : 30
+  const rombo = grande ? 8 : 6
   return (
     <span
       aria-hidden
-      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: margen, opacity: 0.6 }}
+      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: grande ? 12 : 10, margin: margen, opacity: 0.6 }}
     >
-      <span style={{ display: 'block', width: 30, height: 1, background: P.oro }} />
-      <span style={{ display: 'block', width: 6, height: 6, background: P.oro, transform: 'rotate(45deg)' }} />
-      <span style={{ display: 'block', width: 30, height: 1, background: P.oro }} />
+      <span style={{ display: 'block', width: raya, height: 1, background: P.oro }} />
+      <span style={{ display: 'block', width: rombo, height: rombo, background: P.oro, transform: 'rotate(45deg)' }} />
+      <span style={{ display: 'block', width: raya, height: 1, background: P.oro }} />
     </span>
   )
 }
 
 /** Los iconos de línea del diseño: los mismos trazos de la maqueta. */
-export function IconoDeEsencia({ nombre, tamano = 48, opacidad = 0.5 }: { readonly nombre: ClaveDeIcono; readonly tamano?: number; readonly opacidad?: number }) {
-  const trazo = { fill: 'none', stroke: P.oro, strokeWidth: 1.1, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
+export function IconoDeEsencia({
+  nombre,
+  tamano = 48,
+  opacidad = 0.5,
+  grosor = 1.1,
+}: {
+  readonly nombre: ClaveDeIcono
+  readonly tamano?: number
+  readonly opacidad?: number
+  readonly grosor?: number
+}) {
+  const trazo = { fill: 'none', stroke: P.oro, strokeWidth: grosor, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
   return (
     <svg aria-hidden height={tamano} style={{ opacity: opacidad }} viewBox="0 0 48 48" width={tamano}>
       {DIBUJOS[nombre](trazo)}

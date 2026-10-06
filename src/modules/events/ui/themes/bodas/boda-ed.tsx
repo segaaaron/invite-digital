@@ -6,10 +6,10 @@ import { ACENTO, PALETA } from './boda-ed.palette'
 /** «Editorial» — María & Alex (maqueta V3). Verde botánico y oro, con el retrato enmarcado sobre las hojas. */
 export const bodaEdDefinition: ThemeDefinition = {
   key: 'boda-ed',
-  label: 'Editorial',
+  label: 'Esmeralda',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'montserrat', 'playfairDisplay', 'dmSans'],
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'montserrat', 'playfairDisplay', 'dmSans', 'cinzel', 'cormorant'],
   // «Asistiré» y «No puedo» como las otras editoriales (`primarySecondary`).
   rsvp: 'pildoras',
   pinta: {

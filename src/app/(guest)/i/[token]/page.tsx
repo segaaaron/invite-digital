@@ -27,6 +27,7 @@ import { headers } from 'next/headers'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
 import { EventPasswordGate } from '@/modules/events/ui/EventPasswordGate'
 import { fechaEnBolivia } from '@/shared/format/fecha'
+import { HechoPorLuxury } from '@/modules/events/ui/HechoPorLuxury'
 
 // El estado del RSVP cambia con cada respuesta: esta página no se cachea.
 export const dynamic = 'force-dynamic'
@@ -150,9 +151,22 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
       ),
   }
 
-  // «Agregar a mi calendario» va con el pase: quien confirmó que viene es quien quiere guardarlo.
+  // El evento tal como lo guarda el calendario del invitado.
   const alCalendario = eventoDeLaInvitacion(event, await eventos.contenidoParaInvitados(event.id, {}), invitationUrl(token, env.SITE_URL))
   const boton = 'inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase'
+
+  // «Agendar en Google Calendar» (y el .ics): en los tres planes y **para todos**, confirmen o no
+  // (documento de cambios). Va con el pase, y sin pase, bajo su aviso.
+  const agendar = (
+    <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-center font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase">
+      <a className="underline underline-offset-4" href={`/i/${token}/calendario`}>
+        {dictionary.calendarAdd}
+      </a>
+      <a className="underline underline-offset-4" href={enlaceDeGoogle(alCalendario)} rel="noopener noreferrer" target="_blank">
+        {dictionary.calendarGoogle}
+      </a>
+    </p>
+  )
 
   // El pase de entrada: el QR y el botón de abrirlo a solas, en su ranura.
   const pase = (
@@ -170,14 +184,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
           {dictionary.passOpen}
         </a>
       </p>
-      <p className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-center font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase">
-        <a className="underline underline-offset-4" href={`/i/${token}/calendario`}>
-          {dictionary.calendarAdd}
-        </a>
-        <a className="underline underline-offset-4" href={enlaceDeGoogle(alCalendario)} rel="noopener noreferrer" target="_blank">
-          {dictionary.calendarGoogle}
-        </a>
-      </p>
+      {agendar}
     </>
   )
 
@@ -201,6 +208,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
             {...(sinResponder ? {} : { asistira: latest.attending > 0 })}
             event={event}
             guestInfo={{ label: group.label, seats: group.seats }}
+            calendario={`/i/${token}/calendario`}
             themes={temasDictionary}
             slots={{
               // A quién va dirigida y cuántos lugares tiene. Es dato nuestro —sale del
@@ -228,7 +236,8 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
                   </div>
                 ) : (
                 <RsvpForm
-                  conMensaje={conLibro}
+                  // V4: el mensaje ya no va en la confirmación; se escribe en el libro de firmas.
+                  conMensaje={false}
                   preguntas={await rsvp.preguntas.leer(event.id)}
                   dictionary={dictionary}
                   guestName={group.label}
@@ -243,13 +252,24 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               ),
               registry: todosLosRegalos,
               regalos: regalosPorPiezas,
-              // El libro de firmas: en los diseños de boda es su propia sección con su campo y
-              // su «FIRMAR LIBRO»; en los de XV, solo la respuesta de los anfitriones.
-              guestbook: (
+              // El libro de firmas: en todos los diseños es su propia sección con su campo (V4: en
+              // los XV también, con «Firmar el libro»), y debajo la respuesta de los anfitriones.
+              // Sin libro en el plan y sin respuesta que enseñar, la ranura no existe: el diseño no pinta
+              // el titular del libro sobre una caja vacía (Atelier, documento de cambios).
+              guestbook: !conLibro && respuestaDelAtelier === null ? null : (
                 <>
-                  {conLibro && definicion.rsvp !== undefined && definicion.rsvp !== 'campos' ? (
-                    <GuestbookForm dictionary={dictionary} guestName={group.label} previous={latest} seats={group.seats} token={token} />
-                  ) : null}
+                  {/* El mensaje vive en la respuesta: firmar sin haber confirmado daba por confirmados a
+                      todos los lugares. Primero se confirma, luego se firma. */}
+                  {!conLibro ? null : latest === null ? (
+                    <p className="py-4 text-center text-[14px] text-ink-soft">{dictionary.signAfterRsvp}</p>
+                  ) : (
+                    <GuestbookForm
+                      boton={definicion.categorySlug === 'xv-anos' ? dictionary.signTheBook : undefined}
+                      dictionary={dictionary}
+                      firmado={latest.message === null || latest.message === '' ? null : latest.message}
+                      token={token}
+                    />
+                  )}
                   <GuestReply dictionary={guestbookDictionary} reply={respuestaDelAtelier} />
                 </>
               ),
@@ -269,11 +289,15 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
               pass: concedePase(latest) ? (
                 pase
               ) : (
-                <p className="text-center text-[13.5px] leading-[1.7]">{latest === null ? dictionary.passPending : dictionary.passDeclined}</p>
+                <>
+                  <p className="text-center text-[13.5px] leading-[1.7]">{latest === null ? dictionary.passPending : dictionary.passDeclined}</p>
+                  {agendar}
+                </>
               ),
             }}
           />
           </EstiloDeLaInvitacion>
+          <HechoPorLuxury href={env.SITE_URL} texto={dictionary.madeBy} />
         </div>
       </div>
     </>

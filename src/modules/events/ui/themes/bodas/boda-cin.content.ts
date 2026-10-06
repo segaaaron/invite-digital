@@ -33,8 +33,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   ceremony: { label: 'Ceremonia Religiosa', place: 'Parroquia San Rafael', time: '13:00' },
   reception: { label: 'Recepción Social', place: 'Salón Los Cedros', time: '15:00' },
   itinerary: [
-    { time: '16:00 h', label: 'Ceremonia', imageId: '0' },
-    { time: '18:00 h', label: 'Recepción Social', imageId: '1' },
+    { time: '13:00 h', label: 'Ceremonia', imageId: '0' },
+    { time: '15:00 h', label: 'Recepción Social', imageId: '1' },
     { time: '18:30 h', label: 'Vals y Brindis', imageId: 'copas' },
     { time: '20:00 h', label: 'Cena', imageId: '3' },
     { time: '20:30 h', label: 'A bailar', imageId: '2' },

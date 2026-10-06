@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { db } from '@/shared/db/client'
 import { events, guestGroups, rsvpResponses } from '@/shared/db/schema'
 import { eq } from 'drizzle-orm'
-import { createDrizzleRsvpRepository } from './drizzle-rsvp-repository'
+import { createDrizzleRsvpRepository, firmarLibro } from './drizzle-rsvp-repository'
 
 class RollbackForTest extends Error {}
 
@@ -150,6 +150,30 @@ describe('respondedAtsFor', () => {
       await tx.update(guestGroups).set({ revokedAt: new Date() }).where(eq(guestGroups.id, grupoId))
 
       expect(await repo.respondedAtsFor(eventoId, new Date('2026-08-01T00:00:00Z'))).toEqual([])
+    })
+  })
+
+  it('firmar el libro escribe en la última respuesta sin tocar cuántos vienen, y una sola vez', async () => {
+    await inRolledBackTransaction(async (tx) => {
+      const repo = createDrizzleRsvpRepository(tx)
+      const groupId = await seedGroup(tx, await seedEvent(tx), 4, 7)
+
+      // Sin respuesta no hay dónde firmar.
+      expect(await firmarLibro(groupId, 'Hola', tx)).toBe(false)
+
+      const base = { guestGroupId: groupId, responderName: null, message: null }
+      await repo.append({ ...base, id: crypto.randomUUID(), attending: 4, respondedAt: new Date('2026-10-01T12:00:00Z') })
+      await repo.append({ ...base, id: crypto.randomUUID(), attending: 2, respondedAt: new Date('2026-10-02T12:00:00Z') })
+
+      expect(await firmarLibro(groupId, 'Qué ganas', tx)).toBe(true)
+      expect(await repo.latestFor(groupId)).toMatchObject({ attending: 2, message: 'Qué ganas' })
+      // La respuesta anterior no se toca.
+      const filas = await tx.select({ message: rsvpResponses.message }).from(rsvpResponses).where(eq(rsvpResponses.guestGroupId, groupId))
+      expect(filas.filter((f) => f.message !== null)).toHaveLength(1)
+
+      // Firmado, no se reescribe.
+      expect(await firmarLibro(groupId, 'Otra cosa', tx)).toBe(false)
+      expect((await repo.latestFor(groupId))?.message).toBe('Qué ganas')
     })
   })
 })

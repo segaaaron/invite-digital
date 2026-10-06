@@ -7,6 +7,11 @@ const BASE = {
   oroClaro: '#D8BE84',
   papel: '#F5EFE0',
   papelClaro: '#F8F4EA',
+  /** V4: los párrafos de «solo adultos» y de las fotos, un punto más claros. */
+  papelAdultos: '#F9F5EB',
+  papelFotos: '#FAF8F1',
+  /** El punto del alfiler del plano, como la maqueta. */
+  alfiler: '#000000',
   crema: '#f1ede4',
   hueso: '#EDE6D3',
   velo: 'rgba(10,25,15,0.35)',

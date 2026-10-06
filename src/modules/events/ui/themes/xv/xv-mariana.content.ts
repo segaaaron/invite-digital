@@ -13,24 +13,24 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     label: 'Agradecida por el amor y cuidado de mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],
   },
-  schedule: { startsAt: '2026-09-12T18:00:00' },
+  schedule: { startsAt: '2026-09-12T19:00:00' },
   reception: {
     label: 'Recepción Social',
-    place: 'Salón de Eventos Elianne',
-    address: 'Km 8, Carretera al Cielo',
-    time: '18:00',
+    place: 'El Portal Centro de Convenciones',
+    address: 'Av. Ricardo Jaimes Freyre 1929, Norte Parque Lincoln, Cochabamba',
+    time: '19:00',
   },
-  map: { label: 'SALÓN ELIANNE', coords: '17.39°S · 66.16°W' },
+  map: { label: 'EL PORTAL CENTRO DE CONVENCIONES', coords: '17.37°S · 66.16°W' },
   // Las cinco filas de su maqueta (`invites-1.jsx:2325-2331`). Faltaba la torta, y la
   // última se llamaba «Despedida» en vez de «Cierre».
   itinerary: [
-    { time: '18:00', label: 'Recepción', imageId: 'recepcion' },
+    { time: '19:00', label: 'Recepción', imageId: 'recepcion' },
     { time: '21:00', label: 'Cena', imageId: 'cena' },
     { time: '23:00', label: 'Baile Sorpresa', imageId: 'baile' },
     { time: '00:00', label: 'Torta', imageId: 'torta' },
     { time: '02:00', label: 'Cierre', imageId: 'cierre' },
   ],
-  music: { track: 'Tiempo de Vals', artist: 'Chayanne · vals oficial' },
+  music: { track: 'Dancing Queen', artist: 'ABBA' },
   dressCode: {
     title: 'Código de Vestimenta',
     note: 'FORMAL — DE GALA',

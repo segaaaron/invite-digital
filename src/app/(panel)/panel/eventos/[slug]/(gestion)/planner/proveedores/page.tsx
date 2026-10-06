@@ -29,7 +29,7 @@ export default async function ProveedoresPage({ params, searchParams }: { params
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los proveedores, el cronograma y el cortejo vienen con Firma 3D y Alta Costura." title="Proveedores" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los proveedores, el cronograma y el cortejo vienen con Gala e Imperial." title="Proveedores" />
   }
 
   const fiesta = fiestaDeTema(event.value.themeKey)

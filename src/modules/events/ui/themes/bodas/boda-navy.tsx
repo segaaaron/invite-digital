@@ -11,10 +11,10 @@ import { ACENTO, PALETA } from './boda-navy.palette'
  */
 export const bodaNavyDefinition: ThemeDefinition = {
   key: 'boda-navy',
-  label: 'Noche Estrellada',
+  label: 'Cielo estrellado',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'playfairDisplay', 'montserrat'],
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'playfairDisplay', 'montserrat', 'cinzel', 'cormorant'],
   rsvp: 'pildoras',
   pinta: {
     // Seis en el carrusel y el retrato grande de arriba.

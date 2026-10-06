@@ -35,14 +35,17 @@ describe('PlanComparison', () => {
     )
 
     expect(screen.getByRole('columnheader', { name: 'Alta Costura' })).toBeInTheDocument()
-    const porteros = screen.getByRole('row', { name: /personal de recepción/i })
-    expect(within(porteros).getAllByRole('cell').map((c) => c.textContent)).toEqual(['No', 'Hasta 10'])
+    // Las filas del documento de cambios: la galería por su número y el QR de acceso solo arriba.
+    const fotos = screen.getByRole('row', { name: /galería de fotos/i })
+    expect(within(fotos).getAllByRole('cell').map((c) => c.textContent)).toEqual(['8', '8'])
+    const qr = screen.getByRole('row', { name: /qr de acceso/i })
+    expect(within(qr).getAllByRole('cell').map((c) => c.textContent)).toEqual(['–', '✓'])
   })
 
   it('los extras a la venta salen debajo con su precio; sin extras, no hay bloque', () => {
     const { rerender } = render(<PlanComparison extras={[{ name: '+3 porteros', precio: 'Bs 80,00' }]} planes={[{ nombre: 'Atelier', limites: base }]} textos={es.pricing.comparison} />)
     expect(screen.getByRole('heading', { name: es.pricing.comparison.extrasTitle })).toBeInTheDocument()
-    expect(screen.getByRole('listitem')).toHaveTextContent('+3 porteros · Bs 80,00')
+    expect(screen.getByRole('listitem')).toHaveTextContent('+3 porteros+Bs 80,00')
     rerender(<PlanComparison planes={[{ nombre: 'Atelier', limites: base }]} textos={es.pricing.comparison} />)
     expect(screen.queryByRole('heading', { name: es.pricing.comparison.extrasTitle })).not.toBeInTheDocument()
   })

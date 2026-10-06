@@ -13,7 +13,7 @@ export const xvIsabelleDefinition: ThemeDefinition = {
   pinta: {
     // Su retrato es la foto que abre la invitación a sangre, entre columnas (la portada no se toca).
     fotos: { retrato: true, casillas: 0 },
-    sinCampos: { hero: ['nameB'], itinerary: ['note'] },
+    sinCampos: { hero: ['nameB', 'serial'], itinerary: ['note'] },
   },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,

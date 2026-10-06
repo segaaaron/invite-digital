@@ -17,6 +17,8 @@ type Props = {
   readonly name: string
   readonly hint: string
   readonly openLabel: string
+  /** V4: «SÁBADO 12 DE SEPTIEMBRE». */
+  readonly fecha?: string
 }
 
 const SOMBRA = '0 0 28px rgba(0,0,0,.9), 0 0 12px rgba(0,0,0,.8), 0 2px 4px rgba(0,0,0,.85)'
@@ -55,6 +57,7 @@ export function ValentinaCover({
   title,
   name,
   hint,
+  fecha = '',
   openLabel,
 }: Props) {
   return (
@@ -143,6 +146,13 @@ export function ValentinaCover({
         </span>
 
         <Filete color={accent} />
+
+        {/* V4: la fecha donde iba la placa, sin marco: es dato, no otro botón. */}
+        {fecha === '' ? null : (
+          <span style={{ display: 'block', marginTop: 4, fontSize: 10, letterSpacing: '0.3em', fontFamily: 'var(--font-jetbrains-mono)', color: accent, textShadow: SOMBRA }}>
+            {fecha}
+          </span>
+        )}
 
         <span
           style={{

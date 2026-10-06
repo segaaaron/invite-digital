@@ -1,7 +1,7 @@
 export type { Event, EventStatus } from './domain/event'
 export { acceptsResponses } from './domain/event'
 export { fechasDeMuestra } from './domain/fechas-de-muestra'
-export { puedeRepartir, type Diseno, type EstadoDeDiseno } from './domain/diseno'
+export { leerBrief, preguntasDelEncargo, puedeRepartir, MAX_RESPUESTA_DEL_ENCARGO, PREGUNTAS_DEL_ENCARGO, type BriefDelEncargo, type Diseno, type EstadoDeDiseno, type PreguntaDelEncargo } from './domain/diseno'
 export { loQueFaltaParaInvitar, loQueSePerderia, pideNombres, type InvitationContent, type Perdida } from './domain/invitation-content'
 export {
   FIESTAS,

@@ -86,7 +86,7 @@ test('un plan sin libro ni formas de regalar: el panel lo dice y la invitación 
 
     const invitado = await (await page.context().browser()!.newContext()).newPage()
     await invitado.goto(`/i/${token}`)
-    await expect(invitado.getByRole('button', { name: 'ENVIAR' })).toBeAttached()
+    await expect(invitado.getByRole('button', { name: 'ENVIAR', exact: true })).toBeAttached()
     await expect(invitado.locator('textarea[name=message]')).toHaveCount(0)
     await invitado.context().close()
   } finally {

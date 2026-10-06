@@ -17,6 +17,8 @@ type Props = {
   readonly name: string
   readonly hint: string
   readonly openLabel: string
+  /** V4: «SÁBADO 12 DE SEPTIEMBRE». */
+  readonly fecha?: string
 }
 
 const SOMBRA = '0 2px 8px rgba(0,0,0,.75)'
@@ -39,6 +41,7 @@ export function LucianaCover({
   title,
   name,
   hint,
+  fecha = '',
   openLabel,
 }: Props) {
   const barra = (
@@ -119,6 +122,13 @@ export function LucianaCover({
         </span>
 
         {barra}
+
+        {/* V4: la fecha donde iba la placa, sin marco: es dato, no otro botón. */}
+        {fecha === '' ? null : (
+          <span style={{ display: 'block', marginTop: 4, fontSize: 10, letterSpacing: '0.3em', fontFamily: 'var(--font-jetbrains-mono)', color: accent, textShadow: SOMBRA }}>
+            {fecha}
+          </span>
+        )}
 
         <span
           style={{

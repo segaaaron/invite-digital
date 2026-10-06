@@ -33,7 +33,7 @@ describe('repositorios Drizzle (requiere base sembrada)', () => {
     const es = await drizzlePlanRepository.listActive('es')
     const en = await drizzlePlanRepository.listActive('en')
     expect(en.map((r) => r.priceCents)).toEqual(es.map((r) => r.priceCents))
-    expect(en[1]?.name).toBe('Signature 3D')
+    expect(en[1]?.name).toBe('Gala')
   })
 
   it('publica exactamente los diseños que se venden, y ninguna de las de relleno', async () => {

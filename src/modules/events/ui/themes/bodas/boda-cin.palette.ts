@@ -11,6 +11,11 @@ const BASE = {
   flechaFondo: 'rgba(0,0,0,0.45)',
   fileteMuestra: 'rgba(197,150,26,0.4)',
   guion: 'rgba(201,169,110,0.5)',
+  /** V4: los párrafos un punto más claros, para leerse sobre el negro. */
+  papelClaro: '#F9F5EB',
+  cremaClara: '#F0E4C6',
+  /** El punto del alfiler del plano. */
+  alfiler: '#000000',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

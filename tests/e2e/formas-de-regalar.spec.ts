@@ -94,6 +94,8 @@ test('en un XV con tarjeta de regalos propia va el QR real, no el de adorno de l
   `
 
   await page.goto(`/i/${token}`)
+  // V4: sobres y transferencia van en dos pestañas; el QR está en la segunda.
+  await page.getByRole('button', { name: 'Transferencia QR' }).click()
   await expect(page.getByRole('img', { name: 'Código QR para transferir' })).toBeAttached()
   await expect(page.getByText('Escanea Aquí')).toHaveCount(0)
 

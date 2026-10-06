@@ -14,7 +14,7 @@ export const bodaPerlaDefinition: ThemeDefinition = {
   label: 'Marco Perlado',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'playfairDisplay', 'montserrat', 'cormorant', 'dmSans'],
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'playfairDisplay', 'montserrat', 'cormorant', 'dmSans', 'cinzel'],
   rsvp: 'pildoras',
   pinta: {
     // Cinco en el carrusel y el retrato grande de arriba.

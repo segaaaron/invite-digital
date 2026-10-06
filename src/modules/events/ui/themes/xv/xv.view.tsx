@@ -1,6 +1,7 @@
 import Image from '@/shared/design/ui/ImagenQueAparece'
 import type { ThemeProps } from '../contract'
 import { anfitrionesXv } from '../../../domain/invitation-content'
+import { comoLlegar } from '../../../domain/ubicacion'
 import { variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
@@ -13,7 +14,8 @@ import { ThemeColumn } from '../kit/ThemeColumn'
 import { FloatingParticles } from '../kit/backgrounds/FloatingParticles'
 import { PremiumBubbles } from '../kit/backgrounds/PremiumBubbles'
 import { DividerOrnamental } from './DividerOrnamental'
-import { FileteDegradado, SobreDeLinea } from './PiezasXv'
+import { FileteDegradado } from './PiezasXv'
+import { PestanasDeRegalo } from './PestanasDeRegalo'
 import type { PielXv } from './piel-xv'
 import { PIEL_XV } from './xv.skin'
 import { colorDeAcento } from './xv.palette'
@@ -60,7 +62,10 @@ export function XvSharedView({
   // sobre de línea; los demás llevan tarjeta propia entre ornamentos. Es la composición de
   // la maqueta, y el orden de `notes` lo fija el diseño, igual que «Editorial» indexa el
   // suyo para la tarjeta de fotografías.
-  const [avisoDeSobres, ...avisosSueltos] = notes ?? []
+  // Sin tarjeta de regalos (V4: «Noche Estrellada» pinta su aviso de «solo adultos»), todos
+  // los avisos van sueltos.
+  const avisoDeSobres = piel.regalos === true ? notes?.[0] : undefined
+  const avisosSueltos = (piel.regalos === true ? notes?.slice(1) : notes) ?? []
   // Los regalos por piezas, en una invitación de verdad (ver `ThemeSlots.regalos`).
   const partes = slots.regalos
 
@@ -70,10 +75,28 @@ export function XvSharedView({
   // blanco que ya usa la cita de «Editorial».
   const [introDeRegalos, notaDeSobres] = (avisoDeSobres?.text ?? '').split('\n\n')
 
-  // El cierre son dos textos, como en la maqueta: la despedida —arriba, sobre la firma— y
-  // la bendición del final, tras la concha. Van en un solo campo separados por una línea en
-  // blanco; con uno solo, es la despedida y no hay bendición.
-  const [despedida, bendicion] = (closing?.text ?? '').split('\n\n')
+  // El cierre son dos textos: la despedida —arriba, sobre la firma— y la bendición del final,
+  // tras la pieza, separados por una línea en blanco. Con uno solo es la despedida, salvo en
+  // los diseños que en V4 ya no la escriben (`cierreSoloBendicion`): ahí es la bendición.
+  const parrafosDelCierre = (closing?.text ?? '').split('\n\n').filter((p) => p.trim() !== '')
+  const [despedida, bendicion] =
+    parrafosDelCierre.length === 1 && piel.cierreSoloBendicion === true ? [undefined, parrafosDelCierre[0]] : parrafosDelCierre
+  const llegarALaRecepcion = comoLlegar(
+    { href: map?.href, coords: map?.coords },
+    [reception?.place, reception?.address].filter(Boolean).join(', '),
+  )
+  // «SÁBADO 12 DE SEPTIEMBRE», la de la portada (V4). Se lee del texto, a mediodía en UTC, para
+  // que la zona del servidor no la mueva de día.
+  const fechaDePortada =
+    schedule === undefined
+      ? ''
+      : new Intl.DateTimeFormat(event.locale === 'en' ? 'en-US' : 'es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+          .format(new Date(`${schedule.startsAt.slice(0, 10)}T12:00:00Z`))
+          .replace(',', '')
+          .toUpperCase()
+  // «· MIS QUINCE · 12.09.2026 ·»: la barra de arriba lleva la fecha del evento (V4).
+  const fechaPuntos = schedule === undefined ? '' : schedule.startsAt.slice(0, 10).split('-').reverse().join('.')
+  const barra = `${(hero?.eyebrow ?? '').replace(/\s*·\s*$/, '')} · ${fechaPuntos === '' ? hero?.serial ?? '' : fechaPuntos} ·`
 
   // El morado con el que la maqueta escribe la cita de portada y el código de vestimenta,
   // más hondo que el de los demás rótulos. Los diseños que no lo distinguen caen en `uva`.
@@ -145,8 +168,16 @@ export function XvSharedView({
 
   return (
     <article
+      className={piel.halo === undefined ? undefined : 'theme-halo'}
       style={{
         ...RANURAS,
+        ...(piel.halo === undefined ? {} : { ['--halo' as string]: piel.halo }),
+        // V4: «Enviar» en DM Sans, y el libro de firmas con su caja redondeada.
+        ['--rsvp-boton-letra' as string]: SANS,
+        ['--rsvp-boton-fs' as string]: '11px',
+        ['--rsvp-boton-tracking' as string]: '0.18em',
+        ['--libro-radio' as string]: '10px',
+        ['--libro-letra' as string]: SANS,
         position: 'relative',
         background: piel.fondoBase,
         color: P.tinta,
@@ -161,6 +192,8 @@ export function XvSharedView({
       }}
     >
       {piel.portada({
+        fecha: fechaDePortada,
+        anio: schedule?.startsAt.slice(0, 4) ?? hero?.serial ?? '',
         eyebrow: hero?.eyebrow ?? '',
         name: hero?.nameA ?? '',
         title: hero?.monogram ?? 'XV',
@@ -212,6 +245,19 @@ export function XvSharedView({
           pointerEvents: 'none',
         }}
       />
+      {piel.veloCentral === undefined ? null : (
+        <div
+          aria-hidden
+          style={{
+            position: 'sticky',
+            top: 0,
+            height: 'var(--alto, 100dvh)',
+            marginBottom: 'calc(var(--alto, 100dvh) * -1)',
+            background: piel.veloCentral,
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       {piel.veloInferior === undefined ? null : (
         <div
           aria-hidden
@@ -321,19 +367,18 @@ export function XvSharedView({
             <div
               data-testid="xv-barra-superior"
               style={{
-                display: 'flex',
-                justifyContent: 'space-between',
+                textAlign: 'center',
+                paddingLeft: '0.22em',
                 minHeight: '1.6em',
-                fontFamily: MONO,
-                fontSize: 13,
-                letterSpacing: '0.3em',
+                fontFamily: SANS,
+                fontSize: 12,
+                letterSpacing: '0.22em',
                 opacity: 0.85,
                 color: SERIAL,
                 fontWeight: 700,
               }}
             >
-              <span>{hero?.eyebrow ?? ''}</span>
-              <span>{hero?.serial ?? ''}</span>
+              {barra}
             </div>
           </div>
         </Reveal>
@@ -380,12 +425,16 @@ export function XvSharedView({
             </div>
             <div
               style={{
-                fontFamily: DISPLAY,
-                fontSize: 26,
-                marginTop: 2,
+                fontFamily: CINZEL,
+                fontWeight: 500,
+                fontSize: 28,
+                marginTop: 4,
                 color: ANIOS,
                 textTransform: 'uppercase',
-                letterSpacing: '9px',
+                letterSpacing: '8px',
+                paddingLeft: '8px',
+                lineHeight: 1.2,
+                textShadow: Z.aniosSombra ?? Z.sombraTexto,
               }}
             >
               {themes.years}
@@ -422,6 +471,8 @@ export function XvSharedView({
                     color: Z.cita?.color ?? UVA_HONDA,
                     fontWeight: Z.cita?.weight ?? 900,
                     textShadow: Z.cita?.sombra,
+                    fontStyle: Z.cita?.cursiva === true ? 'italic' : undefined,
+                    whiteSpace: 'pre-line',
                     margin: 0,
                   }}
                 >
@@ -575,7 +626,7 @@ export function XvSharedView({
                 color="rgba(74,26,110,0.45)"
                 height="100%"
                 label={retrato?.label ?? themes.portraitPlaceholder}
-                objectPosition="center 6%"
+                objectPosition={retrato?.imageId === undefined ? (piel.arte?.retratoPosicion ?? 'center 6%') : 'center 6%'}
                 radius={0}
                 src={retrato?.imageId === undefined ? piel.retrato : `/media/${retrato.imageId}`}
                 width="100%"
@@ -768,7 +819,7 @@ export function XvSharedView({
                   {guestInfo.label}
                 </div>
                 <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 16, color: ROTULO_TENUE }}>{themes.weSaved}</div>
-                <div style={{ fontFamily: DISPLAY, fontSize: 40, marginTop: 4, color: P.tinta, fontWeight: 700 }}>
+                <div style={{ fontFamily: SERIF, fontSize: 40, marginTop: 4, color: P.tinta, fontWeight: 600, fontVariantNumeric: 'lining-nums', lineHeight: 1.1 }}>
                   {guestInfo.seats}
                 </div>
                 <div style={{ fontFamily: SANS, fontSize: 13, marginTop: 4, color: ROTULO_TENUE }}>{guestInfo.seats === 1 ? themes.seatForYou : themes.seatsForYou}</div>
@@ -892,7 +943,8 @@ export function XvSharedView({
                     <span>{reception.place ?? ''}</span>
                     <span
                       style={{
-                        fontFamily: MONO,
+                        fontFamily: Z.lugarHoraLetra ?? MONO,
+                        textAlign: 'right',
                         fontSize: Z.lugarHoraSize,
                         fontWeight: Z.lugarHoraPeso,
                         color: LUGAR_HORA,
@@ -904,6 +956,29 @@ export function XvSharedView({
                   <div style={{ fontSize: 11, marginTop: 4, color: LUGAR_DIRECCION, fontWeight: 600, textShadow: Z.sombraTexto }}>
                     {reception.address ?? ''}
                   </div>
+                  {Z.verUbicacion === undefined || llegarALaRecepcion === null ? null : (
+                    <a
+                      href={llegarALaRecepcion}
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'inline-block',
+                        marginTop: 12,
+                        padding: '7px 16px',
+                        borderRadius: 999,
+                        border: `1.5px solid ${Z.verUbicacion.borde}`,
+                        color: Z.verUbicacion.tinta,
+                        fontFamily: SANS,
+                        fontSize: 10,
+                        letterSpacing: '0.16em',
+                        fontWeight: 700,
+                        textDecoration: 'none',
+                        textTransform: 'uppercase',
+                      }}
+                      target="_blank"
+                    >
+                      {themes.viewLocation}
+                    </a>
+                  )}
                 </div>
               )}
             </div>
@@ -1109,7 +1184,8 @@ export function XvSharedView({
                   artist={music.artist ?? ''}
                   artistColor={Z.musicaArtista ?? P.malva}
                   audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
-                  eyebrow={themes.songOfTheNight}
+                  eyebrow={themes.myWaltz}
+                  eyebrowFont={SANS}
                   playBg={P.uva}
                   playIconColor={P.blanco}
                   textColor={P.tinta}
@@ -1223,58 +1299,49 @@ export function XvSharedView({
               </p>
             )}
 
-            {avisoDeSobres === undefined || partes?.sobres === false ? null : (
-              <div style={{ marginTop: 40 }}>
-                <SobreDeLinea color={Z.sobreAcento ?? P.lila} />
-                <div
-                  style={{
-                    marginTop: 16,
-                    fontFamily: SANS,
-                    fontSize: 15,
-                    letterSpacing: '0.04em',
-                    color: Z.sobresRotulo ?? P.violetaHondo,
-                    textShadow: Z.sombraTexto,
-                    fontWeight: 700,
-                  }}
-                >
-                  {avisoDeSobres.title}
-                </div>
-                {notaDeSobres === undefined ? null : (
-                  <div style={{ marginTop: 6, fontSize: 12, color: Z.sobresNota ?? P.uva, textShadow: Z.sombraTexto }}>
-                    {notaDeSobres}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* El separador de esta tarjeta no es el mismo en los cuatro: ver `separadorRegalos`. */}
-            {piel.separadorRegalos ?? <FileteDegradado color={P.lilaFuerte} margin="36px auto" />}
-
-            {/* El código y su pie, como en el diseño. En una invitación de verdad es el QR del banco
-                del cliente, o nada: el de adorno de la maqueta, con «escanea aquí», invitaría a pagar
-                a un código falso. Sin `partes` (escaparate, vista previa) queda el de la maqueta. */}
-            {partes === undefined ? (
-              <>
-                <MarcoQr aro={Z.qrAro} bg={P.blanco} fg={Z.qrTinta ?? P.violetaHondo} seed={42} size={110} />
-                <div
-                  style={{
-                    marginTop: 14,
-                    fontFamily: SANS,
-                    fontSize: 15,
-                    letterSpacing: '0.04em',
-                    color: Z.sobresRotulo ?? P.violetaHondo,
-                    textShadow: Z.sombraTexto,
-                    fontWeight: 700,
-                  }}
-                >
-                  {themes.scanHere}
-                </div>
-              </>
-            ) : partes.qr === null ? null : (
-              <div style={{ marginTop: 8 }}>{partes.qr}</div>
-            )}
-
-            {partes === undefined ? slots.registry : partes.resto}
+            {/* V4: «Lluvia de sobres» y «Transferencia QR» en dos pestañas. En una invitación de
+                verdad la segunda es el QR del banco del cliente y sus datos, o nada: el de adorno de
+                la maqueta, con «escanea», invitaría a pagar a un código falso. Sin `partes`
+                (escaparate, vista previa) queda el de la maqueta. */}
+            <PestanasDeRegalo
+              acento={Z.pestanas?.acento ?? P.uva}
+              borde={Z.pestanas?.borde ?? P.lila}
+              sobreAcento={Z.pestanas?.sobreAcento ?? P.blanco}
+              sobres={
+                avisoDeSobres === undefined || partes?.sobres === false
+                  ? null
+                  : { rotulo: avisoDeSobres.title ?? '', nota: notaDeSobres }
+              }
+              sombra={Z.pestanas?.sombra}
+              tinta={Z.pestanas?.tinta ?? Z.sobresRotulo ?? P.violetaHondo}
+              transferencia={
+                partes === undefined
+                  ? {
+                      rotulo: themes.transferQr,
+                      contenido: (
+                        <>
+                          <MarcoQr aro={Z.qrAro} bg={P.blanco} fg={Z.qrTinta ?? P.violetaHondo} seed={42} size={116} />
+                          <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 14, color: Z.pestanas?.tinta ?? Z.sobresRotulo ?? P.violetaHondo, textShadow: Z.pestanas?.sombra }}>
+                            {themes.scanFromBank}
+                          </div>
+                        </>
+                      ),
+                    }
+                  : partes.qr === null && partes.resto === null
+                    ? null
+                    : {
+                        rotulo: themes.transferQr,
+                        contenido: (
+                          <>
+                            {partes.qr}
+                            {partes.resto}
+                          </>
+                        ),
+                      }
+              }
+            />
+            {/* La mesa de regalos de verdad (reservar), fuera de las pestañas: no es una forma de pago. */}
+            {partes === undefined ? slots.registry : null}
           </div>
         </Reveal>
         )}
@@ -1345,16 +1412,99 @@ export function XvSharedView({
             )}
             {piel.ornamento ?? <FileteDegradado color={F.filete ?? P.lilaFuerte} margin="22px auto" />}
             {slots.rsvp}
+            {/* V4: ya confirmó; el mensaje se deja en el libro de firmas, a un toque. */}
+            {!respondida || slots.guestbook === null ? null : (
+              <div style={{ marginTop: 14 }}>
+                <div style={{ fontFamily: SANS, fontSize: 14, color: Z.plazo ?? P.violeta, textShadow: Z.sombraTexto }}>
+                  {themes.leaveMessageTo.replace('{nombre}', hero?.nameA ?? '')}
+                </div>
+                <a
+                  href="#libro-de-firmas"
+                  style={{
+                    display: 'inline-block',
+                    marginTop: 18,
+                    fontFamily: SANS,
+                    fontSize: 11,
+                    letterSpacing: '0.18em',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    padding: '12px 22px',
+                    borderRadius: 30,
+                    border: `1.5px solid ${Z.pestanas?.acento ?? P.uva}`,
+                    background: Z.pestanas?.acento ?? P.uva,
+                    color: Z.pestanas?.sobreAcento ?? P.blanco,
+                    textDecoration: 'none',
+                  }}
+                >
+                  {themes.goToBook}
+                </a>
+              </div>
+            )}
           </div>
         </Reveal>
 
+        {/* V4 (`Firma3D`): el rótulo «Libro de firmas», el titular «Déjale un mensaje» con su
+            ornamento, y la tarjeta con el formulario debajo. */}
         {slots.guestbook === null ? null : (
           <Reveal>
-            <div style={{ marginTop: 28, padding: '22px 20px', ...CRISTAL, border: `1.5px solid ${P.lila}` }}>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.uva, textAlign: 'center', marginBottom: 12 }}>
+            <div id="libro-de-firmas" style={{ marginTop: 40, textAlign: 'center', scrollMarginTop: 60 }}>
+              <div style={{ fontFamily: SANS, fontSize: 10, letterSpacing: '0.3em', color: Z.pestanas?.acento ?? P.uva, fontWeight: 700, textTransform: 'uppercase', textShadow: Z.sombraTexto }}>
                 {themes[piel.rotulos?.guestbook ?? 'guestbook']}
               </div>
-              {slots.guestbook}
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, lineHeight: 1.15, marginTop: 6, color: TITULO, textShadow: Z.sombraTexto }}>
+                {themes.leaveHerMessage}
+              </div>
+              <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '12px 0 4px' }}>
+                <span style={{ width: 44, height: 1, background: P.lila }} />
+                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>◆</span>
+                <span style={{ width: 44, height: 1, background: P.lila }} />
+              </div>
+            </div>
+            <div style={{ marginTop: 18, padding: '22px 18px', ...CRISTAL, border: `1px solid ${P.lila}` }}>{slots.guestbook}</div>
+          </Reveal>
+        )}
+
+        {/* V4 (`Firma3D`): el álbum compartido, cuando el plan lo trae. La etiqueta del plan solo
+            se enseña en el escaparate y la vista previa (sin regalos por piezas, que solo trae una
+            invitación de verdad): al invitado no le dice nada. */}
+        {slots.photos === undefined ? null : (
+          <Reveal>
+            <div style={{ marginTop: 40, textAlign: 'center' }}>
+              {partes !== undefined ? null : (
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    marginBottom: 10,
+                    padding: '4px 12px',
+                    borderRadius: 30,
+                    border: `1px solid ${P.lila}`,
+                    background: P.vidrio,
+                    fontFamily: SANS,
+                    fontSize: 8.5,
+                    letterSpacing: '0.2em',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    color: Z.pestanas?.acento ?? P.uva,
+                  }}
+                >
+                  ◆ {themes.albumBadge}
+                </div>
+              )}
+              <div style={{ fontFamily: SANS, fontSize: 10, letterSpacing: '0.3em', color: Z.pestanas?.acento ?? P.uva, fontWeight: 700, textTransform: 'uppercase', textShadow: Z.sombraTexto }}>
+                {themes.albumKicker}
+              </div>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, lineHeight: 1.15, marginTop: 6, color: TITULO, textShadow: Z.sombraTexto }}>{themes.albumTitle}</div>
+              <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '12px 0 4px' }}>
+                <span style={{ width: 44, height: 1, background: P.lila }} />
+                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>◆</span>
+                <span style={{ width: 44, height: 1, background: P.lila }} />
+              </div>
+              <p style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: Z.pestanas?.tinta ?? P.violeta, maxWidth: 300, margin: '8px auto 0', textShadow: Z.sombraTexto }}>
+                {themes.albumHint}
+              </p>
+              <div style={{ marginTop: 16 }}>{slots.photos}</div>
             </div>
           </Reveal>
         )}
@@ -1377,7 +1527,7 @@ export function XvSharedView({
             )}
             {/* El cierre lleva su propio rótulo —«Mis XV Años»—, no el antetítulo de la
                 cabecera: arriba pone «· MIS QUINCE ·» y aquí no. */}
-            <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: P.uva, marginTop: 36 }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: P.uva, marginTop: despedida === undefined ? 8 : 36 }}>
               {themes.myFifteen}
             </div>
             {closing?.signature === undefined ? null : (

@@ -8,6 +8,7 @@ import { CapaFija } from '../kit/CapaFija'
 import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { Reveal } from '../kit/Reveal'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { BohoCover } from './BohoCover'
 import { CarruselDePerla } from './CarruselDePerla'
 import { alfaDe, CARTA_DE_COLOR, PALETA as P } from './boda-boho.palette'
@@ -244,7 +245,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
       {/* ── La invitación personal ── */}
       <Reveal>
         <div style={{ padding: '56px 24px', textAlign: 'center' }}>
-          <p style={{ ...VIDRIO, fontFamily: SERIF, fontSize: 17, lineHeight: 1.9, maxWidth: '76%', margin: '0 auto', borderRadius: 12, padding: '18px 20px' }}>
+          <p style={{ ...VIDRIO, fontFamily: SERIF, fontSize: 19.5, fontWeight: 500, lineHeight: 1.8, color: P.cafeLectura, maxWidth: '76%', margin: '0 auto', borderRadius: 12, padding: '18px 20px' }}>
             {ROTULOS.invitacion}
           </p>
           {guestInfo === undefined ? (
@@ -299,7 +300,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
                   padding: '28px 8px 22px',
                   textAlign: 'center',
                   display: 'grid',
-                  gridTemplateRows: '150px auto auto auto 1fr auto',
+                  gridTemplateRows: '150px auto auto auto 1fr auto auto',
                   justifyItems: 'center',
                   rowGap: 16,
                 }}
@@ -332,6 +333,19 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
                     {ROTULOS.verUbicacion}
                   </a>
                 )}
+                <MapaDeLaTarjeta
+                  accent={P.terracota}
+                  border={alfaDe('oro', 0.5)}
+                  coords={map?.coords ?? ''}
+                  coordsColor={P.terracota}
+                  directionsLabel={ROTULOS.verUbicacion}
+                  href={map?.href}
+                  label={lugar.place ?? ''}
+                  labelColor={P.cafe}
+                  pinDot={P.alfiler}
+                  pinRing={P.aroAlfiler}
+                  respaldo={[lugar.place, lugar.address].filter(Boolean).join(', ')}
+                />
               </div>
             ),
           )}
@@ -397,7 +411,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
               <Arte ancho={620} flota estilo={{ width: '85%', margin: '26px auto' }} src={themeAsset('boda-boho', 'vestimenta.avif')} />
               <div style={{ display: 'flex', justifyContent: 'center', gap: 6, width: '58%', margin: '22px auto 0' }}>
                 {(dressCode.colors ?? CARTA_DE_COLOR.map((c) => c.color)).map((color) => (
-                  <span key={color} style={{ textAlign: 'center', flex: 1 }}>
+                  <span key={color} style={{ textAlign: 'center', flex: '1 1 0', minWidth: 0 }}>
                     <span style={{ display: 'block', width: '100%', aspectRatio: '1/1', background: color, border: `1px solid ${alfaDe('terracota', 0.25)}` }} />
                     <span style={{ display: 'block', marginTop: 3, fontFamily: MONO, fontSize: 8, letterSpacing: '0.15em' }}>
                       {(CARTA_DE_COLOR.find((c) => c.color === color.toLowerCase())?.nombre ?? '').toUpperCase()}
@@ -406,7 +420,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
                 ))}
               </div>
               {dressCode.note === undefined ? null : (
-                <p style={{ marginTop: 14, fontSize: 13, fontStyle: 'italic', lineHeight: 1.6, textAlign: 'center' }}>{dressCode.note}</p>
+                <p style={{ marginTop: 14, fontSize: 15, fontStyle: 'italic', fontWeight: 500, color: P.cafeLectura, lineHeight: 1.8, textAlign: 'center' }}>{dressCode.note}</p>
               )}
             </div>
           </Reveal>
@@ -417,12 +431,12 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
           <Reveal>
             <div style={{ marginTop: 60, marginBottom: 20, padding: '0 10px' }}>
               <div style={{ ...VIDRIO, borderRadius: 16, padding: '30px 20px', textAlign: 'center' }}>
+                {soloAdultos.title === undefined ? null : (
+                  <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', fontWeight: 700, marginBottom: 18, textTransform: 'uppercase' }}>{soloAdultos.title}</p>
+                )}
                 <Arte ancho={260} flota estilo={{ margin: '0 auto' }} src={themeAsset('boda-boho', 'tacon-y-corbata.avif')} />
                 <div style={{ maxWidth: '88%', margin: '16px auto 0' }}>
-                  <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 20, lineHeight: 1.7 }}>{soloAdultos.text}</p>
-                  {soloAdultos.title === undefined ? null : (
-                    <p style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', fontWeight: 700, marginTop: 14, textTransform: 'uppercase' }}>{soloAdultos.title}</p>
-                  )}
+                  <p style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 23, fontWeight: 500, lineHeight: 1.8, color: P.cafeLectura }}>{soloAdultos.text}</p>
                 </div>
               </div>
             </div>
@@ -435,7 +449,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
             <Arte ancho={240} flota estilo={{ margin: '0 auto' }} src={themeAsset('boda-boho', 'regalo.avif')} />
             <p style={{ fontFamily: CALIGRAFIA, fontSize: 46, marginTop: 32 }}>{regalos?.title ?? ROTULOS.regalos}</p>
             {regalos?.text === undefined ? null : (
-              <p style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
+              <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.cafeLectura, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
             <div style={{ marginTop: 22 }}>{slots.registry}</div>
           </div>
@@ -477,19 +491,21 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
             <div style={{ marginTop: 50, padding: '32px 24px', textAlign: 'center' }}>
               <Arte ancho={225} flota estilo={{ margin: '0 auto' }} src={themeAsset('boda-boho', 'camara.avif')} />
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, marginTop: 20 }}>{dictionary.photosTitle}</p>
-              <p style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{dictionary.photosIntro}</p>
+              <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.cafeLectura, maxWidth: '72%', margin: '18px auto 0' }}>{dictionary.photosIntro}</p>
               <div style={{ marginTop: 22 }}>{slots.photos}</div>
             </div>
           </Reveal>
         )}
 
         {/* ── El libro de firmas ── */}
-        <Reveal>
-          <div style={{ marginTop: 50, padding: '32px 0', textAlign: 'center' }}>
-            <p style={{ fontFamily: CALIGRAFIA, fontSize: 40 }}>{ROTULOS.firmas}</p>
-            <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
-          </div>
-        </Reveal>
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 50, padding: '32px 0', textAlign: 'center' }}>
+              <p style={{ fontFamily: CALIGRAFIA, fontSize: 40 }}>{ROTULOS.firmas}</p>
+              <div style={{ marginTop: 18 }}>{slots.guestbook}</div>
+            </div>
+          </Reveal>
+        )}
 
         {/* ── El cierre ── */}
         <Reveal>

@@ -61,7 +61,7 @@ describe('lectura del catálogo', () => {
     const row = await drizzlePlansRepository.findEventPlan(eventId)
 
     expect(row?.slug).toBe('atelier')
-    expect(row?.maxGuestGroups).toBe(40)
+    expect(row?.maxGuestGroups).toBeNull()
     expect(row?.includesRegistry).toBe(false)
   })
 
@@ -188,9 +188,9 @@ describe('aplicar un extra aprobado', () => {
     expect(await drizzlePlansRepository.applyExtra(pedido!.id)).toBe(true)
     expect(await drizzlePlansRepository.applyExtra(pedido!.id)).toBe(false)
 
-    expect(await drizzlePlansRepository.listEventExtras(eventId)).toEqual([{ effect: 'mas_dias', amount: 180 }])
+    expect(await drizzlePlansRepository.listEventExtras(eventId)).toEqual([{ effect: 'mas_dias', amount: 90 }])
     const [despues] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
-    expect(despues!.dias).toBe(antes!.dias + 180)
+    expect(despues!.dias).toBe(antes!.dias + 90)
 
     await db.delete(orders).where(eq(orders.id, pedido!.id))
     await db.delete(eventAddons).where(eq(eventAddons.eventId, eventId))
@@ -238,9 +238,9 @@ describe('los extras de una cotización', () => {
     expect(await drizzlePlansRepository.applyQuoteExtras(pedido!.id)).toBe(1)
     expect(await drizzlePlansRepository.applyQuoteExtras(pedido!.id)).toBe(0)
 
-    expect(await drizzlePlansRepository.listEventExtras(eventId)).toEqual([{ effect: 'mas_dias', amount: 180 }])
+    expect(await drizzlePlansRepository.listEventExtras(eventId)).toEqual([{ effect: 'mas_dias', amount: 90 }])
     const [despues] = await db.select({ dias: events.retentionDays }).from(events).where(eq(events.id, eventId))
-    expect(despues!.dias).toBe(antes!.dias + 180)
+    expect(despues!.dias).toBe(antes!.dias + 90)
 
     await db.delete(orders).where(eq(orders.id, pedido!.id))
     await db.delete(eventAddons).where(eq(eventAddons.eventId, eventId))

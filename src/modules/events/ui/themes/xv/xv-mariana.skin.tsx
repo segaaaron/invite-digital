@@ -93,6 +93,7 @@ export const PIEL: PielXv = {
   // Los colores que «Encanto Musical» reparte distinto de «Bajo el Mar». Su «XV» no es un
   // color: es un degradado de plata recortado sobre el texto, como el material del diseño.
   piezas: {
+    anios: '#E6E9ED',
     // El «ENVIAR» de su formulario en la maqueta.
     formulario: { boton: '#C0C6CD' },
     botonTinta: '#000000',
@@ -187,7 +188,7 @@ export const PIEL: PielXv = {
   corona: themeAsset('xv-mariana', 'micro-notas-opt.avif'),
   reloj: themeAsset('xv-mariana', 'reloj-plata-opt.avif'),
   castillo: themeAsset('xv-mariana', 'castillo-guindo-opt.avif'),
-  vestimenta: themeAsset('xv-mariana', 'traje-plata-opt.avif'),
+  vestimenta: themeAsset('xv-mariana', 'vestimenta-v4.avif'),
   cierre: themeAsset('xv-mariana', 'corona-plata-opt.avif'),
   // La torta la **dibuja** su maqueta; los otros cuatro son PNG de plata. Por eso esta
   // fila entra por `iconoNodo` y las demás caen a `icono`.

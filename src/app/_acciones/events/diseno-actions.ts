@@ -6,6 +6,7 @@ import { admin, avisos, diseno, events, type ResultadoDePaso } from '@/app/compo
 import { requireAdmin, requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { avisoDeVersionLista } from '@/modules/notifications'
+import { leerBrief, MAX_RESPUESTA_DEL_ENCARGO } from '@/modules/events'
 import { campo } from '@/shared/forms/campo'
 import { fechaEnBolivia } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
@@ -42,6 +43,12 @@ export async function enviarADisenoAction(_previo: DisenoState, formData: FormDa
   const eventId = campo(formData, 'eventId')
   await requireEventAccess(actor, { eventId, section: 'invitacion' })
   const evento = await eventoDe(eventId)
+
+  // Lo que el formulario pregunta según el plan (secciones; en Imperial, temática, vestido…). Va
+  // antes del paso: si el paso falla, las respuestas quedan guardadas para el siguiente intento.
+  const brief = leerBrief((pregunta) => (formData.has(`brief_${pregunta}`) ? campo(formData, `brief_${pregunta}`) : null))
+  if (isErr(brief)) return { status: 'error', message: `Cada respuesta puede tener hasta ${MAX_RESPUESTA_DEL_ENCARGO} caracteres. Resume la más larga.` }
+  if (Object.keys(brief.value).length > 0) await diseno.guardarBrief(eventId, brief.value)
 
   const r = await diseno.paso(eventId, 'enviar', { hoy: fechaEnBolivia(new Date()) })
   if (r !== 'ok') return { status: 'error', message: MENSAJE[r] }

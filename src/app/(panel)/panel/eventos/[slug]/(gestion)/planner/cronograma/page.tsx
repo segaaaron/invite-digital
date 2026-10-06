@@ -27,7 +27,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cronograma del día viene con Firma 3D y Alta Costura." title="Cronograma" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cronograma del día viene con Gala e Imperial." title="Cronograma" />
   }
 
   const proveedores = (await planner.dia.listVendors(event.value.id)).map((p) => ({ id: p.id, service: p.service }))

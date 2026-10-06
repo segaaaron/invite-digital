@@ -11,10 +11,10 @@ import { ACENTO, PALETA } from './boda-glamour.palette'
  */
 export const bodaGlamourDefinition: ThemeDefinition = {
   key: 'boda-glamour',
-  label: 'Glamour',
+  label: 'Glamour Burdeos',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['cormorant', 'greatVibes', 'montserrat', 'playfairDisplay', 'dmSans', 'jetbrainsMono'],
+  fonts: ['cormorant', 'greatVibes', 'montserrat', 'playfairDisplay', 'dmSans', 'jetbrainsMono', 'cinzel'],
   rsvp: 'pildoras',
   pinta: {
     // Cinco en el carrusel «Nuestra Historia» y el retrato de arriba.

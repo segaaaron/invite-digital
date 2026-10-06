@@ -22,6 +22,28 @@ const BASE = {
   oroClaro: '#e8dece',
   /** `line`: el filete neutro de los campos y los botones. */
   filete: '#ddd8ce',
+  /** El gris de la fecha y del rótulo de la portada. */
+  gris: '#8a8279',
+  /** V4: la tinta de las líneas del itinerario. */
+  tintaItinerario: '#6b5e4e',
+  /** El sobre de la portada V4: su fondo, la carta, el frente, la solapa y el lacre. */
+  sobre: '#ede3d2',
+  carta: '#fdfbf7',
+  frenteSobre: '#f3ebdd',
+  solapa: '#f0e6d5',
+  filoSolapa: 'rgba(184,150,106,0.45)',
+  brilloSobre: 'linear-gradient(160deg, rgba(0,0,0,0.035), transparent 55%)',
+  lacreClaro: '#dcc293',
+  lacreOscuro: '#957548',
+  sombraSobre: 'rgba(60,45,25,0.22)',
+  sombraDelSobre: '0 22px 44px rgba(60,45,25,0.18), 0 4px 10px rgba(60,45,25,0.08), inset 0 0 0 1px rgba(184,150,106,0.22)',
+  sombraSolapa: 'rgba(60,45,25,0.12)',
+  sombraLacre: '0 3px 8px rgba(80,55,20,0.3), inset 0 0 0 3px rgba(255,255,255,0.12)',
+  /** El velo oscuro de la fotografía en paralaje y el blanco de su frase. */
+  veloFoto: 'rgba(30,24,16,0.34)',
+  blanco: '#ffffff',
+  /** La caja de los datos del banco, sobre el lino. */
+  papelVelado: 'rgba(250,247,242,0.6)',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

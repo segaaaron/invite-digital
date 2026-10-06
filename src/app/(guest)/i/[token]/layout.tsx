@@ -11,6 +11,7 @@ import '../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
 import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
+import { SinVerCodigo } from '@/modules/events/ui/themes/kit/SinVerCodigo'
 
 export const viewport = VIEWPORT
 
@@ -49,7 +50,8 @@ export default async function InvitationLayout({
       lang={invitation.value.event.locale}
       suppressHydrationWarning
     >
-      <body className="antialiased">
+      <body className="antialiased theme-protegida">
+        <SinVerCodigo />
         <CapturaDeFallos />
         <PortadasQueEsperan />
         <TextosDeError textos={getDictionary(invitation.value.event.locale).invitation.error}>{children}</TextosDeError>

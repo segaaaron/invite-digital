@@ -173,7 +173,7 @@ test.describe('Admin › Asistente', () => {
       await page.goto('/panel/admin/asistente')
       await expect(page.getByRole('heading', { name: 'Asistente', level: 1 })).toBeVisible()
       await expect(page.getByText('Gastado este mes')).toBeVisible()
-      await expect(page.getByRole('switch', { name: 'Alta Costura' })).toBeChecked()
+      await expect(page.getByRole('switch', { name: 'Imperial' })).toBeChecked()
       await page.getByLabel('Mensajes por evento y mes').fill('250')
       await page.getByRole('button', { name: 'Guardar' }).click()
       await expect(page.getByText('Guardado.')).toBeVisible()

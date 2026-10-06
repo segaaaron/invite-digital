@@ -8,6 +8,7 @@ import { Countdown } from '../kit/Countdown'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { CapaFija } from '../kit/CapaFija'
 import { Reveal } from '../kit/Reveal'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { SelloCover } from './SelloCover'
 import { alfaDe, PALETA as P } from './boda-sello.palette'
 
@@ -35,7 +36,7 @@ const PETALOS = Array.from({ length: 22 }, (_, i) => ({
  * interletrado y los nombres en caligrafía. Las fotografías entran a sangre y se funden con
  * el papel por una onda dibujada, no por un degradado recto.
  */
-export function BodaSelloView({ content, event, themes, slots, guestInfo, audioSrc, respondida }: ThemeProps) {
+export function BodaSelloView({ content, event, dictionary, themes, slots, guestInfo, audioSrc, respondida }: ThemeProps) {
   const ROTULOS = themes.designs['boda-sello']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, notes, music, closing, gallery } = content
   // Sus seis fotos de la pareja, en orden de aparición: cada una es una casilla de la galería
@@ -178,7 +179,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
         <Seccion esquinas={['tr', 'bl']} estilo={{ paddingBottom: 0 }}>
           <div style={{ textAlign: 'center' }}>
             <Rotulo color={P.rosa}>{historia.title ?? ROTULOS.historia}</Rotulo>
-            <p style={{ fontSize: 19, fontStyle: 'italic', lineHeight: 1.7, marginTop: 26, color: P.vino, opacity: 0.9 }}>{historia.text}</p>
+            <p style={{ fontSize: 22, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.8, marginTop: 26, color: P.vino }}>{historia.text}</p>
           </div>
           <div style={{ margin: '36px -34px 0', width: 'calc(100% + 68px)' }}>
             <FotoConOnda alto={300} src={foto(1, 'pareja-historia.avif')} />
@@ -194,7 +195,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
             estilo={{ width: '60%', borderRadius: 14, border: `1.5px solid ${P.oro}`, margin: '0 auto 20px' }}
             src={foto(2, 'pareja-invitacion.avif')}
           />
-          <p style={{ fontSize: 19, lineHeight: 1.7, color: P.vino, maxWidth: '88%', margin: '0 auto' }}>{ROTULOS.invitacion}</p>
+          <p style={{ fontSize: 22, fontWeight: 500, lineHeight: 1.8, color: P.vino, maxWidth: '88%', margin: '0 auto' }}>{ROTULOS.invitacion}</p>
           {guestInfo === undefined ? (
             <div style={{ marginTop: 20 }}>{slots.guest}</div>
           ) : (
@@ -221,7 +222,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       {hosts === undefined ? null : (
         <Seccion>
           <div style={{ textAlign: 'center' }}>
-            {hosts.label === undefined ? null : <p style={{ fontStyle: 'italic', fontSize: 19, color: P.vino }}>{hosts.label}</p>}
+            {hosts.label === undefined ? null : <p style={{ fontStyle: 'italic', fontSize: 22, fontWeight: 500, lineHeight: 1.8, color: P.vino }}>{hosts.label}</p>}
             <div style={{ marginTop: 34, display: 'flex', flexDirection: 'column', gap: 42 }}>
               <Familia nombres={papeles.novia} titulo={ROTULOS.padresNovia} />
               <Familia nombres={papeles.novio} titulo={ROTULOS.padresNovio} />
@@ -309,6 +310,19 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
                     </a>
                   </div>
                 )}
+                <MapaDeLaTarjeta
+                  accent={P.oro}
+                  border={P.oro}
+                  coords={map?.coords ?? ''}
+                  coordsColor={P.oro}
+                  directionsLabel={ROTULOS.verUbicacion}
+                  href={map?.href}
+                  label={lugar.place ?? ''}
+                  labelColor={P.cremaTinta}
+                  pinDot={P.alfiler}
+                  pinRing={P.aroAlfiler}
+                  respaldo={[lugar.place, lugar.address].filter(Boolean).join(', ')}
+                />
               </div>
             ),
           )}
@@ -376,7 +390,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
             )}
             <Arte ancho={235} estilo={{ margin: '36px auto' }} flota src={themeAsset('boda-sello', 'vestido-y-saco.avif')} />
             {dressCode.note === undefined ? null : (
-              <p style={{ fontSize: 16, fontStyle: 'italic', opacity: 0.75, marginTop: 8 }}>{dressCode.note}</p>
+              <p style={{ fontSize: 18.5, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.8, marginTop: 8 }}>{dressCode.note}</p>
             )}
           </div>
         </Seccion>
@@ -384,17 +398,17 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
 
       {/* ── Solo adultos ── */}
       {soloAdultos === undefined ? null : (
-        <Seccion>
+        <Seccion estilo={{ paddingTop: 100 }} subirEsquina={60}>
           <div style={{ border: `1.5px solid ${P.oro}`, borderRadius: 16, padding: '40px 24px', textAlign: 'center' }}>
-            <Arte ancho={214} estilo={{ margin: '0 auto' }} flota src={themeAsset('boda-sello', 'tacon-y-corbata.avif')} />
-            <p style={{ fontSize: 18, fontStyle: 'italic', lineHeight: 1.6, color: P.vino, maxWidth: '82%', margin: '32px auto 0' }}>
-              {soloAdultos.text}
-            </p>
             {soloAdultos.title === undefined ? null : (
-              <div style={{ marginTop: 20 }}>
+              <div style={{ marginBottom: 18 }}>
                 <Rotulo color={P.rosa}>{soloAdultos.title}</Rotulo>
               </div>
             )}
+            <Arte ancho={214} estilo={{ margin: '0 auto' }} flota src={themeAsset('boda-sello', 'tacon-y-corbata.avif')} />
+            <p style={{ fontSize: 20.5, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.8, color: P.vino, maxWidth: '82%', margin: '32px auto 0' }}>
+              {soloAdultos.text}
+            </p>
           </div>
         </Seccion>
       )}
@@ -405,7 +419,7 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
           <Arte ancho={230} estilo={{ margin: '0 auto 18px' }} src={themeAsset('boda-sello', 'regalo.avif')} />
           <Rotulo color={P.rosa}>{regalos?.title ?? ROTULOS.regalos}</Rotulo>
           {regalos?.text === undefined ? null : (
-            <p style={{ fontSize: 19, color: P.vino, marginTop: 18, lineHeight: 1.7 }}>{regalos.text}</p>
+            <p style={{ fontSize: 22, fontWeight: 500, color: P.vino, marginTop: 18, lineHeight: 1.8 }}>{regalos.text}</p>
           )}
           <div style={{ marginTop: 22 }}>{slots.registry}</div>
         </div>
@@ -447,18 +461,21 @@ export function BodaSelloView({ content, event, themes, slots, guestInfo, audioS
       </Seccion>
 
       {/* ── El libro de firmas ── */}
-      <Seccion>
-        <div style={{ textAlign: 'center', marginBottom: 26 }}>
-          <p style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.vino }}>{ROTULOS.mensaje}</p>
-        </div>
-        <div style={{ width: '100%' }}>{slots.guestbook}</div>
-      </Seccion>
+      {slots.guestbook === null ? null : (
+        <Seccion>
+          <div style={{ textAlign: 'center', marginBottom: 26 }}>
+            <p style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.vino }}>{ROTULOS.mensaje}</p>
+          </div>
+          <div style={{ width: '100%' }}>{slots.guestbook}</div>
+        </Seccion>
+      )}
 
       {/* ── Las fotos del invitado ── */}
       <Seccion>
         <div style={{ border: `1.5px solid ${P.oro}`, borderRadius: 16, padding: '36px 22px', textAlign: 'center' }}>
           <Arte alto={289} ancho={289} estilo={{ margin: '0 auto' }} src={themeAsset('boda-sello', 'camara.avif')} />
           <p style={{ fontFamily: CALIGRAFIA, fontSize: 32, color: P.vino, marginTop: 24 }}>{ROTULOS.fotos}</p>
+          <p style={{ fontSize: 19.5, fontWeight: 500, lineHeight: 1.8, color: P.vino, maxWidth: '82%', margin: '16px auto 0' }}>{dictionary.photosIntro}</p>
           <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>{slots.photos}</div>
         </div>
       </Seccion>
@@ -491,11 +508,14 @@ function Seccion({
   ciruela = false,
   esquinas = ['tl', 'br'],
   estilo,
+  subirEsquina = 0,
 }: {
   readonly children: React.ReactNode
   readonly ciruela?: boolean
   readonly esquinas?: readonly ('tl' | 'tr' | 'bl' | 'br')[]
   readonly estilo?: React.CSSProperties
+  /** Cuánto sube la esquina de arriba a la izquierda (`topLift` de la maqueta V4). */
+  readonly subirEsquina?: number
 }) {
   return (
     <section
@@ -512,7 +532,7 @@ function Seccion({
       {ciruela
         ? null
         : esquinas.map((esquina) => (
-            <Esquina clave={esquina} key={esquina} />
+            <Esquina clave={esquina} key={esquina} subir={esquina === 'tl' ? subirEsquina : 0} />
           ))}
       <div style={{ position: 'relative', zIndex: 1 }}>{children}</div>
     </section>
@@ -520,7 +540,7 @@ function Seccion({
 }
 
 /** Una esquina de flores pintadas, flotando. */
-function Esquina({ clave }: { readonly clave: 'tl' | 'tr' | 'bl' | 'br' }) {
+function Esquina({ clave, subir = 0 }: { readonly clave: 'tl' | 'tr' | 'bl' | 'br'; readonly subir?: number }) {
   const derecha = clave === 'tr' || clave === 'br'
   const abajo = clave === 'bl' || clave === 'br'
   return (
@@ -528,7 +548,7 @@ function Esquina({ clave }: { readonly clave: 'tl' | 'tr' | 'bl' | 'br' }) {
       aria-hidden
       style={{
         position: 'absolute',
-        [abajo ? 'bottom' : 'top']: 4,
+        [abajo ? 'bottom' : 'top']: 4 - subir,
         [derecha ? 'right' : 'left']: 4,
         width: 162,
         opacity: 0.92,

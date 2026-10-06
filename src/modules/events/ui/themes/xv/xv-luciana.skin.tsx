@@ -64,6 +64,7 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#0f2a1f"
       bgAsset={themeAsset('xv-luciana', 'bosque-verdee.avif')}
+      fecha={datos.fecha}
       hint={datos.enter}
       lanternAsset={themeAsset('xv-luciana', 'faro-verde.avif')}
       line1={datos.line1}
@@ -76,6 +77,8 @@ export const PIEL: PielXv = {
   ),
   // Los colores que «Bosque Encantado» reparte distinto de «Bajo el Mar».
   piezas: {
+    // V4: las pestañas de regalos del oro sobre el verde del bosque.
+    pestanas: { acento: colorDeAcento.orquidea, sobreAcento: '#0C1C12', tinta: '#EAF3E4', borde: colorDeAcento.lilaFuerte, sombra: '0 2px 8px rgba(0,0,0,.75)' },
     // El «ENVIAR» de su formulario en la maqueta.
     formulario: { boton: colorDeAcento.lilaFuerte },
     botonTinta: '#0f2a1f',
@@ -95,7 +98,8 @@ export const PIEL: PielXv = {
     // Su reloj va debajo del «Faltan», y la cita mide 14,4 con menos espaciado.
     relojDebajo: true,
     // Los valores de su maqueta: 14,4 con interlineado 2, negrita 700 y la sombra negra.
-    cita: { size: 14.4, espaciado: '0.06em', opacidad: 1, color: '#EAF3E4', weight: 700, interlineado: 2, sombra: '0 2px 8px rgba(0,0,0,.75)' },
+    // V4: la cita en Cormorant itálica, en sus cuatro renglones, sin versales.
+    cita: { fuente: 'var(--font-cormorant)', cursiva: true, size: 19, weight: 600, interlineado: 1.6, mayusculas: false, espaciado: 'normal', opacidad: 1, color: '#EAF3E4', sombra: '0 2px 8px rgba(0,0,0,.75)' },
     // El código de la mesa de regalos va casi en negro, como en la maqueta: es lo que se lee.
     qrTinta: '#2a1140',
     // Como en Mascarada: el sobre con el borde del panel y el texto con sombra negra.
@@ -120,6 +124,8 @@ export const PIEL: PielXv = {
   },
   // Los tamaños de su maqueta: el faro cierra a 110 y el reloj mide 90.
   arte: { relojWidth: 90, cierreWidth: 110 },
+  // V4: el cierre es solo la bendición del final.
+  cierreSoloBendicion: true,
   paleta: P,
   cristal: {
     background: P.vidrio,
@@ -138,7 +144,7 @@ export const PIEL: PielXv = {
   // farol encima.
   reloj: themeAsset('xv-luciana', 'reloj1.avif'),
   castillo: themeAsset('xv-luciana', 'faro-verde.avif'),
-  vestimenta: themeAsset('xv-luciana', 'traje1.avif'),
+  vestimenta: themeAsset('xv-luciana', 'vestimenta-v4.avif'),
   cierre: themeAsset('xv-luciana', 'faro-verde.avif'),
   // Su cronograma en V3 es una esfera de reloj con «XV» al centro, dentro de su panel.
   itinerario: (filas) => (

@@ -15,6 +15,11 @@ type Props = {
     entrega: string
     entregaDias: string
     autoservicio: string
+    /** V4: el subtítulo, la nota de las rondas y el recuadro del álbum. Sin ellos no se pintan. */
+    sub?: string
+    nota?: string
+    albumTitle?: string
+    albumBody?: string
   }
   /** Los extras a la venta, ya con su precio en palabras. Sin ninguno, no hay bloque. */
   extras?: ReadonlyArray<{ name: string; precio: string }>
@@ -35,15 +40,20 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
   if (planes.some((p) => p.encargo != null)) {
     const celda = (p: (typeof planes)[number], valor: (e: NonNullable<EncargoDePlan>) => string) =>
       p.encargo == null ? { texto: textos.autoservicio, incluido: false } : { texto: valor(p.encargo), incluido: true }
-    filas.unshift(
-      { clave: 'grupos', etiqueta: textos.entrega, valores: planes.map((p) => celda(p, (e) => textos.entregaDias.replace('{n}', String(e.dias)))) },
+    // Van tras la galería, como en el documento de cambios; sin galería en la tabla, arriba.
+    const tras = filas.findIndex((f) => f.clave === 'fotos') + 1
+    filas.splice(
+      tras,
+      0,
       { clave: 'grupos', etiqueta: textos.rondas, valores: planes.map((p) => celda(p, (e) => String(e.rondas))) },
+      { clave: 'grupos', etiqueta: textos.entrega, valores: planes.map((p) => celda(p, (e) => textos.entregaDias.replace('{n}', String(e.dias)))) },
     )
   }
 
   return (
     <div className="mt-16">
       <h3 className="text-center font-display text-[28px] font-light text-ink">{textos.title}</h3>
+      {textos.sub === undefined ? null : <p className="mt-2 text-center text-[14px] text-ink-soft">{textos.sub}</p>}
       <div className="relative mt-8 overflow-x-auto">
         <table className="w-full min-w-[600px] border-collapse text-left text-[14px]">
           <thead>
@@ -77,13 +87,21 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
           </tbody>
         </table>
       </div>
+      {textos.nota === undefined ? null : <p className="mt-4 text-[12.5px] text-ink-mute">{textos.nota}</p>}
+      {textos.albumTitle === undefined || textos.albumBody === undefined ? null : (
+        <div className="mt-8 flex flex-col items-start gap-2 rounded-[var(--radius-card)] border border-line bg-bg-raised/70 p-6 sm:flex-row sm:items-center sm:gap-6">
+          <span className="font-mono text-[10px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{textos.albumTitle}</span>
+          <p className="text-[14px] leading-[1.7] text-ink-soft">{textos.albumBody}</p>
+        </div>
+      )}
       {extras.length === 0 ? null : (
-        <div className="mt-10 flex flex-col items-center gap-4">
-          <h3 className="font-display text-[22px] font-light text-ink">{textos.extrasTitle}</h3>
-          <ul className="flex flex-wrap justify-center gap-2.5">
+        <div className="mt-14">
+          <h3 className="text-center font-display text-[22px] font-light text-ink">{textos.extrasTitle}</h3>
+          <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {extras.map((x) => (
-              <li className="rounded-[var(--radius-pill)] border border-line px-4 py-2 text-[13px] text-ink-soft" key={x.name}>
-                {x.name} · <span className="text-ink [font-variant-numeric:lining-nums]">{x.precio}</span>
+              <li className="flex items-center justify-between gap-4 rounded-[16px] border border-line bg-bg-raised/70 px-5 py-4 text-[14px] text-ink" key={x.name}>
+                <span>{x.name}</span>
+                <span className="shrink-0 font-display text-[20px] text-gold-deep [font-variant-numeric:lining-nums]">+{x.precio}</span>
               </li>
             ))}
           </ul>

@@ -374,7 +374,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
       )}
 
       <button
-        className="w-full rounded-[12px] bg-[var(--color-cta)] px-7 py-4 font-mono text-[12px] font-bold uppercase tracking-[0.2em] text-[var(--color-on-cta)] transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="w-full rounded-[12px] bg-[var(--color-cta)] px-7 py-4 [font-family:var(--rsvp-boton-letra,var(--font-mono))] text-[length:var(--rsvp-boton-fs,12px)] font-bold uppercase tracking-[var(--rsvp-boton-tracking,0.2em)] text-[var(--color-on-cta)] transition-transform duration-300 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
         disabled={rsvp.isPending}
         type="submit"
       >

@@ -14,18 +14,26 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   quote: {
     text: '"Hemos esperado este momento con todo el corazón. Queremos compartir nuestra felicidad contigo, porque sin ti, esta historia no estaría completa."',
   },
+  hosts: {
+    names: ['Roberto Salinas', 'Mariana Ortiz', 'Andrés Herrera', 'Lucía Morales', 'Carlos y Elena Vega', 'Jorge y Patricia Ruiz', 'Fernando y Sofía Navarro'],
+    roles: {
+      brideFather: 'Roberto Salinas',
+      brideMother: 'Mariana Ortiz',
+      groomFather: 'Andrés Herrera',
+      groomMother: 'Lucía Morales',
+      godparents: ['Carlos y Elena Vega', 'Jorge y Patricia Ruiz', 'Fernando y Sofía Navarro'],
+    },
+  },
   schedule: { startsAt: '2027-12-20T17:00:00' },
   ceremony: {
     label: 'Religiosa',
     place: 'Parroquia San Martín',
-    address: 'Av. Heroínas #342, Cochabamba, Bolivia',
     time: '17:00 HRS',
   },
   reception: {
     label: 'Celebración',
     place: 'Jardín Las Magnolias',
-    address: 'Av. del Ejército #1120, Cochabamba, Bolivia',
-    time: '19:30 HRS',
+    time: '18:30 HRS',
   },
   map: { label: 'JARDÍN LAS MAGNOLIAS', coords: '17.39°S · 66.15°O' },
   itinerary: [
@@ -42,6 +50,13 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     note: 'Evitar color blanco, por favor',
     colors: ['#1a1a18', '#b8956a', '#f0eae0', '#8b9080'],
   },
+  // El primero es la línea de «solo adultos»; los demás, los hitos de «Nuestra historia».
+  notes: [
+    { title: 'Evento solo para adultos' },
+    { title: '2019', text: 'Nos conocimos' },
+    { title: '2022', text: 'Nuestro primer viaje juntos' },
+    { title: '2026', text: 'Dijimos que sí' },
+  ],
   music: { track: 'Nuestra canción', artist: 'Valentina & Mateo' },
   closing: {
     text: 'Será un honor tenerte con nosotros',

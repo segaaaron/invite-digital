@@ -46,6 +46,7 @@ export const PIEL: PielXv = {
       accent={P.lila}
       bg="#1c0a2d"
       bgAsset={themeAsset('xv-valentina', 'mascarada-morada.avif')}
+      fecha={datos.fecha}
       hint={datos.enter}
       line1={datos.line1}
       line2={datos.line2}
@@ -63,6 +64,9 @@ export const PIEL: PielXv = {
   // Los colores que «Mascarada» reparte distinto de «Bajo el Mar»: su fecha va en oro y la
   // hora de su cronograma en marfil, justo al revés que la marina.
   piezas: {
+    // V4: «AÑOS» en Cinzel y oro; las pestañas de regalos del oro sobre morado.
+    anios: colorDeAcento.orquidea,
+    pestanas: { acento: colorDeAcento.orquidea, sobreAcento: '#1E0F30', tinta: '#F5EFE0', borde: colorDeAcento.lilaFuerte, sombra: '0 2px 8px rgba(0,0,0,.75)' },
     // El «ENVIAR» de su formulario en la maqueta.
     formulario: { boton: colorDeAcento.lilaFuerte },
     botonTinta: '#2A1140',
@@ -89,12 +93,16 @@ export const PIEL: PielXv = {
     sombraTexto: '0 2px 8px rgba(0,0,0,.75)',
     // La cita de «Mascarada» va dentro de un panel, no suelta: texto claro sobre la
     // fotografía morada, con su sombra negra y sin la opacidad de la marina.
+    // V4: la cita en Cormorant itálica, sin versales.
     cita: {
-      size: 13,
-      weight: 700,
+      fuente: 'var(--font-cormorant)',
+      cursiva: true,
+      mayusculas: false,
+      size: 19,
+      weight: 600,
       color: '#F5EFE0',
       panel: true,
-      espaciado: '0.14em',
+      espaciado: 'normal',
       interlineado: 1.6,
       opacidad: 1,
       sombra: '0 2px 8px rgba(0,0,0,.75)',
@@ -118,12 +126,14 @@ export const PIEL: PielXv = {
   // del cronograma **en morado**, copiada literal de `invites-1.jsx:1148`. El comentario
   // que había aquí decía «en dorado, no en morado como la marina» y era al revés: la
   // maqueta gira 230 grados. Con `hue-rotate(2deg)` no se gira nada y salía dorada.
-  arte: { castilloWidth: 52, marcoRetrato: `linear-gradient(160deg, ${P.lilaFuerte}, ${P.lila})`, marcoRetratoFiltro: 'none' },
+  arte: { retratoPosicion: '35% 78%', castilloWidth: 52, marcoRetrato: `linear-gradient(160deg, ${P.lilaFuerte}, ${P.lila})`, marcoRetratoFiltro: 'none' },
   iconoTam: (clave) => ({ recepcion: 48, corona: 55, fiesta: 50, despedida: 60 })[clave ?? ''] ?? 48,
   iconoFiltro: (clave) =>
     clave === 'corona'
       ? 'brightness(0) saturate(100%) invert(64%) sepia(28%) saturate(1200%) hue-rotate(230deg) brightness(95%) contrast(90%)'
       : undefined,
+  // V4: el cierre es solo la bendición del final.
+  cierreSoloBendicion: true,
   paleta: P,
   cristal: {
     background: P.vidrio,
@@ -133,11 +143,12 @@ export const PIEL: PielXv = {
   },
   // Sin corona: la maqueta no pone ninguna pieza entre la cita y el retrato. La máscara
   // es del fondo y de la portada; encima del arco tapaba media fotografía.
-  retrato: themeAsset('xv-valentina', 'xv3.avif'),
+  // V4: el retrato de muestra es la máscara veneciana morada y dorada.
+  retrato: themeAsset('xv-valentina', 'mascarada-morada.avif'),
   // Sin pieza sobre la cuenta atrás: su maqueta no pone ninguna, y la máscara volvía a
   // aparecer aquí por segunda vez.
   castillo: themeAsset('xv-valentina', 'castillo2sf.avif'),
-  vestimenta: themeAsset('xv-valentina', 'icono-vestimenta.avif'),
+  vestimenta: themeAsset('xv-valentina', 'vestimenta-v4.avif'),
   cierre: themeAsset('xv-valentina', 'mascara-sin-fondo.avif'),
   icono: (clave) => themeAsset('xv-valentina', ICONOS[clave ?? ''] ?? 'corona-icono1.avif'),
   // El ornamento de esta piel es el abanico de su maqueta, no el filete de la marina.

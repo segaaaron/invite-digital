@@ -16,6 +16,8 @@ const BASE = {
   rosa: '#b76e79',
   /** El blanco cálido del rótulo de la portada. */
   blancoCalido: '#fff8e7',
+  /** El punto del alfiler del plano. */
+  alfiler: '#000000',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

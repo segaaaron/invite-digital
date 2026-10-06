@@ -156,8 +156,9 @@ export default async function InvitadosPage({
       <PanelHeader
         actions={
           <>
-            {/* Con la lista vacía, una sola salida: añadir. Exportar o enviar nada solo despista. */}
-            {filas.length === 0 ? null : (
+            {/* Con la lista vacía, una sola salida: añadir. Exportar o enviar nada solo despista.
+                La lista descargable es del plan Imperial (documento de cambios): va con importar. */}
+            {filas.length === 0 || isErr(capacidad) || !capacidad.value.csvImport ? null : (
             <ExportCsvButton
               eventSlug={event.value.slug}
               people={filasPersona.map((p) => ({

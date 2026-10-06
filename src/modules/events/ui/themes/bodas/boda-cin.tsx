@@ -6,10 +6,10 @@ import { ACENTO, PALETA } from './boda-cin.palette'
 /** «Cinemática» — Sofía & Diego (maqueta V3). El póster de cine abre a un programa de gala negro y oro. */
 export const bodaCinDefinition: ThemeDefinition = {
   key: 'boda-cin',
-  label: 'Cinemática',
+  label: 'Noche dorada',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'cormorant', 'jetbrainsMono', 'greatVibes'],
+  fonts: ['spectral', 'cormorant', 'jetbrainsMono', 'greatVibes', 'cinzel'],
   // «Asistiré» y «No puedo» como las editoriales (`primarySecondary`).
   rsvp: 'pildoras',
   pinta: {

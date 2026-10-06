@@ -10,7 +10,7 @@ import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: MensajesState = { status: 'idle' }
 /** Lo que se ve en la muestra de cada mensaje: una venta cualquiera. */
-const EJEMPLO = { nombre: 'Carla', fecha: 'sáb 14 feb 2027', importe: 'Bs 1.190,00', enlace: 'luxuryatelier.net/es/pedido/ref/7KQ3M9XA', plan: 'Firma 3D', marca: 'Luxury Atelier' }
+const EJEMPLO = { nombre: 'Carla', fecha: 'sáb 14 feb 2027', importe: 'Bs 690,00', enlace: 'luxuryatelier.net/es/pedido/ref/7KQ3M9XA', plan: 'Gala', marca: 'Luxury Atelier' }
 
 /**
  * Las plantillas con **su muestra al lado**, rellenada como la verá el cliente: así se escribe

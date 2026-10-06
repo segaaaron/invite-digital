@@ -42,8 +42,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     time: '15:00',
   },
   itinerary: [
-    { time: '13:45', label: 'CEREMONIA RELIGIOSA' },
-    { time: '16:00', label: 'RECEPCIÓN SOCIAL' },
+    { time: '13:00', label: 'CEREMONIA RELIGIOSA' },
+    { time: '15:00', label: 'RECEPCIÓN SOCIAL' },
     { time: '17:00', label: 'VALS DE LOS NOVIOS' },
     { time: '19:00', label: 'UNA DELICIOSA CENA' },
     { time: '21:00', label: 'PARTIMOS LA TORTA' },

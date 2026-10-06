@@ -10,7 +10,7 @@ export const xv_valeriaDefinition: ThemeDefinition = {
   categorySlug: 'xv-anos',
   palette: PALETA,
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono', 'playfairDisplay'],
-  pinta: { fotos: { retrato: true, casillas: 0 }, sinCampos: { hero: ['nameB'], itinerary: ['note', 'imageId'] } },
+  pinta: { fotos: { retrato: true, casillas: 0 }, sinCampos: { hero: ['nameB', 'serial'], itinerary: ['note', 'imageId'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'closing'],
   defaultContent: CONTENIDO_DE_MUESTRA,
   estilo: { acento: ACENTO, caligrafia: 'greatVibes', titulares: 'italiana' },

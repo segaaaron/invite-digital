@@ -162,6 +162,26 @@ export interface PricingDictionary {
   reserve: string
   /** El precio en dólares que fija el admin: «USD {monto}». */
   usd: string
+  /** «/ evento», junto al precio. */
+  perEvent: string
+  /** «Todo lo de {plan}, más:», sobre las funciones de Gala e Imperial. */
+  inherits: string
+  /** El selector de moneda: «Bolivianos», «Dólares» y la nota del cambio. */
+  currency: { bob: string; usd: string; label: string; note: string }
+  /** La caja de la reserva (V4): titular con {monto}, el texto, los tres pasos y el botón. */
+  reserveBox: { title: string; body: string; steps: readonly [string, string, string]; cta: string }
+  /** «Nivel de personalización»: una escalera de tres peldaños, con el antes/después de Gala. */
+  ladder: {
+    title: string
+    titleAccent: string
+    sub: string
+    rungs: readonly [{ title: string; body: string }, { title: string; body: string }, { title: string; body: string }]
+    before: string
+    after: string
+    beforeAlt: string
+    afterAlt: string
+    example: string
+  }
   /** La tabla que compara los planes. Sus filas salen de los límites de la base. */
   comparison: PlanComparisonDictionary
 }
@@ -184,25 +204,34 @@ export interface PlanComparisonDictionary {
   hasta: string
   /** «{n} días». */
   dias: string
+  /** «{n} meses». */
+  meses: string
+  /** «Cada plan incluye todo lo del plan anterior.» */
+  sub: string
+  /** La nota de las rondas bajo la tabla y el recuadro del álbum compartido. */
+  nota: string
+  albumTitle: string
+  albumBody: string
+  /** Las filas del documento de cambios, en su orden. */
   filas: {
+    basicos: string
     grupos: string
+    confirmacion: string
+    lista: string
+    pases: string
+    calendario: string
+    textos: string
     fotos: string
-    fotosInvitados: string
-    contrasena: string
-    csv: string
-    mesas: string
-    regalos: string
     formas: string
     libro: string
-    estilo: string
-    puerta: string
-    porteros: string
-    planners: string
-    tareas: string
-    plannerCompleto: string
-    plannerTotal: string
+    colores: string
+    tipografias: string
+    secciones: string
+    panel: string
+    mesaQr: string
+    album: string
+    detalles: string
     enLinea: string
-    modelo: string
   }
   modelo: { ninguno: string; antes_de_repartir: string; siempre: string }
 }
@@ -360,6 +389,21 @@ export interface ThemeDictionary {
    * NOCHE» en español y «SONG OF THE NIGHT» en inglés.
    */
   songOfTheNight: string
+  /** «MI VALS»: el rótulo del reproductor de los XV (V4). */
+  myWaltz: string
+  /** Las pestañas de regalos de los XV (V4): «Transferencia QR» y su pie. */
+  transferQr: string
+  scanFromBank: string
+  /** «Déjale un mensaje», el titular del libro de firmas de los XV (V4). */
+  leaveHerMessage: string
+  /** Tras confirmar (V4): «¿Quieres dejarle un mensaje a {nombre}?» y el botón que lleva al libro. */
+  leaveMessageTo: string
+  goToBook: string
+  /** El álbum compartido de los XV (V4): rótulo, titular, cómo se usa y la etiqueta del plan. */
+  albumKicker: string
+  albumTitle: string
+  albumHint: string
+  albumBadge: string
   gifts: string
   guestbook: string
   /** Lo que dice un hueco de foto todavía sin imagen. */
@@ -445,7 +489,7 @@ export interface DesignDictionary {
   'boda-navy': Record<'nuestraBoda' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
   'boda-royal': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'fotos' | 'firmas', string>
   'boda-serenidad': Record<'nuestraBoda' | 'faltan' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'fotos' | 'firmas', string>
-  'esencia': Record<'pie' | 'mensaje' | 'ceremonia' | 'recepcion' | 'itinerario' | 'faltan' | 'vestimenta' | 'galeria' | 'confirmacion' | 'regalos' | 'musica' | 'verUbicacion' | 'preguntaRsvp' | 'confirmaAntes' | 'firmas', string>
+  'esencia': Record<'pie' | 'mensaje' | 'ceremonia' | 'recepcion' | 'itinerario' | 'faltan' | 'vestimenta' | 'galeria' | 'regalos' | 'verUbicacion' | 'confirmaAntes' | 'firmas' | 'nosCasamos' | 'tocaParaAbrir' | 'paralaje' | 'padres' | 'calendario' | 'regalosTexto' | 'paseUno' | 'paseVarios', string>
   'boda-sello': Record<'faltan' | 'historia' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'vestimenta' | 'regalos' | 'confirma' | 'mensaje' | 'fotos', string>
   'boda-perla': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
   'xv-papillon': Record<'xvAnos' | 'padrinos' | 'misXv' | 'itinerario' | 'confirmar', string>
@@ -530,6 +574,12 @@ export interface InvitationDictionary {
   guestbookPlaceholder: string
   /** «FIRMAR LIBRO», el botón de esa sección. */
   signBook: string
+  /** El libro antes de confirmar: firmarlo guardaría una respuesta, y sin una no sabe cuántos vienen. */
+  signAfterRsvp: string
+  /** «Hecho por {marca}», el pie de cada invitación. */
+  madeBy: string
+  /** «FIRMAR EL LIBRO», el botón del libro de firmas de los XV (V4). */
+  signTheBook: string
   submit: string
   sending: string
   /**

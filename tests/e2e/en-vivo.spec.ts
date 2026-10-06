@@ -49,7 +49,7 @@ test('el invitado confirma y los novios lo ven en su lista sin recargar', async 
 
   const invitado = await (await browser.newContext()).newPage()
   await invitado.goto(`/i/${token}`)
-  await invitado.getByRole('button', { name: 'ENVIAR' }).click()
+  await invitado.getByRole('button', { name: 'ENVIAR', exact: true }).click()
   await expect(invitado.getByRole('status')).toContainText('Confirmación enviada')
 
   // Llega sola, sin `reload`. No repinta: avisa, y actualiza al pulsar.

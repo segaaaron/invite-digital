@@ -230,6 +230,8 @@ export const eventDesign = pgTable('event_design', {
   roundsUsed: smallint('rounds_used').notNull().default(0),
   deliveryDays: smallint('delivery_days').notNull().default(3),
   dueDate: date('due_date'),
+  /** Lo que el formulario de datos pregunta según el plan (`0090`): secciones, temática, vestido… */
+  brief: jsonb('brief').$type<Record<string, string>>(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
 })
 

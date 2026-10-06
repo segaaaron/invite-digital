@@ -99,6 +99,12 @@ export type ThemeProps = {
    * con un ajuste que no es de ninguna.
    */
   readonly audioSrc?: string | undefined
+  /**
+   * El `.ics` del evento de este invitado (`/i/<token>/calendario`), para el diseño que pinta su
+   * propio «Agregar al calendario» («Esencia» V4). Sin invitado —escaparate, vista previa— no
+   * llega y el diseño enlaza a Google Calendar con lo que pinta.
+   */
+  readonly calendario?: string | undefined
   }
 
 /**

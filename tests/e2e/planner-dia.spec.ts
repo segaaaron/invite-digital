@@ -121,5 +121,5 @@ test('un contrato en PDF se guarda privado y se descarga como adjunto, nunca en 
 test('con el plan Atelier, proveedores dice qué plan los trae y el servidor no guarda', async ({ page }) => {
   await seedInvitation({ slug: 'planner-dia-atelier-e2e', plan: 'atelier' })
   await page.goto('/panel/eventos/planner-dia-atelier-e2e/planner/proveedores')
-  await expect(page.getByText('Los proveedores, el cronograma y el cortejo vienen con Firma 3D y Alta Costura.')).toBeVisible()
+  await expect(page.getByText('Los proveedores, el cronograma y el cortejo vienen con Gala e Imperial.')).toBeVisible()
 })

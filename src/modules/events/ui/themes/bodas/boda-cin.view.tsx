@@ -12,7 +12,8 @@ import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { CarruselNosotros } from './CarruselNosotros'
 import { CinematicaCover } from './CinematicaCover'
-import { CARTA_DE_COLOR, PALETA as P } from './boda-cin.palette'
+import { CARTA_DE_COLOR, PALETA as P, alfaDe } from './boda-cin.palette'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 
 const MONO = 'var(--font-jetbrains-mono)'
 const SERIF = 'var(--font-spectral)'
@@ -269,11 +270,12 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
               <div
                 style={{
                   fontFamily: SERIF,
-                  fontSize: 17,
-                  lineHeight: 1.9,
+                  fontSize: 19.5,
+                  fontWeight: 500,
+                  lineHeight: 1.8,
                   maxWidth: '76%',
                   margin: '0 auto',
-                  color: P.papel,
+                  color: P.papelClaro,
                   background: P.tarjeta,
                   border: `1px solid ${P.oro}`,
                   borderRadius: 12,
@@ -348,7 +350,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                     padding: '28px 8px 22px',
                     textAlign: 'center',
                     display: 'grid',
-                    gridTemplateRows: '184px auto auto auto 1fr auto',
+                    gridTemplateRows: '184px auto auto auto 1fr auto auto',
                     justifyItems: 'center',
                     rowGap: 16,
                   }}
@@ -374,6 +376,19 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                       {themes.viewLocation}
                     </a>
                   )}
+                  <MapaDeLaTarjeta
+                    accent={P.oro}
+                    border={alfaDe('oro', 0.5)}
+                    coords={map?.coords ?? ''}
+                    coordsColor={P.oro}
+                    directionsLabel={themes.viewLocation}
+                    href={map?.href}
+                    label={tarjeta.lugar?.place ?? ''}
+                    labelColor={P.crema}
+                    pinDot={P.alfiler}
+                    pinRing={P.fondo}
+                    respaldo={[tarjeta.lugar?.place, tarjeta.lugar?.address].filter(Boolean).join(', ')}
+                  />
                 </div>
               ))}
             </div>
@@ -483,7 +498,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                     </div>
                   ))}
                 </div>
-                <div style={{ marginTop: 14, fontSize: 13, fontStyle: 'italic', color: P.crema, lineHeight: 1.6, textAlign: 'center' }}>{dressCode.detail ?? ''}</div>
+                <div style={{ marginTop: 14, fontSize: 15, fontStyle: 'italic', fontWeight: 500, color: P.cremaClara, lineHeight: 1.8, textAlign: 'center' }}>{dressCode.detail ?? ''}</div>
                 <PaletaDeColores etiqueta={themes.suggestedColors} borde="currentColor" colores={dressCode.colors} />
               </div>
             </Reveal>
@@ -493,6 +508,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
             <Reveal>
               <div style={{ marginTop: 60, marginBottom: 20, padding: '0 10px' }}>
                 <div style={{ background: P.tarjeta, border: `1.5px solid ${P.oro}`, borderRadius: 16, padding: '30px 20px', textAlign: 'center' }}>
+                  <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', color: P.oro, fontWeight: 700, marginBottom: 18 }}>{soloAdultos.title}</div>
                   <Image
                     alt=""
                     className={FLOTA}
@@ -503,9 +519,8 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                   />
                   <div style={{ maxWidth: '88%', margin: '16px auto 0' }}>
                     {soloAdultos.text === undefined ? null : (
-                      <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 20, lineHeight: 1.7, color: P.papel }}>{soloAdultos.text}</div>
+                      <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 23, fontWeight: 500, lineHeight: 1.8, color: P.papelClaro }}>{soloAdultos.text}</div>
                     )}
-                    <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.35em', color: P.oro, fontWeight: 700, marginTop: 14 }}>{soloAdultos.title}</div>
                   </div>
                 </div>
               </div>
@@ -525,7 +540,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
               />
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oro, marginTop: 32 }}>{regalos?.title ?? themes.gifts}</div>
               {regalos?.text === undefined ? null : (
-                <div style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, color: P.crema, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
+                <div style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.cremaClara, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
               )}
               <div style={{ marginTop: 22 }}>{slots.registry}</div>
             </div>
@@ -553,7 +568,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                 />
                 <div style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.oro, marginTop: 20 }}>{fotos.title}</div>
                 {fotos.text === undefined ? null : (
-                  <div style={{ fontFamily: SERIF, fontSize: 18, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.crema }}>{fotos.text}</div>
+                  <div style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0', color: P.cremaClara }}>{fotos.text}</div>
                 )}
                 <div style={{ marginTop: 22 }}>{slots.photos}</div>
               </div>

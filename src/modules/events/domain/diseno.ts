@@ -25,6 +25,8 @@ export type Diseno = {
   readonly diasDeEntrega: number
   /** Para cuándo prometimos la versión que se está haciendo (`aaaa-mm-dd`, Bolivia). */
   readonly entregaHasta: string | null
+  /** Lo que el cliente contó en el formulario de su plan (temática, vestido…), si lo contó. */
+  readonly brief?: BriefDelEncargo | null
 }
 
 export type ErrorDeDiseno = 'paso_invalido' | 'sin_rondas'
@@ -67,4 +69,35 @@ export const descontarRonda = (d: Diseno): Diseno => ({ ...d, rondasUsadas: Math
 export function puedeRepartir(d: Diseno | null, cobro: { saldoPendiente: boolean }): boolean {
   if (d === null) return true
   return d.estado === 'aprobada' && !cobro.saldoPendiente
+}
+
+/**
+ * Lo que el formulario de datos pide **según el plan** (documento de cambios, sección 7): en Gala,
+ * qué secciones quitar, agregar u ordenar; en Imperial además la temática, el vestido, la
+ * decoración y las flores, con lo que diseñamos «creado para ti». El resto de datos se escribe en
+ * la invitación y las fotos llegan por WhatsApp.
+ */
+export const PREGUNTAS_DEL_ENCARGO = ['secciones', 'tematica', 'vestido', 'decoracion', 'flores'] as const
+export type PreguntaDelEncargo = (typeof PREGUNTAS_DEL_ENCARGO)[number]
+export type BriefDelEncargo = Partial<Record<PreguntaDelEncargo, string>>
+
+/** Tope de cada respuesta: una descripción, no un documento. */
+export const MAX_RESPUESTA_DEL_ENCARGO = 1000
+
+/** Qué se le pregunta a cada plan: con «Colores y letra», las secciones; con el planner total, todo. */
+export function preguntasDelEncargo(plan: { readonly estilo: boolean; readonly creadoParaTi: boolean }): readonly PreguntaDelEncargo[] {
+  if (plan.creadoParaTi) return PREGUNTAS_DEL_ENCARGO
+  return plan.estilo ? ['secciones'] : []
+}
+
+/** Las respuestas, limpias: sin espacios de sobra, sin vacías y solo las preguntas que existen. */
+export function leerBrief(valor: (pregunta: PreguntaDelEncargo) => string | null): Result<BriefDelEncargo, 'texto_largo'> {
+  const brief: BriefDelEncargo = {}
+  for (const pregunta of PREGUNTAS_DEL_ENCARGO) {
+    const texto = (valor(pregunta) ?? '').trim()
+    if (texto === '') continue
+    if (texto.length > MAX_RESPUESTA_DEL_ENCARGO) return err('texto_largo')
+    brief[pregunta] = texto
+  }
+  return ok(brief)
 }

@@ -61,6 +61,7 @@ export const PIEL_XV: PielXv = {
     <SofiaCover
       bgAsset={themeAsset('xv', 'bajo-el-mar1.avif')}
       crownAsset={themeAsset('xv', 'corona-joyas.avif')}
+      fecha={datos.fecha}
       hint={datos.enter}
       line1={datos.line1}
       line2={datos.line2}
@@ -71,6 +72,11 @@ export const PIEL_XV: PielXv = {
   ),
   // El código de la mesa de regalos, con el aro lila que le pone la maqueta.
   piezas: {
+    // V4: «AÑOS» en Cinzel, del morado del «XV», y la cita en Cormorant itálica.
+    anios: P.uva,
+    aniosSombra: '0 1px 2px rgba(255,255,255,.7)',
+    cita: { fuente: 'var(--font-cormorant)', cursiva: true, size: 19, weight: 600, interlineado: 1.6, mayusculas: false, espaciado: 'normal', opacidad: 1 },
+    pestanas: { acento: P.uva, sobreAcento: P.blanco, tinta: P.violetaHondo, borde: P.lila, sombra: '0 1px 3px rgba(255,255,255,.8)' },
     qrTinta: P.violetaHondo,
     qrAro: P.lila,
     // Su tarjeta de la fecha va enmarcada por dos filetes, arriba y abajo.
@@ -91,6 +97,8 @@ export const PIEL_XV: PielXv = {
     },
   },
   ornamentoFormulario: <CoronaDeLinea />,
+  // V4: el cierre es solo la bendición del final.
+  cierreSoloBendicion: true,
   paleta: P,
   cristal: {
     background: P.vidrio,
@@ -105,7 +113,7 @@ export const PIEL_XV: PielXv = {
   reloj: themeAsset('xv', 'concha-pastel.avif'),
   arte: { relojWidth: 200, relojFiltro: 'drop-shadow(0 8px 20px rgba(0,0,0,.3))' },
   castillo: themeAsset('xv', 'castillo-purpura.avif'),
-  vestimenta: themeAsset('xv', 'icono-vestimenta.avif'),
+  vestimenta: themeAsset('xv', 'vestimenta-v4.avif'),
   cierre: themeAsset('xv', 'concha-recortada.avif'),
   icono: (clave) => themeAsset('xv', ICONOS[clave ?? ''] ?? 'corona-icono1.avif'),
   iconoTam: (clave) => ({ recepcion: 48, corona: 55, fiesta: 50, despedida: 60 })[clave ?? ''] ?? 48,

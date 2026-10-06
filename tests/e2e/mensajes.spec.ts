@@ -14,12 +14,16 @@ test.afterAll(async () => {
 test('el invitado firma el libro, se le agradece, y él ve la respuesta', async ({ page }) => {
   const { eventId, token } = await seedGuestbookEvent(SLUG)
 
-  // 1. El invitado confirma **con un mensaje**. El texto no vuelve a escribirse en
-  //    ninguna tabla nueva: se queda en `rsvp_responses.message`, donde ya vivía.
+  // 1. El invitado confirma y luego firma el libro (V4: el mensaje ya no va en la confirmación).
+  //    Antes de confirmar no se firma: firmar guardaba una respuesta con todos los lugares. El
+  //    texto no vuelve a escribirse en ninguna tabla nueva: se queda en `rsvp_responses.message`.
   await page.goto(`/i/${token}`)
+  await expect(page.getByText('Confirma tu asistencia y podrás dejar tus deseos')).toBeVisible()
+  await page.getByRole('button', { name: 'ENVIAR', exact: true }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Confirmación enviada' })).toBeVisible()
   await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Qué ganas de celebrar con ustedes.')
-  await page.getByRole('button', { name: 'ENVIAR' }).click()
-  await expect(page.getByRole('status')).toContainText('Gracias')
+  await page.getByRole('button', { name: 'ENVIAR MIS DESEOS' }).click()
+  await expect(page.getByRole('status').filter({ hasText: 'Te esperamos' })).toBeVisible()
 
   // 2. El libro de firmas lo muestra: sin «leído» ni «destacado», solo las palabras y quién las dejó.
   await page.goto(`/panel/eventos/${SLUG}/mensajes`)

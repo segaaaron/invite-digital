@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gte, isNull } from 'drizzle-orm'
+import { and, asc, desc, eq, gte, inArray, isNull, or } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { guestGroups, rsvpResponses } from '@/shared/db/schema'
 import type { RsvpRepository } from '../application/ports'
@@ -106,3 +106,25 @@ export const createDrizzleRsvpRepository = (database: DbExecutor): RsvpRepositor
 })
 
 export const drizzleRsvpRepository = createDrizzleRsvpRepository(db)
+
+/**
+ * Firma el libro: pone el mensaje en **la última respuesta** del grupo, si aún no tiene uno.
+ *
+ * No es responder otra vez —eso se hace una sola vez y crea fila—: el libro solo escribe sus
+ * palabras, sin tocar cuántos vienen. Devuelve `false` sin respuesta o con el libro ya firmado:
+ * reescribirlo cambiaría lo que los anfitriones ya leyeron (y quizá agradecieron).
+ */
+export async function firmarLibro(guestGroupId: string, mensaje: string, database: DbExecutor = db): Promise<boolean> {
+  const ultima = database
+    .select({ id: rsvpResponses.id })
+    .from(rsvpResponses)
+    .where(eq(rsvpResponses.guestGroupId, guestGroupId))
+    .orderBy(desc(rsvpResponses.respondedAt))
+    .limit(1)
+  const filas = await database
+    .update(rsvpResponses)
+    .set({ message: mensaje })
+    .where(and(inArray(rsvpResponses.id, ultima), or(isNull(rsvpResponses.message), eq(rsvpResponses.message, ''))))
+    .returning({ id: rsvpResponses.id })
+  return filas.length > 0
+}

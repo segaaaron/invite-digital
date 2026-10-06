@@ -20,6 +20,15 @@ const BASE = {
   marfil: '#fff8e7',
   /** La tinta: blanco. */
   tinta: '#ffffff',
+  /** El punto del alfiler del plano. */
+  alfiler: '#000000',
+  /** V4, legibilidad: el halo azul del texto sobre la purpurina (`.lg-nv`). */
+  halo: 'rgba(6,14,30,0.92)',
+  /** El velo que oscurece la fotografía bajo el cuerpo, más arriba que abajo. */
+  veloCuerpo: 'linear-gradient(180deg, rgba(8,18,36,.6) 0%, rgba(8,18,36,.4) 35%, rgba(8,18,36,.2) 70%, rgba(8,18,36,.15) 100%)',
+  /** El velo de la portada detrás de los nombres y la sombra de sus textos. */
+  veloPortada: 'rgba(8,18,36,0.7)',
+  sombraLegible: '0 0 12px rgba(6,14,30,.95), 0 0 3px rgba(6,14,30,.9)',
 } as const
 
 /** Gala: la familia del acento, con su valor de siempre de respaldo (`kit/acento.ts`). */

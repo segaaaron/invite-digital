@@ -23,7 +23,7 @@ export default async function DiaDPage({ params }: { params: Promise<{ slug: str
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerTotal'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El Día D en el teléfono viene con Alta Costura." title="Día D" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El Día D en el teléfono viene con Imperial." title="Día D" />
   }
 
   const ahora = new Date()

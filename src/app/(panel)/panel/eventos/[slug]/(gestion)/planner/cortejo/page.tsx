@@ -27,7 +27,7 @@ export default async function CortejoPage({ params, searchParams }: { params: Pr
     throw new Error(event.error.detail)
   }
   if (isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))) {
-    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cortejo y los ensayos vienen con Firma 3D y Alta Costura." title="Cortejo" />
+    return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="El cortejo y los ensayos vienen con Gala e Imperial." title="Cortejo" />
   }
 
   const fiesta = fiestaDeTema(event.value.themeKey)

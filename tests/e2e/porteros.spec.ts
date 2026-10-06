@@ -26,8 +26,8 @@ async function sembrar(slug: string, fecha: string, plan: string) {
 }
 
 test.beforeAll(async () => {
-  await sembrar(HOY, diaBolivia(0), 'firma-3d')
-  await sembrar(MANANA, diaBolivia(2), 'firma-3d')
+  await sembrar(HOY, diaBolivia(0), 'alta-costura')
+  await sembrar(MANANA, diaBolivia(2), 'alta-costura')
   await sembrar(SIN_PUERTA, diaBolivia(0), 'atelier')
 })
 
@@ -51,7 +51,7 @@ async function sumarPortero(gestor: import('@playwright/test').Page, slug: strin
 test('un portero entra con su PIN, registra una llegada, no sale de la puerta y quitarlo lo saca', async ({ browser }) => {
   const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   const { ruta, pin } = await sumarPortero(gestor, HOY, 'Carlos')
-  await expect(gestor.getByText('1 de 3')).toBeVisible()
+  await expect(gestor.getByText('1 de 10')).toBeVisible()
 
   const portero = await (await browser.newContext()).newPage()
   await portero.goto(ruta)

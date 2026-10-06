@@ -79,7 +79,7 @@ export const PIEL: PielXv = {
       hint={datos.enter}
       name={datos.name}
       openLabel={datos.openLabel}
-      serial={`${datos.eyebrow} 2026`.trim()}
+      serial={`${datos.eyebrow} ${datos.anio}`.trim()}
       title={`${datos.title} ${datos.anios}`}
     />
   ),
@@ -96,7 +96,7 @@ export const PIEL: PielXv = {
     mapaRotulo: P.malva,
     serial: P.uva,
     monograma: P.uva,
-    anios: P.malva,
+    anios: colorDeAcento.orquidea,
     nombre: P.violetaHondo,
     firma: P.violetaHondo,
     fecha: P.uva,
@@ -179,7 +179,7 @@ export const PIEL: PielXv = {
   corona: themeAsset('xv-isabelle', 'busto-marmol-sf.avif'),
   reloj: themeAsset('xv-isabelle', 'reloj-conteo-sf.avif'),
   castillo: themeAsset('xv-isabelle', 'recepcion-dorada-casa-sf.avif'),
-  vestimenta: themeAsset('xv-isabelle', 'codigo-vestimenta-dorado-sf.avif'),
+  vestimenta: themeAsset('xv-isabelle', 'vestimenta-v4.avif'),
   cierre: themeAsset('xv-isabelle', 'marmol-y-flores-sf.avif'),
   icono: (clave) => themeAsset('xv-isabelle', (ICONOS_ISABELLE[clave ?? ''] ?? ICONOS_ISABELLE.copa)?.archivo ?? 'copa-dorada-sf.avif'),
 }

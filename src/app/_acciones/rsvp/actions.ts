@@ -9,7 +9,7 @@ import { isErr } from '@/shared/result'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { guardedRespond, type RsvpOutcome } from '@/modules/rsvp/application/guarded-respond'
 import { campo } from '@/shared/forms/campo'
-import { avisarALosAnfitriones } from '@/app/_acciones/avisar-a-los-anfitriones'
+import { avisarALosAnfitriones, avisarDelMensaje } from '@/app/_acciones/avisar-a-los-anfitriones'
 import { registrarFallo } from '@/shared/observability/fallos'
 
 export type RsvpActionState = RsvpOutcome | { status: 'idle' }
@@ -30,6 +30,40 @@ const respond = guardedRespond({
  */
 async function sinMensajeSiNoHayLibro(eventId: string, formData: FormData): Promise<void> {
   if (isErr(await plans.requireFeature(eventId, 'guestbook'))) formData.delete('message')
+}
+
+export type FirmaState = { status: 'idle' } | { status: 'success' } | { status: 'error'; message: 'rate_limited' | 'invalid_payload' | 'invitation_not_found' | 'already_answered' }
+
+const limiteDelLibro = createRateLimiter({ windowMs: 60_000, max: 10 })
+
+/** El tope del mensaje, el mismo que el de la respuesta (`rsvp-response.ts`). */
+const MAX_FIRMA = 500
+
+/**
+ * Firmar el libro de firmas, **después de confirmar**. Antes reusaba la confirmación: como se
+ * contesta una sola vez, tras confirmar se rechazaba («ya se confirmó»), y antes de confirmar
+ * confirmaba todos los lugares. Ahora escribe solo el mensaje en la respuesta ya dada.
+ *
+ * Mismas guardas que responder: límite por IP, candado de la contraseña del evento y el libro
+ * en el plan (es un extremo HTTP público).
+ */
+export async function firmarLibroAction(_previous: FirmaState, formData: FormData): Promise<FirmaState> {
+  const headerBag = await headers()
+  const ip = clientIpFrom({ realIp: headerBag.get('x-real-ip'), forwardedFor: headerBag.get('x-forwarded-for') })
+  if (limiteDelLibro.isLimited(ip, Date.now())) return { status: 'error', message: 'rate_limited' }
+
+  const token = campo(formData, 'token')
+  const mensaje = campo(formData, 'message').trim()
+  if (mensaje.length === 0 || mensaje.length > MAX_FIRMA) return { status: 'error', message: 'invalid_payload' }
+
+  const group = await guests.resolveByToken(token)
+  if (isErr(group) || !(await eventUnlocked(group.value.eventId))) return { status: 'error', message: 'invitation_not_found' }
+  if (isErr(await plans.requireFeature(group.value.eventId, 'guestbook'))) return { status: 'error', message: 'invalid_payload' }
+
+  if (!(await rsvp.firmarLibro(group.value.id, mensaje))) return { status: 'error', message: 'already_answered' }
+  revalidatePath(`/i/${token}`)
+  avisarDelMensaje({ eventId: group.value.eventId, invitado: group.value.label, texto: mensaje })
+  return { status: 'success' }
 }
 
 /** Mismo cupo que la respuesta de siempre: diez por minuto y por IP. */

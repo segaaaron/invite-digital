@@ -10,7 +10,8 @@ import { MusicPlayer } from '../kit/MusicPlayer'
 import { Reveal } from '../kit/Reveal'
 import { CarruselDePerla } from './CarruselDePerla'
 import { GlamourCover } from './GlamourCover'
-import { PALETA as P } from './boda-glamour.palette'
+import { PALETA as P, alfaDe } from './boda-glamour.palette'
+import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 
 const SERIF = 'var(--font-cormorant)'
 const SANS = 'var(--font-montserrat)'
@@ -155,7 +156,7 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
           {quote === undefined || hero?.nameB === undefined ? null : (
             <p style={{ marginTop: 10, fontFamily: SANS, fontSize: 10, letterSpacing: '0.3em', opacity: 0.75 }}>— {hero.nameB.toUpperCase()}</p>
           )}
-          {historia?.text === undefined ? null : <p style={{ marginTop: 20, fontSize: 14, lineHeight: 1.7, opacity: 0.9 }}>{historia.text}</p>}
+          {historia?.text === undefined ? null : <p style={{ marginTop: 20, fontSize: 16, fontWeight: 500, lineHeight: 1.8 }}>{historia.text}</p>}
         </div>
       </Reveal>
 
@@ -240,7 +241,7 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
             lugar === undefined ? null : (
               <div key={icono} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 30 }}>
                 {indice === 1 ? <FileteDeOro /> : null}
-                <div style={{ textAlign: 'center' }}>
+                <div style={{ textAlign: 'center', width: '100%' }}>
                   <Arte ancho={119} estilo={{ margin: '0 auto' }} src={themeAsset('boda-glamour', icono)} />
                   {lugar.label === undefined ? null : <p style={{ fontFamily: CALIGRAFIA, fontSize: 24, color: P.oro, marginTop: 12 }}>{lugar.label}</p>}
                   {lugar.time === undefined ? null : <p style={{ fontSize: 26, marginTop: 4 }}>{lugar.time}</p>}
@@ -268,6 +269,19 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
                       {ROTULOS.verUbicacion}
                     </a>
                   )}
+                  <MapaDeLaTarjeta
+                    accent={P.oro}
+                    border={alfaDe('oro', 0.45)}
+                    coords={map?.coords ?? ''}
+                    coordsColor={P.oro}
+                    directionsLabel={ROTULOS.verUbicacion}
+                    href={map?.href}
+                    label={lugar.place ?? ''}
+                    labelColor={P.marfil}
+                    pinDot={P.alfiler}
+                    pinRing={P.guinda}
+                    respaldo={[lugar.place, lugar.address].filter(Boolean).join(', ')}
+                  />
                 </div>
               </div>
             ),
@@ -314,7 +328,7 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
             <Esquinas ancho={44} opacidad={0.4} />
             {dressCode.title === undefined ? null : <p style={{ fontFamily: CALIGRAFIA, fontSize: 30, marginTop: 6 }}>{dressCode.title}</p>}
             <Arte ancho={620} estilo={{ width: '78%', margin: '20px auto' }} src={themeAsset('boda-glamour', 'vestimenta.avif')} />
-            {dressCode.note === undefined ? null : <p style={{ fontSize: 12, opacity: 0.8, fontStyle: 'italic' }}>{dressCode.note}</p>}
+            {dressCode.note === undefined ? null : <p style={{ fontSize: 14, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.8 }}>{dressCode.note}</p>}
           </div>
         </Reveal>
       )}
@@ -346,9 +360,9 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
         <>
           <Reveal>
             <div style={{ padding: '0 24px 40px', textAlign: 'center' }}>
+              <p style={{ marginBottom: 18, fontFamily: SANS, fontSize: 10, letterSpacing: '0.25em', color: P.oro, fontWeight: 700 }}>{ROTULOS.soloAdultos}</p>
               <Arte ancho={154} estilo={{ margin: '0 auto' }} src={themeAsset('boda-glamour', 'tacon-y-corbata.avif')} />
-              {soloAdultos.text === undefined ? null : <p style={{ marginTop: 14, fontSize: 14, opacity: 0.9 }}>{soloAdultos.text}</p>}
-              <p style={{ marginTop: 10, fontFamily: SANS, fontSize: 10, letterSpacing: '0.25em', color: P.oro, fontWeight: 700 }}>{ROTULOS.soloAdultos}</p>
+              {soloAdultos.text === undefined ? null : <p style={{ marginTop: 14, fontSize: 16, fontWeight: 500, lineHeight: 1.8 }}>{soloAdultos.text}</p>}
             </div>
           </Reveal>
           <FileteDeOro />
@@ -368,12 +382,14 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
       <FileteDeOro />
 
       {/* ── El libro de firmas ── */}
-      <Reveal>
-        <div style={{ padding: '0 24px 50px', textAlign: 'center' }}>
-          <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, marginBottom: 16 }}>{ROTULOS.firmas}</p>
-          {slots.guestbook}
-        </div>
-      </Reveal>
+      {slots.guestbook === null ? null : (
+        <Reveal>
+          <div style={{ padding: '0 24px 50px', textAlign: 'center' }}>
+            <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, marginBottom: 16 }}>{ROTULOS.firmas}</p>
+            {slots.guestbook}
+          </div>
+        </Reveal>
+      )}
 
       <FileteDeOro />
 

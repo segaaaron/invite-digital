@@ -10,6 +10,8 @@ type Props = {
   readonly artist: string
   /** El rótulo sobre el título. Del diccionario: la invitación va en el idioma del evento. */
   readonly eyebrow: string
+  /** La letra del rótulo, si no es la monoespaciada: «MI VALS» de los XV V4 va en DM Sans negrita. */
+  readonly eyebrowFont?: string | undefined
   /**
    * La dirección del MP3 que suena, o nada.
    *
@@ -151,6 +153,7 @@ export function MusicPlayer({
   track,
   artist,
   eyebrow,
+  eyebrowFont,
   audioSrc,
   soloAlAbrir = false,
   textColor = 'currentColor',
@@ -220,7 +223,7 @@ export function MusicPlayer({
       </button>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: 'var(--font-jetbrains-mono)', fontSize: 9, letterSpacing: '0.3em', color: accent, opacity: 0.95 }}>
+        <div style={{ fontFamily: eyebrowFont ?? 'var(--font-jetbrains-mono)', fontWeight: eyebrowFont === undefined ? undefined : 700, fontSize: 9, letterSpacing: '0.3em', color: accent, opacity: 0.95 }}>
           {eyebrow}
         </div>
         <div

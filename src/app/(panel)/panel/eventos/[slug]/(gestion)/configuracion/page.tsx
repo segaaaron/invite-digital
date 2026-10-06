@@ -29,6 +29,7 @@ import { SaveTheDateCard } from '@/modules/events/ui/SaveTheDateCard'
 import { EstiloDelEventoCard } from '@/modules/events/ui/EstiloDelEventoCard'
 import { acentosPara, CALIGRAFIAS, TITULARES } from '@/modules/events/domain/estilo'
 import { hasFeature } from '@/modules/plans'
+import { preguntasDelEncargo } from '@/modules/events'
 import { FONT_VARIABLES } from '@/shared/design/font-manifest'
 import { themeFonts } from '@/shared/design/fonts'
 import { EncargoDelEquipo } from '@/modules/events/ui/EncargoDelEquipo'
@@ -305,6 +306,11 @@ export default async function ConfiguracionPage({
               encargo={encargo}
               eventId={event.value.id}
               extras={`/panel/eventos/${event.value.slug}/extras`}
+              preguntas={
+                isErr(capacidad)
+                  ? []
+                  : preguntasDelEncargo({ estilo: hasFeature(capacidad.value, 'estilo'), creadoParaTi: hasFeature(capacidad.value, 'plannerTotal') })
+              }
               saldoPendiente={encargo.estado === 'aprobada' && (await orders.saldoPendienteDe(event.value.id))}
               vistaPrevia={`/panel/eventos/${event.value.slug}/vista-previa`}
             />

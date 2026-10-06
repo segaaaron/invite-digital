@@ -16,7 +16,7 @@ export const bodaSelloDefinition: ThemeDefinition = {
   label: 'Sobre Lacrado',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['cormorant', 'greatVibes', 'bodoniModa', 'jetbrainsMono'],
+  fonts: ['cormorant', 'greatVibes', 'bodoniModa', 'jetbrainsMono', 'cinzel'],
   rsvp: 'uniformes',
   pinta: {
     // Seis fotos de la pareja repartidas por la invitación (la fecha, la historia, la

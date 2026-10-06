@@ -32,8 +32,8 @@ describe('el tema Editorial', () => {
 
   it('el itinerario es un camino que va de un lado al otro, con la hora hacia dentro', () => {
     render(<BodaEdView {...conMuestra()} />)
-    const primera = screen.getByText('13:45').parentElement
-    const segunda = screen.getByText('16:00').parentElement
+    const primera = screen.getByText('17:00').parentElement
+    const segunda = screen.getByText('19:00').parentElement
     expect(primera?.style.textAlign).toBe('left')
     expect(segunda?.style.textAlign).toBe('right')
   })

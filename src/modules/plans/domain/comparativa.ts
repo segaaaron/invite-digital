@@ -13,7 +13,35 @@ export type TextosComparativa = {
   hasta: string
   /** «{n} días». */
   dias: string
-  filas: {
+  /** «{n} meses», para lo que dura en línea a partir de seis meses (V4: «6 meses»). */
+  meses?: string
+  /**
+   * Las filas que se pintan, **en este orden**: la web elige las del documento de cambios y el
+   * panel las de sus límites. Una clave que no esté, no sale.
+   */
+  filas: Partial<FilasDeComparativa>
+  modelo: Record<DesignChange, string>
+}
+
+type FilasDeComparativa = {
+    /** Lo que traen todos: portada, cuenta regresiva, mapa, cronograma, vestimenta y música. */
+    basicos: string
+    confirmacion: string
+    lista: string
+    pases: string
+    calendario: string
+    textos: string
+    /** Los cambios de diseño que hacemos nosotros en Gala e Imperial (van con «Colores y letra»). */
+    colores: string
+    tipografias: string
+    secciones: string
+    /** El panel descargable: la lista de invitados que se exporta (va con importar/descargar). */
+    panel: string
+    /** Número de mesa + QR de acceso: mesas y puerta a la vez. */
+    mesaQr: string
+    album: string
+    /** Los detalles inspirados en su evento: lo que hacemos en el plan de todo el día. */
+    detalles: string
     grupos: string
     fotos: string
     fotosInvitados: string
@@ -32,12 +60,10 @@ export type TextosComparativa = {
     plannerTotal: string
     enLinea: string
     modelo: string
-  }
-  modelo: Record<DesignChange, string>
 }
 
 export type CeldaComparativa = { texto: string; incluido: boolean }
-export type FilaComparativa = { clave: keyof TextosComparativa['filas']; etiqueta: string; valores: CeldaComparativa[] }
+export type FilaComparativa = { clave: keyof FilasDeComparativa; etiqueta: string; valores: CeldaComparativa[] }
 
 /** Una fila por límite, con una celda por plan en el orden en que llegan. */
 export function filasComparativas(planes: readonly Allowance[], t: TextosComparativa): FilaComparativa[] {
@@ -45,7 +71,21 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
   const tope = (v: number | null): CeldaComparativa =>
     v === null ? { texto: t.sinLimite, incluido: true } : v <= 0 ? { texto: t.no, incluido: false } : { texto: t.hasta.replace('{n}', String(v)), incluido: true }
 
-  const celdas: Record<keyof TextosComparativa['filas'], (a: Allowance) => CeldaComparativa> = {
+  const todos = (): CeldaComparativa => siNo(true)
+  const celdas: Record<keyof FilasDeComparativa, (a: Allowance) => CeldaComparativa> = {
+    basicos: todos,
+    confirmacion: todos,
+    lista: todos,
+    pases: todos,
+    calendario: todos,
+    textos: todos,
+    colores: (a) => siNo(hasFeature(a, 'estilo')),
+    tipografias: (a) => siNo(hasFeature(a, 'estilo')),
+    secciones: (a) => siNo(hasFeature(a, 'estilo')),
+    panel: (a) => siNo(a.csvImport),
+    mesaQr: (a) => siNo(a.seating && a.checkin),
+    album: (a) => siNo(a.guestPhotos),
+    detalles: (a) => siNo(hasFeature(a, 'plannerTotal')),
     grupos: (a) => tope(a.maxGuestGroups),
     fotos: (a) => tope(a.maxGalleryPhotos),
     fotosInvitados: (a) => siNo(a.guestPhotos),
@@ -62,13 +102,19 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     tareas: () => siNo(true),
     plannerCompleto: (a) => siNo(hasFeature(a, 'plannerCompleto')),
     plannerTotal: (a) => siNo(hasFeature(a, 'plannerTotal')),
-    enLinea: (a) => ({ texto: t.dias.replace('{n}', String(a.onlineDays)), incluido: true }),
+    enLinea: (a) => ({
+      texto:
+        t.meses !== undefined && a.onlineDays >= 180 && a.onlineDays % 30 === 0
+          ? t.meses.replace('{n}', String(a.onlineDays / 30))
+          : t.dias.replace('{n}', String(a.onlineDays)),
+      incluido: true,
+    }),
     modelo: (a) => ({ texto: t.modelo[a.designChange], incluido: a.designChange !== 'ninguno' }),
   }
 
-  return (Object.keys(t.filas) as Array<keyof TextosComparativa['filas']>).map((clave) => ({
+  return (Object.entries(t.filas) as Array<[keyof FilasDeComparativa, string]>).map(([clave, etiqueta]) => ({
     clave,
-    etiqueta: t.filas[clave],
+    etiqueta,
     valores: planes.map(celdas[clave]),
   }))
 }

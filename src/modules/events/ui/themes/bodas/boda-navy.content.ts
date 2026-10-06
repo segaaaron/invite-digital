@@ -30,8 +30,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   reception: { label: 'Recepción Social', place: 'Salón Los Cedros', time: '15:00' },
   map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.15°O' },
   itinerary: [
-    { time: '13:45', label: 'Ceremonia Religiosa' },
-    { time: '16:00', label: 'Recepción Social' },
+    { time: '13:00', label: 'Ceremonia Religiosa' },
+    { time: '15:00', label: 'Recepción Social' },
     { time: '17:00', label: 'Vals de los Novios' },
     { time: '19:00', label: 'Una Deliciosa Cena' },
     { time: '21:00', label: 'Partimos la Torta' },

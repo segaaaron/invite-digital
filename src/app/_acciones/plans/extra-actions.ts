@@ -10,7 +10,7 @@ import { campo } from '@/shared/forms/campo'
 
 const NO_DISPONIBLE: Record<ExtraNoDisponible, string> = {
   incluido: 'Tu evento ya lo tiene.',
-  requiere_plan: 'Este extra es para el plan Firma 3D. Cambia de plan para tenerlo.',
+  requiere_plan: 'Este extra es para el plan Gala. Cambia de plan para tenerlo.',
 }
 
 export type ExtraActionState = { status: 'idle' } | { status: 'error'; message: string }

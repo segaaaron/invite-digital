@@ -28,7 +28,7 @@ describe('drizzleDisenoRepository', () => {
     expect(await repo.leer(eventId)).toBeNull()
     await repo.empezar(eventId, { rondas: 3, dias: 5 })
     const d = await repo.leer(eventId)
-    expect(d).toEqual({ estado: 'esperando_datos', rondasIncluidas: 3, rondasUsadas: 0, diasDeEntrega: 5, entregaHasta: null })
+    expect(d).toEqual({ estado: 'esperando_datos', rondasIncluidas: 3, rondasUsadas: 0, diasDeEntrega: 5, entregaHasta: null, brief: null })
     await repo.cambiar(eventId, 'esperando_datos', { ...d!, estado: 'en_diseno', entregaHasta: '2026-10-07' })
     await repo.empezar(eventId, { rondas: 9, dias: 9 })
     expect((await repo.leer(eventId))?.estado).toBe('en_diseno')
@@ -69,13 +69,15 @@ describe('empezar según el plan', () => {
   it('un plan de autoservicio no crea encargo; uno con rondas y días, sí, con sus valores', async () => {
     const otro = crypto.randomUUID()
     await db.insert(events).values({ id: otro, slug: `diseno-plan-${otro.slice(0, 8)}`, title: 'Plan', eventDate: '2027-01-17', rsvpDeadline: '2026-12-27', locale: 'es', themeKey: 'xv', status: 'draft' })
+    const [antes] = await db.select({ rondas: plans.correctionRounds, dias: plans.deliveryDays }).from(plans).where(eq(plans.slug, 'firma-3d'))
     try {
       expect(await repo.empezarSegunPlan(otro, 'plan-que-no-existe')).toBe(false)
       await db.update(plans).set({ correctionRounds: 3, deliveryDays: 4 }).where(eq(plans.slug, 'firma-3d'))
       expect(await repo.empezarSegunPlan(otro, 'firma-3d')).toBe(true)
       expect(await repo.leer(otro)).toMatchObject({ rondasIncluidas: 3, diasDeEntrega: 4, estado: 'esperando_datos' })
     } finally {
-      await db.update(plans).set({ correctionRounds: null, deliveryDays: null }).where(eq(plans.slug, 'firma-3d'))
+      // Se deja el plan como estaba: con nulos, Gala perdía sus rondas en la base de desarrollo.
+      await db.update(plans).set({ correctionRounds: antes!.rondas, deliveryDays: antes!.dias }).where(eq(plans.slug, 'firma-3d'))
       await db.delete(events).where(eq(events.id, otro))
     }
   })

@@ -224,6 +224,8 @@ export const THEME_ASSETS = {
     'white-spray.avif',
   ],
   'xv': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'bajo-el-mar1.avif',
     'castillo-purpura.avif',
     'concha-pastel.avif',
@@ -252,6 +254,8 @@ export const THEME_ASSETS = {
     'tiara-vino-sf.avif',
   ],
   'xv-isabelle': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'baile-dorado-sf.avif',
     'busto-marmol-sf.avif',
     'carrosa-dorada-sf.avif',
@@ -283,6 +287,8 @@ export const THEME_ASSETS = {
     'torta-pinki-sf.avif',
   ],
   'xv-luciana': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'borde.avif',
     'bosque-verdee.avif',
     'faro-verde.avif',
@@ -291,6 +297,8 @@ export const THEME_ASSETS = {
     'traje1.avif',
   ],
   'xv-mariana': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'auto-plata-opt.avif',
     'baile-plata-opt.avif',
     'bola-sola-opt.avif',
@@ -306,6 +314,8 @@ export const THEME_ASSETS = {
     'traje-plata-opt.avif',
   ],
   'xv-natalia': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'castillo-purpura.avif',
     'fondo-musical.avif',
     'fondo-notas-dorado.avif',
@@ -316,6 +326,8 @@ export const THEME_ASSETS = {
     'traje-y-vestido.avif',
   ],
   'xv-valentina': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'castillo2sf.avif',
     'corona-icono1.avif',
     'despedida-icono.avif',
@@ -327,6 +339,8 @@ export const THEME_ASSETS = {
     'xv3.avif',
   ],
   'xv-valeria': [
+    // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
+    'vestimenta-v4.avif',
     'borde.avif',
     'candelabro-guindo-sf.avif',
     'castillo-guindo-opt.avif',

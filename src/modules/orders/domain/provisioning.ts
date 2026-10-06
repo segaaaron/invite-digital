@@ -6,7 +6,8 @@
  * traer los datos.
  */
 
-const DIAS_DE_CIERRE = 15
+// Documento de cambios (30 sep): el plazo de confirmar se sugiere solo, 3 semanas antes.
+const DIAS_DE_CIERRE = 21
 const MS_POR_DIA = 86_400_000
 
 /**
@@ -22,7 +23,7 @@ const MS_POR_DIA = 86_400_000
 export const eventSlugFor = (publicRef: string): string => `evento-${publicRef.trim().toLowerCase()}`
 
 /**
- * Cuándo dejan de admitirse confirmaciones: quince días antes del evento.
+ * Cuándo dejan de admitirse confirmaciones: tres semanas antes del evento.
  *
  * Se calcula en UTC a partir de la fecha ISO, sin `new Date(cadena)`: esa forma
  * interpreta la zona horaria del servidor y en Bolivia —UTC−4— devuelve el día anterior.

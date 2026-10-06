@@ -16,7 +16,7 @@ beforeEach(() => {
  */
 describe('el bloque de confirmación, una vez respondida', () => {
   for (const [nombre, Vista, plazo] of [
-    ['XV', XvView, /Confírmame antes/],
+    ['XV', XvView, /confirma antes/],
     ['Botánica', BodaBotView, /antes del/],
   ] as const) {
     it(`${nombre}: sin respuesta pide confirmar antes del plazo; respondida, no`, () => {

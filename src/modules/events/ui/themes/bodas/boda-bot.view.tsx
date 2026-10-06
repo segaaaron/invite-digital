@@ -692,14 +692,16 @@ export function BodaBotView({ content, event, dictionary, themes, slots, guestIn
           </div>
         </Reveal>
 
-        <Reveal>
-          <div style={{ marginTop: 36 }}>
-            <div style={{ textAlign: 'center', marginBottom: 14 }}>
-              <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.salvia }}>{ROTULOS.guestbook}</div>
+        {slots.guestbook === null ? null : (
+          <Reveal>
+            <div style={{ marginTop: 36 }}>
+              <div style={{ textAlign: 'center', marginBottom: 14 }}>
+                <div style={{ fontFamily: CALIGRAFIA, fontSize: 30, color: P.salvia }}>{ROTULOS.guestbook}</div>
+              </div>
+              {slots.guestbook}
             </div>
-            {slots.guestbook}
-          </div>
-        </Reveal>
+          </Reveal>
+        )}
 
         {fotos === undefined ? null : (
           <Reveal>
