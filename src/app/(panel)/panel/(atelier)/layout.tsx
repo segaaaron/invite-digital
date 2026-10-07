@@ -34,7 +34,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
     activo === null ? null : guests.contar(activo.id).catch(() => null),
     activo === null ? null : plans.allowanceFor(activo.id),
     insigniasDeAdmin(actor),
-    actor.role === 'cliente' && activo !== null ? events.staff.membershipsOf(activo.id, actor.userId).then(rolEnEquipo) : null,
+    actor.role === 'cliente' && activo !== null ? events.staff.de(actor, activo.id).then(rolEnEquipo) : null,
     actor.role === 'puerta' || admin ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
     conCampana ? avisos.sinVer(actor.userId).catch(() => 0) : 0,
   ])
@@ -64,7 +64,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
       }
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
-      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
+      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
       {admin ? <BarraDelAdmin campana={campana} /> : campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>}
       {children}
     </PanelFrame>

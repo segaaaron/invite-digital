@@ -7,7 +7,8 @@ import type { Anfitrion } from './SoporteDeBoda'
 
 /**
  * «Entrar como el cliente», **de un clic** (28 de septiembre: antes pedía un motivo que se repetía y
- * acababa en 404). Con un anfitrión entra directo; con varios, un diálogo para elegir como quién. Cada
+ * acababa en 404). **Sale en todos los eventos** (6 de octubre): sin cliente, el admin entra como
+ * anfitrión del evento. Con un anfitrión entra directo; con varios, un diálogo para elegir como quién. Cada
  * entrada queda en la auditoría. La navegación la hace el navegador (`location.assign`): una petición
  * nueva, ya con la sesión en modo soporte.
  */
@@ -28,9 +29,7 @@ export function EntrarComoCliente({
   const dialogo = useRef<HTMLDialogElement>(null)
   const id = useId()
 
-  if (anfitriones.length === 0) return null
-
-  const entrarComo = (clientUserId: string) =>
+  const entrarComo = (clientUserId: string | null) =>
     empezar(async () => {
       setError(null)
       const hecho = await enterAsClientAction({ eventId, clientUserId })
@@ -45,13 +44,16 @@ export function EntrarComoCliente({
         aria-haspopup={anfitriones.length > 1 ? 'dialog' : undefined}
         className={claseDelBoton ?? botonClases(variant)}
         disabled={entrando}
-        onClick={() => (anfitriones.length === 1 ? entrarComo(anfitriones[0]!.userId) : dialogo.current?.showModal())}
-        title={anfitriones.length === 1 ? `Entrar como ${anfitriones[0]!.email}` : undefined}
+        // Sin cliente, el admin entra igual: como anfitrión de este evento.
+        onClick={() =>
+          anfitriones.length > 1 ? dialogo.current?.showModal() : entrarComo(anfitriones[0]?.userId ?? null)
+        }
+        title={anfitriones.length === 1 ? `Entrar como ${anfitriones[0]!.email}` : anfitriones.length === 0 ? 'Sin cliente: entras como anfitrión del evento' : undefined}
         type="button"
       >
-        {entrando ? 'Entrando…' : 'Entrar como el cliente'}
+        {entrando ? 'Entrando…' : anfitriones.length === 0 ? 'Entrar al panel del evento' : 'Entrar como el cliente'}
       </button>
-      {error !== null && anfitriones.length === 1 ? (
+      {error !== null && anfitriones.length <= 1 ? (
         <span className="text-[12px] text-danger" role="alert">
           {error}
         </span>

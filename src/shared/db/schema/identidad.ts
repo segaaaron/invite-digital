@@ -137,9 +137,8 @@ export const supportSessions = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     adminUserId: uuid('admin_user_id').references(() => users.id, { onDelete: 'set null' }),
     adminEmail: text('admin_email').notNull(),
-    clientUserId: uuid('client_user_id')
-      .notNull()
-      .references(() => users.id, { onDelete: 'cascade' }),
+    // Nulo: el admin entra a un evento **sin cliente** como su anfitrión (`0091`).
+    clientUserId: uuid('client_user_id').references(() => users.id, { onDelete: 'cascade' }),
     eventId: uuid('event_id')
       .notNull()
       .references(() => events.id, { onDelete: 'cascade' }),

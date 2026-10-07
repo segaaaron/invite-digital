@@ -35,25 +35,36 @@ async function sesionActual(): Promise<string | null> {
   return isErr(sesion) ? null : sesion.value.sessionId
 }
 
-export async function enterAsClientAction(input: { eventId: string; clientUserId: string }): Promise<Navegar> {
+/**
+ * `clientUserId` nulo: el evento no tiene cliente («lo llevas tú») y el admin entra a su panel como
+ * anfitrión de **ese** evento (`0091`). Con cliente, como él.
+ */
+export async function enterAsClientAction(input: { eventId: string; clientUserId: string | null }): Promise<Navegar> {
   const actor = await requireAdmin()
 
   const evento = await events.getByIdUnscoped(input.eventId)
   if (isErr(evento)) return { status: 'error', message: 'Ese evento ya no existe.' }
 
-  // Solo como **el anfitrión de ese evento**: el id llega del navegador y no se le cree.
-  const clases = await events.staff.membershipsOf(evento.value.id, input.clientUserId)
-  if (!clases.includes('cliente')) return { status: 'error', message: 'Esa persona no es anfitriona de este evento.' }
-  const cliente = await identity.actorOf(input.clientUserId)
-  if (cliente === null) return { status: 'error', message: 'Esa cuenta ya no existe.' }
+  let como = 'anfitrión (sin cliente)'
+  if (input.clientUserId !== null) {
+    // Solo como **el anfitrión de ese evento**: el id llega del navegador y no se le cree.
+    const clases = await events.staff.membershipsOf(evento.value.id, input.clientUserId)
+    if (!clases.includes('cliente')) return { status: 'error', message: 'Esa persona no es anfitriona de este evento.' }
+    const cliente = await identity.actorOf(input.clientUserId)
+    if (cliente === null) return { status: 'error', message: 'Esa cuenta ya no existe.' }
+    como = cliente.email
+  }
 
   const sessionId = await sesionActual()
   if (sessionId === null) return { status: 'ok', href: '/panel/entrar' }
 
-  await identity.support.open({ sessionId, adminUserId: actor.userId, adminEmail: actor.email, clientUserId: cliente.id, eventId: evento.value.id, reason: 'Entrada del admin' })
-  await admin.record(actor, { action: 'soporte.entrada', subject: evento.value.slug, detail: `como ${cliente.email}` })
+  await identity.support.open({ sessionId, adminUserId: actor.userId, adminEmail: actor.email, clientUserId: input.clientUserId, eventId: evento.value.id, reason: 'Entrada del admin' })
+  await admin.record(actor, { action: 'soporte.entrada', subject: evento.value.slug, detail: `como ${como}` })
   return { status: 'ok', href: `/panel/eventos/${evento.value.slug}` }
 }
+
+/** Como quién actuó el admin: el correo del cliente, o el anfitrión de un evento sin cliente. */
+const comoQuien = (actor: Actor): string => (actor.soporte?.eventoSinCliente === undefined ? actor.email : 'anfitrión (sin cliente)')
 
 export async function leaveSupportAction(): Promise<Navegar> {
   const actor = await requireSession()
@@ -64,7 +75,7 @@ export async function leaveSupportAction(): Promise<Navegar> {
   if (sessionId !== null) await identity.support.close(sessionId, new Date())
 
   const elAdmin: Actor = { userId: actor.soporte.adminUserId, email: actor.soporte.adminEmail, role: 'admin', mustChangePassword: false }
-  await admin.record(elAdmin, { action: 'soporte.salida', subject: null, detail: `como ${actor.email}` })
+  await admin.record(elAdmin, { action: 'soporte.salida', subject: null, detail: `como ${comoQuien(actor)}` })
   return { status: 'ok', href: '/panel/admin/eventos' }
 }
 

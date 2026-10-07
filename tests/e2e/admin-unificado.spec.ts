@@ -136,6 +136,8 @@ test('el evento de un pedido pagado lleva los extras cotizados y cierra su consu
   await ficha(page).getByLabel('Lo llevo yo, sin acceso del cliente').check()
   await ficha(page).getByRole('button', { name: 'Crear el evento', exact: true }).click()
   await expect(ficha(page).getByText(/Evento creado/)).toBeVisible({ timeout: 20_000 })
+  // Creado, no se vuelve a crear: el botón queda deshabilitado (otro clic era un duplicado).
+  await expect(ficha(page).getByRole('button', { name: 'Creado ✓' })).toBeDisabled()
 
   const [pedido] = await sql<{ event_id: string | null }[]>`select event_id from orders where public_ref = ${r}`
   expect(pedido!.event_id).not.toBeNull()

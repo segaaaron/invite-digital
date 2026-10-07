@@ -54,6 +54,8 @@ test.describe('con sesión', () => {
     await elegirFecha(page, 'Fecha límite de confirmación', '2027-05-01')
     await page.getByRole('button', { name: 'Crear evento' }).click()
     await expect(page.getByRole('status')).toContainText('Evento guardado')
+    // Un alta hecha no se repite: el botón queda deshabilitado.
+    await expect(page.getByRole('button', { name: 'Creado ✓' })).toBeDisabled()
 
     await page.goto('/panel')
     await expect(page.getByRole('link', { name: /Boda e2e/ })).toBeVisible()

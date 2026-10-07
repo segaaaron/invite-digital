@@ -5,6 +5,7 @@ import { display, sans } from '@/shared/design/fonts'
 import { VIEWPORT } from '@/shared/config/viewport'
 import { isErr } from '@/shared/result'
 import '../../../globals.css'
+import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
 
 export const viewport = VIEWPORT
 export const metadata = { robots: { index: false, follow: false } }
@@ -21,7 +22,8 @@ export default async function EnlaceGeneralLayout({ children, params }: { childr
   if (isErr(evento)) notFound()
   return (
     <html className={`${sans.variable} ${display.variable}`} lang={evento.value.locale}>
-      <body className="bg-bg antialiased">{children}</body>
+      <body className="bg-bg antialiased">
+        <ValidacionDeFormularios />{children}</body>
     </html>
   )
 }

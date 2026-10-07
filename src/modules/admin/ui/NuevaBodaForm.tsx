@@ -268,7 +268,11 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
               </Link>
             </PanelAlert>
           ) : null}
-          <SubmitButton className="w-full" variant="primary" pending={creando} pendingLabel={'Creando…'}>{sinAcceso ? 'Crear el evento' : 'Crear el evento y su acceso'}</SubmitButton>
+          {/* Creado, el botón no vuelve a crear: otro clic sería un evento duplicado. Para otro evento,
+              «+ Crear» de arriba. */}
+          <SubmitButton className="w-full" disabled={estado.status === 'success'} variant="primary" pending={creando} pendingLabel={'Creando…'}>
+            {estado.status === 'success' ? 'Creado ✓' : sinAcceso ? 'Crear el evento' : 'Crear el evento y su acceso'}
+          </SubmitButton>
         </div>
       </aside>
     </form>

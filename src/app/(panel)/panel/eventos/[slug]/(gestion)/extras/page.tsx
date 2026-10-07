@@ -53,7 +53,13 @@ export default async function ExtrasPage({ params }: { params: Promise<{ slug: s
     <>
       <PanelHeader kicker="Tu evento" meta={`${extras.length} extra${extras.length === 1 ? '' : 's'} a la venta`} title="Extras" />
       <PanelCard title="Lo que puedes sumar">
-        <ExtrasCard eventId={event.value.id} eventSlug={event.value.slug} extras={extras} pedidos={pedidos} />
+        <ExtrasCard
+          eventId={event.value.id}
+          eventSlug={event.value.slug}
+          extras={extras}
+          pedidos={pedidos}
+          sinPedido={actor.soporte?.eventoSinCliente === event.value.id}
+        />
       </PanelCard>
     </>
   )

@@ -9,6 +9,7 @@ import '@/modules/events/ui/themes/kit/keyframes.css'
 import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
 import { SinVerCodigo } from '@/modules/events/ui/themes/kit/SinVerCodigo'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
+import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
 
 export const viewport = VIEWPORT
 
@@ -42,6 +43,7 @@ export default async function ModelPreviewLayout({
       <body className="antialiased theme-protegida">
         <SinVerCodigo />
         <CapturaDeFallos />
+        <ValidacionDeFormularios />
         <PortadasQueEsperan />
         {children}
       </body>

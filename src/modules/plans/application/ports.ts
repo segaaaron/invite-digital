@@ -98,6 +98,11 @@ export interface PlansRepository extends PlanReader, PlanChangeRequests {
    * Devuelve cuántos aplicó.
    */
   applyQuoteExtras(orderId: string): Promise<number>
+  /**
+   * Aplica un extra **sin pedido**: el evento sin cliente que lleva el atelier, cuyo cobro va fuera
+   * del sistema. Una vez por evento y extra. `false` si ya lo tenía o el extra no existe.
+   */
+  applyExtraWithoutOrder(eventId: string, addonSlug: string): Promise<boolean>
   /** El catálogo de extras; con `soloActivos`, los que están a la venta. */
   listExtras(soloActivos: boolean): Promise<Extra[]>
   /** Edita un extra. `false` si no existe. */

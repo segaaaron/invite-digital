@@ -64,7 +64,7 @@ export default async function EventoLayout({
     plans.allowanceFor(id),
     insigniasDeAdmin(actor),
     // Quien entra por pertenencia ve la barra de su papel en el equipo.
-    dueno || actor.role === 'puerta' ? null : events.staff.membershipsOf(id, actor.userId).then(rolEnEquipo),
+    dueno || actor.role === 'puerta' ? null : events.staff.de(actor, id).then(rolEnEquipo),
     actor.role === 'puerta' ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
     conCampana ? avisos.sinVer(actor.userId).catch(() => 0) : 0,
   ])
@@ -98,7 +98,7 @@ export default async function EventoLayout({
       }}
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
-      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.email} />}
+      {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
       {isAdmin(actor) ? <BarraDelAdmin campana={campana} /> : campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.

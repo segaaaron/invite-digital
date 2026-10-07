@@ -46,7 +46,7 @@ export default async function TareasPage({
   const filtro = (FILTROS_DE_TAREAS as readonly string[]).includes(pedido ?? '') ? (pedido as FiltroDeTareas) : 'todas'
   // «Mías»: quien celebra ve las de los anfitriones; su planner y quien lleva el evento, las del planner.
   const dueno = gestionaElEvento(actor, event.value)
-  const mias = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).includes('planner') ? 'planner' : 'anfitrion'
+  const mias = dueno || (await events.staff.de(actor, event.value.id)).includes('planner') ? 'planner' : 'anfitrion'
   // Lo que ya está hecho en el panel: una tarea cuya pantalla ya lo resolvió se da por hecha.
   const eventId = event.value.id
   const [contenido, grupos, plan, proveedores, cortejo, momentos, recepcion] = await Promise.all([

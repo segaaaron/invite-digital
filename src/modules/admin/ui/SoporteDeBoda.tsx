@@ -12,14 +12,14 @@ export type Anfitrion = { readonly userId: string; readonly email: string; reado
 
 /**
  * Restablecer el acceso del cliente, dentro de «Gestionar». Entrar como el cliente vive a la
- * vista, en `EntrarComoCliente`. Sin anfitrión no hay a quién ayudar, y lo dice.
+ * vista, en `EntrarComoCliente`. Sin anfitrión no hay acceso que restablecer: lo dice, y dónde se entra.
  */
 export function SoporteDeBoda({ eventId, anfitriones }: { eventId: string; anfitriones: readonly Anfitrion[] }) {
   const id = useId()
   const [reinicio, restablecer, restableciendo] = useActionState(sinCaerse(resetClientAccessAction), INICIAL)
 
   if (anfitriones.length === 0) {
-    return <p className="text-[12px] text-ink-mute">Sin anfitrión todavía: da el acceso del cliente para poder darle soporte.</p>
+    return <p className="text-[12px] text-ink-mute">Sin cliente todavía: lo llevas tú. Entras a su panel con «Entrar al panel del evento», arriba.</p>
   }
 
   return (

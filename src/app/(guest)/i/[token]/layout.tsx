@@ -10,6 +10,7 @@ import { VIEWPORT } from '@/shared/config/viewport'
 import '../../../globals.css'
 import '@/modules/events/ui/themes/kit/keyframes.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
+import { ValidacionDeFormularios } from '@/shared/design/ui/ValidacionDeFormularios'
 import { PortadasQueEsperan } from '@/modules/events/ui/themes/kit/PortadasQueEsperan'
 import { SinVerCodigo } from '@/modules/events/ui/themes/kit/SinVerCodigo'
 
@@ -53,6 +54,7 @@ export default async function InvitationLayout({
       <body className="antialiased theme-protegida">
         <SinVerCodigo />
         <CapturaDeFallos />
+        <ValidacionDeFormularios />
         <PortadasQueEsperan />
         <TextosDeError textos={getDictionary(invitation.value.event.locale).invitation.error}>{children}</TextosDeError>
       </body>

@@ -40,7 +40,7 @@ export async function accesoAlAsistente(actor: Actor, slug: string) {
   if (isErr(capacidad) || !tieneLuxury(capacidad.value, config)) return null
   const rol = gestionaElEvento(actor, evento.value)
     ? 'organizador (el atelier que lleva el evento)'
-    : (await events.staff.membershipsOf(evento.value.id, actor.userId)).includes('planner')
+    : (await events.staff.de(actor, evento.value.id)).includes('planner')
       ? 'planner contratado'
       : 'anfitrión (quien celebra)'
   return { evento: evento.value, capacidad: capacidad.value as Allowance, config, rol, nombreDelPlan: await nombreDePlan(capacidad.value.planSlug) }

@@ -173,7 +173,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
   // Los proveedores son del anfitrión y su planner: al co-anfitrión no se le ofrecen.
   const dueno = gestionaElEvento(actor, event.value)
-  const llevaProveedores = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).some((m) => m === 'cliente' || m === 'planner')
+  const llevaProveedores = dueno || (await events.staff.de(actor, event.value.id)).some((m) => m === 'cliente' || m === 'planner')
   const conProveedores = llevaProveedores && !isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))
   const proveedores = conProveedores ? await planner.dia.listVendors(event.value.id) : []
   const semana = {

@@ -40,6 +40,9 @@ export const createFakePlansRepository = (input: {
     async applyQuoteExtras() {
       return 0
     },
+    async applyExtraWithoutOrder() {
+      return false
+    },
     async listEventExtras(eventId) {
       return input.extras?.[eventId] ?? []
     },

@@ -15,6 +15,14 @@ html { scroll-behavior: smooth; }
   }
 }
 
+/* El campo que no pasa la validación (`ValidacionDeFormularios`, o el error del servidor que ata
+   `Field`): filete del color de peligro y un halo suave, en lugar de la burbuja del navegador. Fuera
+   de las capas a propósito: tiene que ganar al borde que cada campo pone con sus clases. */
+:is(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--color-danger);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 16%, transparent);
+}
+
 /*
  * **El recorte lateral va en la raíz, y en las dos.**
  *

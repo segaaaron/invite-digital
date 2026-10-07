@@ -37,7 +37,7 @@ test.describe('soporte como el cliente', () => {
 
   test.afterAll(async () => {
     await contexto.close()
-    await sql`delete from audit_log where subject = ${SLUG} or detail like ${`como ${CLIENTE.email}%`}`
+    await sql`delete from audit_log where subject = ${SLUG} or detail like ${`como ${CLIENTE.email}%`} or (actor_email = ${ADMIN.email} and detail = 'como anfitrión (sin cliente)')`
     await deleteClienteFixture(SLUG)
     await closeClienteDb()
     await sql.end({ timeout: 5 })
@@ -129,5 +129,26 @@ test.describe('soporte como el cliente', () => {
       expect((await suya.goto(ruta))?.status(), ruta).toBe(404)
     }
     await cliente.close()
+  })
+  test('sin cliente también entra: como anfitrión de ese evento, y nada más', async () => {
+    // «Lo llevas tú»: el evento no tiene cliente. Antes el botón ni salía y el admin no podía cargar
+    // invitados (6 de octubre). Se quita el acceso del cliente al final, para no tocar las de arriba.
+    await sql`delete from event_staff where event_id = (select id from events where slug = ${SLUG}) and membership = 'cliente'`
+    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await expect(page.getByText('Sin acceso · lo llevas tú')).toBeVisible()
+    await page.getByRole('button', { name: 'Entrar al panel del evento' }).first().click()
+
+    await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}(/configuracion)?$`), { timeout: 30_000 })
+    await expect(page.getByRole('status').filter({ hasText: 'anfitrión del evento (sin cliente)' })).toBeVisible()
+    expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(200)
+    // Solo ese evento: la administración sigue cerrada mientras actúa como anfitrión.
+    expect((await page.goto('/panel/admin/eventos'))?.status()).toBe(404)
+
+    await page.goto(`/panel/eventos/${SLUG}`)
+    await page.getByRole('button', { name: 'Regresar como admin' }).click()
+    await expect(page).toHaveURL(/\/panel\/admin\/eventos$/, { timeout: 30_000 })
+    expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(404)
+    const [entrada] = await sql<{ n: number }[]>`select count(*)::int as n from audit_log where action = 'soporte.entrada' and subject = ${SLUG} and detail = 'como anfitrión (sin cliente)'`
+    expect(entrada!.n).toBe(1)
   })
 })

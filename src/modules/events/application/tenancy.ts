@@ -1,4 +1,4 @@
-import { type Actor, canAccessEvent, type EventSection, isAdmin } from '@/modules/identity'
+import { type Actor, canAccessEvent, type EventSection, isAdmin, type Membership } from '@/modules/identity'
 import { attempt, err, isErr, isOk, ok, type Result } from '@/shared/result'
 import { createEvent, type Event } from '../domain/event'
 import { eventError, type EventError } from '../domain/errors'
@@ -10,6 +10,13 @@ import type { EventRepository, StaffReader } from './ports'
  * lado seguro.
  */
 type Opciones = { section?: EventSection | undefined }
+
+/**
+ * Las pertenencias de este actor en ese evento. **El único sitio** donde el admin que entró a un
+ * evento sin cliente cuenta como su anfitrión (`soporte.eventoSinCliente`): solo en ese evento.
+ */
+export const membresiasDe = (staff: Pick<StaffReader, 'membershipsOf'>, actor: Actor, eventId: string): Promise<Membership[]> =>
+  actor.soporte?.eventoSinCliente === eventId ? Promise.resolve(['cliente']) : staff.membershipsOf(eventId, actor.userId)
 
 /**
  * El evento de este actor.
@@ -59,7 +66,7 @@ async function permitido(
   // El admin no toma el atajo: su acceso depende de la sección.
   if (actor.role === 'atelier' && event.userId !== null && event.userId === actor.userId) return true
   if (isAdmin(actor)) return canAccessEvent(actor, event, { section: opciones.section })
-  const memberships = await deps.staff.membershipsOf(event.id, actor.userId)
+  const memberships = await membresiasDe(deps.staff, actor, event.id)
   return canAccessEvent(actor, event, { section: opciones.section, memberships })
 }
 
@@ -109,7 +116,9 @@ export const listEventsFor =
           : actor.role === 'puerta'
             ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, ['puerta']))
             : actor.role === 'cliente'
-              ? await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, EQUIPO))
+              ? await deps.events.listByIds(
+                  actor.soporte?.eventoSinCliente === undefined ? await deps.staff.eventIdsOf(actor.userId, EQUIPO) : [actor.soporte.eventoSinCliente],
+                )
               : [
                   ...(await deps.events.listByUser(actor.userId)),
                   ...(await deps.events.listByIds(await deps.staff.eventIdsOf(actor.userId, EQUIPO))).filter((r) => r.userId !== actor.userId),

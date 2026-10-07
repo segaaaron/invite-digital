@@ -56,10 +56,18 @@ async function leerSesion(): Promise<Actor> {
 
   // Modo soporte: el admin actúa como el cliente. Solo se consulta si la sesión lo tiene.
   const abierto = result.value.supportSessionId === null ? null : await identity.support.activeFor(result.value.sessionId)
-  const cliente = abierto === null ? null : await identity.actorOf(abierto.clientUserId)
+  const cliente = abierto === null || abierto.clientUserId === null ? null : await identity.actorOf(abierto.clientUserId)
   const { actor, limpiar } = actorDeSesion(
     usuario,
-    abierto === null ? null : { id: abierto.id, adminEmail: abierto.adminEmail, cliente: cliente === null ? null : aActor(cliente) },
+    abierto === null
+      ? null
+      : {
+          id: abierto.id,
+          adminEmail: abierto.adminEmail,
+          cliente: cliente === null ? null : aActor(cliente),
+          // Sin cliente: el admin, como anfitrión de ese evento.
+          ...(abierto.clientUserId === null ? { sinCliente: { eventId: abierto.eventId } } : {}),
+        },
   )
   if (limpiar || (result.value.supportSessionId !== null && abierto === null)) await identity.support.close(result.value.sessionId, new Date())
 
@@ -77,7 +85,7 @@ async function leerSesion(): Promise<Actor> {
     if (cabeceras.get('next-action') !== null) {
       await admin.record(
         { userId: actor.soporte.adminUserId, email: actor.soporte.adminEmail, role: 'admin', mustChangePassword: false },
-        { action: 'soporte.accion', subject: ruta || null, detail: `como ${actor.email}` },
+        { action: 'soporte.accion', subject: ruta || null, detail: `como ${actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión (sin cliente)'}` },
       )
     }
     return actor

@@ -49,6 +49,7 @@ export const plans = {
   applyExtra: (orderId: string) => drizzlePlansRepository.applyExtra(orderId),
   /** Los extras de la cotización, al evento que nace de su pedido. */
   applyQuoteExtras: (orderId: string) => drizzlePlansRepository.applyQuoteExtras(orderId),
+  applyExtraWithoutOrder: (eventId: string, addonSlug: string) => drizzlePlansRepository.applyExtraWithoutOrder(eventId, addonSlug),
   /** Los extras a la venta, del más barato de orden. */
   listActiveExtras: () => drizzlePlansRepository.listExtras(true),
   /** Todo el catálogo de extras, para el admin. */

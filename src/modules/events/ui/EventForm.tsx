@@ -1,6 +1,7 @@
 'use client'
 
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
+import Link from 'next/link'
 import { useActionState, useId, type ReactNode } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { CATALOG_KEYS, seAsigna } from '@/shared/design/theme-catalog'
@@ -189,11 +190,19 @@ export function EventForm({
 
       {state.status === 'success' ? (
         <p aria-live="polite" className="text-[13px] text-ink-soft" role="status">
-          Evento guardado.
+          Evento guardado.{' '}
+          {event ? null : (
+            <Link className="underline underline-offset-4" href="/panel">
+              Ver mis eventos
+            </Link>
+          )}
         </p>
       ) : null}
 
-      <SubmitButton variant="primary" pending={isPending} pendingLabel={'Guardando…'}>{event ? 'Guardar cambios' : 'Crear evento'}</SubmitButton>
+      {/* Un alta hecha no se repite: otro clic crearía el mismo evento dos veces. */}
+      <SubmitButton disabled={!event && state.status === 'success'} variant="primary" pending={isPending} pendingLabel={'Guardando…'}>
+        {event ? 'Guardar cambios' : state.status === 'success' ? 'Creado ✓' : 'Crear evento'}
+      </SubmitButton>
     </form>
   )
 }

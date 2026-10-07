@@ -27,6 +27,23 @@ describe('actorDeSesion', () => {
     expect(actorDeSesion(admin, { ...soporte, cliente: null })).toEqual({ actor: admin, limpiar: true })
   })
 
+  it('sin cliente, el admin entra como anfitrión de ese evento, marcado con él', () => {
+    expect(actorDeSesion(admin, { id: 's2', adminEmail: 'admin@ejemplo.bo', cliente: null, sinCliente: { eventId: 'e9' } })).toEqual({
+      actor: {
+        ...admin,
+        role: 'cliente',
+        mustChangePassword: false,
+        soporte: { id: 's2', adminUserId: 'a1', adminEmail: 'admin@ejemplo.bo', eventoSinCliente: 'e9' },
+      },
+      limpiar: false,
+    })
+  })
+
+  it('sin cliente tampoco sube privilegios: quien ya no es admin se limpia', () => {
+    const exAdmin = { ...admin, role: 'atelier' as const }
+    expect(actorDeSesion(exAdmin, { id: 's2', adminEmail: 'x', cliente: null, sinCliente: { eventId: 'e9' } })).toEqual({ actor: exAdmin, limpiar: true })
+  })
+
   it('un cliente que llegara con la marca no la conserva: el soporte lo pone solo esta función', () => {
     expect(actorDeSesion({ ...cliente, soporte: { id: 'x', adminUserId: 'a1', adminEmail: 'x' } }, null).actor.soporte).toBeUndefined()
   })

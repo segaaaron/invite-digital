@@ -217,3 +217,27 @@ describe('actorCanTouchEvent', () => {
     expect(await tocar(ana, {})).toBeNull()
   })
 })
+
+describe('el admin que entra a un evento sin cliente', () => {
+  // `actorDeSesion` lo convierte en anfitrión de **ese** evento; la pertenencia no está en la base.
+  const comoAnfitrion: Actor = {
+    ...jefa,
+    role: 'cliente',
+    soporte: { id: 's1', adminUserId: 'u9', adminEmail: 'jefa@ejemplo.bo', eventoSinCliente: 'e3' },
+  }
+
+  it('abre ese evento como su anfitrión', async () => {
+    const abierto = await getEventFor({ events: repo(), staff: sinPersonal })(comoAnfitrion, 'boda-huerfana', { section: 'cliente' })
+    expect(isOk(abierto)).toBe(true)
+  })
+
+  it('y ningún otro', async () => {
+    const ajeno = await getEventFor({ events: repo(), staff: sinPersonal })(comoAnfitrion, 'boda-de-ana', { section: 'cliente' })
+    expect(isErr(ajeno)).toBe(true)
+  })
+
+  it('su bandeja es ese evento', async () => {
+    const lista = await listEventsFor({ events: repo(), staff: sinPersonal })(comoAnfitrion)
+    expect(isOk(lista) && lista.value.map((e) => e.id)).toEqual(['e3'])
+  })
+})

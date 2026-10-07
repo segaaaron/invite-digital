@@ -104,7 +104,7 @@ export default async function ConfiguracionPage({
   const encargo = await encargos.leer(event.value.id)
   // Aprobar y pedir cambios gastan rondas: los decide quien compró (sección `equipo`), no su planner.
   const decideElEncargo =
-    encargo !== null && (esDelAtelier || rolEnEquipo(await events.staff.membershipsOf(event.value.id, actor.userId)) === 'anfitrion')
+    encargo !== null && (esDelAtelier || rolEnEquipo(await events.staff.de(actor, event.value.id)) === 'anfitrion')
 
   // El contenido rico que pinta el diseño, y **qué secciones pinta**: pedirle un
   // itinerario a un diseño que no lo tiene es pedir trabajo que no se ve.

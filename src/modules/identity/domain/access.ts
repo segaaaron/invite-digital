@@ -33,7 +33,16 @@ export type Actor = {
    * Presente solo cuando **el admin** actúa como este cliente (modo soporte). Lo pone
    * `actorDeSesion` y nadie más; lo usan la franja «Regresar como admin» y el registro.
    */
-  readonly soporte?: { readonly id: string; readonly adminUserId: string; readonly adminEmail: string }
+  readonly soporte?: {
+    readonly id: string
+    readonly adminUserId: string
+    readonly adminEmail: string
+    /**
+     * El evento **sin cliente** al que el admin entró como anfitrión. Solo en ese evento cuenta
+     * como anfitrión (`membresiasDe`); en ningún otro tiene pertenencia.
+     */
+    readonly eventoSinCliente?: string
+  }
 }
 
 /**

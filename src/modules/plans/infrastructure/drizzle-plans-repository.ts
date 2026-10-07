@@ -125,16 +125,27 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
             select 1 from event_addons e where e.event_id = o.event_id and e.addon_slug = a.slug and e.order_id is null
           )
         returning event_id, effect, amount
-      `)) as unknown as Array<{ event_id: string; effect: string; amount: number }>
-      const dias = aplicados.filter((f) => f.effect === 'mas_dias')
-      for (const f of dias) {
-        await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${f.amount}` }).where(eq(events.id, f.event_id))
-      }
-      // Con el encargo ya empezado se suman aquí; si aún no existe, lo cuenta al crearse.
-      for (const f of aplicados.filter((a) => a.effect === 'mas_rondas')) {
-        await tx.execute(sql`update event_design set rounds_included = rounds_included + ${f.amount}, updated_at = now() where event_id = ${f.event_id}`)
-      }
+      `)) as unknown as Aplicados
+      await sumarLoAplicado(tx, aplicados)
       return aplicados.length
+    })
+  },
+
+  async applyExtraWithoutOrder(eventId, addonSlug): Promise<boolean> {
+    return database.transaction(async (tx) => {
+      // Como los de una cotización: sin `order_id` y una sola vez por evento y extra.
+      const aplicados = (await tx.execute(sql`
+        insert into event_addons (event_id, addon_slug, effect, amount)
+        select ${eventId}, a.slug, a.effect, a.amount
+        from addons a
+        where a.slug = ${addonSlug}
+          and not exists (
+            select 1 from event_addons e where e.event_id = ${eventId} and e.addon_slug = a.slug and e.order_id is null
+          )
+        returning event_id, effect, amount
+      `)) as unknown as Aplicados
+      await sumarLoAplicado(tx, aplicados)
+      return aplicados.length > 0
     })
   },
 
@@ -172,3 +183,16 @@ export const createDrizzlePlansRepository = (database: DbExecutor): PlansReposit
 })
 
 export const drizzlePlansRepository = createDrizzlePlansRepository(db)
+
+type Aplicados = Array<{ event_id: string; effect: string; amount: number }>
+
+/** Lo que un extra suma fuera de `event_addons`: días en línea y rondas del encargo ya empezado. */
+async function sumarLoAplicado(tx: DbExecutor, aplicados: Aplicados): Promise<void> {
+  for (const f of aplicados.filter((a) => a.effect === 'mas_dias')) {
+    await tx.update(events).set({ retentionDays: sql`${events.retentionDays} + ${f.amount}` }).where(eq(events.id, f.event_id))
+  }
+  // Con el encargo ya empezado se suman aquí; si aún no existe, lo cuenta al crearse.
+  for (const f of aplicados.filter((a) => a.effect === 'mas_rondas')) {
+    await tx.execute(sql`update event_design set rounds_included = rounds_included + ${f.amount}, updated_at = now() where event_id = ${f.event_id}`)
+  }
+}

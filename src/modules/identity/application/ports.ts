@@ -75,9 +75,10 @@ export interface TokenMinter {
  */
 export interface SupportStore {
   /** Abre uno en esa sesión y cierra el que hubiera abierto. Devuelve su id. */
-  open(input: { sessionId: string; adminUserId: string; adminEmail: string; clientUserId: string; eventId: string; reason: string }): Promise<string>
+  /** `clientUserId` nulo: el evento no tiene cliente y el admin entra como su anfitrión. */
+  open(input: { sessionId: string; adminUserId: string; adminEmail: string; clientUserId: string | null; eventId: string; reason: string }): Promise<string>
   /** El abierto de esa sesión, o `null`. */
-  activeFor(sessionId: string): Promise<{ id: string; adminEmail: string; clientUserId: string; eventId: string } | null>
+  activeFor(sessionId: string): Promise<{ id: string; adminEmail: string; clientUserId: string | null; eventId: string } | null>
   /** Cierra el abierto y la sesión deja de apuntar. `false` si no había ninguno. */
   close(sessionId: string, at: Date): Promise<boolean>
 }

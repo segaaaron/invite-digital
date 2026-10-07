@@ -46,7 +46,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
   const fiesta = fiestaDeTema(event.value.themeKey)
   // El dinero lo llevan el anfitrión y su planner; el co-anfitrión lo ve sin tocarlo.
   const dueno = gestionaElEvento(actor, event.value)
-  const editable = dueno || (await events.staff.membershipsOf(event.value.id, actor.userId)).some((m) => m === 'cliente' || m === 'planner')
+  const editable = dueno || (await events.staff.de(actor, event.value.id)).some((m) => m === 'cliente' || m === 'planner')
   const hoy = fechaEnBolivia(new Date())
   const partidas = await planner.listBudget(event.value.id)
   const totales = totalesDelPresupuesto(partidas)

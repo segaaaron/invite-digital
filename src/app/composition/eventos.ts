@@ -9,7 +9,7 @@ import { eq, sql } from 'drizzle-orm'
 import { anonymizeExpiredEvents } from '@/modules/events/application/anonymize-expired-events'
 import { randomBytes } from 'node:crypto'
 import { addTeamMember, removeTeamMember } from '@/modules/events/application/team-use-cases'
-import type { Membership } from '@/modules/identity'
+import type { Actor, Membership } from '@/modules/identity'
 import * as diaUseCases from '@/modules/planner/application/dia-use-cases'
 import * as plannerUseCases from '@/modules/planner/application/planner-use-cases'
 import { drizzleDiaStore } from '@/modules/planner/infrastructure/drizzle-dia-store'
@@ -18,7 +18,7 @@ import { componerAgenda } from '@/modules/planner/domain/agenda'
 import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
-import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor } from '@/modules/events/application/tenancy'
+import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor, membresiasDe } from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
 import { clearContent, contentFor, contentForPreview, saveContentBlock, seedEmptyContent } from '@/modules/events/application/content-use-cases'
@@ -279,6 +279,8 @@ export const events = {
     listWithEmail: (eventId: string, membership: Membership) => drizzleStaffRepository.listWithEmail(eventId, membership),
     hostsOf: (eventIds: readonly string[]) => drizzleStaffRepository.hostsOf(eventIds),
     membershipsOf: (eventId: string, userId: string) => drizzleStaffRepository.membershipsOf(eventId, userId),
+    /** Las de quien mira, contando al admin que entró a un evento sin cliente: lo que usan las pantallas. */
+    de: (actor: Actor, eventId: string) => membresiasDe(drizzleStaffRepository, actor, eventId),
     eventIdsOf: (userId: string, memberships: readonly Membership[]) => drizzleStaffRepository.eventIdsOf(userId, memberships),
   },
   /**

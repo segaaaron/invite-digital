@@ -1,7 +1,8 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
-import { asistente, diseno, orders, plans } from '@/app/composition/container'
+import { admin, asistente, diseno, orders, plans } from '@/app/composition/container'
 import { tieneLuxury } from '@/modules/asistente'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
@@ -13,7 +14,7 @@ const NO_DISPONIBLE: Record<ExtraNoDisponible, string> = {
   requiere_plan: 'Este extra es para el plan Gala. Cambia de plan para tenerlo.',
 }
 
-export type ExtraActionState = { status: 'idle' } | { status: 'error'; message: string }
+export type ExtraActionState = { status: 'idle' } | { status: 'error'; message: string } | { status: 'success'; message: string }
 
 /**
  * Pide un extra para el evento. Lo pide **el anfitrión** —sección `equipo`—, o su atelier o el
@@ -38,6 +39,20 @@ export async function orderExtraAction(_previo: ExtraActionState, fd: FormData):
   const conLuxury = extra.effect === 'asistente' ? { ...capacidad.value, asistente: tieneLuxury(capacidad.value, await asistente.config()) } : capacidad.value
   const disponible = extraDisponible(conLuxury, extra.effect, { encargo: (await diseno.leer(eventId)) !== null })
   if (!disponible.ok) return { status: 'error', message: NO_DISPONIBLE[disponible.motivo] }
+
+  // Sin cliente, el evento lo lleva el atelier y su cobro va fuera del sistema (igual que el alta
+  // del evento, que no genera pedido): el extra se aplica ya, sin pedido a nombre del admin ni
+  // comprobante que subirse a sí mismo. Queda en la auditoría.
+  if (actor.soporte?.eventoSinCliente === eventId) {
+    const aplicado = await plans.applyExtraWithoutOrder(eventId, addonSlug)
+    if (!aplicado) return { status: 'error', message: 'Tu evento ya lo tiene.' }
+    await admin.record(
+      { userId: actor.soporte.adminUserId, email: actor.soporte.adminEmail, role: 'admin', mustChangePassword: false },
+      { action: 'extra.aplicado', subject: eventSlug || null, detail: `${extra.name} (sin pedido: evento sin cliente)` },
+    )
+    revalidatePath(`/panel/eventos/${eventSlug}`, 'layout')
+    return { status: 'success', message: `${extra.name}: aplicado al evento. Sin cliente no se genera pedido.` }
+  }
 
   // Con un pedido abierto del mismo extra, `placeAddon` devuelve ese: pedir dos veces lleva al mismo.
   const pedido = await orders.placeAddon({ addonSlug, eventId, customerName: actor.email, contact: actor.email })
