@@ -18,6 +18,7 @@ import {
   ReceiptIcon,
   ScanIcon,
   SearchIcon,
+  SendIcon,
   ShieldIcon,
   TableIcon,
   UsersIcon,
@@ -60,6 +61,7 @@ export const NAV_ICONS = {
   diaD: <CalendarIcon />,
   agenda: <CalendarIcon />,
   documentos: <PenIcon />,
+  enviar: <SendIcon />,
 } as const satisfies Record<string, ReactNode>
 
 export type NavIcon = keyof typeof NAV_ICONS

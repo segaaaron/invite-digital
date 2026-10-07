@@ -23,13 +23,13 @@ export function FeatureLocked({ title, reason, eventSlug, mejorar }: { title: st
       <div className="flex items-center gap-4">
         {mejorar === null ? null : (
           <Link
-            className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
+            className="cursor-pointer rounded-[var(--radius-pill)] border border-shell-deep bg-linear-to-b from-shell to-shell-deep inline-flex min-h-11 items-center px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-white uppercase transition-all duration-200 hover:-translate-y-px disabled:cursor-not-allowed disabled:opacity-40"
             href={mejorar.href}
           >
             {mejorar.label}
           </Link>
         )}
-        <Link className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href={`/panel/eventos/${eventSlug}`}>
+        <Link className="inline-flex min-h-11 items-center text-[11px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute" href={`/panel/eventos/${eventSlug}`}>
           Volver al evento
         </Link>
       </div>

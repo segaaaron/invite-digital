@@ -77,7 +77,7 @@ export function BuscadorRapido() {
   return (
     <>
       <button
-        className="inline-flex cursor-pointer items-center gap-2.5 rounded-full border border-line-panel-strong bg-white/80 px-3 py-2 min-[560px]:px-3.5 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink"
+        className="inline-flex cursor-pointer items-center justify-center gap-2.5 rounded-full border border-line-panel-strong bg-white/80 px-3 py-2 max-[859px]:size-11 max-[859px]:p-0 min-[560px]:px-3.5 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink"
         onClick={abrir}
         type="button"
       >

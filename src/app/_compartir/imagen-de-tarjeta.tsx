@@ -6,6 +6,7 @@ import type { TarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-inv
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { medallonDeCompartir, portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
 import { PALETTE } from '@/shared/design/palette'
+import { CATALOG_ENTRIES } from '@/shared/design/theme-catalog'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 
 const ANCHO = 1200
@@ -22,33 +23,43 @@ const leerFuentes = () =>
     readFile(join(FUENTES, 'cinzel-700.ttf')).then((data) => ({ name: 'Cinzel', data, weight: 700 as const, style: 'normal' as const })),
   ]))
 
+/** Si un color de fondo es oscuro: decide si los textos van en marfil o en tinta. */
+const esOscuro = (hex: string): boolean => {
+  const n = Number.parseInt(hex.replace('#', ''), 16)
+  const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 140
+}
+
 /**
- * La imagen de vista previa (1200×630, JPEG) de un enlace de evento: el arte de portada del
- * diseño a sangre y desenfocado detrás, con los textos de la tarjeta. La usan la invitación
+ * La imagen de vista previa (1200×630, JPEG) de un enlace de evento. La usan la invitación
  * (`/i/<token>/imagen`) y el save the date (`/guarda/<token>/imagen`).
+ *
+ * **Sin desenfoque y sin nada escrito sobre el arte** (6 de octubre): antes la portada iba sobre
+ * sí misma ampliada y borrosa, con los nombres y la fecha encima, y en los carteles que ya traen
+ * letras («Femme Fatale») se leían encimadas. Ahora la portada va entera y nítida al centro, sobre
+ * el color del propio diseño, con los nombres a la izquierda y la fecha a la derecha. Al centro y
+ * sola porque WhatsApp recorta a cuadrado las miniaturas pequeñas: ahí queda la portada limpia.
+ * La única excepción es el medallón de «Cervecería Vintage», que espera el nombre dentro.
  *
  * JPEG y no PNG: WhatsApp deja sin imagen las vistas previas pesadas.
  */
 export async function imagenDeTarjeta(event: { readonly themeKey: string; readonly locale: 'es' | 'en' }, tarjeta: TarjetaDeInvitacion): Promise<Response> {
-  // La portada de la invitación comprada: el arte de portada del diseño (la portada no se
-  // personaliza), con los nombres del cliente encima, como al abrirla.
-  const original = await readFile(join(process.cwd(), 'public', portadaParaCompartir(themeFor(event.themeKey).key))).catch(() => null)
+  const clave = themeFor(event.themeKey).key
+  const original = await readFile(join(process.cwd(), 'public', portadaParaCompartir(clave))).catch(() => null)
 
   /** El hueco del arte donde va rotulado el nombre, para el diseño cuyo arte lo tiene (hoy «Cervecería Vintage»). */
-  const hueco = medallonDeCompartir(themeFor(event.themeKey).key)
+  const hueco = medallonDeCompartir(clave)
 
-  // La miniatura es 380×570 salvo cuando el arte lleva medallón: ahí toma **la proporción
-  // del propio arte**, para que entre entero. Con el recorte de 380×570 se le iban los
-  // bordes de arriba y abajo, que en este diseño son la cenefa de espigas y el cierre.
-  const ALTO_PORTADA = hueco === null ? 570 : 600
+  // Los colores del diseño (los de su tarjeta del catálogo): el fondo y el filete.
+  const colores = CATALOG_ENTRIES.find((entrada) => entrada.key === clave)?.palette ?? { base: PALETTE.ink, accent: PALETTE.gold }
+  const oscuro = esOscuro(colores.base)
+  const tinta = oscuro ? PALETTE.bgRaised : PALETTE.ink
+  const tintaSuave = oscuro ? PALETTE.bgSunken : PALETTE.inkSoft
+
+  // La portada, casi a toda la altura y con la proporción de su arte (2:3 por defecto).
+  const ALTO_PORTADA = 570
   const ANCHO_PORTADA = hueco === null ? 380 : Math.round((ALTO_PORTADA * hueco.arte.ancho) / hueco.arte.alto)
-  const [portada, desenfocada] =
-    original === null
-      ? [null, null]
-      : await Promise.all([
-          sharp(original).resize(ANCHO_PORTADA, ALTO_PORTADA, { fit: 'cover', position: 'centre' }).jpeg({ quality: 84 }).toBuffer(),
-          sharp(original).resize(ANCHO, ALTO, { fit: 'cover' }).blur(28).modulate({ brightness: 0.55 }).jpeg({ quality: 70 }).toBuffer(),
-        ])
+  const portada = original === null ? null : await sharp(original).resize(ANCHO_PORTADA, ALTO_PORTADA, { fit: 'cover', position: 'centre' }).jpeg({ quality: 88 }).toBuffer()
   const uri = (b: Buffer | null) => (b === null ? null : `data:image/jpeg;base64,${b.toString('base64')}`)
 
   /**
@@ -69,16 +80,45 @@ export async function imagenDeTarjeta(event: { readonly themeKey: string; readon
     return { texto: tarjeta.nombres.trim().toUpperCase(), tamano, centro }
   })()
 
+  // Los dos lados: quién, a la izquierda; cuándo, a la derecha. La fecha llega como
+  // «sábado, 17 de octubre de 2026 · 18:00» y se parte en día y hora.
+  const nombres = tarjeta.nombres ?? tarjeta.titulo
+  const [dia = '', hora = ''] = (tarjeta.fecha ?? '').split(' · ')
+  const LADO = Math.floor((ANCHO - ANCHO_PORTADA) / 2) - 56
+  const filete = <div style={{ display: 'flex', width: 54, height: 1, background: colores.accent, margin: '18px 0' }} />
+
   const tarjetaPng = new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: PALETTE.ink, position: 'relative' }}>
-        {desenfocada === null ? null : (
-          // eslint-disable-next-line @next/next/no-img-element -- satori: no hay optimizador aquí
-          <img alt="" height={ALTO} src={uri(desenfocada)!} style={{ position: 'absolute', inset: 0 }} width={ANCHO} />
-        )}
-        <div style={{ display: 'flex', position: 'relative', width: ANCHO_PORTADA, height: ALTO_PORTADA, borderRadius: 26, overflow: 'hidden', boxShadow: '0 30px 70px rgba(0,0,0,0.55)', border: '2px solid rgba(255,255,255,0.35)' }}>
+      <div
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 28px',
+          position: 'relative',
+          background: `radial-gradient(ellipse 70% 90% at 50% 50%, ${oscuro ? 'rgba(255,255,255,0.10)' : 'rgba(255,255,255,0.55)'}, rgba(0,0,0,0) 70%), ${colores.base}`,
+          color: tinta,
+        }}
+      >
+        {/* El marco fino del acento, a todo el borde: lo que la hace tarjeta y no captura. */}
+        <div style={{ position: 'absolute', top: 16, left: 16, right: 16, bottom: 16, border: `1px solid ${colores.accent}`, opacity: 0.55, display: 'flex' }} />
+
+        <div style={{ width: LADO, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', textAlign: 'right' }}>
+          {tarjeta.antetitulo === null ? null : (
+            <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 19, letterSpacing: 5, color: colores.accent }}>{tarjeta.antetitulo.toUpperCase()}</div>
+          )}
+          {filete}
+          {/* Con el nombre ya rotulado en el medallón del arte, repetirlo aquí lo diría dos veces. */}
+          {rotulo !== null ? null : (
+            <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: nombres.length > 22 ? 44 : nombres.length > 14 ? 52 : 62, lineHeight: 1.05 }}>{nombres}</div>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', position: 'relative', width: ANCHO_PORTADA, height: ALTO_PORTADA, borderRadius: 22, overflow: 'hidden', boxShadow: '0 26px 60px rgba(0,0,0,0.38)', border: `2px solid ${colores.accent}` }}>
           {portada === null ? null : (
-            // eslint-disable-next-line @next/next/no-img-element -- satori
+            // eslint-disable-next-line @next/next/no-img-element -- satori: no hay optimizador aquí
             <img alt="" height={ALTO_PORTADA} src={uri(portada)!} style={{ position: 'absolute', inset: 0 }} width={ANCHO_PORTADA} />
           )}
           {rotulo === null ? null : (
@@ -99,53 +139,22 @@ export async function imagenDeTarjeta(event: { readonly themeKey: string; readon
               {rotulo.texto}
             </div>
           )}
-          {/* Con el nombre rotulado en el medallón, el arte ya lo dice todo: el pie con la
-              fecha caía justo encima de la frase que el propio arte trae escrita, y las dos
-              se leían encimadas. La fecha la enseña igualmente WhatsApp en el texto de la
-              vista previa, debajo de la imagen. */}
-          {rotulo !== null ? null : (
-            <div
-              style={{
-                position: 'absolute',
-                left: 0,
-                right: 0,
-                bottom: 0,
-                height: 300,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                alignItems: 'center',
-                textAlign: 'center',
-                padding: '0 24px 34px',
-                color: 'white',
-                // Con el nombre en el medallón, abajo solo queda la fecha y el arte trae su
-                // propia frase escrita ahí: sin un velo más oscuro, las dos se leen encimadas.
-                background:
-                  rotulo === null
-                    ? 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 70%)'
-                    : 'linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 62%)',
-              }}
-            >
-              {tarjeta.antetitulo === null ? null : (
-                <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 16, letterSpacing: 6 }}>{tarjeta.antetitulo.toUpperCase()}</div>
-              )}
-              {/* Con el nombre ya rotulado en el medallón, repetirlo abajo lo diría dos veces. */}
-              {rotulo !== null ? null : (
-                <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: (tarjeta.nombres ?? tarjeta.titulo).length > 16 ? 48 : 64, lineHeight: 1.05, marginTop: 8 }}>
-                  {tarjeta.nombres ?? tarjeta.titulo}
-                </div>
-              )}
-              <div style={{ display: 'flex', width: 70, height: 1, background: 'rgba(255,255,255,0.8)', margin: '14px 0' }} />
-              <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 18 }}>{tarjeta.fecha ?? getDictionary(event.locale).themes.shareImageTap}</div>
-            </div>
-          )}
+        </div>
+
+        <div style={{ width: LADO, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}>
+          {dia === '' ? null : <div style={{ display: 'flex', fontFamily: 'Cormorant', fontSize: 38, lineHeight: 1.12 }}>{dia}</div>}
+          {hora === '' ? null : <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 26, marginTop: 6, color: tintaSuave }}>{hora}</div>}
+          {filete}
+          <div style={{ display: 'flex', fontFamily: 'Jost', fontSize: 18, letterSpacing: 3, color: colores.accent }}>
+            {getDictionary(event.locale).themes.shareImageTap.toUpperCase()}
+          </div>
         </div>
       </div>
     ),
     { width: ANCHO, height: ALTO, fonts: await leerFuentes() },
   )
 
-  const jpeg = await sharp(Buffer.from(await tarjetaPng.arrayBuffer())).jpeg({ quality: 80, mozjpeg: true }).toBuffer()
+  const jpeg = await sharp(Buffer.from(await tarjetaPng.arrayBuffer())).jpeg({ quality: 84, mozjpeg: true }).toBuffer()
 
   return new Response(new Uint8Array(jpeg), {
     headers: { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public, max-age=3600', 'X-Robots-Tag': 'noindex' },

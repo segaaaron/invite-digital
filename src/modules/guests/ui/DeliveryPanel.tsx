@@ -9,6 +9,7 @@ import { ChevronIcon, CloseIcon, MailIcon, MessageIcon, WhatsAppIcon, CheckIcon 
 import { resendInvitationAction, sendInvitationAction, setGroupPhoneAction, type ResendState } from '@/app/_acciones/guests/actions'
 import { QrDigital } from '@/shared/design/ui/QrDigital'
 import { renderMessage, whatsappLink } from '../domain/message-template'
+import { conCanal } from '../domain/invitation-url'
 
 export type DeliveryRow = {
   readonly id: string
@@ -131,7 +132,7 @@ export function DeliveryPanel({
     setError(null)
     const url = urls[fila.id]
     if (url !== undefined) {
-      window.open(whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(fila, url) }), '_blank')
+      window.open(whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(fila, conCanal(url, 'whatsapp')) }), '_blank')
       marcar(fila)
       return
     }
@@ -145,7 +146,7 @@ export function DeliveryPanel({
         ventana?.close()
         return
       }
-      const destino = whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(fila, nueva) })
+      const destino = whatsappLink({ phone: telefonos[fila.id] || null, message: mensaje(fila, conCanal(nueva, 'whatsapp')) })
       if (ventana !== null) ventana.location.href = destino
       else window.location.href = destino
     })
@@ -170,7 +171,7 @@ export function DeliveryPanel({
   }
 
   const compartir = (fila: DeliveryRow, url: string) => {
-    void navigator.share?.({ title: eventTitle, text: mensaje(fila, url) }).then(() => marcar(fila), () => {})
+    void navigator.share?.({ title: eventTitle, text: mensaje(fila, conCanal(url, 'compartir')) }).then(() => marcar(fila), () => {})
   }
 
   const enlaceNuevo = (fila: DeliveryRow) => {
@@ -303,7 +304,7 @@ export function DeliveryPanel({
                       <div className="grid gap-2 min-[480px]:grid-cols-2">
                         <button
                           aria-label={`Enviar por WhatsApp a ${fila.label}`}
-                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 py-2.5 text-[13px] text-white transition-colors hover:bg-ink/90 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-whatsapp px-4 py-2.5 text-[14px] font-medium text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
                           disabled={bloqueado}
                           onClick={() => porWhatsapp(fila)}
                           type="button"
@@ -342,25 +343,25 @@ export function DeliveryPanel({
                                   className="min-w-0 flex-1 rounded-[10px] border border-line-panel-strong bg-white px-3 py-2 font-mono text-[11.5px]"
                                   onFocus={(e) => e.currentTarget.select()}
                                   readOnly
-                                  value={url}
+                                  value={conCanal(url, 'enlace')}
                                 />
-                                <button className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90" onClick={() => copiar(fila, url, 'enlace')} type="button">
+                                <button className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90" onClick={() => copiar(fila, conCanal(url, 'enlace'), 'enlace')} type="button">
                                   {copiado === `${fila.id}:enlace` ? 'Copiado' : 'Copiar'}
                                 </button>
                               </div>
                               <div className="flex flex-wrap gap-2">
-                                <button className={OTRA_FORMA} onClick={() => copiar(fila, mensaje(fila, url), 'mensaje')} type="button">
+                                <button className={OTRA_FORMA} onClick={() => copiar(fila, mensaje(fila, conCanal(url, 'mensaje')), 'mensaje')} type="button">
                                   {copiado === `${fila.id}:mensaje` ? 'Copiado' : 'Copiar mensaje'}
                                 </button>
                                 <a
                                   className={OTRA_FORMA}
-                                  href={`mailto:${encodeURIComponent(correo)}?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(mensaje(fila, url))}`}
+                                  href={`mailto:${encodeURIComponent(correo)}?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(mensaje(fila, conCanal(url, 'correo')))}`}
                                   onClick={() => marcar(fila)}
                                 >
                                   <MailIcon className="size-4" />
                                   Correo
                                 </a>
-                                <a className={OTRA_FORMA} href={`sms:${telefono}?&body=${encodeURIComponent(mensaje(fila, url))}`} onClick={() => marcar(fila)}>
+                                <a className={OTRA_FORMA} href={`sms:${telefono}?&body=${encodeURIComponent(mensaje(fila, conCanal(url, 'sms')))}`} onClick={() => marcar(fila)}>
                                   <MessageIcon className="size-4" />
                                   SMS
                                 </a>
@@ -371,7 +372,7 @@ export function DeliveryPanel({
                                 ) : null}
                               </div>
                               <div className="border-t border-line-panel pt-3">
-                                <QrDigital nombre={fila.label} url={url} />
+                                <QrDigital nombre={fila.label} url={conCanal(url, 'qr')} />
                               </div>
                             </>
                           )}

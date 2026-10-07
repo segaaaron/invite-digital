@@ -1,5 +1,9 @@
 import { env } from '@/shared/config/env'
 import { notFound } from 'next/navigation'
+import { headers } from 'next/headers'
+import type { ReactNode } from 'react'
+import { classifyDevice } from '@/modules/analytics'
+import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
 import { admin, diseno as encargos, events, guests, orders, plans, rsvp } from '@/app/composition/container'
 import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
 import { ResumenDelEvento } from '@/modules/admin/ui/ResumenDelEvento'
@@ -178,6 +182,16 @@ export default async function ConfiguracionPage({
     const todos = await admin.events()
     const fila = isErr(todos) ? undefined : todos.value.find((e) => e.id === event.value.id)
     const hoy = fechaEnBolivia(new Date())
+    // En el celular, las secciones largas de la ficha se pliegan: era una página de 5.700 px.
+    const celular = classifyDevice((await headers()).get('user-agent') ?? '') === 'mobile'
+    const seccion = (titulo: string, contenido: ReactNode) =>
+      celular ? (
+        <PlegableEnMovil celular titulo={titulo}>
+          <div className="px-2 pb-1">{contenido}</div>
+        </PlegableEnMovil>
+      ) : (
+        <PanelCard title={titulo}>{contenido}</PanelCard>
+      )
     const secciones = [
       { id: 'diseno', titulo: 'Diseño por encargo' },
       { id: 'invitacion', titulo: 'Invitación' },
@@ -239,25 +253,28 @@ export default async function ConfiguracionPage({
               </PanelCard>
             </section>
             <section className="scroll-mt-24" id="datos">
-              <PanelCard title="Datos y diseño">
+              {seccion(
+                'Datos y diseño',
                 <div className="flex flex-col gap-6">
                   <EventForm diseno={diseno} event={event.value} />
                   <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
-                </div>
-              </PanelCard>
+                </div>,
+              )}
             </section>
             <section className="scroll-mt-24" id="acceso">
-              <PanelCard title="Acceso del cliente">
+              {seccion(
+                'Acceso del cliente',
                 <div className="flex flex-col gap-5">
                   <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
                   <div className="border-t border-line-panel pt-4">
                     <SoporteDeBoda anfitriones={hostsDelEvento} eventId={event.value.id} />
                   </div>
-                </div>
-              </PanelCard>
+                </div>,
+              )}
             </section>
             <section className="scroll-mt-24" id="plan">
-              <PanelCard title="Plan y responsable">
+              {seccion(
+                'Plan y responsable',
                 <ResponsableYPlan
                   eventId={event.value.id}
                   eventSlug={event.value.slug}
@@ -265,18 +282,22 @@ export default async function ConfiguracionPage({
                   owners={responsables.map((u) => ({ id: u.id, email: u.email }))}
                   planSlug={isErr(capacidad) ? null : capacidad.value.planSlug}
                   plans={opcionesDePlan.map((p) => ({ slug: p.slug, nombre: p.nombre }))}
-                />
-              </PanelCard>
+                />,
+              )}
             </section>
             {personal.length > 0 ? (
               <section className="scroll-mt-24" id="puerta">
-                <PanelCard title="Personal de puerta">
-                  <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />
-                </PanelCard>
+                {seccion('Personal de puerta', <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />)}
               </section>
             ) : null}
             <section className="scroll-mt-24" id="riesgo">
-              <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
+              {celular ? (
+                <PlegableEnMovil celular titulo="Zona de riesgo">
+                  <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
+                </PlegableEnMovil>
+              ) : (
+                <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
+              )}
             </section>
           </div>
         </div>
@@ -289,7 +310,7 @@ export default async function ConfiguracionPage({
       <PanelHeader
         actions={escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Volver a la ficha</PanelButton> : undefined}
         kicker={escribiendo ? `Invitación de ${event.value.title}` : 'Evento'}
-        meta="Completa cada sección y mira a la derecha cómo queda. Se guarda sección por sección."
+        meta="Completa cada sección y mira cómo queda en la vista previa. Se guarda sección por sección."
         title={escribiendo || !esDelAtelier ? 'Personalizar invitación' : 'Configuración del evento'}
       />
 

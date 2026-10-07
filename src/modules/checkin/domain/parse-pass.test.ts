@@ -44,3 +44,10 @@ describe('parsePass', () => {
     expect(isErr(parsePass(`https://x.bo/compartir/${TOKEN}`))).toBe(true)
   })
 })
+
+describe('el enlace marcado con su canal', () => {
+  it('sigue siendo un pase: la puerta lee solo la ruta', () => {
+    // El QR del pase sale como `…/i/<token>?utm_source=qr` para que la analítica lo cuente.
+    expect(parsePass('https://luxuryatelier.net/i/abcdefghijklmnopqrstuv?utm_source=qr')).toEqual({ ok: true, value: 'abcdefghijklmnopqrstuv' })
+  })
+})

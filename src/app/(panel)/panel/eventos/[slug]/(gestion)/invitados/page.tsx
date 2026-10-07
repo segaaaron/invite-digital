@@ -171,11 +171,13 @@ export default async function InvitadosPage({
               <UploadIcon className="size-3.5" /> Importar CSV
             </PanelButton>
             {filas.length === 0 ? null : (
-              <PanelButton href={abierto === 'envio' ? base : `${base}?panel=envio`}>
+              // En el celular está al centro de la barra de abajo: aquí sería repetirlo.
+              <PanelButton className="max-[859px]:hidden" href={abierto === 'envio' ? base : `${base}?panel=envio`}>
                 <MailIcon className="size-3.5" /> Enviar invitaciones
               </PanelButton>
             )}
-            <PanelButton href={`${base}?panel=alta`} variant="primary">
+            {/* La acción principal, la primera en el celular (las demás se deslizan detrás). */}
+            <PanelButton className="max-[859px]:order-first" href={`${base}?panel=alta`} variant="primary">
               + Añadir invitado
             </PanelButton>
           </>

@@ -108,5 +108,6 @@ export async function altaConEnlaceGeneralAction(_previo: AltaGeneralState, form
     return { status: 'error', code: 'fallo' }
   }
   // A su invitación personal: ahí confirma, como cualquier invitado cargado a mano.
-  redirect(new URL(invitationUrl(enlace.value.token, env.SITE_URL)).pathname)
+  // Marcado: la visita cuenta en «Enlace general» de «Por dónde les llega».
+  redirect(`${new URL(invitationUrl(enlace.value.token, env.SITE_URL)).pathname}?utm_source=general`)
 }

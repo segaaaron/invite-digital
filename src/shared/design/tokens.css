@@ -31,6 +31,10 @@
   --color-shadow-rgb: 90 66 26;
   --color-line: rgb(var(--color-gold-rgb) / 0.22);
 
+  /* El verde de WhatsApp, algo más hondo que el de la marca para que el texto blanco contraste: el
+     botón de mandar se reconoce por su color antes que por su texto (6 de octubre). */
+  --color-whatsapp: #1f7a4c;
+
   /* Semáforo de la puerta. Es el único sitio donde pueden vivir estos colores. */
   --color-ok: #5a705c;
   --color-ok-deep: #3f5340;

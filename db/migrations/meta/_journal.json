@@ -638,6 +638,13 @@
       "when": 1792013000000,
       "tag": "0091_soporte_sin_cliente",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1792014000000,
+      "tag": "0092_fuentes_de_visita",
+      "breakpoints": true
     }
   ]
 }

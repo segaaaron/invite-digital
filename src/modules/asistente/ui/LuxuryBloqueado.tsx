@@ -24,7 +24,7 @@ export function LuxuryBloqueado({ mejorar, planes, comoExtra }: { mejorar: Mejor
     <>
       <button
         aria-label={`Conocer a ${NOMBRE_DEL_ASISTENTE}, tu planner con IA`}
-        className="fixed right-4 bottom-4 z-30 inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong bg-white text-[13.5px] font-medium text-ink shadow-float transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
+        className="fixed right-4 bottom-4 z-30 max-[859px]:bottom-[calc(88px+env(safe-area-inset-bottom))] inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong bg-white text-[13.5px] font-medium text-ink shadow-float transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
         onClick={() => dialogo.current?.showModal()}
         type="button"
       >

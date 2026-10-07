@@ -46,6 +46,16 @@ export function MailIcon({ className }: IconProps) {
   )
 }
 
+/** Un avión de papel: mandar las invitaciones. */
+export function SendIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>
+      <path d="M21 3 10.2 13.8" />
+      <path d="M21 3l-6.8 18-4-7.2L3 9.8z" />
+    </svg>
+  )
+}
+
 export function SearchIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="14" viewBox="0 0 24 24" width="14" {...BASE}>

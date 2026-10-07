@@ -397,11 +397,12 @@ export function ControlDeIngreso({
 
         <section aria-label="Invitados" className="flex flex-col gap-4 rounded-[18px] border border-line-panel bg-white p-4 shadow-card max-[1099px]:order-3 min-[560px]:p-5">
           <div className="flex flex-col gap-3 min-[760px]:flex-row min-[760px]:items-center">
-            <div className="flex gap-1 overflow-x-auto rounded-full bg-bg-top p-1" role="tablist">
+            {/* En el celular, dos por dos: en una fila la cuarta pestaña se cortaba («To…»). */}
+            <div className="grid grid-cols-2 gap-1 rounded-2xl bg-bg-top p-1 min-[560px]:flex min-[560px]:overflow-x-auto min-[560px]:rounded-full" role="tablist">
               {FILTROS.map((f) => (
                 <button
                   aria-selected={buscado === '' && filtro === f.clave}
-                  className={`cursor-pointer rounded-full px-3.5 py-1.5 text-[12.5px] whitespace-nowrap transition-colors ${buscado === '' && filtro === f.clave ? 'bg-white text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}
+                  className={`min-h-11 cursor-pointer rounded-full px-3.5 py-1.5 text-[13px] whitespace-nowrap transition-colors min-[560px]:min-h-0 min-[560px]:text-[12.5px] ${buscado === '' && filtro === f.clave ? 'bg-white text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}
                   key={f.clave}
                   onClick={() => {
                     setFiltro(f.clave)
@@ -476,7 +477,8 @@ export function ControlDeIngreso({
                               ))}
                             </span>
                             <span className="flex min-w-0 flex-col">
-                              <span className="truncate text-[14.5px] text-ink">{nombreDeBloque}</span>
+                              {/* En el celular, el nombre entero en dos líneas antes que cortado («Compañeros …»). */}
+                              <span className="text-[14.5px] leading-snug text-ink min-[760px]:truncate">{nombreDeBloque}</span>
                               <span className="truncate text-[11.5px] text-ink-mute min-[760px]:hidden">
                                 {[`${todas.length} personas`, bloque.filas[0]?.mesa, dentroN === 0 ? 'Por llegar' : `${dentroN} dentro`].filter(Boolean).join(' · ')}
                               </span>
@@ -506,7 +508,7 @@ export function ControlDeIngreso({
                           {pendientes.length > 1 ? (
                             <button
                               aria-label={`Registrar sin pase a los ${pendientes.length} de ${nombreDeBloque}`}
-                              className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
+                              className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50 max-[759px]:min-h-10 max-[759px]:rounded-full max-[759px]:border max-[759px]:border-line-panel-strong max-[759px]:px-3 max-[759px]:text-[12.5px] max-[759px]:text-ink-soft max-[759px]:no-underline"
                               disabled={enCurso !== null}
                               onClick={() => registrar(pendientes, Date.now(), `todos:${bloque.id}`)}
                               title="Solo si la familia no trae ni el QR ni el código del pase"
@@ -531,7 +533,7 @@ export function ControlDeIngreso({
                               </span>
                               <span className="flex min-w-0 flex-col">
                                 <span className="flex min-w-0 items-center gap-2">
-                                  <span className="truncate text-[14.5px] text-ink">{f.nombre}</span>
+                                  <span className="text-[14.5px] leading-snug text-ink min-[760px]:truncate">{f.nombre}</span>
                                   {f.vip ? <span className="shrink-0 rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[10.5px] tracking-[0.2em] text-gold-deep">VIP</span> : null}
                                 </span>
                                 <span className="truncate text-[11.5px] text-ink-mute min-[760px]:hidden">
@@ -590,7 +592,7 @@ export function ControlDeIngreso({
                               ) : (
                                 <button
                                   aria-label={`Registrar sin pase a ${f.nombre}`}
-                                  className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
+                                  className="cursor-pointer text-[12px] text-ink-mute underline-offset-4 hover:text-ink hover:underline disabled:opacity-50 max-[759px]:min-h-10 max-[759px]:rounded-full max-[759px]:border max-[759px]:border-line-panel-strong max-[759px]:px-3 max-[759px]:text-[12.5px] max-[759px]:text-ink-soft max-[759px]:no-underline"
                                   disabled={enCurso !== null}
                                   onClick={() => setConfirmar(f.clave)}
                                   title="Solo si no trae ni el QR ni el código del pase"

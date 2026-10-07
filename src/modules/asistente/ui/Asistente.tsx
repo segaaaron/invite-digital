@@ -260,7 +260,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
       <button
         aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`}
         // En el celular, solo el círculo: con el nombre tapaba tarjetas y buscadores al desplazarse.
-        className="fixed right-4 bottom-4 z-30 inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[13.5px] font-medium text-white shadow-float ring-1 ring-gold/40 transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
+        className="fixed right-4 bottom-4 z-30 max-[859px]:bottom-[calc(88px+env(safe-area-inset-bottom))] inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[13.5px] font-medium text-white shadow-float ring-1 ring-gold/40 transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
         onClick={abrir}
         type="button"
       >
@@ -291,7 +291,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
             </div>
             <button
               aria-label="Cerrar"
-              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
+              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[13px] transition-colors hover:border-ink max-[859px]:size-11"
               onClick={cerrar}
               type="button"
             >

@@ -7,6 +7,7 @@ import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { addPersonAction, ensureInvitationLinkAction, reopenRsvpAction, setGroupPhoneAction, updatePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
+import { conCanal } from '../domain/invitation-url'
 
 export type EditablePerson = {
   readonly id: string
@@ -285,12 +286,12 @@ export function EditPersonDialog({
                   className="min-w-0 flex-1 rounded-[10px] border border-line-panel bg-white px-3 py-2 font-mono text-[11.5px] text-ink-soft"
                   onFocus={(e) => e.currentTarget.select()}
                   readOnly
-                  value={enlaceNuevo ?? invitacion.enlace ?? ''}
+                  value={conCanal(enlaceNuevo ?? invitacion.enlace ?? '', 'enlace')}
                 />
                 <button
                   className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90"
                   onClick={() => {
-                    void navigator.clipboard?.writeText(enlaceNuevo ?? invitacion.enlace ?? '')
+                    void navigator.clipboard?.writeText(conCanal(enlaceNuevo ?? invitacion.enlace ?? '', 'enlace'))
                     setCopiado(true)
                   }}
                   type="button"

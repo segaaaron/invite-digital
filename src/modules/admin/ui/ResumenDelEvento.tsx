@@ -4,7 +4,6 @@ import { EtiquetaDeFiesta, Semaforo, type FiestaDeLista, type TonoDeSalud } from
 import { botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import { DuplicarEvento } from './DuplicarEvento'
-import { EntrarComoCliente } from './EntrarComoCliente'
 import type { Anfitrion } from './SoporteDeBoda'
 
 /**
@@ -89,7 +88,7 @@ export function ResumenDelEvento({
             <span className="sr-only"> (se abre en una pestaña nueva)</span>
           </a>
         )}
-        <EntrarComoCliente anfitriones={anfitriones} eventId={eventId} />
+        {/* «Entrar al panel» vive una sola vez, arriba de la ficha (en el layout): aquí se repetía. */}
         {/* Mismo diseño, plan y fecha, sin invitados: la civil y la religiosa, o la familia que vuelve. */}
         <DuplicarEvento eventId={eventId} />
       </div>

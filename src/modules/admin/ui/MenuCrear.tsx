@@ -23,7 +23,7 @@ export function MenuCrear() {
     <details className="group relative" ref={menu}>
       <summary
         aria-label="Crear"
-        className="flex cursor-pointer list-none items-center gap-2 rounded-full border border-shell-deep bg-linear-to-b from-shell to-shell-deep px-3 py-2 text-white shadow-[0_2px_8px_rgb(0_0_0/0.25),inset_0_1px_0_rgb(255_255_255/0.12)] transition-transform hover:-translate-y-px min-[560px]:px-4 [&::-webkit-details-marker]:hidden"
+        className="flex cursor-pointer list-none items-center justify-center gap-2 rounded-full border border-shell-deep max-[859px]:size-11 max-[859px]:p-0 bg-linear-to-b from-shell to-shell-deep px-3 py-2 text-white shadow-[0_2px_8px_rgb(0_0_0/0.25),inset_0_1px_0_rgb(255_255_255/0.12)] transition-transform hover:-translate-y-px min-[560px]:px-4 [&::-webkit-details-marker]:hidden"
       >
         <PlusIcon className="size-4 transition-transform duration-200 group-open:rotate-45" />
         <span className="hidden font-mono text-[10px] tracking-[0.25em] uppercase min-[560px]:inline">Crear</span>

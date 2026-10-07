@@ -1,6 +1,7 @@
 'use client'
 
 import { QrDigital } from '@/shared/design/ui/QrDigital'
+import { conCanal } from '../domain/invitation-url'
 
 export type DeliveryCard = { readonly label: string; readonly url: string }
 
@@ -19,7 +20,7 @@ export function DeliverySheet({ cards, eventTitle }: { cards: readonly DeliveryC
         {cards.map((card) => (
           <li className="flex flex-col gap-2 rounded-[14px] border border-line-panel bg-white p-3.5" key={card.url}>
             <span className="text-[13.5px] text-ink">{card.label}</span>
-            <QrDigital nombre={card.label} url={card.url} />
+            <QrDigital nombre={card.label} url={conCanal(card.url, 'qr')} />
           </li>
         ))}
       </ul>

@@ -45,3 +45,15 @@ describe('createView', () => {
     expect(isOk(vista)).toBe(true)
   })
 })
+
+describe('cada forma de envío se registra con su nombre', () => {
+  it('lee la marca que pone el envío en el enlace', () => {
+    // WhatsApp y el correo no dicen de dónde vienen: sin marca, todo salía «Directo».
+    for (const canal of ['whatsapp', 'qr', 'correo', 'sms', 'enlace', 'mensaje', 'compartir', 'general'] as const) {
+      expect(classifySource(canal, null)).toBe(canal)
+    }
+    expect(classifySource('email', null)).toBe('correo')
+    expect(classifySource('campaña-rara', null)).toBe('other')
+    expect(classifySource(null, null)).toBe('direct')
+  })
+})

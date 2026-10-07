@@ -1,4 +1,7 @@
 import { EmptyState } from '@/shared/design/ui/panel/estados'
+import { headers } from 'next/headers'
+import { classifyDevice } from '@/modules/analytics'
+import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
 import { hayPreguntas } from '@/modules/rsvp/domain/preguntas'
 import { LoQueContestaron } from '@/modules/rsvp/ui/LoQueContestaron'
 import Link from 'next/link'
@@ -190,6 +193,9 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const cuentaAtras =
     diasQueFaltan > 1 ? `faltan ${diasQueFaltan} días` : diasQueFaltan === 1 ? 'falta un día' : diasQueFaltan === 0 ? 'es hoy' : null
 
+  // En el celular, las estadísticas van plegadas (ver `PlegableEnMovil`).
+  const celular = classifyDevice((await headers()).get('user-agent') ?? '') === 'mobile'
+
   return (
     <>
       <PanelHeader
@@ -198,7 +204,10 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             {/* «Compartir enlace» llevaba a un enlace de solo lectura que ya no existe, y «Exportar lista» a un
                 ancla que nadie tenía: exportar vive en Invitados. Aquí, el envío de verdad. */}
             {filas.length === 0 ? null : (
-              <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=envio`}>Enviar invitaciones</PanelButton>
+              // En el celular, «Enviar» está al centro de la barra de abajo.
+              <PanelButton className="max-[859px]:hidden" href={`/panel/eventos/${event.value.slug}/invitados?panel=envio`}>
+                Enviar invitaciones
+              </PanelButton>
             )}
             <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=alta`} variant="primary">
               + Invitar persona
@@ -320,6 +329,11 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         <ThisWeekCard evento={{ eventId: event.value.id, eventSlug: event.value.slug }} semana={semana} />
       </PanelCard>
 
+      <PlegableEnMovil
+        celular={celular}
+        resumen={`${filas.length === 0 ? 0 : Math.round((respondieron / filas.length) * 100)} % respondió · ${vistas?.total ?? 0} ${vistas?.total === 1 ? 'visita' : 'visitas'}`}
+        titulo="Cómo va tu invitación"
+      >
       {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
       <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
         <PanelCard
@@ -381,10 +395,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           <Desglose filas={vistas?.devices ?? null} tone="device" total={vistas?.total ?? 0} />
         </PanelCard>
         <PanelCard title="Por dónde les llega">
-          <Desglose filas={vistas?.sources ?? null} tone="gold" total={vistas?.total ?? 0} />
+          {/* Diez formas de llegar: solo las que tienen visitas, de más a menos. */}
+          <Desglose filas={vistas?.sources ?? null} soloConVisitas tone="gold" total={vistas?.total ?? 0} />
+          <p className="mt-3 text-[11.5px] leading-[1.6] text-ink-mute">
+            Cada forma de envío marca su enlace. Lo enviado antes del 6 de octubre, o pegado a mano, cuenta como «Directo».
+          </p>
         </PanelCard>
       </div>
 
+      </PlegableEnMovil>
+
+      <PlegableEnMovil celular={celular} titulo="Invitados recientes">
       {/* Los invitados recientes ocupan el ancho entero, como en la maqueta. */}
       <PanelCard
         action={
@@ -465,6 +486,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </div>
         )}
       </PanelCard>
+
+      </PlegableEnMovil>
 
       {/* Distribución de mesas y acciones rápidas, otra vez 1.6fr / 1fr. */}
       <div className="grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
@@ -548,7 +571,17 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
  * Un desglose de visitas. Con cero visitas lo dice con palabras: una lista de ceros con sus
  * porcentajes se lee como «nadie usa esto», y es distinto de «nadie ha mirado todavía».
  */
-function Desglose({ filas, total, tone }: { filas: readonly Breakdown[] | null; total: number; tone: 'device' | 'gold' }) {
+function Desglose({
+  filas,
+  total,
+  tone,
+  soloConVisitas = false,
+}: {
+  filas: readonly Breakdown[] | null
+  total: number
+  tone: 'device' | 'gold'
+  soloConVisitas?: boolean
+}) {
   if (filas === null) {
     return (
       <p className="text-[13px] text-danger" role="alert">
@@ -557,13 +590,22 @@ function Desglose({ filas, total, tone }: { filas: readonly Breakdown[] | null; 
     )
   }
   if (total === 0) return <p className="text-[13px] text-ink-mute">Todavía nadie ha abierto la invitación.</p>
+  // Con muchas formas de llegar, barras solo para las que tienen visitas; las demás se nombran
+  // debajo, para que no parezca que ese camino no existe.
+  const visibles = soloConVisitas ? [...filas].filter((f) => f.count > 0).sort((a, b) => b.count - a.count) : filas
+  const enCero = soloConVisitas ? filas.filter((f) => f.count === 0) : []
   return (
-    <ul className="flex flex-col">
-      {filas.map((fila) => (
-        <li key={fila.label}>
-          <BarRow label={fila.label} ratio={fila.percent / 100} tone={tone} value={`${fila.percent} %`} />
-        </li>
-      ))}
-    </ul>
+    <>
+      <ul className="flex flex-col">
+        {visibles.map((fila) => (
+          <li key={fila.label}>
+            <BarRow label={fila.label} ratio={fila.percent / 100} tone={tone} value={`${fila.percent} %`} />
+          </li>
+        ))}
+      </ul>
+      {enCero.length === 0 ? null : (
+        <p className="mt-2 text-[11.5px] leading-[1.6] text-ink-mute">Sin visitas todavía: {enCero.map((f) => f.label).join(' · ')}.</p>
+      )}
+    </>
   )
 }

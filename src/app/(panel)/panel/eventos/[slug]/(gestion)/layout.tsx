@@ -8,7 +8,7 @@ import { nombreDePlan } from '../../../_carcasa/nombre-de-plan'
 import { fiestaDeTema } from '@/modules/events'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
+import { barraDelEvento, panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { BarraDelAdmin } from '@/modules/admin'
@@ -78,16 +78,20 @@ export default async function EventoLayout({
   // Sin Luxury en su evento, quien podría usarlo lo ve con candado y sabe cómo conseguirlo.
   const luxuryBloqueado = conAsistente ? null : await luxuryParaMejorar(actor, slug)
 
-  return (
-    <PanelFrame
-      conAcciones={campana !== null && !isAdmin(actor)}
-      brandSub={isAdmin(actor) ? 'FICHA DEL EVENTO · ADMIN' : 'PANEL'}
-      sections={panelNav(event.value.slug, {
+  const sections = panelNav(event.value.slug, {
         invitados: personas,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })}
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })
+
+  return (
+    <PanelFrame
+      // En el celular, la navegación abajo: Inicio · Invitados · Enviar · Ingreso · Más (6 de octubre).
+      barraInferior={barraDelEvento(event.value.slug, sections, isAdmin(actor) ? 'admin' : actor.role === 'puerta' ? 'puerta' : 'equipo')}
+      conAcciones={campana !== null && !isAdmin(actor)}
+      brandSub={isAdmin(actor) ? 'FICHA DEL EVENTO · ADMIN' : 'PANEL'}
+      sections={sections}
       evento={{
         title: event.value.title,
         planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
@@ -99,7 +103,17 @@ export default async function EventoLayout({
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
-      {isAdmin(actor) ? <BarraDelAdmin campana={campana} /> : campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>}
+      {/* El admin lleva la suya. Los demás, la del evento: en el celular también es la cabecera, con su
+          nombre (la puerta no lleva barra inferior y sigue con la oscura). */}
+      {isAdmin(actor) ? (
+        <BarraDelAdmin campana={campana} />
+      ) : actor.role === 'puerta' ? (
+        campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>
+      ) : (
+        <BarraSuperior subtitulo={nombreDelPlan === null ? undefined : `Plan ${nombreDelPlan}`} titulo={event.value.title}>
+          {campana}
+        </BarraSuperior>
+      )}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">

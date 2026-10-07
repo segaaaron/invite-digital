@@ -5,6 +5,7 @@ import { useEffect, useId, useRef } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { compartirQr, descargarQr } from '@/shared/design/ui/QrDigital'
 import { PassQrSvg } from './PassQrSvg'
+import { conCanal } from '../domain/invitation-url'
 
 /**
  * El pase de entrada del invitado: **el QR que ya tiene**, para verlo, descargarlo o compartirlo. Aquí no se
@@ -39,6 +40,9 @@ export function PassDialog({
   url?: string | null
 }) {
   const router = useRouter()
+  // El QR abre su invitación marcada como «Código QR» (la puerta lee solo la ruta). Sin enlace
+  // guardado, el código corto.
+  const contenidoDelQr = url === null ? (codigo ?? '') : conCanal(url, 'qr')
   const dialogo = useRef<HTMLDialogElement>(null)
   const idTitulo = useId()
 
@@ -91,7 +95,7 @@ export function PassDialog({
               {eventTitle} · {eventMeta}
             </p>
             <div className="rounded-xl border border-line-panel bg-white p-2.5">
-              <PassQrSvg label={group.label} url={url ?? codigo ?? ''} />
+              <PassQrSvg label={group.label} url={contenidoDelQr} />
             </div>
             <p className="font-display text-[23px] leading-tight italic">{group.label}</p>
             <p className="text-[12px] text-ink-soft">{sitio}</p>
@@ -112,8 +116,8 @@ export function PassDialog({
           </div>
           <div className="mt-6 grid grid-cols-3 gap-2 [&>*]:w-full [&>*]:justify-center [&>*]:px-2">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
-            <PanelButton onClick={() => void compartirQr(url ?? codigo ?? '', group.label).catch(() => undefined)}>Compartir QR</PanelButton>
-            <PanelButton onClick={() => void descargarQr(url ?? codigo ?? '', group.label)} variant="primary">
+            <PanelButton onClick={() => void compartirQr(contenidoDelQr, group.label).catch(() => undefined)}>Compartir QR</PanelButton>
+            <PanelButton onClick={() => void descargarQr(contenidoDelQr, group.label)} variant="primary">
               Descargar QR
             </PanelButton>
           </div>

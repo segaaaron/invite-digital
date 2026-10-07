@@ -35,25 +35,26 @@ export function StatCard({
   const filled = progress === undefined ? null : Math.max(0, Math.min(1, progress))
 
   return (
-    <div className="relative overflow-hidden rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-4 shadow-card transition-shadow min-[560px]:p-5.5 hover:shadow-float">
+    <div className="relative overflow-hidden rounded-[18px] border border-line-panel bg-linear-to-b from-bg-top to-white p-3.5 shadow-card transition-shadow min-[560px]:p-5.5 hover:shadow-float">
       {/* El filo de luz del borde superior de la maqueta (`.stat::before`). */}
       <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-white/90 to-transparent" />
       {icon ? (
-        <span aria-hidden className="pointer-events-none absolute right-3 bottom-3 size-16 text-ink opacity-[0.07] [&>svg]:size-full">
+        // En el celular el dibujo de fondo no cabe junto a la cifra: se quita, y la tarjeta queda más baja.
+        <span aria-hidden className="pointer-events-none absolute right-3 bottom-3 hidden size-16 text-ink opacity-[0.07] min-[560px]:block [&>svg]:size-full">
           {icon}
         </span>
       ) : null}
-      <p className="font-mono text-[10.5px] tracking-[0.18em] uppercase text-ink-mute">{label}</p>
-      <p className="mt-2 font-display text-[32px] leading-none font-light text-ink [font-variant-numeric:lining-nums] min-[560px]:text-[44px]">
+      <p className="font-mono text-[11px] tracking-[0.16em] uppercase text-ink-mute">{label}</p>
+      <p className="mt-1.5 font-display text-[30px] leading-none font-light text-ink [font-variant-numeric:lining-nums] min-[560px]:text-[44px]">
         {value}
         {suffix ? <span className="ml-1 text-[18px] text-ink-mute">{suffix}</span> : null}
       </p>
       {change ? (
-        <p className={`mt-2 text-[11px] ${change.direction === 'up' ? 'text-sage' : 'text-danger'}`}>
+        <p className={`mt-2 text-[12px] ${change.direction === 'up' ? 'text-sage' : 'text-danger'}`}>
           {change.direction === 'up' ? '↑' : '↓'} {change.text}
         </p>
       ) : null}
-      {detail ? <p className="mt-2 text-[11px] text-ink-soft">{detail}</p> : null}
+      {detail ? <p className="mt-1.5 text-[12px] text-ink-soft">{detail}</p> : null}
       {filled === null ? null : (
         <div className="mt-3 h-1 overflow-hidden rounded-sm bg-bg-sunken">
           <div
@@ -102,7 +103,7 @@ export function PanelCard({
  * de la maqueta. Vivía escrito a mano en cada vista con clases distintas.
  */
 export function PanelCardLink({ children }: { children: ReactNode }) {
-  return <span className="font-mono text-[10px] tracking-[0.25em] uppercase opacity-70 hover:opacity-100">{children}</span>
+  return <span className="font-mono text-[10px] tracking-[0.25em] uppercase opacity-70 hover:opacity-100 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center">{children}</span>
 }
 
 export type DonutSlice = { readonly label: string; readonly value: number; readonly color: string }

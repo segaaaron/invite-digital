@@ -239,3 +239,22 @@ body {
     width: 100%;
   }
 }
+
+/*
+ * **La letra mínima del panel en el celular: 11 px** (6 de octubre). Los rótulos en versales del panel
+ * se escribieron a 9,5–10,5 px para escritorio, y en un teléfono se leían con esfuerzo: eran más de
+ * setecientos en diecinueve pantallas. Una regla aquí los sube a todos de una vez, solo por debajo de
+ * 860 px y solo dentro del panel. Las invitaciones que el panel enseña de vista previa (`article`)
+ * conservan su tipografía: son el diseño que se vende.
+ */
+@media (max-width: 859px) {
+  .panel-movil :is(.text-\[8px\], .text-\[8\.5px\], .text-\[9px\], .text-\[9\.5px\], .text-\[10px\]):not(article *) {
+    font-size: 11px;
+  }
+  .panel-movil .text-\[10\.5px\]:not(article *) {
+    font-size: 11.5px;
+  }
+  .panel-movil .text-\[11px\]:not(article *) {
+    font-size: 12px;
+  }
+}

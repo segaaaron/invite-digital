@@ -65,7 +65,7 @@ export function PestanasDeAdmin() {
             <li key={p.href}>
               <Link
                 aria-current={activa ? 'page' : undefined}
-                className={`block rounded-full px-2.5 py-1.5 text-[12.5px] transition-colors min-[560px]:px-3.5 min-[560px]:text-[13px] ${
+                className={`flex min-h-11 items-center rounded-full px-2.5 py-1.5 text-[13px] transition-colors min-[860px]:block min-[860px]:min-h-0 min-[560px]:px-3.5 min-[560px]:text-[13px] ${
                   activa ? 'bg-ink text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.12)]' : 'text-ink-soft hover:bg-white hover:text-ink'
                 }`}
                 href={p.href}

@@ -61,6 +61,32 @@ function cortados(): string[] {
 function anchoDocumento(): { ancho: number; ventana: number } {
   return { ancho: document.documentElement.scrollWidth, ventana: document.documentElement.clientWidth }
 }
+/**
+ * **El panel en el celular, medido** (6 de octubre): los botones y enlaces del panel se tocan con el dedo
+ * (al menos 40 px de alto —Apple pide 44; el resto lo da el hueco entre ellos—) y la letra se lee sin
+ * esfuerzo (al menos 11 px). Hubo 270 toques pequeños y 744 textos diminutos en 19 pantallas.
+ *
+ * Fuera de la medida: lo que va dentro de una invitación (`article`, el diseño que se vende), lo oculto,
+ * los enlaces dentro de un párrafo y el plano del salón (sus sillas son un dibujo a escala).
+ */
+function enElCelular(): { chicos: string[]; letra: string[] } {
+  const visible = (el: Element) => {
+    const cs = getComputedStyle(el)
+    const r = el.getBoundingClientRect()
+    return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 1 && r.height > 1
+  }
+  const fuera = (el: Element) => el.closest('article, [aria-hidden="true"], dialog:not([open]), .plano-del-salon') !== null
+  const chicos = [...document.querySelectorAll('main :is(a[href], button, select, summary, [role="button"], [role="tab"]), nav[aria-label="Navegación principal"] :is(a, button)')]
+    .filter((el) => visible(el) && !fuera(el) && el.closest('p') === null)
+    .filter((el) => el.getBoundingClientRect().height < 40)
+    .map((el) => `${el.tagName.toLowerCase()} «${(el.textContent ?? el.getAttribute('aria-label') ?? '').trim().slice(0, 30)}» ${Math.round(el.getBoundingClientRect().height)} px`)
+  const letra = [...document.querySelectorAll('main *')]
+    .filter((el) => visible(el) && !fuera(el) && [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== ''))
+    .filter((el) => Number.parseFloat(getComputedStyle(el).fontSize) < 11)
+    .map((el) => `«${(el.textContent ?? '').trim().slice(0, 30)}» ${getComputedStyle(el).fontSize}`)
+  return { chicos: [...new Set(chicos)].slice(0, 8), letra: [...new Set(letra)].slice(0, 8) }
+}
+
 const VISTAS = [
   ['resumen', ''],
   ['invitados', '/invitados'],
@@ -102,7 +128,8 @@ test.afterAll(async () => {
 test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', async ({ page }) => {
   // Trece vistas por cinco anchos son sesenta y cinco navegaciones: no caben en el
   // límite de treinta segundos, y agotarlo se lee como un desborde que no existe.
-  test.setTimeout(240_000)
+  // Con la medida del teléfono (toques y letra) son más pasos por vista: hasta seis minutos.
+  test.setTimeout(360_000)
   await createEvent(page, { slug: SLUG, title: 'Boda responsive e2e' })
   // Con datos dentro: una tabla vacía cabe en cualquier pantalla y no probaría nada.
   await createGuestGroup(page, SLUG, 'Familia Rojas Peña', 4)
@@ -119,6 +146,12 @@ test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', a
 
       const doc = await page.evaluate(anchoDocumento)
       expect(doc.ancho, `${nombre} estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
+
+      if (tamano.width === 390) {
+        const medida = await page.evaluate(enElCelular)
+        expect(medida.chicos, `${nombre}: toques de menos de 40 px en el teléfono`).toEqual([])
+        expect(medida.letra, `${nombre}: letra de menos de 11 px en el teléfono`).toEqual([])
+      }
     }
   }
 })

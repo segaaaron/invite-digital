@@ -29,7 +29,7 @@ export function ThisWeekCard({ evento, semana }: { evento: Evento; semana: Seman
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 [font-variant-numeric:tabular-nums]">
-        <Link className="text-[13px] text-ink-soft hover:text-ink" href={`${base}/tareas`}>
+        <Link className="text-[13px] text-ink-soft hover:text-ink max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`${base}/tareas`}>
           {semana.avance === null ? (
             'Plan de tareas: todavía sin crear'
           ) : (
@@ -39,7 +39,7 @@ export function ThisWeekCard({ evento, semana }: { evento: Evento; semana: Seman
           )}
         </Link>
         {semana.presupuesto === null ? null : (
-          <Link className="text-[13px] text-ink-soft hover:text-ink" href={`${base}/presupuesto`}>
+          <Link className="text-[13px] text-ink-soft hover:text-ink max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`${base}/presupuesto`}>
             Presupuesto: {semana.presupuesto.pagado} pagado de {semana.presupuesto.comprometido} · previsto {semana.presupuesto.previsto}
           </Link>
         )}

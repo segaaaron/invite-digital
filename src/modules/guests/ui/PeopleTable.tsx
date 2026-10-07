@@ -66,6 +66,17 @@ const POR_PAGINA = 10
 const CELDA = 'border-b border-line-panel py-3 pr-4 align-middle'
 
 /**
+ * **En el celular la tabla se vuelve tarjetas, con el mismo marcado** (6 de octubre): cada persona es una
+ * fila de rejilla —nombre y estado arriba; mesa, restricciones e invitación debajo; las acciones al final—
+ * en vez de cinco columnas de 900 px que se cortaban. Una sola lista en el DOM: ni el lector de pantalla
+ * ni las pruebas ven dos.
+ */
+const M_FILA =
+  'max-[859px]:grid max-[859px]:grid-cols-[minmax(0,1fr)_auto] max-[859px]:items-center max-[859px]:gap-x-3 max-[859px]:gap-y-1.5 max-[859px]:border-b max-[859px]:border-line-panel max-[859px]:py-3.5'
+/** Una celda que en el celular ocupa la fila entera bajo el nombre, sangrada al texto (no al avatar). */
+const M_DEBAJO = 'max-[859px]:col-span-2 max-[859px]:block max-[859px]:border-0 max-[859px]:py-0 max-[859px]:pr-0 max-[859px]:pl-13'
+
+/**
  * La lista de invitados, **agrupada por invitación** como las listas de Joy o Zola: la familia se
  * lee junta —el principal y, debajo, sus acompañantes— y el envío y la respuesta se dicen una vez
  * por invitación, no en cada persona. Sigue siendo una tabla: se lee por columnas y se recorre
@@ -125,7 +136,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
           placeholder="Buscar por nombre o invitación…"
           value={query}
         />
-        <div className="flex flex-wrap gap-2">
+        {/* En el celular, una línea que se desliza: seis filtros en tres filas empujaban la lista fuera. */}
+        <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] *:shrink-0 min-[860px]:flex-wrap min-[860px]:overflow-visible [&::-webkit-scrollbar]:hidden">
           {(Object.keys(CASA) as Filtro[]).map((clave) => (
             <FilterChip
               active={filtro === clave}
@@ -150,9 +162,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
       {grupos.length === 0 ? (
         <p className="py-8 text-center text-[13px] text-ink-mute">Ningún invitado coincide.</p>
       ) : (
-        <div className="relative min-w-0 overflow-x-auto">
-          <table className="w-full min-w-[900px] border-collapse text-left">
-            <thead>
+        <div className="relative min-w-0 min-[860px]:overflow-x-auto">
+          <table className="w-full border-collapse text-left max-[859px]:block min-[860px]:min-w-[900px]">
+            <thead className="max-[859px]:hidden">
               <tr>
                 {['Invitado', 'Confirmación', 'Restricciones', 'Mesa', 'Invitación'].map((columna) => (
                   <th className="border-b border-line-panel pt-1 pb-3 pr-4 font-mono text-[10.5px] font-medium tracking-[0.16em] whitespace-nowrap text-ink-mute uppercase" key={columna} scope="col">
@@ -170,11 +182,11 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
               // Plegada, la familia es una línea; con filtro o búsqueda se abre sola, que es cuando se busca a alguien.
               const abierta = !familia || abiertas.has(primera.groupId) || query.trim() !== '' || filtro !== 'todos'
               return (
-                <tbody className="group/invitacion" key={primera.groupId}>
+                <tbody className="group/invitacion max-[859px]:block" key={primera.groupId}>
                   {/* Una familia se presenta como su invitación: nombre, cuántos son, si se envió y su pase. */}
                   {familia ? (
-                    <tr>
-                      <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3" colSpan={6}>
+                    <tr className="max-[859px]:block">
+                      <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3 max-[859px]:block max-[859px]:rounded-xl max-[859px]:py-3" colSpan={6}>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                           <button
                             aria-expanded={abierta}
@@ -217,8 +229,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     </tr>
                   ) : null}
                   {(abierta ? filas : []).map((fila, i) => (
-                    <tr className="transition-colors hover:bg-bg-top/60" key={fila.id}>
-                      <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40 pl-7' : 'pl-3'}`}>
+                    <tr className={`transition-colors hover:bg-bg-top/60 ${M_FILA}`} key={fila.id}>
+                      <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40 pl-7 max-[859px]:pl-4' : 'pl-3 max-[859px]:pl-1'} max-[859px]:col-start-1 max-[859px]:row-start-1 max-[859px]:block max-[859px]:border-b-0 max-[859px]:py-0`}>
                         <span className="flex items-center gap-3">
                           <span
                             aria-hidden
@@ -241,15 +253,19 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           </span>
                         </span>
                       </td>
-                      <td className={CELDA}>
+                      <td className={`${CELDA} max-[859px]:col-start-2 max-[859px]:row-start-1 max-[859px]:block max-[859px]:border-0 max-[859px]:p-0`}>
                         {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
                         <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
                           {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
                         </Pill>
                       </td>
-                      <td className={`${CELDA} text-[13px] text-ink-soft`}>{fila.dietaryNote ?? '—'}</td>
-                      <td className={`${CELDA} text-[13px] text-ink-soft`}>{fila.tableLabel ?? 'Sin mesa'}</td>
-                      <td className={`${CELDA} text-[13px]`}>
+                      {/* En el celular, mesa y restricción en una línea bajo el nombre; sin restricción, no se pinta. */}
+                      <td className={`${CELDA} text-[13px] text-ink-soft ${M_DEBAJO} ${fila.dietaryNote === null ? 'max-[859px]:hidden' : ''}`}>
+                        <span className="min-[860px]:hidden">Restricción: </span>
+                        {fila.dietaryNote ?? '—'}
+                      </td>
+                      <td className={`${CELDA} text-[13px] text-ink-soft ${M_DEBAJO} max-[859px]:row-start-2`}>{fila.tableLabel ?? 'Sin mesa'}</td>
+                      <td className={`${CELDA} text-[13px] ${M_DEBAJO} ${i === 0 && !familia ? '' : 'max-[859px]:hidden'}`}>
                         {i === 0 && !familia ? (
                           <span className="flex flex-col gap-1">
                             <span className="text-ink-soft">
@@ -272,9 +288,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                           </span>
                         ) : null}
                       </td>
-                      <td className={`${CELDA} pr-0 whitespace-nowrap`}>
+                      <td className={`${CELDA} pr-0 whitespace-nowrap ${M_DEBAJO} max-[859px]:pt-1`}>
                         {porQuitar === fila.id ? (
-                          <div className="flex justify-end gap-1.5">
+                          <div className="flex justify-end gap-1.5 max-[859px]:justify-start">
                             <button
                               className="cursor-pointer rounded-lg border border-danger px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
                               onClick={() => {
@@ -295,7 +311,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                             </button>
                           </div>
                         ) : (
-                          <div className="flex justify-end gap-1.5 opacity-70 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100">
+                          <div className="flex justify-end gap-1.5 opacity-70 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100 max-[859px]:justify-start max-[859px]:gap-2 max-[859px]:opacity-100">
                             {familia ? null : (
                               <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
                                 <QrIcon />

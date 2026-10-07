@@ -188,7 +188,7 @@ describe('EditPersonDialog · el enlace de su invitación', () => {
     render(<EditPersonDialog {...props} invitacion={{ ...invitacion, enlace: 'https://luxuryatelier.net/i/abc', codigo: '63CAN' }} />)
 
     const campo = screen.getByLabelText('Enlace de su invitación')
-    expect(campo).toHaveValue('https://luxuryatelier.net/i/abc')
+    expect(campo).toHaveValue('https://luxuryatelier.net/i/abc?utm_source=enlace')
     expect(campo).toHaveAttribute('readonly')
     expect(screen.getByRole('button', { name: 'Copiar' })).toBeInTheDocument()
     expect(screen.getByText('63CAN')).toBeInTheDocument()
@@ -197,7 +197,7 @@ describe('EditPersonDialog · el enlace de su invitación', () => {
   it('sin enlace guardado lo pide al servidor y lo enseña igual', async () => {
     render(<EditPersonDialog {...props} />)
 
-    await waitFor(() => expect(screen.getByLabelText('Enlace de su invitación')).toHaveValue('https://luxuryatelier.net/i/token-guardado'))
+    await waitFor(() => expect(screen.getByLabelText('Enlace de su invitación')).toHaveValue('https://luxuryatelier.net/i/token-guardado?utm_source=enlace'))
     expect(ensureInvitationLinkAction).toHaveBeenCalledWith({ eventSlug: 'boda', groupId: 'g1' })
   })
 

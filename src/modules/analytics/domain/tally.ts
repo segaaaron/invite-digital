@@ -20,7 +20,13 @@ const ETIQUETA_DISPOSITIVO: Record<Device, string> = {
 const ETIQUETA_FUENTE: Record<Source, string> = {
   whatsapp: 'WhatsApp',
   qr: 'Código QR',
-  direct: 'Directo',
+  correo: 'Correo',
+  sms: 'SMS',
+  enlace: 'Enlace copiado',
+  mensaje: 'Mensaje copiado',
+  compartir: 'Compartido desde el teléfono',
+  general: 'Enlace general',
+  direct: 'Directo (sin canal)',
   other: 'Otras',
 }
 

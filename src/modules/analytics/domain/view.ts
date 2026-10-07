@@ -1,7 +1,12 @@
 import { err, ok, type Result } from '@/shared/result'
 
 export const DEVICES = ['mobile', 'tablet', 'desktop'] as const
-export const SOURCES = ['whatsapp', 'qr', 'direct', 'other'] as const
+/**
+ * Por dónde llegó la visita. Las del envío las marca el propio enlace (`?utm_source=…`, ver
+ * `conCanal` en invitados): WhatsApp y el correo **no dicen de dónde vienen**, y sin marca todo
+ * salía «Directo» (6 de octubre). `direct` queda para lo que no trae marca ni procedencia.
+ */
+export const SOURCES = ['whatsapp', 'qr', 'correo', 'sms', 'enlace', 'mensaje', 'compartir', 'general', 'direct', 'other'] as const
 
 export type Device = (typeof DEVICES)[number]
 export type Source = (typeof SOURCES)[number]
@@ -38,15 +43,29 @@ export function classifyDevice(userAgent: string): Device {
  * La fuente sale de `utm_source` si viene, y del `Referer` si no. Sin ninguno de los dos
  * es `direct`: alguien pegó el enlace a mano o lo abrió desde una nota.
  */
+/** Las marcas que entiende `utm_source`, con los alias de otras campañas. */
+const MARCAS: Readonly<Record<string, Source>> = {
+  whatsapp: 'whatsapp',
+  wa: 'whatsapp',
+  qr: 'qr',
+  correo: 'correo',
+  email: 'correo',
+  mail: 'correo',
+  sms: 'sms',
+  enlace: 'enlace',
+  mensaje: 'mensaje',
+  compartir: 'compartir',
+  general: 'general',
+}
+
 export function classifySource(utmSource: string | null, referer: string | null): Source {
   const utm = utmSource?.trim().toLowerCase() ?? ''
-  if (utm === 'whatsapp' || utm === 'wa') return 'whatsapp'
-  if (utm === 'qr') return 'qr'
-  if (utm !== '') return 'other'
+  if (utm !== '') return MARCAS[utm] ?? 'other'
 
   const ref = referer?.toLowerCase() ?? ''
   if (ref === '') return 'direct'
   if (ref.includes('whatsapp') || ref.includes('wa.me')) return 'whatsapp'
+  if (ref.includes('mail.')) return 'correo'
   return 'other'
 }
 

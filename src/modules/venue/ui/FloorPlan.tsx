@@ -382,7 +382,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               e.preventDefault()
               intentarSalir(exit)
             }}
-            className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
+            className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center"
           >
             {exit.label}
           </a>
@@ -405,7 +405,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
       <div
         ref={plano}
         aria-label="Plano del salón"
-        className="relative h-[760px] w-full overflow-hidden rounded-[14px] border border-line-panel bg-[repeating-linear-gradient(0deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),repeating-linear-gradient(90deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),linear-gradient(160deg,var(--color-plan-from),var(--color-plan-to))]"
+        className="plano-del-salon relative h-[760px] w-full overflow-hidden rounded-[14px] border border-line-panel bg-[repeating-linear-gradient(0deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),repeating-linear-gradient(90deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),linear-gradient(160deg,var(--color-plan-from),var(--color-plan-to))]"
       >
         {zones.map((zone) => {
           const key = clave('zone', zone.id)
@@ -455,7 +455,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               {zoneEditHrefPrefix === undefined ? null : (
                 <a
                   aria-label={`Editar ${zone.label}`}
-                  className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
+                  className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px] max-[859px]:size-8 max-[859px]:text-[13px]"
                   href={`${zoneEditHrefPrefix}${zone.id}`}
                   title={`Editar ${zone.label}`}
                 >
@@ -464,7 +464,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
               )}
               <button
                 aria-label={`Eliminar ${zone.label}`}
-                className="flex size-5 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[10px]"
+                className="flex size-5 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[10px] max-[859px]:size-8 max-[859px]:text-[13px]"
                 onClick={() => borrarZona(zone.id)}
                 title={`Eliminar ${zone.label}`}
                 type="button"

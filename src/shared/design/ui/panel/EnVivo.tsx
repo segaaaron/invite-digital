@@ -111,7 +111,7 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
         ) : (
           <button
             aria-busy={actualizando}
-            className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[12px] text-ink-soft transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[12px] text-ink-soft max-[859px]:min-h-10 max-[859px]:px-3.5 max-[859px]:text-[13px] transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-60"
             disabled={actualizando}
             onClick={actualizar}
             type="button"

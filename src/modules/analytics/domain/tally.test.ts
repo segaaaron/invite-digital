@@ -31,7 +31,7 @@ describe('tallyViews', () => {
     // cuando lo que pasa es que no hay dato.
     const tally = tallyViews([{ device: 'mobile', source: 'qr', viewedAt: hoy(8) }], AHORA)
     expect(tally.devices.map((d) => d.label)).toEqual(['Móvil', 'Tableta', 'Escritorio'])
-    expect(tally.sources).toHaveLength(4)
+    expect(tally.sources).toHaveLength(10)
     expect(tally.devices[0]?.percent).toBe(100)
   })
 })

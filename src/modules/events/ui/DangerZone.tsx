@@ -47,7 +47,7 @@ export function DangerZone({ eventId, eventSlug }: { eventId: string; eventSlug:
       ) : null}
 
       <button
-        className="w-fit rounded-full border border-danger px-4 py-2 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase disabled:opacity-40"
+        className="w-fit rounded-full border border-danger px-4 py-2 max-[859px]:min-h-11 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase disabled:opacity-40"
         disabled={pending || escrito.trim() !== eventSlug}
         type="submit" aria-busy={(pending) || undefined}>
         {pending ? 'Eliminando…' : 'Eliminar evento'}

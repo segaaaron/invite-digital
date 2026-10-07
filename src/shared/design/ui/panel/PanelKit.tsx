@@ -12,7 +12,7 @@ import { useId } from 'react'
  */
 
 const BOTON_BASE =
-  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-pill)] px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0'
+  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-pill)] px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-all duration-200 max-[859px]:min-h-11 max-[859px]:text-[11px] max-[859px]:tracking-[0.18em] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0'
 
 const BOTON_VARIANTES = {
   /** La acción principal de la pantalla. Una por cabecera. */
@@ -201,7 +201,7 @@ export function PanelAlert({ tone, children }: { tone: 'error' | 'ok' | 'info'; 
 }
 
 export const FIELD_CLASS =
-  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none transition-colors focus-visible:border-ink'
+  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none max-[859px]:text-[16px] transition-colors focus-visible:border-ink'
 
 /**
  * El rótulo de un campo o dato. **11 px**: el de 9 px en monoespaciada con 0,3 em de espaciado se
@@ -282,7 +282,7 @@ export type PillTone = keyof typeof PILL_TONOS
 export function Pill({ tone, children }: { tone: PillTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[10.5px] tracking-[0.25em] whitespace-nowrap uppercase ${PILL_TONOS[tone]}`}
+      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[10.5px] tracking-[0.25em] whitespace-nowrap uppercase max-[859px]:text-[11px] max-[859px]:tracking-[0.16em] ${PILL_TONOS[tone]}`}
     >
       {children}
     </span>
@@ -302,7 +302,7 @@ export function FilterChip({
     <button
       type="button"
       aria-pressed={active}
-      className={`cursor-pointer rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors ${
+      className={`cursor-pointer rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[11px] max-[859px]:tracking-[0.16em] ${
         active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
       } ${className}`.trim()}
       {...rest}
@@ -317,7 +317,7 @@ export function FilterChipLink({ active = false, href, children }: { active?: bo
   return (
     <Link
       aria-current={active ? 'page' : undefined}
-      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors ${
+      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[11px] max-[859px]:tracking-[0.16em] ${
         active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
       }`}
       href={href}
@@ -345,7 +345,7 @@ export function SearchField({
       <input
         id={id}
         type="search"
-        className={`min-w-[200px] flex-1 rounded-[var(--radius-pill)] border border-line-panel-strong bg-bg-raised px-3.5 py-2.5 text-[13px] text-ink placeholder:text-ink-mute ${className}`.trim()}
+        className={`min-w-[200px] flex-1 rounded-[var(--radius-pill)] border border-line-panel-strong bg-bg-raised px-3.5 py-2.5 text-[13px] text-ink max-[859px]:min-h-11 max-[859px]:text-[16px] placeholder:text-ink-mute ${className}`.trim()}
         {...rest}
       />
     </>
@@ -364,7 +364,7 @@ export function IconLink({ label, href, children }: { label: string; href: strin
   return (
     <Link
       aria-label={label}
-      className="inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel"
+      className="inline-flex size-8 cursor-pointer items-center max-[859px]:size-11 justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel"
       href={href}
       title={label}
     >
@@ -387,7 +387,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex size-8 cursor-pointer items-center justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel ${className}`.trim()}
+      className={`inline-flex size-8 cursor-pointer items-center max-[859px]:size-11 justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel ${className}`.trim()}
       {...rest}
     >
       <span aria-hidden>{children}</span>

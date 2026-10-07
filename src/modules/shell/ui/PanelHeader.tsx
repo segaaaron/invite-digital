@@ -22,14 +22,20 @@ export function PanelHeader({
   return (
     <header className="mb-6.5 flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
-        {kicker ? <p className="font-mono text-[10px] tracking-[0.18em] uppercase opacity-55">{kicker}</p> : null}
-        <h1 className="mt-1.5 font-display text-[26px] leading-none font-light text-ink min-[560px]:text-[38px]">
+        {kicker ? <p className="font-mono text-[11px] tracking-[0.18em] uppercase opacity-55">{kicker}</p> : null}
+        <h1 className="mt-1.5 font-display text-[30px] leading-none font-light text-ink min-[560px]:text-[38px]">
           {title}
           {highlight === undefined ? null : <b className="font-normal text-sage italic">{highlight}</b>}
         </h1>
-        {meta ? <p className="mt-2 text-[12px] text-ink-soft">{meta}</p> : null}
+        {meta ? <p className="mt-2 text-[13px] text-ink-soft">{meta}</p> : null}
       </div>
-      {actions ? <div className="flex w-full flex-wrap items-center gap-2.5 *:max-[560px]:flex-1 min-[560px]:w-auto">{actions}</div> : null}
+      {/* En el celular, las acciones en **una sola fila que se desliza**, sin estirarse ni apilarse: cuatro
+          botones a lo ancho ocupaban medio teléfono antes de la lista (6 de octubre). */}
+      {actions ? (
+        <div className="-mx-4.5 flex w-[calc(100%+36px)] flex-nowrap items-center gap-2 overflow-x-auto px-4.5 pb-1 [scrollbar-width:none] *:shrink-0 min-[560px]:mx-0 min-[560px]:w-auto min-[560px]:flex-wrap min-[560px]:overflow-visible min-[560px]:px-0 min-[560px]:pb-0 min-[560px]:gap-2.5 [&::-webkit-scrollbar]:hidden">
+          {actions}
+        </div>
+      ) : null}
     </header>
   )
 }

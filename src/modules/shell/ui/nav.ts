@@ -291,3 +291,43 @@ export const ROTULO_DE_ROL: Record<'admin' | 'atelier' | 'cliente' | 'puerta', s
   cliente: 'Cliente',
   puerta: 'Personal de puerta',
 }
+
+/** La forma de la barra inferior del celular: qué destinos van a la vista y la acción central. */
+export type ConfigDeBarra = {
+  /** Las entradas a la vista, en orden (dos a cuatro). Las demás van a «Más». */
+  readonly vista?: readonly NavItem[]
+  /** La acción principal, al centro y destacada: en el panel del evento, «Enviar». */
+  readonly centro?: NavItem
+}
+
+/**
+ * La barra inferior de un evento en el celular (6 de octubre): **Inicio · Invitados · Enviar · Ingreso**
+ * y «Más» con el resto. Lo que más se hace —mandar invitaciones— queda al centro, a un toque. Solo con
+ * entradas que esta persona ya tiene en su menú: a quien no le toca Ingreso, le va Mesas.
+ *
+ * El admin dentro de un evento ve su ficha: Eventos (volver a la cartera) · Ficha · Invitación. La
+ * puerta no lleva barra: su panel es una sola pantalla.
+ */
+export function barraDelEvento(slug: string, sections: readonly NavSection[], quien: 'admin' | 'puerta' | 'equipo'): ConfigDeBarra | false {
+  if (quien === 'puerta') return false
+  const base = `/panel/eventos/${slug}`
+  const todas = sections.flatMap((s) => s.items)
+  const de = (href: string) => todas.find((item) => item.href === href)
+  const corto = (item: NavItem | undefined, label: string): NavItem | null => (item === undefined ? null : { ...item, label })
+
+  if (quien === 'admin') {
+    return {
+      vista: [
+        { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos' },
+        corto(de(`${base}/configuracion`), 'Ficha'),
+        corto(de(`${base}/vista-previa`), 'Invitación'),
+      ].filter((item): item is NavItem => item !== null),
+    }
+  }
+
+  const invitados = de(`${base}/invitados`)
+  const vista = [corto(de(base), 'Inicio'), invitados ?? null, corto(de(`${base}/checkin`), 'Ingreso') ?? de(`${base}/mesas`) ?? null].filter(
+    (item): item is NavItem => item !== null,
+  )
+  return invitados === undefined ? { vista } : { vista, centro: { href: `${base}/invitados?panel=envio`, label: 'Enviar', icon: 'enviar' } }
+}
