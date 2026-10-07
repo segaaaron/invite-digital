@@ -31,6 +31,15 @@ describe('renderMessage', () => {
     expect(texto).toContain('¡Los esperamos con mucho cariño!')
   })
 
+  it('una plantilla propia sin {nombre} ni {enlace} los gana sola: saludo delante, enlace al final', () => {
+    // Llegaba «Brindamos por…» a secas: sin a quién y sin enlace la invitación no sirve.
+    expect(renderMessage({ template: 'Brindamos por la alegría, te espero', locale: 'es', groupLabel: 'Yasmin Medrano', url: 'https://x.bo/i/a' })).toBe(
+      'Hola Yasmin Medrano ✨\n\nBrindamos por la alegría, te espero\n\nhttps://x.bo/i/a',
+    )
+    // Con los dos puestos, nada se añade.
+    expect(renderMessage({ template: '{nombre}: {enlace}', locale: 'es', groupLabel: 'Ana', url: 'u' })).toBe('Ana: u')
+  })
+
   it('una plantilla propia puede usar {fecha} y {evento}', () => {
     expect(renderMessage({ template: '{nombre}: {evento}, {fecha}. {enlace}', locale: 'es', groupLabel: 'Ana', url: 'u', evento: 'Quince de Camila', fecha: 'sábado, 17 de octubre' })).toBe(
       'Ana: Quince de Camila, sábado, 17 de octubre. u',

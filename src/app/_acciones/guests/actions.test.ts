@@ -44,14 +44,16 @@ vi.mock('@/app/composition/container', () => ({
   events: {
     contentFor: (...args: unknown[]) => contentFor(...args),
     publicarSiBorrador: (...args: unknown[]) => publicarSiBorrador(...args),
-    // Qué hace falta para invitar depende del diseño: hay portadas que traen los nombres
-    // rotulados dentro y no ofrecen ese campo. Por eso la acción lee el evento.
     getByIdUnscoped: (...args: unknown[]) => getByIdUnscoped(...args),
+    // El encargo solo bloquea si hay cliente que apruebe la versión.
+    staff: { listWithEmail: (...args: unknown[]) => clientes(...args) },
   },
   plans: { allowanceFor: (...args: unknown[]) => allowanceFor(...args), requireFeature: (...args: unknown[]) => requireFeature(...args) },
   diseno: { leer: (...args: unknown[]) => leerDiseno(...args) },
   orders: { saldoPendienteDe: (...args: unknown[]) => saldoPendienteDe(...args) },
 }))
+
+const clientes = vi.fn()
 
 const form = (): FormData => {
   const fd = new FormData()
@@ -68,6 +70,7 @@ beforeEach(() => {
   requireFeature.mockResolvedValue(ok({}))
   contentFor.mockResolvedValue(INVITACION_LISTA)
   leerDiseno.mockResolvedValue(null)
+  clientes.mockResolvedValue([{ userId: 'c1', email: 'novios@ejemplo.bo' }])
   saldoPendienteDe.mockResolvedValue(false)
 })
 
@@ -188,6 +191,7 @@ describe('importGuestsAction y el tope del plan', () => {
 describe('se invita aunque la invitación no esté escrita', () => {
   it('el alta de invitado pasa con el contenido vacío', async () => {
     contentFor.mockResolvedValue({})
+    addGuest.mockResolvedValue(ok({ id: 'g1' }))
     allowanceFor.mockResolvedValue(ok({ maxGuestGroups: null }))
     listGroups.mockResolvedValue(ok([]))
     const { addGuestAction } = await import('@/app/_acciones/guests/actions')
@@ -196,8 +200,7 @@ describe('se invita aunque la invitación no esté escrita', () => {
     fd.set('eventSlug', 'boda')
     fd.set('fullName', 'Yasmin')
 
-    await addGuestAction({ status: 'idle', message: '' }, fd)
-
+    expect((await addGuestAction({ status: 'idle', message: '' }, fd)).status).toBe('success')
     expect(addGuest).toHaveBeenCalled()
   })
 
@@ -245,6 +248,15 @@ describe('preparar un enlace publica la invitación', () => {
 
     saldoPendienteDe.mockResolvedValue(false)
     resend.mockResolvedValue(ok({ token: 't', label: 'Yasmin' }))
+    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('success')
+  })
+
+  it('sin cliente, el encargo no bloquea: nadie aprobaría la versión y el reparto quedaba trabado', async () => {
+    clientes.mockResolvedValue([])
+    leerDiseno.mockResolvedValue({ estado: 'esperando_datos', rondasIncluidas: 5, rondasUsadas: 0, diasDeEntrega: 3, entregaHasta: null })
+    resend.mockResolvedValue(ok({ token: 't', label: 'Yasmin' }))
+    const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
+
     expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('success')
   })
 })

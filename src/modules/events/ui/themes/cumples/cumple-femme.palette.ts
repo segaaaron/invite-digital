@@ -13,8 +13,13 @@ const BASE = {
   vino: '#8C1E32',
   /** La tinta sobre el oro: el texto de los botones llenos. */
   tintaSobreOro: '#1E0A0E',
-  /** El vidrio de las tarjetas: granate casi negro, al 68 %. */
-  vidrio: 'rgba(20,6,10,0.68)',
+  /**
+   * El vidrio de las tarjetas: granate casi negro. La maqueta lo lleva al 68 %; al 80 %, porque
+   * sobre la foto del tocador el texto se perdía (pedido por el usuario, 6 de octubre).
+   */
+  vidrio: 'rgba(20,6,10,0.80)',
+  /** El fondo del plano del mapa: más hondo que las tarjetas, para que las calles y el alfiler se lean. */
+  fondoMapa: 'rgba(10,2,5,0.72)',
   filete: 'rgba(216,185,138,0.45)',
   fileteSuave: 'rgba(216,185,138,0.22)',
   fileteEtiqueta: 'rgba(216,185,138,0.55)',

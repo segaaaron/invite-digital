@@ -17,7 +17,7 @@ const SANS = 'var(--font-dm-sans)'
 
 /** La sombra de todo el texto: sin ella, sobre el terciopelo del fondo no se lee. */
 const SOMBRA = '0 2px 8px rgba(0,0,0,0.8)'
-const TARJETA: CSSProperties = { background: P.vidrio, border: `1px solid ${P.filete}`, borderRadius: 10, backdropFilter: 'blur(3px)' }
+const TARJETA: CSSProperties = { background: P.vidrio, border: `1px solid ${P.filete}`, borderRadius: 10, backdropFilter: 'blur(6px)' }
 /** El arco de las dos fotos: medio punto arriba, esquinas suaves abajo, filete de oro. */
 const ARCO: CSSProperties = {
   width: '100%',
@@ -288,7 +288,9 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
         {/* ── Aquí nos vemos ── */}
         {lugar === '' && map === undefined ? null : (
           <Reveal>
-            <div style={{ marginTop: 36 }}>
+            {/* En su tarjeta, como los demás bloques: suelto sobre la foto, el mapa y la dirección se
+                perdían entre las piernas y las velas. */}
+            <div style={{ ...TARJETA, marginTop: 36, padding: '20px 16px' }}>
               <Titular>{ROTULOS.nosVemos}</Titular>
               <div style={{ marginTop: 14 }}>
                 <MapPreview
@@ -296,6 +298,7 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
                   border={P.filete}
                   coords=""
                   directionsLabel={themes.viewLocation}
+                  fondo={P.fondoMapa}
                   height={150}
                   href={map?.href}
                   label=""

@@ -27,6 +27,8 @@ type Props = {
   readonly directionsLabel: string
   /** Sin el «VER UBICACIÓN ↗» de la esquina: para el diseño que pone su propio botón debajo. */
   readonly sinEsquina?: boolean
+  /** El fondo del plano. Por defecto, un velo casi transparente; sobre una foto se pierde. */
+  readonly fondo?: string
 }
 
 /**
@@ -52,6 +54,7 @@ export function MapPreview({
   respaldo,
   directionsLabel,
   sinEsquina = false,
+  fondo = 'rgba(255,255,255,0.03)',
 }: Props) {
   const [reducido] = useState(prefiereMenosMovimiento)
   const llegar = comoLlegar({ href, coords }, respaldo)
@@ -66,7 +69,7 @@ export function MapPreview({
         borderRadius: 8,
         overflow: 'hidden',
         border: `1px solid ${border}`,
-        background: 'rgba(255,255,255,0.03)',
+        background: fondo,
       }}
     >
       <svg

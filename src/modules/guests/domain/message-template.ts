@@ -33,7 +33,14 @@ export function renderMessage(input: {
   evento?: string
 }): string {
   const fecha = input.fecha ?? null
-  const plantilla = input.template?.trim() || porDefecto(input.locale, (input.seats ?? 1) > 1, fecha)
+  const propia = input.template?.trim() ?? ''
+  // Una plantilla propia que no nombra a nadie o no lleva el enlace **los gana sola** (6 de
+  // octubre): llegaba «Brindamos por…» a secas, sin a quién ni dónde abrirla, y sin enlace la
+  // invitación no sirve. El saludo va delante y el enlace al final; lo escrito, intacto en medio.
+  const saludo = input.locale === 'en' ? 'Hello {nombre} ✨' : 'Hola {nombre} ✨'
+  const conNombre = propia === '' || /\{(nombre|grupo)\}/.test(propia) ? propia : `${saludo}\n\n${propia}`
+  const completa = conNombre === '' || conNombre.includes('{enlace}') ? conNombre : `${conNombre}\n\n{enlace}`
+  const plantilla = completa || porDefecto(input.locale, (input.seats ?? 1) > 1, fecha)
   // `{grupo}` es el nombre antiguo de `{nombre}`: las plantillas ya guardadas lo llevan.
   return plantilla
     .replaceAll('{nombre}', input.groupLabel)

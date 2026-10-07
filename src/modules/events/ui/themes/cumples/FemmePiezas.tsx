@@ -8,7 +8,7 @@ import { PALETA as P } from './cumple-femme.palette'
 const SERIF = 'var(--font-cormorant)'
 const SANS = 'var(--font-dm-sans)'
 
-const TARJETA = { background: P.vidrio, border: `1px solid ${P.filete}`, borderRadius: 10, backdropFilter: 'blur(3px)' } as const
+const TARJETA = { background: P.vidrio, border: `1px solid ${P.filete}`, borderRadius: 10, backdropFilter: 'blur(6px)' } as const
 
 /** Las cuatro casillas de la cuenta atrás; llegado el día, «¡Es hoy!» en su lugar. */
 export function CuentaFemme({
