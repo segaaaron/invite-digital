@@ -268,23 +268,31 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
   }
 
   if (variant === 'fiesta') {
-    // «Femme Fatale»: los dos botones iguales, huecos sobre el vidrio del diseño (`--rsvp-fondo`)
-    // con el filete del oro; el elegido se llena de oro. Debajo, «ENVIAR RESPUESTA →» en el color
-    // que pone el diseño (`--rsvp-enviar`). Sin contador ni saludo: la maqueta no los dibuja, y
-    // con el «sí» van los cupos del grupo, como en los campos.
-    const ELECCION =
-      'flex-1 cursor-pointer rounded-[8px] border-[1.5px] border-[var(--color-cta)] px-1 py-[15px] [font-family:var(--font-dm-sans)] text-[16px] font-bold tracking-[0.04em] transition-all duration-200'
-    const elegido = 'bg-[var(--color-cta)] text-[var(--color-on-cta)]'
-    const libre = 'bg-[var(--rsvp-fondo,transparent)] text-ink'
+    // «Femme Fatale», con aire de joyería (6 de octubre: los botones de la maqueta quedaban básicos).
+    // El «sí» es una píldora de oro champán (`--rsvp-si`) con brillo arriba; el «no», una píldora
+    // hueca con filete de oro, en cursiva. Al elegir, el elegido gana un halo de oro y el otro se atenúa. Debajo,
+    // «Enviar mi respuesta» en vino (`--rsvp-enviar`). Sin contador ni saludo; con el «sí» van los
+    // cupos del grupo, como en los campos. Los colores los pone el diseño por variables.
+    const PILDORA =
+      'flex flex-1 cursor-pointer items-center justify-center whitespace-nowrap rounded-full px-3 py-[15px] [font-family:var(--font-cormorant)] text-[18px] leading-none transition-all duration-300'
+    const SI =
+      'border border-[color-mix(in_srgb,var(--color-cta)_70%,white)] [background:var(--rsvp-si,var(--color-cta))] font-semibold tracking-[0.06em] text-[var(--color-on-cta)] shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_8px_22px_-8px_var(--color-cta)] hover:brightness-105'
+    const NO =
+      'border border-[color-mix(in_srgb,var(--color-cta)_65%,transparent)] bg-[var(--rsvp-fondo,transparent)] italic tracking-[0.02em] text-ink hover:border-[var(--color-cta)]'
+    // El elegido, con un segundo filete de oro separado de la píldora; el otro, atenuado. (Una ✓
+    // dentro rozaba el texto: en el celular las píldoras son estrechas.)
+    const atenuado = (si: boolean) =>
+      !respondido ? '' : viene === si ? 'outline outline-1 outline-offset-[3px] outline-[var(--color-cta)]' : 'opacity-45 saturate-50'
     return (
-      <form action={rsvp.formAction} className="flex w-full flex-col gap-2.5">
+      <form action={rsvp.formAction} className="flex w-full flex-col gap-3">
         <input name="token" type="hidden" value={token} readOnly />
         <input name="attending" type="hidden" value={viene ? String(seats) : '0'} readOnly />
         <input name="name" type="hidden" value={guestName} readOnly />
-        <div className="flex gap-2.5">
+        <div className="flex gap-3">
           {([true, false] as const).map((si) => (
             <button
-              className={`${ELECCION} ${respondido && viene === si ? elegido : libre}`}
+              aria-pressed={respondido ? viene === si : undefined}
+              className={`${PILDORA} ${si ? SI : NO} ${atenuado(si)}`}
               key={String(si)}
               onClick={() => {
                 setViene(si)
@@ -304,7 +312,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
         )}
         {respondido ? (
           <button
-            className="cursor-pointer rounded-[8px] border-0 bg-[var(--rsvp-enviar,var(--color-cta))] px-0 py-[14px] [font-family:var(--font-dm-sans)] text-[16px] font-bold tracking-[0.06em] text-[var(--rsvp-enviar-tinta,var(--color-on-cta))] disabled:opacity-60"
+            className="cursor-pointer rounded-full border border-[color-mix(in_srgb,var(--color-cta)_55%,transparent)] [background:var(--rsvp-enviar,var(--color-cta))] px-0 py-[14px] [font-family:var(--font-cormorant)] text-[15px] font-semibold tracking-[0.22em] text-[var(--rsvp-enviar-tinta,var(--color-on-cta))] uppercase shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_10px_24px_-10px_rgba(0,0,0,0.8)] transition-[filter] duration-200 hover:brightness-110 disabled:opacity-60"
             disabled={rsvp.isPending}
             type="submit"
           >

@@ -27,6 +27,17 @@ const ARCO: CSSProperties = {
   boxShadow: `0 18px 40px rgba(0,0,0,.6), 0 0 0 6px ${P.aro}`,
 }
 
+/** El adorno bajo el nombre del invitado: un filete fino que se desvanece a los lados, con una estrella de oro en medio. */
+function Adorno() {
+  return (
+    <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 8 }}>
+      <span style={{ width: 56, height: 1, background: `linear-gradient(90deg, transparent, ${P.oroViejo})` }} />
+      <span style={{ color: P.destello, fontSize: 11, lineHeight: 1 }}>✦</span>
+      <span style={{ width: 56, height: 1, background: `linear-gradient(270deg, transparent, ${P.oroViejo})` }} />
+    </div>
+  )
+}
+
 /** Los titulares de cada bloque: Cormorant en oro, versales espaciadas. */
 function Titular({ children }: { readonly children: ReactNode }) {
   return (
@@ -120,7 +131,9 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
   const RANURAS = {
     ...variablesDeRanuras(pielDeRanuras({ acento: P.oroViejo, sobreAcento: P.tintaSobreOro, tinta: P.crema, display: SERIF, radio: 10 })),
     '--rsvp-fondo': P.vidrio,
-    '--rsvp-enviar': P.vino,
+    // El «sí» en oro champán, del claro al viejo; «Enviar» en vino, más hondo abajo.
+    '--rsvp-si': `linear-gradient(160deg, ${P.destello} 0%, ${P.oroViejo} 55%, ${P.oroHondo} 100%)`,
+    '--rsvp-enviar': `linear-gradient(180deg, ${P.vino} 0%, ${P.vinoHondo} 100%)`,
     '--rsvp-enviar-tinta': P.crema,
   } as CSSProperties
 
@@ -363,9 +376,10 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
           </Reveal>
         )}
 
-        {/* ── ¿Vienes? ── */}
+        {/* ── ¿Vienes? ── En su tarjeta, como los demás bloques: a quién va, la pregunta y los
+            botones (o las gracias) juntos. Suelto sobre la foto, el nombre se perdía. */}
         <Reveal>
-          <div style={{ marginTop: 40 }}>
+          <div style={{ ...TARJETA, marginTop: 40, padding: '26px 18px 22px' }}>
             {/* A quién va: cada enlace es de alguien. En el escaparate no hay invitado y no se
                 pinta, como en la maqueta. */}
             {invitado === null ? null : (
@@ -373,13 +387,41 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
                 <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', color: P.oro, textTransform: 'uppercase' }}>
                   {dictionary.invitationFor}
                 </div>
-                <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.crema, lineHeight: 1.2, marginTop: 4 }}>{invitado}</div>
+                {/* Blanco marfil en la letra de los titulares, con un destello de oro que lo cruza
+                    despacio, y debajo un filete con su estrella: en caligrafía fina y sobre la foto se
+                    perdía. Todo el ancho para el nombre, para que no se parta. Con movimiento reducido
+                    el destello no corre. */}
+                <div style={{ marginTop: 8 }}>
+                  <span
+                    style={{
+                      fontFamily: SERIF,
+                      fontWeight: 600,
+                      fontSize: 40,
+                      lineHeight: 1.15,
+                      letterSpacing: '0.04em',
+                      textWrap: 'balance',
+                      textShadow: 'none',
+                      backgroundImage: `linear-gradient(110deg, ${P.blanco} 0%, ${P.blanco} 42%, ${P.destello} 50%, ${P.blanco} 58%, ${P.blanco} 100%)`,
+                      backgroundSize: '250% 100%',
+                      backgroundPosition: '-20% 0',
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                      filter: 'drop-shadow(0 2px 8px rgba(0,0,0,0.85))',
+                    }}
+                    className="theme-destello"
+                  >
+                    {invitado}
+                  </span>
+                </div>
+                <Adorno />
               </div>
             )}
             <div style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 40, color: P.crema }}>{ROTULOS.vienes}</div>
             {respondida ? (
               // Ya respondió: en el sitio de los botones, las gracias. La invitación sigue entera.
-              <div style={{ ...TARJETA, marginTop: 14, padding: '24px 20px' }} role="status">
+              // Dentro de la tarjeta del bloque: sin otra tarjeta encima, separada por un filete.
+              <div style={{ marginTop: 16, paddingTop: 18, borderTop: `1px solid ${P.fileteSuave}` }} role="status">
                 <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600, letterSpacing: '0.14em', color: P.oro }}>
                   {asistira ? ROTULOS.graciasVieneRotulo : ROTULOS.graciasNoRotulo}
                 </div>

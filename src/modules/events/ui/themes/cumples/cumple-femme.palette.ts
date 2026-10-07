@@ -11,6 +11,9 @@ const BASE = {
   crema: '#F3E6CC',
   /** El botón de enviar y el del reproductor. */
   vino: '#8C1E32',
+  /** El fondo del degradado del vino y del oro: lo que da volumen a las píldoras del RSVP. */
+  vinoHondo: '#5A1020',
+  oroHondo: '#9C7A46',
   /** La tinta sobre el oro: el texto de los botones llenos. */
   tintaSobreOro: '#1E0A0E',
   /**
@@ -25,6 +28,9 @@ const BASE = {
   fileteEtiqueta: 'rgba(216,185,138,0.55)',
   /** El velo que oscurece el fondo arriba —donde va el titular— y lo deja ver abajo. */
   velo: 'linear-gradient(180deg, rgba(14,3,6,.82) 0%, rgba(14,3,6,.55) 22%, rgba(14,3,6,.15) 45%, rgba(14,3,6,.08) 70%, rgba(14,3,6,.25) 100%)',
+  /** El nombre del invitado: blanco marfil, con un destello de oro que lo cruza. */
+  blanco: '#FFFBF2',
+  destello: '#F3DFA8',
   /** El punto del alfiler del mapa. */
   punto: '#000',
   /** El aro oscuro que separa el marco de las fotos del fondo. */

@@ -40,6 +40,8 @@
 @keyframes theme-haloPulse { 0%,100% { opacity: 0.06; transform: scale(1); } 50% { opacity: 0.18; transform: scale(1.15); } }
 
 @keyframes theme-introFade { from { opacity: 0; } to { opacity: 1; } }
+/* El destello de oro que cruza el nombre del invitado en «Femme Fatale»: pasa y descansa. */
+@keyframes theme-destello { 0% { background-position: 120% 0; } 45%, 100% { background-position: -20% 0; } }
 /* La placa «ENTRA A LA INVITACIÓN» de «Femme Fatale»: el brillo dorado que late (`posterCtaGlow`). */
 @keyframes theme-posterCtaGlow { 0%,100% { box-shadow: 0 0 8px rgba(232,196,110,.35), inset 0 0 6px rgba(232,196,110,.15); } 50% { box-shadow: 0 0 22px rgba(232,196,110,.85), inset 0 0 10px rgba(232,196,110,.3); } }
 
@@ -108,11 +110,14 @@
  * igual quieta. En los `Reveal` no funcionaría — los dejaría en `opacity: 0`.
  */
 .theme-sway-slow { animation: theme-leafSway 8s ease-in-out infinite; }
+/* El destello del nombre del invitado en «Femme Fatale». Quieto, el nombre queda en blanco. */
+.theme-destello { animation: theme-destello 5s ease-in-out infinite; }
 .theme-sway-slower { animation: theme-leafSway 10s ease-in-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
   .theme-sway-slow,
-  .theme-sway-slower { animation: none; }
+  .theme-sway-slower,
+  .theme-destello { animation: none; }
 }
 
 /*
