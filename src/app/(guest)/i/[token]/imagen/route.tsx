@@ -3,6 +3,7 @@ import { imagenDeTarjeta } from '@/app/_compartir/imagen-de-tarjeta'
 import { tarjetaDeInvitacion } from '@/modules/events/domain/tarjeta-de-invitacion'
 import { isErr } from '@/shared/result'
 import { resolveInvitation } from '../invitation'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 
 /**
  * La imagen que WhatsApp enseña al pegar el enlace de una invitación: el arte de portada del
@@ -18,7 +19,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   const { event, group } = invitacion.value
 
   const protegida = (await events.passwordHashOf(event.id)) !== null
-  const contenido = protegida ? {} : await events.contenidoParaInvitados(event.id, {})
+  const contenido = protegida ? {} : await events.contenidoParaInvitados(event.id, themeFor(event.themeKey).defaultContent, event.eventDate)
   const tarjeta = tarjetaDeInvitacion({ evento: event, contenido, invitado: group.label, protegida })
   return imagenDeTarjeta(event, tarjeta)
 }

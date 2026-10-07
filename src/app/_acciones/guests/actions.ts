@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { admin, events, guests, plans } from '@/app/composition/container'
-import { encargoSinTerminar, invitacionSinEscribir } from './puede-invitar'
+import { encargoSinTerminar } from './puede-invitar'
 import { esquemaDePropuesta } from '@/modules/asistente'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { env } from '@/shared/config/env'
@@ -77,8 +77,6 @@ export async function addGuestAction(_previous: GuestActionState, formData: Form
   })
   const eventSlug = campo(formData, 'eventSlug')
 
-  const sinEscribir = await invitacionSinEscribir(eventId)
-  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
 
   const capacidad = await plans.allowanceFor(eventId)
   const grupos = await guests.list(eventId)
@@ -247,8 +245,6 @@ export async function ensureInvitationLinkAction(input: { eventSlug: string; gro
 }
 
 async function repartir(eventId: string, eventSlug: string, formData: FormData, modo: 'rotar' | 'mismo'): Promise<ResendState> {
-  const sinEscribir = await invitacionSinEscribir(eventId)
-  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
   const encargo = await encargoSinTerminar(eventId)
   if (encargo !== null) return { status: 'error', message: encargo }
 
@@ -300,8 +296,6 @@ export async function importGuestsAction(_previous: ImportState, formData: FormD
 
   // Importar la lista es de algunos planes. Esconder el botón no protege: la acción es un
   // extremo HTTP público.
-  const sinEscribir = await invitacionSinEscribir(eventId)
-  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
 
   const incluida = await plans.requireFeature(eventId, 'csvImport')
   if (isErr(incluida)) return { status: 'error', message: incluida.error.detail }
@@ -391,8 +385,6 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
   const propuesta = esquemaDePropuesta.safeParse(input.invitaciones)
   if (!propuesta.success) return { status: 'error', message: 'La propuesta no es válida. Pídesela otra vez a Luxury.' }
 
-  const sinEscribir = await invitacionSinEscribir(eventId)
-  if (sinEscribir !== null) return { status: 'error', message: sinEscribir }
 
   const capacidad = await plans.allowanceFor(eventId)
   const grupos = await guests.list(eventId)

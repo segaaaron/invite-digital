@@ -1,7 +1,6 @@
 'use client'
 
 import { EmptyState } from '@/shared/design/ui/panel/estados'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
@@ -50,7 +49,6 @@ export function DeliveryPanel({
   eventLocale,
   template,
   rows,
-  sinContenido,
   closeHref,
   fechaDelEvento = null,
 }: {
@@ -61,8 +59,6 @@ export function DeliveryPanel({
   fechaDelEvento?: string | null
   template: string | null
   rows: readonly DeliveryRow[]
-  /** La invitación está sin terminar: el enlace abriría una página que no dice de quién es. */
-  sinContenido: boolean
   /** Adónde vuelve al cerrar: la lista, sin `?panel=envio`. */
   closeHref: string
 }) {
@@ -258,18 +254,6 @@ export function DeliveryPanel({
       </header>
 
       <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4 min-[560px]:px-6" role="tabpanel">
-        {sinContenido ? (
-          <div className="flex flex-col gap-2 rounded-[14px] border border-gold/50 bg-gold/10 p-4" role="alert">
-            <p className="text-[13.5px] leading-[1.6]">
-              <strong className="font-medium">Tu invitación está sin terminar.</strong> Termínala antes de enviar: quien abra su enlace no
-              sabría de quién es, cuándo ni dónde.
-            </p>
-            <Link className="text-[13px] text-gold-deep underline underline-offset-4" href={`/panel/eventos/${eventSlug}/configuracion`}>
-              Terminar mi invitación
-            </Link>
-          </div>
-        ) : null}
-
         {error === null ? null : (
           <p className="rounded-[12px] bg-danger/10 px-4 py-3 text-[13px] text-danger" role="alert">
             {error}
@@ -288,7 +272,7 @@ export function DeliveryPanel({
             {lista.map((fila) => {
               const url = urls[fila.id]
               const abierta = abiertas.has(fila.id)
-              const bloqueado = sinContenido || trabajando !== null
+              const bloqueado = trabajando !== null
               const correo = fila.email ?? ''
               const telefono = (telefonos[fila.id] ?? '').replace(/[^0-9+]/g, '')
               return (
@@ -331,7 +315,6 @@ export function DeliveryPanel({
                           aria-controls={`otras-${fila.id}`}
                           aria-expanded={abierta}
                           className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-4 py-2.5 text-[13px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
-                          disabled={sinContenido}
                           onClick={() => abrirOtras(fila)}
                           type="button"
                         >

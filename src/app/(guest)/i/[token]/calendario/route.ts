@@ -6,6 +6,7 @@ import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import { eventoDeLaInvitacion } from '../calendario'
 import { resolveInvitation } from '../invitation'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   if (isErr(invitacion)) return new Response('No encontrado', { status: 404 })
   const { event } = invitacion.value
   if (!(await eventUnlocked(event.id))) return new Response('No encontrado', { status: 404 })
-  const escrito = await eventos.contenidoParaInvitados(event.id, {})
+  const escrito = await eventos.contenidoParaInvitados(event.id, themeFor(event.themeKey).defaultContent, event.eventDate)
   const evento = eventoDeLaInvitacion(event, escrito, invitationUrl(token, env.SITE_URL))
   return respuestaIcs(calendarioIcs(event.title, [evento], new Date()), 'evento.ics')
 }

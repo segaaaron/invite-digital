@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
   if (isErr(invitation)) return {}
   const { event, group } = invitation.value
   const protegida = (await eventos.passwordHashOf(event.id)) !== null
-  const contenido = protegida ? {} : await eventos.contenidoParaInvitados(event.id, {})
+  const contenido = protegida ? {} : await eventos.contenidoParaInvitados(event.id, themeFor(event.themeKey).defaultContent, event.eventDate)
   const tarjeta = tarjetaDeInvitacion({ evento: event, contenido, invitado: group.label, protegida })
   const sitio = env.SITE_URL.replace(/\/+$/, '')
   return {
@@ -106,7 +106,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
 
   // El contenido rico que pinta el diseño, ya fusionado con el de muestra del tema: lo que
   // el atelier no haya escrito se ve con lo que traía el diseño, en vez de dejar un hueco.
-  const contenido = await eventos.contenidoParaInvitados(event.id, definicion.defaultContent)
+  const contenido = await eventos.contenidoParaInvitados(event.id, definicion.defaultContent, event.eventDate)
   // «Comparte tus fotos» solo si el plan lo trae: un botón que lleva a un rechazo no se ofrece.
   const capacidadDelPlan = await plans.allowanceFor(event.id)
   const fotosDeInvitados = !isErr(capacidadDelPlan) && capacidadDelPlan.value.guestPhotos
@@ -152,7 +152,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
   }
 
   // El evento tal como lo guarda el calendario del invitado.
-  const alCalendario = eventoDeLaInvitacion(event, await eventos.contenidoParaInvitados(event.id, {}), invitationUrl(token, env.SITE_URL))
+  const alCalendario = eventoDeLaInvitacion(event, await eventos.contenidoParaInvitados(event.id, themeFor(event.themeKey).defaultContent, event.eventDate), invitationUrl(token, env.SITE_URL))
   const boton = 'inline-block rounded-[var(--radius-pill)] border border-line px-6 py-3 font-mono text-[10px] tracking-[var(--tracking-luxe)] uppercase'
 
   // «Agendar en Google Calendar» (y el .ics): en los tres planes y **para todos**, confirmen o no

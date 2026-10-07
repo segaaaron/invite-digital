@@ -182,14 +182,12 @@ describe('importGuestsAction y el tope del plan', () => {
 })
 
 /**
- * Sin la invitación escrita no se invita a nadie. El botón apagado es cortesía: cada acción
- * es un extremo HTTP público, y el corte vive aquí.
+ * Se invita aunque la invitación no esté escrita (6 de octubre, decisión del usuario): lo que no
+ * se llenó, el invitado lo ve como lo trae el diseño. Antes se cortaba aquí.
  */
-describe('no se invita con la invitación sin escribir', () => {
-  const INCOMPLETA = { hero: { nameA: 'Camila' } }
-
-  it('el alta de invitado se corta y dice qué falta', async () => {
-    contentFor.mockResolvedValue(INCOMPLETA)
+describe('se invita aunque la invitación no esté escrita', () => {
+  it('el alta de invitado pasa con el contenido vacío', async () => {
+    contentFor.mockResolvedValue({})
     allowanceFor.mockResolvedValue(ok({ maxGuestGroups: null }))
     listGroups.mockResolvedValue(ok([]))
     const { addGuestAction } = await import('@/app/_acciones/guests/actions')
@@ -198,33 +196,17 @@ describe('no se invita con la invitación sin escribir', () => {
     fd.set('eventSlug', 'boda')
     fd.set('fullName', 'Yasmin')
 
-    const estado = await addGuestAction({ status: 'idle', message: '' }, fd)
+    await addGuestAction({ status: 'idle', message: '' }, fd)
 
-    expect(estado.status).toBe('error')
-    expect(estado.message).toMatch(/la fecha y la hora/i)
-    expect(addGuest).not.toHaveBeenCalled()
+    expect(addGuest).toHaveBeenCalled()
   })
 
-  it('importar tampoco', async () => {
+  it('y preparar un enlace también', async () => {
     contentFor.mockResolvedValue({})
-    allowanceFor.mockResolvedValue(ok({ maxGuestGroups: null }))
-    listGroups.mockResolvedValue(ok([]))
-    const { importGuestsAction } = await import('@/app/_acciones/guests/actions')
-    const fd = new FormData()
-    fd.set('eventId', 'e1')
-    fd.set('eventSlug', 'boda')
-    fd.set('csv', 'Familia Rojas;4')
-
-    expect((await importGuestsAction({ status: 'idle' }, fd)).status).toBe('error')
-    expect(importCsv).not.toHaveBeenCalled()
-  })
-
-  it('ni preparar un enlace para mandarlo', async () => {
-    contentFor.mockResolvedValue({})
+    resend.mockResolvedValue(ok({ token: 't', label: 'Yasmin' }))
     const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
 
-    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('error')
-    expect(resend).not.toHaveBeenCalled()
+    expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('success')
   })
 })
 
@@ -264,14 +246,5 @@ describe('preparar un enlace publica la invitación', () => {
     saldoPendienteDe.mockResolvedValue(false)
     resend.mockResolvedValue(ok({ token: 't', label: 'Yasmin' }))
     expect((await resendInvitationAction({ status: 'idle' }, form())).status).toBe('success')
-  })
-
-  it('sin la invitación escrita no publica nada', async () => {
-    contentFor.mockResolvedValue({})
-    const { resendInvitationAction } = await import('@/app/_acciones/guests/actions')
-
-    await resendInvitationAction({ status: 'idle' }, form())
-
-    expect(publicarSiBorrador).not.toHaveBeenCalled()
   })
 })

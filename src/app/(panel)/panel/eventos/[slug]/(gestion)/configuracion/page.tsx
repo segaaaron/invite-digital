@@ -119,7 +119,7 @@ export default async function ConfiguracionPage({
   // **El editor enseña lo escrito; la vista previa, lo escrito con el ejemplo debajo.** Son
   // dos lecturas y no una: rellenar los campos del formulario con la muestra haría que el
   // cliente publicara «El Bar de Miki» con solo pulsar Guardar sin mirar.
-  const contenido = await events.contenidoParaInvitados(event.value.id, {})
+  const contenido = await events.contenidoEscrito(event.value.id)
   const contenidoDeLaVistaPrevia = await events.contenidoParaVistaPrevia(event.value.id, tema.defaultContent, event.value.eventDate)
   const conCronograma = !esAdmin && isOk(await plans.requireFeature(event.value.id, 'plannerCompleto'))
 

@@ -28,7 +28,6 @@ const pinta = (over: Partial<Parameters<typeof DeliveryPanel>[0]> = {}) =>
       eventSlug="boda"
       eventTitle="Quince de Camila"
       rows={filas}
-      sinContenido={false}
       template={null}
       {...over}
     />,
@@ -122,13 +121,6 @@ describe('DeliveryPanel', () => {
     fireEvent.blur(campo)
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/no se pudo guardar el teléfono/i))
-  })
-
-  it('con la invitación sin terminar no reparte, y dice por qué', () => {
-    pinta({ sinContenido: true })
-
-    expect(screen.getByRole('alert')).toHaveTextContent(/sin terminar/i)
-    expect(screen.getByRole('button', { name: 'Enviar por WhatsApp a Yasmin Medrano Avila' })).toBeDisabled()
   })
 
   it('cerrar vuelve a la lista sin el parámetro', () => {

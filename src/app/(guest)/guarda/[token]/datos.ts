@@ -5,6 +5,7 @@ import { tarjetaDeInvitacion, type TarjetaDeInvitacion } from '@/modules/events/
 import type { InvitationContent } from '@/modules/events'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { isErr } from '@/shared/result'
+import { themeFor } from '@/modules/events/ui/themes/registry'
 
 export type SaveTheDate = { readonly event: Event; readonly contenido: InvitationContent; readonly tarjeta: TarjetaDeInvitacion }
 
@@ -17,7 +18,7 @@ export const leerSaveTheDate = cache(async (token: string): Promise<SaveTheDate 
   if (eventId === null) return null
   const evento = await events.getByIdUnscoped(eventId)
   if (isErr(evento)) return null
-  const contenido = await events.contenidoParaInvitados(eventId, {})
+  const contenido = await events.contenidoParaInvitados(eventId, themeFor(evento.value.themeKey).defaultContent, evento.value.eventDate)
   const base = tarjetaDeInvitacion({ evento: evento.value, contenido, invitado: '', protegida: false })
   const textos = getDictionary(evento.value.locale).saveTheDate
   const tarjeta = { ...base, antetitulo: textos.eyebrow, descripcion: textos.shareDescription.replace('{fecha}', base.fecha ?? evento.value.eventDate) }

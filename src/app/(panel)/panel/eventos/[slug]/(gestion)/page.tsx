@@ -2,7 +2,7 @@ import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { hayPreguntas } from '@/modules/rsvp/domain/preguntas'
 import { LoQueContestaron } from '@/modules/rsvp/ui/LoQueContestaron'
 import Link from 'next/link'
-import { notFound, redirect } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
@@ -49,9 +49,8 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
    */
   const contenidoDelEvento = await events.contentFor(event.value.id, {})
   const invitacionLista = loQueFaltaParaInvitar(contenidoDelEvento, { pideNombres: pideNombres(themeFor(event.value.themeKey)) }).length === 0
-  // Quien celebra entra primero a su invitación mientras no esté escrita: al iniciar sesión, desde
-  // la barra o desde un enlace. Con ella lista, el resumen. El atelier y el admin ven el resumen.
-  if (!invitacionLista && !gestionaElEvento(actor, event.value)) redirect(`/panel/eventos/${event.value.slug}/configuracion`)
+  // Ya no se manda a «Mi invitación» al que no la escribió (6 de octubre): lo que no se escribió
+  // sale como lo trae el diseño, así que se puede invitar desde el principio.
 
   const groups = await guests.list(event.value.id)
   // Las últimas respuestas, en una sola consulta. Una por grupo y en serie convertía el

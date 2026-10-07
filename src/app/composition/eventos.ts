@@ -223,18 +223,26 @@ export const events = {
    */
   contentFor: contentFor(drizzleContentRepository),
   /**
-   * El contenido **que ven los invitados**: con el itinerario sacado del cronograma del día
-   * cuando el plan lo trae y hay momentos marcados. Una sola lista de momentos, no dos.
+   * **Lo escrito, y nada más**: lo que enseña el editor de «Mi invitación». Con el itinerario
+   * del cronograma cuando el plan lo trae y hay momentos marcados. Rellenar los campos del
+   * editor con el ejemplo haría creer que ya está escrito.
    */
-  contenidoParaInvitados: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1]) => {
-    const contenido = await contentFor(drizzleContentRepository)(eventId, muestra)
+  contenidoEscrito: async (eventId: string) => {
+    const contenido = await contentFor(drizzleContentRepository)(eventId, {})
     if (isErr(await plans.requireFeature(eventId, 'plannerCompleto'))) return contenido
     const itinerario = itinerarioDeInvitacion(await drizzleDiaStore.listMoments(eventId))
     return itinerario === null ? contenido : { ...contenido, itinerary: itinerario }
   },
   /**
+   * Lo que **ven los invitados**, y lo mismo que la vista previa: lo escrito y, en lo que no se
+   * escribió, lo que trae el diseño (6 de octubre, decisión del usuario: «si no llena todos los
+   * campos, agarra lo que trae la invitación»). La fecha es siempre la del evento.
+   */
+  contenidoParaInvitados: (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1], fechaDelEvento: string) =>
+    events.contenidoParaVistaPrevia(eventId, muestra, fechaDelEvento),
+  /**
    * Lo que se pinta en **las vistas previas del panel**: lo escrito, con el ejemplo del
-   * modelo en lo que aún está en blanco. El invitado nunca ve esto.
+   * modelo en lo que aún está en blanco. Es también lo que ve el invitado.
    */
   contenidoParaVistaPrevia: async (eventId: string, muestra: Parameters<ReturnType<typeof contentFor>>[1], fechaDelEvento: string) => {
     // Sin fecha escrita, el ejemplo pone la del evento (con la hora del modelo), no la fija del

@@ -16,8 +16,6 @@ import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
 import { mejorarPara } from '@/app/(panel)/panel/_carcasa/mejorar'
 import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
-import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
-import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
@@ -58,13 +56,9 @@ export default async function InvitadosPage({
     throw new Error(event.error.detail)
   }
 
-  // Antes de invitar, la invitación: quién, cuándo y dónde. Sin eso cada enlace abre una
-  // invitación que no dice de quién es. Aquí se apaga y se explica; el corte de verdad está
-  // en las acciones. Se mide por el dato, no por el estado del evento: un borrador con la
-  // invitación escrita puede prepararse en paralelo.
+  // Se invita desde el principio (6 de octubre): lo que no se escribió, el invitado lo ve como lo
+  // trae el diseño. Lo escrito solo sirve aquí para la fecha del mensaje.
   const contenido = await events.contentFor(event.value.id, {})
-  const faltaEnInvitacion = loQueFaltaParaInvitar(contenido, { pideNombres: pideNombres(themeFor(event.value.themeKey)) })
-  const invitacionVacia = faltaEnInvitacion.length > 0
 
   const groups = await guests.list(event.value.id)
   // Una sola consulta para las respuestas de todos los grupos. Antes eran dos por grupo y
@@ -135,7 +129,7 @@ export default async function InvitadosPage({
   // Con la invitación sin terminar, ni el alta ni la importación se abren, tampoco
   // escribiendo `?panel=alta` a mano.
   const abierto =
-    panel === 'envio' || (!invitacionVacia && (panel === 'alta' || panel === 'importar')) ? panel : null
+    panel === 'envio' || panel === 'alta' || panel === 'importar' ? panel : null
 
   // «✎» y «▣» abren su diálogo con la persona en la dirección. Una persona que ya no
   // existe —la lista se recarga sola mientras el atelier mira— no abre nada, en vez de
@@ -173,11 +167,7 @@ export default async function InvitadosPage({
               rows={filas}
             />
             )}
-            <PanelButton
-              disabled={invitacionVacia}
-              href={abierto === 'importar' ? base : `${base}?panel=importar`}
-              title={invitacionVacia ? 'Termina tu invitación antes de cargar invitados' : undefined}
-            >
+            <PanelButton href={abierto === 'importar' ? base : `${base}?panel=importar`}>
               <UploadIcon className="size-3.5" /> Importar CSV
             </PanelButton>
             {filas.length === 0 ? null : (
@@ -185,12 +175,7 @@ export default async function InvitadosPage({
                 <MailIcon className="size-3.5" /> Enviar invitaciones
               </PanelButton>
             )}
-            <PanelButton
-              disabled={invitacionVacia}
-              href={`${base}?panel=alta`}
-              title={invitacionVacia ? 'Termina tu invitación antes de añadir invitados' : undefined}
-              variant="primary"
-            >
+            <PanelButton href={`${base}?panel=alta`} variant="primary">
               + Añadir invitado
             </PanelButton>
           </>
@@ -200,31 +185,6 @@ export default async function InvitadosPage({
         title="Invitados"
       />
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
-
-      {/* El orden del trabajo, dicho en la propia pantalla: primero la invitación, luego la
-          gente. Sin esto se podían repartir enlaces a una invitación en blanco. */}
-      {invitacionVacia ? (
-        <PanelCard className="mb-4.5">
-          <div className="flex flex-col gap-3">
-            <p className="font-display text-[20px] text-ink">Primero, termina tu invitación</p>
-            <p className="max-w-[62ch] text-[13.5px] leading-[1.7] text-ink-soft">
-              Es lo que verán tus invitados al abrir su enlace, así que no se puede añadir a nadie hasta que diga de quién
-              es, cuándo y dónde. Falta:
-            </p>
-            <ul className="list-disc pl-5 text-[13.5px] leading-[1.7] text-ink">
-              {faltaEnInvitacion.map((falta) => (
-                <li key={falta}>{falta}</li>
-              ))}
-            </ul>
-            <div className="flex flex-wrap gap-2">
-              <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`} variant="primary">
-                Terminar mi invitación
-              </PanelButton>
-              <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Ver cómo va quedando</PanelButton>
-            </div>
-          </div>
-        </PanelCard>
-      ) : null}
 
       {/* «+ Añadir invitado» abre el diálogo de la maqueta, con sus nueve campos. */}
       {abierto === 'alta' ? (
@@ -304,7 +264,6 @@ export default async function InvitadosPage({
             fechaDelEvento={new Intl.DateTimeFormat(event.value.locale === 'en' ? 'en-GB' : 'es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
               new Date(`${(contenido.schedule?.startsAt ?? event.value.eventDate).slice(0, 10)}T12:00:00Z`),
             )}
-            sinContenido={invitacionVacia}
             template={event.value.messageTemplate ?? null}
           />
         ) : null}
@@ -385,7 +344,7 @@ export default async function InvitadosPage({
             </p>
           ) : filasPersona.length === 0 ? (
             <EmptyState
-              action={invitacionVacia ? undefined : <PanelButton href={`${base}?panel=alta`} variant="primary">Añadir el primer invitado</PanelButton>}
+              action={<PanelButton href={`${base}?panel=alta`} variant="primary">Añadir el primer invitado</PanelButton>}
               description="Carga a cada invitado con sus acompañantes. Cada uno recibe su propio enlace y su pase de entrada."
               icon={<UsersIcon />}
               title="Tu lista de invitados empieza aquí"
@@ -395,12 +354,9 @@ export default async function InvitadosPage({
           )}
         </PanelCard>
 
-        {/* Sin la invitación escrita no se ofrece: nadie podría darse de alta. */}
-        {invitacionVacia ? null : (
-          <PanelCard title="Enlace general">
-            <EnlaceGeneral eventId={event.value.id} eventSlug={event.value.slug} url={enlaceGeneral === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${enlaceGeneral}`} />
-          </PanelCard>
-        )}
+        <PanelCard title="Enlace general">
+          <EnlaceGeneral eventId={event.value.id} eventSlug={event.value.slug} url={enlaceGeneral === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${enlaceGeneral}`} />
+        </PanelCard>
       </div>
     </>
   )
