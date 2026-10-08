@@ -24,6 +24,7 @@ import { CheckIcon, ClockIcon, MailIcon, UploadIcon, UsersIcon } from '@/shared/
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
+import { BotonFlotante, CifrasEnFila } from '@/shared/design/ui/panel/movil'
 
 export const metadata = { title: 'Invitados' }
 
@@ -150,6 +151,22 @@ export default async function InvitadosPage({
       <PanelHeader
         actions={
           <>
+            {filas.length === 0 ? null : (
+              // En el celular está al centro de la barra de abajo: aquí sería repetirlo.
+              <PanelButton className="max-[859px]:hidden" href={abierto === 'envio' ? base : `${base}?panel=envio`}>
+                <MailIcon className="size-3.5" /> Enviar invitaciones
+              </PanelButton>
+            )}
+            {/* En el celular, «+ Añadir» flota sobre la barra de abajo (`BotonFlotante`). */}
+            <PanelButton className="max-[859px]:hidden" href={`${base}?panel=alta`} variant="primary">
+              + Añadir invitado
+            </PanelButton>
+          </>
+        }
+        accionesSoloEnEscritorio
+        kicker={`${filasPersona.length} ${filasPersona.length === 1 ? 'persona' : 'personas'} · ${filas.length} ${filas.length === 1 ? 'invitación' : 'invitaciones'}`}
+        menu={
+          <>
             {/* Con la lista vacía, una sola salida: añadir. Exportar o enviar nada solo despista.
                 La lista descargable es del plan Imperial (documento de cambios): va con importar. */}
             {filas.length === 0 || isErr(capacidad) || !capacidad.value.csvImport ? null : (
@@ -170,22 +187,11 @@ export default async function InvitadosPage({
             <PanelButton href={abierto === 'importar' ? base : `${base}?panel=importar`}>
               <UploadIcon className="size-3.5" /> Importar CSV
             </PanelButton>
-            {filas.length === 0 ? null : (
-              // En el celular está al centro de la barra de abajo: aquí sería repetirlo.
-              <PanelButton className="max-[859px]:hidden" href={abierto === 'envio' ? base : `${base}?panel=envio`}>
-                <MailIcon className="size-3.5" /> Enviar invitaciones
-              </PanelButton>
-            )}
-            {/* La acción principal, la primera en el celular (las demás se deslizan detrás). */}
-            <PanelButton className="max-[859px]:order-first" href={`${base}?panel=alta`} variant="primary">
-              + Añadir invitado
-            </PanelButton>
           </>
         }
-        kicker="Gestión"
-        meta={`${filasPersona.length} ${filasPersona.length === 1 ? 'invitado' : 'invitados'} en total`}
         title="Invitados"
       />
+      <BotonFlotante href={`${base}?panel=alta`}>+ Añadir</BotonFlotante>
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       {/* «+ Añadir invitado» abre el diálogo de la maqueta, con sus nueve campos. */}
@@ -298,7 +304,8 @@ export default async function InvitadosPage({
             que casi siempre dice «nadie por recordar hoy» es un hueco fijo que separa la
             cabecera de la lista, y se deja de mirar justo el día que sí trae a alguien. */}
         {!isErr(cola) && cola.value.length === 0 ? null : (
-          <PanelCard title="Recordatorios">
+          // En el celular, después de la lista: lo primero es la lista (maqueta 2 del panel móvil).
+          <PanelCard className="max-[859px]:order-1" title="Recordatorios">
             {isErr(cola) ? (
               <p className="text-[13px] text-danger" role="alert">
                 No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.
@@ -325,12 +332,22 @@ export default async function InvitadosPage({
           const vivas = filas.filter((f) => f.revokedAt === null)
           const enviadas = vivas.filter((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined).length
           return (
-            <div className="grid grid-cols-2 gap-3 min-[900px]:grid-cols-4 min-[900px]:gap-4.5">
+            <>
+            <CifrasEnFila
+              cifras={[
+                { valor: total, rotulo: 'Invitados' },
+                { valor: si, rotulo: 'Vienen' },
+                { valor: pendientes, rotulo: 'Por responder' },
+                { valor: `${enviadas}/${vivas.length}`, rotulo: 'Enviadas' },
+              ]}
+            />
+            <div className="grid grid-cols-2 gap-3 max-[859px]:hidden min-[900px]:grid-cols-4 min-[900px]:gap-4.5">
               <StatCard detail={`${vivas.length} ${vivas.length === 1 ? 'invitación' : 'invitaciones'}`} icon={<UsersIcon />} label="Invitados" value={total} />
               <StatCard detail={`${Math.round((si / total) * 100)} % del total`} icon={<CheckIcon />} label="Confirmados" progress={si / total} value={si} />
               <StatCard detail={no > 0 ? `${no} no ${no === 1 ? 'viene' : 'vienen'}` : 'sin responder o tal vez'} icon={<ClockIcon />} label="Por responder" value={pendientes} />
               <StatCard detail={enviadas === vivas.length ? 'Todas enviadas' : `Faltan ${vivas.length - enviadas}`} icon={<MailIcon />} label="Enviadas" progress={vivas.length === 0 ? 0 : enviadas / vivas.length} suffix={`/ ${vivas.length}`} value={enviadas} />
             </div>
+            </>
           )
         })()}
 
@@ -356,7 +373,7 @@ export default async function InvitadosPage({
           )}
         </PanelCard>
 
-        <PanelCard title="Enlace general">
+        <PanelCard className="max-[859px]:order-2" title="Enlace general">
           <EnlaceGeneral eventId={event.value.id} eventSlug={event.value.slug} url={enlaceGeneral === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${enlaceGeneral}`} />
         </PanelCard>
       </div>

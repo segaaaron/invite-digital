@@ -20,6 +20,8 @@ import { accesoAlAsistente, luxuryParaMejorar } from '../../../_carcasa/asistent
 import { Asistente } from '@/modules/asistente/ui/Asistente'
 import { LuxuryBloqueado } from '@/modules/asistente/ui/LuxuryBloqueado'
 import { isErr } from '@/shared/result'
+import { fechaEnBolivia } from '@/shared/format/fecha'
+import { ArrowLeftIcon } from '@/shared/design/ui/icons'
 
 /**
  * La carcasa de todas las páginas de un evento. Vive aquí y no en cada página porque una
@@ -110,14 +112,24 @@ export default async function EventoLayout({
       ) : actor.role === 'puerta' ? (
         campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>
       ) : (
-        <BarraSuperior subtitulo={nombreDelPlan === null ? undefined : `Plan ${nombreDelPlan}`} titulo={event.value.title}>
+        <BarraSuperior subtitulo={cabecera(fiestaDeTema(event.value.themeKey), event.value.eventDate)} titulo={event.value.title}>
           {campana}
         </BarraSuperior>
       )}
       {isAdmin(actor) ? (
         // La ruta, arriba del contenido: de dónde viene esta pantalla y cómo volver.
         <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-ink-mute">
+          {/* En el celular, una sola cabecera: volver, qué fiesta y cuándo, y el nombre (maqueta 6 del panel móvil). */}
+          <div className="flex min-w-0 flex-1 basis-full items-center gap-3 min-[860px]:hidden">
+            <Link aria-label="Volver a todos los eventos" className="grid size-11 shrink-0 place-items-center rounded-full border border-line-panel bg-white/80 text-ink-soft" href="/panel/admin/eventos">
+              <ArrowLeftIcon className="size-4.5" />
+            </Link>
+            <div className="min-w-0">
+              <p className="truncate font-mono text-[11px] tracking-[0.16em] text-gold-deep uppercase">{cabecera(fiestaDeTema(event.value.themeKey), event.value.eventDate)}</p>
+              <p className="truncate font-display text-[22px] leading-tight text-ink">{event.value.title}</p>
+            </div>
+          </div>
+          <nav aria-label="Ruta" className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-ink-mute max-[859px]:hidden">
             <Link className="hover:text-ink hover:underline" href="/panel/admin/eventos">
               Todos los eventos
             </Link>
@@ -125,7 +137,9 @@ export default async function EventoLayout({
             <span className="text-ink-soft">{event.value.title}</span>
           </nav>
           {/* Invitados, envíos y planner son del cliente: se llega entrando como él, desde aquí. */}
-          <EntrarComoCliente anfitriones={anfitriones} eventId={id} variant="primary" />
+          <div className="max-[859px]:w-full max-[859px]:*:w-full">
+            <EntrarComoCliente anfitriones={anfitriones} eventId={id} variant="primary" />
+          </div>
         </div>
       ) : null}
       {children}
@@ -133,4 +147,13 @@ export default async function EventoLayout({
       {luxuryBloqueado === null ? null : <LuxuryBloqueado comoExtra={luxuryBloqueado.comoExtra} mejorar={luxuryBloqueado.mejorar} planes={luxuryBloqueado.planes} />}
     </PanelFrame>
   )
+}
+
+const FIESTA = { boda: 'Boda', xv: 'XV años', cumple: 'Cumpleaños' } as const
+
+/** Lo que va encima del nombre en la cabecera del celular: «Boda · faltan 6 días». Días de calendario en Bolivia. */
+function cabecera(fiesta: keyof typeof FIESTA, fecha: string): string {
+  const dias = Math.round((Date.parse(`${fecha}T00:00:00Z`) - Date.parse(`${fechaEnBolivia(new Date())}T00:00:00Z`)) / 86_400_000)
+  const cuando = dias > 1 ? `faltan ${dias} días` : dias === 1 ? 'mañana' : dias === 0 ? 'es hoy' : 'ya se celebró'
+  return `${FIESTA[fiesta]} · ${cuando}`
 }

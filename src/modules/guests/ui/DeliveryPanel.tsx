@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
-import { ChevronIcon, CloseIcon, MailIcon, MessageIcon, WhatsAppIcon, CheckIcon } from '@/shared/design/ui/icons'
+import { ChevronIcon, CloseIcon, CopyIcon, MailIcon, MessageIcon, QrIcon, ShareIcon, WhatsAppIcon, CheckIcon } from '@/shared/design/ui/icons'
+import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { resendInvitationAction, sendInvitationAction, setGroupPhoneAction, type ResendState } from '@/app/_acciones/guests/actions'
 import { QrDigital } from '@/shared/design/ui/QrDigital'
 import { renderMessage, whatsappLink } from '../domain/message-template'
@@ -35,7 +36,8 @@ function respuesta(fila: DeliveryRow): { tone: PillTone; text: string } {
   return fila.confirmed > 0 ? { tone: 'ok', text: 'Confirmó' } : { tone: 'no', text: 'No viene' }
 }
 
-const OTRA_FORMA = 'flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-line-panel-strong bg-white px-3 py-1.5 text-[12px] text-ink transition hover:border-ink disabled:cursor-not-allowed disabled:opacity-40'
+/** Cada otra forma de enviar: un botón cuadrado con icono y su nombre debajo, como en la hoja de compartir del teléfono. */
+const OTRA_FORMA = 'flex min-h-[64px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[14px] bg-bg-sunken/70 px-1 py-2 text-center text-[12px] leading-tight text-ink transition-colors hover:bg-bg-sunken aria-pressed:bg-ink aria-pressed:text-white disabled:cursor-not-allowed disabled:opacity-40 [&>svg]:size-5'
 
 /**
  * Enviar invitaciones, en un modal centrado. **Cada invitado tiene un enlace que no cambia**:
@@ -43,6 +45,10 @@ const OTRA_FORMA = 'flex cursor-pointer items-center justify-center gap-1.5 whit
  * correo, SMS o donde se quiera, las veces que haga falta. Usar cualquiera la marca enviada.
  *
  * Generar un enlace nuevo es otra cosa, y se pide aparte: anula el anterior y su pase.
+ *
+ * **La lista es corta y cada invitado se abre** (7 de octubre, maqueta 3 del panel móvil): una fila con
+ * inicial, nombre, teléfono y estado; al tocarla, **WhatsApp grande** y debajo las demás formas como
+ * iconos. En el celular eso sale **como hoja desde abajo**; en tableta y escritorio, debajo de la fila.
  */
 export function DeliveryPanel({
   eventSlug,
@@ -71,7 +77,9 @@ export function DeliveryPanel({
   const [marcadas, setMarcadas] = useState<ReadonlySet<string>>(new Set())
   /** Las que se enviaron en esta visita se quedan en «Por enviar» hasta cambiar de pestaña. */
   const [recienEnviadas, setRecienEnviadas] = useState<ReadonlySet<string>>(new Set())
-  const [abiertas, setAbiertas] = useState<ReadonlySet<string>>(new Set())
+  /** El invitado abierto: su hoja con WhatsApp y las demás formas. Uno a la vez. */
+  const [elegida, setElegida] = useState<string | null>(null)
+  const [conQr, setConQr] = useState(false)
   const [confirmarNuevo, setConfirmarNuevo] = useState<string | null>(null)
   const [trabajando, setTrabajando] = useState<string | null>(null)
   const [copiado, setCopiado] = useState<string | null>(null)
@@ -96,13 +104,6 @@ export function DeliveryPanel({
 
   const mensaje = (fila: DeliveryRow, url: string) =>
     renderMessage({ template, locale: eventLocale, groupLabel: fila.label, url, seats: fila.seats ?? 1, fecha: fechaDelEvento, evento: eventTitle })
-
-  const alternar = (conjunto: ReadonlySet<string>, id: string) => {
-    const nuevo = new Set(conjunto)
-    if (nuevo.has(id)) nuevo.delete(id)
-    else nuevo.add(id)
-    return nuevo
-  }
 
   /** Pide al servidor el enlace —el mismo, o uno nuevo— y la marca enviada. */
   const pedir = async (fila: DeliveryRow, modo: 'mismo' | 'nuevo'): Promise<string | null> => {
@@ -152,16 +153,31 @@ export function DeliveryPanel({
     })
   }
 
-  const abrirOtras = (fila: DeliveryRow) => {
+  const elegir = (fila: DeliveryRow) => {
     setError(null)
-    setAbiertas((previas) => alternar(previas, fila.id))
-    if (urls[fila.id] === undefined && !abiertas.has(fila.id)) {
-      setTrabajando(fila.id)
-      empezar(async () => {
-        await pedir(fila, 'mismo')
-        setTrabajando(null)
-      })
+    setConQr(false)
+    setConfirmarNuevo(null)
+    setElegida((previa) => (previa === fila.id ? null : fila.id))
+  }
+
+  /**
+   * Hace algo con su enlace. Casi todos lo tienen guardado; los de antes de guardarlo se preparan aquí
+   * (el mismo enlace, y la invitación queda enviada). No se prepara solo al abrir la fila: mirar a un
+   * invitado no es enviarle nada.
+   */
+  const conEnlace = (fila: DeliveryRow, hacer: (url: string) => void) => {
+    setError(null)
+    const url = urls[fila.id]
+    if (url !== undefined) {
+      hacer(url)
+      return
     }
+    setTrabajando(fila.id)
+    empezar(async () => {
+      const nueva = await pedir(fila, 'mismo')
+      setTrabajando(null)
+      if (nueva !== null) hacer(nueva)
+    })
   }
 
   const copiar = (fila: DeliveryRow, texto: string, que: string) => {
@@ -197,15 +213,16 @@ export function DeliveryPanel({
   return (
     <dialog
       aria-labelledby="enviar-titulo"
-      // Tamaño fijo, haya uno o cien invitados; en el celular ocupa la pantalla entera.
-      className="m-auto h-[min(820px,94dvh)] max-h-none w-[min(620px,94vw)] max-w-none flex-col overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/45 open:flex max-[560px]:h-dvh max-[560px]:w-screen max-[560px]:rounded-none max-[560px]:border-0"
+      // Tamaño fijo, haya uno o cien invitados; en el celular, una hoja alta que sube desde abajo.
+      className="m-auto h-[min(820px,94dvh)] max-h-none w-[min(620px,94vw)] max-w-none flex-col overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/45 open:flex max-[560px]:mb-0 max-[560px]:h-[94dvh] max-[560px]:w-screen max-[560px]:rounded-t-[26px] max-[560px]:rounded-b-none max-[560px]:border-0 motion-safe:max-[560px]:animate-slide-up"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
       }}
       ref={dialogo}
     >
-      <header className="flex flex-col gap-4 border-b border-line-panel px-5 pt-5 pb-4 min-[560px]:px-6">
+      <header className="flex flex-col gap-4 border-b border-line-panel px-5 pt-5 pb-4 max-[560px]:pt-2.5 min-[560px]:px-6">
+        <span aria-hidden className="mx-auto h-1 w-10 rounded-full bg-line-panel-strong min-[561px]:hidden" />
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="font-display text-[26px] leading-tight font-light italic" id="enviar-titulo">
@@ -215,7 +232,7 @@ export function DeliveryPanel({
           </div>
           <button
             aria-label="Cerrar"
-            className="grid size-9 shrink-0 cursor-pointer place-items-center rounded-full border border-line-panel text-ink-soft hover:border-ink hover:text-ink"
+            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-line-panel text-ink-soft hover:border-ink hover:text-ink"
             onClick={cerrar}
             type="button"
           >
@@ -239,7 +256,7 @@ export function DeliveryPanel({
           ).map(([clave, texto]) => (
             <button
               aria-selected={pestana === clave}
-              className={`flex-1 cursor-pointer rounded-full px-3 py-2 text-[12.5px] transition-colors ${pestana === clave ? 'bg-white text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}
+              className={`min-h-11 flex-1 cursor-pointer rounded-full px-3 py-2 text-[12.5px] transition-colors ${pestana === clave ? 'bg-white text-ink shadow-sm' : 'text-ink-soft hover:text-ink'}`}
               key={clave}
               onClick={() => {
                 setPestana(clave)
@@ -269,138 +286,175 @@ export function DeliveryPanel({
             title={pestana === 'pendientes' ? 'Todas tus invitaciones salieron' : 'Aún no enviaste ninguna'}
           />
         ) : (
-          <ul className="flex flex-col gap-2.5">
+          <ul className="flex flex-col gap-2">
             {lista.map((fila) => {
               const url = urls[fila.id]
-              const abierta = abiertas.has(fila.id)
+              const abierta = elegida === fila.id
               const bloqueado = trabajando !== null
               const correo = fila.email ?? ''
               const telefono = (telefonos[fila.id] ?? '').replace(/[^0-9+]/g, '')
+              const estado = pestana === 'enviadas' ? respuesta(fila) : recienEnviadas.has(fila.id) ? { tone: 'ok' as const, text: 'Enviada' } : { tone: 'pending' as const, text: 'Por enviar' }
+              const preparando = trabajando === fila.id
+              const mailto = (u: string) => `mailto:${encodeURIComponent(correo)}?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(mensaje(fila, conCanal(u, 'correo')))}`
+              const sms = (u: string) => `sms:${telefono}?&body=${encodeURIComponent(mensaje(fila, conCanal(u, 'sms')))}`
               return (
-                <li aria-label={fila.label} className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-white p-4" key={fila.id}>
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="min-w-0 truncate text-[15px]">{fila.label}</span>
-                    {pestana === 'enviadas' ? (
-                      <Pill tone={respuesta(fila).tone}>{respuesta(fila).text}</Pill>
-                    ) : recienEnviadas.has(fila.id) ? (
-                      <Pill tone="ok">Enviada</Pill>
-                    ) : null}
-                  </div>
+                <li aria-label={fila.label} className={`rounded-[16px] border bg-white ${abierta ? 'border-gold/50' : 'border-line-panel'}`} key={fila.id}>
+                  <button
+                    aria-expanded={abierta}
+                    aria-label={`Formas de enviar a ${fila.label}`}
+                    className="flex min-h-15 w-full cursor-pointer items-center gap-3 rounded-[16px] px-3.5 py-3 text-left transition-colors hover:bg-bg-top/60"
+                    onClick={() => elegir(fila)}
+                    type="button"
+                  >
+                    <Inicial nombre={fila.label} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[15px] leading-snug [overflow-wrap:anywhere]">{fila.label}</span>
+                      <span className="block truncate text-[12.5px] text-ink-mute">{telefono === '' ? 'Sin teléfono' : telefono}</span>
+                    </span>
+                    <Pill tone={estado.tone}>{estado.text}</Pill>
+                    <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? 'rotate-180' : ''}`} />
+                  </button>
 
-                  {fila.revoked ? null : (
+                  {abierta ? (
                     <>
-                      <div>
-                        <label className="sr-only" htmlFor={`tel-${fila.id}`}>
-                          Teléfono de {fila.label}
-                        </label>
-                        <CampoTelefono
-                          id={`tel-${fila.id}`}
-                          onBlur={() => guardarTelefono(fila)}
-                          onChange={(e164) => setTelefonos((previo) => ({ ...previo, [fila.id]: e164 }))}
-                          value={telefonos[fila.id] ?? ''}
-                        />
-                      </div>
+                      {/* En el celular, la hoja se cierra tocando fuera, con la ✕ o tocando otra vez la fila. */}
+                      <div aria-hidden className="fixed inset-0 z-10 bg-ink/35 min-[561px]:hidden" onClick={() => setElegida(null)} />
+                      <div
+                        className="flex flex-col gap-3 max-[560px]:fixed max-[560px]:inset-x-0 max-[560px]:bottom-0 max-[560px]:z-20 max-[560px]:max-h-[88dvh] max-[560px]:overflow-y-auto max-[560px]:rounded-t-[26px] max-[560px]:bg-bg-raised max-[560px]:px-5 max-[560px]:pt-2.5 max-[560px]:pb-[max(env(safe-area-inset-bottom),20px)] max-[560px]:shadow-float motion-safe:max-[560px]:animate-slide-up min-[561px]:mx-3 min-[561px]:mb-3 min-[561px]:rounded-[14px] min-[561px]:bg-bg-top/60 min-[561px]:p-4"
+                        id={`otras-${fila.id}`}
+                      >
+                        <span aria-hidden className="mx-auto mb-1 h-1 w-10 rounded-full bg-line-panel-strong min-[561px]:hidden" />
+                        <div className="flex items-center gap-3 min-[561px]:hidden">
+                          <Inicial grande nombre={fila.label} />
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-[17px] font-medium leading-snug [overflow-wrap:anywhere]">{fila.label}</span>
+                            <span className="block text-[12.5px] text-ink-mute">
+                              {fila.seats ?? 1} {(fila.seats ?? 1) === 1 ? 'persona' : 'personas'} · su enlace de siempre
+                            </span>
+                          </span>
+                          <button aria-label="Cerrar" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top" onClick={() => setElegida(null)} type="button">
+                            <CloseIcon className="size-4" />
+                          </button>
+                        </div>
 
-                      <div className="grid gap-2 min-[480px]:grid-cols-2">
-                        <button
-                          aria-label={`Enviar por WhatsApp a ${fila.label}`}
-                          className="flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-whatsapp px-4 py-2.5 text-[14px] font-medium text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
-                          disabled={bloqueado}
-                          onClick={() => porWhatsapp(fila)}
-                          type="button"
-                        >
-                          <WhatsAppIcon className="size-4" />
-                          {trabajando === fila.id && !abierta ? 'Preparando…' : 'WhatsApp'}
-                        </button>
-                        <button
-                          aria-controls={`otras-${fila.id}`}
-                          aria-expanded={abierta}
-                          className="flex cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong px-4 py-2.5 text-[13px] text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
-                          onClick={() => abrirOtras(fila)}
-                          type="button"
-                        >
-                          Enlace y otras formas
-                          <ChevronIcon className={`size-3.5 transition-transform ${abierta ? 'rotate-180' : ''}`} />
-                        </button>
-                      </div>
+                        {fila.revoked ? (
+                          <p className="text-[13px] text-ink-soft">Esta invitación está revocada: se reabre desde «Editar invitado».</p>
+                        ) : (
+                          <>
+                            <div>
+                              <label className="mb-1 block text-[12px] text-ink-soft" htmlFor={`tel-${fila.id}`}>
+                                Teléfono de {fila.label}
+                              </label>
+                              <CampoTelefono
+                                id={`tel-${fila.id}`}
+                                onBlur={() => guardarTelefono(fila)}
+                                onChange={(e164) => setTelefonos((previo) => ({ ...previo, [fila.id]: e164 }))}
+                                value={telefonos[fila.id] ?? ''}
+                              />
+                            </div>
 
-                      {abierta ? (
-                        <div className="flex flex-col gap-3 rounded-[14px] bg-bg-top p-3.5" id={`otras-${fila.id}`}>
-                          {url === undefined ? (
-                            <p className="text-[12.5px] text-ink-soft" role="status">
-                              {trabajando === fila.id
-                                ? 'Preparando su enlace…'
-                                : fila.sent
-                                  ? 'Este invitado ya tiene su enlace: se envió antes de que el panel lo guardara, así que aquí no se puede mostrar.'
-                                  : 'No se pudo preparar el enlace.'}
-                            </p>
-                          ) : (
-                            <>
-                              <p className="text-[12px] text-ink-soft">Su enlace, para mandarlo por donde quieras. Es siempre el mismo.</p>
-                              <div className="flex gap-2">
-                                <input
-                                  aria-label={`Enlace de la invitación de ${fila.label}`}
-                                  className="min-w-0 flex-1 rounded-[10px] border border-line-panel-strong bg-white px-3 py-2 font-mono text-[11.5px]"
-                                  onFocus={(e) => e.currentTarget.select()}
-                                  readOnly
-                                  value={conCanal(url, 'enlace')}
-                                />
-                                <button className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90" onClick={() => copiar(fila, conCanal(url, 'enlace'), 'enlace')} type="button">
+                            <button
+                              aria-label={`Enviar por WhatsApp a ${fila.label}`}
+                              className="flex min-h-13 cursor-pointer items-center justify-center gap-2 rounded-full bg-whatsapp px-4 py-3 text-[15px] font-medium text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                              disabled={bloqueado}
+                              onClick={() => porWhatsapp(fila)}
+                              type="button"
+                            >
+                              <WhatsAppIcon className="size-5" />
+                              {preparando ? 'Preparando…' : 'Mandar por WhatsApp'}
+                            </button>
+
+                            {url === undefined && fila.sent ? (
+                              <p className="text-[12.5px] text-ink-soft" role="status">
+                                Este invitado ya tiene su enlace: se envió antes de que el panel lo guardara, así que aquí no se puede mostrar.
+                              </p>
+                            ) : (
+                              <div className="grid grid-cols-4 gap-2 min-[561px]:grid-cols-6">
+                                <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => copiar(fila, conCanal(u, 'enlace'), 'enlace'))} type="button">
+                                  <CopyIcon />
                                   {copiado === `${fila.id}:enlace` ? 'Copiado' : 'Copiar'}
                                 </button>
-                              </div>
-                              <div className="flex flex-wrap gap-2">
-                                <button className={OTRA_FORMA} onClick={() => copiar(fila, mensaje(fila, conCanal(url, 'mensaje')), 'mensaje')} type="button">
-                                  {copiado === `${fila.id}:mensaje` ? 'Copiado' : 'Copiar mensaje'}
+                                <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => copiar(fila, mensaje(fila, conCanal(u, 'mensaje')), 'mensaje'))} type="button">
+                                  <MessageIcon />
+                                  {copiado === `${fila.id}:mensaje` ? 'Copiado' : 'Mensaje'}
                                 </button>
-                                <a
-                                  className={OTRA_FORMA}
-                                  href={`mailto:${encodeURIComponent(correo)}?subject=${encodeURIComponent(eventTitle)}&body=${encodeURIComponent(mensaje(fila, conCanal(url, 'correo')))}`}
-                                  onClick={() => marcar(fila)}
-                                >
-                                  <MailIcon className="size-4" />
-                                  Correo
-                                </a>
-                                <a className={OTRA_FORMA} href={`sms:${telefono}?&body=${encodeURIComponent(mensaje(fila, conCanal(url, 'sms')))}`} onClick={() => marcar(fila)}>
-                                  <MessageIcon className="size-4" />
-                                  SMS
-                                </a>
+                                {url === undefined ? (
+                                  <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => window.location.assign(mailto(u)))} type="button">
+                                    <MailIcon />
+                                    Correo
+                                  </button>
+                                ) : (
+                                  <a className={OTRA_FORMA} href={mailto(url)} onClick={() => marcar(fila)}>
+                                    <MailIcon />
+                                    Correo
+                                  </a>
+                                )}
+                                {url === undefined ? (
+                                  <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => window.location.assign(sms(u)))} type="button">
+                                    <MessageIcon />
+                                    SMS
+                                  </button>
+                                ) : (
+                                  <a className={OTRA_FORMA} href={sms(url)} onClick={() => marcar(fila)}>
+                                    <MessageIcon />
+                                    SMS
+                                  </a>
+                                )}
+                                <button aria-pressed={conQr} className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, () => setConQr((v) => !v))} type="button">
+                                  <QrIcon />
+                                  QR
+                                </button>
                                 {puedeCompartir ? (
-                                  <button className={OTRA_FORMA} onClick={() => compartir(fila, url)} type="button">
+                                  <button className={OTRA_FORMA} disabled={bloqueado} onClick={() => conEnlace(fila, (u) => compartir(fila, u))} type="button">
+                                    <ShareIcon />
                                     Compartir
                                   </button>
                                 ) : null}
                               </div>
-                              <div className="border-t border-line-panel pt-3">
-                                <QrDigital nombre={fila.label} url={conCanal(url, 'qr')} />
-                              </div>
-                            </>
-                          )}
+                            )}
 
-                          {pestana === 'enviadas' ? (
-                            confirmarNuevo === fila.id ? (
-                              <div className="flex flex-col gap-2 border-t border-line-panel pt-3" role="alert">
-                                <p className="text-[12.5px] leading-[1.6] text-ink">
-                                  El enlace actual y su pase de entrada <strong className="font-medium">dejarán de servir</strong>. Úsalo solo si lo perdió o
-                                  llegó a quien no debía.
-                                </p>
-                                <div className="flex gap-2">
-                                  <PanelButton disabled={bloqueado} onClick={() => enlaceNuevo(fila)} variant="danger">
-                                    Sí, generar uno nuevo
-                                  </PanelButton>
-                                  <PanelButton onClick={() => setConfirmarNuevo(null)}>Cancelar</PanelButton>
+                            {url === undefined ? null : (
+                              <>
+                                <input
+                                  aria-label={`Enlace de la invitación de ${fila.label}`}
+                                  className="w-full min-w-0 rounded-[10px] border border-line-panel bg-white px-3 py-2 font-mono text-[12px] text-ink-soft"
+                                  onFocus={(e) => e.currentTarget.select()}
+                                  readOnly
+                                  value={conCanal(url, 'enlace')}
+                                />
+                                {conQr ? (
+                                  <div className="rounded-[14px] bg-white p-3">
+                                    <QrDigital nombre={fila.label} url={conCanal(url, 'qr')} />
+                                  </div>
+                                ) : null}
+                              </>
+                            )}
+
+                            {pestana === 'enviadas' ? (
+                              confirmarNuevo === fila.id ? (
+                                <div className="flex flex-col gap-2 border-t border-line-panel pt-3" role="alert">
+                                  <p className="text-[12.5px] leading-[1.6] text-ink">
+                                    El enlace actual y su pase de entrada <strong className="font-medium">dejarán de servir</strong>. Úsalo solo si lo perdió o
+                                    llegó a quien no debía.
+                                  </p>
+                                  <div className="flex gap-2">
+                                    <PanelButton disabled={bloqueado} onClick={() => enlaceNuevo(fila)} variant="danger">
+                                      Sí, generar uno nuevo
+                                    </PanelButton>
+                                    <PanelButton onClick={() => setConfirmarNuevo(null)}>Cancelar</PanelButton>
+                                  </div>
                                 </div>
-                              </div>
-                            ) : (
-                              <button className="w-fit cursor-pointer text-[12px] text-ink-mute underline underline-offset-4 hover:text-danger" onClick={() => setConfirmarNuevo(fila.id)} type="button">
-                                ¿Lo perdió? Generar un enlace nuevo
-                              </button>
-                            )
-                          ) : null}
-                        </div>
-                      ) : null}
+                              ) : (
+                                <button className="min-h-11 w-fit cursor-pointer text-[12.5px] text-ink-mute underline underline-offset-4 hover:text-danger" onClick={() => setConfirmarNuevo(fila.id)} type="button">
+                                  ¿Lo perdió? Generar un enlace nuevo
+                                </button>
+                              )
+                            ) : null}
+                          </>
+                        )}
+                      </div>
                     </>
-                  )}
+                  ) : null}
                 </li>
               )
             })}
@@ -408,5 +462,17 @@ export function DeliveryPanel({
         )}
       </div>
     </dialog>
+  )
+}
+
+/** La inicial del invitado sobre su color, como en Invitados. */
+function Inicial({ nombre, grande = false }: { nombre: string; grande?: boolean }) {
+  return (
+    <span
+      aria-hidden
+      className={`grid shrink-0 place-items-center rounded-full bg-linear-to-br font-medium text-white ${avatarColor(nombre)} ${grande ? 'size-11 text-[16px]' : 'size-9 text-[13px]'}`}
+    >
+      {nombre.trim().charAt(0).toUpperCase() || '·'}
+    </span>
   )
 }

@@ -139,7 +139,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
           {(['es', 'en'] as const).map((i) => (
             <button
               aria-pressed={idioma === i}
-              className={`cursor-pointer rounded-[var(--radius-pill)] px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase ${idioma === i ? 'bg-ink text-white' : 'text-ink-soft'}`}
+              className={`cursor-pointer rounded-[var(--radius-pill)] px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase max-[859px]:min-h-11 ${idioma === i ? 'bg-ink text-white' : 'text-ink-soft'}`}
               key={i}
               onClick={() => setIdioma(i)}
               type="button"
@@ -290,7 +290,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
               <PanelAlert tone="ok">
                 Publica solo cifras y marcas que puedas respaldar. Una cifra inflada o una marca que no trabajó contigo resta más confianza de la que suma.
               </PanelAlert>
-              <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink">
+              <label className="flex cursor-pointer items-center gap-2.5 text-[13px] text-ink max-[859px]:min-h-11">
                 <input checked={datos.cifras.visibles} onChange={(e) => cambiar('cifras', { ...datos.cifras, visibles: e.target.checked })} type="checkbox" />
                 Publicar la franja de cifras en la portada
               </label>
@@ -355,7 +355,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
                     </div>
                     <textarea aria-label="Cita" className={`${FIELD_CLASS} min-h-[80px]`} onChange={(e) => actualizar({ cita: bil(t.cita, e.target.value) })} placeholder="Lo que dijo, con sus palabras" value={t.cita[idioma]} />
                     <input aria-label="Foto" className={FIELD_CLASS} onChange={(e) => actualizar({ foto: e.target.value })} placeholder="/site/testimonios/nombre.avif (opcional)" value={t.foto} />
-                    <label className="flex cursor-pointer items-start gap-2.5 text-[12px] leading-[1.5] text-ink-soft">
+                    <label className="flex cursor-pointer items-start gap-2.5 text-[12px] leading-[1.5] text-ink-soft max-[859px]:min-h-11 max-[859px]:items-center">
                       <input checked={t.confirmado} className="mt-0.5" onChange={(e) => actualizar({ confirmado: e.target.checked })} type="checkbox" />
                       Confirmo que es un cliente real, que lo dijo con estas palabras y que me dio permiso para publicarlo.
                     </label>
@@ -426,9 +426,10 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
                 return (
                   <details className="group rounded-[14px] border border-line-panel bg-white" key={clave} open={errorBloque?.ancla === 'buscadores'}>
                     <summary className="flex cursor-pointer list-none flex-col gap-3 p-4">
-                      <span className="flex items-center justify-between gap-3">
+                      {/* Que se parta en dos líneas antes que salirse: a 360 px nombre, píldora y «Cambiar» no caben. */}
+                      <span className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
                         <span className="text-[13.5px] text-ink">{nombre}</span>
-                        <span className="flex items-center gap-2">
+                        <span className="flex flex-wrap items-center gap-2">
                           <Pill tone={propio ? 'ok' : 'pending'}>{propio ? 'Texto propio' : 'Texto de siempre'}</Pill>
                           <span className="text-[12px] text-ink-mute group-open:hidden">Cambiar</span>
                           <span className="hidden text-[12px] text-ink-mute group-open:inline">Cerrar</span>
@@ -660,7 +661,7 @@ function DocumentoLegal({
             </a>
           ) : null}
         </span>
-        <label className="flex cursor-pointer items-center gap-2.5 text-[12.5px] text-ink-soft">
+        <label className="flex cursor-pointer items-center gap-2.5 text-[12.5px] text-ink-soft max-[859px]:min-h-11">
           Publicar en la web
           <span className="relative inline-flex h-6 w-11">
             <input checked={publicada} className="peer absolute inset-0 z-10 m-0 cursor-pointer opacity-0" onChange={(e) => onPublicar(e.target.checked)} role="switch" type="checkbox" />
@@ -678,7 +679,7 @@ function DocumentoLegal({
         ).map(([clave, rotulo]) => (
           <button
             aria-selected={vista === clave}
-            className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[12px] transition-colors ${vista === clave ? 'bg-ink text-white' : 'text-ink-soft hover:bg-bg-top'}`}
+            className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 text-[12px] transition-colors max-[859px]:min-h-11 ${vista === clave ? 'bg-ink text-white' : 'text-ink-soft hover:bg-bg-top'}`}
             key={clave}
             onClick={() => setVista(clave)}
             role="tab"

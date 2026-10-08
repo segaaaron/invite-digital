@@ -58,7 +58,7 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
     <>
       <button
         aria-label={rotulo}
-        className={`relative inline-flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors ${
+        className={`relative inline-flex size-10 shrink-0 max-[859px]:size-11 cursor-pointer items-center justify-center rounded-full border transition-colors ${
           pendientes > 0 ? 'border-ink bg-ink text-white hover:bg-ink/90' : 'border-line-panel-strong bg-white/80 text-ink-soft hover:border-ink hover:text-ink'
         }`}
         onClick={abrir}

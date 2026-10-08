@@ -4,12 +4,15 @@ import { accesoAlAsistente } from '../../../_carcasa/asistente'
 import { leerHistorial } from '@/modules/asistente/domain/historial'
 import { idiomaDe, MENSAJE_DE_CIERRE, puedeConversar, type Salida } from '@/modules/asistente'
 import { createRateLimiter } from '@/shared/http/rate-limit'
+import { escribir } from './escritura'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-/** Diez mensajes por minuto y persona: nadie escribe más rápido, y un bucle no vacía la cuota. */
-const limite = createRateLimiter({ windowMs: 60_000, max: 10 })
+/** Veinte mensajes por minuto y persona: un bucle no vacía la cuota. */
+// 30 por minuto y persona (eran 10, luego 20): hablarle por voz son mensajes cortos y seguidos (7 de octubre). El gasto
+// lo topan la cuota del mes del evento y el techo en dólares, no esto.
+const limite = createRateLimiter({ windowMs: 60_000, max: 30 })
 
 /**
  * **Luxury responde**, en trozos: una línea JSON por evento (`application/x-ndjson`), que el panel va
@@ -34,7 +37,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
   const ahora = new Date()
   const permiso = puedeConversar(acceso.config, acceso.capacidad.planSlug, await asistente.usoDe(acceso.evento.id, ahora), acceso.capacidad.asistente === true)
   const salidas: AsyncIterable<Salida> = permiso.ok
-    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true })
+    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true, escribir })
     : (async function* () {
         yield { tipo: 'texto', delta: permiso.motivo === 'fuera_del_plan' ? MENSAJE_DE_CIERRE.presupuesto : MENSAJE_DE_CIERRE[permiso.motivo] }
         yield { tipo: 'fin' }

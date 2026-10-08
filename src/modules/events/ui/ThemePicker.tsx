@@ -138,7 +138,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                     {/* Abre la invitación entera. El atelier decide mirándola, no leyendo
                         el nombre. En pestaña nueva para no perder el formulario a medias. */}
                     <a
-                      className="font-mono text-[9px] tracking-[0.18em] text-ink-mute uppercase underline-offset-2 hover:text-ink hover:underline"
+                      className="font-mono text-[9px] tracking-[0.18em] text-ink-mute uppercase underline-offset-2 hover:text-ink hover:underline max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center max-[859px]:px-2"
                       href={`/modelos/${locale}/${tema.key}`}
                       onClick={(evento) => evento.stopPropagation()}
                       rel="noreferrer"

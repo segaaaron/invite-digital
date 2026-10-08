@@ -99,22 +99,21 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        // Luxury se dicta: el micrófono se abre, solo para el propio origen, en las páginas de un evento
-        // (ahí vive su botón). Va antes de la regla de la puerta, que es la última y fija la suya.
-        source: '/panel/eventos/:slug/:path*',
-        headers: [{ key: 'Permissions-Policy', value: 'camera=(), microphone=(self), geolocation=()' }],
+        // **Cámara y micrófono, solo para el propio origen, en todo el panel y en las páginas del portero**
+        // (7 de octubre). La política la fija la **primera** página que carga el navegador y se queda con el
+        // documento: navegar dentro del panel no la cambia. Abrirla solo en las páginas de un evento (Luxury,
+        // que se dicta) y en `/puerta` (el escáner) no servía: quien entraba por `/panel/entrar` y llegaba al
+        // evento con clics tenía el micrófono prohibido, y Chrome contestaba «denegado» sin preguntar; el
+        // escáner, al que se llega con `router.push` desde Ingreso, tenía la cámara prohibida; y el del portero
+        // (`/p/<token>/puerta`) no la tuvo nunca. Chrome sigue pidiendo permiso a la persona.
+        source: '/panel/:path*',
+        headers: [{ key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=()' }],
       },
       {
-        // El check-in del día del evento lee el QR del pase con la cámara del
-        // dispositivo de la puerta. La política global la niega, así que se reabre
-        // solo para esta ruta y solo para el propio origen: esta regla va después a
-        // propósito, porque la última coincidencia es la que manda.
-        //
-        // La excepción gemela para `/dashboard/:path*` se retiró: la maqueta pasó a
-        // `docs/design-reference/dashboard/` y ya no se sirve, así que apuntaba a una
-        // ruta que hoy responde 404. Sin esta excepción la política
-        // global deja `getUserMedia` en un fallo de permiso que ninguna prueba
-        // unitaria ve, porque la cabecera solo existe en el servidor.
+        source: '/p/:path*',
+        headers: [{ key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' }],
+      },
+      {
         // El arte de los diseños: una imagen que cambia de contenido **cambia de nombre** (regla en
         // `themes/assets.ts`), así que se guarda un año en el navegador. La de la web y el catálogo, un día.
         source: '/temas/:path*',
@@ -123,12 +122,6 @@ const nextConfig: NextConfig = {
       {
         source: '/(site|templates)/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
-      },
-      {
-        source: '/panel/eventos/:slug/puerta',
-        headers: [
-          { key: 'Permissions-Policy', value: 'camera=(self), microphone=(), geolocation=()' },
-        ],
       },
     ]
   },

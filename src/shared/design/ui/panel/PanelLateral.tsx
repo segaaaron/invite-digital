@@ -68,7 +68,7 @@ export function PanelLateral({
           </div>
           <button
             aria-label="Cerrar"
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
+            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border max-[859px]:size-11 border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
             onClick={cerrar}
             type="button"
           >

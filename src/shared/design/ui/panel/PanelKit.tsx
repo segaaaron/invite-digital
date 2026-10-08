@@ -12,7 +12,7 @@ import { useId } from 'react'
  */
 
 const BOTON_BASE =
-  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-pill)] px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-all duration-200 max-[859px]:min-h-11 max-[859px]:text-[11px] max-[859px]:tracking-[0.18em] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0'
+  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-pill)] px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-all duration-200 max-[859px]:min-h-11 max-[859px]:text-[12px] max-[859px]:tracking-[0.18em] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0'
 
 const BOTON_VARIANTES = {
   /** La acción principal de la pantalla. Una por cabecera. */
@@ -282,7 +282,7 @@ export type PillTone = keyof typeof PILL_TONOS
 export function Pill({ tone, children }: { tone: PillTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[10.5px] tracking-[0.25em] whitespace-nowrap uppercase max-[859px]:text-[11px] max-[859px]:tracking-[0.16em] ${PILL_TONOS[tone]}`}
+      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[10.5px] tracking-[0.25em] whitespace-nowrap uppercase max-[859px]:text-[12px] max-[859px]:tracking-[0.16em] ${PILL_TONOS[tone]}`}
     >
       {children}
     </span>
@@ -302,7 +302,7 @@ export function FilterChip({
     <button
       type="button"
       aria-pressed={active}
-      className={`cursor-pointer rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[11px] max-[859px]:tracking-[0.16em] ${
+      className={`cursor-pointer rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[12px] max-[859px]:tracking-[0.16em] ${
         active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
       } ${className}`.trim()}
       {...rest}
@@ -317,7 +317,7 @@ export function FilterChipLink({ active = false, href, children }: { active?: bo
   return (
     <Link
       aria-current={active ? 'page' : undefined}
-      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[11px] max-[859px]:tracking-[0.16em] ${
+      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[12px] max-[859px]:tracking-[0.16em] ${
         active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
       }`}
       href={href}

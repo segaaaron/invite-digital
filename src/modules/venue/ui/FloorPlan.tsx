@@ -155,6 +155,19 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
   const [salida, setSalida] = useState<Exit | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
+  /**
+   * **A pantalla completa, con zoom** (7 de octubre, fase 4 del panel móvil): en el teléfono el plano de
+   * 760 px de alto no se veía entero ni se acercaba. Pellizcar acerca y aleja el plano, no la página
+   * (`touch-action: pan-x pan-y`); las mesas se siguen arrastrando con un dedo.
+   */
+  const [completo, setCompleto] = useState(false)
+  const [zoom, setZoom] = useState(1)
+  const pellizco = useRef<{ distancia: number; zoom: number } | null>(null)
+  const acotar = (z: number) => Math.min(3, Math.max(1, Math.round(z * 100) / 100))
+  const distancia = (t: React.TouchList) => {
+    const [a, b] = [t[0], t[1]]
+    return a === undefined || b === undefined ? 0 : Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+  }
 
   // Si el servidor devuelve otras posiciones —otra pestaña, un revalidate— se adoptan,
   // pero solo cuando no hay trabajo local sin guardar: pisarlo sería perder el gesto.
@@ -351,8 +364,32 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
   })
 
   return (
-    <section className="flex flex-col gap-4">
+    <section
+      aria-label={completo ? 'Plano del salón a pantalla completa' : undefined}
+      className={completo ? 'fixed inset-0 z-[70] flex flex-col gap-3 bg-bg px-3 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),12px)]' : 'flex flex-col gap-4'}
+    >
       <div className="flex flex-wrap items-center gap-3">
+        <button
+          className="inline-flex min-h-11 items-center rounded-pill border border-line-panel-strong bg-white px-4 text-[13px] text-ink"
+          onClick={() => {
+            setCompleto((v) => !v)
+            setZoom(1)
+          }}
+          type="button"
+        >
+          {completo ? 'Cerrar pantalla completa' : 'Pantalla completa'}
+        </button>
+        {completo ? (
+          <span className="inline-flex items-center gap-1" role="group" aria-label="Zoom del plano">
+            <button aria-label="Alejar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-white text-[18px] disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => acotar(z - 0.5))} type="button">
+              −
+            </button>
+            <span className="w-12 text-center font-mono text-[12px] text-ink-soft">{`${Math.round(zoom * 100)} %`}</span>
+            <button aria-label="Acercar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-white text-[18px] disabled:opacity-40" disabled={zoom >= 3} onClick={() => setZoom((z) => acotar(z + 0.5))} type="button">
+              +
+            </button>
+          </span>
+        ) : null}
         <p aria-label="Estado del plano" role="status" className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
           {hayPendientes
             ? `${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar`
@@ -362,7 +399,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
           type="button"
           disabled={!hayPendientes || guardando}
           onClick={() => void guardar()}
-          className="ml-auto rounded-pill border border-ok px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
+          className="ml-auto rounded-pill border border-ok px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
         >
           Guardar cambios
         </button>
@@ -370,7 +407,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
           type="button"
           disabled={!hayPendientes || guardando}
           onClick={descartar}
-          className="rounded-pill border border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+          className="rounded-pill border border-line px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
         >
           Descartar
         </button>
@@ -395,7 +432,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
         </p>
       )}
 
-      <p className="text-[12px] text-ink-mute">
+      <p className={`text-[12px] text-ink-mute ${completo ? 'hidden' : ''}`}>
         Arrastra las mesas y los elementos para acomodar el salón · usa la esquina inferior derecha de una zona para
         redimensionarla
       </p>
@@ -403,8 +440,23 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
       {/* La rejilla de fondo de la maqueta. Es un degradado repetido, no doscientos
           `div`s: sirve de guía al colocar y no añade un solo nodo al árbol. */}
       <div
+        className={completo ? 'min-h-0 flex-1 overflow-auto rounded-[14px] [touch-action:pan-x_pan-y]' : ''}
+        onTouchEnd={() => {
+          pellizco.current = null
+        }}
+        onTouchMove={(e) => {
+          if (!completo || e.touches.length !== 2 || pellizco.current === null) return
+          const inicio = pellizco.current
+          setZoom(acotar((inicio.zoom * distancia(e.touches)) / Math.max(1, inicio.distancia)))
+        }}
+        onTouchStart={(e) => {
+          if (completo && e.touches.length === 2) pellizco.current = { distancia: distancia(e.touches), zoom }
+        }}
+      >
+      <div
         ref={plano}
         aria-label="Plano del salón"
+        style={completo ? { width: `${zoom * 100}%`, height: `calc((100dvh - 120px) * ${zoom})` } : undefined}
         className="plano-del-salon relative h-[760px] w-full overflow-hidden rounded-[14px] border border-line-panel bg-[repeating-linear-gradient(0deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),repeating-linear-gradient(90deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),linear-gradient(160deg,var(--color-plan-from),var(--color-plan-to))]"
       >
         {zones.map((zone) => {
@@ -538,6 +590,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
           )
         })}
       </div>
+      </div>
 
       {salida === null ? null : (
         <div
@@ -578,7 +631,7 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
                   setSalida(null)
                   router.push(destino)
                 }}
-                className="rounded-pill border border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
+                className="rounded-pill border border-line px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute"
               >
                 Descartar y salir
               </button>

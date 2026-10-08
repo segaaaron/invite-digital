@@ -203,7 +203,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
       <SettingsSection description="Nombre, lema y la lista de la tarjeta de precios, en cada idioma." title="Textos de la web">
         {/* Abierto tras un error: un campo con fallo no puede quedar escondido. */}
         <details className="group rounded-[14px] border border-line-panel bg-bg-top/40" open={enviado !== undefined}>
-          <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-[13px] text-ink">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 py-3 text-[13px] text-ink">
             <span>
               {plan.es?.tagline ? <>«{plan.es.tagline}» · </> : null}
               <span className="text-ink-mute">{plan.es?.features.length ?? 0} funciones en la tarjeta</span>

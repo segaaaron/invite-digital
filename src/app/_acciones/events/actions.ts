@@ -22,6 +22,8 @@ import type { EventErrorKind } from '@/modules/events/domain/errors'
 import { campo } from '@/shared/forms/campo'
 import { isAdmin, puedeCrearEventos } from '@/modules/identity'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { esquemaDeTextos } from '@/modules/asistente/domain/herramientas'
+import { bloquesDeTextos, coloresDesconocidos } from './textos-del-asistente'
 
 export type EventActionState = { status: 'idle' | 'error' | 'success'; message: EventErrorKind | '' }
 
@@ -448,6 +450,97 @@ export async function saveContentBlockAction(
   if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: eventSlug, detail: aGuardar.map(([s]) => s).join(', ') })
   revalidatePath(`/panel/eventos/${eventSlug}/configuracion`)
   return { status: 'success' }
+}
+
+/**
+ * **Los textos que propuso Luxury**, tras «Confirmar» en su tarjeta. Mismo permiso, misma validación y
+ * mismo guardado que «Mi invitación» (`saveContentBlockAction`), pero mezclando con lo escrito en el
+ * servidor: solo cambian los campos de la propuesta; fotos, monograma y mapa se quedan.
+ */
+export async function aplicarTextosDelAsistenteAction(input: { eventId: string; eventSlug: string; textos: unknown }): Promise<ContentActionState> {
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'invitacion' })
+
+  const leido = esquemaDeTextos.safeParse(input.textos)
+  if (!leido.success) return { status: 'error', message: 'invalid_payload' }
+  const [desconocido] = coloresDesconocidos(leido.data)
+  if (desconocido !== undefined) return { status: 'error', message: 'valor_invalido', campo: `color «${desconocido}»` }
+  const bloques = Object.entries(bloquesDeTextos(await eventUseCases.contentFor(input.eventId, {}), leido.data)) as Array<[SectionKey, unknown]>
+  for (const [section, valor] of bloques) {
+    const [perdida] = loQueSePerderia(section, valor)
+    if (perdida !== undefined) {
+      return perdida.motivo === 'largo'
+        ? { status: 'error', message: 'texto_largo', campo: perdida.campo, maximo: perdida.maximo }
+        : { status: 'error', message: 'valor_invalido', campo: perdida.campo }
+    }
+  }
+  for (const [section, valor] of bloques) {
+    try {
+      await eventUseCases.saveContentBlock(input.eventId, section, valor)
+    } catch (cause) {
+      registrarFallo('events/actions', 'No se pudo guardar el bloque %s (Luxury) del evento %s:', section, input.eventId, cause)
+      return { status: 'error', message: 'storage_failure' }
+    }
+  }
+  if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: input.eventSlug, detail: bloques.map(([s]) => s).join(', ') })
+  revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
+  return { status: 'success' }
+}
+
+/**
+ * **Luxury pone una foto ya subida** (la que se adjuntó en el chat) en el retrato o en una casilla de la
+ * galería, solo donde el diseño la pinta. La foto tiene que ser de este evento y una imagen; lo demás del
+ * bloque se queda como estaba.
+ */
+export async function ponerFotoDelAsistenteAction(input: {
+  eventId: string
+  eventSlug: string
+  fotoId: string
+  donde: 'retrato' | 'galeria'
+  /** 1, 2…; sin ella, la primera casilla sin foto. */
+  casilla: number | null
+  rotulo: string | null
+}): Promise<{ status: 'success'; donde: string } | { status: 'error'; message: string }> {
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'invitacion' })
+
+  const [evento, medios, actual] = await Promise.all([eventUseCases.getByIdUnscoped(input.eventId), eventUseCases.media.list(input.eventId), eventUseCases.contentFor(input.eventId, {})])
+  if (isErr(evento)) return { status: 'error', message: 'No se pudo leer el evento.' }
+  const foto = medios.find((m) => m.id === input.fotoId)
+  if (foto === undefined || !foto.contentType.startsWith('image/')) return { status: 'error', message: 'Esa foto no está en este evento. Adjúntala otra vez.' }
+  const fotos = themeFor(evento.value.themeKey).pinta.fotos
+
+  let section: SectionKey
+  let valor: unknown
+  let donde: string
+  if (input.donde === 'retrato') {
+    if (fotos.retrato !== true) return { status: 'error', message: `Este diseño no lleva retrato${fotos.casillas > 0 ? `; tiene ${fotos.casillas} fotos en la galería` : ' ni galería'}.` }
+    section = 'hero'
+    valor = { ...(actual.hero ?? {}), portraitImageId: foto.id }
+    donde = 'el retrato'
+  } else {
+    if (fotos.casillas === 0) return { status: 'error', message: `Este diseño no lleva galería${fotos.retrato === true ? '; sí lleva retrato' : ''}.` }
+    const filas = [...(actual.gallery ?? [])].slice(0, fotos.casillas)
+    const libre = filas.findIndex((f) => f.imageId === undefined)
+    const indice = input.casilla === null ? (libre === -1 ? filas.length : libre) : input.casilla - 1
+    if (indice < 0 || indice >= fotos.casillas) return { status: 'error', message: `La galería de este diseño tiene ${fotos.casillas} fotos: elige de la 1 a la ${fotos.casillas}.` }
+    while (filas.length <= indice) filas.push({ label: '' })
+    filas[indice] = { label: input.rotulo ?? filas[indice]!.label, imageId: foto.id }
+    section = 'gallery'
+    valor = filas
+    donde = `la foto ${indice + 1} de la galería`
+  }
+  const [perdida] = loQueSePerderia(section, valor)
+  if (perdida !== undefined) return { status: 'error', message: 'El rótulo es demasiado largo.' }
+  try {
+    await eventUseCases.saveContentBlock(input.eventId, section, valor)
+  } catch (cause) {
+    registrarFallo('events/actions', 'No se pudo poner la foto (Luxury) en el evento %s:', input.eventId, cause)
+    return { status: 'error', message: 'No se pudo guardar. Vuelve a intentarlo.' }
+  }
+  if (isAdmin(actor)) await admin.record(actor, { action: 'evento.invitacion', subject: input.eventSlug, detail: section })
+  revalidatePath(`/panel/eventos/${input.eventSlug}/configuracion`)
+  return { status: 'success', donde }
 }
 
 /**

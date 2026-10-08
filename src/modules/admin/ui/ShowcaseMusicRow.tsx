@@ -136,7 +136,7 @@ export function ShowcaseMusicRow({
 
         {/* La canción, plegada: se toca una vez y ocupaba media tarjeta en cada modelo. */}
         <details className="group rounded-[14px] border border-line-panel bg-bg-top/60" open={alta.status === 'error' || nombreNuevo !== null}>
-          <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-[13px] [&::-webkit-details-marker]:hidden">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-[13px] [&::-webkit-details-marker]:hidden">
             <span className="min-w-0 truncate text-ink">{tieneMusica ? (cancion === null ? 'Canción sin nombre' : [cancion.track, cancion.artist].filter(Boolean).join(' · ')) : 'Sin canción'}</span>
             <span className="shrink-0 text-[12px] text-ink-mute group-open:hidden">{tieneMusica ? 'Cambiar' : 'Subir'}</span>
           </summary>

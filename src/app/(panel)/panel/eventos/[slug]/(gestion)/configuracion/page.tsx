@@ -1,9 +1,9 @@
 import { env } from '@/shared/config/env'
 import { notFound } from 'next/navigation'
-import { headers } from 'next/headers'
 import type { ReactNode } from 'react'
-import { classifyDevice } from '@/modules/analytics'
 import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
+import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
+import { EyeIcon } from '@/shared/design/ui/icons'
 import { admin, diseno as encargos, events, guests, orders, plans, rsvp } from '@/app/composition/container'
 import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
 import { ResumenDelEvento } from '@/modules/admin/ui/ResumenDelEvento'
@@ -65,12 +65,15 @@ export default async function ConfiguracionPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ vista?: string }>
+  searchParams: Promise<{ vista?: string; ver?: string }>
 }) {
   const actor = await requireSession()
   const { slug } = await params
   // El admin escribe la invitación del cliente en `?vista=invitacion`: el editor solo, sin la ficha.
   const escribiendo = (await searchParams).vista === 'invitacion'
+  // **En el celular y la tableta, «Editar | Ver cómo queda»** (7 de octubre): el teléfono de la vista previa no
+  // cabe al lado del editor por debajo de 1280 px. En la URL, como todo el estado del panel: guardar remonta.
+  const viendo = (await searchParams).ver === '1'
 
   /**
    * `'cliente'` fijo, **nunca `sectionForRole(actor.role)`**.
@@ -182,16 +185,12 @@ export default async function ConfiguracionPage({
     const todos = await admin.events()
     const fila = isErr(todos) ? undefined : todos.value.find((e) => e.id === event.value.id)
     const hoy = fechaEnBolivia(new Date())
-    // En el celular, las secciones largas de la ficha se pliegan: era una página de 5.700 px.
-    const celular = classifyDevice((await headers()).get('user-agent') ?? '') === 'mobile'
-    const seccion = (titulo: string, contenido: ReactNode) =>
-      celular ? (
-        <PlegableEnMovil celular titulo={titulo}>
-          <div className="px-2 pb-1">{contenido}</div>
-        </PlegableEnMovil>
-      ) : (
+    // En el celular y la tableta en vertical, las secciones largas de la ficha se pliegan: era una página de 5.700 px.
+    const seccion = (titulo: string, contenido: ReactNode) => (
+      <PlegableEnMovil titulo={titulo}>
         <PanelCard title={titulo}>{contenido}</PanelCard>
-      )
+      </PlegableEnMovil>
+    )
     const secciones = [
       { id: 'diseno', titulo: 'Diseño por encargo' },
       { id: 'invitacion', titulo: 'Invitación' },
@@ -203,7 +202,10 @@ export default async function ConfiguracionPage({
     ]
     return (
       <>
-        <PanelHeader kicker="Evento" title={event.value.title} />
+        {/* En el celular el nombre ya va en la cabecera de la carcasa, con volver. */}
+        <div className="max-[859px]:hidden">
+          <PanelHeader kicker="Evento" title={event.value.title} />
+        </div>
         <ResumenDelEvento
           anfitriones={hostsDelEvento}
           confirmaciones={fila === undefined ? null : { respondidos: fila.respondidos, grupos: fila.grupos }}
@@ -291,13 +293,9 @@ export default async function ConfiguracionPage({
               </section>
             ) : null}
             <section className="scroll-mt-24" id="riesgo">
-              {celular ? (
-                <PlegableEnMovil celular titulo="Zona de riesgo">
-                  <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
-                </PlegableEnMovil>
-              ) : (
+              <PlegableEnMovil titulo="Zona de riesgo">
                 <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
-              )}
+              </PlegableEnMovil>
             </section>
           </div>
         </div>
@@ -308,18 +306,45 @@ export default async function ConfiguracionPage({
   return (
     <>
       <PanelHeader
-        actions={escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Volver a la ficha</PanelButton> : undefined}
+        actions={
+          <>
+            {escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Volver a la ficha</PanelButton> : null}
+            {/* Verla entera, como la abrirá un invitado: el botón principal de la pantalla, no solo el
+                «Pantalla completa» pequeño junto al teléfono, que no se veía (7 de octubre). */}
+            {contenido === null ? null : (
+              <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`} variant="primary">
+                <EyeIcon className="size-4" /> Ver mi invitación
+              </PanelButton>
+            )}
+          </>
+        }
         kicker={escribiendo ? `Invitación de ${event.value.title}` : 'Evento'}
         meta="Completa cada sección y mira cómo queda en la vista previa. Se guarda sección por sección."
         title={escribiendo || !esDelAtelier ? 'Personalizar invitación' : 'Configuración del evento'}
       />
+
+      {contenido === null ? null : (
+        <div className="sticky top-[calc(env(safe-area-inset-top)+64px)] z-20 mb-4 flex justify-center min-[860px]:top-20 min-[1280px]:hidden">
+          <SegmentedTabs
+            current={viendo ? 'ver' : 'editar'}
+            label="Editar o ver la invitación"
+            segments={(() => {
+              const base = `/panel/eventos/${event.value.slug}/configuracion${escribiendo ? '?vista=invitacion' : ''}`
+              return [
+                { key: 'editar', label: 'Editar', href: base },
+                { key: 'ver', label: 'Ver cómo queda', href: `${base}${escribiendo ? '&' : '?'}ver=1` },
+              ]
+            })()}
+          />
+        </div>
+      )}
 
       {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se
           vuelve a pintar al guardar cada bloque. El admin no ve el contenido: su ficha sigue en
           la rejilla de tarjetas de siempre. */}
       <div className={contenido === null ? 'grid items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : 'grid items-start gap-4.5 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]'}>
         {contenido === null ? null : (
-        <div className="flex min-w-0 flex-col gap-4.5">
+        <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1279px]:hidden' : ''}`}>
         {encargo === null || esAdmin ? null : (
           <PanelCard title="Tu invitación, paso a paso">
             <EncargoDelCliente
@@ -338,10 +363,6 @@ export default async function ConfiguracionPage({
           </PanelCard>
         )}
         <PanelCard title={`Tu invitación · ${tema.label}`}>
-          {/* En pantallas donde no cabe el teléfono al lado, se abre aparte. */}
-          <p className="mb-4 min-[1280px]:hidden">
-            <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>Vista previa</PanelButton>
-          </p>
           <ContentBlockForms
             fiesta={fiestaDeCategoria(tema.categorySlug)}
             temaKey={tema.key}
@@ -396,12 +417,12 @@ export default async function ConfiguracionPage({
         )}
 
         {contenido === null ? null : (
-          <aside className="hidden min-[1280px]:sticky min-[1280px]:top-6 min-[1280px]:row-span-6 min-[1280px]:block">
+          <aside className={`min-[1280px]:sticky min-[1280px]:top-6 min-[1280px]:row-span-6 min-[1280px]:block ${viendo ? '' : 'hidden'}`}>
             <InvitacionEnVivo content={contenidoDeLaVistaPrevia ?? {}} estilo={await events.estilo.leer(event.value.id)} event={event.value} />
           </aside>
         )}
 
-        {esDelAtelier && !escribiendo ? (
+        {esDelAtelier && !escribiendo && !viendo ? (
           <PanelCard title="Detalles del evento">
             <div className="flex flex-col gap-6">
               <EventForm diseno={diseno} event={event.value} />
@@ -412,7 +433,7 @@ export default async function ConfiguracionPage({
 
         {/* Lo demás en una columna propia: en la rejilla, la tarjeta de al lado de «Detalles»
             —que es muy alta por el selector de diseños— se estiraba en blanco hasta su altura. */}
-        <div className="flex min-w-0 flex-col gap-4.5">
+        <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1279px]:hidden' : ''}`}>
         {puedeGestionarPersonal && !escribiendo ? (
           <PanelCard title="Acceso del cliente">
             <div className="flex flex-col gap-5">

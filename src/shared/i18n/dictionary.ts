@@ -231,6 +231,7 @@ export interface PlanComparisonDictionary {
     mesaQr: string
     album: string
     detalles: string
+    luxury: string
     enLinea: string
   }
   modelo: { ninguno: string; antes_de_repartir: string; siempre: string }

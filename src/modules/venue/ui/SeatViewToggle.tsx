@@ -12,7 +12,7 @@ export function SeatViewToggle({ base, current }: { base: string; current: 'mapa
   const chip = (clave: 'mapa' | 'tarjetas', texto: string) => (
     <Link
       aria-current={current === clave ? 'page' : undefined}
-      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors ${
+      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center ${
         current === clave ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
       }`}
       href={clave === 'mapa' ? base : `${base}?vista=tarjetas`}

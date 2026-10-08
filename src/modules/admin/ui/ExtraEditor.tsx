@@ -41,7 +41,7 @@ export function ExtraEditor({ extra, vendidos }: { extra: ExtraEditable; vendido
         <label className="sr-only" htmlFor={`${id}-n`}>
           Nombre
         </label>
-        <input className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-[19px] leading-tight text-ink outline-none hover:border-line-panel-strong focus:border-ink" defaultValue={e?.name ?? extra.name} id={`${id}-n`} maxLength={80} name="name" required />
+        <input className="w-full min-w-0 border-b border-transparent bg-transparent font-display text-[19px] leading-tight text-ink outline-none hover:border-line-panel-strong focus:border-ink max-[859px]:min-h-11" defaultValue={e?.name ?? extra.name} id={`${id}-n`} maxLength={80} name="name" required />
         <span className="text-[12px] text-ink-mute">{NOMBRE_DE_EFECTO[extra.effect as keyof typeof NOMBRE_DE_EFECTO] ?? extra.effect}</span>
       </div>
 

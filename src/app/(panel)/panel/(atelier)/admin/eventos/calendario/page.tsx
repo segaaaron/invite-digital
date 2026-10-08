@@ -197,7 +197,7 @@ export default async function CalendarioPage({ searchParams }: { searchParams: P
 function Pastilla({ entrada: e }: { entrada: Entrada }) {
   return (
     <Link
-      className={`flex items-center gap-1.5 truncate rounded-full px-2 py-1 text-[11.5px] transition-colors ${
+      className={`flex items-center gap-1.5 truncate rounded-full px-2 py-1 text-[11.5px] transition-colors max-[859px]:min-h-11 max-[859px]:px-3 max-[859px]:text-[13px] ${
         e.tentativa ? 'border border-dashed border-ink-mute/60 text-ink-soft hover:border-ink' : 'bg-white text-ink shadow-card ring-1 ring-line-panel hover:ring-ink/40'
       }`}
       href={e.href}

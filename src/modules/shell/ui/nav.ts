@@ -173,10 +173,11 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       {
         label: 'Mi evento',
         items: [
-          // Lo primero que se hace: escribir la invitación. Su pantalla lleva la vista previa en
-          // vivo y la pantalla completa; la estadística de quién la abre vive en el Resumen. Eran
-          // tres entradas sueltas —Personalizar, Vista previa, Estadísticas— (28 de septiembre).
+          // Lo primero que se hace: escribir la invitación, y justo debajo verla entera como la verá un
+          // invitado. La vista previa salió de la barra el 28 de septiembre (quedaba solo «Pantalla completa»
+          // junto al editor) y volvió el 7 de octubre: no se encontraba (pedido del usuario).
           { href: en('/configuracion'), label: 'Mi invitación', icon: 'editar' },
+          { href: en('/vista-previa'), label: 'Ver mi invitación', icon: 'vistaPrevia' },
           { href: base, label: 'Resumen', icon: 'resumen' },
           { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
           // Quién llegó y quién falta, en vivo; y desde ahí, el modo puerta para escanear.
@@ -236,8 +237,8 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
     {
       label: 'Invitación',
       items: [
-        // La vista previa en vivo y su pantalla completa están dentro: no hace falta otra entrada.
         { href: en('/configuracion'), label: 'Editar invitación', icon: 'editar' },
+        { href: en('/vista-previa'), label: 'Ver invitación', icon: 'vistaPrevia' },
         { href: en('/qr'), label: 'Códigos QR', icon: 'qr' },
       ],
     },

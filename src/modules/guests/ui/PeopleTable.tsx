@@ -186,11 +186,12 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                   {/* Una familia se presenta como su invitación: nombre, cuántos son, si se envió y su pase. */}
                   {familia ? (
                     <tr className="max-[859px]:block">
-                      <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3 max-[859px]:block max-[859px]:rounded-xl max-[859px]:py-3" colSpan={6}>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                      <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3 max-[859px]:block max-[859px]:bg-transparent max-[859px]:px-1 max-[859px]:py-3" colSpan={6}>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 max-[859px]:flex-nowrap">
+                          {/* En el celular, como la maqueta: avatares · nombre y «4 personas · Mesa 2» · su estado. */}
                           <button
                             aria-expanded={abierta}
-                            className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 text-left"
+                            className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 text-left max-[859px]:grid max-[859px]:min-h-12 max-[859px]:grid-cols-[auto_minmax(0,1fr)] max-[859px]:gap-y-0.5"
                             onClick={() =>
                               setAbiertas((previo) => {
                                 const siguiente = new Set(previo)
@@ -201,22 +202,29 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                             }
                             type="button"
                           >
-                            <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? '' : '-rotate-90'}`} />
-                            <span aria-hidden className="flex -space-x-2">
+                            <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform max-[859px]:hidden ${abierta ? '' : '-rotate-90'}`} />
+                            <span aria-hidden className="flex -space-x-2 max-[859px]:row-span-2 max-[859px]:w-[76px]">
                               {rows
                                 .filter((r) => r.groupId === primera.groupId)
                                 .slice(0, 3)
                                 .map((r) => (
-                                  <span className={`grid size-7 place-items-center rounded-full bg-linear-to-br text-[11px] text-white ring-2 ring-white ${avatarColor(r.fullName)}`} key={r.id}>
+                                  <span className={`grid size-7 place-items-center rounded-full bg-linear-to-br text-[11px] text-white ring-2 ring-white max-[859px]:size-8 max-[859px]:text-[12px] ${avatarColor(r.fullName)}`} key={r.id}>
                                     {(r.fullName.trim()[0] ?? '·').toUpperCase()}
                                   </span>
                                 ))}
                             </span>
-                            <span className="text-[13.5px] text-ink">{primera.groupLabel}</span>
-                            <span className="text-[12px] text-ink-mute">{`${personasDe(primera.groupId)} personas`}</span>
-                            <Pill tone={primera.sentAt ? 'ok' : 'pending'}>{primera.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
+                            <span className="text-[13.5px] text-ink max-[859px]:col-start-2 max-[859px]:text-[15px] max-[859px]:leading-snug max-[859px]:font-medium max-[859px]:[overflow-wrap:anywhere]">{primera.groupLabel}</span>
+                            <span className="text-[12px] text-ink-mute max-[859px]:col-start-2 max-[859px]:text-[12.5px]">
+                              {`${personasDe(primera.groupId)} personas`}
+                              <span className="min-[860px]:hidden">{` · ${primera.tableLabel ?? 'sin mesa'} · `}</span>
+                              <span className={`min-[860px]:hidden ${primera.sentAt ? '' : 'font-medium text-gold-deep'}`}>{primera.sentAt ? 'enviada' : 'sin enviar'}</span>
+                            </span>
+                            {/* En el celular el envío va en la línea de abajo: la píldora le quitaba el ancho al nombre. */}
+                            <span className="max-[859px]:hidden">
+                              <Pill tone={primera.sentAt ? 'ok' : 'pending'}>{primera.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
+                            </span>
                             {primera.respondedAt === null || primera.respondedAt === undefined ? null : (
-                              <span className="font-mono text-[10.5px] text-ink-mute">{`respondió ${fechaCorta(primera.respondedAt)}`}</span>
+                              <span className="font-mono text-[10.5px] text-ink-mute max-[859px]:hidden">{`respondió ${fechaCorta(primera.respondedAt)}`}</span>
                             )}
                           </button>
                           <span className="ml-auto">
@@ -264,8 +272,12 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                         <span className="min-[860px]:hidden">Restricción: </span>
                         {fila.dietaryNote ?? '—'}
                       </td>
-                      <td className={`${CELDA} text-[13px] text-ink-soft ${M_DEBAJO} max-[859px]:row-start-2`}>{fila.tableLabel ?? 'Sin mesa'}</td>
-                      <td className={`${CELDA} text-[13px] ${M_DEBAJO} ${i === 0 && !familia ? '' : 'max-[859px]:hidden'}`}>
+                      <td className={`${CELDA} text-[13px] text-ink-soft ${M_DEBAJO} max-[859px]:row-start-2`}>
+                        {fila.tableLabel ?? 'Sin mesa'}
+                        {/* En el celular la columna «Invitación» no se pinta: de una invitación suelta, si salió. */}
+                        {i === 0 && !familia ? <span className="min-[860px]:hidden">{fila.sentAt ? ' · enviada' : ' · sin enviar'}</span> : null}
+                      </td>
+                      <td className={`${CELDA} text-[13px] ${M_DEBAJO} max-[859px]:hidden`}>
                         {i === 0 && !familia ? (
                           <span className="flex flex-col gap-1">
                             <span className="text-ink-soft">

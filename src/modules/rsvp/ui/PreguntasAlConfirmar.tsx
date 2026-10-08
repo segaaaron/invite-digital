@@ -18,8 +18,8 @@ export function PreguntasAlConfirmar({ eventId, eventSlug, preguntas }: { eventI
     <form action={accion} className="flex flex-col gap-4">
       <input name="eventId" type="hidden" value={eventId} />
       <input name="eventSlug" type="hidden" value={eventSlug} />
-      <label className="flex items-center gap-2.5 text-[13.5px] text-ink">
-        <input className="accent-ink" defaultChecked={preguntas.cancion} name="cancion" type="checkbox" />
+      <label className="flex items-center gap-2.5 text-[13.5px] text-ink max-[859px]:min-h-11">
+        <input className="accent-ink max-[859px]:size-5" defaultChecked={preguntas.cancion} name="cancion" type="checkbox" />
         Pedir una canción que no puede faltar
       </label>
       <div className="grid gap-4 min-[700px]:grid-cols-2">

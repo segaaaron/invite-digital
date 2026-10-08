@@ -32,7 +32,7 @@ export function SegmentedTabs({ label, current, segments }: { label: string; cur
           <Link
             key={segment.key}
             aria-current={activo ? 'page' : undefined}
-            className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:inline-flex max-[859px]:min-h-10 max-[859px]:items-center ${
+            className={`rounded-[var(--radius-pill)] px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center ${
               activo ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'
             }`}
             href={segment.href}

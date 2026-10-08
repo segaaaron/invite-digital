@@ -94,8 +94,14 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
   if (oculto) return null
 
   // Una píldora pequeña a la derecha, no una fila entera: estaba en cada pantalla y empujaba el contenido.
+  // **En el celular solo aparece cuando hay algo que decir** (novedades o sin conexión) y flota sobre la
+  // barra de abajo: en reposo era una fila entera entre la cabecera y lo que se vino a ver (7 de octubre).
+  const enReposo = novedades === 0 && estado !== 'sin-conexion'
   return (
-    <div aria-live="polite" className="-mt-2 mb-3 flex justify-end">
+    <div
+      aria-live="polite"
+      className={`-mt-2 mb-3 flex justify-end ${enReposo ? 'max-[859px]:hidden' : 'max-[859px]:fixed max-[859px]:inset-x-0 max-[767px]:bottom-[calc(96px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:bottom-6 min-[768px]:max-[859px]:left-[76px] max-[859px]:z-30 max-[859px]:m-0 max-[859px]:justify-center'}`}
+    >
       <div className="inline-flex items-center gap-1 rounded-full border border-line-panel bg-white/70 py-0.5 pr-0.5 pl-3 text-[12px] text-ink-mute shadow-card backdrop-blur-sm">
         <span className="flex items-center gap-1.5 pr-1.5">
           <span

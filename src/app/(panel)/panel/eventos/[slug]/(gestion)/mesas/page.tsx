@@ -7,6 +7,7 @@ import { dietaryReport } from '@/modules/guests'
 import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { BarRow, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan } from '@/modules/venue/ui/FloorPlan'
@@ -112,6 +113,7 @@ export default async function MesasPage({
           <UnseatedStrip groups={unseated} />
         </PanelCard>
 
+        <PlegableEnMovil resumen={menus.length === 0 ? 'Sin restricciones cargadas' : `${menus.length} ${menus.length === 1 ? 'menú especial' : 'menús especiales'}`} titulo="Menús para el catering">
         <PanelCard title="Reporte de menús para el catering">
           {menus.length === 0 ? (
             <p className="text-[13px] text-ink-mute">
@@ -136,6 +138,7 @@ export default async function MesasPage({
             </>
           )}
         </PanelCard>
+        </PlegableEnMovil>
 
         {/* Las tarjetas van sueltas sobre el marfil, como en la maqueta, y se ven **a la
             vez** que el plano: en el diseño el `hidden` de la rejilla lo anula su propio
@@ -167,7 +170,8 @@ export default async function MesasPage({
             />
           </PanelCard>
         ) : (
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4">
+          // En el celular, el mapa o las tarjetas, no los dos uno encima del otro (eran 7.500 px).
+          <div className={`grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-4 ${enTarjetas || zones.length + tables.length === 0 ? '' : 'max-[859px]:hidden'}`}>
             {tables.map((table) => (
               <TableCard
                 key={table.id}

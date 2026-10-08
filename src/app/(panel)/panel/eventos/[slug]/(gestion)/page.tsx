@@ -1,6 +1,4 @@
 import { EmptyState } from '@/shared/design/ui/panel/estados'
-import { headers } from 'next/headers'
-import { classifyDevice } from '@/modules/analytics'
 import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
 import { hayPreguntas } from '@/modules/rsvp/domain/preguntas'
 import { LoQueContestaron } from '@/modules/rsvp/ui/LoQueContestaron'
@@ -29,6 +27,7 @@ import { BarRow, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { CheckIcon, ClockIcon, EyeIcon, UsersIcon, TableIcon } from '@/shared/design/ui/icons'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
+import { AroDeRespuestas, CifrasEnFila, LoProximo } from '@/shared/design/ui/panel/movil'
 
 /** Las dos semanas del gráfico de la maqueta. */
 const DIAS_DEL_GRAFICO = 14
@@ -193,11 +192,54 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const cuentaAtras =
     diasQueFaltan > 1 ? `faltan ${diasQueFaltan} días` : diasQueFaltan === 1 ? 'falta un día' : diasQueFaltan === 0 ? 'es hoy' : null
 
-  // En el celular, las estadísticas van plegadas (ver `PlegableEnMovil`).
-  const celular = classifyDevice((await headers()).get('user-agent') ?? '') === 'mobile'
+
+  // **Lo próximo** (celular): lo único que toca hacer hoy, con su botón. Sustituye a «Primeros pasos» y a
+  // las cuatro tarjetas grandes, que en el teléfono empujaban todo lo demás (maqueta 1 del panel móvil).
+  const base = `/panel/eventos/${event.value.slug}`
+  const porEnviar = filas.filter((f) => f.revokedAt === null && (f.invitationSentAt === null || f.invitationSentAt === undefined)).length
+  const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
+  const algunaEnviada = filas.some((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined)
+  const escribir = { titulo: 'Escribe tu invitación', detalle: 'Los nombres, la fecha y el lugar. Lo que no escribas sale como el ejemplo del diseño.', accion: 'Escribirla', href: `${base}/configuracion` }
+  const proximo =
+    !invitacionLista && !algunaEnviada
+      ? escribir
+      : filas.length === 0
+        ? { titulo: 'Carga a tus invitados', detalle: 'Cada uno recibe su enlace; sus acompañantes entran con el mismo.', accion: 'Añadir invitados', href: `${base}/invitados?panel=alta` }
+        : porEnviar > 0
+          ? { titulo: porEnviar === 1 ? 'Falta 1 invitación por enviar' : `Faltan ${porEnviar} invitaciones por enviar`, accion: 'Enviar ahora', href: `${base}/invitados?panel=envio` }
+          : !invitacionLista
+            ? escribir
+            : pendientes > 0
+              ? { titulo: `${plural(pendientes, 'invitación', 'invitaciones')} sin responder`, detalle: 'Recuérdales por WhatsApp desde Invitados.', accion: 'Ver quién falta', href: `${base}/invitados` }
+              : { titulo: 'Todos respondieron', detalle: `${t ? t.seatsConfirmed : 0} lugares confirmados.`, accion: 'Ver invitados', href: `${base}/invitados` }
+  const gente = isErr(personasResumen) ? [] : personasResumen.value
+  const vienen = gente.filter((p) => p.attending === 'yes').length
+  const noVienen = gente.filter((p) => p.attending === 'no').length
+  const sinResponder = gente.length - vienen - noVienen
+  const mesasOcupadas = mesas === null ? 0 : mesas.tables.filter((m) => m.taken > 0).length
 
   return (
     <>
+      <LoProximo {...proximo} />
+      <AroDeRespuestas
+        detalle={`${vienen} ${vienen === 1 ? 'viene' : 'vienen'} · ${noVienen} no · ${sinResponder} por responder`}
+        href={`${base}/invitados`}
+        porcentaje={gente.length === 0 ? null : Math.round(((vienen + noVienen) / gente.length) * 100)}
+      />
+      <div className="mb-4.5 min-[860px]:hidden">
+        <CifrasEnFila
+          cifras={[
+            { valor: gente.length, rotulo: 'Invitados', href: `${base}/invitados` },
+            { valor: vienen, rotulo: 'Vienen', href: `${base}/invitados` },
+            mesas === null
+              ? { valor: vistas ? vistas.total : '—', rotulo: 'Visitas' }
+              : { valor: `${mesasOcupadas}/${mesas.tables.length}`, rotulo: 'Mesas', href: `${base}/mesas` },
+            { valor: isErr(libroResumen) ? '—' : libroResumen.value.length, rotulo: 'Mensajes', href: `${base}/mensajes` },
+          ]}
+        />
+      </div>
+      {/* En el celular el nombre y la cuenta atrás ya van en la cabecera de arriba. */}
+      <div className="max-[859px]:hidden">
       <PanelHeader
         actions={
           <>
@@ -219,6 +261,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         // El nombre del evento, sin saludo: «Bienvenida, Cumpleaños Miguel» saludaba en femenino a todos.
         title={event.value.title}
       />
+      </div>
       <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       {(() => {
@@ -249,7 +292,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         const siguiente = pasos.find((paso) => !paso.hecho)
         if (siguiente === undefined) return null
         return (
-          <PanelCard className="mb-5.5" title="Primeros pasos">
+          <PanelCard className="mb-5.5 max-[859px]:hidden" title="Primeros pasos">
             <ol className="flex flex-col">
               {pasos.map((paso, i) => (
                 <li className="flex flex-wrap items-center gap-3 border-b border-line-panel py-3 last:border-none" key={paso.titulo}>
@@ -277,7 +320,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         )
       })()}
 
-      <div className="mb-5.5 grid grid-cols-2 gap-3.5 min-[900px]:grid-cols-4">
+      <div className="mb-5.5 grid grid-cols-2 gap-3.5 max-[859px]:hidden min-[900px]:grid-cols-4">
         {/* Las cuatro cifras cuentan lo mismo que la barra: personas. Mezclar invitaciones,
             lugares y personas daba 8 aquí, 27 en la barra y 17 / 30 al lado. */}
         <StatCard
@@ -316,6 +359,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       {/* Lo que contestaron a las preguntas extra (canción, menú, actos), si se hicieron. */}
       {hayPreguntas(preguntas) ? (
+        <PlegableEnMovil titulo="Lo que contestaron">
         <PanelCard
           action={<PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Cambiar preguntas</PanelButton>}
           className="mb-5.5"
@@ -323,15 +367,20 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
         >
           <LoQueContestaron resultados={await rsvp.preguntas.resultados(event.value.id)} />
         </PanelCard>
+        </PlegableEnMovil>
       ) : null}
 
+      <PlegableEnMovil
+        resumen={semana.tareas.length + semana.pagos.length === 0 ? 'Sin vencimientos' : `${plural(semana.tareas.length, 'tarea', 'tareas')} · ${plural(semana.pagos.length, 'pago', 'pagos')}`}
+        titulo="Esta semana"
+      >
       <PanelCard className="mb-5.5" title="Esta semana">
         <ThisWeekCard evento={{ eventId: event.value.id, eventSlug: event.value.slug }} semana={semana} />
       </PanelCard>
+      </PlegableEnMovil>
 
       <PlegableEnMovil
-        celular={celular}
-        resumen={`${filas.length === 0 ? 0 : Math.round((respondieron / filas.length) * 100)} % respondió · ${vistas?.total ?? 0} ${vistas?.total === 1 ? 'visita' : 'visitas'}`}
+        resumen={`${plural(vistas?.total ?? 0, 'visita', 'visitas')} · ${plural(actividad.length, 'novedad', 'novedades')}`}
         titulo="Cómo va tu invitación"
       >
       {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
@@ -405,7 +454,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
 
       </PlegableEnMovil>
 
-      <PlegableEnMovil celular={celular} titulo="Invitados recientes">
+      <PlegableEnMovil titulo="Invitados recientes">
       {/* Los invitados recientes ocupan el ancho entero, como en la maqueta. */}
       <PanelCard
         action={
@@ -490,6 +539,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
       </PlegableEnMovil>
 
       {/* Distribución de mesas y acciones rápidas, otra vez 1.6fr / 1fr. */}
+      <PlegableEnMovil resumen={mesas === null ? undefined : `${plural(mesas.tables.length, 'mesa', 'mesas')} · ${plural(mesas.unseated.length, 'invitación', 'invitaciones')} por sentar`} titulo="Mesas y llegada">
       <div className="grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
         <PanelCard
           action={
@@ -563,6 +613,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </PanelCard>
         </div>
       </div>
+      </PlegableEnMovil>
     </>
   )
 }

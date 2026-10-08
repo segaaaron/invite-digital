@@ -196,7 +196,7 @@ export function MenuDeAcciones({ children, etiqueta = 'Más acciones' }: { child
     <details className="relative">
       <summary
         aria-label={etiqueta}
-        className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full border border-line-panel-strong bg-white text-ink-soft shadow-card transition-colors hover:border-ink hover:text-ink [&::-webkit-details-marker]:hidden"
+        className="flex size-9 cursor-pointer list-none items-center justify-center rounded-full border max-[859px]:size-11 border-line-panel-strong bg-white text-ink-soft shadow-card transition-colors hover:border-ink hover:text-ink [&::-webkit-details-marker]:hidden"
       >
         <DotsIcon className="size-4" />
       </summary>
@@ -209,7 +209,7 @@ export function MenuDeAcciones({ children, etiqueta = 'Más acciones' }: { child
 
 /** Clases de una opción dentro de `MenuDeAcciones`. */
 export const opcionDeMenu = (peligro = false) =>
-  `flex w-full cursor-pointer items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-bg-sunken ${peligro ? 'text-danger-deep' : 'text-ink'}`
+  `flex w-full cursor-pointer items-center gap-2 rounded-[10px] px-3 py-2.5 text-left text-[13px] transition-colors hover:bg-bg-sunken max-[859px]:min-h-11 ${peligro ? 'text-danger-deep' : 'text-ink'}`
 
 export type OpcionDeFiltro = { readonly key: string; readonly label: string; readonly href: string; readonly count?: number }
 
@@ -270,7 +270,7 @@ export function BarraDeFiltros({
           : fiestas.opciones.map((o) => (
               <Link
                 aria-current={o.key === fiestas.actual ? 'true' : undefined}
-                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] transition-colors ${
+                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[12px] transition-colors max-[859px]:min-h-11 max-[859px]:px-3.5 max-[859px]:text-[13px] ${
                   o.key === fiestas.actual ? 'border-ink bg-white text-ink shadow-card' : 'border-line-panel text-ink-soft hover:border-ink/40'
                 }`}
                 href={o.href}
@@ -292,7 +292,7 @@ export function BarraDeFiltros({
                 {busqueda.placeholder}
               </label>
               <input
-                className="w-full min-w-0 rounded-full border border-line-panel-strong bg-white px-4 py-2 text-[13px] text-ink outline-none placeholder:text-ink-mute focus:border-ink"
+                className="w-full min-w-0 rounded-full border border-line-panel-strong bg-white px-4 py-2 text-[13px] text-ink outline-none max-[859px]:min-h-11 max-[859px]:text-[16px] placeholder:text-ink-mute focus:border-ink"
                 defaultValue={busqueda.valor}
                 id="buscar-en-lista"
                 name="q"
@@ -315,7 +315,7 @@ export function ConmutadorDeVista({ opciones, actual }: { opciones: readonly { k
       {opciones.map((o) => (
         <Link
           aria-current={o.key === actual ? 'page' : undefined}
-          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] transition-colors ${o.key === actual ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'}`}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] transition-colors max-[859px]:min-h-11 max-[859px]:px-4 max-[859px]:text-[13px] ${o.key === actual ? 'bg-ink text-white' : 'text-ink-soft hover:text-ink'}`}
           href={o.href}
           key={o.key}
           scroll={false}

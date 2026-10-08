@@ -16,7 +16,7 @@ export function SupportBanner({ clienteEmail }: { clienteEmail: string }) {
         <strong className="font-normal">{clienteEmail}</strong>
         <span className="hidden min-[860px]:inline">. Lo que cambies queda registrado a tu nombre.</span>
       </p>
-      <RegresarComoAdmin etiqueta="Regresar como admin" className={`${botonClases('default')} shrink-0 max-[859px]:min-h-9 max-[859px]:px-3.5 max-[859px]:text-[11px]`}>
+      <RegresarComoAdmin etiqueta="Regresar como admin" className={`${botonClases('default')} shrink-0 max-[859px]:min-h-9 max-[859px]:px-3.5 max-[859px]:text-[12px]`}>
         <span className="min-[860px]:hidden">Salir</span>
         <span className="max-[859px]:hidden">Regresar como admin</span>
       </RegresarComoAdmin>

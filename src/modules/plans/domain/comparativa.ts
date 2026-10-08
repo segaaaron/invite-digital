@@ -42,6 +42,8 @@ type FilasDeComparativa = {
     album: string
     /** Los detalles inspirados en su evento: lo que hacemos en el plan de todo el día. */
     detalles: string
+    /** Luxury, el planner con IA: el plan lo trae según Admin › Asistente (ya resuelto en `asistente`). */
+    luxury: string
     grupos: string
     fotos: string
     fotosInvitados: string
@@ -86,6 +88,7 @@ export function filasComparativas(planes: readonly Allowance[], t: TextosCompara
     mesaQr: (a) => siNo(a.seating && a.checkin),
     album: (a) => siNo(a.guestPhotos),
     detalles: (a) => siNo(hasFeature(a, 'plannerTotal')),
+    luxury: (a) => siNo(a.asistente === true),
     grupos: (a) => tope(a.maxGuestGroups),
     fotos: (a) => tope(a.maxGalleryPhotos),
     fotosInvitados: (a) => siNo(a.guestPhotos),

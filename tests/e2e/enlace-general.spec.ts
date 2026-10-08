@@ -48,7 +48,8 @@ test.describe('el enlace general', () => {
     await invitado.getByLabel('Tu nombre y apellido').fill('Mónica Salvatierra')
     await invitado.getByLabel(/Quiénes van contigo/).fill('Jorge Salvatierra')
     await invitado.getByRole('button', { name: 'Ver mi invitación' }).click()
-    await expect(invitado).toHaveURL(/\/i\/[A-Za-z0-9_-]+$/)
+    // Llega por su enlace, marcado con el canal (`?utm_source=general`, 6 de octubre).
+    await expect(invitado).toHaveURL(/\/i\/[A-Za-z0-9_-]+\?utm_source=general$/)
     await invitado.context().close()
   })
 

@@ -78,6 +78,11 @@ describe('filasComparativas', () => {
     expect(incluido('Mesas')).toBe(true)
   })
 
+  it('Luxury sale incluido solo en el plan que lo trae (ya resuelto con la config del asistente)', () => {
+    const [fila] = filasComparativas([atelier, { ...alta, asistente: true }], { ...TEXTOS, filas: { luxury: 'Luxury' } })
+    expect(fila?.valores.map((v) => v.incluido)).toEqual([false, true])
+  })
+
   it('no se deja ninguna fila de lo que el plan limita', () => {
     expect(filasComparativas([atelier], TEXTOS)).toHaveLength(Object.keys(TEXTOS.filas).length)
   })

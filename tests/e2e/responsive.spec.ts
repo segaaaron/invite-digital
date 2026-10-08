@@ -39,10 +39,12 @@ function cortados(): string[] {
     return false
   }
 
+  // La invitación de muestra (`article`) va dentro de su marco de teléfono, que recorta su propio arte a
+  // propósito: es el diseño que se vende y tiene sus pruebas de fidelidad.
   return [...document.querySelectorAll('main *')]
     .filter((el) => {
       const r = el.getBoundingClientRect()
-      return r.width > 0 && r.right > limite + 1 && !puedeDesplazarse(el)
+      return r.width > 0 && r.right > limite + 1 && !puedeDesplazarse(el) && el.closest('article') === null
     })
     .slice(0, 5)
     .map((el) => `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 50)}`)
@@ -62,9 +64,10 @@ function anchoDocumento(): { ancho: number; ventana: number } {
   return { ancho: document.documentElement.scrollWidth, ventana: document.documentElement.clientWidth }
 }
 /**
- * **El panel en el celular, medido** (6 de octubre): los botones y enlaces del panel se tocan con el dedo
- * (al menos 40 px de alto —Apple pide 44; el resto lo da el hueco entre ellos—) y la letra se lee sin
- * esfuerzo (al menos 11 px). Hubo 270 toques pequeños y 744 textos diminutos en 19 pantallas.
+ * **El panel en el celular y la tableta, medido** (6 de octubre; la meta del roadmap desde el 7): los botones,
+ * enlaces y campos del panel se tocan con el dedo (**44 px** de alto, lo que pide Apple) y la letra se lee
+ * sin esfuerzo (**12 px**). Hubo 270 toques pequeños y 744 textos diminutos en 19 pantallas. Se mide por
+ * debajo de 860 px, donde el panel deja la barra lateral.
  *
  * Fuera de la medida: lo que va dentro de una invitación (`article`, el diseño que se vende), lo oculto,
  * los enlaces dentro de un párrafo y el plano del salón (sus sillas son un dibujo a escala).
@@ -76,13 +79,18 @@ function enElCelular(): { chicos: string[]; letra: string[] } {
     return cs.display !== 'none' && cs.visibility !== 'hidden' && r.width > 1 && r.height > 1
   }
   const fuera = (el: Element) => el.closest('article, [aria-hidden="true"], dialog:not([open]), .plano-del-salon') !== null
-  const chicos = [...document.querySelectorAll('main :is(a[href], button, select, summary, [role="button"], [role="tab"]), nav[aria-label="Navegación principal"] :is(a, button)')]
-    .filter((el) => visible(el) && !fuera(el) && el.closest('p') === null)
-    .filter((el) => el.getBoundingClientRect().height < 40)
+  // Una casilla dentro de su etiqueta se toca por la etiqueta; un nombre cuya tarjeta entera es el enlace
+  // (`after:inset-0`), por la tarjeta; lo plegado en un `<details>` cerrado no se ve.
+  const porSuEtiqueta = (el: Element) => (el as HTMLInputElement).type === 'checkbox' || (el as HTMLInputElement).type === 'radio' ? (el.closest('label')?.getBoundingClientRect().height ?? 0) >= 44 : false
+  const plegado = (el: Element) => { const d = el.closest('details'); return d !== null && !d.open && el.tagName !== 'SUMMARY' }
+  const chicos = [...document.querySelectorAll('main :is(a[href], button, select, summary, input:not([type="hidden"]), textarea, [role="button"], [role="tab"]), nav[aria-label="Navegación principal"] :is(a, button)')]
+    .filter((el) => visible(el) && !fuera(el) && el.closest('p') === null && !porSuEtiqueta(el) && !plegado(el) && !/after:inset-0/.test(String(el.className)))
+    // Medio píxel de tolerancia: a 360 px un botón de 44 px puede medir 43,98 por el redondeo de subpíxel.
+    .filter((el) => el.getBoundingClientRect().height < 43.5)
     .map((el) => `${el.tagName.toLowerCase()} «${(el.textContent ?? el.getAttribute('aria-label') ?? '').trim().slice(0, 30)}» ${Math.round(el.getBoundingClientRect().height)} px`)
   const letra = [...document.querySelectorAll('main *')]
     .filter((el) => visible(el) && !fuera(el) && [...el.childNodes].some((n) => n.nodeType === 3 && (n.textContent ?? '').trim() !== ''))
-    .filter((el) => Number.parseFloat(getComputedStyle(el).fontSize) < 11)
+    .filter((el) => Number.parseFloat(getComputedStyle(el).fontSize) < 12)
     .map((el) => `«${(el.textContent ?? '').trim().slice(0, 30)}» ${getComputedStyle(el).fontSize}`)
   return { chicos: [...new Set(chicos)].slice(0, 8), letra: [...new Set(letra)].slice(0, 8) }
 }
@@ -91,6 +99,7 @@ const VISTAS = [
   ['resumen', ''],
   ['invitados', '/invitados'],
   ['invitados · importar', '/invitados?panel=importar'],
+  ['invitados · enviar', '/invitados?panel=envio'],
   ['mesas', '/mesas'],
   ['mesas · tarjetas', '/mesas?vista=tarjetas'],
   ['regalos', '/regalos'],
@@ -99,6 +108,7 @@ const VISTAS = [
   ['check-in', '/checkin'],
   ['códigos qr', '/qr'],
   ['configuración', '/configuracion'],
+  ['configuración · ver cómo queda', '/configuracion?ver=1'],
   ['plan', '/plan'],
 ] as const
 
@@ -109,15 +119,23 @@ const VISTAS = [
  * ya en columna y la rejilla todavía en una sola.
  */
 const ANCHOS = [
+  { nombre: 'teléfono chico', width: 360, height: 780 },
   { nombre: 'teléfono', width: 390, height: 844 },
   { nombre: 'teléfono ancho', width: 559, height: 900 },
+  { nombre: 'tableta vertical', width: 768, height: 1024 },
   { nombre: 'tableta', width: 820, height: 1180 },
   { nombre: 'tableta ancha', width: 899, height: 1180 },
   { nombre: 'portátil', width: 1024, height: 800 },
 ] as const
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser }) => {
   await borrarEvento(SLUG)
+  // Con datos dentro: una tabla vacía cabe en cualquier pantalla y no probaría nada.
+  const contexto = await browser.newContext({ storageState: AUTH_STATE })
+  const page = await contexto.newPage()
+  await createEvent(page, { slug: SLUG, title: 'Boda responsive e2e' })
+  await createGuestGroup(page, SLUG, 'Familia Rojas Peña', 4)
+  await contexto.close()
 })
 
 test.afterAll(async () => {
@@ -125,21 +143,16 @@ test.afterAll(async () => {
   await sql.end({ timeout: 5 })
 })
 
-test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', async ({ page }) => {
-  // Trece vistas por cinco anchos son sesenta y cinco navegaciones: no caben en el
-  // límite de treinta segundos, y agotarlo se lee como un desborde que no existe.
-  // Con la medida del teléfono (toques y letra) son más pasos por vista: hasta seis minutos.
-  test.setTimeout(360_000)
-  await createEvent(page, { slug: SLUG, title: 'Boda responsive e2e' })
-  // Con datos dentro: una tabla vacía cabe en cualquier pantalla y no probaría nada.
-  await createGuestGroup(page, SLUG, 'Familia Rojas Peña', 4)
-
-  for (const tamano of ANCHOS) {
+// Una prueba por ancho: quince vistas por siete anchos, con la medida de toques y letra, no cabían en una.
+for (const tamano of ANCHOS) {
+  test(`ninguna vista del panel desborda en ${tamano.nombre} (${tamano.width} px)`, async ({ page }) => {
+    test.setTimeout(240_000)
     await page.setViewportSize({ width: tamano.width, height: tamano.height })
 
     for (const [nombre, ruta] of VISTAS) {
+      // `load`, no `networkidle`: la campana y las novedades en vivo dejan su conexión abierta (ver abajo).
       await page.goto(`/panel/eventos/${SLUG}${ruta}`)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('load')
 
       const fuera = await page.evaluate(cortados)
       expect(fuera, `${nombre} deja contenido fuera de la pantalla en ${tamano.nombre}`).toEqual([])
@@ -147,14 +160,14 @@ test('ninguna vista del panel desborda a lo ancho en teléfono ni en tableta', a
       const doc = await page.evaluate(anchoDocumento)
       expect(doc.ancho, `${nombre} estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
 
-      if (tamano.width === 390) {
+      if (tamano.width < 860) {
         const medida = await page.evaluate(enElCelular)
-        expect(medida.chicos, `${nombre}: toques de menos de 40 px en el teléfono`).toEqual([])
-        expect(medida.letra, `${nombre}: letra de menos de 11 px en el teléfono`).toEqual([])
+        expect(medida.chicos, `${nombre}: toques de menos de 44 px en ${tamano.nombre}`).toEqual([])
+        expect(medida.letra, `${nombre}: letra de menos de 12 px en ${tamano.nombre}`).toEqual([])
       }
     }
-  }
-})
+  })
+}
 
 /**
  * Las vistas del atelier que no cuelgan de un evento. Van aparte porque no llevan `slug`
@@ -241,31 +254,36 @@ test('las vistas del atelier tampoco desbordan', async ({ page }) => {
   }
 })
 
-test('las vistas del administrador tampoco desbordan', async ({ browser }) => {
-  // Trece pantallas por cinco anchos son sesenta y cinco cargas con `networkidle`: no caben
-  // en los 30 s por defecto desde que el admin tiene Hoy, Consultas, Ingresos, Planes y
-  // Modelos. Partirla en una prueba por pantalla repetiría el contexto de sesión trece veces.
-  test.setTimeout(150_000)
-  const sesion = await browser.newContext({ storageState: ADMIN_AUTH_STATE })
-  const page = await sesion.newPage()
-
-  for (const tamano of ANCHOS) {
+for (const tamano of ANCHOS) {
+  test(`las vistas del administrador tampoco desbordan en ${tamano.nombre} (${tamano.width} px)`, async ({ browser }) => {
+    // Veintitrés pantallas y, por debajo de 860 px, la medida de toques y letra.
+    test.setTimeout(240_000)
+    const sesion = await browser.newContext({ storageState: ADMIN_AUTH_STATE })
+    const page = await sesion.newPage()
     await page.setViewportSize({ width: tamano.width, height: tamano.height })
 
     for (const [nombre, ruta] of VISTAS_ADMIN) {
+      // `load`, no `networkidle`: la campana del admin deja abierta su conexión en vivo y, según cuándo
+      // conecte, la red no queda quieta nunca (se colgaba en una pantalla distinta cada vez).
       await page.goto(ruta)
-      await page.waitForLoadState('networkidle')
+      await page.waitForLoadState('load')
 
       const fuera = await page.evaluate(cortados)
       expect(fuera, `${nombre} deja contenido fuera de la pantalla en ${tamano.nombre}`).toEqual([])
 
       const doc = await page.evaluate(anchoDocumento)
       expect(doc.ancho, `${nombre} estira el documento en ${tamano.nombre}`).toBeLessThanOrEqual(doc.ventana)
-    }
-  }
 
-  await sesion.close()
-})
+      if (tamano.width < 860) {
+        const medida = await page.evaluate(enElCelular)
+        expect(medida.chicos, `${nombre}: toques de menos de 44 px en ${tamano.nombre}`).toEqual([])
+        expect(medida.letra, `${nombre}: letra de menos de 12 px en ${tamano.nombre}`).toEqual([])
+      }
+    }
+
+    await sesion.close()
+  })
+}
 
 test('las páginas públicas del pedido tampoco desbordan', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })

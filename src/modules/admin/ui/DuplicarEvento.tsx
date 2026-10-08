@@ -10,7 +10,7 @@ export function DuplicarEvento({ eventId }: { eventId: string }) {
   return (
     <form action={duplicar} className="ml-auto flex flex-col items-end">
       <input name="eventId" type="hidden" value={eventId} />
-      <button aria-busy={pendiente} className="h-full px-2 text-[12.5px] text-ink-soft underline underline-offset-4 hover:text-ink disabled:opacity-60" disabled={pendiente} type="submit">
+      <button aria-busy={pendiente} className="h-full px-2 text-[12.5px] max-[859px]:min-h-11 text-ink-soft underline underline-offset-4 hover:text-ink disabled:opacity-60" disabled={pendiente} type="submit">
         {pendiente ? 'Duplicando…' : 'Duplicar el evento'}
       </button>
       {estado.status === 'error' ? (

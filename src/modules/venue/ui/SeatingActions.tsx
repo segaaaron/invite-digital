@@ -50,7 +50,8 @@ export function SeatingActions({
           </PanelButton>
         )}
         <PanelButton href={`/panel/eventos/${eventSlug}/mesas/imprimir`}>Imprimir plan ↓</PanelButton>
-        <PanelButton href={addHref} variant="primary">
+        {/* La principal, primera en el celular: al final de la fila deslizable quedaba cortada. */}
+        <PanelButton className="max-[859px]:order-first" href={addHref} variant="primary">
           + Añadir mesa
         </PanelButton>
       </div>

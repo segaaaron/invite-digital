@@ -49,7 +49,7 @@ export function BarraInferior({ sections, user, config = {} }: { sections: reado
     <>
       <nav
         aria-label="Navegación principal"
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-shell-deep/95 px-2 pt-1.5 pb-[max(env(safe-area-inset-bottom),8px)] text-shell-ink shadow-[0_-12px_32px_rgb(0_0_0/0.22)] backdrop-blur-md min-[860px]:hidden print:hidden"
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/8 bg-shell-deep/95 px-2 pt-1.5 pb-[max(env(safe-area-inset-bottom),8px)] text-shell-ink shadow-[0_-12px_32px_rgb(0_0_0/0.22)] backdrop-blur-md min-[768px]:hidden print:hidden"
       >
         <ul className="grid items-end" style={{ gridTemplateColumns: `repeat(${columnas}, minmax(0, 1fr))` }}>
           {izquierda.map((item) => (
@@ -70,7 +70,37 @@ export function BarraInferior({ sections, user, config = {} }: { sections: reado
           <li>
             <button
               aria-haspopup="dialog"
-              className={`relative flex min-h-12 w-full flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[11px] transition-colors ${enResto ? 'text-gold-light' : 'opacity-75'}`}
+              className={`relative flex min-h-12 w-full flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[12px] transition-colors ${enResto ? 'text-gold-light' : 'opacity-75'}`}
+              onClick={() => hoja.current?.showModal()}
+              type="button"
+            >
+              <svg aria-hidden className="size-5" fill="currentColor" viewBox="0 0 24 24">
+                <circle cx="5" cy="12" r="1.7" />
+                <circle cx="12" cy="12" r="1.7" />
+                <circle cx="19" cy="12" r="1.7" />
+              </svg>
+              Más
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      {/* **En tableta (768–859 px), riel lateral** con los mismos destinos (maqueta 7 del panel móvil): la
+          barra de abajo estirada a 820 px dejaba cinco iconos perdidos en el ancho. Desde 860, la barra lateral. */}
+      <nav
+        aria-label="Navegación principal"
+        className="fixed inset-y-0 left-0 z-40 hidden w-[76px] flex-col items-center gap-1 bg-shell-deep pt-[max(env(safe-area-inset-top),16px)] pb-4 text-shell-ink min-[768px]:max-[859px]:flex print:hidden"
+      >
+        <ul className="flex w-full flex-col items-stretch gap-1 px-1.5">
+          {[...izquierda, ...(config.centro === undefined ? [] : [config.centro]), ...derecha].map((item) => (
+            <li key={item.href}>
+              <Entrada activa={activa(item)} item={item} riel />
+            </li>
+          ))}
+          <li>
+            <button
+              aria-haspopup="dialog"
+              className={`flex min-h-14 w-full flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[12px] ${enResto ? 'text-gold-light' : 'opacity-75'}`}
               onClick={() => hoja.current?.showModal()}
               type="button"
             >
@@ -112,7 +142,7 @@ export function BarraInferior({ sections, user, config = {} }: { sections: reado
           ) : null}
           {grupos.map((grupo) => (
             <section aria-label={grupo.label} className="flex flex-col gap-2 pt-2" key={grupo.label}>
-              <h2 className="px-1 font-mono text-[11px] tracking-[0.18em] text-gold-deep uppercase">{grupo.label}</h2>
+              <h2 className="px-1 font-mono text-[12px] tracking-[0.18em] text-gold-deep uppercase">{grupo.label}</h2>
               <ul className="grid grid-cols-3 gap-2">
                 {grupo.items.map((item) => (
                   <li key={item.href}>
@@ -161,20 +191,20 @@ export function BarraInferior({ sections, user, config = {} }: { sections: reado
   )
 }
 
-function Entrada({ item, activa }: { item: NavItem; activa: boolean }) {
+function Entrada({ item, activa, riel = false }: { item: NavItem; activa: boolean; riel?: boolean }) {
   return (
     <Link
       aria-current={activa ? 'page' : undefined}
-      className={`relative flex min-h-12 flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[11px] transition-colors ${activa ? 'text-gold-light' : 'opacity-75 hover:opacity-100'}`}
+      className={`relative flex flex-col items-center justify-center gap-1 rounded-xl py-1.5 text-[12px] transition-colors ${riel ? 'min-h-14' : 'min-h-12'} ${activa ? (riel ? 'bg-white/10 text-gold-light' : 'text-gold-light') : 'opacity-75 hover:opacity-100'}`}
       href={item.href}
     >
-      {activa ? <span aria-hidden className="absolute -top-1.5 h-0.5 w-6 rounded-full bg-gold" /> : null}
+      {activa && !riel ? <span aria-hidden className="absolute -top-1.5 h-0.5 w-6 rounded-full bg-gold" /> : null}
       <span aria-hidden className="flex size-5 items-center justify-center [&>svg]:size-5">
         {NAV_ICONS[item.icon]}
       </span>
       <span className="max-w-full truncate px-0.5">{item.label}</span>
       {item.count ? (
-        <span className="absolute top-0 right-[calc(50%-20px)] min-w-5 rounded-full bg-sage px-1 text-center font-mono text-[11px] leading-5 text-white">
+        <span className="absolute top-0 right-[calc(50%-20px)] min-w-5 rounded-full bg-sage px-1 text-center font-mono text-[12px] leading-5 text-white">
           {item.count}
           {item.countLabel ? <span className="sr-only"> {item.countLabel}</span> : null}
         </span>
@@ -188,7 +218,7 @@ function Central({ item, activa }: { item: NavItem; activa: boolean }) {
   return (
     <Link
       aria-current={activa ? 'page' : undefined}
-      className="relative flex min-h-12 flex-col items-center justify-end gap-1 pb-1.5 text-[11px] font-medium text-gold-light"
+      className="relative flex min-h-12 flex-col items-center justify-end gap-1 pb-1.5 text-[12px] font-medium text-gold-light"
       href={item.href}
     >
       <span

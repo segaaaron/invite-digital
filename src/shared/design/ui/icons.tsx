@@ -566,3 +566,23 @@ export function SparkIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** Copiar: dos hojas superpuestas. */
+export function CopyIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <rect height="12" rx="2" width="12" x="8" y="8" />
+      <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+    </svg>
+  )
+}
+
+/** Compartir: la caja con la flecha que sale hacia arriba (la hoja de compartir del teléfono). */
+export function ShareIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M12 3v12M8 7l4-4 4 4" />
+      <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
+    </svg>
+  )
+}

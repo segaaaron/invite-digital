@@ -173,13 +173,13 @@ describe('panelNav', () => {
     expect(panelNav('boda')[0]?.label).toBe('Invitación')
   })
 
-  it('sin entradas sueltas que repiten otra pantalla: ni «Vista previa» ni «Estadísticas»', () => {
-    // La vista previa en vivo y su pantalla completa están en la invitación; quién la abre, en el
-    // Resumen. Como entradas propias eran el mismo flujo dos veces (28 de septiembre).
+  it('ver la invitación entera va justo debajo de escribirla; las estadísticas siguen en el Resumen', () => {
+    // La vista previa salió de la barra el 28 de septiembre y no se encontraba: volvió el 7 de octubre,
+    // pegada a la invitación. «Estadísticas» sigue sin entrada propia: vive en el Resumen.
     for (const secciones of [panelNav('boda'), panelNav('boda', {}, false, false, true)]) {
-      const hrefs = secciones.flatMap((s) => s.items.map((i) => i.href))
-      expect(hrefs).not.toContain('/panel/eventos/boda/vista-previa')
-      expect(hrefs).not.toContain('/panel/eventos/boda/estadisticas')
+      const hrefs = secciones[0]?.items.map((i) => i.href) ?? []
+      expect(hrefs.slice(0, 2)).toEqual(['/panel/eventos/boda/configuracion', '/panel/eventos/boda/vista-previa'])
+      expect(secciones.flatMap((s) => s.items.map((i) => i.href))).not.toContain('/panel/eventos/boda/estadisticas')
     }
   })
 

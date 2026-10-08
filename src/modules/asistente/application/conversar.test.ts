@@ -54,35 +54,32 @@ describe('conversar', () => {
     expect(usos).toEqual([{ entrada: 200, enCache: 0, salida: 20 }])
   })
 
-  it('proponer invitados NO ejecuta nada: manda la tarjeta al navegador', async () => {
+  it('registrar invitados SE HACE: se ejecuta, avisa «hecho» para repintar y el modelo recibe el resultado', async () => {
     const invitaciones = [{ personas: ['Ramón Pérez'], telefono: '70012345' }]
-    const { salidas, ejecutadas } = await correr([llamada('proponer_invitados', { invitaciones }), [{ tipo: 'texto', delta: 'Listo para confirmar.' }, { tipo: 'fin', uso: USO }]])
-    expect(ejecutadas).toEqual([])
-    expect(salidas).toContainEqual({ tipo: 'propuesta', propuesta: { clase: 'invitados', invitaciones } })
-  })
-
-  it('proponer tareas, partidas, momentos y citas tampoco guarda: cada una sale como su tarjeta', async () => {
-    const tareas = [{ titulo: 'Probar el menú', vence: '2026-11-01', responsable: 'anfitrion' }]
-    const partidas = [{ concepto: 'Salón', categoria: 'lugar', previsto_bs: 12000 }]
-    const momentos = [{ hora: '21:00', momento: 'Vals', en_invitacion: true }]
-    const citas = [{ titulo: 'Degustación', dia: '2026-11-03', hora: '16:30', minutos: 90, lugar: null }]
-    const fin = [{ tipo: 'texto' as const, delta: 'Confírmalo.' }, { tipo: 'fin' as const, uso: USO }]
-    for (const [nombre, clase, args] of [
-      ['proponer_tareas', 'tareas', { tareas }],
-      ['proponer_partidas', 'partidas', { partidas }],
-      ['proponer_momentos', 'momentos', { momentos }],
-      ['proponer_citas', 'citas', { citas }],
-    ] as const) {
-      const { salidas, ejecutadas } = await correr([llamada(nombre, args), fin])
-      expect(ejecutadas).toEqual([])
-      expect(salidas).toContainEqual({ tipo: 'propuesta', propuesta: { clase, ...args } })
-    }
-  })
-
-  it('una hora mal escrita no llega a la tarjeta: vuelve al modelo como error', async () => {
-    const { salidas, entradas } = await correr([llamada('proponer_momentos', { momentos: [{ hora: '9pm', momento: 'Vals', en_invitacion: false }] }), [{ tipo: 'fin', uso: USO }]])
+    const { salidas, ejecutadas, entradas } = await correr(
+      [llamada('registrar_invitados', { invitaciones }), [{ tipo: 'texto', delta: 'Listo.' }, { tipo: 'fin', uso: USO }]],
+      async () => ({ hecho: ['1 invitación'] }),
+    )
+    expect(ejecutadas).toEqual(['registrar_invitados'])
+    expect(salidas).toContainEqual({ tipo: 'hecho', herramienta: 'registrar_invitados' })
     expect(salidas.some((s) => s.tipo === 'propuesta')).toBe(false)
-    expect(JSON.stringify(entradas[1])).toContain('proponer_momentos')
+    expect(JSON.stringify(entradas[1])).toContain('1 invitación')
+  })
+
+  it('preparar el envío deja su tarjeta en el navegador y al modelo solo el resumen', async () => {
+    const tarjeta = { clase: 'envio', tipo: 'invitacion', filas: [] }
+    const { salidas, entradas } = await correr([llamada('preparar_envio', { incluir_enviadas: false }), [{ tipo: 'fin', uso: USO }]], async () => ({ tarjeta, resultado: { por_enviar: 0 } }))
+    expect(salidas).toContainEqual({ tipo: 'propuesta', propuesta: tarjeta })
+    expect(salidas.some((s) => s.tipo === 'hecho')).toBe(false)
+    expect(JSON.stringify(entradas[1])).toContain('por_enviar')
+    expect(JSON.stringify(entradas[1])).not.toContain('filas')
+  })
+
+  it('una hora mal escrita no llega a la base: vuelve al modelo como error', async () => {
+    const op = { accion: 'crear', momento_id: null, hora: '9pm', momento: 'Vals', lugar: null, en_invitacion: false }
+    const { ejecutadas, entradas } = await correr([llamada('gestionar_cronograma', { operaciones: [op] }), [{ tipo: 'fin', uso: USO }]])
+    expect(ejecutadas).toEqual([])
+    expect(JSON.stringify(entradas[1])).toContain('Argumentos no válidos')
   })
 
   it('una herramienta inventada o con argumentos malos vuelve como error al modelo, sin ejecutarse', async () => {
@@ -91,7 +88,7 @@ describe('conversar', () => {
     expect(JSON.stringify(entradas[1])).toContain('No existe la herramienta borrar_evento')
   })
 
-  it('no da más de cinco vueltas, y si el modelo falla dice un error y cuenta lo gastado', async () => {
+  it('no da más de MAX_RONDAS vueltas, y si el modelo falla dice un error y cuenta lo gastado', async () => {
     const enBucle = await correr(Array.from({ length: MAX_RONDAS + 2 }, () => llamada('presupuesto', {})))
     expect(enBucle.ejecutadas).toHaveLength(MAX_RONDAS)
     expect(enBucle.usos[0]!.entrada).toBe(100 * MAX_RONDAS)

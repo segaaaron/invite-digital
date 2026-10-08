@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CONFIG_POR_DEFECTO, costeMicroUsd, leerConfig, mesEnBolivia, puedeConversar, tieneLuxury } from './config'
-import { HERRAMIENTAS, interpretarLlamada } from './herramientas'
+import { ESCRITURAS, HERRAMIENTAS, interpretarLlamada } from './herramientas'
 import { leerHistorial, TURNOS_QUE_SE_MANDAN } from './historial'
 import { reglasDelSistema } from './reglas'
 
@@ -57,14 +57,14 @@ describe('herramientas', () => {
     expect(interpretarLlamada('buscar_invitados', '{no json')).toMatchObject({ ok: false })
     expect(interpretarLlamada('resumen_del_evento', '{"eventId":"otro"}')).toMatchObject({ ok: false })
     expect(interpretarLlamada('buscar_invitados', '{"texto":"Ramón","estado":"sin_responder"}')).toEqual({ ok: true, llamada: { nombre: 'buscar_invitados', texto: 'Ramón', estado: 'sin_responder' } })
-    expect(interpretarLlamada('tareas', '{"filtro":null}')).toEqual({ ok: true, llamada: { nombre: 'tareas', filtro: 'pendientes' } })
+    expect(interpretarLlamada('tareas', '{"filtro":null}')).toEqual({ ok: true, llamada: { nombre: 'tareas', filtro: null } })
   })
 
-  it('una propuesta de invitados necesita al menos un nombre por invitación y tiene tope', () => {
-    expect(interpretarLlamada('proponer_invitados', '{"invitaciones":[{"personas":[],"telefono":null}]}')).toMatchObject({ ok: false })
+  it('registrar invitados necesita al menos un nombre por invitación y tiene tope', () => {
+    expect(interpretarLlamada('registrar_invitados', '{"invitaciones":[{"personas":[],"telefono":null}]}')).toMatchObject({ ok: false })
     const muchas = JSON.stringify({ invitaciones: Array.from({ length: 31 }, () => ({ personas: ['Ana'], telefono: null })) })
-    expect(interpretarLlamada('proponer_invitados', muchas)).toMatchObject({ ok: false })
-    expect(interpretarLlamada('proponer_invitados', '{"invitaciones":[{"personas":["Ramón Pérez"],"telefono":"70012345"}]}')).toMatchObject({ ok: true })
+    expect(interpretarLlamada('registrar_invitados', muchas)).toMatchObject({ ok: false })
+    expect(interpretarLlamada('registrar_invitados', '{"invitaciones":[{"personas":["Ramón Pérez"],"telefono":"70012345"}]}')).toMatchObject({ ok: true })
   })
 })
 
@@ -108,5 +108,92 @@ describe('reglas', () => {
     expect(escrito).not.toContain('llegó dictado por voz')
     expect(voz).toContain('SI TE HABLAN POR VOZ')
     expect(voz.slice(0, voz.indexOf('CONTEXTO (datos'))).toBe(escrito.slice(0, escrito.indexOf('CONTEXTO (datos')))
+  })
+})
+
+describe('las herramientas que hacen cosas del evento (7 de octubre)', () => {
+  const llamar = (nombre: string, args: unknown) => interpretarLlamada(nombre, JSON.stringify(args))
+
+  it('cada herramienta declarada tiene su validación, y sus parámetros son estrictos para OpenAI', () => {
+    for (const h of HERRAMIENTAS) {
+      expect(h.strict).toBe(true)
+      expect(h.parameters).toMatchObject({ type: 'object', additionalProperties: false })
+      // Un nombre declarado y sin esquema volvería como «No existe la herramienta».
+      expect(interpretarLlamada(h.name, '{}').ok === false && /No existe/.test((interpretarLlamada(h.name, '{}') as { error: string }).error)).toBe(false)
+    }
+  })
+
+  it('ningún argumento se llama «nombre»: es la clave del nombre de la herramienta y la pisaría', () => {
+    for (const h of HERRAMIENTAS) expect(Object.keys((h.parameters as { properties: object }).properties), h.name).not.toContain('nombre')
+    const r = llamar('renombrar_evento', { titulo: 'Boda de Ana y Luis' })
+    expect(r.ok && r.llamada.nombre).toBe('renombrar_evento')
+  })
+
+  it('cambiar invitados: editar y quitar necesitan la persona; añadir acompañante, su invitación y su nombre', () => {
+    const base = { persona_id: null, invitacion_id: null, nombre: null, telefono: null, vip: null, restriccion: null, asiste: null }
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'editar', persona_id: 'p1', telefono: '70011122', invitacion_id: 'g1' }] }).ok).toBe(true)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'quitar' }] }).ok).toBe(false)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'quitar', persona_id: 'p1' }] }).ok).toBe(true)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'acompanante', invitacion_id: 'g1' }] }).ok).toBe(false)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'acompanante', invitacion_id: 'g1', nombre: 'Luis Vega' }] }).ok).toBe(true)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'asistencia', persona_id: 'p1' }] }).ok).toBe(false)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'asistencia', persona_id: 'p1', asiste: 'no' }] }).ok).toBe(true)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'revocar' }] }).ok).toBe(false)
+    expect(llamar('cambiar_invitados', { operaciones: [{ ...base, accion: 'enlace_nuevo', invitacion_id: 'g1' }] }).ok).toBe(true)
+  })
+
+  it('recepción, fotos y opciones: lo mínimo de cada una', () => {
+    expect(llamar('gestionar_recepcion', { accion: 'sumar', recepcion_id: null, persona: null, whatsapp: null, puerta: null }).ok).toBe(false)
+    expect(llamar('gestionar_recepcion', { accion: 'sumar', recepcion_id: null, persona: 'Carla', whatsapp: '70011122', puerta: null }).ok).toBe(true)
+    expect(llamar('poner_foto', { foto_id: 'f1', donde: 'portada', casilla: null, rotulo: null }).ok).toBe(false)
+    expect(llamar('poner_foto', { foto_id: 'f1', donde: 'galeria', casilla: 2, rotulo: null }).ok).toBe(true)
+    expect(llamar('sumar_planner', { correo: 'no-es-correo' }).ok).toBe(false)
+    const nada = { enlace_general: null, save_the_date: null, pedir_cancion: null, menus: null, actos: null, sobres: null, sobres_texto: null, transferencia: null, banco: null, titular: null, cuenta: null, nota_de_regalo: null }
+    expect(llamar('opciones_de_invitacion', { ...nada, menus: Array.from({ length: 7 }, (_, i) => `Menú ${i}`) }).ok).toBe(false)
+    expect(llamar('opciones_de_invitacion', { ...nada, sobres: true, menus: ['Carne', 'Vegetariano'] }).ok).toBe(true)
+  })
+
+  it('los textos de la invitación: fecha con hora de Bolivia y lugares anulables enteros', () => {
+    const nada = { texto_sobre_nombres: null, iniciales: null, texto_bajo_nombres: null, ubicacion: null, colores_vestimenta: null, anfitriones: null, cancion: null, nombre_a: null, nombre_b: null, frase: null, fecha_hora: null, ceremonia: null, recepcion: null, vestimenta: null, avisos: null, cierre: null }
+    expect(llamar('escribir_invitacion', { ...nada, fecha_hora: '2026-12-12T19:00', recepcion: { lugar: 'Jardín Luna', direccion: null, hora: '20:00' } }).ok).toBe(true)
+    expect(llamar('escribir_invitacion', { ...nada, fecha_hora: '12/12/2026 19:00' }).ok).toBe(false)
+  })
+
+  it('borrar, editar o marcar algo que existe pide su id; crear pide lo mínimo', () => {
+    const tarea = { tarea_id: null, titulo: null, vence: null, responsable: null }
+    expect(llamar('gestionar_tareas', { operaciones: [{ ...tarea, accion: 'borrar' }] }).ok).toBe(false)
+    expect(llamar('gestionar_tareas', { operaciones: [{ ...tarea, accion: 'borrar', tarea_id: 't1' }] }).ok).toBe(true)
+    expect(llamar('gestionar_tareas', { operaciones: [{ ...tarea, accion: 'crear' }] }).ok).toBe(false)
+    expect(llamar('gestionar_tareas', { operaciones: [{ ...tarea, accion: 'crear', titulo: 'Llamar al fotógrafo' }] }).ok).toBe(true)
+    const mesa = { mesa_id: null, invitacion_id: null, nombre: null, lugares: null, zona: null, zona_id: null }
+    expect(llamar('gestionar_mesas', { operaciones: [{ ...mesa, accion: 'sentar', mesa_id: 'm1' }] }).ok).toBe(false)
+    expect(llamar('gestionar_mesas', { operaciones: [{ ...mesa, accion: 'autoasignar' }] }).ok).toBe(true)
+  })
+
+  it('un regalo solo admite enlaces http(s); una mesa, de 1 a 40 lugares', () => {
+    const regalo = { regalo_id: null, nombre: 'Cafetera', precio_bs: 500, tienda: null, descripcion: null, fondo_id: null, quien: null, metodo: null, accion: 'crear' }
+    expect(llamar('gestionar_regalos', { operaciones: [{ ...regalo, enlace: 'javascript:alert(1)' }] }).ok).toBe(false)
+    expect(llamar('gestionar_regalos', { operaciones: [{ ...regalo, enlace: 'https://tienda.bo/cafetera' }] }).ok).toBe(true)
+    const mesa = { accion: 'crear', mesa_id: null, invitacion_id: null, nombre: 'Mesa 1', zona: null, zona_id: null }
+    expect(llamar('gestionar_mesas', { operaciones: [{ ...mesa, lugares: 0 }] }).ok).toBe(false)
+    expect(llamar('gestionar_mesas', { operaciones: [{ ...mesa, lugares: 10 }] }).ok).toBe(true)
+  })
+
+  it('las que escriben repintan el panel; leer y preparar el envío no', () => {
+    expect(ESCRITURAS.has('cambiar_invitados')).toBe(true)
+    expect(ESCRITURAS.has('gestionar_regalos')).toBe(true)
+    expect(ESCRITURAS.has('buscar_invitados')).toBe(false)
+    expect(ESCRITURAS.has('preparar_envio')).toBe(false)
+    for (const nombre of ESCRITURAS) expect(HERRAMIENTAS.some((h) => h.name === nombre)).toBe(true)
+  })
+
+  it('las reglas le piden hacerlo ya, borrar incluido, y contar solo lo que la herramienta dio por hecho', () => {
+    const r = reglasDelSistema({ evento: 'Boda', fiesta: 'boda', fecha: '2026-12-12', plan: 'Imperial', rol: 'anfitrión', hoy: '2026-10-07', slug: 'boda', idioma: 'es', porVoz: false })
+    expect(r).toContain('preparar_envio')
+    expect(r).toContain('cambiar_invitados')
+    expect(r).toContain('también borrar o quitar')
+    expect(r).toContain('no_se_pudo')
+    expect(r).not.toContain('proponer_')
+    expect(r).not.toContain('Nada se guarda sin que la persona lo confirme')
   })
 })

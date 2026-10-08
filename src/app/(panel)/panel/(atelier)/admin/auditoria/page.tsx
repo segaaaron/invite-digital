@@ -157,7 +157,7 @@ function Sobre({ sujeto, eventos, modelos }: { sujeto: string | null; eventos: R
   const evento = eventos.get(sujeto)
   if (evento !== undefined) {
     return (
-      <Link className="text-ink underline-offset-4 hover:underline" href={`/panel/eventos/${sujeto}/configuracion`}>
+      <Link className="text-ink underline-offset-4 hover:underline max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/panel/eventos/${sujeto}/configuracion`}>
         {evento}
       </Link>
     )

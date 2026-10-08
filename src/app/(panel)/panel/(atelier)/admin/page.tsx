@@ -213,7 +213,7 @@ export default async function AdminPage() {
               <ul className="flex flex-col">
                 {despues.map((e) => (
                   <li className="border-t border-line-panel" key={e.slug}>
-                    <Link className="flex items-center justify-between gap-3 py-2.5 text-[13px] transition-colors hover:text-ink" href={`/panel/admin/eventos?evento=${e.slug}`}>
+                    <Link className="flex min-h-11 items-center justify-between gap-3 py-2.5 text-[13px] transition-colors hover:text-ink" href={`/panel/admin/eventos?evento=${e.slug}`}>
                       <span className="min-w-0 truncate text-ink">{e.title}</span>
                       <span className="shrink-0 text-ink-mute">{faltaPara(e.dias)}</span>
                     </Link>
@@ -222,7 +222,7 @@ export default async function AdminPage() {
               </ul>
             </>
           )}
-          <Link className="mt-4 inline-flex items-center gap-1.5 text-[12.5px] text-ink-soft hover:text-ink" href="/panel/admin/eventos/calendario">
+          <Link className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-[12.5px] text-ink-soft hover:text-ink" href="/panel/admin/eventos/calendario">
             Ver el calendario <ArrowRightIcon className="size-3.5" />
           </Link>
         </PanelCard>

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { site, webPublica } from '@/app/composition/container'
+import { asistente, site, webPublica } from '@/app/composition/container'
+import { tieneLuxury } from '@/modules/asistente'
 import { PricingSection } from '@/modules/catalog/ui/PricingSection'
 import type { Plan } from '@/modules/catalog'
 import type { FiestaPublica } from '@/modules/events'
@@ -46,16 +47,23 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
     return null
   })
   const filas = leidas === null || !leidas.ok ? [] : leidas.value
+  // Luxury se vende solo si existe (clave de OpenAI) y en los planes que lo traen según Admin › Asistente,
+  // la misma regla que enseña el botón en el panel.
+  const config = asistente.disponible ? await asistente.config().catch(() => null) : null
   const columnas = planes.flatMap((plan) => {
     const fila = filas.find((f) => f.slug === plan.slug)
     if (fila === undefined) return []
     const encargo = fila.correctionRounds != null && fila.deliveryDays != null ? { rondas: fila.correctionRounds, dias: fila.deliveryDays } : null
-    return [{ nombre: plan.name, limites: capacidadDePlan(fila), encargo }]
+    const limites = capacidadDePlan(fila)
+    return [{ nombre: plan.name, limites: config === null ? limites : { ...limites, asistente: tieneLuxury(limites, config) }, encargo }]
   })
   const extrasLeidos = await webPublica.extrasActivos().catch(() => null)
-  const extras = extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value
+  const extras = (extrasLeidos === null || !extrasLeidos.ok ? [] : extrasLeidos.value).filter((x) => config !== null || x.effect !== 'asistente')
+  const comparativa = dictionary.pricing.comparison
+  const filasVisibles = Object.fromEntries(Object.entries(comparativa.filas).filter(([clave]) => config !== null || clave !== 'luxury')) as Partial<typeof comparativa.filas>
+  const textos = { ...comparativa, filas: filasVisibles }
   return columnas.length === 0 ? null : (
-    <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: formatAmount(x.priceCents, x.currency) }))} planes={columnas} textos={dictionary.pricing.comparison} />
+    <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: formatAmount(x.priceCents, x.currency) }))} planes={columnas} textos={textos} />
   )
 }
 

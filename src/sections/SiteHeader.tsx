@@ -36,14 +36,17 @@ export function SiteHeader({ locale, dictionary }: Props) {
 
         {/* El logotipo horizontal de la marca: el sello de lacre «LA» y el nombre en una línea. */}
         <Link aria-label="Luxury Atelier" className="flex items-center gap-2.5 px-1 leading-none" href={`/${locale}`}>
+          {/* El sello de lacre real de la marca (documento de marca, 875 px), con el grabado realzado para que
+              las iniciales se lean a este tamaño. Sale de la fuente grande en 1x, 2x y 3x: la copia de 192 px
+              que había antes, reducida, dejaba la caligrafía borrosa. Un vectorial se leía, pero era de juguete. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             alt=""
-            className="size-9 shrink-0 drop-shadow-[0_2px_4px_rgb(104_80_36/0.25)]"
-            height={36}
-            src="/site/marca/sello-9882c5a6.avif"
-            srcSet="/site/marca/sello-9882c5a6.avif 1x, /site/marca/sello@2x-7fb6a36a.avif 2x"
-            width={36}
+            className="size-12 shrink-0 object-contain drop-shadow-[0_2px_5px_rgb(104_80_36/0.28)]"
+            height={47}
+            src="/site/marca/sello-la-48-f98d8d2a.avif"
+            srcSet="/site/marca/sello-la-48-f98d8d2a.avif 1x, /site/marca/sello-la-96-1f9874bd.avif 2x, /site/marca/sello-la-144-249452d9.avif 3x"
+            width={48}
           />
           <span className="bg-gradient-to-r from-gold-deep via-gold-light to-gold-deep bg-clip-text font-display text-[19px] font-medium tracking-[0.16em] whitespace-nowrap text-transparent min-[440px]:text-[21px]">
             LUXURY ATELIER

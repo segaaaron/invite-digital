@@ -218,6 +218,7 @@ export const es = {
         mesaQr: 'Número de mesa + QR de acceso al evento',
         album: 'Álbum compartido con QR para la fiesta',
         detalles: 'Detalles inspirados en tu evento: vestido, decoración, flores',
+        luxury: 'Luxury, tu planner con IA: le hablas y organiza tu evento',
         enLinea: 'En línea después del evento',
       },
       modelo: { ninguno: 'No', antes_de_repartir: 'Hasta repartir', siempre: 'Siempre' },

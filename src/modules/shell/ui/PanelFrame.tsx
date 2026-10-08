@@ -36,7 +36,8 @@ export function PanelFrame({
   return (
     // `grid-rows-[auto_1fr]` en el teléfono: con `min-h-dvh` y una página corta, la rejilla
     // repartía el alto sobrante también a la fila del menú y la barra salía el doble de alta.
-    <div className="grid min-h-dvh grid-cols-1 grid-rows-[auto_1fr] min-[860px]:grid-cols-[240px_1fr] min-[860px]:grid-rows-1 print:block">
+    // Con la barra abajo, la lateral no se pinta en el celular: una sola fila, o la segunda quedaba vacía y blanca.
+    <div className={`grid min-h-dvh grid-cols-1 min-[860px]:grid-cols-[240px_1fr] min-[860px]:grid-rows-1 print:block ${barraInferior ? 'grid-rows-1' : 'grid-rows-[auto_1fr]'}`}>
       {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
           la ventana y en una página larga dejaba una franja blanca por debajo. */}
       <div className={`bg-shell-deep print:hidden ${barraInferior ? 'max-[859px]:hidden' : ''}`}>
@@ -46,7 +47,7 @@ export function PanelFrame({
           el pie de una página larga, que sin él se quedaba en marfil plano. */}
       {/* Sin `z-1` en el celular: haría del contenido una capa propia y la campana, que ahí flota dentro de
           la barra oscura (`BarraSuperior`), quedaría debajo de ella. */}
-      <main className={`panel-movil relative min-w-0 min-[860px]:z-1 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(var(--color-sage-rgb)/0.14),transparent_55%),radial-gradient(ellipse_900px_800px_at_50%_120%,rgb(var(--color-sage-rgb)/0.08),transparent_60%)] bg-fixed px-4.5 py-4.5 min-[860px]:px-8 min-[860px]:py-7 print:bg-white print:p-0 ${barraInferior ? 'max-[859px]:pb-28' : ''}`}>
+      <main className={`panel-movil relative min-w-0 min-[860px]:z-1 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(var(--color-sage-rgb)/0.14),transparent_55%),radial-gradient(ellipse_900px_800px_at_50%_120%,rgb(var(--color-sage-rgb)/0.08),transparent_60%)] bg-fixed px-4.5 py-4.5 min-[860px]:px-8 min-[860px]:py-7 print:bg-white print:p-0 ${barraInferior ? 'max-[767px]:pb-28 min-[768px]:max-[859px]:pl-[94px]' : ''}`}>
         {children}
       </main>
       {/* Su `Suspense` envuelve solo la barra (lee la consulta de la URL), nunca las páginas:

@@ -56,7 +56,7 @@ export function PanelDialog({
         </h2>
         <button
           aria-label="Cerrar"
-          className="flex size-7 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[13px]"
+          className="flex size-7 cursor-pointer items-center justify-center rounded-full border max-[859px]:size-11 border-line-panel bg-white text-[13px]"
           onClick={cerrar}
           type="button"
         >

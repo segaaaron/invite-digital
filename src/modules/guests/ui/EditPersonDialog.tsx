@@ -178,7 +178,9 @@ export function EditPersonDialog({
     <dialog
       ref={dialogo}
       aria-labelledby={`${idNombre}-titulo`}
-      className="m-auto w-[min(560px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
+      // Desde 1024 px, **al lado de la lista** (panel lateral, la lista se sigue viendo: maqueta 7 del panel
+      // móvil); en el teléfono, hoja desde abajo. En medio, centrado.
+      className="m-auto w-[min(560px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45 max-[560px]:mb-0 max-[560px]:max-h-[92dvh] max-[560px]:w-screen max-[560px]:max-w-none max-[560px]:rounded-b-none max-[560px]:p-5 min-[1024px]:fixed min-[1024px]:inset-y-0 min-[1024px]:right-0 min-[1024px]:left-auto min-[1024px]:m-0 min-[1024px]:h-dvh min-[1024px]:max-h-dvh min-[1024px]:w-[min(520px,44vw)] min-[1024px]:overflow-y-auto min-[1024px]:rounded-none min-[1024px]:border-y-0 min-[1024px]:border-r-0 min-[1024px]:backdrop:bg-ink/15"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()

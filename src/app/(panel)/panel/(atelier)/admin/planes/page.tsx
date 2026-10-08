@@ -37,7 +37,7 @@ export default async function AdminPlanesPage() {
           {/* Tres planes largos: saltar al que se quiere editar sin desplazarse por los otros. */}
           <nav aria-label="Ir a un plan" className="flex flex-wrap gap-2">
             {planes.value.map((plan) => (
-              <a className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 text-[12.5px] text-ink transition-colors hover:border-ink" href={`#plan-${plan.slug}`} key={plan.slug}>
+              <a className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 text-[12.5px] max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center text-ink transition-colors hover:border-ink" href={`#plan-${plan.slug}`} key={plan.slug}>
                 {plan.es?.name ?? plan.slug} · <span className="text-ink-mute">{formatAmount(plan.priceCents, plan.currency)}</span>
               </a>
             ))}

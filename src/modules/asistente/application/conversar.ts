@@ -1,5 +1,5 @@
 import type { UsoDeTokens } from '../domain/config'
-import { interpretarLlamada, propuestaDe, type DefinicionDeHerramienta, type LlamadaValida, type Propuesta } from '../domain/herramientas'
+import { ESCRITURAS, interpretarLlamada, type DefinicionDeHerramienta, type LlamadaValida, type Propuesta } from '../domain/herramientas'
 import type { Mensaje } from '../domain/historial'
 import { registrarFallo } from '@/shared/observability/fallos'
 
@@ -21,16 +21,25 @@ export interface ModeloDeLenguaje {
 /** Lo que ejecuta una herramienta ya validada, con los permisos de quien pregunta. */
 export type Ejecutor = (llamada: LlamadaValida) => Promise<unknown>
 
+/**
+ * Lo que devuelve una herramienta del servidor que además **enseña una tarjeta** (preparar el envío: la
+ * tarjeta lleva el enlace de cada invitado, que solo tiene el servidor). El modelo recibe `resultado`.
+ */
+export type ConTarjeta = { readonly tarjeta: Propuesta; readonly resultado: unknown }
+const esConTarjeta = (valor: unknown): valor is ConTarjeta => typeof valor === 'object' && valor !== null && 'tarjeta' in valor && 'resultado' in valor
+
 /** Lo que ve el navegador. */
 export type Salida =
   | { readonly tipo: 'texto'; readonly delta: string }
   | { readonly tipo: 'consultando'; readonly herramienta: string }
   | { readonly tipo: 'propuesta'; readonly propuesta: Propuesta }
+  /** Algo cambió en el evento: el panel se vuelve a pintar para enseñarlo. */
+  | { readonly tipo: 'hecho'; readonly herramienta: string }
   | { readonly tipo: 'error'; readonly mensaje: string }
   | { readonly tipo: 'fin' }
 
 /** Rondas de herramientas por mensaje: un techo al gasto y a un modelo que se enrede. */
-export const MAX_RONDAS = 5
+export const MAX_RONDAS = 8
 
 const ERROR_GENERICO = 'No pude responder ahora. Vuelve a intentarlo en un momento.'
 
@@ -67,17 +76,15 @@ export const conversar = (deps: { modelo: ModeloDeLenguaje; herramientas: readon
           if (!interpretada.ok) resultado = { error: interpretada.error }
           else {
             yield { tipo: 'consultando', herramienta: llamada.nombre }
-            const propuesta = propuestaDe(interpretada.llamada)
-            if (propuesta !== null) {
-              // No guarda nada: la tarjeta la confirma la persona.
-              yield { tipo: 'propuesta', propuesta }
-              resultado = { mostrada: true, nota: 'La persona ve una tarjeta con Confirmar. Todavía no se guardó nada.' }
-            } else {
-              resultado = await deps.ejecutar(interpretada.llamada).catch((causa: unknown) => {
-                registrarFallo('asistente/conversar', 'herramienta del asistente %s:', llamada.nombre, causa)
-                return { error: 'No se pudo leer ese dato ahora.' }
-              })
+            resultado = await deps.ejecutar(interpretada.llamada).catch((causa: unknown) => {
+              registrarFallo('asistente/conversar', 'herramienta del asistente %s:', llamada.nombre, causa)
+              return { error: 'No se pudo hacer ahora. Vuelve a intentarlo en un momento.' }
+            })
+            if (esConTarjeta(resultado)) {
+              yield { tipo: 'propuesta', propuesta: resultado.tarjeta }
+              resultado = resultado.resultado
             }
+            if (ESCRITURAS.has(llamada.nombre)) yield { tipo: 'hecho', herramienta: llamada.nombre }
           }
           entrada.push({ type: 'function_call_output', call_id: llamada.callId, output: JSON.stringify(resultado) })
         }

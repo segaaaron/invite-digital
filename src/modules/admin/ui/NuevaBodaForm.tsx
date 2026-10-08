@@ -84,7 +84,7 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
             {categorias.map((c) => (
               <button
                 aria-pressed={categoria === c}
-                className={`cursor-pointer rounded-[var(--radius-pill)] border px-4 py-2 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors ${
+                className={`cursor-pointer rounded-[var(--radius-pill)] border px-4 py-2 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors max-[859px]:min-h-11 ${
                   categoria === c ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'
                 }`}
                 key={c}
@@ -126,7 +126,7 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
                   </button>
                   <a
                     aria-label={`Ver el modelo ${m.label} en una pestaña nueva`}
-                    className="absolute top-2 right-2 grid size-7 place-items-center rounded-full bg-white/90 text-ink-soft opacity-0 shadow-card transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
+                    className="absolute top-1 right-1 grid size-7 place-items-center rounded-full bg-white/90 text-ink-soft opacity-0 max-[859px]:size-11 max-[859px]:opacity-100 shadow-card transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
                     href={`/modelos/es/${m.key}`}
                     rel="noopener noreferrer"
                     target="_blank"

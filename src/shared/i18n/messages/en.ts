@@ -218,6 +218,7 @@ export const en = {
         mesaQr: 'Table number + event entry QR',
         album: 'Shared album with a QR for the party',
         detalles: 'Details inspired by your event: dress, decoration, flowers',
+        luxury: 'Luxury, your AI planner: talk to it and it organizes your event',
         enLinea: 'Online after the event',
       },
       modelo: { ninguno: 'No', antes_de_repartir: 'Until links are sent', siempre: 'Anytime' },

@@ -59,7 +59,8 @@ test.describe('el panel del cliente', () => {
   test('y el recuento de su lista', async () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
-    await expect(page.getByText('1 invitado en total')).toBeVisible()
+    // La cabecera cuenta personas e invitaciones (7 de octubre: «27 personas · 8 invitaciones»).
+    await expect(page.getByText('1 persona · 1 invitación')).toBeVisible()
   })
 
   test('abre su planner y suma una tarea propia', async () => {
@@ -201,7 +202,9 @@ test.describe('el panel del cliente', () => {
     const barra = page.getByRole('navigation')
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
     // Su invitación sí: es la pantalla donde escribe sus textos y elige su canción.
-    await expect(barra.getByRole('link', { name: 'Mi invitación' })).toBeVisible()
+    await expect(barra.getByRole('link', { name: 'Mi invitación', exact: true })).toBeVisible()
+    // Y verla entera, como un invitado, justo debajo (volvió el 7 de octubre: no se encontraba).
+    await expect(barra.getByRole('link', { name: 'Ver mi invitación' })).toBeVisible()
     // Lo del atelier, no.
     await expect(barra.getByRole('link', { name: 'Plan', exact: true })).toHaveCount(0)
     await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)

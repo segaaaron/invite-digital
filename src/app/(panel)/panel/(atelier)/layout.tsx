@@ -4,7 +4,7 @@ import { Campana } from '@/modules/notifications/ui/Campana'
 import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
+import { barraDelEvento, panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
 import { BarraDelAdmin } from '@/modules/admin'
@@ -31,7 +31,8 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
   // Todo lo de la barra en paralelo: eran nueve lecturas en fila antes de pintar nada.
   const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
   const [grupos, capacidad, insignias, rolEquipo, mesaPlanner, sinVer] = await Promise.all([
-    activo === null ? null : guests.contar(activo.id).catch(() => null),
+    // Personas, como dentro del evento: aquí decía 8 (invitaciones) y allí 27 (personas).
+    activo === null ? null : guests.contarPersonas(activo.id).catch(() => null),
     activo === null ? null : plans.allowanceFor(activo.id),
     insigniasDeAdmin(actor),
     actor.role === 'cliente' && activo !== null ? events.staff.de(actor, activo.id).then(rolEnEquipo) : null,
@@ -42,16 +43,21 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
 
   const nombreDelPlan = capacidad === null || isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
 
+  const sections = panelNav(activo?.slug ?? null, {
+    invitados: grupos,
+    pedidos: insignias.pedidos,
+    consultas: insignias.consultas,
+  }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })
+  // Quien tiene un evento navega con la misma barra de abajo que dentro de él (Mi cuenta, la ayuda…):
+  // antes aquí volvía la barra oscura con «Menú» de antes del 6 de octubre.
+  const barra = admin ? actor.soporte === undefined : activo !== null && actor.role !== 'puerta' ? barraDelEvento(activo.slug, sections, 'equipo') : false
+
   return (
     <PanelFrame
       conAcciones={campana !== null && !admin}
-      barraInferior={admin && actor.soporte === undefined}
+      barraInferior={barra}
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
-      sections={panelNav(activo?.slug ?? null, {
-        invitados: grupos,
-        pedidos: insignias.pedidos,
-        consultas: insignias.consultas,
-      }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })}
+      sections={sections}
       evento={
         activo === null
           ? null
@@ -65,7 +71,13 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
-      {admin ? <BarraDelAdmin campana={campana} /> : campana === null ? null : <BarraSuperior>{campana}</BarraSuperior>}
+      {admin ? (
+        <BarraDelAdmin campana={campana} />
+      ) : activo !== null && actor.role !== 'puerta' ? (
+        <BarraSuperior titulo={activo.title}>{campana}</BarraSuperior>
+      ) : campana === null ? null : (
+        <BarraSuperior>{campana}</BarraSuperior>
+      )}
       {children}
     </PanelFrame>
   )

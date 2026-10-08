@@ -23,7 +23,10 @@ test('el invitado firma el libro, se le agradece, y él ve la respuesta', async 
   await expect(page.getByRole('status').filter({ hasText: 'Confirmación enviada' })).toBeVisible()
   await page.getByLabel('Mensaje para los anfitriones (opcional)').fill('Qué ganas de celebrar con ustedes.')
   await page.getByRole('button', { name: 'ENVIAR MIS DESEOS' }).click()
-  await expect(page.getByRole('status').filter({ hasText: 'Te esperamos' })).toBeVisible()
+  // Se espera a que el libro deje de pedir el mensaje: «Te esperamos» ya lo decía la confirmación de
+  // arriba, así que esperar ese texto no esperaba a la firma y el panel se abría antes de que existiera.
+  await expect(page.getByLabel('Mensaje para los anfitriones (opcional)')).toBeHidden()
+  await expect(page.getByRole('status').filter({ hasText: 'Te esperamos' }).first()).toBeVisible()
 
   // 2. El libro de firmas lo muestra: sin «leído» ni «destacado», solo las palabras y quién las dejó.
   await page.goto(`/panel/eventos/${SLUG}/mensajes`)

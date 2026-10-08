@@ -63,6 +63,7 @@ describe('DeliveryPanel', () => {
     enviar.mockResolvedValue({ status: 'success', groupId: 'g1', label: 'Yasmin Medrano Avila', url: 'https://luxuryatelier.net/i/TOKEN' })
     pinta()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Formas de enviar a Yasmin Medrano Avila' }))
     fireEvent.click(screen.getByRole('button', { name: 'Enviar por WhatsApp a Yasmin Medrano Avila' }))
 
     await waitFor(() => expect(ventana.location.href).toContain('https://wa.me/59177205448?text='))
@@ -76,6 +77,7 @@ describe('DeliveryPanel', () => {
     enviar.mockResolvedValue({ status: 'error', message: 'Antes de invitar, termina tu invitación.' })
     pinta()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Formas de enviar a Yasmin Medrano Avila' }))
     fireEvent.click(screen.getByRole('button', { name: 'Enviar por WhatsApp a Yasmin Medrano Avila' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('termina tu invitación')
@@ -90,7 +92,7 @@ describe('DeliveryPanel', () => {
     expect(within(carlos).getByText('Confirmó')).toBeInTheDocument()
     expect(within(screen.getByRole('listitem', { name: 'Luis Peña' })).getByText('Sin responder')).toBeInTheDocument()
 
-    fireEvent.click(within(carlos).getByRole('button', { name: /Enlace y otras formas/ }))
+    fireEvent.click(within(carlos).getByRole('button', { name: /Formas de enviar a/ }))
     expect(within(carlos).getByLabelText('Enlace de la invitación de Carlos Rojas')).toHaveValue('https://luxuryatelier.net/i/CARLOS?utm_source=enlace')
     expect(within(carlos).getByRole('link', { name: /Correo/ }).getAttribute('href')).toMatch(/^mailto:carlos%40correo\.bo\?subject=/)
     expect(within(carlos).getByRole('link', { name: /SMS/ }).getAttribute('href')).toContain('CARLOS')
@@ -103,7 +105,7 @@ describe('DeliveryPanel', () => {
     pinta()
     fireEvent.click(screen.getByRole('tab', { name: 'Enviadas (2)' }))
     const carlos = screen.getByRole('listitem', { name: 'Carlos Rojas' })
-    fireEvent.click(within(carlos).getByRole('button', { name: /Enlace y otras formas/ }))
+    fireEvent.click(within(carlos).getByRole('button', { name: /Formas de enviar a/ }))
     fireEvent.click(within(carlos).getByRole('button', { name: /Generar un enlace nuevo/ }))
     expect(within(carlos).getByRole('alert')).toHaveTextContent(/dejarán de servir/)
     expect(reenviar).not.toHaveBeenCalled()
@@ -116,6 +118,7 @@ describe('DeliveryPanel', () => {
     guardarTelefono.mockImplementation(async () => ({ status: 'error', message: 'No se pudo guardar el teléfono.' }))
     pinta()
 
+    fireEvent.click(screen.getByRole('button', { name: 'Formas de enviar a Yasmin Medrano Avila' }))
     const campo = screen.getByLabelText('Teléfono de Yasmin Medrano Avila')
     fireEvent.change(campo, { target: { value: '70011122' } })
     fireEvent.blur(campo)
