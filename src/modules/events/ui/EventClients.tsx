@@ -67,6 +67,9 @@ export function EventClients({
       )}
 
       <form action={darAlta} className="flex flex-col gap-4">
+        {/* Sin estos dos, el servidor no sabe de qué evento es el alta y responde «ya no existe». */}
+        <input name="eventId" type="hidden" value={eventId} />
+        <input name="eventSlug" type="hidden" value={eventSlug} />
         <div className="flex flex-col gap-2">
           <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
             Correo del cliente
