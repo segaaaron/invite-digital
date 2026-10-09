@@ -38,7 +38,21 @@ export default defineConfig({
     // ejecución es una puerta abierta con la contraseña escrita en el repositorio.
     { name: 'setup', testMatch: /auth\.setup\.ts/, teardown: 'cleanup' },
     { name: 'cleanup', testMatch: /auth\.teardown\.ts/ },
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, dependencies: ['setup'] },
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, dependencies: ['setup'], testIgnore: /voz-propia\.spec\.ts/ },
+    // El dictado propio de Luxury (Vosk en el navegador) con un micrófono de verdad: Chrome lo alimenta con una frase
+    // dicha en español (la voz Paulina de macOS) en vez del micrófono del aparato.
+    {
+      name: 'voz-propia',
+      testMatch: /voz-propia\.spec\.ts/,
+      dependencies: ['setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        permissions: ['microphone'],
+        launchOptions: {
+          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--use-file-for-fake-audio-capture=tests/e2e/fixtures/voz/quien-falta.wav'],
+        },
+      },
+    },
   ],
   webServer: {
     // In CI there is no prior build and no inherited env, so the server would fail to

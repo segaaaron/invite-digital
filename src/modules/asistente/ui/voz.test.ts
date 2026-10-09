@@ -111,6 +111,18 @@ describe('cómo se dicta en cada aparato', () => {
     for (const ua of [CHROME_IPHONE, INSTAGRAM, WHATSAPP]) expect(comoDictar({ ua, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true }), ua).toEqual({ modo: 'teclado' })
   })
 
+  // Grabar sí se puede en todos ellos (getUserMedia): con micrófono, el dictado es el propio (Vosk en el teléfono).
+  it('en iPhone fuera de Safari o instalado, con micrófono, dicta el propio de Luxury', () => {
+    const CHROME_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/129.0.6668.69 Mobile/15E148 Safari/604.1'
+    const SAFARI = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1'
+    expect(comoDictar({ ua: CHROME_IPHONE, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true, conMicrofono: true })).toEqual({ modo: 'propio' })
+    expect(comoDictar({ ua: SAFARI, instalada: true, tactil: true, lang: 'es-BO', conReconocedor: true, conMicrofono: true })).toEqual({ modo: 'propio' })
+    // Safari de pestaña sigue con el de Apple, que entiende mejor.
+    expect(comoDictar({ ua: SAFARI, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true, conMicrofono: true })).toEqual({ modo: 'navegador', lang: 'es-MX' })
+    // Sin micrófono que grabar, el teclado.
+    expect(comoDictar({ ua: CHROME_IPHONE, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true, conMicrofono: false })).toEqual({ modo: 'teclado' })
+  })
+
   it('Chrome en Android sí trae el dictado (Google)', () => {
     const CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36'
     expect(comoDictar({ ua: CHROME_ANDROID, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true })).toEqual({ modo: 'navegador', lang: 'es-BO' })

@@ -12,6 +12,7 @@ import { conCanal, whatsappLink } from '@/modules/guests'
 import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
+import { despertarAudio, dictadoPropioListo, escucharPropio, type Escucha } from './dictado-propio'
 import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, vocesParaElegir } from './voz'
 
 /** `muestra`: lo que se ve en la burbuja cuando el texto para Luxury lleva datos de más (el id de un adjunto). */
@@ -153,7 +154,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
     lectura.callar()
     // En iPhone la voz solo suena si se estrenó en un toque: se estrena aquí.
     lectura.estrenar()
-    if (dictado.modo === 'navegador') {
+    if (dictado.modo === 'navegador' || dictado.modo === 'propio') {
       conversando.current = true
       rondas.current = 0
       setConversacion(true)
@@ -912,6 +913,7 @@ const modoDeDictado = (): string => {
     tactil: navigator.maxTouchPoints > 0,
     lang: navigator.language,
     conReconocedor: reconocedorDelNavegador() !== null,
+    conMicrofono: typeof navigator.mediaDevices?.getUserMedia === 'function',
   })
   return como.modo === 'navegador' ? `navegador:${como.lang}` : como.modo
 }
@@ -929,6 +931,9 @@ function anotarVoz(que: string) {
 }
 
 const CLAVE_DE_VOCES = 'luxury.voces'
+
+/** Cuánto puede tardar en decirse una frase, holgado (~9 caracteres por segundo y 3 s de margen). */
+const duracionHolgada = (texto: string) => 3000 + texto.length * 110
 
 const SEGUIR_HABLANDO = 'Toca el micrófono para seguir hablando.'
 
@@ -980,7 +985,65 @@ function useDictado(
   // Si se va de la página a mitad, se suelta el micrófono.
   useEffect(() => () => actual.current?.cerrar(false), [])
 
+  /** Chrome de iPhone, apps, panel instalado: Luxury graba y entiende en el teléfono (Vosk). */
+  function empezarPropio(textoActual: string) {
+    actual.current?.cerrar(false)
+    setAviso(null)
+    // Dentro del toque: iOS solo deja arrancar el audio en un gesto (al reabrir en la conversación ya está en marcha).
+    despertarAudio()
+    if (!dictadoPropioListo()) setAviso('Preparando el dictado de Luxury (solo la primera vez, unos 45 MB; mejor con wifi)…')
+    const base = textoActual.trim()
+    const unido = (t: string) => [base, t].filter((x) => x !== '').join(' ')
+    let escucha: Escucha | null = null
+    let pedido: boolean | null = null
+    let hecho = false
+    const terminarAqui = () => {
+      if (hecho) return false
+      hecho = true
+      if (actual.current?.cerrar === cerrar) actual.current = null
+      setEstado('quieto')
+      return true
+    }
+    const cerrar = (enviar: boolean) => {
+      if (escucha !== null) escucha.parar(enviar)
+      else pedido = enviar
+      if (!enviar) terminarAqui()
+    }
+    actual.current = { cerrar }
+    // «Te escucho» cuando de verdad escucha: antes, el aviso de que se prepara.
+    if (dictadoPropioListo()) setEstado('escuchando')
+    void escucharPropio({
+      alListo: () => {
+        if (hecho) return
+        setAviso(null)
+        setEstado('escuchando')
+      },
+      alOir: (t) => {
+        setAviso(null)
+        alOir(unido(t))
+      },
+      alTerminar: (t) => {
+        if (terminarAqui()) alTerminar(unido(t))
+      },
+      alCallar: () => {
+        if (!terminarAqui()) return
+        if (!conversacion.enRonda()) anotarVoz('el dictado propio no oyó nada')
+        conversacion.cortar(null)
+      },
+      alFallar: (motivo) => {
+        if (!terminarAqui()) return
+        anotarVoz(`el dictado propio falló (${motivo})`)
+        conversacion.cortar(null)
+        usarTeclado(motivo === 'NotAllowedError' ? AVISO_DE_VOZ['not-allowed']! : DICTA_CON_EL_TECLADO)
+      },
+    }).then((e) => {
+      escucha = e
+      if (pedido !== null) e.parar(pedido)
+    })
+  }
+
   function empezar(textoActual: string) {
+    if (modo === 'propio') return empezarPropio(textoActual)
     const Reconocer = reconocedorDelNavegador()
     if (modo === 'teclado' || Reconocer === null) {
       usarTeclado(DICTA_CON_EL_TECLADO)
@@ -1084,7 +1147,7 @@ function useDictado(
   return {
     disponible,
     /** `navegador` (dictado del navegador), `teclado` (dictado del teclado del celular) o `ninguno`. */
-    modo: modo.startsWith('navegador') ? ('navegador' as const) : (modo as 'teclado' | 'ninguno'),
+    modo: modo.startsWith('navegador') ? ('navegador' as const) : (modo as 'propio' | 'teclado' | 'ninguno'),
     estado,
     aviso,
     avisar: (texto: string) => setAviso(texto),
@@ -1190,11 +1253,21 @@ function useLectura(alTerminar: () => void) {
     r.sonando += 1
     setHablando(true)
     vivas.current.add(u)
+    // ponytail: temporizador sin red. Algunos Android no avisan del final de la frase y la conversación se quedaba
+    // «Hablando…» sin reabrir el micrófono: si al empezar a sonar no acaba en un tiempo holgado para su largo, se da por dicha.
+    let respaldo: ReturnType<typeof setTimeout> | undefined
+    let acabada = false
     const acabo = () => {
+      if (acabada) return
+      acabada = true
+      clearTimeout(respaldo)
       vivas.current.delete(u)
       if (id !== ronda.current.id) return
       ronda.current.sonando -= 1
       if (ronda.current.sonando === 0 && ronda.current.entera) terminarRonda(id)
+    }
+    u.onstart = () => {
+      respaldo = setTimeout(acabo, duracionHolgada(texto))
     }
     u.onend = acabo
     u.onerror = (e) => {
@@ -1230,7 +1303,17 @@ function useLectura(alTerminar: () => void) {
     r.entera = true
     if (r.resto.trim() !== '') decir(r.resto)
     r.resto = ''
-    if (r.sonando === 0) terminarRonda(r.id)
+    if (r.sonando === 0) return terminarRonda(r.id)
+    // Si el navegador no llega ni a empezar a hablar (sin voz, sin aviso), no se queda esperando.
+    const id = r.id
+    setTimeout(() => {
+      const voz = window.speechSynthesis
+      if (id === ronda.current.id && ronda.current.sonando > 0 && !voz.speaking && !voz.pending) {
+        anotarVoz('la voz no llegó a sonar')
+        ronda.current.sonando = 0
+        terminarRonda(id)
+      }
+    }, 4000)
   }
   /** Una frase suelta («Cuando quieras»), sin ronda de respuesta detrás. */
   function una(frase: string) {

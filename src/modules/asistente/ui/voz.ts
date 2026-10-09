@@ -84,24 +84,27 @@ export function idiomaDelTexto(texto: string, porDefecto: 'es' | 'en'): 'es' | '
 /**
  * **Cómo se le habla a Luxury en este aparato** (8 de octubre: en iPhone el micrófono no escuchaba).
  * - `navegador`: el reconocimiento de voz del navegador (Web Speech), con un idioma que ese navegador trae.
+ * - `propio`: donde Apple no deja su dictado pero sí grabar (Chrome de iPhone, apps, el panel instalado): Luxury
+ *   graba y entiende en el propio teléfono con Vosk en español (`dictado-propio.ts`; 40 MB la primera vez).
  * - `teclado`: el dictado del propio teclado del celular. WebKit **no** trae el reconocimiento en las apps de
  *   la pantalla de inicio (bug 225298), que es como se instala el panel para los avisos, ni fuera de Safari
  *   (Chrome de iPhone, el navegador de WhatsApp: bug 239816); ahí, y donde no hay reconocedor, el micrófono abre
  *   el teclado y se dicta con su micrófono. Gratis y nativo.
  * - `ninguno`: computadora sin reconocedor (Firefox): se escribe.
  */
-export type ComoDictar = { modo: 'navegador'; lang: string } | { modo: 'teclado' } | { modo: 'ninguno' }
+export type ComoDictar = { modo: 'navegador'; lang: string } | { modo: 'propio' } | { modo: 'teclado' } | { modo: 'ninguno' }
 
 /** Los españoles que trae el dictado de Apple; el resto (es-BO, es-PE…) no devuelve nada. */
 const ESPANOL_DE_APPLE = /^es-(ES|MX|US|CL|CO)$/i
 
-export function comoDictar(aparato: { ua: string; instalada: boolean; tactil: boolean; lang: string; conReconocedor: boolean }): ComoDictar {
+export function comoDictar(aparato: { ua: string; instalada: boolean; tactil: boolean; lang: string; conReconocedor: boolean; conMicrofono?: boolean }): ComoDictar {
   // El iPad se presenta como Mac; se le distingue por la pantalla táctil.
   const esApple = /iPhone|iPad|iPod/.test(aparato.ua) || (/Macintosh/.test(aparato.ua) && aparato.tactil)
   // En Apple solo Safari trae el dictado: Chrome, Firefox, Edge y los navegadores dentro de apps (WhatsApp,
   // Instagram) lo enseñan pero no va y el permiso nunca sale (WebKit 239816). Safari dice «Version/… Safari/».
   const esSafari = /Version\/[\d.]+.*Safari\//.test(aparato.ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|GSA\//.test(aparato.ua)
-  if (esApple && (aparato.instalada || !esSafari)) return { modo: 'teclado' }
+  // Ahí grabar sí se puede (getUserMedia, con su permiso): el dictado propio de Luxury (Vosk en el teléfono).
+  if (esApple && (aparato.instalada || !esSafari)) return aparato.conMicrofono === true ? { modo: 'propio' } : { modo: 'teclado' }
   if (!aparato.conReconocedor) return aparato.tactil ? { modo: 'teclado' } : { modo: 'ninguno' }
   const lang = aparato.lang || 'es-BO'
   if (esApple && /^es\b/i.test(lang) && !ESPANOL_DE_APPLE.test(lang)) return { modo: 'navegador', lang: 'es-MX' }

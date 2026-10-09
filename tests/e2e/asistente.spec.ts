@@ -214,6 +214,43 @@ test.describe('hablarle', () => {
     await expect(panel.getByLabel('Voz en español')).toHaveValue('com.apple.voice.compact.es-ES.Monica')
   })
 
+  test('en Android, si la voz no avisa de que terminó, la conversación sigue igual', async ({ page }) => {
+    await page.addInitScript(() => {
+      const dichos = ['¿Quién falta por responder?', 'listo']
+      const w = window as unknown as { __arranques: number }
+      w.__arranques = 0
+      class Falso {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          const dicho = dichos[w.__arranques] ?? ''
+          w.__arranques += 1
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: dicho }]] }), 50)
+          setTimeout(() => this.onend?.(), 120)
+        }
+        stop() {
+          this.onend?.()
+        }
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Falso, SpeechRecognition: undefined })
+      // Empieza a sonar y nunca dice que acabó (pasa con la voz de Google en algunos Android).
+      window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => {
+        setTimeout(() => u.onstart?.(new Event('start') as SpeechSynthesisEvent), 10)
+      }
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+    await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/)
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __arranques: number }).__arranques), { timeout: 20_000 }).toBe(2)
+  })
+
   test('si al primer intento no oye nada, la conversación se suelta (no se queda «Pensando…»)', async ({ page }) => {
     await page.addInitScript(() => {
       class Calla {

@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs'
 import withSerwistInit from '@serwist/next'
 import type { NextConfig } from 'next'
 
@@ -120,6 +121,19 @@ const nextConfig: NextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
       {
+        // El dictado propio de Luxury (Vosk y su modelo en español, ~45 MB): el nombre lleva la versión, así que el
+        // navegador lo guarda un año y solo se baja una vez. Fuera del precache del Service Worker (pasan de 2 MB).
+        source: '/vosk/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        // El worker del dictado lleva **su propia CSP**: su motor (emscripten) usa `new Function` y compila
+        // WebAssembly. Ese permiso queda encerrado aquí, en un worker sin DOM; la página no lo tiene
+        // (`scripts/vosk-separar-worker.py`).
+        source: '/vosk/vosk-worker-:version.js',
+        headers: [{ key: 'Content-Security-Policy', value: "default-src 'none'; script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; connect-src 'self' data:" }],
+      },
+      {
         source: '/(site|templates)/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }],
       },
@@ -127,9 +141,17 @@ const nextConfig: NextConfig = {
   },
 }
 
+// El dictado propio de Luxury (`/vosk`, ~45 MB) y el atajo de Siri no van al precache del Service Worker: con el
+// patrón por defecto (`**/*`) cada visitante del panel los bajaba al instalarlo. Se bajan solo al usarlos.
+const FUERA_DEL_PRECACHE = new Set(['vosk', 'siri'])
+const carpetasPublicas = readdirSync('public', { withFileTypes: true })
+  .filter((d) => d.isDirectory() && !FUERA_DEL_PRECACHE.has(d.name))
+  .map((d) => `${d.name}/**/*`)
+
 const withSerwist = withSerwistInit({
   swSrc: 'src/app/sw.ts',
   swDest: 'public/sw.js',
+  globPublicPatterns: ['*', ...carpetasPublicas],
   // El Service Worker se versiona con el build: si no, un despliegue nuevo deja a la
   // puerta sirviendo el JS de ayer. En desarrollo va apagado, así que probarlo con
   // `pnpm dev` no prueba nada: se comprueba contra la imagen.
