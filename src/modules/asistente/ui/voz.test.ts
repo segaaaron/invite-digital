@@ -66,6 +66,20 @@ describe('cómo se dicta en cada aparato', () => {
     expect(comoDictar({ ua: SAFARI_IPHONE, instalada: false, tactil: true, lang: 'en-GB', conReconocedor: true })).toEqual({ modo: 'navegador', lang: 'en-GB' })
   })
 
+  // En iPhone, Chrome y los navegadores dentro de apps (WhatsApp, Instagram) dicen tener dictado pero no va y el
+  // permiso nunca sale (WebKit 239816): solo Safari lo trae.
+  it('en iPhone fuera de Safari (Chrome, el navegador de WhatsApp o Instagram) dicta con el teclado', () => {
+    const CHROME_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/129.0.6668.69 Mobile/15E148 Safari/604.1'
+    const INSTAGRAM = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 350.0.0.0 (iPhone15,2; iOS 18_5)'
+    const WHATSAPP = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148'
+    for (const ua of [CHROME_IPHONE, INSTAGRAM, WHATSAPP]) expect(comoDictar({ ua, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true }), ua).toEqual({ modo: 'teclado' })
+  })
+
+  it('Chrome en Android sí trae el dictado (Google)', () => {
+    const CHROME_ANDROID = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36'
+    expect(comoDictar({ ua: CHROME_ANDROID, instalada: false, tactil: true, lang: 'es-BO', conReconocedor: true })).toEqual({ modo: 'navegador', lang: 'es-BO' })
+  })
+
   it('fuera de Apple, el idioma del aparato tal cual', () => {
     expect(comoDictar({ ua: ANDROID, instalada: true, tactil: true, lang: 'es-BO', conReconocedor: true })).toEqual({ modo: 'navegador', lang: 'es-BO' })
   })
