@@ -18,6 +18,8 @@ type Modelo = { KaldiRecognizer: new (sampleRate: number) => Reconocedor }
 type Vosk = { createModel(url: string, logLevel?: number): Promise<Modelo> }
 
 const MOTOR = '/vosk/vosk-0.0.8.js'
+/** La primera descarga (~45 MB): pasado esto, se dice y se dicta con el teclado; la próxima vez se reintenta. */
+const DESCARGA_MAXIMA_MS = 90_000
 const MODELO = '/vosk/es-0.42.tar.gz'
 
 let motor: Promise<Vosk> | null = null
@@ -81,6 +83,8 @@ export async function escucharPropio(p: {
   alFallar: (motivo: string) => void
   /** Ya escucha (motor y micrófono listos): hasta aquí, lo que se diga se perdería. */
   alListo?: () => void
+  /** Si todavía hace falta escuchar: cerrado Luxury mientras se preparaba, el micrófono ni se abre. */
+  sigue?: () => boolean
   silencioMs?: number
   /** El silencio tras un trozo cerrado que da la frase por terminada. */
   pausaMs?: number
@@ -116,9 +120,25 @@ export async function escucharPropio(p: {
   try {
     despertarAudio()
     if (audio === null) throw new Error('sin audio')
+    // Reabierto sin toque (la conversación), iOS puede dejar el audio en pausa: sin frames no hay nada que oír.
+    if (audio.state !== 'running') await audio.resume().catch(() => undefined)
+    if (audio.state !== 'running') throw new Error('audio-en-pausa')
     // Primero el motor y después el micrófono: lo dicho mientras se baja el modelo se perdía (se oía «…responder»).
-    const m = await prepararDictadoPropio()
-    if (cerrado) return escucha
+    // ponytail: temporizador sin red, solo corta una primera descarga colgada (40 MB con datos lentos).
+    let cortaDescarga: ReturnType<typeof setTimeout> | undefined
+    const m = await Promise.race([
+      prepararDictadoPropio(),
+      new Promise<never>((_, falla) => {
+        cortaDescarga = setTimeout(() => {
+          modelo = null
+          falla(new Error('descarga-lenta'))
+        }, DESCARGA_MAXIMA_MS)
+      }),
+    ]).finally(() => clearTimeout(cortaDescarga))
+    if (cerrado || p.sigue?.() === false) {
+      cerrado = true
+      return escucha
+    }
     flujo = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } })
     if (cerrado) {
       soltar()

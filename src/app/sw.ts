@@ -32,6 +32,10 @@ const serwist = new Serwist({
 // stream que no termina. Va antes que Serwist: `stopImmediatePropagation` le quita el evento.
 self.addEventListener('fetch', (event) => {
   if (event.request.headers.get('accept')?.includes('text/event-stream')) event.stopImmediatePropagation()
+  // **El dictado propio de Luxury tampoco** (`/vosk`: motor, worker y modelo, ~45 MB): las reglas de Serwist lo
+  // guardaban otra vez en su caché («others», «static-js-assets»), duplicando 45 MB en un iPhone. Ya lo guarda
+  // el navegador un año (`immutable`, ver `next.config.ts`).
+  else if (new URL(event.request.url).pathname.startsWith('/vosk/')) event.stopImmediatePropagation()
 })
 
 // **Las notificaciones push** (28 de septiembre). El servidor manda título, texto, a dónde abrir y una

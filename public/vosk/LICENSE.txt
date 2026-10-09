@@ -1,0 +1,12 @@
+Dictado de Luxury (Luxury Atelier) — componentes de terceros
+
+vosk-browser 0.0.8 (vosk-0.0.8.js, vosk-worker-0.0.8.js)
+  Copyright Ciaran O'Reilly y colaboradores · https://github.com/ccoreilly/vosk-browser
+  Licencia Apache 2.0. El worker se separó del archivo original sin cambiar su código
+  (scripts/vosk-separar-worker.py).
+
+vosk-model-small-es-0.42 (es-0.42.tar.gz)
+  Alpha Cephei Inc. · https://alphacephei.com/vosk/models
+  Licencia Apache 2.0.
+
+Texto de la licencia: https://www.apache.org/licenses/LICENSE-2.0

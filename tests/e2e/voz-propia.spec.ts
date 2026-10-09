@@ -45,6 +45,10 @@ test('en Chrome de iPhone, Luxury oye lo dicho con su propio dictado y responde'
     if (m.type() === 'error') fallos.push(m.text())
   })
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  // Como en la segunda visita: con el Service Worker ya al mando (en la primera se instala después de cargar).
+  await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined))
+  await page.reload()
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true)
   await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
   const panel = page.locator('dialog[open]')
   await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
@@ -58,6 +62,14 @@ test('en Chrome de iPhone, Luxury oye lo dicho con su propio dictado y responde'
   await expect(panel.locator('p.self-end')).toHaveText(/falta por responder$/i)
   await expect(panel).toContainText(/Faltan por responder|Ya respondieron todos/, { timeout: 20_000 })
   await expect.poll(() => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))).toMatch(/Faltan por responder|Ya respondieron todos/)
+  // El Service Worker no guarda el dictado otra vez (45 MB duplicados en un iPhone): lo guarda el navegador.
+  expect(await page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true)
+  const enCache = await page.evaluate(async () => {
+    const urls: string[] = []
+    for (const nombre of await caches.keys()) for (const r of await (await caches.open(nombre)).keys()) urls.push(r.url)
+    return urls.filter((u) => u.includes('/vosk/'))
+  })
+  expect(enCache).toEqual([])
   // La CSP de producción deja correr el motor (WebAssembly y su worker).
   expect(fallos.filter((f) => /Content Security Policy|Refused|wasm|Worker/i.test(f))).toEqual([])
   // El worker del dictado lleva su propia CSP; la página, la de siempre (sin `unsafe-eval`).

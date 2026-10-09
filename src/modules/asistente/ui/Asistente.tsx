@@ -12,6 +12,7 @@ import { conCanal, whatsappLink } from '@/modules/guests'
 import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
+import { RobotLuxury, TarjetaDeLuxury } from './RobotLuxury'
 import { despertarAudio, dictadoPropioListo, escucharPropio, type Escucha } from './dictado-propio'
 import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, vocesParaElegir } from './voz'
 
@@ -128,6 +129,39 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
    */
   const [conversacion, setConversacion] = useState(false)
   const [verVoces, setVerVoces] = useState(false)
+  /** Lo que Luxury dice **con el chat cerrado**, en su tarjeta junto al robot. */
+  const [afuera, setAfuera] = useState<{ id: number; texto: string } | null>(null)
+  const [afueraHablando, setAfueraHablando] = useState(false)
+  const decirAfuera = useRef((texto: string) => void texto)
+  useEffect(() => {
+    // ponytail: temporizadores sin red: cuánto mueve la boca y cuándo se va la tarjeta.
+    let quitar: ReturnType<typeof setTimeout> | undefined
+    let callar: ReturnType<typeof setTimeout> | undefined
+    decirAfuera.current = (texto) => {
+      clearTimeout(quitar)
+      clearTimeout(callar)
+      setAfuera({ id: Date.now(), texto })
+      setAfueraHablando(true)
+      callar = setTimeout(() => setAfueraHablando(false), Math.min(4000, texto.length * 35))
+      quitar = setTimeout(() => setAfuera(null), 5000 + texto.length * 40)
+    }
+    // Un saludo al día en este aparato: así se sabe que Luxury está y que se le toca.
+    let saludo: ReturnType<typeof setTimeout> | undefined
+    try {
+      const hoy = new Date().toISOString().slice(0, 10)
+      if (window.localStorage.getItem(CLAVE_DEL_SALUDO) !== hoy) {
+        window.localStorage.setItem(CLAVE_DEL_SALUDO, hoy)
+        saludo = setTimeout(() => decirAfuera.current('Hola, soy Luxury. Tócame y te ayudo con tu evento: invitados, mesas, tareas…'), 1500)
+      }
+    } catch {
+      // Sin almacenamiento (privado): sin saludo.
+    }
+    return () => {
+      clearTimeout(quitar)
+      clearTimeout(callar)
+      clearTimeout(saludo)
+    }
+  }, [])
   const conversando = useRef(false)
   const rondas = useRef(0)
   const seguirConversacion = useRef(() => {})
@@ -175,6 +209,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   }, [burbujas, consultando])
 
   const abrir = () => {
+    setAfuera(null)
     dialogo.current?.showModal()
     campo.current?.focus()
   }
@@ -216,6 +251,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
       vigia = setTimeout(() => control.abort('lento'), 45_000)
     }
     let huboCambios = false
+    let recibido = ''
     try {
       const respuesta = await fetch(`/panel/eventos/${slug}/asistente`, {
         method: 'POST',
@@ -245,6 +281,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
           const salida = JSON.parse(linea) as Salida
           if (salida.tipo === 'texto') {
             setConsultando(null)
+            recibido += salida.delta
             if (leyendo) lectura.alimentar(salida.delta)
             enLaUltima((b) => ({ ...b, texto: b.texto + salida.delta }))
           } else if (salida.tipo === 'consultando') setConsultando(CONSULTANDO[salida.herramienta] ?? 'Consultando…')
@@ -261,6 +298,8 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
           }
         }
       }
+      // Si se cerró el chat mientras contestaba, lo dice en su tarjeta junto al robot.
+      if (dialogo.current?.open !== true && recibido.trim() !== '') decirAfuera.current(recorte(paraLeer(recibido)))
       // Lo que quede por leer; sin voz (apagada), la conversación sigue escuchando igual.
       if (leyendo) lectura.terminar()
       else if (porVoz) seguirConversacion.current()
@@ -390,16 +429,21 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
 
   return (
     <>
-      <button
-        aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`}
-        // En el celular, solo el círculo: con el nombre tapaba tarjetas y buscadores al desplazarse.
-        className="fixed right-4 bottom-4 z-30 max-[859px]:right-auto max-[859px]:left-4 max-[767px]:bottom-[calc(92px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:left-[92px] inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[13.5px] font-medium text-white shadow-float ring-1 ring-gold/40 transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
-        onClick={abrir}
-        type="button"
-      >
-        <Chispa className="size-5 text-gold" />
-        <span className="max-[859px]:sr-only">{NOMBRE_DEL_ASISTENTE}</span>
-      </button>
+      {/* **Luxury en persona** (8 de octubre): el robot champán es el botón; tocarlo abre el chat. Con el chat
+          cerrado, habla en su tarjeta (un saludo al día, o la respuesta si se cerró mientras contestaba). */}
+      <div className="fixed right-3 bottom-2 z-30 max-[859px]:right-auto max-[859px]:left-3 max-[767px]:bottom-[calc(84px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:left-[84px] min-[860px]:right-4 min-[860px]:bottom-3 print:hidden">
+        {afuera === null ? null : (
+          // No intercepta toques (no tapa botones de la pantalla): el que abre el chat es el robot.
+          <div aria-live="polite" className="pointer-events-none absolute bottom-[50px] w-[min(280px,calc(100vw-110px))] max-[859px]:left-[66px] min-[860px]:right-[86px] min-[860px]:bottom-[58px]" key={afuera.id} role="status">
+            <TarjetaDeLuxury perlas={null}>
+              <span className="block text-[13.5px] leading-normal">{afuera.texto}</span>
+            </TarjetaDeLuxury>
+          </div>
+        )}
+        <button aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`} className="block h-[72px] w-[60px] cursor-pointer min-[860px]:h-[86px] min-[860px]:w-[72px] transition-transform hover:-translate-y-0.5" onClick={abrir} type="button">
+          <RobotLuxury className="h-full w-full drop-shadow-[0_6px_10px_rgb(43_39_35/0.18)]" hablando={afuera !== null && afueraHablando} />
+        </button>
+      </div>
 
       <dialog
         aria-labelledby={titulo}
@@ -412,9 +456,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-line-panel px-6 py-5">
             <div className="flex items-center gap-3">
-              <span aria-hidden className="grid size-10 place-items-center rounded-full bg-ink text-gold">
-                <Chispa className="size-5" />
-              </span>
+              <RobotLuxury className="h-12 w-10 shrink-0" />
               <div>
                 <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
                   {NOMBRE_DEL_ASISTENTE}
@@ -486,13 +528,23 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
                     {b.muestra ?? b.texto}
                   </p>
                 ) : (
-                  <div className="flex max-w-[92%] flex-col gap-2 self-start" key={i}>
-                    {b.texto === '' ? null : (
-                      <p className={`rounded-[16px] rounded-bl-[4px] border px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap ${b.error ? 'border-danger/30 bg-danger/5 text-danger' : 'border-line-panel bg-white text-ink'}`}>
-                        {conEnlaces(b.texto, slug, cerrar)}
-                      </p>
+                  // Luxury responde en su tarjeta de invitación; la última, con él al lado (habla mientras escribe o lee).
+                  <div className="flex max-w-[94%] items-end gap-2 self-start" key={i}>
+                    {i === burbujas.length - 1 ? (
+                      <RobotLuxury className="h-[52px] w-[44px] shrink-0" hablando={(ocupado && b.texto !== '') || lectura.hablando} />
+                    ) : (
+                      <span aria-hidden className="w-[44px] shrink-0" />
                     )}
-                    {b.envio === undefined ? null : <TarjetaDeEnvio eventId={eventId} filas={b.envio.filas} slug={slug} tipo={b.envio.tipo} />}
+                    <div className="flex min-w-0 flex-col gap-2 pl-6">
+                      {b.texto === '' ? null : b.error ? (
+                        <p className="rounded-[16px] rounded-bl-[4px] border border-danger/30 bg-danger/5 px-3.5 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-wrap text-danger">{conEnlaces(b.texto, slug, cerrar)}</p>
+                      ) : (
+                        <TarjetaDeLuxury perlas={i === burbujas.length - 1 ? 'izquierda' : null}>
+                          <p className="text-[13.5px] leading-relaxed whitespace-pre-wrap">{conEnlaces(b.texto, slug, cerrar)}</p>
+                        </TarjetaDeLuxury>
+                      )}
+                      {b.envio === undefined ? null : <TarjetaDeEnvio eventId={eventId} filas={b.envio.filas} slug={slug} tipo={b.envio.tipo} />}
+                    </div>
                   </div>
                 ),
               )
@@ -753,14 +805,6 @@ function TarjetaDeEnvio({ filas, tipo, slug, eventId }: { filas: readonly FilaDe
   )
 }
 
-function Chispa({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden className={className} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" viewBox="0 0 24 24">
-      <path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" />
-      <path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7z" />
-    </svg>
-  )
-}
 
 function Clip({ className }: { className?: string }) {
   return (
@@ -931,6 +975,10 @@ function anotarVoz(que: string) {
 }
 
 const CLAVE_DE_VOCES = 'luxury.voces'
+const CLAVE_DEL_SALUDO = 'luxury.saludo'
+
+/** Lo que cabe en la tarjeta junto al robot: la primera parte, cortada en palabra. */
+const recorte = (texto: string) => (texto.length <= 170 ? texto : `${texto.slice(0, 170).replace(/\s+\S*$/, '')}…`)
 
 /** Cuánto puede tardar en decirse una frase, holgado (~9 caracteres por segundo y 3 s de margen). */
 const duracionHolgada = (texto: string) => 3000 + texto.length * 110
@@ -1013,6 +1061,7 @@ function useDictado(
     // «Te escucho» cuando de verdad escucha: antes, el aviso de que se prepara.
     if (dictadoPropioListo()) setEstado('escuchando')
     void escucharPropio({
+      sigue: () => !hecho && pedido !== false,
       alListo: () => {
         if (hecho) return
         setAviso(null)
@@ -1033,8 +1082,16 @@ function useDictado(
       alFallar: (motivo) => {
         if (!terminarAqui()) return
         anotarVoz(`el dictado propio falló (${motivo})`)
+        // En mitad de la conversación (reabierto sin toque), basta con tocar para seguir.
+        if (conversacion.enRonda() && motivo !== 'NotAllowedError') return conversacion.cortar(SEGUIR_HABLANDO)
         conversacion.cortar(null)
-        usarTeclado(motivo === 'NotAllowedError' ? AVISO_DE_VOZ['not-allowed']! : DICTA_CON_EL_TECLADO)
+        usarTeclado(
+          motivo === 'NotAllowedError'
+            ? AVISO_DE_VOZ['not-allowed']!
+            : motivo === 'descarga-lenta'
+              ? 'El dictado tarda en bajarse (unos 45 MB): prueba con wifi. Mientras, dicta con el micrófono de tu teclado y toca Enviar.'
+              : DICTA_CON_EL_TECLADO,
+        )
       },
     }).then((e) => {
       escucha = e

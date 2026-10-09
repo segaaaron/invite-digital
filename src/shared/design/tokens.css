@@ -12,6 +12,7 @@
   --color-gold: #b8894f;
   --color-gold-deep: #9d6e3a;
   --color-gold-light: #d7a871;
+
   /* El azul de los títulos de Google, solo para la vista previa de «Buscadores». */
   --color-link: #1a0dab;
   /* La tinta que va **encima** del acento: el texto de un botón dorado macizo.
@@ -162,4 +163,18 @@
 
 :root {
   --page-gradient: radial-gradient(1200px 700px at 78% -8%, var(--color-bg-top) 0%, var(--color-bg) 46%, var(--color-bg-sunken) 100%);
+}
+
+/* **Luxury, el robot del panel** (8 de octubre, acabado champán): su metal, el dorado brillante de sus detalles, el
+   cristal negro de su cara y el marfil de la tarjeta en la que habla. `static`: el SVG los usa con `var()`, sin clase
+   de Tailwind, y sin `static` Tailwind no los publica (el robot salía negro). */
+@theme static {
+  --color-champan-brillo: #fbe7c0;
+  --color-champan: #d6ae6f;
+  --color-champan-sombra: #8f6634;
+  --color-oro-brillo: #f7e2b0;
+  --color-oro-sombra: #8a6230;
+  --color-cristal: #2c2824;
+  --color-cristal-fondo: #050505;
+  --color-tarjeta: #fffdf8;
 }

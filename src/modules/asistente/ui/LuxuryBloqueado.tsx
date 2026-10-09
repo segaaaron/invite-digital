@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useId, useRef } from 'react'
 import type { Mejorar } from '@/modules/plans'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
+import { RobotLuxury } from './RobotLuxury'
 
 const LO_QUE_HACE = [
   'Carga a tus invitados escribiendo o dictando sus nombres.',
@@ -22,14 +23,17 @@ export function LuxuryBloqueado({ mejorar, planes, comoExtra }: { mejorar: Mejor
 
   return (
     <>
+      {/* El mismo robot que el de quien lo tiene (9 de octubre), apagado y con un candadito: el botón viejo desentonaba. */}
       <button
         aria-label={`Conocer a ${NOMBRE_DEL_ASISTENTE}, tu planner con IA`}
-        className="fixed right-4 bottom-4 z-30 max-[859px]:right-auto max-[859px]:left-4 max-[767px]:bottom-[calc(92px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:left-[92px] inline-flex size-13 cursor-pointer items-center justify-center gap-2 rounded-full border border-line-panel-strong bg-white text-[13.5px] font-medium text-ink shadow-float transition-transform hover:-translate-y-0.5 min-[860px]:right-5 min-[860px]:bottom-5 min-[860px]:w-auto min-[860px]:pr-5 min-[860px]:pl-4 print:hidden"
+        className="fixed right-3 bottom-2 z-30 block h-[72px] w-[60px] cursor-pointer transition-transform hover:-translate-y-0.5 max-[859px]:right-auto max-[859px]:left-3 max-[767px]:bottom-[calc(84px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:left-[84px] min-[860px]:right-4 min-[860px]:bottom-3 min-[860px]:h-[86px] min-[860px]:w-[72px] print:hidden"
         onClick={() => dialogo.current?.showModal()}
         type="button"
       >
-        <Candado className="size-4 text-gold-deep" />
-        <span className="max-[859px]:sr-only">{NOMBRE_DEL_ASISTENTE}</span>
+        <RobotLuxury className="h-full w-full opacity-70 grayscale-[.55]" />
+        <span aria-hidden className="absolute top-[30%] right-0 grid size-6 place-items-center rounded-full border border-line-panel-strong bg-white text-gold-deep shadow-float">
+          <Candado className="size-3.5" />
+        </span>
       </button>
 
       <dialog
@@ -42,9 +46,7 @@ export function LuxuryBloqueado({ mejorar, planes, comoExtra }: { mejorar: Mejor
       >
         <div className="flex flex-col gap-4 p-6">
           <div className="flex items-center gap-3">
-            <span aria-hidden className="grid size-11 place-items-center rounded-full bg-ink text-gold">
-              <Candado className="size-5" />
-            </span>
+            <RobotLuxury className="h-[52px] w-11 shrink-0" />
             <div>
               <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
                 {NOMBRE_DEL_ASISTENTE}
