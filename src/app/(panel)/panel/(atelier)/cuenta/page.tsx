@@ -1,5 +1,8 @@
 import { cookies } from 'next/headers'
-import { avisos, identity } from '@/app/composition/container'
+import { asistente, avisos, identity } from '@/app/composition/container'
+import { LuxuryConSiri } from '@/modules/asistente/ui/LuxuryConSiri'
+import { primerEventoConLuxury } from '../../_carcasa/asistente'
+import { env } from '@/shared/config/env'
 import { TIPOS_DE_AVISO_EXPLICADOS } from '@/modules/notifications'
 import { ActivarAvisos } from '@/modules/notifications/ui/ActivarAvisos'
 import { PreferenciasDeAvisos } from '@/modules/notifications/ui/PreferenciasDeAvisos'
@@ -44,6 +47,9 @@ export default async function CuentaPage() {
     esta: s.id === estaId,
   }))
 
+  // «Luxury con Siri», solo si alguno de sus eventos tiene a Luxury (la ruta de Siri lo vuelve a comprobar).
+  const conLuxury = (actor.role === 'cliente' || actor.role === 'atelier') && (await primerEventoConLuxury(actor)) !== null
+
   return (
     <div className="flex max-w-[980px] flex-col gap-4.5">
       <PanelHeader kicker="Cuenta" meta="Tus datos de acceso al panel" title="Mi cuenta" />
@@ -84,6 +90,14 @@ export default async function CuentaPage() {
             </SettingsSection>
           </div>
         )}
+
+        {conLuxury ? (
+          <div className="scroll-mt-24" id="siri">
+            <SettingsSection description="Háblale a Luxury sin abrir el panel: «Oye Siri, Luxury», y te responde en voz alta. En iPhone, con la app Atajos." title="Luxury con Siri">
+              <LuxuryConSiri atajo={(await asistente.config()).atajoDeSiri} url={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} />
+            </SettingsSection>
+          </div>
+        ) : null}
 
         <SettingsSection description="Dónde está abierta tu cuenta. Si alguien más entra con tu contraseña, ciérrale la sesión con el código de tu correo." title="Sesiones abiertas">
           <SesionesAbiertas sesiones={sesiones} />

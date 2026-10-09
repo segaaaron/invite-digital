@@ -123,6 +123,100 @@ test.describe('hablarle', () => {
     await expect.poll(() => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))).toContain('Faltan por responder')
   })
 
+  test('modo conversación: contesta en voz alta, vuelve a escuchar solo y «listo» lo termina', async ({ page }) => {
+    // Dos turnos: la pregunta y «listo». La voz de mentira avisa al terminar cada frase, como la de verdad.
+    await page.addInitScript(() => {
+      const dichos = ['¿Quién falta por responder?', 'listo']
+      const w = window as unknown as { __arranques: number; __leido: string[] }
+      w.__arranques = 0
+      w.__leido = []
+      class Falso {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          const dicho = dichos[w.__arranques] ?? ''
+          w.__arranques += 1
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: dicho }]] }), 50)
+          setTimeout(() => this.onend?.(), 120)
+        }
+        stop() {
+          this.onend?.()
+        }
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Falso, SpeechRecognition: undefined })
+      window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => {
+        if (u.text !== '') w.__leido.push(u.text)
+        setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 30)
+      }
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+    await expect(panel.getByText('Conversación por voz · di «listo» para terminar')).toBeVisible()
+    await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/)
+    const leido = () => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))
+    await expect.poll(leido).toContain('Faltan por responder')
+    // Al callarse Luxury, el micrófono se abrió solo; «listo» terminó sin mandarle nada.
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __arranques: number }).__arranques)).toBe(2)
+    await expect.poll(leido).toContain('Cuando quieras.')
+    await expect(panel.getByText('Conversación por voz · di «listo» para terminar')).toHaveCount(0)
+    await expect(panel.getByText('listo', { exact: true })).toHaveCount(0)
+  })
+
+  test('si al primer intento no oye nada, la conversación se suelta (no se queda «Pensando…»)', async ({ page }) => {
+    await page.addInitScript(() => {
+      class Calla {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          setTimeout(() => this.onend?.(), 80)
+        }
+        stop() {}
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Calla, SpeechRecognition: undefined })
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+    await expect(panel.getByText('Conversación por voz · di «listo» para terminar')).toHaveCount(0)
+    await expect(panel.getByRole('button', { name: 'Hablarle a Luxury' })).toBeEnabled()
+  })
+
+  test('«Hablar con Luxury» desde el icono del panel instalado lo abre ya escuchando', async ({ page }) => {
+    await page.addInitScript(() => {
+      class Escucha {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {}
+        stop() {}
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Escucha, SpeechRecognition: undefined })
+    })
+    // El acceso del manifiesto (Android: mantener pulsado el icono).
+    const manifiesto = (await (await page.request.get('/panel.webmanifest')).json()) as { shortcuts?: { url: string }[] }
+    expect(manifiesto.shortcuts?.map((x) => x.url)).toContain('/panel/luxury')
+    await page.goto('/panel/luxury')
+    await expect(page).toHaveURL(/\/panel\/eventos\/[^/?]+$/)
+    await expect(page.locator('dialog[open]').getByText('Te escucho…', { exact: true })).toBeVisible()
+  })
+
   test('escribir mientras escucha corta la escucha y deja enviar', async ({ page }) => {
     // Un reconocedor que no avisa nunca de que terminó (pasa en iPhone): antes dejaba «Enviar» bloqueado.
     await page.addInitScript(() => {
@@ -150,6 +244,90 @@ test.describe('hablarle', () => {
     await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/)
   })
 
+  test.describe('en el panel instalado en un iPhone', () => {
+    // Safari no trae el dictado del navegador en las apps de la pantalla de inicio (WebKit 225298).
+    test.use({
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+      hasTouch: true,
+      isMobile: true,
+      viewport: { width: 390, height: 844 },
+    })
+
+    test('el micrófono abre el teclado; lo dictado se envía al terminar y se contesta en voz alta', async ({ page }) => {
+      await page.addInitScript(() => {
+        Object.defineProperty(navigator, 'standalone', { value: true })
+        const leido: string[] = []
+        Object.assign(window, { __leido: leido })
+        window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void leido.push(u.text)
+      })
+      await page.goto(`/panel/eventos/${SLUG}/invitados`)
+      await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+      const panel = page.locator('dialog[open]')
+      await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+      await expect(panel.getByText(/Dicta con el micrófono de tu teclado/)).toBeVisible()
+      const campo = panel.getByLabel('Escríbele a Luxury')
+      await expect(campo).toBeFocused()
+
+      // El dictado de iOS escribe en «composición»: un Enter en mitad no envía lo que aún no está.
+      await campo.evaluate((t: HTMLTextAreaElement) => {
+        t.dispatchEvent(new CompositionEvent('compositionstart'))
+        t.value = '¿Quién falta por responder?'
+        t.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', keyCode: 229, isComposing: true, bubbles: true }))
+      })
+      await expect(panel.getByText(/Faltan por responder/)).toHaveCount(0)
+      // Termina el dictado: el estado no se enteró (sin `input`), pero se envía lo que dice el campo.
+      await campo.evaluate((t: HTMLTextAreaElement) => t.dispatchEvent(new CompositionEvent('compositionend', { bubbles: true })))
+      await panel.getByRole('button', { name: 'Enviar' }).click()
+      await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/)
+      await expect.poll(() => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))).toContain('Faltan por responder')
+    })
+  })
+
+  test('en Safari del iPhone, si el dictado falla, pasa al teclado y queda en el registro de fallos', async ({ browser }) => {
+    const contexto = await browser.newContext({
+      storageState: AUTH_STATE,
+      userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1',
+      hasTouch: true,
+      isMobile: true,
+      viewport: { width: 390, height: 844 },
+      permissions: ['microphone'],
+    })
+    const page = await contexto.newPage()
+    await sql`delete from service_failures where message like '%Voz de Luxury:%'`
+    await page.addInitScript(() => {
+      class Roto {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          ;(window as unknown as { __lang: string }).__lang = this.lang
+          setTimeout(() => this.onerror?.({ error: 'service-not-allowed' }), 50)
+          setTimeout(() => this.onend?.(), 80)
+        }
+        stop() {}
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Roto, SpeechRecognition: undefined })
+      Object.defineProperty(navigator, 'language', { value: 'es-BO' })
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+    await expect(panel.getByText(/Dicta con el micrófono de tu teclado/)).toBeVisible()
+    await expect(panel.getByLabel('Escríbele a Luxury')).toBeFocused()
+    // El dictado de Apple no trae es-BO: se le pide es-MX.
+    expect(await page.evaluate(() => (window as unknown as { __lang: string }).__lang)).toBe('es-MX')
+    await expect
+      .poll(async () => (await sql<{ n: number }[]>`select count(*)::int as n from service_failures where message like '%Voz de Luxury: el dictado del navegador falló (service-not-allowed)%'`)[0]!.n)
+      .toBe(1)
+    await sql`delete from service_failures where message like '%Voz de Luxury:%'`
+    await contexto.close()
+  })
+
   test('el micrófono queda permitido aunque se entre al panel por otra página', async ({ page }) => {
     // La política de permisos la fija la primera página que carga el navegador y no cambia al navegar dentro
     // del panel: quien entraba por la bandeja y llegaba al evento con clics tenía el micrófono prohibido.
@@ -175,6 +353,31 @@ test.describe('hablarle', () => {
     await expect(panel.getByLabel('Escríbele a Luxury')).toBeVisible()
     await expect(panel.getByRole('button', { name: 'Hablarle a Luxury' })).toHaveCount(0)
   })
+})
+
+test('«Oye Siri, Luxury»: la llave de Mi cuenta solo vale en la ruta de Siri, y Siri recibe texto para leer', async ({ page, playwright }) => {
+  await page.goto('/panel/cuenta#siri')
+  await page.getByRole('button', { name: 'Crear mi llave' }).click()
+  const llave = await page.getByLabel('Tu llave de Siri').inputValue()
+  expect(llave).toMatch(/^[A-Za-z0-9_-]{20,}$/)
+
+  // Sin cookie, como el Atajo de Apple.
+  const siri = await playwright.request.newContext({ baseURL: test.info().project.use.baseURL ?? 'http://localhost:3100', storageState: { cookies: [], origins: [] } })
+  const pregunta = (clave: string) => siri.post('/panel/luxury/siri', { headers: { authorization: `Bearer ${clave}` }, data: { texto: '¿Quién falta por responder?' } })
+  const bien = await pregunta(llave)
+  expect(bien.headers()['content-type']).toContain('text/plain')
+  expect(await bien.text()).toMatch(/Faltan por responder|Ya respondieron todos/)
+  expect(await (await pregunta('llave-que-no-existe-0000000')).text()).toContain('ya no vale')
+  // La llave no abre nada más: en cualquier otra ruta, a la puerta.
+  const fuera = await siri.get('/panel/cuenta', { headers: { authorization: `Bearer ${llave}` }, maxRedirects: 0 })
+  expect(fuera.status()).toBe(307)
+  expect(fuera.headers()['location']).toContain('/panel/entrar')
+  await siri.dispose()
+
+  // Se ve en las sesiones abiertas como una más.
+  await page.reload()
+  await expect(page.getByText('Atajo de Siri').first()).toBeVisible()
+  await sql`delete from sessions where device = 'Atajo de Siri'`
 })
 
 test('con la cuota del mes gastada lo dice y no responde', async ({ page }) => {

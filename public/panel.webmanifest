@@ -11,7 +11,32 @@
   "theme_color": "#121313",
   "lang": "es",
   "icons": [
-    { "src": "/icons/panel-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
-    { "src": "/icons/panel-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+    {
+      "src": "/icons/panel-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/panel-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Hablar con Luxury",
+      "short_name": "Luxury",
+      "description": "Abre Luxury escuchando: háblale y te responde en voz alta.",
+      "url": "/panel/luxury",
+      "icons": [
+        {
+          "src": "/icons/panel-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }

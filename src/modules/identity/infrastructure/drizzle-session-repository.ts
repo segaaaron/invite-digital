@@ -56,3 +56,8 @@ export const createDrizzleSessionRepository = (database: DbExecutor): SessionRep
 })
 
 export const drizzleSessionRepository = createDrizzleSessionRepository(db)
+
+/** Las sesiones de un usuario con ese nombre de aparato: la llave de Siri anterior, al crear otra. */
+export async function borrarSesionesDelDispositivo(userId: string, device: string): Promise<void> {
+  await db.delete(sessions).where(and(eq(sessions.userId, userId), eq(sessions.device, device)))
+}

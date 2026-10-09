@@ -117,7 +117,8 @@ export function PassDialog({
           <div className="mt-6 grid grid-cols-3 gap-2 [&>*]:w-full [&>*]:justify-center [&>*]:px-2">
             <PanelButton onClick={cerrar}>Cerrar</PanelButton>
             <PanelButton onClick={() => void compartirQr(contenidoDelQr, group.label).catch(() => undefined)}>Compartir QR</PanelButton>
-            <PanelButton onClick={() => void descargarQr(contenidoDelQr, group.label)} variant="primary">
+            {/* Descargar sigue después de la fiesta: no lo apaga lo celebrado. */}
+            <PanelButton data-aun-celebrado="" onClick={() => void descargarQr(contenidoDelQr, group.label)} variant="primary">
               Descargar QR
             </PanelButton>
           </div>

@@ -63,6 +63,26 @@ test.describe('el panel del cliente', () => {
     await expect(page.getByText('1 persona · 1 invitación')).toBeVisible()
   })
 
+  // Producción, 7 de octubre: las páginas se le abrían y cada botón acababa en «Evento no
+  // encontrado» —las acciones pedían la sección `full`—. Se crea de verdad, no basta con ver.
+  test('reparte su salón y arma su mesa de regalos', async () => {
+    await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+    await page.getByLabel('Nombre de la mesa').fill('Mesa del cliente')
+    await page.getByLabel('Capacidad (asientos)').fill('6')
+    await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(page.locator('dialog[open]')).toHaveCount(0)
+    await page.getByRole('link', { name: 'Vista de tarjetas' }).click()
+    await expect(page.getByRole('heading', { name: 'Mesa del cliente' })).toBeVisible()
+
+    await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
+    await page.getByLabel('Regalo', { exact: true }).fill('Juego de copas')
+    await page.getByLabel('Precio').fill('200')
+    await page.getByRole('button', { name: 'Añadir regalo' }).click()
+    await page.waitForURL(/regalos$/)
+    await page.getByRole('link', { name: 'Lista de regalos', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Juego de copas' })).toBeVisible()
+  })
+
   test('abre su planner y suma una tarea propia', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
     await page.goto(`/panel/eventos/${SLUG}/planner/tareas?panel=tarea`)

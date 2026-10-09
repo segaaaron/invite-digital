@@ -7,7 +7,9 @@ import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { nombreDePlan } from '../../../_carcasa/nombre-de-plan'
 import { fiestaDeTema } from '@/modules/events'
 import { gestionaElEvento, isAdmin, rolEnEquipo, sectionForRole } from '@/modules/identity'
-import { requireSession } from '@/app/_acciones/sesion'
+import { requireSession, soloParaMirar } from '@/app/_acciones/sesion'
+import { ConSoloLectura } from '@/shared/design/ui/panel/solo-lectura'
+import { PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { barraDelEvento, panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
@@ -60,7 +62,7 @@ export default async function EventoLayout({
   const dueno = gestionaElEvento(actor, event.value)
   // La campana: la recepción no recibe avisos, y en modo soporte abrirla dejaría vistos los del cliente.
   const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
-  const [personas, capacidad, insignias, equipo, mesaPlanner, sinVer] = await Promise.all([
+  const [personas, capacidad, insignias, equipo, mesaPlanner, sinVer, misEventos] = await Promise.all([
     // Personas, no grupos: la insignia dice «Invitados» y un grupo sin nadie dentro no lo es.
     guests.contarPersonas(id).catch(() => null),
     plans.allowanceFor(id),
@@ -69,6 +71,10 @@ export default async function EventoLayout({
     dueno || actor.role === 'puerta' ? null : events.staff.de(actor, id).then(rolEnEquipo),
     actor.role === 'puerta' ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
     conCampana ? avisos.sinVer(actor.userId).catch(() => 0) : 0,
+    // El cliente que compró otro evento elige en «Mis eventos».
+    actor.role === 'cliente' && actor.soporte === undefined
+      ? events.staff.eventIdsOf(actor.userId, ['cliente', 'coanfitrion', 'planner']).then((ids) => ids.length > 1).catch(() => false)
+      : false,
   ])
   const campana = conCampana ? <Campana clavePublica={avisos.clavePublica} sinVer={sinVer} /> : null
   // La capacidad ya leída dice si trae puerta: `requireFeature` la volvía a calcular entera.
@@ -80,12 +86,15 @@ export default async function EventoLayout({
   // Sin Luxury en su evento, quien podría usarlo lo ve con candado y sabe cómo conseguirlo.
   const luxuryBloqueado = conAsistente ? null : await luxuryParaMejorar(actor, slug)
 
+  // Lo celebrado queda para mirar: aviso arriba y los botones de guardar apagados (el corte, en las acciones).
+  const celebrado = soloParaMirar(actor, event.value.eventDate)
+
   const sections = panelNav(event.value.slug, {
         invitados: personas,
         llegadas: puerta === null || isErr(puerta) ? null : puerta.value.tally.arrivedGroups,
         pedidos: insignias.pedidos,
         consultas: insignias.consultas,
-      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })
+      }, isAdmin(actor), actor.role === 'puerta', actor.role === 'cliente' || equipo !== null, { equipo, mesaPlanner, misEventos, fueraDelPlan: isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value), cortejo: TIPOS_DE_CORTEJO[fiestaDeTema(event.value.themeKey)].length > 0 })
 
   return (
     <PanelFrame
@@ -99,7 +108,7 @@ export default async function EventoLayout({
         planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
         // A dónde vuelve cada uno: el admin a la cartera, el atelier a su bandeja. El cliente y
         // la puerta no tienen «fuera»: su panel es este evento.
-        salirHref: isAdmin(actor) ? '/panel/admin/eventos' : actor.role === 'atelier' ? '/panel' : null,
+        salirHref: isAdmin(actor) ? '/panel/admin/eventos' : actor.role === 'atelier' || misEventos ? '/panel' : null,
         salirLabel: isAdmin(actor) ? 'Volver a la administración' : 'Volver a mis eventos',
       }}
       user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
@@ -142,7 +151,18 @@ export default async function EventoLayout({
           </div>
         </div>
       ) : null}
-      {children}
+      {celebrado ? (
+        <div className="mb-4">
+          <PanelAlert tone="info">
+            Este evento ya se celebró. Todo queda guardado para que lo mires y lo descargues; ya no se puede cambiar ni borrar. Sí puedes agradecer los mensajes del libro de firmas.
+          </PanelAlert>
+        </div>
+      ) : null}
+      <ConSoloLectura activa={celebrado}>
+        <div className="contents" data-solo-lectura={celebrado ? '' : undefined}>
+          {children}
+        </div>
+      </ConSoloLectura>
       {conAsistente ? <Asistente eventId={event.value.id} slug={event.value.slug} /> : null}
       {luxuryBloqueado === null ? null : <LuxuryBloqueado comoExtra={luxuryBloqueado.comoExtra} mejorar={luxuryBloqueado.mejorar} planes={luxuryBloqueado.planes} />}
     </PanelFrame>

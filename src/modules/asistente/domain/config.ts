@@ -9,15 +9,21 @@ export type ConfigDelAsistente = {
   readonly planes: readonly string[]
   readonly mensajesPorMes: number
   readonly presupuestoUsd: number
+  /**
+   * El enlace de iCloud del **Atajo de Siri** «Luxury» (8 de octubre): lo arma el admin una vez en su iPhone y lo
+   * comparte; Mi cuenta lo ofrece con «Añadir a Siri». Vacío, Mi cuenta enseña cómo armarlo a mano.
+   */
+  readonly atajoDeSiri: string
 }
 
 export const CLAVE_DE_CONFIG = 'asistente.config'
-export const CONFIG_POR_DEFECTO: ConfigDelAsistente = { planes: ['alta-costura'], mensajesPorMes: 300, presupuestoUsd: 20 }
+export const CONFIG_POR_DEFECTO: ConfigDelAsistente = { planes: ['alta-costura'], mensajesPorMes: 300, presupuestoUsd: 20, atajoDeSiri: '' }
 
 const esquema = z.object({
   planes: z.array(z.string().trim().min(1).max(64)).max(20),
   mensajesPorMes: z.number().int().min(0).max(100_000),
   presupuestoUsd: z.number().min(0).max(10_000),
+  atajoDeSiri: z.union([z.literal(''), z.string().trim().max(300).regex(/^https:\/\/www\.icloud\.com\/shortcuts\/[A-Za-z0-9]+$/)]).default(''),
 })
 
 /** Lo guardado, o lo de por defecto si no hay nada o no se entiende: un ajuste roto no enciende nada nuevo. */

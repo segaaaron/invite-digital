@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react'
 import { useFormStatus } from 'react-dom'
 import { PanelButton } from './PanelKit'
+import { useSoloLectura } from './solo-lectura'
 
 export type SubmitButtonProps = {
   children: ReactNode
@@ -21,6 +22,8 @@ export type SubmitButtonProps = {
   value?: string
   className?: string
   'aria-label'?: string
+  /** Sigue activo en un evento ya celebrado (lo que la guardia deja con `aunCelebrado`). */
+  aunCelebrado?: boolean
 }
 
 /**
@@ -36,12 +39,21 @@ export type SubmitButtonProps = {
  * - El indicador es un punto que late, no un disco girando, y con movimiento reducido se queda
  *   quieto (`animate-latido` lo apaga `globals.css`).
  */
-export function SubmitButton({ children, pendingLabel, pending, variant = 'primary', disabled = false, ...rest }: SubmitButtonProps) {
+export function SubmitButton({ children, pendingLabel, pending, variant = 'primary', disabled = false, aunCelebrado = false, ...rest }: SubmitButtonProps) {
   const { pending: enviando } = useFormStatus()
   const esperando = pending ?? enviando
+  const soloMirar = useSoloLectura() && !aunCelebrado
 
   return (
-    <PanelButton aria-busy={esperando || undefined} disabled={disabled || esperando} type="submit" variant={variant} {...rest}>
+    <PanelButton
+      aria-busy={esperando || undefined}
+      disabled={disabled || esperando || soloMirar}
+      title={soloMirar ? 'El evento ya se celebró: queda para mirar' : undefined}
+      {...(aunCelebrado ? { 'data-aun-celebrado': '' } : {})}
+      type="submit"
+      variant={variant}
+      {...rest}
+    >
       {esperando ? <span aria-hidden className="size-1.5 animate-latido rounded-full bg-current" /> : null}
       {esperando && pendingLabel !== undefined ? pendingLabel : children}
     </PanelButton>

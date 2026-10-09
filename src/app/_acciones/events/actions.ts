@@ -322,9 +322,9 @@ export async function setEventCurrencyAction(input: {
   currency: string
 }): Promise<{ status: 'success' } | { status: 'error'; message: string }> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
-  const row = await eventUseCases.getByIdFor(actor, input.eventId)
+  const row = await eventUseCases.getByIdFor(actor, input.eventId, { section: 'cliente' })
   if (isErr(row)) return { status: 'error', message: row.error.detail }
 
   const result = await eventUseCases.update({ ...row.value, currency: input.currency })

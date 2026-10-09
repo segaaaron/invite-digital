@@ -12,7 +12,7 @@ import { conCanal, whatsappLink } from '@/modules/guests'
 import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
-import { elegirVoz, idiomaDelTexto } from './voz'
+import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer } from './voz'
 
 /** `muestra`: lo que se ve en la burbuja cuando el texto para Luxury lleva datos de más (el id de un adjunto). */
 type Burbuja = { rol: 'usuario' | 'asistente'; texto: string; muestra?: string; envio?: Contenido; error?: boolean }
@@ -120,7 +120,16 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   const router = useRouter()
   /** La petición en curso, para «Detener» y para cortarla si se queda sin responder. */
   const peticion = useRef<AbortController | null>(null)
-  const lectura = useLectura()
+  /**
+   * **Modo conversación** (8 de octubre): se toca el micrófono una vez y se habla como con Siri. Al callarse se
+   * envía, Luxury contesta en voz alta y el micrófono **se vuelve a abrir solo**; «listo» o «gracias» lo terminan.
+   * `rondas`: cuántas veces ya se le habló en esta conversación (la primera, si falla, pasa al teclado).
+   */
+  const [conversacion, setConversacion] = useState(false)
+  const conversando = useRef(false)
+  const rondas = useRef(0)
+  const seguirConversacion = useRef(() => {})
+  const lectura = useLectura(() => seguirConversacion.current())
   const selectorDeArchivo = useRef<HTMLInputElement>(null)
   const [subiendo, setSubiendo] = useState<string | null>(null)
   const [avisoDeSubida, setAvisoDeSubida] = useState<string | null>(null)
@@ -132,7 +141,30 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   const dictado = useDictado(
     (parcial) => setTexto(parcial),
     (dicho) => enviarAlTerminar.current(dicho),
+    () => campo.current?.focus(),
+    {
+      enRonda: () => conversando.current && rondas.current > 0,
+      cortar: (aviso) => terminarConversacion(aviso),
+    },
   )
+
+  function empezarConversacion() {
+    lectura.callar()
+    // En iPhone la voz solo suena si se estrenó en un toque: se estrena aquí.
+    lectura.estrenar()
+    if (dictado.modo === 'navegador') {
+      conversando.current = true
+      rondas.current = 0
+      setConversacion(true)
+    }
+    dictado.empezar(texto)
+  }
+  function terminarConversacion(aviso: string | null = null) {
+    conversando.current = false
+    setConversacion(false)
+    dictado.cancelar()
+    if (aviso !== null) dictado.avisar(aviso)
+  }
 
   // Con llaves: en Chrome reciente `scrollIntoView` devuelve una promesa, y un efecto que devuelve algo que
   // no es una función revienta React al limpiarlo («i is not a function»).
@@ -145,7 +177,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
     campo.current?.focus()
   }
   const cerrar = () => {
-    dictado.cancelar()
+    terminarConversacion()
     lectura.callar()
     dialogo.current?.close()
   }
@@ -162,9 +194,12 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   async function enviar(pregunta: string, porVoz = false, muestra?: string) {
     const limpia = pregunta.trim()
     if (limpia === '' || ocupado) return
-    // Escribir o enviar corta la escucha: el micrófono nunca deja sin poder mandar.
+    // Escribir o enviar corta la escucha: el micrófono nunca deja sin poder mandar. Escribir a mano termina la conversación.
     if (dictado.estado === 'escuchando') dictado.cancelar()
+    if (!porVoz && conversando.current) terminarConversacion()
     lectura.callar()
+    // Si le hablaste, contesta en voz alta mientras llega (frase a frase), y al callarse vuelve a escuchar.
+    const leyendo = porVoz && lectura.empezar()
     const historial = [...burbujas.filter((b) => !b.error && b.texto !== ''), { rol: 'usuario' as const, texto: limpia }]
     setBurbujas([...burbujas, { rol: 'usuario', texto: limpia, ...(muestra === undefined ? {} : { muestra }) }, { rol: 'asistente', texto: '' }])
     setTexto('')
@@ -178,7 +213,6 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
       clearTimeout(vigia)
       vigia = setTimeout(() => control.abort('lento'), 45_000)
     }
-    let respuestaEntera = ''
     let huboCambios = false
     try {
       const respuesta = await fetch(`/panel/eventos/${slug}/asistente`, {
@@ -209,19 +243,28 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
           const salida = JSON.parse(linea) as Salida
           if (salida.tipo === 'texto') {
             setConsultando(null)
-            respuestaEntera += salida.delta
+            if (leyendo) lectura.alimentar(salida.delta)
             enLaUltima((b) => ({ ...b, texto: b.texto + salida.delta }))
           } else if (salida.tipo === 'consultando') setConsultando(CONSULTANDO[salida.herramienta] ?? 'Consultando…')
           else if (salida.tipo === 'propuesta') {
             const envio = salida.propuesta
+            // Los botones de WhatsApp piden tocarlos: la conversación por voz termina aquí.
+            conversando.current = false
+            setConversacion(false)
             enLaUltima((b) => ({ ...b, envio }))
           } else if (salida.tipo === 'hecho') huboCambios = true
-          else if (salida.tipo === 'error') enLaUltima((b) => ({ ...b, texto: b.texto === '' ? salida.mensaje : `${b.texto}\n\n${salida.mensaje}`, error: b.texto === '' }))
+          else if (salida.tipo === 'error') {
+            if (leyendo) lectura.alimentar(` ${salida.mensaje}`)
+            enLaUltima((b) => ({ ...b, texto: b.texto === '' ? salida.mensaje : `${b.texto}\n\n${salida.mensaje}`, error: b.texto === '' }))
+          }
         }
       }
-      // Si le hablaste, te contesta en voz alta.
-      if (porVoz && respuestaEntera.trim() !== '') lectura.leer(respuestaEntera)
+      // Lo que quede por leer; sin voz (apagada), la conversación sigue escuchando igual.
+      if (leyendo) lectura.terminar()
+      else if (porVoz) seguirConversacion.current()
     } catch {
+      lectura.callar()
+      if (conversando.current) terminarConversacion()
       const motivo = control.signal.reason
       const aviso = motivo === 'detenido' ? 'Detenido.' : motivo === 'lento' ? 'Tardé demasiado en responder. Vuelve a preguntarme.' : 'Se cortó la conexión. Vuelve a intentarlo.'
       enLaUltima((b) => ({ ...b, texto: b.texto === '' ? aviso : `${b.texto}\n\n${aviso}`, error: b.texto === '' }))
@@ -298,9 +341,49 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
     }
   }
 
+  // **«Hablar con Luxury» desde el icono** (Android: acceso del manifiesto → `/panel/luxury` → aquí con `?luxury=voz`):
+  // se abre ya escuchando. Si el navegador pide un toque para el micrófono, el aviso lo dice.
+  const alAbrirConVoz = useRef(() => {})
+  useEffect(() => {
+    alAbrirConVoz.current = () => {
+      abrir()
+      empezarConversacion()
+    }
+  })
+  // Se lee una vez; se abre cuando el aparato ya dijo cómo dicta (al hidratar todavía es `ninguno`).
+  const pidioVoz = useRef<boolean | null>(null)
+  useEffect(() => {
+    if (pidioVoz.current === null) {
+      const url = new URL(window.location.href)
+      pidioVoz.current = url.searchParams.get('luxury') === 'voz'
+      if (pidioVoz.current) {
+        url.searchParams.delete('luxury')
+        window.history.replaceState(window.history.state, '', url)
+      }
+    }
+    if (pidioVoz.current && dictado.modo !== 'ninguno') {
+      pidioVoz.current = false
+      alAbrirConVoz.current()
+    }
+  }, [dictado.modo])
+
   // Lo dicho se envía con el `enviar` de este pintado (lee la conversación al día), no con el de cuando se tocó.
   useEffect(() => {
-    enviarAlTerminar.current = (dicho) => void enviar(dicho, true)
+    enviarAlTerminar.current = (dicho) => {
+      // «Listo», «gracias»: se acaba la conversación sin molestar a Luxury.
+      if (conversando.current && esDespedida(dicho)) {
+        setTexto('')
+        terminarConversacion()
+        lectura.una('Cuando quieras.')
+        return
+      }
+      rondas.current += 1
+      void enviar(dicho, true)
+    }
+    // Al callarse Luxury (o al terminar de responder sin voz), vuelve a escuchar si la conversación sigue.
+    seguirConversacion.current = () => {
+      if (conversando.current && dialogo.current?.open === true) dictado.empezar('')
+    }
   })
 
   return (
@@ -413,7 +496,8 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
             className="flex flex-col gap-2 border-t border-line-panel px-5 pt-4 pb-[max(env(safe-area-inset-bottom),16px)]"
             onSubmit={(e) => {
               e.preventDefault()
-              void enviar(texto)
+              lectura.estrenar()
+              void enviar(campo.current?.value ?? texto, dictado.tomarTeclado())
             }}
           >
             <div className="flex items-end gap-2">
@@ -430,10 +514,14 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
                   if (dictado.estado === 'escuchando') dictado.cancelar()
                   setTexto(e.target.value)
                 }}
+                // El dictado del teclado del iPhone escribe en «composición»: hasta que termina, el estado no lo
+                // tiene. Enter en mitad de eso enviaba vacío y no pasaba nada (8 de octubre); se espera al final.
+                onCompositionEnd={(e) => setTexto(e.currentTarget.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
+                  if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.keyCode !== 229) {
                     e.preventDefault()
-                    void enviar(texto)
+                    lectura.estrenar()
+                    void enviar(e.currentTarget.value, dictado.tomarTeclado())
                   }
                 }}
                 placeholder={dictado.disponible ? 'Escríbele o háblale…' : `Escríbele a ${NOMBRE_DEL_ASISTENTE}…`}
@@ -478,10 +566,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
                     aria-label={`Hablarle a ${NOMBRE_DEL_ASISTENTE}`}
                     className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-line-panel-strong bg-white text-ink transition-colors hover:border-ink disabled:cursor-not-allowed disabled:opacity-40"
                     disabled={ocupado}
-                    onClick={() => {
-                      lectura.callar()
-                      dictado.empezar(texto)
-                    }}
+                    onClick={empezarConversacion}
                     type="button"
                   >
                     <Microfono className="size-[18px]" />
@@ -501,7 +586,6 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
               ) : (
                 <button
                   className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full bg-ink text-white transition-opacity disabled:cursor-not-allowed disabled:opacity-40"
-                  disabled={texto.trim() === ''}
                   type="submit"
                 >
                   <span className="sr-only">Enviar</span>
@@ -511,7 +595,19 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
                 </button>
               )}
             </div>
-            {dictado.estado === 'escuchando' ? (
+            {conversacion ? (
+              <EnConversacion
+                estado={dictado.estado === 'escuchando' ? 'escuchando' : lectura.hablando ? 'hablando' : 'pensando'}
+                interrumpir={() => {
+                  lectura.callar()
+                  dictado.empezar('')
+                }}
+                terminar={() => {
+                  lectura.callar()
+                  terminarConversacion()
+                }}
+              />
+            ) : dictado.estado === 'escuchando' ? (
               <p aria-live="polite" className="flex items-center gap-2 text-[12.5px] text-ink-soft" role="status">
                 <span aria-hidden className="size-2 animate-pulse rounded-full bg-danger" />
                 Te escucho… Al terminar de hablar, te respondo.
@@ -550,7 +646,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
               </p>
             )}
             {dictado.aviso === null ? null : (
-              <p className="text-[12.5px] text-danger" role="alert">
+              <p className="text-[12.5px] text-ink-soft" role="status">
                 {dictado.aviso}
               </p>
             )}
@@ -660,6 +756,42 @@ function Clip({ className }: { className?: string }) {
   )
 }
 
+/**
+ * **La conversación por voz, a la vista**: un círculo que dice en qué está —te escucha (late en rojo), piensa
+ * (dorado quieto) o te responde (ondas doradas)— y las dos salidas: interrumpir para hablar ya, o terminar.
+ */
+function EnConversacion({ estado, interrumpir, terminar }: { estado: 'escuchando' | 'pensando' | 'hablando'; interrumpir: () => void; terminar: () => void }) {
+  const TEXTO = {
+    escuchando: 'Te escucho…',
+    pensando: 'Pensando…',
+    hablando: 'Te respondo. Toca para interrumpir.',
+  } as const
+  return (
+    <div aria-live="polite" className="flex items-center gap-3 rounded-[16px] border border-line-panel bg-white px-3.5 py-2.5" role="status">
+      <button
+        aria-label={estado === 'hablando' ? 'Interrumpir y hablar' : TEXTO[estado]}
+        className="relative grid size-11 shrink-0 cursor-pointer place-items-center rounded-full disabled:cursor-default"
+        disabled={estado !== 'hablando'}
+        onClick={interrumpir}
+        type="button"
+      >
+        <span
+          aria-hidden
+          className={`absolute inset-0 rounded-full motion-reduce:animate-none ${estado === 'escuchando' ? 'animate-ping bg-danger/30' : estado === 'hablando' ? 'animate-pulse bg-gold/35' : 'bg-gold/15'}`}
+        />
+        <span aria-hidden className={`relative size-5 rounded-full ${estado === 'escuchando' ? 'bg-danger' : 'bg-gold'}`} />
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] text-ink">{TEXTO[estado]}</p>
+        <p className="text-[12px] text-ink-mute">Conversación por voz · di «listo» para terminar</p>
+      </div>
+      <button className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3.5 text-[12.5px] text-ink hover:border-ink" onClick={terminar} type="button">
+        Terminar
+      </button>
+    </div>
+  )
+}
+
 function Microfono({ className }: { className?: string }) {
   return (
     <svg aria-hidden className={className} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" viewBox="0 0 24 24">
@@ -698,6 +830,34 @@ const reconocedorDelNavegador = (): ConstructorDeReconocedor | null => {
   return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
 }
 
+/** Dónde se dicta en este aparato (`voz.ts`), como texto para que `useSyncExternalStore` lo compare. */
+const modoDeDictado = (): string => {
+  const como = comoDictar({
+    ua: navigator.userAgent,
+    instalada: window.matchMedia?.('(display-mode: standalone)').matches === true || (navigator as { standalone?: boolean }).standalone === true,
+    tactil: navigator.maxTouchPoints > 0,
+    lang: navigator.language,
+    conReconocedor: reconocedorDelNavegador() !== null,
+  })
+  return como.modo === 'navegador' ? `navegador:${como.lang}` : como.modo
+}
+
+/**
+ * **Lo que falla de la voz queda en Admin › Registro de fallos** (8 de octubre: «no funciona ni en iOS ni en
+ * Android», sin saber por qué). Qué falló, en qué aparato y en qué modo; nunca lo dicho.
+ */
+function anotarVoz(que: string) {
+  void fetch('/api/fallos', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ mensaje: `Voz de Luxury: ${que}`, pila: `${navigator.userAgent}\nmodo=${modoDeDictado()} idioma=${navigator.language}`, ruta: location.pathname }),
+  }).catch(() => {})
+}
+
+const SEGUIR_HABLANDO = 'Toca el micrófono para seguir hablando.'
+
+const DICTA_CON_EL_TECLADO = 'Dicta con el micrófono de tu teclado (🎤 junto a la barra espaciadora) y toca Enviar: te respondo en voz alta. En iPhone también puedes decir «Oye Siri, Luxury» (actívalo en Mi cuenta).'
+
 /** Lo que se le dice a la persona cuando el navegador no puede escuchar, según su error. */
 const AVISO_DE_VOZ: Record<string, string> = {
   'no-speech': 'No te oí. Toca el micrófono y vuelve a hablar.',
@@ -706,6 +866,7 @@ const AVISO_DE_VOZ: Record<string, string> = {
     'Tu aparato no deja dictar aquí. En iPhone, activa Ajustes › General › Teclado › Dictado; o usa el micrófono de tu teclado para dictar.',
   'audio-capture': 'No encontré un micrófono en este aparato. Puedes escribirme.',
   network: 'Tu navegador no pudo escucharte ahora (sin conexión). Usa el micrófono de tu teclado o escríbeme.',
+  'language-not-supported': 'Tu navegador no dicta en este idioma. Usa el micrófono de tu teclado o escríbeme.',
 }
 
 /**
@@ -717,29 +878,50 @@ const AVISO_DE_VOZ: Record<string, string> = {
  * **Nunca se queda escuchando**: si el navegador no avisa de que terminó (pasa en iPhone), se suelta solo
  * tras unos segundos de silencio. Escribir o enviar a mano lo corta (`cancelar`).
  */
-function useDictado(alOir: (texto: string) => void, alTerminar: (texto: string) => void) {
-  const disponible = useSyncExternalStore(sinCambios, () => reconocedorDelNavegador() !== null, () => false)
+function useDictado(
+  alOir: (texto: string) => void,
+  alTerminar: (texto: string) => void,
+  abrirTeclado: () => void,
+  /**
+   * La conversación: `enRonda` dice si ya se habló en ella (el micrófono se reabrió solo). Ahí, un fallo o un
+   * silencio no pasa al teclado: `cortar` termina la conversación (con un aviso, si hay que tocar para seguir).
+   */
+  conversacion: { enRonda: () => boolean; cortar: (aviso: string | null) => void },
+) {
+  const modo = useSyncExternalStore(sinCambios, modoDeDictado, () => 'ninguno')
+  const disponible = modo !== 'ninguno'
   const [estado, setEstado] = useState<'quieto' | 'escuchando'>('quieto')
   const [aviso, setAviso] = useState<string | null>(null)
   const actual = useRef<{ cerrar: (enviar: boolean) => void } | null>(null)
+  /** Se tocó el micrófono y se dicta con el teclado: lo que se envíe después se contesta en voz alta. */
+  const porTeclado = useRef(false)
+  const usarTeclado = (motivo: string) => {
+    porTeclado.current = true
+    setAviso(motivo)
+    abrirTeclado()
+  }
 
   // Si se va de la página a mitad, se suelta el micrófono.
   useEffect(() => () => actual.current?.cerrar(false), [])
 
   function empezar(textoActual: string) {
     const Reconocer = reconocedorDelNavegador()
-    if (Reconocer === null) return
+    if (modo === 'teclado' || Reconocer === null) {
+      usarTeclado(DICTA_CON_EL_TECLADO)
+      return
+    }
     actual.current?.cerrar(false)
     setAviso(null)
     const base = textoActual.trim()
     // Uno nuevo cada vez: en iPhone, reusar el anterior lo deja callado a la segunda.
     const r = new Reconocer()
-    r.lang = navigator.language || 'es-BO'
+    r.lang = modo.startsWith('navegador:') ? modo.slice('navegador:'.length) : navigator.language || 'es-BO'
     r.interimResults = true
     // Una frase por toque: en Android, el modo continuo repite lo ya dicho.
     r.continuous = false
     let dicho = ''
     let cerrado = false
+    let fallo = false
     // ponytail: temporizadores sin red, solo para soltar el micrófono si el navegador no avisa de que terminó.
     let silencio: ReturnType<typeof setTimeout> | undefined
     let respaldo: ReturnType<typeof setTimeout> | undefined
@@ -757,6 +939,16 @@ function useDictado(alOir: (texto: string) => void, alTerminar: (texto: string) 
         // Ya estaba cerrado.
       }
       if (enviar && dicho !== '') alTerminar(unido())
+      else if (enviar && !fallo) {
+        // Sin oír nada, la conversación se suelta (si no, se quedaba «Pensando…»). Callarse en mitad de ella la
+        // termina sin más; al primer intento, en un celular, el teclado sí dicta (el iPhone a veces calla sin error).
+        const enRonda = conversacion.enRonda()
+        conversacion.cortar(null)
+        if (!enRonda && navigator.maxTouchPoints > 0) {
+          anotarVoz('el micrófono se cerró sin oír nada')
+          usarTeclado(DICTA_CON_EL_TECLADO)
+        }
+      }
     }
     const esperarSilencio = (ms: number) => {
       clearTimeout(silencio)
@@ -775,7 +967,27 @@ function useDictado(alOir: (texto: string) => void, alTerminar: (texto: string) 
       esperarSilencio(2500)
     }
     r.onerror = (e) => {
-      if (e.error !== 'aborted') setAviso(AVISO_DE_VOZ[e.error] ?? 'Tu navegador no pudo escucharte. Puedes escribirme.')
+      if (e.error === 'aborted') return
+      fallo = true
+      // Callarse en la conversación no es un fallo: se termina y ya.
+      if (conversacion.enRonda()) {
+        if (e.error !== 'no-speech') anotarVoz(`el micrófono no se reabrió solo (${e.error})`)
+        conversacion.cortar(e.error === 'no-speech' ? null : SEGUIR_HABLANDO)
+        return
+      }
+      anotarVoz(`el dictado del navegador falló (${e.error})`)
+      conversacion.cortar(null)
+      // Sin permiso se dice cómo darlo; cualquier otro fallo en el celular pasa al dictado del teclado.
+      if (e.error !== 'not-allowed' && navigator.maxTouchPoints > 0) {
+        cerrado = true
+        clearTimeout(silencio)
+        clearTimeout(respaldo)
+        actual.current = null
+        setEstado('quieto')
+        usarTeclado(DICTA_CON_EL_TECLADO)
+        return
+      }
+      setAviso(AVISO_DE_VOZ[e.error] ?? 'Tu navegador no pudo escucharte. Puedes escribirme.')
     }
     r.onend = () => cerrar(true)
     actual.current = { cerrar }
@@ -783,19 +995,33 @@ function useDictado(alOir: (texto: string) => void, alTerminar: (texto: string) 
     esperarSilencio(8000)
     try {
       r.start()
-    } catch {
+    } catch (causa) {
+      anotarVoz(`el dictado no arrancó (${causa instanceof Error ? causa.name : 'desconocido'})`)
       cerrar(false)
+      // Reabrirlo solo (sin toque) lo niegan algunos navegadores: se pide el toque.
+      if (conversacion.enRonda()) return conversacion.cortar(SEGUIR_HABLANDO)
+      conversacion.cortar(null)
       setAviso('Tu navegador no pudo escucharte. Puedes escribirme.')
     }
   }
 
   return {
     disponible,
+    /** `navegador` (dictado del navegador), `teclado` (dictado del teclado del celular) o `ninguno`. */
+    modo: modo.startsWith('navegador') ? ('navegador' as const) : (modo as 'teclado' | 'ninguno'),
     estado,
     aviso,
+    avisar: (texto: string) => setAviso(texto),
     empezar,
     terminar: () => actual.current?.cerrar(true),
     cancelar: () => actual.current?.cerrar(false),
+    /** Si lo que se envía se dictó con el teclado tras tocar el micrófono (y lo olvida). */
+    tomarTeclado: () => {
+      const fue = porTeclado.current
+      porTeclado.current = false
+      if (fue) setAviso(null)
+      return fue
+    },
   }
 }
 
@@ -804,10 +1030,18 @@ function useDictado(alOir: (texto: string) => void, alTerminar: (texto: string) 
  * gratis y sin servidor. Por frases (Chrome corta las locuciones largas a los ~15 s) y sin los enlaces del
  * panel, que leídos en voz alta no dicen nada. Se apaga con el altavoz de la cabecera.
  */
-function useLectura() {
+function useLectura(alTerminar: () => void) {
   const disponible = useSyncExternalStore(sinCambios, () => 'speechSynthesis' in window, () => false)
   const [activa, setActiva] = useState(true)
   const [hablando, setHablando] = useState(false)
+  /** La respuesta que se va leyendo: lo que falta por cerrar frase, cuántas frases suenan y si ya llegó entera. */
+  const ronda = useRef({ resto: '', leido: '', sonando: 0, entera: true, id: 0 })
+  /** Las frases que suenan, guardadas hasta que acaben: sin referencia, el navegador puede soltarlas sin avisar del final. */
+  const vivas = useRef(new Set<SpeechSynthesisUtterance>())
+  const alFinal = useRef(alTerminar)
+  useEffect(() => {
+    alFinal.current = alTerminar
+  })
 
   // Chrome carga sus voces tarde: se piden al montar para que la primera respuesta ya tenga la buena.
   useEffect(() => {
@@ -823,31 +1057,89 @@ function useLectura() {
   }, [])
 
   const callar = () => {
+    ronda.current = { resto: '', leido: '', sonando: 0, entera: true, id: ronda.current.id + 1 }
+    vivas.current.clear()
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) window.speechSynthesis.cancel()
     setHablando(false)
   }
 
-  function leer(texto: string) {
-    if (!disponible || !activa) return
+  /** iOS solo deja hablar a una página que ya habló dentro de un toque: una frase vacía la estrena. */
+  const estrenada = useRef(false)
+  const estrenar = () => {
+    if (estrenada.current || !disponible) return
+    estrenada.current = true
+    window.speechSynthesis.speak(new SpeechSynthesisUtterance(''))
+  }
+
+  const terminarRonda = (id: number) => {
+    if (id !== ronda.current.id) return
+    setHablando(false)
+    alFinal.current()
+  }
+
+  function decir(frase: string) {
+    const r = ronda.current
+    const texto = paraLeer(frase)
+    if (texto.length < 2) return
     const voz = window.speechSynthesis
-    voz.cancel()
-    const limpio = texto.replace(/\/panel\/eventos\/\S+/g, '').replace(/[*_#`]/g, '')
-    const frases = (limpio.match(/[^.!?¿¡\n]+[.!?]*/g) ?? []).map((f) => f.trim()).filter((f) => f.length > 1)
-    if (frases.length === 0) return
-    // Mujer latinoamericana en español, mujer nativa en inglés; el idioma, el de la respuesta (`voz.ts`).
-    const idioma = idiomaDelTexto(limpio, navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es')
+    r.leido += ` ${texto}`
+    // Mujer latinoamericana en español, mujer nativa en inglés; el idioma, el de lo que va de respuesta (`voz.ts`).
+    const idioma = idiomaDelTexto(r.leido, navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es')
     const elegida = elegirVoz(voz.getVoices(), idioma)
-    frases.forEach((frase, i) => {
-      const u = new SpeechSynthesisUtterance(frase)
-      u.lang = elegida?.lang ?? (idioma === 'en' ? 'en-US' : 'es-MX')
-      if (elegida !== undefined) u.voice = elegida
-      if (i === 0) u.onstart = () => setHablando(true)
-      if (i === frases.length - 1) {
-        u.onend = () => setHablando(false)
-        u.onerror = () => setHablando(false)
-      }
-      voz.speak(u)
-    })
+    const u = new SpeechSynthesisUtterance(texto)
+    u.lang = elegida?.lang ?? (idioma === 'en' ? 'en-US' : 'es-MX')
+    if (elegida !== undefined) u.voice = elegida
+    const id = r.id
+    r.sonando += 1
+    setHablando(true)
+    vivas.current.add(u)
+    const acabo = () => {
+      vivas.current.delete(u)
+      if (id !== ronda.current.id) return
+      ronda.current.sonando -= 1
+      if (ronda.current.sonando === 0 && ronda.current.entera) terminarRonda(id)
+    }
+    u.onend = acabo
+    u.onerror = (e) => {
+      if (e.error !== 'interrupted' && e.error !== 'canceled') anotarVoz(`no pudo leer la respuesta en voz alta (${e.error})`)
+      acabo()
+    }
+    voz.speak(u)
+  }
+
+  /**
+   * **Leer mientras llega**: `empezar` abre la ronda, `alimentar` lee cada frase en cuanto se cierra y `terminar`
+   * lee lo que quede. Al callarse la última frase avisa (`alTerminar`): así vuelve a escuchar en la conversación.
+   * Devuelve si va a leer (apagada o sin voz en el aparato, no).
+   */
+  function empezar(): boolean {
+    if (!disponible || !activa) return false
+    const voz = window.speechSynthesis
+    // Solo si algo suena: en iOS, `cancel()` justo antes de `speak()` se traga la frase nueva.
+    if (voz.speaking || voz.pending) voz.cancel()
+    ronda.current = { resto: '', leido: '', sonando: 0, entera: false, id: ronda.current.id + 1 }
+    return true
+  }
+  function alimentar(trozo: string) {
+    const r = ronda.current
+    if (r.entera) return
+    const { frases, resto } = frasesListas(r.resto + trozo)
+    r.resto = resto
+    for (const f of frases) decir(f)
+  }
+  function terminar() {
+    const r = ronda.current
+    if (r.entera) return
+    r.entera = true
+    if (r.resto.trim() !== '') decir(r.resto)
+    r.resto = ''
+    if (r.sonando === 0) terminarRonda(r.id)
+  }
+  /** Una frase suelta («Cuando quieras»), sin ronda de respuesta detrás. */
+  function una(frase: string) {
+    if (!empezar()) return
+    alimentar(frase)
+    terminar()
   }
 
   const alternar = () => {
@@ -855,5 +1147,5 @@ function useLectura() {
     setActiva(!activa)
   }
 
-  return { disponible, activa, hablando, leer, callar, alternar }
+  return { disponible, activa, hablando, empezar, alimentar, terminar, una, callar, alternar, estrenar }
 }

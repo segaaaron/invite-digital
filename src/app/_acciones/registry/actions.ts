@@ -59,7 +59,7 @@ export async function addGiftAction(input: {
   url: string | null
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -81,7 +81,7 @@ export async function updateGiftAction(input: {
   url: string | null
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -99,7 +99,7 @@ export async function removeGiftAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -117,7 +117,7 @@ export async function markPurchasedAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -135,7 +135,7 @@ export async function releaseGiftAsAtelierAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -155,7 +155,7 @@ export async function addFundAction(input: {
   goalCents: number
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -176,7 +176,7 @@ export async function updateFundAction(input: {
   goalCents: number
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -194,7 +194,7 @@ export async function removeFundAction(input: {
   eventSlug: string
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado
@@ -224,7 +224,7 @@ export async function recordContributionAction(input: {
   message: string | null
 }): Promise<RegistryActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinMesaDeRegalos(input.eventId)
   if (cerrado) return cerrado

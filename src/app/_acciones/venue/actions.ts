@@ -40,7 +40,7 @@ export async function addTableAction(input: {
   notes?: string | null
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -70,7 +70,7 @@ export async function updateTableAction(input: {
   notes?: string | null
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -88,7 +88,7 @@ export async function removeTableAction(input: {
   eventSlug: string
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -113,7 +113,7 @@ export async function assignGroupAction(input: {
   tableId: string
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -131,7 +131,7 @@ export async function unassignGroupAction(input: {
   groupId: string
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -145,7 +145,7 @@ export async function unassignGroupAction(input: {
 
 export async function autoAssignAction(input: { eventId: string; eventSlug: string }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -171,7 +171,7 @@ export async function addZoneAction(input: {
   label: string
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -208,7 +208,7 @@ export async function updateZoneAction(input: {
   h: number
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -226,7 +226,7 @@ export async function removeZoneAction(input: {
   eventSlug: string
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado
@@ -249,7 +249,7 @@ export async function moveElementsAction(input: {
   moves: ElementMove[]
 }): Promise<VenueActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const cerrado = await sinSalon(input.eventId)
   if (cerrado) return cerrado

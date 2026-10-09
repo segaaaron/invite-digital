@@ -18,7 +18,7 @@ import { componerAgenda } from '@/modules/planner/domain/agenda'
 import { drizzlePlannerStore } from '@/modules/planner/infrastructure/drizzle-planner-store'
 import { createEventUseCase } from '@/modules/events/application/create-event'
 import { getEventById, getEventBySlug } from '@/modules/events/application/get-event'
-import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor, membresiasDe } from '@/modules/events/application/tenancy'
+import { actorCanTouchEvent, getEventByIdFor, getEventFor, listEventsFor, membresiasDe, tocarEvento } from '@/modules/events/application/tenancy'
 import { deleteEvent } from '@/modules/events/application/delete-event'
 import { checkEventPassword, setEventPassword } from '@/modules/events/application/event-access'
 import { clearContent, contentFor, contentForPreview, saveContentBlock, seedEmptyContent } from '@/modules/events/application/content-use-cases'
@@ -211,6 +211,7 @@ export const events = {
   getByIdFor: getEventByIdFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   listFor: listEventsFor({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   canTouch: actorCanTouchEvent({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
+  tocar: tocarEvento({ events: drizzleEventRepository, staff: drizzleStaffRepository }),
   setOwner: (eventId: string, userId: string) => drizzleEventRepository.setOwner(eventId, userId),
   /** Al preparar un enlace: la invitación sale publicada, sin que nadie la apruebe. */
   publicarSiBorrador: (eventId: string) => publicarSiBorrador(db, eventId),

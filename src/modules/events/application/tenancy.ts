@@ -1,5 +1,6 @@
 import { type Actor, canAccessEvent, type EventSection, isAdmin, type Membership } from '@/modules/identity'
 import { attempt, err, isErr, isOk, ok, type Result } from '@/shared/result'
+import { enOrdenParaElCliente } from '../domain/celebrado'
 import { createEvent, type Event } from '../domain/event'
 import { eventError, type EventError } from '../domain/errors'
 import type { EventRepository, StaffReader } from './ports'
@@ -131,34 +132,47 @@ export const listEventsFor =
           built.push(event.value)
         }
 
-        return ok(built)
+        // El cliente que compró otro evento: lo que viene primero, no el más antiguo (que ya se celebró).
+        return ok(actor.role === 'cliente' ? enOrdenParaElCliente(built, new Date()) : built)
       },
       (cause) => eventError('storage_failure', `No se pudo leer la lista de eventos: ${String(cause)}`),
     )
 
-/** Lo usa la guardia de las Server Actions, que solo necesita un sí o un no. */
-export const actorCanTouchEvent =
+/**
+ * Lo usa la guardia de las Server Actions: el evento que puede tocar, o `null`. Trae su fecha para el
+ * cierre de lo ya celebrado (`yaSeCelebro`).
+ */
+export const tocarEvento =
   (deps: { events: EventRepository; staff: StaffReader }) =>
   async (
     actor: Actor,
     ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
-  ): Promise<string | null> => {
+  ): Promise<{ id: string; slug: string; eventDate: string } | null> => {
     const opciones = { section: ref.section }
-    let eventId: string | null = null
+    let evento: Event | null = null
     if (ref.eventId !== undefined) {
       const porId = await getEventByIdFor(deps)(actor, ref.eventId, opciones)
       if (!isOk(porId)) return null
-      eventId = porId.value.id
+      evento = porId.value
     }
     if (ref.eventSlug !== undefined) {
       const porSlug = await getEventFor(deps)(actor, ref.eventSlug, opciones)
       if (!isOk(porSlug)) return null
       // Con las dos referencias, tienen que ser **el mismo** evento: si no, la acción
       // comprobaría uno y escribiría en el otro.
-      if (eventId !== null && eventId !== porSlug.value.id) return null
-      eventId = porSlug.value.id
+      if (evento !== null && evento.id !== porSlug.value.id) return null
+      evento = porSlug.value
     }
     // Sin ninguna referencia no hay nada que comprobar, y eso es un error de quien llama:
     // la guardia existe justo para las acciones que sí tocan un evento.
-    return eventId
+    return evento === null ? null : { id: evento.id, slug: evento.slug, eventDate: evento.eventDate }
   }
+
+/** Solo el sí o el no. */
+export const actorCanTouchEvent =
+  (deps: { events: EventRepository; staff: StaffReader }) =>
+  async (
+    actor: Actor,
+    ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
+  ): Promise<string | null> =>
+    (await tocarEvento(deps)(actor, ref))?.id ?? null

@@ -76,6 +76,8 @@ export type NavExtra = {
   readonly equipo?: 'anfitrion' | 'coanfitrion' | 'planner' | null
   /** Es planner en algún evento: llega a su mesa desde la cuenta. */
   readonly mesaPlanner?: boolean
+  /** El cliente tiene más de un evento (compró otro): llega a «Mis eventos» y elige. */
+  readonly misEventos?: boolean
   /**
    * Las secciones que el plan del evento no trae (`seccionesFueraDelPlan`): no se enseñan. Un
    * plan básico no ve entradas a pantallas que tiene cerradas. Sin decirlo, todas.
@@ -209,6 +211,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
       {
         label: 'Cuenta',
         items: [
+          { href: extra.misEventos ? '/panel' : null, label: 'Mis eventos', icon: 'eventos' },
           { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
         ],
       },

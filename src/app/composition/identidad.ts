@@ -6,7 +6,9 @@ import { authenticateSession } from '@/modules/identity/application/authenticate
 import { signIn } from '@/modules/identity/application/sign-in'
 import { signOut } from '@/modules/identity/application/sign-out'
 import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
-import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
+import { borrarSesionesDelDispositivo, drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
+import { DISPOSITIVO_DE_SIRI } from '@/modules/identity/domain/dispositivo'
+import { nextExpiry } from '@/modules/identity/domain/session'
 import { drizzleSupportStore } from '@/modules/identity/infrastructure/drizzle-support-store'
 import { drizzleUserRepository, setProvisionalPassword } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { resetClientAccess } from '@/modules/identity/application/reset-client-access'
@@ -62,5 +64,15 @@ export const identity = {
   nombrarSesion: (sessionId: string, device: string) => drizzleSessionRepository.setDevice(sessionId, device),
   /** Un código al correo de quien tiene la sesión: para cambiar la contraseña o cerrar las demás. */
   requestAccountCode: requestAccountCode({ users: drizzleUserRepository, resets: drizzlePasswordResetRepository, minter, clock }),
+  /**
+   * **La llave del Atajo de Siri**: una sesión propia («Atajo de Siri») de quien la pide; la anterior deja de
+   * valer. Se devuelve en claro una sola vez (en la base, su SHA-256, como toda sesión).
+   */
+  llaveDeSiri: async (userId: string): Promise<string> => {
+    await borrarSesionesDelDispositivo(userId, DISPOSITIVO_DE_SIRI)
+    const { token, hash } = minter.mint()
+    await drizzleSessionRepository.create({ userId, tokenHash: hash, expiresAt: nextExpiry(clock()), device: DISPOSITIVO_DE_SIRI })
+    return token
+  },
   closeOtherSessions: closeOtherSessions({ resets: drizzlePasswordResetRepository, sessions: drizzleSessionRepository, minter, clock }),
 } as const

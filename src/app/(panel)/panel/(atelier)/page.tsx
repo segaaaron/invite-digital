@@ -26,7 +26,7 @@ export default async function PanelHomePage() {
           ) : undefined
         }
         kicker={actor.role === 'atelier' ? 'Atelier' : 'Panel'}
-        title={actor.role === 'atelier' ? 'Eventos' : 'Tus eventos'}
+        title={actor.role === 'atelier' ? 'Eventos' : 'Mis eventos'}
       />
 
       <PanelCard>

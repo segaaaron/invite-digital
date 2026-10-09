@@ -25,7 +25,7 @@ export async function markReminderSentAction(input: {
   kind: ReminderKind
 }): Promise<ReminderActionState> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
 
   const result = await reminders.markSent({
     eventId: input.eventId,

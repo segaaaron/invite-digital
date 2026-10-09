@@ -19,4 +19,4 @@ export {
 export type { Actor, DeleteUserVerdict, EventSection, Membership, RolEnEquipo, Role } from './domain/access'
 export { createCredential } from './domain/credential'
 export { actorDeSesion } from './domain/support'
-export { describirDispositivo } from './domain/dispositivo'
+export { DISPOSITIVO_DE_SIRI, describirDispositivo } from './domain/dispositivo'

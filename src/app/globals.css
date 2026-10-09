@@ -253,3 +253,10 @@ body {
     font-size: 12px;
   }
 }
+
+/* Un evento celebrado queda para mirar (8 de octubre): los botones que guardan o borran se apagan. El
+   corte de verdad está en la guardia de las acciones; esto solo evita escribir para nada. */
+[data-solo-lectura] button:is([data-variante='primary'], [data-variante='danger']):not([data-aun-celebrado]) {
+  pointer-events: none;
+  opacity: 0.4;
+}

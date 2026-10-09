@@ -80,8 +80,11 @@ async function entrarCon(token: string): Promise<never> {
   // El admin no entra a los datos de ninguna boda: su puerta es la administración.
   if (usuario !== null && parseRole(usuario.role) === 'admin') redirect('/panel/admin')
 
+  // El cliente con más de un evento (compró otro) elige en «Mis eventos».
+  const varios = usuario !== null && parseRole(usuario.role) === 'cliente' && listados !== null && !isErr(listados) && listados.value.length > 1
+
   redirect(
-    activo === null
+    activo === null || varios
       ? '/panel'
       : esPuerta
         ? `/panel/eventos/${activo.slug}/checkin`

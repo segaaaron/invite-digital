@@ -8,6 +8,7 @@ import { type Actor, type EventSection, isAdmin, parseRole } from '@/modules/ide
 import { actorDeSesion } from '@/modules/identity/domain/support'
 import { describirDispositivo } from '@/modules/identity/domain/dispositivo'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { yaSeCelebro } from '@/modules/events'
 
 export const SESSION_COOKIE = 'invite_session'
 
@@ -41,9 +42,18 @@ const CUENTA = '/panel/cuenta'
  */
 export const requireSession = cache(leerSesion)
 
+/** La ruta del Atajo de Siri: la **única** donde la sesión puede llegar como `Authorization: Bearer` (la llave). */
+export const RUTA_DE_SIRI = '/panel/luxury/siri'
+
+/** La llave de Siri del encabezado, solo en su ruta: en cualquier otra, la sesión es la cookie y nada más. */
+export const llaveDelEncabezado = (ruta: string, autorizacion: string | null): string | null =>
+  ruta === RUTA_DE_SIRI && autorizacion !== null && /^Bearer [A-Za-z0-9_-]{16,200}$/.test(autorizacion.trim()) ? autorizacion.trim().slice(7) : null
+
 async function leerSesion(): Promise<Actor> {
   const jar = await cookies()
-  const token = jar.get(SESSION_COOKIE)?.value ?? null
+  const cabeceras = await headers()
+  const ruta = cabeceras.get(PATHNAME_HEADER) ?? ''
+  const token = jar.get(SESSION_COOKIE)?.value ?? llaveDelEncabezado(ruta, cabeceras.get('authorization'))
   const result = await identity.authenticateSession(token)
 
   if (isErr(result)) redirect('/panel/entrar')
@@ -71,8 +81,6 @@ async function leerSesion(): Promise<Actor> {
   )
   if (limpiar || (result.value.supportSessionId !== null && abierto === null)) await identity.support.close(result.value.sessionId, new Date())
 
-  const cabeceras = await headers()
-  const ruta = cabeceras.get(PATHNAME_HEADER) ?? ''
   // Las sesiones abiertas antes de guardar el dispositivo lo toman en su siguiente visita:
   // si no, Mi cuenta las lista como «Dispositivo sin identificar» para siempre.
   if (result.value.device === null) await identity.nombrarSesion(result.value.sessionId, describirDispositivo(cabeceras.get('user-agent') ?? ''))
@@ -136,12 +144,33 @@ export async function requireAdmin(): Promise<Actor> {
  */
 export async function requireEventAccess(
   actor: Actor,
-  ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
+  ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection; aunCelebrado?: true },
 ): Promise<string> {
-  const eventId = await events.canTouch(actor, ref)
-  if (eventId === null) {
+  const evento = await events.tocar(actor, ref)
+  if (evento === null) {
     registrarFallo('sesion', 'acceso denegado a evento ajeno', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
     throw new Error('Evento no encontrado')
   }
-  return eventId
+  // **Lo celebrado queda para mirar** (8 de octubre): nadie del equipo lo cambia ni lo borra; el admin
+  // sí (también en modo soporte), y lo que sigue después de la fiesta lo pide con `aunCelebrado`
+  // (agradecer mensajes). No se escribe nada: se vuelve a la pantalla, que dice por qué.
+  if (ref.aunCelebrado !== true && soloParaMirar(actor, evento.eventDate)) redirect(await pantallaDeVuelta(evento.slug))
+  return evento.id
+}
+
+/** Lo celebrado, para quien no es admin. Lo usan la guardia, la carcasa (el aviso) y Luxury. */
+export const soloParaMirar = (actor: Actor, eventDate: string, ahora = new Date()): boolean =>
+  !isAdmin(actor) && actor.soporte === undefined && yaSeCelebro(eventDate, ahora)
+
+/** La pantalla desde la que se pulsó (sin `?panel=…`: el diálogo se cierra), o el resumen del evento. */
+async function pantallaDeVuelta(slug: string): Promise<string> {
+  const base = `/panel/eventos/${slug}`
+  const desde = (await headers()).get('referer')
+  if (desde === null) return base
+  try {
+    const ruta = new URL(desde).pathname
+    return ruta.startsWith(base) ? ruta : base
+  } catch {
+    return base
+  }
 }

@@ -45,3 +45,20 @@ export async function accesoAlAsistente(actor: Actor, slug: string) {
       : 'anfitrión (quien celebra)'
   return { evento: evento.value, capacidad: capacidad.value as Allowance, config, rol, nombreDelPlan: await nombreDePlan(capacidad.value.planSlug) }
 }
+
+/** Cuántos eventos se miran buscando a Luxury: los que vienen primero; los de más atrás no se hablan por voz. */
+const EVENTOS_QUE_SE_MIRAN = 5
+
+/**
+ * **El evento con Luxury de quien habla** (Siri, «Hablar con Luxury» del icono, Mi cuenta): el primero de sus
+ * eventos —en el orden de «Mis eventos», lo que viene primero— que tenga a Luxury. `null` si ninguno.
+ */
+export async function primerEventoConLuxury(actor: Actor) {
+  const listados = await events.listFor(actor)
+  // ponytail: mira los 5 primeros en serie (~4 consultas cada uno); con más eventos, una consulta por plan si hace falta.
+  for (const e of isErr(listados) ? [] : listados.value.slice(0, EVENTOS_QUE_SE_MIRAN)) {
+    const acceso = await accesoAlAsistente(actor, e.slug)
+    if (acceso !== null) return acceso
+  }
+  return null
+}

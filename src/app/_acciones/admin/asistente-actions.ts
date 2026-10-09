@@ -16,8 +16,9 @@ export async function guardarAsistenteAction(_previo: AsistenteState, formData: 
     planes: formData.getAll('plan').map(String),
     mensajesPorMes: Number(campo(formData, 'mensajes')),
     presupuestoUsd: Number(campo(formData, 'presupuesto').replace(',', '.')),
+    atajoDeSiri: campo(formData, 'atajoDeSiri').trim(),
   })
-  if (config === null) return { status: 'error', message: 'Revisa los números: mensajes entero de 0 a 100.000 y gasto de 0 a 10.000 USD.' }
+  if (config === null) return { status: 'error', message: 'Revisa los números (mensajes entero de 0 a 100.000, gasto de 0 a 10.000 USD) y que el atajo sea un enlace https://www.icloud.com/shortcuts/…' }
   try {
     await asistente.guardarConfig(config)
   } catch (causa) {

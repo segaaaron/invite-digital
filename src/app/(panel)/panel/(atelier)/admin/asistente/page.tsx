@@ -4,6 +4,7 @@ import { AjustesDelAsistente } from '@/modules/asistente/ui/AjustesDelAsistente'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
+import { env } from '@/shared/config/env'
 
 export const metadata = { title: 'Asistente · Administración' }
 export const dynamic = 'force-dynamic'
@@ -48,7 +49,7 @@ export default async function AsistentePage() {
               No pudimos leer los planes. La base no responde; vuelve a intentarlo en un momento.
             </p>
           ) : (
-            <AjustesDelAsistente config={config} planes={planes.value.filter((p) => p.isActive).map((p) => ({ slug: p.slug, nombre: p.es?.name ?? p.slug }))} />
+            <AjustesDelAsistente config={config} urlDeSiri={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} planes={planes.value.filter((p) => p.isActive).map((p) => ({ slug: p.slug, nombre: p.es?.name ?? p.slug }))} />
           )}
         </PanelCard>
       </div>

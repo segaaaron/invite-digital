@@ -9,7 +9,7 @@ import { reglasDelSistema, type Idioma } from '@/modules/asistente/domain/reglas
 import { drizzleUsoDelAsistente } from '@/modules/asistente/infrastructure/drizzle-uso'
 import { modeloFalso } from '@/modules/asistente/infrastructure/modelo-falso'
 import { crearModeloOpenAI } from '@/modules/asistente/infrastructure/openai'
-import { fiestaDeTema, preguntasDelEncargo } from '@/modules/events'
+import { fiestaDeTema, preguntasDelEncargo, yaSeCelebro } from '@/modules/events'
 import { categoriasDe, cuentasDePartida, estadoDeTarea, NOMBRE_DE_CLASE, NOMBRE_DE_ESTADO, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
 import { extraDisponible, hasFeature, NOMBRE_DE_EFECTO, type Allowance } from '@/modules/plans'
 import { env } from '@/shared/config/env'
@@ -53,7 +53,13 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
   const hoy = fechaEnBolivia(ahora)
   const ruta = (r: string) => `/panel/eventos/${evento.slug}${r}`
   return async (llamada) => {
-    if (ESCRITURAS.has(llamada.nombre)) return escribir(llamada, evento)
+    if (ESCRITURAS.has(llamada.nombre)) {
+      // Lo celebrado queda para mirar (8 de octubre): solo se agradecen los mensajes.
+      if (yaSeCelebro(evento.eventDate, ahora) && llamada.nombre !== 'agradecer_mensajes') {
+        return { hecho: [], no_se_pudo: ['El evento ya se celebró: queda para mirar y ya no se cambia ni se borra nada. Solo se pueden agradecer los mensajes del libro de firmas.'] }
+      }
+      return escribir(llamada, evento)
+    }
     switch (llamada.nombre) {
       case 'resumen_del_evento': {
         const [cuenta, grupos, personas, visitas] = await Promise.all([rsvp.tally(evento.id), guests.list(evento.id), guests.listPeople(evento.id), analytics.tally(evento.id)])
@@ -413,7 +419,7 @@ export const asistente = {
   usoDe: (eventId: string, ahora: Date) => drizzleUsoDelAsistente.usoDe(eventId, mesEnBolivia(ahora)),
   resumenDelMes: (ahora: Date) => drizzleUsoDelAsistente.resumenDelMes(mesEnBolivia(ahora)),
   /** Una respuesta, en trozos. Quien llama ya comprobó sesión, evento, plan y cuota. */
-  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; escribir: Escritor }): AsyncGenerator<Salida> {
+  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor }): AsyncGenerator<Salida> {
     if (modelo === null) throw new Error('Luxury no tiene modelo configurado')
     const mes = mesEnBolivia(p.ahora)
     const instrucciones = reglasDelSistema({
@@ -426,6 +432,7 @@ export const asistente = {
       slug: p.evento.slug,
       idioma: p.idioma,
       porVoz: p.porVoz,
+      canal: p.canal ?? 'panel',
     })
     return conversar({
       modelo,

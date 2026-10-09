@@ -141,6 +141,19 @@ test.describe('soporte como el cliente', () => {
     await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}(/configuracion)?$`), { timeout: 30_000 })
     await expect(page.getByRole('status').filter({ hasText: 'anfitrión del evento (sin cliente)' })).toBeVisible()
     expect((await page.goto(`/panel/eventos/${SLUG}/invitados`))?.status()).toBe(200)
+    // Producción, 7 de octubre: crear una mesa así acababa en «Evento no encontrado». Se crea de verdad.
+    await page.goto(`/panel/eventos/${SLUG}/mesas?panel=mesa`)
+    await page.getByLabel('Nombre de la mesa').fill('Mesa del equipo')
+    await page.getByLabel('Capacidad (asientos)').fill('8')
+    await page.locator('dialog').getByRole('button', { name: 'Guardar', exact: true }).click()
+    await expect(page.locator('dialog[open]')).toHaveCount(0)
+    const [mesa] = await sql<{ n: number }[]>`select count(*)::int as n from venue_tables t join events e on e.id = t.event_id where e.slug = ${SLUG} and t.label = 'Mesa del equipo'`
+    expect(mesa!.n).toBe(1)
+    await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
+    await page.getByLabel('Regalo', { exact: true }).fill('Vajilla')
+    await page.getByLabel('Precio').fill('500')
+    await page.getByRole('button', { name: 'Añadir regalo' }).click()
+    await page.waitForURL(/regalos$/)
     // Solo ese evento: la administración sigue cerrada mientras actúa como anfitrión.
     expect((await page.goto('/panel/admin/eventos'))?.status()).toBe(404)
 

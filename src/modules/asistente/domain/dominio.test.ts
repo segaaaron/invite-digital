@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CONFIG_POR_DEFECTO, costeMicroUsd, leerConfig, mesEnBolivia, puedeConversar, tieneLuxury } from './config'
+import { CONFIG_POR_DEFECTO, costeMicroUsd, leerConfig, mesEnBolivia, puedeConversar, tieneLuxury, validarConfig } from './config'
 import { ESCRITURAS, HERRAMIENTAS, interpretarLlamada } from './herramientas'
 import { leerHistorial, TURNOS_QUE_SE_MANDAN } from './historial'
 import { reglasDelSistema } from './reglas'
@@ -8,7 +8,16 @@ describe('config y cuota', () => {
   it('por defecto: solo Alta Costura, 300 mensajes y 20 USD; un ajuste roto no enciende nada nuevo', () => {
     expect(leerConfig(undefined)).toEqual(CONFIG_POR_DEFECTO)
     expect(leerConfig('{roto')).toEqual(CONFIG_POR_DEFECTO)
-    expect(leerConfig('{"planes":["firma-3d"],"mensajesPorMes":50,"presupuestoUsd":5}')).toEqual({ planes: ['firma-3d'], mensajesPorMes: 50, presupuestoUsd: 5 })
+    // Lo guardado antes del atajo de Siri sigue valiendo: el atajo, vacío.
+    expect(leerConfig('{"planes":["firma-3d"],"mensajesPorMes":50,"presupuestoUsd":5}')).toEqual({ planes: ['firma-3d'], mensajesPorMes: 50, presupuestoUsd: 5, atajoDeSiri: '' })
+  })
+
+  it('el atajo de Siri solo admite un enlace de iCloud de atajos', () => {
+    const base = { planes: [], mensajesPorMes: 1, presupuestoUsd: 1 }
+    expect(validarConfig({ ...base, atajoDeSiri: 'https://www.icloud.com/shortcuts/abc123DEF' })?.atajoDeSiri).toBe('https://www.icloud.com/shortcuts/abc123DEF')
+    expect(validarConfig({ ...base, atajoDeSiri: '' })?.atajoDeSiri).toBe('')
+    expect(validarConfig({ ...base, atajoDeSiri: 'https://otro.com/shortcuts/abc' })).toBeNull()
+    expect(validarConfig({ ...base, atajoDeSiri: 'javascript:alert(1)' })).toBeNull()
   })
 
   it('corta fuera del plan, al llegar a la cuota del evento y al techo del mes', () => {

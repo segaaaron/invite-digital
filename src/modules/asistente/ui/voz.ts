@@ -53,3 +53,76 @@ export function idiomaDelTexto(texto: string, porDefecto: 'es' | 'en'): 'es' | '
   if (es === en) return porDefecto
   return es > en ? 'es' : 'en'
 }
+
+/**
+ * **Cómo se le habla a Luxury en este aparato** (8 de octubre: en iPhone el micrófono no escuchaba).
+ * - `navegador`: el reconocimiento de voz del navegador (Web Speech), con un idioma que ese navegador trae.
+ * - `teclado`: el dictado del propio teclado del celular. WebKit **no** trae el reconocimiento en las apps de
+ *   la pantalla de inicio (bug 225298), que es como se instala el panel para los avisos; ahí, y donde no hay
+ *   reconocedor, el micrófono abre el teclado y se dicta con su micrófono. Gratis y nativo.
+ * - `ninguno`: computadora sin reconocedor (Firefox): se escribe.
+ */
+export type ComoDictar = { modo: 'navegador'; lang: string } | { modo: 'teclado' } | { modo: 'ninguno' }
+
+/** Los españoles que trae el dictado de Apple; el resto (es-BO, es-PE…) no devuelve nada. */
+const ESPANOL_DE_APPLE = /^es-(ES|MX|US|CL|CO)$/i
+
+export function comoDictar(aparato: { ua: string; instalada: boolean; tactil: boolean; lang: string; conReconocedor: boolean }): ComoDictar {
+  // El iPad se presenta como Mac; se le distingue por la pantalla táctil.
+  const esApple = /iPhone|iPad|iPod/.test(aparato.ua) || (/Macintosh/.test(aparato.ua) && aparato.tactil)
+  if (esApple && aparato.instalada) return { modo: 'teclado' }
+  if (!aparato.conReconocedor) return aparato.tactil ? { modo: 'teclado' } : { modo: 'ninguno' }
+  const lang = aparato.lang || 'es-BO'
+  if (esApple && /^es\b/i.test(lang) && !ESPANOL_DE_APPLE.test(lang)) return { modo: 'navegador', lang: 'es-MX' }
+  return { modo: 'navegador', lang }
+}
+
+/**
+ * **Leer mientras llega** (8 de octubre): la respuesta se lee por frases según va llegando, sin esperar al final.
+ * Una frase está lista cuando termina en `.`, `!`, `?` o salto de línea seguido de espacio o del final; lo
+ * demás espera. «1.500,50» no corta: después del punto no hay espacio.
+ */
+export function frasesListas(texto: string): { frases: string[]; resto: string } {
+  const frases: string[] = []
+  const corte = /[.!?…]+(?=\s)|\n/g
+  let desde = 0
+  for (let m = corte.exec(texto); m !== null; m = corte.exec(texto)) {
+    const fin = m[0] === '\n' ? m.index : m.index + m[0].length
+    const frase = texto.slice(desde, fin).trim()
+    if (frase !== '') frases.push(frase)
+    desde = fin
+  }
+  return { frases, resto: texto.slice(desde) }
+}
+
+/** Las pantallas del panel por su nombre: un enlace leído en voz alta no dice nada. */
+const PANTALLAS: Record<string, string> = {
+  invitados: 'Invitados', mesas: 'Mesas', regalos: 'Regalos', mensajes: 'Mensajes', configuracion: 'Mi invitación', 'vista-previa': 'Ver mi invitación',
+  checkin: 'Ingreso al evento', equipo: 'Equipo', extras: 'Extras', 'dia-d': 'Día D', tareas: 'Plan de tareas', presupuesto: 'Presupuesto',
+  agenda: 'Agenda', proveedores: 'Proveedores', cronograma: 'Cronograma', cortejo: 'Cortejo', documentos: 'Documentos',
+}
+
+/** El texto tal como se lee: sin enlaces (la pantalla por su nombre), sin marcas y sin guiones de lista. */
+export function paraLeer(texto: string): string {
+  return texto
+    .replace(/\/panel\/eventos\/[^/\s]+(?:\/planner)?\/?([a-z-]*)[^\s,.;:)]*/g, (_, p: string) => PANTALLAS[p] ?? 'el panel')
+    .replace(/[*_#`]/g, '')
+    .replace(/^\s*[-•]\s+/gm, '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l !== '')
+    .join('. ')
+    .replace(/\.\.\s/g, '. ')
+}
+
+/** «Listo», «gracias», «eso es todo»: la conversación por voz termina (sin enviar nada a Luxury). */
+export function esDespedida(dicho: string): boolean {
+  const t = dicho
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z' ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return /^(ok |bueno |)(listo|ya|ya esta|gracias|muchas gracias|eso es todo|eso seria todo|nada mas|nada mas gracias|adios|chao|chau|hasta luego|terminar|termina|basta|para|thanks|thank you|that's all|thats all|bye|stop|done)( gracias| luxury)?$/.test(t)
+}

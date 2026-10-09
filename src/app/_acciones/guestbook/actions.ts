@@ -30,7 +30,7 @@ const refrescar = (slug: string) => revalidatePath(`/panel/eventos/${slug}/mensa
 
 export async function replyAction(input: Target & { text: string }): Promise<GuestbookActionResult> {
   const actor = await requireSession()
-  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente' })
+  await requireEventAccess(actor, { eventId: input.eventId, eventSlug: input.eventSlug, section: 'cliente', aunCelebrado: true })
 
   const result = await guestbook.reply({
     responseId: input.responseId,

@@ -95,8 +95,10 @@ export function PanelButton({
     )
   }
 
+  // La variante viaja en el botón: en un evento celebrado, el CSS apaga los que guardan o borran
+  // (`[data-solo-lectura]` en `globals.css`), también los que llaman a la acción con `onClick`.
   return (
-    <button className={clases} type="button" {...rest}>
+    <button className={clases} data-variante={variant} type="button" {...rest}>
       {children}
     </button>
   )

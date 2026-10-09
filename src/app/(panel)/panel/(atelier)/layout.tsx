@@ -47,7 +47,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
     invitados: grupos,
     pedidos: insignias.pedidos,
     consultas: insignias.consultas,
-  }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })
+  }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, misEventos: actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })
   // Quien tiene un evento navega con la misma barra de abajo que dentro de él (Mi cuenta, la ayuda…):
   // antes aquí volvía la barra oscura con «Menú» de antes del 6 de octubre.
   const barra = admin ? actor.soporte === undefined : activo !== null && actor.role !== 'puerta' ? barraDelEvento(activo.slug, sections, 'equipo') : false
