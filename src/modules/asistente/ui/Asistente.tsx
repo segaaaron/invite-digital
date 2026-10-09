@@ -12,7 +12,7 @@ import { conCanal, whatsappLink } from '@/modules/guests'
 import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
-import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer } from './voz'
+import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, vocesParaElegir } from './voz'
 
 /** `muestra`: lo que se ve en la burbuja cuando el texto para Luxury lleva datos de más (el id de un adjunto). */
 type Burbuja = { rol: 'usuario' | 'asistente'; texto: string; muestra?: string; envio?: Contenido; error?: boolean }
@@ -126,6 +126,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
    * `rondas`: cuántas veces ya se le habló en esta conversación (la primera, si falla, pasa al teclado).
    */
   const [conversacion, setConversacion] = useState(false)
+  const [verVoces, setVerVoces] = useState(false)
   const conversando = useRef(false)
   const rondas = useRef(0)
   const seguirConversacion = useRef(() => {})
@@ -422,6 +423,16 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
             </div>
             <div className="flex shrink-0 items-center gap-2">
               {lectura.disponible ? (
+                <button
+                  aria-expanded={verVoces}
+                  className="flex h-10 cursor-pointer items-center rounded-full border border-line-panel bg-white px-3 text-[12.5px] text-ink-soft transition-colors hover:border-ink hover:text-ink max-[859px]:h-11"
+                  onClick={() => setVerVoces(!verVoces)}
+                  type="button"
+                >
+                  Voz
+                </button>
+              ) : null}
+              {lectura.disponible ? (
                 // Que conteste en voz alta cuando se le habla; se apaga aquí (y «Callar» corta la que suena).
                 <button
                   aria-label={lectura.activa ? 'No leer las respuestas en voz alta' : 'Leer las respuestas en voz alta'}
@@ -444,6 +455,8 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
               </button>
             </div>
           </header>
+
+          {verVoces ? <VocesDeLuxury elegidas={lectura.elegidas} elegir={lectura.elegir} probar={lectura.probar} voces={lectura.voces} /> : null}
 
           <div aria-busy={ocupado} aria-live="polite" className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-5">
             {burbujas.length === 0 ? (
@@ -792,6 +805,67 @@ function EnConversacion({ estado, interrumpir, terminar }: { estado: 'escuchando
   )
 }
 
+/**
+ * **La voz de Luxury, a elección** (8 de octubre: «suena robótica»). La automática ya evita las voces de efecto;
+ * aquí se elige oyéndola, por idioma, y se recuerda en este aparato. Las mejores son las «mejoradas» o «premium»
+ * de Apple y las «Natural» de Windows: gratis, pero se descargan en el sistema.
+ */
+function VocesDeLuxury({
+  voces,
+  elegidas,
+  elegir,
+  probar,
+}: {
+  voces: readonly SpeechSynthesisVoice[]
+  elegidas: { es?: string; en?: string }
+  elegir: (idioma: 'es' | 'en', voiceURI: string | null) => void
+  probar: (idioma: 'es' | 'en') => void
+}) {
+  const fila = (idioma: 'es' | 'en', rotulo: string) => {
+    const lista = vocesParaElegir(voces, idioma)
+    return (
+      <div className="flex items-end gap-2">
+        <label className="flex min-w-0 flex-1 flex-col gap-1">
+          <span className="text-[12px] text-ink-mute">{rotulo}</span>
+          <select
+            className="min-h-11 w-full rounded-[12px] border border-line-panel-strong bg-white px-3 text-[14px] text-ink"
+            onChange={(e) => elegir(idioma, e.target.value === '' ? null : e.target.value)}
+            value={elegidas[idioma] ?? ''}
+          >
+            <option value="">Automática (la mejor de tu aparato)</option>
+            {lista.map((v) => (
+              <option key={v.voiceURI} value={v.voiceURI}>
+                {v.name} · {v.lang}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3.5 text-[12.5px] text-ink hover:border-ink" onClick={() => probar(idioma)} type="button">
+          Probar
+        </button>
+      </div>
+    )
+  }
+  return (
+    <div className="flex flex-col gap-3 border-b border-line-panel bg-white/60 px-5 py-4">
+      {fila('es', 'Voz en español')}
+      {fila('en', 'Voz en inglés')}
+      <details className="text-[12.5px] leading-relaxed text-ink-soft">
+        <summary className="cursor-pointer text-ink">¿Suena robótica? Descarga una voz natural (gratis)</summary>
+        <p className="mt-2">
+          <strong>iPhone:</strong> Ajustes › Accesibilidad › Leer y hablar (o Contenido leído) › Voces › Español (México) › <strong>Paulina</strong> ›
+          descarga la versión <strong>Mejorada</strong> o <strong>Premium</strong> y déjala elegida. Para inglés, English › <strong>Ava</strong> o
+          Samantha, también mejorada. Vuelve aquí y toca Probar.
+        </p>
+        <p className="mt-1.5">
+          <strong>Android:</strong> Ajustes › Accesibilidad › Salida de texto a voz › Motor de Google › Instalar datos de voz › Español (Estados Unidos o
+          México). <strong>Computadora:</strong> en Edge, las voces «Natural» de Microsoft.
+        </p>
+      </details>
+    </div>
+  )
+}
+
 function Microfono({ className }: { className?: string }) {
   return (
     <svg aria-hidden className={className} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.6" viewBox="0 0 24 24">
@@ -853,6 +927,8 @@ function anotarVoz(que: string) {
     body: JSON.stringify({ mensaje: `Voz de Luxury: ${que}`, pila: `${navigator.userAgent}\nmodo=${modoDeDictado()} idioma=${navigator.language}`, ruta: location.pathname }),
   }).catch(() => {})
 }
+
+const CLAVE_DE_VOCES = 'luxury.voces'
 
 const SEGUIR_HABLANDO = 'Toca el micrófono para seguir hablando.'
 
@@ -1043,12 +1119,33 @@ function useLectura(alTerminar: () => void) {
     alFinal.current = alTerminar
   })
 
+  /** Las voces del aparato y la que la persona eligió por idioma (se recuerda en este aparato). */
+  // Se leen al crear (el panel de voces no se pinta al hidratar: no hay desajuste con el servidor).
+  const [voces, setVoces] = useState<SpeechSynthesisVoice[]>(() => (typeof window !== 'undefined' && 'speechSynthesis' in window ? window.speechSynthesis.getVoices() : []))
+  const [elegidas, setElegidas] = useState<{ es?: string; en?: string }>(() => {
+    try {
+      return typeof window === 'undefined' ? {} : (JSON.parse(window.localStorage.getItem(CLAVE_DE_VOCES) ?? '{}') as { es?: string; en?: string })
+    } catch {
+      // Sin almacenamiento (privado): la automática.
+      return {}
+    }
+  })
+  const elegir = (idioma: 'es' | 'en', voiceURI: string | null) => {
+    const nuevas = { ...elegidas, [idioma]: voiceURI ?? undefined }
+    setElegidas(nuevas)
+    try {
+      window.localStorage.setItem(CLAVE_DE_VOCES, JSON.stringify(nuevas))
+    } catch {
+      // Sin almacenamiento: vale hasta cerrar.
+    }
+  }
+
   // Chrome carga sus voces tarde: se piden al montar para que la primera respuesta ya tenga la buena.
   useEffect(() => {
     const voz = window.speechSynthesis
     if (voz === undefined) return
     voz.getVoices()
-    const precargar = () => voz.getVoices()
+    const precargar = () => setVoces(voz.getVoices())
     voz.addEventListener?.('voiceschanged', precargar)
     return () => {
       voz.removeEventListener?.('voiceschanged', precargar)
@@ -1085,7 +1182,7 @@ function useLectura(alTerminar: () => void) {
     r.leido += ` ${texto}`
     // Mujer latinoamericana en español, mujer nativa en inglés; el idioma, el de lo que va de respuesta (`voz.ts`).
     const idioma = idiomaDelTexto(r.leido, navigator.language?.toLowerCase().startsWith('en') ? 'en' : 'es')
-    const elegida = elegirVoz(voz.getVoices(), idioma)
+    const elegida = elegirVoz(voz.getVoices(), idioma, elegidas[idioma])
     const u = new SpeechSynthesisUtterance(texto)
     u.lang = elegida?.lang ?? (idioma === 'en' ? 'en-US' : 'es-MX')
     if (elegida !== undefined) u.voice = elegida
@@ -1147,5 +1244,14 @@ function useLectura(alTerminar: () => void) {
     setActiva(!activa)
   }
 
-  return { disponible, activa, hablando, empezar, alimentar, terminar, una, callar, alternar, estrenar }
+  /** Una frase de muestra con la voz de ese idioma, para elegir oyéndola. */
+  const probar = (idioma: 'es' | 'en') => {
+    callar()
+    estrenar()
+    if (!empezar()) return
+    alimentar(idioma === 'en' ? 'Hi, I am Luxury, your event planner. ' : 'Hola, soy Luxury, tu planner. Así sueno. ')
+    terminar()
+  }
+
+  return { disponible, activa, hablando, empezar, alimentar, terminar, una, callar, alternar, estrenar, voces, elegidas, elegir, probar }
 }

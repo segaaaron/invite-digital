@@ -3,16 +3,25 @@
  * Son las voces del propio aparato (gratis): cada sistema trae las suyas, así que se puntúan por idioma,
  * por nombre conocido de voz femenina y por calidad («Natural», «Premium», «Enhanced» suenan a persona).
  */
-export type VozDelAparato = { readonly name: string; readonly lang: string }
+export type VozDelAparato = { readonly name: string; readonly lang: string; readonly voiceURI?: string }
 
 const LATAM = /^es[-_](419|MX|US|AR|BO|CO|PE|CL|EC|VE|UY|PY|CR|GT|HN|NI|PA|PR|DO|SV|CU)$/i
 /** Voces femeninas conocidas de macOS/iOS, Chrome, Edge/Windows y Android. */
 const FEMENINAS = /paulina|ang[eé]lica|sof[ií]a|dalia|paloma|sabina|salom[eé]|camila|elena|valentina|ximena|renata|catalina|larissa|samantha|ava|allison|susan|zoe|aria|jenny|michelle|emma|ana\b|libby|sonia|karen|moira|tessa|serena|nicky|joanna|salli|kimberly|google (español|us english)|female|mujer/i
-const MASCULINAS = /\b(juan|jorge|diego|carlos|ra[uú]l|pablo|gonzalo|tom[aá]s|federico|emilio|alex|daniel|fred|tom|aaron|arthur|guy|andrew|brian|christopher|eric|roger|steffan|jorge|lorenzo|alonso|gerardo|male|hombre)\b/i
+const MASCULINAS = /\b(juan|jorge|diego|carlos|ra[uú]l|pablo|gonzalo|tom[aá]s|federico|emilio|alex|daniel|tom|aaron|arthur|guy|andrew|brian|christopher|eric|roger|steffan|lorenzo|alonso|gerardo|male|hombre)\b/i
+/** Mejor calidad: las mejoradas y premium de Apple, las neuronales de Edge, las «Natural» de Windows. */
 const CALIDAD = /natural|premium|enhanced|mejorada|neural|online/i
+/**
+ * **Las voces de efecto, nunca** (8 de octubre: «la voz suena robótica» en Safari de iPhone, que a menudo solo
+ * enseña éstas a las páginas): las Eloquence de Apple (Eddy, Flo, Abuela/o, Reed, Rocko, Sandy, Shelley) y las
+ * de novedad de macOS (Zarvox, Bubbles…). Sin otra voz, se deja la del sistema: la que la persona tiene puesta.
+ */
+const DE_EFECTO = /eloquence|\b(eddy|flo|grandma|grandpa|abuela|abuelo|reed|rocko|sandy|shelley|albert|bad news|bahh|bells|boing|bubbles|cellos|good news|jester|organ|superstar|trinoids|whisper|wobble|zarvox|fred|junior|kathy|ralph)\b/i
 
 function puntos(v: VozDelAparato, idioma: 'es' | 'en'): number {
   const lang = v.lang.replace('_', '-')
+  const ficha = `${v.name} ${v.voiceURI ?? ''}`
+  if (DE_EFECTO.test(ficha)) return -1
   let p = 0
   if (idioma === 'es') {
     if (!lang.toLowerCase().startsWith('es')) return -1
@@ -24,13 +33,22 @@ function puntos(v: VozDelAparato, idioma: 'es' | 'en'): number {
   }
   if (FEMENINAS.test(v.name)) p += 40
   if (MASCULINAS.test(v.name)) p -= 60
-  if (CALIDAD.test(v.name)) p += 30
+  if (/premium/i.test(ficha)) p += 35
+  else if (CALIDAD.test(ficha)) p += 30
   if (/google/i.test(v.name)) p += 10
   return p
 }
 
-/** La mejor voz para ese idioma, o `undefined` si el aparato no trae ninguna (habla la de por defecto). */
-export function elegirVoz<V extends VozDelAparato>(voces: readonly V[], idioma: 'es' | 'en'): V | undefined {
+/**
+ * La mejor voz para ese idioma, o `undefined`: entonces habla la del sistema con el idioma puesto (en iPhone, la
+ * que la persona tiene en Ajustes, mejor que cualquier voz de efecto). `elegida`: la `voiceURI` que la persona
+ * escogió en Luxury; manda si es de ese idioma.
+ */
+export function elegirVoz<V extends VozDelAparato>(voces: readonly V[], idioma: 'es' | 'en', elegida?: string | null): V | undefined {
+  if (elegida) {
+    const suya = voces.find((v) => (v.voiceURI ?? v.name) === elegida && v.lang.toLowerCase().startsWith(idioma))
+    if (suya !== undefined) return suya
+  }
   let mejor: V | undefined
   let mejores = -1
   for (const v of voces) {
@@ -41,6 +59,15 @@ export function elegirVoz<V extends VozDelAparato>(voces: readonly V[], idioma: 
     }
   }
   return mejores < 0 ? undefined : mejor
+}
+
+/** Las voces que se ofrecen para elegir en Luxury: las de ese idioma, sin las de efecto, las mejores primero. */
+export function vocesParaElegir<V extends VozDelAparato>(voces: readonly V[], idioma: 'es' | 'en'): V[] {
+  return voces
+    .map((v) => ({ v, p: puntos(v, idioma) }))
+    .filter((x) => x.p >= 0)
+    .sort((a, b) => b.p - a.p)
+    .map((x) => x.v)
 }
 
 const PALABRAS_ES = /\b(el|la|los|las|de|que|y|en|un|una|tu|tus|para|con|por|es|está|ya|listo|invitados?)\b|[ñ¿¡áéíóú]/gi

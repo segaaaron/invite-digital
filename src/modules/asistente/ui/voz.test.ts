@@ -49,6 +49,42 @@ describe('la voz de Luxury', () => {
   })
 })
 
+describe('la voz en iPhone (8 de octubre: «suena robótica»)', () => {
+  // Lo que Safari de iPhone suele enseñar en español de México: las voces de efecto (Eloquence) y, a veces, Paulina.
+  const IPHONE = [
+    { name: 'Eddy (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Eddy' },
+    { name: 'Flo (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Flo' },
+    { name: 'Abuela (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Grandma' },
+    { name: 'Sandy (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Sandy' },
+    { name: 'Shelley (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Shelley' },
+  ]
+
+  it('nunca elige una voz de efecto: sin otra, deja la del sistema (la que la persona tiene puesta)', () => {
+    expect(elegirVoz(IPHONE, 'es')).toBeUndefined()
+  })
+
+  it('con Paulina, Paulina; y la mejorada o premium antes que la compacta', () => {
+    const compacta = { name: 'Paulina', lang: 'es-MX', voiceURI: 'com.apple.voice.compact.es-MX.Paulina' }
+    expect(elegirVoz([...IPHONE, compacta], 'es')).toBe(compacta)
+    const mejorada = { name: 'Paulina (mejorada)', lang: 'es-MX', voiceURI: 'com.apple.voice.enhanced.es-MX.Paulina' }
+    expect(elegirVoz([...IPHONE, compacta, mejorada], 'es')).toBe(mejorada)
+    const premium = { name: 'Paulina', lang: 'es-MX', voiceURI: 'com.apple.voice.premium.es-MX.Paulina' }
+    expect(elegirVoz([compacta, premium], 'es')).toBe(premium)
+  })
+
+  it('la que eligió la persona manda, si es de ese idioma', () => {
+    const marisol = { name: 'Marisol', lang: 'es-ES', voiceURI: 'marisol' }
+    const paulina = { name: 'Paulina', lang: 'es-MX', voiceURI: 'paulina' }
+    expect(elegirVoz([marisol, paulina], 'es', 'marisol')).toBe(marisol)
+    // Una elegida en español no se usa para leer en inglés.
+    expect(elegirVoz([marisol, { name: 'Samantha', lang: 'en-US', voiceURI: 'sam' }], 'en', 'marisol')?.name).toBe('Samantha')
+  })
+
+  it('en inglés tampoco las de efecto', () => {
+    expect(elegirVoz([{ name: 'Fred', lang: 'en-US' }, { name: 'Zarvox', lang: 'en-US' }, { name: 'Bubbles', lang: 'en-US' }], 'en')).toBeUndefined()
+  })
+})
+
 describe('cómo se dicta en cada aparato', () => {
   const SAFARI_IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Mobile/15E148 Safari/604.1'
   const IPAD_ESCRITORIO = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15'

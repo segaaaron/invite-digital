@@ -169,6 +169,51 @@ test.describe('hablarle', () => {
     await expect(panel.getByText('listo', { exact: true })).toHaveCount(0)
   })
 
+  test('la voz se elige oyéndola: sin voces de efecto, y se recuerda', async ({ page }) => {
+    // Las voces de un iPhone: las de efecto (Eloquence) y Paulina. Utterance y voz de mentira apuntan con qué voz habla.
+    await page.addInitScript(() => {
+      const voces = [
+        { name: 'Eddy (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Eddy' },
+        { name: 'Flo (Español (México))', lang: 'es-MX', voiceURI: 'com.apple.eloquence.es-MX.Flo' },
+        { name: 'Paulina', lang: 'es-MX', voiceURI: 'com.apple.voice.compact.es-MX.Paulina' },
+        { name: 'Mónica', lang: 'es-ES', voiceURI: 'com.apple.voice.compact.es-ES.Monica' },
+        { name: 'Samantha', lang: 'en-US', voiceURI: 'com.apple.voice.compact.en-US.Samantha' },
+      ]
+      const w = window as unknown as { __hablo: string[] }
+      w.__hablo = []
+      class Frase {
+        text: string
+        lang = ''
+        voice: { name: string } | null = null
+        onend: (() => void) | null = null
+        onerror: (() => void) | null = null
+        constructor(t: string) {
+          this.text = t
+        }
+      }
+      Object.assign(window, { SpeechSynthesisUtterance: Frase })
+      Object.defineProperty(window.speechSynthesis, 'getVoices', { value: () => voces })
+      window.speechSynthesis.speak = ((u: Frase) => {
+        if (u.text !== '') w.__hablo.push(`${u.voice?.name ?? 'sistema'}: ${u.text}`)
+        setTimeout(() => u.onend?.(), 20)
+      }) as unknown as typeof window.speechSynthesis.speak
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Voz', exact: true }).click()
+    const espanol = panel.getByLabel('Voz en español')
+    await expect(espanol.locator('option')).toHaveText(['Automática (la mejor de tu aparato)', 'Paulina · es-MX', 'Mónica · es-ES'])
+    await espanol.selectOption({ label: 'Mónica · es-ES' })
+    await panel.getByRole('button', { name: 'Probar' }).first().click()
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __hablo: string[] }).__hablo.join(' | '))).toContain('Mónica: Hola, soy Luxury')
+    // Se recuerda en este aparato.
+    await page.reload()
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    await panel.getByRole('button', { name: 'Voz', exact: true }).click()
+    await expect(panel.getByLabel('Voz en español')).toHaveValue('com.apple.voice.compact.es-ES.Monica')
+  })
+
   test('si al primer intento no oye nada, la conversación se suelta (no se queda «Pensando…»)', async ({ page }) => {
     await page.addInitScript(() => {
       class Calla {
