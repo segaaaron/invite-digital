@@ -78,3 +78,15 @@ test('en Chrome de iPhone, Luxury oye lo dicho con su propio dictado y responde'
   const pagina = await page.request.get(`/panel/eventos/${SLUG}/invitados`)
   expect(pagina.headers()['content-security-policy']).not.toMatch(/script-src[^;]*'unsafe-eval'/)
 })
+
+test('en Chrome de iPhone se le habla sin abrir el chat y responde en la tarjeta del robot', async ({ page }) => {
+  test.setTimeout(90_000)
+  await page.addInitScript(() => {
+    window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 20)
+  })
+  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
+  const tarjeta = page.getByRole('status').filter({ hasText: 'Abrir el chat' })
+  await expect(tarjeta).toContainText(/Faltan por responder|Ya respondieron todos/, { timeout: 60_000 })
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
+})

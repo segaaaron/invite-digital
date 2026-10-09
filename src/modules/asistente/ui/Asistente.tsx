@@ -212,7 +212,14 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   // Lo que dice la tarjeta del robot cuando se le habla fuera del chat: la última respuesta **de esta conversación**
   // (se sigue viendo mientras vuelve a escuchar) y, debajo, en qué está.
   const ultima = burbujas.at(-1)
-  const respuestaFuera = ultima?.rol === 'asistente' && ultima.texto !== '' && burbujas.length > inicioFuera.current ? paraLeer(ultima.texto) : null
+  const respuestaFuera =
+    ultima?.rol !== 'asistente' || burbujas.length <= inicioFuera.current
+      ? null
+      : ultima.texto !== ''
+        ? paraLeer(ultima.texto)
+        : ultima.envio !== undefined
+          ? 'Te dejé los mensajes de WhatsApp listos en el chat: ábrelo y toca enviar en cada uno.'
+          : null
   const fuera = {
     texto: despedidaFuera !== null && !conversacion ? despedidaFuera : respuestaFuera,
     estado:
@@ -227,12 +234,14 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
   }
   // Terminada la conversación (dijo «listo», calló o falló), la tarjeta se queda un momento y se va.
   const quieto = modoFuera && !conversacion && !ocupado && !lectura.hablando && dictado.estado !== 'escuchando'
+  const hayAviso = dictado.aviso !== null
   useEffect(() => {
     if (!quieto) return
     // ponytail: temporizador sin red, solo retira la tarjeta.
-    const t = setTimeout(() => setModoFuera(false), 6000)
+    // Un aviso (el permiso del micrófono, la descarga) se queda más: hay que leerlo y hacer algo.
+    const t = setTimeout(() => setModoFuera(false), hayAviso ? 15_000 : 6000)
     return () => clearTimeout(t)
-  }, [quieto])
+  }, [quieto, hayAviso])
 
   function terminarConversacion(aviso: string | null = null) {
     conversando.current = false
@@ -1040,6 +1049,8 @@ type Reconocedor = {
   onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }>> }) => void) | null
   onerror: ((e: { error: string }) => void) | null
   onend: (() => void) | null
+  /** El micrófono ya graba (tras los permisos del aparato). */
+  onaudiostart?: (() => void) | null
 }
 type ConstructorDeReconocedor = new () => Reconocedor
 const reconocedorDelNavegador = (): ConstructorDeReconocedor | null => {
@@ -1284,9 +1295,14 @@ function useDictado(
       setAviso(AVISO_DE_VOZ[e.error] ?? 'Tu navegador no pudo escucharte. Puedes escribirme.')
     }
     r.onend = () => cerrar(true)
+    // Los 8 s de silencio cuentan desde que el micrófono **graba**: la primera vez el iPhone pregunta dos permisos
+    // (micrófono y reconocimiento) y, contando desde el toque, se cerraba antes de poder hablar (producción, 9 oct).
+    r.onaudiostart = () => {
+      if (dicho === '') esperarSilencio(8000)
+    }
     actual.current = { cerrar }
     setEstado('escuchando')
-    esperarSilencio(8000)
+    esperarSilencio(20_000)
     try {
       r.start()
     } catch (causa) {

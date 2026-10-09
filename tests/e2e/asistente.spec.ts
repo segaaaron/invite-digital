@@ -300,6 +300,67 @@ test.describe('hablarle', () => {
     await expect(page.locator('dialog[open]')).toContainText(/Faltan por responder: .*Ramón Pérez/)
   })
 
+  test('si los permisos del aparato tardan (iPhone: micrófono y reconocimiento), igual oye y responde', async ({ page }) => {
+    test.setTimeout(45_000)
+    // Producción, 9 de octubre: los 8 s de silencio contaban desde el toque y se cerraba mientras se aceptaban los
+    // permisos. Aquí el micrófono empieza a grabar a los 9 s.
+    await page.addInitScript(() => {
+      class Lento {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        onaudiostart: (() => void) | null = null
+        start() {
+          setTimeout(() => this.onaudiostart?.(), 9000)
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: '¿Quién falta por responder?' }]] }), 9300)
+          setTimeout(() => this.onend?.(), 9400)
+        }
+        stop() {
+          this.onend?.()
+        }
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Lento, SpeechRecognition: undefined })
+      window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 20)
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    const panel = page.locator('dialog[open]')
+    await panel.getByRole('button', { name: 'Hablarle a Luxury' }).click()
+    await expect(panel).toContainText(/Faltan por responder: .*Ramón Pérez/, { timeout: 20_000 })
+  })
+
+  test('fuera del chat, sin permiso del micrófono, la tarjeta dice cómo darlo', async ({ page }) => {
+    await page.addInitScript(() => {
+      class SinPermiso {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          setTimeout(() => this.onerror?.({ error: 'not-allowed' }), 50)
+          setTimeout(() => this.onend?.(), 80)
+        }
+        stop() {}
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: SinPermiso, SpeechRecognition: undefined })
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
+    const tarjeta = page.getByRole('status').filter({ hasText: 'Abrir el chat' })
+    await expect(tarjeta).toContainText('permite el micrófono')
+    // Se queda a la vista para leerlo (antes se iba a los 6 s).
+    await page.waitForTimeout(7000)
+    await expect(tarjeta).toContainText('permite el micrófono')
+    await expect(page.locator('dialog[open]')).toHaveCount(0)
+  })
+
   test('si al primer intento no oye nada, la conversación se suelta (no se queda «Pensando…»)', async ({ page }) => {
     await page.addInitScript(() => {
       class Calla {

@@ -1,3 +1,4 @@
+import { esUuid } from '@/shared/uuid'
 import { attempt, err, isErr, ok, type Result } from '@/shared/result'
 import { qrError, type QrError } from '../domain/errors'
 import { createQrCode, type QrKind } from '../domain/qr-code'
@@ -124,6 +125,8 @@ export const resolveQrCode =
   async (id: string): Promise<Result<ResolvedQr, QrError>> =>
     attempt(
       async () => {
+        // Un id sin forma de UUID no existe: preguntarlo a la base daba un error y la ruta, 500.
+        if (!esUuid(id)) return err(qrError('not_found', `No existe el código ${id}`))
         const row = await deps.qr.findById(id)
         if (row === null || !row.active) return err(qrError('not_found', `No existe el código ${id}`))
 

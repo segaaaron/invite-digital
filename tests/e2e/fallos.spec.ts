@@ -33,13 +33,18 @@ test.describe('registro de fallos', () => {
     expect((await page.request.post('/api/fallos', { data: { nada: 1 } })).status()).toBe(400)
 
     await page.goto('/panel/admin/fallos?dias=1&origen=navegador')
-    const fila = page.locator('details').filter({ hasText: MENSAJE })
+    const fila = page.locator('li > details').filter({ hasText: MENSAJE })
     await expect(fila).toBeVisible()
-    await fila.locator('summary').click()
-    await expect(fila).toContainText('bloque.tsx:12:3')
+    // Dicho para personas: dónde pasó, sin la pila a la vista.
+    await expect(fila.locator('> summary')).toContainText('En el navegador')
+    await expect(fila.locator('> summary')).not.toContainText('bloque.tsx')
+    await fila.locator('> summary').click()
+    await expect(fila).toContainText('Qué significa')
     await expect(fila).toContainText('/panel/eventos/x/configuracion')
+    await fila.getByText('Ver detalle técnico').click()
+    await expect(fila).toContainText('bloque.tsx:12:3')
     await fila.getByRole('button', { name: 'Ya está arreglado: borrar' }).click()
-    await expect(page.locator('details').filter({ hasText: MENSAJE })).toHaveCount(0)
+    await expect(page.locator('li > details').filter({ hasText: MENSAJE })).toHaveCount(0)
   })
 })
 

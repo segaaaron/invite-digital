@@ -1,3 +1,4 @@
+import { esUuid } from '@/shared/uuid'
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
 import { eventUnlocked } from '@/app/_acciones/events/actions'
@@ -51,6 +52,8 @@ function rangoDe(cabecera: string | null, total: number): { desde: number; hasta
 
 export async function GET(peticion: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
+  // Sin forma de UUID no existe (la base lo rechazaba con un error: salía 500 en vez de 404).
+  if (!esUuid(id)) notFound()
 
   const archivo = await events.media.read(id)
   if (archivo === null) notFound()
