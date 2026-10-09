@@ -251,6 +251,55 @@ test.describe('hablarle', () => {
     await expect.poll(() => page.evaluate(() => (window as unknown as { __arranques: number }).__arranques), { timeout: 20_000 }).toBe(2)
   })
 
+  test('se le habla sin abrir el chat: responde en la tarjeta del robot y el chat lo guarda', async ({ page }) => {
+    await page.addInitScript(() => {
+      const dichos = ['¿Quién falta por responder?', 'listo']
+      const w = window as unknown as { __arranques: number; __leido: string[] }
+      w.__arranques = 0
+      w.__leido = []
+      class Falso {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        start() {
+          const dicho = dichos[w.__arranques] ?? ''
+          // El «listo» llega con una pausa, como cuando una persona escucha la respuesta antes de contestar.
+          const pausa = w.__arranques === 0 ? 0 : 1500
+          w.__arranques += 1
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: dicho }]] }), 50 + pausa)
+          setTimeout(() => this.onend?.(), 120 + pausa)
+        }
+        stop() {
+          this.onend?.()
+        }
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Falso, SpeechRecognition: undefined })
+      window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => {
+        if (u.text !== '') w.__leido.push(u.text)
+        setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 30)
+      }
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
+    // Responde en la tarjeta del robot, en voz alta, y el chat sigue cerrado.
+    const tarjeta = page.getByRole('status').filter({ hasText: 'Abrir el chat' })
+    await expect(tarjeta).toContainText(/Faltan por responder: .*Ramón Pérez/)
+    await expect(page.locator('dialog[open]')).toHaveCount(0)
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))).toContain('Faltan por responder')
+    // Vuelve a escuchar sola; «listo» termina.
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __arranques: number }).__arranques)).toBe(2)
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))).toContain('Cuando quieras.')
+    await expect(tarjeta).toContainText('Cuando quieras. Toca el micrófono si me necesitas.')
+    // El chat guardó la conversación.
+    await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+    await expect(page.locator('dialog[open]')).toContainText('¿Quién falta por responder?')
+    await expect(page.locator('dialog[open]')).toContainText(/Faltan por responder: .*Ramón Pérez/)
+  })
+
   test('si al primer intento no oye nada, la conversación se suelta (no se queda «Pensando…»)', async ({ page }) => {
     await page.addInitScript(() => {
       class Calla {
