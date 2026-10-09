@@ -357,6 +357,11 @@ test.describe('hablarle', () => {
 
 test('«Oye Siri, Luxury»: la llave de Mi cuenta solo vale en la ruta de Siri, y Siri recibe texto para leer', async ({ page, playwright }) => {
   await page.goto('/panel/cuenta#siri')
+  // Sin enlace de iCloud, el atajo firmado se descarga de aquí.
+  await expect(page.getByRole('link', { name: 'Descargar el atajo' })).toHaveAttribute('href', '/siri/Luxury.shortcut')
+  const atajo = await page.request.get('/siri/Luxury.shortcut')
+  expect(atajo.status()).toBe(200)
+  expect((await atajo.body()).subarray(0, 4).toString()).toBe('AEA1')
   await page.getByRole('button', { name: 'Crear mi llave' }).click()
   const llave = await page.getByLabel('Tu llave de Siri').inputValue()
   expect(llave).toMatch(/^[A-Za-z0-9_-]{20,}$/)

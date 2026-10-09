@@ -40,10 +40,8 @@ export function LuxuryConSiri({ atajo, url }: { atajo: string; url: string }) {
         </li>
         {atajo === '' ? (
           <li>
-            En tu iPhone abre la app <strong>Atajos</strong>, toca <strong>+</strong> y llámalo «Luxury». Añade tres acciones: <strong>Dictar texto</strong>;{' '}
-            <strong>Obtener contenido de URL</strong> con método POST a <code className="font-codigo break-all">{url}</code>, encabezado{' '}
-            <code className="font-codigo">Authorization</code> = <code className="font-codigo">Bearer</code> + espacio + tu llave, y cuerpo JSON con{' '}
-            <code className="font-codigo">texto</code> = Texto dictado; y <strong>Leer texto</strong>.
+            En tu iPhone, toca <strong>Descargar el atajo</strong>, ábrelo desde Descargas (app Archivos) y, cuando la app Atajos te la pida, pega
+            tu llave. Si lo tienes en una Mac con tu misma cuenta de iCloud, ábrelo ahí: llega solo a tu iPhone.
           </li>
         ) : (
           <li>
@@ -58,7 +56,12 @@ export function LuxuryConSiri({ atajo, url }: { atajo: string; url: string }) {
         <PanelButton aria-busy={creando || undefined} disabled={creando} onClick={() => void crear()} variant={estado.status === 'success' ? 'default' : 'primary'}>
           {estado.status === 'success' ? 'Crear otra llave' : 'Crear mi llave'}
         </PanelButton>
-        {atajo === '' ? null : (
+        {atajo === '' ? (
+          // El atajo firmado (`scripts/atajo-de-siri.py`): sin el enlace de iCloud, se baja y se abre en Atajos.
+          <a className="inline-flex min-h-11 items-center rounded-full border border-line-panel-strong bg-white px-4 text-[13px] text-ink hover:border-ink" download href="/siri/Luxury.shortcut">
+            Descargar el atajo
+          </a>
+        ) : (
           <PanelButton external href={atajo}>
             Añadir a Siri
           </PanelButton>
@@ -79,6 +82,14 @@ export function LuxuryConSiri({ atajo, url }: { atajo: string; url: string }) {
           {estado.message}
         </p>
       ) : null}
+      <details className="text-[12.5px]">
+        <summary className="cursor-pointer text-ink">Armarlo a mano en la app Atajos</summary>
+        <p className="mt-2">
+          Toca <strong>+</strong> y llámalo «Luxury». Añade: <strong>Dictar texto</strong>; <strong>Obtener contenido de URL</strong> con método POST a{' '}
+          <code className="font-codigo break-all">{url}</code>, encabezado <code className="font-codigo">Authorization</code> = <code className="font-codigo">Bearer</code> + espacio +
+          tu llave, y cuerpo JSON con <code className="font-codigo">texto</code> = Texto dictado; y <strong>Leer texto</strong> con el Contenido de URL.
+        </p>
+      </details>
       <p className="text-[12px] text-ink-mute">
         La llave aparece en «Sesiones abiertas» como «Atajo de Siri»: si la cierras, Siri deja de entrar. Si pasas 30 días sin usarla, crea otra.
       </p>
