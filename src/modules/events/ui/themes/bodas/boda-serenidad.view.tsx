@@ -5,8 +5,9 @@ import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
-import { MusicPlayer } from '../kit/MusicPlayer'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
 import { CapaFija } from '../kit/CapaFija'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { CarruselDePerla } from './CarruselDePerla'
@@ -80,6 +81,8 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         overflowX: 'clip',
       }}
     >
+      {/* Sin reproductor en la maqueta (PDF 9 oct): la canción suena desde el botón que flota. */}
+      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
       <SerenidadCover
         bgAsset={themeAsset('boda-serenidad', 'portada-flores.avif')}
         cta={themes.coverEnterShared}
@@ -192,6 +195,9 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
             >
               {quote.text}
             </p>
+            {hero?.nameB === undefined ? null : (
+              <p style={{ marginTop: 10, padding: '0 24px', fontFamily: MONO, fontSize: 10, letterSpacing: '0.3em', color: P.medio, textAlign: 'center' }}>— {hero.nameB.toUpperCase()}</p>
+            )}
           </Reveal>
         )}
         {historia?.title === undefined ? null : (
@@ -435,31 +441,14 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
                 {regalos.text}
               </p>
             )}
-            <div style={{ marginTop: 22 }}>{slots.registry}</div>
+            <VerMesaDeRegalos estilo={{ background: P.titular, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 30 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
           </div>
         </Reveal>
 
         <div style={{ height: 36 }} />
         <Cenefa reflejada />
-
-        {/* ── La canción ── */}
-        {cancion === undefined ? null : (
-          <Reveal>
-            <div style={{ marginTop: 40 }}>
-              <MusicPlayer
-                accent={P.oro}
-                artist={music?.artist ?? ''}
-                audioSrc={cancion}
-                eyebrow={themes.songOfTheNight}
-                playBg={P.marino}
-                playIconColor="#ffffff"
-                textColor={P.titular}
-                track={music?.track ?? ''}
-                trackColor={P.titular}
-              />
-            </div>
-          </Reveal>
-        )}
 
         {/* ── Confirmación ── */}
         <Reveal>
@@ -489,7 +478,8 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
         <Cenefa />
 
         {/* ── El libro de firmas ── */}
-        {slots.guestbook === null ? null : (
+        {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+        {slots.guestbook === null || slots.regalos === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 8, padding: '32px 0', textAlign: 'center' }}>
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.titular }}>{ROTULOS.firmas}</p>
@@ -498,7 +488,8 @@ export function BodaSerenidadView({ content, event, dictionary, themes, slots, g
           </Reveal>
         )}
 
-        <Cenefa reflejada />
+        {/* Sin libro (la muestra), la franja de arriba ya cierra: dos seguidas forman un espejo. */}
+        {slots.guestbook === null || slots.regalos === undefined ? null : <Cenefa reflejada />}
 
         {/* ── El cierre ── */}
         <Reveal>

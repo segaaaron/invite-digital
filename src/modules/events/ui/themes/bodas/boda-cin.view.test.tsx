@@ -13,11 +13,17 @@ beforeEach(() => {
 const conMuestra = () => propsDePrueba({ content: CONTENIDO_DE_MUESTRA })
 
 describe('el tema Cinemática', () => {
-  it('coloca las cinco ranuras', () => {
-    render(<BodaCinView {...conMuestra()} />)
+  it('coloca las cinco ranuras en una invitación de verdad', () => {
+    const base = conMuestra()
+    render(<BodaCinView {...base} slots={{ ...base.slots, regalos: { sobres: false, qr: null, resto: null } }} />)
     for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
+  })
+
+  it('en la muestra no pinta el libro de firmas, que su maqueta no tiene', () => {
+    render(<BodaCinView {...conMuestra()} />)
+    expect(screen.queryByText('ranura-firmas')).not.toBeInTheDocument()
   })
 
   it('parte la cita en titular, firma y columna con capitular', () => {

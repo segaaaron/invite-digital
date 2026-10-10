@@ -33,7 +33,9 @@ export function ParalajeDeEsencia({ src, frase }: { readonly src: string; readon
       const arriba = raiz === null ? 0 : raiz.getBoundingClientRect().top
       const alto = raiz === null ? window.innerHeight : raiz.clientHeight
       const desvio = r.top - arriba + r.height / 2 - alto / 2
-      if (foto.current !== null) foto.current.style.transform = `translateY(${-desvio * 0.18}px)`
+      // Topado al 20 % de margen que tiene la foto por arriba y por abajo: pasado, asomaba un hueco gris.
+      const dy = Math.max(-0.19 * r.height, Math.min(0.19 * r.height, -desvio * 0.18))
+      if (foto.current !== null) foto.current.style.transform = `translateY(${dy}px)`
     }
     mover()
     destino.addEventListener('scroll', mover, { passive: true })

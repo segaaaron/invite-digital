@@ -42,7 +42,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   dressCode: { title: 'Formal', note: 'de etiqueta · paleta neutra · evita blanco' },
   notes: [
     {
-      title: 'Nuestra historia',
+      title: 'Nuestra historia (2019 — 2026)',
       text: 'Nos conocimos un domingo de café. Él pidió un americano, ella un capuccino con dos cucharadas de azúcar. Siete años después, todo lo que queremos es seguir despertando juntos cada domingo.',
     },
     {
@@ -51,7 +51,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     },
     {
       title: 'Mesa de regalos',
-      text: 'Tu presencia es nuestro mejor regalo. Si deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
+      text: 'Tu presencia es nuestro mejor regalo.\nSi deseas obsequiar algo, abrimos un fondo para nuestra luna de miel.',
     },
   ],
   music: { track: 'Mil Años', artist: 'Christina Perri · primer baile' },

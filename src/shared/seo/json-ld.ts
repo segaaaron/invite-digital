@@ -11,6 +11,8 @@ export type PricedPlan = {
   readonly name: string
   readonly description: string
   readonly price: { readonly cents: number; readonly currency: string }
+  /** El precio en dólares del admin, si lo tiene: Google lo enseña a quien busca desde EE. UU. o Canadá. */
+  readonly priceUsdCents?: number | null
 }
 
 export type FaqSource = {
@@ -23,14 +25,10 @@ export type ProductJsonLd = {
   name: string
   description: string
   brand: { '@type': 'Brand'; name: string }
-  offers: {
-    '@type': 'Offer'
-    price: string
-    priceCurrency: string
-    availability: string
-    url: string
-  }
+  offers: Oferta | Oferta[]
 }
+
+type Oferta = { '@type': 'Offer'; price: string; priceCurrency: string; availability: string; url: string }
 
 export type FaqJsonLd = {
   '@context': 'https://schema.org'
@@ -40,15 +38,22 @@ export type FaqJsonLd = {
 
 export type OrganizationJsonLd = {
   '@context': 'https://schema.org'
-  '@type': 'LocalBusiness'
+  '@type': 'Organization'
   name: string
   url: string
-  areaServed: string
+  logo: string
   slogan: string
+  areaServed: string[]
+  knowsLanguage: string[]
   telephone?: string
-  address: { '@type': 'PostalAddress'; streetAddress?: string; addressLocality: string; addressCountry: string }
+  email?: string
   sameAs?: string[]
 }
+
+export type WebSiteJsonLd = { '@context': 'https://schema.org'; '@type': 'WebSite'; name: string; url: string; inLanguage: string; publisher: { '@type': 'Organization'; name: string } }
+
+/** Dónde atiende la marca (9 oct): toda América, sin decir desde dónde trabaja. */
+export const ZONA_DE_SERVICIO = ['Latin America', 'United States', 'Canada'] as const
 
 /** Lo que Google cruza con los directorios y las redes: nombre, dirección, teléfono y web. */
 export type NegocioParaGoogle = {
@@ -57,6 +62,7 @@ export type NegocioParaGoogle = {
   readonly ciudad: string
   readonly pais: string
   readonly redes: readonly string[]
+  readonly correo?: string
 }
 
 export type BreadcrumbJsonLd = {
@@ -80,14 +86,30 @@ export function productJsonLd(
     name: `${BRAND.siteName} · ${plan.name}`,
     description: plan.description,
     brand: { '@type': 'Brand', name: BRAND.siteName },
-    offers: {
-      '@type': 'Offer',
-      price: toPriceUnits(plan.price.cents),
-      priceCurrency: plan.price.currency,
-      availability: 'https://schema.org/InStock',
-      url: `${baseUrl}/${locale}#precios`,
-    },
+    offers: ((): Oferta | Oferta[] => {
+      const oferta = (cents: number, moneda: string): Oferta => ({
+        '@type': 'Offer',
+        price: toPriceUnits(cents),
+        priceCurrency: moneda,
+        availability: 'https://schema.org/InStock',
+        url: `${baseUrl}/${locale}#precios`,
+      })
+      const enBs = oferta(plan.price.cents, plan.price.currency)
+      return plan.priceUsdCents == null ? enBs : [enBs, oferta(plan.priceUsdCents, 'USD')]
+    })(),
   }))
+}
+
+/** El sitio en el idioma de la página: con el `hreflang`, Google sabe qué versión enseñar en cada país. */
+export function websiteJsonLd(locale: Locale, baseUrl: string = env.SITE_URL): WebSiteJsonLd {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: BRAND.siteName,
+    url: `${baseUrl.replace(/\/$/, '')}/${locale}`,
+    inLanguage: locale,
+    publisher: { '@type': 'Organization', name: BRAND.siteName },
+  }
 }
 
 export function faqJsonLd(dictionary: FaqSource): FaqJsonLd {
@@ -103,7 +125,8 @@ export function faqJsonLd(dictionary: FaqSource): FaqJsonLd {
 }
 
 /**
- * El negocio, marcado como `LocalBusiness`. Nombre, dirección, teléfono y web tienen que ser
+ * El negocio, marcado como `Organization` (9 oct: era `LocalBusiness`, que pide dirección; la marca vende en
+ * línea a toda América y no dice desde dónde trabaja). Nombre, dirección, teléfono y web tienen que ser
  * **los mismos** que en el pie y en las redes: es lo que Google compara para confiar en la
  * ficha. Por eso salen de «La web», la misma fuente que el pie. Lo vacío no se publica.
  */
@@ -111,18 +134,17 @@ export function organizationJsonLd(negocio: NegocioParaGoogle, baseUrl: string =
   const redes = negocio.redes.filter((r) => r !== '')
   return {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': 'Organization',
     name: BRAND.siteName,
     url: baseUrl,
-    areaServed: negocio.pais,
+    logo: `${baseUrl.replace(/\/$/, '')}/icon.png`,
+    areaServed: [...ZONA_DE_SERVICIO],
+    knowsLanguage: ['es', 'en'],
+    // Sin dirección ni zona (9 oct, decisión del usuario): la marca vende a toda América y no dice desde
+    // dónde trabaja, tampoco a Google.
     slogan: BRAND.tagline,
     ...(negocio.whatsapp === '' ? {} : { telephone: negocio.whatsapp }),
-    address: {
-      '@type': 'PostalAddress',
-      ...(negocio.direccion === '' ? {} : { streetAddress: negocio.direccion }),
-      addressLocality: negocio.ciudad,
-      addressCountry: negocio.pais,
-    },
+    ...(negocio.correo ? { email: negocio.correo } : {}),
     ...(redes.length === 0 ? {} : { sameAs: redes }),
   }
 }

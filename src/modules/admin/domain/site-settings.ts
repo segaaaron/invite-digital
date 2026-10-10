@@ -78,9 +78,10 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
     },
   },
   direccion: '',
-  ciudad: 'Cochabamba',
-  pais: 'Bolivia',
-  cobertura: { es: 'Entregas a todo el país', en: 'Delivering nationwide' },
+  // Sin lugar (9 oct, decisión del usuario): la marca vende a toda América y no dice desde dónde trabaja.
+  ciudad: '',
+  pais: '',
+  cobertura: { es: 'Invitaciones digitales para todo el mundo', en: 'Digital invitations worldwide' },
   redes: { instagram: '', facebook: '', tiktok: '', correo: '' },
   // Las cifras que la portada enseñaba escritas en el código. **Ocultas por defecto**: son
   // afirmaciones de negocio y se publican cuando el admin las confirma.
@@ -97,7 +98,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   testimonios: [
     {
       autor: 'Daniela Ortiz',
-      rol: { es: 'Wedding planner · Cochabamba', en: 'Wedding planner · Cochabamba' },
+      rol: { es: 'Wedding planner', en: 'Wedding planner' },
       cita: {
         es: 'Mandamos el enlace un martes y el viernes ya teníamos el 90% de las confirmaciones. Ninguna novia había visto algo así en Bolivia.',
         en: 'We sent the link on a Tuesday and by Friday we already had ninety percent of the confirmations. No bride in Bolivia had seen anything like it.',
@@ -226,8 +227,6 @@ export function leerSiteSettings(entrada: SiteSettings): Result<SiteSettings, Si
     const r = largo(campo, texto, maximo)
     if (r) return r
   }
-  if (entrada.ciudad.trim() === '') return fallo('ciudad', 'La ciudad es obligatoria: sale en el pie y en Google.')
-  if (entrada.pais.trim() === '') return fallo('pais', 'El país es obligatorio.')
 
   const mensajes = {
     general: recortar(entrada.mensajes.general),

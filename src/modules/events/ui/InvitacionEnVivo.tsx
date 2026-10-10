@@ -51,7 +51,7 @@ export function InvitacionEnVivo({ event, content, estilo }: { event: Event; con
             dictionary={diccionario.invitation}
             event={event}
             guestInfo={INVITADO_DE_MUESTRA}
-            slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp)}
+            slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp, definicion.categorySlug === 'xv-anos')}
             themes={diccionario.themes}
           />
           </EstiloDeLaInvitacion>

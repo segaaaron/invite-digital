@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { countdownFrom, pad } from './time'
+import { countdownFrom, franjaConLaFecha, pad } from './time'
 
 describe('pad', () => {
   it('rellena a dos cifras', () => {
@@ -70,5 +70,15 @@ describe('countdownFrom', () => {
 
   it('aguanta una fecha muy lejana sin desbordar', () => {
     expect(countdownFrom('2126-09-12T19:00:00Z', ahora).days).toBeGreaterThan(36_000)
+  })
+})
+
+describe('franjaConLaFecha', () => {
+  it('pone el día del evento en la franja', () => {
+    expect(franjaConLaFecha('· NOS CASAMOS · 20.09.2026 ·', '2026-12-27T19:00:00')).toBe('· NOS CASAMOS · 27.12.2026 ·')
+  })
+  it('sin fecha, o sin fecha en el texto, lo deja tal cual', () => {
+    expect(franjaConLaFecha('· NOS CASAMOS · 20.09.2026 ·', undefined)).toBe('· NOS CASAMOS · 20.09.2026 ·')
+    expect(franjaConLaFecha('· NOS CASAMOS ·', '2026-12-27T19:00:00')).toBe('· NOS CASAMOS ·')
   })
 })

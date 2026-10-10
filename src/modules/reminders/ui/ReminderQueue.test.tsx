@@ -34,8 +34,8 @@ describe('ReminderQueue', () => {
   it('dice el motivo con palabras, no solo con color', () => {
     pintar([fila(), fila({ groupId: 'g2', label: 'Ana Lucía Vega', kind: 'sin_abrir' })])
 
-    expect(screen.getByText('Sin responder')).toBeInTheDocument()
-    expect(screen.getByText('Sin abrir')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /abrieron y no confirmaron/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /no han abierto/i })).toBeInTheDocument()
   })
 
   it('el enlace de WhatsApp lleva el mensaje del motivo y NUNCA un enlace de invitación', () => {
@@ -55,14 +55,14 @@ describe('ReminderQueue', () => {
     pintar([fila({ phone: null })])
 
     expect(screen.queryByRole('link', { name: /whatsapp/i })).not.toBeInTheDocument()
-    expect(screen.getByText(/sin teléfono/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/sin teléfono/i).length).toBeGreaterThan(0)
   })
 
   it('marcar recordado anota el motivo de esa fila, no otro', async () => {
     anotar.mockClear()
     pintar([fila({ kind: 'sin_abrir' })])
 
-    fireEvent.click(screen.getByRole('button', { name: /marcar recordado/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ya le avisé/i }))
 
     await waitFor(() =>
       expect(anotar).toHaveBeenCalledWith({
@@ -78,7 +78,7 @@ describe('ReminderQueue', () => {
     anotar.mockImplementationOnce(async () => ({ status: 'error', message: 'No pudimos anotar el recordatorio.' }))
     pintar([fila()])
 
-    fireEvent.click(screen.getByRole('button', { name: /marcar recordado/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ya le avisé/i }))
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/no pudimos anotar/i))
   })
@@ -87,6 +87,28 @@ describe('ReminderQueue', () => {
     pintar([])
 
     expect(screen.getByText(/nadie por recordar/i)).toBeInTheDocument()
+  })
+
+  it('tocar «Recordar» abre WhatsApp y ya lo anota: un solo paso (9 oct)', async () => {
+    anotar.mockClear()
+    pintar([fila()])
+    fireEvent.click(screen.getByRole('link', { name: /recordar a familia rojas peña por whatsapp/i }))
+    await waitFor(() => expect(anotar).toHaveBeenCalledWith(expect.objectContaining({ guestGroupId: 'g1', kind: 'sin_respuesta' })))
+  })
+
+  it('el motivo se dice una vez por grupo, no en cada fila, y «1 lugar» en singular', () => {
+    pintar([fila({ groupId: 'a', label: 'Ana', seats: 1 }), fila({ groupId: 'b', label: 'Luis' }), fila({ groupId: 'c', label: 'Rosa', kind: 'sin_abrir' })])
+    expect(screen.getAllByText(/abrió la invitación y no ha confirmado/i)).toHaveLength(1)
+    expect(screen.getByRole('heading', { name: /abrieron y no confirmaron · 2/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /no han abierto · 1/i })).toBeInTheDocument()
+    expect(screen.getByText(/1 lugar\b/)).toBeInTheDocument()
+  })
+
+  it('enseña las cinco primeras y deja ver el resto', () => {
+    pintar(Array.from({ length: 8 }, (_, i) => fila({ groupId: `g${i}`, label: `Invitado ${i}` })))
+    expect(screen.getAllByRole('listitem')).toHaveLength(5)
+    fireEvent.click(screen.getByRole('button', { name: /ver las 3 restantes/i }))
+    expect(screen.getAllByRole('listitem')).toHaveLength(8)
   })
 
   it('enseña cuántos días lleva esperando cada grupo', () => {

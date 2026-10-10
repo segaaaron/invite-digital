@@ -7,11 +7,13 @@ import { comoLlegar } from '../../../domain/ubicacion'
 import { variablesDeRanuras, pielDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
 import { MapPreview } from '../kit/MapPreview'
+import { MarcoQr } from '../kit/MarcoQr'
 import { MusicPlayer } from '../kit/MusicPlayer'
 import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { PhotoSlot } from '../kit/PhotoSlot'
 import { Reveal } from '../kit/Reveal'
 import { PapillonCover } from './PapillonCover'
+import { PestanasDeRegalo } from './PestanasDeRegalo'
 import { CARTA_DE_COLOR, PALETA as P } from './xv-papillon.palette'
 
 const SANS = 'var(--font-outfit)'
@@ -56,7 +58,7 @@ function Franja({ children, centrada = false }: { readonly children: ReactNode; 
  * cuenta atrás, recepción con la rosa de cristal y el plano, itinerario con sus piezas
  * rosas, canción, vestimenta, lluvia de sobres, confirmación y cierre—.
  */
-export function XvPapillonView({ content, event, themes, slots, audioSrc, respondida }: ThemeProps) {
+export function XvPapillonView({ content, event, themes, slots, audioSrc }: ThemeProps) {
   const ROTULOS = themes.designs['xv-papillon']
   const { hero, quote, hosts, schedule, reception, map, itinerary, music, dressCode, notes, closing } = content
   const nombre = hero?.nameA ?? ''
@@ -71,10 +73,30 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
   const dia = valida ? String(cuando.getDate()) : ''
   const mes = valida ? cuando.toLocaleDateString(etiquetaLocal, { month: 'long' }).replace(/^./, (letra) => letra.toUpperCase()) : ''
   const hora = valida ? `${String(cuando.getHours()).padStart(2, '0')}:${String(cuando.getMinutes()).padStart(2, '0')}` : ''
-  const plazo =
-    respondida || event.rsvpDeadline === null
-      ? null
-      : `${themes.rsvpBefore} ${new Intl.DateTimeFormat(etiquetaLocal, { day: 'numeric', month: 'long', timeZone: 'UTC' }).format(new Date(`${event.rsvpDeadline}T00:00:00Z`))}`
+  // V4 (`Firma3D`): los regalos por piezas en una invitación de verdad; sin ellos (escaparate, vista
+  // previa) van los de muestra y los tres mensajes del libro.
+  const partes = slots.regalos
+  const mensajesDeMuestra =
+    partes !== undefined
+      ? []
+      : [
+          { texto: ROTULOS.m1, quien: ROTULOS.q1 },
+          { texto: ROTULOS.m2, quien: ROTULOS.q2 },
+          { texto: ROTULOS.m3, quien: ROTULOS.q3 },
+        ]
+  /** El titular de `Firma3D`: rótulo pequeño, la caligrafía y el adorno ❦ entre dos filetes. */
+  const titularF3 = (rotulo: string, titulo: string) => (
+    <>
+      <div style={{ fontFamily: SANS, fontSize: 10, letterSpacing: '0.3em', color: P.oro, fontWeight: 700, textTransform: 'uppercase' }}>{rotulo}</div>
+      <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, lineHeight: 1.15, marginTop: 6, color: P.oro }}>{titulo}</div>
+      <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '12px 0 4px' }}>
+        <span style={{ width: 44, height: 1, background: P.oro, opacity: 0.5 }} />
+        <span style={{ color: P.oro, fontSize: 14, lineHeight: 1 }}>❦</span>
+        <span style={{ width: 44, height: 1, background: P.oro, opacity: 0.5 }} />
+      </div>
+    </>
+  )
+  const CUERPO: CSSProperties = { fontFamily: SERIF, fontSize: 15, lineHeight: 1.7, color: P.tinta, maxWidth: 320, margin: '10px auto 0' }
   const llegar = comoLlegar({ href: map?.href, coords: map?.coords }, [reception?.place, reception?.address].filter(Boolean).join(', '))
 
   const RANURAS = variablesDeRanuras(pielDeRanuras({ acento: P.oro, sobreAcento: P.blanco, tinta: P.tinta, display: SERIF, radio: 10 }))
@@ -312,7 +334,7 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
                 artist={music.artist ?? ''}
                 artistColor={P.tintaSuave}
                 audioSrc={cancion}
-                eyebrow={themes.songOfTheNight}
+                eyebrow={themes.myWaltz}
                 playBg={P.oro}
                 playIconColor={P.blanco}
                 textColor={P.tinta}
@@ -371,7 +393,37 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
               {sobres.text === undefined ? null : (
                 <div style={{ marginTop: 10, fontFamily: SERIF, fontStyle: 'italic', fontSize: 14, color: P.tintaSuave, lineHeight: 1.7 }}>{sobres.text}</div>
               )}
-              <div style={{ marginTop: 16, textAlign: 'left' }}>{slots.registry}</div>
+              <PestanasDeRegalo
+                acento={P.oro}
+                borde={P.oro}
+                sobreAcento={P.blanco}
+                sobres={partes?.sobres === false ? null : { rotulo: themes.envelopeRain, nota: themes.mailboxNote }}
+                tinta={P.tinta}
+                transferencia={
+                  partes === undefined
+                    ? {
+                        rotulo: themes.transferQr,
+                        contenido: (
+                          <>
+                            <MarcoQr bg={P.blanco} fg={P.tinta} seed={42} size={116} />
+                            <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 14, color: P.tinta }}>{themes.scanFromBank}</div>
+                          </>
+                        ),
+                      }
+                    : partes.qr === null && partes.resto === null
+                      ? null
+                      : {
+                          rotulo: themes.transferQr,
+                          contenido: (
+                            <>
+                              {partes.qr}
+                              {partes.resto}
+                            </>
+                          ),
+                        }
+                }
+              />
+              {slots.registry === null ? null : <div style={{ marginTop: 16, textAlign: 'left' }}>{slots.registry}</div>}
             </Tarjeta>
           </Reveal>
         </Franja>
@@ -380,22 +432,80 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc, respon
       {/* ── La confirmación ── */}
       <Franja centrada>
         <div style={{ fontFamily: CALIGRAFIA, fontSize: 34, color: P.oro }}>{ROTULOS.confirmar}</div>
-        {plazo === null ? null : <div style={{ marginTop: 4, fontFamily: SANS, fontSize: 12, color: P.tintaSuave }}>{plazo}</div>}
         <Reveal>
           <Tarjeta style={{ marginTop: 16, textAlign: 'left' }}>{slots.rsvp}</Tarjeta>
         </Reveal>
       </Franja>
 
+      {/* ── El libro de firmas (V4, `Firma3D`) ── */}
+      {slots.guestbook === null ? null : (
+        <Franja centrada>
+          <Reveal>
+            <div id="libro-de-firmas" style={{ scrollMarginTop: 60 }}>
+              {titularF3(themes.guestbook, themes.leaveHerMessage)}
+              <p style={CUERPO}>{ROTULOS.firmaIntro.replace('{nombre}', nombre)}</p>
+            </div>
+            <Tarjeta style={{ marginTop: 18, padding: '22px 18px', textAlign: 'left' }}>{slots.guestbook}</Tarjeta>
+            {mensajesDeMuestra.length === 0 ? null : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14, textAlign: 'left' }}>
+                {mensajesDeMuestra.map((m) => (
+                  <Tarjeta key={m.quien} style={{ padding: '16px 18px' }}>
+                    <div style={{ fontFamily: SERIF, fontStyle: 'italic', fontSize: 15, lineHeight: 1.6, color: P.tinta }}>«{m.texto}»</div>
+                    <div style={{ fontFamily: SANS, fontSize: 9.5, letterSpacing: '0.25em', fontWeight: 700, textTransform: 'uppercase', marginTop: 8, color: P.oro }}>— {m.quien}</div>
+                  </Tarjeta>
+                ))}
+              </div>
+            )}
+          </Reveal>
+        </Franja>
+      )}
+
+      {/* ── El álbum compartido, cuando el plan lo trae (la etiqueta del plan, solo en la muestra) ── */}
       {slots.photos === undefined ? null : (
         <Franja centrada>
-          <Reveal>{slots.photos}</Reveal>
+          <Reveal>
+            {partes !== undefined ? null : (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  marginBottom: 10,
+                  padding: '4px 12px',
+                  borderRadius: 30,
+                  border: `1px solid ${P.oro}`,
+                  background: P.cristal,
+                  fontFamily: SANS,
+                  fontSize: 8.5,
+                  letterSpacing: '0.2em',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  color: P.oro,
+                }}
+              >
+                <span style={{ fontSize: 9 }}>◆</span>
+                {themes.albumBadge}
+              </div>
+            )}
+            {titularF3(themes.albumKicker, themes.albumTitle)}
+            <p style={CUERPO}>{ROTULOS.albumIntro}</p>
+            <p style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: P.tintaSuave, maxWidth: 300, margin: '8px auto 0' }}>{themes.albumHint}</p>
+            {/* Las seis fotos de muestra de la maqueta, solo en el escaparate. */}
+            {partes !== undefined ? null : (
+              <div aria-hidden style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 6, marginTop: 18 }}>
+                {(['album-1.avif', 'album-2.avif', 'album-3.avif', 'album-4.avif', 'album-5.avif', 'album-6.avif'] as const).map((archivo) => (
+                  <div key={archivo} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', border: `1px solid ${P.oro}` }}>
+                    <Image alt="" fill sizes="140px" src={themeAsset('xv-papillon', archivo)} style={{ objectFit: 'cover' }} />
+                  </div>
+                ))}
+              </div>
+            )}
+            <div style={{ marginTop: 16 }}>{slots.photos}</div>
+          </Reveal>
         </Franja>
       )}
 
       <div style={{ padding: '0 22px' }}>
-        <Reveal>
-          <div>{slots.guestbook}</div>
-        </Reveal>
         <div style={{ marginTop: 28 }}>{slots.pass}</div>
       </div>
 

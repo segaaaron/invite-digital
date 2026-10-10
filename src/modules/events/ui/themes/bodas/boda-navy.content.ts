@@ -44,7 +44,6 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   },
   notes: [
     {
-      title: 'Nuestra historia',
       text: 'Fue en una librería de viejo, una tarde de septiembre. Maya buscaba a Borges. Anderson tropezó con su pila de libros. Se cayeron tres tomos y un cuaderno de notas con dibujos. Lo demás, como suele decirse, es historia. Siete años más tarde, Maya escribe poemas. Anderson sigue dibujando. Y ambos firman la suya, en septiembre, igual que la primera vez.',
     },
     {

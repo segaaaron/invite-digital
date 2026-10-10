@@ -9,7 +9,7 @@ export const xvPapillonDefinition: ThemeDefinition = {
   label: 'Papillon',
   categorySlug: 'xv-anos',
   palette: PALETA,
-  fonts: ['outfit', 'cormorant', 'greatVibes', 'jetbrainsMono', 'cinzel'],
+  fonts: ['outfit', 'cormorant', 'greatVibes', 'jetbrainsMono', 'cinzel', 'dmSans'],
   // Los dos botones iguales de su maqueta (`uniformBg` transparente con filete de oro).
   rsvp: 'uniformes',
   pinta: {

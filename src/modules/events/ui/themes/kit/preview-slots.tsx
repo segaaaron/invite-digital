@@ -21,7 +21,12 @@ export const INVITADO_DE_MUESTRA = { label: 'Pedro Zárate', seats: 2 } as const
  *
  * El pase se queda fuera: es un QR de un grupo concreto, y aquí no hay ninguno.
  */
-export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | 'fiesta'): ThemeSlots {
+export function ranurasDeVistaPrevia(
+  diccionario: Dictionary,
+  rsvp?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | 'fiesta',
+  /** Si es un XV: su libro se firma con «FIRMAR EL LIBRO», como en la invitación de verdad. */
+  esXv = false,
+): ThemeSlots {
   const envuelta = (contenido: React.ReactNode) => <PreviewSlot>{contenido}</PreviewSlot>
 
   return {
@@ -50,8 +55,9 @@ export function ranurasDeVistaPrevia(diccionario: Dictionary, rsvp?: 'campos' | 
     // V4: el mensaje se escribe siempre en el libro de firmas; los XV lo firman con «FIRMAR EL LIBRO».
     guestbook: envuelta(
       <GuestbookForm
-        boton={rsvp === 'campos' || rsvp === undefined ? diccionario.invitation.signTheBook : undefined}
+        boton={esXv || rsvp === 'campos' || rsvp === undefined ? diccionario.invitation.signTheBook : undefined}
         dictionary={diccionario.invitation}
+        relleno={esXv}
         firmado={null}
         token=""
       />,

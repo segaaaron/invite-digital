@@ -356,7 +356,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
               id={messageId}
               maxLength={500}
               name="message"
-              placeholder={dictionary.messageLabel}
+              placeholder={dictionary.messagePlaceholder}
               type="text"
             />
           </>

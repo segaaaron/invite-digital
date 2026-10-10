@@ -64,3 +64,23 @@ describe('buildPageMetadata', () => {
     )
   })
 })
+
+describe('los demos de modelos (9 oct: sus hreflang apuntaban a /es/modelos/es/… y daban 404)', () => {
+  it('cada idioma lleva a la misma pieza en su idioma, con el idioma después de /modelos', () => {
+    const a = buildAlternates('/modelos/es/boda-bot', 'https://luxuryatelier.net')
+    expect(a.canonical).toBe('https://luxuryatelier.net/modelos/es/boda-bot')
+    expect(a.languages).toMatchObject({
+      es: 'https://luxuryatelier.net/modelos/es/boda-bot',
+      en: 'https://luxuryatelier.net/modelos/en/boda-bot',
+    })
+  })
+})
+
+describe('idioma para redes (9 oct: decía español de Bolivia)', () => {
+  it('español de Latinoamérica e inglés de EE. UU., cada uno con el otro como alternativa', () => {
+    const es = buildPageMetadata({ locale: 'es', path: '/es', title: 't', description: 'd', baseUrl: 'https://luxuryatelier.net' })
+    expect(es.openGraph).toMatchObject({ locale: 'es_LA', alternateLocale: ['en_US'] })
+    const en = buildPageMetadata({ locale: 'en', path: '/en', title: 't', description: 'd', baseUrl: 'https://luxuryatelier.net' })
+    expect(en.openGraph).toMatchObject({ locale: 'en_US', alternateLocale: ['es_LA'] })
+  })
+})

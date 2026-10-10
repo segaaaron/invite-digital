@@ -95,6 +95,20 @@ export type PielXv = {
    * caligrafía y no de rótulo.
    */
   readonly regalos?: boolean
+  /**
+   * V4 (`Firma3D`), para los que no traen la tarjeta marina: la sección de regalos con su título,
+   * el adorno, la intro de `voz` y las pestañas «Lluvia de sobres» / «Transferencia QR».
+   */
+  readonly regalosV4?: boolean
+  /**
+   * Sin la tarjeta «Tu presencia hará este día más especial · Reservamos N lugares» (V4: Gala Real,
+   * Noche Disco y Palacio Griego no la tienen). El invitado sigue viendo sus lugares en la confirmación.
+   */
+  readonly sinSaludo?: boolean
+  /** El adorno de `Firma3D` en el libro de firmas, el álbum y los regalos (✦, ♪, ✧…). Sin él, ◆. */
+  readonly glifo?: string
+  /** Dónde está la voz del diseño en `themes.designs`: la frase del libro, la del álbum y los mensajes de muestra. */
+  readonly voz?: 'xv' | 'xv-natalia' | 'xv-valentina' | 'xv-luciana' | 'xv-fantasia' | 'xv-valeria' | 'xv-mariana' | 'xv-isabelle'
 
   /**
    * La línea vertical que parte el itinerario en dos. La llevan todos menos **«Gala Real»**
@@ -263,6 +277,9 @@ export type PielXv = {
     readonly vestimentaNota?: string
     readonly vestimentaDetalle?: string
     readonly musicaAcento?: string
+    /** El botón de play y su icono, si no son el `uva` y el blanco (Noche Disco: plata con icono negro). */
+    readonly musicaBoton?: string
+    readonly musicaIcono?: string
     readonly musicaPista?: string
     readonly musicaArtista?: string
     readonly regalosIntro?: string

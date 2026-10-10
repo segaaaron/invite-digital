@@ -5,6 +5,7 @@ import { useState, type ReactNode } from 'react'
 type Props = {
   readonly textos: { readonly bob: string; readonly usd: string; readonly label: string; readonly note: string }
   readonly children: ReactNode
+  readonly inicial?: 'bob' | 'usd'
 }
 
 /**
@@ -13,8 +14,9 @@ type Props = {
  * servidor: las tarjetas traen los dos precios y el CSS (`group-data-[moneda=usd]/precios`) enseña
  * uno u otro.
  */
-export function SelectorDeMoneda({ textos, children }: Props) {
-  const [moneda, setMoneda] = useState<'bob' | 'usd'>('bob')
+export function SelectorDeMoneda({ textos, children, inicial = 'bob' }: Props) {
+  // En inglés abre en dólares (9 oct): quien llega desde EE. UU. o Canadá lee el precio en su moneda.
+  const [moneda, setMoneda] = useState<'bob' | 'usd'>(inicial)
   const boton = (valor: 'bob' | 'usd', texto: string) => (
     <button
       aria-pressed={moneda === valor}

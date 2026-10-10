@@ -17,6 +17,8 @@ const ICONOS: Record<string, Archivo> = {
 
 /** La piel de «Mascarada». */
 export const PIEL: PielXv = {
+  voz: 'xv-valentina',
+  glifo: '✧',
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.

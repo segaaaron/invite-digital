@@ -2,6 +2,7 @@ import type { MetadataRoute } from 'next'
 import { site, webPublica } from '@/app/composition/container'
 import { env } from '@/shared/config/env'
 import { LOCALES } from '@/shared/i18n/locales'
+import { buildAlternates } from '@/shared/seo/metadata'
 import { attempt, isOk } from '@/shared/result'
 import { registrarFallo } from '@/shared/observability/fallos'
 
@@ -14,6 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Las páginas legales solo existen publicadas: anunciar una que responde 404 resta
   // confianza de rastreo a toda la web.
   const { legal } = await site.settings()
+
+  // Cada entrada con su versión en el otro idioma (9 oct): la misma regla que el `hreflang` de la página, así
+  // el sitemap y la página nunca se contradicen.
+  const conIdiomas = (entradas: MetadataRoute.Sitemap): MetadataRoute.Sitemap =>
+    entradas.map((e) => ({ ...e, alternates: { languages: buildAlternates(new URL(e.url).pathname).languages } }))
 
   for (const locale of LOCALES) {
     entries.push({ url: `${env.SITE_URL}/${locale}`, changeFrequency: 'weekly', priority: 1 })
@@ -32,7 +38,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (legal.terminos.publicada) entries.push({ url: `${env.SITE_URL}/${locale}/terminos`, changeFrequency: 'yearly', priority: 0.2 })
   }
 
-  return entries
+  return conIdiomas(entries)
 }
 
 /**

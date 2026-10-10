@@ -8,6 +8,8 @@ import { alfaDe, colorDeAcento, PALETA as P } from './xv-luciana.palette'
 
 /** La piel de «Bosque Encantado». */
 export const PIEL: PielXv = {
+  voz: 'xv-luciana',
+  glifo: '❦',
   // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta, con el retrato
   // del evento si lo subieron.
   apertura: (foto) => (

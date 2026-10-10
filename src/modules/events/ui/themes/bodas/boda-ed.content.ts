@@ -41,6 +41,8 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     address: '· KM 22 CARRETERA REAL · GTO ·',
     time: '15:00',
   },
+  // Las coordenadas que el mapa de cada tarjeta enseña dentro (PDF 9 oct), como las demás bodas.
+  map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.15°O' },
   itinerary: [
     { time: '13:00', label: 'CEREMONIA RELIGIOSA' },
     { time: '15:00', label: 'RECEPCIÓN SOCIAL' },

@@ -9,7 +9,7 @@ import type { InvitationContent } from '../../../domain/invitation-content'
  */
 export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   hero: {
-    eyebrow: '¡NOS CASAMOS!',
+    eyebrow: 'NOS CASAMOS',
     nameA: 'Marcia',
     nameB: 'Ricardo',
     monogram: 'M & R',
@@ -36,13 +36,11 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   ceremony: {
     label: 'Ceremonia Religiosa',
     place: 'Parroquia San Mateo',
-    address: 'Av. Iglesia 14, Centro',
     time: '16:00 h',
   },
   reception: {
     label: 'Recepción Social',
     place: 'Hacienda La Aurora',
-    address: 'Km 8 Carretera del Lago',
     time: '18:00 h',
   },
   // Con enlace: es lo que enciende el botón «ver ubicación» de las dos tarjetas. Sin él no

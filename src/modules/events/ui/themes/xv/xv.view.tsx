@@ -1,4 +1,5 @@
 import Image from '@/shared/design/ui/ImagenQueAparece'
+import { themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { anfitrionesXv } from '../../../domain/invitation-content'
 import { comoLlegar } from '../../../domain/ubicacion'
@@ -42,6 +43,9 @@ const SERIF = 'var(--font-cormorant)'
  * Todo el texto va sobre cristal esmerilado: es lo único que lo deja legible sobre una
  * fotografía a sangre, sea clara con lila o negra con oro.
  */
+/** Las seis fotos de muestra del álbum (`Firma3D`), en `public/temas/<diseño>/`. */
+const ALBUM_DE_MUESTRA = ['album-1.avif', 'album-2.avif', 'album-3.avif', 'album-4.avif', 'album-5.avif', 'album-6.avif'] as const
+
 export function XvSharedView({
   content,
   event,
@@ -68,6 +72,21 @@ export function XvSharedView({
   const avisosSueltos = (piel.regalos === true ? notes?.slice(1) : notes) ?? []
   // Los regalos por piezas, en una invitación de verdad (ver `ThemeSlots.regalos`).
   const partes = slots.regalos
+  // V4 (`Firma3D`): la voz del diseño en el libro, el álbum y los regalos, y su adorno. Los
+  // mensajes de muestra solo en el escaparate y la vista previa (sin `partes`): en una invitación
+  // de verdad el libro es de sus invitados.
+  const claveDeVoz = piel.voz
+  const voz = claveDeVoz === undefined ? undefined : themes.designs[claveDeVoz]
+  const conNombre = (texto: string) => texto.replace('{nombre}', hero?.nameA ?? '')
+  const GLIFO = piel.glifo ?? '◆'
+  const mensajesDeMuestra =
+    voz === undefined || partes !== undefined
+      ? []
+      : [
+          { texto: voz.m1, quien: voz.q1 },
+          { texto: voz.m2, quien: voz.q2 },
+          { texto: voz.m3, quien: voz.q3 },
+        ]
 
   // El texto del aviso puede traer dos párrafos: el primero es la intro de la tarjeta —«Que
   // estés ahí, celebrando conmigo…»— y el segundo, la nota corta bajo el sobre. Con uno
@@ -106,6 +125,8 @@ export function XvSharedView({
   // es de quien salió este esqueleto.
   const Z = piel.piezas ?? {}
   const F = Z.formulario ?? {}
+  // El párrafo de `Firma3D` bajo cada titular (la frase del libro, del álbum y de los regalos).
+  const CUERPO_F3 = { fontFamily: SANS, fontSize: 15, lineHeight: 1.7, textAlign: 'center', color: Z.pestanas?.tinta ?? P.violeta, textShadow: Z.sombraTexto } as const
   // La portada no se personaliza; la foto que abre «Palacio Griego» a sangre es el retrato.
   const fotoDeApertura = hero?.portraitImageId === undefined ? undefined : `/media/${hero.portraitImageId}`
   /** La recepción centrada y compacta de «Gala Real» en V3. */
@@ -796,6 +817,7 @@ export function XvSharedView({
           </Reveal>
         )}
 
+        {piel.sinSaludo === true ? null : (
         <Reveal>
           <div
             style={{
@@ -827,6 +849,7 @@ export function XvSharedView({
             )}
           </div>
         </Reveal>
+        )}
 
         {reception === undefined ? null : (
           <Reveal>
@@ -1186,8 +1209,8 @@ export function XvSharedView({
                   audioSrc={audioSrc ?? (music.audioMediaId === undefined ? undefined : `/media/${music.audioMediaId}`)}
                   eyebrow={themes.myWaltz}
                   eyebrowFont={SANS}
-                  playBg={P.uva}
-                  playIconColor={P.blanco}
+                  playBg={Z.musicaBoton ?? P.uva}
+                  playIconColor={Z.musicaIcono ?? P.blanco}
                   textColor={P.tinta}
                   track={music.track ?? ''}
                   trackColor={Z.musicaPista ?? P.violetaHondo}
@@ -1261,7 +1284,7 @@ export function XvSharedView({
           con ella: lo hacía en «Noche Estrellada», «Encanto Musical» y «Gala Real».
         */}
         {piel.regalos !== true ? (
-          <div style={{ marginTop: 28 }}>{slots.registry}</div>
+          piel.regalosV4 === true ? null : <div style={{ marginTop: 28 }}>{slots.registry}</div>
         ) : partes !== undefined && !partes.sobres && partes.qr === null && partes.resto === null ? null : (
         <Reveal>
           <div
@@ -1443,6 +1466,65 @@ export function XvSharedView({
           </div>
         </Reveal>
 
+        {/* V4 (`Firma3D`), en los que no traen la tarjeta marina: la sección de regalos tras la
+            confirmación —titular, adorno, intro y las pestañas «Lluvia de sobres» / «Transferencia QR»—.
+            En una invitación de verdad cada pestaña sale si el cliente la encendió, y la mesa de
+            regalos (reservar) va debajo. */}
+        {piel.regalosV4 !== true ||
+        (partes !== undefined && !partes.sobres && partes.qr === null && partes.resto === null && slots.registry === null) ? null : (
+          <Reveal>
+            <div style={{ marginTop: 40, textAlign: 'center' }}>
+              <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, lineHeight: 1.15, color: TITULO, textShadow: Z.sombraTexto }}>
+                {themes[piel.rotulos?.gifts ?? 'gifts']}
+              </div>
+              <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '12px 0 4px' }}>
+                <span style={{ width: 44, height: 1, background: P.lila }} />
+                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>{GLIFO}</span>
+                <span style={{ width: 44, height: 1, background: P.lila }} />
+              </div>
+              {voz?.regalosIntro === undefined ? null : <p style={{ ...CUERPO_F3, maxWidth: 320, margin: '10px auto 0' }}>{voz.regalosIntro}</p>}
+              {partes !== undefined && !partes.sobres && partes.qr === null && partes.resto === null ? null : (
+                <div style={{ marginTop: 18, padding: '14px 16px 18px', ...CRISTAL, border: `1px solid ${P.lila}` }}>
+                  <PestanasDeRegalo
+                    acento={Z.pestanas?.acento ?? P.uva}
+                    borde={Z.pestanas?.borde ?? P.lila}
+                    sobreAcento={Z.pestanas?.sobreAcento ?? P.blanco}
+                    sobres={partes?.sobres === false ? null : { rotulo: themes.envelopeRain, nota: themes.mailboxNote }}
+                    sombra={Z.pestanas?.sombra}
+                    tinta={Z.pestanas?.tinta ?? P.violetaHondo}
+                    transferencia={
+                      partes === undefined
+                        ? {
+                            rotulo: themes.transferQr,
+                            contenido: (
+                              <>
+                                <MarcoQr aro={Z.qrAro} bg={P.blanco} fg={Z.qrTinta ?? P.violetaHondo} seed={42} size={116} />
+                                <div style={{ marginTop: 8, fontFamily: SANS, fontSize: 14, color: Z.pestanas?.tinta ?? P.violetaHondo, textShadow: Z.pestanas?.sombra }}>
+                                  {themes.scanFromBank}
+                                </div>
+                              </>
+                            ),
+                          }
+                        : partes.qr === null && partes.resto === null
+                          ? null
+                          : {
+                              rotulo: themes.transferQr,
+                              contenido: (
+                                <>
+                                  {partes.qr}
+                                  {partes.resto}
+                                </>
+                              ),
+                            }
+                    }
+                  />
+                </div>
+              )}
+              {slots.registry === null ? null : <div style={{ marginTop: 18 }}>{slots.registry}</div>}
+            </div>
+          </Reveal>
+        )}
+
         {/* V4 (`Firma3D`): el rótulo «Libro de firmas», el titular «Déjale un mensaje» con su
             ornamento, y la tarjeta con el formulario debajo. */}
         {slots.guestbook === null ? null : (
@@ -1456,11 +1538,22 @@ export function XvSharedView({
               </div>
               <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '12px 0 4px' }}>
                 <span style={{ width: 44, height: 1, background: P.lila }} />
-                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>◆</span>
+                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>{GLIFO}</span>
                 <span style={{ width: 44, height: 1, background: P.lila }} />
               </div>
             </div>
+            {voz === undefined ? null : <p style={{ ...CUERPO_F3, maxWidth: 320, margin: '10px auto 0' }}>{conNombre(voz.firmaIntro)}</p>}
             <div style={{ marginTop: 18, padding: '22px 18px', ...CRISTAL, border: `1px solid ${P.lila}` }}>{slots.guestbook}</div>
+            {mensajesDeMuestra.length === 0 ? null : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
+                {mensajesDeMuestra.map((m) => (
+                  <div key={m.quien} style={{ padding: '16px 18px', textAlign: 'left', ...CRISTAL, border: `1px solid ${P.lila}` }}>
+                    <div style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 15, lineHeight: 1.6, color: Z.pestanas?.tinta ?? P.violeta }}>&quot;{m.texto}&quot;</div>
+                    <div style={{ fontFamily: SANS, fontSize: 9.5, letterSpacing: '0.25em', fontWeight: 700, textTransform: 'uppercase', marginTop: 8, color: Z.pestanas?.acento ?? P.uva }}>— {m.quien}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </Reveal>
         )}
 
@@ -1489,7 +1582,8 @@ export function XvSharedView({
                     color: Z.pestanas?.acento ?? P.uva,
                   }}
                 >
-                  ◆ {themes.albumBadge}
+                  <span style={{ fontSize: 9 }}>{GLIFO}</span>
+                  {themes.albumBadge}
                 </div>
               )}
               <div style={{ fontFamily: SANS, fontSize: 10, letterSpacing: '0.3em', color: Z.pestanas?.acento ?? P.uva, fontWeight: 700, textTransform: 'uppercase', textShadow: Z.sombraTexto }}>
@@ -1498,12 +1592,23 @@ export function XvSharedView({
               <div style={{ fontFamily: CALIGRAFIA, fontSize: 38, lineHeight: 1.15, marginTop: 6, color: TITULO, textShadow: Z.sombraTexto }}>{themes.albumTitle}</div>
               <div aria-hidden style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, margin: '12px 0 4px' }}>
                 <span style={{ width: 44, height: 1, background: P.lila }} />
-                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>◆</span>
+                <span style={{ color: Z.pestanas?.acento ?? P.uva, fontSize: 14, lineHeight: 1 }}>{GLIFO}</span>
                 <span style={{ width: 44, height: 1, background: P.lila }} />
               </div>
+              {voz === undefined ? null : <p style={{ ...CUERPO_F3, maxWidth: 320, margin: '10px auto 0' }}>{voz.albumIntro}</p>}
               <p style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: Z.pestanas?.tinta ?? P.violeta, maxWidth: 300, margin: '8px auto 0', textShadow: Z.sombraTexto }}>
                 {themes.albumHint}
               </p>
+              {/* Las seis fotos de muestra de la maqueta, solo en el escaparate: en una invitación, las suben los invitados. */}
+              {partes !== undefined || claveDeVoz === undefined ? null : (
+                <div aria-hidden style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0,1fr))', gap: 6, marginTop: 18 }}>
+                  {ALBUM_DE_MUESTRA.map((archivo) => (
+                    <div key={archivo} style={{ position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', border: `1px solid ${P.lila}` }}>
+                      <Image alt="" fill sizes="140px" src={themeAsset(claveDeVoz, archivo)} style={{ objectFit: 'cover' }} />
+                    </div>
+                  ))}
+                </div>
+              )}
               <div style={{ marginTop: 16 }}>{slots.photos}</div>
             </div>
           </Reveal>

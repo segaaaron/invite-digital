@@ -7,6 +7,8 @@ import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { CapaFija } from '../kit/CapaFija'
 import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { PhotoSlot } from '../kit/PhotoSlot'
+import { franjaConLaFecha } from '../kit/time'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { CuentaConAros } from './CuentaConAros'
@@ -240,7 +242,7 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
               )}
             </h1>
             <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oroPalido }}>
-              {hero?.serial ?? ''}
+              {franjaConLaFecha(hero?.serial ?? '', schedule?.startsAt)}
             </div>
           </div>
         </div>
@@ -654,7 +656,9 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
               {regalos?.text === undefined ? null : (
                 <div style={{ fontFamily: DISPLAY, fontSize: 17.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
               )}
-              <div style={{ marginTop: 22 }}>{slots.registry}</div>
+              <VerMesaDeRegalos estilo={{ background: P.oro, color: P.fondo, fontFamily: MONO, fontSize: 9, padding: '12px 20px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
             </div>
           </Reveal>
 
@@ -728,9 +732,12 @@ export function BodaEdView({ content, event, dictionary, themes, slots, guestInf
             </Reveal>
           )}
 
-          <Reveal>
-            <div style={{ marginTop: 40 }}>{slots.guestbook}</div>
-          </Reveal>
+          {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+          {slots.guestbook === null || slots.regalos === undefined ? null : (
+            <Reveal>
+              <div style={{ marginTop: 40 }}>{slots.guestbook}</div>
+            </Reveal>
+          )}
 
           <div style={{ marginTop: 28 }}>{slots.pass}</div>
 

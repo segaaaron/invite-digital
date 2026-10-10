@@ -1,4 +1,5 @@
 import Image from '@/shared/design/ui/ImagenQueAparece'
+import { useId } from 'react'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import type { ThemeProps } from '../contract'
 import { anfitrionesBoda } from '../../../domain/invitation-content'
@@ -59,6 +60,7 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
   const nombres = [hero?.nameA, hero?.nameB].filter((nombre) => nombre !== undefined && nombre !== '').join(' & ')
   const papeles = hosts === undefined ? { novia: [], novio: [], padrinos: [] } : anfitrionesBoda(hosts, { madreDelante: true })
   const historia = notes?.[0]
+  const [, tituloDeHistoria = historia?.title ?? ROTULOS.historia, aniosDeHistoria] = /^(.*?)\s*(\([^)]*\))?\s*$/.exec(historia?.title ?? ROTULOS.historia) ?? []
   const soloAdultos = notes?.[1]
   const regalos = notes?.[2]
 
@@ -123,7 +125,10 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
 
       {/* ── La fecha, con la pareja a sangre ── */}
       <Seccion estilo={{ padding: '0 26px 68px' }}>
-        <FotoConOnda alto={560} posicion="20% 15%" src={foto(0, 'pareja-fecha.avif')} />
+        {/* A sangre (`margin: 0 -26px` de la maqueta) y con la onda que funde la foto en el papel. */}
+        <div style={{ margin: '0 -26px 40px', width: 'calc(100% + 52px)' }}>
+          <FotoConOnda alto={560} fundido posicion="20% 15%" src={foto(0, 'pareja-fecha.avif')} />
+        </div>
         <div style={{ textAlign: 'center', marginTop: -8, marginBottom: 8 }}>
           <h1 style={{ fontFamily: CALIGRAFIA, fontSize: 44, lineHeight: 1.1, color: P.vino }}>{nombres}</h1>
         </div>
@@ -178,7 +183,11 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
       {historia === undefined ? null : (
         <Seccion esquinas={['tr', 'bl']} estilo={{ paddingBottom: 0 }}>
           <div style={{ textAlign: 'center' }}>
-            <Rotulo color={P.rosa}>{historia.title ?? ROTULOS.historia}</Rotulo>
+            <Rotulo color={P.rosa}>{tituloDeHistoria}</Rotulo>
+            {/* «(2019 — 2026)»: los años van en el propio título, entre paréntesis («Nuestra historia (2019 — 2026)»). */}
+            {aniosDeHistoria === undefined ? null : (
+              <p style={{ fontFamily: SERIF, fontSize: 15, letterSpacing: '0.2em', color: P.rosa, opacity: 0.75, marginTop: 8 }}>{aniosDeHistoria}</p>
+            )}
             <p style={{ fontSize: 22, fontStyle: 'italic', fontWeight: 500, lineHeight: 1.8, marginTop: 26, color: P.vino }}>{historia.text}</p>
           </div>
           <div style={{ margin: '36px -34px 0', width: 'calc(100% + 68px)' }}>
@@ -419,7 +428,7 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
           <Arte ancho={230} estilo={{ margin: '0 auto 18px' }} src={themeAsset('boda-sello', 'regalo.avif')} />
           <Rotulo color={P.rosa}>{regalos?.title ?? ROTULOS.regalos}</Rotulo>
           {regalos?.text === undefined ? null : (
-            <p style={{ fontSize: 22, fontWeight: 500, color: P.vino, marginTop: 18, lineHeight: 1.8 }}>{regalos.text}</p>
+            <p style={{ fontSize: 22, fontWeight: 500, color: P.vino, marginTop: 18, lineHeight: 1.8, whiteSpace: 'pre-line' }}>{regalos.text}</p>
           )}
           <div style={{ marginTop: 22 }}>{slots.registry}</div>
         </div>
@@ -605,12 +614,16 @@ function FotoConOnda({
   alto,
   posicion = 'center',
   fondo = P.crema,
+  fundido = false,
 }: {
   readonly src: string
   readonly alto: number
   readonly posicion?: string
   readonly fondo?: string
+  /** La onda en degradado (de transparente al papel), como la portada de la maqueta; sin él, maciza. */
+  readonly fundido?: boolean
 }) {
+  const idFundido = useId()
   return (
     <div style={{ position: 'relative', width: '100%', height: alto }}>
       <Image alt="" aria-hidden fill sizes="480px" src={src} style={{ objectFit: 'cover', objectPosition: posicion }} />
@@ -620,7 +633,15 @@ function FotoConOnda({
         style={{ position: 'absolute', bottom: -1, left: 0, width: '100%', height: 50, display: 'block' }}
         viewBox="0 0 100 30"
       >
-        <path d="M0,10 C15,4 28,16 42,9 C58,2 70,18 85,11 C92,8 96,13 100,10 L100,30 L0,30 Z" fill={fondo} />
+        {fundido ? (
+          <defs>
+            <linearGradient id={idFundido} x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor={fondo} stopOpacity="0" />
+              <stop offset="100%" stopColor={fondo} stopOpacity="1" />
+            </linearGradient>
+          </defs>
+        ) : null}
+        <path d="M0,10 C15,4 28,16 42,9 C58,2 70,18 85,11 C92,8 96,13 100,10 L100,30 L0,30 Z" fill={fundido ? `url(#${idFundido})` : fondo} />
       </svg>
     </div>
   )

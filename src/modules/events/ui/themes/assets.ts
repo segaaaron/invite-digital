@@ -26,16 +26,20 @@ export const THEME_ASSETS = {
   ],
   'cumple-femme': ['amigas-disfraces.avif', 'brindis-copas.avif', 'fondo-tocador.avif', 'portada-cabaret.avif'],
   'boda-bot': [
-    'boda-01-pareja.avif',
     // La portada de la maqueta (`wedding-variants-2.jsx`): el sobre lacrado sobre las rosas.
     'portada-rosas.avif',
     'boda-02-arreglo.avif',
     'boda-03-anillos.avif',
     'boda-04-pastel.avif',
-    'marmol-flores-optimized.avif',
-    'taco-gato-sf.avif',
-    'trajes-dorados-sf.avif',
+    'boda-05-mesa.avif',
     'wedding-couple.avif',
+    // Las rosas blancas y los dibujos de la maqueta (PDF 9 oct): templo, copas, código, tacón y cámara.
+    'rosas-blancas-sf.avif',
+    'templo-v5-sf.avif',
+    'copas-v5-sf.avif',
+    'codigo-v5-sf.avif',
+    'tacon-v5-sf.avif',
+    'camara-v5-sf.avif',
   ],
   esencia: [
     'portada-lino.avif',
@@ -243,6 +247,13 @@ export const THEME_ASSETS = {
     'mar-corona.avif',
     'nota-sol-dorado-sf.avif',
     'xv3.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-fantasia': [
     'borde.avif',
@@ -253,6 +264,13 @@ export const THEME_ASSETS = {
     'reloj-dorado-opt.avif',
     'sobre-corona-recortado.avif',
     'tiara-vino-sf.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-isabelle': [
     // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
@@ -270,6 +288,13 @@ export const THEME_ASSETS = {
     'reloj-conteo-sf.avif',
     'torta-dorada-sf.avif',
     'xv-recortado.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-papillon': [
     'auto-pinki-sf.avif',
@@ -286,6 +311,13 @@ export const THEME_ASSETS = {
     'reloj-pinki-sf.avif',
     'rosa-pinki-sf.avif',
     'torta-pinki-sf.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-luciana': [
     // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
@@ -296,6 +328,13 @@ export const THEME_ASSETS = {
     'quinceanera-verde.avif',
     'reloj1.avif',
     'traje1.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-mariana': [
     // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
@@ -313,6 +352,13 @@ export const THEME_ASSETS = {
     'reloj-plata-opt.avif',
     'sobre-plata-opt.avif',
     'traje-plata-opt.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-natalia': [
     // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
@@ -325,6 +371,13 @@ export const THEME_ASSETS = {
     'nota-sol-dorado-sf.avif',
     'nota-sol-sf.avif',
     'traje-y-vestido.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-valentina': [
     // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
@@ -338,6 +391,13 @@ export const THEME_ASSETS = {
     'mascara-sin-fondo.avif',
     'mascarada-morada.avif',
     'xv3.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
   'xv-valeria': [
     // V4: la vestimenta nueva de la maqueta (`vestimenta-*-original.webp`).
@@ -351,6 +411,13 @@ export const THEME_ASSETS = {
     'tiara-vino-sf.avif',
     'traje1-opt.avif',
     'xv-guindo-photo.avif',
+    // Las seis fotos de muestra del álbum compartido (`Firma3D`), solo en el escaparate.
+    'album-1.avif',
+    'album-2.avif',
+    'album-3.avif',
+    'album-4.avif',
+    'album-5.avif',
+    'album-6.avif',
   ],
 } as const satisfies Record<string, readonly string[]>
 

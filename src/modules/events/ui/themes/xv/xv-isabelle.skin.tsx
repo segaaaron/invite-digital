@@ -25,6 +25,10 @@ const SOMBRA = '0 1px 3px rgba(255,255,255,.6)'
  * el itinerario, que va en una columna con un dibujo por hito.
  */
 export const PIEL: PielXv = {
+  voz: 'xv-isabelle',
+  glifo: '⚜',
+  regalosV4: true,
+  sinSaludo: true,
   apertura: (foto) => (
     <div style={{ position: 'relative', width: '100%', height: 460, overflow: 'hidden', marginBottom: -20 }}>
       {foto === undefined ? (
@@ -86,6 +90,8 @@ export const PIEL: PielXv = {
   // Sin ornamentos: la maqueta no pone ninguno entre bloques ni en el formulario.
   ornamento: <></>,
   piezas: {
+    // `Firma3D` de su maqueta: acento oro viejo y el texto en café (en dorado claro sobre crema no se leía).
+    pestanas: { acento: '#8b6914', sobreAcento: '#fff8e7', tinta: '#3c2a14', borde: '#c5961a' },
     formulario: { boton: colorDeAcento.lila, campo: 'rgba(255,255,255,.75)', linea: colorDeAcento.lila, tinta: P.tinta, etiqueta: P.uva },
     botonTinta: P.crema,
     tituloFormulario: P.uva,
@@ -154,7 +160,7 @@ export const PIEL: PielXv = {
     border: `1.5px solid ${P.bordeVidrio}`,
     boxShadow: P.sombra,
   },
-  rotulos: { itinerary: 'itineraryTitle' },
+  rotulos: { itinerary: 'itineraryTitle', gifts: 'giftTable' },
   // Una columna con el dibujo dorado de cada hito, su momento y su hora, en un panel.
   itinerario: (filas) => (
     <div style={{ padding: '26px 22px', borderRadius: 20, background: P.vidrio, border: `1.5px solid ${P.bordeVidrio}`, boxShadow: P.sombra }}>

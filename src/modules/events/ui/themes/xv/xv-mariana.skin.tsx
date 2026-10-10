@@ -18,36 +18,44 @@ const ICONOS: Record<string, Archivo> = {
 
 /** La piel de «Noche Disco» (Mariana). */
 export const PIEL: PielXv = {
+  voz: 'xv-mariana',
+  glifo: '✦',
+  regalosV4: true,
+  sinSaludo: true,
   // Su itinerario es una sola columna centrada (`invites-1.jsx`, «Itinerario»).
   itinerarioColumna: true,
   // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta.
   apertura: (
     <>
+      {/* V5 (`invites-1.jsx:2267`): 368 px, la bola entera (alto completo, sin recortar) y un fundido a negro. */}
       <div
         style={{
           position: 'relative',
           width: '100%',
-          height: 'calc(var(--alto, 100dvh) * 0.42)',
-          minHeight: 280,
+          height: 368,
           overflow: 'hidden',
-          clipPath: 'polygon(0 0, 100% 0, 100% 94%, 75% 100%, 50% 94%, 25% 100%, 0 94%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'radial-gradient(circle at 50% 40%, rgba(0,0,0,.15), transparent 70%)',
         }}
       >
         <Image
           alt=""
-          fill
+          height={368}
           priority
-          sizes="480px"
           src={themeAsset('xv-mariana', 'bola-sola-opt.avif')}
-          style={{ objectFit: 'cover', objectPosition: 'center top' }}
+          style={{ height: '100%', width: 'auto', maxWidth: 'none', objectFit: 'contain', filter: 'drop-shadow(0 10px 30px rgba(0,0,0,.5))' }}
+          width={368}
         />
+        <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '40%', background: 'linear-gradient(to bottom, transparent, #000)' }} />
       </div>
       <Image
         alt=""
         aria-hidden
         height={510}
         src={themeAsset('xv-mariana', 'borde-plata-sf.avif')}
-        style={{ width: '60%', height: 'auto', display: 'block', margin: '18px auto 0', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
+        style={{ width: '60%', height: 'auto', display: 'block', margin: '0 auto 18px', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
         width={1400}
       />
     </>
@@ -93,6 +101,12 @@ export const PIEL: PielXv = {
   // Los colores que «Encanto Musical» reparte distinto de «Bajo el Mar». Su «XV» no es un
   // color: es un degradado de plata recortado sobre el texto, como el material del diseño.
   piezas: {
+    // Las pestañas de regalos de su maqueta (`Firma3D`): la elegida en plata con la letra negra; con el
+    // blanco del diseño, la pestaña y su letra eran blancas.
+    pestanas: { acento: '#d8dde3', sobreAcento: '#0a0a0a', tinta: '#ffffff', borde: '#b8bfc7', sombra: '0 2px 8px rgba(0,0,0,.7)' },
+    // El play de su maqueta: plata con el icono negro (el blanco sobre blanco no se veía).
+    musicaBoton: '#c0c6cd',
+    musicaIcono: '#000000',
     anios: '#E6E9ED',
     // El «ENVIAR» de su formulario en la maqueta.
     formulario: { boton: '#C0C6CD' },
@@ -184,7 +198,7 @@ export const PIEL: PielXv = {
     />
   ),
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
-  rotulos: { itinerary: 'itineraryTitle' },
+  rotulos: { itinerary: 'itineraryTitle', gifts: 'giftTable' },
   corona: themeAsset('xv-mariana', 'micro-notas-opt.avif'),
   reloj: themeAsset('xv-mariana', 'reloj-plata-opt.avif'),
   castillo: themeAsset('xv-mariana', 'castillo-guindo-opt.avif'),

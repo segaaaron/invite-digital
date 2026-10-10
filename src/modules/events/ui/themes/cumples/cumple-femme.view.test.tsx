@@ -14,7 +14,9 @@ afterEach(() => vi.restoreAllMocks())
 
 describe('el tema Femme Fatale', () => {
   it('coloca el RSVP, el libro y los regalos, y no el pase', () => {
-    render(<CumpleFemmeView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
+    // En una invitación de verdad (con `regalos`): en la muestra el libro no sale, su maqueta no lo tiene.
+    const base = propsDePrueba({ content: CONTENIDO_DE_MUESTRA })
+    render(<CumpleFemmeView {...base} slots={{ ...base.slots, regalos: { sobres: false, qr: null, resto: null } }} />)
     for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }

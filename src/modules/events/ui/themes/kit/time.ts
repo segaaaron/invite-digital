@@ -39,3 +39,13 @@ export function countdownFrom(targetISO: string, now: Date): CountdownParts {
     over: false,
   }
 }
+
+/**
+ * La franja de la portada con la fecha **de la invitación** (PDF 9 oct): «· NOS CASAMOS · 20.09.2026 ·»
+ * venía escrito en la muestra y salía igual en una boda de diciembre. Cambia el `dd.mm.aaaa` del
+ * texto por el día del evento; sin fecha o sin evento, el texto tal cual.
+ */
+export function franjaConLaFecha(serial: string, startsAt: string | undefined): string {
+  if (startsAt === undefined || !/^\d{4}-\d{2}-\d{2}/.test(startsAt)) return serial
+  return serial.replace(/\d{2}\.\d{2}\.\d{4}/, startsAt.slice(0, 10).split('-').reverse().join('.'))
+}

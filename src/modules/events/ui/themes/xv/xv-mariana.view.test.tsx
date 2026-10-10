@@ -13,9 +13,11 @@ beforeEach(() => {
 describe('el tema Encanto Musical', () => {
   it('coloca las cinco ranuras', () => {
     render(<XvMarianaView {...propsDePrueba({ content: CONTENIDO_DE_MUESTRA })} />)
-    for (const ranura of ['ranura-invitado', 'ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
+    for (const ranura of ['ranura-rsvp', 'ranura-regalos', 'ranura-firmas', 'ranura-pase']) {
       expect(screen.getByText(ranura), ranura).toBeInTheDocument()
     }
+    // Sin la tarjeta «Reservamos N lugares» (PDF 9 oct): los lugares los dice la confirmación.
+    expect(screen.queryByText('ranura-invitado')).not.toBeInTheDocument()
   })
 
   it('pinta el nombre de la quinceañera desde el contenido', () => {

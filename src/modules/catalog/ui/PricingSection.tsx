@@ -44,7 +44,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
 
         {/* El selector Bs / USD (si algún plan tiene precio en dólares) envuelve todo: tarjetas, reserva,
             tabla y adicionales cambian a la vez (9 oct: la reserva y los adicionales seguían en Bs). */}
-        <Envoltura conDolares={plans.some((p) => p.priceUsdCents !== null)} textos={pricing.currency}>
+        <Envoltura conDolares={plans.some((p) => p.priceUsdCents !== null)} inicial={locale === 'en' ? 'usd' : 'bob'} textos={pricing.currency}>
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {plans.map((plan, index) => {
             // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia
@@ -101,6 +101,12 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
   )
 }
 
-function Envoltura({ conDolares, textos, children }: { conDolares: boolean; textos: Dictionary['pricing']['currency']; children: ReactNode }) {
-  return conDolares ? <SelectorDeMoneda textos={textos}>{children}</SelectorDeMoneda> : <>{children}</>
+function Envoltura({ conDolares, inicial, textos, children }: { conDolares: boolean; inicial: 'bob' | 'usd'; textos: Dictionary['pricing']['currency']; children: ReactNode }) {
+  return conDolares ? (
+    <SelectorDeMoneda inicial={inicial} textos={textos}>
+      {children}
+    </SelectorDeMoneda>
+  ) : (
+    <>{children}</>
+  )
 }

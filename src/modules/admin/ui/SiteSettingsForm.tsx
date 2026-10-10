@@ -239,7 +239,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
             'Ubicación',
             <>
               <p className="text-[12px] leading-[1.6] text-ink-mute">
-                Google compara estos datos con tu ficha y tus redes: escríbelos exactamente igual que allí.
+                No se publican en la web ni para Google: Luxury Atelier no dice desde dónde trabaja. La cobertura sí sale en el pie.
               </p>
               <Campo ayuda="Opcional. Déjala vacía si no atiendes en un local." etiqueta="Dirección" ancho="medio">
                 <input className={FIELD_CLASS} onChange={(e) => cambiar('direccion', e.target.value)} placeholder="Av. América 123" value={datos.direccion} />

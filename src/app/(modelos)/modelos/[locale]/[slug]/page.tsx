@@ -107,14 +107,19 @@ export default async function ModelPreviewPage({
   ])
   const cancion = cancionesLeidas?.ok ? cancionesLeidas.value[slug] : undefined
   const tieneMusica = musica !== null && isOk(musica) && (musica.value[slug] ?? '') !== ''
-  // Con canción subida, el reproductor dice la que suena y no la del contenido de muestra.
-  // Una subida anterior a guardar el nombre no lo tiene: sin él se deja en blanco, que es
-  // mejor que anunciar a Chayanne sonando otra cosa.
+  // El reproductor dice la canción **del diseño** (9 oct, informe de fidelidad con Claude Design: salía
+  // «LA CANCIÓN DE LA NOCHE · BODA 1», el nombre del archivo subido). El nombre de la subida solo se usa si el
+  // diseño no trae canción de muestra.
   // Fechas siempre por delante de hoy: con las fijas del modelo, la cuenta regresiva quedaba en cero.
   const fechas = fechasDeMuestra(fechaEnBolivia(new Date()), tema.defaultContent.schedule?.startsAt)
   const base = { ...tema.defaultContent, schedule: { startsAt: fechas.startsAt } }
   const contenido = tieneMusica
-    ? { ...base, music: { ...base.music, track: cancion?.track ?? '', artist: cancion?.artist ?? '' } }
+    ? {
+        ...base,
+        music: base.music?.track
+          ? base.music
+          : { ...base.music, track: cancion?.track ?? '', artist: cancion?.artist ?? '' },
+      }
     : base
 
   const eventoDeMuestra: Event = {
@@ -152,7 +157,7 @@ export default async function ModelPreviewPage({
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}
         guestInfo={INVITADO_DE_MUESTRA}
-        slots={ranurasDeVistaPrevia(diccionario, tema.rsvp)}
+        slots={ranurasDeVistaPrevia(diccionario, tema.rsvp, tema.categorySlug === 'xv-anos')}
         themes={diccionario.themes}
       />
       </EstiloDeLaInvitacion>

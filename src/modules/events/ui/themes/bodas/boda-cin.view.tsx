@@ -5,9 +5,11 @@ import { anfitrionesBoda, type ItineraryRow } from '../../../domain/invitation-c
 import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
-import { MusicPlayer } from '../kit/MusicPlayer'
+import { franjaConLaFecha } from '../kit/time'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
 import { PaletaDeColores } from '../kit/PaletaDeColores'
 import { PhotoSlot } from '../kit/PhotoSlot'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { ThemeColumn } from '../kit/ThemeColumn'
 import { CarruselNosotros } from './CarruselNosotros'
@@ -37,7 +39,7 @@ function IconoDelHito({ fila, indice }: { readonly fila: ItineraryRow; readonly 
   const casilla = Number.parseInt(clave, 10)
   const posicion = Number.isNaN(casilla) ? indice % 6 : casilla % 6
   return (
-    <div aria-hidden style={{ width: lado, height: lado, overflow: 'hidden', position: 'relative' }}>
+    <div aria-hidden style={{ width: lado, height: lado, flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
       {suelto === null ? (
         <Image
           alt=""
@@ -47,6 +49,8 @@ function IconoDelHito({ fila, indice }: { readonly fila: ItineraryRow; readonly 
             position: 'absolute',
             width: '300%',
             height: '200%',
+            // El reset (`img { max-width: 100% }`) la topaba al ancho de la casilla: salía la lámina entera en miniatura.
+            maxWidth: 'none',
             left: `${-(posicion % 3) * 100}%`,
             top: `${-Math.floor(posicion / 3) * 100}%`,
             objectFit: 'contain',
@@ -141,6 +145,8 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
         overflowX: 'clip',
       }}
     >
+      {/* Sin reproductor en la maqueta (PDF 9 oct): la canción suena desde el botón que flota. */}
+      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
       <CinematicaCover
         accent={P.oro}
         bg={P.fondo}
@@ -168,7 +174,8 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
             style={{
               position: 'absolute',
               top: 24,
-              bottom: 76,
+              // La foto de la maqueta es apaisada y deja los nombres debajo, no encima.
+              aspectRatio: '3 / 2',
               left: '50%',
               transform: 'translateX(-50%)',
               width: '72%',
@@ -202,7 +209,7 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
                 </>
               )}
             </h1>
-            <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.crema }}>{hero?.serial ?? ''}</div>
+            <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.crema }}>{franjaConLaFecha(hero?.serial ?? '', schedule?.startsAt)}</div>
           </div>
         </div>
 
@@ -437,25 +444,6 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
           </div>
         )}
 
-        {cancion === undefined ? null : (
-          <Reveal>
-            <div style={{ margin: '40px 24px 0', borderRadius: 999, background: P.tarjeta, boxShadow: `inset 0 0 0 1.5px ${P.oro}` }}>
-              <MusicPlayer
-                accent={P.oro}
-                artist={music?.artist ?? ''}
-                artistColor={P.crema}
-                audioSrc={cancion}
-                eyebrow={themes.songOfTheNight}
-                playBg={P.oro}
-                playIconColor={P.fondo}
-                textColor={P.papel}
-                track={music?.track ?? ''}
-                trackColor={P.papel}
-              />
-            </div>
-          </Reveal>
-        )}
-
         {nosotros === undefined ? null : (
           <div style={{ padding: '44px 0 0', textAlign: 'center' }}>
             <Reveal>
@@ -542,7 +530,9 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
               {regalos?.text === undefined ? null : (
                 <div style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.cremaClara, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</div>
               )}
-              <div style={{ marginTop: 22 }}>{slots.registry}</div>
+              <VerMesaDeRegalos estilo={{ background: P.oro, color: P.fondo, fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
             </div>
           </Reveal>
 
@@ -575,9 +565,12 @@ export function BodaCinView({ content, event, dictionary, themes, slots, guestIn
             </Reveal>
           )}
 
-          <Reveal>
-            <div style={{ marginTop: 40 }}>{slots.guestbook}</div>
-          </Reveal>
+          {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+          {slots.guestbook === null || slots.regalos === undefined ? null : (
+            <Reveal>
+              <div style={{ marginTop: 40 }}>{slots.guestbook}</div>
+            </Reveal>
+          )}
 
           <div style={{ marginTop: 28 }}>{slots.pass}</div>
 

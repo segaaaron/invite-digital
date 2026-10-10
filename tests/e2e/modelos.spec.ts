@@ -202,7 +202,8 @@ test.describe('los modelos, dentro del teléfono', () => {
       await page.waitForLoadState('networkidle')
       // Con la portada puesta el marco no se desplaza a propósito (`data-portada` en
       // `keyframes.css`): se mide con la invitación abierta, que es lo que se recorre.
-      await page.locator('[data-portada]').first().click()
+      // «Boho» no tapa: su portada es parte de la página (PDF 9 oct).
+      if ((await page.locator('[data-portada]').count()) > 0) await page.locator('[data-portada]').first().click()
       await expect(page.locator('[data-portada]'), clave).toHaveCount(0)
 
       const marco = await page.evaluate(() => {

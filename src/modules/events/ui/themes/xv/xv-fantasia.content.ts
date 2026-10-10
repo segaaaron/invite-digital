@@ -8,7 +8,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     monogram: 'XV',
     serial: '2026',
   },
-  quote: { text: 'Que nunca dejes de soñar, y que cada sueño te encuentre preparada.' },
+  quote: { text: 'Que nunca dejes de soñar,\ny que cada sueño te encuentre\npreparada.' },
   hosts: {
     label: 'Agradecida por el amor de mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],

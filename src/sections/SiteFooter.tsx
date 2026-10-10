@@ -34,7 +34,6 @@ const REDES = [
  */
 export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dictionary: Dictionary; sitio: PieDelSitio }) {
   const year = new Date().getUTCFullYear()
-  const ubicacion = [sitio.direccion, sitio.ciudad, sitio.pais].filter((parte) => parte !== '').join(', ')
   const redes = REDES.filter((red) => sitio.redes[red.clave] !== '')
   // En Bolivia se atiende por WhatsApp: el número, a la vista en cada página.
   const whatsapp = enlaceWhatsapp(sitio.whatsapp, sitio.mensajeGeneral)
@@ -79,8 +78,8 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
           </a>
         ) : null}
         <span className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-          {ubicacion}
-          {sitio.cobertura === '' ? '' : ` · ${sitio.cobertura}`}
+          {/* Sin dirección, ciudad ni país (9 oct, decisión del usuario): la marca no dice desde dónde trabaja. */}
+          {sitio.cobertura}
         </span>
         <span className="flex flex-wrap items-center justify-center gap-4 text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
           {sitio.privacidadPublicada ? (

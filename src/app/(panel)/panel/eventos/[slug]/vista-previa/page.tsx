@@ -67,7 +67,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
           dictionary={diccionario.invitation}
           event={event.value}
           guestInfo={INVITADO_DE_MUESTRA}
-          slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp)}
+          slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp, definicion.categorySlug === 'xv-anos')}
           themes={diccionario.themes}
         />
         </EstiloDeLaInvitacion>

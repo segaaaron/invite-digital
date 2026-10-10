@@ -266,6 +266,7 @@ export default async function InvitationPage({ params }: { params: Promise<{ tok
                     <GuestbookForm
                       boton={definicion.categorySlug === 'xv-anos' ? dictionary.signTheBook : undefined}
                       dictionary={dictionary}
+                      relleno={definicion.categorySlug === 'xv-anos'}
                       firmado={latest.message === null || latest.message === '' ? null : latest.message}
                       token={token}
                     />

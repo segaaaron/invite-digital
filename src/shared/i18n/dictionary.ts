@@ -142,7 +142,7 @@ export interface FaqItem {
 export interface FaqDictionary {
   eyebrow: string
   title: string
-  items: readonly [FaqItem, FaqItem, FaqItem, FaqItem, FaqItem]
+  items: readonly [FaqItem, FaqItem, FaqItem, FaqItem, FaqItem, FaqItem]
   /** Las del diseño por encargo: van primero si algún plan es por encargo (y sustituyen a la de la entrega). */
   encargoItems: readonly FaqItem[]
 }
@@ -416,6 +416,14 @@ export interface ThemeDictionary {
   /** Las pestañas de regalos de los XV (V4): «Transferencia QR» y su pie. */
   transferQr: string
   scanFromBank: string
+  /** «Lluvia de sobres»: la primera pestaña de los regalos de los XV (V4). */
+  /** «Mesa de regalos», el titular en caligrafía de los XV de V4 (no el rótulo en mayúsculas). */
+  giftTable: string
+  /** «VER MESA DE REGALOS»: el botón de la mesa de regalos de las bodas (PDF 9 oct). */
+  seeGiftTable: string
+  envelopeRain: string
+  /** «El día del evento habrá un buzón esperando tus sobres.» */
+  mailboxNote: string
   /** «Déjale un mensaje», el titular del libro de firmas de los XV (V4). */
   leaveHerMessage: string
   /** Tras confirmar (V4): «¿Quieres dejarle un mensaje a {nombre}?» y el botón que lleva al libro. */
@@ -512,11 +520,26 @@ export interface DesignDictionary {
   'boda-navy': Record<'nuestraBoda' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
   'boda-royal': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'fotos' | 'firmas', string>
   'boda-serenidad': Record<'nuestraBoda' | 'faltan' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'fotos' | 'firmas', string>
-  'esencia': Record<'pie' | 'mensaje' | 'ceremonia' | 'recepcion' | 'itinerario' | 'faltan' | 'vestimenta' | 'galeria' | 'regalos' | 'verUbicacion' | 'confirmaAntes' | 'firmas' | 'nosCasamos' | 'tocaParaAbrir' | 'paralaje' | 'padres' | 'calendario' | 'regalosTexto' | 'paseUno' | 'paseVarios', string>
+  'esencia': Record<'pie' | 'mensaje' | 'ceremonia' | 'recepcion' | 'itinerario' | 'faltan' | 'vestimenta' | 'galeria' | 'regalos' | 'verUbicacion' | 'confirmaAntes' | 'firmas' | 'nosCasamos' | 'tocaParaAbrir' | 'paralaje' | 'padres' | 'calendario' | 'regalosTexto' | 'paseUno' | 'paseVarios' | 'codigoQr' | 'banco' | 'titular' | 'cuenta' | 'copiarCuenta', string>
   'boda-sello': Record<'faltan' | 'historia' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'vestimenta' | 'regalos' | 'confirma' | 'mensaje' | 'fotos', string>
   'boda-perla': Record<'nuestraBoda' | 'faltan' | 'invitacion' | 'reservado' | 'pases' | 'padresNovia' | 'padresNovio' | 'padrinos' | 'verUbicacion' | 'itinerario' | 'nosotros' | 'vestimenta' | 'vestimentaCursiva' | 'regalos' | 'confirma' | 'confirmaCursiva' | 'firmas', string>
-  'xv-papillon': Record<'xvAnos' | 'padrinos' | 'misXv' | 'itinerario' | 'confirmar', string>
+  'xv': VozXv
+  'xv-natalia': VozXv
+  'xv-valentina': VozXv
+  'xv-luciana': VozXv
+  'xv-fantasia': VozXv
+  'xv-valeria': VozXv
+  'xv-mariana': VozXv
+  'xv-isabelle': VozXv
+  'xv-papillon': Record<'xvAnos' | 'padrinos' | 'misXv' | 'itinerario' | 'confirmar', string> & VozXv
 }
+
+/**
+ * La voz de cada XV en el libro de firmas, el álbum y los regalos (V4, `Firma3D`): la frase bajo
+ * «Déjale un mensaje» (`{nombre}` es la quinceañera), la del álbum, la de los regalos para quien
+ * la pinta, y los tres mensajes de muestra del escaparate (`m` lo que dicen, `q` quién).
+ */
+export type VozXv = Record<'firmaIntro' | 'albumIntro' | 'm1' | 'q1' | 'm2' | 'q2' | 'm3' | 'q3', string> & { regalosIntro?: string }
 
 /** La página del «save the date» (`/guarda/<enlace>`). */
 export interface SaveTheDateDictionary {

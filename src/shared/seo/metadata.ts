@@ -3,7 +3,8 @@ import { BRAND } from '@/shared/config/brand'
 import { env } from '@/shared/config/env'
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/shared/i18n/locales'
 
-const OG_LOCALES: Record<Locale, string> = { es: 'es_BO', en: 'en_US' }
+/** Español de Latinoamérica e inglés de EE. UU. (9 oct: decía `es_BO`; la marca vende a toda América). */
+const OG_LOCALES: Record<Locale, string> = { es: 'es_LA', en: 'en_US' }
 
 const trimTrailingSlash = (value: string): string => value.replace(/\/$/, '')
 
@@ -23,8 +24,11 @@ export type Alternates = { canonical: string; languages: Record<string, string> 
 export function buildAlternates(path: string, baseUrl: string = env.SITE_URL): Alternates {
   // SITE_URL is only validated as a URL, so a trailing slash would produce `//es`.
   const base = trimTrailingSlash(baseUrl)
-  const rest = trimTrailingSlash(stripLocale(path))
-  const urlFor = (locale: Locale): string => `${base}/${locale}${rest}`
+  // Los demos llevan el idioma **después** de `/modelos` (`/modelos/es/boda-bot`): con la regla general sus
+  // hreflang apuntaban a `/es/modelos/es/…`, que no existe (9 oct).
+  const demo = /^\/modelos\/(es|en)(\/.*)?$/.exec(path)
+  const rest = demo === null ? trimTrailingSlash(stripLocale(path)) : trimTrailingSlash(demo[2] ?? '')
+  const urlFor = (locale: Locale): string => (demo === null ? `${base}/${locale}${rest}` : `${base}/modelos/${locale}${rest}`)
   const absolute = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`
 
   return {
@@ -63,6 +67,7 @@ export function buildPageMetadata({
       type: 'website',
       siteName: BRAND.siteName,
       locale: OG_LOCALES[locale],
+      alternateLocale: LOCALES.filter((l) => l !== locale).map((l) => OG_LOCALES[l]),
       title,
       description,
       url: alternates.canonical,

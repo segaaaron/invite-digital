@@ -5,8 +5,10 @@ import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { Countdown } from '../kit/Countdown'
-import { MusicPlayer } from '../kit/MusicPlayer'
+import { franjaConLaFecha } from '../kit/time'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
 import { CapaFija } from '../kit/CapaFija'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { conAlfa } from '../kit/acento'
@@ -84,6 +86,8 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
         overflowX: 'clip',
       }}
     >
+      {/* Sin reproductor en la maqueta (PDF 9 oct): la canción suena desde el botón que flota. */}
+      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
       <RoyalCover
         bgAsset={themeAsset('boda-royal', 'portada-royal.avif')}
         cta={themes.coverEnterShared}
@@ -164,7 +168,7 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
           </h1>
           {hero?.serial === undefined ? null : (
             <span style={{ display: 'block', marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oroHondo }}>
-              {hero.serial}
+              {franjaConLaFecha(hero.serial, schedule?.startsAt)}
             </span>
           )}
         </div>
@@ -218,6 +222,9 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
               >
                 {quote.text}
               </p>
+              {hero?.nameB === undefined ? null : (
+                <p style={{ marginTop: 10, fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.3em', color: P.borgonaHondo, fontWeight: 700, textAlign: 'center' }}>— {hero.nameB.toUpperCase()}</p>
+              )}
             </Reveal>
           )}
           {historia?.title === undefined ? null : (
@@ -478,28 +485,11 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
             {regalos?.text === undefined ? null : (
               <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.tintaHonda, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
-            <div style={{ marginTop: 22 }}>{slots.registry}</div>
+            <VerMesaDeRegalos estilo={{ background: P.oroClaro, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 30 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
           </div>
         </Reveal>
-
-        {/* ── La canción ── */}
-        {cancion === undefined ? null : (
-          <Reveal>
-            <div style={{ marginTop: 40 }}>
-              <MusicPlayer
-                accent={P.oroClaro}
-                artist={music?.artist ?? ''}
-                audioSrc={cancion}
-                eyebrow={themes.songOfTheNight}
-                playBg={P.borgona}
-                playIconColor="#ffffff"
-                textColor={P.borgona}
-                track={music?.track ?? ''}
-                trackColor={P.borgona}
-              />
-            </div>
-          </Reveal>
-        )}
 
         {/* ── Confirmación ── */}
         <Reveal>
@@ -525,7 +515,8 @@ export function BodaRoyalView({ content, event, dictionary, themes, slots, guest
         )}
 
         {/* ── El libro de firmas ── */}
-        {slots.guestbook === null ? null : (
+        {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+        {slots.guestbook === null || slots.regalos === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 50, padding: '32px 0', borderTop: `1.5px solid ${P.oro}`, textAlign: 'center' }}>
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 40, color: P.borgona }}>{ROTULOS.firmas}</p>

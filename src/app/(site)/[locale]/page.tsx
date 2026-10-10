@@ -14,7 +14,7 @@ import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { attempt, isOk } from '@/shared/result'
-import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd } from '@/shared/seo/json-ld'
+import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd, websiteJsonLd } from '@/shared/seo/json-ld'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { ComparisonSection } from '@/sections/ComparisonSection'
 import { AboutSection } from '@/sections/AboutSection'
@@ -132,11 +132,13 @@ export default async function LandingPage({
             ciudad: sitio.ciudad,
             pais: sitio.pais,
             redes: [sitio.redes.instagram, sitio.redes.facebook, sitio.redes.tiktok],
+            correo: sitio.redes.correo ?? '',
           }),
         ) }}
         nonce={nonce}
         type="application/ld+json"
       />
+      <script dangerouslySetInnerHTML={{ __html: jsonLdScript(websiteJsonLd(locale)) }} nonce={nonce} type="application/ld+json" />
       <script
         dangerouslySetInnerHTML={{ __html: jsonLdScript(productJsonLd(plans, locale)) }}
         nonce={nonce}

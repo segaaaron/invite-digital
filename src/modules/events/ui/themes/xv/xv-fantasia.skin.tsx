@@ -13,6 +13,9 @@ const ICONOS: Record<string, Archivo> = {}
 
 /** La piel de «Noche Estrellada». */
 export const PIEL: PielXv = {
+  voz: 'xv-fantasia',
+  glifo: '★',
+  regalosV4: true,
   fondoBase: '#0c1830',
   // El velo exacto de su maqueta (`invites-1.jsx:1767`). Estaba en rgba(10,20,42,.48).
   velo: 'rgba(8,16,40,.45)',
@@ -130,7 +133,7 @@ export const PIEL: PielXv = {
     boxShadow: P.sombra,
   },
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
-  rotulos: { itinerary: 'itineraryTitle' },
+  rotulos: { itinerary: 'itineraryTitle', gifts: 'giftsEmbrace' },
   // La pieza entre la cita y los padres es el ramo, y la luna cierra la invitación: en la
   // maqueta van así, y estaban cruzadas.
   corona: themeAsset('xv-fantasia', 'flores-sin-fondo.avif'),

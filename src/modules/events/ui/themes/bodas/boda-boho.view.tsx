@@ -6,7 +6,9 @@ import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { CapaFija } from '../kit/CapaFija'
 import { Countdown } from '../kit/Countdown'
-import { MusicPlayer } from '../kit/MusicPlayer'
+import { franjaConLaFecha } from '../kit/time'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { BohoCover } from './BohoCover'
@@ -97,6 +99,8 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
         overflowX: 'clip',
       }}
     >
+      {/* Sin reproductor en la maqueta (PDF 9 oct): la canción suena desde el botón que flota. */}
+      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
       <BohoCover
         bgAsset={themeAsset('boda-boho', 'portada-boho.avif')}
         cta={themes.coverEnterShared}
@@ -180,7 +184,7 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
                 textShadow: '0 2px 12px rgba(90,62,43,0.5)',
               }}
             >
-              {hero.serial}
+              {franjaConLaFecha(hero.serial, schedule?.startsAt)}
             </span>
           )}
         </div>
@@ -451,28 +455,11 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
             {regalos?.text === undefined ? null : (
               <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, color: P.cafeLectura, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
-            <div style={{ marginTop: 22 }}>{slots.registry}</div>
+            <VerMesaDeRegalos estilo={{ background: P.terracota, color: '#ffffff', fontFamily: MONO, fontSize: 10, padding: '13px 22px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
           </div>
         </Reveal>
-
-        {/* ── La canción ── */}
-        {cancion === undefined ? null : (
-          <Reveal>
-            <div style={{ marginTop: 40 }}>
-              <MusicPlayer
-                accent={P.terracota}
-                artist={music?.artist ?? ''}
-                audioSrc={cancion}
-                eyebrow={themes.songOfTheNight}
-                playBg={P.terracota}
-                playIconColor="#ffffff"
-                textColor={P.cafe}
-                track={music?.track ?? ''}
-                trackColor={P.cafe}
-              />
-            </div>
-          </Reveal>
-        )}
 
         {/* ── Confirmación ── */}
         <Reveal>
@@ -498,7 +485,8 @@ export function BodaBohoView({ content, event, dictionary, themes, slots, guestI
         )}
 
         {/* ── El libro de firmas ── */}
-        {slots.guestbook === null ? null : (
+        {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+        {slots.guestbook === null || slots.regalos === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 50, padding: '32px 0', textAlign: 'center' }}>
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 40 }}>{ROTULOS.firmas}</p>

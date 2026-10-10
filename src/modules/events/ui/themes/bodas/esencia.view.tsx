@@ -42,6 +42,14 @@ const ICONOS: readonly ClaveDeIcono[] = ['church', 'glasses', 'glasses', 'plate'
  * (con el pase del invitado al lado) y los demás, los hitos de «Nuestra historia», con el año de
  * título.
  */
+/** La cuenta de muestra de la maqueta (`esencia.jsx`): solo en el escaparate y la vista previa. */
+const CUENTA_DE_MUESTRA = (r: { banco: string; titular: string; cuenta: string }) =>
+  [
+    [r.banco, 'Banco Nacional'],
+    [r.titular, 'Valentina Salinas'],
+    [r.cuenta, '0123 4567 8901 2345'],
+  ] as const
+
 export function EsenciaView({ content, event, themes, slots, audioSrc, respondida, guestInfo, calendario }: ThemeProps) {
   const ROTULOS = themes.designs['esencia']
   const { hero, quote, hosts, schedule, ceremony, reception, map, itinerary, dressCode, gallery, notes, music, closing } = content
@@ -395,7 +403,8 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
               ))}
             </div>
           </div>
-          <div style={{ marginTop: 18 }}>{slots.photos}</div>
+          {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación, si el plan trae las fotos. */}
+          {slots.regalos === undefined ? null : <div style={{ marginTop: 18 }}>{slots.photos}</div>}
         </Bloque>
 
         {/* ── 9 · La confirmación, y debajo el libro de firmas ── */}
@@ -430,7 +439,26 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
             <IconoDeEsencia nombre="heart" opacidad={1} tamano={24} />
           </span>
           <p style={{ fontSize: 15, fontWeight: 400, lineHeight: 1.8, color: P.tinta, maxWidth: 280, margin: '16px auto 0' }}>{ROTULOS.regalosTexto}</p>
-          <div style={{ marginTop: 18, width: '100%' }}>{slots.registry}</div>
+          {/* En la muestra, el código y la tarjeta de la cuenta de la maqueta; en una invitación, lo que el
+              cliente cargó (su QR, su cuenta con «Copiar» y la lista). */}
+          {slots.regalos !== undefined ? (
+            <div style={{ marginTop: 18, width: '100%' }}>{slots.registry}</div>
+          ) : (
+            <>
+              <div style={{ width: 100, height: 100, margin: '18px auto 0', background: P.calido, border: `1.5px solid ${P.filete}`, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontSize: 9.6, color: P.tintaSuave }}>{ROTULOS.codigoQr}</span>
+              </div>
+              <div style={{ marginTop: 18, width: '100%', maxWidth: 300, boxSizing: 'border-box', border: `1px solid ${P.filete}`, borderRadius: 10, padding: '18px 18px 16px', background: 'rgba(250,247,242,0.6)', textAlign: 'left', marginInline: 'auto' }}>
+                {CUENTA_DE_MUESTRA(ROTULOS).map(([rotulo, valor], i) => (
+                  <div key={rotulo} style={{ marginTop: i === 0 ? 0 : 12 }}>
+                    <div style={{ fontSize: 8.8, letterSpacing: '0.2em', color: P.tintaSuave, textTransform: 'uppercase' }}>{rotulo}</div>
+                    <div style={{ marginTop: 3, fontFamily: SERIF, fontSize: 18.4, color: P.tinta }}>{valor}</div>
+                  </div>
+                ))}
+                <span style={{ display: 'inline-block', marginTop: 14, padding: '8px 16px', border: `1px solid ${P.filete}`, borderRadius: 30, fontSize: 9.9, letterSpacing: '0.15em', textTransform: 'uppercase', color: P.tinta }}>{ROTULOS.copiarCuenta}</span>
+              </div>
+            </>
+          )}
         </Bloque>
 
         {/* ── 11 · Solo adultos, con los lugares del pase ── */}
@@ -457,9 +485,9 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
 
         {/* A quién va dirigida y su pase, al final: es lo nuestro, y va donde no parte el
             diseño en dos. */}
+        {/* Sin la línea «Pedro Zárate · Cupos reservados: 2» (PDF 9 oct): los lugares ya los dice «Solo adultos». */}
         <Bloque>
-          <div style={{ fontSize: 13, color: P.tintaSuave }}>{slots.guest}</div>
-          <div style={{ marginTop: 14, width: '100%' }}>{slots.pass}</div>
+          <div style={{ width: '100%' }}>{slots.pass}</div>
         </Bloque>
 
         {/* La franja del pie: en la maqueta, «Invitación digital — tu marca». */}

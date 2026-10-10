@@ -6,7 +6,8 @@ import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
 import { CapaFija } from '../kit/CapaFija'
 import { Countdown } from '../kit/Countdown'
-import { MusicPlayer } from '../kit/MusicPlayer'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { CarruselDePerla } from './CarruselDePerla'
 import { GlamourCover } from './GlamourCover'
@@ -94,6 +95,8 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
         overflowX: 'clip',
       }}
     >
+      {/* Sin reproductor en la maqueta (PDF 9 oct): la canción suena desde el botón que flota. */}
+      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
       {/* Los pétalos guinda, por encima de todo. */}
       <CapaFija zIndex={50}>
         {PETALOS.map((petalo) => (
@@ -399,14 +402,16 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
           <Arte ancho={180} estilo={{ margin: '0 auto' }} src={themeAsset('boda-glamour', 'regalo.avif')} />
           <p style={{ fontFamily: CALIGRAFIA, fontSize: 28, color: P.oro, marginTop: 16 }}>{ROTULOS.regalos}</p>
           {regalos?.text === undefined ? null : <p style={{ marginTop: 10, fontSize: 13, opacity: 0.85 }}>{regalos.text}</p>}
-          <div style={{ marginTop: 18 }}>{slots.registry}</div>
+          <VerMesaDeRegalos estilo={{ background: 'transparent', border: `1.5px solid ${P.marfil}`, color: P.marfil, fontFamily: SANS, fontSize: 9, padding: '12px 20px', borderRadius: 20 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
         </div>
       </Reveal>
 
       <FileteDeOro />
 
-      {/* ── Comparte tus fotos: solo si el plan trae las fotos de invitados ── */}
-      {slots.photos === undefined ? null : (
+      {/* ── Comparte tus fotos: solo si el plan trae las fotos de invitados (Design no lo tiene: fuera de la muestra) ── */}
+      {slots.photos === undefined || slots.regalos === undefined ? null : (
         <>
           <Reveal>
             <div style={{ padding: '0 24px 40px', textAlign: 'center' }}>
@@ -417,25 +422,6 @@ export function BodaGlamourView({ content, event, dictionary, themes, slots, gue
           </Reveal>
           <FileteDeOro />
         </>
-      )}
-
-      {/* ── La canción ── */}
-      {cancion === undefined ? null : (
-        <Reveal>
-          <div style={{ padding: '0 24px 40px' }}>
-            <MusicPlayer
-              accent={P.oro}
-              artist={music?.artist ?? ''}
-              audioSrc={cancion}
-              eyebrow={themes.songOfTheNight}
-              playBg={P.oro}
-              playIconColor={P.guinda}
-              textColor={P.crema}
-              track={music?.track ?? ''}
-              trackColor={P.oro}
-            />
-          </div>
-        </Reveal>
       )}
 
       <Separador />

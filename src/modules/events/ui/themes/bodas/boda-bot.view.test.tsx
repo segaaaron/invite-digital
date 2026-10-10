@@ -14,12 +14,12 @@ const conMuestra = () => propsDePrueba({ content: CONTENIDO_DE_MUESTRA })
 
 describe('el tema Botánica', () => {
   it('el collage y la fotografía grande caen al arte del diseño cuando no hay foto propia', () => {
-    // Tres huecos grises donde la maqueta enseña anillos, flores y pastel es lo que hace
+    // Tres huecos grises donde la maqueta enseña anillos, mesa y pastel es lo que hace
     // que un modelo terminado parezca a medias. Las fotografías del diseño están en el
     // repositorio desde que se portó: lo que faltaba era usarlas de respaldo.
     const { container } = render(<BodaBotView {...conMuestra()} />)
     const fuentes = [...container.querySelectorAll('img')].map((img) => img.getAttribute('src') ?? '')
-    for (const archivo of ['boda-01-pareja', 'boda-03-anillos', 'boda-02-arreglo', 'boda-04-pastel']) {
+    for (const archivo of ['boda-02-arreglo', 'boda-03-anillos', 'boda-05-mesa', 'boda-04-pastel']) {
       expect(fuentes.some((fuente) => fuente.includes(archivo)), archivo).toBe(true)
     }
   })
@@ -51,7 +51,7 @@ describe('el tema Botánica', () => {
     // El «18» aparece dos veces: el día del calendario y las horas de la cuenta atrás. Se
     // busca el del calendario por su tamaño, que es lo que lo distingue en el diseño.
     const dias = screen.getAllByText('18')
-    expect(dias.some((nodo) => nodo.style.fontSize === '90px')).toBe(true)
+    expect(dias.some((nodo) => nodo.style.fontSize === '68px')).toBe(true)
     expect(screen.getByText('2026')).toBeInTheDocument()
   })
 

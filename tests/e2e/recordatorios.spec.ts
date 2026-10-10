@@ -19,7 +19,8 @@ test('el grupo sin contestar sale en la cola, se marca recordado y deja de salir
   const cola = page.locator('section', { has: page.getByRole('heading', { name: 'Recordatorios' }) })
   const fila = cola.getByRole('listitem').filter({ hasText: 'Familia Rojas Peña' })
   await expect(fila).toBeVisible()
-  await expect(fila).toContainText('Sin responder')
+  // El motivo va en el título de su grupo, una vez (9 oct).
+  await expect(cola.getByRole('heading', { name: /abrieron y no confirmaron/i })).toBeVisible()
 
   // El enlace de WhatsApp lleva el mensaje escrito y NUNCA el enlace de la invitación:
   // de ese token la base guarda solo su SHA-256.
@@ -32,6 +33,6 @@ test('el grupo sin contestar sale en la cola, se marca recordado y deja de salir
   // Sin nadie a quien recordar, la tarjeta **desaparece entera**: una permanente que casi
   // siempre dice «nadie por recordar hoy» es un hueco fijo que se deja de mirar justo el
   // día que sí trae a alguien.
-  await fila.getByRole('button', { name: 'Marcar recordado' }).click()
+  await fila.getByRole('button', { name: /ya le avisé/i }).click()
   await expect(cola).toHaveCount(0)
 })

@@ -4,8 +4,10 @@ import type { ThemeProps } from '../contract'
 import { anfitrionesBoda } from '../../../domain/invitation-content'
 import { comoLlegar } from '../../../domain/ubicacion'
 import { pielDeRanuras, variablesDeRanuras } from '../kit/slot-skin'
-import { MusicPlayer } from '../kit/MusicPlayer'
+import { franjaConLaFecha } from '../kit/time'
+import { MusicaFlotante } from '../kit/MusicaFlotante'
 import { CapaFija } from '../kit/CapaFija'
+import { VerMesaDeRegalos } from '../kit/VerMesaDeRegalos'
 import { Reveal } from '../kit/Reveal'
 import { MapaDeLaTarjeta } from '../kit/MapaDeLaTarjeta'
 import { CarruselDePerla } from './CarruselDePerla'
@@ -83,6 +85,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
         overflowX: 'clip',
       }}
     >
+      {/* Sin reproductor en la maqueta (PDF 9 oct): la canción suena desde el botón que flota. */}
+      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
       <NavyCover
         bgAsset={themeAsset('boda-navy', 'portada-navy.avif')}
         cta={themes.coverEnterShared}
@@ -145,7 +149,7 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
           </h1>
           {hero?.serial === undefined ? null : (
             <span style={{ display: 'block', marginTop: 12, fontFamily: MONO, fontSize: 10, letterSpacing: '0.35em', color: P.oroPalido }}>
-              {hero.serial}
+              {franjaConLaFecha(hero.serial, schedule?.startsAt)}
             </span>
           )}
         </div>
@@ -375,7 +379,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
             sombra={alfaDe('oro', 0.35)}
           />
         </Reveal>
-        <div style={{ marginTop: 18 }}>{slots.photos}</div>
+        {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación, si el plan trae las fotos. */}
+        {slots.regalos === undefined ? null : <div style={{ marginTop: 18 }}>{slots.photos}</div>}
       </div>
 
       <div style={{ padding: '0 24px' }}>
@@ -433,28 +438,11 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
             {regalos?.text === undefined ? null : (
               <p style={{ fontFamily: SERIF, fontSize: 20.5, fontWeight: 500, lineHeight: 1.8, maxWidth: '72%', margin: '18px auto 0' }}>{regalos.text}</p>
             )}
-            <div style={{ marginTop: 22 }}>{slots.registry}</div>
+            <VerMesaDeRegalos estilo={{ background: P.oro, color: P.marino, fontFamily: MONO, fontSize: 11, padding: '14.5px 24px', borderRadius: 26 }} muestra={slots.regalos === undefined} rotulo={themes.seeGiftTable}>
+              {slots.registry}
+            </VerMesaDeRegalos>
           </div>
         </Reveal>
-
-        {/* ── La canción ── */}
-        {cancion === undefined ? null : (
-          <Reveal>
-            <div style={{ marginTop: 40 }}>
-              <MusicPlayer
-                accent={P.oro}
-                artist={music?.artist ?? ''}
-                audioSrc={cancion}
-                eyebrow={themes.songOfTheNight}
-                playBg={P.oro}
-                playIconColor={P.marino}
-                textColor={P.tinta}
-                track={music?.track ?? ''}
-                trackColor={P.oroTitular}
-              />
-            </div>
-          </Reveal>
-        )}
 
         {/* ── Confirmación ── */}
         <Reveal>
@@ -468,7 +456,8 @@ export function BodaNavyView({ content, event, themes, slots, guestInfo, audioSr
         </Reveal>
 
         {/* ── El libro de firmas ── */}
-        {slots.guestbook === null ? null : (
+        {/* Design no lo tiene (PDF 9 oct): fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+        {slots.guestbook === null || slots.regalos === undefined ? null : (
           <Reveal>
             <div style={{ marginTop: 50, padding: '32px 0', borderTop: `1.5px solid ${P.oro}`, textAlign: 'center' }}>
               <p style={{ fontFamily: CALIGRAFIA, fontSize: 46, color: P.oroTitular }}>{ROTULOS.firmas}</p>

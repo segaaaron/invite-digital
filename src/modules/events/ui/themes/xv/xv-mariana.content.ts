@@ -8,7 +8,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     monogram: 'XV',
     serial: '2026',
   },
-  quote: { text: 'Que nunca dejes de soñar, y que cada sueño te encuentre preparada.' },
+  quote: { text: 'Que nunca dejes de soñar,\ny que cada sueño te encuentre\npreparada.' },
   hosts: {
     label: 'Agradecida por el amor y cuidado de mis padres',
     names: ['Juan Julio Pereira', 'Linzi Torrico'],
@@ -17,7 +17,6 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   reception: {
     label: 'Recepción Social',
     place: 'El Portal Centro de Convenciones',
-    address: 'Av. Ricardo Jaimes Freyre 1929, Norte Parque Lincoln, Cochabamba',
     time: '19:00',
   },
   map: { label: 'EL PORTAL CENTRO DE CONVENCIONES', coords: '17.37°S · 66.16°W' },

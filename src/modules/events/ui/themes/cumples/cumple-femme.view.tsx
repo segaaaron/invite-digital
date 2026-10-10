@@ -444,7 +444,8 @@ export function CumpleFemmeView({ content, event, dictionary, themes, slots, gue
         {/* El libro de firmas y la mesa de regalos no están en la maqueta; son nuestros y van con
             la piel del diseño. Sin ellos en el plan, las ranuras no pintan nada. **Sin pase**: una
             fiesta entre amigas no controla la entrada con un QR. */}
-        {slots.guestbook === null ? null : (
+        {/* Design no lo tiene: fuera de la muestra; en una invitación sale si el plan trae el libro. */}
+        {slots.guestbook === null || slots.regalos === undefined ? null : (
           <Reveal>
             <div style={{ ...TARJETA, marginTop: 36, padding: '20px 16px', textShadow: 'none' }}>
               <Titular>{ROTULOS.guestbook}</Titular>

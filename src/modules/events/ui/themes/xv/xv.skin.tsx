@@ -37,6 +37,8 @@ function CoronaDeLinea() {
 
 /** La piel de «Bajo el Mar»: pasteles sobre fotografía de mar. */
 export const PIEL_XV: PielXv = {
+  voz: 'xv',
+  glifo: '✦',
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
   // «Lluvia de Sobres» no está: en la maqueta es una tarjeta **dentro** de los regalos, y
   // vive en el contenido de muestra, no como rótulo del libro de firmas.

@@ -7,30 +7,30 @@ import { alfaDe, colorDeAcento, PALETA as P } from './xv-valeria.palette'
 
 /** La piel de «Gala Real». */
 export const PIEL: PielXv = {
+  voz: 'xv-valeria',
+  glifo: '♛',
+  regalosV4: true,
+  sinSaludo: true,
   // Lo que este diseño abre a sangre, antes de la barra: como en la maqueta, con el retrato
   // del evento si lo subieron.
+  // V5 (`invites-1.jsx:2020`): 368 px a sangre, centrada y fundida abajo en el guinda (antes, zigzag y 45 % del alto).
   apertura: (foto) => (
-    <>
-      <div
+    <div style={{ position: 'relative', width: '100%', height: 368, overflow: 'hidden' }}>
+      <Image
+        alt=""
+        fill
+        priority
+        sizes="480px"
+        src={foto ?? themeAsset('xv-valeria', 'xv-guindo-photo.avif')}
         style={{
-          position: 'relative',
-          width: '100%',
-          height: 'calc(var(--alto, 100dvh) * 0.45)',
-          minHeight: 280,
-          overflow: 'hidden',
-          clipPath: 'polygon(0 0, 100% 0, 100% 94%, 75% 100%, 50% 94%, 25% 100%, 0 94%)',
+          objectFit: 'cover',
+          objectPosition: 'center',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
+          maskImage: 'linear-gradient(to bottom, black 0%, black 65%, transparent 100%)',
         }}
-      >
-        <Image
-          alt=""
-          fill
-          priority
-          sizes="480px"
-          src={foto ?? themeAsset('xv-valeria', 'xv-guindo-photo.avif')}
-          style={{ objectFit: 'cover', objectPosition: 'center top' }}
-        />
-      </div>
-    </>
+      />
+      <div aria-hidden style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: '40%', background: 'linear-gradient(to bottom, transparent, #2B050C)' }} />
+    </div>
   ),
   fondoBase: '#2b050c',
   velo: 'rgba(45,10,22,.48)',
@@ -127,7 +127,7 @@ export const PIEL: PielXv = {
     boxShadow: P.sombra,
   },
   // Cómo llama este diseño a sus secciones. Lo que no esté aquí cae al diccionario.
-  rotulos: { itinerary: 'itineraryTitle' },
+  rotulos: { itinerary: 'itineraryTitle', gifts: 'giftTable' },
   // Su itinerario en V3 es una esfera de reloj con «XV» al centro, sin panel. Con cinco
   // hitos los reparte como la maqueta: 12, 3, 4 y media, 6 y 9.
   itinerario: (filas) => (
