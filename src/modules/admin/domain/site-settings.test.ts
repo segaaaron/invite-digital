@@ -48,11 +48,11 @@ describe('WhatsApp', () => {
 
 describe('redes', () => {
   it('solo admite enlaces https de la red correspondiente', () => {
-    const bien = leerSiteSettings(conCambios({ redes: { instagram: 'https://www.instagram.com/luxuryatelier', facebook: '', tiktok: '' } }))
+    const bien = leerSiteSettings(conCambios({ redes: { instagram: 'https://www.instagram.com/luxuryatelier', facebook: '', tiktok: '', correo: '' } }))
     expect(isOk(bien)).toBe(true)
-    const otraRed = leerSiteSettings(conCambios({ redes: { instagram: 'https://facebook.com/x', facebook: '', tiktok: '' } }))
+    const otraRed = leerSiteSettings(conCambios({ redes: { instagram: 'https://facebook.com/x', facebook: '', tiktok: '', correo: '' } }))
     expect(isErr(otraRed) && otraRed.error.campo).toBe('redes.instagram')
-    const javascript = leerSiteSettings(conCambios({ redes: { instagram: '', facebook: 'javascript:alert(1)', tiktok: '' } }))
+    const javascript = leerSiteSettings(conCambios({ redes: { instagram: '', facebook: 'javascript:alert(1)', tiktok: '', correo: '' } }))
     expect(isErr(javascript) && javascript.error.campo).toBe('redes.facebook')
   })
 })
@@ -133,5 +133,21 @@ describe('seo de las páginas de cada fiesta', () => {
     const viejo = parseSiteSettings(JSON.stringify({ seo: { inicio: { titulo: { es: 'Hola', en: '' }, descripcion: { es: '', en: '' } } } }))
     expect(viejo.seo.inicio.titulo.es).toBe('Hola')
     expect(viejo.seo.bodas).toEqual(DEFAULT_SITE_SETTINGS.seo.bodas)
+  })
+})
+
+describe('correo de contacto (9 oct: «sin correo en todo el sitio»)', () => {
+  const con = (correo: string) => leerSiteSettings({ ...DEFAULT_SITE_SETTINGS, redes: { ...DEFAULT_SITE_SETTINGS.redes, correo } })
+  it('vacío vale (no se enseña) y un correo válido se guarda en minúsculas', () => {
+    expect(isOk(con(''))).toBe(true)
+    const r = con('  Hola@LuxuryAtelier.net ')
+    expect(isOk(r) && r.value.redes.correo).toBe('hola@luxuryatelier.net')
+  })
+  it('lo que no es un correo se rechaza diciendo dónde', () => {
+    const r = con('hola arroba luxury')
+    expect(isErr(r) && r.error.campo).toBe('redes.correo')
+  })
+  it('lo guardado antes, sin el campo, se lee vacío', () => {
+    expect(parseSiteSettings(JSON.stringify({ redes: { instagram: '' } })).redes.correo).toBe('')
   })
 })

@@ -43,7 +43,7 @@ vi.mock('@/app/composition/container', () => ({
   events: { getByIdUnscoped: (...a: unknown[]) => getById(...a) },
 }))
 
-const capacidad = (maxDoorPorters: number) => ok({ planSlug: 'firma-3d', maxGuestGroups: 80, seating: true, registry: true, checkin: true, maxDoorPorters })
+const capacidad = (maxDoorPorters: number) => ok({ planSlug: 'gala', maxGuestGroups: 80, seating: true, registry: true, checkin: true, maxDoorPorters })
 const sesion = ok({ porterId: 'p1', eventId: 'e1', eventSlug: 'xv-valeria', eventTitle: 'XV de Valeria', name: 'Carlos', gate: null })
 
 const formulario = (datos: Record<string, string>) => {

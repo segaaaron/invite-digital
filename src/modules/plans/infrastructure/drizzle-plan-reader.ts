@@ -24,6 +24,7 @@ const columnas = {
   priceCents: plans.priceCents,
   priceAnnualCents: plans.priceAnnualCents,
   depositFixedCents: plans.depositFixedCents,
+  depositPct: plans.depositPct,
   correctionRounds: plans.correctionRounds,
   deliveryDays: plans.deliveryDays,
   includesGuestbook: plans.includesGuestbook,

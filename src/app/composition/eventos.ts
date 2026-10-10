@@ -105,6 +105,8 @@ export const planner = {
   addTask: plannerUseCases.addTask(plannerDeps),
   editTask: plannerUseCases.editTask(plannerDeps),
   toggleTask: plannerUseCases.toggleTask(plannerDeps),
+  marcarTarea: plannerUseCases.marcarTarea(plannerDeps),
+  reprogramarTarea: plannerUseCases.reprogramarTarea(plannerDeps),
   removeTask: plannerUseCases.removeTask(plannerDeps),
   moveTask: plannerUseCases.moveTask(plannerDeps),
   listBudget: (eventId: string) => drizzlePlannerStore.listBudget(eventId),
@@ -114,6 +116,7 @@ export const planner = {
   removeItem: plannerUseCases.removeItem(plannerDeps),
   addPayment: plannerUseCases.addPayment(plannerDeps),
   setPaymentPaid: plannerUseCases.setPaymentPaid(plannerDeps),
+  reprogramarPago: plannerUseCases.reprogramarPago(plannerDeps),
   removePayment: plannerUseCases.removePayment(plannerDeps),
   /** El día del evento: proveedores, cronograma, cortejo y ensayos. */
   dia: {

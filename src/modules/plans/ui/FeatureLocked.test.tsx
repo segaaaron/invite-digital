@@ -8,12 +8,12 @@ describe('FeatureLocked', () => {
       <FeatureLocked
         eventSlug="boda-rojas"
         mejorar={{ href: '/panel/eventos/boda-rojas/plan', label: 'Ver planes' }}
-        reason="El plan atelier no incluye la mesa de regalos; lo trae el plan firma-3d."
+        reason="El plan atelier no incluye la mesa de regalos; lo trae el plan gala."
         title="Regalos"
       />,
     )
 
-    expect(screen.getByText(/firma-3d/)).toBeInTheDocument()
+    expect(screen.getByText(/gala/)).toBeInTheDocument()
   })
 
   it('lleva adonde quien mira puede mejorar el plan', () => {

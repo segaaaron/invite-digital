@@ -17,6 +17,12 @@ export type EventoDeCalendario = {
   readonly lugar?: string | null
   readonly descripcion?: string | null
   readonly url?: string | null
+  /**
+   * Una alarma: con hora, una hora antes; de día entero, la víspera a las 9. **No es la forma de avisar**
+   * (9 oct): al suscribirse, el iPhone quita las alertas por defecto y Google no las usa; avisan la campana y
+   * el celular. Va para quien mantenga las alertas o descargue el fichero.
+   */
+  readonly aviso?: boolean
 }
 
 const BOLIVIA_MS = 4 * 3_600_000
@@ -64,6 +70,7 @@ export function calendarioIcs(nombre: string, eventos: readonly EventoDeCalendar
     if (e.lugar) lineas.push(`LOCATION:${escaparIcs(e.lugar)}`)
     if (e.descripcion) lineas.push(`DESCRIPTION:${escaparIcs(e.descripcion)}`)
     if (e.url) lineas.push(`URL:${e.url}`)
+    if (e.aviso) lineas.push('BEGIN:VALARM', 'ACTION:DISPLAY', `DESCRIPTION:${escaparIcs(e.titulo)}`, `TRIGGER:${conHora(e.inicio) ? '-PT1H' : '-PT15H'}`, 'END:VALARM')
     lineas.push('END:VEVENT')
   }
   lineas.push('END:VCALENDAR')

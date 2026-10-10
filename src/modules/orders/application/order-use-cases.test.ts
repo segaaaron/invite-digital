@@ -9,7 +9,7 @@ const png = () => Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0
 const ejecutable = () => Buffer.from([0x4d, 0x5a, 0x90, 0x00])
 
 const ALTA = {
-  planSlug: 'firma-3d',
+  planSlug: 'gala',
   customerName: 'María Aguilar',
   contact: '+59170011122',
   email: 'maria@correo.bo',

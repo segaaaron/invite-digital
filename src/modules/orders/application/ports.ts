@@ -15,6 +15,8 @@ export type NewOrder = {
   readonly referralCode?: string | null
   /** El descuento de recomendación, en porcentaje, que se aplica al precio de lista. */
   readonly descuentoPct?: number
+  /** Los adicionales elegidos al pedir, ya filtrados por plan en la frontera. El precio lo pone la base. */
+  readonly extraSlugs?: readonly string[]
 }
 
 /** Una cotización: el pedido que arma el admin con su precio, sus extras y su descuento. */

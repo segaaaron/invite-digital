@@ -363,3 +363,9 @@ export const seAsigna = (key: string): boolean => {
   const entrada = CATALOG_ENTRIES.find((e) => e.key === key)
   return entrada !== undefined && entrada.listo && entrada.retirado !== true
 }
+
+/**
+ * El nombre del modelo en el catálogo (el de la tarjeta), en el idioma de la página (9 oct: la tarjeta decía
+ * «Clásica - Floral» y la pestaña del demo «Botánica»). Sin entrada, `null`.
+ */
+export const nombreDelCatalogo = (key: string, locale: 'es' | 'en'): string | null => CATALOG_ENTRIES.find((e) => e.key === key)?.[locale] ?? null

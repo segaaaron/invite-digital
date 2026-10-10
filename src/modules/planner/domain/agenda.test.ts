@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { componerAgenda, leerCita, proximasDeLaAgenda, semanasDelMes } from './agenda'
+import { atrasadasDeLaAgenda, avisosDeLaAgenda, componerAgenda, diasHasta, leerCita, proximasDeLaAgenda, semanasDelMes, type EntradaDeAgenda } from './agenda'
 import type { Tarea } from './tareas'
 
 const evento = { title: 'Boda de Ana', eventDate: '2026-12-12', rsvpDeadline: '2026-11-30', inicio: '2026-12-12T20:00:00' }
@@ -55,5 +55,77 @@ describe('leerCita', () => {
     expect(leerCita({ ...base, title: ' ' }).ok).toBe(false)
     expect(leerCita({ ...base, hora: '25:00' }).ok).toBe(false)
     expect(leerCita({ ...base, durationMin: '0' }).ok).toBe(false)
+  })
+})
+
+const entrada = (id: string, clase: EntradaDeAgenda['clase'], dia: string, extra: Partial<EntradaDeAgenda> = {}): EntradaDeAgenda => ({
+  id, clase, dia, hora: null, minutos: null, titulo: id, detalle: null, hecha: false, ruta: `/${clase}`, ...extra,
+})
+
+describe('lo atrasado (9 oct)', () => {
+  it('tareas y pagos de antes de hoy sin hacer, lo más viejo primero; lo hecho, las citas y el cronograma no', () => {
+    const entradas = [
+      entrada('menu', 'tarea', '2026-10-08'),
+      entrada('foto', 'pago', '2026-10-07'),
+      entrada('hecha', 'tarea', '2026-10-01', { hecha: true }),
+      entrada('cita', 'cita', '2026-10-05'),
+      entrada('hoy', 'tarea', '2026-10-09'),
+    ]
+    expect(atrasadasDeLaAgenda(entradas, '2026-10-09').map((e) => e.id)).toEqual(['foto', 'menu'])
+  })
+  it('días que faltan', () => {
+    expect(diasHasta('2026-10-09', '2026-12-12')).toBe(64)
+    expect(diasHasta('2026-10-09', '2026-10-09')).toBe(0)
+  })
+})
+
+describe('los avisos de la agenda (9 oct: «notificaciones para las fechas»)', () => {
+  const hoy = '2026-10-09'
+  it('por la mañana, un solo resumen de lo de hoy (sin el cronograma ni lo hecho)', () => {
+    const avisos = avisosDeLaAgenda(
+      [
+        entrada('Degustación', 'cita', hoy, { hora: '10:00' }),
+        entrada('Llamar al DJ', 'tarea', hoy),
+        entrada('Pagar flores', 'pago', hoy, { hecha: true }),
+        entrada('Vals', 'momento', hoy, { hora: '21:00' }),
+      ],
+      hoy,
+    )
+    expect(avisos).toEqual([{ cuando: 'hoy', que: '10:00 Degustación · Llamar al DJ', ruta: '/planner/agenda' }])
+  })
+  it('lo de mañana, uno por cosa: citas con su hora, ensayos y el cierre de confirmaciones también', () => {
+    const avisos = avisosDeLaAgenda(
+      [
+        entrada('Prueba del vestido', 'cita', '2026-10-10', { hora: '16:30', ruta: '/planner/agenda?cita=c' }),
+        entrada('Ensayo del cortejo', 'ensayo', '2026-10-10', { hora: '19:00' }),
+        entrada('Último día para confirmar', 'confirmacion', '2026-10-10'),
+      ],
+      hoy,
+    )
+    expect(avisos).toEqual([
+      { cuando: 'mañana', que: '16:30 Prueba del vestido', ruta: '/planner/agenda?cita=c' },
+      { cuando: 'mañana', que: '19:00 Ensayo del cortejo', ruta: '/ensayo' },
+      { cuando: 'mañana', que: 'Último día para confirmar', ruta: '/confirmacion' },
+    ])
+  })
+  it('lo que venció ayer, una vez; y la cuenta del evento a 30 y 7 días, la víspera y el día', () => {
+    expect(avisosDeLaAgenda([entrada('Pagar al fotógrafo', 'pago', '2026-10-08')], hoy)).toEqual([{ cuando: 'atrasado', que: 'Pagar al fotógrafo', ruta: '/pago' }])
+    expect(avisosDeLaAgenda([entrada('Pagar al fotógrafo', 'pago', '2026-10-01')], hoy)).toEqual([])
+    const delEvento = (dia: string) => avisosDeLaAgenda([entrada('Boda', 'evento', dia, { ruta: '' })], hoy)
+    expect(delEvento('2026-11-08')).toEqual([{ cuando: 'en 30 días', que: 'tu evento', ruta: '' }])
+    expect(delEvento('2026-10-16')).toEqual([{ cuando: 'en 7 días', que: 'tu evento', ruta: '' }])
+    expect(delEvento('2026-10-10')).toEqual([{ cuando: 'mañana', que: 'es tu evento', ruta: '' }])
+    expect(delEvento(hoy)).toEqual([{ cuando: 'hoy', que: 'es tu evento', ruta: '' }])
+  })
+  it('un pago lleva su importe: dos cuotas del mismo día no se toman por el mismo aviso (QA 9 oct)', () => {
+    const avisos = avisosDeLaAgenda(
+      [entrada('a', 'pago', '2026-10-10', { titulo: 'Cuota · Fotógrafo', detalle: 'Bs 1.500' }), entrada('b', 'pago', '2026-10-10', { titulo: 'Cuota · Fotógrafo', detalle: 'Bs 3.000' })],
+      hoy,
+    )
+    expect(avisos.map((a) => a.que)).toEqual(['Cuota · Fotógrafo (Bs 1.500)', 'Cuota · Fotógrafo (Bs 3.000)'])
+  })
+  it('un día con mucho resume y dice cuántas más', () => {
+    const muchas = ['A', 'B', 'C', 'D', 'E'].map((t) => entrada(t, 'tarea', hoy))
+    expect(avisosDeLaAgenda(muchas, hoy)[0]!.que).toBe('A · B · C y 2 más')
   })
 })

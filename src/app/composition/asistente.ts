@@ -3,15 +3,16 @@ import { drizzleSettingsRepository } from '@/modules/admin/infrastructure/drizzl
 import { conversar, type Ejecutor, type Salida } from '@/modules/asistente/application/conversar'
 import { CLAVE_DE_CONFIG, leerConfig, mesEnBolivia, type ConfigDelAsistente } from '@/modules/asistente/domain/config'
 import { GUIAS } from '@/modules/asistente/domain/guias'
-import { ESCRITURAS, HERRAMIENTAS, type LlamadaValida } from '@/modules/asistente/domain/herramientas'
+import { ESCRITURAS, HERRAMIENTAS, PANTALLAS_DEL_EVENTO, type LlamadaValida } from '@/modules/asistente/domain/herramientas'
 import type { Mensaje } from '@/modules/asistente/domain/historial'
 import { reglasDelSistema, type Idioma } from '@/modules/asistente/domain/reglas'
 import { drizzleUsoDelAsistente } from '@/modules/asistente/infrastructure/drizzle-uso'
 import { modeloFalso } from '@/modules/asistente/infrastructure/modelo-falso'
 import { crearModeloOpenAI } from '@/modules/asistente/infrastructure/openai'
-import { fiestaDeTema, preguntasDelEncargo, yaSeCelebro } from '@/modules/events'
-import { categoriasDe, cuentasDePartida, estadoDeTarea, NOMBRE_DE_CLASE, NOMBRE_DE_ESTADO, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
-import { extraDisponible, hasFeature, NOMBRE_DE_EFECTO, type Allowance } from '@/modules/plans'
+import { fiestaDeTema, preguntasDelEncargo, topeDeTexto, yaSeCelebro, type SectionKey } from '@/modules/events'
+import { themeFor } from '@/modules/events/ui/themes/registry'
+import { TIPOS_DE_CORTEJO, atrasadasDeLaAgenda, categoriasDe, diasHasta, cuentasDePartida, estadoDeTarea, NOMBRE_DE_CLASE, NOMBRE_DE_ESTADO, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
+import { extraDisponible, hasFeature, NOMBRE_DE_EFECTO, seccionesFueraDelPlan, type Allowance } from '@/modules/plans'
 import { env } from '@/shared/config/env'
 import { hora } from '@/shared/format/fecha'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
@@ -49,7 +50,7 @@ type EventoDelAsistente = {
 /** Lo que cambia algo lo hacen las acciones de las pantallas; se inyecta desde la ruta (ver `escritura.ts`). */
 export type Escritor = (llamada: LlamadaValida, evento: { id: string; slug: string }) => Promise<unknown>
 
-function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Date, escribir: Escritor): Ejecutor {
+function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Date, escribir: Escritor, destinos?: readonly string[]): Ejecutor {
   const hoy = fechaEnBolivia(ahora)
   const ruta = (r: string) => `/panel/eventos/${evento.slug}${r}`
   return async (llamada) => {
@@ -176,13 +177,25 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
         const momentos = await planner.dia.listMoments(evento.id)
         return { momentos: momentos.map((m) => ({ momento_id: m.id, hora: m.startsAt, momento: m.title, lugar: m.place, sale_en_la_invitacion: m.enInvitacion })), enlace: ruta('/planner/cronograma') }
       }
+      case 'ir_a': {
+        // Lo que el plan o la fiesta no traen da 404: se le dice al modelo en vez de mandar a la persona allí.
+        const destino = PANTALLAS_DEL_EVENTO[llamada.pantalla]
+        if (destino === '/planner/cortejo' && TIPOS_DE_CORTEJO[fiestaDeTema(evento.themeKey)].length === 0) return { error: 'Esta fiesta no tiene cortejo.' }
+        if (seccionesFueraDelPlan(capacidad).includes(destino.split('?')[0]!)) return { error: 'El plan de este evento no trae esa pantalla.' }
+        // Lo que su papel no abre (Equipo para el co-anfitrión…) tampoco: el modelo no puede creer que la abrió.
+        if (destinos !== undefined && !destinos.includes(ruta(destino).split('?')[0]!)) return { error: 'Esa pantalla no está en tu panel.' }
+        return { navegar: ruta(destino), resultado: { hecho: `La persona ya está viendo la pantalla ${llamada.pantalla.replace(/_/g, ' ')}.` } }
+      }
       case 'como_se_hace':
         return { como: GUIAS[llamada.tema].texto, enlace: ruta(GUIAS[llamada.tema].ruta) }
       case 'agenda': {
         const desde = llamada.desde ?? hoy
         const hasta = llamada.hasta ?? new Date(Date.parse(`${desde}T00:00:00Z`) + 30 * 86_400_000).toISOString().slice(0, 10)
-        const [entradas, citas] = await Promise.all([planner.dia.agenda(evento).then((a) => a.filter((e) => e.dia >= desde && e.dia <= hasta)), planner.dia.listCitas(evento.id)])
+        const [todas, citas] = await Promise.all([planner.dia.agenda(evento), planner.dia.listCitas(evento.id)])
+        const entradas = todas.filter((e) => e.dia >= desde && e.dia <= hasta)
         return {
+          faltan_dias_para_el_evento: diasHasta(hoy, evento.eventDate),
+          atrasado: atrasadasDeLaAgenda(todas, hoy).map((e) => ({ dia: e.dia, que: e.titulo, tipo: NOMBRE_DE_CLASE[e.clase], detalle: e.detalle })),
           citas: citas.map((c) => ({ cita_id: c.id, titulo: c.title, cuando: c.startsAt, minutos: c.durationMin, lugar: c.place })),
           desde,
           hasta,
@@ -217,6 +230,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
               galeria: (c.gallery ?? []).map((g, i) => ({ casilla: i + 1, rotulo: g.label, con_foto: g.imageId !== undefined })),
             },
           },
+          diseno: disenoParaRedactar(evento.themeKey),
           nota: 'Lo que está en null no se escribió: la invitación enseña ahí el ejemplo del diseño.',
           opciones: await opcionesDeInvitacion(evento.id),
           enlace: ruta('/configuracion'),
@@ -387,6 +401,55 @@ async function prepararEnvio(evento: EventoDelAsistente, incluirEnviadas: boolea
 }
 
 /** Lo que rodea a la invitación, para «mi_invitacion»: lo que hay hoy, para no pisarlo al cambiarlo. */
+/** Las secciones como las nombra el editor del panel. */
+const NOMBRE_DE_SECCION: Record<SectionKey, string> = {
+  hero: 'Portada y nombres',
+  quote: 'Frase',
+  hosts: 'Padres y padrinos',
+  schedule: 'Fecha y hora',
+  ceremony: 'Ceremonia',
+  reception: 'Recepción',
+  map: 'Ubicación',
+  itinerary: 'Itinerario',
+  dressCode: 'Vestimenta',
+  music: 'Canción',
+  gallery: 'Galería',
+  notes: 'Avisos',
+  closing: 'Cierre',
+}
+
+/**
+ * Lo que Luxury necesita para **redactar** la invitación (9 oct): qué secciones pinta este diseño y en qué
+ * orden (proponer texto para una que no pinta sería trabajo perdido), su texto de ejemplo como referencia de
+ * tono, y el tope de caracteres de cada campo (un texto más largo no se guarda).
+ */
+function disenoParaRedactar(themeKey: string) {
+  const tema = themeFor(themeKey)
+  const d = tema.defaultContent
+  return {
+    nombre: tema.label,
+    secciones_en_orden: tema.sections.map((s) => NOMBRE_DE_SECCION[s]),
+    ejemplo_del_diseno: {
+      texto_sobre_nombres: d.hero?.eyebrow ?? null,
+      texto_bajo_nombres: d.hero?.serial ?? null,
+      frase: d.quote?.text ?? null,
+      vestimenta: d.dressCode === undefined ? null : { titulo: d.dressCode.title ?? null, nota: d.dressCode.note ?? null },
+      avisos: (d.notes ?? []).map((n) => ({ titulo: n.title ?? null, texto: n.text ?? null })),
+      cierre: d.closing?.text ?? null,
+    },
+    maximo_de_caracteres: {
+      texto_sobre_nombres: topeDeTexto('hero', 'eyebrow'),
+      texto_bajo_nombres: topeDeTexto('hero', 'serial'),
+      frase: topeDeTexto('quote', 'text'),
+      vestimenta_titulo: topeDeTexto('dressCode', 'title'),
+      vestimenta_nota: topeDeTexto('dressCode', 'note'),
+      aviso_titulo: topeDeTexto('notes', 'title', ['title', 'text']),
+      aviso_texto: topeDeTexto('notes', 'text', ['title', 'text']),
+      cierre: topeDeTexto('closing', 'text'),
+    },
+  }
+}
+
 async function opcionesDeInvitacion(eventId: string) {
   const [preguntas, formas, general, saveTheDate, comprado, estilo] = await Promise.all([
     rsvp.preguntas.leer(eventId),
@@ -419,7 +482,7 @@ export const asistente = {
   usoDe: (eventId: string, ahora: Date) => drizzleUsoDelAsistente.usoDe(eventId, mesEnBolivia(ahora)),
   resumenDelMes: (ahora: Date) => drizzleUsoDelAsistente.resumenDelMes(mesEnBolivia(ahora)),
   /** Una respuesta, en trozos. Quien llama ya comprobó sesión, evento, plan y cuota. */
-  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor }): AsyncGenerator<Salida> {
+  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor; destinos?: readonly string[] }): AsyncGenerator<Salida> {
     if (modelo === null) throw new Error('Luxury no tiene modelo configurado')
     const mes = mesEnBolivia(p.ahora)
     const instrucciones = reglasDelSistema({
@@ -436,8 +499,9 @@ export const asistente = {
     })
     return conversar({
       modelo,
-      herramientas: HERRAMIENTAS,
-      ejecutar: ejecutorDe(p.evento, p.capacidad, p.ahora, p.escribir),
+      // Por Siri no hay pantalla que abrir.
+      herramientas: p.canal === 'siri' ? HERRAMIENTAS.filter((h) => h.name !== 'ir_a') : HERRAMIENTAS,
+      ejecutar: ejecutorDe(p.evento, p.capacidad, p.ahora, p.escribir, p.destinos),
       registrarUso: (uso) => drizzleUsoDelAsistente.registrar(p.evento.id, mes, uso),
     })({ instrucciones, mensajes: p.mensajes })
   },

@@ -5,12 +5,14 @@
   --color-bg-top: #fffdf9;
   --color-ink: #2b2723;
   --color-ink-soft: #58514a;
-  --color-ink-mute: #9a917f;
+  /* Oscurecido el 9 oct (informe de lanzamiento): #9a917f daba 2,8:1 sobre el marfil; este pasa AA (4,9:1). */
+  --color-ink-mute: #6f685b;
   --color-ink-selection: #26221e;
   /* Un solo dorado, el del sello de lacre de la marca (documento de cambios del 30 sep):
      medio, sombra y brillo. */
   --color-gold: #b8894f;
-  --color-gold-deep: #9d6e3a;
+  /* Oscurecido el 9 oct: #9d6e3a daba 4,0:1 en las etiquetas pequeñas; este pasa AA (4,9:1) con el mismo tono. */
+  --color-gold-deep: #896032;
   --color-gold-light: #d7a871;
 
   /* El azul de los títulos de Google, solo para la vista previa de «Buscadores». */

@@ -22,7 +22,7 @@ const atelier: Allowance = {
 }
 
 const alta: Allowance = {
-  planSlug: 'alta-costura',
+  planSlug: 'imperial',
   maxGuestGroups: null,
   seating: true,
   registry: true,

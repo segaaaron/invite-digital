@@ -20,7 +20,7 @@ test.use({
 })
 
 test.beforeAll(async () => {
-  await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
+  await seedInvitation({ slug: SLUG, plan: 'imperial' })
   await escribirInvitacion(SLUG)
 })
 

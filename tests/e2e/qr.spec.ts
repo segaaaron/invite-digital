@@ -21,7 +21,7 @@ test('un código apunta a nosotros, redirige, cuenta y se le cambia el destino s
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     values ((select id from users where email = ${ATELIER.email}),
             ${SLUG}, 'Boda de los códigos', '2027-08-14', '2027-07-30', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
   `
 
   await page.goto(`/panel/eventos/${SLUG}/qr`)

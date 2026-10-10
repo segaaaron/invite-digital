@@ -31,7 +31,7 @@ describe('BillingToggle', () => {
   })
 
   it('con precio anual conmuta, y el ahorro sale de los dos precios', () => {
-    render(<BillingToggle plans={[tarjeta('firma-3d', 100_00, 1000_00)]} />)
+    render(<BillingToggle plans={[tarjeta('gala', 100_00, 1000_00)]} />)
 
     const anual = screen.getByRole('button', { name: /^anual$/i })
     expect(screen.getByRole('button', { name: /por evento/i })).toHaveAttribute('aria-pressed', 'true')

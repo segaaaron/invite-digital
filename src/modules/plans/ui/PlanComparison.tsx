@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Allowance } from '../domain/allowance'
 import { filasComparativas, type TextosComparativa } from '../domain/comparativa'
 
@@ -22,7 +23,7 @@ type Props = {
     albumBody?: string
   }
   /** Los extras a la venta, ya con su precio en palabras. Sin ninguno, no hay bloque. */
-  extras?: ReadonlyArray<{ name: string; precio: string }>
+  extras?: ReadonlyArray<{ name: string; precio: ReactNode; descripcion?: string }>
 }
 
 /**
@@ -54,7 +55,36 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
     <div className="mt-16">
       <h3 className="text-center font-display text-[28px] font-light text-ink">{textos.title}</h3>
       {textos.sub === undefined ? null : <p className="mt-2 text-center text-[14px] text-ink-soft">{textos.sub}</p>}
-      <div className="relative mt-8 overflow-x-auto">
+      {/* Celular (9 oct, informe de lanzamiento): la tabla de 600 px obligaba a desplazarse de lado. Aquí cada
+          característica va en su línea con las tres columnas debajo, y los nombres de los planes quedan fijos. */}
+      <div className="mt-8 sm:hidden">
+        <div className="sticky top-[84px] z-10 grid grid-cols-3 gap-2 border-b border-line bg-bg/95 py-3 backdrop-blur" aria-hidden>
+          {planes.map((p) => (
+            <span className="text-center font-display text-[18px] leading-tight text-ink" key={p.limites.planSlug}>
+              {p.nombre}
+            </span>
+          ))}
+        </div>
+        <dl>
+          {filas.map((fila) => (
+            <div className="border-b border-line py-3 last:border-none" key={fila.etiqueta}>
+              <dt className="text-[13px] leading-snug text-ink-soft">{fila.etiqueta}</dt>
+              <dd className="mt-2 grid grid-cols-3 gap-2">
+                {fila.valores.map((celda, i) => (
+                  <span
+                    className={`text-center text-[14px] [font-variant-numeric:lining-nums] ${celda.incluido ? 'text-ink' : 'text-ink-mute'}`}
+                    key={planes[i]?.limites.planSlug ?? i}
+                  >
+                    <span className="sr-only">{planes[i]?.nombre}: </span>
+                    {celda.texto}
+                  </span>
+                ))}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <div className="relative mt-8 hidden overflow-x-auto sm:block">
         <table className="w-full min-w-[600px] border-collapse text-left text-[14px]">
           <thead>
             <tr className="border-b border-line">
@@ -100,7 +130,10 @@ export function PlanComparison({ planes, textos, extras = [] }: Props) {
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {extras.map((x) => (
               <li className="flex items-center justify-between gap-4 rounded-[16px] border border-line bg-bg-raised/70 px-5 py-4 text-[14px] text-ink" key={x.name}>
-                <span>{x.name}</span>
+                <span className="flex min-w-0 flex-col gap-1">
+                  <span>{x.name}</span>
+                  {x.descripcion ? <span className="text-[12.5px] leading-snug text-ink-soft">{x.descripcion}</span> : null}
+                </span>
                 <span className="shrink-0 font-display text-[20px] text-gold-deep [font-variant-numeric:lining-nums]">+{x.precio}</span>
               </li>
             ))}

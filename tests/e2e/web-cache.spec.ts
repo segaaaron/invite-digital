@@ -23,14 +23,14 @@ test('un cambio por fuera del admin no se ve: la portada lee de la caché', asyn
   await page.goto('/es')
   await expect(page.getByText('Bs 690')).toBeVisible()
 
-  const [antes] = await sql<{ price: number }[]>`select price_cents as price from plans where slug = 'firma-3d'`
-  await sql`update plans set price_cents = 77700 where slug = 'firma-3d'`
+  const [antes] = await sql<{ price: number }[]>`select price_cents as price from plans where slug = 'gala'`
+  await sql`update plans set price_cents = 77700 where slug = 'gala'`
   try {
     await page.goto('/es')
     await expect(page.getByText('Bs 690')).toBeVisible()
     await expect(page.getByText('Bs 777')).toHaveCount(0)
   } finally {
-    await sql`update plans set price_cents = ${antes!.price} where slug = 'firma-3d'`
+    await sql`update plans set price_cents = ${antes!.price} where slug = 'gala'`
   }
 })
 

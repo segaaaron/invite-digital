@@ -43,17 +43,17 @@ test.beforeAll(async () => {
     returning id`
   const [evento] = await sql<{ id: string }[]>`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
-    values ((select id from users where email = 'admin-e2e@invitepremium.bo'), ${EVENTO_CLIENTE}, ${`Boda de ${CLIENTE.nombre}`}, current_date - 5, current_date - 20, 'es', 'boda-bot', 'live', (select id from plans where slug = 'alta-costura'))
+    values ((select id from users where email = 'admin-e2e@invitepremium.bo'), ${EVENTO_CLIENTE}, ${`Boda de ${CLIENTE.nombre}`}, current_date - 5, current_date - 20, 'es', 'boda-bot', 'live', (select id from plans where slug = 'imperial'))
     returning id`
   await sql`insert into event_staff (event_id, user_id, membership) values (${evento!.id}, ${usuario!.id}, 'cliente')`
 
   // Un evento del atelier para duplicarlo, y otro que se celebra hoy con una invitación confirmada.
   await sql`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
-    values ((select id from users where email = 'admin-e2e@invitepremium.bo'), ${EVENTO_ADMIN}, ${`${PREFIJO} para duplicar`}, '2027-06-12', '2027-05-20', 'es', 'boda-bot', 'draft', (select id from plans where slug = 'alta-costura'))`
+    values ((select id from users where email = 'admin-e2e@invitepremium.bo'), ${EVENTO_ADMIN}, ${`${PREFIJO} para duplicar`}, '2027-06-12', '2027-05-20', 'es', 'boda-bot', 'draft', (select id from plans where slug = 'imperial'))`
   const [deHoy] = await sql<{ id: string }[]>`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
-    values ((select id from users where email = 'admin-e2e@invitepremium.bo'), ${EVENTO_HOY}, ${`${PREFIJO} es hoy`}, (now() at time zone 'America/La_Paz')::date, (now() at time zone 'America/La_Paz')::date, 'es', 'boda-bot', 'live', (select id from plans where slug = 'alta-costura'))
+    values ((select id from users where email = 'admin-e2e@invitepremium.bo'), ${EVENTO_HOY}, ${`${PREFIJO} es hoy`}, (now() at time zone 'America/La_Paz')::date, (now() at time zone 'America/La_Paz')::date, 'es', 'boda-bot', 'live', (select id from plans where slug = 'imperial'))
     returning id`
   const [grupo] = await sql<{ id: string }[]>`
     insert into guest_groups (event_id, label, seats, token_hash)
@@ -183,6 +183,7 @@ test('el cliente entero: etiquetas y nota, su código de recomendación y la com
   await web.getByLabel('WhatsApp', { exact: true }).fill('+591 7555 0606')
   await web.getByLabel(/^Correo/).fill('pedido-e2e@ejemplo.bo')
   await web.getByLabel('Fecha del evento').fill('2027-03-20')
+  await web.getByLabel('Tipo de evento').selectOption('boda')
   await web.getByRole('button', { name: 'Registrar pedido' }).click()
   await expect(web.getByText(/^[2-9A-Z]{8}$/)).toBeVisible()
   const [pedido] = await sql<{ referral_code: string | null; discount_cents: number | null }[]>`select referral_code, discount_cents from orders where customer_name = ${`${PREFIJO} referida`}`
@@ -262,7 +263,7 @@ test('duplicar un evento lleva a la copia, con su diseño y su plan', async ({ p
   await expect(page).toHaveURL(/\/configuracion$/)
   const [copia] = await sql<{ theme_key: string; plan: string }[]>`
     select e.theme_key, p.slug as plan from events e join plans p on p.id = e.plan_id where e.title = ${`${PREFIJO} para duplicar (copia)`}`
-  expect(copia).toEqual({ theme_key: 'boda-bot', plan: 'alta-costura' })
+  expect(copia).toEqual({ theme_key: 'boda-bot', plan: 'imperial' })
 })
 
 test('⌘K lleva a una pantalla con solo escribir', async ({ page }) => {

@@ -7,11 +7,12 @@ import type { Plan } from '@/modules/catalog'
 import type { FiestaPublica } from '@/modules/events'
 import { capacidadDePlan } from '@/modules/plans'
 import { PlanComparison } from '@/modules/plans/ui/PlanComparison'
-import { formatAmount } from '@/shared/money'
+import { Monto } from '@/modules/catalog/ui/Monto'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import { FiestaLanding } from '@/sections/FiestaLanding'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
+import type { Locale } from '@/shared/i18n/locales'
 import { attempt, isOk } from '@/shared/result'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -41,7 +42,7 @@ export async function metadataDeFiesta(raw: string, fiesta: FiestaPublica): Prom
  * La tabla que compara los planes, con los límites de la base en el orden de las tarjetas.
  * Si los límites no se leen, no hay tabla: mejor sin ella que con una que invente.
  */
-export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary) {
+export async function comparativaDePlanes(planes: readonly Plan[], dictionary: Dictionary, locale: Locale) {
   const leidas = await webPublica.planesActivos().catch((cause: unknown) => {
     registrarFallo('[locale]/fiesta-page', 'Precios sin tabla comparativa:', cause)
     return null
@@ -63,7 +64,7 @@ export async function comparativaDePlanes(planes: readonly Plan[], dictionary: D
   const filasVisibles = Object.fromEntries(Object.entries(comparativa.filas).filter(([clave]) => config !== null || clave !== 'luxury')) as Partial<typeof comparativa.filas>
   const textos = { ...comparativa, filas: filasVisibles }
   return columnas.length === 0 ? null : (
-    <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: formatAmount(x.priceCents, x.currency) }))} planes={columnas} textos={textos} />
+    <PlanComparison extras={extras.map((x) => ({ name: x.name, precio: <Monto cents={x.priceCents} locale={locale} />, descripcion: comparativa.extrasDescripcion[x.effect] }))} planes={columnas} textos={textos} />
   )
 }
 
@@ -106,7 +107,7 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
       pricing={
         isOk(planes) && planes.value.length > 0 ? (
           <PricingSection
-            comparativa={await comparativaDePlanes(planes.value, dictionary)}
+            comparativa={await comparativaDePlanes(planes.value, dictionary, locale)}
             reservas={await reservasDePlanes()}
             dictionary={dictionary}
             locale={locale}

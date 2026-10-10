@@ -4,7 +4,7 @@ import { createPlan } from './plan'
 
 const base = {
   id: '11111111-1111-1111-1111-111111111111',
-  slug: 'firma-3d',
+  slug: 'gala',
   priceCents: 145000,
   highlighted: true,
   sortOrder: 2,

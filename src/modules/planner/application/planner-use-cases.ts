@@ -78,6 +78,21 @@ export const toggleTask =
     return { ok: true }
   }
 
+/** Hecha o no, dicho (9 oct): «Deshacer» en la agenda no puede depender de alternar, que con dos toques la cerraría otra vez. */
+export const marcarTarea =
+  ({ store, clock }: Deps) =>
+  async (eventId: string, id: string, hecha: boolean, by: string): Promise<PlannerResult> =>
+    (await store.updateTask(eventId, id, { doneAt: hecha ? clock() : null, doneBy: hecha ? by : null })) ? { ok: true } : fallo(NO_ESTA)
+
+/** Otro día para una tarea atrasada, desde la agenda. Hace falta un día: quitarle la fecha la sacaría del calendario. */
+export const reprogramarTarea =
+  ({ store }: Deps) =>
+  async (eventId: string, id: string, dia: string): Promise<PlannerResult> => {
+    const fecha = leerFecha(dia)
+    if (!fecha.ok || fecha.fecha === null) return fallo('Elige el nuevo día.')
+    return (await store.updateTask(eventId, id, { dueDate: fecha.fecha })) ? { ok: true } : fallo(NO_ESTA)
+  }
+
 export const removeTask =
   ({ store }: Deps) =>
   async (eventId: string, id: string): Promise<PlannerResult> =>
@@ -180,6 +195,15 @@ export const setPaymentPaid =
   ({ store, clock }: Deps) =>
   async (eventId: string, paymentId: string, pagado: boolean): Promise<PlannerResult> =>
     (await store.setPaymentPaid(eventId, paymentId, pagado ? clock() : null)) ? { ok: true } : fallo(NO_ESTA)
+
+/** Otro día para un pago, desde la agenda. */
+export const reprogramarPago =
+  ({ store }: Deps) =>
+  async (eventId: string, paymentId: string, dia: string): Promise<PlannerResult> => {
+    const fecha = leerFecha(dia)
+    if (!fecha.ok || fecha.fecha === null) return fallo('Elige el nuevo día.')
+    return (await store.setPaymentDue(eventId, paymentId, fecha.fecha)) ? { ok: true } : fallo(NO_ESTA)
+  }
 
 export const removePayment =
   ({ store }: Deps) =>

@@ -15,7 +15,7 @@ export const TIPOS_DE_AVISO_EXPLICADOS: readonly { tipo: TipoDeAviso; titulo: st
   { tipo: 'mensaje', titulo: 'Mensajes', ayuda: 'Cuando alguien firma tu libro de mensajes.', soloAdmin: false },
   { tipo: 'apertura', titulo: 'Invitaciones abiertas', ayuda: 'La primera vez que un invitado abre su invitación.', soloAdmin: false },
   { tipo: 'regalo', titulo: 'Regalos', ayuda: 'Cuando alguien reserva un regalo de tu lista.', soloAdmin: false },
-  { tipo: 'agenda', titulo: 'Lo que vence', ayuda: 'Tareas y pagos que vencen mañana, y la semana del evento.', soloAdmin: false },
+  { tipo: 'agenda', titulo: 'Lo que vence', ayuda: 'Cada mañana: lo de hoy y de mañana (tareas, pagos, citas, ensayos y el cierre de confirmaciones), lo que se atrasó y cuánto falta para tu evento.', soloAdmin: false },
   { tipo: 'diseno', titulo: 'Tu invitación', ayuda: 'Cuando tenemos lista una versión de tu invitación para que la revises.', soloAdmin: false },
   { tipo: 'venta', titulo: 'Ventas', ayuda: 'Consultas nuevas y comprobantes por revisar.', soloAdmin: true },
 ]

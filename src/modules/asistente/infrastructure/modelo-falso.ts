@@ -20,9 +20,9 @@ export const modeloFalso: ModeloDeLenguaje = {
 
     // Tras escribir, dice lo que la herramienta devolvió (hecho o no_se_pudo), como pide la regla 3.
     const informe = (r: string): EventoDelModelo[] => {
-      const leido = JSON.parse(r) as { hecho?: string | string[]; no_se_pudo?: string[]; error?: string; pin?: string }
+      const leido = JSON.parse(r) as { hecho?: string | string[]; no_se_pudo?: string[]; ya_estaban?: string[]; error?: string; pin?: string }
       const hecho = [leido.hecho ?? []].flat()
-      const partes = [hecho.length > 0 ? `Hecho: ${hecho.join('; ')}.` : '', leido.pin ? `PIN ${leido.pin}.` : '', leido.no_se_pudo ? `No se pudo: ${leido.no_se_pudo.join('; ')}.` : '', leido.error ? `No se pudo: ${leido.error}` : '']
+      const partes = [hecho.length > 0 ? `Hecho: ${hecho.join('; ')}.` : '', leido.pin ? `PIN ${leido.pin}.` : '', leido.no_se_pudo ? `No se pudo: ${leido.no_se_pudo.join('; ')}.` : '', leido.ya_estaban ? `Ya estaba: ${leido.ya_estaban.join('; ')}.` : '', leido.error ? `No se pudo: ${leido.error}` : '']
       return texto(partes.filter(Boolean).join(' '))
     }
     const salidas = items.filter((i) => i.type === 'function_call_output').length
@@ -57,8 +57,11 @@ export const modeloFalso: ModeloDeLenguaje = {
         const l = JSON.parse(resultado) as { personas_dentro?: number; personas_esperadas?: number }
         guion = texto(`Dentro ${l.personas_dentro ?? 0} de ${l.personas_esperadas ?? 0}.`)
       }
+    } else if (/^llévame a (.+)$/i.test(q)) {
+      const pantalla = /^llévame a (.+)$/i.exec(q)![1]!.trim().toLowerCase().replace(/ /g, '_')
+      guion = resultado === undefined ? llamar('ir_a', { pantalla }) : texto((JSON.parse(resultado) as { error?: string }).error ?? 'Te llevo.')
     } else if (alta !== null) {
-      guion = resultado === undefined ? llamar('registrar_invitados', { invitaciones: [{ personas: [alta[1]!.trim()], telefono: alta[2]?.trim() ?? null }] }) : informe(resultado)
+      guion = resultado === undefined ? llamar('registrar_invitados', { invitaciones: [{ personas: [alta[1]!.trim()], telefono: alta[2]?.trim() ?? null, aun_si_existe: false }] }) : informe(resultado)
     } else if (/^agrega la tarea (.+)$/i.test(q)) {
       const titulo = /^agrega la tarea (.+)$/i.exec(q)![1]!
       guion = resultado === undefined ? llamar('gestionar_tareas', { operaciones: [{ accion: 'crear', tarea_id: null, titulo, vence: null, responsable: 'anfitrion' }] }) : informe(resultado)

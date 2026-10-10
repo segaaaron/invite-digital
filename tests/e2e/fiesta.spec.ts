@@ -17,7 +17,7 @@ test.beforeAll(async () => {
   await sql`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     values ((select id from users where email = ${ATELIER.email}), ${SLUG}, 'XV de Valeria', '2027-08-14', '2027-08-01', 'es', 'xv-valeria', 'live',
-            (select id from plans where slug = 'alta-costura'))`
+            (select id from plans where slug = 'imperial'))`
 })
 
 test.afterAll(async () => {

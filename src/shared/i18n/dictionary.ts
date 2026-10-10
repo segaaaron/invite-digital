@@ -38,6 +38,8 @@ export interface FiestasDictionary {
   /** Lo que la plataforma ya hace, igual para las dos fiestas. Nada que no exista. */
   toolsEyebrow: string
   toolsTitle: string
+  /** «¿Qué plan trae cada herramienta? Compáralos» (portada, lleva a la tabla). */
+  toolsPlanes: string
   tools: { title: string; body: string }[]
 }
 
@@ -63,6 +65,15 @@ export interface ExperienceAct {
   body: string
   /** Texto alternativo de la fotografía del acto. La imagen sale de la maqueta. */
   imageAlt: string
+}
+
+/** «Quiénes somos» (9 oct): quién es la marca, sin lugar ni fotos (vende a toda América). */
+export interface AboutDictionary {
+  eyebrow: string
+  title: string
+  paragraphs: readonly string[]
+  pillars: readonly { title: string; body: string }[]
+  signature: string
 }
 
 export interface ExperienceDictionary {
@@ -195,6 +206,8 @@ export interface PlanComparisonDictionary {
   autoservicio: string
   /** Los extras sueltos a la venta, debajo de la tabla. */
   extrasTitle: string
+  /** Qué hace cada adicional, por su efecto (9 oct: «Sumar a tu planner» o «Día D» no se entendían). */
+  extrasDescripcion: Record<'cambio_modelo' | 'fotos_invitados' | 'mas_grupos' | 'mas_dias' | 'mas_porteros' | 'sumar_planner' | 'dia_d' | 'asistente' | 'servicio' | 'mas_rondas', string>
   /** Cabecera de la primera columna. */
   feature: string
   si: string
@@ -232,6 +245,14 @@ export interface PlanComparisonDictionary {
     album: string
     detalles: string
     luxury: string
+    /** Lo del panel, plan por plan (9 oct: «la tabla no dice qué plan lo incluye»). */
+    tareas: string
+    mesas: string
+    regalos: string
+    puerta: string
+    porteros: string
+    plannerCompleto: string
+    plannerTotal: string
     enLinea: string
   }
   modelo: { ninguno: string; antes_de_repartir: string; siempre: string }
@@ -730,6 +751,10 @@ export interface OrdersDictionary {
   qrAlt: string
   proofHeading: string
   statusHeading: string
+  /** «Qué sigue» (9 oct): los tres pasos tras pedir. `{horario}` sale de «La web». */
+  nextHeading: string
+  nextSteps: readonly [string, string, string]
+  nextHours: string
   status: Record<'pending_payment' | 'proof_submitted' | 'approved' | 'rejected' | 'cancelled', string>
   /** El monto exacto que toca transferir ahora, encima de los datos de cobro. */
   amountDue: string
@@ -755,6 +780,7 @@ export type OrderErrorCode =
   | 'plan'
   | 'notes'
   | 'referral'
+  | 'terms'
   | 'invalid'
   | 'proofRateLimited'
   | 'proofMissing'
@@ -792,6 +818,22 @@ export interface OrderFormDictionary {
   proofReceived: string
   proofSubmit: string
   proofSubmitting: string
+  /** El pedido completo (9 oct): tipo de evento, modelo, adicionales, resumen de pago y términos. */
+  eventType: string
+  eventTypes: { boda: string; xv: string }
+  model: string
+  modelLater: string
+  extrasTitle: string
+  summaryTitle: string
+  summaryExtras: string
+  summaryTotal: string
+  summaryToday: string
+  summaryBalance: string
+  summaryReferral: string
+  /** «Acepto los {terminos}»: `{terminos}` es el enlace. */
+  terms: string
+  termsLink: string
+  nonRefundable: string
   errors: Record<OrderErrorCode, string>
 }
 
@@ -834,6 +876,7 @@ export interface Dictionary {
   fiestas: FiestasDictionary
   hero: HeroDictionary
   experience: ExperienceDictionary
+  about: AboutDictionary
   mobile: MobileDictionary
   collections: CollectionsDictionary
   comparison: ComparisonDictionary

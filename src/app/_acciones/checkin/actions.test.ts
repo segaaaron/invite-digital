@@ -35,7 +35,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   requireSession.mockResolvedValue({ userId: 'u1' })
   requireFeature.mockResolvedValue(
-    ok({ planSlug: 'alta-costura', maxGuestGroups: null, seating: true, registry: true, checkin: true }),
+    ok({ planSlug: 'imperial', maxGuestGroups: null, seating: true, registry: true, checkin: true }),
   )
 })
 

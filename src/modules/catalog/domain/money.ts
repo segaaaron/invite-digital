@@ -29,3 +29,13 @@ export function formatMoney(money: Money, locale: Locale): string {
   }).format(units)
   return `Bs ${amount}`
 }
+
+/** El tipo de cambio oficial que cita la web junto al selector de moneda. */
+export const BS_POR_DOLAR = 6.96
+
+/**
+ * Un importe en bolivianos (centavos) dicho en dólares, sin decimales (9 oct): con el selector en USD, la
+ * reserva y los adicionales seguían en Bs. Los planes usan su precio en dólares del admin; lo que no lo
+ * tiene, este equivalente.
+ */
+export const enDolares = (cents: number): string => `USD ${Math.round(cents / 100 / BS_POR_DOLAR)}`

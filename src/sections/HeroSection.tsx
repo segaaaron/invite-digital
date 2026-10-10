@@ -42,7 +42,7 @@ export function HeroSection({ dictionary, locale, encargo = false, slot, cifras,
             />
             <span className="text-[11px] tracking-[var(--tracking-luxe)] text-gold-deep uppercase">{hero.eyebrow}</span>
           </span>
-          <h1 className="font-display text-[clamp(42px,7.4vw,92px)] font-light leading-[0.98] text-ink">
+          <h1 className="font-display text-[clamp(42px,7.4vw,92px)] font-light leading-[0.98] text-ink max-[379px]:text-[34px]">
             {hero.titleLine1}
             <br />
             {hero.titleLine2}

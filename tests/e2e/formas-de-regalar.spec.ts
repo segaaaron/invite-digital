@@ -19,7 +19,7 @@ async function sembrar(): Promise<{ token: string }> {
   const [evento] = await sql<{ id: string }[]>`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     values ((select id from users where email = 'atelier@invitepremium.bo'), ${SLUG}, 'Boda formas e2e', '2027-05-15', '2027-05-01', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
     returning id
   `
   const token = randomBytes(16).toString('base64url')

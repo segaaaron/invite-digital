@@ -136,10 +136,31 @@ const PANTALLAS: Record<string, string> = {
   agenda: 'Agenda', proveedores: 'Proveedores', cronograma: 'Cronograma', cortejo: 'Cortejo', documentos: 'Documentos',
 }
 
+/**
+ * Un teléfono se dice de dos en dos (9 oct, como se dicta en Bolivia: «76, 94, 49, 86»); con cifras impares la
+ * última va sola. La voz leía «76944986» como «setenta y seis millones…». Un par que empieza por cero se dice
+ * por cifras («0, 1»): leído como número, el cero se pierde. Solo secuencias de 7 a 15 cifras (con espacios
+ * entre medias o un `+` delante): montos con punto, horas y fechas no casan.
+ */
+function telefonoParaLeer(numero: string): string {
+  const todas = numero.replace(/\D/g, '')
+  const cifras = todas.length === 11 && todas.startsWith('591') ? todas.slice(3) : todas
+  // Solo lo que es un teléfono: un celular de Bolivia o un número dicho con su «+». Una lista de cifras
+  // («120 150 200») se lee como siempre.
+  if (!/^[67]\d{7}$/.test(cifras) && !numero.trim().startsWith('+')) return numero
+  const pares = cifras.match(/\d{1,2}/g) ?? []
+  return pares.map((p) => (p.length === 2 && p.startsWith('0') ? `${p[0]}, ${p[1]}` : p)).join(', ')
+}
+
 /** El texto tal como se lee: sin enlaces (la pantalla por su nombre), sin marcas y sin guiones de lista. */
 export function paraLeer(texto: string): string {
   return texto
+    // El enlace con su nombre al lado se diría dos veces («Agenda (Agenda)»): queda el nombre.
+    .replace(/\[([^\]]+)\]\(\/panel\/[^)]*\)/g, '$1')
+    .replace(/\s*\(\/panel\/eventos\/[^)\s]+\)/g, '')
     .replace(/\/panel\/eventos\/[^/\s]+(?:\/planner)?\/?([a-z-]*)[^\s,.;:)]*/g, (_, p: string) => PANTALLAS[p] ?? 'el panel')
+    // Los teléfonos, ya sin enlaces: las cifras de un enlace no son un teléfono.
+    .replace(/\+?(?<![\d.,\w])\d(?: ?\d){6,14}(?![\d.,:-]?\d)/g, telefonoParaLeer)
     .replace(/[*_#`]/g, '')
     .replace(/^\s*[-•]\s+/gm, '')
     .split('\n')
@@ -147,6 +168,34 @@ export function paraLeer(texto: string): string {
     .filter((l) => l !== '')
     .join('. ')
     .replace(/\.\.\s/g, '. ')
+}
+
+/** Lo dicho, de los resultados del dictado: en iPhone cada resultado repite lo anterior (acumulado). */
+export function unirResultados(trozos: readonly string[]): string {
+  let dicho = ''
+  // Safari acumula: cada resultado trae lo anterior más lo nuevo. Chrome manda trozos sueltos, y dos iguales
+  // seguidos («77», «77») son lo que se dijo.
+  let acumulativo = false
+  for (const trozo of trozos) {
+    const t = trozo.trim()
+    if (t === '') continue
+    const antes = dicho.toLowerCase()
+    const ahora = t.toLowerCase()
+    if (antes === '') {
+      dicho = t
+      continue
+    }
+    if (ahora.length > antes.length && ahora.startsWith(antes)) {
+      dicho = t
+      acumulativo = true
+      continue
+    }
+    // Lo mismo otra vez: es repetición si el motor acumula o si es una frase entera (el final que repite al
+    // provisional); un número o una palabra suelta repetidos son lo dicho.
+    if (ahora === antes && (acumulativo || t.split(/\s+/).length >= 3)) continue
+    dicho = `${dicho} ${t}`
+  }
+  return dicho
 }
 
 /** «Listo», «gracias», «eso es todo»: la conversación por voz termina (sin enviar nada a Luxury). */

@@ -4,7 +4,7 @@ import { randomBytes } from 'node:crypto'
 import { avisarAlAdmin } from '@/app/_acciones/avisar-al-admin'
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
-import { admin, diseno, events, identity, leads, notifications, orders, plans } from '@/app/composition/container'
+import { admin, diseno, events, extrasParaPedido, identity, leads, notifications, orders, plans, site } from '@/app/composition/container'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { type Actor, createCredential, parseRole } from '@/modules/identity'
 import { requireAdmin } from '@/app/_acciones/sesion'
@@ -68,6 +68,18 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
   const ajustes = referralCode === null ? null : await admin.mensajes()
   const descuentoPct = ajustes === null || isErr(ajustes) ? 0 : ajustes.value.descuentoReferido
 
+  // Los términos, si están publicados: aceptarlos es obligatorio (se cobra una reserva no reembolsable).
+  const sitio = await site.settings()
+  if (sitio.legal.terminos.publicada && texto('acepto') !== 'si') return { status: 'error', code: 'terms' }
+
+  // Los adicionales: solo los que ese plan puede llevar, aunque el formulario mande otros.
+  const elegidos = formData.getAll('extras').filter((v): v is string => typeof v === 'string')
+  const permitidos = new Set((await extrasParaPedido(texto('planSlug'))).map((x) => x.slug))
+
+  // Sin modelo elegido, la fiesta viaja en las notas: quien aprueba sabe qué tipo de evento es.
+  const fiesta = texto('fiesta').trim().slice(0, 40)
+  const notas = [fiesta !== '' && texto('templateSlug') === '' ? `Tipo de evento: ${fiesta}.` : '', texto('notes').trim()].filter(Boolean).join(' ')
+
   const result = await orders.place({
     referralCode,
     descuentoPct,
@@ -79,7 +91,8 @@ export async function placeOrderAction(_previous: PlaceOrderState, formData: For
     contact: texto('contact'),
     email: texto('email'),
     eventDate: fecha === '' ? null : fecha,
-    notes: texto('notes'),
+    notes: notas,
+    extraSlugs: elegidos.filter((s) => permitidos.has(s)),
   })
 
   if (isErr(result)) {

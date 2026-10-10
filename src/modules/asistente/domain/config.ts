@@ -17,7 +17,7 @@ export type ConfigDelAsistente = {
 }
 
 export const CLAVE_DE_CONFIG = 'asistente.config'
-export const CONFIG_POR_DEFECTO: ConfigDelAsistente = { planes: ['alta-costura'], mensajesPorMes: 300, presupuestoUsd: 20, atajoDeSiri: '' }
+export const CONFIG_POR_DEFECTO: ConfigDelAsistente = { planes: ['imperial'], mensajesPorMes: 300, presupuestoUsd: 20, atajoDeSiri: '' }
 
 const esquema = z.object({
   planes: z.array(z.string().trim().min(1).max(64)).max(20),

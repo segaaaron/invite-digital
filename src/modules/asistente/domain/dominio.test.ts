@@ -9,7 +9,7 @@ describe('config y cuota', () => {
     expect(leerConfig(undefined)).toEqual(CONFIG_POR_DEFECTO)
     expect(leerConfig('{roto')).toEqual(CONFIG_POR_DEFECTO)
     // Lo guardado antes del atajo de Siri sigue valiendo: el atajo, vacío.
-    expect(leerConfig('{"planes":["firma-3d"],"mensajesPorMes":50,"presupuestoUsd":5}')).toEqual({ planes: ['firma-3d'], mensajesPorMes: 50, presupuestoUsd: 5, atajoDeSiri: '' })
+    expect(leerConfig('{"planes":["gala"],"mensajesPorMes":50,"presupuestoUsd":5}')).toEqual({ planes: ['gala'], mensajesPorMes: 50, presupuestoUsd: 5, atajoDeSiri: '' })
   })
 
   it('el atajo de Siri solo admite un enlace de iCloud de atajos', () => {
@@ -22,10 +22,10 @@ describe('config y cuota', () => {
 
   it('corta fuera del plan, al llegar a la cuota del evento y al techo del mes', () => {
     const c = CONFIG_POR_DEFECTO
-    expect(puedeConversar(c, 'alta-costura', { mensajesDelMes: 299, gastoDelMesMicroUsd: 0 })).toEqual({ ok: true })
+    expect(puedeConversar(c, 'imperial', { mensajesDelMes: 299, gastoDelMesMicroUsd: 0 })).toEqual({ ok: true })
     expect(puedeConversar(c, 'atelier', { mensajesDelMes: 0, gastoDelMesMicroUsd: 0 })).toEqual({ ok: false, motivo: 'fuera_del_plan' })
-    expect(puedeConversar(c, 'alta-costura', { mensajesDelMes: 300, gastoDelMesMicroUsd: 0 })).toEqual({ ok: false, motivo: 'cuota' })
-    expect(puedeConversar(c, 'alta-costura', { mensajesDelMes: 0, gastoDelMesMicroUsd: 20_000_000 })).toEqual({ ok: false, motivo: 'presupuesto' })
+    expect(puedeConversar(c, 'imperial', { mensajesDelMes: 300, gastoDelMesMicroUsd: 0 })).toEqual({ ok: false, motivo: 'cuota' })
+    expect(puedeConversar(c, 'imperial', { mensajesDelMes: 0, gastoDelMesMicroUsd: 20_000_000 })).toEqual({ ok: false, motivo: 'presupuesto' })
   })
 
   it('el coste en millonésimas de dólar con los precios de gpt-6-luna, redondeado hacia arriba', () => {
@@ -43,7 +43,7 @@ describe('config y cuota', () => {
 describe('Luxury por plan o por extra', () => {
   it('lo tiene el plan que lo trae o el evento que lo compró; comprado, conversa aunque el plan no lo traiga', () => {
     const c = CONFIG_POR_DEFECTO
-    expect(tieneLuxury({ planSlug: 'alta-costura' }, c)).toBe(true)
+    expect(tieneLuxury({ planSlug: 'imperial' }, c)).toBe(true)
     expect(tieneLuxury({ planSlug: 'atelier' }, c)).toBe(false)
     expect(tieneLuxury({ planSlug: 'atelier', asistente: true }, c)).toBe(true)
     expect(puedeConversar(c, 'atelier', { mensajesDelMes: 0, gastoDelMesMicroUsd: 0 }, true)).toEqual({ ok: true })
@@ -70,10 +70,10 @@ describe('herramientas', () => {
   })
 
   it('registrar invitados necesita al menos un nombre por invitación y tiene tope', () => {
-    expect(interpretarLlamada('registrar_invitados', '{"invitaciones":[{"personas":[],"telefono":null}]}')).toMatchObject({ ok: false })
-    const muchas = JSON.stringify({ invitaciones: Array.from({ length: 31 }, () => ({ personas: ['Ana'], telefono: null })) })
+    expect(interpretarLlamada('registrar_invitados', '{"invitaciones":[{"personas":[],"telefono":null,"aun_si_existe":false}]}')).toMatchObject({ ok: false })
+    const muchas = JSON.stringify({ invitaciones: Array.from({ length: 31 }, () => ({ personas: ['Ana'], telefono: null, aun_si_existe: false })) })
     expect(interpretarLlamada('registrar_invitados', muchas)).toMatchObject({ ok: false })
-    expect(interpretarLlamada('registrar_invitados', '{"invitaciones":[{"personas":["Ramón Pérez"],"telefono":"70012345"}]}')).toMatchObject({ ok: true })
+    expect(interpretarLlamada('registrar_invitados', '{"invitaciones":[{"personas":["Ramón Pérez"],"telefono":"70012345","aun_si_existe":false}]}')).toMatchObject({ ok: true })
   })
 })
 
@@ -204,5 +204,62 @@ describe('las herramientas que hacen cosas del evento (7 de octubre)', () => {
     expect(r).toContain('no_se_pudo')
     expect(r).not.toContain('proponer_')
     expect(r).not.toContain('Nada se guarda sin que la persona lo confirme')
+  })
+})
+
+describe('registrar invitados por voz (9 oct)', () => {
+  const alta = (telefono: string | null, aunSiExiste = false) =>
+    interpretarLlamada('registrar_invitados', JSON.stringify({ invitaciones: [{ personas: ['Ramón Pérez'], telefono, aun_si_existe: aunSiExiste }] }))
+  it('un teléfono dictado con cifras de más vuelve al modelo para que lo pregunte', () => {
+    const r = alta('77 712 345 678')
+    expect(r.ok).toBe(false)
+    expect(r.ok ? '' : r.error).toContain('de dos en dos')
+  })
+  it('un celular bien dicho y sin teléfono pasan', () => {
+    expect(alta('700 123 45').ok).toBe(true)
+    expect(alta(null).ok).toBe(true)
+  })
+  it('«aun_si_existe» va en cada invitación, no en toda la tanda (QA 9 oct)', () => {
+    const r = alta(null, true)
+    expect(r.ok && r.llamada.nombre === 'registrar_invitados' && r.llamada.invitaciones[0]!.aun_si_existe).toBe(true)
+    expect(interpretarLlamada('registrar_invitados', JSON.stringify({ invitaciones: [{ personas: ['Ana'], telefono: null }], aun_si_existe: true })).ok).toBe(false)
+  })
+})
+
+describe('ir a una pantalla (9 oct: «no me lleva a invitados»)', () => {
+  it('solo pantallas que existen', () => {
+    expect(interpretarLlamada('ir_a', '{"pantalla":"invitados"}')).toMatchObject({ ok: true })
+    expect(interpretarLlamada('ir_a', '{"pantalla":"/panel/admin"}')).toMatchObject({ ok: false })
+  })
+})
+
+describe('Luxury como planner (9 oct: «que no repita» y «que sepa comportarse como un planner»)', () => {
+  const r = reglasDelSistema({ evento: 'Quince de Camila', fiesta: 'XV años', fecha: '2027-05-15', plan: 'Gala', rol: 'anfitrión', hoy: '2026-10-09', slug: 'xv', idioma: 'es', porVoz: false })
+  it('no repite lo dicho ni el teléfono al confirmar', () => {
+    expect(r).toContain('No repitas')
+    expect(r).not.toContain('(WhatsApp 70012345)')
+  })
+  it('da ideas de planner según la fiesta, y sin alcohol para menores', () => {
+    expect(r).toContain('TU OFICIO DE PLANNER')
+    expect(r).toMatch(/XV años:.*sin alcohol/)
+  })
+})
+
+describe('Luxury propone las palabras (9 oct: «que me dé opciones de qué palabras encajan mejor»)', () => {
+  const r = reglasDelSistema({ evento: 'Boda de Ana', fiesta: 'boda', fecha: '2027-05-15', plan: 'Gala', rol: 'anfitrión', hoy: '2026-10-09', slug: 'b', idioma: 'es', porVoz: false })
+  it('redacta cada sección del diseño con opciones dentro del tope, y también tareas y mesas', () => {
+    expect(r).toContain('REDACTAS Y PROPONES')
+    expect(r).toContain('maximo_de_caracteres')
+    expect(r).toMatch(/Mesas:.*familias/)
+    expect(r).toMatch(/Tareas:/)
+  })
+})
+
+describe('«muéstrame la lista» abre la pantalla (9 oct)', () => {
+  const r = reglasDelSistema({ evento: 'Boda', fiesta: 'boda', fecha: '2027-05-15', plan: 'Gala', rol: 'anfitrión', hoy: '2026-10-09', slug: 'b', idioma: 'es', porVoz: false })
+  it('ver o mostrar una sección es ir_a; una pregunta se contesta sin moverse', () => {
+    expect(r).toContain('«muéstrame la lista de invitados»')
+    expect(r).toContain('ir_a con pantalla "invitados"')
+    expect(r).toContain('no cambias de pantalla')
   })
 })

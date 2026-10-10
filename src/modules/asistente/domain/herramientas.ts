@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { celularDictado } from '@/shared/whatsapp'
 import { TEMAS_DE_AYUDA, type TemaDeAyuda } from './guias'
 
 /**
@@ -64,6 +65,31 @@ const lugarDeTextos = (quien: string) => ({
   description: `${quien}; null si no cambia.`,
 })
 
+/** Adónde lleva «ir_a», relativo al evento (9 oct): las pantallas del panel del cliente. */
+export const PANTALLAS_DEL_EVENTO = {
+  resumen: '',
+  mi_invitacion: '/configuracion',
+  ver_invitacion: '/vista-previa',
+  invitados: '/invitados',
+  enviar_invitaciones: '/invitados?panel=envio',
+  ingreso: '/checkin',
+  mesas: '/mesas',
+  regalos: '/regalos',
+  mensajes: '/mensajes',
+  equipo: '/equipo',
+  extras: '/extras',
+  tareas: '/planner/tareas',
+  agenda: '/planner/agenda',
+  presupuesto: '/planner/presupuesto',
+  proveedores: '/planner/proveedores',
+  cronograma: '/planner/cronograma',
+  cortejo: '/planner/cortejo',
+  documentos: '/planner/documentos',
+  dia_d: '/dia-d',
+} as const
+export type PantallaDelEvento = keyof typeof PANTALLAS_DEL_EVENTO
+const PANTALLAS = Object.keys(PANTALLAS_DEL_EVENTO) as [PantallaDelEvento, ...PantallaDelEvento[]]
+
 export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
   // ─── Lectura ──────────────────────────────────────────────────────────────
   {
@@ -116,7 +142,7 @@ export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
     type: 'function',
     name: 'agenda',
     description:
-      'La agenda del evento: tareas con fecha, pagos, momentos, ensayos, citas (con cita_id), el cierre de confirmaciones y el día. Sin fechas, los próximos 30 días.',
+      'La agenda del evento: tareas con fecha, pagos, momentos, ensayos, citas (con cita_id), el cierre de confirmaciones y el día; además lo atrasado (tareas y pagos vencidos sin hacer) y cuántos días faltan. Sin fechas, los próximos 30 días.',
     parameters: objeto({ desde: texto('YYYY-MM-DD; null para hoy.', true), hasta: texto('YYYY-MM-DD; null para 30 días después de «desde».', true) }),
     strict: true,
   },
@@ -146,6 +172,13 @@ export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
     name: 'mensajes',
     description: 'El libro de firmas: lo que escribieron los invitados, con su mensaje_id, quién y si ya se le agradeció.',
     parameters: objeto({}),
+    strict: true,
+  },
+  {
+    type: 'function',
+    name: 'ir_a',
+    description: 'Lleva a la persona a una pantalla del panel de este evento: la abre sola. Para «llévame a…», «ábreme…», «ve a…», «quiero ver…».',
+    parameters: objeto({ pantalla: { type: 'string', enum: PANTALLAS, description: 'La pantalla.' } }),
     strict: true,
   },
   {
@@ -216,7 +249,14 @@ export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
         'Las invitaciones a añadir.',
         objeto({
           personas: { type: 'array', items: { type: 'string' }, description: 'Nombres completos; el primero es el principal.' },
-          telefono: texto('Su WhatsApp tal como lo dieron (8 dígitos de Bolivia o con prefijo); null si no lo dieron.', true),
+          telefono: texto(
+            'Su WhatsApp: 8 cifras de Bolivia que empiezan por 6 o 7 (o + y código de país). Del dictado junta solo las cifras; si no salen 8, no lo inventes ni lo recortes: pregúntalo. null si no lo dieron.',
+            true,
+          ),
+          aun_si_existe: {
+            type: 'boolean',
+            description: 'false casi siempre. true solo en ESTA invitación, si la persona confirmó que es OTRA persona con el mismo nombre o el mismo WhatsApp de alguien que ya está en la lista.',
+          },
         }),
       ),
     }),
@@ -645,7 +685,17 @@ const operaciones = <T extends z.ZodTypeAny>(op: T) => z.object({ operaciones: z
 const cumple = (accionPedida: string, reglas: Record<string, () => boolean>) => reglas[accionPedida]?.() ?? true
 const lleno = (v: string | null | undefined) => v !== null && v !== undefined && v.trim() !== ''
 
-export const esquemaDeInvitacion = z.object({ personas: z.array(nombre).min(1).max(MAX_PERSONAS_POR_INVITACION), telefono: z.string().trim().max(40).nullable() })
+/** Un WhatsApp dictado que no es un celular vuelve al modelo con qué hacer, en vez de guardarse (9 oct). */
+const celular = z
+  .string()
+  .trim()
+  .max(40)
+  .nullable()
+  .refine(
+    (t) => t === null || t === '' || celularDictado(t) !== null,
+    'no es un celular válido (8 cifras que empiezan por 6 o 7, o + y código de país). No lo guardes: repite a la persona el número de dos en dos (76 94 49 86) y pregúntale si es así.',
+  )
+export const esquemaDeInvitacion = z.object({ personas: z.array(nombre).min(1).max(MAX_PERSONAS_POR_INVITACION), telefono: celular, aun_si_existe: z.boolean() })
 export const esquemaDePropuesta = z.array(esquemaDeInvitacion).min(1).max(MAX_INVITACIONES_POR_PROPUESTA)
 export type InvitacionPropuesta = z.infer<typeof esquemaDeInvitacion>
 
@@ -655,7 +705,7 @@ const opInvitado = z
     persona_id: id.nullable(),
     invitacion_id: id.nullable(),
     nombre: textoNulo(160),
-    telefono: textoNulo(40),
+    telefono: celular,
     vip: z.boolean().nullable(),
     restriccion: textoNulo(200),
     asiste: z.enum(ASISTENCIA).nullable(),
@@ -873,6 +923,7 @@ const esquemas = {
   mesas: z.object({}).strict(),
   regalos: z.object({}).strict(),
   mensajes: z.object({}).strict(),
+  ir_a: z.object({ pantalla: z.enum(PANTALLAS) }).strict(),
   como_se_hace: z.object({ tema: z.enum(TEMAS_DE_AYUDA) }).strict(),
   preparar_envio: z.object({ incluir_enviadas: z.boolean() }).strict(),
   preparar_recordatorios: z.object({}).strict(),

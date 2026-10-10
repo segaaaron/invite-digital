@@ -9,7 +9,7 @@ const creados: string[] = []
 const nuevo = async (patch: Partial<Parameters<typeof repo.create>[0]> = {}) => {
   const order = await repo.create({
     publicRef: `T${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
-    planSlug: 'firma-3d',
+    planSlug: 'gala',
     // Explícito y no opcional en el puerto: un pedido sin diseño es una decisión —llegó
     // directo a los planes—, no un campo que se olvidó de poner quien escribe la llamada.
     templateSlug: null,
@@ -27,13 +27,13 @@ const nuevo = async (patch: Partial<Parameters<typeof repo.create>[0]> = {}) => 
 // devuelve (dejarla en nulo borraba la reserva fija de Bs 100 de la base de desarrollo).
 let reservaDeGala: { depositPct: number; depositFixedCents: number | null } = { depositPct: 0, depositFixedCents: null }
 beforeAll(async () => {
-  const [fila] = await db.select({ depositPct: plans.depositPct, depositFixedCents: plans.depositFixedCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+  const [fila] = await db.select({ depositPct: plans.depositPct, depositFixedCents: plans.depositFixedCents }).from(plans).where(eq(plans.slug, 'gala'))
   if (fila !== undefined) reservaDeGala = fila
 })
 
 afterAll(async () => {
   for (const id of creados) await db.delete(orders).where(eq(orders.id, id))
-  await db.update(plans).set(reservaDeGala).where(eq(plans.slug, 'firma-3d'))
+  await db.update(plans).set(reservaDeGala).where(eq(plans.slug, 'gala'))
 })
 
 describe('drizzleOrderRepository', () => {
@@ -41,32 +41,32 @@ describe('drizzleOrderRepository', () => {
     const order = await nuevo()
 
     expect(order.status).toBe('pending_payment')
-    expect(order.planSlug).toBe('firma-3d')
+    expect(order.planSlug).toBe('gala')
     expect(order.planName).toBe('Gala')
   })
 
   it('congela el importe del plan al pedir: cambiar el precio después no lo mueve', async () => {
-    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'gala'))
     const order = await nuevo()
 
-    await db.update(plans).set({ priceCents: plan!.precio + 12345 }).where(eq(plans.slug, 'firma-3d'))
+    await db.update(plans).set({ priceCents: plan!.precio + 12345 }).where(eq(plans.slug, 'gala'))
     try {
       const [fila] = await db.select({ importe: orders.amountCents, moneda: orders.currency }).from(orders).where(eq(orders.id, order.id))
       expect(fila).toEqual({ importe: plan!.precio, moneda: 'BOB' })
     } finally {
-      await db.update(plans).set({ priceCents: plan!.precio }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ priceCents: plan!.precio }).where(eq(plans.slug, 'gala'))
     }
   })
 
   it('un plan retirado no se compra por POST: el pedido queda sin plan y sin importe', async () => {
-    await db.update(plans).set({ isActive: false }).where(eq(plans.slug, 'firma-3d'))
+    await db.update(plans).set({ isActive: false }).where(eq(plans.slug, 'gala'))
     try {
       const order = await nuevo()
       const [fila] = await db.select({ importe: orders.amountCents }).from(orders).where(eq(orders.id, order.id))
       expect(order.planSlug).toBeNull()
       expect(fila?.importe).toBeNull()
     } finally {
-      await db.update(plans).set({ isActive: true }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ isActive: true }).where(eq(plans.slug, 'gala'))
     }
   })
 
@@ -213,27 +213,27 @@ describe('drizzleOrderRepository', () => {
   })
 
   it('con anticipo en el plan, el pedido nace con su anticipo; sin él, sin anticipo', async () => {
-    const [plan] = await db.select({ precio: plans.priceCents, fija: plans.depositFixedCents, pct: plans.depositPct }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const [plan] = await db.select({ precio: plans.priceCents, fija: plans.depositFixedCents, pct: plans.depositPct }).from(plans).where(eq(plans.slug, 'gala'))
     // Sin reserva fija, explícito: si la base trae una, manda sobre el porcentaje.
-    await db.update(plans).set({ depositPct: 40, depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
+    await db.update(plans).set({ depositPct: 40, depositFixedCents: null }).where(eq(plans.slug, 'gala'))
     try {
       const con = await nuevo()
       expect(con.depositCents).toBe(Math.round((plan!.precio * 40) / 10000) * 100)
-      await db.update(plans).set({ depositPct: 0 }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ depositPct: 0 }).where(eq(plans.slug, 'gala'))
       expect((await nuevo()).depositCents).toBeNull()
     } finally {
       // Se deja el plan como estaba: la base de desarrollo es la de verdad (reserva fija de Bs 100).
-      await db.update(plans).set({ depositPct: plan!.pct, depositFixedCents: plan!.fija }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ depositPct: plan!.pct, depositFixedCents: plan!.fija }).where(eq(plans.slug, 'gala'))
     }
   })
 
   it('con reserva fija, el pedido y la cotización nacen con esa reserva aunque haya porcentaje', async () => {
-    await db.update(plans).set({ depositPct: 40, depositFixedCents: 10_000 }).where(eq(plans.slug, 'firma-3d'))
+    await db.update(plans).set({ depositPct: 40, depositFixedCents: 10_000 }).where(eq(plans.slug, 'gala'))
     try {
       expect((await nuevo()).depositCents).toBe(10_000)
       const q = await repo.createQuote({
         publicRef: `Q${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
-        planSlug: 'firma-3d',
+        planSlug: 'gala',
         templateSlug: 'boda-bot',
         customerName: 'Reserva fija',
         contact: 'reserva@x.bo',
@@ -247,24 +247,24 @@ describe('drizzleOrderRepository', () => {
       creados.push(q.id)
       expect(q.depositCents).toBe(10_000)
     } finally {
-      await db.update(plans).set({ depositPct: 0, depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ depositPct: 0, depositFixedCents: null }).where(eq(plans.slug, 'gala'))
     }
   })
 
   it('una reserva fija que no es menor que el importe no se aplica: se paga entero', async () => {
-    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
-    await db.update(plans).set({ depositFixedCents: plan!.precio }).where(eq(plans.slug, 'firma-3d'))
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'gala'))
+    await db.update(plans).set({ depositFixedCents: plan!.precio }).where(eq(plans.slug, 'gala'))
     try {
       expect((await nuevo()).depositCents).toBeNull()
     } finally {
-      await db.update(plans).set({ depositFixedCents: null }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ depositFixedCents: null }).where(eq(plans.slug, 'gala'))
     }
   })
 
   it('la cotización guarda el precio del admin, sus extras, el descuento y la consulta', async () => {
     const q = await repo.createQuote({
       publicRef: `Q${crypto.randomUUID().replaceAll('-', '').slice(0, 7).toUpperCase()}`,
-      planSlug: 'firma-3d',
+      planSlug: 'gala',
       templateSlug: 'boda-bot',
       customerName: 'Lucía (cotización)',
       contact: 'lucia@x.bo',
@@ -302,7 +302,7 @@ describe('drizzleOrderRepository', () => {
   })
 
   it('con recomendación, el descuento se aplica y se congela en el mismo alta', async () => {
-    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'gala'))
     const o = await nuevo({ referralCode: 'ABC234', descuentoPct: 10 })
     expect(o.referralCode).toBe('ABC234')
     expect(o.amountCents).toBe(Math.round(plan!.precio * 0.9))
@@ -310,5 +310,34 @@ describe('drizzleOrderRepository', () => {
     const sin = await nuevo()
     expect(sin.discountCents).toBeNull()
     expect(sin.amountCents).toBe(plan!.precio)
+  })
+})
+
+describe('pedido de la web con adicionales (9 oct: «no permite elegir adicionales»)', () => {
+  const SLUGS = ['zz-extra-on', 'zz-extra-off']
+  beforeAll(async () => {
+    await db.delete(addons).where(eq(addons.slug, SLUGS[0]!))
+    await db.delete(addons).where(eq(addons.slug, SLUGS[1]!))
+    await db.insert(addons).values([
+      { slug: SLUGS[0]!, name: 'Extra encendido', priceCents: 15000, effect: 'servicio', isActive: true },
+      { slug: SLUGS[1]!, name: 'Extra apagado', priceCents: 99900, effect: 'servicio', isActive: false },
+    ])
+  })
+  afterAll(async () => {
+    for (const s of SLUGS) await db.delete(addons).where(eq(addons.slug, s))
+  })
+
+  it('suma al importe solo los adicionales a la venta, con su precio de hoy, y los guarda para aplicarlos', async () => {
+    const [plan] = await db.select({ precio: plans.priceCents }).from(plans).where(eq(plans.slug, 'gala'))
+    const order = await nuevo({ extraSlugs: SLUGS })
+    const [fila] = await db.select({ importe: orders.amountCents, extras: orders.quoteExtras }).from(orders).where(eq(orders.id, order.id))
+    expect(fila!.importe).toBe(plan!.precio + 15000)
+    expect(fila!.extras).toEqual([{ slug: 'zz-extra-on', name: 'Extra encendido', cents: 15000 }])
+  })
+
+  it('sin adicionales, el pedido queda como siempre', async () => {
+    const order = await nuevo({ extraSlugs: [] })
+    const [fila] = await db.select({ extras: orders.quoteExtras }).from(orders).where(eq(orders.id, order.id))
+    expect(fila!.extras).toBeNull()
   })
 })

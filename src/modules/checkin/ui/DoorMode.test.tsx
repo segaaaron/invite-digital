@@ -52,7 +52,7 @@ describe('DoorMode', () => {
 
   it('abre el buscador por nombre', () => {
     render(<DoorMode eventId="e1" eventSlug="boda" manifest={manifest} />)
-    fireEvent.click(screen.getByRole('button', { name: /buscar por nombre/i }))
+    fireEvent.click(screen.getByRole('button', { name: /lista de invitados/i }))
     expect(screen.getByPlaceholderText(/nombre del invitado/i)).toBeInTheDocument()
   })
 
@@ -101,7 +101,7 @@ describe('DoorMode', () => {
     const acciones = { recordScans: vi.fn(async () => []), checkInByGroup, adjust: vi.fn(), void: vi.fn() }
     render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={manifest} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /buscar por nombre/i }))
+    fireEvent.click(screen.getByRole('button', { name: /lista de invitados/i }))
     fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/ }))
 
     await waitFor(() => expect(checkInByGroup).toHaveBeenCalled())
@@ -119,7 +119,7 @@ describe('DoorMode', () => {
     }
     render(<DoorMode acciones={acciones} eventId="e1" eventSlug="boda" manifest={manifest} />)
 
-    fireEvent.click(screen.getByRole('button', { name: /buscar por nombre/i }))
+    fireEvent.click(screen.getByRole('button', { name: /lista de invitados/i }))
     fireEvent.click(await screen.findByRole('button', { name: /Familia Rojas Peña/ }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/tu acceso a esta puerta se cerró/i)

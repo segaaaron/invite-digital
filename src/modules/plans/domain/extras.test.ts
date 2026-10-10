@@ -78,8 +78,8 @@ describe('aplicarExtras y el Día D', () => {
 })
 
 describe('extraDisponible', () => {
-  const firma: Allowance = { ...atelier, planSlug: 'firma-3d', maxGuestGroups: 120, guestPhotos: true, designChange: 'antes_de_repartir', maxHiredPlanners: 1, plannerSuite: 'completo' }
-  const alta: Allowance = { ...firma, planSlug: 'alta-costura', maxGuestGroups: null, maxHiredPlanners: null, designChange: 'siempre', plannerSuite: 'total' }
+  const firma: Allowance = { ...atelier, planSlug: 'gala', maxGuestGroups: 120, guestPhotos: true, designChange: 'antes_de_repartir', maxHiredPlanners: 1, plannerSuite: 'completo' }
+  const alta: Allowance = { ...firma, planSlug: 'imperial', maxGuestGroups: null, maxHiredPlanners: null, designChange: 'siempre', plannerSuite: 'total' }
 
   it('un cambio adicional (más rondas) solo se vende a un evento de diseño por encargo, y no toca la capacidad', () => {
     expect(extraDisponible(atelier, 'mas_rondas')).toEqual({ ok: false, motivo: 'requiere_plan' })

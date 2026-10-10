@@ -24,8 +24,8 @@ const atelier: PlanRow = {
 }
 
 const firma: PlanRow = {
-  id: 'plan-firma-3d',
-  slug: 'firma-3d',
+  id: 'plan-gala',
+  slug: 'gala',
   maxGuestGroups: 80,
   includesSeating: true,
   includesRegistry: true,
@@ -61,7 +61,7 @@ describe('requestPlanChange', () => {
 
     const result = await requestPlanChange(deps(repository))({
       eventId: 'evento-1',
-      requestedPlanId: 'plan-firma-3d',
+      requestedPlanId: 'plan-gala',
       note: 'La lista creció.',
     })
 
@@ -70,7 +70,7 @@ describe('requestPlanChange', () => {
       {
         id: 'sol-1',
         eventId: 'evento-1',
-        requestedPlanId: 'plan-firma-3d',
+        requestedPlanId: 'plan-gala',
         note: 'La lista creció.',
         status: 'pending',
         createdAt: NOW,
@@ -107,11 +107,11 @@ describe('requestPlanChange', () => {
 
   it('una segunda solicitud pendiente da request_already_pending', async () => {
     const { repository } = conEvento('plan-atelier')
-    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-firma-3d', note: null })
+    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
 
     const segunda = await requestPlanChange({ ...deps(repository), ids: () => 'sol-2' })({
       eventId: 'evento-1',
-      requestedPlanId: 'plan-firma-3d',
+      requestedPlanId: 'plan-gala',
       note: null,
     })
 
@@ -134,18 +134,18 @@ describe('requestPlanChange', () => {
 describe('applyPlanChange', () => {
   it('cambia el plan del evento y marca la solicitud', async () => {
     const { repository, planDe } = conEvento('plan-atelier')
-    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-firma-3d', note: null })
+    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
 
     const result = await applyPlanChange(deps(repository))('sol-1')
 
     expect(isOk(result)).toBe(true)
-    expect(planDe('evento-1')).toBe('plan-firma-3d')
+    expect(planDe('evento-1')).toBe('plan-gala')
     expect((await repository.findRequest('sol-1'))?.status).toBe('applied')
   })
 
   it('aplicar una ya resuelta da already_resolved', async () => {
     const { repository } = conEvento('plan-atelier')
-    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-firma-3d', note: null })
+    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
     await applyPlanChange(deps(repository))('sol-1')
 
     const segunda = await applyPlanChange(deps(repository))('sol-1')
@@ -173,10 +173,10 @@ describe('getPendingRequest', () => {
 
   it('devuelve la pendiente con el plan pedido', async () => {
     const { repository } = conEvento('plan-atelier')
-    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-firma-3d', note: null })
+    await requestPlanChange(deps(repository))({ eventId: 'evento-1', requestedPlanId: 'plan-gala', note: null })
 
     const result = await getPendingRequest({ plans: repository })('evento-1')
 
-    expect(isOk(result) && result.value?.requestedPlanSlug).toBe('firma-3d')
+    expect(isOk(result) && result.value?.requestedPlanSlug).toBe('gala')
   })
 })

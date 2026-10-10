@@ -69,15 +69,15 @@ describe('empezar según el plan', () => {
   it('un plan de autoservicio no crea encargo; uno con rondas y días, sí, con sus valores', async () => {
     const otro = crypto.randomUUID()
     await db.insert(events).values({ id: otro, slug: `diseno-plan-${otro.slice(0, 8)}`, title: 'Plan', eventDate: '2027-01-17', rsvpDeadline: '2026-12-27', locale: 'es', themeKey: 'xv', status: 'draft' })
-    const [antes] = await db.select({ rondas: plans.correctionRounds, dias: plans.deliveryDays }).from(plans).where(eq(plans.slug, 'firma-3d'))
+    const [antes] = await db.select({ rondas: plans.correctionRounds, dias: plans.deliveryDays }).from(plans).where(eq(plans.slug, 'gala'))
     try {
       expect(await repo.empezarSegunPlan(otro, 'plan-que-no-existe')).toBe(false)
-      await db.update(plans).set({ correctionRounds: 3, deliveryDays: 4 }).where(eq(plans.slug, 'firma-3d'))
-      expect(await repo.empezarSegunPlan(otro, 'firma-3d')).toBe(true)
+      await db.update(plans).set({ correctionRounds: 3, deliveryDays: 4 }).where(eq(plans.slug, 'gala'))
+      expect(await repo.empezarSegunPlan(otro, 'gala')).toBe(true)
       expect(await repo.leer(otro)).toMatchObject({ rondasIncluidas: 3, diasDeEntrega: 4, estado: 'esperando_datos' })
     } finally {
       // Se deja el plan como estaba: con nulos, Gala perdía sus rondas en la base de desarrollo.
-      await db.update(plans).set({ correctionRounds: antes!.rondas, deliveryDays: antes!.dias }).where(eq(plans.slug, 'firma-3d'))
+      await db.update(plans).set({ correctionRounds: antes!.rondas, deliveryDays: antes!.dias }).where(eq(plans.slug, 'gala'))
       await db.delete(events).where(eq(events.id, otro))
     }
   })

@@ -18,6 +18,7 @@ export interface PlannerStore {
   removeItem(eventId: string, id: string): Promise<boolean>
   insertPayment(eventId: string, itemId: string, pago: { amountCents: number; dueDate: string | null; label: string | null }): Promise<boolean>
   setPaymentPaid(eventId: string, paymentId: string, paidAt: Date | null): Promise<boolean>
+  setPaymentDue(eventId: string, paymentId: string, dueDate: string): Promise<boolean>
   removePayment(eventId: string, paymentId: string): Promise<boolean>
 
   /** El total y su reparto por categorías, o `null` si todavía no se fijó. */

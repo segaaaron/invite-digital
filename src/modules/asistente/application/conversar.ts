@@ -28,6 +28,10 @@ export type Ejecutor = (llamada: LlamadaValida) => Promise<unknown>
 export type ConTarjeta = { readonly tarjeta: Propuesta; readonly resultado: unknown }
 const esConTarjeta = (valor: unknown): valor is ConTarjeta => typeof valor === 'object' && valor !== null && 'tarjeta' in valor && 'resultado' in valor
 
+/** Lo que devuelve «ir_a»: adónde va el navegador (9 oct). El modelo recibe `resultado`. */
+export type ConNavegacion = { readonly navegar: string; readonly resultado: unknown }
+const esConNavegacion = (valor: unknown): valor is ConNavegacion => typeof valor === 'object' && valor !== null && 'navegar' in valor && 'resultado' in valor
+
 /** Lo que ve el navegador. */
 export type Salida =
   | { readonly tipo: 'texto'; readonly delta: string }
@@ -35,6 +39,8 @@ export type Salida =
   | { readonly tipo: 'propuesta'; readonly propuesta: Propuesta }
   /** Algo cambió en el evento: el panel se vuelve a pintar para enseñarlo. */
   | { readonly tipo: 'hecho'; readonly herramienta: string }
+  /** Abrir esa pantalla del panel. */
+  | { readonly tipo: 'navegar'; readonly href: string }
   | { readonly tipo: 'error'; readonly mensaje: string }
   | { readonly tipo: 'fin' }
 
@@ -82,6 +88,10 @@ export const conversar = (deps: { modelo: ModeloDeLenguaje; herramientas: readon
             })
             if (esConTarjeta(resultado)) {
               yield { tipo: 'propuesta', propuesta: resultado.tarjeta }
+              resultado = resultado.resultado
+            }
+            if (esConNavegacion(resultado)) {
+              yield { tipo: 'navegar', href: resultado.navegar }
               resultado = resultado.resultado
             }
             if (ESCRITURAS.has(llamada.nombre)) yield { tipo: 'hecho', herramienta: llamada.nombre }

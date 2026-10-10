@@ -31,7 +31,7 @@ test.beforeAll(async () => {
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'nullsrc=s=6000x4500,geq=random(1)*255:random(2)*255:128', '-frames:v', '1', '-q:v', '1', FOTO])
   execFileSync('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'lavfi', '-i', 'anoisesrc=d=70:a=0.1', '-ac', '2', '-ar', '44100', CANCION])
   await sql`delete from service_failures where created_at > now() - interval '1 hour'`
-  await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
+  await seedInvitation({ slug: SLUG, plan: 'imperial' })
   await sql`update events set theme_key = 'xv-valentina' where slug = ${SLUG}`
   await escribirInvitacion(SLUG)
 })

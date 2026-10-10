@@ -60,7 +60,7 @@ test('el admin pone a la venta +3 porteros, el evento lo pide y al aprobarse pue
 })
 
 test('el Día D solo se ofrece sobre Gala, y pedirlo dos veces lleva al mismo pedido', async ({ browser }) => {
-  await seedInvitation({ slug: SLUG_FIRMA, plan: 'firma-3d' })
+  await seedInvitation({ slug: SLUG_FIRMA, plan: 'gala' })
   await seedInvitation({ slug: SLUG_ATELIER, plan: 'atelier' })
   await sql`update addons set is_active = true where slug = 'dia-d'`
   const atelier = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()

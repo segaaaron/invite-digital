@@ -41,6 +41,8 @@ export const placeOrder =
     /** El código de recomendación, ya validado en la frontera, y su descuento. */
     referralCode?: string | null
     descuentoPct?: number
+    /** Los adicionales elegidos, ya filtrados por plan en la frontera (`extrasParaPedido`). */
+    extraSlugs?: readonly string[]
   }): Promise<Result<Order, OrdersError>> => {
     // Los errores del pedido público son **códigos** (`name`, `contact`…): la web los
     // traduce con su diccionario, en el idioma de quien pide.
@@ -87,6 +89,7 @@ export const placeOrder =
               notes: notas === '' ? null : notas,
               referralCode: input.referralCode ?? null,
               descuentoPct: input.referralCode ? (input.descuentoPct ?? 0) : 0,
+              extraSlugs: (input.extraSlugs ?? []).filter((s) => s.length > 0 && s.length <= 32).slice(0, 12),
             }),
           )
         }

@@ -12,10 +12,10 @@ import { plansError } from '@/modules/plans/domain/errors'
 const requireFeature = vi.fn()
 const permitida = () =>
   requireFeature.mockResolvedValue(
-    ok({ planSlug: 'alta-costura', maxGuestGroups: null, seating: true, registry: true, checkin: true }),
+    ok({ planSlug: 'imperial', maxGuestGroups: null, seating: true, registry: true, checkin: true }),
   )
 const noIncluida = () =>
-  requireFeature.mockResolvedValue(err(plansError('feature_not_included', 'El plan atelier no incluye X; lo trae firma-3d.')))
+  requireFeature.mockResolvedValue(err(plansError('feature_not_included', 'El plan atelier no incluye X; lo trae gala.')))
 
 const venue = {
   addTable: vi.fn().mockResolvedValue(ok({ id: 't1' })),

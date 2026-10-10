@@ -24,8 +24,8 @@ const atelier: PlanRow = {
 }
 
 const firma: PlanRow = {
-  id: 'plan-firma-3d',
-  slug: 'firma-3d',
+  id: 'plan-gala',
+  slug: 'gala',
   maxGuestGroups: 80,
   includesSeating: true,
   includesRegistry: true,
@@ -49,9 +49,9 @@ const conPlan = (planId: string) =>
 
 describe('requireFeature', () => {
   it('con la función incluida devuelve la capacidad', async () => {
-    const result = await requireFeature({ plans: conPlan('plan-firma-3d') })('evento-1', 'registry')
+    const result = await requireFeature({ plans: conPlan('plan-gala') })('evento-1', 'registry')
 
-    expect(isOk(result) && result.value.planSlug).toBe('firma-3d')
+    expect(isOk(result) && result.value.planSlug).toBe('gala')
   })
 
   it('sin la función incluida rechaza con feature_not_included', async () => {
@@ -65,7 +65,7 @@ describe('requireFeature', () => {
     // cliente a qué plan subir.
     const result = await requireFeature({ plans: conPlan('plan-atelier') })('evento-1', 'checkin')
 
-    expect(isErr(result) && result.error.detail).toContain('firma-3d')
+    expect(isErr(result) && result.error.detail).toContain('gala')
   })
 
   it('si ningún plan del catálogo la trae, el rechazo no inventa un plan', async () => {

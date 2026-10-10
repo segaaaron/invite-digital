@@ -11,9 +11,9 @@ export const PALETTE = {
   bgTop: '#fffdf9',
   ink: '#2b2723',
   inkSoft: '#58514a',
-  inkMute: '#9a917f',
+  inkMute: '#6f685b',
   gold: '#b8894f',
-  goldDeep: '#9d6e3a',
+  goldDeep: '#896032',
   goldLight: '#d7a871',
 } as const
 

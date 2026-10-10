@@ -28,7 +28,7 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     values ((select id from users where email = ${ATELIER.email}),
             ${SLUG}, 'Boda de la puerta', '2027-07-10', '2027-06-25', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
   `
 
   // --- La cuenta de puerta ya existe: desde que la recepción se suma con enlace y PIN, el

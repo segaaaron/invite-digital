@@ -55,7 +55,7 @@ describe('conversar', () => {
   })
 
   it('registrar invitados SE HACE: se ejecuta, avisa «hecho» para repintar y el modelo recibe el resultado', async () => {
-    const invitaciones = [{ personas: ['Ramón Pérez'], telefono: '70012345' }]
+    const invitaciones = [{ personas: ['Ramón Pérez'], telefono: '70012345', aun_si_existe: false }]
     const { salidas, ejecutadas, entradas } = await correr(
       [llamada('registrar_invitados', { invitaciones }), [{ tipo: 'texto', delta: 'Listo.' }, { tipo: 'fin', uso: USO }]],
       async () => ({ hecho: ['1 invitación'] }),
@@ -64,6 +64,15 @@ describe('conversar', () => {
     expect(salidas).toContainEqual({ tipo: 'hecho', herramienta: 'registrar_invitados' })
     expect(salidas.some((s) => s.tipo === 'propuesta')).toBe(false)
     expect(JSON.stringify(entradas[1])).toContain('1 invitación')
+  })
+
+  it('«llévame a invitados» lleva al navegador y al modelo solo el resultado (9 oct)', async () => {
+    const { salidas, entradas } = await correr(
+      [llamada('ir_a', { pantalla: 'invitados' }), [{ tipo: 'texto', delta: 'Te llevo a Invitados.' }, { tipo: 'fin', uso: USO }]],
+      async () => ({ navegar: '/panel/eventos/boda/invitados', resultado: { hecho: 'Abierta Invitados' } }),
+    )
+    expect(salidas).toContainEqual({ tipo: 'navegar', href: '/panel/eventos/boda/invitados' })
+    expect(JSON.stringify(entradas[1])).not.toContain('navegar')
   })
 
   it('preparar el envío deja su tarjeta en el navegador y al modelo solo el resumen', async () => {

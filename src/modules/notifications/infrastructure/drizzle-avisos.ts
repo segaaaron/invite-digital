@@ -129,21 +129,25 @@ export const createDrizzleAvisos = (database: DbExecutor) => {
      * Lo que vence en `fecha` (ISO, día de Bolivia): tareas sin hacer, pagos sin pagar y los eventos de
      * ese día. Solo de eventos vivos o en borrador. `ruta` es la pantalla del evento donde se atiende.
      */
-    async vencenEl(fecha: string): Promise<{ eventId: string; que: string; ruta: string }[]> {
+    /**
+     * Los eventos con **algo que avisar** ese día (QA 9 oct): su día a 0/1/7/30, el cierre de confirmaciones,
+     * tareas y pagos de ayer, hoy o mañana sin hacer, y citas o ensayos de hoy o mañana. Recorrer todos los
+     * eventos futuros con su agenda entera eran miles de consultas cada mañana; esto elige antes en la base.
+     * Qué se dice de cada uno lo sigue decidiendo `avisosDeLaAgenda`.
+     */
+    async eventosConAvisos(hoy: string): Promise<string[]> {
+      const d = (n: number) => sql`(${hoy}::date + ${n}::integer)`
       const filas = (await database.execute(sql`
-        select t.event_id, t.title as que, '/planner/tareas' as ruta
-        from planner_tasks t join events e on e.id = t.event_id
-        where t.due_date = ${fecha}::date and t.done_at is null and e.status <> 'closed'
-        union all
-        select i.event_id, 'pagar ' || i.concept as que, '/planner/presupuesto' as ruta
-        from budget_payments p join budget_items i on i.id = p.item_id join events e on e.id = i.event_id
-        where p.due_date = ${fecha}::date and p.paid_at is null and e.status <> 'closed'
-      `)) as unknown as Array<{ event_id: string; que: string; ruta: string }>
-      return filas.map((f) => ({ eventId: f.event_id, que: f.que, ruta: f.ruta }))
-    },
-
-    async eventosDel(fecha: string): Promise<string[]> {
-      const filas = (await database.execute(sql`select id from events where event_date = ${fecha}::date and status <> 'closed'`)) as unknown as Array<{ id: string }>
+        select e.id from events e
+        where e.status <> 'closed' and e.event_date >= ${hoy}::date and (
+          e.event_date in (${d(0)}, ${d(1)}, ${d(7)}, ${d(30)})
+          or e.rsvp_deadline in (${d(0)}, ${d(1)})
+          or exists (select 1 from planner_tasks t where t.event_id = e.id and t.done_at is null and t.due_date between ${d(-1)} and ${d(1)})
+          or exists (select 1 from budget_payments p join budget_items i on i.id = p.item_id
+                     where i.event_id = e.id and p.paid_at is null and p.due_date between ${d(-1)} and ${d(1)})
+          or exists (select 1 from event_appointments a where a.event_id = e.id and left(a.starts_at, 10)::date between ${d(0)} and ${d(1)})
+          or exists (select 1 from rehearsals r where r.event_id = e.id and (r.date at time zone 'America/La_Paz')::date between ${d(0)} and ${d(1)})
+        )`)) as unknown as Array<{ id: string }>
       return filas.map((f) => f.id)
     },
 

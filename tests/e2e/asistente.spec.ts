@@ -28,7 +28,7 @@ test.afterAll(async () => {
 })
 
 test('Luxury registra un invitado en el momento, responde con los datos y rechaza lo que no es del evento', async ({ page }) => {
-  await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
+  await seedInvitation({ slug: SLUG, plan: 'imperial' })
   await escribirInvitacion(SLUG)
 
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
@@ -46,6 +46,18 @@ test('Luxury registra un invitado en el momento, responde con los datos y rechaz
   const [grupo] = await sql<{ phone: string }[]>`select g.phone from guest_groups g join events e on e.id = g.event_id where e.slug = ${SLUG} and g.label = 'Ramón Pérez'`
   expect(grupo!.phone).toBe('+59170012345')
 
+  // Pedirlo otra vez (sin tildes) no lo duplica: Luxury dice dónde está (9 oct).
+  await panel.getByLabel('Escríbele a Luxury').fill('Crea a Ramon Perez')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
+  await expect(panel).toContainText('Ramon Perez ya está en la invitación «Ramón Pérez» (mismo nombre)')
+  expect(await cuantos()).toBe(1)
+
+  // Un teléfono dictado con cifras de más no se guarda: vuelve al modelo para que lo pregunte.
+  await panel.getByLabel('Escríbele a Luxury').fill('Crea a Lucía Rojas, 77 712 345 678')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
+  await expect(panel).toContainText('de dos en dos')
+  expect((await sql`select 1 from guest_people p join guest_groups g on g.id = p.guest_group_id join events e on e.id = g.event_id where e.slug = ${SLUG} and p.full_name = 'Lucía Rojas'`).length).toBe(0)
+
   // Con los datos reales: Ramón acaba de entrar y no respondió.
   await panel.getByLabel('Escríbele a Luxury').fill('¿Quién falta por responder?')
   await panel.getByRole('button', { name: 'Enviar' }).click()
@@ -57,11 +69,21 @@ test('Luxury registra un invitado en el momento, responde con los datos y rechaz
 
   // Cada mensaje cuenta para la cuota del evento.
   const [uso] = await sql<{ messages: number }[]>`select u.messages from assistant_usage u join events e on e.id = u.event_id where e.slug = ${SLUG}`
-  expect(uso!.messages).toBe(3)
+  expect(uso!.messages).toBe(5)
 
   // El panel de detrás se repinta solo: Ramón está en la lista sin recargar.
   await panel.getByRole('button', { name: 'Cerrar' }).click()
   await expect(page.getByRole('main').getByText('Ramón Pérez').and(page.locator(':not(dialog *)')).first()).toBeVisible()
+})
+
+test('Luxury lleva a la pantalla que se le pide (9 oct)', async ({ page }) => {
+  await page.goto(`/panel/eventos/${SLUG}/mensajes`)
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+  const panel = page.locator('dialog[open]')
+  await panel.getByLabel('Escríbele a Luxury').fill('Llévame a invitados')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
+  await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/invitados$`))
+  await expect(page.locator('dialog[open]')).toHaveCount(0)
 })
 
 test('Luxury crea y borra una tarea cuando se le pide, y la pantalla de detrás lo enseña', async ({ page }) => {
@@ -627,7 +649,7 @@ test.describe('Admin › Asistente', () => {
       await page.getByRole('button', { name: 'Guardar' }).click()
       await expect(page.getByText('Guardado.')).toBeVisible()
       const [guardado] = await sql<{ value: string }[]>`select value from app_settings where key = 'asistente.config'`
-      expect(JSON.parse(guardado!.value)).toMatchObject({ planes: ['alta-costura'], mensajesPorMes: 250, presupuestoUsd: 20 })
+      expect(JSON.parse(guardado!.value)).toMatchObject({ planes: ['imperial'], mensajesPorMes: 250, presupuestoUsd: 20 })
     } finally {
       if (antes === null) await sql`delete from app_settings where key = 'asistente.config'`
       else await sql`update app_settings set value = ${antes} where key = 'asistente.config'`

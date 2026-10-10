@@ -24,8 +24,8 @@ const atelier: PlanRow = {
 }
 
 const altaCostura: PlanRow = {
-  id: 'plan-alta-costura',
-  slug: 'alta-costura',
+  id: 'plan-imperial',
+  slug: 'imperial',
   maxGuestGroups: null,
   includesSeating: true,
   includesRegistry: true,
@@ -51,13 +51,13 @@ describe('getEventAllowance', () => {
   it('un evento con plan devuelve los límites de ese plan', async () => {
     const { repository } = createFakePlansRepository({
       plans: catalogo,
-      eventPlans: { 'evento-1': 'plan-alta-costura' },
+      eventPlans: { 'evento-1': 'plan-imperial' },
     })
 
     const result = await getEventAllowance({ plans: repository })('evento-1')
 
     expect(isOk(result) && result.value).toEqual({
-      planSlug: 'alta-costura',
+      planSlug: 'imperial',
       maxGuestGroups: null,
       seating: true,
       registry: true,

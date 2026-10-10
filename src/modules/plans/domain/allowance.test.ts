@@ -20,7 +20,7 @@ const atelier: Allowance = {
 }
 
 const altaCostura: Allowance = {
-  planSlug: 'alta-costura',
+  planSlug: 'imperial',
   maxGuestGroups: null,
   seating: true,
   registry: true,
@@ -92,7 +92,7 @@ describe('planThatIncludes', () => {
   const catalogo = [atelier, altaCostura]
 
   it('nombra el plan más barato que sí la trae', () => {
-    expect(planThatIncludes('registry', catalogo)).toBe('alta-costura')
+    expect(planThatIncludes('registry', catalogo)).toBe('imperial')
   })
 
   it('el plan en el que ya se está también cuenta si la trae', () => {
@@ -108,7 +108,7 @@ describe('funciones nuevas del plan', () => {
   it('fotos de invitados, contraseña e importar CSV se piden como cualquier función', () => {
     expect(hasFeature(atelier, 'guestPhotos')).toBe(false)
     expect(hasFeature(altaCostura, 'eventPassword')).toBe(true)
-    expect(planThatIncludes('csvImport', [atelier, altaCostura])).toBe('alta-costura')
+    expect(planThatIncludes('csvImport', [atelier, altaCostura])).toBe('imperial')
   })
 })
 
@@ -135,7 +135,7 @@ describe('el planner por plan', () => {
     expect(hasFeature(completo, 'plannerTotal')).toBe(false)
     expect(hasFeature(total, 'plannerCompleto')).toBe(true)
     expect(hasFeature(total, 'plannerTotal')).toBe(true)
-    expect(planThatIncludes('plannerTotal', [esencial, completo, total])).toBe('alta-costura')
+    expect(planThatIncludes('plannerTotal', [esencial, completo, total])).toBe('imperial')
   })
 })
 

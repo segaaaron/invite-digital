@@ -192,7 +192,7 @@ async function seedDemo() {
             ${SLUG}, 'María & Alejandro', '2026-10-12', '2026-09-28', 'es', 'perla', 'live',
             'Jardín Botánico Luna', 'BOB',
             'Hola {grupo}, les compartimos nuestra invitación: {enlace}',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
     returning id
   `)
   if (!evento) throw new Error('No se pudo crear el evento de demostración')

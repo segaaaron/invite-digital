@@ -32,12 +32,17 @@ async function runMaintenance(): Promise<number> {
   }
   console.log(`Retención de consultas: ${consultas.value} anonimizada(s)`)
 
-  // Lo que vence mañana y la semana del evento, a la campana y a los aparatos. Nunca lanza por un aviso.
-  try {
-    console.log(`Avisos de agenda: ${await avisarLoQueVence(new Date())}`)
-  } catch (causa) {
-    console.error('Avisos de agenda fallidos —', causa)
-    return 1
+  // Los avisos de la agenda, a la campana y a los aparatos. Nunca lanza por un aviso. Al arrancar el contenedor
+  // (`--sin-avisos`) no: salen a las 08:00, no a la hora de un despliegue.
+  if (process.argv.includes('--sin-avisos')) {
+    console.log('Avisos de agenda: a las 08:00')
+  } else {
+    try {
+      console.log(`Avisos de agenda: ${await avisarLoQueVence(new Date())}`)
+    } catch (causa) {
+      console.error('Avisos de agenda fallidos —', causa)
+      return 1
+    }
   }
 
   // La portada no se personaliza: lo que se subió como portada se borra (idempotente).

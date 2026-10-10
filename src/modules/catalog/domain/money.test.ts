@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
-import { createMoney, formatMoney } from './money'
+import { createMoney, formatMoney, enDolares } from './money'
 
 describe('Money', () => {
   it('acepta un monto positivo', () => {
@@ -54,5 +54,13 @@ describe('Money', () => {
     const result = createMoney(69050)
     if (!isOk(result)) throw new Error('esperaba un monto válido')
     expect(formatMoney(result.value, 'en')).toBe('Bs 690.50')
+  })
+})
+
+describe('en dólares (9 oct: la reserva y los adicionales seguían en Bs con el selector en USD)', () => {
+  it('al cambio oficial, redondeado a dólares enteros', () => {
+    expect(enDolares(10000)).toBe('USD 14')
+    expect(enDolares(15000)).toBe('USD 22')
+    expect(enDolares(49000)).toBe('USD 70')
   })
 })

@@ -3,8 +3,8 @@ import type { Template } from '@/modules/catalog'
 import { TemplateCard } from '@/modules/catalog/ui/TemplateCard'
 import { fiestaDeCategoria, type Fiesta, type FiestaPublica } from '@/modules/events'
 import { Button } from '@/shared/design/ui/Button'
-import { CheckIcon } from '@/shared/design/ui/icons'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
+import { HerramientasDelPanel } from './HerramientasDelPanel'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 
@@ -68,22 +68,7 @@ export function FiestaLanding({
         </section>
       ) : null}
 
-      <section aria-labelledby="herramientas" className="px-6 py-20">
-        <div className="mx-auto max-w-[1080px]">
-          <SectionHeading eyebrow={dictionary.fiestas.toolsEyebrow} title={<span id="herramientas">{dictionary.fiestas.toolsTitle}</span>} />
-          <ul className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {dictionary.fiestas.tools.map((herramienta) => (
-              <li className="flex flex-col gap-2 rounded-[18px] border border-[var(--color-line)] bg-bg-raised p-6" key={herramienta.title}>
-                <span aria-hidden className="grid size-8 place-items-center rounded-full bg-gold/15 text-gold-deep">
-                  <CheckIcon className="size-4" />
-                </span>
-                <h3 className="font-display text-[22px] leading-tight text-ink">{herramienta.title}</h3>
-                <p className="text-[14px] leading-[1.65] text-ink-soft">{herramienta.body}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <HerramientasDelPanel dictionary={dictionary} />
 
       <section aria-labelledby="para-planners" className="px-6 py-20">
         <div className="mx-auto flex max-w-[860px] flex-col items-center gap-5 rounded-[28px] border border-[var(--color-line)] bg-bg-raised px-6 py-14 text-center">

@@ -163,7 +163,7 @@ export default async function EventoLayout({
           {children}
         </div>
       </ConSoloLectura>
-      {conAsistente ? <Asistente eventId={event.value.id} slug={event.value.slug} /> : null}
+      {conAsistente ? <Asistente destinos={sections.flatMap((s) => s.items.map((i) => i.href))} eventId={event.value.id} slug={event.value.slug} /> : null}
       {luxuryBloqueado === null ? null : <LuxuryBloqueado comoExtra={luxuryBloqueado.comoExtra} mejorar={luxuryBloqueado.mejorar} planes={luxuryBloqueado.planes} />}
     </PanelFrame>
   )

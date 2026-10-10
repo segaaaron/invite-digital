@@ -13,8 +13,8 @@ import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
 import { RobotLuxury, TarjetaDeLuxury } from './RobotLuxury'
-import { despertarAudio, dictadoPropioListo, escucharPropio, type Escucha } from './dictado-propio'
-import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, vocesParaElegir } from './voz'
+import { despertarAudio, dictadoPropioListo, escucharPropio, soltarMicrofono, type Escucha } from './dictado-propio'
+import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, unirResultados, vocesParaElegir } from './voz'
 
 /** `muestra`: lo que se ve en la burbuja cuando el texto para Luxury lleva datos de más (el id de un adjunto). */
 type Burbuja = { rol: 'usuario' | 'asistente'; texto: string; muestra?: string; envio?: Contenido; error?: boolean }
@@ -35,6 +35,7 @@ const SUGERENCIAS = ['¿Qué me falta esta semana?', '¿Quién falta por respond
 
 /** Lo que se ve mientras Luxury consulta: dice qué está mirando, no «pensando…». */
 const CONSULTANDO: Record<string, string> = {
+  ir_a: 'Abriendo la pantalla…',
   resumen_del_evento: 'Mirando las cifras de tu evento…',
   buscar_invitados: 'Revisando tu lista de invitados…',
   tareas: 'Revisando tus tareas…',
@@ -110,7 +111,8 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNo
  * las pantallas (7 de octubre); al terminar algo, el panel de detrás se vuelve a pintar. Solo el envío por
  * WhatsApp lleva tarjeta: cada mensaje necesita el toque de la persona.
  */
-export function Asistente({ eventId, slug }: { eventId: string; slug: string }) {
+/** `destinos`: las pantallas de la barra de quien mira (por su papel y su plan); «ir_a» solo abre esas. */
+export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: string; destinos: readonly string[] }) {
   const [burbujas, setBurbujas] = useState<Burbuja[]>([])
   const [texto, setTexto] = useState('')
   const [ocupado, setOcupado] = useState(false)
@@ -247,6 +249,7 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
     conversando.current = false
     setConversacion(false)
     dictado.cancelar()
+    soltarMicrofono()
     if (aviso !== null) dictado.avisar(aviso)
   }
 
@@ -300,13 +303,14 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
       vigia = setTimeout(() => control.abort('lento'), 45_000)
     }
     let huboCambios = false
+    let destino: string | null = null
     let recibido = ''
     try {
       const respuesta = await fetch(`/panel/eventos/${slug}/asistente`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         // El idioma del aparato: Luxury responde en inglés si el celular o la computadora está en inglés.
-        body: JSON.stringify({ mensajes: historial.map((b) => ({ rol: b.rol, texto: b.texto })), idioma: navigator.language, porVoz }),
+        body: JSON.stringify({ mensajes: historial.map((b) => ({ rol: b.rol, texto: b.texto })), idioma: navigator.language, porVoz, destinos }),
         signal: control.signal,
       })
       if (!respuesta.ok || respuesta.body === null) {
@@ -339,8 +343,10 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
             // Los botones de WhatsApp piden tocarlos: la conversación por voz termina aquí.
             conversando.current = false
             setConversacion(false)
+            soltarMicrofono()
             enLaUltima((b) => ({ ...b, envio }))
           } else if (salida.tipo === 'hecho') huboCambios = true
+          else if (salida.tipo === 'navegar') destino = salida.href
           else if (salida.tipo === 'error') {
             if (leyendo) lectura.alimentar(` ${salida.mensaje}`)
             enLaUltima((b) => ({ ...b, texto: b.texto === '' ? salida.mensaje : `${b.texto}\n\n${salida.mensaje}`, error: b.texto === '' }))
@@ -359,8 +365,19 @@ export function Asistente({ eventId, slug }: { eventId: string; slug: string }) 
       const aviso = motivo === 'detenido' ? 'Detenido.' : motivo === 'lento' ? 'Tardé demasiado en responder. Vuelve a preguntarme.' : 'Se cortó la conexión. Vuelve a intentarlo.'
       enLaUltima((b) => ({ ...b, texto: b.texto === '' ? aviso : `${b.texto}\n\n${aviso}`, error: b.texto === '' }))
     } finally {
-      // Lo que Luxury cambió se ve en el panel de detrás sin recargar.
-      if (huboCambios) router.refresh()
+      // «Llévame a invitados» (9 oct): se abre la pantalla, como al tocar un enlace del chat. Solo si está en
+      // la barra de quien mira: un destino que su papel no abre sería un 404.
+      const abre = destino !== null && destinos.includes(destino.split('?')[0]!)
+      if (destino !== null && !abre) enLaUltima((b) => ({ ...b, texto: `${b.texto}\n\nEsa pantalla no está en tu panel.` }))
+      if (abre) {
+        // Se cierra el chat para ver la pantalla; por voz la conversación sigue con el robot, fuera del chat.
+        // `close()` y no `cerrar()`: este corta la voz y el «Te llevo a…» se quedaría a medias.
+        if (dialogo.current?.open === true) {
+          dialogo.current.close()
+          if (conversando.current) setModoFuera(true)
+        }
+        router.push(destino!)
+      } else if (huboCambios) router.refresh()
       clearTimeout(vigia)
       peticion.current = null
       setConsultando(null)
@@ -1140,7 +1157,13 @@ function useDictado(
   }
 
   // Si se va de la página a mitad, se suelta el micrófono.
-  useEffect(() => () => actual.current?.cerrar(false), [])
+  useEffect(
+    () => () => {
+      actual.current?.cerrar(false)
+      soltarMicrofono()
+    },
+    [],
+  )
 
   /** Chrome de iPhone, apps, panel instalado: Luxury graba y entiende en el teléfono (Vosk). */
   function empezarPropio(textoActual: string) {
@@ -1267,7 +1290,7 @@ function useDictado(
       }, ms)
     }
     r.onresult = (e) => {
-      dicho = Array.from(e.results, (resultado) => resultado[0]?.transcript ?? '').join('').trim()
+      dicho = unirResultados(Array.from(e.results, (resultado) => resultado[0]?.transcript ?? ''))
       alOir(unido())
       esperarSilencio(2500)
     }

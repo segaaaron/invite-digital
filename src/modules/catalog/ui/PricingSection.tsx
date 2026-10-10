@@ -3,9 +3,9 @@ import { Reveal } from '@/shared/design/ui/Reveal'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
-import { formatMoney } from '../domain/money'
 import type { Plan } from '../domain/plan'
 import { EscaleraDePlanes } from './EscaleraDePlanes'
+import { conMonto, Monto } from './Monto'
 import { PlanCard } from './PlanCard'
 import { SelectorDeMoneda } from './SelectorDeMoneda'
 
@@ -42,8 +42,9 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
       <div className="mx-auto max-w-[1180px]">
         <SectionHeading eyebrow={pricing.eyebrow} title={<span id="pricing-title">{pricing.title}</span>} />
 
-        {(() => {
-          const tarjetas = (
+        {/* El selector Bs / USD (si algún plan tiene precio en dólares) envuelve todo: tarjetas, reserva,
+            tabla y adicionales cambian a la vez (9 oct: la reserva y los adicionales seguían en Bs). */}
+        <Envoltura conDolares={plans.some((p) => p.priceUsdCents !== null)} textos={pricing.currency}>
         <div className="mt-14 grid gap-6 md:grid-cols-3">
           {plans.map((plan, index) => {
             // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia
@@ -54,7 +55,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
               <PlanCard
                 ctaHref={`/${locale}/pedido/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`}
                 ctaLabel={pricing.choose.replace('{plan}', plan.name)}
-                reserva={reserva === undefined ? null : pricing.reserve.replace('{monto}', formatMoney({ cents: reserva, currency: plan.price.currency }, locale))}
+                reserva={reserva === undefined ? null : conMonto(pricing.reserve, <Monto cents={reserva} locale={locale} />)}
                 dictionary={dictionary}
                 locale={locale}
                 plan={plan}
@@ -64,17 +65,13 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
             )
           })}
         </div>
-          )
-          // El selector Bs / USD solo si algún plan tiene precio en dólares.
-          return plans.some((p) => p.priceUsdCents !== null) ? <SelectorDeMoneda textos={pricing.currency}>{tarjetas}</SelectorDeMoneda> : tarjetas
-        })()}
 
         {/* La reserva (V4): cuánto, cuándo se paga el resto y los tres pasos. */}
         {reservaMinima === null ? null : (
           <div className="mt-16 flex flex-col gap-6 rounded-[var(--radius-card)] bg-ink p-8 text-bg-raised md:flex-row md:items-center md:justify-between md:p-10">
             <div className="max-w-[640px]">
               <h3 className="font-display text-[26px] leading-tight font-light">
-                {pricing.reserveBox.title.replace('{monto}', formatMoney(reservaMinima, locale))}
+                {conMonto(pricing.reserveBox.title, <Monto cents={reservaMinima.cents} locale={locale} />)}
               </h3>
               <p className="mt-3 text-[14px] leading-[1.7] text-bg-sunken/85">{pricing.reserveBox.body}</p>
               <ol className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-bg-sunken">
@@ -98,7 +95,12 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
         {plans.length === 3 ? <EscaleraDePlanes planes={plans.map((p) => p.name)} textos={pricing.ladder} /> : null}
 
         {comparativa}
+        </Envoltura>
       </div>
     </section>
   )
+}
+
+function Envoltura({ conDolares, textos, children }: { conDolares: boolean; textos: Dictionary['pricing']['currency']; children: ReactNode }) {
+  return conDolares ? <SelectorDeMoneda textos={textos}>{children}</SelectorDeMoneda> : <>{children}</>
 }

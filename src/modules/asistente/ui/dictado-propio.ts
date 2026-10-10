@@ -70,6 +70,37 @@ export function despertarAudio(): void {
   if (audio.state === 'suspended') void audio.resume()
 }
 
+/**
+ * Un solo micrófono por conversación (9 oct): soltarlo tras cada frase y volver a pedirlo hacía que el iPhone
+ * preguntara el permiso en cada turno. Se reutiliza mientras siga vivo y se suelta al terminar la conversación.
+ */
+let microfono: MediaStream | null = null
+let pidiendo: Promise<MediaStream> | null = null
+/** Sube al cerrar: un permiso que llega después de terminar la conversación se cierra en vez de quedarse abierto. */
+let vuelta = 0
+async function abrirMicrofono(): Promise<MediaStream> {
+  if (microfono?.getAudioTracks().some((t) => t.readyState === 'live') === true) return microfono
+  pidiendo ??= (async () => {
+    const mia = vuelta
+    const flujo = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } })
+    if (mia !== vuelta) {
+      flujo.getTracks().forEach((t) => t.stop())
+      throw new DOMException('La conversación terminó', 'AbortError')
+    }
+    microfono = flujo
+    return flujo
+  })().finally(() => {
+    pidiendo = null
+  })
+  return pidiendo
+}
+/** Cierra el micrófono de la conversación (el punto naranja del iPhone se apaga), también el que se esté pidiendo. */
+export function soltarMicrofono(): void {
+  vuelta += 1
+  microfono?.getTracks().forEach((t) => t.stop())
+  microfono = null
+}
+
 export type Escucha = { parar: (enviar: boolean) => void }
 
 /**
@@ -101,7 +132,7 @@ export async function escucharPropio(p: {
     clearTimeout(vigia)
     nodo?.disconnect()
     fuente?.disconnect()
-    flujo?.getTracks().forEach((t) => t.stop())
+    // Las pistas siguen vivas: el micrófono es de la conversación (`soltarMicrofono`), no de la frase.
     try {
       rec?.remove()
     } catch {
@@ -139,7 +170,7 @@ export async function escucharPropio(p: {
       cerrado = true
       return escucha
     }
-    flujo = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } })
+    flujo = await abrirMicrofono()
     if (cerrado) {
       soltar()
       return escucha
@@ -175,8 +206,12 @@ export async function escucharPropio(p: {
     vigia = setTimeout(() => parar(true), p.silencioMs ?? 8000)
     p.alListo?.()
   } catch (causa) {
+    const yaCerrado = cerrado
     cerrado = true
     soltar()
+    // Cerrada mientras se pedía el permiso: no es un fallo que contar.
+    if (yaCerrado) return escucha
+    soltarMicrofono()
     p.alFallar(causa instanceof DOMException ? causa.name : causa instanceof Error ? causa.message : 'desconocido')
   }
   return escucha

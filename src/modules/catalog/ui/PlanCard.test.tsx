@@ -8,7 +8,7 @@ const dictionary = es
 
 const plan: Plan = {
   id: '11111111-1111-1111-1111-111111111111',
-  slug: 'firma-3d',
+  slug: 'gala',
   price: { cents: 145000, currency: 'BOB' },
   priceUsdCents: null,
   highlighted: true,

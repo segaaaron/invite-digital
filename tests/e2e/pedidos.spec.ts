@@ -22,11 +22,14 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
   await deleteTestOrders(CLIENTE, CORREO)
 
   // 1. El cliente pide desde la web pública, sin sesión.
-  await page.goto('/es/pedido/firma-3d')
+  await page.goto('/es/pedido/gala')
   await page.getByLabel('Tu nombre').fill(CLIENTE)
   await page.getByLabel('WhatsApp', { exact: true }).fill('+59170099988')
   await page.getByLabel(/^Correo/).fill(CORREO)
   await page.getByLabel('Fecha del evento').fill('2027-03-20')
+  await page.getByLabel('Tipo de evento').selectOption('boda')
+  // El resumen (9 oct) dice lo que se paga hoy antes de enviar.
+  await expect(page.getByRole('region', { name: 'Resumen' })).toContainText('Pagas hoy')
   await page.getByRole('button', { name: 'Registrar pedido' }).click()
 
   const referencia = await page.getByText(/^[23456789ABCDEFGHJKMNPQRSTUVWXYZ]{8}$/).innerText()
@@ -81,11 +84,12 @@ test('el comprobante no se descarga sin sesión, y una referencia inventada es 4
 test('un archivo que miente sobre su tipo se rechaza en el servidor', async ({ page }) => {
   await deleteTestOrders(CLIENTE, CORREO)
 
-  await page.goto('/es/pedido/firma-3d')
+  await page.goto('/es/pedido/gala')
   await page.getByLabel('Tu nombre').fill(CLIENTE)
   await page.getByLabel('WhatsApp', { exact: true }).fill('+59170099988')
   await page.getByLabel(/^Correo/).fill(CORREO)
   await page.getByLabel('Fecha del evento').fill('2027-03-20')
+  await page.getByLabel('Tipo de evento').selectOption('boda')
   await page.getByRole('button', { name: 'Registrar pedido' }).click()
   await page.getByRole('link', { name: 'Ir a pagar' }).click()
 
@@ -99,4 +103,10 @@ test('un archivo que miente sobre su tipo se rechaza en el servidor', async ({ p
 
   // Acotado al formulario: Next monta su propio `role="alert"` para anunciar la ruta.
   await expect(page.getByText('Solo aceptamos una foto')).toBeVisible()
+})
+
+test('la dirección vieja del plan lleva a la de hoy, con lo que traía detrás (9 oct)', async ({ request }) => {
+  const r = await request.get('/es/pedido/firma-3d?modelo=boda-bot', { maxRedirects: 0 })
+  expect([301, 308]).toContain(r.status())
+  expect(r.headers()['location']).toBe('/es/pedido/gala?modelo=boda-bot')
 })

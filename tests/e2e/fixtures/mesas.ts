@@ -24,7 +24,7 @@ export async function seedVenueEvent(slug: string): Promise<SeededVenue> {
     -- (atelier), que no incluye mesa de regalos ni modo puerta, y estas pruebas
     -- chocarían con la pantalla de función no incluida en vez de con lo que miden.
     values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Evento ${slug}`}, '2027-05-15', '2027-05-01', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
     returning id
   `
 

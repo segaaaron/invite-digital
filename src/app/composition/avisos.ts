@@ -1,4 +1,8 @@
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
+import { avisosDeLaAgenda } from '@/modules/planner'
+import { registrarFallo } from '@/shared/observability/fallos'
+import { isErr } from '@/shared/result'
+import { events, planner } from './eventos'
 import { avisoDeAgenda } from '@/modules/notifications'
 import { avisarAlAdmin, avisarDelEvento } from '@/modules/notifications/application/avisos'
 import { drizzleAvisos } from '@/modules/notifications/infrastructure/drizzle-avisos'
@@ -36,28 +40,32 @@ export const avisos = {
   },
 }
 
-const masDias = (iso: string, dias: number): string => {
-  const d = new Date(`${iso}T12:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + dias)
-  return d.toISOString().slice(0, 10)
-}
-
 /**
- * **Lo que vence**, del mantenimiento diario: tareas y pagos de mañana, y la semana y la víspera del
- * evento. Cada aviso una sola vez por día aunque el mantenimiento corra dos veces. Devuelve cuántos salieron.
+ * **Los avisos de la agenda**, del mantenimiento de cada mañana (9 oct): de cada evento por venir, lo que
+ * dice `avisosDeLaAgenda` —el resumen de hoy, lo de mañana (también citas, ensayos y el cierre de
+ * confirmaciones), lo que venció ayer y la cuenta del evento—. Cada aviso una sola vez por día aunque el
+ * mantenimiento corra dos veces. Un evento que falla no corta a los demás. Devuelve cuántos salieron.
  */
+// ponytail: todos los del equipo reciben todo; por responsable de cada tarea, si el equipo crece.
 export async function avisarLoQueVence(ahora: Date): Promise<number> {
   const hoy = fechaEnBolivia(ahora)
-  const manana = masDias(hoy, 1)
-  const candidatos: { eventId: string; que: string; cuando: string; ruta: string }[] = [
-    ...(await drizzleAvisos.vencenEl(manana)).map((v) => ({ ...v, cuando: 'mañana' })),
-    ...(await drizzleAvisos.eventosDel(manana)).map((eventId) => ({ eventId, que: 'es tu evento', cuando: 'mañana', ruta: '' })),
-    ...(await drizzleAvisos.eventosDel(masDias(hoy, 7))).map((eventId) => ({ eventId, que: 'tu evento', cuando: 'en 7 días', ruta: '' })),
-  ]
-  let enviados = 0
-  for (const c of candidatos) {
-    const salio = await avisos.delEvento(c.eventId, (ev) => avisoDeAgenda({ ...ev, que: c.que, cuando: c.cuando, ruta: c.ruta }), { unaVezAlDia: true })
-    if (salio) enviados += 1
+  const ids = await drizzleAvisos.eventosConAvisos(hoy)
+  const deUno = async (eventId: string): Promise<number> => {
+    try {
+      const evento = await events.getByIdUnscoped(eventId)
+      if (isErr(evento)) return 0
+      let salieron = 0
+      for (const a of avisosDeLaAgenda(await planner.dia.agenda(evento.value), hoy)) {
+        if (await avisos.delEvento(eventId, (ev) => avisoDeAgenda({ ...ev, ...a }), { unaVezAlDia: true })) salieron += 1
+      }
+      return salieron
+    } catch (causa) {
+      registrarFallo('avisos/agenda', 'no se pudieron preparar los avisos de la agenda de un evento', causa)
+      return 0
+    }
   }
+  // De cinco en cinco: sin abrir de golpe tantas consultas como eventos haya.
+  let enviados = 0
+  for (let i = 0; i < ids.length; i += 5) enviados += (await Promise.all(ids.slice(i, i + 5).map(deUno))).reduce((s, n) => s + n, 0)
   return enviados
 }

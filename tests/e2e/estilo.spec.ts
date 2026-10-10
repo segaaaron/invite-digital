@@ -8,7 +8,7 @@ const CUENTA = { email: 'cliente-estilo-e2e@invitepremium.bo', password: CLIENTE
 /**
  * Colores y letra (Gala, `0088`): sin el plan, la tarjeta lo dice y el servidor no guarda aunque el
  * formulario llegue; con él, el cliente elige el acento y la caligrafía y la invitación los pinta.
- * Plan propio, copia de `alta-costura`, para no tocar los de verdad.
+ * Plan propio, copia de `imperial`, para no tocar los de verdad.
  */
 const SLUG = 'boda-estilo-e2e'
 const PLAN = 'gala-estilo-e2e'
@@ -27,7 +27,7 @@ test.describe('colores y letra', () => {
     await sql`
       insert into plans
       select (jsonb_populate_record(null::plans, to_jsonb(p) || jsonb_build_object('id', gen_random_uuid(), 'slug', ${PLAN}::text, 'is_active', false, 'includes_style', false))).*
-      from plans p where p.slug = 'alta-costura'`
+      from plans p where p.slug = 'imperial'`
     token = (await seedCliente(SLUG, CUENTA)).token
     await sql`update events set theme_key = 'boda-bot', plan_id = (select id from plans where slug = ${PLAN}) where slug = ${SLUG}`
     ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, extraHTTPHeaders: { 'x-real-ip': '10.99.0.81' } })

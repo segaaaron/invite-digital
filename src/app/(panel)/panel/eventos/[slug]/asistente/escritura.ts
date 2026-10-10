@@ -98,7 +98,13 @@ export async function escribir(llamada: LlamadaValida, evento: Evento): Promise<
   switch (llamada.nombre) {
     case 'registrar_invitados': {
       const r = await addGuestsFromAssistantAction({ eventSlug: evento.slug, invitaciones: llamada.invitaciones })
-      return r.status === 'success' ? { hecho: `${r.creadas === 1 ? '1 invitación' : `${r.creadas} invitaciones`} · ${r.personas === 1 ? '1 persona' : `${r.personas} personas`} en la lista`, enlace: ruta('/invitados') } : { error: r.message }
+      if (r.status === 'error') return { error: r.message }
+      const ya = r.yaEstaban.map((y) => `${y.nombre} ya está en la invitación «${y.invitacion}» (mismo ${y.por === 'nombre' ? 'nombre' : 'WhatsApp'}); no se volvió a crear`)
+      return {
+        ...(r.creadas > 0 ? { hecho: `${r.creadas === 1 ? '1 invitación' : `${r.creadas} invitaciones`} · ${r.personas === 1 ? '1 persona' : `${r.personas} personas`} en la lista` } : {}),
+        ...(ya.length > 0 ? { ya_estaban: ya } : {}),
+        enlace: ruta('/invitados'),
+      }
     }
 
     case 'cambiar_invitados': {

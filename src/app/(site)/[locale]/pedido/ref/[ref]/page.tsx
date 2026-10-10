@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
-import { admin, orders } from '@/app/composition/container'
+import { admin, orders, site } from '@/app/composition/container'
 import { ProofUpload } from '@/modules/orders/ui/ProofUpload'
 import { montoAPagar, saldoPendiente } from '@/modules/orders/domain/order'
+import { formatMoney } from '@/modules/catalog'
 import { formatAmount } from '@/shared/money'
 import { isPayable } from '@/modules/admin/domain/payment-settings'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -74,6 +75,10 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
         )}
       </section>
 
+      {order.status === 'approved' || order.status === 'cancelled' ? null : (
+        <QueSigue horario={(await site.settings()).horario[locale]} textos={dictionary.orders} />
+      )}
+
       {!porPagar ? null : (
         <>
           <section className="flex flex-col gap-3 rounded-[18px] border border-line bg-bg-top/60 p-6">
@@ -81,7 +86,7 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
             {aPagar === null || aPagar === 0 ? null : (
               <div className="flex flex-col gap-1 border-b border-line pb-4">
                 <p className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">{dictionary.orders.amountDue}</p>
-                <p className="font-display text-[34px] leading-none text-ink [font-variant-numeric:lining-nums]">{formatAmount(aPagar, order.currency ?? 'BOB')}</p>
+                <p className="font-display text-[34px] leading-none text-ink [font-variant-numeric:lining-nums]">{order.currency === null || order.currency === 'BOB' ? formatMoney({ cents: aPagar, currency: 'BOB' }, locale) : formatAmount(aPagar, order.currency)}</p>
                 {order.depositCents !== null && !esSaldo ? <p className="text-[12px] text-ink-mute">{dictionary.orders.amountDueDeposit}</p> : null}
               </div>
             )}
@@ -143,5 +148,23 @@ export default async function SeguimientoPage({ params }: { params: Promise<{ lo
         </section>
       )}
     </main>
+  )
+}
+
+/** «Qué sigue» tras pedir (9 oct, informe de lanzamiento): pagar, revisión y el acceso al panel. */
+function QueSigue({ textos, horario }: { textos: { nextHeading: string; nextSteps: readonly string[]; nextHours: string }; horario: string }) {
+  return (
+    <section className="flex flex-col gap-3 rounded-[18px] border border-line bg-bg-top/60 p-6">
+      <h2 className="font-display text-[22px] font-light text-ink">{textos.nextHeading}</h2>
+      <ol className="flex flex-col gap-2.5 text-[14px] leading-[1.6] text-ink-soft">
+        {textos.nextSteps.map((paso, i) => (
+          <li className="flex gap-3" key={paso}>
+            <span className="font-display text-[20px] leading-none text-gold-deep [font-variant-numeric:lining-nums]">{i + 1}</span>
+            <span>{paso}</span>
+          </li>
+        ))}
+      </ol>
+      {horario.trim() === '' ? null : <p className="text-[13px] text-ink-mute">{textos.nextHours.replace('{horario}', horario)}</p>}
+    </section>
   )
 }

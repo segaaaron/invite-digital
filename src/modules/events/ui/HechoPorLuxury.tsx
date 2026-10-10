@@ -13,8 +13,8 @@ export function HechoPorLuxury({ texto, href }: { readonly texto: string; readon
       rel="noopener"
       target="_blank"
     >
-      {/* El favicon de la marca: el monograma en trazos, sin fuente. */}
-      <Image alt="" aria-hidden height={18} src="/icon.svg" unoptimized width={18} />
+      {/* El favicon de la marca: el sello de lacre «LA». */}
+      <Image alt="" aria-hidden height={18} src="/site/marca/sello-la-48-627a79b8.avif" unoptimized width={18} />
       {texto.replace('{marca}', BRAND.siteName)}
     </a>
   )

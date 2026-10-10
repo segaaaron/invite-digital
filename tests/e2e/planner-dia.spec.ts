@@ -13,7 +13,7 @@ test.describe.configure({ mode: 'serial' })
 const SLUG = 'planner-dia-xv-e2e'
 
 test.beforeAll(async () => {
-  await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
+  await seedInvitation({ slug: SLUG, plan: 'imperial' })
   await sql`update events set theme_key = 'xv-isabelle' where slug = ${SLUG}`
 })
 

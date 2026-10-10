@@ -279,7 +279,17 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
                   />
                 </Campo>
               ))}
-              <p className="text-[12px] text-ink-mute">Vacías no aparecen. Salen en el pie y Google las usa para confirmar que el negocio es el mismo.</p>
+              <Campo etiqueta="Correo de contacto">
+                <input
+                  className={FIELD_CLASS}
+                  inputMode="email"
+                  onChange={(e) => cambiar('redes', { ...datos.redes, correo: e.target.value })}
+                  placeholder="hola@tudominio.com"
+                  type="email"
+                  value={datos.redes.correo}
+                />
+              </Campo>
+              <p className="text-[12px] text-ink-mute">Vacíos no aparecen. Salen en el pie de la web; las redes, además, Google las usa para confirmar que el negocio es el mismo.</p>
             </>,
           )}
 

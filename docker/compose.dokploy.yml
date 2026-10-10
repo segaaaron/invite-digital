@@ -92,8 +92,11 @@ services:
       # Las notificaciones push web. Opcionales: sin ellas la campana funciona y la push no sale.
       VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
       VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
-      # Arturo, el asistente del panel. Sin clave, no aparece.
+      # Luxury, el asistente del panel. Sin clave, no aparece.
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # El modelo de Luxury, para cambiarlo desde Dokploy sin desplegar. Con valor por defecto y no vacío:
+      # vacío, `env.ts` lo rechaza y la web no arranca.
+      ASISTENTE_MODELO: ${ASISTENTE_MODELO:-gpt-6-luna}
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos
@@ -156,7 +159,10 @@ services:
     volumes:
       - proofs:/var/lib/invitepremium/comprobantes
       - media:/var/lib/invitepremium/eventos
-    command: sh -c 'while true; do pnpm maintenance || echo "FALLO DE MANTENIMIENTO — se reintenta en 24 h" >&2; sleep 86400; done'
+    # Al arrancar, la limpieza (retención, sesiones) sin los avisos; y cada día a las 08:00 de Bolivia (12:00 UTC,
+    # sin horario de verano) todo: los avisos de la agenda («Hoy tienes…») salían a la hora del último despliegue.
+    # `$$` es un `$` para el shell: compose interpola los sueltos.
+    command: sh -c 'pnpm maintenance --sin-avisos || echo "FALLO DE MANTENIMIENTO AL ARRANCAR" >&2; while true; do ahora=$$(date -u +%s); espera=$$(( (43200 - ahora % 86400 + 86400) % 86400 )); [ "$$espera" -eq 0 ] && espera=86400; echo "Mantenimiento en $$espera s (08:00 de Bolivia)"; sleep $$espera; pnpm maintenance || echo "FALLO DE MANTENIMIENTO — se reintenta mañana a las 08:00" >&2; done'
     depends_on:
       migrate:
         condition: service_completed_successfully

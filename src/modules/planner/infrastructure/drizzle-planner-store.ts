@@ -121,6 +121,11 @@ export function createDrizzlePlannerStore(database: DbExecutor = db): PlannerSto
       return filas.length > 0
     },
 
+    async setPaymentDue(eventId, paymentId, dueDate) {
+      const filas = await database.update(budgetPayments).set({ dueDate }).where(pagoDelEvento(eventId, paymentId)).returning({ id: budgetPayments.id })
+      return filas.length > 0
+    },
+
     async removePayment(eventId, paymentId) {
       const filas = await database.delete(budgetPayments).where(pagoDelEvento(eventId, paymentId)).returning({ id: budgetPayments.id })
       return filas.length > 0

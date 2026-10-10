@@ -22,10 +22,10 @@ const repositoryOf = (rows: PlanInput[]): PlanRepository => ({
 
 describe('listPlans', () => {
   it('devuelve los planes ordenados por sortOrder', async () => {
-    const second: PlanInput = { ...row, id: '22222222-2222-2222-2222-222222222222', slug: 'firma-3d', sortOrder: 2 }
+    const second: PlanInput = { ...row, id: '22222222-2222-2222-2222-222222222222', slug: 'gala', sortOrder: 2 }
     const result = await listPlans({ plans: repositoryOf([second, row]) })('es')
     expect(isOk(result)).toBe(true)
-    if (isOk(result)) expect(result.value.map((p) => p.slug)).toEqual(['atelier', 'firma-3d'])
+    if (isOk(result)) expect(result.value.map((p) => p.slug)).toEqual(['atelier', 'gala'])
   })
 
   it('falla si un plan de la base es inválido', async () => {

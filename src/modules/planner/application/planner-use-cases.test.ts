@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Partida } from '../domain/presupuesto'
 import type { Tarea } from '../domain/tareas'
-import { addPayment, addTask, editTask, moveTask, saveBudgetPlan, saveItem, seedTasks, toggleTask } from './planner-use-cases'
+import { addPayment, addTask, editTask, marcarTarea, moveTask, reprogramarPago, reprogramarTarea, saveBudgetPlan, saveItem, seedTasks, toggleTask } from './planner-use-cases'
 import type { PlannerStore } from './ports'
 
 /** Un almacén en memoria que respeta el evento como el de verdad. */
@@ -37,6 +37,12 @@ function memoria() {
       return true
     },
     setPaymentPaid: async () => true,
+    setPaymentDue: async (e, id, dueDate) => {
+      const pago = partidas.filter((p) => p.eventId === e).flatMap((p) => p.pagos as unknown as { id: string; dueDate: string | null }[]).find((g) => g.id === id)
+      if (!pago) return false
+      pago.dueDate = dueDate
+      return true
+    },
     removePayment: async () => true,
     getBudgetPlan: async (e) => planes.get(e) ?? null,
     saveBudgetPlan: async (e, plan) => void planes.set(e, plan),
@@ -148,5 +154,32 @@ describe('saveBudgetPlan', () => {
     await saveBudgetPlan(deps)('e1', 'xv', { asignaciones: { salon: 1_000_000, catering: 2_000_000, inventada: 9 } })
     expect(deps.planes.get('e1')).toMatchObject({ totalCents: 3_000_000 })
     expect(deps.planes.get('e1')!.asignaciones).not.toHaveProperty('inventada')
+  })
+})
+
+describe('desde la agenda (9 oct): marcar con deshacer y cambiar la fecha', () => {
+  it('marcar una tarea dice el estado, no lo alterna: deshacer dos veces no la vuelve a cerrar', async () => {
+    const m = memoria()
+    await m.store.insertTasks('e', [{ stage: 'propias', title: 'Menú', dueDate: '2027-01-08', assignee: 'anfitrion', sortOrder: 0 }])
+    const marcar = marcarTarea(m)
+    expect(await marcar('e', 't1', true, 'ana@x')).toEqual({ ok: true })
+    expect(m.tareas[0]).toMatchObject({ doneBy: 'ana@x' })
+    await marcar('e', 't1', false, 'ana@x')
+    await marcar('e', 't1', false, 'ana@x')
+    expect(m.tareas[0]).toMatchObject({ doneAt: null, doneBy: null })
+    expect(await marcar('otro', 't1', true, 'x')).toMatchObject({ ok: false })
+  })
+  it('cambiar la fecha de una tarea o un pago pide un día que exista', async () => {
+    const m = memoria()
+    await m.store.insertTasks('e', [{ stage: 'propias', title: 'Menú', dueDate: '2027-01-08', assignee: 'anfitrion', sortOrder: 0 }])
+    expect(await reprogramarTarea(m)('e', 't1', '2027-01-20')).toEqual({ ok: true })
+    expect(m.tareas[0]!.dueDate).toBe('2027-01-20')
+    expect(await reprogramarTarea(m)('e', 't1', '2027-02-30')).toMatchObject({ ok: false })
+    expect(await reprogramarTarea(m)('e', 't1', '')).toMatchObject({ ok: false })
+    const item = await m.store.insertItem('e', { category: 'foto', concept: 'Fotógrafo', estimatedCents: 0, contractedCents: null, payer: 'anfitriones', padrinoLabel: null, notes: null } as never)
+    await m.store.insertPayment('e', item, { amountCents: 100, dueDate: '2027-01-05', label: null })
+    const pagoId = (m.partidas[0]!.pagos[0] as unknown as { id: string }).id
+    expect(await reprogramarPago(m)('e', pagoId, '2027-01-25')).toEqual({ ok: true })
+    expect((m.partidas[0]!.pagos[0] as unknown as { dueDate: string }).dueDate).toBe('2027-01-25')
   })
 })

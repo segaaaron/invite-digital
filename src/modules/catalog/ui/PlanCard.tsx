@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Button } from '@/shared/design/ui/Button'
 import { ArrowRightIcon } from '@/shared/design/ui/icons'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
@@ -14,7 +15,7 @@ type Props = {
   /** Texto del botón. Lo decide quien conoce el catálogo entero, no la tarjeta. */
   ctaLabel?: string
   /** «Reserva con Bs 100 · el resto cuando esté lista», si el plan tiene reserva fija. */
-  reserva?: string | null
+  reserva?: ReactNode | null
   /** El plan de abajo, para «Todo lo de Atelier, más:» (V4). El primero no lleva. */
   anterior?: string | null
 }

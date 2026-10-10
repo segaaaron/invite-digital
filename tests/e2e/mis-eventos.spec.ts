@@ -23,7 +23,7 @@ test.describe('el cliente con dos eventos', () => {
     await sql`delete from events where slug = ${PASADO}`
     const [pasado] = await sql<{ id: string }[]>`
       insert into events (slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id, user_id)
-      values (${PASADO}, 'Boda celebrada', '2025-05-10', '2025-04-20', 'es', 'boda', 'live', (select id from plans where slug = 'alta-costura'), ${duenoId})
+      values (${PASADO}, 'Boda celebrada', '2025-05-10', '2025-04-20', 'es', 'boda', 'live', (select id from plans where slug = 'imperial'), ${duenoId})
       returning id`
     await sql`insert into event_staff (event_id, user_id, membership) values (${pasado!.id}, ${clienteId}, 'cliente')`
     await escribirInvitacion(PASADO)

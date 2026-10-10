@@ -110,6 +110,10 @@ const VISTAS = [
   ['configuración', '/configuracion'],
   ['configuración · ver cómo queda', '/configuracion?ver=1'],
   ['plan', '/plan'],
+  // La agenda (9 oct): «Atrasado» con sus botones, el mes, la lista y el día abierto.
+  ['agenda', '/planner/agenda?vista=mes'],
+  ['agenda · lista', '/planner/agenda?vista=lista'],
+  ['agenda · día', `/planner/agenda?dia=${new Date(Date.now() - 4 * 3_600_000).toISOString().slice(0, 10)}`],
 ] as const
 
 /**
@@ -136,6 +140,10 @@ test.beforeAll(async ({ browser }) => {
   await createEvent(page, { slug: SLUG, title: 'Boda responsive e2e' })
   await createGuestGroup(page, SLUG, 'Familia Rojas Peña', 4)
   await contexto.close()
+  // Una tarea atrasada y otra de hoy: la agenda con filas y botones que medir.
+  const dia = (n: number) => new Date(Date.now() - 4 * 3_600_000 + n * 86_400_000).toISOString().slice(0, 10)
+  const [evento] = await sql<{ id: string }[]>`select id from events where slug = ${SLUG}`
+  await sql`insert into planner_tasks (event_id, stage, title, due_date) values (${evento!.id}, 'propias', 'Elegir el menú con el catering del salón', ${dia(-2)}), (${evento!.id}, 'propias', 'Llamar al DJ', ${dia(0)})`
 })
 
 test.afterAll(async () => {
@@ -288,7 +296,7 @@ for (const tamano of ANCHOS) {
 test('las páginas públicas del pedido tampoco desbordan', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
 
-  await page.goto('/es/pedido/firma-3d')
+  await page.goto('/es/pedido/gala')
   await page.waitForLoadState('networkidle')
   expect(await page.evaluate(cortados)).toEqual([])
   const alta = await page.evaluate(anchoDocumento)

@@ -39,7 +39,8 @@ export type SiteSettings = {
   readonly ciudad: string
   readonly pais: string
   readonly cobertura: Bilingue
-  readonly redes: { readonly instagram: string; readonly facebook: string; readonly tiktok: string }
+  /** Las redes y el correo de contacto (9 oct). Vacíos no se enseñan. */
+  readonly redes: { readonly instagram: string; readonly facebook: string; readonly tiktok: string; readonly correo: string }
   readonly cifras: { readonly visibles: boolean; readonly items: readonly [Cifra, Cifra, Cifra, Cifra] }
   readonly marcas: readonly string[]
   readonly testimonios: readonly Testimonio[]
@@ -80,7 +81,7 @@ export const DEFAULT_SITE_SETTINGS: SiteSettings = {
   ciudad: 'Cochabamba',
   pais: 'Bolivia',
   cobertura: { es: 'Entregas a todo el país', en: 'Delivering nationwide' },
-  redes: { instagram: '', facebook: '', tiktok: '' },
+  redes: { instagram: '', facebook: '', tiktok: '', correo: '' },
   // Las cifras que la portada enseñaba escritas en el código. **Ocultas por defecto**: son
   // afirmaciones de negocio y se publican cuando el admin las confirma.
   cifras: {
@@ -243,6 +244,10 @@ export function leerSiteSettings(entrada: SiteSettings): Result<SiteSettings, Si
     instagram: entrada.redes.instagram.trim(),
     facebook: entrada.redes.facebook.trim(),
     tiktok: entrada.redes.tiktok.trim(),
+    correo: entrada.redes.correo.trim().toLowerCase(),
+  }
+  if (redes.correo !== '' && (redes.correo.length > 160 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(redes.correo))) {
+    return fallo('redes.correo', 'Escribe un correo válido, por ejemplo hola@tudominio.com.')
   }
   for (const red of ['instagram', 'facebook', 'tiktok'] as const) {
     if (!redValida(redes[red], REDES[red])) {
@@ -375,6 +380,7 @@ export function parseSiteSettings(crudo: string | undefined): SiteSettings {
       instagram: texto(redes.instagram, d.redes.instagram),
       facebook: texto(redes.facebook, d.redes.facebook),
       tiktok: texto(redes.tiktok, d.redes.tiktok),
+      correo: texto(redes.correo, d.redes.correo),
     },
     cifras: {
       visibles: bool(cifras.visibles, d.cifras.visibles),

@@ -68,7 +68,7 @@ export default function SignInPage() {
             pegado encima de otro. */}
         <div className="relative flex items-center gap-3.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" className="size-11 shrink-0 min-[860px]:size-12" src="/icon.svg" />
+          <img alt="" className="size-11 shrink-0 min-[860px]:size-12" src="/site/marca/sello-la-48-627a79b8.avif" srcSet="/site/marca/sello-la-48-627a79b8.avif 1x, /site/marca/sello-la-96-56d82990.avif 2x, /site/marca/sello-la-144-59259035.avif 3x" />
           <p className="font-display text-[26px] leading-none italic min-[860px]:text-[30px]">
             Luxury <b className="font-medium not-italic">Atelier</b>
           </p>

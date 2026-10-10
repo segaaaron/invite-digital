@@ -33,8 +33,8 @@ let alta = ''
 
 beforeAll(async () => {
   atelier = await planId('atelier')
-  firma = await planId('firma-3d')
-  alta = await planId('alta-costura')
+  firma = await planId('gala')
+  alta = await planId('imperial')
   await nuevoEvento(eventId, atelier)
   await nuevoEvento(otroEventId, null)
 })
@@ -107,7 +107,7 @@ describe('aplicar una solicitud', () => {
     const aplicada = await drizzlePlansRepository.applyRequest(id, new Date('2026-08-21T12:00:00.000Z'))
 
     expect(aplicada).toBe(true)
-    expect((await drizzlePlansRepository.findEventPlan(eventId))?.slug).toBe('alta-costura')
+    expect((await drizzlePlansRepository.findEventPlan(eventId))?.slug).toBe('imperial')
     // Los días en línea viajan con el plan: la retención del evento pasa a ser la del nuevo.
     const [evento] = await db.select({ retentionDays: events.retentionDays }).from(events).where(eq(events.id, eventId))
     const [plan] = await db.select({ onlineDays: plans.onlineDays }).from(plans).where(eq(plans.id, alta))

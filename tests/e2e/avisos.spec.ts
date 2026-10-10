@@ -35,7 +35,7 @@ test.afterAll(async () => {
 })
 
 test('la campana se entera en vivo de que un invitado abrió su invitación y confirmó, y al abrirla quedan vistos', async ({ page, browser }) => {
-  const { token, eventSlug } = await seedInvitation({ slug: SLUG, plan: 'alta-costura' })
+  const { token, eventSlug } = await seedInvitation({ slug: SLUG, plan: 'imperial' })
   const id = await atelierId()
   await sql`update avisos set seen_at = now() where user_id = ${id} and seen_at is null`
 

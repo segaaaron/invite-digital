@@ -8,7 +8,7 @@ export type PlanCardData = {
   readonly id: string
   readonly current: boolean
   readonly allowance: Allowance
-  /** El nombre comercial —«Gala»—. Sin él la tarjeta enseñaba el `slug`: «firma-3d». */
+  /** El nombre comercial —«Gala»—. Sin él la tarjeta enseñaba el `slug` en minúsculas. */
   readonly name: string
   readonly price?: PlanPrice | undefined
   /** Adónde lleva «Cambiar a…» desde esta tarjeta. */

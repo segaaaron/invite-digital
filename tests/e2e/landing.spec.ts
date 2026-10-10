@@ -59,8 +59,8 @@ test('todos los planes se reservan con el pedido, y el WhatsApp sale en el pie',
 
     // Todos se reservan igual (documento de cambios del 30 sep): el pedido guarda la referencia
     // y desde allí se sigue por WhatsApp. Ya no hay plan que «agende una llamada».
-    await expect(page.getByRole('link', { name: 'Quiero reservar Gala' })).toHaveAttribute('href', '/es/pedido/firma-3d')
-    await expect(page.getByRole('link', { name: 'Quiero reservar Imperial' })).toHaveAttribute('href', '/es/pedido/alta-costura')
+    await expect(page.getByRole('link', { name: 'Quiero reservar Gala' })).toHaveAttribute('href', '/es/pedido/gala')
+    await expect(page.getByRole('link', { name: 'Quiero reservar Imperial' })).toHaveAttribute('href', '/es/pedido/imperial')
     await expect(page.getByRole('link', { name: 'Agendar llamada' })).toHaveCount(0)
 
     // En Bolivia se atiende por WhatsApp: el número, a la vista en el pie de cada página.

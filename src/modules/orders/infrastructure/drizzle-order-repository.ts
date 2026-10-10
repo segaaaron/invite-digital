@@ -109,6 +109,13 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
   return {
     async create(order: NewOrder): Promise<Order> {
       const descuento = Math.min(50, Math.max(0, Math.round(order.descuentoPct ?? 0)))
+      // Los adicionales elegidos (9 oct): su precio se congela aquí, del catálogo de ese instante, y solo
+      // los que siguen a la venta. Quedan en `quote_extras`, como los de una cotización: al nacer el evento
+      // se aplican solos (`plans.applyQuoteExtras`).
+      const slugs = [...new Set(order.extraSlugs ?? [])].slice(0, 12)
+      const lista = sql.join(slugs.map((s) => sql`${s}`), sql`, `)
+      const extras = slugs.length === 0 ? sql`0` : sql`(select coalesce(sum(price_cents), 0) from addons where slug in (${lista}) and is_active)`
+      const total = sql`(round(price_cents * (100 - ${descuento}::integer) / 100.0) + ${extras})`
       const [fila] = await database
         .insert(orders)
         .values({
@@ -124,12 +131,16 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
           // El precio se congela en el mismo `insert` y por la misma razón: leído antes, un
           // cambio de precio entre medias dejaría el pedido con el importe de otro momento.
           // Con recomendación, el descuento se aplica en la misma escritura y se congela con él.
-          amountCents: sql`(select round(price_cents * (100 - ${descuento}::integer) / 100.0)::integer from plans where slug = ${order.planSlug} and is_active)`,
+          amountCents: sql`(select ${total}::integer from plans where slug = ${order.planSlug} and is_active)`,
           discountCents: descuento === 0 ? null : sql`(select price_cents - round(price_cents * (100 - ${descuento}::integer) / 100.0)::integer from plans where slug = ${order.planSlug} and is_active)`,
           currency: sql`(select currency from plans where slug = ${order.planSlug} and is_active)`,
           // El anticipo, con el plan en ese mismo instante: la reserva fija si la hay y es menor que
           // el importe; si no, el porcentaje redondeado al boliviano; si tampoco, se paga entero.
-          depositCents: sql`(select case when deposit_fixed_cents < round(price_cents * (100 - ${descuento}::integer) / 100.0) then deposit_fixed_cents when deposit_pct between 1 and 99 then round(round(price_cents * (100 - ${descuento}::integer) / 100.0) * deposit_pct / 10000.0) * 100 end from plans where slug = ${order.planSlug} and is_active)`,
+          depositCents: sql`(select case when deposit_fixed_cents < ${total} then deposit_fixed_cents when deposit_pct between 1 and 99 then round(${total} * deposit_pct / 10000.0) * 100 end from plans where slug = ${order.planSlug} and is_active)`,
+          quoteExtras:
+            slugs.length === 0
+              ? null
+              : sql`(select jsonb_agg(jsonb_build_object('slug', slug, 'name', name, 'cents', price_cents) order by sort_order, slug) from addons where slug in (${lista}) and is_active)`,
           referralCode: order.referralCode ?? null,
           templateSlug: order.templateSlug,
           customerName: order.customerName,

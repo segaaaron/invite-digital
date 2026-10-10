@@ -4,7 +4,7 @@ import type { PlanRow } from './ports'
 
 const fila: PlanRow = {
   id: 'p1',
-  slug: 'firma-3d',
+  slug: 'gala',
   maxGuestGroups: 80,
   includesSeating: true,
   includesRegistry: true,
@@ -24,7 +24,7 @@ const fila: PlanRow = {
 describe('capacidadDePlan', () => {
   it('pasa cada columna del plan a la capacidad', () => {
     expect(capacidadDePlan(fila)).toEqual({
-      planSlug: 'firma-3d',
+      planSlug: 'gala',
       maxGuestGroups: 80,
       seating: true,
       registry: true,

@@ -17,7 +17,7 @@ test.beforeAll(async () => {
   await sql`delete from users where email = ${CORREO}`
   await sql`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
-    values ((select id from users where email = ${ADMIN.email}), ${SLUG}, 'Noche de chicas', '2026-10-17', '2026-10-12', 'es', 'cumple-femme', 'live', (select id from plans where slug = 'alta-costura'))`
+    values ((select id from users where email = ${ADMIN.email}), ${SLUG}, 'Noche de chicas', '2026-10-17', '2026-10-12', 'es', 'cumple-femme', 'live', (select id from plans where slug = 'imperial'))`
 })
 
 test.afterAll(async () => {

@@ -40,7 +40,7 @@ const PLANS = [
     },
   },
   {
-    slug: 'firma-3d',
+    slug: 'gala',
     priceCents: 69000,
     priceUsdCents: 9914,
     highlighted: true,
@@ -61,7 +61,7 @@ const PLANS = [
     },
   },
   {
-    slug: 'alta-costura',
+    slug: 'imperial',
     priceCents: 95000,
     priceUsdCents: 13649,
     highlighted: false,

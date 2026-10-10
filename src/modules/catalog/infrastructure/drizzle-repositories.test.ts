@@ -25,7 +25,7 @@ async function runInRolledBackTransaction(run: (tx: Parameters<Parameters<typeof
 describe('repositorios Drizzle (requiere base sembrada)', () => {
   it('lee los tres planes en español', async () => {
     const rows = await drizzlePlanRepository.listActive('es')
-    expect(rows.map((r) => r.slug)).toEqual(['atelier', 'firma-3d', 'alta-costura'])
+    expect(rows.map((r) => r.slug)).toEqual(['atelier', 'gala', 'imperial'])
     expect(rows[0]?.name).toBe('Atelier')
   })
 

@@ -35,7 +35,7 @@ export async function seedOtroAtelier(slug: string): Promise<{ userId: string; e
   const [evento] = await sql<{ id: string }[]>`
     insert into events (slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id, user_id)
     values (${slug}, ${'Boda del otro atelier'}, '2027-06-12', '2027-05-30', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'), ${usuario!.id})
+            (select id from plans where slug = 'imperial'), ${usuario!.id})
     returning id
   `
 

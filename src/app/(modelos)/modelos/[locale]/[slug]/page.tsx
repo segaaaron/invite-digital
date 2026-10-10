@@ -12,7 +12,7 @@ import { THEME_KEYS, themeFor } from '@/modules/events/ui/themes/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isOk } from '@/shared/result'
-import { seVende } from '@/shared/design/theme-catalog'
+import { nombreDelCatalogo, seVende } from '@/shared/design/theme-catalog'
 import { buildPageMetadata } from '@/shared/seo/metadata'
 
 /**
@@ -56,8 +56,8 @@ export async function generateMetadata({
     locale,
     path: `/modelos/${locale}/${slug}`,
     // Título y descripción propios de cada modelo: con los del catálogo, los veinte competían entre sí en Google.
-    title: diccionario.seo.modelTitle.replace('{nombre}', tema.label).replace('{fiesta}', fiesta),
-    description: diccionario.seo.modelDescription.replace('{nombre}', tema.label).replace('{fiesta}', fiesta),
+    title: diccionario.seo.modelTitle.replace('{nombre}', nombreDelCatalogo(tema.key, locale) ?? tema.label).replace('{fiesta}', fiesta),
+    description: diccionario.seo.modelDescription.replace('{nombre}', nombreDelCatalogo(tema.key, locale) ?? tema.label).replace('{fiesta}', fiesta),
   })
   // Un modelo que todavía no se vende no se indexa: la dirección existe porque el panel
   // enlaza a ella para verlo, y el catálogo no lo enseña.

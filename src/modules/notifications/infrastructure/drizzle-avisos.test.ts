@@ -73,13 +73,17 @@ describe('avisos contra Postgres', () => {
     expect(await avisos.cuantosAparatos(novia)).toBe(0)
   })
 
-  it('lo que vence: tareas sin hacer, pagos sin pagar y eventos del día; y el aviso de agenda no se repite', async () => {
-    await db.execute(sql`insert into planner_tasks (event_id, stage, title, due_date) values (${eventId}, 'mes', 'Prueba de vestido', '2027-04-10')`)
-    await db.execute(sql`insert into planner_tasks (event_id, stage, title, due_date, done_at) values (${eventId}, 'mes', 'Ya hecha', '2027-04-10', now())`)
-    const [item] = (await db.execute(sql`insert into budget_items (event_id, category, concept) values (${eventId}, 'foto', 'fotógrafo') returning id`)) as unknown as { id: string }[]
-    await db.execute(sql`insert into budget_payments (item_id, amount_cents, due_date) values (${item!.id}, 10000, '2027-04-10')`)
-    expect((await avisos.vencenEl('2027-04-10')).filter((v) => v.eventId === eventId).map((v) => v.que).sort()).toEqual(['Prueba de vestido', 'pagar fotógrafo'])
-    expect(await avisos.eventosDel('2027-05-01')).toContain(eventId)
+  it('los eventos por venir (su agenda la arma el planner) y el aviso de agenda no se repite', async () => {
+    // Solo los que tienen algo que avisar ese día (QA 9 oct): la víspera y el día del evento sí; diez días
+    // antes, sin nada que venza, no (15 abr); una tarea que vence mañana lo vuelve a traer; pasado el evento, nunca.
+    expect(await avisos.eventosConAvisos('2027-04-30')).toContain(eventId)
+    expect(await avisos.eventosConAvisos('2027-05-01')).toContain(eventId)
+    expect(await avisos.eventosConAvisos('2027-04-15')).not.toContain(eventId)
+    await db.execute(sql`insert into planner_tasks (event_id, stage, title, due_date) values (${eventId}, 'mes', 'Prueba de vestido', '2027-04-16')`)
+    expect(await avisos.eventosConAvisos('2027-04-15')).toContain(eventId)
+    // El cierre de confirmaciones (20 abr) también lo trae.
+    expect(await avisos.eventosConAvisos('2027-04-20')).toContain(eventId)
+    expect(await avisos.eventosConAvisos('2027-05-02')).not.toContain(eventId)
     expect(await avisos.yaAvisado(eventId, 'Mañana: Prueba de vestido')).toBe(false)
     await avisos.crear([{ userId: novia, eventId, aviso: { kind: 'agenda', title: 'Mañana: Prueba de vestido', body: '', href: '/x' } }])
     expect(await avisos.yaAvisado(eventId, 'Mañana: Prueba de vestido')).toBe(true)

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer } from './voz'
+import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, unirResultados } from './voz'
 
 // Las voces que traen de verdad macOS (Safari), Chrome y Edge.
 const MAC = [
@@ -161,5 +161,46 @@ describe('esDespedida', () => {
   it('una pregunta con «gracias» dentro, no', () => {
     expect(esDespedida('Gracias, ¿y quién falta por responder?')).toBe(false)
     expect(esDespedida('Lista de invitados')).toBe(false)
+  })
+})
+
+describe('el dictado de iPhone (9 oct: «repite agenda o cita dos veces»)', () => {
+  it('los resultados acumulados de Safari no duplican lo dicho', () => {
+    expect(unirResultados(['agenda', 'agenda una cita', 'agenda una cita'])).toBe('agenda una cita')
+    expect(unirResultados(['Agenda una cita', 'agenda una cita'])).toBe('Agenda una cita')
+  })
+  it('los trozos seguidos se juntan con espacio', () => {
+    expect(unirResultados(['agenda', ' una cita'])).toBe('agenda una cita')
+  })
+  it('un trozo que repite una palabra o un número no se pierde (QA 9 oct)', () => {
+    expect(unirResultados(['su WhatsApp es 77', ' 77', ' 12 34'])).toBe('su WhatsApp es 77 77 12 34')
+    expect(unirResultados(['hola', 'la'])).toBe('hola la')
+  })
+  it('dos trozos iguales seguidos de un motor no acumulativo (Chrome) son lo dicho (QA 9 oct)', () => {
+    expect(unirResultados(['77', '77', ' 12 34'])).toBe('77 77 12 34')
+  })
+  it('un enlace con su nombre se lee una vez', () => {
+    expect(paraLeer('Está en [Agenda](/panel/eventos/b/agenda).')).toBe('Está en Agenda.')
+    expect(paraLeer('Está en Agenda (/panel/eventos/b/agenda).')).toBe('Está en Agenda.')
+  })
+})
+
+describe('un teléfono se lee de dos en dos (9 oct: «me lo dices con números grandes»)', () => {
+  it('un celular se dice de dos en dos («76 94 49 86»)', () => {
+    expect(paraLeer('Su WhatsApp es 76944986.')).toBe('Su WhatsApp es 76, 94, 49, 86.')
+    expect(paraLeer('Su WhatsApp es +591 769 44986.')).toBe('Su WhatsApp es 76, 94, 49, 86.')
+    expect(paraLeer('Llámalo al 769 449 86')).toBe('Llámalo al 76, 94, 49, 86')
+  })
+  it('con cifras impares, la última va sola; un par que empieza por cero no la pierde', () => {
+    expect(paraLeer('Es el +12 1231 235')).toBe('Es el 12, 12, 31, 23, 5')
+    expect(paraLeer('Es el 70012345')).toBe('Es el 70, 0, 1, 23, 45')
+  })
+  it('las cifras de un enlace y una lista de números no se leen como teléfono (QA 9 oct)', () => {
+    expect(paraLeer('Está en /panel/eventos/boda/planner/agenda?cita=3f12345678-ab.')).toBe('Está en Agenda.')
+    expect(paraLeer('Mesas de 120 150 200 personas.')).toBe('Mesas de 120 150 200 personas.')
+  })
+  it('montos, horas y fechas se leen como siempre', () => {
+    expect(paraLeer('Son Bs 40.000 a las 19:00, el 2026-12-12.')).toBe('Son Bs 40.000 a las 19:00, el 2026-12-12.')
+    expect(paraLeer('Tienes 120 invitados.')).toBe('Tienes 120 invitados.')
   })
 })

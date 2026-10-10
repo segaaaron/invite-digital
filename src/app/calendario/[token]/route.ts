@@ -34,6 +34,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
     lugar: e.clase === 'pago' ? null : e.detalle,
     descripcion: e.clase === 'pago' ? e.detalle : null,
     url: `${base}${e.ruta}`,
+    // El cronograma es la noche del evento: sin una alarma por cada momento.
+    aviso: e.clase !== 'momento',
   })
   return respuestaIcs(calendarioIcs(evento.value.title, entradas.map(aCalendario), new Date()), 'agenda.ics')
 }

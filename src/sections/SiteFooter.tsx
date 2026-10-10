@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { BRAND } from '@/shared/config/brand'
-import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, MailIcon } from '@/shared/design/ui/icons'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
@@ -15,7 +15,7 @@ export type PieDelSitio = {
   readonly whatsapp: string
   readonly whatsappVisible: string
   readonly mensajeGeneral: string
-  readonly redes: { readonly instagram: string; readonly facebook: string; readonly tiktok: string }
+  readonly redes: { readonly instagram: string; readonly facebook: string; readonly tiktok: string; readonly correo?: string }
   readonly privacidadPublicada: boolean
   readonly terminosPublicados: boolean
 }
@@ -73,6 +73,11 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
             <WhatsAppIcon /> {sitio.whatsappVisible}
           </a>
         )}
+        {sitio.redes.correo ? (
+          <a className="flex items-center gap-2 text-[13px] text-gold-deep transition-colors hover:text-ink" href={`mailto:${sitio.redes.correo}`}>
+            <MailIcon /> {sitio.redes.correo}
+          </a>
+        ) : null}
         <span className="text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
           {ubicacion}
           {sitio.cobertura === '' ? '' : ` · ${sitio.cobertura}`}

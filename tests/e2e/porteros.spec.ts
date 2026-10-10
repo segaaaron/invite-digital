@@ -26,8 +26,8 @@ async function sembrar(slug: string, fecha: string, plan: string) {
 }
 
 test.beforeAll(async () => {
-  await sembrar(HOY, diaBolivia(0), 'alta-costura')
-  await sembrar(MANANA, diaBolivia(2), 'alta-costura')
+  await sembrar(HOY, diaBolivia(0), 'imperial')
+  await sembrar(MANANA, diaBolivia(2), 'imperial')
   await sembrar(SIN_PUERTA, diaBolivia(0), 'atelier')
 })
 
@@ -67,9 +67,16 @@ test('un portero entra con su PIN, registra una llegada, no sale de la puerta y 
   // Margen largo: la primera vez la página de la puerta se compila en `next dev`.
   await expect(portero).toHaveURL(new RegExp(`${ruta}/puerta$`), { timeout: 20_000 })
 
-  await portero.getByRole('button', { name: /buscar por nombre/i }).click()
+  await portero.getByRole('button', { name: /lista de invitados/i }).click()
   await portero.getByRole('button', { name: /Familia Rojas/ }).click()
   await expect(portero.getByLabel('Invitaciones que han llegado')).toHaveText('1')
+
+  // Su lista (9 oct): quién entró y quién falta, sin nada que editar.
+  await portero.getByRole('button', { name: 'Siguiente invitado' }).click()
+  await portero.getByRole('button', { name: /lista de invitados/i }).click()
+  await portero.getByRole('tab', { name: /Dentro · 1/ }).click()
+  await expect(portero.getByRole('tabpanel')).toContainText('Familia Rojas')
+  await portero.getByRole('button', { name: 'Cerrar' }).click()
 
   // No sale de la puerta: el panel le pide iniciar sesión.
   await portero.goto(`/panel/eventos/${HOY}/invitados`)

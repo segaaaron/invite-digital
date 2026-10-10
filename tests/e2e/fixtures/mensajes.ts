@@ -17,7 +17,7 @@ export async function seedGuestbookEvent(slug: string): Promise<SeededGuestbook>
     -- Gala: el libro de firmas no viene en Atelier (documento de cambios, 30 sep).
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Boda ${slug}`}, '2027-05-15', '2027-05-01', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'firma-3d'))
+            (select id from plans where slug = 'gala'))
     returning id
   `
 

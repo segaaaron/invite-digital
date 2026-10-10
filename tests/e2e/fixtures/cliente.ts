@@ -33,7 +33,7 @@ export type ClienteFixture = {
  * `membership = 'cliente'`, que es justo lo que la prueba tiene que ejercitar. Un fixture
  * que le pusiera `events.user_id` probaría otra cosa y pasaría por el motivo equivocado.
  *
- * El plan es `alta-costura` porque un evento sin plan cae al más barato, que no trae mesa
+ * El plan es `imperial` porque un evento sin plan cae al más barato, que no trae mesa
  * de regalos ni modo puerta: la misma trampa que ya documentan los demás fixtures.
  */
 /**
@@ -63,7 +63,7 @@ export async function seedCliente(slug: string, cuenta: { email: string; passwor
   const [evento] = await sql<{ id: string }[]>`
     insert into events (slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id, user_id)
     values (${slug}, ${'Boda con acceso de cliente'}, '2027-08-14', '2027-07-30', 'es', 'boda', 'live',
-            (select id from plans where slug = 'alta-costura'), ${dueno!.id})
+            (select id from plans where slug = 'imperial'), ${dueno!.id})
     returning id
   `
 

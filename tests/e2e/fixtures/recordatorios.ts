@@ -23,7 +23,7 @@ export async function seedRecordatorioEvent(slug: string): Promise<{ eventId: st
             (current_date + interval '20 days')::date,
             (current_date + interval '5 days')::date,
             'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
     returning id
   `
 

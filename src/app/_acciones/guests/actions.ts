@@ -9,6 +9,7 @@ import { env } from '@/shared/config/env'
 import { isErr } from '@/shared/result'
 import type { GuestErrorKind } from '@/modules/guests/domain/errors'
 import { invitationUrl } from '@/modules/guests/domain/invitation-url'
+import { yaEstaEnLaLista, type YaEsta } from '@/modules/guests'
 import { campo } from '@/shared/forms/campo'
 import { normalizarWhatsapp } from '@/shared/whatsapp'
 import { registrarFallo } from '@/shared/observability/fallos'
@@ -370,7 +371,7 @@ export async function setGroupPhoneAction(input: {
   return { status: 'success' }
 }
 
-export type AltaDelAsistenteState = { status: 'success'; creadas: number; personas: number } | { status: 'error'; message: string }
+export type AltaDelAsistenteState = { status: 'success'; creadas: number; personas: number; yaEstaban: YaEsta[] } | { status: 'error'; message: string }
 
 /**
  * «Confirmar» en la tarjeta de Luxury: las invitaciones que propuso, guardadas **por la persona**, con las
@@ -387,12 +388,24 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
 
 
   const capacidad = await plans.allowanceFor(eventId)
-  const grupos = await guests.list(eventId)
-  if (isErr(capacidad) || isErr(grupos)) return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+  const [grupos, personasYa] = await Promise.all([guests.list(eventId), guests.listPeople(eventId)])
+  if (isErr(capacidad) || isErr(grupos) || isErr(personasYa)) return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
 
+  // Quien ya está en la lista no se vuelve a crear (9 oct): se devuelve para que Luxury lo diga y pregunte.
+  const lista = {
+    grupos: grupos.value.map((g) => ({ id: g.id, label: g.label, phone: g.phone, revokedAt: g.revokedAt })),
+    personas: personasYa.value.map((p) => ({ guestGroupId: p.guestGroupId, fullName: p.fullName })),
+  }
+  const yaEstaban: YaEsta[] = []
   let creadas = 0
   let personas = 0
   for (const invitacion of propuesta.data) {
+    // Por invitación: confirmar que una es otra persona no deja pasar las demás repetidas.
+    const repetido = invitacion.aun_si_existe ? null : yaEstaEnLaLista(invitacion, lista)
+    if (repetido !== null) {
+      yaEstaban.push(repetido)
+      continue
+    }
     const [principal, ...acompanantes] = invitacion.personas
     const result = await guests.addGuest({
       eventId,
@@ -414,10 +427,14 @@ export async function addGuestsFromAssistantAction(input: { eventSlug: string; i
     }
     creadas += 1
     personas += invitacion.personas.length
+    // Repetidos dentro del mismo dictado («Ana Vega… y Ana Vega»).
+    const id = `nueva-${creadas}`
+    lista.grupos.push({ id, label: principal!, phone: invitacion.telefono, revokedAt: null })
+    lista.personas.push(...invitacion.personas.map((fullName) => ({ guestGroupId: id, fullName })))
   }
 
   await admin.record(actor, { action: 'asistente.invitados', subject: input.eventSlug, detail: `${creadas} invitaciones, ${personas} personas` })
   revalidatePath(`/panel/eventos/${input.eventSlug}/invitados`)
   revalidatePath(`/panel/eventos/${input.eventSlug}`)
-  return { status: 'success', creadas, personas }
+  return { status: 'success', creadas, personas, yaEstaban }
 }

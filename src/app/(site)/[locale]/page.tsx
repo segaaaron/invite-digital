@@ -17,6 +17,8 @@ import { attempt, isOk } from '@/shared/result'
 import { faqJsonLd, jsonLdScript, organizationJsonLd, productJsonLd } from '@/shared/seo/json-ld'
 import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
 import { ComparisonSection } from '@/sections/ComparisonSection'
+import { AboutSection } from '@/sections/AboutSection'
+import { HerramientasDelPanel } from '@/sections/HerramientasDelPanel'
 import { ExperienceSection } from '@/sections/ExperienceSection'
 import { FaqSection } from '@/sections/FaqSection'
 import { FiestaChooser } from '@/sections/FiestaChooser'
@@ -162,6 +164,7 @@ export default async function LandingPage({
       <FiestaChooser dictionary={dictionary} locale={locale} />
       <ExperienceSection dictionary={dictionary} />
       <MobileSection dictionary={dictionary} />
+      <HerramientasDelPanel aLaTabla="#precios" dictionary={dictionary} />
 
       {templates.length > 0 ? (
         <section aria-labelledby="collections-title" className="px-6 py-24" id="colecciones">
@@ -196,7 +199,7 @@ export default async function LandingPage({
 
       {plans.length > 0 ? (
         <PricingSection
-          comparativa={await comparativaDePlanes(plans, dictionary)}
+          comparativa={await comparativaDePlanes(plans, dictionary, locale)}
           reservas={await reservasDePlanes()}
           dictionary={dictionary}
           locale={locale}
@@ -209,6 +212,7 @@ export default async function LandingPage({
 
       {templates.length > 0 ? <ModelsSection dictionary={dictionary} locale={locale} templates={templates} /> : null}
 
+      <AboutSection dictionary={dictionary} />
       <TestimonialsSection dictionary={dictionary} testimonios={sitio.testimonios} />
       <FaqSection dictionary={dictionary} encargo={encargo} />
       <ContactSection

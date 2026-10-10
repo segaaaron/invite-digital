@@ -34,3 +34,13 @@ describe('enlaceDeGoogle', () => {
     expect(url.searchParams.get('location')).toBe('Salón')
   })
 })
+
+describe('con aviso (9 oct)', () => {
+  const ahora = new Date('2026-10-09T12:00:00Z')
+  it('una cita avisa una hora antes; un día entero, la víspera a las 9; sin `aviso`, ninguna alarma', () => {
+    const ics = calendarioIcs('Agenda', [{ uid: 'a', inicio: '2026-10-15T10:00', titulo: 'Degustación', aviso: true }, { uid: 'b', inicio: '2026-10-16', titulo: 'Pagar flores', aviso: true }], ahora)
+    expect(ics).toContain('BEGIN:VALARM\r\nACTION:DISPLAY\r\nDESCRIPTION:Degustación\r\nTRIGGER:-PT1H\r\nEND:VALARM')
+    expect(ics).toContain('TRIGGER:-PT15H')
+    expect(calendarioIcs('Agenda', [{ uid: 'c', inicio: '2026-10-15T10:00', titulo: 'X' }], ahora)).not.toContain('VALARM')
+  })
+})

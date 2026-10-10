@@ -20,7 +20,7 @@ async function sembrarPuerta(): Promise<string> {
   const [evento] = await sql<{ id: string }[]>`
     insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
     values ((select id from users where email = 'atelier@invitepremium.bo'), ${PUERTA}, 'Evento en vivo', '2027-05-15', '2027-05-01', 'es', 'clasico', 'live',
-            (select id from plans where slug = 'alta-costura'))
+            (select id from plans where slug = 'imperial'))
     returning id
   `
   const [grupo] = await sql<{ id: string }[]>`
@@ -39,7 +39,7 @@ test.afterAll(async () => {
 })
 
 test('el invitado confirma y los novios lo ven en su lista sin recargar', async ({ browser }) => {
-  const { token, eventSlug } = await seedInvitation({ slug: 'en-vivo-rsvp-e2e', plan: 'alta-costura' })
+  const { token, eventSlug } = await seedInvitation({ slug: 'en-vivo-rsvp-e2e', plan: 'imperial' })
 
   const novios = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   await novios.goto(`/panel/eventos/${eventSlug}/invitados`)

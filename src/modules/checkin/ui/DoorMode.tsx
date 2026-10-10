@@ -506,7 +506,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
             onClick={() => setSheetOpen(true)}
             className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-white"
           >
-            ⌕ Buscar por nombre
+            ☰ Lista de invitados
           </button>
         </div>
       )}
@@ -585,6 +585,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       <DoorSearchSheet
         groups={manifest.groups}
         arrivedIds={arrivedIds}
+        dentro={dentroDe}
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         onPick={(groupId) => {

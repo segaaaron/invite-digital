@@ -129,3 +129,51 @@ export function leerCita(input: { title: string; dia: string; hora: string; dura
   const notes = input.notes.trim().slice(0, 2000) || null
   return { ok: true, valor: { title, startsAt: `${input.dia}T${input.hora}`, durationMin: minutos, place, vendorId: input.vendorId.trim() || null, notes } }
 }
+
+/** Días de `desde` a `hasta` (`YYYY-MM-DD`); negativo si ya pasó. */
+export const diasHasta = (desde: string, hasta: string): number => Math.round((Date.parse(`${hasta}T12:00:00Z`) - Date.parse(`${desde}T12:00:00Z`)) / 86_400_000)
+
+/**
+ * **Lo atrasado** (9 oct): tareas y pagos de antes de hoy sin hacer, lo más viejo primero. Es lo único que
+ * se puede atrasar: una cita o un ensayo que pasó ya pasó. Antes no salía en ninguna parte de la agenda.
+ */
+export const atrasadasDeLaAgenda = (entradas: readonly EntradaDeAgenda[], hoy: string): EntradaDeAgenda[] =>
+  entradas.filter((e) => !e.hecha && e.dia < hoy && (e.clase === 'tarea' || e.clase === 'pago')).sort((a, b) => a.dia.localeCompare(b.dia))
+
+export type AvisoDeAgenda = { readonly cuando: string; readonly que: string; readonly ruta: string }
+
+/** Con su hora, y un pago con su importe: el aviso no se repite por título, y dos cuotas iguales son dos avisos. */
+const conHora = (e: EntradaDeAgenda) => {
+  const titulo = e.clase === 'pago' && e.detalle ? `${e.titulo} (${e.detalle})` : e.titulo
+  return e.hora === null ? titulo : `${e.hora} ${titulo}`
+}
+/** Lo que se avisa la víspera, una por cosa. El cronograma no: es la noche del evento, que ya se avisa. */
+const SE_AVISA: readonly ClaseDeAgenda[] = ['tarea', 'pago', 'cita', 'ensayo', 'confirmacion']
+
+/**
+ * **Los avisos del día** (9 oct), del mantenimiento de cada mañana. Antes solo salían tareas y pagos de
+ * mañana: las citas, los ensayos y el cierre de confirmaciones no avisaban nunca.
+ * - **Hoy**: un solo resumen (tres y «y N más»), no una notificación por cosa.
+ * - **Mañana**: una por cosa, con su hora.
+ * - **Atrasado**: lo que venció ayer, una vez (pasado mañana ya no insiste: queda en la agenda).
+ * - **El evento**: a 30 y 7 días, la víspera y el día.
+ */
+export function avisosDeLaAgenda(entradas: readonly EntradaDeAgenda[], hoy: string): AvisoDeAgenda[] {
+  const manana = sumarDias(hoy, 1)
+  const avisos: AvisoDeAgenda[] = []
+  const evento = entradas.find((e) => e.clase === 'evento')
+  if (evento) {
+    const faltan = diasHasta(hoy, evento.dia)
+    if (faltan === 0) avisos.push({ cuando: 'hoy', que: 'es tu evento', ruta: evento.ruta })
+    else if (faltan === 1) avisos.push({ cuando: 'mañana', que: 'es tu evento', ruta: evento.ruta })
+    else if (faltan === 7 || faltan === 30) avisos.push({ cuando: `en ${faltan} días`, que: 'tu evento', ruta: evento.ruta })
+  }
+  const deHoy = entradas.filter((e) => e.dia === hoy && !e.hecha && SE_AVISA.includes(e.clase))
+  if (deHoy.length > 0) {
+    const primeras = deHoy.slice(0, 3).map(conHora).join(' · ')
+    avisos.push({ cuando: 'hoy', que: deHoy.length > 3 ? `${primeras} y ${deHoy.length - 3} más` : primeras, ruta: '/planner/agenda' })
+  }
+  for (const e of entradas) if (e.dia === manana && !e.hecha && SE_AVISA.includes(e.clase)) avisos.push({ cuando: 'mañana', que: conHora(e), ruta: e.ruta })
+  for (const e of atrasadasDeLaAgenda(entradas, hoy)) if (e.dia === sumarDias(hoy, -1)) avisos.push({ cuando: 'atrasado', que: conHora(e), ruta: e.ruta })
+  return avisos
+}

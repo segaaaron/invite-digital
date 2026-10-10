@@ -2,14 +2,14 @@
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId } from 'react'
-import { type AgendaActionState, emitirSuscripcionAction, removeCitaAction, saveCitaAction } from '@/app/_acciones/planner/agenda-actions'
+import { type AgendaActionState, emitirSuscripcionAction, marcarEnLaAgendaAction, removeCitaAction, reprogramarEnLaAgendaAction, saveCitaAction } from '@/app/_acciones/planner/agenda-actions'
 import { CopyLinkButton } from '@/shared/design/ui/CopyLinkButton'
 import { CampoFecha, CampoHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
-import type { Cita } from '../domain/agenda'
+import type { Cita, EntradaDeAgenda } from '../domain/agenda'
 import { Accion, type Evento, Ocultos } from './Accion'
 
 const INICIAL: AgendaActionState = { status: 'idle' }
@@ -89,7 +89,8 @@ export function SuscripcionAlCalendario({ evento }: { evento: Evento }) {
   const enlace = estado.status === 'success' ? estado.enlace : undefined
   return (
     <div className="flex flex-col gap-3 text-[13px] leading-relaxed text-ink-soft">
-      <p>Tu agenda en el calendario de tu teléfono (iPhone, Google Calendar u Outlook), sin cuentas ni permisos. Es de solo lectura y se actualiza sola.</p>
+      <p>Tu agenda dentro del calendario de tu teléfono (iPhone, Google Calendar u Outlook), para verla junto a lo demás. Es de solo lectura y se actualiza sola.</p>
+      <p className="text-[12px] text-ink-mute">Los avisos te llegan por la campana y las notificaciones del panel: el calendario del teléfono suele quitar las alertas de lo que se suscribe.</p>
       {enlace ? (
         <>
           <PanelButton href={enlace.replace(/^https?:/, 'webcal:')} variant="primary">
@@ -111,5 +112,64 @@ export function SuscripcionAlCalendario({ evento }: { evento: Evento }) {
       )}
       <ActionFeedback errorsOnly state={estado} />
     </div>
+  )
+}
+
+/**
+ * «Hecha», «Pagado» y su «Deshacer» (9 oct): un botón que es su formulario. La acción lleva a `despues`
+ * —con `?hecho=` para ofrecer deshacer—: el aviso vive en la URL porque la acción remonta la lista.
+ */
+export function MarcarEnLaAgenda({ evento, entrada, hecha, despues, children, variant = 'default' }: {
+  evento: Evento
+  entrada: Pick<EntradaDeAgenda, 'clase' | 'id' | 'titulo'>
+  hecha: boolean
+  despues: string
+  children: string
+  variant?: 'default' | 'primary'
+}) {
+  const [estado, enviar, enviando] = useActionState(sinCaerse(marcarEnLaAgendaAction), INICIAL)
+  const que = entrada.clase === 'pago' ? (hecha ? 'Marcar pagado' : 'Deshacer el pago de') : hecha ? 'Marcar hecha' : 'Deshacer'
+  return (
+    <form action={enviar} className="inline-flex flex-col items-end gap-1">
+      <Ocultos {...evento} extra={{ clase: entrada.clase, id: entrada.id, hecha: String(hecha), despues }} />
+      <SubmitButton aria-label={`${que} «${entrada.titulo}»`} pending={enviando} pendingLabel="…" variant={variant}>
+        {children}
+      </SubmitButton>
+      {estado.status === 'error' ? (
+        <span className="text-[11px] text-danger-deep" role="alert">
+          {estado.message}
+        </span>
+      ) : null}
+    </form>
+  )
+}
+
+/** «Cambiar fecha» de una tarea o un pago (`?mover=<clase>.<id>`): otro día y listo. */
+export function ReprogramarDialog({ evento, entrada, hoy, cerrarEn }: { evento: Evento; entrada: Pick<EntradaDeAgenda, 'clase' | 'id' | 'titulo' | 'dia'>; hoy: string; cerrarEn: string }) {
+  const router = useRouter()
+  const [estado, enviar, enviando] = useActionState(sinCaerse(reprogramarEnLaAgendaAction), INICIAL)
+  const id = useId()
+  useEffect(() => {
+    if (estado.status === 'success') router.replace(cerrarEn, { scroll: false })
+  }, [estado, router, cerrarEn])
+  return (
+    <PanelDialog closeHref={cerrarEn} title="Cambiar fecha" width={420}>
+      <form action={enviar} className="flex flex-col gap-4">
+        <Ocultos {...evento} extra={{ clase: entrada.clase, id: entrada.id }} />
+        <p className="text-[13.5px] leading-relaxed text-ink-soft">
+          «{entrada.titulo}» {entrada.dia < hoy ? 'venció' : 'vence'} el {entrada.dia.split('-').reverse().join('/')}. ¿Para qué día la pasamos?
+        </p>
+        <Field htmlFor={`${id}-d`} label="Nuevo día">
+          <CampoFecha defaultValue={hoy} id={`${id}-d`} name="dia" required />
+        </Field>
+        <ActionFeedback errorsOnly state={estado} />
+        <div className="flex items-center justify-end gap-3 border-t border-line-panel pt-4">
+          <PanelButton href={cerrarEn}>Cancelar</PanelButton>
+          <SubmitButton pending={enviando} pendingLabel="Guardando…" variant="primary">
+            Cambiar fecha
+          </SubmitButton>
+        </div>
+      </form>
+    </PanelDialog>
   )
 }

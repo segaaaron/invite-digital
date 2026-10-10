@@ -34,3 +34,16 @@ export function enlaceWhatsapp(numero: string | null, mensaje: string): string |
   const digitos = normalizado.slice(1)
   return `https://wa.me/${digitos}${mensaje.trim() === '' ? '' : `?text=${encodeURIComponent(mensaje)}`}`
 }
+
+/**
+ * Un celular **dictado** (Luxury por voz, 9 oct): el dictado junta cifras de más o de menos y `normalizarWhatsapp`
+ * admite de 8 a 15, así que «77 712 345 678» se guardaba como número. Aquí solo vale un celular de Bolivia
+ * —8 cifras que empiezan por 6 o 7, con o sin 591— o un extranjero dicho con su `+`. Si no, `null`: se pregunta.
+ */
+export function celularDictado(crudo: string): string | null {
+  const digitos = crudo.replace(/\D/g, '')
+  const local = digitos.length === 11 && digitos.startsWith('591') ? digitos.slice(3) : digitos
+  if (/^[67]\d{7}$/.test(local)) return `+591${local}`
+  const extranjero = crudo.trim().startsWith('+') && !digitos.startsWith('591') && digitos.length >= 8 && digitos.length <= 15
+  return extranjero ? `+${digitos}` : null
+}

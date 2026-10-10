@@ -6,7 +6,7 @@ const base = { id: 'q1', label: 'Mesa de regalos', kind: 'registry' as const, ta
 
 describe('createQrCode', () => {
   it('acepta una ruta interna', () => {
-    expect(isOk(createQrCode({ ...base, target: '/es/pedido/firma-3d' }))).toBe(true)
+    expect(isOk(createQrCode({ ...base, target: '/es/pedido/gala' }))).toBe(true)
   })
 
   it('acepta http y https', () => {

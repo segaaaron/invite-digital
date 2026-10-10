@@ -30,14 +30,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
 
   if (limite.isLimited(actor.userId, Date.now())) return new Response('Demasiados mensajes seguidos', { status: 429 })
 
-  const cuerpo = (await request.json().catch(() => null)) as { mensajes?: unknown; idioma?: unknown; porVoz?: unknown } | null
+  const cuerpo = (await request.json().catch(() => null)) as { mensajes?: unknown; idioma?: unknown; porVoz?: unknown; destinos?: unknown } | null
+  // Las pantallas de la barra de quien habla: «ir_a» solo lleva a esas. Del navegador, pero solo restringe.
+  const destinos = Array.isArray(cuerpo?.destinos) ? cuerpo.destinos.filter((d): d is string => typeof d === 'string').slice(0, 80) : undefined
   const mensajes = leerHistorial(cuerpo?.mensajes)
   if (mensajes === null) return new Response('Conversación no válida', { status: 400 })
 
   const ahora = new Date()
   const permiso = puedeConversar(acceso.config, acceso.capacidad.planSlug, await asistente.usoDe(acceso.evento.id, ahora), acceso.capacidad.asistente === true)
   const salidas: AsyncIterable<Salida> = permiso.ok
-    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true, escribir })
+    ? asistente.responder({ evento: acceso.evento, capacidad: acceso.capacidad, nombreDelPlan: acceso.nombreDelPlan, rol: acceso.rol, mensajes, ahora, idioma: idiomaDe(cuerpo?.idioma), porVoz: cuerpo?.porVoz === true, ...(destinos ? { destinos } : {}), escribir })
     : (async function* () {
         yield { tipo: 'texto', delta: permiso.motivo === 'fuera_del_plan' ? MENSAJE_DE_CIERRE.presupuesto : MENSAJE_DE_CIERRE[permiso.motivo] }
         yield { tipo: 'fin' }

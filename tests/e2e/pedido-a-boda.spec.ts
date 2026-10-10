@@ -32,7 +32,7 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
       contact: CORREO,
       eventDate: '2027-09-18',
       templateSlug: DISENO,
-      planSlug: 'firma-3d',
+      planSlug: 'gala',
     })
 
     // 1. El **admin** aprueba desde la ficha de la venta. El contacto del pedido es un correo:

@@ -28,6 +28,8 @@ export type PlanRow = {
   readonly priceAnnualCents?: number | null
   /** La reserva de importe fijo, en centavos (`0079`). */
   readonly depositFixedCents?: number | null
+  /** La reserva como porcentaje del total (si no hay fija). */
+  readonly depositPct?: number | null
   /** Diseño por encargo (`0081`): rondas de corrección y días de entrega. Nulos: autoservicio. */
   readonly correctionRounds?: number | null
   readonly deliveryDays?: number | null

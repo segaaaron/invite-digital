@@ -41,16 +41,16 @@ describe('esquema', () => {
     if (rows.length === 0) throw new Error('No hay planes en la base — ¿corriste `pnpm db:seed`?')
     expect(rows).toEqual([
       { slug: 'atelier', priceCents: 49000, currency: 'BOB' },
-      { slug: 'firma-3d', priceCents: 69000, currency: 'BOB' },
-      { slug: 'alta-costura', priceCents: 95000, currency: 'BOB' },
+      { slug: 'gala', priceCents: 69000, currency: 'BOB' },
+      { slug: 'imperial', priceCents: 95000, currency: 'BOB' },
     ])
   })
 
-  it('exactamente un plan está destacado y es firma-3d', async () => {
+  it('exactamente un plan está destacado y es gala', async () => {
     const allPlans = await db.select({ slug: plans.slug }).from(plans)
     if (allPlans.length === 0) throw new Error('No hay planes en la base — ¿corriste `pnpm db:seed`?')
     const highlighted = await db.select({ slug: plans.slug }).from(plans).where(eq(plans.highlighted, true))
-    expect(highlighted).toEqual([{ slug: 'firma-3d' }])
+    expect(highlighted).toEqual([{ slug: 'gala' }])
   })
 
   it('las plantillas publicadas son las de la colección, ordenadas y con categoría real', async () => {
@@ -408,8 +408,8 @@ describe('límites del plan', () => {
     expect(rows).toEqual([
       // Documento de cambios (30 sep): envíos ilimitados en los tres; mesa + QR solo en Imperial.
       { slug: 'atelier', maxGuestGroups: null, seating: false, registry: false, checkin: false },
-      { slug: 'firma-3d', maxGuestGroups: null, seating: false, registry: true, checkin: false },
-      { slug: 'alta-costura', maxGuestGroups: null, seating: true, registry: true, checkin: true },
+      { slug: 'gala', maxGuestGroups: null, seating: false, registry: true, checkin: false },
+      { slug: 'imperial', maxGuestGroups: null, seating: true, registry: true, checkin: true },
     ])
   })
 
