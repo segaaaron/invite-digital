@@ -30,7 +30,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
         {/* El `Suspense` envuelve solo la barra (lee `useSearchParams`), nunca las páginas: alrededor
             de ellas rompería sus `notFound()`. */}
         <Suspense fallback={null}>
-          <BarraDeCarga />
+          <BarraDeCarga esqueleto />
         </Suspense>
         {/* `div`, no `main`: la carcasa del panel emite su propio `main` y dos anidados
             dejan la página con dos regiones principales, que es un error de HTML y hace

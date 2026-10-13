@@ -5,7 +5,7 @@
 // hereda `full`, y `full` deniega a un puerta — el olvido cae del lado seguro.
 
 import { revalidatePath } from 'next/cache'
-import { checkin, plans } from '@/app/composition/container'
+import { checkin, guests, plans } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { CheckinErrorKind } from '@/modules/checkin/domain/errors'
@@ -174,4 +174,44 @@ export async function undoCheckInAction(input: { eventId: string; eventSlug: str
 
   revalidatePath(`/panel/eventos/${input.eventSlug}/checkin`)
   return { status: 'success' }
+}
+
+export type SinPaseState = { status: 'idle' } | { status: 'error'; message: string } | { status: 'success'; message: string }
+
+/**
+ * **Llegó alguien sin pase** (maqueta E68): el acompañante que nadie cargó. Se suma a la invitación con la que
+ * viene —su cupo crece solo, como «Otro acompañante»— y entra en ese mismo momento. Así el catering lo cuenta y la
+ * puerta lo ve dentro, con nombre, sin inventarle una invitación propia.
+ */
+export async function registrarSinPaseAction(_previo: SinPaseState, formData: FormData): Promise<SinPaseState> {
+  const eventId = String(formData.get('eventId') ?? '')
+  const eventSlug = String(formData.get('eventSlug') ?? '')
+  const actor = await requireSession()
+  await requireEventAccess(actor, { eventId, eventSlug, section: 'checkin' })
+  await exigirModoPuerta(eventId)
+
+  const nombre = String(formData.get('nombre') ?? '').trim()
+  const groupId = String(formData.get('groupId') ?? '')
+  if (nombre === '') return { status: 'error', message: 'Escribe su nombre: así lo ve el catering y la puerta.' }
+  if (groupId === '') return { status: 'error', message: 'Elige con quién viene.' }
+
+  const persona = await guests.addPerson({ eventId, guestGroupId: groupId, fullName: nombre, isCompanion: true, attending: 'yes' })
+  if (isErr(persona)) {
+    registrarFallo('checkin/actions', 'alta sin pase rechazada', persona.error.kind, persona.error.detail)
+    return { status: 'error', message: persona.error.detail }
+  }
+
+  const entrada = await checkin.recordGroup({
+    eventId,
+    recordedBy: `user:${actor.userId}`,
+    scan: { scanId: crypto.randomUUID(), groupId, arrivedCount: null, scannedAt: new Date(), personIds: [persona.value.id] },
+  })
+  if (isErr(entrada)) {
+    registrarFallo('checkin/actions', 'ingreso sin pase rechazado', entrada.error.kind, entrada.error.detail)
+    return { status: 'error', message: `${nombre} quedó en la lista, pero no se pudo marcar su ingreso. Regístralo desde la lista.` }
+  }
+
+  revalidatePath(`/panel/eventos/${eventSlug}/checkin`)
+  revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
+  return { status: 'success', message: `${nombre} entró como acompañante.` }
 }

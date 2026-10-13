@@ -2,10 +2,12 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useRef, useState } from 'react'
-import { checkInByGroupAction, undoCheckInAction } from '@/app/_acciones/checkin/actions'
+import { useActionState, useEffect, useRef, useState, type RefObject } from 'react'
+import { checkInByGroupAction, registrarSinPaseAction, type SinPaseState, undoCheckInAction } from '@/app/_acciones/checkin/actions'
 import { CheckIcon, CloseIcon, ScanIcon, UsersIcon } from '@/shared/design/ui/icons'
-import { botonClases, Iniciales, SearchField } from '@/shared/design/ui/panel/PanelKit'
+import { botonClases, FIELD_CLASS, Iniciales, LABEL_CLASS, SearchField } from '@/shared/design/ui/panel/PanelKit'
+import { SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import type { EstadoDeLlegada } from '../domain/lista-de-llegadas'
 
@@ -85,6 +87,9 @@ export function ControlDeIngreso({
   const [nota, setNota] = useState<string | null>(null)
   /** «Código del pase» abre su diálogo (E67). */
   const dialogoCodigo = useRef<HTMLDialogElement>(null)
+  const dialogoSinPase = useRef<HTMLDialogElement>(null)
+  // Con quién puede venir: cada invitación una vez, con su mesa.
+  const invitaciones = [...new Map(filas.map((f) => [f.invitacionId, { id: f.invitacionId, nombre: f.invitacion ?? f.nombre, mesa: f.mesa }])).values()].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
   const [codigoAbierto, setCodigoAbierto] = useState(false)
   const abrirCodigo = () => {
     if (dialogoCodigo.current?.open === false) dialogoCodigo.current.showModal()
@@ -292,6 +297,11 @@ export function ControlDeIngreso({
               Código del pase
             </button>
           </div>
+          {/* El último recurso, discreto (pedido del usuario): quien llega sin estar en la lista (E68). */}
+          <button className="min-h-11 w-full cursor-pointer text-center text-[14px] font-medium text-gold-deep hover:underline" onClick={() => dialogoSinPase.current?.showModal()} type="button">
+            Llegó alguien sin pase
+          </button>
+          <SinPase dialogo={dialogoSinPase} eventId={eventId} eventSlug={eventSlug} invitaciones={invitaciones} />
         </section>
 
         <section aria-label="Últimas llegadas" className="hidden flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5 min-[1100px]:flex">
@@ -639,5 +649,95 @@ export function ControlDeIngreso({
         </section>
       </div>
     </div>
+  )
+}
+
+/**
+ * **Llegó alguien sin pase** (maqueta E68): nombre y con quién viene. Se suma como acompañante a esa invitación y
+ * entra ya; se sienta en su mesa. Primero se avisa de buscarlo por nombre: quizá sí está, en otra invitación.
+ */
+function SinPase({
+  dialogo,
+  eventId,
+  eventSlug,
+  invitaciones,
+}: {
+  dialogo: RefObject<HTMLDialogElement | null>
+  eventId: string
+  eventSlug: string
+  invitaciones: readonly { id: string; nombre: string; mesa: string | null }[]
+}) {
+  const [estado, registrar, registrando] = useActionState<SinPaseState, FormData>(sinCaerse(registrarSinPaseAction), { status: 'idle' })
+  const [con, setCon] = useState(invitaciones[0]?.id ?? '')
+  const mesa = invitaciones.find((i) => i.id === con)?.mesa ?? null
+  const cerrar = () => dialogo.current?.close()
+  useEffect(() => {
+    if (estado.status === 'success') dialogo.current?.close()
+  }, [estado, dialogo])
+
+  return (
+    <>
+      {estado.status === 'success' ? (
+        <p className="m-0 rounded-[12px] bg-pill-ok px-4 py-3 text-[14px] text-pill-ok-ink" role="status">
+          {estado.message}
+        </p>
+      ) : null}
+      <dialog
+        aria-labelledby="sin-pase-titulo"
+        className="m-auto max-h-[92dvh] w-[min(560px,94vw)] max-w-none overflow-y-auto rounded-[20px] border border-line-panel bg-bg p-7 text-left text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:mx-0 max-[767px]:mt-auto max-[767px]:mb-0 max-[767px]:w-full max-[767px]:rounded-b-none max-[767px]:px-5 max-[767px]:pt-3 max-[767px]:pb-[max(20px,env(safe-area-inset-bottom))]"
+        ref={dialogo}
+      >
+        <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-line-panel-strong min-[768px]:hidden" />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id="sin-pase-titulo">
+              Llegó alguien sin pase
+            </h2>
+            <p className="text-[15px] text-ink-mute">Lo registramos como acompañante extra. El catering lo cuenta.</p>
+          </div>
+          <button aria-label="Cerrar" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold" onClick={cerrar} type="button">
+            <CloseIcon className="size-4" />
+          </button>
+        </div>
+        <p className="mt-5 rounded-[12px] bg-pill-pending px-4 py-3.5 text-[14.5px] text-pill-pending-ink">Primero búscalo por nombre: quizá está en otra invitación.</p>
+        <form action={registrar} className="mt-5 flex flex-col gap-4">
+          <input name="eventId" type="hidden" value={eventId} />
+          <input name="eventSlug" type="hidden" value={eventSlug} />
+          <label className="flex flex-col gap-2" htmlFor="sin-pase-nombre">
+            <span className={LABEL_CLASS}>Nombre</span>
+            <input autoComplete="off" className={FIELD_CLASS} id="sin-pase-nombre" maxLength={160} name="nombre" required />
+          </label>
+          <div className="grid gap-4 min-[480px]:grid-cols-2">
+            <label className="flex flex-col gap-2" htmlFor="sin-pase-con">
+              <span className={LABEL_CLASS}>Viene con</span>
+              <select className={FIELD_CLASS} id="sin-pase-con" name="groupId" onChange={(e) => setCon(e.target.value)} required value={con}>
+                {invitaciones.map((i) => (
+                  <option key={i.id} value={i.id}>
+                    {i.nombre}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="flex flex-col gap-2">
+              <span className={LABEL_CLASS}>Mesa</span>
+              <span className="flex min-h-11.5 items-center rounded-[8px] border border-line-panel bg-bg-sunken/50 px-3.5 text-[15px] text-ink-mute">{mesa ?? 'Sin mesa'}</span>
+            </div>
+          </div>
+          {estado.status === 'error' ? (
+            <p className="text-[13.5px] text-danger" role="alert">
+              {estado.message}
+            </p>
+          ) : null}
+          <div className="flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
+            <button className={botonClases('default')} onClick={cerrar} type="button">
+              Cancelar
+            </button>
+            <SubmitButton pending={registrando} pendingLabel="Registrando…" variant="primary">
+              Registrar la llegada
+            </SubmitButton>
+          </div>
+        </form>
+      </dialog>
+    </>
   )
 }

@@ -4,7 +4,7 @@ import { ControlDeIngreso, type FilaDeIngreso } from './ControlDeIngreso'
 
 const registrar = vi.hoisted(() => vi.fn(async (): Promise<Record<string, unknown>> => ({ kind: 'welcome' })))
 const deshacer = vi.hoisted(() => vi.fn(async () => ({ status: 'success' })))
-vi.mock('@/app/_acciones/checkin/actions', () => ({ checkInByGroupAction: registrar, undoCheckInAction: deshacer }))
+vi.mock('@/app/_acciones/checkin/actions', () => ({ checkInByGroupAction: registrar, undoCheckInAction: deshacer, registrarSinPaseAction: vi.fn(async () => ({ status: 'idle' })) }))
 const refrescar = vi.hoisted(() => vi.fn())
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: refrescar, push: vi.fn() }) }))
 
