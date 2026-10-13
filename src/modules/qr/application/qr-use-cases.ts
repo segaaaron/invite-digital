@@ -4,7 +4,13 @@ import { qrError, type QrError } from '../domain/errors'
 import { createQrCode, type QrKind } from '../domain/qr-code'
 import type { QrRepository, QrRow } from './ports'
 
-type Deps = { qr: QrRepository; ids: () => string; clock: () => Date }
+type Deps = {
+  qr: QrRepository
+  ids: () => string
+  clock: () => Date
+  /** Si el evento del código ya se celebró: su código deja de llevar a ninguna parte (13 oct). */
+  eventoTerminado?: (eventId: string) => Promise<boolean>
+}
 
 export const listEventQrCodes =
   (deps: Deps) =>
@@ -129,6 +135,7 @@ export const resolveQrCode =
         if (!esUuid(id)) return err(qrError('not_found', `No existe el código ${id}`))
         const row = await deps.qr.findById(id)
         if (row === null || !row.active) return err(qrError('not_found', `No existe el código ${id}`))
+        if (row.eventId !== null && (await deps.eventoTerminado?.(row.eventId))) return err(qrError('not_found', `Evento celebrado: ${id}`))
 
         await deps.qr.countScan(id, deps.clock())
         return ok({ target: row.target })

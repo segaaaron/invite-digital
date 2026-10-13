@@ -58,9 +58,9 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
   const ruta = (r: string) => `/panel/eventos/${evento.slug}${r}`
   return async (llamada) => {
     if (ESCRITURAS.has(llamada.nombre)) {
-      // Lo celebrado queda para mirar (8 de octubre): solo se agradecen los mensajes.
-      if (yaSeCelebro(evento.eventDate, ahora) && llamada.nombre !== 'agradecer_mensajes') {
-        return { hecho: [], no_se_pudo: ['El evento ya se celebró: queda para mirar y ya no se cambia ni se borra nada. Solo se pueden agradecer los mensajes del libro de firmas.'] }
+      // Lo celebrado queda para mirar (8 de octubre; sin excepciones desde el 13): no se cambia nada.
+      if (yaSeCelebro(evento.eventDate, ahora)) {
+        return { hecho: [], no_se_pudo: ['El evento ya se celebró: queda solo para mirar y ya no se cambia nada. Si hace falta corregir algo, lo hace el atelier.'] }
       }
       return escribir(llamada, evento)
     }

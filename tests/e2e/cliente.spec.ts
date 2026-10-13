@@ -73,6 +73,9 @@ test.describe('el panel del cliente', () => {
     await expect(page.locator('dialog[open]')).toHaveCount(0)
     await page.getByRole('link', { name: 'Vista de tarjetas' }).click()
     await expect(page.getByRole('heading', { name: 'Mesa del cliente' })).toBeVisible()
+    // Su botón «Imprimir plan» abre el plan, no un 404 (13 oct: la página pedía `full`).
+    expect((await page.goto(`/panel/eventos/${SLUG}/mesas/imprimir`))?.status()).toBe(200)
+    await expect(page.getByText('Mesa del cliente')).toBeVisible()
 
     await page.goto(`/panel/eventos/${SLUG}/regalos?panel=regalo`)
     await page.getByLabel('Regalo', { exact: true }).fill('Juego de copas')

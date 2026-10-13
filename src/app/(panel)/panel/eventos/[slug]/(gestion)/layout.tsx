@@ -149,7 +149,7 @@ export default async function EventoLayout({
       {celebrado ? (
         <div className="mb-4">
           <PanelAlert tone="info">
-            Este evento ya se celebró. Todo queda guardado para que lo mires y lo descargues; ya no se puede cambiar ni borrar. Sí puedes agradecer los mensajes del libro de firmas.
+            Este evento ya se celebró. Todo queda guardado para que lo mires; ya no se puede cambiar nada y los enlaces de la invitación ya no abren. Si hace falta corregir algo, escríbele a tu atelier.
           </PanelAlert>
         </div>
       ) : null}

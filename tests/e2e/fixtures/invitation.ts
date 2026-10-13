@@ -8,6 +8,8 @@ type Options = {
   seats?: number
   status?: 'draft' | 'live' | 'closed'
   rsvpDeadline?: string
+  /** La fecha del evento: una ya pasada lo deja celebrado y sus enlaces mueren. */
+  eventDate?: string
   revoked?: boolean
   locale?: 'es' | 'en'
   /** El plan del evento. Sin él, el evento usa el más barato, que no trae fotos de invitados. */
@@ -38,6 +40,7 @@ export function invitationFixtures() {
       seats = 4,
       status = 'live',
       rsvpDeadline = '2027-05-01',
+      eventDate = '2027-05-15',
       revoked = false,
       locale = 'es',
       plan = null,
@@ -49,7 +52,7 @@ export function invitationFixtures() {
       -- El dueño: desde la multitenencia, un evento sin usuario solo lo ve el admin, y
       -- estas pruebas entran como el atelier. Sin esta columna la suite entera da 404.
       insert into events (user_id, slug, title, event_date, rsvp_deadline, locale, theme_key, status, plan_id)
-      values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Evento ${slug}`}, '2027-05-15', ${rsvpDeadline}, ${locale}, 'clasico', ${status},
+      values ((select id from users where email = 'atelier@invitepremium.bo'), ${slug}, ${`Evento ${slug}`}, ${eventDate}, ${rsvpDeadline}, ${locale}, 'clasico', ${status},
               ${plan === null ? null : sql`(select id from plans where slug = ${plan})`})
       returning id
     `

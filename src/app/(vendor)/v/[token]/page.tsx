@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events, planner, plans } from '@/app/composition/container'
+import { yaSeCelebro } from '@/modules/events'
 import { isErr } from '@/shared/result'
 
 export const dynamic = 'force-dynamic'
@@ -16,7 +17,8 @@ export default async function VendorPage({ params }: { params: Promise<{ token: 
   if (vista === null) notFound()
   if (isErr(await plans.requireFeature(vista.eventId, 'plannerTotal'))) notFound()
   const evento = await events.getByIdUnscoped(vista.eventId)
-  if (isErr(evento)) notFound()
+  // Celebrado el evento, el enlace del proveedor muere como todos (13 oct).
+  if (isErr(evento) || yaSeCelebro(evento.value.eventDate, new Date())) notFound()
 
   const { proveedor, momentos } = vista
   return (

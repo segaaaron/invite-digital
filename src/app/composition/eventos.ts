@@ -47,7 +47,7 @@ import { sniffMime } from '@/modules/orders/domain/proof'
 import { env } from '@/shared/config/env'
 import { listDueReminders, markReminderSent } from '@/modules/reminders/application/reminder-use-cases'
 import { drizzleReminderRepository } from '@/modules/reminders/infrastructure/drizzle-reminder-repository'
-import { isErr } from '@/shared/result'
+import { err, isErr } from '@/shared/result'
 import { addGuest } from '@/modules/guests/application/add-guest'
 import { addGuestGroup } from '@/modules/guests/application/add-guest-group'
 import { listGuestGroups } from '@/modules/guests/application/list-guest-groups'
@@ -71,6 +71,8 @@ import { argon2Hasher } from '@/modules/identity/infrastructure/argon2-hasher'
 import { drizzleSessionRepository } from '@/modules/identity/infrastructure/drizzle-session-repository'
 import { createDrizzleUserRepository } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { clock, minter } from './base'
+import { yaSeCelebro } from '@/modules/events'
+import { guestError } from '@/modules/guests/domain/errors'
 // Solo dentro de funciones: una referencia ansiosa entre ficheros de composición revienta al cargar.
 import { plans } from './negocio'
 
@@ -200,7 +202,14 @@ export const events = {
   /** Solo el título: el nombre con el que el cliente ve su evento en el panel. */
   renombrar: renombrarEvento({ events: drizzleEventRepository }),
   /** El «save the date» (`0087`): su enlace y si el evento compró el extra. */
-  saveTheDate: drizzleSaveTheDate,
+  saveTheDate: {
+    ...drizzleSaveTheDate,
+    /** Celebrado el evento, el «save the date» tampoco abre (13 oct). */
+    resolver: async (token: string) => {
+      const eventId = await drizzleSaveTheDate.resolver(token)
+      return eventId !== null && (await eventoTerminado(eventId)) ? null : eventId
+    },
+  },
   /** Acento y letra sobre la piel del diseño (`0088`, Gala o más). */
   estilo: drizzleEstilo,
   /**
@@ -404,15 +413,43 @@ const gruposQueAvisan: typeof drizzleGuestGroupRepository = {
   },
 }
 
+const resolverInvitado = resolveByToken({ groups: gruposQueAvisan, minter, clock })
+
+/**
+ * Si el evento ya se celebró (desde las 06:00 del día siguiente, como el panel): **todo enlace público
+ * muere** (13 oct). Un evento que no se puede leer no se da por terminado: un fallo de la base no apaga
+ * invitaciones vivas.
+ */
+export async function eventoTerminado(eventId: string): Promise<boolean> {
+  const evento = await events.getByIdUnscoped(eventId)
+  return !isErr(evento) && yaSeCelebro(evento.value.eventDate, clock())
+}
+
 export const guests = {
   /** El enlace general del evento (`0086`): uno, del que cada invitado saca el suyo. */
-  general: drizzleEnlaceGeneral,
+  general: {
+    ...drizzleEnlaceGeneral,
+    /** Un evento celebrado ya no da altas: el enlace muere como los demás (13 oct). */
+    resolver: async (token: string) => {
+      const eventId = await drizzleEnlaceGeneral.resolver(token)
+      return eventId !== null && (await eventoTerminado(eventId)) ? null : eventId
+    },
+  },
   list: listGuestGroups({ groups: drizzleGuestGroupRepository }),
   /** Cuántas invitaciones, sin traerlas: el tope del plan se cuenta en invitaciones. */
   contar: (eventId: string) => countGroupsByEvent(db, eventId),
   /** Cuántas personas, para la insignia de «Invitados» de la barra. */
   contarPersonas: (eventId: string) => countPeopleByEvent(eventId),
-  resolveByToken: resolveByToken({ groups: gruposQueAvisan, minter, clock }),
+  /**
+   * El enlace de un invitado. **Celebrado el evento, muere** (13 oct, pedido del usuario): por aquí pasan
+   * la invitación, el pase, las fotos, los regalos, el calendario, el libro de firmas y confirmar, así que
+   * un solo corte los apaga todos. Se dice «no existe», como un enlace revocado.
+   */
+  resolveByToken: async (token: string) => {
+    const grupo = await resolverInvitado(token)
+    if (isErr(grupo) || !(await eventoTerminado(grupo.value.eventId))) return grupo
+    return err(guestError('not_found', `Evento ya celebrado: ${grupo.value.eventId}`))
+  },
   listPeople: listPeopleByEvent({ people: drizzleGuestPersonRepository }),
   revoke: revokeInvitation({ groups: drizzleGuestGroupRepository, clock }),
   reopenRsvp: reopenRsvp({ groups: drizzleGuestGroupRepository, clock }),

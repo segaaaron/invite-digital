@@ -51,6 +51,14 @@ test('una invitación revocada da 404, igual que una inexistente', async ({ page
   await deleteEvent(eventSlug)
 })
 
+test('celebrado el evento, sus enlaces mueren: invitación, pase y calendario (13 oct)', async ({ page }) => {
+  const { token, eventSlug } = await seedInvitation({ slug: 'boda-enlace-muerto-e2e', eventDate: '2025-01-10', rsvpDeadline: '2025-01-01' })
+  expect((await page.goto(`/i/${token}`))?.status()).toBe(404)
+  expect((await page.goto(`/i/${token}/pase`))?.status()).toBe(404)
+  expect((await page.request.get(`/i/${token}/calendario`)).status()).toBe(404)
+  await deleteEvent(eventSlug)
+})
+
 test('un evento en borrador no tiene invitación todavía', async ({ page }) => {
   const { token, eventSlug } = await seedInvitation({ slug: 'boda-borrador-e2e', status: 'draft' })
   expect((await page.goto(`/i/${token}`))?.status()).toBe(404)

@@ -51,10 +51,5 @@ describe('requireEventAccess con el evento celebrado', () => {
     await expect(requireEventAccess({ ...cliente, soporte: { adminUserId: 'a1' } } as never, { eventId: 'e1', section: 'cliente' })).resolves.toBe('e1')
   })
 
-  it('agradecer los mensajes sigue después de la fiesta', async () => {
-    vi.setSystemTime(new Date('2026-12-01T12:00:00-04:00'))
-    celebrado()
-    const { requireEventAccess } = await import('./sesion')
-    await expect(requireEventAccess(cliente, { eventId: 'e1', section: 'cliente', aunCelebrado: true })).resolves.toBe('e1')
-  })
+
 })

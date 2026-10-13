@@ -21,7 +21,7 @@ import { listRegistry } from '@/modules/registry/application/list-registry'
 import { drizzleRegistryRepository } from '@/modules/registry/infrastructure/drizzle-registry-repository'
 import { createEventQrCode, listEventQrCodes, resolveQrCode, toggleEventQrCode, updateEventQrCode } from '@/modules/qr/application/qr-use-cases'
 import { drizzleQrRepository } from '@/modules/qr/infrastructure/drizzle-qr-repository'
-import { guests } from './eventos'
+import { eventoTerminado, guests } from './eventos'
 import { clock, minter } from './base'
 import { guardarFormasDeRegalar, leerFormasDeRegalar } from '@/modules/registry/application/formas-use-cases'
 import { drizzleFormasDeRegalar } from '@/modules/registry/infrastructure/drizzle-formas-de-regalar'
@@ -110,5 +110,5 @@ export const qr = {
   update: updateEventQrCode(qrDeps),
   toggle: toggleEventQrCode(qrDeps),
   /** Lo usa la ruta pública `/r/<id>`: sin sesión, como el enlace del invitado. */
-  resolve: resolveQrCode(qrDeps),
+  resolve: resolveQrCode({ ...qrDeps, eventoTerminado }),
 }

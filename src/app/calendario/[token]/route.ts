@@ -3,6 +3,7 @@ import { parseRole } from '@/modules/identity'
 import { NOMBRE_DE_CLASE, type EntradaDeAgenda } from '@/modules/planner'
 import { calendarioIcs, respuestaIcs, type EventoDeCalendario } from '@/shared/calendario/ics'
 import { env } from '@/shared/config/env'
+import { yaSeCelebro } from '@/modules/events'
 import { isErr } from '@/shared/result'
 
 export const dynamic = 'force-dynamic'
@@ -22,7 +23,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ tok
   if (fila === null) return noEsta()
   const actor = { userId: fila.id, email: fila.email, role: parseRole(fila.role), mustChangePassword: fila.mustChangePassword }
   const evento = await events.getByIdFor(actor, suscripcion.eventId, { section: 'planner' })
-  if (isErr(evento)) return noEsta()
+  // Celebrado el evento, la suscripción muere como todo enlace (13 oct).
+  if (isErr(evento) || yaSeCelebro(evento.value.eventDate, new Date())) return noEsta()
 
   const base = `${env.SITE_URL.replace(/\/$/, '')}/panel/eventos/${evento.value.slug}`
   const entradas = (await planner.dia.agenda(evento.value)).filter((e) => !e.hecha)

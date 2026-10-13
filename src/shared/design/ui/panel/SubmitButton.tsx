@@ -25,8 +25,6 @@ export type SubmitButtonProps = {
   'aria-label'?: string
   /** Antes de enviar: qué hacer después (p. ej. «Guardar y seguir» frente a «Guardar y volver»). */
   onClick?: () => void
-  /** Sigue activo en un evento ya celebrado (lo que la guardia deja con `aunCelebrado`). */
-  aunCelebrado?: boolean
 }
 
 /**
@@ -42,17 +40,16 @@ export type SubmitButtonProps = {
  * - El indicador es un punto que late, no un disco girando, y con movimiento reducido se queda
  *   quieto (`animate-latido` lo apaga `globals.css`).
  */
-export function SubmitButton({ children, pendingLabel, pending, variant = 'primary', disabled = false, aunCelebrado = false, ...rest }: SubmitButtonProps) {
+export function SubmitButton({ children, pendingLabel, pending, variant = 'primary', disabled = false, ...rest }: SubmitButtonProps) {
   const { pending: enviando } = useFormStatus()
   const esperando = pending ?? enviando
-  const soloMirar = useSoloLectura() && !aunCelebrado
+  const soloMirar = useSoloLectura()
 
   return (
     <PanelButton
       aria-busy={esperando || undefined}
       disabled={disabled || esperando || soloMirar}
       title={soloMirar ? 'El evento ya se celebró: queda para mirar' : undefined}
-      {...(aunCelebrado ? { 'data-aun-celebrado': '' } : {})}
       type="submit"
       variant={variant}
       {...rest}

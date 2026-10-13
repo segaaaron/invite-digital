@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation'
-import { events, venue } from '@/app/composition/container'
+import { events, plans, venue } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 
@@ -16,11 +16,14 @@ export default async function PlanImprimiblePage({ params }: { params: Promise<{
   const actor = await requireSession()
   const { slug } = await params
 
-  const event = await events.getFor(actor, slug)
+  // La misma puerta que Mesas (13 oct): su botón «Imprimir plan» lo ven el anfitrión y su planner, y
+  // sin sección esta página pedía `full` y les daba 404.
+  const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
   }
+  if (isErr(await plans.requireFeature(event.value.id, 'seating'))) notFound()
 
   const seating = await venue.seating(event.value.id)
   if (isErr(seating)) throw new Error(seating.error.detail)

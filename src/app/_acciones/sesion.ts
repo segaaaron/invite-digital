@@ -144,17 +144,17 @@ export async function requireAdmin(): Promise<Actor> {
  */
 export async function requireEventAccess(
   actor: Actor,
-  ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection; aunCelebrado?: true },
+  ref: { eventId?: string | undefined; eventSlug?: string | undefined; section?: EventSection },
 ): Promise<string> {
   const evento = await events.tocar(actor, ref)
   if (evento === null) {
     registrarFallo('sesion', 'acceso denegado a evento ajeno', actor.email, ref.eventSlug ?? ref.eventId ?? '(sin referencia)')
     throw new Error('Evento no encontrado')
   }
-  // **Lo celebrado queda para mirar** (8 de octubre): nadie del equipo lo cambia ni lo borra; el admin
-  // sí (también en modo soporte), y lo que sigue después de la fiesta lo pide con `aunCelebrado`
-  // (agradecer mensajes). No se escribe nada: se vuelve a la pantalla, que dice por qué.
-  if (ref.aunCelebrado !== true && soloParaMirar(actor, evento.eventDate)) redirect(await pantallaDeVuelta(evento.slug))
+  // **Lo celebrado queda para mirar** (8 de octubre; sin excepciones desde el 13): nadie del equipo
+  // cambia nada, ni agradecer mensajes; el admin sí (también en modo soporte). No se escribe nada: se
+  // vuelve a la pantalla, que dice por qué.
+  if (soloParaMirar(actor, evento.eventDate)) redirect(await pantallaDeVuelta(evento.slug))
   return evento.id
 }
 
