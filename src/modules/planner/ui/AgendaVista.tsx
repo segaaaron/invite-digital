@@ -123,7 +123,7 @@ export function MesDeAgenda({
     <div className="overflow-hidden rounded-[14px] border border-line-panel">
       <div className="grid grid-cols-7 border-b border-line-panel bg-bg-top/60">
         {DIAS.map((d) => (
-          <span className="px-2 py-2 text-center text-[10.5px] font-medium tracking-[0.1em] text-ink-mute uppercase" key={d}>
+          <span className="px-2 py-2 text-center text-[12px] font-medium tracking-[0.1em] text-ink-mute uppercase" key={d}>
             {d}
           </span>
         ))}
@@ -181,6 +181,23 @@ export function MesDeAgenda({
           })}
         </div>
       ))}
+      {/* En el celular el mes son puntos de color: sin leyenda no dicen nada (13 oct). Solo las clases que hay. */}
+      {entradas.length === 0 ? null : (
+        <ul aria-label="Qué es cada color" className="m-0 flex list-none flex-wrap gap-x-4 gap-y-1.5 border-t border-line-panel bg-bg-top/40 px-3 py-2.5 text-[12.5px] text-ink-soft min-[700px]:hidden">
+          {[...new Set(entradas.map((e) => e.clase))].map((clase) => (
+            <li className="flex items-center gap-1.5" key={clase}>
+              <span aria-hidden className={`size-2 rounded-full ${punto(clase)}`} />
+              {NOMBRE_DE_CLASE[clase]}
+            </li>
+          ))}
+          {entradas.some((e) => estaAtrasada(e, hoy)) ? (
+            <li className="flex items-center gap-1.5">
+              <span aria-hidden className="size-2 rounded-full bg-pill-no-ink" />
+              Atrasado
+            </li>
+          ) : null}
+        </ul>
+      )}
     </div>
   )
 }

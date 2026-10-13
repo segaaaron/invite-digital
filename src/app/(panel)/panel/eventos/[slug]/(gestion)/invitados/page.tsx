@@ -207,8 +207,9 @@ export default async function InvitadosPage({
         title="Invitados"
       />
       <AccionDeLaIsla>
-        <Link aria-label="Añadir invitado" className="grid size-11 place-items-center rounded-xl text-ink" href={`${base}?panel=alta`}>
-          <PlusIcon className="size-6" />
+        <Link aria-label="Añadir invitado" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=alta`}>
+          <PlusIcon className="size-4.5" />
+          Añadir
         </Link>
       </AccionDeLaIsla>
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
@@ -382,6 +383,11 @@ export default async function InvitadosPage({
             {vivas.length - enviadas > 0 ? (
               <PanelButton className="w-full min-[768px]:hidden" href={`${base}?panel=envio`} variant="primary">
                 <SendIcon className="size-4.5" /> {vivas.length - enviadas === 1 ? 'Enviar la que falta' : `Enviar las ${vivas.length - enviadas} que faltan`}
+              </PanelButton>
+            ) : vivas.length > 0 ? (
+              // Con todas enviadas, el envío sigue a mano: reenviar o ver «Enviadas» (13 oct: en el celular no había forma).
+              <PanelButton className="w-full min-[768px]:hidden" href={`${base}?panel=envio`}>
+                <SendIcon className="size-4.5" /> Enviar o reenviar
               </PanelButton>
             ) : null}
           </>

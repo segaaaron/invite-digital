@@ -157,7 +157,7 @@ function ListaDeArchivos({ documentos, evento, proveedores }: { documentos: read
               <span className="truncate max-[767px]:hidden">{proveedor ?? <span className="text-ink-mute">—</span>}</span>
               <span className="text-ink-mute [font-variant-numeric:tabular-nums] max-[767px]:hidden">{d.peso}</span>
               <span className="flex items-center gap-1.5 justify-self-end max-[767px]:col-start-2 max-[767px]:row-span-2 max-[767px]:row-start-1">
-                <a className={`${botonClases('default')} max-[767px]:hidden`} download href={d.href}>
+                <a className={botonClases('default')} download href={d.href}>
                   Descargar
                 </a>
                 <Quitar enLinea evento={evento} id={d.id} nombre={d.originalName} />

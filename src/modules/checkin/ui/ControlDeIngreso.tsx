@@ -506,7 +506,7 @@ export function ControlDeIngreso({
                     activa
                       ? 'font-medium text-ink max-[767px]:border-shell-deep max-[767px]:bg-shell-deep max-[767px]:text-shell-ink min-[768px]:border-shell-deep'
                       : 'text-ink-mute hover:text-ink max-[767px]:border-line-panel-strong max-[767px]:bg-bg-raised max-[767px]:text-ink min-[768px]:border-transparent'
-                  } ${f.clave === 'todos' ? 'max-[767px]:hidden' : ''}`}
+                  }`}
                   key={f.clave}
                   onClick={() => {
                     setFiltro(f.clave)

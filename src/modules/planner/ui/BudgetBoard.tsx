@@ -236,7 +236,7 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
 
           {editable ? (
           <details>
-            <summary className="inline-flex min-h-8 cursor-pointer list-none items-center text-[13px] text-ink-mute hover:text-ink [&::-webkit-details-marker]:hidden">Pagos, editar o quitar</summary>
+            <summary className="inline-flex min-h-8 max-[767px]:min-h-11 cursor-pointer list-none items-center text-[13px] text-ink-mute hover:text-ink [&::-webkit-details-marker]:hidden">Pagos, editar o quitar</summary>
             <div className="mt-3 flex flex-col gap-4">
               <NuevoPago concepto={p.concept} evento={evento} itemId={p.id} />
               <ItemForm evento={evento} opciones={opciones} partida={p} />

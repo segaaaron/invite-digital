@@ -155,8 +155,9 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
         </div>
       ) : null}
       <AccionDeLaIsla>
-        <Link aria-label="Nueva cotización" className="grid size-11 place-items-center rounded-xl text-ink" href={`${BASE}?crear=cotizacion`}>
-          <PlusIcon className="size-6" />
+        <Link aria-label="Nueva cotización" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${BASE}?crear=cotizacion`}>
+          <PlusIcon className="size-4.5" />
+          Nueva
         </Link>
       </AccionDeLaIsla>
 

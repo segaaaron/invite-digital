@@ -463,7 +463,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
 
       {/* La barra de guardado, fija abajo: el formulario es largo y el botón tiene que estar
           a mano esté donde esté, junto al aviso de que hay cambios sin guardar. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line-panel bg-bg-raised/95 px-4.5 py-3 backdrop-blur min-[768px]:left-[92px] min-[1280px]:left-[268px]">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t max-[767px]:bottom-[calc(64px+env(safe-area-inset-bottom))] border-line-panel bg-bg-raised/95 px-4.5 py-3 backdrop-blur min-[768px]:left-[92px] min-[1280px]:left-[268px]">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3">
           <span aria-live="polite" className="text-[13px] text-ink-soft">
             {guardando ? 'Guardando…' : sucio ? 'Tienes cambios sin guardar.' : estado.status === 'success' ? estado.message : 'Todo guardado.'}

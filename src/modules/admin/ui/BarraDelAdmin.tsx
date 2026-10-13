@@ -41,6 +41,9 @@ export function BarraDelAdmin({
           <span className="sr-only">: volver a todos los eventos</span>
         </Link>
       )}
+      {/* Dentro de un evento la isla vuelve a la cartera, pero el menú sigue montado sin su botón: lo abre la
+          pestaña «Menú» de la barra inferior (13 oct; antes el admin no tenía cómo ir a Invitados o Mesas). */}
+      {evento === undefined ? null : <span className="contents [&>button]:hidden">{menu}</span>}
       <div className="hidden min-w-0 flex-1 truncate text-[14px] text-ink-mute min-[768px]:block">
         {evento === undefined ? (
           <RutaDelAdmin hoy={hoy} />

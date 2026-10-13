@@ -113,6 +113,12 @@ export default async function MesasPage({
             <>
               <UnseatedStrip groups={unseated} />
               <EmptyState
+                // Con su botón (13 oct): en el celular la cabecera no lleva acciones y no había cómo crear la primera.
+                action={
+                  <PanelButton href={`${base}?panel=mesa`} variant="primary">
+                    <PlusIcon className="size-4" /> Crear la primera mesa
+                  </PanelButton>
+                }
                 description="Crea las mesas con sus lugares y reparte a las familias. La puerta le dice a cada invitado dónde se sienta."
                 icon={<TableIcon />}
                 title="Aún no hay mesas en tu salón"
@@ -160,7 +166,7 @@ export default async function MesasPage({
                 <ul className="flex flex-col">
                   {tables.map((t, i) => (
                     <li className="border-b border-line-panel last:border-b-0" key={t.id}>
-                      <Link className="flex min-h-15 items-center gap-3.5 py-3 text-ink no-underline" href={`${base}?vista=tarjetas`}>
+                      <Link className="flex min-h-15 items-center gap-3.5 py-3 text-ink no-underline" href={`${base}?vista=tarjetas#mesa-${t.id}`}>
                         <span className="grid size-10 shrink-0 place-items-center rounded-full border border-line-panel-strong font-display text-[18px] [font-variant-numeric:lining-nums]">
                           {t.label.replace(/^mesa\s*/i, '').replace(/^0+(?=\d)/, '') || i + 1}
                         </span>

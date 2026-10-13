@@ -101,9 +101,11 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
 
   return (
     <article
-      className={`flex flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-5 shadow-card ${clase} ${
+      // `#mesa-<id>`: la lista del celular lleva a esta mesa y la resalta (`target:`), no a todas sin decir cuál.
+      className={`flex scroll-mt-24 flex-col gap-4 rounded-[18px] border bg-linear-to-b from-bg-top to-white p-5 shadow-card target:ring-4 target:ring-gold/50 ${clase} ${
         resaltada ? 'ring-4 ring-gold/50' : ''
       }`}
+      id={`mesa-${table.id}`}
     >
       {/* Con el estado y los dos iconos a la derecha, «Mesa 01» se partía en dos líneas en
           tarjetas de 260 px. El título no se parte: si no cabe, lo que baja es la cola. */}
@@ -120,7 +122,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
           {porBorrar ? (
             <>
               <button
-                className="cursor-pointer rounded-[var(--radius-pill)] border border-danger/40 bg-white px-2.5 py-1 font-mono text-[10.5px] tracking-[0.2em] text-danger-deep uppercase"
+                className="cursor-pointer rounded-[var(--radius-pill)] border border-danger/40 bg-white px-2.5 py-1 font-mono text-[12px] tracking-[0.2em] text-danger-deep uppercase max-[767px]:min-h-11 max-[767px]:px-4"
                 disabled={pendiente}
                 onClick={() => correr(() => removeTableAction({ id: table.id, eventId, eventSlug }))}
                 type="button"
@@ -128,7 +130,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
                 Borrar
               </button>
               <button
-                className="cursor-pointer font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase"
+                className="cursor-pointer font-mono text-[12px] tracking-[0.2em] text-ink-mute uppercase max-[767px]:min-h-11 max-[767px]:px-3"
                 onClick={() => setPorBorrar(false)}
                 type="button"
               >
@@ -203,13 +205,13 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
                   🍽
                 </span>
               ) : null}
-              <span className="font-mono text-[10px] text-ink-mute">{group.seats}</span>
+              <span className="font-mono text-[12px] text-ink-mute">{group.seats}</span>
               <button
                 type="button"
                 aria-label={`Quitar de la mesa a ${group.label}`}
                 disabled={pendiente}
                 onClick={() => correr(() => unassignGroupAction({ eventId, eventSlug, groupId: group.id }))}
-                className="flex size-5 cursor-pointer items-center justify-center rounded-full text-ink-mute transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-40"
+                className="flex size-5 cursor-pointer items-center justify-center rounded-full text-ink-mute max-[767px]:size-10 transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-40"
               >
                 <span aria-hidden>✕</span>
               </button>
@@ -253,7 +255,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
 
       {editando ? (
         <div className="flex flex-col gap-3 border-t border-line pt-4">
-          <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+          <label className="flex flex-col gap-1 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
             Nombre de la mesa
             <input
               className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
@@ -265,7 +267,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
           </label>
 
           <div className="grid grid-cols-2 gap-3">
-            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+            <label className="flex flex-col gap-1 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
               Sitios
               <input
                 className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
@@ -276,7 +278,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
               />
             </label>
 
-            <label className="flex flex-col gap-1 text-[10px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
+            <label className="flex flex-col gap-1 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute">
               Forma
               <select
                 className="rounded-pill border border-line bg-bg-top px-3 py-2 text-[13px] text-ink"
@@ -292,7 +294,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
             </label>
           </div>
 
-          <label className="flex flex-col gap-1 font-mono text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
+          <label className="flex flex-col gap-1 font-mono text-[12px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
             Notas
             <input
               className="rounded-pill border border-line-panel-strong bg-white px-3 py-2 text-[13px] text-ink"
@@ -306,7 +308,7 @@ export function TableCard({ eventId, eventSlug, table, unseated, mesaPrincipal =
 
           <div className="flex flex-wrap items-center gap-4">
             <button
-              className="rounded-pill border border-line px-4 py-2 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
+              className="rounded-pill border border-line px-4 py-2 font-mono text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink disabled:opacity-40"
               disabled={pendiente}
               onClick={guardar}
               type="button"

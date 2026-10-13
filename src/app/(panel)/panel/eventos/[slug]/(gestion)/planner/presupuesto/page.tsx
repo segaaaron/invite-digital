@@ -143,7 +143,7 @@ export default async function PresupuestoPage({ params, searchParams }: { params
       <PanelHeader
         actions={
           editable && plan !== null ? (
-            <span className="flex gap-2.5 max-[767px]:hidden">
+            <span className="flex flex-wrap gap-2.5">
               <PanelButton href={`${base}?panel=reparto`}>Ajustar el reparto</PanelButton>
               <PanelButton href={`${base}?panel=pago`} variant="primary">
                 <PlusIcon className="size-4" /> Registrar un pago
@@ -157,8 +157,9 @@ export default async function PresupuestoPage({ params, searchParams }: { params
 
       {editable ? (
         <AccionDeLaIsla>
-          <Link aria-label="Anotar un gasto" className="grid size-11 place-items-center rounded-xl text-ink" href={`${base}?panel=partida`}>
-            <PlusIcon className="size-6" />
+          <Link aria-label="Anotar un gasto" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=partida`}>
+            <PlusIcon className="size-4.5" />
+          Añadir
           </Link>
         </AccionDeLaIsla>
       ) : null}

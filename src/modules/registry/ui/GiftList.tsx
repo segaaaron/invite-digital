@@ -91,7 +91,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
           {definitivo ? null : (
             <>
               <button
-                className="min-h-8 cursor-pointer text-[13px] font-medium text-gold-deep hover:text-shell-deep disabled:opacity-40"
+                className="min-h-8 max-[767px]:min-h-11 cursor-pointer text-[13px] font-medium text-gold-deep hover:text-shell-deep disabled:opacity-40"
                 disabled={pendiente}
                 onClick={() => correr(() => markPurchasedAction({ id: gift.id, eventId, eventSlug }))}
                 type="button"
@@ -100,7 +100,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
               </button>
               {gift.status === 'reserved' ? (
                 <button
-                  className="min-h-8 cursor-pointer text-[13px] font-medium text-gold-deep hover:text-shell-deep disabled:opacity-40"
+                  className="min-h-8 max-[767px]:min-h-11 cursor-pointer text-[13px] font-medium text-gold-deep hover:text-shell-deep disabled:opacity-40"
                   disabled={pendiente}
                   onClick={() => correr(() => releaseGiftAsAtelierAction({ id: gift.id, eventId, eventSlug }))}
                   type="button"
@@ -115,7 +115,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
             estado, no que el precio se haya escrito mal.
           */}
           <button
-            className="min-h-8 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
+            className="min-h-8 max-[767px]:min-h-11 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
             disabled={pendiente}
             onClick={() => setEditando(true)}
             type="button"
@@ -123,7 +123,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
             Editar
           </button>
           <button
-            className="min-h-8 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
+            className="min-h-8 max-[767px]:min-h-11 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
             disabled={pendiente}
             onClick={() => correr(() => removeGiftAction({ id: gift.id, eventId, eventSlug }))}
             type="button"

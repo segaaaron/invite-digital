@@ -67,7 +67,7 @@ export function BotonFlotante({ href, children, etiqueta }: { href: string; chil
   return (
     <Link
       aria-label={etiqueta}
-      className="fixed right-4 bottom-[calc(16px+env(safe-area-inset-bottom))] z-30 min-[768px]:bottom-6 flex min-h-13 items-center gap-2 rounded-full bg-ink px-5 text-[14px] font-medium text-white shadow-[0_14px_30px_-10px_rgb(0_0_0/0.55)] min-[860px]:hidden print:hidden"
+      className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 min-[768px]:bottom-6 flex min-h-13 items-center gap-2 rounded-full bg-ink px-5 text-[14px] font-medium text-white shadow-[0_14px_30px_-10px_rgb(0_0_0/0.55)] min-[860px]:hidden print:hidden"
       href={href}
     >
       {children}

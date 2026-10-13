@@ -3,6 +3,7 @@ import type { NavSection } from './nav'
 import { ProveedorDeNavegacion } from './navegacion'
 import { PanelSidebar, type PanelEvento, type PanelUser } from './PanelSidebar'
 import { RielTablet, SubpestanasDeTablet } from './RielTablet'
+import { BarraInferiorMovil } from './BarraInferiorMovil'
 
 /**
  * La carcasa del panel: la navegación de cada aparato, la barra de arriba y el cuerpo de papel.
@@ -17,7 +18,8 @@ import { RielTablet, SubpestanasDeTablet } from './RielTablet'
  *   centrado a 1120 px;
  * - tablet (768–1279 px): carril de 92 px (`RielTablet`) y, en las secciones que el carril junta («Planear»), sus
  *   pestañas bajo la barra de arriba;
- * - celular: la barra de arriba es la isla, con el menú guiado (`MenuMovil`).
+ * - celular: la barra de arriba es la isla y, abajo y siempre a la vista, la barra de pestañas (`BarraInferiorMovil`,
+ *   13 oct) con las secciones de siempre y «Menú», que abre el menú guiado (`MenuMovil`).
  */
 export function PanelFrame({
   sections,
@@ -53,11 +55,12 @@ export function PanelFrame({
         <div className="flex min-w-0 flex-col bg-bg min-[768px]:ml-[92px] min-[1280px]:ml-0 print:ml-0 print:bg-white">
           {barra}
           <SubpestanasDeTablet />
-          <main className="panel-movil relative mx-auto w-full max-w-[1120px] min-w-0 px-4 pb-28 min-[768px]:px-8 min-[768px]:pt-8 min-[768px]:pb-32 min-[1280px]:px-12 min-[1280px]:pt-9 min-[1280px]:pb-[140px] print:max-w-none print:p-0">
+          <main className="panel-movil relative mx-auto w-full max-w-[1120px] min-w-0 px-4 pb-[calc(168px+env(safe-area-inset-bottom))] min-[768px]:px-8 min-[768px]:pt-8 min-[768px]:pb-32 min-[1280px]:px-12 min-[1280px]:pt-9 min-[1280px]:pb-[140px] print:max-w-none print:p-0">
             {children}
           </main>
         </div>
       </div>
+      <BarraInferiorMovil />
     </ProveedorDeNavegacion>
   )
 }

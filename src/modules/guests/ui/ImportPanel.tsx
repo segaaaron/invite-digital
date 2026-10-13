@@ -62,7 +62,30 @@ export function ImportPanel({
           </p>
           {/* `relative` a propósito: sin él, un absoluto de dentro toma como bloque
               contenedor el `main` y no se recorta, y estira el documento en el teléfono. */}
-          <div className="relative overflow-x-auto">
+          {/* En el celular, una tarjeta por fila (13 oct): la tabla se deslizaba de lado dentro del diálogo. */}
+          <ul className="m-0 flex list-none flex-col gap-2.5 p-0 min-[768px]:hidden">
+            {state.rows.map((fila) => (
+              <li className="flex flex-col gap-2 rounded-[14px] border border-line-panel bg-white p-3.5" key={fila.line}>
+                <span className="flex items-baseline justify-between gap-3">
+                  <span className="text-[15px] font-medium text-ink">{fila.label || '—'}</span>
+                  <span className="shrink-0 text-[12.5px] text-ink-mute">
+                    Línea {fila.line} · {fila.seats} {fila.seats === 1 ? 'cupo' : 'cupos'}
+                  </span>
+                </span>
+                {fila.url === null ? (
+                  <span className="text-[13.5px] text-danger">{fila.problem}</span>
+                ) : (
+                  <input
+                    aria-label={`Su enlace: ${fila.label}`}
+                    className="min-h-11 w-full rounded-[10px] border border-line-panel-strong bg-white px-3 font-codigo text-[13px] text-ink"
+                    readOnly
+                    value={fila.url}
+                  />
+                )}
+              </li>
+            ))}
+          </ul>
+          <div className="relative overflow-x-auto max-[767px]:hidden">
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr>

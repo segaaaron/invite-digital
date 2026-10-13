@@ -2,7 +2,7 @@
 
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
-import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { reassignEventAction, setEventPlanAction } from '@/app/_acciones/admin/bodas-actions'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'

@@ -78,8 +78,9 @@ export default async function ProveedoresPage({ params, searchParams }: { params
         title="Proveedores"
       />
       <AccionDeLaIsla>
-        <Link aria-label="Añadir proveedor" className="grid size-11 place-items-center rounded-xl text-ink" href={conFiltro('panel=proveedor')}>
-          <PlusIcon className="size-6" />
+        <Link aria-label="Añadir proveedor" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={conFiltro('panel=proveedor')}>
+          <PlusIcon className="size-4.5" />
+          Añadir
         </Link>
       </AccionDeLaIsla>
 

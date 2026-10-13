@@ -26,7 +26,7 @@ export function LuxuryBloqueado({ mejorar, planes, comoExtra }: { mejorar: Mejor
       {/* La misma copa de latón que la de quien lo tiene, apagada y con un candadito. */}
       <button
         aria-label={`Conocer a ${NOMBRE_DEL_ASISTENTE}, tu planner con IA`}
-        className="fixed right-4 bottom-[calc(16px+env(safe-area-inset-bottom))] z-30 grid size-16 cursor-pointer place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo),var(--color-gold-light)_58%,var(--color-gold))] opacity-80 shadow-[inset_0_0_0_1.5px_var(--color-gold-deep),0_12px_28px_rgb(12_36_32/0.24)] grayscale-[.45] transition-transform hover:-translate-y-0.5 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden"
+        className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 grid size-16 cursor-pointer place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo),var(--color-gold-light)_58%,var(--color-gold))] opacity-80 shadow-[inset_0_0_0_1.5px_var(--color-gold-deep),0_12px_28px_rgb(12_36_32/0.24)] grayscale-[.45] transition-transform hover:-translate-y-0.5 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden"
         onClick={() => dialogo.current?.showModal()}
         type="button"
       >

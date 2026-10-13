@@ -462,7 +462,7 @@ function BloqueDeContenido({
       {avisoGuardado ? (
         <p
           aria-live="polite"
-          className="fixed bottom-6 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-shell-deep px-5 py-3 text-[14.5px] text-shell-ink shadow-lift motion-safe:animate-slide-up max-[767px]:bottom-24"
+          className="fixed bottom-6 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-shell-deep px-5 py-3 text-[14.5px] text-shell-ink shadow-lift motion-safe:animate-slide-up max-[767px]:bottom-[calc(152px+env(safe-area-inset-bottom))]"
           role="status"
         >
           <CheckIcon className="size-4 text-gold" />
@@ -530,7 +530,7 @@ function BloqueDeContenido({
           >
             {estadoTexto}
           </span>
-          <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform max-[767px]:hidden ${abierta ? 'rotate-180' : ''}`} />
+          <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? 'rotate-180' : ''}`} />
         </button>
       </h3>
 
@@ -614,7 +614,7 @@ function BloqueDeContenido({
         </p>
       )}
       <div
-        className={`flex flex-wrap items-center justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch max-[767px]:border-t max-[767px]:border-line-panel max-[767px]:pt-5 ${section === 'itinerary' && itinerarioDesde !== undefined ? 'hidden' : ''}`}
+        className={`flex flex-wrap items-center justify-end gap-2.5 max-[767px]:sticky max-[767px]:bottom-0 max-[767px]:z-10 max-[767px]:-mx-4 max-[767px]:flex-col-reverse max-[767px]:items-stretch max-[767px]:border-t max-[767px]:border-line-panel max-[767px]:bg-bg/96 max-[767px]:px-4 max-[767px]:pt-4 max-[767px]:pb-[max(env(safe-area-inset-bottom),16px)] max-[767px]:backdrop-blur ${section === 'itinerary' && itinerarioDesde !== undefined ? 'hidden' : ''}`}
       >
         <span className="max-[767px]:hidden">
           <PanelButton onClick={onAlternar}>Cancelar</PanelButton>
@@ -919,7 +919,7 @@ function SelectorDeImagen({
             {valor === foto.id || eventId === undefined ? null : (
               <button
                 aria-label={`Quitar ${foto.originalName}`}
-                className="absolute top-1 right-1 hidden size-6 cursor-pointer place-items-center rounded-full bg-white/95 text-ink-soft shadow group-hover:grid group-focus-within:grid hover:text-danger"
+                className="absolute top-1 right-1 grid size-10 cursor-pointer place-items-center rounded-full bg-white/95 text-ink-soft shadow hover:text-danger min-[860px]:hidden min-[860px]:size-6 min-[860px]:group-hover:grid min-[860px]:group-focus-within:grid"
                 disabled={quitando}
                 onClick={() => quitar(foto.id)}
                 type="button"

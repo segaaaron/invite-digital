@@ -106,8 +106,9 @@ export default async function RegalosPage({
 
       {conMesa ? (
         <AccionDeLaIsla>
-          <Link aria-label="Añadir regalo" className="grid size-11 place-items-center rounded-xl text-ink" href={`${base}?panel=regalo`}>
-            <PlusIcon className="size-6" />
+          <Link aria-label="Añadir regalo" className="flex min-h-11 items-center gap-1 rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline" href={`${base}?panel=regalo`}>
+            <PlusIcon className="size-4.5" />
+          Añadir
           </Link>
         </AccionDeLaIsla>
       ) : null}

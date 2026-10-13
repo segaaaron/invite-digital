@@ -448,7 +448,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/80 via-black/15 to-black/85" />
 
       {cabecera ? (
-        <p className="relative z-10 truncate px-4 pt-3 font-mono text-[10px] tracking-[0.2em] text-white/70 uppercase">{cabecera}</p>
+        <p className="relative z-10 truncate px-4 pt-3 font-mono text-[13px] tracking-[0.2em] text-white/70 uppercase">{cabecera}</p>
       ) : null}
       <header className="relative z-10 flex items-center gap-3 p-4 text-white">
         <span className="font-mono text-[11px] tracking-[var(--tracking-luxe)]">
@@ -462,7 +462,7 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
         {pending > 0 ? (
           <span
             aria-label="Escaneos por subir"
-            className="ml-auto rounded-full bg-warn px-3 py-1 font-mono text-[10px]"
+            className="ml-auto rounded-full bg-warn px-3 py-1 font-mono text-[13px]"
           >
             {pending} por subir
           </span>
@@ -497,14 +497,14 @@ export function DoorMode({ eventId, eventSlug, manifest, acciones = ACCIONES_DEL
           <button
             type="button"
             onClick={() => setManualOpen(true)}
-            className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-white"
+            className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[13px] uppercase tracking-[var(--tracking-luxe)] text-white"
           >
             ⌨ Código manual
           </button>
           <button
             type="button"
             onClick={() => setSheetOpen(true)}
-            className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-white"
+            className="flex-1 rounded-full border border-white/30 bg-black/40 px-4 py-4 font-mono text-[13px] uppercase tracking-[var(--tracking-luxe)] text-white"
           >
             ☰ Lista de invitados
           </button>

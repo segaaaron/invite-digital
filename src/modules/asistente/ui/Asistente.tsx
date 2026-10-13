@@ -504,7 +504,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       {/* **Luxury en la maqueta «Esmeralda y Latón»** (12 de octubre): abajo a la derecha, el micrófono esmeralda para
           hablarle sin abrir el chat y la copa de latón que abre el chat. Con el chat cerrado, habla en su tarjeta
           (un saludo al día, o la respuesta si se cerró mientras contestaba). */}
-      <div className="fixed right-4 bottom-[calc(16px+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden">
+      <div className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden">
         {modoFuera ? (
           // Hablándole fuera del chat (maqueta E38 y E39): escuchando, una tarjeta clara con lo que va oyendo y la
           // pantalla desenfocada detrás; con la respuesta, la tarjeta esmeralda de Luxury. Siempre se puede abrir el chat.

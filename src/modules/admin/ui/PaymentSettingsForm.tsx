@@ -3,7 +3,7 @@
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
-import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { savePaymentSettingsAction, uploadPaymentQrAction } from '@/app/_acciones/admin/cobro-actions'
 import type { PaymentSettings } from '../domain/payment-settings'
 import { ActionFeedback, Ayuda, SubmitButton } from '@/shared/design/ui/panel/estados'

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 /**
  * El conmutador de la maqueta entre el plano del salón y las tarjetas de mesa.
@@ -9,7 +10,7 @@ import Link from 'next/link'
  * perdería un `useState` justo después de crear una mesa.
  */
 export function SeatViewToggle({ base, current }: { base: string; current: 'mapa' | 'tarjetas' }) {
-  const chip = (clave: 'mapa' | 'tarjetas', texto: string) => (
+  const chip = (clave: 'mapa' | 'tarjetas', texto: ReactNode) => (
     <Link
       aria-current={current === clave ? 'page' : undefined}
       className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors max-[859px]:min-h-11 ${
@@ -23,7 +24,8 @@ export function SeatViewToggle({ base, current }: { base: string; current: 'mapa
 
   return (
     <div className="flex flex-wrap gap-2">
-      {chip('mapa', 'Vista de mapa')}
+      {/* En el celular, «mapa» abre la lista de mesas (el plano se arma en la computadora): lo dice así. */}
+      {chip('mapa', <><span className="max-[767px]:hidden">Vista de mapa</span><span className="min-[768px]:hidden">Lista de mesas</span></>)}
       {chip('tarjetas', 'Vista de tarjetas')}
     </div>
   )

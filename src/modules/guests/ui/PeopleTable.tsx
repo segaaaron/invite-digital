@@ -116,7 +116,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
     porQuitar === fila.id ? (
       <span className="flex justify-end gap-1.5">
         <button
-          className="min-h-9 cursor-pointer rounded-lg border border-danger px-3 text-[13px] font-medium text-danger"
+          className="min-h-9 max-[767px]:min-h-11 cursor-pointer rounded-lg border border-danger px-3 text-[13px] font-medium text-danger"
           onClick={() => {
             setPorQuitar(null)
             aplicar(removePersonAction({ eventSlug, id: fila.id }))
@@ -126,7 +126,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
         >
           Confirmar
         </button>
-        <button className="min-h-9 cursor-pointer rounded-lg border border-line-panel-strong px-3 text-[13px]" onClick={() => setPorQuitar(null)} type="button">
+        <button className="min-h-9 max-[767px]:min-h-11 cursor-pointer rounded-lg border border-line-panel-strong px-3 text-[13px]" onClick={() => setPorQuitar(null)} type="button">
           Cancelar
         </button>
       </span>

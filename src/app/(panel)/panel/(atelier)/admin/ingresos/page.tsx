@@ -75,7 +75,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
       <PanelHeader
         actions={
           // Un `<a>` normal y no `next/link`: es una descarga de un route handler, no una página.
-          <a className={`${botonClases()} max-[767px]:hidden`} download href="/panel/admin/ingresos/csv">
+          <a className={botonClases()} download href="/panel/admin/ingresos/csv">
             Descargar CSV
           </a>
         }
@@ -89,7 +89,7 @@ export default async function AdminIngresosPage({ searchParams }: { searchParams
         </div>
       ) : null}
 
-      <nav aria-label="Cómo mirarlo" className="mb-7 flex flex-wrap gap-2.5 max-[767px]:hidden">
+      <nav aria-label="Cómo mirarlo" className="mb-7 flex flex-wrap gap-2.5 max-[767px]:-mx-4 max-[767px]:mb-5 max-[767px]:flex-nowrap max-[767px]:overflow-x-auto max-[767px]:px-4 max-[767px]:[scrollbar-width:none] max-[767px]:*:shrink-0">
         {VISTAS.map((v) => (
           <Link
             aria-current={vista === v.key ? 'page' : undefined}

@@ -103,7 +103,7 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
       // Fuera del flujo (maqueta «Esmeralda y Latón»: la cabecera de cada pantalla empieza arriba, sin nada encima):
       // en tablet y escritorio, una píldora fija abajo a la izquierda del contenido; en el celular, centrada abajo y
       // solo cuando hay algo que decir.
-      className={`fixed z-30 flex print:hidden ${enReposo ? 'max-[767px]:hidden' : 'max-[767px]:inset-x-0 max-[767px]:bottom-[calc(88px+env(safe-area-inset-bottom))] max-[767px]:justify-center'} min-[768px]:bottom-6 min-[768px]:left-[124px] min-[1280px]:bottom-9 min-[1280px]:left-[316px]`}
+      className={`fixed z-30 flex print:hidden ${enReposo ? 'max-[767px]:hidden' : 'max-[767px]:inset-x-0 max-[767px]:bottom-[calc(152px+env(safe-area-inset-bottom))] max-[767px]:justify-center'} min-[768px]:bottom-6 min-[768px]:left-[124px] min-[1280px]:bottom-9 min-[1280px]:left-[316px]`}
     >
       <div className="inline-flex items-center gap-1 rounded-full border border-line-panel bg-white/70 py-0.5 pr-0.5 pl-3 text-[12px] text-ink-mute shadow-card backdrop-blur-sm">
         <span className="flex items-center gap-1.5 pr-1.5">

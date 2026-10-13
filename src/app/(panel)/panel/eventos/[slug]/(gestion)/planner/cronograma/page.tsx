@@ -49,11 +49,9 @@ export default async function CronogramaPage({ params, searchParams }: { params:
     <>
       <PanelHeader
         actions={
-          <span className="max-[767px]:hidden">
-            <PanelButton href={conMomento('nuevo')} variant="primary">
-              <PlusIcon className="size-4" /> Añadir momento
-            </PanelButton>
-          </span>
+          <PanelButton href={conMomento('nuevo')} variant="primary">
+            <PlusIcon className="size-4" /> Añadir momento
+          </PanelButton>
         }
         meta="Los momentos del día en orden. Los que marques salen en el itinerario de tu invitación."
         title="Cronograma"
@@ -67,7 +65,7 @@ export default async function CronogramaPage({ params, searchParams }: { params:
         <div className="grid items-start gap-x-8 gap-y-6 min-[1100px]:grid-cols-[minmax(0,1fr)_200px]">
           <div className="flex flex-col gap-4">
             {proveedores.length === 0 ? null : (
-              <nav aria-label="Ver por proveedor" className="flex flex-wrap gap-2.5 max-[767px]:hidden">
+              <nav aria-label="Ver por proveedor" className="flex flex-wrap gap-2.5 max-[767px]:-mx-4 max-[767px]:flex-nowrap max-[767px]:overflow-x-auto max-[767px]:px-4 max-[767px]:[scrollbar-width:none] max-[767px]:*:shrink-0">
                 <FilterChipLink active={!proveedor} href={base}>
                   Todo
                 </FilterChipLink>
@@ -80,13 +78,8 @@ export default async function CronogramaPage({ params, searchParams }: { params:
             )}
             {proveedor ? <h2 className="font-display text-[24px] font-medium">Lo de {proveedores.find((p) => p.id === proveedor)?.service ?? 'ese proveedor'}</h2> : null}
             <RunOfShowBoard editarEn={`${conMomento('')}`} iconos={iconos} momentos={momentos} proveedores={proveedores} />
-            <div className="min-[768px]:hidden">
-              <PanelButton className="w-full" href={conMomento('nuevo')} variant="primary">
-                <PlusIcon className="size-4" /> Añadir un momento
-              </PanelButton>
-            </div>
           </div>
-          <aside className="flex flex-col gap-4 max-[767px]:hidden min-[1100px]:sticky min-[1100px]:top-6">
+          <aside className="flex flex-col gap-4 min-[1100px]:sticky min-[1100px]:top-6">
             <ItinerarioEnLaInvitacion
               ejemplo={ejemplo}
               filas={enInvitacion.map((m) => ({ time: m.startsAt, label: m.title, icono: m.icono }))}

@@ -145,7 +145,7 @@ function FilaDeTarea({ tarea, evento, etapas }: { tarea: TareaVista; evento: Eve
       {tarea.porLaApp ? null : (
         <details className="group ml-14">
           {/* En escritorio aparece al pasar por la fila, sin sumarle alto; en el celular, siempre a la vista. */}
-          <summary className="inline-flex min-h-8 cursor-pointer list-none items-center text-[12.5px] text-ink-mute hover:text-ink focus-visible:opacity-100 min-[860px]:absolute min-[860px]:right-0 min-[860px]:bottom-0 min-[860px]:min-h-6 min-[860px]:opacity-0 min-[860px]:group-hover/fila:opacity-100 min-[860px]:group-open:opacity-100 [&::-webkit-details-marker]:hidden">
+          <summary className="inline-flex min-h-8 max-[767px]:min-h-11 cursor-pointer list-none items-center text-[12.5px] text-ink-mute hover:text-ink focus-visible:opacity-100 min-[860px]:absolute min-[860px]:right-0 min-[860px]:bottom-0 min-[860px]:min-h-6 min-[860px]:opacity-0 min-[860px]:group-hover/fila:opacity-100 min-[860px]:group-open:opacity-100 [&::-webkit-details-marker]:hidden">
             Editar, mover o quitar
           </summary>
           <div className="mt-3 flex flex-col gap-3 pb-1">

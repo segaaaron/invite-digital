@@ -198,7 +198,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
             <h2 className="font-display text-[24px] font-medium max-[767px]:sr-only" id="invitacion-titulo">
               Cómo va tu invitación
             </h2>
-            <Link className="inline-flex min-h-11 items-center text-[14px] max-[767px]:hidden" href={`${base}/informe`}>
+            <Link className="inline-flex min-h-11 items-center text-[14px]" href={`${base}/informe`}>
               Informe del evento
             </Link>
           </div>
@@ -288,7 +288,7 @@ function Aro({ porcentaje }: { porcentaje: number | null }) {
       </svg>
       <span className="text-center">
         <span className="block font-display text-[34px] leading-none font-medium max-[767px]:text-[26px]">{porcentaje === null ? '—' : `${porcentaje}%`}</span>
-        <span className="text-[12.5px] text-ink-mute max-[767px]:hidden">respondió</span>
+        <span className="text-[12.5px] text-ink-mute">respondió</span>
       </span>
     </div>
   )
@@ -298,7 +298,7 @@ function Fila({ etiqueta, valor, color, destacar = false }: { etiqueta: string; 
   return (
     <>
       <dt className="flex items-center gap-2">
-        <span aria-hidden className={`size-2.5 rounded-[3px] ${color} max-[767px]:hidden`} />
+        <span aria-hidden className={`size-2.5 rounded-[3px] ${color}`} />
         {etiqueta}
       </dt>
       <dd className={`m-0 font-semibold [font-variant-numeric:tabular-nums] ${destacar ? 'max-[767px]:text-gold-deep' : ''}`}>{valor}</dd>

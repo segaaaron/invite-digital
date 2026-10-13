@@ -44,7 +44,7 @@ export default async function MensajesPage({ params, searchParams }: { params: P
         actions={
           total === 0 ? undefined : (
             // El informe del evento trae el libro entero, listo para guardar como PDF.
-            <span className="max-[767px]:hidden">
+            <span>
               <PanelButton href={`/panel/eventos/${event.value.slug}/informe#libro`}>Descargar el libro</PanelButton>
             </span>
           )

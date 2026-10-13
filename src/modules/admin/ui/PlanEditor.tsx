@@ -3,7 +3,7 @@
 import { useActionState, useId } from 'react'
 import { Field, FIELD_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { ChoiceCards, SettingsSection, SwitchRow, UnitField } from '@/shared/design/ui/panel/ajustes'
-import { type AdminActionState } from '@/app/_acciones/admin/admin-comun'
+import type { AdminActionState } from '@/app/_acciones/admin/admin-comun'
 import { savePlanAction } from '@/app/_acciones/admin/planes-actions'
 import { MAX_FUNCIONES, type TextoPlanLimpio } from '../domain/plan-editable'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
@@ -242,7 +242,7 @@ export function PlanEditor({ plan }: { plan: PlanEditorView }) {
         </details>
       </SettingsSection>
 
-      <footer className="sticky bottom-0 -mx-1 flex flex-wrap items-center gap-3 border-t border-line-panel bg-bg-raised/95 px-1 py-4 backdrop-blur">
+      <footer className="sticky bottom-0 max-[767px]:bottom-[calc(64px+env(safe-area-inset-bottom))] -mx-1 flex flex-wrap items-center gap-3 border-t border-line-panel bg-bg-raised/95 px-1 py-4 backdrop-blur">
         <SubmitButton pending={guardando} pendingLabel="Guardando…" variant="primary">
           Guardar plan
         </SubmitButton>

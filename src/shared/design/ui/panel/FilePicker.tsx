@@ -98,7 +98,7 @@ export function FilePicker({
       {elegido ? (
         <button
           aria-label={`Quitar ${elegido.nombre}`}
-          className="absolute top-1/2 right-3 grid size-7 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-line-panel bg-white text-ink-soft hover:border-ink hover:text-ink"
+          className="absolute top-1/2 right-3 grid size-7 max-[767px]:size-10 -translate-y-1/2 cursor-pointer place-items-center rounded-full border border-line-panel bg-white text-ink-soft hover:border-ink hover:text-ink"
           onClick={() => {
             if (campo.current) campo.current.value = ''
             setElegido(null)

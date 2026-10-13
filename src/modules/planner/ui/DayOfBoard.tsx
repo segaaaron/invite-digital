@@ -55,6 +55,13 @@ export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) 
       {/* Las llegadas de la puerta y las respuestas entran solas, en vivo (SSE). */}
       <EnVivo modo="auto" tipos={['ingreso', 'rsvp']} url={`/panel/eventos/${evento.eventSlug}/en-vivo`} />
 
+      {/* Arriba en el celular (13 oct): el día del evento se usa en el teléfono y al final de las listas no se veía. */}
+      <div className="min-[768px]:hidden">
+        <PanelButton className="w-full" href={dia.ingreso} variant="primary">
+          Ir al ingreso
+        </PanelButton>
+      </div>
+
       <div className="grid items-stretch gap-4 min-[1100px]:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <section
           aria-label="Ahora"
@@ -208,11 +215,6 @@ export function DayOfBoard({ evento, dia }: { evento: Evento; dia: DiaDVista }) 
         </section>
       )}
 
-      <div className="min-[768px]:hidden">
-        <PanelButton className="w-full" href={dia.ingreso}>
-          Ir al ingreso
-        </PanelButton>
-      </div>
     </div>
   )
 }

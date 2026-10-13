@@ -123,14 +123,14 @@ export function SelectorDeFecha({
       {abierto ? (
         <div
           aria-label="Elegir fecha"
-          className="absolute top-[calc(100%+6px)] left-0 z-30 w-[300px] rounded-[16px] border border-line-panel bg-white p-4 shadow-float"
+          className="absolute top-[calc(100%+6px)] left-0 z-30 w-[300px] max-[767px]:w-[min(340px,calc(100vw-32px))] rounded-[16px] border border-line-panel bg-white p-4 shadow-float"
           onKeyDown={teclado}
           role="dialog"
         >
           <div className="mb-3 flex items-center justify-between">
             <button
               aria-label="Mes anterior"
-              className="grid size-8 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top hover:text-ink"
+              className="grid size-8 max-[767px]:size-11 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top hover:text-ink"
               onClick={() => setEnFoco(sumarMeses(mes, -1))}
               type="button"
             >
@@ -141,7 +141,7 @@ export function SelectorDeFecha({
             </p>
             <button
               aria-label="Mes siguiente"
-              className="grid size-8 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top hover:text-ink"
+              className="grid size-8 max-[767px]:size-11 cursor-pointer place-items-center rounded-full text-ink-soft hover:bg-bg-top hover:text-ink"
               onClick={() => setEnFoco(sumarMeses(mes, 1))}
               type="button"
             >
@@ -171,7 +171,7 @@ export function SelectorDeFecha({
                         <button
                           aria-label={FECHA_LARGA.format(aFecha(dia))}
                           aria-pressed={elegido}
-                          className={`size-9 cursor-pointer rounded-full text-[13px] tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-ink ${
+                          className={`size-9 max-[767px]:size-11 cursor-pointer rounded-full text-[13px] tabular-nums transition-colors focus-visible:outline-2 focus-visible:outline-ink ${
                             elegido
                               ? 'bg-ink text-white'
                               : delMes
