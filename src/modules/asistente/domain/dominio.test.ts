@@ -274,3 +274,11 @@ describe('La ficha del evento (13 oct: «que genere cosas de valor, no genérica
     expect(reglasDelSistema(base)).not.toContain('FICHA DEL EVENTO')
   })
 })
+
+describe('la conversación recortada (13 oct: adivinaba lo que ya no veía)', () => {
+  const base = { evento: 'Boda', fiesta: 'boda', fecha: '2027-05-15', plan: 'Gala', rol: 'anfitrión', hoy: '2026-10-13', slug: 'b', idioma: 'es', porVoz: false } as const
+  it('se le dice en CONTEXTO solo cuando llegó recortada', () => {
+    expect(reglasDelSistema({ ...base, recortada: true })).toContain('los mensajes más antiguos ya no están a la vista')
+    expect(reglasDelSistema(base)).not.toContain('los mensajes más antiguos ya no están a la vista')
+  })
+})

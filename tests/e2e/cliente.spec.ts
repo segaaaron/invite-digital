@@ -130,6 +130,16 @@ test.describe('el panel del cliente', () => {
     await suyo.close()
   })
 
+  // 13 oct, sin cobertura hasta hoy: quitar a alguien del equipo le corta el acceso al instante.
+  test('quita a su planner del equipo, con confirmación en la fila', async () => {
+    await page.goto(`/panel/eventos/${SLUG}/equipo`)
+    const fila = page.getByRole('listitem', { name: EQUIPO.planner })
+    await fila.getByRole('button', { name: `Quitar a ${EQUIPO.planner}` }).click()
+    await fila.getByRole('button', { name: 'Sí, quitar' }).click()
+    await expect.poll(() => membresiaDe(SLUG, EQUIPO.planner)).toBeNull()
+    await expect(page.getByRole('listitem', { name: EQUIPO.planner })).toHaveCount(0)
+  })
+
   test('entra a su invitación y puede escribirla', async () => {
     // **Esta regla cambió a propósito.** Antes esta prueba exigía un 404: el cliente no
     // tocaba nada. Ahora el admin le da acceso justo para que ajuste su invitación —los

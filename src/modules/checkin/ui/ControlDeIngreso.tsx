@@ -624,7 +624,7 @@ export function ControlDeIngreso({
                                   <span className="text-[14px] text-ok-deep min-[860px]:hidden">{f.hora === null ? 'Dentro' : `Dentro ${f.hora}`}</span>
                                   <button
                                     aria-label={`Deshacer el ingreso de ${f.nombre}`}
-                                    className="cursor-pointer text-[14px] font-medium text-gold-deep hover:underline disabled:opacity-50 max-[859px]:hidden"
+                                    className="cursor-pointer text-[14px] font-medium text-gold-deep hover:underline disabled:opacity-50 max-[859px]:ml-3 max-[859px]:min-h-11"
                                     disabled={enCurso !== null}
                                     onClick={() => setConfirmar(f.clave)}
                                     type="button"

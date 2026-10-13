@@ -149,7 +149,7 @@ export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
   {
     type: 'function',
     name: 'mi_invitacion',
-    description: 'Lo que ya está escrito en la invitación (nombres, frase, fecha y hora, ceremonia, recepción, vestimenta, avisos, cierre). Úsala antes de escribirla.',
+    description: 'La invitación: lo ya escrito (escrito), las secciones de este diseño que faltan (por_llenar, en su orden) y el diseño con su ejemplo y el tope de caracteres de cada texto. Úsala antes de escribirla o de decir qué le falta.',
     parameters: objeto({}),
     strict: true,
   },
@@ -299,7 +299,7 @@ export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
       fecha_hora: texto('Fecha y hora del evento AAAA-MM-DDTHH:MM, hora de Bolivia; null si no cambia.', true),
       ceremonia: lugarDeTextos('La ceremonia'),
       recepcion: lugarDeTextos('La recepción o la fiesta'),
-      vestimenta: { anyOf: [objeto({ titulo: texto('«Etiqueta», «Formal», «Cóctel».'), nota: texto('Una frase de detalle; null si no.', true) }), { type: 'null' }], description: 'El código de vestimenta; null si no cambia.' },
+      vestimenta: { anyOf: [objeto({ titulo: texto('El nombre del código de vestimenta, corto.'), nota: texto('Una frase de detalle; null si no.', true) }), { type: 'null' }], description: 'El código de vestimenta; null si no cambia.' },
       colores_vestimenta: {
         anyOf: [{ type: 'array', items: { type: 'string' } }, { type: 'null' }],
         description: 'Los colores sugeridos para vestir (hasta 8), por nombre (Negro, Marfil, Champaña, Dorado, Plata, Rosa palo, Lavanda, Celeste, Azul marino, Verde salvia, Vino, Terracota) o #rrggbb; lista vacía para quitarlos; null si no cambian.',
@@ -495,7 +495,7 @@ export const HERRAMIENTAS: readonly DefinicionDeHerramienta[] = [
   {
     type: 'function',
     name: 'registrar_ingreso',
-    description: 'Registra el ingreso de una invitación en la puerta el día del evento (ids de «buscar_invitados»). Solo funciona con el ingreso abierto.',
+    description: 'Registra el ingreso de una invitación en la puerta (ids de «buscar_invitados»); se corrige con «deshacer_ingreso».',
     parameters: objeto({ invitacion_id: texto('El id de la invitación que llegó.'), personas: numero('Cuántas personas entraron; null para todas las de la invitación.', true) }),
     strict: true,
   },

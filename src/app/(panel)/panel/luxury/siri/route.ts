@@ -63,8 +63,10 @@ export async function POST(request: Request) {
     for await (const salida of salidas) {
       if (salida.tipo === 'texto') respuesta += salida.delta
       else if (salida.tipo === 'error') respuesta += ` ${salida.mensaje}`
-      // Los botones de WhatsApp piden un toque: por Siri se dice dónde están.
-      else if (salida.tipo === 'propuesta') respuesta += ' Te dejé los mensajes listos en Luxury, en el panel: ábrelo y toca enviar en cada uno.'
+      // Los botones de WhatsApp piden un toque y solo viven en el chat del panel: por Siri se dice dónde enviarlas, y
+      // solo si hay alguna con WhatsApp (13 oct: decía «te dejé los mensajes» y Luxury, a la vez, que no se podía).
+      else if (salida.tipo === 'propuesta' && salida.propuesta.filas.some((f) => f.telefono !== null))
+        respuesta += ` Para enviarlas, abre Invitados en el panel y toca «Enviar»: WhatsApp pide un toque por ${salida.propuesta.tipo === 'recordatorio' ? 'recordatorio' : 'invitación'}.`
     }
   } catch {
     return decir('No pude responder ahora. Vuelve a intentarlo en un momento.')

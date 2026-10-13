@@ -5,7 +5,7 @@ import { CLAVE_DE_CONFIG, leerConfig, mesEnBolivia, type ConfigDelAsistente } fr
 import { GUIAS } from '@/modules/asistente/domain/guias'
 import { ESCRITURAS, HERRAMIENTAS, PANTALLAS_DEL_EVENTO, type LlamadaValida } from '@/modules/asistente/domain/herramientas'
 import type { Mensaje } from '@/modules/asistente/domain/historial'
-import { comoSuena } from '@/modules/asistente/domain/como-suena'
+import { coincide } from '@/modules/asistente/domain/coincide'
 import { repartoDeMesas } from '@/modules/asistente/domain/reparto-de-mesas'
 import { reglasDelSistema, type FichaDelEvento, type Idioma } from '@/modules/asistente/domain/reglas'
 import { drizzleUsoDelAsistente } from '@/modules/asistente/infrastructure/drizzle-uso'
@@ -129,11 +129,11 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
         const filas = todas.filter(
           (f) =>
             (llamada.estado === null || f.estado === llamada.estado) &&
-            (buscado === '' || sinTildes(`${f.nombre} ${f.invitacion}`).includes(buscado) || (f.codigo_pase !== null && codigo(f.codigo_pase) === codigo(llamada.texto ?? ''))),
+            (buscado === '' || coincide(`${f.nombre} ${f.invitacion}`, buscado) || (f.codigo_pase !== null && codigo(f.codigo_pase) === codigo(llamada.texto ?? ''))),
         )
         // Sin nadie con esa ortografía, quien suena igual (un dictado: «Peres» por «Pérez»), avisado como parecido.
         if (filas.length === 0 && buscado !== '') {
-          const parecidos = todas.filter((f) => (llamada.estado === null || f.estado === llamada.estado) && comoSuena(`${f.nombre} ${f.invitacion}`).includes(comoSuena(buscado)))
+          const parecidos = todas.filter((f) => (llamada.estado === null || f.estado === llamada.estado) && coincide(`${f.nombre} ${f.invitacion}`, buscado, { porSonido: true }))
           if (parecidos.length > 0) return { total: parecidos.length, personas: parecidos.slice(0, 40), nota: 'Nadie con esa ortografía exacta; estas personas suenan igual (puede ser un dictado).', enlace: ruta('/invitados') }
         }
         return { total: filas.length, personas: filas.slice(0, 40), enlace: ruta('/invitados') }
@@ -550,11 +550,12 @@ export const asistente = {
   usoDe: (eventId: string, ahora: Date) => drizzleUsoDelAsistente.usoDe(eventId, mesEnBolivia(ahora)),
   resumenDelMes: (ahora: Date) => drizzleUsoDelAsistente.resumenDelMes(mesEnBolivia(ahora)),
   /** Una respuesta, en trozos. Quien llama ya comprobó sesión, evento, plan y cuota. */
-  async *responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor; destinos?: readonly string[] }): AsyncGenerator<Salida> {
+  async *responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor; destinos?: readonly string[]; recortada?: boolean }): AsyncGenerator<Salida> {
     if (modelo === null) throw new Error('Luxury no tiene modelo configurado')
     const mes = mesEnBolivia(p.ahora)
     const instrucciones = reglasDelSistema({
       ficha: await fichaDelEvento(p.evento),
+      recortada: p.recortada === true,
       evento: p.evento.title,
       fiesta: FIESTA[fiestaDeTema(p.evento.themeKey)] ?? 'evento',
       fecha: p.evento.eventDate,

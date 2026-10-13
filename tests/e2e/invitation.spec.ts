@@ -41,6 +41,23 @@ test('el invitado confirma sin escribir su nombre, y su enlace pasa a ser el res
   await deleteEvent(eventSlug)
 })
 
+test('el invitado responde que no asiste: queda en cero y su pase no se entrega (13 oct, sin cobertura hasta hoy)', async ({ page }) => {
+  const { token, groupId, eventSlug } = await seedInvitation({ slug: 'boda-rsvp-no-e2e' })
+
+  await page.goto(`/i/${token}`)
+  await page.getByLabel('¿Asistirás?').selectOption({ label: 'No podré asistir' })
+  await page.getByRole('button', { name: 'ENVIAR', exact: true }).click()
+  await expect(page.getByRole('status')).toContainText('Confirmación enviada')
+
+  // Cero, no los cupos: el catering, las mesas y la puerta cuentan con este número.
+  expect(await attendingOf(groupId)).toBe(0)
+  await page.goto(`/i/${token}/pase`)
+  await expect(page.getByText('Nos avisaste que no podrás asistir, así que no hay pase de entrada.')).toBeVisible()
+  await expect(page.getByRole('img')).toHaveCount(0)
+
+  await deleteEvent(eventSlug)
+})
+
 test('un token inválido da 404', async ({ page }) => {
   expect((await page.goto('/i/tokenquenoexiste1234'))?.status()).toBe(404)
 })
