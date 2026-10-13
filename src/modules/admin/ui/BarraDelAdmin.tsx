@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { BuscadorRapido } from './BuscadorRapido'
-import { MenuCrear } from './MenuCrear'
+import { MenuCrear, MenuCrearMovil } from './MenuCrear'
 import { IslaDelAdmin, RutaDelAdmin } from './PestanasDeAdmin'
 
 /**
@@ -26,7 +26,7 @@ export function BarraDelAdmin({
   evento?: string
 }) {
   return (
-    <header className="sticky top-2.5 z-30 mx-4 mt-2.5 mb-4 flex min-h-15 items-center gap-1.5 rounded-[18px] border border-line-panel bg-bg-raised/92 px-1.5 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] backdrop-blur-md backdrop-saturate-150 min-[768px]:top-0 min-[768px]:mx-0 min-[768px]:mt-0 min-[768px]:mb-0 min-[768px]:min-h-[76px] min-[768px]:gap-3 min-[768px]:rounded-none min-[768px]:border-0 min-[768px]:border-b min-[768px]:bg-bg/92 min-[768px]:px-6 min-[768px]:shadow-none min-[1280px]:min-h-[85px] min-[1280px]:px-12 print:hidden">
+    <header className="sticky top-2.5 z-30 max-[767px]:[body:has([data-sin-isla])_&]:hidden mx-4 mt-2.5 mb-4 flex min-h-15 items-center gap-1.5 rounded-[18px] border border-line-panel bg-bg-raised/92 px-1.5 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] backdrop-blur-md backdrop-saturate-150 min-[768px]:top-0 min-[768px]:mx-0 min-[768px]:mt-0 min-[768px]:mb-0 min-[768px]:min-h-[76px] min-[768px]:gap-3 min-[768px]:rounded-none min-[768px]:border-0 min-[768px]:border-b min-[768px]:bg-bg/92 min-[768px]:px-6 min-[768px]:shadow-none min-[1280px]:min-h-[85px] min-[1280px]:px-12 print:hidden">
       {evento === undefined ? (
         <IslaDelAdmin menu={menu} />
       ) : (
@@ -57,6 +57,10 @@ export function BarraDelAdmin({
       <div className="ml-auto flex shrink-0 items-center gap-1 min-[768px]:gap-3">
         {/* La acción de la pantalla en el celular (`AccionDeLaIsla`: el «+» de Ventas). */}
         <div className="flex items-center min-[768px]:hidden" id="accion-de-la-isla" />
+        {/* El «+» de crear en la isla del celular (M47), salvo en las pantallas que ya ponen su propia acción. */}
+        <div className="min-[768px]:hidden [#accion-de-la-isla:not(:empty)+&]:hidden">
+          <MenuCrearMovil />
+        </div>
         <BuscadorRapido />
         {campana}
         <div className="hidden min-[768px]:block">

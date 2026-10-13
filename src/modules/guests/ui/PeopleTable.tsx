@@ -86,6 +86,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   const [cuantas, setCuantas] = useState(POR_TANDA)
   /** En la tableta, la invitación abierta al lado de la lista (maqueta T04). */
   const [elegida, setElegida] = useState<string | null>(null)
+  /** En el celular, la invitación abierta a pantalla completa (maqueta M09). */
+  const [enCelular, setEnCelular] = useState<string | null>(null)
 
   const base = `/panel/eventos/${eventSlug}/invitados`
 
@@ -240,6 +242,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                             <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={`Ver el pase de ${primera.groupLabel}`}>
                               <QrIcon />
                             </IconLink>
+                            <IconLink href={`${base}?panel=invitacion&grupo=${primera.groupId}`} label={`Editar la invitación ${primera.groupLabel}`}>
+                              <PenIcon />
+                            </IconLink>
                           </span>
                         </td>
                       </tr>
@@ -347,7 +352,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     <PanelButton href={`${base}?panel=pase&persona=${primera.id}`}>
                       <QrIcon className="size-4" /> Ver el pase
                     </PanelButton>
-                    <PanelButton href={`${base}?panel=editar&persona=${primera.id}`}>Editar</PanelButton>
+                    <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>Editar</PanelButton>
                   </div>
                 </section>
               </div>
@@ -362,7 +367,7 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
               const pildora = pildoraDeInvitacion(todas)
               return (
                 <li className="border-b border-line-panel" key={primera.groupId}>
-                  <Link className="flex min-h-[84px] items-center gap-3 py-3.5 text-ink no-underline" href={`${base}?panel=editar&persona=${primera.id}`}>
+                  <button className="flex min-h-[84px] w-full cursor-pointer items-center gap-3 py-3.5 text-left text-ink" onClick={() => setEnCelular(primera.groupId)} type="button">
                     <span className="min-w-0 flex-1">
                       <span className="block font-display text-[22px] leading-tight font-medium">{todas.length > 1 ? primera.groupLabel : primera.fullName}</span>
                       <span className="text-[14px] text-ink-mute">
@@ -374,11 +379,68 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                     <svg aria-hidden className="size-4.5 shrink-0 text-ink-mute" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
                       <path d="m9 6 6 6-6 6" />
                     </svg>
-                  </Link>
+                  </button>
                 </li>
               )
             })}
           </ul>
+
+          {(() => {
+            const filas = enCelular === null ? undefined : todasDe(enCelular)
+            const primera = filas?.[0]
+            if (filas === undefined || primera === undefined) return null
+            const cerrarFicha = () => setEnCelular(null)
+            return (
+              <div aria-label={`Invitación ${primera.groupLabel}`} aria-modal="true" className="fixed inset-0 z-[60] overflow-y-auto bg-bg px-4 pt-2.5 pb-[max(24px,env(safe-area-inset-bottom))] min-[768px]:hidden" role="dialog">
+                <div className="mb-5 flex min-h-15 items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)]">
+                  <button aria-label="Volver a invitados" className="grid size-11 shrink-0 cursor-pointer place-items-center" onClick={cerrarFicha} type="button">
+                    <svg aria-hidden className="size-5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
+                      <path d="M15 6l-6 6 6 6" />
+                    </svg>
+                  </button>
+                  <span className="flex min-w-0 flex-1 flex-col leading-tight">
+                    <span className="text-[13px] text-ink-mute">Invitados</span>
+                    <span className="truncate text-[16px] font-medium">{filas.length > 1 ? primera.groupLabel : primera.fullName}</span>
+                  </span>
+                  <Link className="flex min-h-11 items-center px-3 text-[15px] font-medium text-gold-deep no-underline" href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>
+                    Editar
+                  </Link>
+                </div>
+                <h2 className="font-display text-[30px] leading-tight font-medium">{filas.length > 1 ? primera.groupLabel : primera.fullName}</h2>
+                <p className="mt-1.5 text-[15px] text-ink-mute">
+                  {filas.length === 1 ? '1 persona' : `${filas.length} personas`}
+                  {primera.tableLabel === null ? '' : ` en la ${primera.tableLabel.toLowerCase()}`}. {estadoDeInvitacion(filas)}.
+                </p>
+                <ul className="mt-5 flex flex-col">
+                  {filas.map((f) => (
+                    <li className="flex min-h-[60px] items-center gap-3 border-b border-line-panel last:border-b-0" key={f.id}>
+                      <span className="flex min-w-0 flex-1 flex-col">
+                        <span className="flex items-center gap-2 text-[15.5px] font-medium">
+                          {f.fullName}
+                          {f.vip ? <Pill tone="vip">VIP</Pill> : null}
+                        </span>
+                        <span className="text-[13px] text-ink-mute">{f.dietaryNote ?? (f.attending === 'no' ? 'Avisó que no puede' : 'Sin restricciones')}</span>
+                      </span>
+                      <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? 'Sin responder' : ESTADO[f.attending]}</Pill>
+                    </li>
+                  ))}
+                </ul>
+                <Link className="mt-5 flex items-center gap-4 rounded-[14px] border border-line-panel bg-bg-raised px-4 py-4 text-ink no-underline" href={`${base}?panel=pase&persona=${primera.id}`}>
+                  <QrIcon className="size-9 shrink-0" />
+                  <span className="flex flex-col">
+                    <span className="text-[13px] text-ink-mute">Pase de ingreso</span>
+                    <span className="text-[15px] font-medium text-gold-deep">Ver el pase y copiar el enlace</span>
+                  </span>
+                </Link>
+                <div className="mt-5 flex flex-col gap-2.5">
+                  <a className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[15.5px] font-medium text-white no-underline" href={`${base}?panel=${(primera.sentAt ?? null) === null ? 'envio' : 'recordar'}`}>
+                    <SendIcon className="size-4" /> {(primera.sentAt ?? null) === null ? 'Enviar por WhatsApp' : 'Enviar recordatorio'}
+                  </a>
+                  <PanelButton href={`${base}?panel=invitacion&grupo=${primera.groupId}`}>Editar la invitación</PanelButton>
+                </div>
+              </div>
+            )
+          })()}
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <span className="text-[14px] text-ink-mute">

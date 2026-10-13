@@ -94,14 +94,15 @@ export function BuscadorRapido() {
 
       <dialog
         aria-label="Buscar en el panel"
-        className="mx-auto mt-[10vh] w-[min(560px,94vw)] max-w-none overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-shell-deep/50"
+        className="mx-auto mt-[10vh] w-[min(560px,94vw)] max-w-none overflow-hidden rounded-[18px] border border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:fixed max-[767px]:inset-0 max-[767px]:m-0 max-[767px]:h-dvh max-[767px]:max-h-dvh max-[767px]:w-full max-[767px]:overflow-y-auto max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:bg-bg"
         onClick={(e) => {
           if (e.target === dialogo.current) cerrar()
         }}
         ref={dialogo}
       >
         <form
-          className="flex items-center gap-3 border-b border-line-panel px-5 py-4"
+          // En el celular (M30): la barra de búsqueda arriba, en su isla, con «Cerrar».
+          className="flex items-center gap-3 border-b border-line-panel px-5 py-4 max-[767px]:mx-4 max-[767px]:mt-2.5 max-[767px]:min-h-15 max-[767px]:rounded-[18px] max-[767px]:border max-[767px]:bg-bg-raised max-[767px]:py-2 max-[767px]:shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)]"
           onSubmit={(e) => {
             e.preventDefault()
             const texto = campo.current?.value.trim() ?? ''
@@ -129,7 +130,10 @@ export function BuscadorRapido() {
             ref={campo}
             type="search"
           />
-          <kbd className="rounded-md border border-line-panel px-1.5 py-0.5 text-[11px] text-ink-mute">Esc</kbd>
+          <button className="min-h-11 shrink-0 cursor-pointer px-1 text-[15px] font-medium text-gold-deep min-[768px]:hidden" onClick={cerrar} type="button">
+            Cerrar
+          </button>
+          <kbd className="rounded-md border border-line-panel px-1.5 py-0.5 text-[11px] text-ink-mute max-[767px]:hidden">Esc</kbd>
         </form>
 
         <div aria-busy={buscando} aria-live="polite" className="max-h-[60vh] overflow-y-auto px-2 py-1">
@@ -153,7 +157,7 @@ export function BuscadorRapido() {
             </>
           )}
         </div>
-        <p className="flex gap-4 border-t border-line-panel px-5 py-2.5 text-[12.5px] text-ink-mute">
+        <p className="flex gap-4 border-t border-line-panel px-5 py-2.5 text-[12.5px] text-ink-mute max-[767px]:hidden">
           <span>Enter para buscar</span>
           <span>Tab para moverte</span>
           <span>Esc para cerrar</span>

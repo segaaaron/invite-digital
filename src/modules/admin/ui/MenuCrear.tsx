@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRef } from 'react'
-import { CalendarIcon, PlusIcon, ReceiptIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { CalendarIcon, CloseIcon, PlusIcon, ReceiptIcon, UsersIcon } from '@/shared/design/ui/icons'
 
 /**
  * **El único punto de alta del admin.** Había cinco sueltos —«+ Nuevo evento», «Créalo sin
@@ -52,5 +52,54 @@ export function MenuCrear() {
         </ul>
       </div>
     </details>
+  )
+}
+
+/** «Crear» en el celular (maqueta M47): el «+» de la isla abre una hoja desde abajo con las mismas altas. */
+export function MenuCrearMovil() {
+  const hoja = useRef<HTMLDialogElement>(null)
+  const cerrar = () => hoja.current?.close()
+  return (
+    <>
+      <button aria-haspopup="dialog" aria-label="Crear" className="grid size-11 cursor-pointer place-items-center rounded-xl text-ink" onClick={() => hoja.current?.showModal()} type="button">
+        <PlusIcon className="size-6" />
+      </button>
+      <dialog
+        aria-labelledby="crear-movil"
+        className="mx-0 mt-auto mb-0 w-full max-w-none rounded-t-[20px] border border-line-panel bg-bg px-5 pt-3 pb-[max(20px,env(safe-area-inset-bottom))] text-ink shadow-float backdrop:bg-shell-deep/50"
+        onClick={(e) => {
+          if (e.target === hoja.current) cerrar()
+        }}
+        ref={hoja}
+      >
+        <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-line-panel-strong" />
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="font-display text-[26px] font-medium" id="crear-movil">
+            Crear
+          </h2>
+          <button aria-label="Cerrar" className="grid size-11 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised" onClick={cerrar} type="button">
+            <CloseIcon className="size-4" />
+          </button>
+        </div>
+        <ul className="mt-3">
+          {CREAR.map((c) => {
+            const Icono = ICONO[c.icono]
+            return (
+              <li key={c.href}>
+                <Link className="flex min-h-[64px] items-center gap-3.5 py-2 text-ink no-underline" href={c.href} onClick={cerrar}>
+                  <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-pill-pending text-gold-deep">
+                    <Icono className="size-4" />
+                  </span>
+                  <span className="flex flex-col gap-0.5">
+                    <span className="text-[15.5px] font-medium">{c.titulo}</span>
+                    <span className="text-[13.5px] text-ink-mute">{c.detalle}</span>
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </dialog>
+    </>
   )
 }

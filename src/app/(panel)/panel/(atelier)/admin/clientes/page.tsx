@@ -12,7 +12,7 @@ import { fiestaDeTema } from '@/modules/events'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { BRAND } from '@/shared/config/brand'
 import { env } from '@/shared/config/env'
-import { CheckIcon, MailIcon, SearchIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, MailIcon, SearchIcon, WhatsAppIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { nombreDeFiesta, type FiestaDeLista } from '@/shared/design/ui/panel/lista'
@@ -215,7 +215,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
         </section>
 
         {abierta === undefined ? null : (
-          <div className={`flex min-w-0 flex-[2_1_460px] ${ficha === undefined ? 'max-[767px]:hidden' : ''}`}>
+          <div className={`flex min-w-0 flex-[2_1_460px] ${ficha === undefined ? 'max-[767px]:hidden' : ''}`} data-sin-isla={ficha === undefined ? undefined : ''}>
             <Ficha
               ahora={ahora}
               cerrar={enlace({})}
@@ -264,14 +264,21 @@ async function Ficha({
 
   return (
     // La ficha de la maqueta (E04): quién es y cómo escribirle, su historia y lo que sabemos de ella.
-    <section aria-labelledby="ficha-de-cliente" className="flex w-full min-w-0 flex-col gap-6 rounded-[16px] border border-line-panel bg-bg-raised p-7 max-[559px]:p-5">
-      <Link className="-mt-1 inline-flex min-h-11 items-center gap-2 text-[15px] text-ink-mute no-underline min-[768px]:hidden" href={cerrar}>
-        ← Todos los clientes
+    <section aria-labelledby="ficha-de-cliente" className="flex w-full min-w-0 flex-col gap-6 rounded-[16px] border border-line-panel bg-bg-raised p-7 max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-0">
+      <Link className="mb-1 flex min-h-15 items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-ink no-underline shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[768px]:hidden" href={cerrar}>
+        <span aria-hidden className="grid size-11 shrink-0 place-items-center">
+          <ArrowLeftIcon className="size-5" />
+        </span>
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span className="text-[13px] text-ink-mute">Clientes</span>
+          <span className="truncate text-[16px] font-medium">{c.nombre}</span>
+        </span>
+        <span className="sr-only">: volver</span>
       </Link>
       <div className="flex flex-wrap items-center gap-4">
         <Iniciales nombre={c.nombre} />
         <div className="min-w-0 flex-1">
-          <h2 className="font-display text-[28px] leading-tight font-medium" id="ficha-de-cliente">
+          <h2 className="font-display text-[28px] leading-tight font-medium break-words" id="ficha-de-cliente">
             {c.nombre}
           </h2>
           <p className="text-[13.5px] text-ink-mute">{[...c.correos, ...c.telefonos].join(', ') || 'Sin contacto'}</p>

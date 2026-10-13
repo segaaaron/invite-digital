@@ -8,7 +8,7 @@ import { addPersonAction, ensureInvitationLinkAction, reopenRsvpAction, setGroup
 import type { Attendance } from '../domain/person'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 import { conCanal } from '../domain/invitation-url'
-import { CloseIcon, CopyIcon, QrIcon } from '@/shared/design/ui/icons'
+import { CloseIcon, CopyIcon, QrIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
 
 export type EditablePerson = {
   readonly id: string
@@ -181,22 +181,37 @@ export function EditPersonDialog({
       aria-labelledby={`${idNombre}-titulo`}
       // Desde 1024 px, **al lado de la lista** (panel lateral, la lista se sigue viendo: maqueta 7 del panel
       // móvil); en el teléfono, hoja desde abajo. En medio, centrado.
-      className="m-auto w-[min(560px,94vw)] max-w-none overflow-y-auto border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:mb-0 max-[767px]:max-h-[92dvh] max-[767px]:w-screen max-[767px]:rounded-t-[20px] max-[767px]:p-5 min-[768px]:fixed min-[768px]:inset-y-0 min-[768px]:right-0 min-[768px]:left-auto min-[768px]:m-0 min-[768px]:h-dvh min-[768px]:max-h-dvh min-[768px]:w-[min(520px,100vw)] min-[768px]:border-y-0 min-[768px]:border-r-0"
+      className="m-auto w-[min(560px,94vw)] max-w-none overflow-y-auto border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:fixed max-[767px]:inset-0 max-[767px]:m-0 max-[767px]:h-dvh max-[767px]:max-h-dvh max-[767px]:w-full max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:px-4 max-[767px]:pt-2.5 max-[767px]:pb-[max(24px,env(safe-area-inset-bottom))] min-[768px]:fixed min-[768px]:inset-y-0 min-[768px]:right-0 min-[768px]:left-auto min-[768px]:m-0 min-[768px]:h-dvh min-[768px]:max-h-dvh min-[768px]:w-[min(520px,100vw)] min-[768px]:border-y-0 min-[768px]:border-r-0"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
       }}
     >
+      {/* En el celular (M43): «← Invitados / la invitación», sin el ✕. */}
+      <button
+        className="mb-5 flex min-h-15 w-full cursor-pointer items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-left shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[768px]:hidden"
+        onClick={cerrar}
+        type="button"
+      >
+        <span aria-hidden className="grid size-11 shrink-0 place-items-center">
+          <ArrowLeftIcon className="size-5" />
+        </span>
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span className="text-[13px] text-ink-mute">Invitados</span>
+          <span className="truncate text-[16px] font-medium">{invitacion.label}</span>
+        </span>
+        <span className="sr-only">: cerrar</span>
+      </button>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="truncate text-[14px] text-ink-mute">Invitación «{invitacion.label}»</p>
+          <p className="truncate text-[14px] text-ink-mute max-[767px]:hidden">Invitación «{invitacion.label}»</p>
           <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idNombre}-titulo`}>
             Editar invitado
           </h2>
         </div>
         <button
           aria-label="Cerrar"
-          className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold"
+          className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold max-[767px]:hidden"
           onClick={cerrar}
           type="button"
         >

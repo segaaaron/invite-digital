@@ -11,6 +11,7 @@ import { DeliveryPanel } from '@/modules/guests/ui/DeliveryPanel'
 import { ImportPanel } from '@/modules/guests/ui/ImportPanel'
 import { GuestDialog } from '@/modules/guests/ui/GuestDialog'
 import { EditPersonDialog } from '@/modules/guests/ui/EditPersonDialog'
+import { EditarInvitacion } from '@/modules/guests/ui/EditarInvitacion'
 import { PassDialog } from '@/modules/guests/ui/PassDialog'
 import { canAddGroup } from '@/modules/plans'
 import { AllowanceNotice } from '@/modules/plans/ui/AllowanceNotice'
@@ -47,11 +48,11 @@ export default async function InvitadosPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>
-  searchParams: Promise<{ panel?: string; persona?: string }>
+  searchParams: Promise<{ panel?: string; persona?: string; grupo?: string }>
 }) {
   const actor = await requireSession()
   const { slug } = await params
-  const { panel, persona } = await searchParams
+  const { panel, persona, grupo } = await searchParams
 
   const event = await events.getFor(actor, slug, { section: 'cliente' })
   if (isErr(event)) {
@@ -224,6 +225,33 @@ export default async function InvitadosPage({
           }
         />
       ) : null}
+
+      {/* Editar la invitación entera (maqueta E36, T32, M43). */}
+      {(() => {
+        if (panel !== 'invitacion' || grupo === undefined || isErr(personas)) return null
+        const g = filas.find((f) => f.id === grupo)
+        if (g === undefined) return null
+        const suyas = personas.value.filter((p) => p.guestGroupId === grupo)
+        const tablas = salon === null || isErr(salon) ? [] : salon.value.tables
+        return (
+          <EditarInvitacion
+            closeHref={base}
+            eventId={event.value.id}
+            eventSlug={event.value.slug}
+            invitacion={{
+              id: g.id,
+              label: g.label,
+              codigo: codigos.get(g.id) ?? null,
+              enlace: enlaceDe(g.id),
+              phone: g.phone ?? null,
+              mesaId: tablas.find((t) => t.groups.some((x) => x.id === g.id))?.id ?? null,
+            }}
+            key={g.id}
+            mesas={tablas.map((t) => ({ id: t.id, label: t.label, libres: Math.max(0, t.capacity - t.taken) }))}
+            personas={suyas.map((p) => ({ id: p.id, fullName: p.fullName, isCompanion: p.isCompanion, vip: p.vip }))}
+          />
+        )
+      })()}
 
       {panel === 'editar' && personaCompleta !== null && enFoco !== null ? (
         <EditPersonDialog

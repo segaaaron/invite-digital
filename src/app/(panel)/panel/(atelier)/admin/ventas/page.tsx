@@ -17,7 +17,7 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { PanelLateral } from '@/shared/design/ui/panel/PanelLateral'
-import { PlusIcon, SearchIcon } from '@/shared/design/ui/icons'
+import { PlusIcon, SearchIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
 import { SelectorDeFiltro } from '@/shared/design/ui/panel/SelectorDeFiltro'
 import { diaDelEvento, hace } from '@/shared/format/fecha'
@@ -129,12 +129,14 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
       </div>
 
       {cobroListo ? null : (
+        <div className={pedida === undefined ? '' : 'max-[767px]:hidden'}>
         <PanelAlert tone="error">
           Faltan tus datos de cobro: quien recibe una cotización no ve a dónde pagar.{' '}
           <Link className="font-medium underline underline-offset-4" href="/panel/admin/pagos">
             Cargarlos
           </Link>
         </PanelAlert>
+        </div>
       )}
 
       {/* En el celular, las etapas en un selector (maqueta M03): cinco pestañas no caben. */}
@@ -214,7 +216,7 @@ export default async function VentasPage({ searchParams }: { searchParams: Promi
             )}
           </section>
           {abierta === undefined || cotizando ? null : (
-            <div className={`flex min-w-0 flex-[1_1_400px] ${pedida === undefined ? 'max-[767px]:hidden' : ''}`}>
+            <div className={`flex min-w-0 flex-[1_1_400px] ${pedida === undefined ? 'max-[767px]:hidden' : ''}`} data-sin-isla={pedida === undefined ? undefined : ''}>
               <Ficha ahora={ahora} cerrar={cerrar} cotizarHref={enlace({ venta: abierta.clave, cotizar: '1' })} plantillas={isErr(plantillas) ? null : plantillas.value.mensajes} venta={abierta} />
             </div>
           )}
@@ -294,9 +296,16 @@ async function Ficha({
 
   return (
     // La ficha de la maqueta (E02): al lado de la lista, en su tarjeta de marfil. En el celular, sola (M04).
-    <section aria-labelledby="ficha-de-venta" className="flex min-w-0 flex-[1_1_400px] flex-col gap-5.5 rounded-[16px] border border-line-panel bg-bg-raised p-7.5 max-[559px]:p-5">
-      <Link className="-mt-1 inline-flex min-h-11 items-center gap-2 text-[15px] text-ink-mute no-underline min-[768px]:hidden" href={cerrar}>
-        ← Todas las ventas
+    <section aria-labelledby="ficha-de-venta" className="flex min-w-0 flex-[1_1_400px] flex-col gap-5.5 rounded-[16px] border border-line-panel bg-bg-raised p-7.5 max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-0">
+      <Link className="mb-1 flex min-h-15 items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-ink no-underline shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[768px]:hidden" href={cerrar}>
+        <span aria-hidden className="grid size-11 shrink-0 place-items-center">
+          <ArrowLeftIcon className="size-5" />
+        </span>
+        <span className="flex min-w-0 flex-col leading-tight">
+          <span className="text-[13px] text-ink-mute">Ventas</span>
+          <span className="truncate text-[16px] font-medium">{v.nombre}</span>
+        </span>
+        <span className="sr-only">: volver</span>
       </Link>
       <div>
         <p className="mb-1.5 text-[13.5px] text-ink-mute">{v.pedido === null ? 'Consulta desde la web' : `Pedido ${v.pedido.publicRef}`}</p>

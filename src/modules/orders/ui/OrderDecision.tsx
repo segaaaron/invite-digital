@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState, useId, useRef, useState } from 'react'
-import { CloseIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
+import { CloseIcon } from '@/shared/design/ui/icons'
 import { botonClases, FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
@@ -90,19 +90,10 @@ export function OrderDecision({
 
       <dialog
         aria-labelledby={`${id}-rechazo`}
-        className="m-auto max-h-[92dvh] w-[min(560px,94vw)] max-w-none overflow-y-auto rounded-[20px] border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:fixed max-[767px]:inset-0 max-[767px]:m-0 max-[767px]:h-dvh max-[767px]:max-h-dvh max-[767px]:w-full max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:px-4 max-[767px]:pt-2.5 max-[767px]:pb-[max(24px,env(safe-area-inset-bottom))]"
+        className="m-auto max-h-[92dvh] w-[min(560px,94vw)] max-w-none overflow-y-auto rounded-[20px] border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:mx-0 max-[767px]:mt-auto max-[767px]:mb-0 max-[767px]:w-full max-[767px]:rounded-b-none max-[767px]:px-5 max-[767px]:pt-3 max-[767px]:pb-[max(20px,env(safe-area-inset-bottom))]"
         ref={rechazo}
       >
-        <button className="mb-5 flex min-h-15 w-full cursor-pointer items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-left shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[768px]:hidden" onClick={cerrar} type="button">
-          <span aria-hidden className="grid size-11 shrink-0 place-items-center">
-            <ArrowLeftIcon className="size-5" />
-          </span>
-          <span className="flex min-w-0 flex-col leading-tight">
-            <span className="text-[13px] text-ink-mute">Ventas</span>
-            <span className="truncate text-[16px] font-medium">Rechazar el comprobante</span>
-          </span>
-          <span className="sr-only">: cerrar</span>
-        </button>
+        <span aria-hidden className="mx-auto mb-3 block h-1 w-10 rounded-full bg-line-panel-strong min-[768px]:hidden" />
         <div className="flex items-start justify-between gap-4">
           <div className="flex flex-col gap-1">
             <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id={`${id}-rechazo`}>
@@ -110,7 +101,7 @@ export function OrderDecision({
             </h2>
             <p className="text-[15px] text-ink-mute">{nombre ?? 'El cliente'} verá tu motivo y podrá subir otro. El pedido no se pierde.</p>
           </div>
-          <button aria-label="Cerrar" className="max-[767px]:hidden grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={cerrar} type="button">
+          <button aria-label="Cerrar" className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={cerrar} type="button">
             <CloseIcon className="size-4" />
           </button>
         </div>
