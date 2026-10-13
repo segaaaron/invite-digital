@@ -33,18 +33,19 @@ test.describe('registro de fallos', () => {
     expect((await page.request.post('/api/fallos', { data: { nada: 1 } })).status()).toBe(400)
 
     await page.goto('/panel/admin/fallos?dias=1&origen=navegador')
-    const fila = page.locator('li > details').filter({ hasText: MENSAJE })
+    // La tarjeta de la maqueta: qué pasó y dónde a la vista, el significado y la pila plegados.
+    const fila = page.getByRole('listitem').filter({ hasText: MENSAJE })
     await expect(fila).toBeVisible()
-    // Dicho para personas: dónde pasó, sin la pila a la vista.
-    await expect(fila.locator('> summary')).toContainText('En el navegador')
-    await expect(fila.locator('> summary')).not.toContainText('bloque.tsx')
-    await fila.locator('> summary').click()
-    await expect(fila).toContainText('Qué significa')
+    await expect(fila).toContainText('En el navegador')
+    await expect(fila.getByText('bloque.tsx:12:3')).toBeHidden()
+    // El primero de la lista ya viene abierto (maqueta); los demás se abren.
+    const significado = fila.locator('details').first()
+    if (!(await significado.evaluate((d) => (d as HTMLDetailsElement).open))) await significado.locator('> summary').click()
     await expect(fila).toContainText('/panel/eventos/x/configuracion')
-    await fila.getByText('Ver detalle técnico').click()
-    await expect(fila).toContainText('bloque.tsx:12:3')
-    await fila.getByRole('button', { name: 'Ya está arreglado: borrar' }).click()
-    await expect(page.locator('li > details').filter({ hasText: MENSAJE })).toHaveCount(0)
+    await fila.getByText('Detalle técnico', { exact: true }).click()
+    await expect(fila.getByText(/bloque\.tsx:12:3/)).toBeVisible()
+    await fila.getByRole('button', { name: 'Ya está arreglado' }).click()
+    await expect(page.getByRole('listitem').filter({ hasText: MENSAJE })).toHaveCount(0)
   })
 })
 
@@ -67,6 +68,8 @@ test.describe('guardar la invitación no pierde nada', () => {
 
     // El campo no deja pasar de lo que se guarda: 240 para «Lugar». (Si algo llegara más largo por otra vía, la
     // acción lo rechaza diciendo el campo: lo cubren las unitarias de `loQueSePerderia`.)
+    // «Guardar y seguir» plegó la sección: se vuelve a abrir.
+    await abrirSeccion(page, 'Recepción')
     const lugar = recepcion.getByLabel('Lugar', { exact: true })
     await expect(lugar).toHaveAttribute('maxlength', '240')
     await lugar.fill('')
@@ -108,6 +111,8 @@ test.describe('guardar la invitación no pierde nada', () => {
     const [fila] = await sql<{ d: string }[]>`select blocks->'dressCode'->>'detail' as d from event_content c join events e on e.id = c.event_id where e.slug = ${SLUG}`
     expect(fila!.d.length).toBeGreaterThan(400)
 
+    // «Guardar y seguir» plegó la sección: se vuelve a abrir.
+    await abrirSeccion(page, 'Código de vestimenta')
     await detalle.fill('')
     await detalle.pressSequentially('x'.repeat(610), { delay: 0 })
     expect((await detalle.inputValue()).length).toBe(600)

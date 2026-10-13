@@ -58,6 +58,7 @@ export async function orderExtraAction(_previo: ExtraActionState, fd: FormData):
   const pedido = await orders.placeAddon({ addonSlug, eventId, customerName: actor.email, contact: actor.email })
   if (isErr(pedido)) return { status: 'error', message: pedido.error.kind === 'invalid_input' ? pedido.error.detail : 'No pudimos crear el pedido. Vuelve a intentarlo.' }
 
-  // `redirect` lanza: va fuera de cualquier try, después de escribir.
-  redirect(`/es/pedido/ref/${pedido.value.publicRef}`)
+  // `redirect` lanza: va fuera de cualquier try, después de escribir. Se paga sin salir del panel: el diálogo
+  // «Pedir el extra» (maqueta E71) con los datos de la transferencia y la subida del comprobante.
+  redirect(`/panel/eventos/${eventSlug}/extras?pedido=${pedido.value.publicRef}`)
 }

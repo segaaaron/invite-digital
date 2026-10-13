@@ -328,6 +328,16 @@ export function ReceiptIcon({ className }: IconProps) {
   )
 }
 
+/** Un archivo: hoja con la esquina doblada. */
+export function FileIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
+      <path d="M6 3h8l4 4v14H6z" />
+      <path d="M14 3v4h4M9 12h6M9 16h6" />
+    </svg>
+  )
+}
+
 export function HelpIcon({ className }: IconProps) {
   return (
     <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
@@ -583,6 +593,16 @@ export function ShareIcon({ className }: IconProps) {
     <svg aria-hidden className={className} height="16" viewBox="0 0 24 24" width="16" {...BASE}>
       <path d="M12 3v12M8 7l4-4 4 4" />
       <path d="M6 11H5a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-8a1 1 0 0 0-1-1h-1" />
+    </svg>
+  )
+}
+
+/** Una llave: dar acceso a alguien (E34). */
+export function KeyIcon({ className }: IconProps) {
+  return (
+    <svg aria-hidden className={className} height="15" viewBox="0 0 24 24" width="15" {...BASE}>
+      <circle cx="8" cy="15" r="4" />
+      <path d="M11 12l8-8M16 7l2.5 2.5M14 9l2 2" />
     </svg>
   )
 }

@@ -52,8 +52,8 @@ test('el pedido va de la web al panel: referencia, comprobante y aprobación', a
   await atelier.goto('/panel/pedidos?estado=proof_submitted')
   await expect(atelier).toHaveURL(/\/panel\/admin\/ventas\?vista=lista&etapa=por_revisar/)
   await atelier.goto(`/panel/admin/ventas?venta=p-${referencia}`)
-  const ficha = atelier.locator('dialog[open]')
-  await expect(ficha).toContainText('Por revisar')
+  const ficha = atelier.locator('section[aria-labelledby="ficha-de-venta"]')
+  await expect(ficha.locator('[aria-current="step"]')).toHaveText('Comprobante')
 
   // El comprobante se descarga, no se pinta: viene con `attachment`.
   await expect(ficha.getByRole('link', { name: /comprobante\.png/ })).toBeVisible()

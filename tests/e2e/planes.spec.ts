@@ -18,7 +18,7 @@ async function crearGrupo(page: Page, etiqueta: string, acompanantes = 1): Promi
   // hay que elegir grupo ninguno.
   await page.getByLabel('Nombre completo').fill(etiqueta)
   await añadirAcompanantes(page, acompanantes)
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   await page.waitForURL(/invitados$/)
 }
 
@@ -41,9 +41,9 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
 
   // 2. En el tope, el aviso cambia de tono y el botón de guardar queda deshabilitado.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-  await page.getByLabel('Tipo de invitación').selectOption('personal')
+  await page.getByRole('radio', { name: /Personal/ }).check()
   await expect(page.getByText('El plan no admite más invitaciones')).toBeVisible()
-  await expect(page.getByRole('button', { name: 'Guardar' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeDisabled()
 
   // 3. Y ahora lo que importa: se desactiva el guardia del navegador y se manda el
   //    formulario igual. Es lo que haría cualquiera con las herramientas de desarrollo
@@ -54,7 +54,7 @@ test('el límite del plan corta en el servidor, no solo en el botón', async ({ 
   await page.evaluate(() => {
     document.querySelectorAll('button[type="submit"]').forEach((b) => b.removeAttribute('disabled'))
   })
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
   await expect(page.getByText('El plan no admite más invitaciones')).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Familia Colada', exact: true })).toBeHidden()
@@ -72,9 +72,9 @@ test('sin mesa de regalos en el plan: sobres y transferencia sí, la lista y los
   // La lluvia de sobres y la transferencia van en todos los planes.
   await expect(page.getByRole('region', { name: 'Formas de regalar' })).toBeVisible()
   await expect(page.getByRole('link', { name: /Lluvia de sobres/ })).toBeVisible()
-  await expect(page.getByText('No incluida', { exact: true })).toBeVisible()
-  // El atelier tiene salida: cambiar de plan (el anfitrión no, la lista no se vende como extra).
-  await expect(page.getByRole('link', { name: 'Ver planes: Lista de regalos' })).toHaveAttribute('href', `/panel/eventos/${SLUG}/plan`)
+  // La lista no viene en el plan: su fila lo dice, y su interruptor lleva a cambiar de plan (el atelier; el anfitrión no,
+  // la lista no se vende como extra).
+  await expect(page.getByRole('link', { name: 'Lista de regalos: no viene en tu plan' })).toHaveAttribute('href', `/panel/eventos/${SLUG}/plan`)
   // Lo que el plan no trae no se ofrece: ni las altas ni el formulario de la lista.
   await expect(page.getByRole('link', { name: /Añadir regalo/ })).toHaveCount(0)
   await expect(page.getByRole('link', { name: /Añadir fondo/ })).toHaveCount(0)
@@ -103,5 +103,5 @@ test('el atelier solicita un cambio de plan y lo aplica', async ({ page }) => {
 
   // El alta vive en la vista de invitados, que es propia como en la maqueta.
   await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-  await expect(page.getByRole('button', { name: 'Guardar' })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Guardar', exact: true })).toBeEnabled()
 })

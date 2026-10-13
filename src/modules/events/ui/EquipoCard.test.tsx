@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { EquipoCard } from './EquipoCard'
 
@@ -38,46 +38,40 @@ beforeEach(() => {
 })
 
 describe('EquipoCard', () => {
-  it('una sola lista con cada persona y lo que hace', () => {
+  it('dos tarjetas: tu planner (y quien compró) y la recepción, cada persona con lo que hace', () => {
     render(<EquipoCard {...base} />)
-    expect(screen.getByRole('listitem', { name: 'tia@correo.bo' })).toHaveTextContent('Co-anfitrión')
-    expect(screen.getByRole('listitem', { name: 'Carlos' })).toHaveTextContent('Recepción')
-    // Quien compró, con nombre, correo y teléfono: a quién llamar.
-    const compro = screen.getByRole('listitem', { name: 'María Rojas' })
+    const planner = screen.getByRole('region', { name: 'Tu planner' })
+    expect(within(planner).getByRole('listitem', { name: 'tia@correo.bo' })).toHaveTextContent('Co-anfitrión')
+    const compro = within(planner).getByRole('listitem', { name: 'María Rojas' })
     expect(compro).toHaveTextContent('quien compró')
     expect(compro).toHaveTextContent('mama@correo.bo')
     expect(compro).toHaveTextContent('+591 700 12345')
+    expect(within(screen.getByRole('region', { name: 'Recepción' })).getByRole('listitem', { name: 'Carlos' })).toHaveTextContent('Puerta 1')
   })
 
   // La familia entra con la cuenta del cliente: ya no se suman co-anfitriones.
-  it('no ofrece co-anfitrión', () => {
+  it('la planner se suma por correo y la recepción por nombre, cada una en su tarjeta', () => {
     render(<EquipoCard {...base} />)
-    expect(screen.queryByRole('radio', { name: /Co-anfitrión/ })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Tu planner' })).getByLabelText('Correo')).toBeInTheDocument()
+    expect(within(screen.getByRole('region', { name: 'Recepción' })).getByLabelText('Nombre')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sumar a la planner' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sumar a recepción' })).toBeInTheDocument()
+    expect(screen.queryByText(/Co-anfitrión/, { selector: 'button, label' })).not.toBeInTheDocument()
   })
 
-  it('un solo formulario: recepción pide nombre; la planner, correo', () => {
-    render(<EquipoCard {...base} />)
-    expect(screen.getByLabelText('Correo')).toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('radio', { name: /Recepción/ }))
-    expect(screen.queryByLabelText('Correo')).not.toBeInTheDocument()
-    expect(screen.getByLabelText('Nombre')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sumar al equipo' })).toBeInTheDocument()
-  })
-
-  it('cada papel dice su cupo, y el plan sin puerta no ofrece porteros', () => {
+  it('cada tarjeta dice su cupo, y el plan sin puerta no ofrece recepción', () => {
     const { rerender } = render(<EquipoCard {...base} />)
-    expect(screen.getByRole('radio', { name: /Recepción/ }).closest('label')).toHaveTextContent('1 de 3')
+    expect(screen.getByRole('region', { name: 'Recepción' })).toHaveTextContent('1 de 3')
 
     rerender(<EquipoCard {...base} porteros={null} />)
-    expect(screen.getByRole('radio', { name: /Recepción/ })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Sumar a recepción' })).not.toBeInTheDocument()
     expect(screen.getByText(/no incluye pases con QR ni personal de recepción/)).toBeInTheDocument()
   })
 
   // Su planner suma recepción, pero no da acceso al panel a nadie.
-  it('quien solo suma recepción no ve las opciones de cuenta', () => {
+  it('quien solo suma recepción no puede sumar una planner', () => {
     render(<EquipoCard {...base} sumaEquipo={false} />)
-    expect(screen.queryByRole('radio', { name: /Planner/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sumar a la planner' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('Nombre')).toBeInTheDocument()
   })
 

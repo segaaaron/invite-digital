@@ -5,10 +5,13 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { moveElementsAction, removeZoneAction } from '@/app/_acciones/venue/actions'
 import type { SeatedTable } from '../application/list-seating'
 import type { ElementMove } from '../application/move-element'
-import { seatRing } from '../domain/seat-ring'
 import { matchesSearch, useSeatingSearch } from './SeatingSearchContext'
 import { clampToPlan } from '../domain/venue-table'
 import type { VenueZone } from '../domain/venue-zone'
+import type { SeatedGroupRow } from '../application/ports'
+import { assignGroupAction, removeTableAction } from '@/app/_acciones/venue/actions'
+import { Iniciales, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { TableCard } from './TableCard'
 
 type Exit = { href: string; label: string }
 
@@ -27,6 +30,10 @@ type Props = {
    * ejecución sin que el typecheck diga una palabra. Ya pasó en la página del plan.
    */
   zoneEditHrefPrefix?: string
+  /** Las invitaciones sin mesa: la columna «Sin mesa», que se arrastran a una mesa. */
+  unseated?: readonly SeatedGroupRow[]
+  /** Cómo se llama la mesa principal en esta fiesta. */
+  mesaPrincipal?: string
 }
 
 type Punto = { x: number; y: number }
@@ -81,26 +88,6 @@ const ZONA_TEXTO: Record<VenueZone['kind'], string> = {
  * resuelta—, empezada en dorado y vacía en línea tenue. El rojo que llevaba la llena
  * decía «problema» donde no lo hay.
  */
-/** El tinte de cada elemento del salón, como en la maqueta: pista dorada, mesa de honor
- *  verde, banda violeta, y el resto en blanco translúcido. */
-const TONO_ZONA: Record<VenueZone['kind'], string> = {
-  dance: 'bg-gold/10',
-  stage: 'bg-sage/10',
-  music: 'bg-device/8',
-  bar: 'bg-white/45',
-  entrance: 'bg-white/45',
-  kitchen: 'bg-white/45',
-  photo: 'bg-white/45',
-  custom: 'bg-white/45',
-}
-
-/**
- * En la maqueta el disco es **siempre** arena y quien dice cómo va la mesa son las
- * sillas: llenas de verde, vacías con su número. Un borde de color por estado repetía esa
- * información y hacía que el plano gritara.
- */
-const bordeDeMesa = (): string => 'border-table-edge'
-
 const PASO_TECLADO = 1
 
 /**
@@ -128,6 +115,34 @@ const enElServidor = (): boolean => false
 const usePrefiereMenosMovimiento = (): boolean =>
   useSyncExternalStore(suscribirseAlMovimiento, leerMovimiento, enElServidor)
 
+/** El botón «Guardar el plano» vive en la cabecera de la página y el plano dentro: se hablan por estos avisos. */
+const PLANO_ESTADO = 'venue:plano-estado'
+const PLANO_GUARDAR = 'venue:plano-guardar'
+
+/** «Guardar el plano» (E10), en la cabecera: activo solo con cambios sin guardar. */
+export function GuardarPlano() {
+  const [estado, setEstado] = useState({ pendientes: 0, guardando: false })
+  useEffect(() => {
+    const oir = (e: Event) => setEstado((e as CustomEvent<{ pendientes: number; guardando: boolean }>).detail)
+    window.addEventListener(PLANO_ESTADO, oir)
+    return () => window.removeEventListener(PLANO_ESTADO, oir)
+  }, [])
+  return (
+    <PanelButton disabled={estado.pendientes === 0 || estado.guardando} onClick={() => window.dispatchEvent(new Event(PLANO_GUARDAR))} variant="primary">
+      Guardar el plano
+    </PanelButton>
+  )
+}
+
+/** «Mesa 06» → «6»; «Novios» se queda. */
+const numeroDe = (label: string): string => {
+  const sin = label.replace(/^mesa\s*/i, '')
+  return /^\d+$/.test(sin) ? String(Number(sin)) : sin || label
+}
+
+/** Un toque sin arrastre (menos de esto en píxeles) elige la mesa. */
+const TOQUE = 4
+
 /**
  * El plano no guarda al arrastrar ni al soltar: acumula los movimientos en local y los
  * manda en un solo lote cuando el atelier pulsa «Guardar». Guardar por fotograma serían
@@ -137,7 +152,7 @@ const usePrefiereMenosMovimiento = (): boolean =>
  * Se mueve con el ratón y con las flechas del teclado. Un plano solo arrastrable deja
  * fuera a quien no usa ratón.
  */
-export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHrefPrefix }: Props) {
+export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHrefPrefix, unseated = [], mesaPrincipal = 'De los novios' }: Props) {
   const router = useRouter()
   const { termino } = useSeatingSearch()
   const reduceMotion = usePrefiereMenosMovimiento()
@@ -155,6 +170,10 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
   const [salida, setSalida] = useState<Exit | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [guardando, setGuardando] = useState(false)
+  const [elegida, setElegida] = useState<string | null>(null)
+  const [encima, setEncima] = useState<string | null>(null)
+  const [porQuitar, setPorQuitar] = useState(false)
+  const [viendo, setViendo] = useState(false)
   /**
    * **A pantalla completa, con zoom** (7 de octubre, fase 4 del panel móvil): en el teléfono el plano de
    * 760 px de alto no se veía entero ni se acercaba. Pellizcar acerca y aleja el plano, no la página
@@ -206,6 +225,17 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
     return () => window.removeEventListener('beforeunload', avisar)
   }, [hayPendientes])
 
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent(PLANO_ESTADO, { detail: { pendientes: pendientes.length, guardando } }))
+  }, [pendientes.length, guardando])
+
+  const guardarRef = useRef<() => Promise<boolean>>(async () => false)
+  useEffect(() => {
+    const oir = () => void guardarRef.current()
+    window.addEventListener(PLANO_GUARDAR, oir)
+    return () => window.removeEventListener(PLANO_GUARDAR, oir)
+  }, [])
+
   const mover = (key: string, punto: Punto) => {
     setActuales((prev) => ({ ...prev, [key]: { x: clampToPlan(punto.x), y: clampToPlan(punto.y) } }))
   }
@@ -231,6 +261,10 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
   const alSoltar = (e: React.PointerEvent<HTMLButtonElement>) => {
     e.currentTarget.releasePointerCapture?.(e.pointerId)
     // Aquí no se guarda nada a propósito: el lote viaja al pulsar «Guardar».
+    const activo = arrastre.current
+    if (activo?.key.startsWith('table:') && Math.hypot(e.clientX - activo.desdeX, e.clientY - activo.desdeY) < TOQUE) {
+      elegir(activo.key.slice('table:'.length))
+    }
     arrastre.current = null
     setArrastrando(null)
   }
@@ -293,6 +327,28 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
     mover(key, { x: origen.x + delta.x, y: origen.y + delta.y })
   }
 
+  const elegir = (id: string) => {
+    setElegida(id)
+    setPorQuitar(false)
+    setViendo(false)
+  }
+
+  /** Soltar una invitación de «Sin mesa» encima de una mesa la sienta ahí. */
+  const sentar = (tableId: string, groupId: string) => {
+    setError(null)
+    void assignGroupAction({ eventId, eventSlug, groupId, tableId }).then((r) => {
+      if (!r.ok) setError(r.message ?? 'No se pudo sentar a esa invitación.')
+    })
+  }
+
+  const quitarMesa = (id: string) => {
+    setError(null)
+    void removeTableAction({ id, eventId, eventSlug }).then((r) => {
+      if (!r.ok) setError(r.message ?? 'No se pudo quitar la mesa.')
+      else setElegida(null)
+    })
+  }
+
   const borrarZona = (id: string) => {
     setError(null)
     void removeZoneAction({ id, eventId, eventSlug }).then((r) => {
@@ -342,6 +398,10 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
     }
   }
 
+  useEffect(() => {
+    guardarRef.current = guardar
+  })
+
   const descartar = () => {
     setError(null)
     setActuales(guardadas)
@@ -363,233 +423,277 @@ export function FloorPlan({ eventId, eventSlug, tables, zones, exits, zoneEditHr
     transition: reduceMotion || arrastrando ? 'none' : 'left 140ms ease-out, top 140ms ease-out',
   })
 
+  const mesa = tables.find((t) => t.id === elegida) ?? null
+  const quienes = (t: SeatedTable) => {
+    const nombres = t.groups.map((g) => `${g.label} (${g.seats})`)
+    return nombres.length <= 1 ? (nombres[0] ?? '') : `${nombres.slice(0, -1).join(', ')} y ${nombres[nombres.length - 1]}`
+  }
+
   return (
     <section
       aria-label={completo ? 'Plano del salón a pantalla completa' : undefined}
       className={completo ? 'fixed inset-0 z-[70] flex flex-col gap-3 bg-bg px-3 pt-[max(env(safe-area-inset-top),12px)] pb-[max(env(safe-area-inset-bottom),12px)]' : 'flex flex-col gap-4'}
     >
-      <div className="flex flex-wrap items-center gap-3">
-        <button
-          className="inline-flex min-h-11 items-center rounded-pill border border-line-panel-strong bg-white px-4 text-[13px] text-ink"
-          onClick={() => {
-            setCompleto((v) => !v)
-            setZoom(1)
-          }}
-          type="button"
-        >
-          {completo ? 'Cerrar pantalla completa' : 'Pantalla completa'}
-        </button>
-        {completo ? (
-          <span className="inline-flex items-center gap-1" role="group" aria-label="Zoom del plano">
-            <button aria-label="Alejar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-white text-[18px] disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => acotar(z - 0.5))} type="button">
-              −
+      <div className={`grid items-start gap-6 ${unseated.length === 0 || completo ? '' : 'min-[1100px]:grid-cols-[230px_minmax(0,1fr)]'}`}>
+        {unseated.length === 0 || completo ? null : (
+          // La columna «Sin mesa» de la maqueta (E10): cada invitación se arrastra entera a una mesa.
+          <section aria-label="Invitados sin mesa" className="flex flex-col gap-3">
+            <h2 className="font-display text-[24px] leading-tight font-medium">
+              Sin mesa <span className="text-[18px] text-ink-mute">{unseated.reduce((n, g) => n + g.seats, 0)}</span>
+            </h2>
+            <p className="text-[13.5px] text-ink-mute">Arrástralos a una mesa. Una familia nunca se parte.</p>
+            <ul className="flex flex-col gap-2.5 max-[1099px]:flex-row max-[1099px]:flex-wrap">
+              {unseated.map((g) => (
+                <li
+                  className="flex cursor-grab items-center gap-3 rounded-[12px] border border-line-panel bg-tarjeta px-3.5 py-3 active:cursor-grabbing"
+                  draggable
+                  key={g.id}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData('text/x-invitacion', g.id)
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                >
+                  <Iniciales chico nombre={g.label} />
+                  <span className="flex min-w-0 flex-col">
+                    <span className="truncate text-[14.5px] font-medium">{g.label}</span>
+                    <span className="text-[13px] text-ink-mute">
+                      {g.seats} {g.seats === 1 ? 'persona' : 'personas'}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        <div className="flex min-w-0 flex-col gap-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              className="inline-flex min-h-9 items-center rounded-full border border-line-panel-strong bg-bg-raised px-3.5 text-[13px] text-ink max-[859px]:min-h-11"
+              onClick={() => {
+                setCompleto((v) => !v)
+                setZoom(1)
+              }}
+              type="button"
+            >
+              {completo ? 'Cerrar pantalla completa' : 'Pantalla completa'}
             </button>
-            <span className="w-12 text-center font-mono text-[12px] text-ink-soft">{`${Math.round(zoom * 100)} %`}</span>
-            <button aria-label="Acercar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-white text-[18px] disabled:opacity-40" disabled={zoom >= 3} onClick={() => setZoom((z) => acotar(z + 0.5))} type="button">
-              +
-            </button>
-          </span>
-        ) : null}
-        <p aria-label="Estado del plano" role="status" className="font-mono text-[10px] uppercase tracking-[var(--tracking-luxe)] text-warn">
-          {hayPendientes
-            ? `${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar`
-            : 'Plano guardado'}
-        </p>
-        <button
-          type="button"
-          disabled={!hayPendientes || guardando}
-          onClick={() => void guardar()}
-          className="ml-auto rounded-pill border border-ok px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ok disabled:opacity-40"
-        >
-          Guardar cambios
-        </button>
-        <button
-          type="button"
-          disabled={!hayPendientes || guardando}
-          onClick={descartar}
-          className="rounded-pill border border-line px-4 py-2 max-[859px]:min-h-11 font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
-        >
-          Descartar
-        </button>
-        {exits.map((exit) => (
-          <a
-            key={exit.href}
-            href={exit.href}
-            onClick={(e) => {
-              e.preventDefault()
-              intentarSalir(exit)
+            {completo ? (
+              <span className="inline-flex items-center gap-1" role="group" aria-label="Zoom del plano">
+                <button aria-label="Alejar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-[18px] disabled:opacity-40" disabled={zoom <= 1} onClick={() => setZoom((z) => acotar(z - 0.5))} type="button">
+                  −
+                </button>
+                <span className="w-12 text-center text-[12px] text-ink-soft">{`${Math.round(zoom * 100)} %`}</span>
+                <button aria-label="Acercar" className="grid size-11 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-[18px] disabled:opacity-40" disabled={zoom >= 3} onClick={() => setZoom((z) => acotar(z + 0.5))} type="button">
+                  +
+                </button>
+              </span>
+            ) : null}
+            {exits.map((exit) => (
+              <a
+                className="ml-auto text-[13px] text-ink-mute max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center"
+                href={exit.href}
+                key={exit.href}
+                onClick={(e) => {
+                  e.preventDefault()
+                  intentarSalir(exit)
+                }}
+              >
+                {exit.label}
+              </a>
+            ))}
+          </div>
+
+          {/* La rejilla de puntos de la maqueta: un degradado repetido, ni un nodo de más. */}
+          <div
+            className={completo ? 'min-h-0 flex-1 overflow-auto rounded-[16px] [touch-action:pan-x_pan-y]' : ''}
+            onTouchEnd={() => {
+              pellizco.current = null
             }}
-            className="font-mono text-[10.5px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center"
+            onTouchMove={(e) => {
+              if (!completo || e.touches.length !== 2 || pellizco.current === null) return
+              const inicio = pellizco.current
+              setZoom(acotar((inicio.zoom * distancia(e.touches)) / Math.max(1, inicio.distancia)))
+            }}
+            onTouchStart={(e) => {
+              if (completo && e.touches.length === 2) pellizco.current = { distancia: distancia(e.touches), zoom }
+            }}
           >
-            {exit.label}
-          </a>
-        ))}
+            <div
+              ref={plano}
+              aria-label="Plano del salón"
+              style={completo ? { width: `${zoom * 100}%`, height: `calc((100dvh - 120px) * ${zoom})` } : undefined}
+              className="plano-del-salon relative h-[520px] w-full overflow-hidden rounded-[16px] border border-line-panel bg-tarjeta bg-[radial-gradient(circle,var(--color-line-panel-strong)_1px,transparent_1.4px)] bg-[length:22px_22px] max-[767px]:h-[440px]"
+            >
+              {zones.map((zone) => {
+                const key = clave('zone', zone.id)
+                return (
+                  <span className="group/zona" key={key}>
+                    <button
+                      aria-label={`${ZONA_TEXTO[zone.kind]}: ${zone.label}. Muévela con las flechas.`}
+                      className="absolute grid touch-none place-items-center rounded-[10px] border border-dashed border-gold/70 p-1 text-[12.5px] text-gold-deep"
+                      onKeyDown={alTeclear(key)}
+                      onPointerDown={alPulsar(key)}
+                      onPointerMove={alArrastrar}
+                      onPointerUp={alSoltar}
+                      style={{
+                        ...estiloDe(key, arrastrando === key),
+                        width: `${tamActuales[key]?.w ?? zone.w}%`,
+                        height: `${tamActuales[key]?.h ?? zone.h}%`,
+                      }}
+                      type="button"
+                    >
+                      {zone.label}
+                      {/* El mango de la esquina; un botón dentro de otro no es HTML válido, y el teclado redimensiona con Mayúsculas + flechas. */}
+                      <span
+                        aria-hidden
+                        className="absolute right-0.5 bottom-0.5 size-3 cursor-nwse-resize border-r-2 border-b-2 border-gold/60 opacity-50"
+                        onPointerDown={alEstirarInicio(key)}
+                        onPointerMove={alEstirar}
+                        onPointerUp={alSoltarMango}
+                      />
+                    </button>
+                    <span
+                      className="absolute z-10 flex gap-1 opacity-0 transition-opacity group-hover/zona:opacity-100 focus-within:opacity-100"
+                      style={{
+                        left: `calc(${actuales[key]?.x ?? 0}% + ${tamActuales[key]?.w ?? zone.w}% - 18px)`,
+                        top: `calc(${actuales[key]?.y ?? 0}% - 10px)`,
+                      }}
+                    >
+                      {zoneEditHrefPrefix === undefined ? null : (
+                        <a
+                          aria-label={`Editar ${zone.label}`}
+                          className="flex size-6 items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[11px] max-[859px]:size-8 max-[859px]:text-[13px]"
+                          href={`${zoneEditHrefPrefix}${zone.id}`}
+                          title={`Editar ${zone.label}`}
+                        >
+                          ✎
+                        </a>
+                      )}
+                      <button
+                        aria-label={`Eliminar ${zone.label}`}
+                        className="flex size-6 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-bg-raised text-[11px] max-[859px]:size-8 max-[859px]:text-[13px]"
+                        onClick={() => borrarZona(zone.id)}
+                        title={`Eliminar ${zone.label}`}
+                        type="button"
+                      >
+                        <span aria-hidden>✕</span>
+                      </button>
+                    </span>
+                  </span>
+                )
+              })}
+
+              {tables.map((table) => {
+                const key = clave('table', table.id)
+                const resaltada = matchesSearch(termino, table.groups.map((g) => g.label))
+                const redonda = table.shape === 'round'
+                const borde = table.free === 0 ? 'border-[1.5px] border-shell-deep' : table.taken > 0 ? 'border-gold' : 'border-line-panel-strong'
+                const marcada = elegida === table.id || encima === table.id || resaltada
+                return (
+                  <button
+                    aria-label={`${table.label}: ${table.taken} de ${table.capacity} sitios${
+                      table.groups.length === 0 ? ' y nadie sentado' : `. Se sientan ${table.groups.map((g) => g.label).join(', ')}`
+                    }. Muévela con las flechas.`}
+                    aria-pressed={elegida === table.id}
+                    className={`absolute grid -translate-x-1/2 -translate-y-1/2 touch-none place-items-center border bg-tarjeta text-ink transition-shadow ${borde} ${
+                      redonda ? 'size-[76px] rounded-full' : 'h-[58px] w-[118px] rounded-[10px]'
+                    } ${marcada ? 'shadow-[0_0_0_4px_var(--color-tarjeta),0_0_0_6px_var(--color-gold)]' : ''}`}
+                    key={key}
+                    onDragLeave={() => setEncima(null)}
+                    onDragOver={(e) => {
+                      if (!e.dataTransfer.types.includes('text/x-invitacion')) return
+                      e.preventDefault()
+                      setEncima(table.id)
+                    }}
+                    onDrop={(e) => {
+                      const grupo = e.dataTransfer.getData('text/x-invitacion')
+                      setEncima(null)
+                      if (grupo === '') return
+                      e.preventDefault()
+                      sentar(table.id, grupo)
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        elegir(table.id)
+                        return
+                      }
+                      alTeclear(key)(e)
+                    }}
+                    onPointerDown={alPulsar(key)}
+                    onPointerMove={alArrastrar}
+                    onPointerUp={alSoltar}
+                    style={estiloDe(key, arrastrando === key)}
+                    type="button"
+                  >
+                    <span aria-hidden className="flex flex-col items-center leading-none">
+                      <span className={`font-display font-medium ${redonda ? 'text-[26px]' : 'text-[20px]'}`}>{numeroDe(table.label)}</span>
+                      <span className="mt-1 text-[11.5px] text-ink-mute [font-variant-numeric:tabular-nums]">
+                        {table.taken}/{table.capacity}
+                      </span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* La mesa elegida (E10): quién se sienta, cuántas sillas quedan, cambiarla o quitarla. */}
+          {mesa === null || completo ? (
+            completo || tables.length === 0 ? null : <p className="px-1 text-[13.5px] text-ink-mute">Toca una mesa para ver quién se sienta y cambiarla.</p>
+          ) : (
+            <section aria-label={`Mesa elegida: ${mesa.label}`} className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta px-5 py-4">
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <p className="text-[15.5px] font-medium">
+                    {mesa.label}
+                    {mesa.notes ? `, ${mesa.notes}` : mesa.shape === 'sweetheart' ? `, ${mesaPrincipal.toLowerCase()}` : ''}
+                  </p>
+                  <p className="text-[13.5px] text-ink-mute">
+                    {mesa.groups.length === 0 ? 'Nadie sentado todavía.' : `${quienes(mesa)}.`} {mesa.free === 0 ? 'Está completa.' : `Quedan ${mesa.free} ${mesa.free === 1 ? 'silla' : 'sillas'}.`}
+                  </p>
+                </div>
+                <PanelButton onClick={() => setViendo((v) => !v)} size="sm">
+                  {viendo ? 'Cerrar' : 'Cambiar nombre o sillas'}
+                </PanelButton>
+                {porQuitar ? (
+                  <span className="flex items-center gap-2 text-[13.5px]">
+                    ¿Quitarla? {mesa.groups.length === 0 ? '' : 'Sus invitados quedan sin mesa.'}
+                    <PanelButton onClick={() => quitarMesa(mesa.id)} size="sm" variant="danger">
+                      Sí, quitar
+                    </PanelButton>
+                    <PanelButton onClick={() => setPorQuitar(false)} size="sm">
+                      No
+                    </PanelButton>
+                  </span>
+                ) : (
+                  <button className="cursor-pointer text-[14px] font-medium text-danger-deep hover:underline" onClick={() => setPorQuitar(true)} type="button">
+                    Quitar mesa
+                  </button>
+                )}
+              </div>
+              {viendo ? <TableCard eventId={eventId} eventSlug={eventSlug} key={mesa.id} mesaPrincipal={mesaPrincipal} table={mesa} unseated={unseated} /> : null}
+            </section>
+          )}
+        </div>
       </div>
 
       {error === null ? null : (
-        <p role="alert" className="text-[12px] text-danger">
+        <p className="text-[13px] text-danger" role="alert">
           {error}
         </p>
       )}
 
-      <p className={`text-[12px] text-ink-mute ${completo ? 'hidden' : ''}`}>
-        Arrastra las mesas y los elementos para acomodar el salón · usa la esquina inferior derecha de una zona para
-        redimensionarla
-      </p>
-
-      {/* La rejilla de fondo de la maqueta. Es un degradado repetido, no doscientos
-          `div`s: sirve de guía al colocar y no añade un solo nodo al árbol. */}
-      <div
-        className={completo ? 'min-h-0 flex-1 overflow-auto rounded-[14px] [touch-action:pan-x_pan-y]' : ''}
-        onTouchEnd={() => {
-          pellizco.current = null
-        }}
-        onTouchMove={(e) => {
-          if (!completo || e.touches.length !== 2 || pellizco.current === null) return
-          const inicio = pellizco.current
-          setZoom(acotar((inicio.zoom * distancia(e.touches)) / Math.max(1, inicio.distancia)))
-        }}
-        onTouchStart={(e) => {
-          if (completo && e.touches.length === 2) pellizco.current = { distancia: distancia(e.touches), zoom }
-        }}
-      >
-      <div
-        ref={plano}
-        aria-label="Plano del salón"
-        style={completo ? { width: `${zoom * 100}%`, height: `calc((100dvh - 120px) * ${zoom})` } : undefined}
-        className="plano-del-salon relative h-[760px] w-full overflow-hidden rounded-[14px] border border-line-panel bg-[repeating-linear-gradient(0deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),repeating-linear-gradient(90deg,var(--color-plan-grid)_0_1px,transparent_1px_32px),linear-gradient(160deg,var(--color-plan-from),var(--color-plan-to))]"
-      >
-        {zones.map((zone) => {
-          const key = clave('zone', zone.id)
-          return (
-            <span
-              key={key}
-              className="group/zona"
-            >
-            <button
-              type="button"
-              aria-label={`${ZONA_TEXTO[zone.kind]}: ${zone.label}. Muévela con las flechas.`}
-              onPointerDown={alPulsar(key)}
-              onPointerMove={alArrastrar}
-              onPointerUp={alSoltar}
-              onKeyDown={alTeclear(key)}
-              style={{
-                ...estiloDe(key, arrastrando === key),
-                width: `${tamActuales[key]?.w ?? zone.w}%`,
-                height: `${tamActuales[key]?.h ?? zone.h}%`,
-              }}
-              className={`group/zona absolute touch-none rounded-[12px] border border-dashed border-line-panel-strong/70 p-1 font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase ${TONO_ZONA[zone.kind]}`}
-            >
-              {zone.label}
-
-              {/* El mango de la esquina, como en la maqueta. Es un `span` dentro del
-                  botón: un botón dentro de otro botón no es HTML válido, y el teclado
-                  ya redimensiona con Mayúsculas + flechas. */}
-              <span
-                aria-hidden
-                className="absolute right-0.5 bottom-0.5 size-3 cursor-nwse-resize border-r-2 border-b-2 border-ink/50 opacity-40"
-                onPointerDown={alEstirarInicio(key)}
-                onPointerMove={alEstirar}
-                onPointerUp={alSoltarMango}
-              />
-            </button>
-
-            {/* Editar y eliminar **fuera** del botón de arrastre: un botón dentro de otro
-                botón no es HTML válido, y como `span` con `onPointerDown` no había forma
-                de borrar una zona con el teclado. Son controles de verdad, con su nombre. */}
-            <span
-              className="absolute z-10 flex gap-1 opacity-0 transition-opacity group-hover/zona:opacity-100 focus-within:opacity-100"
-              style={{
-                left: `calc(${actuales[key]?.x ?? 0}% + ${tamActuales[key]?.w ?? zone.w}% - 18px)`,
-                top: `calc(${actuales[key]?.y ?? 0}% - 10px)`,
-              }}
-            >
-              {zoneEditHrefPrefix === undefined ? null : (
-                <a
-                  aria-label={`Editar ${zone.label}`}
-                  className="flex size-5 items-center justify-center rounded-full border border-line-panel bg-white text-[10px] max-[859px]:size-8 max-[859px]:text-[13px]"
-                  href={`${zoneEditHrefPrefix}${zone.id}`}
-                  title={`Editar ${zone.label}`}
-                >
-                  ✎
-                </a>
-              )}
-              <button
-                aria-label={`Eliminar ${zone.label}`}
-                className="flex size-5 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[10px] max-[859px]:size-8 max-[859px]:text-[13px]"
-                onClick={() => borrarZona(zone.id)}
-                title={`Eliminar ${zone.label}`}
-                type="button"
-              >
-                <span aria-hidden>✕</span>
-              </button>
-            </span>
-            </span>
-          )
-        })}
-
-        {tables.map((table) => {
-          const key = clave('table', table.id)
-          const sillas = seatRing(table.capacity, table.groups, table.shape)
-          const resaltada = matchesSearch(termino, table.groups.map((g) => g.label))
-          return (
-            <button
-              key={key}
-              type="button"
-              aria-label={`${table.label}: ${table.taken} de ${table.capacity} sitios${
-                table.groups.length === 0 ? ' y nadie sentado' : `. Se sientan ${table.groups.map((g) => g.label).join(', ')}`
-              }. Muévela con las flechas.`}
-              onPointerDown={alPulsar(key)}
-              onPointerMove={alArrastrar}
-              onPointerUp={alSoltar}
-              onKeyDown={alTeclear(key)}
-              style={estiloDe(key, arrastrando === key)}
-              className="absolute size-[74px] -translate-x-1/2 -translate-y-1/2 touch-none text-ink"
-            >
-              {/* Las sillas alrededor, como en la maqueta: la ocupada lleva la inicial de
-                  su grupo. Son decorativas para el lector de pantalla —los nombres ya van
-                  en la etiqueta del botón—; repetir ocho iniciales sueltas sería ruido. */}
-              <span aria-hidden className="absolute inset-0">
-                {sillas.map((silla, indice) => (
-                  <span
-                    key={indice}
-                    className={`absolute flex size-4 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border font-mono text-[7px] ${
-                      silla.occupant === null
-                        ? 'border-line-panel bg-bg-top text-ink-mute'
-                        : silla.vip
-                          ? 'border-gold-deep bg-linear-to-br from-[var(--color-gold-light)] to-gold-deep text-white'
-                          : 'border-sage bg-linear-to-br from-sage-light to-sage text-white'
-                    }`}
-                    style={{ left: `${silla.x}%`, top: `${silla.y}%` }}
-                  >
-                    {silla.initial ?? indice + 1}
-                  </span>
-                ))}
-              </span>
-
-              {/* Dentro va el número, como en la maqueta; el nombre entero y la
-                  ocupación van debajo, donde caben sin apretarse. */}
-              <span
-                aria-hidden
-                className={`absolute top-1/2 left-1/2 flex size-[34px] -translate-x-1/2 -translate-y-1/2 items-center justify-center border bg-linear-to-br from-table-from to-table-to font-mono text-[10px] tracking-[0.1em] text-table-ink shadow-[inset_0_2px_4px_rgb(255_255_255/0.6),inset_0_-3px_6px_rgb(140_110_60/0.25),0_3px_8px_rgb(26_26_26/0.12)] ${bordeDeMesa()} ${
-                  table.shape === 'round' ? 'rounded-full' : 'rounded-[12px]'
-                } ${resaltada ? 'ring-4 ring-gold/50' : ''}`}
-              >
-                #{table.label.replace(/^mesa\s*/i, '') || table.label}
-              </span>
-
-              {/* Etiqueta y ocupación justo debajo del disco, como en la maqueta: 9 px
-                  y 8 px, sin recuadro. */}
-              <span aria-hidden className="absolute top-full left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
-                <span className="mt-0.5 block text-[10.5px] font-medium text-ink">{table.label}</span>
-                <span className="block font-mono text-[10px] text-ink-mute">
-                  {table.taken}/{table.capacity}
-                </span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      <div className="flex flex-wrap items-center gap-3">
+        <p aria-label="Estado del plano" className="flex-1 text-[14px] text-ink-mute" role="status">
+          {hayPendientes ? `Tienes ${pendientes.length} cambio${pendientes.length === 1 ? '' : 's'} sin guardar. Si sales, te preguntamos antes.` : 'Plano guardado'}
+        </p>
+        {hayPendientes ? (
+          <PanelButton disabled={guardando} onClick={descartar} size="sm">
+            Descartar
+          </PanelButton>
+        ) : null}
       </div>
 
       {salida === null ? null : (

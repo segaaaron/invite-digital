@@ -63,9 +63,9 @@ describe('GiftList', () => {
     expect(screen.getByText('Comprado')).toBeInTheDocument()
   })
 
-  it('muestra el precio en la moneda del evento, con sus dos decimales', () => {
+  it('muestra el precio en la moneda del evento, en grande y sin céntimos redondos (E11)', () => {
     render(<GiftList {...props} gifts={[disponible]} />)
-    expect(screen.getByText(/450,00/)).toBeInTheDocument()
+    expect(screen.getByText(/Bs\s?450$/)).toBeInTheDocument()
   })
 
   it('el reservado dice qué grupo lo reservó', () => {

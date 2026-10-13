@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useEffect, useId, useRef, useState, useTransition, type ReactNode } from 'react'
 import { abrirCampanaAction, type AvisoDeLaCampana } from '@/app/_acciones/notifications/avisos-actions'
-import { BellIcon, CalendarIcon, CheckIcon, EyeIcon, GiftIcon, MessageIcon, PenIcon, ReceiptIcon } from '@/shared/design/ui/icons'
+import { BellIcon, CalendarIcon, CloseIcon, CheckIcon, EyeIcon, GiftIcon, MessageIcon, PenIcon, ReceiptIcon } from '@/shared/design/ui/icons'
 import { escucharEnVivo } from '@/shared/design/ui/panel/EnVivo'
 import { hace } from '@/shared/format/fecha'
 import { ActivarAvisos } from './ActivarAvisos'
@@ -58,19 +58,14 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
     <>
       <button
         aria-label={rotulo}
-        className={`relative inline-flex size-10 shrink-0 max-[859px]:size-11 cursor-pointer items-center justify-center rounded-full border transition-colors ${
-          pendientes > 0 ? 'border-ink bg-ink text-white hover:bg-ink/90' : 'border-line-panel-strong bg-white/80 text-ink-soft hover:border-ink hover:text-ink'
-        }`}
+        className="relative inline-flex size-11 shrink-0 cursor-pointer items-center justify-center rounded-xl text-ink transition-colors hover:text-shell-deep min-[768px]:rounded-[10px] min-[768px]:border min-[768px]:border-line-panel-strong min-[768px]:bg-bg-raised min-[768px]:hover:border-gold"
         onClick={abrir}
         title={rotulo}
         type="button"
       >
-        <BellIcon className="size-[18px]" />
-        {pendientes > 0 ? (
-          <span aria-hidden className="absolute -top-1 -right-1 grid min-w-5 place-items-center rounded-full bg-gold px-1 font-mono text-[10.5px] leading-5 text-white shadow-card">
-            {pendientes > 99 ? '99+' : pendientes}
-          </span>
-        ) : null}
+        <BellIcon className="size-5" />
+        {/* Maqueta: un punto de latón; cuántos, lo dice el nombre del botón y la lista al abrirla. */}
+        {pendientes > 0 ? <span aria-hidden className="absolute top-2.5 right-[11px] size-[7px] rounded-full bg-gold" /> : null}
         <span aria-live="polite" className="sr-only">
           {pendientes > 0 ? rotulo : ''}
         </span>
@@ -78,28 +73,29 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
 
       <dialog
         aria-labelledby={titulo}
-        className="panel-lateral fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/35 min-[640px]:w-[min(440px,100vw)]"
+        // En el celular, una hoja a pantalla completa; en tableta y escritorio, el desplegable bajo la campana (E19).
+        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-shell-deep/40 min-[768px]:top-[72px] min-[768px]:right-6 min-[768px]:bottom-auto min-[768px]:h-auto min-[768px]:max-h-[min(560px,80dvh)] min-[768px]:w-[380px] min-[768px]:rounded-[16px] min-[768px]:border min-[768px]:shadow-lift min-[768px]:backdrop:bg-transparent min-[1280px]:top-[78px] min-[1280px]:right-12"
         onClick={(e) => {
           if (e.target === dialogo.current) cerrar()
         }}
         ref={dialogo}
       >
-        <div className="flex h-full flex-col">
-          <header className="flex items-center justify-between gap-4 border-b border-line-panel px-6 py-5">
-            <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
+        <div className="flex h-full max-h-[inherit] flex-col">
+          <header className="flex items-center justify-between gap-4 border-b border-line-panel px-5 py-3.5">
+            <h2 className="font-display text-[22px] leading-tight font-medium" id={titulo}>
               Avisos
             </h2>
             <button
               aria-label="Cerrar"
-              className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
+              className="grid size-10 shrink-0 cursor-pointer place-items-center rounded-[10px] text-ink-mute transition-colors hover:text-ink"
               onClick={cerrar}
               type="button"
             >
-              <span aria-hidden>✕</span>
+              <CloseIcon className="size-4" />
             </button>
           </header>
 
-          <div className="flex-1 overflow-y-auto px-3 py-3" aria-busy={cargando}>
+          <div className="flex-1 overflow-y-auto" aria-busy={cargando}>
             {lista === null ? (
               <p className="px-3 py-6 text-[13px] text-ink-mute">Cargando…</p>
             ) : lista.length === 0 ? (
@@ -115,19 +111,19 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
                 {lista.map((a) => (
                   <li key={a.id}>
                     <Link
-                      className={`flex gap-3 rounded-[14px] px-3 py-3 transition-colors hover:bg-bg-sunken/70 ${a.visto ? '' : 'bg-gold/8'}`}
+                      className={`flex gap-3 border-b border-line-panel px-5 py-3 text-ink no-underline transition-colors hover:bg-fila ${a.visto ? '' : 'bg-pill-pending/50'}`}
                       href={a.href}
                       onClick={cerrar}
                     >
-                      <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-bg-sunken text-sage-deep">
+                      <span aria-hidden className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-full bg-pill-pending text-gold-deep">
                         {ICONO[a.kind] ?? <BellIcon className="size-4" />}
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[13.5px] leading-snug text-ink">{a.title}</span>
-                        {a.body === '' ? null : <span className="mt-0.5 block truncate text-[12.5px] text-ink-mute">{a.body}</span>}
-                        <span className="mt-1 block font-mono text-[10.5px] tracking-[0.06em] text-ink-mute">{hace(new Date(a.createdAt), ahora)}</span>
+                        <span className="block text-[14px] leading-snug font-medium">{a.title}</span>
+                        {a.body === '' ? null : <span className="mt-0.5 block truncate text-[13px] text-ink-mute">{a.body}</span>}
                       </span>
-                      {a.visto ? null : <span aria-label="Nuevo" className="mt-2 size-2 shrink-0 rounded-full bg-gold" />}
+                      <span className="shrink-0 text-[12px] text-ink-mute">{hace(new Date(a.createdAt), ahora)}</span>
+                      {a.visto ? null : <span className="sr-only">Nuevo</span>}
                     </Link>
                   </li>
                 ))}
@@ -135,9 +131,9 @@ export function Campana({ sinVer, clavePublica }: { sinVer: number; clavePublica
             )}
           </div>
 
-          <footer className="flex flex-col gap-3 border-t border-line-panel px-6 py-4">
+          <footer className="flex flex-col items-center gap-2.5 px-5 py-3.5">
             <ActivarAvisos clavePublica={clavePublica} />
-            <Link className="text-[12.5px] text-ink-soft underline underline-offset-4 hover:text-ink" href="/panel/cuenta#avisos" onClick={cerrar}>
+            <Link className="text-[14px] font-medium text-gold-deep underline underline-offset-4 hover:text-ink" href="/panel/cuenta#avisos" onClick={cerrar}>
               Elegir qué avisos recibo
             </Link>
           </footer>

@@ -3,7 +3,10 @@ import { PlanEditor } from '@/modules/admin/ui/PlanEditor'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { PestanasDeAdmin } from '@/modules/admin'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { Pill } from '@/shared/design/ui/panel/PanelKit'
+import { CheckIcon } from '@/shared/design/ui/icons'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Planes · Administración' }
@@ -18,13 +21,13 @@ const aCampo = (cents: number) => (cents % 100 === 0 ? String(cents / 100) : `${
  * Los límites ya vivían en la base «para no exigir un despliegue», pero sin esta pantalla
  * cambiarlos exigía SQL, que es peor. Y el seed ya no los pisa en cada despliegue.
  */
-export default async function AdminPlanesPage() {
+export default async function AdminPlanesPage({ searchParams }: { searchParams: Promise<{ plan?: string }> }) {
   await requireAdmin()
-  const planes = await admin.plans()
+  const [planes, { plan: pedido }] = await Promise.all([admin.plans(), searchParams])
 
   return (
     <>
-      <PanelHeader kicker="Escaparate" meta="Precio, tope, funciones y textos de lo que vende la web" title="Planes" />
+      <PanelHeader title="Catálogo" meta="Precio y límites de cada plan. Los cambios valen para las ventas nuevas." pestanas={<PestanasDeAdmin />} />
 
       {isErr(planes) ? (
         <PanelCard>
@@ -33,56 +36,85 @@ export default async function AdminPlanesPage() {
           </p>
         </PanelCard>
       ) : (
-        <div className="flex flex-col gap-4.5">
-          {/* Tres planes largos: saltar al que se quiere editar sin desplazarse por los otros. */}
-          <nav aria-label="Ir a un plan" className="flex flex-wrap gap-2">
-            {planes.value.map((plan) => (
-              <a className="rounded-[var(--radius-pill)] border border-line-panel-strong bg-white px-4 py-2 text-[12.5px] max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center text-ink transition-colors hover:border-ink" href={`#plan-${plan.slug}`} key={plan.slug}>
-                {plan.es?.name ?? plan.slug} · <span className="text-ink-mute">{formatAmount(plan.priceCents, plan.currency)}</span>
-              </a>
-            ))}
-          </nav>
-          {planes.value.map((plan) => (
-            <div className="scroll-mt-6" id={`plan-${plan.slug}`} key={plan.slug}>
-            <PanelCard className={plan.highlighted ? 'border-gold/50' : ''}>
+        (() => {
+          // Las tres tarjetas de la maqueta (E16) y, debajo, el editor del elegido (`?plan=`): por defecto, el destacado.
+          const elegido = planes.value.find((pl) => pl.slug === pedido) ?? planes.value.find((pl) => pl.highlighted) ?? planes.value[0]
+          return (
+            <div className="flex flex-col gap-7">
+              <div className="flex flex-wrap gap-4.5">
+                {planes.value.map((plan) => {
+                  const activo = plan.slug === elegido?.slug
+                  const rasgos = [
+                    plan.maxGuestGroups === null ? 'Sin límite de invitaciones' : `Hasta ${plan.maxGuestGroups} invitaciones`,
+                    plan.maxGalleryPhotos === null ? 'Fotos sin límite' : `${plan.maxGalleryPhotos} fotos`,
+                    plan.correctionRounds === null ? null : `${plan.correctionRounds} rondas de diseño`,
+                    `${plan.onlineDays} días en línea`,
+                  ].filter((x): x is string => x !== null)
+                  return (
+                    <a
+                      aria-current={activo ? 'true' : undefined}
+                      className={`flex min-w-0 flex-[1_1_220px] flex-col rounded-[16px] bg-bg-raised p-5.5 text-ink no-underline transition-colors ${activo ? 'border-[1.5px] border-shell-deep' : 'border border-line-panel hover:border-gold'} ${plan.isActive ? '' : 'opacity-60'}`}
+                      href={`/panel/admin/planes?plan=${plan.slug}`}
+                      key={plan.slug}
+                    >
+                      <span className="flex items-center justify-between gap-2">
+                        <span className="font-display text-[24px] font-medium">{plan.es?.name ?? plan.slug}</span>
+                        {activo ? <Pill tone="maybe">Editando</Pill> : plan.isActive ? null : <Pill tone="neutro">Sin vender</Pill>}
+                      </span>
+                      <span className="mt-1.5 mb-2.5 font-display text-[34px] font-medium">{formatAmount(plan.priceCents, plan.currency).replace(/,00$/, '')}</span>
+                      <ul>
+                        {rasgos.map((r) => (
+                          <li className="flex gap-2.5 py-1.5 text-[14px]" key={r}>
+                            <CheckIcon className="mt-0.5 size-4 shrink-0 text-pill-ok-ink" />
+                            {r}
+                          </li>
+                        ))}
+                      </ul>
+                    </a>
+                  )
+                })}
+              </div>
+              {elegido === undefined ? null : (
+                <PanelCard key={elegido.slug}>
               <PlanEditor
                 plan={{
-                  slug: plan.slug,
-                  price: aCampo(plan.priceCents),
-                  priceLabel: formatAmount(plan.priceCents, plan.currency),
-                  maxGuestGroups: plan.maxGuestGroups,
-                  maxDoorPorters: plan.maxDoorPorters,
-                  maxCohosts: plan.maxCohosts,
-                  maxHiredPlanners: plan.maxHiredPlanners,
-                  maxGalleryPhotos: plan.maxGalleryPhotos,
-                  guestPhotos: plan.guestPhotos,
-                  eventPassword: plan.eventPassword,
-                  csvImport: plan.csvImport,
-                  onlineDays: plan.onlineDays,
-                  designChange: plan.designChange,
-                  plannerSuite: plan.plannerSuite,
-                  depositPct: plan.depositPct,
-                  depositFixed: plan.depositFixedCents === null ? '' : aCampo(plan.depositFixedCents),
-                  priceUsd: plan.priceUsdCents === null ? '' : aCampo(plan.priceUsdCents),
-                  correctionRounds: plan.correctionRounds === null ? '' : String(plan.correctionRounds),
-                  deliveryDays: plan.deliveryDays === null ? '' : String(plan.deliveryDays),
-                  includesSeating: plan.includesSeating,
-                  includesRegistry: plan.includesRegistry,
-                  includesCheckin: plan.includesCheckin,
-                  includesGuestbook: plan.includesGuestbook,
-                  includesGiftWays: plan.includesGiftWays,
-                  includesStyle: plan.includesStyle,
-                  highlighted: plan.highlighted,
-                  isActive: plan.isActive,
-                  eventos: plan.eventos,
-                  es: plan.es,
-                  en: plan.en,
+                  slug: elegido.slug,
+                  price: aCampo(elegido.priceCents),
+                  priceLabel: formatAmount(elegido.priceCents, elegido.currency),
+                  maxGuestGroups: elegido.maxGuestGroups,
+                  maxDoorPorters: elegido.maxDoorPorters,
+                  maxCohosts: elegido.maxCohosts,
+                  maxHiredPlanners: elegido.maxHiredPlanners,
+                  maxGalleryPhotos: elegido.maxGalleryPhotos,
+                  guestPhotos: elegido.guestPhotos,
+                  eventPassword: elegido.eventPassword,
+                  csvImport: elegido.csvImport,
+                  onlineDays: elegido.onlineDays,
+                  designChange: elegido.designChange,
+                  plannerSuite: elegido.plannerSuite,
+                  depositPct: elegido.depositPct,
+                  depositFixed: elegido.depositFixedCents === null ? '' : aCampo(elegido.depositFixedCents),
+                  priceUsd: elegido.priceUsdCents === null ? '' : aCampo(elegido.priceUsdCents),
+                  correctionRounds: elegido.correctionRounds === null ? '' : String(elegido.correctionRounds),
+                  deliveryDays: elegido.deliveryDays === null ? '' : String(elegido.deliveryDays),
+                  includesSeating: elegido.includesSeating,
+                  includesRegistry: elegido.includesRegistry,
+                  includesCheckin: elegido.includesCheckin,
+                  includesGuestbook: elegido.includesGuestbook,
+                  includesGiftWays: elegido.includesGiftWays,
+                  includesStyle: elegido.includesStyle,
+                  highlighted: elegido.highlighted,
+                  isActive: elegido.isActive,
+                  eventos: elegido.eventos,
+                  es: elegido.es,
+                  en: elegido.en,
                 }}
               />
-            </PanelCard>
+                </PanelCard>
+              )}
             </div>
-          ))}
-        </div>
+          )
+        })()
       )}
     </>
   )

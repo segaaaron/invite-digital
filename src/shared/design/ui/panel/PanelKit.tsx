@@ -11,18 +11,20 @@ import { useId } from 'react'
  * desviarse, se desvía en un fichero, no en catorce.
  */
 
+// «Esmeralda y Latón» (12 oct): botón de 44 px, radio 10, Jost 500 en caja normal. Sin versales ni espaciado:
+// un botón dice lo que hace con su verbo, y en mayúsculas espaciadas se leía como un rótulo.
 const BOTON_BASE =
-  'inline-flex cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-pill)] px-4.5 py-2.5 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-all duration-200 max-[859px]:min-h-11 max-[859px]:text-[12px] max-[859px]:tracking-[0.18em] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0'
+  'inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-[10px] px-4.5 py-2 text-[14.5px] font-medium whitespace-nowrap transition-colors duration-150 max-[859px]:min-h-12 max-[859px]:text-[15.5px] disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold'
 
 const BOTON_VARIANTES = {
   /** La acción principal de la pantalla. Una por cabecera. */
-  primary:
-    'border border-shell-deep bg-linear-to-b from-shell to-shell-deep text-white shadow-[0_2px_8px_rgb(0_0_0/0.25),inset_0_1px_0_rgb(255_255_255/0.12)] hover:-translate-y-px hover:from-shell-deep hover:to-black',
-  /** Todo lo demás: blanca con borde fino. */
-  default:
-    'border border-line-panel-strong bg-white text-ink shadow-[var(--shadow-card)] hover:-translate-y-px hover:border-ink',
+  primary: 'border border-shell-deep bg-shell-deep text-shell-ink hover:border-sage hover:bg-sage',
+  /** Todo lo demás: papel con borde de lino. */
+  default: 'border border-line-panel-strong bg-bg-raised text-ink hover:border-gold hover:text-shell-deep',
   /** Lo que no se deshace. */
-  danger: 'border border-danger/40 bg-white text-danger-deep hover:-translate-y-px hover:bg-danger-deep hover:text-white',
+  danger: 'border border-danger/30 bg-bg-raised text-danger hover:border-danger hover:bg-danger hover:text-white',
+  /** Confirmar lo que no se deshace, dentro de su diálogo (E33, E65): rojo macizo. */
+  peligro: 'border border-danger bg-danger text-white hover:border-danger-deep hover:bg-danger-deep',
 } as const
 
 /** Las clases de un botón del panel, para un control que no es `PanelButton` (el que abre un diálogo). */
@@ -38,6 +40,8 @@ type PanelButtonProps = {
    * el enlace necesita `target` y `rel` propios.
    */
   external?: boolean
+  /** `sm`: el botón pequeño de las filas (38 px en la computadora). */
+  size?: 'sm' | undefined
   className?: string
 } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'className' | 'children'>
 
@@ -49,10 +53,12 @@ export function PanelButton({
   variant = 'default',
   href,
   external = false,
+  size,
   className = '',
   ...rest
 }: PanelButtonProps) {
-  const clases = `${BOTON_BASE} ${BOTON_VARIANTES[variant]} ${className}`.trim()
+  // `sm` es el `b-sm` de la maqueta (38 px) en la computadora; en el celular sigue a 48 para el dedo.
+  const clases = `${BOTON_BASE} ${BOTON_VARIANTES[variant]} ${size === 'sm' ? 'min-[860px]:min-h-[38px] min-[860px]:px-3.5 min-[860px]:text-[14px]' : ''} ${className}`.trim()
   // Lo accesible viaja también a los enlaces: antes solo el `<button>` recibía `aria-*`.
   const { 'aria-label': ariaLabel, 'aria-describedby': ariaDescribedBy, disabled, title } = rest
 
@@ -203,13 +209,13 @@ export function PanelAlert({ tone, children }: { tone: 'error' | 'ok' | 'info'; 
 }
 
 export const FIELD_CLASS =
-  'w-full rounded-[14px] border border-line-panel-strong bg-white px-4 py-3 text-[14px] text-ink outline-none max-[859px]:text-[16px] transition-colors focus-visible:border-ink'
+  'w-full min-h-11.5 rounded-[8px] border border-line-panel-strong bg-bg-raised px-3.5 py-2.5 text-[15px] text-ink outline-none max-[859px]:min-h-12.5 max-[859px]:text-[16px] transition-[border-color,box-shadow] focus-visible:border-gold focus-visible:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.22)] aria-[invalid=true]:border-danger'
 
 /**
  * El rótulo de un campo o dato. **11 px**: el de 9 px en monoespaciada con 0,3 em de espaciado se
  * veía fino en una captura y costaba leerlo en el trabajo diario, sobre todo en el celular.
  */
-export const LABEL_CLASS = 'text-[11px] font-medium tracking-[0.1em] text-ink-mute uppercase'
+export const LABEL_CLASS = 'text-[14px] font-medium text-ink max-[859px]:text-[15px]'
 
 /** Lo que `Field` le pasa a su campo cuando se escribe como función: el campo no se ata a mano. */
 export type FieldControlProps = {
@@ -273,6 +279,8 @@ const PILL_TONOS = {
   no: 'bg-pill-no text-pill-no-ink',
   pending: 'bg-pill-pending text-pill-pending-ink',
   maybe: 'bg-pill-maybe text-pill-maybe-ink',
+  vip: 'bg-pill-laton text-pill-laton-ink',
+  neutro: 'bg-pill-neutra text-pill-neutra-ink',
 } as const
 
 export type PillTone = keyof typeof PILL_TONOS
@@ -284,7 +292,7 @@ export type PillTone = keyof typeof PILL_TONOS
 export function Pill({ tone, children }: { tone: PillTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-block rounded-[var(--radius-pill)] px-2.5 py-1 font-mono text-[10.5px] tracking-[0.25em] whitespace-nowrap uppercase max-[859px]:text-[12px] max-[859px]:tracking-[0.16em] ${PILL_TONOS[tone]}`}
+      className={`inline-block rounded-[var(--radius-pill)] px-2.75 py-0.75 text-[12.5px] font-medium whitespace-nowrap ${PILL_TONOS[tone]}`}
     >
       {children}
     </span>
@@ -304,8 +312,8 @@ export function FilterChip({
     <button
       type="button"
       aria-pressed={active}
-      className={`cursor-pointer rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[12px] max-[859px]:tracking-[0.16em] ${
-        active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
+      className={`inline-flex min-h-9 cursor-pointer items-center rounded-[var(--radius-pill)] border px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors max-[859px]:min-h-11 max-[859px]:text-[14.5px] ${
+        active ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'
       } ${className}`.trim()}
       {...rest}
     >
@@ -319,8 +327,8 @@ export function FilterChipLink({ active = false, href, children }: { active?: bo
   return (
     <Link
       aria-current={active ? 'page' : undefined}
-      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:min-h-11 max-[859px]:text-[12px] max-[859px]:tracking-[0.16em] ${
-        active ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
+      className={`inline-flex min-h-9 items-center rounded-[var(--radius-pill)] border px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors max-[859px]:min-h-11 max-[859px]:text-[14.5px] ${
+        active ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'
       }`}
       href={href}
     >
@@ -347,7 +355,7 @@ export function SearchField({
       <input
         id={id}
         type="search"
-        className={`min-w-[200px] flex-1 rounded-[var(--radius-pill)] border border-line-panel-strong bg-bg-raised px-3.5 py-2.5 text-[13px] text-ink max-[859px]:min-h-11 max-[859px]:text-[16px] placeholder:text-ink-mute ${className}`.trim()}
+        className={`min-h-11.5 min-w-[200px] flex-1 rounded-[8px] border border-line-panel-strong bg-bg-raised px-3.5 py-2.5 text-[15px] text-ink outline-none focus-visible:border-gold focus-visible:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.22)] max-[859px]:min-h-12.5 max-[859px]:text-[16px] placeholder:text-ink-mute ${className}`.trim()}
         {...rest}
       />
     </>
@@ -366,7 +374,7 @@ export function IconLink({ label, href, children }: { label: string; href: strin
   return (
     <Link
       aria-label={label}
-      className="inline-flex size-8 cursor-pointer items-center max-[859px]:size-11 justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel"
+      className="inline-flex size-10 cursor-pointer items-center max-[859px]:size-12 justify-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink-soft transition-colors hover:border-gold hover:text-shell-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel"
       href={href}
       title={label}
     >
@@ -389,7 +397,7 @@ export function IconButton({
       type="button"
       aria-label={label}
       title={label}
-      className={`inline-flex size-8 cursor-pointer items-center max-[859px]:size-11 justify-center rounded-lg border border-line-panel bg-white text-ink-soft transition-colors hover:border-ink hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel ${className}`.trim()}
+      className={`inline-flex size-10 cursor-pointer items-center max-[859px]:size-12 justify-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink-soft transition-colors hover:border-gold hover:text-shell-deep focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold disabled:cursor-not-allowed disabled:opacity-35 disabled:hover:border-line-panel ${className}`.trim()}
       {...rest}
     >
       <span aria-hidden>{children}</span>
@@ -433,5 +441,23 @@ export function BarRow({
       </span>
       <span className={`${wide ? 'w-24' : 'w-10'} shrink-0 text-right font-mono text-[11px] whitespace-nowrap text-ink-soft`}>{value}</span>
     </div>
+  )
+}
+
+/**
+ * **La tarjeta destacada de la maqueta** («grab»): marfil con borde de pergamino y un filete por dentro, como una
+ * tarjeta de invitación. Para lo primero que hay que hacer en una pantalla.
+ */
+export const TARJETA_DESTACADA =
+  'rounded-[16px] border border-grab-borde bg-bg-raised shadow-[inset_0_0_0_7px_var(--color-bg-raised),inset_0_0_0_8px_var(--color-grab-filete),0_10px_30px_rgb(12_36_32/0.06)]'
+
+/** Las iniciales de un nombre en su círculo verde claro (filas de la maqueta). */
+export function Iniciales({ nombre, chico = false }: { nombre: string; chico?: boolean }) {
+  const partes = nombre.trim().split(/\s+/).filter(Boolean)
+  const letras = ((partes[0]?.[0] ?? '') + (partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? '') : '')).toUpperCase()
+  return (
+    <span aria-hidden className={`grid shrink-0 place-items-center rounded-full bg-pill-maybe font-semibold text-shell-deep ${chico ? 'size-8 text-[12px]' : 'size-10 text-[13px]'}`}>
+      {letras}
+    </span>
   )
 }

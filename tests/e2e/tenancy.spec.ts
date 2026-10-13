@@ -50,9 +50,9 @@ test('un atelier no ve ni toca el evento de otro; el admin solo su ficha', async
   await entrar(admin, ADMIN)
   expect((await admin.goto(`/panel/eventos/${SLUG}`))?.status()).toBe(404)
   expect((await admin.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
-  // Dentro del evento, solo su menú: la administración queda detrás de «← Volver».
-  await expect(admin.getByRole('link', { name: 'Volver a la administración' })).toBeVisible()
-  await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toHaveCount(0)
+  // Dentro del evento sigue en la administración (maqueta E35): su barra, y arriba la ruta «Eventos / el evento».
+  await expect(admin.getByRole('navigation', { name: 'Ruta' }).getByRole('link', { name: 'Eventos' })).toBeVisible()
+  await expect(admin.getByRole('link', { name: 'Hoy', exact: true })).toBeVisible()
 
   // La cartera del admin trae el evento del otro con su responsable.
   // Buscado por su nombre: la cartera pinta de veinte en veinte, y con más eventos en la base

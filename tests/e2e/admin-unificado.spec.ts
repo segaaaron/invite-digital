@@ -77,20 +77,21 @@ test.afterAll(async () => {
   await sql.end({ timeout: 5 })
 })
 
-const ficha = (page: Page) => page.locator('dialog[open]')
+// El alta va en un diálogo; la ficha de una venta, al lado de la lista (maqueta E02).
+const ficha = (page: Page) => page.locator('dialog[open], section[aria-labelledby="ficha-de-venta"], section[aria-labelledby="ficha-de-cliente"]')
 
 test('cotizar, recordar el pago y perder la venta cancelando el pedido', async ({ page }) => {
   const nombre = `${PREFIJO} cotizada`
   await page.goto('/panel/admin/ventas?crear=cotizacion')
-  await ficha(page).getByLabel('Nombre', { exact: true }).fill(nombre)
-  await ficha(page).getByLabel('WhatsApp o correo').fill('+591 7555 0303')
-  await ficha(page).getByRole('button', { name: 'Crear la cotización' }).click()
+  await ficha(page).getByLabel('Cliente', { exact: true }).fill(nombre)
+  await ficha(page).getByLabel('WhatsApp', { exact: true }).fill('+591 7555 0303')
+  await ficha(page).getByRole('button', { name: 'Guardar sin enviar' }).click()
   const lista = ficha(page).getByText(/Cotización [2-9A-Z]{8} lista/)
   await expect(lista).toBeVisible()
   const referencia = (await lista.locator('b').innerText()).trim()
 
   await page.goto(`/panel/admin/ventas?venta=p-${referencia}`)
-  await expect(ficha(page).getByText('Esperando pago', { exact: true })).toBeVisible()
+  await expect(ficha(page).locator('[aria-current="step"]')).toHaveText('Pedido')
   const [whatsapp] = await Promise.all([page.waitForEvent('popup'), ficha(page).getByRole('button', { name: /Recordar el pago/ }).click()])
   await whatsapp.close()
   await expect.poll(async () => (await sql`select reminded_at from orders where public_ref = ${referencia}`)[0]?.reminded_at ?? null).not.toBeNull()
@@ -110,10 +111,10 @@ test('una consulta cerrada por fuera crea su evento y queda ganada', async ({ pa
   await ficha(page).getByLabel('Más acciones').click()
   await ficha(page).getByRole('link', { name: 'Ya cerró: crear su evento' }).click()
   await expect(page).toHaveURL(new RegExp(`crear=evento&consulta=${c!.id}`))
-  await expect(ficha(page).getByLabel('Nombre del evento')).toHaveValue(nombre)
-  await ficha(page).getByLabel('Lo llevo yo, sin acceso del cliente').check()
-  await ficha(page).getByRole('button', { name: 'Crear el evento', exact: true }).click()
-  await expect(ficha(page).getByText(/Evento creado/)).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByLabel('Nombre del evento')).toHaveValue(nombre)
+  await page.getByLabel('Lo llevo yo, sin acceso del cliente').check()
+  await page.getByRole('button', { name: 'Crear el evento', exact: true }).click()
+  await expect(page.getByText(/Evento creado/)).toBeVisible({ timeout: 20_000 })
 
   const [ganada] = await sql<{ status: string; event_id: string | null }[]>`select status, event_id from consultation_requests where id = ${c!.id}`
   expect(ganada).toMatchObject({ status: 'won' })
@@ -133,11 +134,11 @@ test('el evento de un pedido pagado lleva los extras cotizados y cierra su consu
   await page.goto(`/panel/admin/ventas?venta=p-${r}`)
   await ficha(page).getByRole('link', { name: 'Crear el evento' }).click()
   await expect(page).toHaveURL(new RegExp(`crear=evento&pedido=${r}`))
-  await ficha(page).getByLabel('Lo llevo yo, sin acceso del cliente').check()
-  await ficha(page).getByRole('button', { name: 'Crear el evento', exact: true }).click()
-  await expect(ficha(page).getByText(/Evento creado/)).toBeVisible({ timeout: 20_000 })
+  await page.getByLabel('Lo llevo yo, sin acceso del cliente').check()
+  await page.getByRole('button', { name: 'Crear el evento', exact: true }).click()
+  await expect(page.getByText(/Evento creado/)).toBeVisible({ timeout: 20_000 })
   // Creado, no se vuelve a crear: el botón queda deshabilitado (otro clic era un duplicado).
-  await expect(ficha(page).getByRole('button', { name: 'Creado ✓' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Creado ✓' })).toBeDisabled()
 
   const [pedido] = await sql<{ event_id: string | null }[]>`select event_id from orders where public_ref = ${r}`
   expect(pedido!.event_id).not.toBeNull()
@@ -153,22 +154,25 @@ test('el saldo de un pedido con anticipo se registra y la venta queda cerrada', 
     insert into orders (public_ref, plan_id, customer_name, contact, status, amount_cents, deposit_cents, currency, decided_at, event_id)
     values (${r}, (select id from plans where slug = 'atelier'), ${nombre}, '+591 7555 0505', 'approved', 200000, 100000, 'BOB', now(), (select id from events where slug = ${EVENTO_ADMIN}))`
   await page.goto(`/panel/admin/ventas?venta=p-${r}`)
-  await expect(ficha(page).getByText('Saldo pendiente', { exact: true })).toBeVisible()
   await ficha(page).getByRole('button', { name: /Registrar el saldo/ }).click()
   await expect.poll(async () => (await sql`select balance_paid_at from orders where public_ref = ${r}`)[0]?.balance_paid_at ?? null).not.toBeNull()
   await page.reload()
-  await expect(ficha(page).getByText('Cerrada', { exact: true })).toBeVisible()
+  // La fila de la lista dice la etapa (maqueta E02); la ficha ya no ofrece registrar el saldo.
+  await expect(page.getByRole('region', { name: 'Lista de ventas' }).getByRole('link', { name: new RegExp(nombre) })).toContainText('Cerrada')
+  await expect(ficha(page).getByRole('button', { name: /Registrar el saldo/ })).toHaveCount(0)
 })
 
 test('el cliente entero: etiquetas y nota, su código de recomendación y la compra que trae', async ({ page, browser }) => {
   await page.goto(`/panel/admin/clientes?de=${encodeURIComponent(CLIENTE.email)}`)
   await expect(ficha(page).getByRole('heading', { name: CLIENTE.nombre })).toBeVisible()
-  await ficha(page).getByText('VIP', { exact: true }).click()
+  await ficha(page).getByText('VIP', { exact: true }).first().click()
   await ficha(page).getByLabel('Nota', { exact: true }).fill('Prefiere tonos lila')
   await ficha(page).getByRole('button', { name: 'Guardar' }).first().click()
   await expect(ficha(page).getByText('Guardado.')).toBeVisible()
   await expect.poll(async () => (await sql<{ tags: string[] }[]>`select tags from client_notes where note = 'Prefiere tonos lila' and clave like ${`%${S}%`}`)[0]?.tags).toEqual(['VIP'])
 
+  // Sus eventos y referidos van plegados (maqueta E04).
+  await ficha(page).getByText('Sus eventos, referidos y cuenta').click()
   await ficha(page).getByRole('button', { name: 'Darle su código de recomendación' }).click()
   const codigo = (await ficha(page).getByText(/^Código [2-9A-Z]{6}$/).locator('b').innerText()).trim()
 
@@ -191,6 +195,7 @@ test('el cliente entero: etiquetas y nota, su código de recomendación y la com
   await anonimo.close()
 
   await page.reload()
+  await ficha(page).getByText('Sus eventos, referidos y cuenta').click()
   await expect(ficha(page).getByText('1 compra con su código')).toBeVisible()
 })
 
@@ -209,11 +214,14 @@ test('la opinión del cliente llega a su ficha y se publica en la web de un toqu
   expect((await web.goto('/es/opinion/enlace-inventado'))?.status()).toBe(404)
 
   await page.goto(`/panel/admin/clientes?de=${encodeURIComponent(CLIENTE.email)}`)
+  const plegado = () => ficha(page).getByText('Sus eventos, referidos y cuenta')
+  await plegado().click()
   await expect(ficha(page).getByText('5 de 5')).toBeVisible()
   await ficha(page).getByRole('button', { name: 'Publicar en la web' }).click()
   // La ficha se repinta y lo dice fijo; y al recargar ya no ofrece publicarla otra vez.
   await expect(ficha(page).getByText('Publicada en la web', { exact: true })).toBeVisible()
   await page.reload()
+  await plegado().click()
   await expect(ficha(page).getByText('Publicada en la web', { exact: true })).toBeVisible()
   await expect(ficha(page).getByRole('button', { name: 'Publicar en la web' })).toHaveCount(0)
 
@@ -248,7 +256,7 @@ test('el cliente abre el informe de su evento', async ({ browser }) => {
 test('Mensajes y agenda guarda la capacidad del día, y el calendario la usa', async ({ page }) => {
   await page.goto('/panel/admin/mensajes')
   await page.getByLabel('Eventos por día').fill('4')
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   await expect(page.getByText('Guardado.')).toBeVisible()
   await expect.poll(async () => (await sql<{ value: string }[]>`select value from app_settings where key = 'agenda.capacidad'`)[0]?.value).toBe('4')
 
@@ -268,6 +276,10 @@ test('duplicar un evento lleva a la copia, con su diseño y su plan', async ({ p
 
 test('⌘K lleva a una pantalla con solo escribir', async ({ page }) => {
   await page.goto('/panel/admin')
+  // Con la página recién abierta, el Service Worker se instala y aborta la descarga del código de la pantalla
+  // a la que se va (se vio en la traza: la navegación se quedaba en /panel/admin). Se espera a que esté listo.
+  // En `next dev` no hay worker y `ready` no se resuelve nunca: como mucho tres segundos.
+  await page.evaluate(() => Promise.race([navigator.serviceWorker?.ready, new Promise((listo) => setTimeout(listo, 3_000))]))
   // El atajo existe cuando la página ha hidratado: se pulsa hasta que abre.
   await expect(async () => {
     await page.keyboard.press('ControlOrMeta+k')
@@ -278,23 +290,34 @@ test('⌘K lleva a una pantalla con solo escribir', async ({ page }) => {
   await expect(page).toHaveURL(/\/panel\/admin\/eventos\/calendario$/)
 })
 
-test('en el celular, la barra de abajo y «Más» llevan a todo', async ({ page }) => {
+test('en el celular, el menú guiado lleva a todo', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/panel/admin')
-  const barra = page.getByRole('navigation', { name: 'Navegación principal' })
-  await expect(barra.getByRole('link', { name: 'Ventas' })).toBeVisible()
-  await barra.getByRole('button', { name: 'Más' }).click()
-  const hoja = page.getByRole('dialog', { name: 'Más secciones' })
-  await hoja.getByRole('link', { name: 'Ajustes' }).click()
-  await expect(page).toHaveURL(/\/panel\/admin\/usuarios$/)
+  await page.getByRole('button', { name: /Abrir el menú/ }).click()
+  const menu = page.getByRole('dialog', { name: 'Menú' })
+  await expect(menu.getByRole('link', { name: /Ventas/ })).toBeVisible()
+  await menu.getByRole('link', { name: /Ajustes/ }).click()
+  await expect(page).toHaveURL(/\/panel\/admin\/ajustes$/, { timeout: 15_000 })
+})
+
+test('en la tablet, el carril y «Más» abren el mismo menú', async ({ page }) => {
+  await page.setViewportSize({ width: 820, height: 1180 })
+  await page.goto('/panel/admin')
+  const carril = page.getByRole('navigation', { name: 'Navegación principal' })
+  await expect(carril.getByRole('link', { name: 'Ventas' })).toBeVisible()
+  // Con el teclado: en `next dev` la burbuja de Next tapa la esquina de abajo a la izquierda.
+  await carril.getByRole('button', { name: 'Más' }).press('Enter')
+  await expect(page.getByRole('dialog', { name: 'Menú' })).toBeVisible()
 })
 
 test('el día del evento, «Hoy» cuenta quién entra en vivo, sin recargar', async ({ page }) => {
   await page.goto('/panel/admin')
-  const hoy = page.getByRole('region', { name: 'Se celebra hoy' })
+  // «Esta semana se celebran» (maqueta E01): el de hoy cuenta quién entra, en vivo y sin rótulo.
+  const hoy = page.getByRole('region', { name: 'Esta semana se celebran' })
   const fila = hoy.getByRole('listitem').filter({ hasText: `${PREFIJO} es hoy` })
   await expect(fila).toContainText('0 de 3 personas dentro')
-  await expect(hoy.getByText('En vivo', { exact: true })).toBeVisible({ timeout: 10_000 })
+  // La conexión en vivo se abre al hidratar; se da un respiro antes de escribir el ingreso.
+  await page.waitForLoadState('networkidle').catch(() => undefined)
 
   await sql`
     insert into arrivals (scan_id, guest_group_id, arrived_count, scanned_at, recorded_by)

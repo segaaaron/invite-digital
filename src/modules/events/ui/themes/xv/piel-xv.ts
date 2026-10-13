@@ -334,6 +334,10 @@ export type PielXv = {
      * fotografía—; los claros no llevan ninguna. Lo que no se declare va sin sombra.
      */
     readonly sombraTexto?: string
+    /** La tinta del texto de los avisos sueltos («Una noche sin niños»), si en la maqueta no es la del titular. */
+    readonly avisoTinta?: string
+    /** La tinta de la bendición del cierre, si en la maqueta no es la del titular. */
+    readonly cierreTinta?: string
     /**
      * La sombra del nombre de la quinceañera, cuando no es la del resto del texto.
      *
@@ -402,6 +406,14 @@ export type PielXv = {
     readonly despedida?: string
     /** Si el cierre acaba con el rombo; Palacio Griego no lo pinta. */
     readonly cierreRombo?: boolean
+    /** Sin el ornamento encima de la despedida (Noche Estrellada: la maqueta abre el cierre con el texto). */
+    readonly cierreOrnamento?: boolean
+    /** El ornamento del cierre va **debajo** de la despedida (Noche Disco), no encima. */
+    readonly cierreOrnamentoTrasTexto?: boolean
+    /** La tinta del cuerpo de regalos, libro y álbum (Firma3D `ink`), si no es la de las pestañas. */
+    readonly cuerpoF3?: string
+    /** El ornamento de debajo del titular del formulario, si no es el del diseño. */
+    readonly ornamentoFormularioAbajo?: ReactNode
     /** El halo claro detrás de la bendición del cierre. */
     readonly haloCierre?: string
     /** La sombra de la bendición, cuando no es la del resto del texto. */
@@ -508,6 +520,8 @@ export type PielXv = {
    */
   /** El ornamento de encima del titular del formulario, si no es el de los avisos. */
   readonly ornamentoFormulario?: ReactNode
+  /** El ornamento de las tarjetas de avisos («Una noche sin niños»), si no es el del diseño: Mascarada y Bosque llevan el filete fino. */
+  readonly ornamentoAviso?: ReactNode
   readonly arte?: {
     readonly coronaWidth?: number | string
     readonly coronaFiltro?: string

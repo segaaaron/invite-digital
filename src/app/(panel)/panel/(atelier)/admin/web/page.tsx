@@ -2,7 +2,10 @@ import { admin } from '@/app/composition/container'
 import { SiteSettingsForm } from '@/modules/admin/ui/SiteSettingsForm'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { PestanasDeAdmin } from '@/modules/admin'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { EyeIcon } from '@/shared/design/ui/icons'
 import { fechaHora } from '@/shared/format/fecha'
 import { isErr } from '@/shared/result'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -33,7 +36,15 @@ export default async function AdminWebPage() {
 
   return (
     <>
-      <PanelHeader kicker="Escaparate" meta="Lo que la web pública enseña del negocio, sin tocar código" title="La web" />
+      <PanelHeader
+        actions={
+          <PanelButton className="max-[767px]:hidden" external href="/es">
+            <EyeIcon className="size-4" /> Ver la web
+          </PanelButton>
+        }
+        pestanas={<PestanasDeAdmin />}
+        title="Ajustes" tituloEnCelular="La web"
+      />
 
       {isErr(ajustes) ? (
         <PanelCard>

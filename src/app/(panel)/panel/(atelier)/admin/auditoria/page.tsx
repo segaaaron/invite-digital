@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import { admin } from '@/app/composition/container'
 import { themeDefinitions } from '@/modules/events/ui/themes/registry'
-import { fechaHora } from '@/shared/format/fecha'
+import { fechaEnBolivia, hora } from '@/shared/format/fecha'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { PestanasDeAdmin } from '@/modules/admin'
 import { isErr } from '@/shared/result'
 import { EmptyState, LoadMoreLink } from '@/shared/design/ui/panel/estados'
 import { fraseDeAuditoria, GRUPOS_DE_AUDITORIA, prefijosDeGrupo } from '@/modules/admin'
@@ -63,13 +63,10 @@ export default async function AdminAuditoriaPage({
 
   return (
     <>
-      <PanelHeader
-        kicker="Ajustes"
-        meta="Solo escrituras: quién creó, cambió o borró algo. Las lecturas no se registran."
-        title="Auditoría"
+      <PanelHeader title="Ajustes" tituloEnCelular="Auditoría" pestanas={<PestanasDeAdmin />}
       />
 
-      <form action="/panel/admin/auditoria" className="mb-4.5 grid gap-3 min-[760px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] min-[760px]:items-end" method="get" role="search">
+      <form action="/panel/admin/auditoria" className="mb-8 grid gap-3 min-[760px]:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.3fr)_auto] min-[760px]:items-end" method="get" role="search">
         <label className="flex flex-col gap-2">
           <span className={LABEL_CLASS}>Quién</span>
           <select className={FIELD_CLASS} defaultValue={quien ?? ''} name="quien">
@@ -82,7 +79,7 @@ export default async function AdminAuditoriaPage({
           </select>
         </label>
         <label className="flex flex-col gap-2">
-          <span className={LABEL_CLASS}>Tipo</span>
+          <span className={LABEL_CLASS}>Qué</span>
           <select className={FIELD_CLASS} defaultValue={tipo ?? ''} name="tipo">
             <option value="">Todos</option>
             {GRUPOS_DE_AUDITORIA.map((g) => (
@@ -94,7 +91,7 @@ export default async function AdminAuditoriaPage({
         </label>
         <label className="flex flex-col gap-2">
           <span className={LABEL_CLASS}>Sobre qué</span>
-          <input className={FIELD_CLASS} defaultValue={q} name="q" placeholder="Evento, modelo, correo…" type="search" />
+          <input className={FIELD_CLASS} defaultValue={q} name="q" placeholder="Evento, cliente o plan" type="search" />
         </label>
         <span className="flex gap-2">
           <PanelButton type="submit" variant="primary">
@@ -104,52 +101,77 @@ export default async function AdminAuditoriaPage({
         </span>
       </form>
 
-      <PanelCard>
-        {isErr(registro) ? (
-          <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer la auditoría. La base no responde; vuelve a intentarlo en un momento.
-          </p>
-        ) : registro.value.length === 0 ? (
-          filtrando ? (
-            <EmptyState compact description="Prueba con otro tipo, otra persona o menos texto." title="Nada con estos filtros" />
-          ) : (
-            <EmptyState compact description="Cada vez que alguien del equipo crea, cambia o borra algo, queda aquí." title="Todavía no hay nada anotado" />
-          )
+      {isErr(registro) ? (
+        <p className="text-[14px] text-danger" role="alert">
+          No pudimos leer la auditoría. La base no responde; vuelve a intentarlo en un momento.
+        </p>
+      ) : registro.value.length === 0 ? (
+        filtrando ? (
+          <EmptyState compact description="Prueba con otro tipo, otra persona o menos texto." title="Nada con estos filtros" />
         ) : (
-          <>
-            {/* Rejilla y no tabla: en el celular cada fila se apila —qué, sobre qué, quién y
-                cuándo— en vez de partir el correo en tres líneas dentro de una columna. */}
-            <div className="hidden grid-cols-[168px_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)] gap-3 border-b border-line-panel pb-3 font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase min-[760px]:grid">
-              <span>Cuándo</span>
-              <span>Quién</span>
-              <span>Qué</span>
-              <span>Sobre</span>
+          <EmptyState compact description="Cada vez que alguien del equipo crea, cambia o borra algo, queda aquí." title="Todavía no hay nada anotado" />
+        )
+      ) : (
+        <div className="flex flex-col gap-8">
+          {/* Por día, como en la maqueta (E17): «Hoy», «Ayer» y la fecha; cada fila, a qué hora, quién, qué hizo y sobre qué. */}
+          {porDia(registro.value).map(([dia, filas]) => (
+            <section aria-label={tituloDelDia(dia)} key={dia}>
+              <h2 className="mb-2.5 font-display text-[22px] font-medium">{tituloDelDia(dia)}</h2>
+              <div className="hidden grid-cols-[70px_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1.2fr)] gap-3 border-b border-line-panel-strong px-3.5 pb-2.5 text-[13px] font-medium text-ink-mute min-[760px]:grid">
+                <span>Hora</span>
+                <span>Quién</span>
+                <span>Qué hizo</span>
+                <span>Sobre</span>
+              </div>
+              <ul>
+                {filas.map((fila) => (
+                  <li
+                    className="grid gap-1 border-b border-line-panel px-3.5 py-3 text-[14.5px] min-[760px]:grid-cols-[70px_minmax(0,1fr)_minmax(0,1.4fr)_minmax(0,1.2fr)] min-[760px]:items-baseline min-[760px]:gap-3 max-[759px]:px-0"
+                    key={fila.id}
+                  >
+                    <span className="order-3 text-[13px] whitespace-nowrap text-ink-mute [font-variant-numeric:tabular-nums] min-[760px]:order-none">{hora(fila.createdAt)}</span>
+                    <span className="order-3 truncate text-[13px] text-ink-mute min-[760px]:order-none min-[760px]:text-[14.5px] min-[760px]:text-ink">{fila.actorEmail}</span>
+                    <span className="order-1 min-[760px]:order-none">{fraseDeAuditoria(fila.action)}</span>
+                    <span className="order-2 break-words min-[760px]:order-none">
+                      <Sobre modelos={modelos} eventos={eventos} sujeto={fila.subject} />
+                      {fila.detail === null ? null : <span className="text-ink-mute"> · {fila.detail}</span>}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          {hayMas ? (
+            <div className="flex justify-center">
+              <LoadMoreLink href={enlace(tope + PAGINA)} noun="cambios" />
             </div>
-            <ul className="flex flex-col">
-              {registro.value.map((fila) => (
-                <li
-                  className="grid gap-1 border-b border-line-panel py-3 min-[760px]:grid-cols-[168px_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.3fr)] min-[760px]:items-baseline min-[760px]:gap-3"
-                  key={fila.id}
-                >
-                  <span className="order-3 font-mono text-[11px] whitespace-nowrap text-ink-mute min-[760px]:order-none">{fechaHora(fila.createdAt)}</span>
-                  <span className="order-3 truncate text-[12px] text-ink-mute min-[760px]:order-none min-[760px]:text-[13px] min-[760px]:text-ink-soft">
-                    {fila.actorEmail}
-                  </span>
-                  <span className="order-1 text-[14px] text-ink min-[760px]:order-none min-[760px]:text-[13px]">{fraseDeAuditoria(fila.action)}</span>
-                  <span className="order-2 text-[13px] break-words text-ink-soft min-[760px]:order-none">
-                    <Sobre modelos={modelos} eventos={eventos} sujeto={fila.subject} />
-                    {fila.detail === null ? null : <span className="text-ink-mute"> · {fila.detail}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            {hayMas ? <LoadMoreLink href={enlace(tope + PAGINA)} noun="registros" /> : null}
-          </>
-        )}
-      </PanelCard>
+          ) : null}
+        </div>
+      )}
     </>
   )
 }
+
+/** Las filas juntas por su día en Bolivia, del más reciente al más viejo. */
+function porDia<T extends { createdAt: Date }>(filas: readonly T[]): [string, T[]][] {
+  const dias = new Map<string, T[]>()
+  for (const f of filas) {
+    const dia = fechaEnBolivia(f.createdAt)
+    dias.set(dia, [...(dias.get(dia) ?? []), f])
+  }
+  return [...dias.entries()]
+}
+
+/** «Hoy», «Ayer» o «12 de octubre». */
+function tituloDelDia(dia: string): string {
+  const hoy = fechaEnBolivia(new Date())
+  const ayer = fechaEnBolivia(new Date(Date.now() - 86_400_000))
+  if (dia === hoy) return 'Hoy'
+  if (dia === ayer) return 'Ayer'
+  return DIA.format(new Date(`${dia}T12:00:00Z`))
+}
+
+const DIA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', timeZone: 'UTC' })
 
 /** El sujeto de una fila con su nombre: un evento enlaza a su ficha; un modelo dice cómo se llama. */
 function Sobre({ sujeto, eventos, modelos }: { sujeto: string | null; eventos: ReadonlyMap<string, string>; modelos: ReadonlyMap<string, string> }) {
@@ -157,7 +179,7 @@ function Sobre({ sujeto, eventos, modelos }: { sujeto: string | null; eventos: R
   const evento = eventos.get(sujeto)
   if (evento !== undefined) {
     return (
-      <Link className="text-ink underline-offset-4 hover:underline max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/panel/eventos/${sujeto}/configuracion`}>
+      <Link className="text-gold-deep underline underline-offset-4 max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center" href={`/panel/eventos/${sujeto}/configuracion`}>
         {evento}
       </Link>
     )

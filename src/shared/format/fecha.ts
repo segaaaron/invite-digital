@@ -108,3 +108,24 @@ export function faltaPara(dias: number): string {
   const texto = n < 45 ? `${n} días` : n < 365 ? `${Math.round(n / 30)} meses` : `${anos} año${anos === 1 ? '' : 's'}`
   return dias > 0 ? `en ${texto}` : `hace ${texto}`
 }
+
+const DIA_LARGO = new Intl.DateTimeFormat('es-BO', { timeZone: 'America/La_Paz', weekday: 'long', day: 'numeric', month: 'long' })
+const DIA_DE_FIESTA = new Intl.DateTimeFormat('es-BO', { timeZone: 'UTC', weekday: 'short', day: 'numeric', month: 'long' })
+
+/** «Lunes 12 de octubre»: hoy en Bolivia, como lo dice la barra de arriba del admin. */
+export function diaLargo(instante: Date): string {
+  const partes = DIA_LARGO.formatToParts(instante)
+  const dia = pieza(partes, 'weekday')
+  return `${dia.charAt(0).toUpperCase()}${dia.slice(1)} ${pieza(partes, 'day')} de ${pieza(partes, 'month')}`
+}
+
+/** «sáb 18 de octubre»: el día de una fiesta (`aaaa-mm-dd`), bajo su nombre en la barra. */
+export function diaDeLaFiesta(iso: string): string {
+  const partes = DIA_DE_FIESTA.formatToParts(deIso(iso))
+  return `${sinPunto(pieza(partes, 'weekday'))} ${pieza(partes, 'day')} de ${pieza(partes, 'month')}`
+}
+
+/** Días de calendario de hoy (Bolivia) a una fecha `aaaa-mm-dd`: negativos si ya pasó. */
+export function diasHasta(iso: string, ahora: Date): number {
+  return Math.round((Date.parse(`${iso}T00:00:00Z`) - Date.parse(`${fechaEnBolivia(ahora)}T00:00:00Z`)) / 86_400_000)
+}

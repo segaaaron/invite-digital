@@ -24,8 +24,8 @@ export const sans = localFont({
 })
 
 /**
- * Las dos tipografías del **panel**, que son las de `docs/design-reference/dashboard/`:
- * Space Grotesk para el texto y JetBrains Mono para cifras y rótulos.
+ * Las tipografías del **panel**: Jost para el texto (rediseño «Esmeralda y Latón», 12 oct; antes Space
+ * Grotesk, la de `docs/design-reference/dashboard/`) y JetBrains Mono para los códigos.
  *
  * No alcanzan a la web pública ni a la invitación: la maqueta Ivory usa Jost, y son dos
  * piezas distintas del mismo atelier. Por eso `panelSans` reutiliza el mismo nombre de
@@ -38,7 +38,26 @@ export const sans = localFont({
 export const panelSans = localFont({
   variable: '--font-sans-raw',
   display: 'swap',
-  src: [{ path: '../../../public/fonts/space-grotesk-variable.woff2', weight: '300 700', style: 'normal' }],
+  src: [
+    { path: '../../../public/fonts/jost-300.woff2', weight: '300', style: 'normal' },
+    { path: '../../../public/fonts/jost-400.woff2', weight: '400', style: 'normal' },
+    { path: '../../../public/fonts/jost-500.woff2', weight: '500', style: 'normal' },
+  ],
+})
+
+/**
+ * **Bodoni Moda, la letra de títulos y cifras del panel** (rediseño «Esmeralda y Latón», 12 oct). Variable:
+ * un solo woff2 cubre 400–700 y el tamaño óptico. Va en su propia variable y el panel la pone en
+ * `--font-display` (`tokens.css`); la vista previa de la invitación (`.con-mono`) vuelve a la suya.
+ */
+export const panelDisplay = localFont({
+  variable: '--font-panel-display',
+  display: 'swap',
+  fallback: ['Didot', 'Georgia', 'serif'],
+  src: [
+    { path: '../../../public/fonts/bodoni-moda-variable.woff2', weight: '400 700', style: 'normal' },
+    { path: '../../../public/fonts/bodoni-moda-italic-variable.woff2', weight: '400 900', style: 'italic' },
+  ],
 })
 
 export const panelMono = localFont({

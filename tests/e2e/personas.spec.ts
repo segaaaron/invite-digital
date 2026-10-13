@@ -19,11 +19,12 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   // 1. Una persona con restricción, dentro del grupo sembrado (4 cupos). El alta es el
   // diálogo de la maqueta.
   await page.getByLabel('Nombre completo').fill('Ana Lucía Vega')
+  await page.getByText('Restricciones, correo y VIP').click()
   await page.getByLabel('Restricciones').fill('Sin gluten')
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   await page.waitForURL(/invitados$/)
   // Dos celdas con su nombre: ella y su invitación, que se llama como ella.
-  await expect(page.getByRole('cell', { name: 'Ana Lucía Vega', exact: true }).first()).toBeVisible()
+  await expect(page.getByRole('cell', { name: /^Ana Lucía Vega/ }).first()).toBeVisible()
   await expect(page.getByRole('cell', { name: 'Sin gluten', exact: true })).toBeVisible()
 
   // 2. El estado lo da el invitado; corregirlo a mano es de «Editar», no de la fila.
@@ -31,9 +32,12 @@ test('el atelier carga personas dentro del grupo, y el catering ve sus menús', 
   await page.getByRole('link', { name: 'Editar a Ana Lucía Vega' }).click()
   await page.getByLabel('RSVP').selectOption('yes')
   await page.getByLabel('Invitado VIP').check()
-  await page.getByRole('button', { name: 'Guardar' }).click()
-  await expect(page.getByRole('button', { name: /VIP 1/i })).toBeVisible()
-  await expect(page.getByRole('button', { name: /Confirmados 1/i })).toBeVisible()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
+  // La fila (maqueta E03) lo dice: la marca VIP junto al nombre y «Asistirá»; el chip filtra a quienes asisten.
+  const fila = page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega' }) })
+  await expect(fila.getByText('VIP', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Asistirán' }).click()
+  await expect(fila.getByText('Asistirá', { exact: true })).toBeVisible()
 
   // 4. El reporte del catering sale de esas restricciones.
   await page.goto(`/panel/eventos/${SLUG}/mesas`)

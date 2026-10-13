@@ -169,14 +169,14 @@ describe('ContentBlockForms', () => {
     const { unmount } = render(
       <ContentBlockForms fiesta="cumple" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['reception']} />,
     )
-    expect(screen.getByText('Dónde es la fiesta')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Dónde es la fiesta' })).toBeInTheDocument()
     expect(screen.queryByText('Recepción')).not.toBeInTheDocument()
     unmount()
 
     render(
       <ContentBlockForms fiesta="boda" ejemplo={{}} pinta={TODO} content={{}} eventId="e1" eventSlug="b" media={SIN_IMAGENES} sections={['reception']} />,
     )
-    expect(screen.getByText('Recepción')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Recepción' })).toBeInTheDocument()
   })
 
   it('en una boda pide los padres de cada novio', () => {
@@ -335,12 +335,12 @@ describe('ContentBlockForms', () => {
     const formularios = container.querySelectorAll('form')
     expect(formularios).toHaveLength(2)
     const cancion = container.querySelector('#bloque-music') as HTMLElement
-    expect(within(cancion).getByRole('button', { name: 'Guardar', hidden: true })).toBeInTheDocument()
+    expect(within(cancion).getByRole('button', { name: 'Guardar y seguir', hidden: true })).toBeInTheDocument()
     expect(valorEnviado(cancion)).toEqual({ track: 'At Last' })
   })
 
   // En el orden de la invitación: abrir la siguiente lleva la vista previa más abajo, nunca arriba.
-  it('lista las secciones en el orden del diseño, numeradas, con el mapa dentro de la recepción', () => {
+  it('lista las secciones en el orden del diseño, con el mapa dentro de la recepción', () => {
     render(
       <ContentBlockForms
         ejemplo={{}} pinta={TODO}
@@ -353,7 +353,7 @@ describe('ContentBlockForms', () => {
     )
     const tarjetas = [...document.querySelectorAll('ol > li form')].map((f) => f.id)
     expect(tarjetas).toEqual(['bloque-hero', 'bloque-gallery', 'bloque-quote', 'bloque-schedule', 'bloque-reception', 'bloque-music', 'bloque-closing'])
-    expect(screen.getByText('0 de 7 secciones listas')).toBeInTheDocument()
+    expect(screen.getByText('0 de 7 listas')).toBeInTheDocument()
   })
 
   it('en la portada, las fotos van justo después de los nombres', () => {
@@ -396,11 +396,11 @@ describe('ContentBlockForms', () => {
       />,
     )
 
-    expect(screen.getByText('1 de 2 secciones listas')).toBeInTheDocument()
+    expect(screen.getByText('1 de 2 listas')).toBeInTheDocument()
     const portada = screen.getByRole('button', { name: 'Portada y nombres' })
-    expect(portada).toHaveAccessibleDescription(/Listo/)
+    expect(portada).toHaveAccessibleDescription(/Lista/)
     expect(portada).toHaveAccessibleDescription(/Loreley · MIS QUINCE/)
-    expect(screen.getByRole('button', { name: 'Frase' })).toHaveAccessibleDescription(/Por completar/)
+    expect(screen.getByRole('button', { name: 'Frase' })).toHaveAccessibleDescription(/Sin empezar/)
   })
 
   it('abrir una sección le dice a la vista previa adónde ir, con lo que esa sección tiene escrito', () => {

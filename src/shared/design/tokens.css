@@ -114,6 +114,38 @@
   --color-shell: #1f1f1d;
   --color-shell-deep: #141412;
   --color-shell-ink: #f8f6f1;
+  /* La barra esmeralda del panel (maqueta «Esmeralda y Latón»): texto apagado, entradas, buscador y avatar. */
+  --color-shell-mute: #9fb5aa;
+  --color-shell-soft: #dcd5c6;
+  --color-shell-buscar: #c8c0af;
+  --color-avatar: #e9d9b8;
+  /* El latón del botón «Crear» al pasar por encima. */
+  --color-gold-hover: #c9a36a;
+  /* Píldoras de la maqueta: latón (VIP, Atelier) y neutra (Sin enviar, Libre). */
+  --color-pill-laton: #f3ead8;
+  --color-pill-laton-ink: #6e4a0e;
+  --color-pill-neutra: #eee9de;
+  --color-pill-neutra-ink: #4f4a41;
+  /* El botón de WhatsApp de la maqueta. */
+  --color-whatsapp: #1f6b47;
+  --color-whatsapp-hover: #185a3b;
+  /* La tarjeta destacada de la maqueta («grab»): borde de pergamino con su filete por dentro. */
+  --color-grab-borde: #d9c9a6;
+  --color-grab-filete: #e9dcc0;
+  /* La fila que se pasa por encima y la cabecera de una familia en una tabla. */
+  --color-fila: #fbf8f1;
+  /* Las barras de los meses anteriores en la tira del mes. */
+  --color-barra-suave: #cbd9d1;
+  /* La copa de Luxury: trazo de lacre y cristal claro. */
+  /* El reparto del presupuesto: un color por categoría, en el orden de la maqueta (E23). */
+  --color-reparto-1: #0c2420;
+  --color-reparto-2: #2e5a4a;
+  --color-reparto-3: #7f9a8a;
+  --color-reparto-4: #b08d57;
+  --color-reparto-5: #d9c29a;
+  --color-reparto-6: #8c7b62;
+  --color-copa-trazo: #3a2a12;
+  --color-copa-luz: #fff7e6;
   --color-sage: #5a705c;
   /* El verde claro de la silla ocupada y de la barra del gráfico por día. */
   --color-sage-light: #7a8c64;
@@ -179,4 +211,95 @@
   --color-cristal: #2c2824;
   --color-cristal-fondo: #050505;
   --color-tarjeta: #fffdf8;
+}
+
+/*
+ * **El panel, «Esmeralda y Latón»** (rediseño del 12 de octubre; sistema en el Design System del mismo nombre).
+ * Solo dentro del panel (`.panel-sin-mono`, lo pone su layout): la web pública y las invitaciones conservan
+ * sus colores. Esmeralda para la estructura, latón para la distinción, papel para respirar. Los nombres de los
+ * tokens no cambian —cada pantalla del panel los usa ya—, cambia su valor.
+ */
+.panel-sin-mono {
+  --color-bg: #f5f2ec;
+  --color-bg-raised: #fffefb;
+  --color-bg-sunken: #eee9de;
+  --color-bg-top: #f5f2ec;
+  --color-ink: #161b19;
+  --color-ink-soft: #3d423f;
+  --color-ink-mute: #5b5a52;
+  --color-ink-selection: #0c2420;
+  --color-gold: #b8925a;
+  --color-gold-deep: #8f6e3c;
+  --color-gold-light: #c9a66f;
+  --color-gold-rgb: 184 146 90;
+  --color-on-gold: #0c2420;
+  --color-shadow-rgb: 12 36 32;
+  --color-line: rgb(184 146 90 / 0.3);
+  --color-whatsapp: #1f6b47;
+  --color-ok: #1f5a3f;
+  --color-ok-deep: #163f2c;
+  --color-warn: #b8925a;
+  --color-warn-deep: #6e4a0e;
+  --color-danger: #8a2f22;
+  --color-danger-deep: #6e2318;
+  --color-pill-ok: #e3efe7;
+  --color-pill-ok-ink: #1f5a3f;
+  --color-pill-no: #f6e2de;
+  --color-pill-no-ink: #8a2f22;
+  --color-pill-pending: #f6ead0;
+  --color-pill-pending-ink: #6e4a0e;
+  --color-pill-maybe: #e4ece8;
+  --color-pill-maybe-ink: #0c2420;
+  --color-line-panel: #e6dfd1;
+  --color-line-panel-strong: #d9d0be;
+  --color-shell: #163a32;
+  --color-shell-deep: #0c2420;
+  --color-shell-ink: #f5f2ec;
+  --color-sage: #1e4a3f;
+  --color-sage-light: #2e5a4a;
+  --color-sage-rgb: 30 74 63;
+  --color-sage-deep: #0c2420;
+  --color-tarjeta: #fffefb;
+  --color-white: #fffefb;
+  /* El sello LA y Luxury: latón bruñido. */
+  --color-laton-brillo: #ebd6a9;
+  --color-laton-sombra: #6e5229;
+  --font-display: var(--font-panel-display), 'Bodoni Moda', Didot, serif;
+  --radius-card: 16px;
+  /* Las tarjetas de la maqueta son planas: borde y nada de sombra. */
+  --shadow-card: none;
+  --shadow-float: 0 22px 60px -28px rgb(12 36 32 / 0.45);
+  --shadow-lift: 0 30px 80px -30px rgb(12 36 32 / 0.5);
+  --page-gradient: none;
+  font-weight: 400;
+}
+
+/* **La invitación dentro del panel** (vista previa, escritorio en vivo) vuelve a los colores y la letra de la
+   invitación: es el diseño que se vende, no la piel del panel. */
+.panel-sin-mono .con-mono {
+  --color-bg: #f6f1e9;
+  --color-bg-raised: #fdfaf4;
+  --color-bg-sunken: #efe7dc;
+  --color-bg-top: #fffdf9;
+  --color-ink: #2b2723;
+  --color-ink-soft: #58514a;
+  --color-ink-mute: #6f685b;
+  --color-gold: #b8894f;
+  --color-gold-deep: #896032;
+  --color-gold-light: #d7a871;
+  --color-gold-rgb: 184 137 79;
+  --color-on-gold: #fdfaf4;
+  --color-shadow-rgb: 90 66 26;
+  --color-line: rgb(184 137 79 / 0.22);
+  --color-ok: #5a705c;
+  --color-ok-deep: #3f5340;
+  --color-warn: #b48c44;
+  --color-warn-deep: #7d5f22;
+  --color-danger: #a3553a;
+  --color-danger-deep: #6d2716;
+  --color-tarjeta: #fffdf8;
+  --color-white: #ffffff;
+  --font-display: var(--font-display-raw), 'Cormorant Garamond', serif;
+  --radius-card: 22px;
+  font-weight: 300;
 }

@@ -2,9 +2,8 @@
 
 import { useState } from 'react'
 import { whatsappLink } from '@/modules/guests'
-import { avatarColor } from '@/shared/design/ui/avatar-color'
 import { CheckIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
-import { Pill } from '@/shared/design/ui/panel/PanelKit'
+import { Iniciales, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { markReminderSentAction } from '@/app/_acciones/reminders/actions'
 import type { DueReminder, ReminderKind } from '../domain/due'
 import { reminderMessage } from '../domain/reminder-message'
@@ -84,9 +83,7 @@ export function ReminderQueue({
 
   return (
     <div className="flex flex-col gap-5">
-      <p className="text-[14px] text-ink-soft">
-        <span className="font-display text-[22px] text-ink lining-nums">{rows.length}</span> por recordar · el plazo para confirmar cierra {cierre(deadline)}.
-      </p>
+      <p className="text-[14px] text-ink-mute">El plazo para confirmar cierra {cierre(deadline)}. El mensaje no lleva el enlace: el invitado ya lo tiene en el mismo chat.</p>
 
       {error === null ? null : (
         <p className="text-[13px] text-danger" role="alert">
@@ -101,22 +98,20 @@ export function ReminderQueue({
         return (
           <section className="flex flex-col gap-2" key={grupo.kind}>
             <div>
-              <h3 className="text-[13px] font-medium text-ink">
+              <h3 className="text-[14px] font-medium text-ink">
                 {grupo.titulo} · {total}
               </h3>
               <p className="text-[12.5px] text-ink-mute">{grupo.explica}</p>
             </div>
-            <ul className="divide-y divide-line-panel overflow-hidden rounded-[14px] border border-line-panel bg-white">
+            <ul className="flex flex-col">
               {delGrupo.map((fila) => {
                 const ocupado = anotando === clave(fila)
                 return (
-                  <li className="flex items-center gap-3 px-3.5 py-2.5" key={clave(fila)}>
-                    <span aria-hidden className={`grid size-9 shrink-0 place-items-center rounded-full bg-linear-to-br font-display text-[15px] text-white italic ${avatarColor(fila.label)}`}>
-                      {fila.label.trim().charAt(0).toUpperCase()}
-                    </span>
+                  <li className="flex items-center gap-3 border-b border-line-panel py-3 last:border-none" key={clave(fila)}>
+                    <Iniciales chico nombre={fila.label} />
                     <span className="flex min-w-0 flex-1 flex-col">
-                      <span className="truncate text-[14px] text-ink">{fila.label}</span>
-                      <span className="text-[12px] text-ink-mute">
+                      <span className="truncate text-[15px] font-medium text-ink">{fila.label}</span>
+                      <span className="text-[13px] text-ink-mute">
                         <span className="max-[559px]:hidden">esperando </span>
                         {fila.waitingDays} {fila.waitingDays === 1 ? 'día' : 'días'} · {fila.seats} {fila.seats === 1 ? 'lugar' : 'lugares'}
                         {/* En el celular, «sin teléfono» va en esta línea: la píldora a la derecha apretaba el nombre. */}
@@ -130,7 +125,7 @@ export function ReminderQueue({
                     ) : (
                       <a
                         aria-label={`Recordar a ${fila.label} por WhatsApp`}
-                        className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-[var(--radius-pill)] border border-whatsapp/40 px-4 text-[13px] text-whatsapp transition-colors hover:bg-whatsapp/8 max-[559px]:px-3"
+                        className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-[10px] bg-whatsapp px-4 text-[14px] font-medium text-white no-underline transition-colors hover:bg-whatsapp-hover max-[559px]:px-3"
                         href={whatsappLink({ phone: fila.phone, message: reminderMessage({ kind: fila.kind, locale: eventLocale, groupLabel: fila.label, deadline }) })}
                         onClick={() => anotar(fila)}
                         rel="noopener noreferrer"

@@ -94,13 +94,13 @@ export function ZoneDialog({
     <dialog
       ref={dialogo}
       aria-labelledby={`${idTipo}-titulo`}
-      className="m-auto w-[min(460px,92vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
+      className="m-auto w-[min(460px,92vw)] rounded-[20px] border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
       }}
     >
-      <h2 className="font-display text-[24px] font-light italic" id={`${idTipo}-titulo`}>
+      <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idTipo}-titulo`}>
         {editando ? 'Editar elemento del salón' : 'Añadir elemento del salón'}
       </h2>
 

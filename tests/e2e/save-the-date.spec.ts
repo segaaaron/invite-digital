@@ -39,7 +39,7 @@ test.describe('el save the date', () => {
   })
 
   test('sin el extra, se pide en Extras', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
     await expect(page.getByRole('link', { name: 'Pedirlo en Extras' })).toBeVisible()
   })
 

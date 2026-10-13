@@ -6,7 +6,7 @@ import { momentosParaVer } from '@/modules/planner/ui/cronograma-vista'
 import { CronogramaVacio, ItinerarioEnLaInvitacion, MomentoDialog, RunOfShowBoard } from '@/modules/planner/ui/RunOfShowBoard'
 import { FeatureLocked } from '@/modules/plans'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { PlusIcon } from '@/shared/design/ui/icons'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { vocabularioDeCategoria } from '@/modules/events'
@@ -42,7 +42,6 @@ export default async function CronogramaPage({ params, searchParams }: { params:
   const aqui = proveedor ? `${base}?proveedor=${proveedor}` : base
   const conMomento = (valor: string) => `${aqui}${proveedor ? '&' : '?'}momento=${valor}`
   const enInvitacion = todos.filter((m) => m.enInvitacion)
-  const conAviso = todos.filter((m) => m.aviso !== null).length
   const editando = momento === undefined || momento === 'nuevo' ? undefined : todos.find((m) => m.id === momento)
   const ejemplo = (tema.defaultContent.itinerary ?? []).map((f) => ({ time: f.time, label: f.label, icono: f.imageId ?? null }))
 
@@ -50,57 +49,55 @@ export default async function CronogramaPage({ params, searchParams }: { params:
     <>
       <PanelHeader
         actions={
-          <>
-            {todos.length === 0 ? null : (
-              <PanelButton external href={`/panel/eventos/${event.value.slug}/cronograma/imprimir`}>
-                Imprimir
-              </PanelButton>
-            )}
+          <span className="max-[767px]:hidden">
             <PanelButton href={conMomento('nuevo')} variant="primary">
-              Sumar momento
+              <PlusIcon className="size-4" /> Añadir momento
             </PanelButton>
-          </>
+          </span>
         }
-        kicker="Planner"
-        meta={todos.length === 0 ? 'La hora de cada momento del día, para tu equipo y tus invitados' : `${todos.length} momento${todos.length === 1 ? '' : 's'} · ${enInvitacion.length} en la invitación${conAviso > 0 ? ` · ${conAviso} con aviso` : ''}`}
-        title="Cronograma del día"
+        meta="Los momentos del día en orden. Los que marques salen en el itinerario de tu invitación."
+        title="Cronograma"
       />
       {momento === 'nuevo' || editando ? (
         <MomentoDialog cerrarEn={aqui} ejemplo={vocabularioDeCategoria(tema.categorySlug).ejemplos.momento} evento={evento} iconos={iconos} key={momento} momento={editando} proveedores={proveedores} />
       ) : null}
-      <div className="grid items-start gap-4.5 min-[1200px]:grid-cols-[minmax(0,1fr)_340px]">
-        <PanelCard title={proveedor ? `Lo de ${proveedores.find((p) => p.id === proveedor)?.service ?? 'ese proveedor'}` : 'Momento a momento'}>
-          {todos.length === 0 ? (
-            <CronogramaVacio nuevo={conMomento('nuevo')} />
-          ) : (
-            <>
-              {proveedores.length === 0 ? null : (
-                <nav aria-label="Ver por proveedor" className="mb-4 flex flex-wrap gap-2">
-                  <FilterChipLink active={!proveedor} href={base}>
-                    Todo
+      {todos.length === 0 ? (
+        <CronogramaVacio nuevo={conMomento('nuevo')} />
+      ) : (
+        <div className="grid items-start gap-x-8 gap-y-6 min-[1100px]:grid-cols-[minmax(0,1fr)_200px]">
+          <div className="flex flex-col gap-4">
+            {proveedores.length === 0 ? null : (
+              <nav aria-label="Ver por proveedor" className="flex flex-wrap gap-2.5 max-[767px]:hidden">
+                <FilterChipLink active={!proveedor} href={base}>
+                  Todo
+                </FilterChipLink>
+                {proveedores.map((p) => (
+                  <FilterChipLink active={proveedor === p.id} href={`${base}?proveedor=${p.id}`} key={p.id}>
+                    {p.service}
                   </FilterChipLink>
-                  {proveedores.map((p) => (
-                    <FilterChipLink active={proveedor === p.id} href={`${base}?proveedor=${p.id}`} key={p.id}>
-                      {p.service}
-                    </FilterChipLink>
-                  ))}
-                </nav>
-              )}
-              <RunOfShowBoard editarEn={`${conMomento('')}`} iconos={iconos} momentos={momentos} proveedores={proveedores} />
-            </>
-          )}
-        </PanelCard>
-        <div className="min-[1200px]:sticky min-[1200px]:top-6">
-          <PanelCard title="En tu invitación">
+                ))}
+              </nav>
+            )}
+            {proveedor ? <h2 className="font-display text-[24px] font-medium">Lo de {proveedores.find((p) => p.id === proveedor)?.service ?? 'ese proveedor'}</h2> : null}
+            <RunOfShowBoard editarEn={`${conMomento('')}`} iconos={iconos} momentos={momentos} proveedores={proveedores} />
+            <div className="min-[768px]:hidden">
+              <PanelButton className="w-full" href={conMomento('nuevo')} variant="primary">
+                <PlusIcon className="size-4" /> Añadir un momento
+              </PanelButton>
+            </div>
+          </div>
+          <aside className="flex flex-col gap-4 max-[767px]:hidden min-[1100px]:sticky min-[1100px]:top-6">
             <ItinerarioEnLaInvitacion
               ejemplo={ejemplo}
               filas={enInvitacion.map((m) => ({ time: m.startsAt, label: m.title, icono: m.icono }))}
-              iconos={iconos}
               vistaPrevia={`/panel/eventos/${event.value.slug}/vista-previa`}
             />
-          </PanelCard>
+            <a className="text-center text-[13.5px] text-gold-deep" href={`/panel/eventos/${event.value.slug}/cronograma/imprimir`} rel="noopener" target="_blank">
+              Imprimir el cronograma
+            </a>
+          </aside>
         </div>
-      </div>
+      )}
     </>
   )
 }

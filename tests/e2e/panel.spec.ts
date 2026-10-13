@@ -83,9 +83,8 @@ test.describe('cierre de sesión', () => {
   test('cierra la sesión y el panel vuelve a exigirla', async ({ page }) => {
     await signIn(page)
 
-    // La cuenta vive en el menú de la tarjeta del usuario.
-    await page.locator('summary', { hasText: 'Menú de la cuenta' }).click()
-    await page.getByRole('button', { name: 'Cerrar sesión' }).click()
+    // Salir está en la tarjeta del usuario, abajo de la barra.
+    await page.getByRole('complementary').getByRole('button', { name: 'Cerrar sesión' }).click()
     // Pide confirmación: el botón de dentro del diálogo es el que cierra la sesión.
     await page.getByRole('dialog', { name: 'Cerrar sesión' }).getByRole('button', { name: 'Cerrar sesión' }).click()
     await expect(page).toHaveURL(/\/panel\/entrar$/)
@@ -225,7 +224,7 @@ test.describe('invitados del evento', () => {
     // acompañantes, que son los cupos de más.
     await page.getByLabel('Nombre completo').fill('Familia Rojas Peña')
     await añadirAcompanantes(page, 3)
-    await page.getByRole('button', { name: 'Guardar' }).click()
+    await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
     // Guardar cierra el diálogo y no enseña enlace: se prepara desde «Enviar invitaciones».
     await expect(page).toHaveURL(/invitados$/)
@@ -240,7 +239,7 @@ test.describe('invitados del evento', () => {
 
   test('un invitado sin nombre no se envía: el navegador lo corta', async ({ page }) => {
     await page.goto(`/panel/eventos/${SLUG}/invitados?panel=alta`)
-    await page.getByRole('button', { name: 'Guardar' }).click()
+    await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
     // `required` corta el envío en el navegador; el dominio vuelve a rechazarlo si
     // alguien llama a la acción por su cuenta (cubierto en las pruebas de aplicación).

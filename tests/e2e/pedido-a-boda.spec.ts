@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+import postgres from 'postgres'
 import { ADMIN_AUTH_STATE } from './fixtures/atelier'
 import { closeDb, deleteOrdersOf, deleteProvisioned, seedOrder } from './fixtures/pedido-a-boda'
 
@@ -39,24 +40,27 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // no pide nada más —la contraseña provisional se genera sola y le llega por correo—.
     const atelier = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
     await atelier.goto(`/panel/admin/ventas?venta=p-${REFERENCIA}`)
-    const ficha = atelier.locator('dialog[open]')
+    const ficha = atelier.locator('section[aria-labelledby="ficha-de-venta"]')
     await ficha.getByRole('button', { name: 'Aprobar pago' }).click()
 
     // 2. La venta queda cerrada con su evento, **leído de la base**: sobrevive a recargar.
-    await expect(ficha.getByText('Evento creado')).toBeVisible()
+    await expect(ficha.getByText('Evento creado')).toBeAttached()
     await atelier.reload()
-    await expect(atelier.locator('dialog[open]').getByText('Evento creado')).toBeVisible()
+    // Recargada, el hito va en «Recorrido y datos», plegado.
+    await expect(atelier.locator('section[aria-labelledby="ficha-de-venta"]').getByText('Evento creado')).toBeAttached()
 
     // 3. El admin ve la ficha de la boda nueva, no sus datos: esos son del cliente.
     const slug = `evento-${REFERENCIA.toLowerCase()}`
     await atelier.goto(`/panel/eventos/${slug}/configuracion`)
-    await expect(atelier.getByRole('heading', { name: 'Datos y diseño' })).toBeVisible()
+    await expect(atelier.getByRole('heading', { name: 'Detalles' })).toBeVisible()
     expect((await atelier.goto(`/panel/eventos/${slug}/planner/tareas`))?.status()).toBe(404)
 
     // Sin proveedor de correo (como aquí), la contraseña provisional no le llegó: el admin la
     // restablece en la ficha y la ve **una vez**, para pasársela por WhatsApp.
     await atelier.goto(`/panel/eventos/${slug}/configuracion#acceso`)
+    // Se confirma en su diálogo (maqueta E66).
     await atelier.getByRole('button', { name: 'Restablecer acceso' }).click()
+    await atelier.getByRole('button', { name: 'Restablecer y enviar correo' }).click()
     const CLAVE = (await atelier.locator('code').filter({ hasText: /^[A-Za-z0-9_-]{12,}$/ }).first().innerText()).trim()
     expect(CLAVE.length).toBeGreaterThanOrEqual(12)
 
@@ -87,11 +91,14 @@ test('aprobar el pedido crea la boda con su diseño, y el cliente entra a ella',
     // sube. Esta línea exigía 404 hasta que el acceso del cliente pasó a incluirla; lo que
     // sigue siendo del atelier son las tarjetas de dentro, no la pantalla.
     expect((await page.goto(`/panel/eventos/${slug}/configuracion`))?.status()).toBe(200)
-    await expect(page.getByRole('heading', { name: 'Datos y diseño' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Detalles' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Mi invitación', level: 1 })).toBeVisible()
 
-    // La boda nació con el diseño que se eligió en el escaparate. Por rol y no por texto
-    // suelto: el título de la tarjeta es un `h2` y es único.
-    await expect(page.getByRole('heading', { name: 'Tu invitación · Botánica' })).toBeVisible()
+    // La boda nació con el diseño que se eligió en el escaparate.
+    const sql = postgres(process.env.DATABASE_URL ?? 'postgres://invite:invite@localhost:5434/invite', { max: 1 })
+    const [diseno] = await sql<{ theme: string }[]>`select theme_key as theme from events where slug = ${slug}`
+    await sql.end({ timeout: 5 })
+    expect(diseno!.theme).toBe(DISENO)
 
     // Sin tareas de ejemplo: el plan se crea cuando el anfitrión lo pide.
     await page.goto(`/panel/eventos/${slug}/planner/tareas`)

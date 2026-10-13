@@ -47,7 +47,7 @@ export function GuestPhotoUpload({ dictionary, token, remaining }: Props) {
       <input name="token" type="hidden" value={token} readOnly />
 
       <label
-        className="cursor-pointer rounded-[var(--radius-pill)] bg-gold px-6 py-3 font-mono text-[10px] font-bold tracking-[0.15em] text-[var(--color-on-gold)] uppercase"
+        className="cursor-pointer min-w-[var(--fotos-min,0px)] rounded-[var(--radius-pill)] border-[length:var(--fotos-borde,0px)] text-center whitespace-nowrap border-[var(--fotos-linea,transparent)] px-[var(--fotos-px,24px)] py-[var(--fotos-py,12px)] [font-family:var(--fotos-letra,var(--font-mono))] text-[length:var(--fotos-fs,10px)] font-bold tracking-[var(--fotos-tracking,0.15em)] uppercase bg-[var(--fotos-fondo,var(--color-gold))] text-[var(--fotos-tinta,var(--color-on-gold))]"
         htmlFor={campoId}
       >
         {enviando ? dictionary.photosSending : dictionary.photosPick}

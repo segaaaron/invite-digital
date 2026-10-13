@@ -15,7 +15,7 @@ export const bodaRoyalDefinition: ThemeDefinition = {
   label: 'Royal Blush',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'playfairDisplay', 'cinzel'],
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'playfairDisplay', 'cinzel', 'montserrat'],
   rsvp: 'pildoras',
   pinta: {
     fotos: { casillas: 5, retrato: true },

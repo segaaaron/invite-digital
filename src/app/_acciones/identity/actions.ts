@@ -40,7 +40,9 @@ export async function signInAction(_previous: SignInActionState, formData: FormD
   if (outcome.status === 'error') return { status: 'error', message: outcome.message }
 
   const jar = await cookies()
-  jar.set(SESSION_COOKIE, outcome.token, sessionCookieOptions(outcome.expiresAt))
+  // «Recordarme en este aparato» (E14): sin marcar, la cookie no lleva caducidad y se va al cerrar el navegador.
+  const { expires, ...soloEstaVez } = sessionCookieOptions(outcome.expiresAt)
+  jar.set(SESSION_COOKIE, outcome.token, formData.get('recordarme') === 'on' ? { ...soloEstaVez, expires } : soloEstaVez)
   return entrarCon(outcome.token)
 }
 
@@ -253,6 +255,26 @@ export async function closeOtherSessionsAction(_previo: CodigoDeCuentaState, for
   }
   revalidatePath('/panel/cuenta')
   return { status: 'done', message: 'Listo: solo queda abierta tu sesión en este dispositivo.' }
+}
+
+export type MisDatosState = { status: 'idle' | 'success' | 'error'; message?: string }
+
+/** «Tus datos» (Mi cuenta): nombre y teléfono de la propia cuenta. En modo soporte no se tocan los del cliente. */
+export async function guardarMisDatosAction(_previo: MisDatosState, formData: FormData): Promise<MisDatosState> {
+  const actor = await requireSession()
+  if (actor.soporte) return { status: 'error', message: 'En modo soporte no se cambian los datos del cliente.' }
+  const nombre = campo(formData, 'nombre').trim().replace(/\s+/g, ' ')
+  const telefono = campo(formData, 'telefono').replace(/[^\d+]/g, '')
+  if (nombre.length > 120) return { status: 'error', message: 'El nombre puede tener hasta 120 letras.' }
+  if (telefono !== '' && (telefono.replace('+', '').length < 7 || telefono.length > 20)) return { status: 'error', message: 'Revisa el teléfono: son de 7 a 15 números, con el código del país si es de fuera.' }
+  try {
+    await identity.guardarMisDatos(actor.userId, { nombre: nombre === '' ? null : nombre, telefono: telefono === '' ? null : telefono })
+  } catch (e) {
+    registrarFallo('identity/actions', 'no se pudieron guardar los datos de la cuenta', 'storage_failure', e)
+    return { status: 'error', message: 'No pudimos guardarlos. Inténtalo en un momento.' }
+  }
+  revalidatePath('/panel', 'layout')
+  return { status: 'success', message: 'Guardado.' }
 }
 
 export async function signOutAction(): Promise<void> {

@@ -69,7 +69,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
-      <PanelHeader kicker="Día del evento" meta="Escanea el QR del pase o escribe su código. Registrar sin pase queda para cuando no trae ninguno." title="Ingreso al evento" />
+      <PanelHeader kicker="Día del evento" meta="Escanea el pase o busca por nombre. La familia entra junta con un toque." title="Ingreso al evento" />
       <EnVivo modo="auto" tipos={['ingreso']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
       <ControlDeIngreso
         escanerHref={`/panel/eventos/${event.value.slug}/puerta`}

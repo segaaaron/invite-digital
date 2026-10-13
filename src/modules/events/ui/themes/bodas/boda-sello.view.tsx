@@ -86,6 +86,27 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
         // Los dos botones iguales del RSVP (`uniformBg` en la maqueta): velo vino y filete de oro.
         ['--rsvp-fondo' as string]: alfaDe('vino', 0.06),
         ['--rsvp-borde' as string]: P.oro,
+        // El libro y «Subir mis fotos» como en la maqueta (`Guestbook` y `SLBtn`): velo vino, filete de oro, serif.
+        ['--libro-campo' as string]: alfaDe('vino', 0.04),
+        ['--libro-campo-linea' as string]: `color-mix(in srgb, ${P.oro} 44%, transparent)`,
+        ['--libro-campo-borde' as string]: '1.5px',
+        ['--libro-campo-fs' as string]: '18px',
+        ['--libro-campo-p' as string]: '18px',
+        ['--libro-boton-fondo' as string]: alfaDe('vino', 0.06),
+        ['--libro-boton-linea' as string]: P.oro,
+        ['--libro-boton-py' as string]: '16px',
+        ['--libro-fs' as string]: '15px',
+        ['--libro-letra' as string]: SERIF,
+        ['--fotos-fondo' as string]: alfaDe('vino', 0.06),
+        ['--fotos-tinta' as string]: P.vino,
+        ['--fotos-linea' as string]: P.oro,
+        ['--fotos-borde' as string]: '1.5px',
+        ['--fotos-letra' as string]: SERIF,
+        ['--fotos-fs' as string]: '15px',
+        ['--fotos-px' as string]: '26px',
+        ['--fotos-min' as string]: '240px',
+        ['--fotos-py' as string]: '18px',
+        ['--fotos-tracking' as string]: '0.25em',
         position: 'relative',
         background: P.crema,
         color: P.vino,
@@ -275,6 +296,7 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
             lugar === undefined ? null : (
               <div key={icono} style={{ border: `1.5px solid ${P.oro}`, borderRadius: 16, padding: '36px 22px', textAlign: 'center' }}>
                 <Arte
+                  acuarela={icono === 'copas.avif'}
                   ancho={186}
                   estilo={{ width: '57%', margin: '0 auto 28px' }}
                   flota
@@ -492,7 +514,7 @@ export function BodaSelloView({ content, event, dictionary, themes, slots, guest
       {/* ── El cierre, sobre ciruela ── */}
       <Seccion ciruela estilo={{ paddingTop: 0, paddingBottom: 80 }}>
         <div style={{ margin: '0 -34px 34px', width: 'calc(100% + 68px)' }}>
-          <FotoConOnda alto={300} fondo={P.ciruela} posicion="center 20%" src={foto(5, 'pareja-cierre.avif')} />
+          <FotoConOnda alto={300} fondo={P.ciruela} fundido posicion="center 20%" src={foto(5, 'pareja-cierre.avif')} />
         </div>
         <div style={{ textAlign: 'center' }}>
           {closing?.text === undefined ? null : (
@@ -653,14 +675,39 @@ function Arte({
   ancho,
   alto,
   flota = false,
+  acuarela = false,
   estilo,
 }: {
   readonly src: string
   readonly ancho: number
   readonly alto?: number
   readonly flota?: boolean
+  /** Bordes de acuarela (las copas de la recepción en la maqueta: `WatercolorEdge`), en vez del recuadro de la foto. */
+  readonly acuarela?: boolean
   readonly estilo?: React.CSSProperties
 }) {
+  const id = useId()
+  if (acuarela)
+    return (
+      <span style={{ display: 'block', maxWidth: ancho, animation: flota ? 'theme-floatIcon 3.6s ease-in-out infinite' : undefined, ...estilo }}>
+        <svg aria-hidden style={{ display: 'block', width: '100%', height: 'auto', overflow: 'visible' }} viewBox="0 0 200 200">
+          <defs>
+            <filter height="160%" id={`${id}t`} width="160%" x="-30%" y="-30%">
+              <feTurbulence baseFrequency="0.05" numOctaves={3} result="ruido" seed={9} type="fractalNoise" />
+              <feDisplacementMap in="SourceGraphic" in2="ruido" scale={22} xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+            <radialGradient cx="50%" cy="50%" id={`${id}f`} r="52%">
+              <stop offset="58%" stopColor="white" stopOpacity="1" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </radialGradient>
+            <mask id={`${id}m`}>
+              <rect fill={`url(#${id}f)`} filter={`url(#${id}t)`} height="200" width="200" />
+            </mask>
+          </defs>
+          <image height="200" href={src} mask={`url(#${id}m)`} preserveAspectRatio="xMidYMid slice" width="200" />
+        </svg>
+      </span>
+    )
   return (
     <span
       style={{

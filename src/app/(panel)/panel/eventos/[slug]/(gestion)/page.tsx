@@ -1,37 +1,34 @@
-import { EmptyState } from '@/shared/design/ui/panel/estados'
-import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
 import { hayPreguntas } from '@/modules/rsvp/domain/preguntas'
 import { LoQueContestaron } from '@/modules/rsvp/ui/LoQueContestaron'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { analytics, checkin, events, guestbook, guests, planner, plans, registry, rsvp, venue } from '@/app/composition/container'
+import { analytics, events, guestbook, guests, planner, plans, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
+import { fiestaDeTema, loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
-import { avanceDeTareas, estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar, totalesDelPresupuesto } from '@/modules/planner'
+import { estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar } from '@/modules/planner'
 import { buildWhatsAppLink } from '@/modules/leads'
-import { ThisWeekCard } from '@/modules/planner/ui/ThisWeekCard'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
-import { fecha as diaCorto } from '@/shared/format/fecha'
-import { ArrivalStrip } from '@/modules/checkin/ui/ArrivalStrip'
+import { diasHasta, fecha as diaCorto, hace } from '@/shared/format/fecha'
 import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
 import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { ActivityFeed, mergeActivity, type ActivityItem } from '@/modules/shell/ui/ActivityFeed'
-import { DonutChart, PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/cards'
-import { TimelineChart } from '@/modules/rsvp/ui/TimelineChart'
-import { EventStats } from '@/modules/rsvp/ui/EventStats'
-import type { Breakdown } from '@/modules/analytics'
-import { BarRow, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { PanelButton, Pill, TARJETA_DESTACADA } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
-import { CheckIcon, ClockIcon, EyeIcon, UsersIcon, TableIcon } from '@/shared/design/ui/icons'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
-import { AroDeRespuestas, CifrasEnFila, LoProximo } from '@/shared/design/ui/panel/movil'
 
-/** Las dos semanas del gráfico de la maqueta. */
-const DIAS_DEL_GRAFICO = 14
+const DIA_LARGO = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
+const HORA = new Intl.DateTimeFormat('es-BO', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/La_Paz' })
 
+type Pendiente = { readonly clave: string; readonly titulo: string; readonly detalle: string; readonly accion: string; readonly href: string; readonly externo?: boolean }
+
+/**
+ * **El resumen del evento, como en la maqueta «Esmeralda y Latón»** (E07 · T17 · M06, 12 de octubre): el nombre con
+ * el día, la hora y el lugar, y los días que faltan en grande; «Lo próximo», lo único que toca hacer ahora; a un lado
+ * cómo va la invitación (el aro de respuestas y de dónde la abren) y al otro lo que vence esta semana; y abajo lo
+ * último que escribieron en el libro de firmas.
+ */
 export default async function EventDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const actor = await requireSession()
   const { slug } = await params
@@ -41,622 +38,270 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     if (event.error.kind === 'not_found') notFound()
     throw new Error(event.error.detail)
   }
-
-  /**
-   * Los primeros pasos, en orden: escribir la invitación, mirarla, publicarla y repartirla.
-   *
-   * Sin esto se podía crear invitados y mandar enlaces con la invitación en blanco y el evento
-   * en borrador, y quien abriera el suyo veía una página de error. La tarjeta desaparece sola
-   * cuando los cuatro están hechos.
-   */
-  const contenidoDelEvento = await events.contentFor(event.value.id, {})
-  const invitacionLista = loQueFaltaParaInvitar(contenidoDelEvento, { pideNombres: pideNombres(themeFor(event.value.themeKey)) }).length === 0
-  // Ya no se manda a «Mi invitación» al que no la escribió (6 de octubre): lo que no se escribió
-  // sale como lo trae el diseño, así que se puede invitar desde el principio.
-
-  const groups = await guests.list(event.value.id)
-  // Las últimas respuestas, en una sola consulta. Una por grupo y en serie convertía el
-  // resumen en decenas de viajes a la base cada vez que alguien lo abría.
-  const ultimas = await rsvp.latestByEvent(event.value.id)
-  const filas: GuestGroupRowView[] = isErr(groups)
-    ? []
-    : groups.value.map((group) => ({ ...group, confirmed: ultimas.get(group.id)?.attending ?? null }))
-
-  // La maqueta lista **personas** en «Invitados recientes»: nombre, grupo, RSVP,
-  // acompañantes y mesa.
-  const personasResumen = await guests.listPeople(event.value.id)
-  const tally = await rsvp.tally(event.value.id)
-  const historial = await rsvp.timeline(event.value.id, DIAS_DEL_GRAFICO)
-
-  // Cuánta gente ha llegado. Solo se lee si el plan trae la puerta: sin ella no hay
-  // llegadas que contar, y una tira de ceros haría creer que la recepción ya empezó.
-  // La comprobación vive aquí, en la página: `checkin` no sabe nada de planes.
-  const conPuerta = await plans.requireFeature(event.value.id, 'checkin')
-  const puerta = isErr(conPuerta) ? null : await checkin.state(event.value.id)
-  const llegadas = puerta === null || isErr(puerta) ? null : puerta.value.tally
-
-  // Los cupos ya salen en las tarjetas de arriba: repetirlos aquí era ruido.
-  const t = isErr(tally) ? null : tally.value
-  const respondieron = filas.filter((f) => f.confirmed !== null).length
-  const pendientes = filas.length - respondieron
-  const noAsisten = filas.filter((f) => f.confirmed === 0).length
-
-  // El salón, para el panel de distribución de mesas del resumen. Si el plan no lo trae,
-  // no se pinta: enseñar mesas vacías haría creer que el salón está sin repartir.
-  // Los mensajes sin leer, para la acción rápida.
-  const libroResumen = await guestbook.list(event.value.id)
-
-  // La actividad reciente se **compone** de lo que ya se registra: mensajes, llegadas y
-  // regalos reservados. No hay tabla de actividad, y no hace falta: duplicar esos hechos
-  // en un registro aparte crearía dos versiones de la misma verdad.
-  const mesaDeRegalos = isErr(await plans.requireFeature(event.value.id, 'registry'))
-    ? null
-    : await registry.list(event.value.id)
-
-  const actividadMensajes: ActivityItem[] = isErr(libroResumen)
-    ? []
-    : libroResumen.value.map((mensaje) => ({
-        at: mensaje.writtenAt,
-        actor: mensaje.groupLabel,
-        action: 'dejó un mensaje',
-      }))
-
-  const actividadLlegadas: ActivityItem[] =
-    puerta === null || isErr(puerta)
-      ? []
-      : puerta.value.arrivals.map((llegada) => ({
-          at: llegada.arrivedAt,
-          actor: puerta.value.groups.find((g) => g.id === llegada.guestGroupId)?.label ?? 'Un invitado',
-          action: 'llegó al evento',
-        }))
-
-  const actividadRegalos: ActivityItem[] =
-    mesaDeRegalos === null || isErr(mesaDeRegalos)
-      ? []
-      : mesaDeRegalos.value.gifts
-          .filter((regalo) => regalo.claimedAt !== null)
-          .map((regalo) => ({ at: regalo.claimedAt!, actor: regalo.name, action: 'quedó reservado' }))
-
-  const actividad = mergeActivity(actividadMensajes, actividadLlegadas, actividadRegalos)
-
-  // Las visitas a la invitación, que es la cuarta cifra de la maqueta.
-  const visitas = await analytics.tally(event.value.id)
-  const vistas = isErr(visitas) ? null : visitas.value
-  // El embudo de las respuestas. Antes vivía en «Estadísticas», una pantalla aparte que repetía
-  // el donut y las visitas de aquí: ahora el resumen lo dice todo en un sitio (28 de septiembre).
-  const embudo = await rsvp.stats(event.value.id)
-
-  const conSalon = await plans.requireFeature(event.value.id, 'seating')
-  const salon = isErr(conSalon) ? null : await venue.seating(event.value.id)
-  const mesas = salon === null || isErr(salon) ? null : salon.value
-
-  // «Recientes» son los **últimos** que entraron, no los primeros: el repositorio los
-  // devuelve del más viejo al más nuevo, así que hay que darles la vuelta antes de
-  // recortar. Y la columna de acompañantes cuenta los del grupo de esa persona; antes
-  // decía «Sí/—» sobre la propia fila, así que el titular de una familia de tres salía
-  // con un guion.
-  const recientes = isErr(personasResumen) ? [] : [...personasResumen.value].reverse().slice(0, 6)
-  const acompanantesPorGrupo = new Map<string, number>()
-  if (!isErr(personasResumen)) {
-    for (const persona of personasResumen.value) {
-      if (!persona.isCompanion) continue
-      acompanantesPorGrupo.set(persona.guestGroupId, (acompanantesPorGrupo.get(persona.guestGroupId) ?? 0) + 1)
-    }
-  }
-
-  const fechaDelEvento = new Date(`${event.value.eventDate}T00:00:00`)
-  const fecha = fechaDelEvento.toLocaleDateString('es-BO', { day: 'numeric', month: 'long', year: 'numeric' })
-
-  // «Faltan N días» de la maqueta. Se cuenta en días de calendario, no en horas: a doce
-  // horas del evento la resta cruda diría «faltan 0 días».
-  const hoy = new Date()
-  const diasQueFaltan = Math.round(
-    (Date.UTC(fechaDelEvento.getFullYear(), fechaDelEvento.getMonth(), fechaDelEvento.getDate()) -
-      Date.UTC(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) /
-      86_400_000,
-  )
-  // Los deltas «esta semana» de la maqueta, calculados con lo que ya se mide: grupos
-  // creados en los últimos siete días y respuestas recibidas en ese mismo tramo. Nada de
-  // porcentajes inventados: si la semana fue en blanco, no se pinta la línea.
-  const HACE_UNA_SEMANA = new Date(hoy.getTime() - 7 * 86_400_000)
-  const gruposNuevos = filas.filter((fila) => (fila.createdAt?.getTime() ?? 0) >= HACE_UNA_SEMANA.getTime()).length
-  const respuestasSemana = isErr(historial)
-    ? 0
-    : historial.value.slice(-7).reduce((suma, barra) => suma + barra.count, 0)
-
-  // «Esta semana» del planner: tareas y pagos que vencen en siete días o ya vencieron.
-  const preguntas = await rsvp.preguntas.leer(event.value.id)
-  const hoyBolivia = fechaEnBolivia(hoy)
-  const tareas = await planner.listTasks(event.value.id)
-  const partidas = await planner.listBudget(event.value.id)
-  const totales = totalesDelPresupuesto(partidas)
-  const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
-  const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
-  // Los proveedores son del anfitrión y su planner: al co-anfitrión no se le ofrecen.
-  const dueno = gestionaElEvento(actor, event.value)
-  const llevaProveedores = dueno || (await events.staff.de(actor, event.value.id)).some((m) => m === 'cliente' || m === 'planner')
-  const conProveedores = llevaProveedores && !isErr(await plans.requireFeature(event.value.id, 'plannerCompleto'))
-  const proveedores = conProveedores ? await planner.dia.listVendors(event.value.id) : []
-  const semana = {
-    avance: tareas.length === 0 ? null : avanceDeTareas(tareas),
-    presupuesto: partidas.length === 0 ? null : { previsto: bs(totales.previsto), comprometido: bs(totales.comprometido), pagado: bs(totales.pagado) },
-    tareas: tareas
-      .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
-      .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
-      .map(({ t, estado }) => ({ id: t.id, title: t.title, vence: dia(t.dueDate!), atrasada: estado === 'atrasada' })),
-    marcaPagos: llevaProveedores,
-    sinConfirmar: proveedoresSinConfirmar(proveedores).map((v) => ({ id: v.id, service: v.service, whatsappHref: v.whatsapp ? buildWhatsAppLink(v.whatsapp, `Hola, ¿nos confirmas para ${event.value.title}?`) : null })),
-    pagos: pagosQueVencen(partidas, hoyBolivia).map((g) => ({ id: g.id, concepto: g.concepto, importe: bs(g.amountCents), vence: dia(g.dueDate!), atrasado: g.dueDate! < hoyBolivia })),
-  }
-
-  const cuentaAtras =
-    diasQueFaltan > 1 ? `faltan ${diasQueFaltan} días` : diasQueFaltan === 1 ? 'falta un día' : diasQueFaltan === 0 ? 'es hoy' : null
-
-
-  // **Lo próximo** (celular): lo único que toca hacer hoy, con su botón. Sustituye a «Primeros pasos» y a
-  // las cuatro tarjetas grandes, que en el teléfono empujaban todo lo demás (maqueta 1 del panel móvil).
+  const id = event.value.id
   const base = `/panel/eventos/${event.value.slug}`
-  const porEnviar = filas.filter((f) => f.revokedAt === null && (f.invitationSentAt === null || f.invitationSentAt === undefined)).length
-  const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
-  const algunaEnviada = filas.some((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined)
-  const escribir = { titulo: 'Escribe tu invitación', detalle: 'Los nombres, la fecha y el lugar. Lo que no escribas sale como el ejemplo del diseño.', accion: 'Escribirla', href: `${base}/configuracion` }
+  const ahora = new Date()
+  const hoyBolivia = fechaEnBolivia(ahora)
+
+  const [contenido, groups, ultimas, personas, libro, visitas, preguntas, tareas, partidas] = await Promise.all([
+    events.contentFor(id, {}),
+    guests.list(id),
+    rsvp.latestByEvent(id),
+    guests.listPeople(id),
+    guestbook.list(id),
+    analytics.tally(id),
+    rsvp.preguntas.leer(id),
+    planner.listTasks(id),
+    planner.listBudget(id),
+  ])
+  const invitacionLista = loQueFaltaParaInvitar(contenido, { pideNombres: pideNombres(themeFor(event.value.themeKey)) }).length === 0
+  const filas: GuestGroupRowView[] = isErr(groups) ? [] : groups.value.map((g) => ({ ...g, confirmed: ultimas.get(g.id)?.attending ?? null }))
+  const gente = isErr(personas) ? [] : personas.value
+  const vienen = gente.filter((p) => p.attending === 'yes').length
+  const noVienen = gente.filter((p) => p.attending === 'no').length
+  const sinResponder = gente.length - vienen - noVienen
+  const respondio = gente.length === 0 ? null : Math.round(((vienen + noVienen) / gente.length) * 100)
+  const vistas = isErr(visitas) ? null : visitas.value
+  const firmas = isErr(libro) ? [] : [...libro.value].filter((m) => (m.body ?? '').trim() !== '').sort((a, b) => b.writtenAt.getTime() - a.writtenAt.getTime())
+  const porAgradecer = firmas.filter((m) => m.reply === null).length
+
+  // El salón y los proveedores, solo si el plan los trae y quien entra los lleva.
+  const conSalon = await plans.requireFeature(id, 'seating')
+  const salon = isErr(conSalon) ? null : await venue.seating(id)
+  const mesas = salon === null || isErr(salon) ? null : salon.value
+  const dueno = gestionaElEvento(actor, event.value)
+  const llevaProveedores = dueno || (await events.staff.de(actor, id)).some((m) => m === 'cliente' || m === 'planner')
+  const conProveedores = llevaProveedores && !isErr(await plans.requireFeature(id, 'plannerCompleto'))
+  const proveedores = conProveedores ? await planner.dia.listVendors(id) : []
+
+  // ── La cabecera: el día, la hora y el lugar, y cuánto falta.
+  const fiesta = fiestaDeTema(event.value.themeKey)
+  const dias = diasHasta(event.value.eventDate, ahora)
+  const diaTexto = DIA_LARGO.format(new Date(`${event.value.eventDate}T00:00:00Z`))
+  const inicio = contenido.schedule?.startsAt === undefined ? null : new Date(contenido.schedule.startsAt)
+  const lugares = [contenido.ceremony?.place, contenido.reception?.place].filter((l): l is string => (l ?? '').trim() !== '')
+  const cuando = `${diaTexto.charAt(0).toUpperCase()}${diaTexto.slice(1)}${inicio === null || Number.isNaN(inicio.getTime()) ? '' : `, ${HORA.format(inicio)}`}`
+  const donde = lugares.length === 0 ? '' : `${lugares.join(' y ')}.`
+  const enGrande = dias > 1 ? { n: String(dias), palabra: 'días' } : dias === 1 ? { n: '1', palabra: 'día' } : dias === 0 ? { n: 'Hoy', palabra: '' } : null
+
+  // ── Lo próximo: lo único que toca hacer ahora, con su botón (y uno secundario cuando ayuda).
+  const porEnviar = filas.filter((f) => f.revokedAt === null && (f.invitationSentAt ?? null) === null).length
+  const algunaEnviada = filas.some((f) => (f.invitationSentAt ?? null) !== null)
+  const pendientes = filas.filter((f) => f.revokedAt === null && f.confirmed === null).length
+  const escribir = {
+    titulo: 'Escribe tu invitación',
+    detalle: 'Los nombres, la fecha y el lugar. Lo que no escribas sale como el ejemplo del diseño.',
+    accion: 'Escribirla',
+    href: `${base}/configuracion`,
+    secundaria: { accion: 'Verla', href: `${base}/vista-previa` },
+  }
   const proximo =
     !invitacionLista && !algunaEnviada
       ? escribir
       : filas.length === 0
-        ? { titulo: 'Carga a tus invitados', detalle: 'Cada uno recibe su enlace; sus acompañantes entran con el mismo.', accion: 'Añadir invitados', href: `${base}/invitados?panel=alta` }
+        ? { titulo: 'Carga a tus invitados', detalle: 'Cada uno recibe su enlace; sus acompañantes entran con el mismo.', accion: 'Añadir invitados', href: `${base}/invitados?panel=alta`, secundaria: { accion: 'Importar una lista', href: `${base}/invitados?panel=importar` } }
         : porEnviar > 0
-          ? { titulo: porEnviar === 1 ? 'Falta 1 invitación por enviar' : `Faltan ${porEnviar} invitaciones por enviar`, accion: 'Enviar ahora', href: `${base}/invitados?panel=envio` }
+          ? { titulo: porEnviar === 1 ? 'Falta 1 invitación por enviar' : `Faltan ${porEnviar} invitaciones por enviar`, detalle: 'Se envían por WhatsApp o con su enlace, una por una.', accion: 'Enviar ahora', href: `${base}/invitados?panel=envio`, secundaria: { accion: 'Ver quiénes son', href: `${base}/invitados` } }
           : !invitacionLista
             ? escribir
             : pendientes > 0
-              ? { titulo: `${plural(pendientes, 'invitación', 'invitaciones')} sin responder`, detalle: 'Recuérdales por WhatsApp desde Invitados.', accion: 'Ver quién falta', href: `${base}/invitados` }
-              : { titulo: 'Todos respondieron', detalle: `${t ? t.seatsConfirmed : 0} lugares confirmados.`, accion: 'Ver invitados', href: `${base}/invitados` }
-  const gente = isErr(personasResumen) ? [] : personasResumen.value
-  const vienen = gente.filter((p) => p.attending === 'yes').length
-  const noVienen = gente.filter((p) => p.attending === 'no').length
-  const sinResponder = gente.length - vienen - noVienen
-  const mesasOcupadas = mesas === null ? 0 : mesas.tables.filter((m) => m.taken > 0).length
+              ? { titulo: `${pendientes} ${pendientes === 1 ? 'invitado aún no responde' : 'invitados aún no responden'}`, detalle: 'Un recordatorio por WhatsApp suele traer la mitad de vuelta.', accion: 'Enviar recordatorios', href: `${base}/invitados`, secundaria: { accion: 'Ver quiénes son', href: `${base}/invitados` } }
+              : { titulo: 'Todos respondieron', detalle: `${vienen} ${vienen === 1 ? 'persona viene' : 'personas vienen'}.`, accion: 'Ver invitados', href: `${base}/invitados`, secundaria: null }
+
+  // ── Esta semana: lo que vence o ya venció, cada cosa con adónde ir.
+  const bs = (cents: number) => formatAmount(cents, DEFAULT_CURRENCY)
+  const dia = (iso: string) => diaCorto(new Date(`${iso}T12:00:00.000Z`))
+  const semana: Pendiente[] = [
+    ...pagosQueVencen(partidas, hoyBolivia).map((g) => ({
+      clave: `pago-${g.id}`,
+      titulo: `Pagar ${g.concepto.charAt(0).toLowerCase()}${g.concepto.slice(1)}`,
+      detalle: `${bs(g.amountCents)}, ${g.dueDate! < hoyBolivia ? 'venció' : 'vence'} el ${dia(g.dueDate!)}`,
+      accion: 'Ver pago',
+      href: `${base}/planner/presupuesto`,
+    })),
+    ...(mesas !== null && mesas.unseated.length > 0
+      ? [{ clave: 'mesas', titulo: `Sentar ${mesas.unseated.length === 1 ? 'a 1 invitación' : `a ${mesas.unseated.length} invitaciones`}`, detalle: 'Aún no tienen mesa', accion: 'Ir a mesas', href: `${base}/mesas` }]
+      : []),
+    ...proveedoresSinConfirmar(proveedores).map((v): Pendiente => {
+      const whatsapp = v.whatsapp ? buildWhatsAppLink(v.whatsapp, `Hola, ¿nos confirmas para ${event.value.title}?`) : null
+      return {
+        clave: `prov-${v.id}`,
+        titulo: `Confirmar ${v.service.charAt(0).toLowerCase()}${v.service.slice(1)}`,
+        detalle: 'Todavía no confirmó',
+        accion: whatsapp === null ? 'Ver' : 'Escribirle',
+        href: whatsapp ?? `${base}/planner/proveedores`,
+        externo: whatsapp !== null,
+      }
+    }),
+    ...tareas
+      .map((t) => ({ t, estado: estadoDeTarea(t, hoyBolivia) }))
+      .filter(({ estado }) => estado === 'atrasada' || estado === 'semana')
+      .map(({ t, estado }) => ({ clave: `tarea-${t.id}`, titulo: t.title, detalle: `${estado === 'atrasada' ? 'Venció' : 'Vence'} el ${dia(t.dueDate!)}`, accion: 'Ver', href: `${base}/planner/tareas` })),
+    ...(porAgradecer > 0
+      ? [{ clave: 'firmas', titulo: `Agradecer ${porAgradecer === 1 ? '1 firma nueva' : `${porAgradecer} firmas nuevas`}`, detalle: 'En tu libro de firmas', accion: 'Leer', href: `${base}/mensajes` }]
+      : []),
+  ].slice(0, 5)
+
+  // De dónde la abren: el aparato y el camino que más pesan.
+  const masDe = (lista: readonly { label: string; percent: number; count: number }[] | undefined) => [...(lista ?? [])].filter((x) => x.count > 0).sort((a, b) => b.count - a.count)[0]
+  const aparato = masDe(vistas?.devices)
+  const camino = masDe(vistas?.sources)
 
   return (
-    <>
-      <LoProximo {...proximo} />
-      <AroDeRespuestas
-        detalle={`${vienen} ${vienen === 1 ? 'viene' : 'vienen'} · ${noVienen} no · ${sinResponder} por responder`}
-        href={`${base}/invitados`}
-        porcentaje={gente.length === 0 ? null : Math.round(((vienen + noVienen) / gente.length) * 100)}
-      />
-      <div className="mb-4.5 min-[860px]:hidden">
-        <CifrasEnFila
-          cifras={[
-            { valor: gente.length, rotulo: 'Invitados', href: `${base}/invitados` },
-            { valor: vienen, rotulo: 'Vienen', href: `${base}/invitados` },
-            mesas === null
-              ? { valor: vistas ? vistas.total : '—', rotulo: 'Visitas' }
-              : { valor: `${mesasOcupadas}/${mesas.tables.length}`, rotulo: 'Mesas', href: `${base}/mesas` },
-            { valor: isErr(libroResumen) ? '—' : libroResumen.value.length, rotulo: 'Mensajes', href: `${base}/mensajes` },
-          ]}
-        />
-      </div>
-      {/* En el celular el nombre y la cuenta atrás ya van en la cabecera de arriba. */}
-      <div className="max-[859px]:hidden">
-      <PanelHeader
-        actions={
-          <>
-            {/* «Compartir enlace» llevaba a un enlace de solo lectura que ya no existe, y «Exportar lista» a un
-                ancla que nadie tenía: exportar vive en Invitados. Aquí, el envío de verdad. */}
-            {filas.length === 0 ? null : (
-              // En el celular, «Enviar» está al centro de la barra de abajo.
-              <PanelButton className="max-[859px]:hidden" href={`/panel/eventos/${event.value.slug}/invitados?panel=envio`}>
-                Enviar invitaciones
-              </PanelButton>
-            )}
-            <PanelButton href={`/panel/eventos/${event.value.slug}/invitados?panel=alta`} variant="primary">
-              + Invitar persona
-            </PanelButton>
-          </>
-        }
-        kicker="Resumen del evento"
-        meta={cuentaAtras === null ? fecha : `${fecha} · ${cuentaAtras}`}
-        // El nombre del evento, sin saludo: «Bienvenida, Cumpleaños Miguel» saludaba en femenino a todos.
-        title={event.value.title}
-      />
-      </div>
-      <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
+    <div className="flex flex-col gap-8 max-[767px]:gap-7">
+      <EnVivo modo="aviso" tipos={['rsvp', 'ingreso', 'visita']} url={`${base}/en-vivo`} />
 
-      {(() => {
-        const pasos = [
-          {
-            titulo: 'Escribe tu invitación',
-            hecho: invitacionLista,
-            detalle: 'Los nombres, la fecha, el lugar y la frase. Es lo que verán tus invitados.',
-            href: `/panel/eventos/${event.value.slug}/configuracion`,
-            accion: 'Escribirla',
-          },
-          {
-            titulo: 'Mírala antes de repartirla',
-            hecho: invitacionLista,
-            detalle: 'Se abre igual que en el teléfono de un invitado.',
-            href: `/panel/eventos/${event.value.slug}/vista-previa`,
-            accion: 'Ver la invitación',
-          },
-          {
-            titulo: 'Carga a tus invitados y reparte',
-            // Publicar ya no es un paso: preparar el primer enlace publica la invitación.
-            hecho: filas.some((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined),
-            detalle: 'Cada invitado recibe su enlace; sus acompañantes entran con el mismo. Al preparar el primero, tu invitación queda publicada.',
-            href: `/panel/eventos/${event.value.slug}/invitados`,
-            accion: 'Ir a invitados',
-          },
-        ]
-        const siguiente = pasos.find((paso) => !paso.hecho)
-        if (siguiente === undefined) return null
-        return (
-          <PanelCard className="mb-5.5 max-[859px]:hidden" title="Primeros pasos">
-            <ol className="flex flex-col">
-              {pasos.map((paso, i) => (
-                <li className="flex flex-wrap items-center gap-3 border-b border-line-panel py-3 last:border-none" key={paso.titulo}>
-                  <span
-                    aria-hidden
-                    className={`grid size-6 shrink-0 place-items-center rounded-full text-[11px] ${
-                      paso.hecho ? 'bg-sage text-white' : 'border border-line-panel-strong text-ink-mute'
-                    }`}
-                  >
-                    {paso.hecho ? '✓' : i + 1}
-                  </span>
-                  <span className="flex min-w-[240px] flex-1 flex-col">
-                    <span className={`text-[14px] ${paso.hecho ? 'text-ink-mute line-through' : 'text-ink'}`}>{paso.titulo}</span>
-                    {paso.hecho ? null : <span className="text-[12.5px] leading-[1.5] text-ink-mute">{paso.detalle}</span>}
-                  </span>
-                  {paso.hecho ? null : (
-                    <PanelButton href={paso.href} variant={paso === siguiente ? 'primary' : 'default'}>
-                      {paso.accion}
-                    </PanelButton>
-                  )}
+      {/* La cabecera. En el celular, en su tarjeta esmeralda (maqueta M06). */}
+      <div className="flex flex-wrap items-center gap-7 max-[767px]:hidden">
+        <div className="min-w-0 flex-[1_1_420px]">
+          <h1 className="font-display text-[44px] leading-[1.05] font-medium max-[1279px]:text-[40px]">{event.value.title}</h1>
+          <p className="mt-2 text-[16px] text-ink-mute">
+            {cuando}.{donde === '' ? '' : ` ${donde}`}
+          </p>
+        </div>
+        {enGrande === null ? null : (
+          <p className="flex items-baseline gap-1.5">
+            <span className="font-display text-[64px] leading-none font-medium">{enGrande.n}</span>
+            {enGrande.palabra === '' ? null : <span className="text-[15px] text-ink-mute">{enGrande.palabra}</span>}
+          </p>
+        )}
+      </div>
+      <section aria-label={event.value.title} className="rounded-[16px] bg-shell-deep bg-[radial-gradient(140%_80%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_65%)] p-5.5 text-shell-ink min-[768px]:hidden">
+        <p className="text-[14px] text-gold-light">{cuando}</p>
+        <h1 className="mt-1 font-display text-[36px] leading-tight font-medium">
+          {dias > 1 ? `Faltan ${dias} días` : dias === 1 ? 'Es mañana' : dias === 0 ? `Hoy es ${fiesta === 'xv' ? 'la fiesta' : fiesta === 'cumple' ? 'el cumpleaños' : 'la boda'}` : event.value.title}
+        </h1>
+        {donde === '' ? null : <p className="mt-1 text-[15px] text-shell-ink/85">{donde}</p>}
+      </section>
+
+      <article className={`${TARJETA_DESTACADA} flex flex-wrap items-center gap-6 px-7.5 py-7 max-[559px]:p-5.5`}>
+        <div className="min-w-0 flex-[1_1_320px]">
+          <Pill tone="pending">Lo próximo</Pill>
+          <h2 className="mt-2.5 font-display text-[26px] leading-tight font-medium max-[559px]:text-[24px]">{proximo.titulo}</h2>
+          <p className="mt-1.5 text-[15px] text-ink-mute">{proximo.detalle}</p>
+        </div>
+        <div className="flex flex-wrap gap-2.5 max-[559px]:w-full max-[559px]:*:w-full">
+          {proximo.secundaria ? (
+            <span className="max-[559px]:hidden">
+              <PanelButton href={proximo.secundaria.href}>{proximo.secundaria.accion}</PanelButton>
+            </span>
+          ) : null}
+          <PanelButton href={proximo.href} variant="primary">
+            {proximo.accion}
+          </PanelButton>
+        </div>
+      </article>
+
+      <div className="flex flex-wrap items-start gap-10 max-[767px]:gap-7">
+        <section aria-labelledby="invitacion-titulo" className="min-w-0 flex-[1_1_360px] scroll-mt-24" id="invitacion">
+          <div className="mb-3.5 flex items-baseline justify-between gap-3">
+            <h2 className="font-display text-[24px] font-medium max-[767px]:sr-only" id="invitacion-titulo">
+              Cómo va tu invitación
+            </h2>
+            <Link className="inline-flex min-h-11 items-center text-[14px] max-[767px]:hidden" href={`${base}/informe`}>
+              Informe del evento
+            </Link>
+          </div>
+          <div className="flex items-center gap-6">
+            <Aro porcentaje={respondio} />
+            <dl className="grid grid-cols-[auto_auto] gap-x-4.5 gap-y-2 text-[14.5px]">
+              <Fila color="bg-shell-deep" etiqueta="Asisten" valor={vienen} />
+              <Fila color="bg-gold" etiqueta="No vienen" valor={noVienen} />
+              <Fila color="bg-line-panel" destacar={sinResponder > 0} etiqueta="Sin responder" valor={sinResponder} />
+              <dt className="text-ink-mute max-[767px]:hidden">La vieron</dt>
+              <dd className="m-0 [font-variant-numeric:tabular-nums] max-[767px]:hidden">{vistas === null ? '—' : vistas.total === 1 ? '1 vez' : `${vistas.total} veces`}</dd>
+            </dl>
+          </div>
+          {aparato === undefined || camino === undefined ? null : (
+            <p className="mt-4.5 text-[14px] text-ink-mute max-[767px]:hidden">
+              La abren sobre todo desde {aparato.label === 'Móvil' ? 'el celular' : aparato.label === 'Tableta' ? 'la tablet' : 'la computadora'} ({aparato.percent} %) y les llega por {camino.label} ({camino.percent} %).
+            </p>
+          )}
+        </section>
+
+        <section aria-labelledby="semana-titulo" className="min-w-0 flex-[1_1_360px]">
+          <h2 className="mb-1.5 font-display text-[24px] font-medium" id="semana-titulo">
+            Esta semana
+          </h2>
+          {semana.length === 0 ? (
+            <p className="border-t border-line-panel py-4 text-[15px] text-ink-mute">Nada vence esta semana.</p>
+          ) : (
+            <ul>
+              {semana.map((p) => (
+                <li className="flex items-center gap-4 border-t border-line-panel px-1 py-4 max-[767px]:border-t-0 max-[767px]:px-0 max-[767px]:[&+li]:border-t" key={p.clave}>
+                  <svg aria-hidden className="size-[19px] shrink-0 text-gold-deep max-[767px]:hidden" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
+                    <path d="m9 6 6 6-6 6" />
+                  </svg>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium">{p.titulo}</p>
+                    <p className="text-[13.5px] text-ink-mute">{p.detalle}</p>
+                  </div>
+                  <PanelButton external={p.externo ?? false} href={p.href} size="sm">
+                    {p.accion}
+                  </PanelButton>
                 </li>
               ))}
-            </ol>
-          </PanelCard>
-        )
-      })()}
-
-      <div className="mb-5.5 grid grid-cols-2 gap-3.5 max-[859px]:hidden min-[900px]:grid-cols-4">
-        {/* Las cuatro cifras cuentan lo mismo que la barra: personas. Mezclar invitaciones,
-            lugares y personas daba 8 aquí, 27 en la barra y 17 / 30 al lado. */}
-        <StatCard
-          label="Invitados"
-          value={isErr(personasResumen) ? '—' : personasResumen.value.length}
-          icon={<UsersIcon />}
-          change={gruposNuevos > 0 ? { direction: 'up', text: `${gruposNuevos} invitaci${gruposNuevos === 1 ? 'ón' : 'ones'} esta semana` } : undefined}
-          detail={gruposNuevos > 0 ? undefined : `En ${filas.length} invitaci${filas.length === 1 ? 'ón' : 'ones'} · ${t ? t.seatsInvited : 0} lugares`}
-        />
-        <StatCard
-          label="Confirmados"
-          value={t ? t.seatsConfirmed : 0}
-          suffix={`/ ${t ? t.seatsInvited : 0}`}
-          icon={<CheckIcon />}
-          change={respuestasSemana > 0 ? { direction: 'up', text: `${respuestasSemana} esta semana` } : undefined}
-          progress={t && t.seatsInvited > 0 ? t.seatsConfirmed / t.seatsInvited : 0}
-        />
-        <StatCard
-          label="Sin responder"
-          value={pendientes}
-          icon={<ClockIcon />}
-          detail={`invitaci${pendientes === 1 ? 'ón' : 'ones'} de ${filas.length}`}
-          // Cada respuesta de la semana es un pendiente menos: la flecha va hacia abajo,
-          // que en esta tarjeta es la buena noticia.
-          change={respuestasSemana > 0 ? { direction: 'down', text: `${respuestasSemana} esta semana` } : undefined}
-          progress={filas.length > 0 ? pendientes / filas.length : 0}
-        />
-        <StatCard
-          label="Visitas a la invitación"
-          value={vistas ? vistas.total : '—'}
-          detail={vistas && vistas.today > 0 ? undefined : 'Nadie la ha abierto hoy'}
-          change={vistas && vistas.today > 0 ? { direction: 'up', text: `${vistas.today} hoy` } : undefined}
-          icon={<EyeIcon />}
-        />
+            </ul>
+          )}
+        </section>
       </div>
 
-      {/* Lo que contestaron a las preguntas extra (canción, menú, actos), si se hicieron. */}
       {hayPreguntas(preguntas) ? (
-        <PlegableEnMovil titulo="Lo que contestaron">
-        <PanelCard
-          action={<PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Cambiar preguntas</PanelButton>}
-          className="mb-5.5"
-          title="Lo que contestaron"
-        >
-          <LoQueContestaron resultados={await rsvp.preguntas.resultados(event.value.id)} />
+        <PanelCard action={<PanelButton href={`${base}/ajustes`}>Cambiar preguntas</PanelButton>} title="Lo que contestaron">
+          <LoQueContestaron resultados={await rsvp.preguntas.resultados(id)} />
         </PanelCard>
-        </PlegableEnMovil>
       ) : null}
 
-      <PlegableEnMovil
-        resumen={semana.tareas.length + semana.pagos.length === 0 ? 'Sin vencimientos' : `${plural(semana.tareas.length, 'tarea', 'tareas')} · ${plural(semana.pagos.length, 'pago', 'pagos')}`}
-        titulo="Esta semana"
-      >
-      <PanelCard className="mb-5.5" title="Esta semana">
-        <ThisWeekCard evento={{ eventId: event.value.id, eventSlug: event.value.slug }} semana={semana} />
-      </PanelCard>
-      </PlegableEnMovil>
-
-      <PlegableEnMovil
-        resumen={`${plural(vistas?.total ?? 0, 'visita', 'visitas')} · ${plural(actividad.length, 'novedad', 'novedades')}`}
-        titulo="Cómo va tu invitación"
-      >
-      {/* Fila del donut y la actividad, en 1.6fr / 1fr como la maqueta. */}
-      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
-        <PanelCard
-          action={
-            <Link href={`/panel/eventos/${event.value.slug}/informe`}>
-              <PanelCardLink>Informe del evento →</PanelCardLink>
-            </Link>
-          }
-          id="invitacion"
-          title="Cómo va tu invitación"
-        >
-          <div className="grid gap-6 min-[1100px]:grid-cols-2">
-            <div>
-              <DonutChart
-                big={filas.length === 0 ? '—' : `${Math.round((respondieron / filas.length) * 100)}%`}
-                caption="RESPONDIERON"
-                slices={[
-                  { label: 'Asistirán', value: respondieron - noAsisten, color: 'var(--color-sage)' },
-                  { label: 'No podrán', value: noAsisten, color: 'var(--color-danger)' },
-                  { label: 'Sin responder', value: pendientes, color: 'var(--color-gold-light)' },
-                ]}
-              />
-              {isErr(historial) ? (
-                <p className="mt-4 text-[12px] text-danger" role="alert">
-                  No pudimos leer el historial de respuestas. La base no responde; vuelve a intentarlo en un momento.
+      {firmas.length === 0 ? null : (
+        <section aria-labelledby="firmas-titulo">
+          <div aria-hidden className="mb-5.5 h-[3px] border-y border-gold max-[767px]:hidden" />
+          <h2 className="mb-3.5 font-display text-[24px] font-medium max-[767px]:sr-only" id="firmas-titulo">
+            Lo último que escribieron
+          </h2>
+          <div className="grid gap-5 min-[768px]:grid-cols-3">
+            {firmas.slice(0, 3).map((m, i) => (
+              <blockquote className={`m-0 rounded-[14px] border border-line-panel bg-bg-raised px-5 py-4.5 ${i > 0 ? 'max-[767px]:hidden' : ''}`} data-cita key={m.responseId}>
+                <p className="font-display text-[17px] leading-[1.45] italic" data-cita>
+                  «{m.body}»
                 </p>
-              ) : (
-                <TimelineChart bars={historial.value} caption={`RSVPs por día · últimas ${DIAS_DEL_GRAFICO / 7} semanas`} />
-              )}
-            </div>
-            <div className="min-[1100px]:border-l min-[1100px]:border-line-panel min-[1100px]:pl-6">
-              <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">Embudo</h3>
-              {isErr(embudo) ? (
-                <p className="text-[13px] text-danger" role="alert">
-                  No pudimos leer las respuestas. La base no responde; vuelve a intentarlo en un momento.
-                </p>
-              ) : (
-                <EventStats stats={embudo.value} />
-              )}
-            </div>
+                <footer className="mt-2.5 text-[13px] text-ink-mute">
+                  {m.responderName ?? m.groupLabel}, {hace(m.writtenAt, ahora)}
+                </footer>
+              </blockquote>
+            ))}
           </div>
-        </PanelCard>
-
-        <PanelCard
-          action={
-            <Link href={`/panel/eventos/${event.value.slug}/mensajes`}>
-              <PanelCardLink>Ver mensajes →</PanelCardLink>
-            </Link>
-          }
-          title="Actividad reciente"
-        >
-          <ActivityFeed items={actividad} />
-        </PanelCard>
-      </div>
-
-      {/* Quién abre la invitación: desde qué aparato y por dónde le llegó. Antes, en «Estadísticas». */}
-      <div className="mb-5.5 grid items-start gap-4.5 min-[900px]:grid-cols-2">
-        <PanelCard title="Desde qué aparato la abren">
-          <Desglose filas={vistas?.devices ?? null} tone="device" total={vistas?.total ?? 0} />
-        </PanelCard>
-        <PanelCard title="Por dónde les llega">
-          {/* Diez formas de llegar: solo las que tienen visitas, de más a menos. */}
-          <Desglose filas={vistas?.sources ?? null} soloConVisitas tone="gold" total={vistas?.total ?? 0} />
-          <p className="mt-3 text-[11.5px] leading-[1.6] text-ink-mute">
-            Cada forma de envío marca su enlace. Lo enviado antes del 6 de octubre, o pegado a mano, cuenta como «Directo».
-          </p>
-        </PanelCard>
-      </div>
-
-      </PlegableEnMovil>
-
-      <PlegableEnMovil titulo="Invitados recientes">
-      {/* Los invitados recientes ocupan el ancho entero, como en la maqueta. */}
-      <PanelCard
-        action={
-          <Link href={`/panel/eventos/${event.value.slug}/invitados`}>
-            <PanelCardLink>Ver todos →</PanelCardLink>
-          </Link>
-        }
-        className="mb-5.5"
-        title="Invitados recientes"
-      >
-        {isErr(personasResumen) ? (
-          <p className="text-[13px] text-danger" role="alert">
-            No pudimos leer los invitados. La base no responde; vuelve a intentarlo en un momento.
-          </p>
-        ) : recientes.length === 0 ? (
-          <EmptyState
-            action={<PanelButton href={`/panel/eventos/${event.value.slug}/invitados`}>Ir a Invitados</PanelButton>}
-            compact
-            description="Aquí verás a los últimos que cargaste y cómo responden."
-            icon={<UsersIcon />}
-            title="Aún no hay invitados"
-          />
-        ) : (
-          <div className="relative overflow-x-auto">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr>
-                  {['Nombre', 'Invitación', 'RSVP', 'Acompañantes', 'Mesa'].map((columna) => (
-                    <th
-                      key={columna}
-                      className="border-b border-line-panel px-3.5 py-3 text-left font-mono text-[10.5px] font-medium tracking-[0.16em] text-ink-mute uppercase"
-                      scope="col"
-                    >
-                      {columna}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {recientes.map((persona) => {
-                  const grupo = filas.find((f) => f.id === persona.guestGroupId)
-                  const mesa = mesas?.tables.find((m) => m.groups.some((g) => g.id === persona.guestGroupId))
-                  return (
-                    <tr key={persona.id} className="hover:bg-bg-raised">
-                      <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink">
-                        {persona.fullName}
-                        {persona.vip ? (
-                          <span aria-label="VIP" className="ml-1 text-gold" title="VIP">
-                            ★
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
-                        {grupo?.label ?? '—'}
-                      </td>
-                      <td className="border-b border-line-panel px-3.5 py-3">
-                        {persona.attending === 'yes' ? (
-                          <Pill tone="ok">Asistirá</Pill>
-                        ) : persona.attending === 'no' ? (
-                          <Pill tone="no">No podrá</Pill>
-                        ) : persona.attending === 'maybe' ? (
-                          <Pill tone="maybe">Tal vez</Pill>
-                        ) : (
-                          <Pill tone="pending">Pendiente</Pill>
-                        )}
-                      </td>
-                      <td className="border-b border-line-panel px-3.5 py-3 font-mono text-[12px] text-ink-soft">
-                        {persona.isCompanion ? '—' : (acompanantesPorGrupo.get(persona.guestGroupId) ?? 0)}
-                      </td>
-                      <td className="border-b border-line-panel px-3.5 py-3 text-[13px] text-ink-soft">
-                        {mesa?.label ?? '—'}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </PanelCard>
-
-      </PlegableEnMovil>
-
-      {/* Distribución de mesas y acciones rápidas, otra vez 1.6fr / 1fr. */}
-      <PlegableEnMovil resumen={mesas === null ? undefined : `${plural(mesas.tables.length, 'mesa', 'mesas')} · ${plural(mesas.unseated.length, 'invitación', 'invitaciones')} por sentar`} titulo="Mesas y llegada">
-      <div className="grid items-start gap-4.5 min-[900px]:grid-cols-[1.6fr_1fr]">
-        <PanelCard
-          action={
-            <Link href={`/panel/eventos/${event.value.slug}/mesas`}>
-              <PanelCardLink>Editar asignaciones →</PanelCardLink>
-            </Link>
-          }
-          title="Distribución de mesas"
-        >
-          {mesas === null ? (
-            <p className="text-[13px] text-ink-mute">El plan de este evento no incluye el plano del salón.</p>
-          ) : mesas.tables.length === 0 ? (
-            <EmptyState compact description="Cuando crees las mesas, aquí verás cuántos lugares quedan." icon={<TableIcon />} title="Aún no hay mesas" />
-          ) : (
-            <>
-              <ul className="grid grid-cols-4 gap-1.5">
-                {mesas.tables.map((mesa) => {
-                  const cupo = mesa.taken + mesa.free
-                  const lleno = mesa.free === 0
-                  return (
-                    <li
-                      key={mesa.id}
-                      className={`flex aspect-square flex-col items-center justify-center gap-0.5 rounded-lg border text-center ${
-                        lleno
-                          ? 'border-sage bg-sage text-white'
-                          : mesa.taken > 0
-                            ? 'border-line-panel bg-pill-ok text-ink'
-                            : 'border-line-panel bg-bg-raised text-ink'
-                      }`}
-                    >
-                      <span className="font-display text-[16px] font-medium [font-variant-numeric:lining-nums]">
-                        {mesa.label.replace(/^mesa\s*/i, '')}
-                      </span>
-                      <span className="font-mono text-[10px] tracking-[0.2em] opacity-70">
-                        {mesa.taken}/{cupo}
-                      </span>
-                    </li>
-                  )
-                })}
-              </ul>
-              <p className="mt-4 flex justify-between font-mono text-[11px] text-ink-mute">
-                <span>
-                  {mesas.tables.length} mesas · capacidad {mesas.tables.reduce((suma, mesa) => suma + mesa.taken + mesa.free, 0)}
-                </span>
-                <span>{mesas.unseated.length} invitaci{mesas.unseated.length === 1 ? 'ón' : 'ones'} sin mesa</span>
-              </p>
-            </>
-          )}
-        </PanelCard>
-
-        <div className="flex flex-col gap-4.5">
-          {/* Lo único de aquí que no está en otro sitio: la fecha límite. «Acciones rápidas» repetía la
-              cabecera (enviar), la barra (Mi invitación, Ingreso) y se fue (28 de septiembre). */}
-          <div className="rounded-[18px] bg-linear-to-br from-sage to-[var(--color-sage-deep)] p-5 text-white shadow-card">
-            <p className="font-mono text-[10.5px] tracking-[0.16em] opacity-85 uppercase">Recordatorio</p>
-            <p className="mt-1.5 font-display text-[20px] italic">Fecha límite de confirmación</p>
-            <p className="mt-1.5 text-[12px] opacity-85">
-              {new Date(`${event.value.rsvpDeadline}T00:00:00`).toLocaleDateString('es-BO', {
-                day: 'numeric',
-                month: 'long',
-                year: 'numeric',
-              })}
-              {pendientes > 0 ? ` · ${pendientes} invitaci${pendientes === 1 ? 'ón' : 'ones'} sin responder` : ''}
-            </p>
-          </div>
-
-          {/* La tira de llegadas no está en la maqueta: es del ciclo 4 y se queda, pero
-              acomodada a su lenguaje y no ocupando media fila ella sola. */}
-          <PanelCard title="Llegada">
-            <ArrivalStrip tally={llegadas} />
-          </PanelCard>
-        </div>
-      </div>
-      </PlegableEnMovil>
-    </>
+        </section>
+      )}
+    </div>
   )
 }
 
-/**
- * Un desglose de visitas. Con cero visitas lo dice con palabras: una lista de ceros con sus
- * porcentajes se lee como «nadie usa esto», y es distinto de «nadie ha mirado todavía».
- */
-function Desglose({
-  filas,
-  total,
-  tone,
-  soloConVisitas = false,
-}: {
-  filas: readonly Breakdown[] | null
-  total: number
-  tone: 'device' | 'gold'
-  soloConVisitas?: boolean
-}) {
-  if (filas === null) {
-    return (
-      <p className="text-[13px] text-danger" role="alert">
-        No pudimos leer las visitas. La base no responde; vuelve a intentarlo en un momento.
-      </p>
-    )
-  }
-  if (total === 0) return <p className="text-[13px] text-ink-mute">Todavía nadie ha abierto la invitación.</p>
-  // Con muchas formas de llegar, barras solo para las que tienen visitas; las demás se nombran
-  // debajo, para que no parezca que ese camino no existe.
-  const visibles = soloConVisitas ? [...filas].filter((f) => f.count > 0).sort((a, b) => b.count - a.count) : filas
-  const enCero = soloConVisitas ? filas.filter((f) => f.count === 0) : []
+/** El aro de respuestas de la maqueta: esmeralda lo respondido, latón el resto. */
+function Aro({ porcentaje }: { porcentaje: number | null }) {
+  const p = porcentaje ?? 0
+  return (
+    <div className="relative grid size-[150px] shrink-0 place-items-center max-[767px]:size-[104px]">
+      <svg aria-hidden className="absolute inset-0 -rotate-90" viewBox="0 0 42 42">
+        <circle cx="21" cy="21" fill="none" r="17" stroke="var(--color-line-panel)" strokeWidth="4" />
+        <circle cx="21" cy="21" fill="none" pathLength="100" r="17" stroke="var(--color-shell-deep)" strokeDasharray={`${p} ${100 - p}`} strokeWidth="4" />
+        {p > 0 && p < 100 ? <circle cx="21" cy="21" fill="none" pathLength="100" r="17" stroke="var(--color-gold)" strokeDasharray={`${Math.min(6, 100 - p)} ${100 - Math.min(6, 100 - p)}`} strokeDashoffset={-p} strokeWidth="4" /> : null}
+      </svg>
+      <span className="text-center">
+        <span className="block font-display text-[34px] leading-none font-medium max-[767px]:text-[26px]">{porcentaje === null ? '—' : `${porcentaje}%`}</span>
+        <span className="text-[12.5px] text-ink-mute max-[767px]:hidden">respondió</span>
+      </span>
+    </div>
+  )
+}
+
+function Fila({ etiqueta, valor, color, destacar = false }: { etiqueta: string; valor: number; color: string; destacar?: boolean }) {
   return (
     <>
-      <ul className="flex flex-col">
-        {visibles.map((fila) => (
-          <li key={fila.label}>
-            <BarRow label={fila.label} ratio={fila.percent / 100} tone={tone} value={`${fila.percent} %`} />
-          </li>
-        ))}
-      </ul>
-      {enCero.length === 0 ? null : (
-        <p className="mt-2 text-[11.5px] leading-[1.6] text-ink-mute">Sin visitas todavía: {enCero.map((f) => f.label).join(' · ')}.</p>
-      )}
+      <dt className="flex items-center gap-2">
+        <span aria-hidden className={`size-2.5 rounded-[3px] ${color} max-[767px]:hidden`} />
+        {etiqueta}
+      </dt>
+      <dd className={`m-0 font-semibold [font-variant-numeric:tabular-nums] ${destacar ? 'max-[767px]:text-gold-deep' : ''}`}>{valor}</dd>
     </>
   )
 }

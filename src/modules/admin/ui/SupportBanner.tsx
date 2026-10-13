@@ -10,7 +10,7 @@ export function SupportBanner({ clienteEmail }: { clienteEmail: string }) {
   return (
     // En el celular, una sola línea que se va al bajar (la cabecera del evento sí se queda arriba) y la
     // salida a mano; la explicación entera, desde 860 px. Ocupaba 160 px de cada pantalla (6 de octubre).
-    <div className="-mx-4.5 -mt-4.5 mb-4.5 flex items-center justify-between gap-3 border-b border-gold/40 bg-shell-deep px-4.5 py-2 text-white min-[860px]:sticky min-[860px]:top-[env(safe-area-inset-top,0px)] min-[860px]:z-20 min-[860px]:-mx-8 min-[860px]:-mt-7 min-[860px]:flex-wrap min-[860px]:px-8 min-[860px]:py-2.5">
+    <div className="-mx-4 -mt-2.5 mb-3 flex items-center justify-between gap-3 border-b border-gold/40 bg-shell-deep px-4 py-2 text-shell-ink min-[768px]:-mx-8 min-[768px]:-mt-7 min-[768px]:mb-7 min-[768px]:flex-wrap min-[768px]:px-8 min-[768px]:py-2.5">
       <p className="min-w-0 truncate text-[12.5px] min-[860px]:text-[13px] min-[860px]:whitespace-normal" role="status">
         <span className="font-mono text-[10.5px] tracking-[0.25em] text-gold uppercase">Soporte</span> · <span className="hidden min-[860px]:inline">Estás </span>como{' '}
         <strong className="font-normal">{clienteEmail}</strong>

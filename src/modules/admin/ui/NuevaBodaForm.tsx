@@ -3,8 +3,8 @@
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
 import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
-import { useActionState, useId, useState, type ReactNode } from 'react'
-import { CalendarIcon, CheckIcon, EyeIcon, MailIcon } from '@/shared/design/ui/icons'
+import { useActionState, useId, useState } from 'react'
+import { CheckIcon, EyeIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { createWeddingForClientAction, type NuevaBodaState } from '@/app/_acciones/admin/bodas-actions'
 import { FIESTAS, VOCABULARIO, VOCABULARIO_GENERICO } from '@/modules/events'
@@ -36,23 +36,30 @@ export type DesdePedido = {
   readonly telefono: string | null
 }
 
-const FECHA = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
 
 /**
  * Crear el evento de un cliente —boda, XV años o cumpleaños— con su modelo, su plan y su
  * acceso.
  *
- * **Un flujo en cuatro pasos a la vista, con el resumen al lado**, y no un formulario plano:
- * el modelo se elige **mirándolo** (la portada de cada diseño, como en la web que vio el
- * cliente), el plan se elige con su precio, y el resumen dice en todo momento qué se va a
- * crear antes de pulsar. Revelado progresivo por pasos numerados, sin ocultar ninguno: son
- * pocos campos y ver el recorrido entero da confianza.
+ * La página de la maqueta (E51): el cliente, el evento y el diseño —que se elige **mirándolo**, con la portada
+ * de cada modelo— y al lado «Al crear», que dice qué va a pasar antes de pulsar.
  *
  * Los campos se envían con los mismos nombres de siempre (`themeKey`, `title`, `eventDate`,
  * `planSlug`, `clientName`, `clientPhone`, `clientEmail`, `clientPassword`).
  */
-export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly ModeloElegible[]; planes: readonly PlanElegible[]; pedido?: DesdePedido | undefined }) {
+export function NuevaBodaForm({
+  modelos,
+  planes,
+  pedido,
+  cancelar,
+}: {
+  modelos: readonly ModeloElegible[]
+  planes: readonly PlanElegible[]
+  pedido?: DesdePedido | undefined
+  /** Adónde vuelve «Cancelar». */
+  cancelar?: string
+}) {
   const [estado, crear, creando] = useActionState<NuevaBodaState, FormData>(sinCaerse(createWeddingForClientAction), INICIAL)
   const id = useId()
 
@@ -68,79 +75,87 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
   const [sinAcceso, setSinAcceso] = useState(false)
 
   const elegido = modelos.find((m) => m.key === modelo)
-  const planElegido = planes.find((p) => p.slug === plan)
   const visibles = modelos.filter((m) => m.categoria === categoria)
 
+  const TARJETA = 'flex flex-col gap-4 rounded-[16px] border border-line-panel bg-bg-raised p-6.5 max-[559px]:p-5'
+  const TITULO = 'font-display text-[26px] leading-tight font-medium'
+  const nombrePila = (pedido?.nombre ?? '').split(' ')[0] || 'El cliente'
+
   return (
-    <form action={crear} className="grid items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_320px]">
+    // La página de la maqueta (E51): el cliente, el evento y el diseño en sus tarjetas; al lado, «Al crear» con lo que
+    // va a pasar y el botón, fijo en escritorio para tenerlo siempre a la vista.
+    <form action={crear} className="grid items-start gap-6 min-[1100px]:grid-cols-[minmax(0,1fr)_380px]">
       <input name="themeKey" type="hidden" value={modelo} />
       {pedido?.ref ? <input name="orderRef" type="hidden" value={pedido.ref} /> : null}
       {pedido?.consultaId ? <input name="consultaId" type="hidden" value={pedido.consultaId} /> : null}
       <input name="planSlug" type="hidden" value={plan} />
 
-      <div className="flex min-w-0 flex-col gap-7">
-        <Paso numero={1} titulo="El diseño que eligió" ayuda="El tipo de evento lo decide el modelo. Se puede cambiar después sin perder lo escrito.">
-          <div className="flex flex-wrap gap-1.5" role="group" aria-label="Tipo de evento">
-            {categorias.map((c) => (
-              <button
-                aria-pressed={categoria === c}
-                className={`cursor-pointer rounded-[var(--radius-pill)] border px-4 py-2 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors max-[859px]:min-h-11 ${
-                  categoria === c ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink-soft hover:border-ink hover:text-ink'
-                }`}
-                key={c}
-                onClick={() => {
+      <div className="flex min-w-0 flex-col gap-6">
+        <section aria-labelledby={`${id}-cliente`} className={TARJETA}>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className={TITULO} id={`${id}-cliente`}>
+              El cliente
+            </h2>
+            {/* Un solo alta para los dos casos. Sin acceso, el evento lo lleva el atelier y nadie más entra. */}
+            <label className="flex min-h-11 cursor-pointer items-center gap-2.5 text-[14px] text-ink-soft">
+              <input checked={sinAcceso} className="size-4 accent-shell-deep" name="sinAcceso" onChange={(e) => setSinAcceso(e.target.checked)} type="checkbox" />
+              Lo llevo yo, sin acceso del cliente
+            </label>
+          </div>
+          <div className="grid gap-4 min-[560px]:grid-cols-2">
+            {sinAcceso ? null : (
+              <>
+                <div className="flex flex-col gap-2">
+                  <label className={LABEL_CLASS} htmlFor={`${id}-nombre-cliente`}>
+                    Nombre
+                  </label>
+                  <input autoComplete="off" className={FIELD_CLASS} defaultValue={pedido?.nombre} id={`${id}-nombre-cliente`} maxLength={160} name="clientName" required />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
+                    Correo
+                  </label>
+                  <input autoComplete="off" className={FIELD_CLASS} id={`${id}-correo`} name="clientEmail" onChange={(e) => setCorreo(e.target.value)} required type="email" value={correo} />
+                  <span className="text-[13px] text-ink-mute">Le llega su acceso por correo</span>
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className={LABEL_CLASS} htmlFor={`${id}-telefono-cliente`}>
+                    Teléfono
+                  </label>
+                  <input autoComplete="off" className={FIELD_CLASS} defaultValue={pedido?.telefono ?? undefined} id={`${id}-telefono-cliente`} inputMode="tel" name="clientPhone" />
+                </div>
+              </>
+            )}
+            <div className="flex flex-col gap-2">
+              <label className={LABEL_CLASS} htmlFor={`${id}-fiesta`}>
+                Fiesta
+              </label>
+              <select
+                className={FIELD_CLASS}
+                id={`${id}-fiesta`}
+                onChange={(e) => {
+                  const c = e.target.value
                   setCategoria(c)
                   const primero = modelos.find((m) => m.categoria === c)
                   if (primero && elegido?.categoria !== c) setModelo(primero.key)
                 }}
-                type="button"
+                value={categoria}
               >
-                {c} · {modelos.filter((m) => m.categoria === c).length}
-              </button>
-            ))}
+                {categorias.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+        </section>
 
-          <div className="grid grid-cols-2 gap-3 min-[560px]:grid-cols-[repeat(auto-fill,minmax(140px,1fr))]" role="radiogroup" aria-label="Modelo">
-            {visibles.map((m) => {
-              const activo = m.key === modelo
-              return (
-                <div className="group relative" key={m.key}>
-                  <button
-                    aria-checked={activo}
-                    className={`block w-full cursor-pointer overflow-hidden rounded-[14px] border bg-white text-left transition-all ${
-                      activo ? 'border-ink shadow-float ring-2 ring-ink' : 'border-line-panel hover:-translate-y-0.5 hover:shadow-card'
-                    }`}
-                    onClick={() => setModelo(m.key)}
-                    role="radio"
-                    type="button"
-                  >
-                    <span className="relative block aspect-[3/4] bg-bg-sunken">
-                      <Image alt="" className="object-cover object-top" fill sizes="160px" src={`/templates/${m.key}.avif`} />
-                      {activo ? (
-                        <span className="absolute top-2 left-2 grid size-6 place-items-center rounded-full bg-ink text-white">
-                          <CheckIcon className="size-3.5" />
-                        </span>
-                      ) : null}
-                    </span>
-                    <span className="block px-3 py-2 font-display text-[15px] leading-tight text-ink">{m.label}</span>
-                  </button>
-                  <a
-                    aria-label={`Ver el modelo ${m.label} en una pestaña nueva`}
-                    className="absolute top-1 right-1 grid size-7 place-items-center rounded-full bg-white/90 text-ink-soft opacity-0 max-[859px]:size-11 max-[859px]:opacity-100 shadow-card transition-opacity group-hover:opacity-100 focus-visible:opacity-100"
-                    href={`/modelos/es/${m.key}`}
-                    rel="noopener noreferrer"
-                    target="_blank"
-                  >
-                    <EyeIcon className="size-3.5" />
-                  </a>
-                </div>
-              )
-            })}
-          </div>
-        </Paso>
-
-        <Paso numero={2} titulo="El evento">
-          <div className="grid gap-4 min-[560px]:grid-cols-[minmax(0,1fr)_220px]">
+        <section aria-labelledby={`${id}-evento`} className={TARJETA}>
+          <h2 className={TITULO} id={`${id}-evento`}>
+            El evento
+          </h2>
+          <div className="grid gap-4 min-[560px]:grid-cols-2">
             <div className="flex flex-col gap-2">
               <label className={LABEL_CLASS} htmlFor={`${id}-titulo`}>
                 Nombre del evento
@@ -159,106 +174,83 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
             </div>
             <div className="flex flex-col gap-2">
               <label className={LABEL_CLASS} htmlFor={`${id}-fecha`}>
-                Fecha del evento
+                Fecha
               </label>
               <CampoFecha id={`${id}-fecha`} name="eventDate" onChange={setFecha} required valor={fecha} />
             </div>
+            <div className="flex flex-col gap-2">
+              <label className={LABEL_CLASS} htmlFor={`${id}-plan`}>
+                Plan
+              </label>
+              <select className={FIELD_CLASS} id={`${id}-plan`} onChange={(e) => setPlan(e.target.value)} value={plan}>
+                {planes.map((p) => (
+                  <option key={p.slug} value={p.slug}>
+                    {p.nombre}, {p.precio}
+                  </option>
+                ))}
+              </select>
+              <span className="text-[13px] text-ink-mute">Decide qué trae su panel. Cobrado por fuera, no suma en Ingresos.</span>
+            </div>
           </div>
-        </Paso>
+        </section>
 
-        <Paso numero={3} titulo="El plan que compró" ayuda="Decide qué trae su panel: mesa de regalos, modo puerta, tope de invitados.">
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3" role="radiogroup" aria-label="Plan">
-            {planes.map((p) => {
-              const activo = p.slug === plan
+        <section aria-labelledby={`${id}-diseno`} className={TARJETA}>
+          <h2 className={TITULO} id={`${id}-diseno`}>
+            El diseño
+          </h2>
+          <div className="grid grid-cols-2 gap-3.5 min-[560px]:grid-cols-[repeat(auto-fill,minmax(130px,1fr))]" role="radiogroup" aria-label="Modelo">
+            {visibles.map((m) => {
+              const activo = m.key === modelo
               return (
-                <button
-                  aria-checked={activo}
-                  className={`flex cursor-pointer flex-col gap-1 rounded-[14px] border p-4 text-left transition-all ${
-                    activo ? 'border-ink bg-ink text-white shadow-float' : 'border-line-panel bg-white text-ink hover:border-ink'
-                  }`}
-                  key={p.slug}
-                  onClick={() => setPlan(p.slug)}
-                  role="radio"
-                  type="button"
-                >
-                  <span className="font-display text-[19px] leading-tight">{p.nombre}</span>
-                  <span className={`font-mono text-[11px] tracking-[0.1em] ${activo ? 'text-white/75' : 'text-ink-mute'}`}>{p.precio}</span>
-                </button>
+                <div className="group relative" key={m.key}>
+                  <button aria-checked={activo} className="block w-full cursor-pointer text-left" onClick={() => setModelo(m.key)} role="radio" type="button">
+                    <span className={`relative block aspect-[13/20] overflow-hidden rounded-[10px] bg-bg-sunken transition-shadow ${activo ? 'ring-[3px] ring-gold' : 'ring-1 ring-line-panel group-hover:ring-gold/60'}`}>
+                      <Image alt="" className="object-cover object-top" fill sizes="160px" src={`/templates/${m.key}.avif`} />
+                    </span>
+                    <span className={`mt-2 block text-[14.5px] leading-tight ${activo ? 'font-semibold' : 'font-medium'}`}>{m.label}</span>
+                  </button>
+                  <a
+                    aria-label={`Ver el modelo ${m.label} en una pestaña nueva`}
+                    className="absolute top-1.5 right-1.5 grid size-8 place-items-center rounded-full bg-white/90 text-ink-soft opacity-0 shadow-card transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-[859px]:size-11 max-[859px]:opacity-100"
+                    href={`/modelos/es/${m.key}`}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    <EyeIcon className="size-3.5" />
+                  </a>
+                </div>
               )
             })}
           </div>
-        </Paso>
-
-        <Paso numero={4} titulo="Su acceso al panel" ayuda="Le llega su acceso por correo con una contraseña provisional que se genera sola; la primera vez que entre elige la suya.">
-          {/* Un solo alta para los dos casos. Sin acceso, el evento lo lleva el atelier y nadie más entra. */}
-          <label className="flex cursor-pointer items-start gap-3 rounded-[14px] border border-line-panel bg-white px-4 py-3 has-[:checked]:border-ink">
-            <input checked={sinAcceso} className="mt-1 accent-ink" name="sinAcceso" onChange={(e) => setSinAcceso(e.target.checked)} type="checkbox" />
-            <span>
-              <span className="block text-[13.5px] text-ink">Lo llevo yo, sin acceso del cliente</span>
-              <span className="block text-[12px] text-ink-mute">El cliente no entra al panel. Se le puede dar acceso después, desde la ficha del evento.</span>
-            </span>
-          </label>
-          {sinAcceso ? null : (
-            <div className="grid gap-4 min-[560px]:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <label className={LABEL_CLASS} htmlFor={`${id}-nombre-cliente`}>
-                  Nombre del cliente
-                </label>
-                <input autoComplete="off" className={FIELD_CLASS} id={`${id}-nombre-cliente`} maxLength={160} defaultValue={pedido?.nombre} name="clientName" placeholder="María Rojas" required />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className={LABEL_CLASS} htmlFor={`${id}-telefono-cliente`}>
-                  WhatsApp del cliente
-                </label>
-                <input autoComplete="off" className={FIELD_CLASS} id={`${id}-telefono-cliente`} defaultValue={pedido?.telefono ?? undefined} inputMode="tel" name="clientPhone" placeholder="+591 700 12345" />
-              </div>
-              <div className="flex flex-col gap-2 min-[560px]:col-span-2">
-                <label className={LABEL_CLASS} htmlFor={`${id}-correo`}>
-                  Correo del cliente
-                </label>
-                <input
-                  autoComplete="off"
-                  className={FIELD_CLASS}
-                  id={`${id}-correo`}
-                  name="clientEmail"
-                  onChange={(e) => setCorreo(e.target.value)}
-                  placeholder="cliente@correo.com"
-                  required
-                  type="email"
-                  value={correo}
-                />
-                <p className="text-[11px] leading-[1.5] text-ink-mute">Si ese correo ya tiene cuenta, se le suma este evento sin tocarle la contraseña.</p>
-              </div>
-            </div>
-          )}
-        </Paso>
+        </section>
       </div>
 
-      {/* El resumen: lo que se va a crear, con la portada del modelo. Fijo al lado en
-          escritorio para que el botón esté siempre a la vista. */}
-      <aside className="flex flex-col overflow-hidden rounded-[18px] border border-line-panel bg-white shadow-card min-[1100px]:sticky min-[1100px]:top-6">
-        <div className="relative aspect-[4/3] bg-bg-sunken">
-          {elegido ? <Image alt="" className="object-cover object-top" fill sizes="320px" src={`/templates/${elegido.key}.avif`} /> : null}
-          <span className="absolute inset-x-0 bottom-0 bg-linear-to-t from-shell-deep/85 to-transparent px-4 pt-10 pb-3 text-white">
-            <span className="block font-mono text-[10.5px] tracking-[0.16em] uppercase opacity-80">{elegido?.categoria}</span>
-            <span className="block font-display text-[22px] leading-tight">{elegido?.label}</span>
-          </span>
-        </div>
-        <dl className="flex flex-col gap-3 p-5 text-[13px]">
-          <Resumen etiqueta="Evento" vacio={titulo.trim() === ''}>
-            {titulo.trim() || 'Sin nombre todavía'}
-          </Resumen>
-          <Resumen etiqueta="Fecha" icono={<CalendarIcon className="size-3.5" />} vacio={fecha === ''}>
-            {fecha === '' ? 'Sin fecha' : FECHA.format(new Date(`${fecha}T00:00:00Z`))}
-          </Resumen>
-          <Resumen etiqueta="Plan" vacio={planElegido === undefined}>
-            {planElegido ? `${planElegido.nombre} · ${planElegido.precio}` : 'Sin plan'}
-          </Resumen>
-          <Resumen etiqueta="Acceso" icono={<MailIcon className="size-3.5" />} vacio={!sinAcceso && correo.trim() === ''}>
-            {sinAcceso ? 'Lo llevas tú, sin acceso' : correo.trim() || 'Sin correo'}
-          </Resumen>
-        </dl>
-        <div className="flex flex-col gap-3 border-t border-line-panel p-5">
+      <aside className="rounded-[18px] border border-gold/45 bg-bg-raised p-2 min-[1100px]:sticky min-[1100px]:top-24">
+        <div className="flex flex-col gap-4 rounded-[12px] border border-gold/30 p-5.5">
+          <h2 className={TITULO}>Al crear</h2>
+          <ul className="flex flex-col gap-3 text-[14.5px] leading-[1.5]">
+            <li className="flex gap-2.5">
+              <CheckIcon className="mt-1 size-3.5 shrink-0 text-sage-deep" />
+              El evento nace en borrador con el diseño {elegido?.label ?? 'elegido'}
+            </li>
+            {sinAcceso ? (
+              <li className="flex gap-2.5">
+                <CheckIcon className="mt-1 size-3.5 shrink-0 text-sage-deep" />
+                Lo llevas tú: nadie más entra hasta que le des acceso
+              </li>
+            ) : (
+              <>
+                <li className="flex gap-2.5">
+                  <CheckIcon className="mt-1 size-3.5 shrink-0 text-sage-deep" />
+                  {pedido === undefined ? 'El cliente' : nombrePila} recibe su acceso con una contraseña provisional
+                </li>
+                <li className="flex gap-2.5">
+                  <CheckIcon className="mt-1 size-3.5 shrink-0 text-sage-deep" />
+                  Al entrar elige la suya y escribe su invitación
+                </li>
+              </>
+            )}
+          </ul>
           <ActionFeedback errorsOnly state={estado} />
           {estado.status === 'success' ? (
             <PanelAlert tone="ok">
@@ -268,42 +260,17 @@ export function NuevaBodaForm({ modelos, planes, pedido }: { modelos: readonly M
               </Link>
             </PanelAlert>
           ) : null}
-          {/* Creado, el botón no vuelve a crear: otro clic sería un evento duplicado. Para otro evento,
-              «+ Crear» de arriba. */}
-          <SubmitButton className="w-full" disabled={estado.status === 'success'} variant="primary" pending={creando} pendingLabel={'Creando…'}>
-            {estado.status === 'success' ? 'Creado ✓' : sinAcceso ? 'Crear el evento' : 'Crear el evento y su acceso'}
+          {/* Creado, el botón no vuelve a crear: otro clic sería un evento duplicado. */}
+          <SubmitButton className="w-full" disabled={estado.status === 'success'} pending={creando} pendingLabel={'Creando…'} variant="primary">
+            {estado.status === 'success' ? 'Creado ✓' : sinAcceso ? 'Crear el evento' : 'Crear el evento y dar acceso'}
           </SubmitButton>
+          {cancelar === undefined ? null : (
+            <Link className="flex min-h-11 items-center justify-center text-[15px] font-medium text-gold-deep no-underline hover:underline" href={cancelar}>
+              Cancelar
+            </Link>
+          )}
         </div>
       </aside>
     </form>
-  )
-}
-
-function Paso({ numero, titulo, ayuda, children }: { numero: number; titulo: string; ayuda?: string; children: ReactNode }) {
-  return (
-    <section className="flex gap-3 min-[560px]:gap-4">
-      <span className="grid size-7 shrink-0 place-items-center rounded-full border border-line-panel-strong bg-white font-display text-[15px] min-[560px]:size-8 min-[560px]:text-[16px] text-ink [font-variant-numeric:lining-nums]">
-        {numero}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-3.5 pt-0.5">
-        <div>
-          <h3 className="font-display text-[20px] leading-tight text-ink">{titulo}</h3>
-          {ayuda ? <p className="mt-1 text-[12px] leading-[1.6] text-ink-mute">{ayuda}</p> : null}
-        </div>
-        {children}
-      </div>
-    </section>
-  )
-}
-
-function Resumen({ etiqueta, icono, vacio, children }: { etiqueta: string; icono?: ReactNode; vacio: boolean; children: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <dt className={LABEL_CLASS}>{etiqueta}</dt>
-      <dd className={`flex items-center gap-1.5 first-letter:uppercase ${vacio ? 'text-ink-mute italic' : 'text-ink'}`}>
-        {icono}
-        <span className="min-w-0 truncate first-letter:uppercase">{children}</span>
-      </dd>
-    </div>
   )
 }

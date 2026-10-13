@@ -19,12 +19,14 @@ import type { GuestGroupRowView } from '@/modules/guests/ui/invitation-row'
 import { requireSession } from '@/app/_acciones/sesion'
 import { ReminderQueue } from '@/modules/reminders/ui/ReminderQueue'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard, PanelCardLink, StatCard } from '@/shared/design/ui/panel/cards'
-import { CheckIcon, ClockIcon, MailIcon, UploadIcon, UsersIcon } from '@/shared/design/ui/icons'
+import { PanelCard } from '@/shared/design/ui/panel/cards'
+import { PlusIcon, SendIcon, UploadIcon, UsersIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
-import { BotonFlotante, CifrasEnFila } from '@/shared/design/ui/panel/movil'
+import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
+import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
+import { portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
 
 export const metadata = { title: 'Invitados' }
 
@@ -146,52 +148,68 @@ export default async function InvitadosPage({
     .filter((fila) => fila.revokedAt === null || fila.id === enFoco?.groupId)
     .map((fila) => ({ id: fila.id, label: fila.label }))
 
+  const vivas = filas.filter((f) => f.revokedAt === null)
+  const enviadas = vivas.filter((f) => (f.invitationSentAt ?? null) !== null).length
+  const si = filasPersona.filter((p) => p.attending === 'yes').length
+  const no = filasPersona.filter((p) => p.attending === 'no').length
+  const porResponder = filasPersona.length - si - no
+  const conImportar = !isErr(capacidad) && capacidad.value.csvImport
+
   return (
     <>
+      {/* Maqueta «Esmeralda y Latón» (E09 · T04 · M08): cuántos y en cuántas invitaciones, y las tres acciones. */}
       <PanelHeader
         actions={
           <>
+            <PanelButton className="max-[767px]:hidden" href={abierto === 'importar' ? base : `${base}?panel=importar`}>
+              Importar lista
+            </PanelButton>
             {filas.length === 0 ? null : (
-              // En el celular está al centro de la barra de abajo: aquí sería repetirlo.
-              <PanelButton className="max-[859px]:hidden" href={abierto === 'envio' ? base : `${base}?panel=envio`}>
-                <MailIcon className="size-3.5" /> Enviar invitaciones
+              <PanelButton className="max-[767px]:hidden" href={abierto === 'envio' ? base : `${base}?panel=envio`}>
+                <SendIcon className="size-4" /> Enviar invitaciones
               </PanelButton>
             )}
-            {/* En el celular, «+ Añadir» flota sobre la barra de abajo (`BotonFlotante`). */}
-            <PanelButton className="max-[859px]:hidden" href={`${base}?panel=alta`} variant="primary">
-              + Añadir invitado
+            <PanelButton className="max-[767px]:hidden" href={`${base}?panel=alta`} variant="primary">
+              <PlusIcon className="size-4" /> Añadir invitado
             </PanelButton>
           </>
         }
         accionesSoloEnEscritorio
-        kicker={`${filasPersona.length} ${filasPersona.length === 1 ? 'persona' : 'personas'} · ${filas.length} ${filas.length === 1 ? 'invitación' : 'invitaciones'}`}
+        meta={
+          filasPersona.length === 0
+            ? 'Cada invitación tiene su enlace y su pase.'
+            : `${filasPersona.length} ${filasPersona.length === 1 ? 'persona' : 'personas'} en ${filas.length} ${filas.length === 1 ? 'invitación' : 'invitaciones'}. Cada invitación tiene su enlace y su pase.`
+        }
         menu={
           <>
-            {/* Con la lista vacía, una sola salida: añadir. Exportar o enviar nada solo despista.
-                La lista descargable es del plan Imperial (documento de cambios): va con importar. */}
-            {filas.length === 0 || isErr(capacidad) || !capacidad.value.csvImport ? null : (
-            <ExportCsvButton
-              eventSlug={event.value.slug}
-              people={filasPersona.map((p) => ({
-                fullName: p.fullName,
-                groupLabel: p.groupLabel,
-                attending: p.attending,
-                isCompanion: p.isCompanion,
-                dietaryNote: p.dietaryNote,
-                vip: p.vip,
-                tableLabel: p.tableLabel,
-              }))}
-              rows={filas}
-            />
+            {/* La lista descargable es del plan que trae importar (documento de cambios). */}
+            {filas.length === 0 || !conImportar ? null : (
+              <ExportCsvButton
+                eventSlug={event.value.slug}
+                people={filasPersona.map((p) => ({
+                  fullName: p.fullName,
+                  groupLabel: p.groupLabel,
+                  attending: p.attending,
+                  isCompanion: p.isCompanion,
+                  dietaryNote: p.dietaryNote,
+                  vip: p.vip,
+                  tableLabel: p.tableLabel,
+                }))}
+                rows={filas}
+              />
             )}
-            <PanelButton href={abierto === 'importar' ? base : `${base}?panel=importar`}>
-              <UploadIcon className="size-3.5" /> Importar CSV
+            <PanelButton className="min-[768px]:hidden" href={abierto === 'importar' ? base : `${base}?panel=importar`}>
+              <UploadIcon className="size-3.5" /> Importar lista
             </PanelButton>
           </>
         }
         title="Invitados"
       />
-      <BotonFlotante href={`${base}?panel=alta`}>+ Añadir</BotonFlotante>
+      <AccionDeLaIsla>
+        <Link aria-label="Añadir invitado" className="grid size-11 place-items-center rounded-xl text-ink" href={`${base}?panel=alta`}>
+          <PlusIcon className="size-6" />
+        </Link>
+      </AccionDeLaIsla>
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
       {/* «+ Añadir invitado» abre el diálogo de la maqueta, con sus nueve campos. */}
@@ -249,13 +267,14 @@ export default async function InvitadosPage({
         />
       ) : null}
 
-      <div className="flex flex-col gap-4.5">
+      <div className="flex flex-col gap-8 max-[767px]:gap-5">
         {/* «Enviar invitaciones» es un panel lateral: repartir es ir invitado tras invitado
             mirando la lista, y un bloque aquí la empujaba hacia abajo. */}
         {abierto === 'envio' ? (
           <DeliveryPanel
             closeHref={base}
             eventLocale={event.value.locale}
+            portada={portadaParaCompartir(event.value.themeKey)}
             eventSlug={event.value.slug}
             eventTitle={event.value.title}
             rows={filas.map((fila) => ({
@@ -276,38 +295,16 @@ export default async function InvitadosPage({
           />
         ) : null}
 
-        {abierto === 'importar' ? (
-          <PanelCard
-            action={
-              <Link href={base}>
-                <PanelCardLink>Cerrar ✕</PanelCardLink>
-              </Link>
-            }
-            title="Importar desde CSV"
+        {/* Recordar (E55): uno por uno, por WhatsApp; lo que se anota sale de la cola. Lo abre «Recordar» de cada fila. */}
+        {panel === 'recordar' ? (
+          <PanelDialog
+            closeHref={base}
+            descripcion="Uno por uno, por WhatsApp. Te vamos marcando a quién ya le escribiste."
+            title={isErr(cola) || cola.value.length === 0 ? 'Recordatorios' : `Recordar a ${cola.value.length} ${cola.value.length === 1 ? 'invitación' : 'invitaciones'}`}
+            width={560}
           >
-            {/* Importar es de algunos planes. Se ofrece igual y dice por qué no: es algo que se
-                consigue subiendo de plan, y la acción lo corta también en el servidor. */}
-            {isErr(capacidad) || !capacidad.value.csvImport ? (
-              <p className="text-[13px] leading-[1.7] text-ink-soft">
-                Tu plan no incluye importar la lista de invitados. Puedes cargarlos uno a uno, o subir a un plan que
-                lo incluya.
-              </p>
-            ) : (
-              <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
-            )}
-          </PanelCard>
-        ) : null}
-
-        {/* Recordatorios: el servidor calcula a quién toca, el atelier despacha. No es
-            una bandeja de salida y la pantalla no lo llama así.
-            **La tarjeta solo existe cuando hay algo que hacer.** Una tarjeta permanente
-            que casi siempre dice «nadie por recordar hoy» es un hueco fijo que separa la
-            cabecera de la lista, y se deja de mirar justo el día que sí trae a alguien. */}
-        {!isErr(cola) && cola.value.length === 0 ? null : (
-          // En el celular, después de la lista: lo primero es la lista (maqueta 2 del panel móvil).
-          <PanelCard className="max-[859px]:order-1" title="Recordatorios">
             {isErr(cola) ? (
-              <p className="text-[13px] text-danger" role="alert">
+              <p className="text-[14px] text-danger" role="alert">
                 No pudimos calcular la cola de recordatorios. La base no responde; vuelve a intentarlo en un momento.
               </p>
             ) : (
@@ -319,41 +316,52 @@ export default async function InvitadosPage({
                 rows={cola.value}
               />
             )}
-          </PanelCard>
-        )}
-
-        {/* Las cifras de un vistazo, como los tableros de Joy o Zola: cuántos, quién confirmó, quién
-            falta y cuántas invitaciones salieron. */}
-        {filasPersona.length === 0 ? null : (() => {
-          const total = filasPersona.length
-          const si = filasPersona.filter((p) => p.attending === 'yes').length
-          const pendientes = filasPersona.filter((p) => p.attending === null || p.attending === 'maybe').length
-          const no = filasPersona.filter((p) => p.attending === 'no').length
-          const vivas = filas.filter((f) => f.revokedAt === null)
-          const enviadas = vivas.filter((f) => f.invitationSentAt !== null && f.invitationSentAt !== undefined).length
-          return (
-            <>
-            <CifrasEnFila
-              cifras={[
-                { valor: total, rotulo: 'Invitados' },
-                { valor: si, rotulo: 'Vienen' },
-                { valor: pendientes, rotulo: 'Por responder' },
-                { valor: `${enviadas}/${vivas.length}`, rotulo: 'Enviadas' },
-              ]}
-            />
-            <div className="grid grid-cols-2 gap-3 max-[859px]:hidden min-[900px]:grid-cols-4 min-[900px]:gap-4.5">
-              <StatCard detail={`${vivas.length} ${vivas.length === 1 ? 'invitación' : 'invitaciones'}`} icon={<UsersIcon />} label="Invitados" value={total} />
-              <StatCard detail={`${Math.round((si / total) * 100)} % del total`} icon={<CheckIcon />} label="Confirmados" progress={si / total} value={si} />
-              <StatCard detail={no > 0 ? `${no} no ${no === 1 ? 'viene' : 'vienen'}` : 'sin responder o tal vez'} icon={<ClockIcon />} label="Por responder" value={pendientes} />
-              <StatCard detail={enviadas === vivas.length ? 'Todas enviadas' : `Faltan ${vivas.length - enviadas}`} icon={<MailIcon />} label="Enviadas" progress={vivas.length === 0 ? 0 : enviadas / vivas.length} suffix={`/ ${vivas.length}`} value={enviadas} />
+            <div className="mt-5 flex justify-end">
+              <PanelButton href={base}>Terminar por hoy</PanelButton>
             </div>
-            </>
-          )
-        })()}
+          </PanelDialog>
+        ) : null}
+
+        {abierto === 'importar' ? (
+          <PanelDialog closeHref={base} descripcion="Revisa antes de cargar: cada fila dice si entró o por qué no." title="Importar tu lista" width={640}>
+            {/* Importar es de algunos planes. Se ofrece igual y dice por qué no: es algo que se
+                consigue subiendo de plan, y la acción lo corta también en el servidor. */}
+            {isErr(capacidad) || !capacidad.value.csvImport ? (
+              <p className="text-[13px] leading-[1.7] text-ink-soft">
+                Tu plan no incluye importar la lista de invitados. Puedes cargarlos uno a uno, o subir a un plan que
+                lo incluya.
+              </p>
+            ) : (
+              <ImportPanel eventId={event.value.id} eventSlug={event.value.slug} eventTitle={event.value.title} />
+            )}
+          </PanelDialog>
+        ) : null}
+
+        {/* Las cifras de la maqueta: una tira con filetes, sin tarjetas. En el celular, tres y el botón de enviar lo que falta. */}
+        {filasPersona.length === 0 ? null : (
+          <>
+            <dl className="flex flex-wrap max-[767px]:hidden">
+              <Cifra etiqueta="Invitados" valor={filasPersona.length} primera />
+              <Cifra etiqueta="Asistirán" valor={si} />
+              <Cifra detalle={no > 0 ? `${no} no ${no === 1 ? 'viene' : 'vienen'}` : undefined} etiqueta="Por responder" valor={porResponder} />
+              <Cifra etiqueta="Enviadas" valor={enviadas} de={vivas.length} />
+            </dl>
+            <dl className="grid grid-cols-3 border-y border-line-panel min-[768px]:hidden">
+              <CifraMovil etiqueta="asisten" valor={si} />
+              <CifraMovil destacar etiqueta="sin responder" valor={porResponder} />
+              <CifraMovil etiqueta="sin enviar" valor={vivas.length - enviadas} />
+            </dl>
+            {vivas.length - enviadas > 0 ? (
+              <PanelButton className="w-full min-[768px]:hidden" href={`${base}?panel=envio`} variant="primary">
+                <SendIcon className="size-4.5" /> {vivas.length - enviadas === 1 ? 'Enviar la que falta' : `Enviar las ${vivas.length - enviadas} que faltan`}
+              </PanelButton>
+            ) : null}
+          </>
+        )}
 
         {/* Se cargan invitados, no grupos: el grupo es el enlace que va por debajo y aquí
             no se enseña (pedido por el usuario el 16 de septiembre). */}
-        <PanelCard title="Lista de invitados">
+        <section aria-label="Lista de invitados">
           {isErr(personas) ? (
             // Pintar «todavía no hay personas» cuando la lectura falló no es un error
             // invisible: es un error que **miente**. El atelier daría por vacía una
@@ -362,21 +370,59 @@ export default async function InvitadosPage({
               No pudimos leer las personas. La base no responde; vuelve a intentarlo en un momento.
             </p>
           ) : filasPersona.length === 0 ? (
-            <EmptyState
-              action={<PanelButton href={`${base}?panel=alta`} variant="primary">Añadir el primer invitado</PanelButton>}
-              description="Carga a cada invitado con sus acompañantes. Cada uno recibe su propio enlace y su pase de entrada."
-              icon={<UsersIcon />}
-              title="Tu lista de invitados empieza aquí"
-            />
+            <div className="flex flex-col gap-3">
+              <EmptyState
+                action={
+                  <>
+                    <PanelButton href={`${base}?panel=importar`}>Importar lista</PanelButton>
+                    <PanelButton href={`${base}?panel=alta`} variant="primary">
+                      <PlusIcon className="size-4" /> Añadir el primero
+                    </PanelButton>
+                  </>
+                }
+                description="Añade al primero con su nombre y sus acompañantes, o sube tu lista de Excel de una vez."
+                icon={<UsersIcon />}
+                title="Todavía no hay invitados"
+              />
+            </div>
           ) : (
             <PeopleTable eventSlug={event.value.slug} rows={filasPersona} />
           )}
-        </PanelCard>
+        </section>
 
-        <PanelCard className="max-[859px]:order-2" title="Enlace general">
+        {/* Recordatorios: el servidor calcula a quién toca, el atelier despacha. No es
+            una bandeja de salida y la pantalla no lo llama así.
+            **La tarjeta solo existe cuando hay algo que hacer.** Una tarjeta permanente
+            que casi siempre dice «nadie por recordar hoy» es un hueco fijo que separa la
+            cabecera de la lista, y se deja de mirar justo el día que sí trae a alguien. */}
+        <PanelCard title="Enlace general">
           <EnlaceGeneral eventId={event.value.id} eventSlug={event.value.slug} url={enlaceGeneral === null ? null : `${env.SITE_URL.replace(/\/+$/, '')}/abierta/${enlaceGeneral}`} />
         </PanelCard>
       </div>
     </>
+  )
+}
+
+/** Una cifra de la tira de la maqueta (`.kpi`): rótulo, número en Bodoni y, si hace falta, su línea. */
+function Cifra({ etiqueta, valor, de, detalle, primera = false }: { etiqueta: string; valor: number; de?: number; detalle?: string | undefined; primera?: boolean }) {
+  return (
+    <div className={`flex-[1_1_140px] ${primera ? '' : 'border-l border-line-panel pl-6'}`}>
+      <dt className="text-[13.5px] text-ink-mute">{etiqueta}</dt>
+      <dd className="m-0 font-display text-[32px] leading-[1.15] font-medium">
+        {valor}
+        {de === undefined ? null : <span className="font-sans text-[16px] font-normal text-ink-mute"> de {de}</span>}
+      </dd>
+      {detalle === undefined ? null : <dd className="m-0 text-[13px] text-pill-pending-ink">{detalle}</dd>}
+    </div>
+  )
+}
+
+/** Las tres cifras del celular (maqueta M08), una al lado de otra. */
+function CifraMovil({ etiqueta, valor, destacar = false }: { etiqueta: string; valor: number; destacar?: boolean }) {
+  return (
+    <div className="border-l border-line-panel px-3.5 py-3 first:border-l-0 first:pl-0">
+      <dd className={`m-0 font-display text-[32px] leading-tight font-medium ${destacar && valor > 0 ? 'text-gold-deep' : ''}`}>{valor}</dd>
+      <dt className="text-[14px] text-ink-mute">{etiqueta}</dt>
+    </div>
   )
 }

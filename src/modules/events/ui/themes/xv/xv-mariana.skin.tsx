@@ -127,6 +127,8 @@ export const PIEL: PielXv = {
     // Los tres diseños de gala: sombra negra, sin halo, la cita dentro de un panel en
     // serif itálico y el reloj **debajo** del «Faltan», como en su maqueta.
     sombraTexto: '0 2px 8px rgba(0,0,0,.7)',
+    // Como su maqueta: la despedida y debajo el borde plateado.
+    cierreOrnamentoTrasTexto: true,
     haloTitular: 'none',
     cita: {
       panel: true,

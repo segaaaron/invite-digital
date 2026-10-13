@@ -106,6 +106,11 @@ export function XvPapillonView({ content, event, themes, slots, audioSrc }: Them
       className="theme-pp-glow"
       style={{
         ...RANURAS,
+        // «Subir mis fotos» como el `F3Btn` de la maqueta: el mismo botón que «Firmar el libro».
+        ['--fotos-letra' as string]: SANS,
+        ['--fotos-fs' as string]: '11px',
+        ['--fotos-tracking' as string]: '0.18em',
+        ['--fotos-px' as string]: '22px',
         // Los dos botones iguales de su confirmación, transparentes con filete de oro.
         ['--rsvp-fondo' as string]: 'transparent',
         ['--rsvp-borde' as string]: P.oro,

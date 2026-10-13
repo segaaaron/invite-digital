@@ -38,9 +38,8 @@ test.afterAll(async () => {
 
 async function sumarPortero(gestor: import('@playwright/test').Page, slug: string, nombre: string) {
   await gestor.goto(`/panel/eventos/${slug}/equipo`)
-  await gestor.getByRole('radio', { name: /Recepción/ }).check()
   await gestor.getByLabel('Nombre').fill(nombre)
-  await gestor.getByRole('button', { name: 'Sumar al equipo' }).click()
+  await gestor.getByRole('button', { name: 'Sumar a recepción' }).click()
   const aviso = gestor.getByRole('status').filter({ hasText: 'ya puede entrar' })
   await expect(aviso).toBeVisible()
   const enlace = (await aviso.locator('dd').first().textContent())!.trim()
@@ -113,5 +112,5 @@ test('un plan sin puerta no ofrece porteros', async ({ browser }) => {
   const gestor = await (await browser.newContext({ storageState: AUTH_STATE })).newPage()
   await gestor.goto(`/panel/eventos/${SIN_PUERTA}/equipo`)
   await expect(gestor.getByText(/no incluye pases con QR ni personal de recepción/)).toBeVisible()
-  await expect(gestor.getByRole('radio', { name: /Recepción/ })).toBeDisabled()
+  await expect(gestor.getByRole('button', { name: 'Sumar a recepción' })).toHaveCount(0)
 })

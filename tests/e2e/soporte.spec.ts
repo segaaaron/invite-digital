@@ -51,8 +51,8 @@ test.describe('soporte como el cliente', () => {
 
   test('pero sí su ficha: configuración sin el contenido del cliente, plan y vista previa', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/configuracion`))?.status()).toBe(200)
-    await expect(page.getByRole('heading', { name: 'Datos y diseño' })).toBeVisible()
-    await expect(page.getByRole('heading', { name: /Tu invitación ·/ })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Detalles' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toHaveCount(0)
     expect((await page.goto(`/panel/eventos/${SLUG}/plan`))?.status()).toBe(200)
     expect((await page.goto(`/panel/eventos/${SLUG}/vista-previa`))?.status()).toBe(200)
   })
@@ -60,8 +60,8 @@ test.describe('soporte como el cliente', () => {
   test('escribe la invitación del cliente sin entrar como él, y queda en la auditoría', async () => {
     // Servicio hecho por nosotros: el equipo diseña la invitación. Solo la invitación.
     await page.goto(`/panel/eventos/${SLUG}/configuracion?vista=invitacion`)
-    await expect(page.getByRole('heading', { name: /Tu invitación ·/ })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Datos y diseño' })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Escribir la invitación' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Detalles' })).toHaveCount(0)
     const cancion = await abrirSeccion(page, 'Canción')
     await cancion.getByLabel('Título de la canción', { exact: true }).fill('Canción puesta por el equipo')
     await cancion.getByRole('button', { name: 'Guardar' }).click()
@@ -124,7 +124,9 @@ test.describe('soporte como el cliente', () => {
     await expect(suya.getByRole('button', { name: 'Regresar como admin' })).toHaveCount(0)
     // Ni rastro de la administración en su barra.
     for (const enlace of ['Hoy', 'Usuarios', 'Planes', 'Auditoría']) await expect(suya.getByRole('link', { name: enlace, exact: true })).toHaveCount(0)
-    await expect(suya.getByText('Cliente', { exact: true })).toBeVisible()
+    // Abajo de la barra, su tarjeta (maqueta E21): su nombre y «Mi cuenta», sin «Regresar al panel de admin».
+    await expect(suya.getByRole('complementary').getByRole('link', { name: 'Mi cuenta' })).toBeVisible()
+    await expect(suya.getByRole('button', { name: 'Regresar al panel de admin' })).toHaveCount(0)
     for (const ruta of ['/panel/admin', '/panel/admin/eventos', '/panel/admin/auditoria']) {
       expect((await suya.goto(ruta))?.status(), ruta).toBe(404)
     }
@@ -135,7 +137,7 @@ test.describe('soporte como el cliente', () => {
     // invitados (6 de octubre). Se quita el acceso del cliente al final, para no tocar las de arriba.
     await sql`delete from event_staff where event_id = (select id from events where slug = ${SLUG}) and membership = 'cliente'`
     await page.goto(`/panel/eventos/${SLUG}/configuracion`)
-    await expect(page.getByText('Sin acceso · lo llevas tú')).toBeVisible()
+    await expect(page.getByText('Sin cliente todavía: lo llevas tú', { exact: false })).toBeVisible()
     await page.getByRole('button', { name: 'Entrar al panel del evento' }).first().click()
 
     await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}(/configuracion)?$`), { timeout: 30_000 })

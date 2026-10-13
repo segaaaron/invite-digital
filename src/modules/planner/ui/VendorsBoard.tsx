@@ -1,6 +1,7 @@
 'use client'
 
-import { BuildingIcon } from '@/shared/design/ui/icons'
+import Link from 'next/link'
+import { BuildingIcon, PhoneIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { CampoHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
@@ -129,17 +130,42 @@ function EnlaceDeProveedor({ evento, proveedor, incluido }: { evento: Evento; pr
   )
 }
 
-/** Los proveedores, con su estado, su dinero y su WhatsApp a un toque. */
+/** «Editar proveedor» (diálogo): su estado de un toque, sus datos y quitarlo. */
+export function EditarProveedor({ evento, categorias, proveedor }: { evento: Evento; categorias: readonly Categoria[]; proveedor: ProveedorVista }) {
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap gap-2">
+        {ESTADOS_DE_PROVEEDOR.filter((x) => x !== proveedor.status).map((x) => (
+          <Accion action={setVendorStatusAction} evento={evento} extra={{ vendorId: proveedor.id, status: x }} key={x} label={`Marcar ${proveedor.service} como ${NOMBRE_DE_ESTADO[x].toLowerCase()}`}>
+            {NOMBRE_DE_ESTADO[x]}
+          </Accion>
+        ))}
+      </div>
+      <FormularioDeProveedor categorias={categorias} evento={evento} proveedor={proveedor} />
+      <div className="border-t border-line-panel pt-4">
+        <Accion action={removeVendorAction} evento={evento} extra={{ vendorId: proveedor.id }} label={`Quitar a ${proveedor.service}`} variant="danger">
+          Quitar proveedor
+        </Accion>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Los proveedores como tarjetas (E24): su servicio y estado, la empresa en grande, quién atiende, precio y hora de
+ * llegada, llamar o escribir de un toque y compartirle su ficha del día. Tocar el nombre abre su edición.
+ */
 export function VendorsBoard({
   evento,
-  categorias,
   proveedores,
   enlacesIncluidos,
+  editarHref,
 }: {
   evento: Evento
-  categorias: readonly Categoria[]
   proveedores: readonly ProveedorVista[]
   enlacesIncluidos: boolean
+  /** La dirección de editar sin el id: `…?proveedor=`. Una función no cruza del servidor al cliente. */
+  editarHref: string
 }) {
   if (proveedores.length === 0) {
     return (
@@ -151,47 +177,52 @@ export function VendorsBoard({
     )
   }
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] items-start gap-5">
       {proveedores.map((p) => (
-        <li aria-label={p.service} className="flex flex-col gap-3 rounded-[18px] border border-line-panel bg-white px-5 py-4 shadow-card" key={p.id}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex min-w-0 flex-col">
-              <span className="font-display text-[20px] font-light text-ink">{p.service}</span>
-              <span className="text-[12px] text-ink-mute">
-                {[p.company, p.contactName, p.arrivalTime ? `llega ${p.arrivalTime}` : null].filter(Boolean).join(' · ') || 'Sin datos de contacto'}
-              </span>
-              {p.dinero ? (
-                <span className="text-[12px] text-ink-soft [font-variant-numeric:tabular-nums]">
-                  {p.dinero.precio} · pagado {p.dinero.pagado} · falta {p.dinero.falta}
-                </span>
-              ) : null}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <Pill tone={TONO[p.status]}>{NOMBRE_DE_ESTADO[p.status]}</Pill>
-              {p.whatsappHref ? (
-                <PanelButton external href={p.whatsappHref}>
-                  WhatsApp
-                </PanelButton>
-              ) : null}
-            </div>
+        <li aria-label={p.service} className="flex flex-col rounded-[16px] border border-line-panel bg-tarjeta px-5 pt-4 pb-3" key={p.id}>
+          <div className="flex items-start justify-between gap-3">
+            <span className="text-[13px] text-ink-mute">{p.service}</span>
+            <Pill tone={TONO[p.status]}>{NOMBRE_DE_ESTADO[p.status]}</Pill>
           </div>
-          <details>
-            <summary className="cursor-pointer text-[11px] text-ink-soft underline underline-offset-2">Estado, enlace, editar o quitar</summary>
-            <div className="mt-3 flex flex-col gap-4">
-              <div className="flex flex-wrap gap-2">
-                {ESTADOS_DE_PROVEEDOR.filter((x) => x !== p.status).map((x) => (
-                  <Accion action={setVendorStatusAction} evento={evento} extra={{ vendorId: p.id, status: x }} key={x} label={`Marcar ${p.service} como ${NOMBRE_DE_ESTADO[x].toLowerCase()}`}>
-                    {NOMBRE_DE_ESTADO[x]}
-                  </Accion>
-                ))}
-              </div>
+          <Link
+            aria-label={`Editar ${p.service}`}
+            className="mt-1 font-display text-[24px] leading-[1.2] font-medium text-ink no-underline hover:text-gold-deep"
+            href={`${editarHref}${p.id}`}
+            scroll={false}
+          >
+            {p.company ?? p.service}
+          </Link>
+          <span className="mt-2 text-[14px] text-ink-mute">{[p.contactName, p.whatsapp?.replace(/^\+591(?=\d)/, '+591 ')].filter(Boolean).join(', ') || 'Sin datos de contacto'}</span>
+          <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-line-panel pt-3.5 text-[14.5px] [font-variant-numeric:tabular-nums]">
+            <span>
+              {p.dinero ? (
+                <>
+                  Precio <strong className="font-medium">{p.dinero.precio}</strong>
+                </>
+              ) : (
+                <span className="text-ink-mute">Sin precio</span>
+              )}
+            </span>
+            <span className="text-ink-mute">{p.arrivalTime ? `Llega ${p.arrivalTime}` : 'Llega por confirmar'}</span>
+          </div>
+          <div className="mt-3.5 flex flex-wrap gap-2">
+            {p.whatsapp ? (
+              <PanelButton href={`tel:${p.whatsapp}`} size="sm">
+                <PhoneIcon className="size-4" /> Llamar
+              </PanelButton>
+            ) : null}
+            {p.whatsappHref ? (
+              <PanelButton external href={p.whatsappHref} size="sm">
+                <WhatsAppIcon className="size-4" /> WhatsApp
+              </PanelButton>
+            ) : null}
+          </div>
+          <details className="mt-2">
+            <summary className="flex min-h-10 cursor-pointer list-none items-center justify-center text-[14px] font-medium text-gold-deep hover:underline [&::-webkit-details-marker]:hidden">
+              Compartirle su ficha del día
+            </summary>
+            <div className="pt-1 pb-2">
               <EnlaceDeProveedor evento={evento} incluido={enlacesIncluidos} proveedor={p} />
-              <FormularioDeProveedor categorias={categorias} evento={evento} proveedor={p} />
-              <div>
-                <Accion action={removeVendorAction} evento={evento} extra={{ vendorId: p.id }} label={`Quitar a ${p.service}`} variant="danger">
-                  Quitar proveedor
-                </Accion>
-              </div>
             </div>
           </details>
         </li>

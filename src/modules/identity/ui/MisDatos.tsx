@@ -1,0 +1,32 @@
+'use client'
+
+import { useActionState, useId } from 'react'
+import { guardarMisDatosAction, type MisDatosState } from '@/app/_acciones/identity/actions'
+import { FIELD_CLASS, Field } from '@/shared/design/ui/panel/PanelKit'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
+import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+
+const INICIAL: MisDatosState = { status: 'idle' }
+
+/** «Tus datos» (E21): nombre y teléfono se cambian aquí; el correo, no —con él se entra—. */
+export function MisDatos({ nombre, correo, telefono, ayudaCorreo }: { nombre: string | null; correo: string; telefono: string | null; ayudaCorreo: string }) {
+  const [estado, guardar] = useActionState(sinCaerse(guardarMisDatosAction), INICIAL)
+  const id = useId()
+  return (
+    <form action={guardar} className="flex flex-col gap-4">
+      <Field htmlFor={`${id}-n`} label="Nombre">
+        <input autoComplete="name" className={FIELD_CLASS} defaultValue={nombre ?? ''} id={`${id}-n`} maxLength={120} name="nombre" />
+      </Field>
+      <Field hint={ayudaCorreo} htmlFor={`${id}-c`} label="Correo">
+        <input className={`${FIELD_CLASS} bg-bg-sunken text-ink-mute`} id={`${id}-c`} readOnly value={correo} />
+      </Field>
+      <Field htmlFor={`${id}-t`} label="Teléfono">
+        <input autoComplete="tel" className={FIELD_CLASS} defaultValue={telefono ?? ''} id={`${id}-t`} inputMode="tel" maxLength={24} name="telefono" placeholder="+591 70000000" />
+      </Field>
+      <div className="flex items-center justify-end gap-3">
+        <ActionFeedback state={estado} />
+        <SubmitButton pendingLabel="Guardando…">Guardar</SubmitButton>
+      </div>
+    </form>
+  )
+}

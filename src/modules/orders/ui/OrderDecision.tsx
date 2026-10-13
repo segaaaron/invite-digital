@@ -1,12 +1,15 @@
 'use client'
 
-import { useActionState, useId } from 'react'
-import { FIELD_CLASS, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { useActionState, useId, useRef, useState } from 'react'
+import { CloseIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
+import { botonClases, FIELD_CLASS, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
 import { decideOrderAction, type DecideOrderState } from '@/app/_acciones/orders/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: DecideOrderState = { status: 'idle' }
+const MOTIVOS = ['El monto no coincide', 'No se ve el comprobante', 'Es de otro pedido'] as const
+const MAX_NOTA = 440
 
 /**
  * Aprobar o rechazar un pedido.
@@ -25,6 +28,7 @@ export function OrderDecision({
   esExtra = false,
   importe = null,
   correo = null,
+  nombre = null,
 }: {
   orderId: string
   /** Un extra no crea boda: no pide acceso. */
@@ -33,9 +37,16 @@ export function OrderDecision({
   importe?: string | null
   /** El correo del cliente si ya se sabe (del pedido o de su consulta). Sin él, se pide aquí. */
   correo?: string | null
+  /** Quién verá el motivo del rechazo (E33). */
+  nombre?: string | null
 }) {
   const [estado, accion, pendiente] = useActionState<DecideOrderState, FormData>(sinCaerse(decideOrderAction), INICIAL)
   const id = useId()
+  const rechazo = useRef<HTMLDialogElement>(null)
+  const [motivo, setMotivo] = useState<string>(MOTIVOS[0])
+  const [nota, setNota] = useState('')
+  const cerrar = () => rechazo.current?.close()
+  const pila = nombre?.split(' ')[0] ?? null
 
   return (
     <form action={accion} className="flex flex-col gap-3">
@@ -46,18 +57,6 @@ export function OrderDecision({
           Comprueba que la transferencia sea de <b className="font-medium">{importe}</b> antes de aprobar.
         </p>
       )}
-
-      <label className="flex flex-col gap-2" htmlFor={id}>
-        <span className={LABEL_CLASS}>Nota para el cliente · obligatoria si rechazas</span>
-        <input
-          className={FIELD_CLASS}
-          id={id}
-          maxLength={500}
-          name="note"
-          placeholder="La transferencia es de otro importe"
-          type="text"
-        />
-      </label>
 
       {/* Al aprobar nace el evento con el diseño que eligió y el plan que pagó, y su acceso: la
           contraseña **se genera sola** y le llega por correo. Nadie la inventa ni la escribe. Si
@@ -81,12 +80,70 @@ export function OrderDecision({
           cambia de estado, este formulario deja de pintarse y cualquier mensaje se iría
           con él. Lo que salió de la decisión lo enseña la tarjeta, leyéndolo de la base. */}
 
-      <div className="flex flex-wrap gap-2.5">
-        <SubmitButton name="decision" value="approved" variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Aprobar pago'}</SubmitButton>
-        <PanelButton disabled={pendiente} name="decision" type="submit" value="rejected" variant="danger">
+      <div className="flex flex-wrap justify-end gap-2.5">
+        {/* Rechazar abre su diálogo (E33): motivo de lista y una nota que el cliente lee. */}
+        <button aria-haspopup="dialog" className={botonClases('danger')} disabled={pendiente} onClick={() => rechazo.current?.showModal()} type="button">
           Rechazar
-        </PanelButton>
+        </button>
+        <SubmitButton name="decision" value="approved" variant="primary" pending={pendiente} pendingLabel={'Guardando…'}>{'Aprobar pago'}</SubmitButton>
       </div>
+
+      <dialog
+        aria-labelledby={`${id}-rechazo`}
+        className="m-auto max-h-[92dvh] w-[min(560px,94vw)] max-w-none overflow-y-auto rounded-[20px] border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:fixed max-[767px]:inset-0 max-[767px]:m-0 max-[767px]:h-dvh max-[767px]:max-h-dvh max-[767px]:w-full max-[767px]:rounded-none max-[767px]:border-0 max-[767px]:px-4 max-[767px]:pt-2.5 max-[767px]:pb-[max(24px,env(safe-area-inset-bottom))]"
+        ref={rechazo}
+      >
+        <button className="mb-5 flex min-h-15 w-full cursor-pointer items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-left shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[768px]:hidden" onClick={cerrar} type="button">
+          <span aria-hidden className="grid size-11 shrink-0 place-items-center">
+            <ArrowLeftIcon className="size-5" />
+          </span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="text-[13px] text-ink-mute">Ventas</span>
+            <span className="truncate text-[16px] font-medium">Rechazar el comprobante</span>
+          </span>
+          <span className="sr-only">: cerrar</span>
+        </button>
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-1">
+            <h2 className="font-display text-[30px] leading-tight font-medium max-[767px]:text-[26px]" id={`${id}-rechazo`}>
+              Rechazar el comprobante
+            </h2>
+            <p className="text-[15px] text-ink-mute">{nombre ?? 'El cliente'} verá tu motivo y podrá subir otro. El pedido no se pierde.</p>
+          </div>
+          <button aria-label="Cerrar" className="max-[767px]:hidden grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised text-ink transition-colors hover:border-gold" onClick={cerrar} type="button">
+            <CloseIcon className="size-4" />
+          </button>
+        </div>
+        <fieldset className="mt-5 flex flex-col gap-2.5">
+          <legend className={`${LABEL_CLASS} mb-2.5`}>Motivo</legend>
+          {MOTIVOS.map((m) => (
+            <label className="flex min-h-12 cursor-pointer items-center gap-3 rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[15px] has-[:checked]:border-shell-deep" key={m}>
+              <input checked={motivo === m} className="size-4 accent-shell-deep" name={`${id}-motivo`} onChange={() => setMotivo(m)} type="radio" />
+              {m}
+            </label>
+          ))}
+        </fieldset>
+        <label className="mt-5 flex flex-col gap-2" htmlFor={id}>
+          <span className={LABEL_CLASS}>Nota para {pila ?? 'el cliente'}</span>
+          <textarea className={`${FIELD_CLASS} min-h-24`} id={id} maxLength={MAX_NOTA} onChange={(e) => setNota(e.target.value)} placeholder="Recibimos otro monto: sube el comprobante de lo que falta." value={nota} />
+          <span className="flex justify-between text-[13px] text-ink-mute">
+            <span>Obligatoria</span>
+            <span>
+              {nota.length}/{MAX_NOTA}
+            </span>
+          </span>
+        </label>
+        {/* La nota que llega al servidor: el motivo y lo escrito. */}
+        <input name="note" type="hidden" value={nota.trim() === '' ? '' : `${motivo}. ${nota.trim()}`} />
+        <div className="mt-5 flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
+          <button className={botonClases('default')} onClick={cerrar} type="button">
+            Cancelar
+          </button>
+          <button className={botonClases('peligro')} disabled={pendiente || nota.trim() === ''} name="decision" onClick={() => setTimeout(cerrar)} type="submit" value="rejected">
+            Rechazar y avisarle
+          </button>
+        </div>
+      </dialog>
     </form>
   )
 }

@@ -42,7 +42,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
     time: '15:00',
   },
   // Las coordenadas que el mapa de cada tarjeta enseña dentro (PDF 9 oct), como las demás bodas.
-  map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.15°O' },
+  map: { label: 'SALÓN LOS CEDROS', coords: '19.32°N · 99.18°W' },
   itinerary: [
     { time: '13:00', label: 'CEREMONIA RELIGIOSA' },
     { time: '15:00', label: 'RECEPCIÓN SOCIAL' },

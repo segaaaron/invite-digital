@@ -15,6 +15,7 @@ export type SubmitButtonProps = {
    */
   pending?: boolean
   variant?: 'primary' | 'default' | 'danger'
+  size?: 'sm'
   disabled?: boolean
   /** Envía el formulario con este `id` aunque el botón viva fuera de él. */
   form?: string
@@ -22,6 +23,8 @@ export type SubmitButtonProps = {
   value?: string
   className?: string
   'aria-label'?: string
+  /** Antes de enviar: qué hacer después (p. ej. «Guardar y seguir» frente a «Guardar y volver»). */
+  onClick?: () => void
   /** Sigue activo en un evento ya celebrado (lo que la guardia deja con `aunCelebrado`). */
   aunCelebrado?: boolean
 }

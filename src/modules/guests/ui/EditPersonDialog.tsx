@@ -8,6 +8,7 @@ import { addPersonAction, ensureInvitationLinkAction, reopenRsvpAction, setGroup
 import type { Attendance } from '../domain/person'
 import { RevokeInvitationForm } from './RevokeInvitationForm'
 import { conCanal } from '../domain/invitation-url'
+import { CloseIcon, CopyIcon, QrIcon } from '@/shared/design/ui/icons'
 
 export type EditablePerson = {
   readonly id: string
@@ -180,15 +181,61 @@ export function EditPersonDialog({
       aria-labelledby={`${idNombre}-titulo`}
       // Desde 1024 px, **al lado de la lista** (panel lateral, la lista se sigue viendo: maqueta 7 del panel
       // móvil); en el teléfono, hoja desde abajo. En medio, centrado.
-      className="m-auto w-[min(560px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45 max-[560px]:mb-0 max-[560px]:max-h-[92dvh] max-[560px]:w-screen max-[560px]:max-w-none max-[560px]:rounded-b-none max-[560px]:p-5 min-[1024px]:fixed min-[1024px]:inset-y-0 min-[1024px]:right-0 min-[1024px]:left-auto min-[1024px]:m-0 min-[1024px]:h-dvh min-[1024px]:max-h-dvh min-[1024px]:w-[min(520px,44vw)] min-[1024px]:overflow-y-auto min-[1024px]:rounded-none min-[1024px]:border-y-0 min-[1024px]:border-r-0 min-[1024px]:backdrop:bg-ink/15"
+      className="m-auto w-[min(560px,94vw)] max-w-none overflow-y-auto border border-line-panel bg-bg p-7 text-ink shadow-float backdrop:bg-shell-deep/50 max-[767px]:mb-0 max-[767px]:max-h-[92dvh] max-[767px]:w-screen max-[767px]:rounded-t-[20px] max-[767px]:p-5 min-[768px]:fixed min-[768px]:inset-y-0 min-[768px]:right-0 min-[768px]:left-auto min-[768px]:m-0 min-[768px]:h-dvh min-[768px]:max-h-dvh min-[768px]:w-[min(520px,100vw)] min-[768px]:border-y-0 min-[768px]:border-r-0"
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
       }}
     >
-      <h2 className="font-display text-[24px] font-light italic" id={`${idNombre}-titulo`}>
-        Editar invitado
-      </h2>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="truncate text-[14px] text-ink-mute">Invitación «{invitacion.label}»</p>
+          <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idNombre}-titulo`}>
+            Editar invitado
+          </h2>
+        </div>
+        <button
+          aria-label="Cerrar"
+          className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold"
+          onClick={cerrar}
+          type="button"
+        >
+          <CloseIcon className="size-4" />
+        </button>
+      </div>
+
+      {/* El pase arriba (E36): el código que se dicta en la puerta y su enlace para copiar. */}
+      {invitacion.revocada || (!invitacion.codigo && !(enlaceNuevo ?? invitacion.enlace)) ? null : (
+        <div className="mt-5 flex items-center gap-4 rounded-[14px] border border-line-panel bg-bg-raised px-4 py-3.5">
+          <QrIcon className="size-8 shrink-0 text-ink" />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="text-[13px] text-ink-mute">Código del pase</span>
+            {invitacion.codigo ? <span className="font-display text-[26px] leading-tight font-medium tracking-[0.08em]">{invitacion.codigo}</span> : null}
+            {(enlaceNuevo ?? invitacion.enlace) ? (
+              <input
+                aria-label="Enlace de su invitación"
+                className="w-full min-w-0 truncate bg-transparent text-[12.5px] text-ink-mute outline-none"
+                onFocus={(e) => e.currentTarget.select()}
+                readOnly
+                value={conCanal(enlaceNuevo ?? invitacion.enlace ?? '', 'enlace')}
+              />
+            ) : null}
+          </div>
+          {(enlaceNuevo ?? invitacion.enlace) ? (
+            <button
+              className="inline-flex min-h-10 shrink-0 cursor-pointer items-center gap-1.5 rounded-[10px] border border-line-panel-strong bg-bg px-3 text-[13.5px] font-medium hover:border-gold"
+              onClick={() => {
+                void navigator.clipboard?.writeText(conCanal(enlaceNuevo ?? invitacion.enlace ?? '', 'enlace'))
+                setCopiado(true)
+              }}
+              type="button"
+            >
+              <CopyIcon className="size-4" />
+              {copiado ? 'Copiado' : 'Copiar enlace'}
+            </button>
+          ) : null}
+        </div>
+      )}
 
       <div className="mt-5 flex flex-col gap-4">
         <Field htmlFor={idNombre} label="Nombre completo">
@@ -275,42 +322,9 @@ export function EditPersonDialog({
       </div>
 
       <section aria-labelledby={`${idAcomp}-titulo`} className="mt-6 flex flex-col gap-3 border-t border-line-panel pt-5">
-        <h3 className="font-display text-[18px] italic" id={`${idAcomp}-titulo`}>
+        <h3 className="text-[15px] font-medium" id={`${idAcomp}-titulo`}>
           Su invitación
         </h3>
-
-        {invitacion.revocada ? null : (
-          <div className="flex flex-col gap-2 rounded-[14px] bg-bg-top p-3.5">
-            {(enlaceNuevo ?? invitacion.enlace) ? (
-              <div className="flex min-w-0 items-center gap-2">
-                <input
-                  aria-label="Enlace de su invitación"
-                  className="min-w-0 flex-1 rounded-[10px] border border-line-panel bg-white px-3 py-2 font-mono text-[11.5px] text-ink-soft"
-                  onFocus={(e) => e.currentTarget.select()}
-                  readOnly
-                  value={conCanal(enlaceNuevo ?? invitacion.enlace ?? '', 'enlace')}
-                />
-                <button
-                  className="shrink-0 cursor-pointer rounded-full bg-ink px-3.5 py-1.5 text-[12px] text-white hover:bg-ink/90"
-                  onClick={() => {
-                    void navigator.clipboard?.writeText(conCanal(enlaceNuevo ?? invitacion.enlace ?? '', 'enlace'))
-                    setCopiado(true)
-                  }}
-                  type="button"
-                >
-                  {copiado ? 'Copiado' : 'Copiar'}
-                </button>
-              </div>
-            ) : (
-              <p className="m-0 text-[12px] text-ink-soft">Preparando su enlace…</p>
-            )}
-            {invitacion.codigo ? (
-              <p className="m-0 text-[12px] text-ink-soft">
-                Código del pase para la puerta: <span className="font-codigo text-[14px] tracking-[0.2em] text-ink">{invitacion.codigo}</span>
-              </p>
-            ) : null}
-          </div>
-        )}
 
         <div className="flex min-w-0 gap-2">
           <label className="sr-only" htmlFor={idAcomp}>

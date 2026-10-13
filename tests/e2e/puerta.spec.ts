@@ -44,7 +44,8 @@ test('el personal de puerta con cuenta solo ve el check-in, y el admin se lo qui
 
   const gestor = await (await browser.newContext({ storageState: ADMIN_AUTH_STATE })).newPage()
   await gestor.goto(`/panel/eventos/${SLUG}/configuracion`)
-  const tarjeta = gestor.locator('section', { has: gestor.getByRole('heading', { name: 'Personal de puerta' }) })
+  // En la ficha del admin (maqueta E35) el personal de puerta va dentro de «Accesos».
+  const tarjeta = gestor.getByRole('region', { name: 'Accesos' })
   await expect(tarjeta.getByRole('listitem').filter({ hasText: PUERTA.email })).toBeVisible()
   // Ya no hay alta de cuentas de puerta: la recepción se suma con enlace y PIN.
   await expect(tarjeta.getByRole('button', { name: 'Dar acceso a la puerta' })).toHaveCount(0)

@@ -16,11 +16,11 @@ export function UnseatedStrip({ groups }: { groups: readonly SeatedGroupRow[] })
         {groups.map((group) => (
           <li
             key={group.id}
-            className="flex items-baseline gap-2 rounded-pill border border-line-panel bg-white px-3 py-1.5 text-[13px] text-ink-soft"
+            className="flex items-baseline gap-2 rounded-full border border-line-panel bg-tarjeta px-3.5 py-1.5 text-[14px]"
           >
             <span>{group.label}</span>
-            <span className="font-mono text-[10px] text-ink-mute">
-              {group.seats} cupo{group.seats === 1 ? '' : 's'}
+            <span className="text-[12.5px] text-ink-mute">
+              {group.seats} {group.seats === 1 ? 'persona' : 'personas'}
             </span>
           </li>
         ))}

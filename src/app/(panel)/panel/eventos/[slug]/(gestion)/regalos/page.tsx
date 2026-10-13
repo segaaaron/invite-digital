@@ -1,4 +1,5 @@
-import { CardIcon } from '@/shared/design/ui/icons'
+import Link from 'next/link'
+import { CardIcon, PlusIcon } from '@/shared/design/ui/icons'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 import { notFound } from 'next/navigation'
 import { events, plans, registry } from '@/app/composition/container'
@@ -6,16 +7,18 @@ import { vocabularioDeCategoria } from '@/modules/events'
 import { CurrencyPicker } from '@/modules/events/ui/CurrencyPicker'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
-import { formatAmount } from '@/shared/money'
 import { FundCard } from '@/modules/registry/ui/FundCard'
+import { hace } from '@/shared/format/fecha'
+import { formatAmount } from '@/shared/money'
 import { FundForm } from '@/modules/registry/ui/FundForm'
 import { GiftForm } from '@/modules/registry/ui/GiftForm'
 import { GiftList } from '@/modules/registry/ui/GiftList'
 import { RegistryTabs } from '@/modules/registry/ui/RegistryTabs'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
-import { PanelButton, Pill, type PillTone } from '@/shared/design/ui/panel/PanelKit'
+import { PanelButton, TARJETA_DESTACADA } from '@/shared/design/ui/panel/PanelKit'
 import { FormasDeRegalarForm } from '@/modules/registry/ui/FormasDeRegalarForm'
 import { hayFormas } from '@/modules/registry'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -52,7 +55,7 @@ export default async function RegalosPage({
   // Quien ya las configuró las conserva aunque su plan ya no las traiga.
   const conFormas = !isErr(await plans.requireFeature(event.value.id, 'giftWays')) || hayFormas(formas)
 
-  const { gifts, funds, tally } = mesa.value
+  const { gifts, funds } = mesa.value
   // Lo que el invitado ve hoy, dicho: sin nada, la invitación no enseña la sección y conviene saberlo.
   const muestra = [
     formas.sobres ? 'lluvia de sobres' : null,
@@ -61,75 +64,85 @@ export default async function RegalosPage({
     funds.length > 0 ? 'fondos' : null,
   ].filter((x) => x !== null)
 
-  // La cabecera de la maqueta cuenta el dinero, no las tarjetas: lo recaudado en fondos
-  // y lo que ya se llevaron de la lista frente a lo que vale entera.
-  const recaudado = funds.reduce((suma, fondo) => suma + fondo.progress.raisedCents, 0)
-  const valorLista = gifts.reduce((suma, regalo) => suma + (regalo.priceCents ?? 0), 0)
-  const yaTomado = gifts
-    .filter((regalo) => regalo.status !== 'available')
-    .reduce((suma, regalo) => suma + (regalo.priceCents ?? 0), 0)
-
   const base = `/panel/eventos/${event.value.slug}/regalos`
   // Sin lista en el plan, la tarjeta dice cómo tenerla (el atelier, al plan; el anfitrión, a Extras).
   const mejorarAlgo = conMesa ? null : await mejorarPara(actor, event.value.slug)
   // La lista no se vende como extra: al anfitrión, Extras no se la da. Solo el cambio de plan.
   const mejorar = mejorarAlgo?.href.endsWith('/extras') === true ? null : mejorarAlgo
   const abierto = panel === 'fondo' || panel === 'regalo' ? panel : null
+  // La pestaña de fondos (E58) va sin las formas de regalar y con su propio botón: «Nuevo fondo».
+  const enFondos = vista === 'fondos' || abierto === 'fondo'
+  const aportes = funds
+    .flatMap((v) => v.contributions.map((c) => ({ ...c, fondo: v.fund.name })))
+    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+    .slice(0, 6)
   const mejorarFormas = conFormas ? null : (mejorarAlgo ?? (await mejorarPara(actor, event.value.slug)))
 
   return (
     <>
       <PanelHeader
         actions={
-          conMesa ? (
+          conMesa && enFondos ? (
+            <PanelButton href={`${base}?panel=fondo&vista=fondos`} variant="primary">
+              <PlusIcon className="size-4" /> Nuevo fondo
+            </PanelButton>
+          ) : conMesa ? (
             <>
-              <CurrencyPicker current={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} />
-              <PanelButton href={abierto === 'fondo' ? base : `${base}?panel=fondo`}>+ Añadir fondo</PanelButton>
+              <PanelButton href={abierto === 'fondo' ? base : `${base}?panel=fondo&vista=fondos`}>
+                <PlusIcon className="size-4" /> Fondo
+              </PanelButton>
               <PanelButton href={abierto === 'regalo' ? base : `${base}?panel=regalo`} variant="primary">
-                + Añadir regalo
+                <PlusIcon className="size-4" /> Añadir regalo
               </PanelButton>
             </>
           ) : undefined
         }
+        accionesSoloEnEscritorio
         kicker="Regalos"
-        meta={
-          conMesa
-            ? `${formatAmount(recaudado, event.value.currency)} recaudados en fondos · ${formatAmount(yaTomado, event.value.currency)} de ${formatAmount(
-                valorLista,
-                event.value.currency,
-              )} en regalos físicos · ${tally.total} en la lista`
-            : 'Cómo pueden regalarte tus invitados'
-        }
+        meta="Cómo pueden regalarte tus invitados. Lo que enciendas aparece en tu invitación."
+        menu={conMesa ? <CurrencyPicker current={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} /> : undefined}
         title="Regalos"
       />
 
-      {/* Tres formas de regalar, cada una con su estado; se configura en su diálogo. */}
-      <section aria-label="Formas de regalar" className="mb-4.5 grid gap-4 min-[900px]:grid-cols-3">
-        <FormaCard
-          accion={conFormas ? (formas.sobres ? 'Editar' : 'Encender') : (mejorarFormas?.label ?? null)}
-          descripcion="El efectivo que te entregan en la fiesta, en su sobre."
-          estado={!conFormas ? { tono: 'pending', texto: 'No incluida' } : formas.sobres ? { tono: 'ok', texto: 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
-          href={conFormas ? `${base}?panel=sobres` : (mejorarFormas?.href ?? base)}
-          titulo="Lluvia de sobres"
-        />
-        <FormaCard
-          accion={conFormas ? (formas.transferencia ? 'Editar' : 'Encender') : (mejorarFormas?.label ?? null)}
-          descripcion="Te transfieren directo a tu cuenta o con el QR de tu banco."
-          estado={!conFormas ? { tono: 'pending', texto: 'No incluida' } : formas.transferencia ? { tono: 'ok', texto: formas.tieneQr ? 'Activa · con QR' : 'Activa' } : { tono: 'pending', texto: 'Apagada' }}
-          href={conFormas ? `${base}?panel=transferencia` : (mejorarFormas?.href ?? base)}
-          titulo="Transferencia o QR"
-        />
-        <FormaCard
-          accion={conMesa ? 'Ver la lista' : (mejorar?.label ?? null)}
-          descripcion={conMesa ? 'Regalos que reservan de tu lista y fondos para algo grande.' : 'Regalos que tus invitados reservan de tu lista, y fondos para algo grande. No viene en tu plan.'}
-          estado={conMesa ? { tono: gifts.length + funds.length > 0 ? 'ok' : 'pending', texto: `${gifts.length} ${gifts.length === 1 ? 'regalo' : 'regalos'} · ${funds.length} ${funds.length === 1 ? 'fondo' : 'fondos'}` } : { tono: 'pending', texto: 'No incluida' }}
-          href={conMesa ? '#lista' : (mejorar?.href ?? base)}
-          titulo="Lista de regalos"
-        />
+      {conMesa ? (
+        <AccionDeLaIsla>
+          <Link aria-label="Añadir regalo" className="grid size-11 place-items-center rounded-xl text-ink" href={`${base}?panel=regalo`}>
+            <PlusIcon className="size-6" />
+          </Link>
+        </AccionDeLaIsla>
+      ) : null}
+      {/* Las formas de regalar en su tarjeta destacada (maqueta E11): cada una con su interruptor, que abre sus datos. */}
+      <section aria-labelledby="formas-de-regalar" className={`${TARJETA_DESTACADA} mb-8 flex flex-wrap gap-x-10 gap-y-5 p-6.5 max-[559px]:p-5 ${enFondos ? 'hidden' : ''}`}>
+        <div className="min-w-0 flex-[1_1_240px] max-[767px]:sr-only">
+          <h2 className="font-display text-[26px] leading-tight font-medium" id="formas-de-regalar">
+            Formas de regalar
+          </h2>
+          <p className="mt-1.5 text-[14px] text-ink-mute">
+            {conFormas ? 'En todos los planes. Tus invitados ven solo lo que enciendas.' : 'Tu plan no las incluye.'}{' '}
+            {muestra.length === 0 ? 'Tu invitación no muestra regalos todavía.' : `Tu invitación muestra: ${muestra.join(', ')}.`}
+          </p>
+        </div>
+        <ul className="flex min-w-0 flex-[2_1_360px] flex-col">
+          <Forma
+            descripcion="Un aviso con la caja de sobres en la recepción."
+            encendida={formas.sobres}
+            href={conFormas ? `${base}?panel=sobres` : (mejorarFormas?.href ?? base)}
+            incluida={conFormas}
+            titulo="Lluvia de sobres"
+          />
+          <Forma
+            descripcion={formas.transferencia ? `Con sus datos${formas.tieneQr ? ' y el QR de tu banco' : ''}.` : 'Te transfieren directo a tu cuenta o con el QR de tu banco.'}
+            editar={formas.transferencia ? `${base}?panel=transferencia` : null}
+            encendida={formas.transferencia}
+            href={conFormas ? `${base}?panel=transferencia` : (mejorarFormas?.href ?? base)}
+            incluida={conFormas}
+            titulo="Transferencia"
+          />
+          {conMesa ? null : (
+            <Forma descripcion="Regalos que reservan de tu lista, y fondos para algo grande. No viene en tu plan." encendida={false} href={mejorar?.href ?? base} incluida={false} titulo="Lista de regalos" />
+          )}
+        </ul>
       </section>
-      <p className="mb-4.5 text-[13px] text-ink-soft">
-        {muestra.length === 0 ? 'Tu invitación no muestra regalos todavía: enciende la lluvia de sobres o la transferencia.' : `Tu invitación muestra: ${muestra.join(', ')}.`}
-      </p>
 
       {conFormas && (panel === 'sobres' || panel === 'transferencia') ? (
         <PanelDialog closeHref={base} title={panel === 'sobres' ? 'Lluvia de sobres' : 'Transferencia o QR'}>
@@ -142,14 +155,14 @@ export default async function RegalosPage({
         {/* Las altas son los modales de la maqueta (`#modal-gift`, `#modal-fund`), no
             paneles desplegados sobre la lista. */}
         {abierto === 'regalo' ? (
-          <PanelDialog closeHref={base} title="Añadir regalo">
+          <PanelDialog closeHref={base} kicker="Regalos" lado="derecha" title="Añadir regalo" width={520}>
             <GiftForm doneHref={base} eventId={event.value.id} eventSlug={event.value.slug} />
           </PanelDialog>
         ) : null}
 
         {abierto === 'fondo' ? (
-          <PanelDialog closeHref={base} title="Añadir fondo en efectivo">
-            <FundForm doneHref={base} ejemplo={vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug).ejemplos} eventId={event.value.id} eventSlug={event.value.slug} />
+          <PanelDialog closeHref={base} kicker="Regalos" lado="derecha" title="Añadir fondo en efectivo" width={520}>
+            <FundForm doneHref={`${base}?vista=fondos`} ejemplo={vocabularioDeCategoria(themeFor(event.value.themeKey).categorySlug).ejemplos} eventId={event.value.id} eventSlug={event.value.slug} />
           </PanelDialog>
         ) : null}
 
@@ -157,7 +170,8 @@ export default async function RegalosPage({
           base={base}
           // Con el alta de regalo abierta se enseña la lista: quien acaba de añadir uno
           // quiere verlo, y dejarlo en los fondos hacía creer que no se había guardado.
-          current={vista === 'regalos' || abierto === 'regalo' ? 'regalos' : 'fondos'}
+          current={vista === 'fondos' || abierto === 'fondo' ? 'fondos' : 'regalos'}
+          cuentas={{ regalos: gifts.length, fondos: funds.length }}
           funds={
             funds.length === 0 ? (
               <PanelCard>
@@ -169,28 +183,38 @@ export default async function RegalosPage({
                 />
               </PanelCard>
             ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(320px,1fr))] gap-4">
-                {funds.map((view) => (
-                  <FundCard
-                    key={view.fund.id}
-                    currency={event.value.currency}
-                    eventId={event.value.id}
-                    eventSlug={event.value.slug}
-                    view={view}
-                  />
-                ))}
+              <div className="flex flex-col gap-9">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] items-start gap-5">
+                  {funds.map((view) => (
+                    <FundCard key={view.fund.id} currency={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} view={view} />
+                  ))}
+                </div>
+                {aportes.length === 0 ? null : (
+                  <section aria-labelledby="ultimos-aportes">
+                    <h2 className="border-b border-line-panel pb-2.5 font-display text-[24px] font-medium" id="ultimos-aportes">
+                      Últimos aportes
+                    </h2>
+                    <ul>
+                      {aportes.map((a) => (
+                        <li className="flex items-baseline gap-4 border-b border-line-panel py-3 text-[14.5px]" key={a.id}>
+                          <span className="min-w-0 flex-1 truncate">
+                            <span className="font-medium">{a.displayName}</span> <span className="text-ink-mute">a {a.fondo}</span>
+                          </span>
+                          <span className="font-display text-[19px] font-medium [font-variant-numeric:lining-nums]">{formatAmount(a.amountCents, event.value.currency).replace(/,00$/, '')}</span>
+                          <span className="w-[90px] text-right text-[13px] text-ink-mute">{hace(a.createdAt, new Date())}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
               </div>
             )
           }
           gifts={
-            <PanelCard title="Lista de regalos">
-              <GiftList
-                currency={event.value.currency}
-                eventId={event.value.id}
-                eventSlug={event.value.slug}
-                gifts={gifts}
-              />
-            </PanelCard>
+            <>
+              <GiftList currency={event.value.currency} eventId={event.value.id} eventSlug={event.value.slug} gifts={gifts} />
+              {gifts.length === 0 ? null : <p className="text-[14px] text-ink-mute">Tú ves quién reservó cada regalo. Tus invitados solo ven que ya está reservado.</p>}
+            </>
           }
         />
       </div>
@@ -199,20 +223,29 @@ export default async function RegalosPage({
   )
 }
 
-function FormaCard({ titulo, descripcion, estado, accion, href }: { titulo: string; descripcion: string; estado: { tono: PillTone; texto: string }; accion: string | null; href: string }) {
+/** Una forma de regalar en su fila (maqueta E11): qué es, si se editan sus datos y su interruptor. */
+function Forma({ titulo, descripcion, encendida, incluida, href, editar = null }: { titulo: string; descripcion: string; encendida: boolean; incluida: boolean; href: string; editar?: string | null }) {
   return (
-    <article className="flex flex-col gap-3 rounded-[18px] border border-line-panel bg-white p-5 shadow-card">
-      {/* El estado arriba del título: al lado, en tres columnas estrechas se salía de la tarjeta. */}
-      <div className="flex flex-col items-start gap-2">
-        <Pill tone={estado.tono}>{estado.texto}</Pill>
-        <h2 className="font-display text-[22px] leading-tight font-light text-ink">{titulo}</h2>
-      </div>
-      <p className="flex-1 text-[13px] leading-relaxed text-ink-soft">{descripcion}</p>
-      {accion === null ? null : (
-        <PanelButton aria-label={`${accion}: ${titulo}`} href={href}>
-          {accion}
-        </PanelButton>
+    <li className="flex items-center gap-4 border-b border-line-panel py-3 last:border-b-0">
+      <span className="min-w-0 flex-1">
+        <span className="block font-medium">{titulo}</span>
+        <span className="block text-[13.5px] text-ink-mute">{descripcion}</span>
+      </span>
+      {editar === null ? null : (
+        <Link className="shrink-0 text-[14px] text-gold-deep max-[559px]:hidden" href={editar}>
+          Editar datos
+        </Link>
       )}
-    </article>
+      <Link
+        aria-label={incluida ? `${titulo}: ${encendida ? 'encendida, cambiar' : 'apagada, encender'}` : `${titulo}: no viene en tu plan`}
+        className={`grid min-h-11 shrink-0 place-items-center ${incluida ? '' : 'opacity-50'}`}
+        href={href}
+      >
+        {/* El interruptor mide 28 px; el toque, 44 (la fila entera de alto). */}
+        <span aria-hidden className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${encendida ? 'bg-shell-deep' : 'bg-line-panel-strong'}`}>
+          <span className={`absolute size-5.5 rounded-full bg-bg-raised shadow transition-transform ${encendida ? 'translate-x-[22px]' : 'translate-x-[3px]'}`} />
+        </span>
+      </Link>
+    </li>
   )
 }

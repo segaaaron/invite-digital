@@ -14,11 +14,11 @@ const grupo = (id: string, label: string, seats: number): SeatedGroupRow => ({
 })
 
 describe('UnseatedStrip', () => {
-  it('lista los grupos pendientes de sentar con sus cupos', () => {
+  it('lista los grupos pendientes de sentar con cuántas personas son', () => {
     render(<UnseatedStrip groups={[grupo('a', 'Familia Rojas', 4), grupo('b', 'Camila Vargas', 1)]} />)
     expect(screen.getByText('Familia Rojas')).toBeInTheDocument()
-    expect(screen.getByText(/4 cupos/)).toBeInTheDocument()
-    expect(screen.getByText(/1 cupo$/)).toBeInTheDocument()
+    expect(screen.getByText(/4 personas/)).toBeInTheDocument()
+    expect(screen.getByText(/1 persona$/)).toBeInTheDocument()
   })
 
   it('es una tira de chips, como la maqueta: uno por grupo', () => {

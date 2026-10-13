@@ -1,8 +1,12 @@
 import Link from 'next/link'
 import { admin } from '@/app/composition/container'
-import { COLUMNAS_DE_EQUIPO, NewUserForm, UserRow } from '@/modules/admin/ui/UserAdmin'
+import { NewUserForm, UserRow } from '@/modules/admin/ui/UserAdmin'
+import { COLUMNAS_DE_EQUIPO } from '@/modules/admin/ui/columnas-de-equipo'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { PlusIcon } from '@/shared/design/ui/icons'
+import { PestanasDeAdmin } from '@/modules/admin'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EncabezadoDeLista } from '@/shared/design/ui/panel/lista'
 import { PanelLateral } from '@/shared/design/ui/panel/PanelLateral'
@@ -31,7 +35,16 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
 
   return (
     <>
-      <PanelHeader kicker="Ajustes" meta={isErr(usuarios) ? 'Quién trabaja en el panel' : `${plural(equipo.length, 'persona', 'personas')} con acceso al panel`} title="Equipo" />
+      <PanelHeader
+        actions={
+          <PanelButton href={`${BASE}?panel=alta`}>
+            <PlusIcon className="size-4" /> Sumar a alguien
+          </PanelButton>
+        }
+        bajoPestanas="Quién trabaja en el atelier. Los clientes no están aquí: entran a su propio evento."
+        pestanas={<PestanasDeAdmin />}
+        title="Ajustes" tituloEnCelular="Equipo"
+      />
 
       {crear === 'persona' || panel === 'alta' ? (
         <PanelLateral closeHref={BASE} subtitle="Administrador o atelier, con cuenta propia" title="Persona del equipo">
@@ -68,8 +81,24 @@ export default async function AdminUsuariosPage({ searchParams }: { searchParams
         )}
       </PanelCard>
 
+      {/* Qué puede hacer cada rol, en una línea cada uno (maqueta E47). */}
+      <dl className="mt-5 grid gap-5 rounded-[16px] border border-line-panel bg-bg-raised px-6 py-5 min-[700px]:grid-cols-3">
+        <div>
+          <dt className="font-medium">Administrador</dt>
+          <dd className="m-0 text-[13.5px] text-ink-mute">Todo: ventas, catálogo, ajustes y cualquier evento.</dd>
+        </div>
+        <div>
+          <dt className="font-medium">Atelier</dt>
+          <dd className="m-0 text-[13.5px] text-ink-mute">Sus eventos y los clientes que atiende.</dd>
+        </div>
+        <div>
+          <dt className="font-medium">Planner</dt>
+          <dd className="m-0 text-[13.5px] text-ink-mute">Solo los eventos donde la contrataron.</dd>
+        </div>
+      </dl>
+
       {clientes === 0 ? null : (
-        <p className="mt-4 text-[12.5px] text-ink-mute">
+        <p className="mt-4 text-[13.5px] text-ink-mute">
           {plural(clientes, 'cuenta de cliente vive', 'cuentas de cliente viven')} en{' '}
           <Link className="text-ink underline underline-offset-4" href="/panel/admin/clientes">
             Clientes

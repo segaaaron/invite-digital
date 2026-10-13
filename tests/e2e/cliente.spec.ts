@@ -53,14 +53,14 @@ test.describe('el panel del cliente', () => {
   test('ve sus invitados', async () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
-    await expect(page.getByRole('cell', { name: 'Rosa Vargas', exact: true })).toBeVisible()
+    await expect(page.getByRole('cell', { name: /^Rosa Vargas/ })).toBeVisible()
   })
 
   test('y el recuento de su lista', async () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
 
     // La cabecera cuenta personas e invitaciones (7 de octubre: «27 personas · 8 invitaciones»).
-    await expect(page.getByText('1 persona · 1 invitación')).toBeVisible()
+    await expect(page.getByText('1 persona en 1 invitación', { exact: false })).toBeVisible()
   })
 
   // Producción, 7 de octubre: las páginas se le abrían y cada botón acababa en «Evento no
@@ -86,18 +86,16 @@ test.describe('el panel del cliente', () => {
   test('abre su planner y suma una tarea propia', async () => {
     expect((await page.goto(`/panel/eventos/${SLUG}/planner/presupuesto`))?.status()).toBe(200)
     await page.goto(`/panel/eventos/${SLUG}/planner/tareas?panel=tarea`)
-    await page.getByLabel('Tarea').fill('Probar el peinado')
+    await page.getByRole('textbox', { name: 'Tarea' }).fill('Probar el peinado')
     await page.getByLabel('Etapa').selectOption('propias')
-    await page.getByRole('button', { name: 'Sumar tarea' }).last().click()
+    await page.getByRole('button', { name: 'Añadir tarea' }).click()
     await expect(page.getByRole('listitem', { name: 'Probar el peinado' })).toBeVisible({ timeout: 15_000 })
   })
 
   test('suma a su planner desde Equipo, y ya no ofrece co-anfitriones', async () => {
     await page.goto(`/panel/eventos/${SLUG}/equipo`)
-    await expect(page.getByRole('radio', { name: /Co-anfitrión/ })).toHaveCount(0)
-    await page.getByRole('radio', { name: /Planner/ }).check()
     await page.getByLabel('Correo').fill(EQUIPO.planner)
-    await page.getByRole('button', { name: 'Sumar al equipo' }).click()
+    await page.getByRole('button', { name: 'Sumar a la planner' }).click()
     await expect(page.getByRole('status').filter({ hasText: EQUIPO.planner })).toBeVisible({ timeout: 15_000 })
     // Sin proveedor de correo, la contraseña provisional se enseña una vez.
     await expect(page.getByLabel('Contraseña provisional')).toBeVisible()
@@ -137,7 +135,7 @@ test.describe('el panel del cliente', () => {
     const respuesta = await page.goto(`/panel/eventos/${SLUG}/configuracion`)
     expect(respuesta?.status()).toBe(200)
 
-    await expect(page.getByRole('heading', { name: 'Personalizar invitación', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Mi invitación', exact: true })).toBeVisible()
 
     // Y escribe de verdad: no basta con que la página pinte. Si la guarda de
     // `saveContentBlockAction` siguiera pidiendo `full`, esto reventaría al guardar.
@@ -184,7 +182,7 @@ test.describe('el panel del cliente', () => {
   })
 
   test('le pone nombre a su evento sin tocar el enlace', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
     const campo = page.getByLabel('Cómo se llama en tu panel')
     const antes = await campo.inputValue()
     await campo.fill('XV de Amanda e2e')
@@ -193,7 +191,7 @@ test.describe('el panel del cliente', () => {
     await page.goto(`/panel/eventos/${SLUG}`)
     await expect(page.getByRole('heading', { name: 'XV de Amanda e2e' })).toBeVisible()
     // Y se deja como estaba: la suite comparte el evento.
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
     await page.getByLabel('Cómo se llama en tu panel').fill(antes)
     await page.getByRole('button', { name: 'Guardar nombre' }).click()
     await expect(page.getByText('Nombre guardado.')).toBeVisible()
@@ -223,8 +221,8 @@ test.describe('el panel del cliente', () => {
     await expect(barra.getByRole('link', { name: 'Invitados' })).toBeVisible()
     // Su invitación sí: es la pantalla donde escribe sus textos y elige su canción.
     await expect(barra.getByRole('link', { name: 'Mi invitación', exact: true })).toBeVisible()
-    // Y verla entera, como un invitado, justo debajo (volvió el 7 de octubre: no se encontraba).
-    await expect(barra.getByRole('link', { name: 'Ver mi invitación' })).toBeVisible()
+    // Y verla entera, como un invitado: en la barra de arriba (maqueta E21).
+    await expect(page.getByRole('link', { name: 'Ver mi invitación' }).first()).toBeVisible()
     // Lo del atelier, no.
     await expect(barra.getByRole('link', { name: 'Plan', exact: true })).toHaveCount(0)
     await expect(barra.getByRole('link', { name: 'Códigos QR' })).toHaveCount(0)
@@ -238,6 +236,6 @@ test.describe('el panel del cliente', () => {
     await expect(page.getByRole('heading', { name: 'Mi cuenta' })).toBeVisible()
     // La contraseña no se cambia aquí: con la cuenta compartida, cualquiera la cambiaría. Se recupera desde la entrada.
     await expect(page.getByLabel('Contraseña actual')).toHaveCount(0)
-    await expect(page.getByText('Este dispositivo', { exact: true })).toBeVisible()
+    await expect(page.getByText('Este aparato', { exact: true })).toBeVisible()
   })
 })

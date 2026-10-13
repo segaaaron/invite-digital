@@ -12,11 +12,7 @@ import { tipoDeDispositivo } from '@/modules/identity/domain/dispositivo'
 import { isErr } from '@/shared/result'
 import { requireSession, SESSION_COOKIE } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/shared/design/ui/panel/cards'
-import { SettingsSection } from '@/shared/design/ui/panel/ajustes'
-import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
-import { botonClases } from '@/shared/design/ui/panel/PanelKit'
-import { signOutAction } from '@/app/_acciones/identity/actions'
+import { MisDatos } from '@/modules/identity/ui/MisDatos'
 
 const ROL = { admin: 'Administrador', atelier: 'Atelier', cliente: 'Cliente', puerta: 'Personal de puerta' } as const
 
@@ -50,72 +46,57 @@ export default async function CuentaPage() {
   // «Luxury con Siri», solo si alguno de sus eventos tiene a Luxury (la ruta de Siri lo vuelve a comprobar).
   const conLuxury = (actor.role === 'cliente' || actor.role === 'atelier') && (await primerEventoConLuxury(actor)) !== null
 
+  const datos = await identity.misDatos(actor.userId)
+  const TARJETA = 'flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta p-6'
+
   return (
-    <div className="flex max-w-[980px] flex-col gap-4.5">
-      <PanelHeader kicker="Cuenta" meta="Tus datos de acceso al panel" title="Mi cuenta" />
+    <div className="flex flex-col gap-5">
+      <PanelHeader meta="Tus datos, tus avisos y dónde tienes la sesión abierta." title="Mi cuenta" />
 
-      <PanelCard>
-        <SettingsSection
-          description={
-            actor.role === 'admin'
-              ? 'Con este correo entras al panel y te llegan los avisos. Para cambiarlo, crea la cuenta nueva en Ajustes › Equipo y borra esta.'
-              : 'Con este correo entras al panel y te llegan los avisos. Si hay que cambiarlo, escríbele al atelier.'
-          }
-          title="Perfil"
-        >
-          <dl className="grid gap-4 min-[560px]:grid-cols-2">
-            <div className="flex flex-col gap-1">
-              <dt className="text-[12px] text-ink-mute">Correo</dt>
-              <dd className="text-[14px] text-ink">{actor.email}</dd>
-            </div>
-            <div className="flex flex-col gap-1">
-              <dt className="text-[12px] text-ink-mute">Rol</dt>
-              <dd className="text-[14px] text-ink">{ROL[actor.role]}</dd>
-            </div>
-          </dl>
-        </SettingsSection>
+      <div className="grid items-start gap-5 min-[900px]:grid-cols-2">
+        <section aria-labelledby="tus-datos" className={TARJETA}>
+          <h2 className="font-display text-[24px] font-medium" id="tus-datos">
+            Tus datos
+          </h2>
+          <MisDatos
+            ayudaCorreo={actor.role === 'admin' ? 'Para cambiarlo, crea la cuenta nueva en Ajustes › Equipo y borra esta.' : 'Para cambiarlo, escríbele al atelier.'}
+            correo={actor.email}
+            nombre={datos.nombre}
+            telefono={datos.telefono}
+          />
+          <p className="text-[13px] text-ink-mute">Entras como {ROL[actor.role].toLowerCase()}.</p>
+        </section>
 
-
-        {actor.role === 'puerta' ? null : (
-          <div className="scroll-mt-24" id="avisos">
-            <SettingsSection
-              description="Te avisamos en la campana y, si los activas, en tu celular o computadora: aunque no tengas el panel abierto. En iPhone, con el panel instalado en la pantalla de inicio."
-              title="Avisos"
-            >
-              <ActivarAvisos clavePublica={avisos.clavePublica} />
-              <PreferenciasDeAvisos
-                silenciados={await avisos.silenciados(actor.userId)}
-                tipos={TIPOS_DE_AVISO_EXPLICADOS.filter((t) => t.soloAdmin === (actor.role === 'admin'))}
-              />
-            </SettingsSection>
-          </div>
-        )}
-
-        {conLuxury ? (
-          <div className="scroll-mt-24" id="siri">
-            <SettingsSection description="Háblale a Luxury sin abrir el panel: «Oye Siri, Luxury», y te responde en voz alta. En iPhone, con la app Atajos." title="Luxury con Siri">
-              <LuxuryConSiri atajo={(await asistente.config()).atajoDeSiri} url={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} />
-            </SettingsSection>
-          </div>
-        ) : null}
-
-        <SettingsSection description="Dónde está abierta tu cuenta. Si alguien más entra con tu contraseña, ciérrale la sesión con el código de tu correo." title="Sesiones abiertas">
+        <section aria-labelledby="donde" className={TARJETA}>
+          <h2 className="font-display text-[24px] font-medium" id="donde">
+            Dónde está abierta
+          </h2>
           <SesionesAbiertas sesiones={sesiones} />
-        </SettingsSection>
+        </section>
+      </div>
 
-        <SettingsSection description="Sal del panel en este dispositivo." title="Sesión">
-          <div>
-            <ConfirmAction
-              action={signOutAction}
-              confirmLabel="Cerrar sesión"
-              description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
-              title="Cerrar sesión"
-              trigger="Cerrar sesión"
-              triggerClassName={botonClases('default')}
-            />
-          </div>
-        </SettingsSection>
-      </PanelCard>
+      {actor.role === 'puerta' ? null : (
+        <section aria-labelledby="avisos-t" className={`${TARJETA} scroll-mt-24`} id="avisos">
+          <h2 className="font-display text-[24px] font-medium" id="avisos-t">
+            Avisos
+          </h2>
+          <p className="max-w-[68ch] text-[14px] text-ink-mute">
+            Te avisamos en la campana y, si los activas, en tu celular o computadora aunque no tengas el panel abierto. En iPhone, con el panel instalado en la pantalla de inicio.
+          </p>
+          <ActivarAvisos clavePublica={avisos.clavePublica} />
+          <PreferenciasDeAvisos silenciados={await avisos.silenciados(actor.userId)} tipos={TIPOS_DE_AVISO_EXPLICADOS.filter((t) => t.soloAdmin === (actor.role === 'admin'))} />
+        </section>
+      )}
+
+      {conLuxury ? (
+        <section aria-labelledby="siri-t" className={`${TARJETA} scroll-mt-24`} id="siri">
+          <h2 className="font-display text-[24px] font-medium" id="siri-t">
+            Luxury con Siri
+          </h2>
+          <p className="max-w-[68ch] text-[14px] text-ink-mute">Háblale a Luxury sin abrir el panel: «Oye Siri, Luxury», y te responde en voz alta. En iPhone, con la app Atajos.</p>
+          <LuxuryConSiri atajo={(await asistente.config()).atajoDeSiri} url={`${env.SITE_URL.replace(/\/$/, '')}/panel/luxury/siri`} />
+        </section>
+      ) : null}
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { themeAsset } from '../assets'
 import { BotanicalWreath } from '../kit/flora/BotanicalWreath'
 import { LucianaCover } from './LucianaCover'
 import { CronogramaEsfera } from './CronogramasV3'
+import { DividerOrnamental } from './DividerOrnamental'
 import type { PielXv } from './piel-xv'
 import { alfaDe, colorDeAcento, PALETA as P } from './xv-luciana.palette'
 
@@ -107,6 +108,8 @@ export const PIEL: PielXv = {
     // Como en Mascarada: el sobre con el borde del panel y el texto con sombra negra.
     sobreAcento: P.lilaFuerte,
     sombraTexto: '0 2px 8px rgba(0,0,0,.75)',
+    avisoTinta: P.violetaHondo,
+    cierreTinta: P.violetaHondo,
     musicaAcento: colorDeAcento.orquidea,
     musicaPista: colorDeAcento.orquidea,
     musicaArtista: colorDeAcento.amatista,
@@ -264,6 +267,9 @@ export const PIEL: PielXv = {
     </BotanicalWreath>
   ),
   // Su ornamento no es un filete: la maqueta pone la lámina del borde, al 50 %.
+  // Avisos y formulario con el filete fino de la maqueta; el ornamento grande va en la fecha y el cronograma.
+  ornamentoAviso: <DividerOrnamental color={P.lilaFuerte} />,
+  ornamentoFormulario: <DividerOrnamental color={P.lilaFuerte} />,
   ornamento: (
     <Image
       alt=""

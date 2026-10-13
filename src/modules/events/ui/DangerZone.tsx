@@ -1,57 +1,54 @@
 'use client'
 
-import { useActionState, useId, useState } from 'react'
+import { useActionState } from 'react'
 import { deleteEventAction, type DeleteEventState } from '@/app/_acciones/events/actions'
+import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
+import { botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 /**
- * La zona de riesgo de la maqueta.
+ * Borrar el evento (maqueta E35 y su diálogo E65).
  *
- * Borrar un evento se lleva por delante invitados, mesas, regalos, mensajes y visitas, y
- * no hay papelera. Por eso el botón no aparece hasta que quien lo pide escribe el
- * identificador exacto del evento — y el servidor lo vuelve a comprobar, porque este
- * formulario es cortesía y la acción es un extremo público.
+ * Se lleva por delante invitados, mesas, regalos, mensajes, fotos y documentos, y no hay papelera. Por eso
+ * el diálogo dice qué se pierde y no deja confirmar hasta escribir el nombre del evento — y el servidor lo
+ * vuelve a comprobar, porque este formulario es cortesía y la acción es un extremo público.
  */
-export function DangerZone({ eventId, eventSlug }: { eventId: string; eventSlug: string }) {
-  const [state, action, pending] = useActionState<DeleteEventState, FormData>(sinCaerse(deleteEventAction), { status: 'idle' })
-  const [escrito, setEscrito] = useState('')
-  const campoId = useId()
+export function DangerZone({ eventId, titulo, personas }: { eventId: string; titulo: string; personas?: number }) {
+  const [state, action] = useActionState<DeleteEventState, FormData>(sinCaerse(deleteEventAction), { status: 'idle' })
 
   return (
-    <form action={action} className="flex flex-col gap-3 rounded-2xl border border-danger/40 bg-danger/5 p-5">
-      <input name="eventId" type="hidden" value={eventId} />
-
-      <p className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-danger uppercase">Zona de riesgo</p>
-      <p className="text-[13px] leading-[1.7] text-ink-soft">
-        Eliminar el evento borra para siempre sus invitados, mesas, regalos, mensajes y visitas. No hay deshacer.
-      </p>
-
-      <label className="flex flex-col gap-2" htmlFor={campoId}>
-        <span className="font-mono text-[9px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
-          Escribe «{eventSlug}» para confirmar
-        </span>
-        <input
-          autoComplete="off"
-          className="rounded-[14px] border border-line bg-bg-top/80 px-4 py-3 text-[14px] text-ink"
-          id={campoId}
-          name="confirmation"
-          onChange={(e) => setEscrito(e.target.value)}
-          value={escrito}
-        />
-      </label>
-
+    <section aria-labelledby="borrar-evento" className="flex flex-col gap-3 rounded-[16px] border border-danger/30 bg-bg-raised p-5.5">
+      <h2 className="text-[16px] font-medium text-danger" id="borrar-evento">
+        Borrar el evento
+      </h2>
+      <p className="text-[14.5px] leading-[1.6] text-ink-mute">Se borran invitados, fotos y documentos. No se puede deshacer.</p>
+      <div>
+        <ConfirmAction
+          action={action}
+          aviso={
+            <>
+              Se borran {personas === undefined ? 'sus invitados' : personas === 1 ? '1 invitado' : `${personas} invitados`}, sus enlaces, las firmas, las fotos y los documentos. Los
+              enlaces enviados dejarán de abrir.
+            </>
+          }
+          confirmLabel="Borrar para siempre"
+          description="No se puede deshacer."
+          requiere={titulo}
+          requiereEtiqueta="Para confirmar, escribe el nombre del evento"
+          title="Borrar el evento"
+          tone="danger"
+          trigger="Borrar evento"
+          volver="Ficha del evento"
+          triggerClassName={botonClases('danger')}
+        >
+          <input name="eventId" type="hidden" value={eventId} />
+        </ConfirmAction>
+      </div>
       {state.status === 'error' ? (
-        <p className="text-[13px] text-danger" role="alert">
+        <p className="text-[13.5px] text-danger" role="alert">
           {state.message}
         </p>
       ) : null}
-
-      <button
-        className="w-fit rounded-full border border-danger px-4 py-2 max-[859px]:min-h-11 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase disabled:opacity-40"
-        disabled={pending || escrito.trim() !== eventSlug}
-        type="submit" aria-busy={(pending) || undefined}>
-        {pending ? 'Eliminando…' : 'Eliminar evento'}
-      </button>
-    </form>
+    </section>
   )
 }

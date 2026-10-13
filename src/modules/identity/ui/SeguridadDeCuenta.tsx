@@ -15,7 +15,7 @@ import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 const ICONO = { computadora: LaptopIcon, celular: PhoneIcon, tablet: TabletIcon, desconocido: HelpIcon } as const
 const CLASE = { computadora: 'Computadora', celular: 'Celular', tablet: 'Tablet', desconocido: 'Dispositivo' } as const
 
-const MAX_VISIBLES = 5
+const MAX_VISIBLES = 3
 
 const INICIAL: CodigoDeCuentaState = { status: 'idle', message: '' }
 
@@ -61,26 +61,26 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
 
   return (
     <div className="flex flex-col gap-4">
-      <ul className="flex flex-col divide-y divide-line-panel rounded-[14px] border border-line-panel bg-white">
+      <ul className="flex flex-col">
         {visibles.map((s) => (
-          <li className="flex flex-wrap items-center justify-between gap-3 px-4 py-3" key={s.id}>
+          <li className="flex flex-wrap items-center justify-between gap-3 border-b border-line-panel py-3.5 last:border-none" key={s.id}>
             <span className="flex items-center gap-3">
-              <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-bg-top text-ink-soft">
+              <span aria-hidden className="grid size-10 shrink-0 place-items-center rounded-full bg-pill-pending text-gold-deep">
                 {(() => {
                   const Icono = ICONO[s.tipo]
                   return <Icono className="size-5" />
                 })()}
               </span>
               <span className="flex flex-col">
-              <span className="text-[14px] text-ink">{`${CLASE[s.tipo]} · ${s.dispositivo}`}</span>
-              <span className="text-[12px] text-ink-mute">Último uso: {s.ultimoUso}</span>
+              <span className="text-[15px] font-medium">{`${CLASE[s.tipo]}, ${s.dispositivo.replace(/ · /g, ', ')}`}</span>
+              <span className="text-[13.5px] text-ink-mute">{s.ultimoUso}</span>
               </span>
             </span>
-            {s.esta ? <Pill tone="ok">Este dispositivo</Pill> : null}
+            {s.esta ? <Pill tone="ok">Este aparato</Pill> : null}
           </li>
         ))}
         {ocultas > 0 ? (
-          <li className="px-4 py-3 text-[12px] text-ink-mute">
+          <li className="py-3 text-[13px] text-ink-mute">
             y {ocultas} sesi{ocultas === 1 ? 'ón' : 'ones'} más, de antes
           </li>
         ) : null}
@@ -89,8 +89,11 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
       {otras === 0 ? (
         <p className="text-[13px] text-ink-mute">Solo está abierta tu sesión en este dispositivo.</p>
       ) : (
-        <div className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-bg-raised p-4">
-          <p className="text-[13px] leading-[1.6] text-ink-soft">
+        <details className="group flex flex-col gap-3">
+          <summary className="inline-flex min-h-10 w-fit cursor-pointer list-none items-center rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 text-[14px] font-medium hover:border-gold group-open:mb-3 [&::-webkit-details-marker]:hidden">
+            Cerrar en los demás aparatos
+          </summary>
+          <p className="mb-3 text-[13.5px] leading-[1.6] text-ink-soft">
             Para cerrar {otras === 1 ? 'la otra sesión' : `las otras ${otras}`} te mandamos un código a tu correo: así solo tú puedes sacar a los demás.
           </p>
           <PedirCodigo texto="Enviarme el código" />
@@ -102,7 +105,7 @@ export function SesionesAbiertas({ sesiones }: { sesiones: readonly SesionVista[
               Cerrar las demás sesiones
             </SubmitButton>
           </form>
-        </div>
+        </details>
       )}
       <ActionFeedback state={estado.status === 'idle' ? { status: 'idle' } : { status: estado.status === 'done' ? 'success' : 'error', message: estado.message }} />
     </div>

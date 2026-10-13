@@ -3,17 +3,17 @@ import { describe, expect, it } from 'vitest'
 import { BarRow, FilterChip, IconButton, PanelButton, Pill, SearchField } from './PanelKit'
 
 describe('PanelButton', () => {
-  it('pinta el primario en tinta oscura, no en dorado', () => {
+  it('pinta el primario en esmeralda, no en dorado', () => {
     render(<PanelButton variant="primary">Invitar persona</PanelButton>)
     const boton = screen.getByRole('button', { name: 'Invitar persona' })
-    expect(boton.className).toContain('to-shell-deep')
+    expect(boton.className).toContain('bg-shell-deep')
     expect(boton.className).not.toContain('bg-gold')
   })
 
-  it('pinta el secundario blanco con borde, como la maqueta', () => {
+  it('pinta el secundario en marfil con borde', () => {
     render(<PanelButton>Exportar lista</PanelButton>)
     const boton = screen.getByRole('button', { name: 'Exportar lista' })
-    expect(boton.className).toContain('bg-white')
+    expect(boton.className).toContain('bg-bg-raised')
     expect(boton.className).toContain('border')
   })
 
@@ -49,17 +49,17 @@ describe('Pill', () => {
 })
 
 describe('FilterChip', () => {
-  it('el activo va en tinta sólida y lo anuncia', () => {
+  it('el activo va en esmeralda sólido y lo anuncia', () => {
     render(<FilterChip active>Confirmados</FilterChip>)
     const chip = screen.getByRole('button', { name: 'Confirmados' })
-    expect(chip.className).toContain('bg-ink')
+    expect(chip.className).toContain('bg-shell-deep')
     expect(chip.getAttribute('aria-pressed')).toBe('true')
   })
 
-  it('el inactivo va blanco', () => {
+  it('el inactivo va en marfil', () => {
     render(<FilterChip>Pendientes</FilterChip>)
     const chip = screen.getByRole('button', { name: 'Pendientes' })
-    expect(chip.className).toContain('bg-white')
+    expect(chip.className).toContain('bg-bg-raised')
     expect(chip.getAttribute('aria-pressed')).toBe('false')
   })
 })

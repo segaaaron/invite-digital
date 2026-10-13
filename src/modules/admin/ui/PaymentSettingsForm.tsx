@@ -25,8 +25,16 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
   const id = useId()
 
   return (
-    <div className="flex flex-col gap-7">
-      <form action={guardar} className="flex flex-col gap-4">
+    // La maqueta (E44): los datos de transferencia en su tarjeta y, al lado, el QR de cobro.
+    <div className="flex flex-wrap items-start gap-9">
+      <form action={guardar} aria-labelledby={`${id}-dc`} className="flex min-w-0 flex-[2_1_460px] flex-col gap-4.5 rounded-[16px] border border-line-panel bg-bg-raised p-7 max-[559px]:p-5">
+        <div>
+          <h2 className="font-display text-[24px] font-medium" id={`${id}-dc`}>
+            Datos de transferencia
+          </h2>
+          {/* Los tres primeros o ninguno: media ficha de transferencia hace creer que se puede pagar. */}
+          <p className="mt-1 text-[14px] text-ink-mute">Se muestran al cliente cuando hace su pedido. Banco, titular y cuenta van juntos.</p>
+        </div>
         <div className="grid gap-4 min-[560px]:grid-cols-2">
           <div className="flex flex-col gap-2">
             <label className={LABEL_CLASS} htmlFor={`${id}-banco`}>
@@ -76,12 +84,6 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           />
         </div>
 
-        {/* Los tres primeros o ninguno: media ficha de transferencia hace creer que se
-            puede pagar, y el cliente lo descubre cuando ya escribió. */}
-        <p className="text-[11px] leading-[1.7] text-ink-mute">
-          Banco, titular y cuenta van juntos: si falta alguno, la página del pedido no enseña la ficha y remite a
-          WhatsApp.
-        </p>
 
         {datos.status === 'error' ? (
           <p className="text-[13px] text-danger" role="alert">
@@ -94,13 +96,15 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           </p>
         ) : null}
 
-        <SubmitButton className="w-fit" variant="primary" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar datos'}</SubmitButton>
+        <SubmitButton className="w-fit self-end" variant="primary" pending={guardando} pendingLabel={'Guardando…'}>{'Guardar datos'}</SubmitButton>
       </form>
 
-      <form action={subir} className="flex flex-col gap-3.5 border-t border-line-panel pt-6">
-        <p className={LABEL_CLASS}>Imagen del QR de cobro</p>
+      <form action={subir} aria-labelledby={`${id}-qr`} className="flex min-w-0 flex-[1_1_260px] flex-col gap-3">
+        <h2 className="font-display text-[24px] font-medium" id={`${id}-qr`}>
+          QR de cobro
+        </h2>
 
-        <p className="text-[12px] leading-[1.7] text-ink-soft">Expórtalo de la aplicación de tu banco y súbelo.</p>
+        <p className="text-[13.5px] text-ink-mute">En Bolivia el QR lo emite tu banco. Sube la imagen que exporta su aplicación.</p>
         <Ayuda titulo="¿Por qué no se genera aquí?">
           <p>
             En Bolivia el QR de cobro lo emite el sistema financiero, cifrado y firmado por el banco: no se puede generar
@@ -108,15 +112,14 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           </p>
         </Ayuda>
 
-        {settings.hasQrImage ? (
-          <span className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img alt="QR de cobro cargado" className="w-28 rounded-xl border border-line-panel" src="/qr-de-cobro" />
-            <span className="text-[12px] text-ink-soft">Ya hay uno cargado. Sube otro para reemplazarlo.</span>
-          </span>
-        ) : (
-          <p className="text-[13px] text-ink-mute">Todavía no hay ninguno: la página del pedido enseña solo los datos escritos.</p>
-        )}
+        <div className="grid aspect-square w-full max-w-[200px] place-items-center rounded-[16px] border border-line-panel bg-bg-raised p-4">
+          {settings.hasQrImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt="QR de cobro cargado" className="size-full object-contain" src="/qr-de-cobro" />
+          ) : (
+            <p className="text-center text-[13.5px] text-ink-mute">Todavía no hay ninguno: el pedido enseña solo los datos escritos.</p>
+          )}
+        </div>
 
         <FilePicker accept="image/png,image/jpeg,image/webp" hint="PNG, JPG o WEBP exportado de la app de tu banco" label="Elegir imagen del QR" name="qr" />
 
@@ -125,7 +128,7 @@ export function PaymentSettingsForm({ settings }: { settings: PaymentSettings })
           <PanelAlert tone="ok">{imagen.message}</PanelAlert>
         ) : null}
 
-        <SubmitButton className="w-fit" variant="default" pending={subiendo} pendingLabel={'Subiendo…'}>{'Subir QR'}</SubmitButton>
+        <SubmitButton className="w-fit" variant="default" pending={subiendo} pendingLabel={'Subiendo…'}>{settings.hasQrImage ? 'Cambiar imagen' : 'Subir QR'}</SubmitButton>
       </form>
     </div>
   )

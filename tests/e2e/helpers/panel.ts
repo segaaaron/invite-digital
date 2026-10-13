@@ -56,7 +56,7 @@ export async function createGuestGroup(
   // «Acompañado» abre un campo por acompañante, y de cada uno solo se pide el nombre: los
   // cupos del grupo son la persona más ellos.
   await añadirAcompanantes(page, Math.max(0, seats - 1))
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   // Guardar cierra el diálogo.
   await page.waitForURL(/invitados$/)
 }
@@ -76,8 +76,8 @@ export async function desplegarInvitacion(page: Page, label: string): Promise<vo
 /** Abre «Acompañado» y escribe un nombre por acompañante, que es lo único que se les pide. */
 export async function añadirAcompanantes(page: Page, cuantos: number): Promise<void> {
   if (cuantos === 0) return
-  await page.getByLabel('Tipo de invitación').selectOption('acompanado')
-  for (let i = 1; i < cuantos; i += 1) await page.getByRole('button', { name: 'Añadir acompañante' }).click()
+  await page.getByRole('radio', { name: /Con acompañantes/ }).check()
+  for (let i = 1; i < cuantos; i += 1) await page.getByRole('button', { name: 'Otro acompañante' }).click()
   for (let i = 0; i < cuantos; i += 1) {
     await page.getByLabel(`Nombre del acompañante ${i + 1}`).fill(`Acompañante ${i + 1}`)
   }

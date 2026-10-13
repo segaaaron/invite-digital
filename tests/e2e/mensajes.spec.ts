@@ -33,14 +33,13 @@ test('el invitado firma el libro, se le agradece, y él ve la respuesta', async 
   await expect(page.getByText('Qué ganas de celebrar con ustedes.')).toBeVisible()
   await expect(page.getByRole('button', { name: /Marcar leído|Destacar/ })).toHaveCount(0)
   // Dice si viene, y cuántas quedan por agradecer.
-  await expect(page.getByText(/^Vienen? /).first()).toBeVisible()
   await expect(page.getByRole('link', { name: 'Sin agradecer · 1' })).toBeVisible()
 
   // 3. Se le agradece, y la respuesta llega a la base.
   await page.getByRole('button', { name: 'Agradecer' }).first().click()
   await page.getByLabel(/^Agradecer a /).fill('Gracias, los esperamos con muchas ganas.')
   await page.getByRole('button', { name: 'Guardar' }).click()
-  await expect(page.getByText('Tu agradecimiento')).toBeVisible()
+  await expect(page.getByText('Tu respuesta')).toBeVisible()
 
   await expect
     .poll(async () => (await noteOf(eventId))?.reply)

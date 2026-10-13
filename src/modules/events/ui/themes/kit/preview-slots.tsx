@@ -67,7 +67,7 @@ export function ranurasDeVistaPrevia(
     // del diseño. Va inerte, como el resto.
     photos: (
       <PreviewSlot>
-        <span className="inline-block rounded-[var(--radius-pill)] bg-[var(--color-cta)] px-5 py-3 font-mono text-[9px] font-bold tracking-[0.15em] text-[var(--color-on-cta)] uppercase">
+        <span className="inline-block min-w-[var(--fotos-min,0px)] rounded-[var(--radius-pill)] border-[length:var(--fotos-borde,0px)] text-center whitespace-nowrap border-[var(--fotos-linea,transparent)] px-[var(--fotos-px,20px)] py-[var(--fotos-py,12px)] [font-family:var(--fotos-letra,var(--font-mono))] text-[length:var(--fotos-fs,9px)] font-bold tracking-[var(--fotos-tracking,0.15em)] uppercase bg-[var(--fotos-fondo,var(--color-cta))] text-[var(--fotos-tinta,var(--color-on-cta))]">
           {diccionario.invitation.photosPick}
         </span>
       </PreviewSlot>

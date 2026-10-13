@@ -36,6 +36,7 @@ export function ShowcaseMusicRow({
   cancion,
   publicado,
   ventas,
+  fiesta,
 }: {
   themeKey: string
   label: string
@@ -47,6 +48,8 @@ export function ShowcaseMusicRow({
   publicado: boolean
   /** Cuántas veces se vendió y cuándo la última (ya en palabras): qué destacar y qué retirar. */
   ventas: { readonly veces: number; readonly ultima: string | null }
+  /** «Boda», «XV años»: lo que dice bajo el nombre (maqueta E05). */
+  fiesta: string
 }) {
   const [alta, subir, subiendo] = useActionState<AdminActionState, FormData>(sinCaerse(uploadShowcaseMusicAction), INICIAL)
   const [baja, quitar, quitando] = useActionState<AdminActionState, FormData>(sinCaerse(removeShowcaseMusicAction), INICIAL)
@@ -75,45 +78,35 @@ export function ShowcaseMusicRow({
   const estado = alta.status !== 'idle' ? alta : baja.status !== 'idle' ? baja : renombre.status !== 'idle' ? renombre : publicacion
 
   return (
-    <li
-      // `@container`: los campos de la canción se apilan según lo ancho que sea **la tarjeta**,
-      // no la ventana. Con la consulta de ventana, en la rejilla de cinco columnas salían dos
-      // campos de 90 px con el rótulo partido en tres líneas.
-      className={`@container flex flex-col overflow-hidden rounded-[var(--radius-card)] border bg-white shadow-[var(--shadow-card)] ${
-        publicado ? 'border-line-panel' : 'border-dashed border-line-panel-strong'
-      }`}
-    >
+    // La tarjeta de la maqueta (E05): la portada a 9:16, el nombre con su fiesta y sus ventas, y si está publicado.
+    <li className="@container flex flex-col gap-2.5">
       <a
         aria-label={`Abrir el modelo ${label} en una pestaña nueva`}
-        className="group relative block aspect-[4/3] overflow-hidden bg-bg-sunken"
+        className="group relative block aspect-[9/16] overflow-hidden rounded-[12px] border border-line-panel bg-bg-sunken"
         href={`/modelos/es/${themeKey}`}
         rel="noopener noreferrer"
         target="_blank"
       >
         <Image
-          alt=""
-          className={`object-cover object-top transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${
-            publicado ? '' : 'opacity-50 grayscale'
-          }`}
+          alt={`Portada de ${label}`}
+          className={`object-cover object-top transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100 ${publicado ? '' : 'opacity-55 grayscale'}`}
           fill
-          sizes="(max-width: 560px) 90vw, 300px"
+          sizes="(max-width: 560px) 45vw, 220px"
           src={coverSrc}
         />
-        <span className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-          <Pill tone={publicado ? 'ok' : 'no'}>{publicado ? 'En la web' : 'Retirado'}</Pill>
-          <Pill tone={tieneMusica ? 'ok' : 'pending'}>{tieneMusica ? 'Con música' : 'Sin música'}</Pill>
-        </span>
       </a>
 
-      <div className="flex flex-1 flex-col gap-3 p-4">
-        <div className="flex items-start justify-between gap-2">
-          <span className="min-w-0">
-            <span className="block font-display text-[20px] leading-tight text-ink">{label}</span>
-            {/* Lo que dice si merece estar en la vitrina: cuánto se vende. La clave interna no le dice nada al admin. */}
-            <span className="mt-0.5 block text-[12px] text-ink-mute">
-              {ventas.veces === 0 ? 'Sin ventas todavía' : `Vendido ${ventas.veces === 1 ? '1 vez' : `${ventas.veces} veces`}${ventas.ultima === null ? '' : ` · la última ${ventas.ultima}`}`}
+      <div className="flex flex-1 flex-col gap-2.5">
+        {/* Ancha, todo en una línea; estrecha (dos por fila en el celular), la píldora y el «⋯» bajan. */}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
+          <span className="min-w-0 flex-[1_1_120px]">
+            <span className="block truncate font-medium">{label}</span>
+            {/* Lo que dice si merece estar en la vitrina: cuánto se vende. */}
+            <span className="block truncate text-[13px] text-ink-mute" title={ventas.ultima === null ? undefined : `La última, ${ventas.ultima}`}>
+              {fiesta}, {ventas.veces === 1 ? '1 venta' : `${ventas.veces} ventas`}
             </span>
           </span>
+          <Pill tone={publicado ? 'ok' : 'neutro'}>{publicado ? 'Publicado' : 'Sin publicar'}</Pill>
           <MenuDeAcciones etiqueta={`Más acciones de ${label}`}>
             <a className={opcionDeMenu()} href={`/modelos/es/${themeKey}`} rel="noopener noreferrer" target="_blank">
               Ver el modelo
@@ -135,7 +128,7 @@ export function ShowcaseMusicRow({
         </div>
 
         {/* La canción, plegada: se toca una vez y ocupaba media tarjeta en cada modelo. */}
-        <details className="group rounded-[14px] border border-line-panel bg-bg-top/60" open={alta.status === 'error' || nombreNuevo !== null}>
+        <details className="group rounded-[10px] border border-line-panel bg-bg-raised" open={alta.status === 'error' || nombreNuevo !== null}>
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-[13px] [&::-webkit-details-marker]:hidden">
             <span className="min-w-0 truncate text-ink">{tieneMusica ? (cancion === null ? 'Canción sin nombre' : [cancion.track, cancion.artist].filter(Boolean).join(' · ')) : 'Sin canción'}</span>
             <span className="shrink-0 text-[12px] text-ink-mute group-open:hidden">{tieneMusica ? 'Cambiar' : 'Subir'}</span>

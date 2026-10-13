@@ -126,7 +126,7 @@ export function XvSharedView({
   const Z = piel.piezas ?? {}
   const F = Z.formulario ?? {}
   // El párrafo de `Firma3D` bajo cada titular (la frase del libro, del álbum y de los regalos).
-  const CUERPO_F3 = { fontFamily: SANS, fontSize: 15, lineHeight: 1.7, textAlign: 'center', color: Z.pestanas?.tinta ?? P.violeta, textShadow: Z.sombraTexto } as const
+  const CUERPO_F3 = { fontFamily: SANS, fontSize: 15, lineHeight: 1.7, textAlign: 'center', color: Z.cuerpoF3 ?? Z.pestanas?.tinta ?? P.violeta, textShadow: Z.sombraTexto } as const
   // La portada no se personaliza; la foto que abre «Palacio Griego» a sangre es el retrato.
   const fotoDeApertura = hero?.portraitImageId === undefined ? undefined : `/media/${hero.portraitImageId}`
   /** La recepción centrada y compacta de «Gala Real» en V3. */
@@ -199,6 +199,20 @@ export function XvSharedView({
         ['--rsvp-boton-tracking' as string]: '0.18em',
         ['--libro-radio' as string]: '10px',
         ['--libro-letra' as string]: SANS,
+        // «Subir mis fotos» como el `F3Btn` de la maqueta: el mismo botón que «Firmar el libro».
+        ['--fotos-letra' as string]: SANS,
+        ['--fotos-fs' as string]: '11px',
+        ['--fotos-tracking' as string]: '0.18em',
+        ['--fotos-px' as string]: '22px',
+        // V4 (Firma3D): «Firmar el libro» y «Subir mis fotos» con el acento de sus pestañas, como en la maqueta.
+        ...(piel.regalosV4 === true && Z.pestanas !== undefined
+          ? {
+              ['--libro-enviar' as string]: Z.pestanas.acento,
+              ['--libro-enviar-tinta' as string]: Z.pestanas.sobreAcento,
+              ['--fotos-fondo' as string]: Z.pestanas.acento,
+              ['--fotos-tinta' as string]: Z.pestanas.sobreAcento,
+            }
+          : {}),
         position: 'relative',
         background: piel.fondoBase,
         color: P.tinta,
@@ -1382,7 +1396,7 @@ export function XvSharedView({
                 boxShadow: P.sombraFuerte,
               }}
             >
-              {piel.ornamento ?? <DividerOrnamental color={P.amatista} />}
+              {piel.ornamentoAviso ?? piel.ornamento ?? <DividerOrnamental color={P.amatista} />}
               <div style={{ marginTop: 22, fontFamily: CALIGRAFIA, fontSize: 44, color: TITULO }}>
                 {aviso.title}
               </div>
@@ -1393,7 +1407,7 @@ export function XvSharedView({
                     fontFamily: SERIF,
                     fontSize: 16,
                     lineHeight: 1.7,
-                    color: P.violeta,
+                    color: Z.avisoTinta ?? P.violeta,
                     textShadow: Z.sombraTexto ?? '0 1px 3px rgba(255,255,255,.9)',
                     maxWidth: '78%',
                     marginInline: 'auto',
@@ -1402,7 +1416,7 @@ export function XvSharedView({
                   {aviso.text}
                 </p>
               )}
-              <div style={{ marginTop: 22 }}>{piel.ornamento ?? <DividerOrnamental color={P.amatista} />}</div>
+              <div style={{ marginTop: 22 }}>{piel.ornamentoAviso ?? piel.ornamento ?? <DividerOrnamental color={P.amatista} />}</div>
             </div>
           </Reveal>
         ))}
@@ -1433,7 +1447,7 @@ export function XvSharedView({
                 {themes.rsvpDeadlineLine.replace('{fecha}', plazo)}
               </div>
             )}
-            {piel.ornamento ?? <FileteDegradado color={F.filete ?? P.lilaFuerte} margin="22px auto" />}
+            {Z.ornamentoFormularioAbajo ?? piel.ornamento ?? <FileteDegradado color={F.filete ?? P.lilaFuerte} margin="22px auto" />}
             {slots.rsvp}
             {/* V4: ya confirmó; el mensaje se deja en el libro de firmas, a un toque. */}
             {!respondida || slots.guestbook === null ? null : (
@@ -1548,7 +1562,7 @@ export function XvSharedView({
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 14 }}>
                 {mensajesDeMuestra.map((m) => (
                   <div key={m.quien} style={{ padding: '16px 18px', textAlign: 'left', ...CRISTAL, border: `1px solid ${P.lila}` }}>
-                    <div style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 15, lineHeight: 1.6, color: Z.pestanas?.tinta ?? P.violeta }}>&quot;{m.texto}&quot;</div>
+                    <div style={{ fontFamily: SANS, fontStyle: 'italic', fontSize: 15, lineHeight: 1.6, color: Z.cuerpoF3 ?? Z.pestanas?.tinta ?? P.violeta }}>&quot;{m.texto}&quot;</div>
                     <div style={{ fontFamily: SANS, fontSize: 9.5, letterSpacing: '0.25em', fontWeight: 700, textTransform: 'uppercase', marginTop: 8, color: Z.pestanas?.acento ?? P.uva }}>— {m.quien}</div>
                   </div>
                 ))}
@@ -1596,7 +1610,7 @@ export function XvSharedView({
                 <span style={{ width: 44, height: 1, background: P.lila }} />
               </div>
               {voz === undefined ? null : <p style={{ ...CUERPO_F3, maxWidth: 320, margin: '10px auto 0' }}>{voz.albumIntro}</p>}
-              <p style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: Z.pestanas?.tinta ?? P.violeta, maxWidth: 300, margin: '8px auto 0', textShadow: Z.sombraTexto }}>
+              <p style={{ fontFamily: SANS, fontSize: 12.5, lineHeight: 1.6, color: Z.cuerpoF3 ?? Z.pestanas?.tinta ?? P.violeta, maxWidth: 300, margin: '8px auto 0', textShadow: Z.sombraTexto }}>
                 {themes.albumHint}
               </p>
               {/* Las seis fotos de muestra de la maqueta, solo en el escaparate: en una invitación, las suben los invitados. */}
@@ -1618,7 +1632,7 @@ export function XvSharedView({
 
         <Reveal>
           <div style={{ marginTop: 20, textAlign: 'center', padding: '20px 10px 40px' }}>
-            {piel.ornamento ?? <FileteDegradado color={P.lilaFuerte} margin="0 auto 34px" />}
+            {Z.cierreOrnamento === false || Z.cierreOrnamentoTrasTexto === true ? null : (piel.ornamento ?? <FileteDegradado color={P.lilaFuerte} margin="0 auto 34px" />)}
             {/*
               El agradecimiento va **antes** del rótulo y de la firma, que es donde la
               maqueta lo pone: «gracias por acompañarme» cierra la invitación, y debajo
@@ -1630,6 +1644,7 @@ export function XvSharedView({
                 {despedida}
               </p>
             )}
+            {Z.cierreOrnamentoTrasTexto === true ? <div style={{ marginTop: 22 }}>{piel.ornamento}</div> : null}
             {/* El cierre lleva su propio rótulo —«Mis XV Años»—, no el antetítulo de la
                 cabecera: arriba pone «· MIS QUINCE ·» y aquí no. */}
             <div style={{ fontSize: 11, letterSpacing: '0.28em', textTransform: 'uppercase', color: P.uva, marginTop: despedida === undefined ? 8 : 36 }}>
@@ -1662,7 +1677,7 @@ export function XvSharedView({
                     fontStyle: 'italic',
                     fontSize: 21,
                     lineHeight: 1.8,
-                    color: P.violeta,
+                    color: Z.cierreTinta ?? P.violeta,
                     textShadow: Z.sombraBendicion ?? Z.sombraTexto ?? '0 2px 8px rgba(255,255,255,.9)',
                   }}
                 >

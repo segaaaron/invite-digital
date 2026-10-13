@@ -48,7 +48,7 @@ test.describe('colores y letra', () => {
   })
 
   test('sin el plan, la tarjeta lo dice', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
     await expect(page.getByText(/En Gala e Imperial eliges el color/)).toBeVisible()
     await expect(page.getByRole('button', { name: 'Guardar colores y letra' })).toHaveCount(0)
   })

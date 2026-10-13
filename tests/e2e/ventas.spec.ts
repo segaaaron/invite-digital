@@ -28,48 +28,47 @@ test.afterAll(async () => {
   await sql.end({ timeout: 5 })
 })
 
-test('la consulta y su pedido son una sola venta: una tarjeta, una ficha con su recorrido y la decisión', async ({ page }) => {
+test('la consulta y su pedido son una sola venta: una fila, una ficha con su recorrido y la decisión', async ({ page }) => {
+  // La lista con su ficha al lado (maqueta E02): cada fila dice su etapa.
   await page.goto('/panel/admin/ventas')
-  const nuevas = page.locator('section[aria-labelledby="etapa-nueva"]')
-  const revisar = page.locator('section[aria-labelledby="etapa-por_revisar"]')
+  const lista = page.getByRole('region', { name: 'Lista de ventas' })
+  const ficha = page.locator('section[aria-labelledby="ficha-de-venta"]')
   // La misma persona (mismo teléfono) no sale dos veces: su consulta va dentro de su pedido.
-  await expect(revisar.getByRole('link', { name: new RegExp(nombre) })).toBeVisible()
-  await expect(nuevas.getByRole('link', { name: new RegExp(nombre) })).toHaveCount(0)
+  await expect(lista.getByRole('link', { name: new RegExp(nombre) })).toHaveCount(1)
+  await expect(lista.getByRole('link', { name: new RegExp(nombre) })).toContainText('Por revisar')
 
-  await revisar.getByRole('link', { name: new RegExp(nombre) }).click()
+  await lista.getByRole('link', { name: new RegExp(nombre) }).click()
   await expect(page).toHaveURL(new RegExp(`venta=p-${ref}`))
-  const panel = page.locator('dialog[open]')
-  await expect(panel.getByRole('heading', { name: nombre })).toBeVisible()
-  await expect(panel.getByText('Escribió desde la web')).toBeVisible()
-  await expect(panel.getByRole('button', { name: 'Aprobar pago' })).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page).not.toHaveURL(/venta=/)
-  await expect(page.locator('dialog[open]')).toHaveCount(0)
+  await expect(ficha.getByRole('heading', { name: nombre })).toBeVisible()
+  await ficha.getByText('Recorrido y datos').click()
+  await expect(ficha.getByText('Escribió desde la web')).toBeVisible()
+  await expect(ficha.getByRole('button', { name: 'Aprobar pago' })).toBeVisible()
 
   // Una consulta sola se contesta de un toque: abre WhatsApp y pasa a «Contactadas».
-  await nuevas.getByRole('link', { name: new RegExp(suelta) }).click()
-  const [whatsapp] = await Promise.all([page.waitForEvent('popup'), page.locator('dialog[open]').getByRole('button', { name: /Contactar/ }).click()])
+  await lista.getByRole('link', { name: new RegExp(suelta) }).click()
+  await expect(ficha.getByRole('heading', { name: suelta })).toBeVisible()
+  const [whatsapp] = await Promise.all([page.waitForEvent('popup'), ficha.getByRole('button', { name: /Contactar/ }).click()])
   await whatsapp.close()
-  // La ficha se repinta con la etapa nueva en cuanto la acción deja constancia.
-  await expect(page.locator('dialog[open]').getByText('Contactada', { exact: true })).toBeVisible()
-  await page.keyboard.press('Escape')
-  await expect(page.locator('section[aria-labelledby="etapa-contactada"]').getByRole('link', { name: new RegExp(suelta) })).toBeVisible()
+  await expect.poll(async () => (await sql<{ status: string }[]>`select status from consultation_requests where email = ${correoSuelta}`)[0]?.status).toBe('contacted')
+  await page.goto('/panel/admin/ventas?etapa=consultas')
+  await expect(lista.getByRole('link', { name: new RegExp(suelta) })).toContainText('Contactada')
 })
 
 test('clientes junta la consulta y el pedido de la misma persona, y ⌘K lleva a su venta', async ({ page }) => {
   await page.goto(`/panel/admin/clientes?q=${encodeURIComponent(correo)}`)
-  await page.getByRole('link', { name: new RegExp(nombre) }).click()
-  const ficha = page.locator('dialog[open]')
+  await page.getByRole('region', { name: 'Lista de clientes' }).getByRole('link', { name: new RegExp(nombre) }).click()
+  // La ficha del cliente, al lado de la lista (maqueta E04).
+  const ficha = page.locator('section[aria-labelledby="ficha-de-cliente"]')
   await expect(ficha.getByRole('link', { name: 'Escribió desde la web' })).toBeVisible()
   await expect(ficha.getByRole('link', { name: 'Pedido Atelier' })).toBeVisible()
-  await expect(ficha.getByText('Pidió plan')).toBeVisible()
+  // Su etapa la dice la fila de la lista (maqueta E04).
+  await expect(page.getByRole('region', { name: 'Lista de clientes' }).getByRole('link', { name: new RegExp(nombre) })).toContainText('Pidió plan')
 
-  await page.keyboard.press('Escape')
   await page.keyboard.press('ControlOrMeta+k')
   const buscador = page.locator('dialog[open]')
   await buscador.getByRole('searchbox').fill(ref)
   await page.keyboard.press('Enter')
   await buscador.getByRole('link', { name: new RegExp(ref) }).first().click()
   await expect(page).toHaveURL(new RegExp(`/panel/admin/ventas\\?venta=p-${ref}`))
-  await expect(page.locator('dialog[open]').getByRole('heading', { name: nombre })).toBeVisible()
+  await expect(page.locator('section[aria-labelledby="ficha-de-venta"]').getByRole('heading', { name: nombre })).toBeVisible()
 })

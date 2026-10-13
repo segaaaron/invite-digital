@@ -55,8 +55,8 @@ test.describe('el enlace general', () => {
 
   test('aparece en la lista de invitados, con su acompañante', async () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
-    // Una familia se pinta plegada con su cabecera: quién, cuántas personas y si ya se envió.
-    await expect(page.getByRole('button', { name: /Mónica Salvatierra\s*2 personas\s*Enviado/ })).toBeVisible()
+    // Una familia lleva su fila de cabecera: quién, cuántas personas y si ya se envió.
+    await expect(page.getByRole('cell', { name: 'Mónica Salvatierra 2 personas, enviada' })).toBeVisible()
   })
 
   test('quitado, el enlace deja de abrir', async ({ browser }) => {

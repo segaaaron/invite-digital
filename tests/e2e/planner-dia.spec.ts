@@ -35,14 +35,14 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
   await page.getByRole('button', { name: 'Sumar proveedor' }).click()
 
   const dj = page.getByRole('listitem', { name: 'DJ' })
-  await expect(dj).toContainText('pagado', { timeout: 15_000 })
+  await expect(dj).toContainText('Precio Bs 3.500', { timeout: 15_000 })
   const [partida] = await sql<{ concept: string; contracted: number }[]>`
     select i.concept, i.contracted_cents as contracted from budget_items i join events e on e.id = i.event_id where e.slug = ${SLUG}`
   expect(partida).toEqual({ concept: 'DJ · Beat', contracted: 3_500_00 })
 
   // El cronograma empieza vacío: el momento se suma a mano, en su modal, con el DJ y su canción.
   await page.goto(`/panel/eventos/${SLUG}/planner/cronograma?momento=nuevo`)
-  const modal = page.getByRole('dialog', { name: 'Nuevo momento' })
+  const modal = page.getByRole('dialog', { name: 'Añadir un momento' })
   await modal.getByLabel('Hora', { exact: true }).selectOption('20:00')
   await modal.getByLabel('Momento').fill('Vals con el papá')
   await modal.getByText('Para tu equipo').click()
@@ -57,7 +57,7 @@ test('un proveedor con precio nace con su partida, entra al cronograma y ve su p
   // Su enlace, una vez.
   await page.goto(`/panel/eventos/${SLUG}/planner/proveedores`)
   const tarjeta = page.getByRole('listitem', { name: 'DJ' })
-  await tarjeta.getByText('Estado, enlace, editar o quitar').click()
+  await tarjeta.getByText('Compartirle su ficha del día').click()
   await tarjeta.getByRole('button', { name: 'Crear el enlace de DJ' }).click()
   const enlace = (await tarjeta.getByLabel('Enlace del proveedor').textContent({ timeout: 15_000 }))!.trim()
   const ruta = new URL(enlace).pathname
@@ -82,6 +82,7 @@ test('el cortejo de XV suma un chambelán con su talla y un ensayo del vals', as
   const diego = page.getByRole('listitem', { name: 'Diego Rojas' })
   await expect(diego).toContainText('talla M', { timeout: 15_000 })
 
+  await page.goto(`/panel/eventos/${SLUG}/planner/cortejo?panel=ensayo`)
   await elegirFecha(page, 'Fecha y hora', '2027-04-10')
   await page.getByLabel('Hora', { exact: true }).last().selectOption('19:00')
   await page.getByRole('checkbox', { name: 'Diego Rojas' }).check()

@@ -37,6 +37,7 @@ import { COLORES_DE_VESTIMENTA } from '../domain/paleta-vestimenta'
 import { iconosDelItinerario, type OpcionDeIcono } from './themes/iconos-itinerario'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
+import { anexoDe, escrito, visibles } from './avance-de-invitacion'
 
 const INICIAL: ContentActionState = { status: 'idle' }
 
@@ -211,23 +212,14 @@ export function ContentBlockForms({ eventId, eventSlug, sections, pinta, content
   )
 }
 
-/**
- * El mapa va **dentro** de la recepción: es el mismo lugar, y en dos tarjetas se leía como
- * dos sitios distintos. Solo si el diseño pinta las dos.
- */
-const anexoDe = (sections: readonly SectionKey[], seccion: SectionKey): SectionKey | undefined =>
-  seccion === 'reception' && sections.includes('map') ? 'map' : undefined
-const visibles = (sections: readonly SectionKey[]): readonly SectionKey[] =>
-  sections.includes('reception') ? sections.filter((s) => s !== 'map') : sections
+/** Si el formulario ya lleva algo, aunque no esté guardado: «Por completar» en vez de «Sin empezar». */
+const algoEscrito = (estado: EstadoBloque): boolean =>
+  Object.values(estado.campos).some((v) => v.trim() !== '') || estado.lista.length > 0 || estado.filas.length > 0
 
-/** Si el bloque tiene algo escrito. */
-const escrito = (content: InvitationContent, seccion: SectionKey): boolean => {
+/** En la fila plegada, lo que dice un número: «6 de 20 fotos». El resto, «Lista». */
+const resumenCorto = (content: InvitationContent, seccion: SectionKey): string | null => {
   const bloque = content[seccion]
-  if (bloque === undefined || bloque === null) return false
-  if (Array.isArray(bloque)) return bloque.length > 0
-  return Object.values(bloque as Record<string, unknown>).some(
-    (v) => (typeof v === 'string' && v.trim() !== '') || (Array.isArray(v) && v.length > 0),
-  )
+  return Array.isArray(bloque) && seccion === 'gallery' ? `${bloque.length} ${bloque.length === 1 ? 'foto' : 'fotos'}` : null
 }
 
 const FECHA_CORTA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
@@ -278,51 +270,50 @@ function Acordeon({ sections: todas, content, ejemplo, hechos, ...resto }: Props
   const enOrden = visibles(todas)
 
   const [abierta, setAbierta] = useState<SectionKey | null>(() => enOrden.find((seccion) => !escrito(content, seccion)) ?? enOrden[0] ?? null)
+  // En el celular la abierta ocupa la pantalla (M12), pero solo si se tocó: al llegar se ve la lista (M11).
+  const [tocada, setTocada] = useState(false)
+
+  const avisar = (seccion: SectionKey) => {
+    // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita. Con el bloque vacío se busca
+    // el texto del ejemplo, que es justo lo que la vista previa está pintando.
+    const aviso: AvisoDeSeccion = { seccion, textos: textosDeSeccion(escrito(content, seccion) ? content : ejemplo, seccion) }
+    window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
+  }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
-        <p className="text-[13px] text-ink">{`${hechos} de ${enOrden.length} secciones listas`}</p>
-        <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-bg-top">
-          <div className="h-full rounded-full bg-sage transition-[width]" style={{ width: `${(hechos / Math.max(1, enOrden.length)) * 100}%` }} />
+    <div className="flex flex-col gap-5">
+      {/* El avance arriba, a lo ancho (E08). En el celular lo pinta la cabecera de la página (M11). */}
+      <div className="flex items-center gap-4 max-[1023px]:hidden">
+        <div aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-panel">
+          <div className="h-full rounded-full bg-shell-deep transition-[width]" style={{ width: `${(hechos / Math.max(1, enOrden.length)) * 100}%` }} />
         </div>
-        <p className="text-[12px] text-ink-mute">En el orden en que se ve tu invitación, de arriba abajo.</p>
+        <p className="shrink-0 text-[15px] font-medium [font-variant-numeric:tabular-nums]">{`${hechos} de ${enOrden.length} listas`}</p>
       </div>
 
-      <ol className="m-0 flex list-none flex-col gap-3 p-0">
+      <ol className="m-0 flex list-none flex-col overflow-hidden rounded-[16px] border border-line-panel bg-tarjeta p-0 max-[767px]:rounded-none max-[767px]:border-none max-[767px]:bg-transparent">
         {enOrden.map((seccion, i) => (
-          <li className="flex items-start gap-3" key={seccion}>
-            <span
-              aria-hidden
-              className={`mt-5 grid size-7 shrink-0 place-items-center rounded-full text-[12px] font-medium max-[419px]:hidden ${escrito(content, seccion) ? 'bg-sage text-white' : 'bg-ink text-white'}`}
-            >
-              {escrito(content, seccion) ? <CheckIcon className="size-3.5" /> : i + 1}
-            </span>
-            <div className="min-w-0 flex-1">
-              <BloqueDeContenido
-                {...resto}
-                anexo={anexoDe(todas, seccion)}
-                abierta={abierta === seccion}
-                content={content}
-                ejemplo={ejemplo}
-                onAlternar={() => {
-                  const abre = abierta !== seccion
-                  setAbierta(abre ? seccion : null)
-                  // La vista previa va a esa parte de la invitación: se ve dónde cae lo que se edita.
-                  if (abre) {
-                    // Con el bloque escrito se busca su texto; vacío, el del ejemplo, que
-                    // es justo lo que la vista previa está pintando. Con el texto escrito
-                    // en un bloque vacío no se encontraba nada y la invitación no se movía.
-                    const aviso: AvisoDeSeccion = {
-                      seccion,
-                      textos: textosDeSeccion(escrito(content, seccion) ? content : ejemplo, seccion),
-                    }
-                    window.dispatchEvent(new CustomEvent(EVENTO_SECCION, { detail: aviso }))
-                  }
-                }}
-                section={seccion}
-              />
-            </div>
+          <li className="border-b border-line-panel last:border-none" key={seccion}>
+            <BloqueDeContenido
+              {...resto}
+              anexo={anexoDe(todas, seccion)}
+              abierta={abierta === seccion}
+              aPantallaCompleta={abierta === seccion && tocada}
+              content={content}
+              ejemplo={ejemplo}
+              onAlternar={() => {
+                const abre = abierta !== seccion || !tocada
+                setAbierta(abre ? seccion : null)
+                setTocada(abre)
+                if (abre) avisar(seccion)
+              }}
+              onSiguiente={() => {
+                const siguiente = enOrden[i + 1] ?? null
+                setAbierta(siguiente)
+                if (siguiente !== null) avisar(siguiente)
+              }}
+              paso={{ n: i + 1, de: enOrden.length }}
+              section={seccion}
+            />
           </li>
         ))}
       </ol>
@@ -352,7 +343,10 @@ function BloqueDeContenido({
   media,
   ejemplo,
   abierta,
+  aPantallaCompleta = abierta,
   onAlternar,
+  onSiguiente,
+  paso,
   fiesta = 'boda',
   anexo,
 }: {
@@ -361,7 +355,13 @@ function BloqueDeContenido({
   anexo?: SectionKey | undefined
   itinerarioDesde?: string | undefined
   abierta: boolean
+  /** En el celular: abierta porque se tocó, a pantalla completa. Abierta sin tocar, en el celular se ve plegada. */
+  aPantallaCompleta?: boolean
   onAlternar: () => void
+  /** «Guardar y seguir»: guardado, abre la siguiente sección. */
+  onSiguiente: () => void
+  /** Qué paso es en el celular, donde la sección se abre a pantalla completa (M12). */
+  paso: { n: number; de: number }
   eventId: string
   eventSlug: string
   section: SectionKey
@@ -423,16 +423,52 @@ function BloqueDeContenido({
     [],
   )
 
+  // El aviso «Guardado» dura unos segundos (temporizador sin red) y vuelve con cada guardado.
+  const [avisoVisto, setAvisoVisto] = useState<typeof state | null>(null)
+  const avisoGuardado = state.status === 'success' && avisoVisto !== state
+  useEffect(() => {
+    if (state.status !== 'success') return
+    const t = setTimeout(() => setAvisoVisto(state), 4000)
+    return () => clearTimeout(t)
+  }, [state])
+
+  // «Guardar y seguir» (E08): al volver guardado, se abre la siguiente. Una foto que se guarda sola no avanza.
+  const seguir = useRef<'seguir' | 'volver' | null>(null)
+  useEffect(() => {
+    if (state.status !== 'success' || seguir.current === null) return
+    const hacia = seguir.current
+    seguir.current = null
+    if (hacia === 'seguir') onSiguiente()
+    else onAlternar()
+  }, [state, onSiguiente, onAlternar])
+
+  const estadoTexto = listo ? (abierta ? 'Lista' : resumenCorto(content, section) ?? 'Lista') : algoEscrito(estado) ? 'Por completar' : 'Sin empezar'
+
   return (
     <GuardarLaSeccion.Provider value={pedirGuardado}>
     <form
       action={formAction}
       ref={formulario}
-      className={`scroll-mt-6 rounded-[18px] border bg-white transition-shadow ${
-        abierta ? 'border-line-panel-strong shadow-[0_12px_40px_-24px_rgb(0_0_0/0.35)]' : 'border-line-panel hover:border-line-panel-strong'
+      className={`scroll-mt-6 border-l-[3px] transition-colors ${
+        abierta
+          ? aPantallaCompleta
+            ? 'border-l-gold bg-tarjeta max-[767px]:fixed max-[767px]:inset-0 max-[767px]:z-[60] max-[767px]:overflow-y-auto max-[767px]:border-l-0 max-[767px]:bg-bg max-[767px]:px-4 max-[767px]:pb-8'
+            : 'border-l-gold bg-tarjeta max-[767px]:border-l-0 max-[767px]:bg-transparent'
+          : 'border-l-transparent hover:bg-fila'
       }`}
       id={`bloque-${section}`}
     >
+      {/* El aviso de la maqueta (E64): flota abajo unos segundos, aunque «Guardar y seguir» ya haya plegado la sección. */}
+      {avisoGuardado ? (
+        <p
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 rounded-full bg-shell-deep px-5 py-3 text-[14.5px] text-shell-ink shadow-lift motion-safe:animate-slide-up max-[767px]:bottom-24"
+          role="status"
+        >
+          <CheckIcon className="size-4 text-gold" />
+          Guardado. La vista previa ya lo enseña.
+        </p>
+      ) : null}
       <input name="eventId" readOnly type="hidden" value={eventId} />
       <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
       <input name="section" readOnly type="hidden" value={section} />
@@ -445,42 +481,66 @@ function BloqueDeContenido({
         </>
       )}
 
-      <h3 className="m-0">
+      {/* En el celular la sección abierta ocupa la pantalla (M12): volver, en qué paso va y su título en grande. */}
+      {aPantallaCompleta ? (
+        <div className="sticky top-0 z-10 -mx-4 mb-2 bg-bg px-4 pt-3 pb-2 min-[768px]:hidden">
+          <div className="flex items-center gap-3 rounded-[18px] bg-bg-raised px-3 py-2.5 shadow-[0_8px_24px_-12px_rgb(12_36_32/0.35)]">
+            <button aria-label="Volver a Mi invitación" className="grid size-11 cursor-pointer place-items-center rounded-xl" onClick={onAlternar} type="button">
+              <ChevronIcon className="size-5 rotate-90" />
+            </button>
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
+              <span className="text-[13px] text-ink-mute">Mi invitación</span>
+              <span className="truncate text-[16px] font-medium">{bloque.titulo}</span>
+            </span>
+            <span className="shrink-0 pr-1 text-[14px] text-ink-mute">
+              Paso {paso.n} de {paso.de}
+            </span>
+          </div>
+        </div>
+      ) : null}
+
+      <h3 className={`m-0 ${aPantallaCompleta ? 'max-[767px]:hidden' : ''}`}>
         <button
           aria-controls={`${cuerpoId}-cuerpo`}
           aria-describedby={`${cuerpoId}-estado ${cuerpoId}-resumen`}
           aria-expanded={abierta}
           aria-labelledby={`${cuerpoId}-titulo`}
-          className="flex w-full cursor-pointer items-center gap-3.5 p-4 text-left min-[560px]:gap-4 min-[560px]:p-5"
+          className="flex min-h-14 w-full cursor-pointer items-center gap-3.5 px-5 py-3.5 text-left max-[767px]:min-h-[72px] max-[767px]:px-0"
           onClick={onAlternar}
           type="button"
         >
-          <span aria-hidden className={`grid size-11 shrink-0 place-items-center rounded-full ${listo ? 'bg-bg-top text-ink-soft' : 'bg-gold/15 text-gold-deep'}`}>
-            <IconoDeBloque className="size-5" seccion={section} />
+          <span aria-hidden className="grid size-6 shrink-0 place-items-center min-[768px]:hidden">
+            {listo ? (
+              <CheckIcon className="size-5 text-ok-deep" />
+            ) : (
+              <span className={`size-[22px] rounded-full border-[1.5px] ${algoEscrito(estado) ? 'border-gold' : 'border-dashed border-line-panel-strong'}`} />
+            )}
           </span>
-          <span className="flex min-w-0 grow flex-col gap-0.5">
-            <span className="font-display text-[19px] leading-tight text-ink min-[560px]:text-[21px]" id={`${cuerpoId}-titulo`}>
-              {bloque.titulo}
-            </span>
-            {/* El nombre del botón es solo el título; esto y el estado van en su descripción. */}
-            <span className="truncate text-[12.5px] text-ink-soft" id={`${cuerpoId}-resumen`}>
-              {listo && !abierta ? resumen(content, section, forma) || bloque.descripcion : bloque.descripcion}
-            </span>
+          <span className={`min-w-0 grow text-[15.5px] text-ink max-[767px]:text-[17px] ${listo ? '' : 'font-medium'}`} id={`${cuerpoId}-titulo`}>
+            {bloque.titulo}
           </span>
+          {abierta ? null : (
+            <span className="sr-only" id={`${cuerpoId}-resumen`}>
+              {listo ? resumen(content, section, forma) || bloque.descripcion : bloque.descripcion}
+            </span>
+          )}
           <span
-            className={`shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[11.5px] font-medium max-[419px]:sr-only min-[420px]:flex ${
-              listo ? 'bg-sage text-white' : 'border border-gold/60 text-gold-deep'
-            }`}
+            className={`shrink-0 text-[14px] ${(abierta && aPantallaCompleta) || (!listo && algoEscrito(estado)) ? 'text-gold-deep' : listo ? 'text-ink-mute max-[767px]:text-ok-deep' : 'text-ink-mute'}`}
             id={`${cuerpoId}-estado`}
           >
-            {listo ? <CheckIcon className="size-3" /> : null}
-            {listo ? 'Listo' : 'Por completar'}
+            {estadoTexto}
           </span>
-          <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform ${abierta ? 'rotate-180' : ''}`} />
+          <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform max-[767px]:hidden ${abierta ? 'rotate-180' : ''}`} />
         </button>
       </h3>
 
-      <div className="flex flex-col gap-4 border-t border-line-panel px-4 pt-4 pb-5 min-[560px]:px-5" hidden={!abierta} id={`${cuerpoId}-cuerpo`}>
+      <div className={`flex flex-col gap-4 px-5 pb-5 max-[767px]:px-0 ${aPantallaCompleta ? '' : 'max-[767px]:hidden'}`} hidden={!abierta} id={`${cuerpoId}-cuerpo`}>
+      <div className="flex flex-col gap-1 min-[768px]:hidden">
+        <p aria-hidden className="font-display text-[34px] leading-tight font-medium">
+          {bloque.titulo}
+        </p>
+        <p className="text-[16px] text-ink-soft">{bloque.descripcion}</p>
+      </div>
       {section === 'itinerary' && itinerarioDesde !== undefined ? (
         <div className="flex flex-col items-start gap-3 rounded-[14px] bg-bg-top p-4">
           <p className="text-[13px] leading-[1.6] text-ink-soft">
@@ -553,14 +613,24 @@ function BloqueDeContenido({
           {error}
         </p>
       )}
-      <div className={`flex flex-wrap items-center gap-3 border-t border-line-panel pt-4 ${section === 'itinerary' && itinerarioDesde !== undefined ? 'hidden' : ''}`}>
-        <SubmitButton variant="primary" pending={isPending} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
-        {state.status === 'success' ? (
-          <p aria-live="polite" className="flex items-center gap-1.5 text-[12px] text-sage" role="status">
-            <CheckIcon className="size-3.5" />
-            Guardado. La vista previa ya lo enseña.
-          </p>
-        ) : null}
+      <div
+        className={`flex flex-wrap items-center justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch max-[767px]:border-t max-[767px]:border-line-panel max-[767px]:pt-5 ${section === 'itinerary' && itinerarioDesde !== undefined ? 'hidden' : ''}`}
+      >
+        <span className="max-[767px]:hidden">
+          <PanelButton onClick={onAlternar}>Cancelar</PanelButton>
+        </span>
+        <span className="min-[768px]:hidden">
+          <SubmitButton className="w-full" onClick={() => {
+              seguir.current = 'volver'
+            }} pending={isPending} pendingLabel="Guardando…" variant="default">
+            Guardar y volver
+          </SubmitButton>
+        </span>
+        <SubmitButton className="max-[767px]:min-h-13 max-[767px]:w-full" onClick={() => {
+            seguir.current = 'seguir'
+          }} pending={isPending} pendingLabel="Guardando…" variant="primary">
+          Guardar y seguir
+        </SubmitButton>
       </div>
       </div>
     </form>

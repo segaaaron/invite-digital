@@ -8,7 +8,7 @@ import type { GiftStatus } from '../domain/gift'
 import type { GiftRow } from '../application/ports'
 import { markPurchasedAction, releaseGiftAsAtelierAction, removeGiftAction } from '@/app/_acciones/registry/actions'
 import { GiftForm } from './GiftForm'
-import { PILL_CLASS } from './shared'
+import { Pill } from '@/shared/design/ui/panel/PanelKit'
 
 type Props = {
   eventId: string
@@ -22,10 +22,10 @@ type Props = {
  * reservado, verde comprado. Son `--color-line`, `--color-warn` y `--color-ok` de
  * `tokens.css`; aquí no hay ni un hexadecimal.
  */
-const ESTADO: Record<GiftStatus, { clase: string; texto: string }> = {
-  available: { clase: 'border-line text-ink-mute', texto: 'Disponible' },
-  reserved: { clase: 'border-warn text-warn', texto: 'Reservado' },
-  purchased: { clase: 'border-ok text-ok', texto: 'Comprado' },
+const ESTADO: Record<GiftStatus, { tono: 'ok' | 'pending' | 'neutro'; texto: string }> = {
+  available: { tono: 'ok', texto: 'Disponible' },
+  reserved: { tono: 'pending', texto: 'Reservado' },
+  purchased: { tono: 'neutro', texto: 'Comprado' },
 }
 
 function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> & { gift: GiftRow }) {
@@ -44,55 +44,54 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
     })
   }
 
-  const { clase, texto } = ESTADO[gift.status]
+  const { tono, texto } = ESTADO[gift.status]
   // Comprado es definitivo: la tarjeta no ofrece ninguna salida de ese estado, igual que
   // el dominio no la permite. Un botón deshabilitado invitaría a intentarlo.
   const definitivo = gift.status === 'purchased'
 
   return (
-    <article className={`flex flex-col gap-3 rounded-card border bg-bg-raised p-5 ${clase}`}>
-      <header className="flex items-baseline justify-between gap-3">
-        <h3 className="font-display text-[18px] font-light text-ink">{gift.name}</h3>
-        <span className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)]">{texto}</span>
+    // La tarjeta de la maqueta (E11): nombre y estado, de qué tienda, el precio en grande y quién lo eligió.
+    <article className="flex flex-col gap-2 rounded-[16px] border border-line-panel bg-bg-raised p-4.5">
+      <header className="flex items-start justify-between gap-3">
+        <h3 className="font-medium">{gift.name}</h3>
+        <Pill tone={tono}>{texto}</Pill>
       </header>
+
+      {/* Editando, sigue diciendo quién lo reservó: corregir el precio no borra la reserva. */}
+      {editando && gift.claimedByLabel !== null ? <p className="text-[13px] text-ink-mute">Reservado por {gift.claimedByLabel}</p> : null}
 
       {editando ? null : (
         <>
-          <p className="font-mono text-[13px] text-ink">{formatAmount(gift.priceCents, currency)}</p>
-
           {gift.url === null ? (
-            gift.store === null ? null : <p className="text-[12px] text-ink-mute">{gift.store}</p>
+            gift.store === null ? null : <p className="text-[13px] text-ink-mute">{gift.store}</p>
           ) : (
             <a
-              className="text-[12px] text-gold-deep underline underline-offset-4"
+              className="text-[13px] text-ink-mute"
               href={gift.url}
               // `noopener noreferrer` y pestaña nueva: el destino es una tienda cualquiera y
               // no tiene por qué recibir de dónde viene el invitado ni tocar esta ventana.
               rel="noopener noreferrer"
               target="_blank"
             >
-              {gift.store ?? 'Ver en la tienda'}
+              {gift.store === null ? 'Ver en la tienda' : `${gift.store}, ver en la tienda`}
             </a>
           )}
+          <div className="mt-2 flex items-baseline justify-between gap-3">
+            <p className="font-display text-[22px] font-medium">{formatAmount(gift.priceCents, currency).replace(/,00$/, '')}</p>
+            <p className="text-right text-[12.5px] text-ink-mute">{gift.claimedByLabel === null ? 'Nadie lo eligió aún' : `por ${gift.claimedByLabel}`}</p>
+          </div>
         </>
       )}
 
-      {/*
-        Quién lo reservó se sigue leyendo mientras se corrige la ficha. No es adorno:
-        es la garantía visible de que cambiar el precio no suelta la reserva.
-      */}
-      {gift.claimedByLabel === null ? null : (
-        <p className="text-[12px] text-ink-soft">Reservado por {gift.claimedByLabel}</p>
-      )}
 
       {editando ? (
         <GiftForm eventId={eventId} eventSlug={eventSlug} gift={gift} onDone={() => setEditando(false)} />
       ) : (
-        <footer className="mt-auto flex flex-wrap items-center gap-2 pt-2">
+        <footer className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line-panel pt-2.5">
           {definitivo ? null : (
             <>
               <button
-                className={PILL_CLASS}
+                className="min-h-8 cursor-pointer text-[13px] font-medium text-gold-deep hover:text-shell-deep disabled:opacity-40"
                 disabled={pendiente}
                 onClick={() => correr(() => markPurchasedAction({ id: gift.id, eventId, eventSlug }))}
                 type="button"
@@ -101,7 +100,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
               </button>
               {gift.status === 'reserved' ? (
                 <button
-                  className={PILL_CLASS}
+                  className="min-h-8 cursor-pointer text-[13px] font-medium text-gold-deep hover:text-shell-deep disabled:opacity-40"
                   disabled={pendiente}
                   onClick={() => correr(() => releaseGiftAsAtelierAction({ id: gift.id, eventId, eventSlug }))}
                   type="button"
@@ -116,7 +115,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
             estado, no que el precio se haya escrito mal.
           */}
           <button
-            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            className="min-h-8 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
             disabled={pendiente}
             onClick={() => setEditando(true)}
             type="button"
@@ -124,7 +123,7 @@ function GiftCard({ eventId, eventSlug, currency, gift }: Omit<Props, 'gifts'> &
             Editar
           </button>
           <button
-            className="font-mono text-[9px] uppercase tracking-[var(--tracking-luxe)] text-ink-mute disabled:opacity-40"
+            className="min-h-8 cursor-pointer text-[13px] text-ink-mute hover:text-ink disabled:opacity-40"
             disabled={pendiente}
             onClick={() => correr(() => removeGiftAction({ id: gift.id, eventId, eventSlug }))}
             type="button"
@@ -160,7 +159,7 @@ export function GiftList({ eventId, eventSlug, currency, gifts }: Props) {
   }
 
   return (
-    <div className="grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-4">
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
       {gifts.map((gift) => (
         <GiftCard key={gift.id} currency={currency} eventId={eventId} eventSlug={eventSlug} gift={gift} />
       ))}

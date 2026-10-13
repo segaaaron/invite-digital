@@ -82,7 +82,7 @@ test('un plan sin libro ni formas de regalar: el panel lo dice y la invitación 
 
     await page.goto(`/panel/eventos/${eventSlug}/regalos`)
     // Sobres, transferencia y —porque `atelier` tampoco la trae— la lista de regalos.
-    await expect(page.getByRole('region', { name: 'Formas de regalar' }).getByText('No incluida')).toHaveCount(3)
+    await expect(page.getByRole('region', { name: 'Formas de regalar' }).getByRole('link', { name: /: no viene en tu plan$/ })).toHaveCount(3)
 
     const invitado = await (await page.context().browser()!.newContext()).newPage()
     await invitado.goto(`/i/${token}`)

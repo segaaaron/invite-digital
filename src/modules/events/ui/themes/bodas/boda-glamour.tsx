@@ -15,6 +15,7 @@ export const bodaGlamourDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['cormorant', 'greatVibes', 'montserrat', 'playfairDisplay', 'dmSans', 'jetbrainsMono', 'cinzel'],
+  invitadoDeMuestra: { label: 'Ricardo Montalvo y Sra.', seats: 2 },
   rsvp: 'pildoras',
   pinta: {
     // Cinco en el carrusel «Nuestra Historia» y el retrato de arriba.

@@ -2,10 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useRef, useState } from 'react'
-import { signOutAction } from '@/app/_acciones/identity/actions'
 import { leaveSupportAction } from '@/app/_acciones/admin/support-actions'
+import { signOutAction } from '@/app/_acciones/identity/actions'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
+import { ABRIR_BUSCADOR } from '@/shared/design/ui/panel/avisos-del-panel'
 import { esEntradaActiva, type NavItem, type NavSection } from './nav'
 import { NAV_ICONS } from './nav-icons'
 
@@ -15,6 +15,8 @@ import { NAV_ICONS } from './nav-icons'
  */
 export type PanelUser = {
   readonly email: string
+  /** Su nombre, si la cuenta lo tiene; sin él, la tarjeta firma con el correo. */
+  readonly nombre: string | null
   readonly rol: string
   /** El admin actúa como el cliente: la tarjeta lo dice y lleva la salida. */
   readonly soporte: boolean
@@ -26,17 +28,29 @@ export type PanelEvento = {
   readonly planLabel: string
   readonly salirHref: string | null
   readonly salirLabel: string
+  /** «Boda, sáb 18 de octubre»: qué fiesta y cuándo, bajo el nombre. */
+  readonly cuando?: string
+  /** La portada del diseño, en miniatura junto al nombre. */
+  readonly portada?: string | null
 }
 
-const ITEM_BASE =
-  'flex items-center gap-3 rounded-lg px-2.5 py-2 text-[12px] whitespace-nowrap transition-colors min-[860px]:text-[13px]'
+/** Nombre y apellido a dos iniciales; un correo, a su primera letra. */
+export const iniciales = (user: PanelUser): string => {
+  const partes = (user.nombre ?? '').trim().split(/\s+/).filter(Boolean)
+  if (partes.length === 0) return user.email.slice(0, 1).toUpperCase()
+  return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? (partes[partes.length - 1]?.[0] ?? '') : '')).toUpperCase()
+}
 
-function Icono({ icon }: { icon: NavItem['icon'] }) {
-  // `shrink-0` y ancho fijo: los rótulos arrancan todos en la misma columna, que es lo
-  // que hace que la barra se lea como una lista y no como una escalera.
+
+/** El sello de la marca: monograma LA en latón bruñido, como el lacre de un sobre. */
+export function SelloLA({ size = 48 }: { size?: number }) {
   return (
-    <span aria-hidden className="flex w-4.5 shrink-0 justify-center opacity-80">
-      {NAV_ICONS[icon]}
+    <span
+      aria-hidden
+      className="grid shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo)_0%,var(--color-gold)_40%,var(--color-gold-deep)_80%,var(--color-laton-sombra)_100%)] font-display font-semibold text-[color:var(--color-laton-sombra)] shadow-[inset_0_0_0_3px_rgb(255_255_255/0.08),inset_0_0_0_4.5px_rgb(12_36_32/0.35),0_6px_14px_rgb(0_0_0/0.35)]"
+      style={{ width: size, height: size, fontSize: size * 0.4 }}
+    >
+      LA
     </span>
   )
 }
@@ -44,7 +58,7 @@ function Icono({ icon }: { icon: NavItem['icon'] }) {
 function Insignia({ item }: { item: NavItem }) {
   if (!item.count) return null
   return (
-    <span className="ml-auto hidden rounded-full bg-sage px-1.5 py-0.5 font-mono text-[10.5px] text-white min-[860px]:inline">
+    <span className="ml-auto rounded-full bg-gold px-2 text-[11.5px] leading-[19px] font-semibold text-shell-deep">
       {item.count}
       {item.countLabel ? <span className="sr-only"> {item.countLabel}</span> : null}
     </span>
@@ -52,194 +66,176 @@ function Insignia({ item }: { item: NavItem }) {
 }
 
 /**
- * La barra lateral del panel, portada de la maqueta entregada.
+ * **La barra lateral de la maqueta «Esmeralda y Latón»** (12 de octubre), solo en escritorio (≥ 1280 px).
  *
- * Es cliente por una razón concreta: la sección activa se deduce de la ruta con
- * `usePathname`, no de un prop `active` que cada página tenía que pasar. Ese prop era
- * otro sitio donde olvidarse, igual que la carcasa entera lo fue.
+ * - Fuera de un evento: el sello grande con «Panel del atelier», el buscador (⌘K) si quien entra es admin, y los
+ *   grupos Principal · Vender · Organizar · Configurar.
+ * - Dentro de uno: el sello pequeño y la tarjeta del evento —su portada, el nombre y qué fiesta y cuándo—, que
+ *   lleva a «Mis eventos» o a la cartera; debajo, sus grupos.
+ * - Abajo, quien entró: iniciales, nombre, «Mi cuenta» y la salida.
+ *
+ * La sección activa se deduce de la ruta con `usePathname`, no de un prop que cada página tenía que pasar.
  */
 export function PanelSidebar({
   sections,
   brandSub,
   user,
   evento,
-  conAcciones = false,
+  conBuscador = false,
 }: {
   sections: readonly NavSection[]
   brandSub: string
   user: PanelUser
   evento: PanelEvento | null
-  /** La campana flota a la derecha de «Menú» en el celular: el botón le deja su sitio. */
+  /** El buscador ⌘K: solo el admin lo tiene. */
+  conBuscador?: boolean
+  /** Ya no se usa: la campana vive en la barra de arriba. */
   conAcciones?: boolean
 }) {
   const pathname = usePathname()
-  /**
-   * En el teléfono el menú va plegado. La maqueta lo reparte en filas encima de la página,
-   * pero la dibujó con doce entradas: con las del evento y las del admin eran más de veinte,
-   * y cada pantalla empezaba con medio teléfono de menú antes del contenido.
-   */
-  const [abierto, setAbierto] = useState(false)
-  const actual = sections.flatMap((s) => s.items).find((item) => esEntradaActiva(item, pathname))
 
   return (
-    <aside className="sticky top-0 z-50 flex max-h-dvh flex-col gap-y-2 overflow-y-auto bg-linear-to-b from-shell to-shell-deep px-4 py-3 text-shell-ink shadow-[12px_0_40px_rgb(0_0_0/0.18)] min-[860px]:h-dvh min-[860px]:flex-nowrap min-[860px]:items-stretch min-[860px]:gap-0 min-[860px]:px-5 min-[860px]:py-6.5">
-      {/* La barra del teléfono: marca, dónde estás y el botón que abre el menú. */}
-      {/* La marca no se parte nunca; lo que cede, con puntos suspensivos, es el nombre de la
-          sección («Todos los eventos», «Ficha del evento»), que antes la empujaba a dos líneas. */}
-      <div className="flex min-w-0 items-center gap-3 min-[860px]:hidden">
-        <p className="shrink-0 whitespace-nowrap font-display text-[18px] italic">
-          Luxury <b className="font-medium not-italic">Atelier</b>
-        </p>
-        {actual ? <span className="min-w-0 truncate font-mono text-[10px] tracking-[0.2em] uppercase opacity-60">· {actual.label}</span> : null}
-        <button
-          aria-controls="menu-panel"
-          aria-expanded={abierto}
-          className={`ml-auto flex shrink-0 items-center gap-2 rounded-full border border-white/15 px-3.5 py-1.5 font-mono text-[10px] tracking-[0.25em] uppercase transition-colors hover:border-gold/50 ${conAcciones ? 'mr-12' : ''}`}
-          onClick={() => setAbierto((a) => !a)}
-          type="button"
-        >
-          {/* Icono **y** palabra: según NN/g, la palabra «Menú» junto al icono es lo que
-              compensa la encontrabilidad que se pierde al plegar la navegación. */}
-          <svg aria-hidden className="size-3.5" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
-            {abierto ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
-          </svg>
-          {abierto ? 'Cerrar' : 'Menú'}
-        </button>
-      </div>
-
-      <div
-        className={`${abierto ? 'flex' : 'hidden'} flex-col gap-3 pb-2 min-[860px]:flex min-[860px]:flex-1 min-[860px]:gap-0 min-[860px]:pb-0`}
-        id="menu-panel"
-      >
-      <div className="hidden min-[860px]:block">
-        <p className="font-display text-[22px] italic">
-          Luxury <b className="font-medium not-italic">Atelier</b>
-        </p>
-        <p className="mt-1 mb-7 font-mono text-[10.5px] tracking-[0.16em] opacity-55">{brandSub}</p>
-      </div>
-
-      {user.soporte ? (
-        // En modo soporte, la salida va lo primero de la barra: abajo quedaba fuera de la vista.
-        <div className="mb-5 flex flex-col gap-2 rounded-xl border border-gold/50 bg-gold/15 px-3 py-2.5">
-          <p className="font-mono text-[10.5px] tracking-[0.25em] text-gold-light uppercase">Modo soporte</p>
-          <p className="text-[12px] leading-snug">
-            Estás como <span className="break-all">{user.email}</span>
-          </p>
-          {/* Navega el navegador con el destino de la acción: con `redirect` se pintaba con el actor de antes. */}
-          <button
-            className="w-full rounded-lg bg-gold px-3 py-2 text-[12px] text-shell-deep transition-colors hover:bg-gold-light"
-            onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
-            type="button"
-          >
-            Regresar al panel de admin
-          </button>
-        </div>
-      ) : null}
-
-      {evento === null ? null : (
-        // Dónde se está y cómo salir, lo primero de la barra. Dentro de un evento el menú es
-        // solo el de ese evento: la única forma de salir es esta, y dice adónde lleva.
-        <div className="mb-6 flex flex-col gap-2.5">
-          {evento.salirHref === null ? null : (
-            <Link
-              className="inline-flex w-fit items-center gap-2 rounded-lg border border-white/15 px-3 py-1.5 text-[12px] transition-colors hover:border-gold/60 hover:text-gold-light"
-              href={evento.salirHref}
-              onClick={() => setAbierto(false)}
+    <aside
+      aria-label={evento === null ? 'Menú del panel' : 'Menú del evento'}
+      className="sticky top-0 flex h-dvh flex-col overflow-y-auto bg-shell-deep bg-[radial-gradient(140%_60%_at_0%_0%,var(--color-shell)_0%,var(--color-shell-deep)_60%)] px-4.5 pt-6.5 pb-5.5 text-shell-soft"
+    >
+      {evento === null ? (
+        <>
+          <Link className="flex items-center gap-3.5 px-2 text-shell-ink no-underline" href={sections[0]?.items[0]?.href ?? '/panel'}>
+            <SelloLA />
+            <span className="min-w-0">
+              <span className="block font-display text-[21px] leading-[1.05] font-medium">Luxury Atelier</span>
+              <span className="block text-[12.5px] text-shell-mute">{brandSub === 'ADMINISTRACIÓN' ? 'Panel del atelier' : brandSub === 'PANEL' ? 'Tu panel' : brandSub}</span>
+            </span>
+          </Link>
+          {conBuscador ? (
+            <button
+              className="mt-5 flex min-h-[42px] cursor-pointer items-center justify-between rounded-[10px] border border-gold-light/28 bg-shell-ink/5 px-3 text-[14px] text-shell-buscar transition-colors hover:border-gold-light/50"
+              onClick={() => window.dispatchEvent(new Event(ABRIR_BUSCADOR))}
+              type="button"
             >
-              <span aria-hidden>←</span> {evento.salirLabel}
+              <span className="inline-flex items-center gap-2.5">
+                {NAV_ICONS.buscar}
+                Buscar o ir a…
+              </span>
+              <kbd className="font-sans text-[12px] font-medium text-gold-light">⌘K</kbd>
+            </button>
+          ) : null}
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 px-2 pb-4.5">
+            <SelloLA size={34} />
+            <span className="font-display text-[17px] font-medium text-shell-ink">Luxury Atelier</span>
+          </div>
+          {evento.salirHref === null ? (
+            <TarjetaDelEvento evento={evento} />
+          ) : (
+            <Link
+              aria-label={`${evento.title}. ${evento.salirLabel}`}
+              className="block rounded-xl no-underline transition-colors hover:bg-shell-ink/5"
+              href={evento.salirHref}
+            >
+              <TarjetaDelEvento conFlecha evento={evento} />
             </Link>
           )}
-          <div className="rounded-xl border border-gold/35 bg-white/5 px-3 py-2.5">
-            <p className="font-mono text-[10.5px] tracking-[0.25em] uppercase opacity-55">Evento</p>
-            <p className="mt-0.5 truncate text-[14px]">{evento.title}</p>
-            <p className="font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-55">{evento.planLabel}</p>
-          </div>
-        </div>
+        </>
       )}
 
       {sections.map((section) => (
-        <nav key={section.label} aria-label={section.label} className="flex flex-wrap gap-1 min-[860px]:mb-5.5 min-[860px]:flex-col min-[860px]:gap-0">
-          <p className="mb-1 w-full font-mono text-[10.5px] tracking-[0.16em] uppercase opacity-45 min-[860px]:mb-2">
-            {section.label}
-          </p>
-          {section.items.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setAbierto(false)}
-              aria-current={esEntradaActiva(item, pathname) ? 'page' : undefined}
-              className={`${ITEM_BASE} ${
-                esEntradaActiva(item, pathname)
-                  ? 'bg-linear-to-r from-gold/20 to-white/5 shadow-[inset_2px_0_0_var(--color-gold)]'
-                  : 'hover:bg-white/7'
-              }`}
-            >
-              <Icono icon={item.icon} />
-              {item.label}
-              <Insignia item={item} />
-            </Link>
-          ))}
+        <nav aria-label={section.label} className="flex flex-col" key={section.label}>
+          <p className="mx-3 mt-4.5 mb-1 text-[12.5px] tracking-[0.02em] text-gold-light">{section.label}</p>
+          {section.items.map((item) => {
+            const activa = esEntradaActiva(item, pathname)
+            return (
+              <Link
+                aria-current={activa ? 'page' : undefined}
+                className={`flex min-h-10 items-center gap-3 rounded-[10px] px-3 text-[14.5px] font-medium no-underline transition-colors motion-reduce:transition-none ${
+                  activa ? 'bg-bg text-shell-deep' : 'text-shell-soft hover:bg-shell-ink/7 hover:text-shell-ink'
+                }`}
+                href={item.href}
+                key={item.href}
+              >
+                <span aria-hidden className="flex shrink-0">
+                  {NAV_ICONS[item.icon]}
+                </span>
+                {item.label}
+                <Insignia item={item} />
+              </Link>
+            )
+          })}
         </nav>
       ))}
 
-      {/* Pegada abajo en la computadora: con todas las entradas del evento la barra no cabía y la tarjeta
-          de quien entró quedaba cortada por el borde de la ventana. */}
-      <div className="min-[860px]:sticky min-[860px]:-bottom-6.5 min-[860px]:-mx-5 min-[860px]:mt-auto min-[860px]:bg-shell-deep min-[860px]:px-5 min-[860px]:pt-3 min-[860px]:pb-6.5">
-        <MenuDeUsuario user={user} alElegir={() => setAbierto(false)} />
-      </div>
+      <div className="mt-auto pt-6">
+        <div aria-hidden className="mx-3 mb-4 h-[3px] border-y border-gold-light/45" />
+        <TarjetaDeUsuario user={user} />
       </div>
     </aside>
   )
 }
 
-/**
- * **La cuenta propia en un solo sitio**: la tarjeta de quien ha entrado abre su menú —«Mi cuenta»
- * y «Cerrar sesión»—. Eran tres cosas sueltas: la tarjeta, un botón de cerrar sesión debajo y una
- * entrada «Mi cuenta» en la barra (en el admin, una pestaña de Ajustes).
- */
-export function MenuDeUsuario({ user, alElegir, hacia = 'arriba' }: { user: PanelUser; alElegir?: () => void; hacia?: 'arriba' | 'abajo' }) {
-  const menu = useRef<HTMLDetailsElement>(null)
-  const cerrar = () => {
-    menu.current?.removeAttribute('open')
-    alElegir?.()
-  }
+function TarjetaDelEvento({ evento, conFlecha = false }: { evento: PanelEvento; conFlecha?: boolean }) {
   return (
-    <details className="group relative min-[860px]:mt-auto" ref={menu}>
-      <summary className="flex cursor-pointer list-none items-center gap-2.5 rounded-xl border border-white/8 bg-linear-to-br from-white/8 to-white/3 px-2.5 py-2 transition-colors hover:border-gold/40 min-[860px]:px-3.5 min-[860px]:py-3 [&::-webkit-details-marker]:hidden">
-        <span
-          aria-hidden
-          className="flex size-9 shrink-0 items-center justify-center rounded-full bg-linear-to-br from-sage to-[var(--color-gold-light)] font-display text-[17px] text-white uppercase"
-        >
-          {user.email.slice(0, 1)}
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12px] min-[860px]:text-[12.5px]">{user.email}</span>
-          <span className="block font-mono text-[10.5px] tracking-[0.2em] uppercase opacity-60">{user.rol}</span>
-        </span>
-        <svg aria-hidden className="size-3.5 shrink-0 opacity-60 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" strokeWidth="1.6" viewBox="0 0 24 24">
-          <path d="M6 15l6-6 6 6" />
+    <span className="flex items-center gap-3 rounded-xl border border-gold-light/28 bg-shell-ink/5 px-2.5 py-2 text-shell-ink">
+      {evento.portada ? (
+        // Miniatura decorativa: el nombre del evento va al lado, en texto.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img alt="" className="h-[54px] w-9 shrink-0 rounded-[5px] object-cover" src={evento.portada} />
+      ) : null}
+      <span className="min-w-0 flex-1">
+        <span className="block font-display text-[17px] leading-[1.15] font-medium">{evento.title}</span>
+        <span className="block text-[12.5px] text-shell-mute">{evento.cuando ?? evento.planLabel}</span>
+      </span>
+      {conFlecha ? (
+        <svg aria-hidden className="size-[17px] shrink-0 text-gold-light" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
+          <path d="m6 9 6 6 6-6" />
         </svg>
-        <span className="sr-only">Menú de la cuenta</span>
-      </summary>
-      <div
-        className={`absolute right-0 left-0 z-50 flex flex-col gap-1 rounded-xl border border-white/10 bg-shell-deep p-1.5 shadow-[0_18px_40px_rgb(0_0_0/0.45)] ${
-          hacia === 'arriba' ? 'bottom-[calc(100%+8px)]' : 'top-[calc(100%+8px)]'
-        }`}
-      >
-        {user.soporte ? null : (
-          <Link className="rounded-lg px-3 py-2.5 text-[13px] transition-colors hover:bg-white/8" href="/panel/cuenta" onClick={cerrar}>
+      ) : null}
+    </span>
+  )
+}
+
+/** Quien entró: iniciales, nombre, «Mi cuenta» y la salida, como en la maqueta. */
+function TarjetaDeUsuario({ user }: { user: PanelUser }) {
+  return (
+    <div className="flex items-center gap-3 px-2.5">
+      <span aria-hidden className="grid size-[38px] shrink-0 place-items-center rounded-full bg-avatar text-[13px] font-semibold text-shell-deep">
+        {iniciales(user)}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[14px] font-medium text-shell-ink">{user.nombre ?? user.email}</span>
+        {user.soporte ? (
+          // En modo soporte, la segunda salida (la otra es la franja de arriba). Navega el navegador: con
+          // `redirect` el destino se pintaba con el actor de antes.
+          <button
+            className="min-h-8 cursor-pointer text-left text-[12.5px] font-medium text-gold-light hover:text-shell-ink"
+            onClick={() => void leaveSupportAction().then((hecho) => hecho.status === 'ok' && window.location.assign(hecho.href))}
+            type="button"
+          >
+            Regresar al panel de admin
+          </button>
+        ) : (
+          <Link className="text-[12.5px] text-shell-mute no-underline hover:text-shell-ink" href="/panel/cuenta">
             Mi cuenta
           </Link>
         )}
-        <ConfirmAction
-          action={signOutAction}
-          confirmLabel="Cerrar sesión"
-          description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
-          title="Cerrar sesión"
-          trigger="Cerrar sesión"
-          triggerClassName="w-full rounded-lg px-3 py-2.5 text-left text-[13px] text-[var(--color-pill-no)] transition-colors hover:bg-white/8"
-        />
-      </div>
-    </details>
+      </span>
+      <ConfirmAction
+        action={signOutAction}
+        confirmLabel="Cerrar sesión"
+        description="Saldrás del panel en este dispositivo. Para volver tendrás que entrar con tu correo y tu contraseña."
+        title="Cerrar sesión"
+        trigger={
+          <>
+            <svg aria-hidden className="size-[19px]" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.4" viewBox="0 0 24 24">
+              <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />
+            </svg>
+            <span className="sr-only">Cerrar sesión</span>
+          </>
+        }
+        triggerClassName="grid size-10 shrink-0 cursor-pointer place-items-center rounded-lg text-shell-mute transition-colors hover:bg-shell-ink/7 hover:text-shell-ink"
+      />
+    </div>
   )
 }

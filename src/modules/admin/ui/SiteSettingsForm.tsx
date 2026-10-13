@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useState, type ReactNode } from 'react'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
-import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { FIELD_CLASS, LABEL_CLASS, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { enlaceWhatsapp, formatoWhatsapp } from '@/shared/whatsapp'
 import { restoreSiteVersionAction, saveSiteSettingsAction, type SiteActionState } from '@/app/_acciones/admin/web-actions'
@@ -39,18 +38,6 @@ const BLOQUES: Record<string, { titulo: string; ancla: string }> = {
   seo: { titulo: 'Buscadores', ancla: 'buscadores' },
 }
 
-const SECCIONES = [
-  ['contacto', 'Contacto'],
-  ['mensajes', 'Mensajes'],
-  ['ubicacion', 'Ubicación'],
-  ['redes', 'Redes'],
-  ['pruebas', 'Pruebas sociales'],
-  ['testimonios', 'Testimonios'],
-  ['legal', 'Legal'],
-  ['buscadores', 'Buscadores'],
-  ['historial', 'Historial'],
-] as const
-
 const bloqueDe = (campo: string | undefined) => (campo === undefined ? undefined : BLOQUES[campo.split('.')[0] ?? ''])
 
 /**
@@ -86,47 +73,43 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
     if (errorBloque) document.getElementById(errorBloque.ancla)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [errorBloque])
 
-  /**
-   * Qué sección se está mirando, para marcarla en el índice. Con `IntersectionObserver`, que es
-   * lo que recomienda cualquier guía de «scrollspy»: leer el scroll en cada fotograma cuesta
-   * más y acierta menos. La franja `-45% 0px -50%` elige la que cruza el centro de la pantalla,
-   * así no hay dos activas a la vez.
-   */
-  const [visible, setVisible] = useState<string>(SECCIONES[0][0])
-  useEffect(() => {
-    const observador = new IntersectionObserver(
-      (entradas) => {
-        const dentro = entradas.filter((e) => e.isIntersecting)[0]
-        if (dentro) setVisible(dentro.target.id)
-      },
-      { rootMargin: '-45% 0px -50% 0px', threshold: 0 },
-    )
-    for (const [ancla] of SECCIONES) {
-      const nodo = document.getElementById(ancla)
-      if (nodo !== null) observador.observe(nodo)
-    }
-    return () => observador.disconnect()
-  }, [])
-
   const actual = JSON.stringify(datos)
   const sucio = actual !== guardado.json
 
   const cambiar = <K extends keyof SiteSettings>(clave: K, valor: SiteSettings[K]) => setDatos((d) => ({ ...d, [clave]: valor }))
   const bil = (b: Bilingue, v: string): Bilingue => ({ ...b, [idioma]: v })
 
+  /** Lo que dice cada bloque cerrado, en una línea (maqueta E46): se lee la web sin abrir nada. */
+  const redes = (['instagram', 'facebook', 'tiktok'] as const).filter((r) => (datos.redes[r] ?? '').trim() !== '')
+  const RESUMEN: Record<string, string> = {
+    contacto: datos.whatsapp.trim() === '' ? 'Sin WhatsApp: se ve solo el formulario' : `WhatsApp ${formatoWhatsapp(datos.whatsapp)}${datos.horario[idioma] ? `, ${datos.horario[idioma]}` : ''}`,
+    mensajes: 'Lo que se abre escrito al pulsar WhatsApp',
+    ubicacion: [datos.ciudad, datos.pais].filter(Boolean).join(', ') || 'Sin ubicación',
+    redes: redes.length === 0 ? 'Sin redes' : redes.map((r) => ({ instagram: 'Instagram', facebook: 'Facebook', tiktok: 'TikTok' })[r]).join(' y '),
+    pruebas: datos.cifras.visibles ? 'Cifras de la portada a la vista' : 'Cifras ocultas hasta que sean reales',
+    testimonios: `${datos.testimonios.filter((t) => t.confirmado).length} publicado(s)`,
+    legal: [datos.legal.terminos.publicada ? 'Términos' : '', datos.legal.privacidad.publicada ? 'Privacidad' : ''].filter(Boolean).join(' y ') || 'Sin publicar',
+    buscadores: 'Título y descripción para América',
+  }
+
   const tarjeta = (ancla: string, titulo: string, hijos: ReactNode, pie?: ReactNode) => (
-    <section
-      className={`scroll-mt-6 rounded-[18px] ${errorBloque?.ancla === ancla ? 'ring-2 ring-danger/50 ring-offset-2 ring-offset-bg' : ''}`}
-      id={ancla}
-    >
-      <PanelCard title={titulo}>
-        <div className="flex flex-col gap-4">
-          {errorBloque?.ancla === ancla && estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
-          {hijos}
-        </div>
+    // Una fila de la maqueta: el bloque y su resumen, y se despliega para editarlo.
+    <details className="group scroll-mt-28 border-b border-line-panel last:border-b-0" id={ancla} open={errorBloque?.ancla === ancla ? true : undefined}>
+      <summary className="flex min-h-[68px] cursor-pointer list-none items-center gap-4 px-1 py-3.5 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0 flex-1">
+          <span className="block font-medium">{titulo}</span>
+          <span className="block truncate text-[13.5px] text-ink-mute">{RESUMEN[ancla] ?? ''}</span>
+        </span>
+        <svg aria-hidden className="size-4.5 shrink-0 text-ink-mute transition-transform group-open:rotate-90" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
+          <path d="m9 6 6 6-6 6" />
+        </svg>
+      </summary>
+      <div className={`flex flex-col gap-4 px-1 pt-1 pb-6 ${errorBloque?.ancla === ancla ? 'rounded-[12px] ring-2 ring-danger/40' : ''}`}>
+        {errorBloque?.ancla === ancla && estado.status === 'error' ? <PanelAlert tone="error">{estado.message}</PanelAlert> : null}
+        {hijos}
         {pie}
-      </PanelCard>
-    </section>
+      </div>
+    </details>
   )
 
   const probar = enlaceWhatsapp(datos.whatsapp, datos.mensajes.general[idioma])
@@ -162,29 +145,13 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
         </PanelAlert>
       ) : null}
 
-      {/* Índice a la izquierda, contenido en medio y la vista previa a la derecha: nueve bloques
-          largos necesitan saber dónde se está y llegar a otro sin buscar. El índice es una lista
-          vertical fija, no una fila de píldoras: en una fila no cabe marcar la sección activa. */}
-      <div className="grid items-start gap-4.5 min-[1000px]:grid-cols-[186px_minmax(0,1fr)] min-[1320px]:grid-cols-[186px_minmax(0,1fr)_330px]">
-        <nav aria-label="Secciones de La web" className="hidden min-[1000px]:block min-[1000px]:sticky min-[1000px]:top-6">
-          <ul className="flex flex-col gap-0.5">
-            {SECCIONES.map(([ancla, nombre]) => (
-              <li key={ancla}>
-                <a
-                  aria-current={visible === ancla ? 'true' : undefined}
-                  className={`block rounded-[10px] px-3 py-2 text-[13px] transition-colors ${
-                    visible === ancla ? 'bg-ink text-white' : 'text-ink-soft hover:bg-bg-top hover:text-ink'
-                  }`}
-                  href={`#${ancla}`}
-                >
-                  {nombre}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <form action={guardar} className="flex min-w-0 flex-col gap-4.5" id="form-web">
+      {/* El índice de la maqueta (E46) a la izquierda y las versiones a la derecha. */}
+      <div className="flex flex-wrap items-start gap-7">
+        <section aria-labelledby="lo-que-dice-la-web" className="min-w-0 flex-[2_1_480px]">
+          <h2 className="mb-2 font-display text-[24px] font-medium" id="lo-que-dice-la-web">
+            Lo que dice la web
+          </h2>
+        <form action={guardar} className="flex min-w-0 flex-col border-t border-line-panel" id="form-web">
           <input name="datos" type="hidden" value={actual} />
           <input name="base" type="hidden" value={base} />
 
@@ -475,66 +442,11 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
             </>,
           )}
         </form>
+        </section>
 
-        {/* La vista previa: lo que verá quien entra en la web, con lo que está escrito ahora. */}
-        <aside className="flex flex-col gap-4.5 min-[1000px]:col-start-2 min-[1320px]:col-start-3 min-[1320px]:sticky min-[1320px]:top-6">
-          <PanelCard title="Así se ve">
-            <div className="flex flex-col gap-4">
-              <div className="rounded-[14px] border border-line-panel bg-white p-4">
-                <p className={LABEL_CLASS}>Contacto</p>
-                {datos.whatsapp.trim() === '' ? (
-                  <p className="mt-2 text-[13px] text-ink-mute">Sin WhatsApp: se ve solo el formulario.</p>
-                ) : (
-                  <>
-                    <p className="mt-2 flex items-center gap-2 text-[14px] text-ink">
-                      <WhatsAppIcon className="text-gold-deep" /> WhatsApp {formatoWhatsapp(datos.whatsapp)}
-                    </p>
-                    {datos.horario[idioma] ? <p className="mt-1 pl-6 text-[12px] text-ink-mute">{datos.horario[idioma]}</p> : null}
-                  </>
-                )}
-              </div>
-
-              <div className="rounded-[14px] border border-line-panel bg-white p-4">
-                <p className={LABEL_CLASS}>Pie de la web</p>
-                <p className="mt-2 font-display text-[17px] text-gold-deep">Luxury Atelier</p>
-                <p className="mt-1 text-[10px] tracking-[0.18em] text-ink-mute uppercase">
-                  {[datos.direccion, datos.ciudad, datos.pais].filter(Boolean).join(', ')}
-                  {datos.cobertura[idioma] ? ` · ${datos.cobertura[idioma]}` : ''}
-                </p>
-                <div className="mt-2 flex items-center gap-2 text-gold-deep">
-                  {datos.redes.instagram ? <InstagramIcon /> : null}
-                  {datos.redes.facebook ? <FacebookIcon /> : null}
-                  {datos.redes.tiktok ? <TikTokIcon /> : null}
-                  <span className="text-[10px] tracking-[0.18em] text-ink-mute uppercase">
-                    {[datos.legal.privacidad.publicada ? 'Privacidad' : '', datos.legal.terminos.publicada ? 'Términos' : ''].filter(Boolean).join(' · ')}
-                  </span>
-                </div>
-              </div>
-
-              <div className="rounded-[14px] border border-line-panel bg-white p-4">
-                <p className={LABEL_CLASS}>Portada</p>
-                {datos.cifras.visibles ? (
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {datos.cifras.items.map((c, i) => (
-                      <div key={i}>
-                        <p className="font-display text-[22px] leading-none text-gold-deep">{c.valor || '—'}</p>
-                        <p className="mt-1 text-[10.5px] tracking-[0.15em] text-ink-mute uppercase">{c[idioma] || '—'}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="mt-2 text-[13px] text-ink-mute">Franja de cifras oculta.</p>
-                )}
-                <p className="mt-3 text-[12px] text-ink-soft">
-                  {datos.testimonios.filter((t) => t.confirmado).length} testimonio(s) publicado(s) ·{' '}
-                  {datos.marcas.filter((m) => m.trim() !== '').length} marca(s)
-                </p>
-              </div>
-            </div>
-          </PanelCard>
-
-          <section className="scroll-mt-6" id="historial">
-            <PanelCard title="Historial">
+        <aside className="min-w-0 flex-[1_1_280px]">
+          <section className="scroll-mt-28" id="historial">
+            <PanelCard title="Versiones">
               {versiones.length === 0 ? (
                 <p className="text-[13px] text-ink-mute">Todavía no se ha guardado ningún cambio.</p>
               ) : (
@@ -551,7 +463,7 @@ export function SiteSettingsForm({ inicial, versiones, seoPorDefecto }: { inicia
 
       {/* La barra de guardado, fija abajo: el formulario es largo y el botón tiene que estar
           a mano esté donde esté, junto al aviso de que hay cambios sin guardar. */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line-panel bg-bg-raised/95 px-4.5 py-3 backdrop-blur min-[860px]:left-[240px]">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-line-panel bg-bg-raised/95 px-4.5 py-3 backdrop-blur min-[768px]:left-[92px] min-[1280px]:left-[268px]">
         <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-3">
           <span aria-live="polite" className="text-[13px] text-ink-soft">
             {guardando ? 'Guardando…' : sucio ? 'Tienes cambios sin guardar.' : estado.status === 'success' ? estado.message : 'Todo guardado.'}

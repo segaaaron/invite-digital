@@ -282,7 +282,7 @@ export function BarraDeFiltros({
                 {o.count === undefined ? null : <span className="font-mono text-[10.5px] text-ink-mute">{o.count}</span>}
               </Link>
             ))}
-        <div className="flex min-w-0 flex-1 items-center justify-end gap-2 max-[559px]:basis-full">
+        <div className="flex min-w-0 flex-1 basis-[340px] items-center justify-end gap-2 max-[559px]:basis-full">
           {busqueda === undefined ? null : (
             <form action={busqueda.accion} className="flex min-w-0 flex-1 items-center min-[560px]:max-w-[320px]" method="get" role="search">
               {Object.entries(busqueda.ocultos).map(([k, v]) => (

@@ -1,6 +1,6 @@
 import { Suspense, type ReactNode } from 'react'
 import { BarraDeCarga } from '@/shared/design/ui/BarraDeCarga'
-import { display, panelMono, panelSans } from '@/shared/design/fonts'
+import { display, panelDisplay, panelMono, panelSans } from '@/shared/design/fonts'
 import { VIEWPORT } from '@/shared/config/viewport'
 import '../globals.css'
 import { CapturaDeFallos } from '@/shared/design/ui/CapturaDeFallos'
@@ -22,7 +22,7 @@ export const metadata = {
 
 export default function PanelLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es" className={`${display.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
+    <html lang="es" className={`${display.variable} ${panelDisplay.variable} ${panelSans.variable} ${panelMono.variable}`} suppressHydrationWarning>
       <body>
         <CapturaDeFallos />
         <ValidacionDeFormularios />

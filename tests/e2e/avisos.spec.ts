@@ -71,7 +71,7 @@ test('en Mi cuenta elige qué avisos van a sus aparatos', async ({ page }) => {
   await expect(seccion.getByRole('heading', { name: 'Avisos' })).toBeVisible()
   // Las ventas son del admin: al atelier no se le ofrecen.
   await expect(seccion.getByText('Ventas', { exact: true })).toHaveCount(0)
-  await seccion.getByRole('switch', { name: /Invitaciones abiertas/ }).uncheck()
+  await seccion.getByRole('checkbox', { name: /Invitaciones abiertas/ }).uncheck()
   await seccion.getByRole('button', { name: 'Guardar' }).click()
   await expect(seccion.getByText('Guardado.')).toBeVisible()
   expect((await sql<{ s: string[] }[]>`select avisos_silenciados as s from users where id = ${await atelierId()}`)[0]!.s).toEqual(['apertura'])

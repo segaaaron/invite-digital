@@ -8,11 +8,10 @@ import { formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { BarRow, PanelAlert, botonClases } from '@/shared/design/ui/panel/PanelKit'
-import { EtiquetaDeFiesta, TiraDeCifras, nombreDeFiesta } from '@/shared/design/ui/panel/lista'
+import { EtiquetaDeFiesta, nombreDeFiesta } from '@/shared/design/ui/panel/lista'
 import { fechaHora } from '@/shared/format/fecha'
 import { plural } from '@/shared/format/plural'
 import { isErr } from '@/shared/result'
-import { EmbudoDeVentas } from '@/modules/admin'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
 
 export const metadata = { title: 'Ingresos · Administración' }
@@ -20,6 +19,15 @@ export const dynamic = 'force-dynamic'
 
 const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', year: '2-digit', timeZone: 'UTC' })
 const MES_LARGO = new Intl.DateTimeFormat('es-BO', { month: 'long', timeZone: 'UTC' })
+
+/** Las vistas de la maqueta (E15): cómo mirar el dinero. */
+const VISTAS = [
+  { key: 'cobro', label: 'Por mes del cobro' },
+  { key: 'evento', label: 'Por mes del evento' },
+  { key: 'fiesta', label: 'Por fiesta' },
+  { key: 'temporadas', label: 'Temporadas' },
+] as const
+const MES_CORTO = new Intl.DateTimeFormat('es-BO', { month: 'short', timeZone: 'UTC' })
 
 /** Todo se vende en BOB hoy. Si un día hay dos monedas, sumarlas sería mentir: se separan. */
 const bs = (cents: number) => formatAmount(cents, 'BOB')
@@ -30,8 +38,10 @@ const bs = (cents: number) => formatAmount(cents, 'BOB')
  * por mes del evento, que es como llega la temporada; en qué meses se compra cada fiesta; por qué se
  * pierde y de dónde llega quien compra. Y el CSV para la contadora.
  */
-export default async function AdminIngresosPage() {
+export default async function AdminIngresosPage({ searchParams }: { searchParams: Promise<{ vista?: string }> }) {
   await requireAdmin()
+  const { vista: pedida } = await searchParams
+  const vista = VISTAS.find((v) => v.key === pedida)?.key ?? 'cobro'
   const ahora = new Date()
   const hoy = fechaEnBolivia(ahora)
   const [ingresos, ventas] = await Promise.all([admin.income(), cargarVentas(ahora)])
@@ -51,7 +61,10 @@ export default async function AdminIngresosPage() {
 
   const i = ingresos.value
   const a = analizarVentas(ventas.value.ventas, hoy, etiquetaDeMotivo)
-  const techoMes = Math.max(1, ...i.porMes.map((m) => m.total))
+  const seis = i.porMes.slice(-6)
+  const techoSeis = Math.max(1, ...seis.map((m) => m.total))
+  const anterior = i.porMes.at(-2)
+  const cambio = anterior === undefined || anterior.total === 0 ? null : Math.round(((i.esteMes - anterior.total) / anterior.total) * 100)
   const techoPlan = Math.max(1, ...i.porPlan.map((p) => p.total))
   const techoFiesta = Math.max(1, ...a.porFiesta.map((f) => f.total))
   const techoEvento = Math.max(1, ...a.porMesDelEvento.map((m) => m.cobrado + m.abierto))
@@ -62,12 +75,11 @@ export default async function AdminIngresosPage() {
       <PanelHeader
         actions={
           // Un `<a>` normal y no `next/link`: es una descarga de un route handler, no una página.
-          <a className={botonClases()} download href="/panel/admin/ingresos/csv">
+          <a className={`${botonClases()} max-[767px]:hidden`} download href="/panel/admin/ingresos/csv">
             Descargar CSV
           </a>
         }
-        kicker="Ventas"
-        meta="Pedidos aprobados, con el precio que tenían al pedirse"
+        meta="Lo cobrado: pedidos aprobados tras ver el comprobante."
         title="Ingresos"
       />
 
@@ -77,37 +89,101 @@ export default async function AdminIngresosPage() {
         </div>
       ) : null}
 
-      <TiraDeCifras
-        cifras={[
-          { label: 'Este mes', value: bs(i.esteMes), detail: 'Aprobado en el mes en curso' },
-          { label: 'Este año', value: bs(i.esteAnio), detail: 'Desde el 1 de enero' },
-          { label: 'Ticket medio', value: i.ticketMedio === null ? '—' : bs(i.ticketMedio), detail: plural(i.aprobados, 'pedido aprobado', 'pedidos aprobados') },
-          {
-            label: 'Por cobrar',
-            value: bs(a.porCobrar.total),
-            detail: a.porCobrar.saldos > 0 ? `${bs(a.porCobrar.saldos)} en saldos` : 'Pagos esperando o por revisar',
-            href: '/panel/admin/ventas?vista=lista&etapa=esperando_pago',
-          },
-        ]}
-      />
+      <nav aria-label="Cómo mirarlo" className="mb-7 flex flex-wrap gap-2.5 max-[767px]:hidden">
+        {VISTAS.map((v) => (
+          <Link
+            aria-current={vista === v.key ? 'page' : undefined}
+            className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13.5px] font-medium no-underline max-[859px]:min-h-11 ${vista === v.key ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'}`}
+            href={v.key === 'cobro' ? '/panel/admin/ingresos' : `/panel/admin/ingresos?vista=${v.key}`}
+            key={v.key}
+          >
+            {v.label}
+          </Link>
+        ))}
+      </nav>
 
-      <PanelCard title="El recorrido de la venta">
-        <EmbudoDeVentas embudo={i.embudo} />
-      </PanelCard>
+      {/* Las cifras en su tira con filetes (maqueta E15). */}
+      <dl className="mb-9 flex flex-wrap gap-y-4 max-[767px]:grid max-[767px]:grid-cols-2 max-[767px]:gap-x-4 max-[767px]:gap-y-5">
+        {[
+          { k: MES_LARGO.format(new Date(`${hoy}T00:00:00Z`)), v: bs(i.esteMes), d: cambio === null ? 'Aprobado en el mes en curso' : `${Math.abs(cambio)} % ${cambio >= 0 ? 'más' : 'menos'} que ${MES_LARGO.format(new Date(`${anterior!.mes}-01T00:00:00Z`))}`, ok: cambio !== null && cambio >= 0 },
+          { k: 'En el año', v: bs(i.esteAnio), d: 'Desde el 1 de enero', ok: false },
+          { k: 'Ticket medio', v: i.ticketMedio === null ? '—' : bs(i.ticketMedio), d: plural(i.aprobados, 'pedido aprobado', 'pedidos aprobados'), ok: false },
+          { k: 'Por cobrar', v: bs(a.porCobrar.total), d: a.porCobrar.saldos > 0 ? `${bs(a.porCobrar.saldos)} en saldos` : 'Pagos esperando o por revisar', ok: false },
+        ].map((c, n) => (
+          // En el celular, el mes va en su tarjeta destacada y las demás de dos en dos (maqueta M28).
+          <div className={`flex-[1_1_180px] ${n === 0 ? 'max-[767px]:col-span-2 max-[767px]:rounded-[16px] max-[767px]:border max-[767px]:border-grab-borde max-[767px]:bg-bg-raised max-[767px]:p-5 max-[767px]:shadow-[inset_0_0_0_7px_var(--color-bg-raised),inset_0_0_0_8px_var(--color-grab-filete)]' : 'border-l border-line-panel pl-6 max-[767px]:border-l-0 max-[767px]:pl-0'}`} key={c.k}>
+            <dt className="text-[13.5px] text-ink-mute first-letter:uppercase">{c.k}</dt>
+            <dd className="m-0 font-display text-[32px] leading-[1.15] font-medium">{c.v.replace(/,00$/, '')}</dd>
+            <dd className={`m-0 text-[13px] ${c.ok ? 'text-pill-ok-ink' : 'text-ink-mute'}`}>{c.d}</dd>
+          </div>
+        ))}
+      </dl>
 
-      <div className="mt-4.5 grid gap-4.5 min-[900px]:grid-cols-2">
-        <PanelCard title="Cobrado, últimos doce meses">
-          {i.porMes.every((m) => m.total === 0) ? (
-            <EmptyState compact description="Cuando apruebes el primer pedido, aquí verás lo cobrado mes a mes." title="Todavía no hay cobros" />
-          ) : (
-            <div className="flex flex-col">
-              {i.porMes.map((fila) => (
-                <BarRow key={fila.mes} label={MES.format(new Date(`${fila.mes}-01T00:00:00Z`))} ratio={fila.total / techoMes} value={fila.total === 0 ? '—' : bs(fila.total)} wide />
+      {vista === 'cobro' ? (
+        <div className="flex flex-col gap-8">
+          <section aria-labelledby="cobrado-por-mes" className="rounded-[16px] border border-line-panel bg-bg-raised p-6 max-[767px]:border-0 max-[767px]:bg-transparent max-[767px]:p-0">
+            <h2 className="mb-6 font-display text-[24px] font-medium max-[767px]:sr-only" id="cobrado-por-mes">
+              Cobrado por mes, en Bs
+            </h2>
+            {seis.every((m) => m.total === 0) ? (
+              <EmptyState compact description="Cuando apruebes el primer pedido, aquí verás lo cobrado mes a mes." title="Todavía no hay cobros" />
+            ) : (
+              <ol aria-label={`Cobrado por mes: ${seis.map((m) => `${MES_CORTO.format(new Date(`${m.mes}-01T00:00:00Z`))} ${bs(m.total)}`).join(', ')}`} className="flex h-[200px] items-end gap-[4%] px-2">
+                {seis.map((m, n) => (
+                  <li className="flex h-full flex-1 flex-col items-center justify-end gap-1.5" key={m.mes}>
+                    <span className="text-[12.5px] text-ink-mute [font-variant-numeric:tabular-nums]">{m.total === 0 ? '—' : bs(m.total).replace(/^Bs\s*/, '').replace(/,00$/, '')}</span>
+                    <span className={`w-full max-w-[56px] rounded-t-[3px] ${n === seis.length - 1 ? 'bg-shell-deep' : 'bg-barra-suave'}`} style={{ height: `${Math.max(2, (m.total / techoSeis) * 100)}%` }} />
+                    <span className="text-[12.5px] text-ink-mute">{MES_CORTO.format(new Date(`${m.mes}-01T00:00:00Z`)).replace('.', '')}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </section>
+
+          <section aria-labelledby="de-consulta-a-evento">
+            <h2 className="mb-3.5 font-display text-[24px] font-medium" id="de-consulta-a-evento">
+              De consulta a evento, este año
+            </h2>
+            <ol className="grid grid-cols-2 overflow-hidden rounded-[12px] min-[700px]:grid-cols-4">
+              {i.embudo.pasos.map((paso, n) => (
+                <li className={`px-5 py-4 ${['bg-pill-maybe text-shell-deep', 'bg-barra-suave text-shell-deep', 'bg-sage text-shell-ink', 'bg-shell-deep text-shell-ink'][n] ?? ''}`} key={paso.clave}>
+                  <span className="block font-display text-[30px] leading-tight font-medium">{paso.total}</span>
+                  <span className="text-[13.5px]">
+                    {paso.titulo}
+                    {paso.desdeElAnterior === null ? '' : `, ${paso.desdeElAnterior} %`}
+                  </span>
+                </li>
               ))}
-            </div>
-          )}
-        </PanelCard>
+            </ol>
+          </section>
 
+      <PanelCard title="Últimos cobros">
+        {i.ultimos.length === 0 ? (
+          <EmptyState compact description="Cada pedido que apruebes aparece aquí con su importe." title="Todavía no se ha aprobado ningún pedido" />
+        ) : (
+          <ul className="flex flex-col">
+            {i.ultimos.map((p) => (
+              <li className="border-t border-line-panel first:border-none" key={p.ref}>
+                {/* En el celular: nombre e importe arriba; referencia, plan y fecha debajo. */}
+                <Link className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-bg-sunken/50 min-[700px]:grid-cols-[6rem_minmax(0,1fr)_auto_7rem]" href={`/panel/admin/ventas?venta=p-${p.ref}`}>
+                  <span className="order-3 font-codigo text-[11px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
+                  <span className="order-1 min-w-0 truncate text-[14px] text-ink min-[700px]:order-none">
+                    {p.customerName}
+                    <span className="ml-2 text-[12px] text-ink-mute">{p.planName ?? 'Sin plan'}</span>
+                  </span>
+                  <span className="order-4 text-right text-[12px] text-ink-mute min-[700px]:order-none min-[700px]:text-left">{p.decidedAt ? fechaHora(p.decidedAt) : ''}</span>
+                  <span className="order-2 text-right font-display text-[20px] text-ink [font-variant-numeric:lining-nums] min-[700px]:order-none">{bs(p.amountCents ?? 0)}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </PanelCard>
+          <a className={`${botonClases()} w-full min-[768px]:hidden`} download href="/panel/admin/ingresos/csv">
+            Descargar CSV
+          </a>
+        </div>
+      ) : vista === 'evento' ? (
         <PanelCard title="Por mes del evento">
           <p className="-mt-2 mb-3 text-[12px] text-ink-mute">Lo vendido para los eventos de los próximos seis meses; en oro, lo que aún espera su pago.</p>
           <div className="flex flex-col">
@@ -123,8 +199,9 @@ export default async function AdminIngresosPage() {
             ))}
           </div>
         </PanelCard>
-
-        <PanelCard title="Por fiesta">
+      ) : vista === 'fiesta' ? (
+        <div className="grid gap-4.5 min-[900px]:grid-cols-2">
+          <PanelCard title="Por fiesta">
           {a.porFiesta.length === 0 ? (
             <EmptyState compact title="Todavía no hay ventas cobradas" />
           ) : (
@@ -135,8 +212,7 @@ export default async function AdminIngresosPage() {
             </div>
           )}
         </PanelCard>
-
-        <PanelCard title="Por plan">
+          <PanelCard title="Por plan">
           {i.porPlan.length === 0 ? (
             <EmptyState compact title="Todavía no hay pedidos aprobados" />
           ) : (
@@ -147,8 +223,10 @@ export default async function AdminIngresosPage() {
             </div>
           )}
         </PanelCard>
-
-        <PanelCard title="Temporadas">
+        </div>
+      ) : (
+        <div className="grid gap-4.5 min-[900px]:grid-cols-2">
+          <PanelCard title="Temporadas">
           {a.temporadas.length === 0 ? (
             <EmptyState compact description="Con tres ventas cobradas de una fiesta, aquí verás en qué meses del año se compra más." title="Aún pocas ventas para verlo" />
           ) : (
@@ -169,8 +247,7 @@ export default async function AdminIngresosPage() {
           )}
           <p className="mt-3 text-[11.5px] text-ink-mute">Hoy es {MES_LARGO.format(new Date(`${hoy}T00:00:00Z`))}.</p>
         </PanelCard>
-
-        <PanelCard title="De dónde llegan y por qué se pierden">
+          <PanelCard title="De dónde llegan y por qué se pierden">
           {a.origenes.length === 0 && a.motivosDePerdida.length === 0 ? (
             <EmptyState compact title="Todavía no hay consultas" />
           ) : (
@@ -196,30 +273,8 @@ export default async function AdminIngresosPage() {
             </div>
           )}
         </PanelCard>
-      </div>
-
-      <PanelCard className="mt-4.5" title="Últimos cobros">
-        {i.ultimos.length === 0 ? (
-          <EmptyState compact description="Cada pedido que apruebes aparece aquí con su importe." title="Todavía no se ha aprobado ningún pedido" />
-        ) : (
-          <ul className="flex flex-col">
-            {i.ultimos.map((p) => (
-              <li className="border-t border-line-panel first:border-none" key={p.ref}>
-                {/* En el celular: nombre e importe arriba; referencia, plan y fecha debajo. */}
-                <Link className="grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 gap-y-0.5 py-3 transition-colors hover:bg-bg-sunken/50 min-[700px]:grid-cols-[6rem_minmax(0,1fr)_auto_7rem]" href={`/panel/admin/ventas?venta=p-${p.ref}`}>
-                  <span className="order-3 font-codigo text-[11px] tracking-[0.15em] text-ink-mute min-[700px]:order-none">{p.ref}</span>
-                  <span className="order-1 min-w-0 truncate text-[14px] text-ink min-[700px]:order-none">
-                    {p.customerName}
-                    <span className="ml-2 text-[12px] text-ink-mute">{p.planName ?? 'Sin plan'}</span>
-                  </span>
-                  <span className="order-4 text-right text-[12px] text-ink-mute min-[700px]:order-none min-[700px]:text-left">{p.decidedAt ? fechaHora(p.decidedAt) : ''}</span>
-                  <span className="order-2 text-right font-display text-[20px] text-ink [font-variant-numeric:lining-nums] min-[700px]:order-none">{bs(p.amountCents ?? 0)}</span>
-                </Link>
-              </li>
-            ))}
-          </ul>
-        )}
-      </PanelCard>
+        </div>
+      )}
     </>
   )
 }

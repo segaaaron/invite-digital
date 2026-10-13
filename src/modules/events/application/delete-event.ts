@@ -29,13 +29,10 @@ export const deleteEvent =
         const row = await deps.events.findById(input.eventId)
         if (row === null) return err(eventError('not_found', 'El evento no existe'))
 
-        if (input.confirmation.trim() !== row.slug) {
-          return err(
-            eventError(
-              'invalid_slug',
-              `Para borrar el evento hay que escribir su identificador exacto: ${row.slug}`,
-            ),
-          )
+        // Vale su nombre (lo que pide la pantalla, maqueta E65) o su identificador; sin distinguir mayúsculas.
+        const escrito = input.confirmation.trim().toLocaleLowerCase('es')
+        if (![row.title, row.slug].some((x) => x.trim().toLocaleLowerCase('es') === escrito)) {
+          return err(eventError('invalid_slug', `Para borrar el evento hay que escribir su nombre exacto: ${row.title}`))
         }
 
         await deps.purgeFiles(input.eventId)

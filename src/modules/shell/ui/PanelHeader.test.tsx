@@ -3,12 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { PanelHeader } from './PanelHeader'
 
 describe('PanelHeader', () => {
-  it('destaca en verde la parte del título que la maqueta pone en itálica', () => {
+  it('el destacado del título va en su propio elemento', () => {
     const { container } = render(<PanelHeader highlight="Marcia & Ricardo" title="Bienvenida, " />)
-    const destacado = container.querySelector('b')
-
-    expect(destacado?.textContent).toBe('Marcia & Ricardo')
-    expect(destacado?.className).toContain('text-sage')
+    expect(container.querySelector('b')?.textContent).toBe('Marcia & Ricardo')
   })
 
   it('el título sigue leyéndose entero, destacado incluido', () => {

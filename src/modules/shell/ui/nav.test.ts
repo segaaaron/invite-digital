@@ -64,11 +64,11 @@ describe('panelNav', () => {
     expect(secciones[0]?.items.map((item) => item.href)).toEqual(['/panel', '/panel/ayuda'])
   })
 
-  it('el admin fuera de un evento ve seis entradas, una por trabajo', () => {
+  it('el admin fuera de un evento ve el menú de la maqueta: una entrada por trabajo, en cuatro grupos', () => {
     const secciones = panelNav(null, {}, true)
-    expect(secciones.map((seccion) => seccion.label)).toEqual(['Día a día', 'Negocio', 'Sistema'])
+    expect(secciones.map((seccion) => seccion.label)).toEqual(['Principal', 'Vender', 'Organizar', 'Configurar'])
     const entradas = secciones.flatMap((seccion) => seccion.items)
-    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Eventos', 'Clientes', 'Escaparate', 'Ajustes'])
+    expect(entradas.map((item) => item.label)).toEqual(['Hoy', 'Ventas', 'Clientes', 'Ingresos', 'Eventos', 'Catálogo', 'Ajustes'])
     const hrefs = entradas.map((item) => item.href)
     expect(hrefs).not.toContain('/panel')
     expect(hrefs).not.toContain('/panel/ayuda')
@@ -77,12 +77,13 @@ describe('panelNav', () => {
   it('las pantallas hermanas son pestañas de su entrada: la entrada sigue marcada en ellas', () => {
     const entradas = panelNav(null, {}, true).flatMap((seccion) => seccion.items)
     const de = (label: string) => entradas.find((item) => item.label === label)!
-    for (const ruta of ['/panel/admin/consultas', '/panel/pedidos', '/panel/admin/ingresos']) expect(esEntradaActiva(de('Ventas'), ruta)).toBe(true)
-    for (const ruta of ['/panel/admin/planes', '/panel/admin/extras', '/panel/admin/modelos', '/panel/admin/web']) expect(esEntradaActiva(de('Escaparate'), ruta)).toBe(true)
-    for (const ruta of ['/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/auditoria']) expect(esEntradaActiva(de('Ajustes'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/consultas', '/panel/pedidos']) expect(esEntradaActiva(de('Ventas'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/planes', '/panel/admin/extras', '/panel/admin/modelos']) expect(esEntradaActiva(de('Catálogo'), ruta)).toBe(true)
+    for (const ruta of ['/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/auditoria', '/panel/admin/web']) expect(esEntradaActiva(de('Ajustes'), ruta)).toBe(true)
     // La cuenta propia vive en el menú del usuario: ninguna entrada la marca.
     expect(entradas.some((item) => esEntradaActiva(item, '/panel/cuenta'))).toBe(false)
-    for (const ruta of ['/panel/admin/eventos', '/panel/admin/eventos/calendario']) expect(esEntradaActiva(de('Eventos'), ruta)).toBe(true)
+    // La ficha de un evento es parte de «Eventos» (E35).
+    for (const ruta of ['/panel/admin/eventos', '/panel/admin/eventos/calendario', '/panel/eventos/boda/configuracion']) expect(esEntradaActiva(de('Eventos'), ruta)).toBe(true)
     // «Hoy» solo en su ruta: su prefijo es el de toda la administración.
     expect(esEntradaActiva(de('Hoy'), '/panel/admin/eventos')).toBe(false)
     // Y un atelier no llega a nada de la administración.
@@ -167,20 +168,14 @@ describe('panelNav', () => {
     expect(hrefs(false, true, false)).not.toContain(ruta)
   })
 
-  // Escribir la invitación es lo primero que se hace: su grupo va arriba de la barra.
-  it('la invitación va primero, para el cliente y para el atelier', () => {
-    expect(panelNav('boda', {}, false, false, true)[0]?.items[0]).toMatchObject({ label: 'Mi invitación', href: '/panel/eventos/boda/configuracion' })
-    expect(panelNav('boda')[0]?.label).toBe('Invitación')
-  })
-
-  it('ver la invitación entera va justo debajo de escribirla; las estadísticas siguen en el Resumen', () => {
-    // La vista previa salió de la barra el 28 de septiembre y no se encontraba: volvió el 7 de octubre,
-    // pegada a la invitación. «Estadísticas» sigue sin entrada propia: vive en el Resumen.
-    for (const secciones of [panelNav('boda'), panelNav('boda', {}, false, false, true)]) {
-      const hrefs = secciones[0]?.items.map((i) => i.href) ?? []
-      expect(hrefs.slice(0, 2)).toEqual(['/panel/eventos/boda/configuracion', '/panel/eventos/boda/vista-previa'])
-      expect(secciones.flatMap((s) => s.items.map((i) => i.href))).not.toContain('/panel/eventos/boda/estadisticas')
-    }
+  // El menú del cliente es el de la maqueta (E07): «Mi evento» empieza por el Resumen y sigue con su invitación.
+  it('para el cliente, el Resumen y luego Mi invitación; para el atelier, escribir y ver la invitación arriba', () => {
+    const cliente = panelNav('boda', {}, false, false, true)
+    expect(cliente.map((s) => s.label)).toEqual(['Mi evento', 'Organizar', 'El gran día', 'Ajustes'])
+    expect(cliente[0]?.items.slice(0, 2).map((i) => i.href)).toEqual(['/panel/eventos/boda', '/panel/eventos/boda/configuracion'])
+    expect(panelNav('boda')[0]?.items.slice(0, 2).map((i) => i.href)).toEqual(['/panel/eventos/boda/configuracion', '/panel/eventos/boda/vista-previa'])
+    // «Estadísticas» sigue sin entrada propia: vive en el Resumen.
+    for (const secciones of [panelNav('boda'), cliente]) expect(secciones.flatMap((s) => s.items.map((i) => i.href))).not.toContain('/panel/eventos/boda/estadisticas')
   })
 
   it('el planner sale para quien celebra y para quien lleva el evento, no para la puerta', () => {

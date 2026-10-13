@@ -9,6 +9,7 @@ export const xv_fantasiaDefinition: ThemeDefinition = {
   label: 'Noche Estrellada',
   categorySlug: 'xv-anos',
   palette: PALETA,
+  invitadoDeMuestra: { label: 'Camila Vargas', seats: 1 },
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: { fotos: { casillas: 0 }, sinCampos: { hero: ['nameB', 'serial'], itinerary: ['note'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],

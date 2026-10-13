@@ -2,7 +2,8 @@
 
 import { ReceiptIcon } from '@/shared/design/ui/icons'
 import { CampoFecha } from '@/shared/design/ui/panel/campos-de-fecha'
-import { useActionState, useId } from 'react'
+import { useRouter } from 'next/navigation'
+import { useActionState, useEffect, useId } from 'react'
 import { FIELD_CLASS, Field, PanelAlert, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { addPaymentAction, type PlannerActionState, removeItemAction, removePaymentAction, saveItemAction, setPaymentPaidAction } from '@/app/_acciones/planner/actions'
 import type { Pagador } from '../domain/presupuesto'
@@ -89,8 +90,25 @@ function CamposDePartida({ opciones, inicial }: { opciones: Opciones; inicial: V
  * Alta o edición de una partida. El nombre del padrino solo aparece si paga un padrino. Con
  * error, los campos se vuelven a montar con lo que se envió: React vacía el formulario.
  */
-export function ItemForm({ evento, opciones, partida, categoria }: { evento: Evento; opciones: Opciones; partida?: PartidaVista; categoria?: string | undefined }) {
+export function ItemForm({
+  evento,
+  opciones,
+  partida,
+  categoria,
+  cerrarEn,
+}: {
+  evento: Evento
+  opciones: Opciones
+  partida?: PartidaVista
+  categoria?: string | undefined
+  /** En el diálogo «Anotar un gasto»: guardado, se cierra y se ve el gasto en la lista. */
+  cerrarEn?: string
+}) {
   const [estado, enviar, enviando] = useActionState(sinCaerse(saveItemAction), INICIAL)
+  const router = useRouter()
+  useEffect(() => {
+    if (estado.status === 'success' && cerrarEn !== undefined) router.replace(cerrarEn)
+  }, [estado, cerrarEn, router])
   const enviados = estado.status === 'error' ? estado.valores : undefined
   const inicial: ValoresPartida = enviados
     ? {
@@ -164,16 +182,17 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
     )
   }
   return (
-    <ul className="flex flex-col gap-3">
+    <ul className="flex flex-col border-t border-line-panel">
       {partidas.map((p) => (
-        <li aria-label={p.concept} className="flex flex-col gap-3 rounded-[18px] border border-line-panel bg-white px-5 py-4 shadow-card" key={p.id}>
+        <li aria-label={p.concept} className="flex flex-col gap-2.5 border-b border-line-panel py-4" key={p.id}>
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <div className="flex min-w-0 flex-col">
-              <span className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{p.categoria}</span>
-              <span className="font-display text-[20px] font-light text-ink">{p.concept}</span>
-              <span className="text-[11px] text-ink-mute">Paga: {p.quienPaga}</span>
+              <span className="text-[15px] font-medium text-ink">{p.concept}</span>
+              <span className="text-[13px] text-ink-mute">
+                {p.categoria} · Paga: {p.quienPaga}
+              </span>
             </div>
-            <dl className="grid grid-cols-2 gap-x-5 gap-y-1 text-[12px] [font-variant-numeric:tabular-nums] min-[560px]:grid-cols-4">
+            <dl className="grid grid-cols-2 gap-x-6 gap-y-1 text-[14px] [font-variant-numeric:tabular-nums] min-[560px]:grid-cols-4">
               {[
                 ['Previsto', p.previsto],
                 ['Contratado', p.contratado ?? '—'],
@@ -181,7 +200,7 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
                 ['Falta', p.falta],
               ].map(([k, v]) => (
                 <div className="flex flex-col" key={k}>
-                  <dt className="font-mono text-[10.5px] tracking-[0.2em] text-ink-mute uppercase">{k}</dt>
+                  <dt className="text-[12.5px] text-ink-mute">{k}</dt>
                   <dd className="text-ink">{v}</dd>
                 </div>
               ))}
@@ -189,9 +208,9 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
           </div>
 
           {p.pagos.length === 0 ? null : (
-            <ul className="flex flex-col border-t border-line-panel pt-2">
+            <ul className="flex flex-col rounded-[12px] bg-fila px-3.5 py-1">
               {p.pagos.map((g) => (
-                <li className="flex flex-wrap items-center justify-between gap-3 py-1.5 text-[13px]" key={g.id}>
+                <li className="flex flex-wrap items-center justify-between gap-3 py-1.5 text-[14px]" key={g.id}>
                   <span className="text-ink [font-variant-numeric:tabular-nums]">
                     {g.etiqueta ? `${g.etiqueta} · ` : ''}
                     {g.importe}
@@ -217,7 +236,7 @@ export function BudgetBoard({ evento, opciones, partidas, editable = true }: { e
 
           {editable ? (
           <details>
-            <summary className="cursor-pointer text-[11px] text-ink-soft underline underline-offset-2">Pagos, editar o quitar</summary>
+            <summary className="inline-flex min-h-8 cursor-pointer list-none items-center text-[13px] text-ink-mute hover:text-ink [&::-webkit-details-marker]:hidden">Pagos, editar o quitar</summary>
             <div className="mt-3 flex flex-col gap-4">
               <NuevoPago concepto={p.concept} evento={evento} itemId={p.id} />
               <ItemForm evento={evento} opciones={opciones} partida={p} />

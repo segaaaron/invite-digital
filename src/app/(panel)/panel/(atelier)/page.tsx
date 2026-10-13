@@ -1,10 +1,9 @@
 import { redirect } from 'next/navigation'
-import { events } from '@/app/composition/container'
+import { events, guests } from '@/app/composition/container'
 import { isAdmin, puedeCrearEventos } from '@/modules/identity'
 import { EventList } from '@/modules/events/ui/EventList'
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 
@@ -13,6 +12,18 @@ export default async function PanelHomePage() {
   // La bandeja enlaza al resumen de cada boda, que el admin no abre: su lista es la cartera.
   if (isAdmin(actor)) redirect('/panel/admin/eventos')
   const listed = await events.listFor(actor)
+  // Cómo va cada uno: quiénes confirmaron de cuántas personas (una lectura por evento; un cliente tiene pocos).
+  const avance = isErr(listed)
+    ? {}
+    : Object.fromEntries(
+        await Promise.all(
+          listed.value.map(async (e) => {
+            const gente = await guests.listPeople(e.id)
+            const lista = isErr(gente) ? [] : gente.value
+            return [e.id, { vienen: lista.filter((p) => p.attending === 'yes').length, personas: lista.length }] as const
+          }),
+        ),
+      )
 
   return (
     <>
@@ -25,19 +36,17 @@ export default async function PanelHomePage() {
             </PanelButton>
           ) : undefined
         }
-        kicker={actor.role === 'atelier' ? 'Atelier' : 'Panel'}
+        meta={actor.role === 'atelier' ? undefined : 'Elige cuál quieres organizar ahora.'}
         title={actor.role === 'atelier' ? 'Eventos' : 'Mis eventos'}
       />
 
-      <PanelCard>
-        {isErr(listed) ? (
+      {isErr(listed) ? (
           <p className="text-[14px] text-danger" role="alert">
             No pudimos leer los eventos. La base no responde; vuelve a intentarlo en un momento.
           </p>
         ) : (
-          <EventList events={listed.value} />
-        )}
-      </PanelCard>
+        <EventList avance={avance} events={listed.value} />
+      )}
     </>
   )
 }

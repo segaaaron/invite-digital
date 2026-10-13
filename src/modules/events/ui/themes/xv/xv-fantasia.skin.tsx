@@ -6,6 +6,28 @@ import { iconoGala } from './IconosLineaXv'
 import type { PielXv } from './piel-xv'
 import { alfaDe, colorDeAcento, PALETA as P } from './xv-fantasia.palette'
 
+/** La lámina del borde que la maqueta pone arriba y abajo del titular del formulario . */
+const LAMINA = (
+  <Image
+    alt=""
+    aria-hidden
+    height={40}
+    src={themeAsset('xv-fantasia', 'borde.avif')}
+    style={{ width: '50%', height: 'auto', display: 'block', margin: '22px auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
+    width={300}
+  />
+)
+
+/** El filete con estrella de cuatro puntas de sus avisos («Una noche sin niños»). */
+const FILETE_ESTRELLA = (
+  <svg aria-hidden height="24" style={{ display: 'block', margin: '0 auto' }} viewBox="0 0 126 24" width="126">
+    <path d="M4 12 H48 M78 12 H122" stroke={colorDeAcento.orquidea} strokeWidth="1" />
+    <path d="M63 3 L65.4 9.6 L72 12 L65.4 14.4 L63 21 L60.6 14.4 L54 12 L60.6 9.6 Z" fill="none" stroke={colorDeAcento.orquidea} strokeWidth="1.2" />
+    <circle cx="14" cy="12" fill={colorDeAcento.orquidea} r="1.6" />
+    <circle cx="112" cy="12" fill={colorDeAcento.orquidea} r="1.6" />
+  </svg>
+)
+
 type Archivo = (typeof THEME_ASSETS)['xv-fantasia'][number]
 
 /** Los iconos del cronograma, tipados contra el manifiesto: un nombre mal escrito no compila. */
@@ -66,6 +88,14 @@ export const PIEL: PielXv = {
     // Los tres diseños de gala: sombra negra, sin halo, la cita dentro de un panel en
     // serif itálico y el reloj **debajo** del «Faltan», como en su maqueta.
     sombraTexto: '0 2px 8px rgba(0,0,0,.7)',
+    avisoTinta: P.violetaHondo,
+    // El cierre abre con el texto, en su crema, sin ornamento encima ni rombo debajo de la luna.
+    cierreOrnamento: false,
+    cierreRombo: false,
+    despedida: P.violetaHondo,
+    plazo: P.violetaHondo,
+    cuerpoF3: P.violetaHondo,
+    ornamentoFormularioAbajo: LAMINA,
     haloTitular: 'none',
     cita: {
       panel: true,
@@ -104,7 +134,7 @@ export const PIEL: PielXv = {
     itinerarioRotuloSize: 11,
   },
   // Los tamaños de su maqueta: el ramo y la luna a 260, el reloj a 100.
-  arte: { coronaWidth: 260, relojWidth: 100, cierreWidth: '60%' },
+  arte: { coronaWidth: 260, relojWidth: 100, cierreWidth: 260 },
   // La recepción lleva un castillo de línea dorado, como en su maqueta.
   castilloNodo: (
     <svg
@@ -143,7 +173,8 @@ export const PIEL: PielXv = {
   // Su código de vestimenta son dos siluetas de línea, como en la maqueta.
   vestimentaNodo: (
     <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 18 }}>
-      <svg aria-hidden fill="none" height="70" stroke={colorDeAcento.orquidea} strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="50">
+      {/* El vestido en plata, como en su maqueta (`stroke="#D7DCE3"`); la camisa en oro. */}
+      <svg aria-hidden fill="none" height="70" stroke="#D7DCE3" strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.7} viewBox="0 0 24 24" width="50">
         <path d="M9 3 L9 6 L6 9 L6 20 L18 20 L18 9 L15 6 L15 3 Z" />
         <path d="M9 3 a3 3 0 0 0 6 0" />
       </svg>
@@ -157,4 +188,6 @@ export const PIEL: PielXv = {
   iconoNodo: (clave) => iconoGala(clave, { color: colorDeAcento.orquidea }),
   icono: (clave) => themeAsset('xv-fantasia', ICONOS[clave ?? ''] ?? 'luna-estrella-opt.avif'),
   ornamento: <DividerOrnamental color={P.lila} />,
+  ornamentoAviso: FILETE_ESTRELLA,
+  ornamentoFormulario: LAMINA,
 }

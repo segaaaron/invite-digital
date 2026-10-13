@@ -71,8 +71,15 @@ async function darDeAlta(
   const email = texto(formData, 'email').trim().toLowerCase()
   const existente = await admin.findUserByEmail(email)
 
+  // Nombre y teléfono (E34) completan la cuenta; `completarContacto` no pisa lo que ya tenía.
+  const nombre = texto(formData, 'nombre').trim()
+  const telefono = texto(formData, 'telefono').trim()
+  const contacto = (userId: string) =>
+    nombre === '' && telefono === '' ? Promise.resolve() : admin.completarContacto(userId, { fullName: nombre === '' ? null : nombre, phone: telefono === '' ? null : telefono })
+
   if (existente !== null) {
     await events.staff.add(contexto.eventId, existente.id, membership)
+    await contacto(existente.id)
     // Ya tenía cuenta: se le avisa, pero **sin contraseña dentro** — no se le ha tocado.
     const avisado = membership === 'cliente' ? await avisarPorCorreo(contexto.eventId, email, null) : false
     revalidatePath(`/panel/eventos/${contexto.eventSlug}/configuracion`)
@@ -92,6 +99,7 @@ async function darDeAlta(
     role: membership,
   })
   await events.staff.add(contexto.eventId, id, membership)
+  await contacto(id)
 
   // El correo con su acceso, solo al cliente: el personal de puerta trabaja una noche y se
   // le da la contraseña en mano.

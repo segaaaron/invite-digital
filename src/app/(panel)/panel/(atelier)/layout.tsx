@@ -1,17 +1,22 @@
 import type { ReactNode } from 'react'
-import { avisos, events, guests, plans } from '@/app/composition/container'
+import { avisos, events, guests, identity, plans } from '@/app/composition/container'
 import { Campana } from '@/modules/notifications/ui/Campana'
 import { BarraSuperior } from '@/modules/shell/ui/BarraSuperior'
 import { isAdmin, rolEnEquipo } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { barraDelEvento, panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
+import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { MenuMovil } from '@/modules/shell/ui/MenuMovil'
 import { BarraDelAdmin } from '@/modules/admin'
 import { insigniasDeAdmin } from '../_carcasa/insignias-de-admin'
 import { nombreDePlan } from '../_carcasa/nombre-de-plan'
 import { isErr } from '@/shared/result'
 import { seccionesFueraDelPlan } from '@/modules/plans'
+import { diaLargo } from '@/shared/format/fecha'
+import { fiestaDeTema } from '@/modules/events'
+import { portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
+import { cuandoEs } from '../_carcasa/cuenta-atras'
 
 /**
  * La carcasa fuera de un evento: la bandeja, el evento nuevo y la ayuda.
@@ -30,7 +35,7 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
 
   // Todo lo de la barra en paralelo: eran nueve lecturas en fila antes de pintar nada.
   const conCampana = actor.role !== 'puerta' && actor.soporte === undefined
-  const [grupos, capacidad, insignias, rolEquipo, mesaPlanner, sinVer] = await Promise.all([
+  const [grupos, capacidad, insignias, rolEquipo, mesaPlanner, sinVer, nombre] = await Promise.all([
     // Personas, como dentro del evento: aquí decía 8 (invitaciones) y allí 27 (personas).
     activo === null ? null : guests.contarPersonas(activo.id).catch(() => null),
     activo === null ? null : plans.allowanceFor(activo.id),
@@ -38,46 +43,48 @@ export default async function AtelierLayout({ children }: { children: ReactNode 
     actor.role === 'cliente' && activo !== null ? events.staff.de(actor, activo.id).then(rolEnEquipo) : null,
     actor.role === 'puerta' || admin ? false : events.staff.eventIdsOf(actor.userId, ['planner']).then((ids) => ids.length > 0),
     conCampana ? avisos.sinVer(actor.userId).catch(() => 0) : 0,
+    identity.nombreDe(actor.userId),
   ])
   const campana = conCampana ? <Campana clavePublica={avisos.clavePublica} sinVer={sinVer} /> : null
 
   const nombreDelPlan = capacidad === null || isErr(capacidad) ? null : await nombreDePlan(capacidad.value.planSlug)
 
-  const sections = panelNav(activo?.slug ?? null, {
+  // Un cliente con varios eventos elige cuál organizar: fuera de un evento su barra es solo «Tu cuenta» (E32).
+  const variosEventos = actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1
+  const sections = variosEventos
+    ? [{ label: 'Tu cuenta', items: [{ href: '/panel', label: 'Mis eventos', icon: 'eventos' as const }, { href: '/panel/cuenta', label: 'Mi cuenta', icon: 'equipo' as const }] }]
+    : panelNav(activo?.slug ?? null, {
     invitados: grupos,
     pedidos: insignias.pedidos,
     consultas: insignias.consultas,
   }, admin, actor.role === 'puerta', actor.role === 'cliente', { equipo: rolEquipo, mesaPlanner, misEventos: actor.role === 'cliente' && listed !== null && !isErr(listed) && listed.value.length > 1, fueraDelPlan: capacidad === null || isErr(capacidad) ? [] : seccionesFueraDelPlan(capacidad.value) })
-  // Quien tiene un evento navega con la misma barra de abajo que dentro de él (Mi cuenta, la ayuda…):
-  // antes aquí volvía la barra oscura con «Menú» de antes del 6 de octubre.
-  const barra = admin ? actor.soporte === undefined : activo !== null && actor.role !== 'puerta' ? barraDelEvento(activo.slug, sections, 'equipo') : false
-
   return (
     <PanelFrame
-      conAcciones={campana !== null && !admin}
-      barraInferior={barra}
+      barra={
+        admin ? (
+          <BarraDelAdmin campana={campana} hoy={diaLargo(new Date())} menu={<MenuMovil />} />
+        ) : (
+          <BarraSuperior izquierda={nombre === null ? undefined : <span className="text-[15px] text-ink-soft">Hola, {nombre.split(' ')[0]}</span>}>{campana}</BarraSuperior>
+        )
+      }
       brandSub={admin ? 'ADMINISTRACIÓN' : 'PANEL'}
+      conBuscador={admin}
       sections={sections}
       evento={
-        activo === null
+        activo === null || variosEventos
           ? null
           : {
               title: activo.title,
               planLabel: nombreDelPlan === null ? 'Plan —' : `Plan ${nombreDelPlan}`,
+              cuando: cuandoEs(fiestaDeTema(activo.themeKey), activo.eventDate),
+              portada: portadaParaCompartir(activo.themeKey),
               salirHref: null,
               salirLabel: '',
             }
       }
-      user={{ email: actor.email, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
+      user={{ email: actor.email, nombre, rol: ROTULO_DE_ROL[actor.role], soporte: actor.soporte !== undefined }}
     >
       {actor.soporte === undefined ? null : <SupportBanner clienteEmail={actor.soporte.eventoSinCliente === undefined ? actor.email : 'anfitrión del evento (sin cliente)'} />}
-      {admin ? (
-        <BarraDelAdmin campana={campana} />
-      ) : activo !== null && actor.role !== 'puerta' ? (
-        <BarraSuperior titulo={activo.title}>{campana}</BarraSuperior>
-      ) : campana === null ? null : (
-        <BarraSuperior>{campana}</BarraSuperior>
-      )}
       {children}
     </PanelFrame>
   )

@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, type ReactNode } from 'react'
-import { FIELD_CLASS, Field, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Field, LABEL_CLASS } from '@/shared/design/ui/panel/PanelKit'
+import { CloseIcon, PlusIcon, ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { CampoTelefono } from '@/shared/design/ui/panel/CampoTelefono'
 import { addGuestAction, type GuestActionState } from '@/app/_acciones/guests/actions'
 import { SubmitButton } from '@/shared/design/ui/panel/estados'
@@ -61,7 +62,6 @@ export function GuestDialog({
   const [telefono, setTelefono] = useState('')
 
   const idNombre = useId()
-  const idGrupo = useId()
   const idAcomp = useId()
   const idDieta = useId()
   const idTel = useId()
@@ -75,13 +75,22 @@ export function GuestDialog({
     if (nodo !== null && !nodo.open) nodo.showModal()
   }, [])
 
-  // Guardar cierra el diálogo, como en la maqueta. El enlace no se enseña aquí: se prepara
-  // al mandarlo, desde «Enviar invitaciones», que es donde se reparte.
+  // Guardar cierra el diálogo, como en la maqueta; «Guardar y añadir otro» lo deja abierto y vacío para el siguiente.
+  // El enlace no se enseña aquí: se prepara al mandarlo, desde «Enviar invitaciones».
+  const otro = useRef(false)
+  const [vuelta, setVuelta] = useState(0)
   useEffect(() => {
-    if (estado.status === 'success') {
-      dialogo.current?.close()
-      router.replace(closeHref)
+    if (estado.status !== 'success') return
+    if (otro.current) {
+      otro.current = false
+      setTipo('personal')
+      setAcompanantes([])
+      setTelefono('')
+      setVuelta((v) => v + 1)
+      return
     }
+    dialogo.current?.close()
+    router.replace(closeHref)
   }, [estado, closeHref, router])
 
   const cerrar = () => {
@@ -91,12 +100,16 @@ export function GuestDialog({
 
   // Toda alta crea su invitación, así que toda alta cuenta contra el tope del plan.
   const nuevoGrupo = true
+  const tarjeta =
+    'flex cursor-pointer items-center gap-3.5 rounded-[12px] border border-line-panel-strong bg-bg-raised px-4 py-3 has-[:checked]:border-[1.5px] has-[:checked]:border-shell-deep has-focus-visible:outline-2 has-focus-visible:outline-gold'
 
   return (
+    // El alta como panel que entra por la derecha (E53): nombre, si viene solo o acompañado, y su WhatsApp. Lo demás
+    // —restricciones, correo, VIP— plegado; se edita también luego desde su fila.
     <dialog
       ref={dialogo}
       aria-labelledby={`${idNombre}-titulo`}
-      className="m-auto w-[min(560px,94vw)] rounded-[18px] border border-line-panel bg-bg-raised p-7 text-ink shadow-float backdrop:bg-ink/45"
+      className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg p-0 text-ink shadow-float backdrop:bg-shell-deep/50 min-[640px]:w-[min(520px,100vw)]"
       onCancel={(e) => {
         // Escape cierra el `<dialog>` por su cuenta; sin esto la dirección se queda en
         // `?panel=alta` y volver a pulsar «+ Añadir invitado» no navega a ninguna parte:
@@ -105,126 +118,188 @@ export function GuestDialog({
         cerrar()
       }}
     >
-      <h2 className="font-display text-[24px] font-light italic" id={`${idNombre}-titulo`}>
-        Añadir invitado
-      </h2>
-
-      <form action={accion} className="mt-5 flex flex-col gap-4">
+      <form action={accion} className="flex h-full flex-col" key={vuelta}>
         <input name="eventId" type="hidden" value={eventId} />
         <input name="eventSlug" type="hidden" value={eventSlug} />
 
-        <Field htmlFor={idNombre} label="Nombre completo">
-          <input autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
-        </Field>
-
-        <Field htmlFor={idGrupo} label="Tipo de invitación">
-          <select
-            className={FIELD_CLASS}
-            id={idGrupo}
-            onChange={(e) => {
-              setTipo(e.target.value)
-              // Al pasar a «Acompañado» hay que poder escribir ya: sin una fila, la pantalla
-              // se queda con un botón y nada donde teclear.
-              if (e.target.value === 'acompanado' && acompanantes.length === 0) setAcompanantes([''])
-            }}
-            value={tipo}
-          >
-            <option value="personal">Personal</option>
-            <option value="acompanado">Acompañado</option>
-          </select>
-        </Field>
-
-        {tipo === 'personal' ? null : (
-          <div className="flex flex-col gap-2">
-            <span className={LABEL_CLASS}>Acompañantes</span>
-            {/* De cada acompañante **solo el nombre**. Lo demás —su comida, su confirmación—
-                se edita luego desde su fila, como en cualquier otro invitado. */}
-            {acompanantes.map((valor, indice) => (
-              <span className="flex min-w-0 gap-2" key={indice}>
-                <label className="sr-only" htmlFor={`${idAcomp}-${indice}`}>
-                  Nombre del acompañante {indice + 1}
-                </label>
-                <input
-                  className={`${FIELD_CLASS} min-w-0 flex-1`}
-                  id={`${idAcomp}-${indice}`}
-                  maxLength={160}
-                  name="companionName"
-                  onChange={(e) =>
-                    setAcompanantes((previos) => previos.map((p, i) => (i === indice ? e.target.value : p)))
-                  }
-                  placeholder="Nombre completo"
-                  type="text"
-                  value={valor}
-                />
-                <PanelButton
-                  aria-label={`Quitar acompañante ${indice + 1}`}
-                  onClick={() => setAcompanantes((previos) => previos.filter((_, i) => i !== indice))}
-                >
-                  Quitar
-                </PanelButton>
-              </span>
-            ))}
-            <div>
-              <PanelButton onClick={() => setAcompanantes((previos) => [...previos, ''])}>
-                Añadir acompañante
-              </PanelButton>
-            </div>
+        {/* En el celular, la barra «← Invitados / Añadir invitado» de la maqueta (M50) en vez del ✕. */}
+        <button
+          className="mx-4 mt-2.5 flex min-h-15 shrink-0 cursor-pointer items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-left shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[640px]:hidden"
+          onClick={cerrar}
+          type="button"
+        >
+          <span aria-hidden className="grid size-11 shrink-0 place-items-center">
+            <ArrowLeftIcon className="size-5" />
+          </span>
+          <span className="flex min-w-0 flex-col leading-tight">
+            <span className="text-[13px] text-ink-mute">Invitados</span>
+            <span className="truncate text-[16px] font-medium">Añadir invitado</span>
+          </span>
+          <span className="sr-only">: cerrar</span>
+        </button>
+        <header className="flex items-start justify-between gap-4 px-7 pt-7 pb-2 max-[639px]:px-4 max-[639px]:pt-5">
+          <div>
+            <p className="text-[14px] text-ink-mute max-[639px]:hidden">Invitados</p>
+            <h2 className="font-display text-[30px] leading-tight font-medium" id={`${idNombre}-titulo`}>
+              Añadir invitado
+            </h2>
           </div>
-        )}
+          <button
+            aria-label="Cerrar"
+            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold max-[639px]:hidden"
+            onClick={cerrar}
+            type="button"
+          >
+            <CloseIcon className="size-4" />
+          </button>
+        </header>
 
-        {notice === undefined ? null : <div>{notice}</div>}
-
-        {/* Sin RSVP al crear: la asistencia la decide el invitado desde su invitación. */}
-        <div>
-          <Field htmlFor={idDieta} label="Restricciones">
-            <input
-              className={FIELD_CLASS}
-              id={idDieta}
-              maxLength={200}
-              name="dietaryNote"
-              placeholder="Vegano, sin gluten…"
-              type="text"
-            />
+        <div className="flex flex-1 flex-col gap-5 overflow-y-auto px-7 py-4 max-[639px]:px-5">
+          <Field hint="Como quieres que aparezca en su invitación" htmlFor={idNombre} label="Nombre">
+            <input aria-label="Nombre completo" autoFocus className={FIELD_CLASS} id={idNombre} maxLength={160} name="fullName" required type="text" />
           </Field>
-        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field htmlFor={idTel} label="WhatsApp / Teléfono">
+          <fieldset className="flex flex-col gap-2.5">
+            <legend className="mb-2.5 text-[14px] font-medium">¿Viene solo?</legend>
+            <label className={tarjeta}>
+              <input
+                checked={tipo === 'personal'}
+                className="size-5 accent-[var(--color-shell-deep)]"
+                name="tipoDeInvitacion"
+                onChange={() => {
+                  setTipo('personal')
+                  setAcompanantes([])
+                }}
+                type="radio"
+                value="personal"
+              />
+              <span className="flex flex-col">
+                <span className="text-[15px] font-medium">Personal</span>
+                <span className="text-[13.5px] text-ink-mute">Una persona</span>
+              </span>
+            </label>
+            <label className={tarjeta}>
+              <input
+                checked={tipo === 'acompanado'}
+                className="size-5 accent-[var(--color-shell-deep)]"
+                name="tipoDeInvitacion"
+                onChange={() => {
+                  setTipo('acompanado')
+                  // Al pasar a acompañado hay que poder escribir ya: sin una fila, no habría dónde teclear.
+                  if (acompanantes.length === 0) setAcompanantes([''])
+                }}
+                type="radio"
+                value="acompanado"
+              />
+              <span className="flex flex-col">
+                <span className="text-[15px] font-medium">Con acompañantes</span>
+                <span className="text-[13.5px] text-ink-mute">Escribe el nombre de cada uno</span>
+              </span>
+            </label>
+          </fieldset>
+
+          {tipo === 'personal' ? null : (
+            <div className="flex flex-col gap-2">
+              <span className={LABEL_CLASS}>Acompañantes</span>
+              {/* De cada acompañante **solo el nombre**. Lo demás —su comida, su confirmación— se edita luego desde su fila. */}
+              {acompanantes.map((valor, indice) => (
+                <span className="flex min-w-0 gap-2" key={indice}>
+                  <label className="sr-only" htmlFor={`${idAcomp}-${indice}`}>
+                    Nombre del acompañante {indice + 1}
+                  </label>
+                  <input
+                    className={`${FIELD_CLASS} min-w-0 flex-1`}
+                    id={`${idAcomp}-${indice}`}
+                    maxLength={160}
+                    name="companionName"
+                    onChange={(e) => setAcompanantes((previos) => previos.map((p, i) => (i === indice ? e.target.value : p)))}
+                    placeholder="Nombre del acompañante"
+                    type="text"
+                    value={valor}
+                  />
+                  <button
+                    aria-label={`Quitar acompañante ${indice + 1}`}
+                    className="grid size-12 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised hover:border-gold"
+                    onClick={() => setAcompanantes((previos) => previos.filter((_, i) => i !== indice))}
+                    type="button"
+                  >
+                    <CloseIcon className="size-3.5" />
+                  </button>
+                </span>
+              ))}
+              <button
+                className="flex min-h-11 w-fit cursor-pointer items-center gap-2 px-1 text-[15px] font-medium text-gold-deep hover:underline"
+                onClick={() => setAcompanantes((previos) => [...previos, ''])}
+                type="button"
+              >
+                <PlusIcon className="size-4" /> Otro acompañante
+              </button>
+            </div>
+          )}
+
+          {notice === undefined ? null : <div>{notice}</div>}
+
+          <Field hint="Opcional. Sin él, envías el enlace por otra vía" htmlFor={idTel} label="Teléfono para WhatsApp">
             <CampoTelefono id={idTel} name="phone" onChange={setTelefono} value={telefono} />
           </Field>
 
-          <Field htmlFor={idCorreo} label="Email">
-            <input
-              className={FIELD_CLASS}
-              id={idCorreo}
-              maxLength={160}
-              name="email"
-              placeholder="correo@ejemplo.com"
-              type="email"
-            />
-          </Field>
+          {/* Sin RSVP al crear: la asistencia la decide el invitado desde su invitación. */}
+          <details className="group">
+            <summary className="inline-flex min-h-10 cursor-pointer list-none items-center text-[14px] text-ink-mute hover:text-ink [&::-webkit-details-marker]:hidden">
+              Restricciones, correo y VIP
+            </summary>
+            <div className="mt-3 flex flex-col gap-4">
+              <Field htmlFor={idDieta} label="Restricciones">
+                <input className={FIELD_CLASS} id={idDieta} maxLength={200} name="dietaryNote" placeholder="Vegano, sin gluten…" type="text" />
+              </Field>
+              <Field htmlFor={idCorreo} label="Email">
+                <input className={FIELD_CLASS} id={idCorreo} maxLength={160} name="email" placeholder="correo@ejemplo.com" type="email" />
+              </Field>
+              <label className="flex items-center gap-2.5 text-[14px]" htmlFor={idVip}>
+                <input className="size-4" id={idVip} name="vip" type="checkbox" />
+                <span className="flex flex-col">
+                  Invitado VIP
+                  <span className="text-[13px] text-ink-mute">Se marca en la lista, se filtra aparte y su silla sale en dorado en el plano del salón.</span>
+                </span>
+              </label>
+            </div>
+          </details>
+
+          {estado.status === 'error' ? (
+            <p className="text-[14px] text-danger" role="alert">
+              {estado.message}
+            </p>
+          ) : null}
+          {estado.status === 'success' && vuelta > 0 ? (
+            <p className="text-[14px] text-ok-deep" role="status">
+              Guardado. Escribe el siguiente.
+            </p>
+          ) : null}
         </div>
 
-        <label className="flex items-center gap-2.5 text-[13px] text-ink" htmlFor={idVip}>
-          <input className="size-4" id={idVip} name="vip" type="checkbox" />
-          <span className="flex flex-col">
-            Invitado VIP
-            <span className="text-[12px] text-ink-mute">Se marca en la lista, se filtra aparte y su silla sale en dorado en el plano del salón.</span>
-          </span>
-        </label>
-
-        {estado.status === 'error' ? (
-          <p className="text-[13px] text-danger" role="alert">
-            {estado.message}
-          </p>
-        ) : null}
-
-        <div className="mt-2 flex justify-end gap-2.5">
-          {/* Cierra el diálogo **y** navega: solo navegar deja el modal abierto encima de
-              la lista hasta que Next termina la transición, y con él la página bloqueada. */}
-          <PanelButton onClick={cerrar}>Cancelar</PanelButton>
-          <SubmitButton variant="primary" disabled={pendiente || (nuevoGrupo && atLimit)} pending={pendiente} pendingLabel={'Guardando…'}>{'Guardar'}</SubmitButton>
-        </div>
+        <footer className="flex justify-end gap-2.5 border-t border-line-panel px-7 py-4 max-[639px]:flex-col-reverse max-[639px]:border-t-0 max-[639px]:px-4 max-[639px]:pb-[max(16px,env(safe-area-inset-bottom))]">
+          <SubmitButton
+            disabled={pendiente || (nuevoGrupo && atLimit)}
+            onClick={() => {
+              otro.current = true
+            }}
+            pending={pendiente}
+            variant="default"
+          >
+            Guardar y añadir otro
+          </SubmitButton>
+          <SubmitButton
+            disabled={pendiente || (nuevoGrupo && atLimit)}
+            onClick={() => {
+              otro.current = false
+            }}
+            pending={pendiente}
+            pendingLabel={'Guardando…'}
+            variant="primary"
+          >
+            {'Guardar'}
+          </SubmitButton>
+        </footer>
       </form>
     </dialog>
   )

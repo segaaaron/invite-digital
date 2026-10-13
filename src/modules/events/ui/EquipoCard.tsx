@@ -1,11 +1,10 @@
 'use client'
 
-import { UsersIcon } from '@/shared/design/ui/icons'
 import { useActionState, useId, useState } from 'react'
 import { addPorterAction, removePorterAction, type PorterActionState } from '@/app/_acciones/checkin/porter-actions'
 import { addTeamMemberAction, removeTeamMemberAction, type TeamActionState } from '@/app/_acciones/events/team-actions'
-import { FIELD_CLASS, Field, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
-import { ActionFeedback, SubmitButton, EmptyState } from '@/shared/design/ui/panel/estados'
+import { FIELD_CLASS, Field, Iniciales, LABEL_CLASS, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 export type MiembroVista = {
@@ -30,28 +29,33 @@ export type PorteroVista = {
   readonly ultima: string | null
 }
 
-type Papel = 'planner' | 'portero'
-
-const PAPEL = { anfitrion: 'Anfitrión', coanfitrion: 'Co-anfitrión', planner: 'Planner', portero: 'Recepción' } as const
+const PAPEL = { anfitrion: 'Anfitrión, quien compró', coanfitrion: 'Co-anfitrión', planner: 'Ve tareas, presupuesto, proveedores y el Día D' } as const
 
 const EQUIPO_INICIAL: TeamActionState = { status: 'idle' }
 const PORTERO_INICIAL: PorterActionState = { status: 'idle' }
 
 /** `null` es sin límite. */
-const cupo = (actuales: number, limite: number | null) => (limite === null ? `${actuales} · sin límite` : `${actuales} de ${limite}`)
+const cupo = (actuales: number, limite: number | null) => (limite === null ? `${actuales}, sin límite` : `${actuales} de ${limite}`)
 
-const FILA = 'flex flex-wrap items-center justify-between gap-3 px-4 py-3'
+const FILA = 'flex items-center gap-3.5 border-b border-line-panel py-3.5 last:border-none'
+const TARJETA = 'flex flex-col gap-3 rounded-[16px] border border-line-panel bg-tarjeta p-6'
+
+function Cabecera({ titulo, cuenta }: { titulo: string; cuenta: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <h2 className="font-display text-[24px] leading-tight font-medium">{titulo}</h2>
+      <span className="text-[14px] text-ink-mute [font-variant-numeric:tabular-nums]">{cuenta}</span>
+    </div>
+  )
+}
 
 /**
- * Todo el equipo del evento en un sitio: la planner y quien recibe en la puerta.
+ * El equipo del evento en dos tarjetas, como la maqueta (E29): **tu planner**, que entra al panel con su cuenta, y la
+ * **recepción**, que entra sin cuenta con un enlace y un PIN el día de la fiesta. Cada una con su alta al pie.
  *
- * Se elige qué hará cada persona. La planner entra al panel con su cuenta (correo y contraseña
- * provisional); recepción no tiene cuenta: un enlace y un PIN que solo abren la puerta el día
- * del evento. Ya no se suman co-anfitriones —la familia entra con la cuenta del cliente—, pero
- * los que ya existían se ven y se pueden quitar.
- *
- * `sumaEquipo` es falso para la planner: suma recepción, pero no da acceso al panel a nadie.
- * `porteros` es nulo si el plan no trae la puerta.
+ * Ya no se suman co-anfitriones —la familia entra con la cuenta del cliente—, pero los que existían se ven y se quitan.
+ * `sumaEquipo` es falso para la planner: suma recepción, pero no da acceso al panel a nadie. `porteros` es nulo si el
+ * plan no trae la puerta.
  */
 export function EquipoCard({
   eventId,
@@ -71,171 +75,135 @@ export function EquipoCard({
   const [altaEquipo, sumarEquipo, sumandoEquipo] = useActionState(sinCaerse(addTeamMemberAction), EQUIPO_INICIAL)
   const [altaPortero, sumarPortero, sumandoPortero] = useActionState(sinCaerse(addPorterAction), PORTERO_INICIAL)
   const id = useId()
-  const cuantos = (p: MiembroVista['papel']) => miembros.filter((m) => m.papel === p).length
-
+  const planners = miembros.filter((m) => m.papel === 'planner').length
+  const plannersLlenos = topes.planners !== null && planners >= topes.planners
   const porterosLlenos = porteros === null || porteros.lista.length >= porteros.limite
-  const opciones: ReadonlyArray<{ value: Papel; descripcion: string; cupo: string; apagada: boolean }> = [
-    ...(sumaEquipo
-      ? [
-          {
-            value: 'planner' as const,
-            descripcion: 'Entra al panel con su cuenta: invitados, planificación y proveedores, y suma personal de recepción.',
-            cupo: topes.planners === 0 ? 'tu plan no lo incluye' : cupo(cuantos('planner'), topes.planners),
-            apagada: topes.planners !== null && cuantos('planner') >= topes.planners,
-          },
-        ]
-      : []),
-    {
-      value: 'portero',
-      descripcion: 'Sin cuenta: un enlace y un PIN para registrar la entrada de los invitados el día del evento.',
-      cupo: porteros === null ? 'tu plan no lo incluye' : cupo(porteros.lista.length, porteros.limite),
-      apagada: porterosLlenos,
-    },
-  ]
-  const primera = opciones.find((o) => !o.apagada)?.value ?? opciones[0]!.value
-  const [papel, setPapel] = useState<Papel>(primera)
-  const elegida = opciones.find((o) => o.value === papel)
-  const esPortero = papel === 'portero'
-  const apagada = elegida?.apagada ?? true
-
-  const vacio = miembros.length === 0 && (porteros === null || porteros.lista.length === 0)
 
   return (
-    <div className="flex flex-col gap-6">
-      {vacio ? (
-        <EmptyState
-          compact
-          description="Suma a tu planner o a quien reciba en la puerta. La recepción entra con un enlace y un PIN, sin crear cuenta."
-          icon={<UsersIcon />}
-          title="Aún no sumaste a nadie"
-        />
-      ) : (
-        <ul className="flex flex-col divide-y divide-line-panel rounded-[14px] border border-line-panel bg-white">
-          {miembros.map((m) => (
-            <li aria-label={m.nombre ?? m.email} className={FILA} key={m.userId}>
-              <span className="flex min-w-0 flex-col">
-                <span className="truncate text-[14px] text-ink">{m.nombre ?? m.email}</span>
-                <span className="text-[12px] text-ink-mute">
-                  {[m.papel === 'anfitrion' ? 'Anfitrión · quien compró' : PAPEL[m.papel], m.nombre === null ? null : m.email, m.telefono]
-                    .filter(Boolean)
-                    .join(' · ')}
+    <div className="grid items-start gap-5 min-[900px]:grid-cols-2">
+      <section aria-label="Tu planner" className={TARJETA}>
+        <Cabecera cuenta={topes.planners === 0 ? 'Tu plan no lo incluye' : cupo(planners, topes.planners)} titulo="Tu planner" />
+        {miembros.length === 0 ? null : (
+          <ul className="flex flex-col">
+            {miembros.map((m) => (
+              <li aria-label={m.nombre ?? m.email} className={FILA} key={m.userId}>
+                <Iniciales chico nombre={m.nombre ?? m.email} />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate text-[15px] font-medium">{m.nombre ?? m.email}</span>
+                  <span className="text-[13.5px] text-ink-mute">{[PAPEL[m.papel], m.nombre === null ? null : m.email, m.telefono].filter(Boolean).join(' · ')}</span>
                 </span>
-              </span>
-              {m.papel === 'anfitrion' || !sumaEquipo ? null : (
-                <QuitarMiembro campos={{ eventId, eventSlug, userId: m.userId, email: m.email }} nombre={m.nombre ?? m.email} />
-              )}
-            </li>
-          ))}
-          {porteros?.lista.map((portero) => (
-            <li aria-label={portero.name} className={FILA} key={portero.id}>
-              <span className="flex min-w-0 flex-col">
-                <span className="text-[14px] text-ink">{portero.name}</span>
-                <span className="text-[12px] text-ink-mute">
-                  {['Recepción', portero.gate, portero.phone, `sumado el ${portero.createdAt}`].filter(Boolean).join(' · ')}
-                </span>
-                <span className="text-[12px] text-ink-soft">
-                  {portero.registradas === 0
-                    ? 'Todavía no registró llegadas'
-                    : `${portero.registradas} invitaci${portero.registradas === 1 ? 'ón' : 'ones'} registrada${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : ` · el último a las ${portero.ultima}`}`}
-                </span>
-              </span>
-              <QuitarPortero campos={{ eventId, eventSlug, porterId: portero.id }} nombre={portero.name} />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {altaPortero.status === 'created' ? (
-        <div className="flex flex-col gap-3 rounded-[14px] border border-sage/40 bg-sage/8 p-4" role="status">
-          <p className="text-[14px] text-ink">
-            <strong className="font-medium">{altaPortero.nombre}</strong> ya puede entrar a la puerta.
-          </p>
-          <dl className="grid gap-3 min-[560px]:grid-cols-[1fr_auto]">
-            <div className="flex min-w-0 flex-col gap-1">
-              <dt className={LABEL_CLASS}>Enlace</dt>
-              <dd className="font-mono text-[12px] break-all text-ink">{altaPortero.enlace}</dd>
-            </div>
-            <div className="flex flex-col gap-1">
-              <dt className={LABEL_CLASS}>PIN</dt>
-              <dd className="font-codigo text-[22px] tracking-[0.2em] text-ink">{altaPortero.pin}</dd>
-            </div>
-          </dl>
-          <p className="text-[12px] text-ink-soft">Cópialos ahora: el PIN no se vuelve a mostrar.</p>
-          {altaPortero.whatsapp === null ? null : (
-            <PanelButton external href={altaPortero.whatsapp} variant="primary">
-              Enviar por WhatsApp
-            </PanelButton>
-          )}
-        </div>
-      ) : null}
-
-      <form action={esPortero ? sumarPortero : sumarEquipo} className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-bg-raised p-4">
-        <input name="eventId" readOnly type="hidden" value={eventId} />
-        <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
-        <fieldset className="flex flex-col gap-2">
-          <legend className={`${LABEL_CLASS} mb-2`}>Qué hará</legend>
-          <div className={`grid gap-2 ${opciones.length > 1 ? 'min-[700px]:grid-cols-3' : ''}`}>
-            {opciones.map((o) => (
-              <label
-                className="flex cursor-pointer flex-col gap-1 rounded-[14px] border border-line-panel-strong bg-white p-3.5 transition-colors has-checked:border-ink has-checked:bg-bg-top has-disabled:cursor-not-allowed has-disabled:opacity-55 has-focus-visible:outline-2 has-focus-visible:outline-gold"
-                key={o.value}
-              >
-                <span className="flex items-center justify-between gap-2 text-[13.5px] text-ink">
-                  <span className="flex items-center gap-2">
-                    <input
-                      checked={papel === o.value}
-                      className="accent-ink"
-                      disabled={o.apagada && papel !== o.value}
-                      name={esPortero ? 'papel' : 'kind'}
-                      onChange={() => setPapel(o.value)}
-                      type="radio"
-                      value={o.value}
-                    />
-                    {PAPEL[o.value]}
-                  </span>
-                  <span className="font-mono text-[10px] tracking-[0.08em] text-ink-mute [font-variant-numeric:tabular-nums]">{o.cupo}</span>
-                </span>
-                <span className="pl-5 text-[12px] leading-[1.5] text-ink-mute">{o.descripcion}</span>
-              </label>
+                {m.papel === 'anfitrion' || !sumaEquipo ? null : <QuitarMiembro campos={{ eventId, eventSlug, userId: m.userId, email: m.email }} nombre={m.nombre ?? m.email} />}
+              </li>
             ))}
-          </div>
-        </fieldset>
-
-        {esPortero ? (
-          <div className="grid gap-3 min-[700px]:grid-cols-3">
-            <Field htmlFor={`${id}-nombre`} label="Nombre">
-              <input className={FIELD_CLASS} disabled={apagada} id={`${id}-nombre`} maxLength={80} name="name" placeholder="Carlos Mendoza" required />
-            </Field>
-            <Field htmlFor={`${id}-whatsapp`} label="WhatsApp (opcional)">
-              <input className={FIELD_CLASS} disabled={apagada} id={`${id}-whatsapp`} inputMode="tel" name="phone" placeholder="+591 700 12345" />
-            </Field>
-            <Field htmlFor={`${id}-puerta`} label="Puerta (opcional)">
-              <input className={FIELD_CLASS} disabled={apagada} id={`${id}-puerta`} maxLength={40} name="gate" placeholder="Entrada principal" />
-            </Field>
-          </div>
+          </ul>
+        )}
+        {!sumaEquipo || topes.planners === 0 ? null : plannersLlenos ? (
+          <p className="text-[13.5px] text-ink-mute">Tu plan admite {topes.planners === 1 ? 'una planner' : `${topes.planners} planners`}. Quita a una para sumar otra.</p>
         ) : (
-          <Field htmlFor={`${id}-email`} label="Correo">
-            <input autoComplete="off" className={FIELD_CLASS} disabled={apagada} id={`${id}-email`} name="email" required type="email" />
-          </Field>
+          <form action={sumarEquipo} className="flex flex-col gap-2 pt-1">
+            <input name="eventId" readOnly type="hidden" value={eventId} />
+            <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
+            <input name="kind" readOnly type="hidden" value="planner" />
+            <Field htmlFor={`${id}-email`} label="Correo">
+              <span className="flex gap-2">
+                <input autoComplete="off" className={`${FIELD_CLASS} min-w-0 flex-1`} id={`${id}-email`} name="email" placeholder="Su correo; le llega su acceso" required type="email" />
+                <SubmitButton aria-label="Sumar a la planner" pending={sumandoEquipo} pendingLabel="Sumando…" variant="primary">
+                  Sumar
+                </SubmitButton>
+              </span>
+            </Field>
+            <ActionFeedback state={altaEquipo} />
+            {altaEquipo.status === 'success' && altaEquipo.password ? (
+              <p aria-label="Contraseña provisional" className="font-codigo text-[16px] tracking-[0.08em] text-ink">
+                {altaEquipo.password}
+              </p>
+            ) : null}
+          </form>
+        )}
+      </section>
+
+      <section aria-label="Recepción" className={TARJETA}>
+        <Cabecera cuenta={porteros === null ? 'Tu plan no lo incluye' : cupo(porteros.lista.length, porteros.limite)} titulo="Recepción" />
+        <p className="text-[14px] text-ink-mute">Entran sin cuenta, con un enlace y un PIN, solo el día de la fiesta.</p>
+        {porteros === null ? (
+          <p className="text-[14px] text-ink-soft">Tu plan no incluye pases con QR ni personal de recepción.</p>
+        ) : porteros.lista.length === 0 ? (
+          <p className="text-[14px] text-ink-soft">Aún no sumaste a nadie.</p>
+        ) : (
+          <ul className="flex flex-col">
+            {porteros.lista.map((portero) => (
+              <li aria-label={portero.name} className={FILA} key={portero.id}>
+                <Iniciales chico nombre={portero.name} />
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="text-[15px] font-medium">{portero.name}</span>
+                  <span className="text-[13.5px] text-ink-mute">
+                    {[portero.gate ?? 'Recepción', portero.phone].filter(Boolean).join(' · ')}
+                    {' · '}
+                    {portero.registradas === 0
+                      ? 'todavía no registró llegadas'
+                      : `${portero.registradas} invitaci${portero.registradas === 1 ? 'ón' : 'ones'} registrada${portero.registradas === 1 ? '' : 's'}${portero.ultima === null ? '' : `, la última a las ${portero.ultima}`}`}
+                  </span>
+                </span>
+                <QuitarPortero campos={{ eventId, eventSlug, porterId: portero.id }} nombre={portero.name} />
+              </li>
+            ))}
+          </ul>
         )}
 
-        {porteros === null ? <p className="text-[12px] text-ink-mute">Tu plan no incluye pases con QR ni personal de recepción.</p> : null}
-        {esPortero && porteros !== null && porterosLlenos ? (
-          <p className="text-[12px] text-ink-mute">Tu plan admite hasta {porteros.limite} personas de recepción a la vez. Quita a una para sumar otra.</p>
+        {altaPortero.status === 'created' ? (
+          <div className="flex flex-col gap-3 rounded-[12px] bg-pill-ok p-4" role="status">
+            <p className="text-[14.5px]">
+              <strong className="font-medium">{altaPortero.nombre}</strong> ya puede entrar a la puerta.
+            </p>
+            <dl className="grid gap-3 min-[560px]:grid-cols-[1fr_auto]">
+              <div className="flex min-w-0 flex-col gap-1">
+                <dt className={LABEL_CLASS}>Enlace</dt>
+                <dd className="font-codigo text-[12.5px] break-all">{altaPortero.enlace}</dd>
+              </div>
+              <div className="flex flex-col gap-1">
+                <dt className={LABEL_CLASS}>PIN</dt>
+                <dd className="font-codigo text-[22px] tracking-[0.2em]">{altaPortero.pin}</dd>
+              </div>
+            </dl>
+            <p className="text-[13px] text-ink-soft">Cópialos ahora: el PIN no se vuelve a mostrar.</p>
+            {altaPortero.whatsapp === null ? null : (
+              <PanelButton external href={altaPortero.whatsapp} size="sm" variant="primary">
+                Enviar por WhatsApp
+              </PanelButton>
+            )}
+          </div>
         ) : null}
 
-        {esPortero ? <ActionFeedback errorsOnly state={altaPortero} /> : <ActionFeedback state={altaEquipo} />}
-        {!esPortero && altaEquipo.status === 'success' && altaEquipo.password ? (
-          <p aria-label="Contraseña provisional" className="font-mono text-[15px] tracking-[0.08em] text-ink">
-            {altaEquipo.password}
-          </p>
-        ) : null}
-        <div>
-          <SubmitButton disabled={apagada} pending={esPortero ? sumandoPortero : sumandoEquipo} pendingLabel="Sumando…" variant="primary">
-            Sumar al equipo
-          </SubmitButton>
-        </div>
-      </form>
+        {porteros === null ? null : porterosLlenos ? (
+          <p className="text-[13.5px] text-ink-mute">Tu plan admite hasta {porteros.limite} personas de recepción a la vez. Quita a una para sumar otra.</p>
+        ) : (
+          <form action={sumarPortero} className="flex flex-col gap-2 pt-1">
+            <input name="eventId" readOnly type="hidden" value={eventId} />
+            <input name="eventSlug" readOnly type="hidden" value={eventSlug} />
+            <input name="papel" readOnly type="hidden" value="portero" />
+            <Field htmlFor={`${id}-nombre`} label="Nombre">
+              <span className="flex gap-2">
+                <input className={`${FIELD_CLASS} min-w-0 flex-1`} id={`${id}-nombre`} maxLength={80} name="name" placeholder="Quién estará en la puerta" required />
+                <SubmitButton aria-label="Sumar a recepción" pending={sumandoPortero} pendingLabel="Sumando…" variant="primary">
+                  Sumar
+                </SubmitButton>
+              </span>
+            </Field>
+            <details className="text-[13.5px]">
+              <summary className="cursor-pointer text-ink-mute hover:text-ink">WhatsApp y puerta (opcional)</summary>
+              <div className="mt-2 grid gap-3 min-[560px]:grid-cols-2">
+                <Field htmlFor={`${id}-whatsapp`} label="WhatsApp">
+                  <input className={FIELD_CLASS} id={`${id}-whatsapp`} inputMode="tel" name="phone" placeholder="+591 700 12345" />
+                </Field>
+                <Field htmlFor={`${id}-puerta`} label="Puerta">
+                  <input className={FIELD_CLASS} id={`${id}-puerta`} maxLength={40} name="gate" placeholder="Entrada principal" />
+                </Field>
+              </div>
+            </details>
+            <ActionFeedback errorsOnly state={altaPortero} />
+          </form>
+        )}
+      </section>
     </div>
   )
 }
@@ -278,9 +246,9 @@ function Quitar({
           <PanelButton onClick={() => setConfirmando(false)}>Cancelar</PanelButton>
         </form>
       ) : (
-        <PanelButton aria-label={`Quitar a ${nombre}`} onClick={() => setConfirmando(true)} variant="danger">
+        <button aria-label={`Quitar a ${nombre}`} className="cursor-pointer text-[14px] font-medium text-gold-deep hover:underline" onClick={() => setConfirmando(true)} type="button">
           Quitar
-        </PanelButton>
+        </button>
       )}
       {error === null ? null : (
         <span className="text-[11px] text-danger-deep" role="alert">

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useId, useRef } from 'react'
 import type { Mejorar } from '@/modules/plans'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
-import { RobotLuxury } from './RobotLuxury'
+import { CopaDeLuxury, SelloDeLuxury } from './RobotLuxury'
 
 const LO_QUE_HACE = [
   'Carga a tus invitados escribiendo o dictando sus nombres.',
@@ -23,15 +23,15 @@ export function LuxuryBloqueado({ mejorar, planes, comoExtra }: { mejorar: Mejor
 
   return (
     <>
-      {/* El mismo robot que el de quien lo tiene (9 de octubre), apagado y con un candadito: el botón viejo desentonaba. */}
+      {/* La misma copa de latón que la de quien lo tiene, apagada y con un candadito. */}
       <button
         aria-label={`Conocer a ${NOMBRE_DEL_ASISTENTE}, tu planner con IA`}
-        className="fixed right-3 bottom-2 z-30 block h-[72px] w-[60px] cursor-pointer transition-transform hover:-translate-y-0.5 max-[859px]:right-auto max-[859px]:left-3 max-[767px]:bottom-[calc(84px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:left-[84px] min-[860px]:right-4 min-[860px]:bottom-3 min-[860px]:h-[86px] min-[860px]:w-[72px] print:hidden"
+        className="fixed right-4 bottom-[calc(16px+env(safe-area-inset-bottom))] z-30 grid size-16 cursor-pointer place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo),var(--color-gold-light)_58%,var(--color-gold))] opacity-80 shadow-[inset_0_0_0_1.5px_var(--color-gold-deep),0_12px_28px_rgb(12_36_32/0.24)] grayscale-[.45] transition-transform hover:-translate-y-0.5 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden"
         onClick={() => dialogo.current?.showModal()}
         type="button"
       >
-        <RobotLuxury className="h-full w-full opacity-70 grayscale-[.55]" />
-        <span aria-hidden className="absolute top-[30%] right-0 grid size-6 place-items-center rounded-full border border-line-panel-strong bg-white text-gold-deep shadow-float">
+        <CopaDeLuxury className="size-9" />
+        <span aria-hidden className="absolute -top-1 -right-1 grid size-6 place-items-center rounded-full border border-line-panel-strong bg-bg-raised text-gold-deep">
           <Candado className="size-3.5" />
         </span>
       </button>
@@ -46,7 +46,7 @@ export function LuxuryBloqueado({ mejorar, planes, comoExtra }: { mejorar: Mejor
       >
         <div className="flex flex-col gap-4 p-6">
           <div className="flex items-center gap-3">
-            <RobotLuxury className="h-[52px] w-11 shrink-0" />
+            <SelloDeLuxury size={48} />
             <div>
               <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
                 {NOMBRE_DEL_ASISTENTE}

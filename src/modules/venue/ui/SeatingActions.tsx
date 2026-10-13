@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from 'react'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { PlusIcon } from '@/shared/design/ui/icons'
 import { autoAssignAction } from '@/app/_acciones/venue/actions'
 
 /**
- * Las acciones de cabecera de la maqueta: auto-asignar, imprimir el plan y añadir mesa.
+ * Las acciones de cabecera de la maqueta (E10): sentar a los demás solo, añadir mesa y guardar el plano.
  *
  * Vivían dentro del panel de reparto, a media página de scroll. Auto-asignar necesita
  * cliente —dice en pantalla cuántos repartió y quién se quedó sin sitio—, así que la
@@ -16,12 +17,15 @@ export function SeatingActions({
   eventSlug,
   unseatedCount,
   addHref,
+  guardar,
 }: {
   eventId: string
   eventSlug: string
   unseatedCount: number
   /** Adónde lleva «+ Añadir mesa»: abre el alta, que no vive desplegada en la página. */
   addHref: string
+  /** «Guardar el plano»: solo en la vista de mapa. */
+  guardar?: React.ReactNode
 }) {
   const [mensaje, setMensaje] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -46,14 +50,13 @@ export function SeatingActions({
               })
             }}
           >
-            + Auto-asignar
+            Sentar a los demás solo
           </PanelButton>
         )}
-        <PanelButton href={`/panel/eventos/${eventSlug}/mesas/imprimir`}>Imprimir plan ↓</PanelButton>
-        {/* La principal, primera en el celular: al final de la fila deslizable quedaba cortada. */}
-        <PanelButton className="max-[859px]:order-first" href={addHref} variant="primary">
-          + Añadir mesa
+        <PanelButton href={addHref} variant={guardar ? 'default' : 'primary'}>
+          <PlusIcon className="size-4" /> Mesa
         </PanelButton>
+        {guardar}
       </div>
 
       {error !== null ? (

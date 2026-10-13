@@ -27,11 +27,11 @@ describe('GuestDialog', () => {
     render(<GuestDialog {...props} />)
 
     expect(screen.getByLabelText('Nombre completo')).toBeInTheDocument()
-    expect(screen.getByLabelText('Tipo de invitación')).toBeInTheDocument()
+    expect(screen.getByRole('radio', { name: /Personal/ })).toBeChecked()
     // Al crear no se elige la asistencia: la decide el invitado.
     expect(screen.queryByLabelText('RSVP')).toBeNull()
     expect(screen.getByLabelText('Restricciones')).toBeInTheDocument()
-    expect(screen.getByLabelText('WhatsApp / Teléfono')).toBeInTheDocument()
+    expect(screen.getByLabelText('Teléfono para WhatsApp')).toBeInTheDocument()
     expect(screen.getByLabelText('Email')).toBeInTheDocument()
     expect(screen.getByLabelText(/Invitado VIP/)).toBeInTheDocument()
   })
@@ -44,25 +44,24 @@ describe('GuestDialog', () => {
   it('personal no pregunta por acompañantes; acompañado sí', () => {
     render(<GuestDialog {...props} />)
 
-    const tipo = screen.getByLabelText('Tipo de invitación')
-    expect(tipo).toHaveValue('personal')
+    expect(screen.getByRole('radio', { name: /Personal/ })).toBeChecked()
     // Personal es una persona y un cupo: el campo de acompañantes sobra y no se pinta.
     expect(screen.queryByLabelText('Nombre del acompañante 1')).not.toBeInTheDocument()
 
     // Acompañado abre un campo por acompañante, y de cada uno **solo el nombre**.
-    fireEvent.change(tipo, { target: { value: 'acompanado' } })
+    fireEvent.click(screen.getByRole('radio', { name: /Con acompañantes/ }))
     expect(screen.getByLabelText('Nombre del acompañante 1')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: 'Añadir acompañante' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Otro acompañante' }))
     expect(screen.getByLabelText('Nombre del acompañante 2')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Quitar acompañante 2' }))
     expect(screen.queryByLabelText('Nombre del acompañante 2')).not.toBeInTheDocument()
   })
 
-  it('cancelar cierra el diálogo y vuelve a la lista', () => {
+  it('cerrar cierra el diálogo y vuelve a la lista', () => {
     render(<GuestDialog {...props} />)
-    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar' }))
 
     // Cerrar **y** navegar: solo navegar deja el modal encima de la lista, y con él la
     // página bloqueada hasta que Next termina la transición.

@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { events } from '@/app/composition/container'
-import { PhonePreview } from '@/modules/events/ui/themes/kit/PhonePreview'
+import { VistaPreviaDelPanel } from '@/modules/events/ui/VistaPreviaDelPanel'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from '@/modules/events/ui/themes/kit/preview-slots'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { requireSession } from '@/app/_acciones/sesion'
@@ -55,13 +55,8 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
   const variables = definicion.fonts.map((clave) => themeFonts[clave].variable).join(' ')
 
   return (
-    <div className={`con-mono ${variables}`}>
-      {/* Dentro de un teléfono, como el escaparate y como la maqueta: es la pantalla para
-          la que están dibujados, y a lo ancho el fondo se derrama por los lados. */}
-      <PhonePreview
-        exit={{ href: `/panel/eventos/${event.value.slug}/configuracion`, label: 'Volver al panel' }}
-      >
-        <EstiloDeLaInvitacion estilo={await events.estilo.leer(event.value.id)} tema={definicion}>
+    <VistaPreviaDelPanel fuentes={variables} invitado={INVITADO_DE_MUESTRA.label} volver={`/panel/eventos/${event.value.slug}/configuracion`}>
+      <EstiloDeLaInvitacion estilo={await events.estilo.leer(event.value.id)} tema={definicion}>
         <Tema
           content={contenido}
           dictionary={diccionario.invitation}
@@ -70,8 +65,7 @@ export default async function VistaPreviaPage({ params }: { params: Promise<{ sl
           slots={ranurasDeVistaPrevia(diccionario, definicion.rsvp, definicion.categorySlug === 'xv-anos')}
           themes={diccionario.themes}
         />
-        </EstiloDeLaInvitacion>
-      </PhonePreview>
-    </div>
+      </EstiloDeLaInvitacion>
+    </VistaPreviaDelPanel>
   )
 }

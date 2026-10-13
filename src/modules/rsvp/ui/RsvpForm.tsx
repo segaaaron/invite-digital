@@ -159,11 +159,11 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     const uniforme = variant === 'uniformes'
     // Las píldoras toman su tamaño del diseño (`--rsvp-py`, `--rsvp-fs`): «Perla» y «Boho»
     // las piden algo más grandes que las demás Editorial.
-    const BOTON = `flex-1 border px-0 tracking-[0.28em] transition-colors duration-200 ${
+    const BOTON = `flex-1 border px-0 tracking-[var(--rsvp-tracking,0.28em)] transition-colors duration-200 ${
       uniforme
         ? 'rounded-[10px] border-[1.5px] py-[18px] [font-family:var(--font-cormorant)] text-[15px] font-semibold'
         : pildora
-        ? 'rounded-[20px] border-[1.5px] py-[var(--rsvp-py,14px)] font-mono text-[length:var(--rsvp-fs,10px)]'
+        ? 'rounded-[20px] border-[1.5px] py-[var(--rsvp-py,14px)] [font-family:var(--rsvp-letra,var(--font-mono))] text-[length:var(--rsvp-fs,10px)]'
         : oro
           ? 'rounded-[4px] border-[1.5px] py-[13px] font-mono text-[10px]'
           : 'rounded-[4px] py-3.5 font-mono text-[10px]'
@@ -174,7 +174,7 @@ export function RsvpForm({ dictionary, seats, token, previous, guestName, varian
     // El filete de las píldoras puede pedirlo el diseño (`--rsvp-borde`): «Glamour» las pinta
     // huecas, con el «sí» transparente y un filete crema en las dos.
     const FILETE = pildora ? 'border-[var(--rsvp-borde,var(--color-cta))]' : 'border-[var(--color-cta)]'
-    const LLENO = `${FILETE} bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : 'font-bold'}`
+    const LLENO = `${FILETE} bg-[var(--color-cta)] text-[var(--color-on-cta)] ${oro ? '' : '[font-weight:var(--rsvp-peso,700)]'}`
     const HUECO = oro
       ? 'border-[var(--color-cta)] text-[var(--color-cta)]'
       : pildora

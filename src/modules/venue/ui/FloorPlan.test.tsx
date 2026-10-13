@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SeatedTable } from '../application/list-seating'
 import type { VenueZone } from '../domain/venue-zone'
-import { FloorPlan } from './FloorPlan'
+import { FloorPlan, GuardarPlano } from './FloorPlan'
 
 const moveElementsAction = vi.fn(async () => ({ ok: true as const }))
 const push = vi.fn()
@@ -93,14 +93,14 @@ afterEach(() => {
 
 describe('FloorPlan', () => {
   it('pinta una marca por mesa y una por zona', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     expect(screen.getByRole('button', { name: /Mesa 01/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Mesa 02/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Pista.*Muévela/ })).toBeInTheDocument()
   })
 
   it('arrastrar mueve la marca en pantalla', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     const marca = screen.getByRole('button', { name: /Mesa 01/ })
     arrastrar(marca, 300, 400)
     expect(marca.style.left).toBe('50%')
@@ -109,18 +109,18 @@ describe('FloorPlan', () => {
 
   it('ARRASTRAR NO LLAMA A NINGUNA SERVER ACTION', () => {
     // Guardar por fotograma serían miles de escrituras por cada mesa que alguien mueve.
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     expect(moveElementsAction).not.toHaveBeenCalled()
   })
 
   it('sin cambios, «Guardar» está deshabilitado', () => {
-    render(<FloorPlan {...props} />)
-    expect(screen.getByRole('button', { name: /guardar cambios/i })).toBeDisabled()
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
+    expect(screen.getByRole('button', { name: /guardar el plano/i })).toBeDisabled()
   })
 
   it('cuenta los cambios sin guardar', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     expect(screen.getByRole('status')).toHaveTextContent('1 cambio sin guardar')
     arrastrar(screen.getByRole('button', { name: /Mesa 02/ }), 100, 100)
@@ -128,10 +128,10 @@ describe('FloorPlan', () => {
   })
 
   it('«Guardar» manda TODAS las posiciones cambiadas en UNA sola llamada', async () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     arrastrar(screen.getByRole('button', { name: /Pista.*Muévela/ }), 500, 500)
-    fireEvent.click(screen.getByRole('button', { name: /guardar cambios/i }))
+    fireEvent.click(screen.getByRole('button', { name: /guardar el plano/i }))
 
     await waitFor(() => expect(moveElementsAction).toHaveBeenCalledTimes(1))
     expect(moveElementsAction).toHaveBeenCalledWith({
@@ -147,25 +147,25 @@ describe('FloorPlan', () => {
   })
 
   it('tras guardar, el botón vuelve a estar deshabilitado', async () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
-    fireEvent.click(screen.getByRole('button', { name: /guardar cambios/i }))
-    await waitFor(() => expect(screen.getByRole('button', { name: /guardar cambios/i })).toBeDisabled())
+    fireEvent.click(screen.getByRole('button', { name: /guardar el plano/i }))
+    await waitFor(() => expect(screen.getByRole('button', { name: /guardar el plano/i })).toBeDisabled())
   })
 
   it('«Descartar» devuelve las marcas a su sitio y deshabilita el guardado', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     const marca = screen.getByRole('button', { name: /Mesa 01/ })
     arrastrar(marca, 300, 400)
     fireEvent.click(screen.getByRole('button', { name: /descartar/i }))
     expect(marca.style.left).toBe('20%')
     expect(marca.style.top).toBe('20%')
-    expect(screen.getByRole('button', { name: /guardar cambios/i })).toBeDisabled()
+    expect(screen.getByRole('button', { name: /guardar el plano/i })).toBeDisabled()
     expect(moveElementsAction).not.toHaveBeenCalled()
   })
 
   it('el teclado mueve la mesa seleccionada con las flechas, sin ratón', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     const marca = screen.getByRole('button', { name: /Mesa 01/ })
     marca.focus()
     fireEvent.keyDown(marca, { key: 'ArrowRight' })
@@ -175,10 +175,10 @@ describe('FloorPlan', () => {
   })
 
   it('el teclado tampoco guarda por su cuenta', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     fireEvent.keyDown(screen.getByRole('button', { name: /Mesa 01/ }), { key: 'ArrowRight' })
     expect(moveElementsAction).not.toHaveBeenCalled()
-    expect(screen.getByRole('button', { name: /guardar cambios/i })).not.toBeDisabled()
+    expect(screen.getByRole('button', { name: /guardar el plano/i })).not.toBeDisabled()
   })
 
   it('el teclado no saca la mesa del plano', () => {
@@ -189,7 +189,7 @@ describe('FloorPlan', () => {
   })
 
   it('con cambios pendientes, salir de la vista abre el modal propio y no navega', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
 
@@ -198,7 +198,7 @@ describe('FloorPlan', () => {
   })
 
   it('«Cancelar» en el modal deja todo como estaba y no navega', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     const marca = screen.getByRole('button', { name: /Mesa 01/ })
     arrastrar(marca, 300, 400)
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
@@ -211,7 +211,7 @@ describe('FloorPlan', () => {
   })
 
   it('«Guardar» desde el modal persiste y luego navega', async () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
     fireEvent.click(screen.getByRole('button', { name: /^guardar$/i }))
@@ -221,7 +221,7 @@ describe('FloorPlan', () => {
   })
 
   it('«Descartar» desde el modal navega sin guardar', async () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
     fireEvent.click(screen.getByRole('button', { name: /descartar y salir/i }))
@@ -231,7 +231,7 @@ describe('FloorPlan', () => {
   })
 
   it('sin cambios pendientes, el enlace navega sin preguntar nada', () => {
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     fireEvent.click(screen.getByRole('link', { name: 'Volver al evento' }))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(push).toHaveBeenCalledWith('/panel/eventos/boda')
@@ -241,19 +241,19 @@ describe('FloorPlan', () => {
     const add = vi.spyOn(window, 'addEventListener')
     const remove = vi.spyOn(window, 'removeEventListener')
 
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     expect(add.mock.calls.some(([tipo]) => tipo === 'beforeunload')).toBe(false)
 
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     expect(add.mock.calls.some(([tipo]) => tipo === 'beforeunload')).toBe(true)
 
-    fireEvent.click(screen.getByRole('button', { name: /guardar cambios/i }))
+    fireEvent.click(screen.getByRole('button', { name: /guardar el plano/i }))
     await waitFor(() => expect(remove.mock.calls.some(([tipo]) => tipo === 'beforeunload')).toBe(true))
   })
 
   it('quita beforeunload al descartar', () => {
     const remove = vi.spyOn(window, 'removeEventListener')
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     arrastrar(screen.getByRole('button', { name: /Mesa 01/ }), 300, 400)
     fireEvent.click(screen.getByRole('button', { name: /descartar/i }))
     expect(remove.mock.calls.some(([tipo]) => tipo === 'beforeunload')).toBe(true)
@@ -261,20 +261,21 @@ describe('FloorPlan', () => {
 
   it('con movimiento reducido las marcas no llevan transición', () => {
     stubReducedMotion(true)
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     expect(screen.getByRole('button', { name: /Mesa 01/ }).style.transition).toBe('none')
   })
 
   it('enseña el error del servidor sin perder los cambios locales', async () => {
     moveElementsAction.mockResolvedValueOnce({ ok: false, kind: 'wrong_event', message: 'de otro evento' } as never)
-    render(<FloorPlan {...props} />)
+    render(<><GuardarPlano /><FloorPlan {...props} /></>)
     const marca = screen.getByRole('button', { name: /Mesa 01/ })
     arrastrar(marca, 300, 400)
-    fireEvent.click(screen.getByRole('button', { name: /guardar cambios/i }))
+    fireEvent.click(screen.getByRole('button', { name: /guardar el plano/i }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('de otro evento')
     expect(marca.style.left).toBe('50%')
-    expect(screen.getByRole('button', { name: /guardar cambios/i })).not.toBeDisabled()
+    // El botón vive en la cabecera y se entera por un aviso: se espera a que llegue.
+    await waitFor(() => expect(screen.getByRole('button', { name: /guardar el plano/i })).not.toBeDisabled())
   })
 })
 

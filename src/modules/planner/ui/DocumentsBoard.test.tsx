@@ -17,17 +17,17 @@ describe('DocumentsBoard', () => {
   it('la lista dice de qué proveedor es cada documento', () => {
     render(<DocumentsBoard documentos={[doc('contrato-foto', { vendorId: 'v1' })]} evento={evento} proveedores={proveedores} />)
     const lista = screen.getByRole('region', { name: /Tus documentos/ })
-    expect(within(lista).getByRole('link', { name: 'contrato-foto.pdf' })).toBeInTheDocument()
-    expect(within(lista).getByText(/Contrato · Fotógrafo · Luz Estudio/)).toBeInTheDocument()
+    const fila = within(lista).getByRole('link', { name: 'contrato-foto.pdf' }).closest('li')!
+    expect(within(fila).getByText('Contrato')).toBeInTheDocument()
+    expect(within(fila).getAllByText(/Fotógrafo · Luz Estudio/).length).toBeGreaterThan(0)
   })
 
   it('se elige qué es y de qué proveedor, y soltar el archivo lo sube', async () => {
     render(<DocumentsBoard documentos={[]} evento={evento} proveedores={proveedores} />)
     const subida = screen.getByRole('region', { name: 'Subir un documento' })
-    fireEvent.click(within(subida).getByRole('radio', { name: 'Cotización' }))
-    fireEvent.change(within(subida).getByLabelText(/De qué proveedor/), { target: { value: 'v2' } })
-    const zona = within(subida).getByText(/Arrastra aquí/).closest('label')!
-    fireEvent.drop(zona, { dataTransfer: { files: [new File(['x'], 'cotizacion.pdf', { type: 'application/pdf' })] } })
+    fireEvent.change(within(subida).getByLabelText('Tipo'), { target: { value: 'cotizacion' } })
+    fireEvent.change(within(subida).getByLabelText('Proveedor'), { target: { value: 'v2' } })
+    fireEvent.drop(subida, { dataTransfer: { files: [new File(['x'], 'cotizacion.pdf', { type: 'application/pdf' })] } })
     await waitFor(() => expect(subir).toHaveBeenCalled())
     const fd = (subir.mock.calls[0] as unknown as [unknown, FormData])[1]
     expect(fd.get('vendorId')).toBe('v2')

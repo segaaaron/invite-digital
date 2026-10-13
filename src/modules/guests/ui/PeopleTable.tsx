@@ -1,12 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import { FilterChip, IconButton, IconLink, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
+import { FilterChip, IconButton, IconLink, Iniciales, PanelButton, Pill, SearchField } from '@/shared/design/ui/panel/PanelKit'
 import { removePersonAction } from '@/app/_acciones/guests/actions'
 import type { Attendance } from '../domain/person'
-import { ChevronIcon, PenIcon, QrIcon, TrashIcon } from '@/shared/design/ui/icons'
-import { fechaCorta, hora } from '@/shared/format/fecha'
-import { avatarColor } from '@/shared/design/ui/avatar-color'
+import { PenIcon, QrIcon, SendIcon, TrashIcon } from '@/shared/design/ui/icons'
+import { hora } from '@/shared/format/fecha'
 
 export type PersonRowView = {
   readonly id: string
@@ -27,60 +27,55 @@ export type PersonRowView = {
   readonly respondedAt?: Date | null
 }
 
-type Filtro = 'todos' | 'confirmados' | 'pendientes' | 'no-vienen' | 'tal-vez' | 'vip'
+type Filtro = 'todos' | 'asistiran' | 'por-responder' | 'no-vienen' | 'sin-enviar'
 
-/** «No vienen» es quien dijo que no; «pendientes» es quien no ha dicho nada. */
+/** Los filtros de la maqueta (E09): quién viene, quién falta, quién dijo que no y lo que aún no salió. */
 const CASA: Record<Filtro, (fila: PersonRowView) => boolean> = {
   todos: () => true,
-  confirmados: (f) => f.attending === 'yes',
-  pendientes: (f) => f.attending === null,
+  asistiran: (f) => f.attending === 'yes',
+  'por-responder': (f) => f.attending === null || f.attending === 'maybe',
   'no-vienen': (f) => f.attending === 'no',
-  'tal-vez': (f) => f.attending === 'maybe',
-  vip: (f) => f.vip,
+  'sin-enviar': (f) => (f.sentAt ?? null) === null,
 }
 
 const ETIQUETA: Record<Filtro, string> = {
   todos: 'Todos',
-  confirmados: 'Confirmados',
-  pendientes: 'Pendientes',
+  asistiran: 'Asistirán',
+  'por-responder': 'Por responder',
   'no-vienen': 'No vienen',
-  'tal-vez': 'Tal vez',
-  vip: 'VIP',
+  'sin-enviar': 'Sin enviar',
 }
 
-const ESTADO: Record<string, string> = { yes: 'Confirmado', no: 'No viene', maybe: 'Tal vez' }
-
-/** El tono de la píldora por estado, como en la maqueta. */
+const ESTADO = { yes: 'Asistirá', no: 'No vendrá', maybe: 'Tal vez' } as const
 const TONO = { yes: 'ok', no: 'no', maybe: 'maybe' } as const
 
-/**
- * La fecha, con la zona fijada a UTC.
- *
- * Este componente se pinta primero en el servidor y luego hidrata en el navegador. Sin
- * fijar la zona, un servidor en UTC y un navegador en La Paz dan dos días distintos para
- * la misma respuesta y React avisa de un desajuste de hidratación.
- */
-/** Diez invitaciones por página: una familia no se parte entre dos páginas. */
-const POR_PAGINA = 10
+/** Diez invitaciones más cada vez: una familia no se parte. */
+const POR_TANDA = 10
 
-const CELDA = 'border-b border-line-panel py-3 pr-4 align-middle'
+const DIA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', month: 'long', timeZone: 'America/La_Paz' })
+
+/** Lo que dice la invitación entera, una vez, en su cabecera o bajo el nombre. */
+function estadoDeInvitacion(filas: readonly PersonRowView[]): string {
+  const primera = filas[0]!
+  if ((primera.sentAt ?? null) === null) return 'Sin enviar'
+  if ((primera.respondedAt ?? null) === null) return 'Enviada, sin respuesta'
+  return `Respondió el ${DIA.format(primera.respondedAt!)}`
+}
+
+/** La píldora de una invitación en el celular (maqueta M08): «Vienen 3», «Sin responder», «Sin enviar». */
+function pildoraDeInvitacion(filas: readonly PersonRowView[]): { tono: 'ok' | 'no' | 'pending' | 'neutro'; texto: string } {
+  const vienen = filas.filter((f) => f.attending === 'yes').length
+  if (vienen > 0) return { tono: 'ok', texto: vienen === 1 && filas.length === 1 ? 'Viene' : `Vienen ${vienen}` }
+  if (filas.every((f) => f.attending === 'no')) return { tono: 'no', texto: filas.length === 1 ? 'No viene' : 'No vienen' }
+  if ((filas[0]?.sentAt ?? null) === null) return { tono: 'neutro', texto: 'Sin enviar' }
+  return { tono: 'pending', texto: 'Sin responder' }
+}
 
 /**
- * **En el celular la tabla se vuelve tarjetas, con el mismo marcado** (6 de octubre): cada persona es una
- * fila de rejilla —nombre y estado arriba; mesa, restricciones e invitación debajo; las acciones al final—
- * en vez de cinco columnas de 900 px que se cortaban. Una sola lista en el DOM: ni el lector de pantalla
- * ni las pruebas ven dos.
- */
-const M_FILA =
-  'max-[859px]:grid max-[859px]:grid-cols-[minmax(0,1fr)_auto] max-[859px]:items-center max-[859px]:gap-x-3 max-[859px]:gap-y-1.5 max-[859px]:border-b max-[859px]:border-line-panel max-[859px]:py-3.5'
-/** Una celda que en el celular ocupa la fila entera bajo el nombre, sangrada al texto (no al avatar). */
-const M_DEBAJO = 'max-[859px]:col-span-2 max-[859px]:block max-[859px]:border-0 max-[859px]:py-0 max-[859px]:pr-0 max-[859px]:pl-13'
-
-/**
- * La lista de invitados, **agrupada por invitación** como las listas de Joy o Zola: la familia se
- * lee junta —el principal y, debajo, sus acompañantes— y el envío y la respuesta se dicen una vez
- * por invitación, no en cada persona. Sigue siendo una tabla: se lee por columnas y se recorre
- * con lector de pantalla.
+ * **La lista de invitados de la maqueta «Esmeralda y Latón»** (E09 · T04 · M08, 12 de octubre), agrupada por
+ * invitación: la familia tiene su fila de cabecera —iniciales, nombre, cuántos son, si se envió, cuándo respondió y
+ * su botón (Enviar o Recordar)— y debajo sus personas, sangradas, cada una con su confirmación, restricciones y mesa.
+ * Una invitación de una sola persona es una sola fila. En el celular, una tarjeta por invitación.
  */
 export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[]; eventSlug: string }) {
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -88,17 +83,11 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
   const [error, setError] = useState<string | null>(null)
   // Quién está a un clic de ser borrado. Borrar no tiene deshacer.
   const [porQuitar, setPorQuitar] = useState<string | null>(null)
-  const [pagina, setPagina] = useState(1)
-  /** Qué invitaciones de varias personas están desplegadas. */
-  const [abiertas, setAbiertas] = useState<ReadonlySet<string>>(new Set())
+  const [cuantas, setCuantas] = useState(POR_TANDA)
+  /** En la tableta, la invitación abierta al lado de la lista (maqueta T04). */
+  const [elegida, setElegida] = useState<string | null>(null)
 
   const base = `/panel/eventos/${eventSlug}/invitados`
-
-  // Los contadores se calculan sobre todas las filas, nunca sobre las visibles.
-  const cuentas = useMemo(
-    () => Object.fromEntries((Object.keys(CASA) as Filtro[]).map((k) => [k, rows.filter(CASA[k]).length])) as Record<Filtro, number>,
-    [rows],
-  )
 
   // Las visibles, juntas por invitación y con el principal primero.
   const grupos = useMemo(() => {
@@ -111,10 +100,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
     return [...porGrupo.values()].map((filas) => [...filas].sort((a, b) => Number(a.isCompanion) - Number(b.isCompanion)))
   }, [rows, filtro, query])
 
-  const paginas = Math.max(1, Math.ceil(grupos.length / POR_PAGINA))
-  const enPagina = grupos.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA)
+  const enVista = grupos.slice(0, cuantas)
   // Cuántas personas tiene cada invitación en total, no solo las visibles.
-  const personasDe = (groupId: string) => rows.filter((r) => r.groupId === groupId).length
+  const todasDe = (groupId: string) => rows.filter((r) => r.groupId === groupId)
 
   const aplicar = (accion: Promise<{ status: string; message?: string }>) => {
     void accion.then((estado) => {
@@ -122,262 +110,287 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
     })
   }
 
+  const accionesDePersona = (fila: PersonRowView, conPase: boolean) =>
+    porQuitar === fila.id ? (
+      <span className="flex justify-end gap-1.5">
+        <button
+          className="min-h-9 cursor-pointer rounded-lg border border-danger px-3 text-[13px] font-medium text-danger"
+          onClick={() => {
+            setPorQuitar(null)
+            aplicar(removePersonAction({ eventSlug, id: fila.id }))
+          }}
+          title="Si es la última persona de su invitación, su enlace se borra con ella."
+          type="button"
+        >
+          Confirmar
+        </button>
+        <button className="min-h-9 cursor-pointer rounded-lg border border-line-panel-strong px-3 text-[13px]" onClick={() => setPorQuitar(null)} type="button">
+          Cancelar
+        </button>
+      </span>
+    ) : (
+      <span className="flex justify-end gap-1.5">
+        {conPase ? (
+          <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
+            <QrIcon />
+          </IconLink>
+        ) : null}
+        <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
+          <PenIcon />
+        </IconLink>
+        <IconButton className="hover:border-danger hover:text-danger" label={`Eliminar a ${fila.fullName}`} onClick={() => setPorQuitar(fila.id)}>
+          <TrashIcon />
+        </IconButton>
+      </span>
+    )
+
+  /** El botón de la invitación: enviarla si no salió, recordarla si salió y nadie contestó. */
+  const botonDeInvitacion = (primera: PersonRowView) =>
+    (primera.sentAt ?? null) === null ? (
+      <PanelButton href={`${base}?panel=envio`} size="sm" variant="primary">
+        <SendIcon className="size-4" /> Enviar
+      </PanelButton>
+    ) : (primera.respondedAt ?? null) === null ? (
+      <PanelButton href={`${base}?panel=recordar`} size="sm">
+        Recordar
+      </PanelButton>
+    ) : null
+
   return (
-    <div className="flex min-w-0 flex-col gap-4">
-      <div className="flex flex-col gap-3">
+    <div className="flex min-w-0 flex-col gap-5">
+      <div className="flex flex-wrap items-center gap-2.5">
         <SearchField
           autoComplete="off"
-          className="w-full"
+          className="min-w-0 flex-[1_1_280px]"
           label="Buscar invitado"
           onChange={(e) => {
             setQuery(e.target.value)
-            setPagina(1)
+            setCuantas(POR_TANDA)
           }}
-          placeholder="Buscar por nombre o invitación…"
+          placeholder="Buscar por nombre"
           value={query}
         />
-        {/* En el celular, una línea que se desliza: seis filtros en tres filas empujaban la lista fuera. */}
-        <div className="-mx-1 flex flex-nowrap gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] *:shrink-0 min-[860px]:flex-wrap min-[860px]:overflow-visible [&::-webkit-scrollbar]:hidden">
+        <div className="flex flex-wrap gap-2.5">
           {(Object.keys(CASA) as Filtro[]).map((clave) => (
             <FilterChip
               active={filtro === clave}
               key={clave}
               onClick={() => {
                 setFiltro(clave)
-                setPagina(1)
+                setCuantas(POR_TANDA)
               }}
             >
-              {ETIQUETA[clave]} {cuentas[clave]}
+              {ETIQUETA[clave]}
             </FilterChip>
           ))}
         </div>
       </div>
 
       {error === null ? null : (
-        <p className="text-[13px] text-danger" role="alert">
+        <p className="text-[14px] text-danger" role="alert">
           {error}
         </p>
       )}
 
       {grupos.length === 0 ? (
-        <p className="py-8 text-center text-[13px] text-ink-mute">Ningún invitado coincide.</p>
+        <p className="py-8 text-center text-[15px] text-ink-mute">Ningún invitado coincide.</p>
       ) : (
-        <div className="relative min-w-0 min-[860px]:overflow-x-auto">
-          <table className="w-full border-collapse text-left max-[859px]:block min-[860px]:min-w-[900px]">
-            <thead className="max-[859px]:hidden">
-              <tr>
-                {['Invitado', 'Confirmación', 'Restricciones', 'Mesa', 'Invitación'].map((columna) => (
-                  <th className="border-b border-line-panel pt-1 pb-3 pr-4 font-mono text-[10.5px] font-medium tracking-[0.16em] whitespace-nowrap text-ink-mute uppercase" key={columna} scope="col">
-                    {columna}
+        <>
+          {/* Computadora: la tabla de la maqueta (E09). */}
+          <div className="relative min-w-0 overflow-x-auto max-[1279px]:hidden">
+            <table className="w-full min-w-[760px] border-collapse text-left text-[14.5px]">
+              <thead>
+                <tr>
+                  {['Invitado', 'Confirmación', 'Restricciones', 'Mesa'].map((columna) => (
+                    <th className="border-b border-line-panel-strong px-3.5 pb-2.5 text-[13px] font-medium whitespace-nowrap text-ink-mute" key={columna} scope="col">
+                      {columna}
+                    </th>
+                  ))}
+                  <th className="border-b border-line-panel-strong pb-2.5" scope="col">
+                    <span className="sr-only">Acciones</span>
                   </th>
-                ))}
-                <th className="border-b border-line-panel pb-3" scope="col">
-                  <span className="sr-only">Acciones</span>
-                </th>
-              </tr>
-            </thead>
-            {enPagina.map((filas) => {
-              const primera = filas[0]!
-              const familia = personasDe(primera.groupId) > 1
-              // Plegada, la familia es una línea; con filtro o búsqueda se abre sola, que es cuando se busca a alguien.
-              const abierta = !familia || abiertas.has(primera.groupId) || query.trim() !== '' || filtro !== 'todos'
-              return (
-                <tbody className="group/invitacion max-[859px]:block" key={primera.groupId}>
-                  {/* Una familia se presenta como su invitación: nombre, cuántos son, si se envió y su pase. */}
-                  {familia ? (
-                    <tr className="max-[859px]:block">
-                      <td className="border-b border-line-panel bg-bg-top/70 py-2.5 pr-3 pl-3 max-[859px]:block max-[859px]:bg-transparent max-[859px]:px-1 max-[859px]:py-3" colSpan={6}>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 max-[859px]:flex-nowrap">
-                          {/* En el celular, como la maqueta: avatares · nombre y «4 personas · Mesa 2» · su estado. */}
-                          <button
-                            aria-expanded={abierta}
-                            className="flex min-w-0 flex-1 cursor-pointer flex-wrap items-center gap-x-3 gap-y-1.5 text-left max-[859px]:grid max-[859px]:min-h-12 max-[859px]:grid-cols-[auto_minmax(0,1fr)] max-[859px]:gap-y-0.5"
-                            onClick={() =>
-                              setAbiertas((previo) => {
-                                const siguiente = new Set(previo)
-                                if (siguiente.has(primera.groupId)) siguiente.delete(primera.groupId)
-                                else siguiente.add(primera.groupId)
-                                return siguiente
-                              })
-                            }
-                            type="button"
-                          >
-                            <ChevronIcon className={`size-4 shrink-0 text-ink-mute transition-transform max-[859px]:hidden ${abierta ? '' : '-rotate-90'}`} />
-                            <span aria-hidden className="flex -space-x-2 max-[859px]:row-span-2 max-[859px]:w-[76px]">
-                              {rows
-                                .filter((r) => r.groupId === primera.groupId)
-                                .slice(0, 3)
-                                .map((r) => (
-                                  <span className={`grid size-7 place-items-center rounded-full bg-linear-to-br text-[11px] text-white ring-2 ring-white max-[859px]:size-8 max-[859px]:text-[12px] ${avatarColor(r.fullName)}`} key={r.id}>
-                                    {(r.fullName.trim()[0] ?? '·').toUpperCase()}
-                                  </span>
-                                ))}
+                </tr>
+              </thead>
+              {enVista.map((filas) => {
+                const primera = filas[0]!
+                const todas = todasDe(primera.groupId)
+                const familia = todas.length > 1
+                return (
+                  <tbody className="group/invitacion" key={primera.groupId}>
+                    {familia ? (
+                      <tr>
+                        <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3">
+                          <span className="flex items-center gap-3">
+                            <Iniciales chico nombre={primera.groupLabel} />
+                            <span>
+                              <span className="block font-semibold">{primera.groupLabel}</span>
+                              <span className="text-[13px] text-ink-mute">
+                                {todas.length} personas, {(primera.sentAt ?? null) === null ? 'sin enviar' : 'enviada'}
+                              </span>
                             </span>
-                            <span className="text-[13.5px] text-ink max-[859px]:col-start-2 max-[859px]:text-[15px] max-[859px]:leading-snug max-[859px]:font-medium max-[859px]:[overflow-wrap:anywhere]">{primera.groupLabel}</span>
-                            <span className="text-[12px] text-ink-mute max-[859px]:col-start-2 max-[859px]:text-[12.5px]">
-                              {`${personasDe(primera.groupId)} personas`}
-                              <span className="min-[860px]:hidden">{` · ${primera.tableLabel ?? 'sin mesa'} · `}</span>
-                              <span className={`min-[860px]:hidden ${primera.sentAt ? '' : 'font-medium text-gold-deep'}`}>{primera.sentAt ? 'enviada' : 'sin enviar'}</span>
-                            </span>
-                            {/* En el celular el envío va en la línea de abajo: la píldora le quitaba el ancho al nombre. */}
-                            <span className="max-[859px]:hidden">
-                              <Pill tone={primera.sentAt ? 'ok' : 'pending'}>{primera.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
-                            </span>
-                            {primera.respondedAt === null || primera.respondedAt === undefined ? null : (
-                              <span className="font-mono text-[10.5px] text-ink-mute max-[859px]:hidden">{`respondió ${fechaCorta(primera.respondedAt)}`}</span>
-                            )}
-                          </button>
-                          <span className="ml-auto">
+                          </span>
+                        </td>
+                        <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 text-[13.5px] text-ink-mute" colSpan={2}>
+                          {estadoDeInvitacion(todas)}
+                        </td>
+                        <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 [font-variant-numeric:tabular-nums]">{primera.tableLabel ?? '—'}</td>
+                        <td className="border-t border-b border-line-panel bg-fila px-3.5 py-3 text-right whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            {botonDeInvitacion(primera)}
                             <IconLink href={`${base}?panel=pase&persona=${primera.id}`} label={`Ver el pase de ${primera.groupLabel}`}>
                               <QrIcon />
                             </IconLink>
                           </span>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null}
-                  {(abierta ? filas : []).map((fila, i) => (
-                    <tr className={`transition-colors hover:bg-bg-top/60 ${M_FILA}`} key={fila.id}>
-                      <td className={`${CELDA} ${familia ? 'border-l-2 border-l-gold/40 pl-7 max-[859px]:pl-4' : 'pl-3 max-[859px]:pl-1'} max-[859px]:col-start-1 max-[859px]:row-start-1 max-[859px]:block max-[859px]:border-b-0 max-[859px]:py-0`}>
-                        <span className="flex items-center gap-3">
-                          <span
-                            aria-hidden
-                            className={`grid shrink-0 place-items-center rounded-full bg-linear-to-br text-white ${avatarColor(fila.fullName)} ${fila.isCompanion ? 'size-8 text-[12px]' : 'size-10 text-[14px]'}`}
-                          >
-                            {(fila.fullName.trim()[0] ?? '·').toUpperCase()}
-                          </span>
-                          <span className="flex min-w-0 flex-col">
-                            <span className="flex items-center gap-2 text-[14.5px] text-ink">
-                              {fila.fullName}
-                              {fila.vip ? (
-                                <span aria-hidden className="rounded-full bg-gold/20 px-2 py-0.5 font-mono text-[10.5px] tracking-[0.2em] text-gold-deep" title="VIP">
-                                  VIP
-                                </span>
-                              ) : null}
-                            </span>
-                            {fila.llegoA === undefined || fila.llegoA === null ? null : (
-                              <span className="mt-0.5 block text-[11px] text-sage">{`Llegó ${hora(fila.llegoA)}`}</span>
-                            )}
-                          </span>
-                        </span>
-                      </td>
-                      <td className={`${CELDA} max-[859px]:col-start-2 max-[859px]:row-start-1 max-[859px]:block max-[859px]:border-0 max-[859px]:p-0`}>
-                        {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
-                        <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>
-                          {fila.attending === null ? 'Pendiente' : ESTADO[fila.attending]}
-                        </Pill>
-                      </td>
-                      {/* En el celular, mesa y restricción en una línea bajo el nombre; sin restricción, no se pinta. */}
-                      <td className={`${CELDA} text-[13px] text-ink-soft ${M_DEBAJO} ${fila.dietaryNote === null ? 'max-[859px]:hidden' : ''}`}>
-                        <span className="min-[860px]:hidden">Restricción: </span>
-                        {fila.dietaryNote ?? '—'}
-                      </td>
-                      <td className={`${CELDA} text-[13px] text-ink-soft ${M_DEBAJO} max-[859px]:row-start-2`}>
-                        {fila.tableLabel ?? 'Sin mesa'}
-                        {/* En el celular la columna «Invitación» no se pinta: de una invitación suelta, si salió. */}
-                        {i === 0 && !familia ? <span className="min-[860px]:hidden">{fila.sentAt ? ' · enviada' : ' · sin enviar'}</span> : null}
-                      </td>
-                      <td className={`${CELDA} text-[13px] ${M_DEBAJO} max-[859px]:hidden`}>
-                        {i === 0 && !familia ? (
-                          <span className="flex flex-col gap-1">
-                            <span className="text-ink-soft">
-                              {fila.isCompanion ? (
-                                `Acompaña a ${fila.groupLabel}`
-                              ) : fila.groupLabel === fila.fullName ? (
-                                <span className="text-ink-mute">{familia ? `Propia · ${personasDe(fila.groupId)} personas` : 'Propia'}</span>
-                              ) : familia ? (
-                                `${fila.groupLabel} · ${personasDe(fila.groupId)} personas`
-                              ) : (
-                                fila.groupLabel
-                              )}
-                            </span>
-                            <span className="flex flex-wrap items-center gap-1.5">
-                              <Pill tone={fila.sentAt ? 'ok' : 'pending'}>{fila.sentAt ? 'Enviado' : 'Sin enviar'}</Pill>
-                              {fila.respondedAt === null || fila.respondedAt === undefined ? null : (
-                                <span className="font-mono text-[10.5px] text-ink-mute">{`respondió ${fechaCorta(fila.respondedAt)}`}</span>
-                              )}
+                        </td>
+                      </tr>
+                    ) : null}
+                    {filas.map((fila) => (
+                      <tr className="transition-colors hover:bg-fila" key={fila.id}>
+                        <td className={`border-b border-line-panel py-3.25 pr-3.5 ${familia ? 'pl-[52px]' : 'pl-3.5'}`}>
+                          <span className="flex items-center gap-3">
+                            {familia ? null : <Iniciales chico nombre={fila.fullName} />}
+                            <span>
+                              <span className={`flex items-center gap-2.5 ${familia ? '' : 'font-medium'}`}>
+                                {fila.fullName}
+                                {fila.vip ? (
+                                  <span aria-hidden>
+                                    <Pill tone="vip">VIP</Pill>
+                                  </span>
+                                ) : null}
+                              </span>
+                              {familia ? null : <span className="text-[13px] text-ink-mute">{estadoDeInvitacion([fila])}</span>}
+                              {fila.llegoA === undefined || fila.llegoA === null ? null : <span className="block text-[12.5px] text-pill-ok-ink">{`Llegó ${hora(fila.llegoA)}`}</span>}
                             </span>
                           </span>
-                        ) : null}
-                      </td>
-                      <td className={`${CELDA} pr-0 whitespace-nowrap ${M_DEBAJO} max-[859px]:pt-1`}>
-                        {porQuitar === fila.id ? (
-                          <div className="flex justify-end gap-1.5 max-[859px]:justify-start">
-                            <button
-                              className="cursor-pointer rounded-lg border border-danger px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-danger uppercase"
-                              onClick={() => {
-                                setPorQuitar(null)
-                                aplicar(removePersonAction({ eventSlug, id: fila.id }))
-                              }}
-                              title="Si es la última persona de su invitación, su enlace se borra con ella."
-                              type="button"
-                            >
-                              Confirmar
-                            </button>
-                            <button
-                              className="cursor-pointer rounded-lg border border-line-panel px-2.5 py-1 font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase"
-                              onClick={() => setPorQuitar(null)}
-                              type="button"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        ) : (
-                          <div className="flex justify-end gap-1.5 opacity-70 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100 max-[859px]:justify-start max-[859px]:gap-2 max-[859px]:opacity-100">
-                            {familia ? null : (
-                              <IconLink href={`${base}?panel=pase&persona=${fila.id}`} label={`Ver el pase de ${fila.fullName}`}>
-                                <QrIcon />
-                              </IconLink>
-                            )}
-                            <IconLink href={`${base}?panel=editar&persona=${fila.id}`} label={`Editar a ${fila.fullName}`}>
-                              <PenIcon />
-                            </IconLink>
-                            <IconButton className="hover:border-danger hover:text-danger" label={`Eliminar a ${fila.fullName}`} onClick={() => setPorQuitar(fila.id)}>
-                              <TrashIcon />
-                            </IconButton>
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
+                        </td>
+                        <td className="border-b border-line-panel px-3.5 py-3.25">
+                          {/* Lo que respondió el invitado. Corregirlo a mano es de «Editar». */}
+                          <Pill tone={fila.attending === null ? 'pending' : TONO[fila.attending]}>{fila.attending === null ? 'Sin responder' : ESTADO[fila.attending]}</Pill>
+                        </td>
+                        <td className="border-b border-line-panel px-3.5 py-3.25 text-ink-mute">{fila.dietaryNote ?? (fila.attending === 'yes' ? 'Sin restricciones' : '')}</td>
+                        <td className="border-b border-line-panel px-3.5 py-3.25 [font-variant-numeric:tabular-nums]">{fila.tableLabel ?? '—'}</td>
+                        <td className="border-b border-line-panel px-3.5 py-3.25 text-right whitespace-nowrap">
+                          <span className="inline-flex items-center gap-1.5">
+                            {familia ? null : botonDeInvitacion(fila)}
+                            <span className={familia ? 'opacity-0 transition-opacity group-hover/invitacion:opacity-100 focus-within:opacity-100' : ''}>{accionesDePersona(fila, !familia)}</span>
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                )
+              })}
+            </table>
+          </div>
+
+          {/* Tableta (maqueta T04): la lista a la izquierda y la invitación elegida al lado, con su gente y lo que se hace. */}
+          {(() => {
+            const abierta = enVista.find((f) => f[0]!.groupId === elegida) ?? enVista[0]
+            if (abierta === undefined) return null
+            const primera = abierta[0]!
+            const todas = todasDe(primera.groupId)
+            return (
+              <div className="hidden min-w-0 grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-6 min-[768px]:max-[1279px]:grid">
+                <ul className="min-w-0 border-t border-line-panel">
+                  {enVista.map((filas) => {
+                    const p0 = filas[0]!
+                    const suyas = todasDe(p0.groupId)
+                    const pildora = pildoraDeInvitacion(suyas)
+                    const activa = p0.groupId === primera.groupId
+                    return (
+                      <li className="border-b border-line-panel" key={p0.groupId}>
+                        <button
+                          aria-current={activa ? 'true' : undefined}
+                          className={`flex min-h-[72px] w-full cursor-pointer items-center gap-3 px-3 py-3 text-left ${activa ? 'bg-bg-raised shadow-[inset_3px_0_0_var(--color-gold)]' : 'hover:bg-fila'}`}
+                          onClick={() => setElegida(p0.groupId)}
+                          type="button"
+                        >
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-display text-[20px] leading-tight font-medium">{suyas.length > 1 ? p0.groupLabel : p0.fullName}</span>
+                            <span className="text-[13.5px] text-ink-mute">
+                              {suyas.length === 1 ? '1 persona' : `${suyas.length} personas`}
+                              {p0.tableLabel === null ? '' : `, ${p0.tableLabel.toLowerCase()}`}
+                            </span>
+                          </span>
+                          <Pill tone={pildora.tono}>{pildora.texto}</Pill>
+                        </button>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <section aria-label={`Invitación ${primera.groupLabel}`} className="sticky top-24 flex flex-col gap-4 self-start rounded-[16px] border border-line-panel bg-bg-raised p-5.5">
+                  <div>
+                    <h2 className="font-display text-[28px] leading-tight font-medium">{todas.length > 1 ? primera.groupLabel : primera.fullName}</h2>
+                    <p className="mt-1 text-[14.5px] text-ink-mute">
+                      {todas.length === 1 ? '1 persona' : `${todas.length} personas`}
+                      {primera.tableLabel === null ? '' : ` en la ${primera.tableLabel.toLowerCase()}`}. {estadoDeInvitacion(todas)}.
+                    </p>
+                  </div>
+                  <ul className="flex flex-col">
+                    {todas.map((f) => (
+                      <li className="flex min-h-11 items-center gap-2.5 border-b border-line-panel last:border-b-0" key={f.id}>
+                        <Link className="flex min-h-11 min-w-0 flex-1 items-center truncate text-[15px] text-ink no-underline hover:underline" href={`${base}?panel=editar&persona=${f.id}`}>
+                          {f.fullName}
+                          {f.dietaryNote === null ? null : <span className="ml-2 text-[13px] text-ink-mute">{f.dietaryNote}</span>}
+                        </Link>
+                        {f.vip ? <Pill tone="vip">VIP</Pill> : null}
+                        <Pill tone={f.attending === null ? 'pending' : TONO[f.attending]}>{f.attending === null ? 'Sin responder' : ESTADO[f.attending]}</Pill>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="flex flex-wrap gap-2.5">
+                    {(primera.sentAt ?? null) === null ? (
+                      <a className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={`${base}?panel=envio`}>
+                        <SendIcon className="size-4" /> Enviar por WhatsApp
+                      </a>
+                    ) : null}
+                    <PanelButton href={`${base}?panel=pase&persona=${primera.id}`}>
+                      <QrIcon className="size-4" /> Ver el pase
+                    </PanelButton>
+                    <PanelButton href={`${base}?panel=editar&persona=${primera.id}`}>Editar</PanelButton>
+                  </div>
+                </section>
+              </div>
+            )
+          })()}
+
+          {/* Celular: una tarjeta por invitación (maqueta M08). Tocarla abre su edición. */}
+          <ul className="min-[768px]:hidden">
+            {enVista.map((filas) => {
+              const primera = filas[0]!
+              const todas = todasDe(primera.groupId)
+              const pildora = pildoraDeInvitacion(todas)
+              return (
+                <li className="border-b border-line-panel" key={primera.groupId}>
+                  <Link className="flex min-h-[84px] items-center gap-3 py-3.5 text-ink no-underline" href={`${base}?panel=editar&persona=${primera.id}`}>
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-display text-[22px] leading-tight font-medium">{todas.length > 1 ? primera.groupLabel : primera.fullName}</span>
+                      <span className="text-[14px] text-ink-mute">
+                        {todas.length === 1 ? '1 persona' : `${todas.length} personas`}
+                        {primera.tableLabel === null ? '' : `, ${primera.tableLabel.toLowerCase()}`}
+                      </span>
+                    </span>
+                    <Pill tone={pildora.tono}>{pildora.texto}</Pill>
+                    <svg aria-hidden className="size-4.5 shrink-0 text-ink-mute" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
+                      <path d="m9 6 6 6-6 6" />
+                    </svg>
+                  </Link>
+                </li>
               )
             })}
-          </table>
+          </ul>
 
-          {paginas === 1 ? null : (
-            <nav aria-label="Páginas de invitados" className="mt-4.5 flex items-center justify-center gap-1.5">
-              <button
-                className="cursor-pointer rounded-lg border border-line-panel bg-white px-2.5 py-1.5 font-mono text-[11px] disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={pagina === 1}
-                onClick={() => setPagina((n) => Math.max(1, n - 1))}
-                type="button"
-              >
-                ‹ Anterior
-              </button>
-              {Array.from({ length: paginas }, (_, i) => i + 1).map((numero) => (
-                <button
-                  aria-current={numero === pagina ? 'page' : undefined}
-                  aria-label={`Página ${numero}`}
-                  className={`size-8 cursor-pointer rounded-lg border font-mono text-[11px] ${numero === pagina ? 'border-ink bg-ink text-white' : 'border-line-panel bg-white text-ink'}`}
-                  key={numero}
-                  onClick={() => setPagina(numero)}
-                  type="button"
-                >
-                  {numero}
-                </button>
-              ))}
-              <button
-                className="cursor-pointer rounded-lg border border-line-panel bg-white px-2.5 py-1.5 font-mono text-[11px] disabled:cursor-not-allowed disabled:opacity-35"
-                disabled={pagina === paginas}
-                onClick={() => setPagina((n) => Math.min(paginas, n + 1))}
-                type="button"
-              >
-                Siguiente ›
-              </button>
-            </nav>
-          )}
-        </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <span className="text-[14px] text-ink-mute">
+              Mostrando {enVista.length} de {grupos.length} {grupos.length === 1 ? 'invitación' : 'invitaciones'}
+            </span>
+            {enVista.length < grupos.length ? (
+              <PanelButton onClick={() => setCuantas((n) => n + POR_TANDA)}>
+                Ver {Math.min(POR_TANDA, grupos.length - enVista.length)} {Math.min(POR_TANDA, grupos.length - enVista.length) === 1 ? 'invitación' : 'invitaciones'} más
+              </PanelButton>
+            ) : null}
+          </div>
+        </>
       )}
     </div>
   )

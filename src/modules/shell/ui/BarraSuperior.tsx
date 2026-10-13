@@ -1,35 +1,46 @@
 import type { ReactNode } from 'react'
+import { MenuMovil } from './MenuMovil'
 
 /**
- * La barra superior del panel para quien no es admin (anfitrión, planner, atelier): a la derecha la
- * campana de avisos —y lo que venga, como el asistente—. **La misma piel que la del admin**
- * (`BarraDelAdmin`): pegajosa, con vidrio marfil.
+ * **La barra de arriba de la maqueta «Esmeralda y Latón»** (12 de octubre).
  *
- * **Con `titulo` (el panel de un evento, que en el celular navega con la barra inferior)** es también la
- * cabecera del celular: el nombre del evento a la izquierda y la campana a la derecha, una sola barra
- * clara (6 de octubre). Antes ahí iba la barra oscura con «Menú».
+ * - Tablet y escritorio: a lo ancho, con su filete abajo; a la izquierda dónde se está («Faltan 6 días para la boda»,
+ *   la ruta, la fecha) y a la derecha las acciones de siempre (Ver mi invitación, la campana).
+ * - Celular: la isla flotante, con el sello y el menú guiado a la izquierda y la campana a la derecha.
  *
- * **Sin `titulo` no es una barra en el celular**: la campana flota dentro de la barra oscura, a la derecha
- * de «Menú» (que le deja el sitio: `PanelFrame conAcciones`). Un solo montaje: una escucha en vivo.
+ * Un solo montaje de la campana: una escucha en vivo.
  */
-export function BarraSuperior({ children, titulo, subtitulo }: { children?: ReactNode; titulo?: string | undefined; subtitulo?: string | undefined }) {
-  if (titulo !== undefined) {
-    return (
-      // Sin nada a la derecha (en modo soporte no hay campana), en escritorio no se pinta: sería una franja vacía.
-      <div
-        className={`sticky top-0 z-30 -mx-4.5 -mt-4.5 mb-4 flex items-center gap-3 border-b border-line-panel bg-bg/85 px-4.5 pt-[max(env(safe-area-inset-top),10px)] pb-2.5 backdrop-blur-md backdrop-saturate-150 min-[860px]:-mx-8 min-[860px]:-mt-7 min-[860px]:mb-6 min-[860px]:px-8 min-[860px]:py-3 ${children == null ? 'min-[860px]:hidden' : ''}`}
-      >
-        <div className="min-w-0 flex-1 min-[860px]:hidden">
-          {subtitulo === undefined ? null : <p className="truncate font-mono text-[10.5px] tracking-[0.16em] text-gold-deep uppercase">{subtitulo}</p>}
-          <p className="truncate font-display text-[20px] leading-tight text-ink">{titulo}</p>
-        </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2">{children}</div>
-      </div>
-    )
-  }
+export function BarraSuperior({
+  izquierda,
+  arriba,
+  enElCelular,
+  children,
+}: {
+  /** Lo que dice dónde se está, en tablet y escritorio. */
+  izquierda?: ReactNode
+  /** Acciones que solo caben en tablet y escritorio (Ver mi invitación). */
+  arriba?: ReactNode
+  /** Acciones solo de la isla del celular (el ojo de «Ver mi invitación»). */
+  enElCelular?: ReactNode
+  /** Acciones en todos los tamaños (la campana). */
+  children?: ReactNode
+  /** Ya no se usan: el nombre del evento lo dicen la tarjeta de la barra lateral y el menú. */
+  titulo?: string | undefined
+  subtitulo?: string | undefined
+}) {
   return (
-    <div className="fixed top-1.5 right-3 z-60 flex items-center gap-2 min-[860px]:sticky min-[860px]:top-0 min-[860px]:right-auto min-[860px]:z-30 min-[860px]:-mx-8 min-[860px]:-mt-7 min-[860px]:mb-6 min-[860px]:border-b min-[860px]:border-line-panel min-[860px]:bg-bg/80 min-[860px]:px-8 min-[860px]:py-3 min-[860px]:backdrop-blur-md min-[860px]:backdrop-saturate-150">
-      <div className="ml-auto flex shrink-0 items-center gap-2">{children}</div>
-    </div>
+    <header className="sticky top-2.5 z-30 mx-4 mt-2.5 mb-4 flex min-h-15 items-center gap-1.5 rounded-[18px] border border-line-panel bg-bg-raised/92 px-1.5 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] backdrop-blur-md backdrop-saturate-150 min-[768px]:top-0 min-[768px]:mx-0 min-[768px]:mt-0 min-[768px]:mb-0 min-[768px]:min-h-[76px] min-[768px]:gap-3 min-[768px]:rounded-none min-[768px]:border-0 min-[768px]:border-b min-[768px]:bg-bg/92 min-[768px]:px-6 min-[768px]:shadow-none min-[1280px]:min-h-[85px] min-[1280px]:px-12 print:hidden">
+      <MenuMovil />
+      <div className="hidden min-w-0 flex-1 truncate text-[14px] text-ink-mute min-[768px]:block">{izquierda}</div>
+      <div className="ml-auto flex shrink-0 items-center gap-2 min-[768px]:gap-3">
+        {arriba ? <div className="hidden items-center gap-3 min-[768px]:flex">{arriba}</div> : null}
+        {/* La acción de la pantalla (`AccionDeLaIsla`) va aquí; si la hay, ocupa el sitio del ojo. */}
+        <div className="flex items-center min-[768px]:hidden [&:has(#accion-de-la-isla:not(:empty))>.ojo-de-la-isla]:hidden">
+          <div className="flex items-center" id="accion-de-la-isla" />
+          {enElCelular ? <div className="ojo-de-la-isla flex items-center">{enElCelular}</div> : null}
+        </div>
+        {children}
+      </div>
+    </header>
   )
 }

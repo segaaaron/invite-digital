@@ -12,13 +12,12 @@ import { fiestaDeTema } from '@/modules/events'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { BRAND } from '@/shared/config/brand'
 import { env } from '@/shared/config/env'
-import { CheckIcon, MailIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
+import { CheckIcon, MailIcon, SearchIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { EmptyState } from '@/shared/design/ui/panel/estados'
-import { BarraDeFiltros, EncabezadoDeLista, EtiquetaDeFiesta, FilaDeLista, Importe, Monograma, nombreDeFiesta, TiraDeCifras, type FiestaDeLista } from '@/shared/design/ui/panel/lista'
-import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
-import { PanelLateral } from '@/shared/design/ui/panel/PanelLateral'
-import { diaCorto, diaDelEvento, fecha as fechaLarga, hace } from '@/shared/format/fecha'
+import { nombreDeFiesta, type FiestaDeLista } from '@/shared/design/ui/panel/lista'
+import { Iniciales, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { diaCorto, diaDelEvento, hace } from '@/shared/format/fecha'
 import { plural } from '@/shared/format/plural'
 import { formatAmount } from '@/shared/money'
 import { isErr } from '@/shared/result'
@@ -29,7 +28,6 @@ export const dynamic = 'force-dynamic'
 
 const BASE = '/panel/admin/clientes'
 const PAGINA = 30
-const COLUMNAS = 'min-[860px]:grid-cols-[minmax(0,1.5fr)_minmax(0,1.1fr)_130px_120px_110px]'
 
 type Params = { [K in 'q' | 'etapa' | 'cliente' | 'de' | 'evento' | 'n']?: string | undefined }
 
@@ -94,7 +92,6 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
   const pagina = visibles.slice(0, tope)
   const conteo = new Map<EtapaDeCliente, number>()
   for (const { etapa: e } of conEtapa) conteo.set(e, (conteo.get(e) ?? 0) + 1)
-  const valorTotal = todos.reduce((s, c) => s + valorDeCliente(c), 0)
 
   const enlace = (cambio: Params) => {
     const actual: Params = { q: q === '' ? undefined : q, etapa: etapa === 'todos' ? undefined : etapa, ...cambio }
@@ -119,82 +116,118 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
     return fila === undefined ? null : fiestaDeTema(fila.themeKey)
   }
 
+  // En la computadora siempre hay una ficha abierta (la pedida o la primera de la lista); en el celular, solo la pedida.
+  const abierta = ficha ?? pagina[0]?.c
+  const etiquetaDe = (e: EtapaDeCliente) => ETAPAS_DE_CLIENTE.find((x) => x.clave === e) ?? ETAPAS_DE_CLIENTE[0]
+  const chips: { key: string; label: string; n: number }[] = [
+    { key: 'todos', label: 'Todos', n: todos.length },
+    { key: 'cliente', label: 'Con evento', n: conteo.get('cliente') ?? 0 },
+    ...((conteo.get('pidio_plan') ?? 0) > 0 ? [{ key: 'pidio_plan', label: 'Pidieron plan', n: conteo.get('pidio_plan') ?? 0 }] : []),
+    { key: 'prospecto', label: 'Consultas', n: conteo.get('prospecto') ?? 0 },
+    { key: 'celebrado', label: 'Celebrados', n: conteo.get('celebrado') ?? 0 },
+    ...((conteo.get('perdido') ?? 0) > 0 ? [{ key: 'perdido', label: 'Perdidos', n: conteo.get('perdido') ?? 0 }] : []),
+  ]
+
   return (
     <>
-      <PanelHeader kicker="Clientes" meta="Quien pregunta, compra o celebra con nosotros. El personal está en Ajustes › Equipo." title="Clientes" />
+      <div className={ficha === undefined ? '' : 'max-[767px]:hidden'}>
+        <PanelHeader meta="Cada persona una sola vez: sus consultas, pedidos y eventos juntos." title="Clientes" />
+        {/* Buscador y etapas en una línea (maqueta E04). */}
+        <div className="mb-7 flex flex-wrap items-center gap-2.5">
+          <form action={BASE} className="relative min-w-0 flex-[1_1_280px]" method="get" role="search">
+            {etapa === 'todos' ? null : <input name="etapa" type="hidden" value={etapa} />}
+            <label className="sr-only" htmlFor="buscar-cliente">
+              Buscar cliente
+            </label>
+            <SearchIcon className="pointer-events-none absolute top-1/2 left-3.5 size-[18px] -translate-y-1/2 text-ink-mute" />
+            <input
+              className="h-[46px] w-full rounded-[8px] border border-line-panel-strong bg-bg-raised pr-3.5 pl-10.5 text-[15px] outline-none focus:border-gold focus:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.22)]"
+              defaultValue={q}
+              id="buscar-cliente"
+              name="q"
+              placeholder="Nombre, correo o teléfono"
+              type="search"
+            />
+          </form>
+          <nav aria-label="Etapa" className="flex flex-wrap gap-2.5">
+            {chips.map((f) => (
+              <Link
+                aria-current={etapa === f.key ? 'page' : undefined}
+                className={`inline-flex min-h-9 items-center gap-1.5 rounded-full border px-3.5 text-[13.5px] font-medium no-underline max-[859px]:min-h-11 ${etapa === f.key ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'}`}
+                href={enlace({ etapa: f.key === 'todos' ? undefined : f.key, n: undefined, cliente: undefined })}
+                key={f.key}
+              >
+                {f.label} {f.n}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      </div>
 
-      <TiraDeCifras
-        cifras={[
-          { label: 'Clientes', value: conteo.get('cliente') ?? 0, detail: 'Con evento o pago aprobado', href: enlace({ etapa: 'cliente', n: undefined }) },
-          { label: 'Pidieron plan', value: conteo.get('pidio_plan') ?? 0, detail: 'Esperando su pago', href: enlace({ etapa: 'pidio_plan', n: undefined }) },
-          { label: 'Prospectos', value: conteo.get('prospecto') ?? 0, detail: 'Preguntaron, aún sin pedido', href: enlace({ etapa: 'prospecto', n: undefined }) },
-          { label: 'Valor cobrado', value: formatAmount(valorTotal, 'BOB'), detail: 'Suma de lo aprobado' },
-        ]}
-      />
+      <div className="flex flex-wrap items-start gap-6">
+        <section aria-label="Lista de clientes" className={`min-w-0 flex-[1_1_320px] overflow-hidden rounded-[16px] border border-line-panel bg-bg-raised ${ficha === undefined ? '' : 'max-[767px]:hidden'}`}>
+          {pagina.length === 0 ? (
+            <div className="p-6">
+              <EmptyState
+                compact
+                description={q === '' ? 'Aparecen en cuanto alguien escribe desde la web, pide un plan o recibe su cuenta.' : 'Prueba con otra parte del nombre, el correo o los últimos dígitos del teléfono.'}
+                title={q === '' ? 'Nadie en esta etapa' : `Nadie coincide con «${q}»`}
+              />
+            </div>
+          ) : (
+            <>
+              <ul>
+                {pagina.map(({ c, etapa: e }) => {
+                  const ev = eventoPrincipal(c, hoy)
+                  const et = etiquetaDe(e)
+                  const activa = abierta?.clave === c.clave
+                  const fiesta = fiestaDe(c)
+                  return (
+                    <li className="border-b border-line-panel last:border-b-0" key={c.clave}>
+                      <Link
+                        aria-current={activa ? 'true' : undefined}
+                        className={`flex items-center gap-3 px-4 py-3.5 text-ink no-underline transition-colors hover:bg-fila ${activa ? 'min-[768px]:bg-fila min-[768px]:shadow-[inset_3px_0_0_var(--color-gold)]' : ''}`}
+                        href={enlace({ cliente: c.clave })}
+                        scroll={false}
+                      >
+                        <Iniciales chico nombre={c.nombre} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">{c.nombre}</span>
+                          <span className="block truncate text-[13px] text-ink-mute">
+                            {ev === null ? `Escribió ${hace(c.ultima, ahora)}` : `${nombreDeFiesta(fiesta)}, ${diaDelEvento(ev.eventDate)}`}
+                          </span>
+                        </span>
+                        <Pill tone={et.tono}>{e === 'cliente' ? 'Con evento' : e === 'prospecto' ? 'Consulta' : et.etiqueta}</Pill>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+              {visibles.length > pagina.length ? (
+                <div className="border-t border-line-panel py-3 text-center">
+                  <Link className="inline-flex min-h-11 items-center text-[14px] font-medium" href={enlace({ n: String(tope + PAGINA) })}>
+                    Ver {plural(Math.min(PAGINA, visibles.length - pagina.length), 'cliente más', 'clientes más')}
+                  </Link>
+                </div>
+              ) : null}
+            </>
+          )}
+        </section>
 
-      <BarraDeFiltros
-        actual={etapa}
-        busqueda={{ accion: BASE, valor: q, placeholder: 'Nombre, correo o teléfono', ocultos: etapa === 'todos' ? {} : { etapa } }}
-        etiqueta="Etapa"
-        opciones={[
-          { key: 'todos', label: 'Todos', href: enlace({ etapa: undefined, n: undefined }), count: todos.length },
-          ...ETAPAS_DE_CLIENTE.map((e) => ({ key: e.clave, label: e.etiqueta, href: enlace({ etapa: e.clave, n: undefined }), count: conteo.get(e.clave) ?? 0 })),
-        ]}
-      />
-
-      <PanelCard>
-        {pagina.length === 0 ? (
-          <EmptyState
-            description={q === '' ? 'Aparecen en cuanto alguien escribe desde la web, pide un plan o recibe su cuenta.' : 'Prueba con otra parte del nombre, el correo o los últimos dígitos del teléfono.'}
-            title={q === '' ? 'Nadie en esta etapa' : `Nadie coincide con «${q}»`}
-          />
-        ) : (
-          <>
-            <EncabezadoDeLista columnas={['Cliente', 'Su evento', 'Etapa', 'Valor', 'Actividad']} plantilla={COLUMNAS} />
-            <ul className="-mx-1 mt-1 flex flex-col">
-              {pagina.map(({ c, etapa: e }) => {
-                const ev = eventoPrincipal(c, hoy)
-                const et = ETAPAS_DE_CLIENTE.find((x) => x.clave === e) ?? ETAPAS_DE_CLIENTE[0]
-                const valor = valorDeCliente(c)
-                return (
-                  <FilaDeLista
-                    detalle={[...c.correos, ...c.telefonos].join(' · ') || 'Sin contacto'}
-                    fiesta={fiestaDe(c)}
-                    href={enlace({ cliente: c.clave })}
-                    key={c.clave}
-                    nombre={c.nombre}
-                    plantilla={COLUMNAS}
-                  >
-                    <span className="min-w-0 truncate text-[12.5px] text-ink-soft max-[859px]:hidden">{ev === null ? '—' : `${ev.title} · ${diaCorto(ev.eventDate, hoy)}`}</span>
-                    <span className="max-[859px]:col-start-2 max-[859px]:row-start-1 max-[859px]:justify-self-end">
-                      <Pill tone={et.tono}>{et.etiqueta}</Pill>
-                    </span>
-                    <span className="font-display text-[15.5px] text-ink [font-variant-numeric:lining-nums] max-[859px]:hidden">{valor === 0 ? '—' : formatAmount(valor, 'BOB')}</span>
-                    <span className="text-right text-[12px] text-ink-mute max-[859px]:hidden">{hace(c.ultima, ahora)}</span>
-                  </FilaDeLista>
-                )
-              })}
-            </ul>
-            {visibles.length > pagina.length ? (
-              <div className="mt-4">
-                <PanelButton href={enlace({ n: String(tope + PAGINA) })}>Ver {plural(Math.min(PAGINA, visibles.length - pagina.length), 'cliente más', 'clientes más')}</PanelButton>
-              </div>
-            ) : null}
-          </>
+        {abierta === undefined ? null : (
+          <div className={`flex min-w-0 flex-[2_1_460px] ${ficha === undefined ? 'max-[767px]:hidden' : ''}`}>
+            <Ficha
+              ahora={ahora}
+              cerrar={enlace({})}
+              cliente={abierta}
+              cuenta={usuarios.value.find((u) => u.role === 'cliente' && abierta.correos.includes(u.email.toLowerCase())) ?? null}
+              eventoPorSlug={eventoPorSlug}
+              fiesta={fiestaDe(abierta)}
+              hoy={hoy}
+            />
+          </div>
         )}
-      </PanelCard>
-
-      {ficha === undefined ? null : (
-        <Ficha
-          ahora={ahora}
-          cerrar={enlace({})}
-          cliente={ficha}
-          cuenta={usuarios.value.find((u) => u.role === 'cliente' && ficha.correos.includes(u.email.toLowerCase())) ?? null}
-          eventoPorSlug={eventoPorSlug}
-          fiesta={fiestaDe(ficha)}
-          hoy={hoy}
-        />
-      )}
+      </div>
     </>
   )
 }
@@ -204,7 +237,6 @@ async function Ficha({
   cerrar,
   hoy,
   ahora,
-  fiesta,
   eventoPorSlug,
   cuenta,
 }: {
@@ -231,49 +263,78 @@ async function Ficha({
   const sitio = env.SITE_URL.replace(/\/$/, '')
 
   return (
-    <PanelLateral
-      acciones={
-        <>
+    // La ficha de la maqueta (E04): quién es y cómo escribirle, su historia y lo que sabemos de ella.
+    <section aria-labelledby="ficha-de-cliente" className="flex w-full min-w-0 flex-col gap-6 rounded-[16px] border border-line-panel bg-bg-raised p-7 max-[559px]:p-5">
+      <Link className="-mt-1 inline-flex min-h-11 items-center gap-2 text-[15px] text-ink-mute no-underline min-[768px]:hidden" href={cerrar}>
+        ← Todos los clientes
+      </Link>
+      <div className="flex flex-wrap items-center gap-4">
+        <Iniciales nombre={c.nombre} />
+        <div className="min-w-0 flex-1">
+          <h2 className="font-display text-[28px] leading-tight font-medium" id="ficha-de-cliente">
+            {c.nombre}
+          </h2>
+          <p className="text-[13.5px] text-ink-mute">{[...c.correos, ...c.telefonos].join(', ') || 'Sin contacto'}</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
           {whatsapp === null ? null : (
-            <PanelButton external href={whatsapp} variant="primary">
-              <WhatsAppIcon className="size-4" /> WhatsApp
-            </PanelButton>
+            <a className="inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-whatsapp px-4 text-[14.5px] font-medium text-white no-underline hover:bg-whatsapp-hover" href={whatsapp} rel="noopener noreferrer" target="_blank">
+              <WhatsAppIcon className="size-[18px]" /> WhatsApp
+            </a>
           )}
           {correo === undefined ? null : (
             <PanelButton href={`mailto:${correo}`}>
               <MailIcon className="size-4" /> Correo
             </PanelButton>
           )}
-          <PanelButton href="/panel/admin/ventas?crear=cotizacion">Nueva cotización</PanelButton>
-        </>
-      }
-      closeHref={cerrar}
-      subtitle={`Última actividad ${hace(c.ultima, ahora)}`}
-      title={c.nombre}
-    >
-      <div className="flex flex-col gap-7">
-        <div className="flex items-start gap-4">
-          <Monograma fiesta={fiesta} grande nombre={c.nombre} />
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
-              <EtiquetaDeFiesta fiesta={fiesta} />
-              {(nota.ok ? (nota.value?.tags ?? []) : []).map((t) => (
-                <span className="rounded-full bg-gold/12 px-2.5 py-0.5 font-mono text-[10px] tracking-[0.12em] text-gold-deep uppercase" key={t}>
-                  {t}
-                </span>
-              ))}
-            </div>
-            <p className="mt-2 text-[13px] text-ink-soft">{principal === null ? 'Sin evento todavía' : `${principal.title} · ${diaDelEvento(principal.eventDate)}`}</p>
-          </div>
-          {valor === 0 ? null : (
-            <div className="shrink-0 text-right">
-              <Importe texto={formatAmount(valor, 'BOB')} />
-              <p className="mt-1 text-[11.5px] text-ink-mute">pagado</p>
-            </div>
-          )}
         </div>
+      </div>
 
+      <div aria-hidden className="h-[3px] border-y border-grab-borde" />
+
+      <section aria-labelledby="su-historia">
+        <h3 className="mb-2 font-medium" id="su-historia">
+          Su historia
+        </h3>
+        <ol>
+          {lineaDeTiempo(c)
+            .toReversed()
+            .map((h, i) => (
+              <li className="flex items-baseline gap-4 border-b border-line-panel py-3 last:border-b-0" key={`${h.texto}-${i}`}>
+                <span className="w-16 shrink-0 text-[13px] text-ink-mute">{hace(h.cuando, ahora).replace('hace ', '')}</span>
+                {h.href === null ? (
+                  <span className="min-w-0 flex-1 text-[14.5px]">{h.texto}</span>
+                ) : (
+                  <Link className="flex min-h-11 min-w-0 flex-1 items-center text-[14.5px] text-ink" href={h.href}>
+                    {h.texto}
+                  </Link>
+                )}
+              </li>
+            ))}
+        </ol>
+        {principal === null ? null : (
+          <p className="mt-2 text-[13.5px] text-ink-mute">
+            {etapa.etiqueta}
+            {valor === 0 ? '' : `, ${formatAmount(valor, 'BOB')} pagado`}
+          </p>
+        )}
+      </section>
+
+      <div aria-hidden className="h-[3px] border-y border-grab-borde" />
+
+      <section aria-labelledby="notas-de-cliente">
+        <h3 className="mb-2 font-medium" id="notas-de-cliente">
+          Notas
+        </h3>
+        <NotaDeCliente clave={claves[0] ?? ''} etiquetas={nota.ok ? (nota.value?.tags ?? []) : []} nombre={c.nombre} nota={nota.ok ? (nota.value?.note ?? null) : null} sugeridas={ETIQUETAS_SUGERIDAS} />
+      </section>
+
+      <details className="group rounded-[12px] border border-line-panel">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-[14.5px] font-medium [&::-webkit-details-marker]:hidden">
+          Sus eventos, referidos y cuenta
+          <span aria-hidden className="text-ink-mute transition-transform group-open:rotate-180">⌄</span>
+        </summary>
+        <div className="flex flex-col gap-5 border-t border-line-panel px-4 py-4">
         <Bloque titulo="Contacto">
           <dl className="grid gap-4 min-[480px]:grid-cols-2">
             <Dato etiqueta="Correo">{c.correos.join(', ') || '—'}</Dato>
@@ -288,10 +349,6 @@ async function Ficha({
           )}
         </Bloque>
 
-        <Bloque titulo="Lo que sabemos">
-          <NotaDeCliente clave={claves[0] ?? ''} etiquetas={nota.ok ? (nota.value?.tags ?? []) : []} nombre={c.nombre} nota={nota.ok ? (nota.value?.note ?? null) : null} sugeridas={ETIQUETAS_SUGERIDAS} />
-        </Bloque>
-
         {eventosConId.length === 0 ? null : (
           <Bloque titulo="Sus eventos y referidos">
             <ul className="flex flex-col gap-2.5">
@@ -300,7 +357,7 @@ async function Ficha({
                 return (
                   <li className="flex flex-col gap-2.5 rounded-[16px] border border-line-panel bg-white px-4 py-3.5" key={e.slug}>
                     <div className="flex items-center justify-between gap-3">
-                      <Link className="min-w-0 truncate font-display text-[17px] text-ink hover:underline" href={`/panel/eventos/${e.slug}/configuracion`}>
+                      <Link className="flex min-h-11 min-w-0 items-center truncate font-display text-[17px] text-ink hover:underline" href={`/panel/eventos/${e.slug}/configuracion`}>
                         {e.title}
                       </Link>
                       <span className="shrink-0 text-[12px] text-ink-mute">{diaCorto(e.eventDate, hoy)}</span>
@@ -349,23 +406,10 @@ async function Ficha({
           </Bloque>
         )}
 
-        <Bloque titulo="Recorrido">
-          <ol className="relative flex flex-col gap-3.5 pl-5 before:absolute before:top-1.5 before:bottom-1.5 before:left-[5px] before:w-px before:bg-line-panel-strong">
-            {lineaDeTiempo(c).map((h, i) => (
-              <li className="relative" key={`${h.texto}-${i}`}>
-                <span aria-hidden className="absolute top-1.5 -left-5 size-[11px] rounded-full border-2 border-bg-raised bg-ink-mute/60" />
-                {h.href === null ? <p className="text-[13.5px] text-ink">{h.texto}</p> : (
-                  <Link className="text-[13.5px] text-ink hover:underline" href={h.href}>
-                    {h.texto}
-                  </Link>
-                )}
-                <p className="font-mono text-[10.5px] tracking-[0.08em] text-ink-mute">{fechaLarga(h.cuando)}</p>
-              </li>
-            ))}
-          </ol>
-        </Bloque>
-      </div>
-    </PanelLateral>
+          <PanelButton href="/panel/admin/ventas?crear=cotizacion">Nueva cotización</PanelButton>
+        </div>
+      </details>
+    </section>
   )
 }
 

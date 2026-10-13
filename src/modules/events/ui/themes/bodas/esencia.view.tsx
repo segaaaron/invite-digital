@@ -107,6 +107,10 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
         ['--font-mono' as string]: SANS,
         ['--rsvp-fs' as string]: '14px',
         ['--rsvp-py' as string]: '14px',
+        // Las píldoras de la maqueta: Outfit 400, 0.12em (no la monoespaciada en negrita).
+        ['--rsvp-letra' as string]: 'var(--font-outfit)',
+        ['--rsvp-peso' as string]: '400',
+        ['--rsvp-tracking' as string]: '0.12em',
         ['--libro-radio' as string]: '10px',
         ['--libro-fs' as string]: '14px',
         ['--libro-tracking' as string]: '0.12em',
@@ -120,7 +124,13 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
         overflowX: 'clip',
       }}
     >
-      <MusicaFlotante artist={music?.artist} audioSrc={cancion} track={music?.track} />
+      <MusicaFlotante
+        artist={music?.artist}
+        audioSrc={cancion}
+        // El botón de la maqueta: crema, filete y pausa de oro.
+        piel={{ fondo: 'rgba(250,247,242,0.92)', borde: P.oro, tinta: P.oro, sombra: '0 4px 14px rgba(60,45,25,0.12)' }}
+        track={music?.track}
+      />
       <EsenciaSobre
         bgAsset={themeAsset('esencia', 'portada-lino.avif')}
         fecha={fechaCorta}
@@ -448,14 +458,14 @@ export function EsenciaView({ content, event, themes, slots, audioSrc, respondid
               <div style={{ width: 100, height: 100, margin: '18px auto 0', background: P.calido, border: `1.5px solid ${P.filete}`, borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <span style={{ fontSize: 9.6, color: P.tintaSuave }}>{ROTULOS.codigoQr}</span>
               </div>
-              <div style={{ marginTop: 18, width: '100%', maxWidth: 300, boxSizing: 'border-box', border: `1px solid ${P.filete}`, borderRadius: 10, padding: '18px 18px 16px', background: 'rgba(250,247,242,0.6)', textAlign: 'left', marginInline: 'auto' }}>
+              <div style={{ marginTop: 18, width: 'fit-content', maxWidth: 300, boxSizing: 'border-box', border: `1px solid ${P.filete}`, borderRadius: 10, padding: '18px 18px 16px', background: 'rgba(250,247,242,0.6)', textAlign: 'left', marginInline: 'auto' }}>
                 {CUENTA_DE_MUESTRA(ROTULOS).map(([rotulo, valor], i) => (
                   <div key={rotulo} style={{ marginTop: i === 0 ? 0 : 12 }}>
                     <div style={{ fontSize: 8.8, letterSpacing: '0.2em', color: P.tintaSuave, textTransform: 'uppercase' }}>{rotulo}</div>
                     <div style={{ marginTop: 3, fontFamily: SERIF, fontSize: 18.4, color: P.tinta }}>{valor}</div>
                   </div>
                 ))}
-                <span style={{ display: 'inline-block', marginTop: 14, padding: '8px 16px', border: `1px solid ${P.filete}`, borderRadius: 30, fontSize: 9.9, letterSpacing: '0.15em', textTransform: 'uppercase', color: P.tinta }}>{ROTULOS.copiarCuenta}</span>
+                <span style={{ display: 'inline-block', marginTop: 14, padding: '8px 16px', border: `1px solid ${P.filete}`, borderRadius: 2, fontSize: 9.9, letterSpacing: '0.1em', color: P.tinta }}>{ROTULOS.copiarCuenta}</span>
               </div>
             </>
           )}

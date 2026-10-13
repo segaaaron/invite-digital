@@ -20,9 +20,9 @@ const MESSAGES = {
  * con el teclado, que es lo que el contorno estaba haciendo.
  */
 const FIELD_CLASS =
-  'w-full rounded-[14px] border border-[var(--color-line)] bg-bg-raised px-4 py-3.5 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(43_39_35/0.04)] outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-mute/70 focus-visible:border-gold focus-visible:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.18)]'
+  'w-full rounded-[10px] border border-line-panel-strong bg-bg-raised px-4 py-3.5 text-[15px] text-ink shadow-[inset_0_1px_2px_rgb(43_39_35/0.04)] outline-none transition-[border-color,box-shadow] duration-200 placeholder:text-ink-mute/70 focus-visible:border-gold focus-visible:shadow-[0_0_0_3px_rgb(var(--color-gold-rgb)/0.18)]'
 
-const LABEL_CLASS = 'font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase'
+const LABEL_CLASS = 'text-[14px] font-medium text-ink'
 
 export function SignInForm() {
   const [state, formAction, isPending] = useActionState(sinCaerse(signInAction, { status: 'error', message: 'storage_failure' }), INITIAL)
@@ -49,7 +49,7 @@ export function SignInForm() {
           className={FIELD_CLASS}
           id={emailId}
           name="email"
-          placeholder="atelier@tudominio.bo"
+          placeholder="nombre@correo.com"
           required
           type="email"
         />
@@ -105,8 +105,19 @@ export function SignInForm() {
         </p>
       ) : null}
 
+      <div className="flex items-center justify-between gap-3 text-[14px]">
+        <label className="flex min-h-11 cursor-pointer items-center gap-2.5">
+          <input className="size-[18px] accent-[var(--color-shell-deep)]" defaultChecked name="recordarme" type="checkbox" />
+          Recordarme<span className="max-[559px]:sr-only"> en este aparato</span>
+        </label>
+        <Link className="text-gold-deep underline underline-offset-4 hover:text-ink" href="/panel/recuperar">
+          <span aria-hidden className="min-[560px]:hidden">¿La olvidaste?</span>
+          <span className="max-[559px]:sr-only">¿Olvidaste tu contraseña?</span>
+        </Link>
+      </div>
+
       <button
-        className="mt-1 cursor-pointer rounded-[var(--radius-pill)] bg-linear-to-b from-gold to-gold-deep px-7 py-3.5 font-mono text-[10px] tracking-[0.16em] text-bg-raised uppercase shadow-[0_6px_18px_rgb(var(--color-gold-rgb)/0.28)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_10px_24px_rgb(var(--color-gold-rgb)/0.34)] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="mt-1 min-h-13 cursor-pointer rounded-[10px] bg-shell-deep px-7 text-[16px] font-medium text-shell-ink transition-colors hover:bg-sage disabled:cursor-not-allowed disabled:opacity-60"
         disabled={isPending}
         type="submit" aria-busy={(isPending) || undefined}>
         {isPending ? 'Entrando…' : 'Entrar'}
@@ -115,12 +126,12 @@ export function SignInForm() {
       {/* Sigue sin haber «crear cuenta», y eso no es un descuido: las altas las hace el
           admin. Lo que sí hay ya es recuperación — antes no, porque no había proveedor de
           correo, y este texto decía justamente eso. */}
-      <p className="text-[11px] leading-[1.7] text-ink-mute">
-        <Link className="underline underline-offset-4 hover:text-ink" href="/panel/recuperar">
-          ¿Olvidaste tu contraseña?
-        </Link>
-        <br />
-        Las cuentas las da de alta el administrador.
+      <p className="text-center text-[14px] text-ink-mute">
+        ¿Aún no tienes acceso?{' '}
+        {/* Una ruta que redirige a wa.me: se abre fuera, no se navega dentro de la app. */}
+        <a className="text-gold-deep underline underline-offset-4 hover:text-ink" href="/contacto/whatsapp" rel="noopener noreferrer" target="_blank">
+          Escríbenos por WhatsApp
+        </a>
       </p>
     </form>
   )

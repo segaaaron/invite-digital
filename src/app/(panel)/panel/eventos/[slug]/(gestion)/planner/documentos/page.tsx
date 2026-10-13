@@ -24,7 +24,7 @@ export default async function DocumentosPage({ params }: { params: Promise<{ slu
     return <FeatureLocked eventSlug={event.value.slug} mejorar={await mejorarPara(actor, event.value.slug)} reason="Los documentos y las referencias vienen con Gala e Imperial." title="Documentos" />
   }
 
-  const proveedores = (await planner.dia.listVendors(event.value.id)).map((v) => ({ id: v.id, nombre: v.company ? `${v.service} · ${v.company}` : v.service }))
+  const proveedores = (await planner.dia.listVendors(event.value.id)).map((v) => ({ id: v.id, nombre: v.company ?? v.service }))
   const documentos = (await planner.dia.listDocuments(event.value.id)).map((d) => ({
     id: d.id,
     kind: d.kind,
@@ -38,7 +38,7 @@ export default async function DocumentosPage({ params }: { params: Promise<{ slu
 
   return (
     <>
-      <PanelHeader kicker="Planner" meta={`${documentos.length} documento${documentos.length === 1 ? '' : 's'} · privados, solo para tu equipo`} title="Documentos e inspiración" />
+      <PanelHeader meta="Contratos, cotizaciones y facturas, cada uno junto a su proveedor." title="Documentos" />
       <DocumentsBoard documentos={documentos} evento={{ eventId: event.value.id, eventSlug: event.value.slug }} proveedores={proveedores} />
     </>
   )

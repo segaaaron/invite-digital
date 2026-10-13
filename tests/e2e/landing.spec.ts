@@ -42,6 +42,8 @@ test('todos los planes se reservan con el pedido, y el WhatsApp sale en el pie',
     await admin.goto('/panel/admin/web')
     const campo = admin.getByLabel('WhatsApp del negocio')
     if ((await campo.inputValue()) === numero) return
+    // La web es un índice (maqueta): cada bloque se despliega para editarlo.
+    await admin.locator('#contacto > summary').click()
     await campo.fill(numero)
     await admin.getByRole('button', { name: 'Guardar cambios' }).click()
     // Se comprueba lo guardado recargando, no el aviso: la acción revalida el árbol y remonta

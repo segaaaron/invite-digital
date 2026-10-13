@@ -9,6 +9,7 @@ export const xvNataliaDefinition: ThemeDefinition = {
   label: 'Encanto Musical',
   categorySlug: 'xv-anos',
   palette: PALETA,
+  invitadoDeMuestra: { label: 'Lucas Montaño', seats: 1 },
   fonts: ['greatVibes', 'alexBrush', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: { fotos: { casillas: 0 }, sinCampos: { hero: ['nameB', 'serial'], itinerary: ['note', 'imageId'] } },
   sections: ['hero', 'quote', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],

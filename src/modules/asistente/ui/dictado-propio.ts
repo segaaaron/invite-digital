@@ -187,14 +187,24 @@ export async function escucharPropio(p: {
       dicho = [dicho, r.result.text].filter((t) => t !== '').join(' ')
       p.alOir(dicho)
       // Vosk cierra un trozo en cada pausa corta («quien falta por» … «responder»): se espera un poco más de silencio
-      // antes de enviar, y lo que siga se junta en el mismo mensaje.
+      // antes de enviar (1,7 s: con 1,2 un teléfono dictado con pausas se mandaba a medias), y lo que siga se junta.
       clearTimeout(vigia)
-      vigia = setTimeout(() => parar(true), p.pausaMs ?? 1200)
+      vigia = setTimeout(() => parar(true), p.pausaMs ?? 1700)
     })
     fuente = audio.createMediaStreamSource(flujo)
     nodo = audio.createScriptProcessor(4096, 1, 1)
+    // **Luxury no se oye a sí misma** (10 oct: en Chrome de iPhone «repite y habla de más»): el micrófono de la
+    // conversación sigue abierto y, si se reabre con la voz aún sonando, Vosk transcribía la respuesta y se la volvía
+    // a mandar. Mientras suena —y un momento después, el eco de la sala— el audio se tira.
+    let callada = 0
     nodo.onaudioprocess = (e) => {
       if (cerrado || rec === null) return
+      const voz = window.speechSynthesis as SpeechSynthesis | undefined
+      if (voz !== undefined && (voz.speaking || voz.pending)) {
+        callada = performance.now()
+        return
+      }
+      if (callada !== 0 && performance.now() - callada < 600) return
       try {
         rec.acceptWaveform(e.inputBuffer)
       } catch {

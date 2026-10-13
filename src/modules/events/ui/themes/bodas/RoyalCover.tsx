@@ -118,7 +118,7 @@ export function RoyalCover({ bgAsset, ringsAsset, eyebrow, names, fecha, cta, op
         {fecha === '' ? null : (
           <span
             style={{
-              fontFamily: 'var(--font-cormorant)',
+              fontFamily: 'var(--font-montserrat)',
               fontWeight: 300,
               fontSize: 12.5,
               letterSpacing: '0.25em',

@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { ArrowLeftIcon, CloseIcon } from '../icons'
 
 /**
  * El detalle de algo **sin salir de su lista**: un panel que entra por la derecha, como en
@@ -47,7 +48,7 @@ export function PanelLateral({
   return (
     <dialog
       aria-labelledby={id}
-      className={`panel-lateral fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg-raised p-0 text-ink shadow-float backdrop:bg-ink/35 ${ancho === 'amplio' ? 'min-[640px]:w-[min(1000px,100vw)]' : 'min-[640px]:w-[min(580px,100vw)]'}`}
+      className={`panel-lateral fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-dvh w-full max-w-none border-l border-line-panel bg-bg p-0 text-ink shadow-float backdrop:bg-shell-deep/50 ${ancho === 'amplio' ? 'min-[640px]:w-[min(1000px,100vw)]' : 'min-[640px]:w-[min(580px,100vw)]'}`}
       onCancel={(e) => {
         e.preventDefault()
         cerrar()
@@ -59,24 +60,36 @@ export function PanelLateral({
       ref={dialogo}
     >
       <div className="flex h-full flex-col">
-        <header className="flex items-start justify-between gap-4 border-b border-line-panel px-6 py-5">
+        {/* En el celular, la barra «← Volver / Título» de la maqueta (M49), en vez del ✕. */}
+        <button
+          className="mx-4 mt-2.5 flex min-h-15 cursor-pointer items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised px-1.5 text-left shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] min-[640px]:hidden"
+          onClick={cerrar}
+          type="button"
+        >
+          <span aria-hidden className="grid size-11 shrink-0 place-items-center">
+            <ArrowLeftIcon className="size-5" />
+          </span>
+          <span className="truncate text-[16px] font-medium">{title}</span>
+          <span className="sr-only">: cerrar</span>
+        </button>
+        <header className="flex items-start justify-between gap-4 px-7 pt-7 pb-3 max-[639px]:px-4 max-[639px]:pt-5">
           <div className="min-w-0">
-            <h2 className="truncate font-display text-[26px] leading-tight font-light" id={id}>
+            <h2 className="font-display text-[30px] leading-tight font-medium" id={id}>
               {title}
             </h2>
-            {subtitle === undefined ? null : <p className="mt-1 text-[13px] text-ink-soft">{subtitle}</p>}
+            {subtitle === undefined ? null : <p className="mt-1 text-[15px] text-ink-mute">{subtitle}</p>}
           </div>
           <button
             aria-label="Cerrar"
-            className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border max-[859px]:size-11 border-line-panel bg-white text-[13px] transition-colors hover:border-ink"
+            className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-line-panel-strong bg-bg-raised transition-colors hover:border-gold max-[639px]:hidden"
             onClick={cerrar}
             type="button"
           >
-            <span aria-hidden>✕</span>
+            <CloseIcon className="size-4" />
           </button>
         </header>
-        {acciones === undefined ? null : <div className="flex flex-wrap gap-2 border-b border-line-panel px-6 py-3.5">{acciones}</div>}
-        <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        {acciones === undefined ? null : <div className="flex flex-wrap gap-2 border-b border-line-panel px-7 pb-4 max-[639px]:px-5">{acciones}</div>}
+        <div className="flex-1 overflow-y-auto px-7 py-5 max-[639px]:px-5">{children}</div>
       </div>
     </dialog>
   )

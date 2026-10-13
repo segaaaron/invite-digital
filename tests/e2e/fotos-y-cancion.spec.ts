@@ -74,7 +74,7 @@ test('una canción de más de 10 MB sube sin tumbar la página', async ({ page }
   await dialogo.getByRole('button', { name: 'Subir', exact: true }).click()
   await expect(dialogo).toHaveCount(0, { timeout: 60_000 })
   await expect.poll(async () => (await bloque('music'))?.audioMediaId ?? null, { timeout: 20_000 }).not.toBeNull()
-  await expect(page.getByRole('heading', { name: 'Personalizar invitación' }).or(page.getByRole('heading', { name: 'Configuración del evento' }))).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Mi invitación', exact: true }).or(page.getByRole('heading', { name: 'Configuración del evento' }))).toBeVisible()
   expect((await sql<{ n: number }[]>`select count(*)::int as n from service_failures where created_at > now() - interval '5 minutes'`)[0]!.n).toBe(0)
 })
 
@@ -91,5 +91,6 @@ test('si el servidor falla al guardar, el aviso sale en la tarjeta y la página 
   await expect(page.getByRole('navigation').first()).toBeVisible()
   await page.unroute(`**/panel/eventos/${SLUG}/configuracion`)
   await portada.getByRole('button', { name: 'Guardar' }).click()
+  // «Guardar y seguir» pliega la sección; el aviso flota (E64).
   await expect(portada.getByText('Guardado.')).toBeVisible()
 })

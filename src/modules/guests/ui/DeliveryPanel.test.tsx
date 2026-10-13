@@ -93,9 +93,10 @@ describe('DeliveryPanel', () => {
     expect(within(screen.getByRole('listitem', { name: 'Luis Peña' })).getByText('Sin responder')).toBeInTheDocument()
 
     fireEvent.click(within(carlos).getByRole('button', { name: /Formas de enviar a/ }))
-    expect(within(carlos).getByLabelText('Enlace de la invitación de Carlos Rojas')).toHaveValue('https://luxuryatelier.net/i/CARLOS?utm_source=enlace')
-    expect(within(carlos).getByRole('link', { name: /Correo/ }).getAttribute('href')).toMatch(/^mailto:carlos%40correo\.bo\?subject=/)
-    expect(within(carlos).getByRole('link', { name: /SMS/ }).getAttribute('href')).toContain('CARLOS')
+    const hoja = screen.getByRole('region', { name: 'Enviar a Carlos Rojas' })
+    expect(within(hoja).getByLabelText('Enlace de la invitación de Carlos Rojas')).toHaveValue('https://luxuryatelier.net/i/CARLOS?utm_source=enlace')
+    expect(within(hoja).getByRole('link', { name: /Correo/ }).getAttribute('href')).toMatch(/^mailto:carlos%40correo\.bo\?subject=/)
+    expect(within(hoja).getByRole('link', { name: /SMS/ }).getAttribute('href')).toContain('CARLOS')
     // Ya tenía enlace: no se pidió nada al servidor.
     expect(enviar).not.toHaveBeenCalled()
   })
@@ -106,12 +107,13 @@ describe('DeliveryPanel', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Enviadas (2)' }))
     const carlos = screen.getByRole('listitem', { name: 'Carlos Rojas' })
     fireEvent.click(within(carlos).getByRole('button', { name: /Formas de enviar a/ }))
-    fireEvent.click(within(carlos).getByRole('button', { name: /Generar un enlace nuevo/ }))
-    expect(within(carlos).getByRole('alert')).toHaveTextContent(/dejarán de servir/)
+    const hoja = screen.getByRole('region', { name: 'Enviar a Carlos Rojas' })
+    fireEvent.click(within(hoja).getByRole('button', { name: /Generar un enlace nuevo/ }))
+    expect(within(hoja).getByRole('alert')).toHaveTextContent(/dejarán de servir/)
     expect(reenviar).not.toHaveBeenCalled()
 
-    fireEvent.click(within(carlos).getByRole('button', { name: 'Sí, generar uno nuevo' }))
-    await waitFor(() => expect(within(carlos).getByLabelText('Enlace de la invitación de Carlos Rojas')).toHaveValue('https://luxuryatelier.net/i/NUEVO?utm_source=enlace'))
+    fireEvent.click(within(hoja).getByRole('button', { name: 'Sí, generar uno nuevo' }))
+    await waitFor(() => expect(within(hoja).getByLabelText('Enlace de la invitación de Carlos Rojas')).toHaveValue('https://luxuryatelier.net/i/NUEVO?utm_source=enlace'))
   })
 
   it('si el teléfono no se guarda, lo dice: WhatsApp abriría sin destinatario', async () => {

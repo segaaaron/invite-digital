@@ -190,7 +190,7 @@ describe('EditPersonDialog · el enlace de su invitación', () => {
     const campo = screen.getByLabelText('Enlace de su invitación')
     expect(campo).toHaveValue('https://luxuryatelier.net/i/abc?utm_source=enlace')
     expect(campo).toHaveAttribute('readonly')
-    expect(screen.getByRole('button', { name: 'Copiar' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Copiar enlace' })).toBeInTheDocument()
     expect(screen.getByText('63CAN')).toBeInTheDocument()
   })
 

@@ -3,7 +3,6 @@ import { events, plans, porters } from '@/app/composition/container'
 import { requireSession } from '@/app/_acciones/sesion'
 import { EquipoCard } from '@/modules/events/ui/EquipoCard'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { fecha, hora } from '@/shared/format/fecha'
 import { formatoWhatsapp } from '@/shared/whatsapp'
 import { isErr, isOk } from '@/shared/result'
@@ -37,13 +36,11 @@ export default async function EquipoPage({ params }: { params: Promise<{ slug: s
   ])
   const papel = { cliente: 'anfitrion', coanfitrion: 'coanfitrion', planner: 'planner' } as const
   const miembros = equipo.flatMap((m) => (m.membership === 'puerta' ? [] : [{ userId: m.userId, email: m.email, nombre: m.fullName, telefono: m.phone === null ? null : formatoWhatsapp(m.phone), papel: papel[m.membership] }]))
-  const total = miembros.length + lista.length
 
   return (
     <>
-      <PanelHeader kicker="Tu evento" meta={`${total} persona${total === 1 ? '' : 's'} en el equipo`} title="Equipo" />
-      <PanelCard title="Quién te ayuda">
-        <EquipoCard
+      <PanelHeader meta="Quién te ayuda con la fiesta. La familia entra con tu misma cuenta." title="Equipo y recepción" />
+      <EquipoCard
           eventId={event.value.id}
           eventSlug={event.value.slug}
           miembros={miembros}
@@ -69,7 +66,6 @@ export default async function EquipoPage({ params }: { params: Promise<{ slug: s
           sumaEquipo={sumaEquipo}
           topes={{ planners: capacidad.value.maxHiredPlanners }}
         />
-      </PanelCard>
     </>
   )
 }

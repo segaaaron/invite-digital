@@ -14,31 +14,40 @@ export function RegistryTabs({
   current,
   funds,
   gifts,
+  cuentas,
 }: {
   /** La ruta de la vista, sin parámetros. */
   base: string
   current: 'fondos' | 'regalos'
   funds: ReactNode
   gifts: ReactNode
+  /** Cuántos hay de cada uno, al lado de su nombre (maqueta E11). */
+  cuentas?: { readonly regalos: number; readonly fondos: number }
 }) {
-  const chip = (clave: 'fondos' | 'regalos', texto: string) => (
+  // Pestañas subrayadas en latón, la lista primero (maqueta E11).
+  const pestana = (clave: 'fondos' | 'regalos', texto: string) => (
     <Link
       aria-current={current === clave ? 'page' : undefined}
-      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center ${
-        current === clave ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
+      className={`-mb-px flex h-[46px] items-center gap-2 border-b-[1.5px] px-0.5 text-[15px] font-medium whitespace-nowrap no-underline ${
+        current === clave ? 'border-gold text-shell-deep' : 'border-transparent text-ink-mute hover:text-shell-deep'
       }`}
-      href={clave === 'fondos' ? base : `${base}?vista=regalos`}
+      href={clave === 'regalos' ? base : `${base}?vista=fondos`}
     >
       {texto}
+      {cuentas === undefined ? null : (
+        <span aria-hidden className="text-[12.5px] font-normal text-ink-mute">
+          {cuentas[clave]}
+        </span>
+      )}
     </Link>
   )
 
   return (
-    <div className="flex flex-col gap-4.5">
-      <div className="flex flex-wrap gap-2.5">
-        {chip('fondos', 'Fondos en efectivo')}
-        {chip('regalos', 'Lista de regalos')}
-      </div>
+    <div className="flex flex-col gap-6">
+      <nav aria-label="Lista y fondos" className="flex gap-7 border-b border-line-panel">
+        {pestana('regalos', 'Lista de regalos')}
+        {pestana('fondos', 'Fondos en efectivo')}
+      </nav>
       {current === 'fondos' ? funds : gifts}
     </div>
   )

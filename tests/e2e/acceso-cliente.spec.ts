@@ -28,8 +28,10 @@ test.afterAll(async () => {
 
 test('el admin da acceso al cliente desde la ficha de un evento sin cliente', async ({ page }) => {
   await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+  // «Dar acceso al cliente» abre su diálogo (maqueta E34).
+  await page.getByRole('button', { name: 'Dar acceso al cliente' }).first().click()
   await page.getByLabel('Correo del cliente').fill(CORREO)
-  await page.getByRole('button', { name: 'Dar acceso al cliente' }).click()
+  await page.getByRole('button', { name: 'Dar acceso y enviar correo' }).click()
   await expect(page.getByText(/ya tiene acceso/)).toBeVisible()
   const [m] = await sql<{ n: number }[]>`select count(*)::int as n from event_staff s join users u on u.id = s.user_id join events e on e.id = s.event_id where e.slug = ${SLUG} and u.email = ${CORREO} and s.membership = 'cliente'`
   expect(m!.n).toBe(1)

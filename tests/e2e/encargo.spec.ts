@@ -66,8 +66,8 @@ test.describe('el diseño por encargo', () => {
 
   test('el equipo lo ve en Hoy y le envía la versión', async () => {
     await equipo.goto('/panel/admin')
-    const porEntregar = equipo.locator('section').filter({ has: equipo.getByRole('heading', { name: 'Diseños por entregar' }) })
-    await expect(porEntregar.getByRole('link', { name: 'Boda con acceso de cliente' })).toBeVisible()
+    // En Hoy (maqueta E01) el diseño por entregar es un aviso más de la lista.
+    await expect(equipo.getByText('El diseño de Boda con acceso de cliente')).toBeVisible()
     await equipo.goto(`/panel/eventos/${SLUG}/configuracion`)
     await equipo.getByRole('button', { name: 'Versión lista: avisar al cliente' }).click()
     await expect(equipo.getByText('Versión enviada, la está revisando')).toBeVisible()

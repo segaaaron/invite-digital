@@ -12,6 +12,9 @@ import { nextExpiry } from '@/modules/identity/domain/session'
 import { drizzleSupportStore } from '@/modules/identity/infrastructure/drizzle-support-store'
 import { drizzleUserRepository, setProvisionalPassword } from '@/modules/identity/infrastructure/drizzle-user-repository'
 import { resetClientAccess } from '@/modules/identity/application/reset-client-access'
+import { eq } from 'drizzle-orm'
+import { db } from '@/shared/db/client'
+import { users } from '@/shared/db/schema'
 import { clock, minter } from './base'
 
 export const identity = {
@@ -20,6 +23,25 @@ export const identity = {
   authenticateSession: authenticateSession({ sessions: drizzleSessionRepository, minter, clock }),
   /** Quién es y qué puede quien tiene esta sesión. Lo consume `requireSession()`. */
   actorOf: (userId: string) => drizzleUserRepository.findActor(userId),
+  /** El nombre con que firma la tarjeta de la barra; sin él, la carcasa usa el correo. Nunca lanza. */
+  nombreDe: async (userId: string): Promise<string | null> =>
+    db
+      .select({ nombre: users.fullName })
+      .from(users)
+      .where(eq(users.id, userId))
+      .then((filas) => filas[0]?.nombre ?? null)
+      .catch(() => null),
+  /** Nombre y teléfono de la propia cuenta, para «Tus datos» en Mi cuenta. */
+  misDatos: async (userId: string): Promise<{ nombre: string | null; telefono: string | null }> =>
+    db
+      .select({ nombre: users.fullName, telefono: users.phone })
+      .from(users)
+      .where(eq(users.id, userId))
+      .then((filas) => filas[0] ?? { nombre: null, telefono: null }),
+  /** Los guarda tal cual vienen ya limpios: vacío es borrar. El correo no se toca aquí. */
+  guardarMisDatos: async (userId: string, datos: { nombre: string | null; telefono: string | null }): Promise<void> => {
+    await db.update(users).set({ fullName: datos.nombre, phone: datos.telefono }).where(eq(users.id, userId))
+  },
   /** El modo soporte: el admin actúa como el cliente, sin su contraseña. */
   support: drizzleSupportStore,
   /** El cliente no puede entrar: provisional nueva, sesiones cerradas. Solo sobre clientes. */

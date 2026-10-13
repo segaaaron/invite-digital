@@ -1,14 +1,14 @@
 'use client'
 
-import Image from '@/shared/design/ui/ImagenConCarga'
 import Link from 'next/link'
-import { EtiquetaDeFiesta, MenuDeAcciones, Semaforo, opcionDeMenu, type FiestaDeLista, type TonoDeSalud } from '@/shared/design/ui/panel/lista'
+import { MenuDeAcciones, Semaforo, opcionDeMenu, type FiestaDeLista, type TonoDeSalud } from '@/shared/design/ui/panel/lista'
 import { Pill } from '@/shared/design/ui/panel/PanelKit'
 import { WhatsAppIcon, EyeIcon } from '@/shared/design/ui/icons'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import { ETAPAS, type Etapa } from '../domain/cartera'
 import { EntrarComoCliente } from './EntrarComoCliente'
 import type { Anfitrion } from './SoporteDeBoda'
+import { COLUMNAS_DE_CARTERA } from './columnas-de-cartera'
 
 const DIA = new Intl.DateTimeFormat('es-BO', { day: 'numeric', timeZone: 'UTC' })
 const MES = new Intl.DateTimeFormat('es-BO', { month: 'short', timeZone: 'UTC' })
@@ -38,11 +38,13 @@ export type EventAdminView = {
 }
 
 
+
+const SEMANA = new Intl.DateTimeFormat('es-BO', { weekday: 'short', timeZone: 'UTC' })
+
 /**
- * **Una fila de la cartera**: la portada y la fecha para reconocerla, la fiesta, la etapa y **su
- * salud con la razón en palabras**, quién es el cliente y cómo van las confirmaciones. La fila
- * entera abre la ficha; lo demás —ver la invitación, entrar como el cliente, escribirle— va en
- * «⋯». Eran tres botones por fila y veinte botones negros por pantalla.
+ * **Una fila de la cartera, como la tabla de la maqueta** (E03): la fecha en grande, el evento con su fiesta, diseño y
+ * plan, quién es el cliente (y quién lo lleva), la etapa, el avance de las confirmaciones y «Abrir». Lo demás —ver la
+ * invitación, escribir al cliente, entrar como él— va en «⋯». En el celular, una tarjeta.
  */
 export function EventAdminRow({ event }: { event: EventAdminView }) {
   const etapa = ETAPAS.find((e) => e.clave === event.etapa) ?? ETAPAS[0]
@@ -51,82 +53,70 @@ export function EventAdminRow({ event }: { event: EventAdminView }) {
   const whatsapp = conTelefono?.phone ? enlaceWhatsapp(conTelefono.phone, `Hola, te escribimos de Luxury Atelier por ${event.title}.`) : null
   const fecha = new Date(`${event.eventDate}T00:00:00Z`)
   const ficha = `/panel/eventos/${event.slug}/configuracion`
-  // Quien respondió abrió su invitación aunque la visita no se contara (otro navegador, sin JS).
   const ratio = event.grupos === 0 ? 0 : event.respondidos / event.grupos
+  const fiesta = event.fiesta === 'xv' ? 'XV años' : event.fiesta === 'cumple' ? 'Cumpleaños' : 'Boda'
+  const avance =
+    event.grupos === 0
+      ? event.etapa === 'borrador'
+        ? 'Falta escribir la invitación'
+        : 'Invitación lista, sin invitados'
+      : event.etapa === 'repartiendo'
+        ? `${event.enviados} de ${event.grupos} invitaciones enviadas`
+        : `${event.respondidos} de ${event.grupos} confirmaron`
 
   return (
-    <li className="group relative grid grid-cols-[auto_1fr_auto] items-center gap-x-4 gap-y-3 rounded-[18px] border border-line-panel bg-white px-3 py-3 shadow-card transition-[box-shadow,border-color] hover:border-ink/25 hover:shadow-float @min-[760px]:grid-cols-[auto_minmax(0,1.7fr)_minmax(0,1fr)_minmax(0,1fr)_40px] @min-[760px]:px-4">
-      {/* La portada con la fecha encima: por el título no se reconoce una invitación, por su portada sí. */}
-      <span className="relative block h-[78px] w-[58px] shrink-0 overflow-hidden rounded-[12px] bg-bg-sunken ring-1 ring-line-panel">
-        {event.portada === null ? (
-          <span aria-hidden className="absolute inset-0 grid place-items-center bg-linear-to-br from-bg-top to-bg-sunken font-display text-[26px] text-ink-mute/70 italic">
-            {event.title.slice(0, 1)}
+    <li className={`group relative grid grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 border-b border-line-panel px-3.5 py-3.5 transition-colors hover:bg-fila ${COLUMNAS_DE_CARTERA} max-[859px]:px-0`}>
+      <span className="text-center">
+        <span className="block font-display text-[30px] leading-[0.95] font-medium">{DIA.format(fecha).padStart(2, '0')}</span>
+        <span className="text-[12px] text-ink-mute">
+          {MES.format(fecha).replace('.', '')}, {SEMANA.format(fecha).replace('.', '')}
+        </span>
+      </span>
+
+      <span className="min-w-0">
+        {/* El enlace cubre la fila entera (`after:`): toda la fila abre la ficha. */}
+        <Link className="font-medium text-ink no-underline after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-gold" href={ficha}>
+          {event.title}
+        </Link>
+        <span className="block truncate text-[13px] text-ink-mute max-[859px]:hidden">
+          {fiesta} «{event.modelo}», plan {event.planNombre ?? 'sin asignar'} · {ANIO.format(fecha)}
+        </span>
+        {event.salud.tono === 'ok' ? null : (
+          <span className="mt-0.5 block text-[12.5px] max-[859px]:hidden">
+            <Semaforo tono={event.salud.tono}>
+              {event.salud.texto}
+              {event.salud.mas > 0 ? ` · y ${event.salud.mas} más` : ''}
+            </Semaforo>
           </span>
-        ) : (
-          <Image alt="" className="object-cover object-top" fill sizes="58px" src={event.portada} />
         )}
-        <span className="absolute inset-x-1 bottom-1 flex flex-col items-center rounded-[8px] bg-white/95 py-0.5 shadow-card">
-          <span className="font-display text-[16px] leading-none text-ink [font-variant-numeric:lining-nums]">{DIA.format(fecha)}</span>
-          <span className="font-mono text-[8.5px] tracking-[0.14em] text-ink-mute uppercase">{MES.format(fecha).replace('.', '')}</span>
-        </span>
       </span>
 
-      <span className="flex min-w-0 flex-col gap-1.5">
-        <span className="flex flex-wrap items-center gap-2">
-          {/* El enlace cubre la fila entera (`after:`): toda la fila abre la ficha. */}
-          <Link className="truncate font-display text-[19px] leading-tight text-ink after:absolute after:inset-0 after:rounded-[18px] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-ink" href={ficha}>
-            {event.title}
-          </Link>
-          <EtiquetaDeFiesta fiesta={event.fiesta} />
-          <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
-        </span>
-        <span className="truncate text-[12px] text-ink-mute first-letter:uppercase">
-          {event.cuando} · {ANIO.format(fecha)} · {event.modelo} · plan {event.planNombre ?? 'sin asignar'}
-        </span>
-        <Semaforo tono={event.salud.tono}>
-          {event.salud.texto}
-          {event.salud.mas > 0 ? ` · y ${event.salud.mas} más` : ''}
-        </Semaforo>
-      </span>
-
-      <span className="col-span-3 flex min-w-0 flex-col gap-0.5 @min-[760px]:col-span-1">
-        <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Cliente</span>
-        <span className="truncate text-[13px] text-ink" title={event.anfitriones.map((a) => a.email).join(', ')}>
-          {cliente === undefined ? <span className="text-ink-mute">Sin acceso · lo llevas tú</span> : cliente.email}
+      <span className="min-w-0 text-[14.5px] max-[859px]:hidden">
+        <span className="block truncate" title={event.anfitriones.map((a) => a.email).join(', ')}>
+          {cliente === undefined ? <span className="text-ink-mute">Sin cliente</span> : cliente.email}
           {event.anfitriones.length > 1 ? <span className="text-ink-mute"> y {event.anfitriones.length - 1} más</span> : null}
         </span>
-        <span className="truncate text-[11.5px] text-ink-mute">{event.ownerEmail === null ? 'Sin responsable' : `Lo lleva ${event.ownerEmail}`}</span>
+        <span className="block truncate text-[12px] text-ink-mute">{event.ownerEmail === null ? 'Sin responsable' : `Lo lleva ${event.ownerEmail}`}</span>
       </span>
 
-      <span className="col-span-2 flex min-w-0 flex-col gap-1.5 @min-[760px]:col-span-1">
-        {event.grupos === 0 ? (
-          <>
-            <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Confirmaciones</span>
-            <span className="text-[12.5px] text-ink-mute">Sin invitaciones todavía</span>
-          </>
-        ) : (
-          <>
-            <span className="flex items-baseline justify-between">
-              <span className="font-mono text-[9.5px] tracking-[0.18em] text-ink-mute uppercase">Confirmaciones</span>
-              <span className="font-display text-[16px] whitespace-nowrap text-ink [font-variant-numeric:lining-nums]">{Math.round(ratio * 100)} %</span>
-            </span>
-            <span
-              aria-label={`${event.enviados} de ${event.grupos} invitaciones enviadas, ${event.respondidos} respondieron`}
-              className="relative h-1.5 overflow-hidden rounded-full bg-bg-sunken"
-              role="img"
-            >
-              <span className="absolute inset-y-0 left-0 rounded-full bg-gold/35" style={{ width: `${(event.enviados / event.grupos) * 100}%` }} />
-              <span className="absolute inset-y-0 left-0 rounded-full bg-sage" style={{ width: `${ratio * 100}%` }} />
-            </span>
-            <span className="font-mono text-[10px] text-ink-mute [font-variant-numeric:lining-nums]">
-              {event.respondidos} de {event.grupos} respondieron · {event.enviados} enviadas
-            </span>
-          </>
+      <span className="max-[859px]:col-start-3 max-[859px]:row-start-1 max-[859px]:self-start">
+        <Pill tone={etapa.tono}>{etapa.etiqueta}</Pill>
+      </span>
+
+      <span className="flex min-w-0 flex-col gap-1.5 max-[859px]:col-span-2 max-[859px]:col-start-2 max-[859px]:-mt-1">
+        {event.grupos === 0 ? null : (
+          <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line-panel">
+            <span className="block h-full bg-shell-deep" style={{ width: `${(event.etapa === 'repartiendo' ? event.enviados / event.grupos : ratio) * 100}%` }} />
+          </span>
         )}
+        <span className="text-[12.5px] text-ink-mute">{avance}</span>
       </span>
 
-      {/* «⋯» encima del enlace de la fila (`relative z-10`): lo que no es abrir la ficha. */}
-      <span className="relative z-10 col-start-3 row-start-1 self-start justify-self-end @min-[760px]:col-start-5 @min-[760px]:row-start-auto @min-[760px]:self-center">
+      {/* Encima del enlace de la fila (`relative z-10`): abrir la ficha y lo demás en «⋯». */}
+      <span className="relative z-10 flex items-center gap-1.5 justify-self-end max-[859px]:hidden">
+        <Link className="hidden min-h-[38px] items-center rounded-[10px] border border-line-panel-strong bg-bg-raised px-3.5 text-[14px] font-medium text-ink no-underline hover:border-gold min-[860px]:inline-flex" href={ficha} tabIndex={-1}>
+          Abrir
+        </Link>
         <MenuDeAcciones etiqueta={`Más acciones de ${event.title}`}>
           <Link className={opcionDeMenu()} href={`/panel/eventos/${event.slug}/vista-previa`}>
             <EyeIcon className="size-4" /> Ver la invitación

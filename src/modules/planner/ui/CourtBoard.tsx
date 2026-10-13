@@ -1,9 +1,10 @@
 'use client'
 
-import { UsersIcon } from '@/shared/design/ui/icons'
+import Link from 'next/link'
+import { UsersIcon, WhatsAppIcon } from '@/shared/design/ui/icons'
 import { CampoFechaYHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { useActionState, useId } from 'react'
-import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { FIELD_CLASS, Field, Iniciales, PanelAlert, PanelButton, Pill, TARJETA_DESTACADA } from '@/shared/design/ui/panel/PanelKit'
 import { type DiaActionState, removeCourtMemberAction, removeRehearsalAction, saveCourtMemberAction, saveRehearsalAction, setCourtConfirmedAction } from '@/app/_acciones/planner/dia-actions'
 import { nombreDelCortejo, type TipoDeCortejo } from '../domain/equipo-del-dia'
 import { Accion, type Evento, Ocultos } from './Accion'
@@ -38,7 +39,7 @@ function FormularioDeMiembro({ evento, tipos, partidas, miembro, ejemplo }: { ev
   return (
     <form action={enviar} className="flex flex-col gap-3" key={e ? JSON.stringify(e) : 'base'}>
       <Ocultos {...evento} extra={{ memberId: miembro?.id ?? '' }} />
-      <div className="grid gap-3 min-[560px]:grid-cols-3">
+      <div className="grid gap-3 min-[560px]:grid-cols-2">
         <Field htmlFor={`${id}-k`} label="Papel">
           <select className={FIELD_CLASS} defaultValue={v('kind', miembro?.kind ?? tipos[0])} id={`${id}-k`} name="kind">
             {tipos.map((t) => (
@@ -72,7 +73,7 @@ function FormularioDeMiembro({ evento, tipos, partidas, miembro, ejemplo }: { ev
         </Field>
       </div>
       <ActionFeedback errorsOnly state={estado} />
-      <div>
+      <div className="flex justify-end">
         <SubmitButton variant={miembro ? 'default' : 'primary'} pending={enviando} pendingLabel={'Guardando…'}>{miembro ? 'Guardar' : 'Sumar al cortejo'}</SubmitButton>
       </div>
     </form>
@@ -84,8 +85,16 @@ export function NewCourtMemberForm(props: { evento: Evento; tipos: readonly Tipo
   return <FormularioDeMiembro {...props} />
 }
 
-/** El cortejo por papel, con confirmado, contacto y lo que apadrina cada uno. */
-export function CourtBoard({ evento, tipos, partidas, miembros }: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; miembros: readonly MiembroVista[] }) {
+/** Los grupos de la maqueta (E26): padrinos; damas y caballeros juntos; en XV, chambelanes y la corte. */
+const GRUPOS: readonly { titulo: string; tipos: readonly TipoDeCortejo[] }[] = [
+  { titulo: 'Padrinos', tipos: ['padrino'] },
+  { titulo: 'Damas y caballeros', tipos: ['dama', 'caballero'] },
+  { titulo: 'Chambelanes', tipos: ['chambelan'] },
+  { titulo: 'Corte de honor', tipos: ['corte'] },
+]
+
+/** El cortejo por grupo (E26): iniciales, nombre y lo que apadrina, su teléfono y «Editar». */
+export function CourtBoard({ miembros, editarEn }: { miembros: readonly MiembroVista[]; /** `…?miembro=`: se le suma el id. */ editarEn: string }) {
   if (miembros.length === 0) {
     return (
       <EmptyState
@@ -96,46 +105,30 @@ export function CourtBoard({ evento, tipos, partidas, miembros }: { evento: Even
     )
   }
   return (
-    <div className="flex flex-col gap-4">
-      {tipos
-        .map((t) => ({ t, gente: miembros.filter((m) => m.kind === t) }))
+    <div className="flex flex-col gap-9">
+      {GRUPOS.map((g) => ({ ...g, gente: miembros.filter((m) => g.tipos.includes(m.kind)) }))
         .filter((g) => g.gente.length > 0)
-        .map(({ t, gente }) => (
-          <section className="rounded-[18px] border border-line-panel bg-white px-5 py-3 shadow-card" key={t}>
-            <h3 className="py-1 font-display text-[20px] font-light text-ink">
-              {nombreDelCortejo(t)} · {gente.filter((g) => g.confirmed).length} de {gente.length} confirmados
-            </h3>
-            <ul className="flex flex-col">
-              {gente.map((m) => (
-                <li aria-label={m.name} className="flex flex-col gap-2 border-b border-line-panel py-3 last:border-none" key={m.id}>
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <span className="flex min-w-0 flex-col">
-                      <span className="text-[14px] text-ink">{m.name}</span>
-                      <span className="text-[11px] text-ink-mute">{[m.sponsors, m.size ? `talla ${m.size}` : null, m.partida ? `partida: ${m.partida}` : null].filter(Boolean).join(' · ') || '—'}</span>
+        .map((g) => (
+          <section aria-label={g.titulo} key={g.titulo}>
+            <h2 className="border-b border-line-panel pb-2.5 font-display text-[24px] font-medium">{g.titulo}</h2>
+            <ul>
+              {g.gente.map((m) => (
+                <li aria-label={m.name} className="relative flex items-center gap-4 border-b border-line-panel py-3.5" key={m.id}>
+                  <Iniciales chico nombre={m.name} />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="text-[15px] font-medium text-ink">{m.name}</span>
+                    <span className="text-[13.5px] text-ink-mute">
+                      {[m.sponsors ?? nombreDelCortejo(m.kind), m.size ? `talla ${m.size}` : null, m.partida ? `partida: ${m.partida}` : null, m.confirmed ? null : 'por confirmar'].filter(Boolean).join(' · ')}
                     </span>
-                    <span className="flex flex-wrap items-center gap-2">
-                      <Pill tone={m.confirmed ? 'ok' : 'pending'}>{m.confirmed ? 'Confirmado' : 'Por confirmar'}</Pill>
-                      <Accion action={setCourtConfirmedAction} evento={evento} extra={{ memberId: m.id, confirmed: String(!m.confirmed) }} label={m.confirmed ? `Desmarcar a ${m.name}` : `Confirmar a ${m.name}`}>
-                        {m.confirmed ? 'Desmarcar' : 'Confirmar'}
-                      </Accion>
-                      {m.whatsappHref ? (
-                        <PanelButton external href={m.whatsappHref}>
-                          WhatsApp
-                        </PanelButton>
-                      ) : null}
-                    </span>
-                  </div>
-                  <details>
-                    <summary className="cursor-pointer text-[11px] text-ink-soft underline underline-offset-2">Editar o quitar</summary>
-                    <div className="mt-3 flex flex-col gap-3">
-                      <FormularioDeMiembro evento={evento} miembro={m} partidas={partidas} tipos={tipos} />
-                      <div>
-                        <Accion action={removeCourtMemberAction} evento={evento} extra={{ memberId: m.id }} label={`Quitar a ${m.name}`} variant="danger">
-                          Quitar
-                        </Accion>
-                      </div>
-                    </div>
-                  </details>
+                  </span>
+                  {m.whatsappHref ? (
+                    <a className="relative z-10 text-[14px] text-ink no-underline [font-variant-numeric:tabular-nums] hover:text-gold-deep max-[559px]:hidden" href={m.whatsappHref} rel="noopener noreferrer" target="_blank">
+                      {m.whatsapp?.replace(/^\+591(?=\d)/, '+591 ')}
+                    </a>
+                  ) : null}
+                  <Link aria-label={`Editar a ${m.name}`} className="text-[14px] font-medium text-gold-deep no-underline after:absolute after:inset-0 hover:underline min-[560px]:ml-4" href={`${editarEn}${m.id}`} scroll={false}>
+                    Editar
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -145,28 +138,67 @@ export function CourtBoard({ evento, tipos, partidas, miembros }: { evento: Even
   )
 }
 
-/** Los ensayos —el vals, la entrada— con quién asiste. */
-export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento; miembros: readonly MiembroVista[]; ensayos: readonly EnsayoVista[] }) {
-  const [estado, enviar, enviando] = useActionState(sinCaerse(saveRehearsalAction), INICIAL)
-  const id = useId()
-  const e = estado.status === 'error' ? estado.valores : undefined
+/** «Editar» de una persona del cortejo (diálogo): confirmarla, escribirle, sus datos y quitarla. */
+export function EditarMiembro({ evento, tipos, partidas, miembro }: { evento: Evento; tipos: readonly TipoDeCortejo[]; partidas: readonly Partida[]; miembro: MiembroVista }) {
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Pill tone={miembro.confirmed ? 'ok' : 'pending'}>{miembro.confirmed ? 'Confirmado' : 'Por confirmar'}</Pill>
+        <Accion action={setCourtConfirmedAction} evento={evento} extra={{ memberId: miembro.id, confirmed: String(!miembro.confirmed) }} label={miembro.confirmed ? `Desmarcar a ${miembro.name}` : `Confirmar a ${miembro.name}`}>
+          {miembro.confirmed ? 'Desmarcar' : 'Confirmar'}
+        </Accion>
+        {miembro.whatsappHref ? (
+          <PanelButton external href={miembro.whatsappHref}>
+            WhatsApp
+          </PanelButton>
+        ) : null}
+      </div>
+      <FormularioDeMiembro evento={evento} miembro={miembro} partidas={partidas} tipos={tipos} />
+      <div className="border-t border-line-panel pt-4">
+        <Accion action={removeCourtMemberAction} evento={evento} extra={{ memberId: miembro.id }} label={`Quitar a ${miembro.name}`} variant="danger">
+          Quitar del cortejo
+        </Accion>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * El próximo ensayo en su tarjeta (E26): cuándo, dónde, cuántos vienen y quién falta confirmar, con «Avisar al cortejo»
+ * por WhatsApp. Debajo, los demás.
+ */
+export function ProximoEnsayo({ evento, ensayos, miembros, avisar }: { evento: Evento; ensayos: readonly EnsayoVista[]; miembros: readonly MiembroVista[]; avisar: string | null }) {
+  const [primero, ...resto] = ensayos
+  if (primero === undefined) return null
+  const faltan = miembros.filter((m) => !m.confirmed).map((m) => m.name)
   return (
     <div className="flex flex-col gap-4">
-      {ensayos.length === 0 ? (
-        <p className="text-[13px] text-ink-mute">Sin ensayos todavía.</p>
-      ) : (
-        <ul className="flex flex-col">
-          {ensayos.map((x) => (
-            <li className="flex flex-wrap items-start justify-between gap-3 border-b border-line-panel py-3 last:border-none" key={x.id}>
-              <span className="flex min-w-0 flex-col">
-                <span className="text-[14px] text-ink">
-                  {x.cuando}
-                  {x.place ? ` · ${x.place}` : ''}
-                </span>
-                <span className="text-[11px] text-ink-mute">
-                  {x.asistentes.length === 0 ? 'Sin asistentes marcados' : x.asistentes.map((a) => miembros.find((m) => m.id === a)?.name).filter(Boolean).join(', ')}
-                  {x.notes ? ` · ${x.notes}` : ''}
-                </span>
+      <section aria-label="Próximo ensayo" className={`${TARJETA_DESTACADA} flex flex-col items-start gap-2 px-6 py-5`}>
+        <Pill tone="vip">Próximo ensayo</Pill>
+        <p className="mt-1 font-display text-[26px] leading-tight font-medium">{primero.cuando}</p>
+        {primero.place ? <p className="text-[14.5px] text-ink-soft">{primero.place}</p> : null}
+        <p className="text-[14px] text-ink-soft">
+          {miembros.length === 0 ? null : `Vienen ${primero.asistentes.length} de ${miembros.length}.`}
+          {faltan.length === 0 ? '' : ` Falta confirmar ${faltan.slice(0, 2).join(' y ')}${faltan.length > 2 ? ` y ${faltan.length - 2} más` : ''}.`}
+        </p>
+        <span className="mt-2 flex flex-wrap items-center gap-2">
+          {avisar ? (
+            <PanelButton external href={avisar} size="sm">
+              <WhatsAppIcon className="size-4" /> Avisar al cortejo
+            </PanelButton>
+          ) : null}
+          <Accion action={removeRehearsalAction} evento={evento} extra={{ rehearsalId: primero.id }} label={`Quitar el ensayo del ${primero.cuando}`} variant="danger">
+            Quitar
+          </Accion>
+        </span>
+      </section>
+      {resto.length === 0 ? null : (
+        <ul aria-label="Más ensayos" className="flex flex-col">
+          {resto.map((x) => (
+            <li className="flex items-center justify-between gap-3 border-b border-line-panel py-2.5" key={x.id}>
+              <span className="flex min-w-0 flex-col text-[14px]">
+                {x.cuando}
+                <span className="text-[13px] text-ink-mute">{x.place ?? 'Sin lugar'}</span>
               </span>
               <Accion action={removeRehearsalAction} evento={evento} extra={{ rehearsalId: x.id }} label={`Quitar el ensayo del ${x.cuando}`} variant="danger">
                 Quitar
@@ -175,7 +207,18 @@ export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento;
           ))}
         </ul>
       )}
-      <form action={enviar} className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-bg-raised p-4" key={e ? JSON.stringify(e) : 'base'}>
+    </div>
+  )
+}
+
+/** Sumar un ensayo (diálogo): cuándo, dónde y quién viene. */
+export function NuevoEnsayoForm({ evento, miembros }: { evento: Evento; miembros: readonly MiembroVista[] }) {
+  const [estado, enviar, enviando] = useActionState(sinCaerse(saveRehearsalAction), INICIAL)
+  const id = useId()
+  const e = estado.status === 'error' ? estado.valores : undefined
+  return (
+    <div className="flex flex-col gap-4">
+      <form action={enviar} className="flex flex-col gap-4" key={e ? JSON.stringify(e) : 'base'}>
         <Ocultos {...evento} />
         <div className="grid gap-3 min-[560px]:grid-cols-2">
           <Field htmlFor={`${id}-f`} label="Fecha y hora">
@@ -187,7 +230,7 @@ export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento;
         </div>
         {miembros.length === 0 ? null : (
           <fieldset className="flex flex-wrap gap-x-4 gap-y-2">
-            <legend className="mb-1 font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">Quién asiste</legend>
+            <legend className="mb-1.5 text-[14px] font-medium">Quién viene</legend>
             {miembros.map((m) => (
               <label className="flex items-center gap-2 text-[13px] text-ink" key={m.id}>
                 <input name="asistentes" type="checkbox" value={m.id} />
@@ -200,8 +243,9 @@ export function RehearsalsBoard({ evento, miembros, ensayos }: { evento: Evento;
           <input className={FIELD_CLASS} defaultValue={e?.notes ?? ''} id={`${id}-n`} maxLength={2000} name="notes" />
         </Field>
         <ActionFeedback errorsOnly state={estado} />
-        <div>
-          <SubmitButton variant="default" pending={enviando} pendingLabel={'Guardando…'}>{'Sumar ensayo'}</SubmitButton>
+        {estado.status === 'success' ? <PanelAlert tone="ok">Ensayo sumado.</PanelAlert> : null}
+        <div className="flex justify-end">
+          <SubmitButton variant="primary" pending={enviando} pendingLabel={'Guardando…'}>{'Sumar ensayo'}</SubmitButton>
         </div>
       </form>
     </div>

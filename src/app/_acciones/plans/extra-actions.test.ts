@@ -83,6 +83,6 @@ describe('orderExtraAction', () => {
     const { orderExtraAction } = await import('@/app/_acciones/plans/extra-actions')
 
     await expect(orderExtraAction({ status: 'idle' }, form('dia-d'))).rejects.toThrow('NEXT_REDIRECT')
-    expect(redirect).toHaveBeenCalledWith('/es/pedido/ref/ABCDEFGH')
+    expect(redirect).toHaveBeenCalledWith(expect.stringMatching(/\/extras\?pedido=ABCDEFGH$/))
   })
 })

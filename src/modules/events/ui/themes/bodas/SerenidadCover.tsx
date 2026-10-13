@@ -115,7 +115,7 @@ export function SerenidadCover({ bgAsset, eyebrow, names, fecha, cta, openLabel 
           <span style={{ display: 'block', flex: 1, height: 1, background: P.marino }} />
         </span>
         {fecha === '' ? null : (
-          <span style={{ fontFamily: 'var(--font-cormorant)', fontWeight: 300, fontSize: 12.1, letterSpacing: '0.25em' }}>{fecha}</span>
+          <span style={{ fontFamily: 'var(--font-montserrat)', fontWeight: 300, fontSize: 12.1, letterSpacing: '0.25em' }}>{fecha}</span>
         )}
       </span>
 

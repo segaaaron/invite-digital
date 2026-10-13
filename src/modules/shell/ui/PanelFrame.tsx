@@ -1,62 +1,63 @@
-import { Suspense, type ReactNode } from 'react'
-import { BarraInferior } from './BarraInferior'
-import type { ConfigDeBarra, NavSection } from './nav'
+import type { ReactNode } from 'react'
+import type { NavSection } from './nav'
+import { ProveedorDeNavegacion } from './navegacion'
 import { PanelSidebar, type PanelEvento, type PanelUser } from './PanelSidebar'
+import { RielTablet, SubpestanasDeTablet } from './RielTablet'
 
 /**
- * La carcasa del panel: barra lateral oscura fija sobre cuerpo marfil.
+ * La carcasa del panel: la navegación de cada aparato, la barra de arriba y el cuerpo de papel.
  *
  * La monta un `layout.tsx`, no una página. Cuando la montaba cada página, bastaba con
  * olvidarla en una para que al cambiar de sección desapareciera la barra y el marco
  * cambiase de golpe: es exactamente lo que pasaba con las ocho páginas que no la tenían.
  * Desde un layout no hay dónde olvidarla.
+ *
+ * **Tres formas, un mismo panel** (maqueta «Esmeralda y Latón», 12 de octubre):
+ * - escritorio (≥1280 px): barra lateral esmeralda de 268 px, la barra de arriba a lo ancho y el contenido
+ *   centrado a 1120 px;
+ * - tablet (768–1279 px): carril de 92 px (`RielTablet`) y, en las secciones que el carril junta («Planear»), sus
+ *   pestañas bajo la barra de arriba;
+ * - celular: la barra de arriba es la isla, con el menú guiado (`MenuMovil`).
  */
 export function PanelFrame({
   sections,
   brandSub,
   user,
   evento,
-  barraInferior = false,
-  conAcciones = false,
+  conBuscador = false,
+  barra,
   children,
 }: {
   sections: readonly NavSection[]
   brandSub: string
   user: PanelUser
   evento: PanelEvento | null
-  /**
-   * En el celular, la navegación va abajo: la del admin fuera de un evento y, desde el 6 de octubre,
-   * la del panel del evento (con sus destinos y «Enviar» al centro, por `ConfigDeBarra`).
-   */
-  barraInferior?: boolean | ConfigDeBarra
-  /** Si la barra superior pone algo (la campana): en el celular flota en la barra oscura y el menú le deja sitio. */
+  /** El buscador ⌘K en la barra lateral y el carril: solo el admin. */
+  conBuscador?: boolean
+  /** La barra de arriba (`BarraSuperior` o `BarraDelAdmin`), a lo ancho fuera del contenido centrado. */
+  barra?: ReactNode
+  /** Ya no se usan. Se aceptan para no romper a quien los pase. */
   conAcciones?: boolean
+  barraInferior?: unknown
   children: ReactNode
 }) {
   return (
-    // `grid-rows-[auto_1fr]` en el teléfono: con `min-h-dvh` y una página corta, la rejilla
-    // repartía el alto sobrante también a la fila del menú y la barra salía el doble de alta.
-    // Con la barra abajo, la lateral no se pinta en el celular: una sola fila, o la segunda quedaba vacía y blanca.
-    <div className={`grid min-h-dvh grid-cols-1 min-[860px]:grid-cols-[240px_1fr] min-[860px]:grid-rows-1 print:block ${barraInferior ? 'grid-rows-1' : 'grid-rows-[auto_1fr]'}`}>
-      {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
-          la ventana y en una página larga dejaba una franja blanca por debajo. */}
-      <div className={`bg-shell-deep print:hidden ${barraInferior ? 'max-[859px]:hidden' : ''}`}>
-        <PanelSidebar brandSub={brandSub} conAcciones={conAcciones} evento={evento} sections={sections} user={user} />
+    <ProveedorDeNavegacion value={{ sections, user, evento, conBuscador }}>
+      <div className="grid min-h-dvh grid-cols-1 min-[1280px]:grid-cols-[268px_1fr] print:block">
+        {/* La columna lleva el fondo oscuro, no solo la barra: la barra mide la altura de
+            la ventana y en una página larga dejaba una franja blanca por debajo. */}
+        <div className="hidden bg-shell-deep min-[1280px]:block print:hidden">
+          <PanelSidebar brandSub={brandSub} conBuscador={conBuscador} evento={evento} sections={sections} user={user} />
+        </div>
+        <RielTablet />
+        <div className="flex min-w-0 flex-col bg-bg min-[768px]:ml-[92px] min-[1280px]:ml-0 print:ml-0 print:bg-white">
+          {barra}
+          <SubpestanasDeTablet />
+          <main className="panel-movil relative mx-auto w-full max-w-[1120px] min-w-0 px-4 pb-28 min-[768px]:px-8 min-[768px]:pt-8 min-[768px]:pb-32 min-[1280px]:px-12 min-[1280px]:pt-9 min-[1280px]:pb-[140px] print:max-w-none print:p-0">
+            {children}
+          </main>
+        </div>
       </div>
-      {/* Los tres focos de la maqueta, fijos al viewport: el tercero es el que sostiene
-          el pie de una página larga, que sin él se quedaba en marfil plano. */}
-      {/* Sin `z-1` en el celular: haría del contenido una capa propia y la campana, que ahí flota dentro de
-          la barra oscura (`BarraSuperior`), quedaría debajo de ella. */}
-      <main className={`panel-movil relative min-w-0 min-[860px]:z-1 bg-bg bg-[radial-gradient(ellipse_900px_600px_at_8%_-10%,rgb(var(--color-gold-rgb)/0.16),transparent_60%),radial-gradient(ellipse_800px_700px_at_105%_10%,rgb(var(--color-sage-rgb)/0.14),transparent_55%),radial-gradient(ellipse_900px_800px_at_50%_120%,rgb(var(--color-sage-rgb)/0.08),transparent_60%)] bg-fixed px-4.5 py-4.5 min-[860px]:px-8 min-[860px]:py-7 print:bg-white print:p-0 ${barraInferior ? 'max-[767px]:pb-28 min-[768px]:max-[859px]:pl-[94px]' : ''}`}>
-        {children}
-      </main>
-      {/* Su `Suspense` envuelve solo la barra (lee la consulta de la URL), nunca las páginas:
-          alrededor de ellas rompería sus `notFound()`. */}
-      {barraInferior ? (
-        <Suspense fallback={null}>
-          <BarraInferior config={barraInferior === true ? {} : barraInferior} sections={sections} user={user} />
-        </Suspense>
-      ) : null}
-    </div>
+    </ProveedorDeNavegacion>
   )
 }

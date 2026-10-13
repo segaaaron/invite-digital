@@ -44,7 +44,7 @@ export function GuestbookForm({ dictionary, token, firmado, boton, relleno = fal
           confirmación, y «Mensaje para los anfitriones» se leía como otro formulario. */}
       <textarea
         aria-label={dictionary.guestbookPlaceholder}
-        className="min-h-[72px] w-full resize-none rounded-[var(--libro-radio,6px)] border border-[var(--color-line)] bg-transparent p-3 font-display text-[15px] italic text-ink outline-none"
+        className="min-h-[72px] w-full resize-none rounded-[var(--libro-radio,6px)] border-[length:var(--libro-campo-borde,1px)] border-[var(--libro-campo-linea,var(--color-line))] bg-[var(--libro-campo,transparent)] p-[var(--libro-campo-p,12px)] font-display text-[length:var(--libro-campo-fs,15px)] italic text-ink outline-none"
         id={campoId}
         maxLength={500}
         name="message"
@@ -63,8 +63,8 @@ export function GuestbookForm({ dictionary, token, firmado, boton, relleno = fal
       <button
         className={
           relleno
-            ? 'mt-2 self-center rounded-full bg-[var(--color-cta)] px-[22px] py-3 [font-family:var(--font-dm-sans)] text-[11px] font-bold tracking-[0.18em] text-[var(--color-on-cta)] uppercase disabled:opacity-60'
-            : 'w-full rounded-[var(--libro-radio,4px)] border border-[var(--color-line)] py-3 [font-family:var(--libro-letra,var(--font-display))] text-[length:var(--libro-fs,11px)] font-semibold tracking-[var(--libro-tracking,0.2em)] text-ink uppercase disabled:opacity-60'
+            ? 'mt-2 self-center rounded-full bg-[var(--libro-enviar,var(--color-cta))] px-[22px] py-3 [font-family:var(--font-dm-sans)] text-[11px] font-bold tracking-[0.18em] text-[var(--libro-enviar-tinta,var(--color-on-cta))] uppercase disabled:opacity-60'
+            : 'w-full rounded-[var(--libro-radio,4px)] border-[length:var(--libro-campo-borde,1px)] border-[var(--libro-boton-linea,var(--color-line))] bg-[var(--libro-boton-fondo,transparent)] py-[var(--libro-boton-py,12px)] [font-family:var(--libro-letra,var(--font-display))] text-[length:var(--libro-fs,11px)] font-semibold tracking-[var(--libro-tracking,0.2em)] text-ink uppercase disabled:opacity-60'
         }
         disabled={isPending}
         type="submit"

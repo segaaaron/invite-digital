@@ -9,6 +9,7 @@ export const xvDefinition: ThemeDefinition = {
   label: 'Bajo el Mar',
   categorySlug: 'xv-anos',
   palette: PALETA,
+  invitadoDeMuestra: { label: 'Lucas Montaño', seats: 1 },
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: { fotos: { casillas: 1 }, sinCampos: { hero: ['nameB', 'serial'], itinerary: ['note'] } },
   sections: ['hero', 'quote', 'gallery', 'hosts', 'schedule', 'reception', 'map', 'itinerary', 'music', 'dressCode', 'notes', 'closing'],

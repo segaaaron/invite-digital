@@ -6,19 +6,26 @@ import { themeFor } from '@/modules/events/ui/themes/registry'
 import { atajoDeTarea, type LoQueYaHay, resueltaEnLaApp } from '@/modules/planner/domain/atajos'
 import { gestionaElEvento } from '@/modules/identity'
 import { requireSession } from '@/app/_acciones/sesion'
-import { avanceDeTareas, estadoDeTarea, etapasDe, sembrarTareas, FILTROS_DE_TAREAS, filtrarTareas, type FiltroDeTareas } from '@/modules/planner'
-import { NewTaskForm, SeedTasksButton, TaskBoard } from '@/modules/planner/ui/TaskBoard'
+import { estadoDeTarea, etapasDe, sembrarTareas } from '@/modules/planner'
+import { NewTaskForm, SeedTasksButton, TaskBoard, type GrupoDeTareas, type TareaVista } from '@/modules/planner/ui/TaskBoard'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
-import { fecha } from '@/shared/format/fecha'
+import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
+import { diaCorto, fecha } from '@/shared/format/fecha'
 import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { PlusIcon } from '@/shared/design/ui/icons'
 import { isErr, isOk } from '@/shared/result'
 import { seccionesFueraDelPlan } from '@/modules/plans'
 
 export const metadata = { title: 'Plan de tareas' }
 export const dynamic = 'force-dynamic'
 
-const NOMBRE_FILTRO: Record<FiltroDeTareas, string> = { todas: 'Todas', mias: 'Mías', atrasadas: 'Atrasadas', semana: 'Esta semana' }
+/** Los filtros de la maqueta (E12). Sin filtro, «Esta semana»: lo atrasado, lo de estos días y lo recién hecho. */
+const FILTROS = ['mias', 'planner', 'hechas', 'todas'] as const
+type Filtro = (typeof FILTROS)[number] | 'semana' | 'atrasadas'
+
+const SEMANA_CORTA = new Intl.DateTimeFormat('es-BO', { weekday: 'short', day: 'numeric', timeZone: 'UTC' })
+const diasEntre = (desde: string, hasta: string) => Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86_400_000)
 
 const diaLegible = (iso: string) => fecha(new Date(`${iso}T12:00:00.000Z`))
 
@@ -43,7 +50,7 @@ export default async function TareasPage({
   const etapas = etapasDe(fiesta).map((e) => ({ clave: e.clave, nombre: e.nombre }))
   const hoy = fechaEnBolivia(new Date())
   const todas = await planner.listTasks(event.value.id)
-  const filtro = (FILTROS_DE_TAREAS as readonly string[]).includes(pedido ?? '') ? (pedido as FiltroDeTareas) : 'todas'
+  const filtro: Filtro | null = ([...FILTROS, 'semana', 'atrasadas'] as readonly string[]).includes(pedido ?? '') ? (pedido as Filtro) : null
   // «Mías»: quien celebra ve las de los anfitriones; su planner y quien lleva el evento, las del planner.
   const dueno = gestionaElEvento(actor, event.value)
   const mias = dueno || (await events.staff.de(actor, event.value.id)).includes('planner') ? 'planner' : 'anfitrion'
@@ -82,44 +89,93 @@ export default async function TareasPage({
   const raiz = `/panel/eventos/${event.value.slug}`
   // La tarea resuelta en su pantalla cuenta como hecha también para el avance y los filtros.
   const conApp = todas.map((t) => (t.doneAt === null && resueltaEnLaApp(t.title, ya) ? { ...t, doneAt: new Date(0), doneBy: null } : t))
-  const visibles = filtrarTareas(conApp, filtro, { hoy, mias }).map((t) => {
+  const vista = (t: (typeof conApp)[number]): TareaVista => {
     const atajo = atajoDentro(t.title)
     const porLaApp = t.doneAt?.getTime() === 0
-    return {
-      ...t,
-      estado: estadoDeTarea(t, hoy),
-      vence: t.dueDate === null ? null : diaLegible(t.dueDate),
-      hechaCuando: t.doneAt === null || porLaApp ? null : fecha(t.doneAt),
-      porLaApp,
-      atajo: atajo === null ? null : { href: `${raiz}${atajo.ruta}`, texto: atajo.texto },
-    }
-  })
-  const atrasadas = filtrarTareas(conApp, 'atrasadas', { hoy, mias }).length
-  // Lo que viene: las tres próximas sin hacer, para no tener que leer la lista entera.
-  const proximas = conApp
-    .filter((t) => t.doneAt === null)
-    .sort((x, y) => (x.dueDate ?? '9999').localeCompare(y.dueDate ?? '9999'))
-    .slice(0, 3)
-    .map((t) => ({ id: t.id, title: t.title, vence: t.dueDate === null ? null : diaLegible(t.dueDate), atrasada: t.dueDate !== null && t.dueDate < hoy, atajo: atajoDentro(t.title) }))
+    const estado = estadoDeTarea(t, hoy)
+    const cuando =
+      estado === 'hecha'
+        ? porLaApp || t.doneAt === null
+          ? ''
+          : diaCorto(fechaEnBolivia(t.doneAt), hoy)
+        : t.dueDate === null
+          ? 'Sin fecha'
+          : estado === 'atrasada'
+            ? diasEntre(t.dueDate, hoy) === 1
+              ? 'venció ayer'
+              : `venció hace ${diasEntre(t.dueDate, hoy)} días`
+            : estado === 'semana'
+              ? SEMANA_CORTA.format(new Date(`${t.dueDate}T00:00:00Z`)).replace('.', '').replace(',', '')
+              : diaCorto(t.dueDate, hoy)
+    return { ...t, estado, cuando, porLaApp, atajo: atajo === null ? null : { href: `${raiz}${atajo.ruta}`, texto: atajo.texto } }
+  }
+  const tareas = conApp.map(vista)
+  const porFecha = (x: TareaVista, y: TareaVista) => (x.dueDate ?? '9999').localeCompare(y.dueDate ?? '9999')
+  const hechas = conApp.filter((t) => t.doneAt !== null)
+  const hechaHace = new Map(hechas.map((t) => [t.id, t.doneAt?.getTime() ?? 0]))
+  const porHecha = (x: TareaVista, y: TareaVista) => (hechaHace.get(y.id) ?? 0) - (hechaHace.get(x.id) ?? 0)
+  const de = (estado: TareaVista['estado'], lista = tareas) => lista.filter((t) => t.estado === estado)
+  const pendientes = tareas.filter((t) => t.estado === 'atrasada' || t.estado === 'semana')
+  const recientes = tareas
+    .filter((t) => t.estado === 'hecha' && !t.porLaApp && (hechaHace.get(t.id) ?? 0) > Date.parse(`${hoy}T00:00:00Z`) - 14 * 86_400_000)
+    .sort(porHecha)
+    .slice(0, 5)
+  const atrasadas = (lista: readonly TareaVista[]) => de('atrasada', [...lista]).sort(porFecha)
+  const porEstado = (lista: readonly TareaVista[], conHechas: boolean): GrupoDeTareas[] => {
+    const tarde = atrasadas(lista)
+    return [
+      { clave: 'atrasada', titulo: tarde.length === 1 ? 'Atrasada' : 'Atrasadas', atrasada: true, tareas: tarde },
+      { clave: 'semana', titulo: 'Esta semana', tareas: de('semana', [...lista]).sort(porFecha) },
+      { clave: 'despues', titulo: 'Más adelante', tareas: de('pendiente', [...lista]).sort(porFecha) },
+      ...(conHechas ? [{ clave: 'hechas', titulo: 'Hechas', tareas: de('hecha', [...lista]).sort(porHecha) }] : []),
+    ]
+  }
+  const porGrupo: GrupoDeTareas[] =
+    filtro === null
+      ? // «Más adelante» también: una tarea recién creada sin fecha no puede desaparecer al guardarla.
+        [...porEstado(tareas.filter((t) => t.estado !== 'hecha'), false), { clave: 'recientes', titulo: 'Hechas hace poco', tareas: recientes }]
+      : filtro === 'mias'
+        ? porEstado(
+            tareas.filter((t) => t.assignee === mias),
+            true,
+          )
+        : filtro === 'planner'
+          ? porEstado(
+              tareas.filter((t) => t.assignee === 'planner'),
+              true,
+            )
+          : filtro === 'hechas'
+            ? [{ clave: 'hechas', titulo: 'Hechas', tareas: de('hecha').sort(porHecha) }]
+            : filtro === 'semana'
+              ? [{ clave: 'semana', titulo: 'Esta semana', tareas: de('semana').sort(porFecha) }]
+              : filtro === 'atrasadas'
+                ? [{ clave: 'atrasada', titulo: 'Atrasadas', atrasada: true, tareas: atrasadas(tareas) }]
+                : porEstado(tareas, true)
+  const chips: { clave: Filtro | null; texto: string; cuenta?: number }[] = [
+    { clave: null, texto: 'Esta semana', cuenta: pendientes.length },
+    { clave: 'mias', texto: 'Mías' },
+    { clave: 'planner', texto: 'De la planner' },
+    { clave: 'hechas', texto: 'Hechas', cuenta: hechas.length },
+    { clave: 'todas', texto: 'Todas' },
+  ]
 
   return (
     <>
       <PanelHeader
         actions={
           <PanelButton href={`${base}?panel=tarea`} variant="primary">
-            Sumar tarea
+            <PlusIcon className="size-4" /> Añadir tarea
           </PanelButton>
         }
-        kicker="Planner"
-        meta={`${avanceDeTareas(conApp)} % hecho · ${atrasadas} atrasada${atrasadas === 1 ? '' : 's'}`}
-        title="Plan de tareas"
+        meta={`El plan de un planner para ${fiesta === 'xv' ? 'tus XV' : fiesta === 'cumple' ? 'tu cumpleaños' : 'tu boda'}. Lo que ya resolviste en el panel se marca solo.`}
+        title="Tareas"
       />
 
       <div className="flex flex-col gap-4.5">
         {panel === 'tarea' ? (
-          <PanelCard title="Tarea nueva">
+          <PanelDialog closeHref={base} title="Añadir tarea" width={520}>
             <NewTaskForm etapas={etapas} eventId={event.value.id} eventSlug={event.value.slug} />
-          </PanelCard>
+          </PanelDialog>
         ) : null}
 
         {todas.length === 0 ? (
@@ -153,33 +209,23 @@ export default async function TareasPage({
           </PanelCard>
         ) : (
           <>
-            {proximas.length === 0 ? null : (
-              <PanelCard title="Lo que viene">
-                <ul className="flex flex-col">
-                  {proximas.map((t) => (
-                    <li className="flex flex-wrap items-center justify-between gap-3 border-b border-line-panel py-2.5 last:border-none" key={t.id}>
-                      <span className="min-w-0 text-[14px] text-ink">
-                        {t.title}
-                        <span className={`block text-[11.5px] ${t.atrasada ? 'text-danger-deep' : 'text-ink-mute'}`}>
-                          {t.vence === null ? 'Sin fecha' : t.atrasada ? `Atrasada · vencía ${t.vence}` : `Vence ${t.vence}`}
-                        </span>
-                      </span>
-                      {t.atajo === null ? null : (
-                        <PanelButton href={`${raiz}${t.atajo.ruta}`}>{t.atajo.texto}</PanelButton>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              </PanelCard>
-            )}
-            <nav aria-label="Filtrar tareas" className="flex flex-wrap gap-2">
-              {FILTROS_DE_TAREAS.map((f) => (
-                <FilterChipLink active={f === filtro} href={f === 'todas' ? base : `${base}?filtro=${f}`} key={f}>
-                  {NOMBRE_FILTRO[f]}
+            <div className="flex items-center gap-4">
+              <span aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-panel">
+                <span className="block h-full rounded-full bg-shell-deep" style={{ width: `${(hechas.length / conApp.length) * 100}%` }} />
+              </span>
+              <span className="shrink-0 text-[15px] font-medium [font-variant-numeric:tabular-nums]">
+                {hechas.length} de {conApp.length} hechas
+              </span>
+            </div>
+            <nav aria-label="Filtrar tareas" className="mb-2 flex flex-wrap gap-2.5">
+              {chips.map((c) => (
+                <FilterChipLink active={c.clave === filtro} href={c.clave === null ? base : `${base}?filtro=${c.clave}`} key={c.texto}>
+                  {c.texto}
+                  {c.cuenta === undefined ? null : <span aria-hidden className="ml-1">{c.cuenta}</span>}
                 </FilterChipLink>
               ))}
             </nav>
-            <TaskBoard etapas={etapas} eventId={event.value.id} eventSlug={event.value.slug} filtrando={filtro !== 'todas'} tareas={visibles} />
+            <TaskBoard etapas={etapas} eventId={event.value.id} eventSlug={event.value.slug} filtrando={filtro !== null && filtro !== 'todas'} grupos={porGrupo} />
           </>
         )}
       </div>

@@ -3,11 +3,11 @@ import { contactarVentaAction, reabrirVentaAction, recordarPagoAction } from '@/
 import { OrderDecision } from '@/modules/orders'
 import { etiquetaDeMotivo } from '@/modules/leads'
 import { CheckIcon, WhatsAppIcon, MailIcon } from '@/shared/design/ui/icons'
-import { EtiquetaDeFiesta, Importe, MenuDeAcciones, Monograma, opcionDeMenu } from '@/shared/design/ui/panel/lista'
-import { PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
+import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { diaDelEvento, fechaHora, hace } from '@/shared/format/fecha'
 import { formatAmount } from '@/shared/money'
-import { etapaDeVenta, eventoDeVenta, origenDe, siguientePaso, type Venta } from '../../domain/ventas'
+import { eventoDeVenta, origenDe, siguientePaso, type Venta } from '../../domain/ventas'
 import { AbrirYAnotar, Copiar, PerderVenta, RegistrarSaldo } from './AccionesDeVenta'
 
 export type ComprobanteDeVenta = { readonly id: string; readonly originalName: string; readonly uploadedAt: Date }
@@ -40,7 +40,6 @@ export function FichaDeVenta({
   diseno: string | null
   ahora: Date
 }) {
-  const etapa = etapaDeVenta(v.etapa)
   const p = v.pedido
   const c = v.consulta
   const moneda = (cents: number) => formatAmount(cents, 'BOB')
@@ -48,41 +47,90 @@ export function FichaDeVenta({
   const paso = siguientePaso(v)
   const saldo = p !== null && p.amountCents !== null && p.depositCents !== null ? p.amountCents - p.depositCents : null
 
-  return (
-    <div className="flex flex-col gap-6">
-      {/* La cabecera: quién, qué fiesta, en qué etapa y cuánto vale. */}
-      <div className="flex flex-wrap items-start gap-4">
-        <Monograma fiesta={v.fiesta} grande nombre={v.nombre} />
-        <div className="min-w-[200px] flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <EtiquetaDeFiesta fiesta={v.fiesta} />
-            <Pill tone={etapa.tono}>{etapa.una}</Pill>
-            {v.urgente ? <Pill tone="no">Urge</Pill> : null}
-          </div>
-          <p className="mt-2 text-[13px] text-ink-soft">
-            {v.fechaEvento === null ? 'Sin fecha de evento' : `Evento el ${diaDelEvento(v.fechaEvento)}`}
-            {' · '}
-            <span className="whitespace-nowrap">en esta etapa {hace(v.esperaDesde, ahora)}</span>
-          </p>
-        </div>
-        {v.importeCents === null ? null : (
-          <div className="shrink-0 text-right max-[479px]:basis-full max-[479px]:text-left">
-            <Importe texto={moneda(v.importeCents)} />
-            {p?.depositCents === null || p === null ? null : <p className="mt-1 text-[11.5px] text-ink-mute">Anticipo {moneda(p.depositCents)}</p>}
-          </div>
-        )}
-      </div>
+  const contacto = [v.telefono, v.correo].filter((x): x is string => x !== null && x !== '')
+  const cerrable = !(v.etapa === 'cerrada' || v.etapa === 'perdida' || v.etapa === 'cancelada' || v.etapa === 'saldo_pendiente' || v.etapa === 'por_crear_evento')
 
-      {/* El siguiente paso, y el resto en «⋯». */}
-      <div className="flex flex-wrap items-center gap-2.5 rounded-[18px] border border-line-panel bg-white/80 p-3 shadow-card">
-        <Principal enlaces={enlaces} moneda={moneda} paso={paso} saldo={saldo} slugDelEvento={slugDelEvento} venta={v} />
-        <div className="ml-auto">
+  return (
+    <div className="flex flex-col gap-5.5">
+      {/* El pago por revisar, en su caja de latón con el importe a comparar (maqueta E02). */}
+      {p !== null && p.status === 'proof_submitted' ? (
+        <div className="flex flex-col gap-4 rounded-[12px] bg-pill-laton p-4.5">
+          <div className="flex items-center gap-5">
+            <span aria-hidden className="flex h-[108px] w-[84px] shrink-0 -rotate-2 flex-col gap-1.5 rounded-[6px] border border-grab-borde bg-white p-2.5 shadow-[0_6px_14px_rgb(12_36_32/0.1)]">
+              <span className="h-[7px] w-3/5 bg-shell-deep" />
+              <span className="h-1 w-[90%] bg-line-panel" />
+              <span className="h-1 w-[78%] bg-line-panel" />
+              <span className="h-1 w-[85%] bg-line-panel" />
+              <span className="mt-auto h-[7px] w-[46%] self-end bg-gold" />
+            </span>
+            <div className="min-w-0">
+              <p className="font-semibold">
+                Subió su comprobante {comprobantes[0] === undefined ? '' : hace(comprobantes[comprobantes.length - 1]!.uploadedAt, ahora)}
+              </p>
+              <p className="mt-1 text-[14.5px] text-ink-soft">
+                Revisa que el monto{p.amountCents === null ? '' : ` (${moneda(p.depositCents ?? p.amountCents)})`} y el nombre coincidan con el pedido.
+              </p>
+            </div>
+          </div>
+          <ListaDeComprobantes comprobantes={comprobantes} />
+        </div>
+      ) : comprobantes.length > 0 ? (
+        <ListaDeComprobantes comprobantes={comprobantes} />
+      ) : null}
+
+      {/* Cómo contactarle, con WhatsApp a un toque. */}
+      {contacto.length === 0 && enlaces.contactar === null ? null : (
+        <div className="flex flex-wrap items-center justify-between gap-3.5">
+          <div className="text-[14.5px]">
+            {contacto[0] ?? ''}
+            {contacto[1] === undefined ? null : <div className="text-ink-mute">{contacto[1]}</div>}
+          </div>
+          {enlaces.contactar === null ? null : (
+            <a
+              className="inline-flex min-h-11 items-center gap-2 rounded-[10px] bg-whatsapp px-4.5 text-[14.5px] font-medium text-white no-underline transition-colors hover:bg-whatsapp-hover"
+              href={enlaces.contactar}
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              <WhatsAppIcon className="size-[18px]" /> Escribir por WhatsApp
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* Lo que escribió y lo que pasó, plegado: la decisión va primero. */}
+      <details className="group rounded-[12px] border border-line-panel">
+        <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between px-4 text-[14.5px] font-medium [&::-webkit-details-marker]:hidden">
+          Recorrido y datos
+          <span aria-hidden className="text-ink-mute transition-transform group-open:rotate-180">⌄</span>
+        </summary>
+        <div className="flex flex-col gap-5 border-t border-line-panel px-4 py-4">
+          <Recorrido venta={v} comprobantes={comprobantes} moneda={moneda} />
+          <dl className="grid gap-4 min-[480px]:grid-cols-2">
+            <Dato etiqueta="Qué celebra">{c?.categoria ?? (v.fiesta === null ? '—' : { boda: 'Boda', xv: 'XV años', cumple: 'Cumpleaños' }[v.fiesta])}</Dato>
+            <Dato etiqueta="Fecha del evento">{v.fechaEvento === null ? '—' : diaDelEvento(v.fechaEvento)}</Dato>
+            <Dato etiqueta="Teléfono">{v.telefono ?? '—'}</Dato>
+            <Dato etiqueta="Correo">{v.correo ?? '—'}</Dato>
+            {p === null ? null : <Dato etiqueta={p.esExtra ? 'Extra' : 'Plan'}>{p.producto}</Dato>}
+            {p === null || p.esExtra ? null : <Dato etiqueta="Diseño">{diseno ?? 'Lo elige después'}</Dato>}
+            {c === null ? null : <Dato etiqueta="Llegó por">{origenDe(c.utm)}</Dato>}
+            {p === null ? null : <Dato etiqueta="Referencia">{p.publicRef}</Dato>}
+            {p?.depositCents === null || p === null ? null : <Dato etiqueta="Anticipo">{moneda(p.depositCents)}</Dato>}
+          </dl>
+          {c?.message ? <p className="rounded-[10px] bg-bg px-4 py-3 text-[14px] leading-relaxed text-ink">«{c.message}»</p> : null}
+          {c?.note ? <p className="text-[13px] text-ink-mute">Nota: {c.note}</p> : null}
+        </div>
+      </details>
+
+      <div aria-hidden className="h-[3px] border-y border-grab-borde" />
+
+      {/* Abajo, como en la maqueta: lo que deshace a la izquierda y el siguiente paso a la derecha. */}
+      {p !== null && p.status === 'proof_submitted' ? (
+        <OrderDecision correo={v.correo} esExtra={p.esExtra} nombre={v.nombre} importe={p.depositCents === null ? (p.amountCents === null ? null : moneda(p.amountCents)) : moneda(p.depositCents)} orderId={p.id} />
+      ) : (
+        <div className="flex flex-wrap items-center gap-3.5">
+          {cerrable ? <PerderVenta consultaId={c?.id ?? null} orderId={p !== null && p.status !== 'approved' ? p.id : null} /> : null}
           <MenuDeAcciones>
-            {enlaces.contactar === null ? null : (
-              <a className={opcionDeMenu()} href={enlaces.contactar} rel="noopener noreferrer" target="_blank">
-                <WhatsAppIcon className="size-4" /> Escribir por WhatsApp
-              </a>
-            )}
             {enlaces.correo === null ? null : (
               <a className={opcionDeMenu()} href={enlaces.correo}>
                 <MailIcon className="size-4" /> Enviar un correo
@@ -111,44 +159,9 @@ export function FichaDeVenta({
               Ver la ficha del cliente
             </a>
           </MenuDeAcciones>
+          <span className="flex-1" />
+          <Principal enlaces={enlaces} moneda={moneda} paso={paso} saldo={saldo} slugDelEvento={slugDelEvento} venta={v} />
         </div>
-      </div>
-
-      {/* El pago por revisar, con el importe a comparar. */}
-      {p !== null && p.status === 'proof_submitted' ? (
-        <Bloque titulo="Comprobante">
-          <ListaDeComprobantes comprobantes={comprobantes} />
-          <div className="mt-3">
-            <OrderDecision correo={v.correo} esExtra={p.esExtra} importe={p.depositCents === null ? (p.amountCents === null ? null : moneda(p.amountCents)) : moneda(p.depositCents)} orderId={p.id} />
-          </div>
-        </Bloque>
-      ) : comprobantes.length > 0 ? (
-        <Bloque titulo="Comprobantes">
-          <ListaDeComprobantes comprobantes={comprobantes} />
-        </Bloque>
-      ) : null}
-
-      <Bloque titulo="Recorrido">
-        <Recorrido venta={v} comprobantes={comprobantes} moneda={moneda} />
-      </Bloque>
-
-      <Bloque titulo="Datos">
-        <dl className="grid gap-4 min-[480px]:grid-cols-2">
-          <Dato etiqueta="Qué celebra">{c?.categoria ?? (v.fiesta === null ? '—' : { boda: 'Boda', xv: 'XV años', cumple: 'Cumpleaños' }[v.fiesta])}</Dato>
-          <Dato etiqueta="Fecha del evento">{v.fechaEvento === null ? '—' : diaDelEvento(v.fechaEvento)}</Dato>
-          <Dato etiqueta="Teléfono">{v.telefono ?? '—'}</Dato>
-          <Dato etiqueta="Correo">{v.correo ?? '—'}</Dato>
-          {p === null ? null : <Dato etiqueta={p.esExtra ? 'Extra' : 'Plan'}>{p.producto}</Dato>}
-          {p === null || p.esExtra ? null : <Dato etiqueta="Diseño">{diseno ?? 'Lo elige después'}</Dato>}
-          {c === null ? null : <Dato etiqueta="Llegó por">{origenDe(c.utm)}</Dato>}
-          {p === null ? null : <Dato etiqueta="Referencia">{p.publicRef}</Dato>}
-        </dl>
-        {c?.message ? <p className="mt-4 rounded-[14px] bg-bg-sunken/60 px-4 py-3 text-[13.5px] leading-relaxed text-ink">«{c.message}»</p> : null}
-        {c?.note ? <p className="mt-3 text-[12.5px] text-ink-mute">Nota: {c.note}</p> : null}
-      </Bloque>
-
-      {v.etapa === 'cerrada' || v.etapa === 'perdida' || v.etapa === 'cancelada' || v.etapa === 'saldo_pendiente' || v.etapa === 'por_crear_evento' ? null : (
-        <PerderVenta consultaId={c?.id ?? null} orderId={p !== null && p.status !== 'approved' ? p.id : null} />
       )}
     </div>
   )
@@ -295,15 +308,6 @@ function ListaDeComprobantes({ comprobantes }: { comprobantes: readonly Comproba
         </li>
       ))}
     </ul>
-  )
-}
-
-function Bloque({ titulo, children }: { titulo: string; children: ReactNode }) {
-  return (
-    <section>
-      <h3 className="mb-3 font-mono text-[10px] tracking-[0.18em] text-ink-mute uppercase">{titulo}</h3>
-      {children}
-    </section>
   )
 }
 

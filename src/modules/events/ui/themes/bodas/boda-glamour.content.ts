@@ -21,7 +21,7 @@ export const CONTENIDO_DE_MUESTRA: InvitationContent = {
   },
   ceremony: { label: 'Ceremonia Religiosa', place: 'Parroquia San Rafael', time: '16:00' },
   reception: { label: 'Recepción Social', place: 'Salón Los Cedros', time: '18:30' },
-  map: { label: 'SALÓN LOS CEDROS', coords: '17.39°S · 66.15°O' },
+  map: { label: 'SALÓN LOS CEDROS', coords: '19.32°N · 99.18°W' },
   itinerary: [
     { time: '16:00', label: 'Ceremonia' },
     { time: '18:30', label: 'Recepción' },

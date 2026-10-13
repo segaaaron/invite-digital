@@ -37,7 +37,8 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   await page.getByLabel('Fondo', { exact: true }).fill('Luna de miel')
   await page.getByLabel('Meta', { exact: true }).fill('5.000,00')
   await page.getByRole('button', { name: 'Abrir fondo' }).click()
-  await page.waitForURL(/regalos$/)
+  // Creado el fondo, se queda en la pestaña de fondos (maqueta E12).
+  await page.waitForURL(/regalos\?vista=fondos$/)
   await expect(page.getByRole('heading', { name: 'Luna de miel' })).toBeVisible()
 
   // 2. El invitado abre su enlace y reserva.
@@ -65,7 +66,7 @@ test('el invitado reserva un regalo desde su enlace y el panel lo ve reservado',
   await page.goto(`/panel/eventos/${SLUG}/regalos`)
   await page.getByRole('link', { name: 'Lista de regalos', exact: true }).click()
   await expect(page.getByText('Reservado', { exact: true })).toBeVisible()
-  await expect(page.getByText('Reservado por Familia Rojas Peña')).toBeVisible()
+  await expect(page.getByText('por Familia Rojas Peña', { exact: true })).toBeVisible()
 
   // 5. El invitado lo suelta y vuelve a estar disponible.
   await page.goto(`/i/${token}`)

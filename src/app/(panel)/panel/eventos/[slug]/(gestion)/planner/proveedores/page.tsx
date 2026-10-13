@@ -5,12 +5,15 @@ import { fiestaDeTema } from '@/modules/events'
 import { requireSession } from '@/app/_acciones/sesion'
 import { buildWhatsAppLink } from '@/modules/leads'
 import { categoriasDe, cuentasDePartida } from '@/modules/planner'
-import { NewVendorForm, VendorsBoard } from '@/modules/planner/ui/VendorsBoard'
+import { EditarProveedor, NewVendorForm, VendorsBoard } from '@/modules/planner/ui/VendorsBoard'
 import { FeatureLocked } from '@/modules/plans'
 import { DEFAULT_CURRENCY, formatAmount } from '@/shared/money'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
-import { PanelCard } from '@/shared/design/ui/panel/cards'
-import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { FilterChipLink, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
+import { AccionDeLaIsla } from '@/shared/design/ui/panel/AccionDeLaIsla'
+import { PlusIcon } from '@/shared/design/ui/icons'
+import Link from 'next/link'
 import { isErr } from '@/shared/result'
 
 export const metadata = { title: 'Proveedores' }
@@ -18,10 +21,10 @@ export const dynamic = 'force-dynamic'
 
 const campo = (cents: number) => `${Math.trunc(cents / 100)}.${String(cents % 100).padStart(2, '0')}`
 
-export default async function ProveedoresPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ panel?: string }> }) {
+export default async function ProveedoresPage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ panel?: string; proveedor?: string; filtro?: string }> }) {
   const actor = await requireSession()
   const { slug } = await params
-  const { panel } = await searchParams
+  const { panel, proveedor: editando, filtro } = await searchParams
 
   const event = await events.getFor(actor, slug, { section: 'planner' })
   if (isErr(event)) {
@@ -34,7 +37,7 @@ export default async function ProveedoresPage({ params, searchParams }: { params
 
   const fiesta = fiestaDeTema(event.value.themeKey)
   const partidas = await planner.listBudget(event.value.id)
-  const bs = (c: number) => formatAmount(c, DEFAULT_CURRENCY)
+  const bs = (c: number) => formatAmount(c, DEFAULT_CURRENCY).replace(/,00$/, '')
   const proveedores = (await planner.dia.listVendors(event.value.id)).map((p) => {
     const partida = p.budgetItemId === null ? null : (partidas.find((x) => x.id === p.budgetItemId) ?? null)
     const c = partida === null ? null : cuentasDePartida(partida)
@@ -49,29 +52,61 @@ export default async function ProveedoresPage({ params, searchParams }: { params
   const evento = { eventId: event.value.id, eventSlug: event.value.slug }
   const base = `/panel/eventos/${event.value.slug}/planner`
 
+  const lista = `${base}/proveedores`
+  const contratados = proveedores.filter((p) => p.status !== 'cotizando')
+  const cotizando = proveedores.filter((p) => p.status === 'cotizando')
+  const visibles = filtro === 'contratados' ? contratados : filtro === 'cotizando' ? cotizando : proveedores
+  const chips = [
+    { clave: undefined, texto: 'Todos', cuenta: proveedores.length },
+    { clave: 'contratados', texto: 'Contratados', cuenta: contratados.length },
+    { clave: 'cotizando', texto: 'Cotizando', cuenta: cotizando.length },
+  ]
+  const conFiltro = (extra: string) => `${lista}?${filtro ? `filtro=${filtro}&` : ''}${extra}`
+  const enEdicion = editando === undefined ? undefined : proveedores.find((p) => p.id === editando)
+  const cerrar = filtro ? `${lista}?filtro=${filtro}` : lista
+  const dia = new Intl.DateTimeFormat('es-BO', { weekday: 'long', timeZone: 'UTC' }).format(new Date(`${event.value.eventDate}T00:00:00Z`))
+
   return (
     <>
       <PanelHeader
         actions={
-          <>
-            <PanelButton href={`${base}/presupuesto`}>Pagos en el presupuesto</PanelButton>
-            <PanelButton href={`${base}/proveedores?panel=proveedor`} variant="primary">
-              Sumar proveedor
-            </PanelButton>
-          </>
+          <PanelButton href={conFiltro('panel=proveedor')} variant="primary">
+            <PlusIcon className="size-4" /> Añadir proveedor
+          </PanelButton>
         }
-        kicker="Planner"
-        meta={`${proveedores.length} proveedor${proveedores.length === 1 ? '' : 'es'} · ${proveedores.filter((p) => p.status === 'confirmado').length} confirmados`}
+        meta={`Quién trae qué el ${dia}. El dinero de cada uno va a su partida del presupuesto.`}
         title="Proveedores"
       />
-      <div className="flex flex-col gap-4.5">
-        {panel === 'proveedor' ? (
-          <PanelCard title="Proveedor nuevo">
-            <NewVendorForm categorias={categoriasDe(fiesta)} evento={evento} />
-          </PanelCard>
-        ) : null}
-        <VendorsBoard categorias={categoriasDe(fiesta)} enlacesIncluidos={enlacesIncluidos} evento={evento} proveedores={proveedores} />
-      </div>
+      <AccionDeLaIsla>
+        <Link aria-label="Añadir proveedor" className="grid size-11 place-items-center rounded-xl text-ink" href={conFiltro('panel=proveedor')}>
+          <PlusIcon className="size-6" />
+        </Link>
+      </AccionDeLaIsla>
+
+      {panel === 'proveedor' ? (
+        <PanelDialog closeHref={cerrar} kicker="Proveedores" lado="derecha" title="Añadir proveedor" width={520}>
+          <NewVendorForm categorias={categoriasDe(fiesta)} evento={evento} />
+        </PanelDialog>
+      ) : null}
+      {enEdicion === undefined ? null : (
+        <PanelDialog closeHref={cerrar} kicker="Proveedores" lado="derecha" title={enEdicion.company ?? enEdicion.service} width={520}>
+          <EditarProveedor categorias={categoriasDe(fiesta)} evento={evento} proveedor={enEdicion} />
+        </PanelDialog>
+      )}
+
+      {proveedores.length === 0 ? null : (
+        <nav aria-label="Filtrar proveedores" className="mb-6 flex flex-wrap gap-2.5">
+          {chips.map((c) => (
+            <FilterChipLink active={c.clave === filtro || (c.clave === undefined && filtro !== 'contratados' && filtro !== 'cotizando')} href={c.clave ? `${lista}?filtro=${c.clave}` : lista} key={c.texto}>
+              {c.texto}
+              <span aria-hidden className="ml-1">
+                {c.cuenta}
+              </span>
+            </FilterChipLink>
+          ))}
+        </nav>
+      )}
+      <VendorsBoard editarHref={conFiltro("proveedor=")} enlacesIncluidos={enlacesIncluidos} evento={evento} proveedores={visibles} />
     </>
   )
 }

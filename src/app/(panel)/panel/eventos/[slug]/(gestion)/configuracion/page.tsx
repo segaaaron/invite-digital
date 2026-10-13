@@ -1,22 +1,22 @@
 import { env } from '@/shared/config/env'
 import { notFound } from 'next/navigation'
-import type { ReactNode } from 'react'
 import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
-import { SegmentedTabs } from '@/shared/design/ui/panel/SegmentedTabs'
+import Link from 'next/link'
+import { portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
+import { avanceDeLaInvitacion } from '@/modules/events/ui/avance-de-invitacion'
 import { EyeIcon } from '@/shared/design/ui/icons'
-import { admin, diseno as encargos, events, guests, orders, plans, rsvp } from '@/app/composition/container'
+import { admin, diseno as encargos, events, guests, orders, planner, plans, rsvp } from '@/app/composition/container'
 import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
-import { ResumenDelEvento } from '@/modules/admin/ui/ResumenDelEvento'
+import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
+import { DuplicarEvento } from '@/modules/admin/ui/DuplicarEvento'
 import { diasEntre, fechaEnBolivia } from '@/modules/admin/domain/hoy'
 import { saludDelEvento } from '@/modules/admin/domain/salud'
 import { fiestaDeTema } from '@/modules/events'
 import { diaDelEvento, faltaPara } from '@/shared/format/fecha'
-import { SoporteDeBoda } from '@/modules/admin/ui/SoporteDeBoda'
 import { ContentBlockForms } from '@/modules/events/ui/ContentBlockForms'
 import { InvitacionEnVivo } from '@/modules/events/ui/InvitacionEnVivo'
 import '@/modules/events/ui/themes/kit/keyframes.css'
 import { DangerZone } from '@/modules/events/ui/DangerZone'
-import { DoorStaff } from '@/modules/events/ui/DoorStaff'
 import { EventClients } from '@/modules/events/ui/EventClients'
 import { EventForm } from '@/modules/events/ui/EventForm'
 import { PrivacyForm } from '@/modules/events/ui/PrivacyForm'
@@ -26,7 +26,6 @@ import { canManageStaff, gestionaElEvento, isAdmin, rolEnEquipo } from '@/module
 import { requireSession } from '@/app/_acciones/sesion'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
-import { NombreDelEvento } from '@/modules/events/ui/NombreDelEvento'
 import { EncargoDelCliente } from '@/modules/events/ui/EncargoDelCliente'
 import { PreguntasAlConfirmar } from '@/modules/rsvp/ui/PreguntasAlConfirmar'
 import { SaveTheDateCard } from '@/modules/events/ui/SaveTheDateCard'
@@ -127,6 +126,7 @@ export default async function ConfiguracionPage({
   // dos lecturas y no una: rellenar los campos del formulario con la muestra haría que el
   // cliente publicara «El Bar de Miki» con solo pulsar Guardar sin mirar.
   const contenido = await events.contenidoEscrito(event.value.id)
+  const avance = avanceDeLaInvitacion(tema.sections, contenido ?? {})
   const contenidoDeLaVistaPrevia = await events.contenidoParaVistaPrevia(event.value.id, tema.defaultContent, event.value.eventDate)
   const conCronograma = !esAdmin && isOk(await plans.requireFeature(event.value.id, 'plannerCompleto'))
 
@@ -185,98 +185,84 @@ export default async function ConfiguracionPage({
     const todos = await admin.events()
     const fila = isErr(todos) ? undefined : todos.value.find((e) => e.id === event.value.id)
     const hoy = fechaEnBolivia(new Date())
-    // En el celular y la tableta en vertical, las secciones largas de la ficha se pliegan: era una página de 5.700 px.
-    const seccion = (titulo: string, contenido: ReactNode) => (
-      <PlegableEnMovil titulo={titulo}>
-        <PanelCard title={titulo}>{contenido}</PanelCard>
-      </PlegableEnMovil>
-    )
-    const secciones = [
-      { id: 'diseno', titulo: 'Diseño por encargo' },
-      { id: 'invitacion', titulo: 'Invitación' },
-      { id: 'datos', titulo: 'Datos y diseño' },
-      { id: 'acceso', titulo: 'Acceso del cliente' },
-      { id: 'plan', titulo: 'Plan y responsable' },
-      ...(personal.length > 0 ? [{ id: 'puerta', titulo: 'Personal de puerta' }] : []),
-      { id: 'riesgo', titulo: 'Zona de riesgo' },
+    // Cómo va (E35): confirmados de cuántas personas, invitaciones enviadas y tareas al día, con la salud en una frase.
+    const [gente, tareas] = await Promise.all([guests.listPeople(event.value.id), planner.listTasks(event.value.id)])
+    const personas = isErr(gente) ? [] : gente.value
+    const vienen = personas.filter((p) => p.attending === 'yes').length
+    const tareasHechas = tareas.filter((t) => t.doneAt !== null).length
+    const salud = fila === undefined ? null : saludDelEvento({ ...fila, fiesta: fiestaDeTema(fila.themeKey) }, hoy)
+    const planNombre = isErr(capacidad) ? null : (opcionesDePlan.find((p) => p.slug === capacidad.value.planSlug)?.nombre ?? null)
+    const metricas = [
+      { nombre: 'Confirmados', n: vienen, de: personas.length, tono: 'bg-shell-deep' },
+      { nombre: 'Invitaciones enviadas', n: fila?.enviados ?? 0, de: fila?.grupos ?? 0, tono: 'bg-shell-deep' },
+      { nombre: 'Tareas al día', n: tareasHechas, de: tareas.length, tono: 'bg-gold' },
     ]
+    const portada = portadaParaCompartir(event.value.themeKey)
+    const TARJETA = 'flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta p-6 max-[767px]:p-5'
     return (
       <>
-        {/* En el celular el nombre ya va en la cabecera de la carcasa, con volver. */}
-        <div className="max-[859px]:hidden">
-          <PanelHeader kicker="Evento" title={event.value.title} />
-        </div>
-        <ResumenDelEvento
-          anfitriones={hostsDelEvento}
-          confirmaciones={fila === undefined ? null : { respondidos: fila.respondidos, grupos: fila.grupos }}
-          cuando={faltaPara(diasEntre(hoy, event.value.eventDate))}
-          eventId={event.value.id}
-          fecha={diaDelEvento(event.value.eventDate)}
-          fiesta={fiestaDeTema(event.value.themeKey)}
-          planNombre={isErr(capacidad) ? null : (opcionesDePlan.find((p) => p.slug === capacidad.value.planSlug)?.nombre ?? null)}
-          salud={fila === undefined ? null : saludDelEvento({ ...fila, fiesta: fiestaDeTema(fila.themeKey) }, hoy)}
-          slug={event.value.slug}
-          tema={themeFor(event.value.themeKey).key === event.value.themeKey ? tema.label : 'Un diseño retirado'}
-        />
-        <div className="grid items-start gap-6 min-[1100px]:grid-cols-[190px_minmax(0,1fr)]">
-          <nav aria-label="Secciones de la ficha" className="hidden min-[1100px]:sticky min-[1100px]:top-24 min-[1100px]:block">
-            <ul className="flex flex-col gap-0.5 border-l border-line-panel">
-              {secciones.map((sec) => (
-                <li key={sec.id}>
-                  <a className="-ml-px block border-l-2 border-transparent py-1.5 pl-4 text-[13px] text-ink-soft transition-colors hover:border-ink hover:text-ink" href={`#${sec.id}`}>
-                    {sec.titulo}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="flex min-w-0 flex-col gap-4.5">
-            <section className="scroll-mt-24" id="diseno">
-              <PanelCard title="Diseño por encargo">
-                <EncargoDelEquipo
-                  encargo={encargo}
-                  escribir={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`}
-                  eventId={event.value.id}
-                  hoy={hoy}
-                  rondas={encargo === null ? [] : await encargos.rondas(event.value.id)}
-                />
-              </PanelCard>
-            </section>
-            <section className="scroll-mt-24" id="invitacion">
-              <PanelCard title="Invitación">
-                <div className="flex flex-col items-start gap-3">
-                  <p className="text-[13px] text-ink-soft">
-                    Escribe sus textos, fotos y canción como lo haría el cliente, sin entrar como él. Cada guardado queda en la auditoría.
-                  </p>
-                  <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`} variant="primary">
-                    Escribir la invitación
+        <div className="mb-6 flex items-start gap-4">
+          {portada ? (
+            // La portada del diseño, a la vista en el celular junto al nombre (M24).
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt="" className="h-[120px] w-[76px] shrink-0 rounded-[8px] object-cover min-[1100px]:hidden" src={portada} />
+          ) : null}
+          <div className="min-w-0 flex-1">
+            <PanelHeader
+              actions={
+                <span className="flex gap-2.5 max-[767px]:hidden">
+                  <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`}>
+                    <EyeIcon className="size-4" /> Ver la invitación
                   </PanelButton>
-                </div>
-              </PanelCard>
-            </section>
-            <section className="scroll-mt-24" id="datos">
-              {seccion(
-                'Datos y diseño',
-                <div className="flex flex-col gap-6">
-                  <EventForm diseno={diseno} event={event.value} />
-                  <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
-                </div>,
-              )}
-            </section>
-            <section className="scroll-mt-24" id="acceso">
-              {seccion(
-                'Acceso del cliente',
-                <div className="flex flex-col gap-5">
-                  <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
-                  <div className="border-t border-line-panel pt-4">
-                    <SoporteDeBoda anfitriones={hostsDelEvento} eventId={event.value.id} />
+                  <EntrarComoCliente anfitriones={hostsDelEvento} eventId={event.value.id} variant="primary" />
+                </span>
+              }
+              meta={`${diaDelEvento(event.value.eventDate)}${event.value.venue ? `, ${event.value.venue}` : ''}. Diseño «${themeFor(event.value.themeKey).key === event.value.themeKey ? tema.label : 'retirado'}», plan ${planNombre ?? 'sin asignar'}.`}
+              title={event.value.title}
+            />
+          </div>
+        </div>
+        <div className="mb-5 min-[768px]:hidden">
+          <EntrarComoCliente anfitriones={hostsDelEvento} eventId={event.value.id} variant="primary" />
+        </div>
+
+        <div className="grid items-start gap-5 min-[1100px]:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="flex min-w-0 flex-col gap-5">
+            <section aria-labelledby="como-va" className={TARJETA}>
+              <div>
+                <h2 className="font-display text-[24px] font-medium" id="como-va">
+                  Cómo va
+                </h2>
+                <p className="mt-1 text-[14px] text-ink-mute">
+                  {faltaPara(diasEntre(hoy, event.value.eventDate)).replace(/^./, (c) => c.toUpperCase())}. {salud?.texto ?? 'Sin datos todavía.'}
+                </p>
+              </div>
+              <div className="grid gap-5 min-[700px]:grid-cols-3">
+                {metricas.map((m) => (
+                  <div className="flex flex-col gap-2" key={m.nombre}>
+                    <p className="flex items-baseline justify-between gap-2 text-[14px] min-[700px]:flex-col min-[700px]:items-start">
+                      <span className="text-ink-mute max-[699px]:text-ink">{m.nombre}</span>
+                      <span className="font-display text-[30px] leading-none font-medium [font-variant-numeric:lining-nums] max-[699px]:font-sans max-[699px]:text-[15px]">
+                        {m.n} <span className="text-[16px] text-ink-mute max-[699px]:text-[15px] max-[699px]:text-ink">de {m.de}</span>
+                      </span>
+                    </p>
+                    <span aria-hidden className="h-1.5 overflow-hidden rounded-full bg-line-panel">
+                      <span className={`block h-full rounded-full ${m.tono}`} style={{ width: `${m.de === 0 ? 0 : Math.min(1, m.n / m.de) * 100}%` }} />
+                    </span>
                   </div>
-                </div>,
-              )}
+                ))}
+              </div>
             </section>
-            <section className="scroll-mt-24" id="plan">
-              {seccion(
-                'Plan y responsable',
+
+            <section aria-labelledby="accesos" className={`${TARJETA} scroll-mt-24`} id="acceso">
+              <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} puerta={personal} />
+            </section>
+
+            <PlegableEnMovil titulo="Plan, diseño y dirección">
+              <section aria-labelledby="detalles" className={`${TARJETA} scroll-mt-24`} id="datos">
+                <h2 className="font-display text-[24px] font-medium" id="detalles">
+                  Detalles
+                </h2>
                 <ResponsableYPlan
                   eventId={event.value.id}
                   eventSlug={event.value.slug}
@@ -284,20 +270,45 @@ export default async function ConfiguracionPage({
                   owners={responsables.map((u) => ({ id: u.id, email: u.email }))}
                   planSlug={isErr(capacidad) ? null : capacidad.value.planSlug}
                   plans={opcionesDePlan.map((p) => ({ slug: p.slug, nombre: p.nombre }))}
-                />,
-              )}
-            </section>
-            {personal.length > 0 ? (
-              <section className="scroll-mt-24" id="puerta">
-                {seccion('Personal de puerta', <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />)}
+                />
+                <div className="border-t border-line-panel pt-5">
+                  <EventForm diseno={diseno} event={event.value} />
+                </div>
+                <div className="border-t border-line-panel pt-5">
+                  <PrivacyForm contrasenaIncluida={contrasenaIncluida} eventId={event.value.id} eventSlug={event.value.slug} hasPassword={conContrasena} />
+                </div>
               </section>
-            ) : null}
-            <section className="scroll-mt-24" id="riesgo">
-              <PlegableEnMovil titulo="Zona de riesgo">
-                <DangerZone eventId={event.value.id} eventSlug={event.value.slug} />
-              </PlegableEnMovil>
-            </section>
+            </PlegableEnMovil>
           </div>
+
+          <aside className="flex flex-col gap-5">
+            {portada ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img alt={`Portada de «${tema.label}»`} className="aspect-[9/14] w-full rounded-[16px] border border-line-panel object-cover max-[1099px]:hidden" src={portada} />
+            ) : null}
+            <section aria-label="La invitación" className={TARJETA}>
+              <p className="text-[14px] text-ink-mute">Escribe sus textos, fotos y canción como lo haría el cliente, sin entrar como él. Cada guardado queda en la auditoría.</p>
+              <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`} size="sm">
+                Escribir la invitación
+              </PanelButton>
+            </section>
+            {encargo === null ? null : (
+              <section aria-label="Diseño por encargo" className={TARJETA} id="diseno">
+                <EncargoDelEquipo
+                  encargo={encargo}
+                  escribir={`/panel/eventos/${event.value.slug}/configuracion?vista=invitacion`}
+                  eventId={event.value.id}
+                  hoy={hoy}
+                  rondas={await encargos.rondas(event.value.id)}
+                />
+              </section>
+            )}
+            {/* Mismo diseño, plan y fecha, sin invitados: la civil y la religiosa, o la familia que vuelve. */}
+            <DuplicarEvento eventId={event.value.id} />
+            <div id="riesgo">
+              <DangerZone eventId={event.value.id} personas={personas.length} titulo={event.value.title} />
+            </div>
+          </aside>
         </div>
       </>
     )
@@ -311,7 +322,8 @@ export default async function ConfiguracionPage({
             {escribiendo ? <PanelButton href={`/panel/eventos/${event.value.slug}/configuracion`}>Volver a la ficha</PanelButton> : null}
             {/* Verla entera, como la abrirá un invitado: el botón principal de la pantalla, no solo el
                 «Pantalla completa» pequeño junto al teléfono, que no se veía (7 de octubre). */}
-            {contenido === null ? null : (
+            {/* Quien no gestiona el evento ya lo tiene arriba, en la barra («Ver mi invitación»). */}
+            {contenido === null || !esDelAtelier ? null : (
               <PanelButton href={`/panel/eventos/${event.value.slug}/vista-previa`} variant="primary">
                 <EyeIcon className="size-4" /> Ver mi invitación
               </PanelButton>
@@ -319,32 +331,40 @@ export default async function ConfiguracionPage({
           </>
         }
         kicker={escribiendo ? `Invitación de ${event.value.title}` : 'Evento'}
-        meta="Completa cada sección y mira cómo queda en la vista previa. Se guarda sección por sección."
-        title={escribiendo || !esDelAtelier ? 'Personalizar invitación' : 'Configuración del evento'}
+        meta="Escríbela en el orden en que se lee. A la derecha la ves como la verá tu invitado."
+        title={escribiendo ? 'Escribir la invitación' : !esDelAtelier ? 'Mi invitación' : 'Configuración del evento'}
       />
 
       {contenido === null ? null : (
-        <div className="sticky top-[calc(env(safe-area-inset-top)+64px)] z-20 mb-4 flex justify-center min-[860px]:top-20 min-[1280px]:hidden">
-          <SegmentedTabs
-            current={viendo ? 'ver' : 'editar'}
-            label="Editar o ver la invitación"
-            segments={(() => {
-              const base = `/panel/eventos/${event.value.slug}/configuracion${escribiendo ? '?vista=invitacion' : ''}`
-              return [
-                { key: 'editar', label: 'Editar', href: base },
-                { key: 'ver', label: 'Ver cómo queda', href: `${base}${escribiendo ? '&' : '?'}ver=1` },
-              ]
-            })()}
-          />
+        // En el celular y la tablet (M11): la portada, cuánto va y «Ver cómo queda»; el editor o la invitación, de a uno.
+        <div className="mb-5 flex items-center gap-4 min-[1024px]:hidden">
+          {portadaParaCompartir(tema.key) ? (
+            // La portada del diseño, decorativa.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img alt="" className="h-[96px] w-[64px] shrink-0 rounded-[8px] object-cover" src={portadaParaCompartir(tema.key) ?? ''} />
+          ) : null}
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <span aria-hidden className="h-1.5 flex-1 overflow-hidden rounded-full bg-line-panel">
+                <span className="block h-full rounded-full bg-shell-deep" style={{ width: `${(avance.listas / Math.max(1, avance.total)) * 100}%` }} />
+              </span>
+              <span className="shrink-0 text-[15px] font-medium [font-variant-numeric:tabular-nums]">
+                {avance.listas} de {avance.total}
+              </span>
+            </div>
+            <Link className="inline-flex min-h-11 w-fit items-center text-[16px] font-medium text-gold-deep underline underline-offset-4" href={`/panel/eventos/${event.value.slug}/configuracion${escribiendo ? '?vista=invitacion' : ''}${viendo ? '' : `${escribiendo ? '&' : '?'}ver=1`}`}>
+              {viendo ? 'Seguir escribiendo' : 'Ver cómo queda'}
+            </Link>
+          </div>
         </div>
       )}
 
       {/* El editor a la izquierda y la invitación a la derecha, dentro de un teléfono, que se
           vuelve a pintar al guardar cada bloque. El admin no ve el contenido: su ficha sigue en
           la rejilla de tarjetas de siempre. */}
-      <div className={contenido === null ? 'grid items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : 'grid items-start gap-4.5 min-[1280px]:grid-cols-[minmax(0,1fr)_400px]'}>
+      <div className={contenido === null ? 'grid items-start gap-4.5 min-[1100px]:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]' : 'grid items-start gap-x-8 gap-y-5 min-[1024px]:grid-cols-[minmax(0,1fr)_300px]'}>
         {contenido === null ? null : (
-        <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1279px]:hidden' : ''}`}>
+        <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1023px]:hidden' : ''}`}>
         {encargo === null || esAdmin ? null : (
           <PanelCard title="Tu invitación, paso a paso">
             <EncargoDelCliente
@@ -362,8 +382,7 @@ export default async function ConfiguracionPage({
             />
           </PanelCard>
         )}
-        <PanelCard title={`Tu invitación · ${tema.label}`}>
-          <ContentBlockForms
+        <ContentBlockForms
             fiesta={fiestaDeCategoria(tema.categorySlug)}
             temaKey={tema.key}
             {...(conCronograma ? { itinerarioDesde: `/panel/eventos/${event.value.slug}/planner/cronograma` } : {})}
@@ -375,13 +394,8 @@ export default async function ConfiguracionPage({
             media={imagenes}
             sections={tema.sections}
           />
-        </PanelCard>
-        {esDelAtelier ? null : (
-          <PanelCard title="Nombre del evento">
-            <NombreDelEvento eventId={event.value.id} title={event.value.title} />
-          </PanelCard>
-        )}
-        {tema.estilo === undefined ? null : (
+        {/* Quien organiza por pertenencia tiene estas tarjetas en «Configuración» (maqueta E31): aquí, solo escribir. */}
+        {tema.estilo === undefined || !esDelAtelier ? null : (
           <PanelCard title="Colores y letra">
             <EstiloDelEventoCard
               acentoDelDiseno={tema.estilo.acento?.principal ?? null}
@@ -396,6 +410,7 @@ export default async function ConfiguracionPage({
             />
           </PanelCard>
         )}
+        {!esDelAtelier ? null : (
         <PanelCard title="Save the date">
           <SaveTheDateCard
             disponible={esAdmin || (await events.saveTheDate.comprado(event.value.id))}
@@ -408,7 +423,8 @@ export default async function ConfiguracionPage({
             })()}
           />
         </PanelCard>
-        {esAdmin ? null : (
+        )}
+        {esAdmin || !esDelAtelier ? null : (
           <PanelCard title="Preguntas al confirmar">
             <PreguntasAlConfirmar eventId={event.value.id} eventSlug={event.value.slug} preguntas={await rsvp.preguntas.leer(event.value.id)} />
           </PanelCard>
@@ -417,7 +433,7 @@ export default async function ConfiguracionPage({
         )}
 
         {contenido === null ? null : (
-          <aside className={`min-[1280px]:sticky min-[1280px]:top-6 min-[1280px]:row-span-6 min-[1280px]:block ${viendo ? '' : 'hidden'}`}>
+          <aside className={`min-[1024px]:sticky min-[1024px]:top-6 min-[1024px]:row-span-6 min-[1024px]:block ${viendo ? '' : 'hidden'}`}>
             <InvitacionEnVivo content={contenidoDeLaVistaPrevia ?? {}} estilo={await events.estilo.leer(event.value.id)} event={event.value} />
           </aside>
         )}
@@ -433,18 +449,11 @@ export default async function ConfiguracionPage({
 
         {/* Lo demás en una columna propia: en la rejilla, la tarjeta de al lado de «Detalles»
             —que es muy alta por el selector de diseños— se estiraba en blanco hasta su altura. */}
-        <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1279px]:hidden' : ''}`}>
+        <div className={`flex min-w-0 flex-col gap-4.5 ${viendo ? 'max-[1023px]:hidden' : ''}`}>
         {puedeGestionarPersonal && !escribiendo ? (
-          <PanelCard title="Acceso del cliente">
-            <div className="flex flex-col gap-5">
-              <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} />
-              {esAdmin ? (
-                <div className="border-t border-line-panel pt-4">
-                  <SoporteDeBoda anfitriones={anfitriones?.get(event.value.id) ?? []} eventId={event.value.id} />
-                </div>
-              ) : null}
-            </div>
-          </PanelCard>
+          <section aria-labelledby="accesos" className="flex flex-col gap-4 rounded-[16px] border border-line-panel bg-tarjeta p-6 max-[767px]:p-5">
+            <EventClients eventId={event.value.id} eventSlug={event.value.slug} members={clientes} puerta={personal} />
+          </section>
         ) : null}
 
         {esAdmin && !escribiendo ? (
@@ -460,14 +469,8 @@ export default async function ConfiguracionPage({
           </PanelCard>
         ) : null}
 
-        {puedeGestionarPersonal && personal.length > 0 && !escribiendo ? (
-          <PanelCard title="Personal de puerta">
-            <DoorStaff eventId={event.value.id} eventSlug={event.value.slug} members={personal} />
-          </PanelCard>
-        ) : null}
-
         {/* Borrar va lo último: es lo irreversible, y estaba en medio de la ficha. */}
-        {esDelAtelier && !escribiendo ? <DangerZone eventId={event.value.id} eventSlug={event.value.slug} /> : null}
+        {esDelAtelier && !escribiendo ? <DangerZone eventId={event.value.id} titulo={event.value.title} /> : null}
         </div>
 
       </div>

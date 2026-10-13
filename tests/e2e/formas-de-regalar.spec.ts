@@ -52,7 +52,7 @@ test('sobres y transferencia con QR: se guardan en el panel y el invitado los ve
   await page.getByLabel('La frase (opcional)').fill('Tu presencia es lo más importante; si quieres, trae tu sobre.')
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.locator('dialog[open]')).toHaveCount(0)
-  await page.getByRole('link', { name: 'Encender: Transferencia o QR' }).click()
+  await page.getByRole('link', { name: 'Transferencia: apagada, encender' }).click()
   await page.getByRole('switch', { name: /Recibir por transferencia/ }).check()
   await page.getByLabel('Banco').fill('Banco Nacional de Bolivia')
   await page.getByLabel('Titular').fill('Ana Vega Rojas')
@@ -61,7 +61,7 @@ test('sobres y transferencia con QR: se guardan en el panel y el invitado los ve
   await page.getByRole('button', { name: 'Guardar' }).click()
   await expect(page.locator('dialog[open]')).toHaveCount(0)
   await expect(page.getByText('Tu invitación muestra: lluvia de sobres, transferencia.')).toBeVisible()
-  await expect(page.getByText('Activa · con QR')).toBeVisible()
+  await expect(page.getByText('Con sus datos y el QR de tu banco.')).toBeVisible()
   await page.goto(`/panel/eventos/${SLUG}/regalos?panel=transferencia`)
   await expect(page.getByRole('img', { name: 'Tu QR para recibir transferencias' })).toBeVisible()
 

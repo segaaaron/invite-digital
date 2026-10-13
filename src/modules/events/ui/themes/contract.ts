@@ -144,6 +144,8 @@ export type ThemeDefinition = {
    * «sí» macizo (`pildoras`), «Sobre Lacrado» dos botones iguales (`uniformes`) y «Esencia»
    * campos subrayados (`linea`). No es una piel del mismo: son seis composiciones.
    */
+  /** El invitado de la tarjeta de pases en el escaparate, si la maqueta pone otro que «Pedro Zárate · 2». */
+  readonly invitadoDeMuestra?: { readonly label: string; readonly seats: number }
   readonly rsvp?: 'campos' | 'botones' | 'botones-oro' | 'pildoras' | 'uniformes' | 'linea' | 'fiesta'
   readonly sections: readonly SectionKey[]
   /**

@@ -100,7 +100,10 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
   return (
     <div
       aria-live="polite"
-      className={`-mt-2 mb-3 flex justify-end ${enReposo ? 'max-[859px]:hidden' : 'max-[859px]:fixed max-[859px]:inset-x-0 max-[767px]:bottom-[calc(96px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:bottom-6 min-[768px]:max-[859px]:left-[76px] max-[859px]:z-30 max-[859px]:m-0 max-[859px]:justify-center'}`}
+      // Fuera del flujo (maqueta «Esmeralda y Latón»: la cabecera de cada pantalla empieza arriba, sin nada encima):
+      // en tablet y escritorio, una píldora fija abajo a la izquierda del contenido; en el celular, centrada abajo y
+      // solo cuando hay algo que decir.
+      className={`fixed z-30 flex print:hidden ${enReposo ? 'max-[767px]:hidden' : 'max-[767px]:inset-x-0 max-[767px]:bottom-[calc(88px+env(safe-area-inset-bottom))] max-[767px]:justify-center'} min-[768px]:bottom-6 min-[768px]:left-[124px] min-[1280px]:bottom-9 min-[1280px]:left-[316px]`}
     >
       <div className="inline-flex items-center gap-1 rounded-full border border-line-panel bg-white/70 py-0.5 pr-0.5 pl-3 text-[12px] text-ink-mute shadow-card backdrop-blur-sm">
         <span className="flex items-center gap-1.5 pr-1.5">
@@ -117,7 +120,7 @@ export function EnVivo({ url, tipos, modo, oculto = false }: { url: string; tipo
         ) : (
           <button
             aria-busy={actualizando}
-            className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[12px] text-ink-soft max-[859px]:min-h-10 max-[859px]:px-3.5 max-[859px]:text-[13px] transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-60"
+            className="inline-flex cursor-pointer items-center gap-1 rounded-full px-2.5 py-1 text-[12px] text-ink-soft max-[859px]:min-h-11 max-[859px]:px-3.5 max-[859px]:text-[13px] transition-colors hover:bg-bg-sunken hover:text-ink disabled:opacity-60"
             disabled={actualizando}
             onClick={actualizar}
             type="button"

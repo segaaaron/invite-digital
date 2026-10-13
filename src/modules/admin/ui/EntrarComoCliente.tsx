@@ -61,10 +61,10 @@ export function EntrarComoCliente({
       {anfitriones.length > 1 ? (
         <dialog
           aria-labelledby={`${id}-titulo`}
-          className="m-auto w-[min(440px,92vw)] rounded-[18px] border border-line-panel bg-bg-raised p-6 text-left text-ink shadow-float backdrop:bg-ink/45"
+          className="m-auto w-[min(440px,92vw)] rounded-[20px] border border-line-panel bg-bg p-7 text-left text-ink shadow-float backdrop:bg-shell-deep/50"
           ref={dialogo}
         >
-          <h2 className="font-display text-[22px] leading-tight" id={`${id}-titulo`}>
+          <h2 className="font-display text-[28px] leading-tight font-medium" id={`${id}-titulo`}>
             Entrar como el cliente
           </h2>
           <p className="mt-2 text-[13px] leading-[1.6] text-ink-soft">Elige la cuenta. La entrada queda registrada en la auditoría.</p>

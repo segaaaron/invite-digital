@@ -47,7 +47,7 @@ test('el atelier reparte el salón y la puerta canta el número de mesa', async 
   await expect(mesa01).toContainText('4 / 8')
 
   // El resto lo reparte la auto-asignación.
-  await page.getByRole('button', { name: '+ Auto-asignar' }).click()
+  await page.getByRole('button', { name: 'Sentar a los demás solo' }).click()
   await expect(page.getByRole('region', { name: 'Invitados sin mesa' })).toBeHidden()
 
   // El plan del banquete lo lleva impreso.
@@ -81,7 +81,7 @@ test('el plano no guarda hasta que se pulsa Guardar', async ({ page }) => {
 
   const plano = page.getByLabel('Plano del salón')
   const marca = plano.getByRole('button', { name: /Mesa 01/ })
-  await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Guardar el plano' })).toBeDisabled()
 
   // Con el teclado, que es como lo usa quien no tiene ratón.
   await marca.focus()
@@ -89,8 +89,8 @@ test('el plano no guarda hasta que se pulsa Guardar', async ({ page }) => {
   await page.keyboard.press('ArrowRight')
   await expect(page.getByLabel('Estado del plano')).toContainText('sin guardar')
 
-  await page.getByRole('button', { name: 'Guardar cambios' }).click()
-  await expect(page.getByRole('button', { name: 'Guardar cambios' })).toBeDisabled()
+  await page.getByRole('button', { name: 'Guardar el plano' }).click()
+  await expect(page.getByRole('button', { name: 'Guardar el plano' })).toBeDisabled()
 
   // La posición sobrevive a una recarga: se guardó de verdad.
   await page.reload()

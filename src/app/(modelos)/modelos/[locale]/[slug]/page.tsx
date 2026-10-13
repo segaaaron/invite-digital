@@ -156,7 +156,7 @@ export default async function ModelPreviewPage({
         content={contenido}
         dictionary={diccionario.invitation}
         event={eventoDeMuestra}
-        guestInfo={INVITADO_DE_MUESTRA}
+        guestInfo={tema.invitadoDeMuestra ?? INVITADO_DE_MUESTRA}
         slots={ranurasDeVistaPrevia(diccionario, tema.rsvp, tema.categorySlug === 'xv-anos')}
         themes={diccionario.themes}
       />

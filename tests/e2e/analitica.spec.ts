@@ -43,9 +43,9 @@ test('abrir la invitación cuenta una visita, con su dispositivo y su camino', a
   const panel = await atelier.newPage()
   await panel.goto(`/panel/eventos/${SLUG}/estadisticas`)
   await expect(panel).toHaveURL(new RegExp(`/panel/eventos/${SLUG}#invitacion$`))
-  await expect(panel.getByText('Móvil')).toBeVisible()
-  await expect(panel.getByText('Código QR')).toBeVisible()
-  await expect(panel.getByText('Visitas a la invitación')).toBeVisible()
+  // «Cómo va tu invitación» (maqueta E21) lo dice en una frase: desde qué aparato y por dónde llega.
+  await expect(panel.getByText(/desde el celular \(100 %\) y les llega por Código QR/)).toBeVisible()
+  await expect(panel.getByText('1 vez')).toBeVisible()
 })
 
 test('un token desconocido no escribe ninguna visita', async ({ browser }) => {

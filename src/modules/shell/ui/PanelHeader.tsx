@@ -13,12 +13,15 @@ export function PanelHeader({
   actions,
   menu,
   accionesSoloEnEscritorio = false,
+  pestanas,
+  bajoPestanas,
+  tituloEnCelular,
 }: {
   title: string
   /** La parte del título que va en verde e itálica, como el `<b>` de la maqueta. */
   highlight?: string | undefined
   kicker?: string
-  meta?: string
+  meta?: string | undefined
   actions?: ReactNode
   /**
    * Las acciones de vez en cuando (exportar, importar…). En escritorio van en la fila con las demás; **en
@@ -27,16 +30,32 @@ export function PanelHeader({
   menu?: ReactNode
   /** Si todas las acciones se esconden en el celular (van a la barra de abajo o flotan): ahí no se deja su fila vacía. */
   accionesSoloEnEscritorio?: boolean
+  /** Las pestañas de la sección (maqueta: bajo el título, subrayadas). */
+  pestanas?: ReactNode
+  /** La línea que dice qué es esta pestaña, debajo de las pestañas (maqueta: Ajustes › Registro de fallos). */
+  bajoPestanas?: string
+  /** En el celular, otro título: dentro de Ajustes cada pantalla se llama por lo suyo («Equipo», M69). */
+  tituloEnCelular?: string
 }) {
   return (
-    <header className="mb-6.5 flex flex-wrap items-start justify-between gap-4 max-[859px]:mb-4">
-      <div className="min-w-0 max-[859px]:flex-1">
-        {kicker ? <p className="font-mono text-[11px] tracking-[0.18em] uppercase opacity-55">{kicker}</p> : null}
-        <h1 className="mt-1.5 font-display text-[30px] leading-none font-light text-ink min-[560px]:text-[38px]">
-          {title}
-          {highlight === undefined ? null : <b className="font-normal text-sage italic">{highlight}</b>}
+    <>
+    {/* Maqueta «Esmeralda y Latón»: el título en Bodoni a 40 px, su línea debajo y las acciones abajo a la derecha. El
+        `kicker` ya no se pinta: la ruta va en la barra de arriba. */}
+    <header className={`flex flex-wrap items-end justify-between gap-x-6 gap-y-4 ${pestanas ? 'mb-6' : 'mb-8'} max-[859px]:mb-4`} data-kicker={kicker}>
+      <div className="min-w-0 flex-[1_1_420px] max-[859px]:flex-1">
+        <h1 className="font-display text-[30px] leading-[1.08] font-medium text-ink min-[560px]:text-[40px]">
+          {tituloEnCelular === undefined ? (
+            title
+          ) : (
+            <>
+              <span className="max-[767px]:hidden">{title}</span>
+              <span className="min-[768px]:hidden">{tituloEnCelular}</span>
+            </>
+          )}
+          {highlight === undefined ? null : <b className="font-medium">{highlight}</b>}
         </h1>
-        {meta ? <p className="mt-2 text-[13px] text-ink-soft">{meta}</p> : null}
+        {/* En el celular las maquetas van sin la línea de ayuda: el título y lo que se hace. */}
+        {meta ? <p className="mt-2 max-w-[640px] text-[16px] text-ink-mute max-[767px]:hidden">{meta}</p> : null}
       </div>
       {menu ? (
         <details className="group/menu relative shrink-0 min-[860px]:hidden">
@@ -58,11 +77,14 @@ export function PanelHeader({
       {/* En el celular, las acciones en **una sola fila que se desliza**, sin estirarse ni apilarse: cuatro
           botones a lo ancho ocupaban medio teléfono antes de la lista (6 de octubre). */}
       {actions || menu ? (
-        <div className={`${accionesSoloEnEscritorio ? 'max-[859px]:hidden ' : ''}-mx-4.5 flex w-[calc(100%+36px)] flex-nowrap items-center gap-2 overflow-x-auto px-4.5 pb-1 [scrollbar-width:none] *:shrink-0 min-[560px]:mx-0 min-[560px]:w-auto min-[560px]:flex-wrap min-[560px]:overflow-visible min-[560px]:px-0 min-[560px]:pb-0 min-[560px]:gap-2.5 [&::-webkit-scrollbar]:hidden`}>
+        <div className={`${accionesSoloEnEscritorio ? 'max-[859px]:hidden ' : ''}-mx-4 flex w-[calc(100%+32px)] flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] *:shrink-0 min-[560px]:mx-0 min-[560px]:w-auto min-[560px]:flex-wrap min-[560px]:overflow-visible min-[560px]:px-0 min-[560px]:pb-0 min-[560px]:gap-2.5 [&::-webkit-scrollbar]:hidden`}>
           {actions}
           {menu ? <div className="contents max-[859px]:hidden">{menu}</div> : null}
         </div>
       ) : null}
     </header>
+    {pestanas}
+    {bajoPestanas ? <p className="-mt-3 mb-7 max-w-[680px] text-[15px] text-ink-mute max-[859px]:mb-5">{bajoPestanas}</p> : null}
+    </>
   )
 }

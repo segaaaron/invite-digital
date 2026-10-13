@@ -97,54 +97,46 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   const fuera = new Set(extra.fueraDelPlan ?? [])
   const en = (ruta: string) => (base === null || fuera.has(ruta) ? null : `${base}${ruta}`)
 
-  // **Seis entradas, una por trabajo** (28 de septiembre). Eran siete, y antes quince —una por
-  // tabla—. Cada cosa vive en un solo sitio: las pantallas hermanas son pestañas de su entrada
-  // (`activo`), y lo que el público ve —modelos, planes, extras y la web— es el Escaparate.
+  // **Los grupos de la maqueta «Esmeralda y Latón»** (12 de octubre): Principal · Vender · Organizar · Configurar.
+  // Cada trabajo en un solo sitio; las pantallas hermanas son pestañas de su entrada (`activo`). La cuenta propia
+  // vive en la tarjeta de quien entró, abajo de la barra.
   const administracion: Borrador[] = esAdmin
     ? [
+        { label: 'Principal', items: [{ href: '/panel/admin', label: 'Hoy', icon: 'hoy' }] },
         {
-          label: 'Día a día',
+          label: 'Vender',
           items: [
-            // Lo que pide acción hoy, con su botón para resolverlo.
-            { href: '/panel/admin', label: 'Hoy', icon: 'hoy' },
-            // Cada venta una sola vez: la consulta y su pedido son la misma fila, de la primera
-            // pregunta a la boda creada. Ingresos es su pestaña.
+            // La consulta y su pedido son la misma venta, de la primera pregunta al evento creado.
             {
               href: '/panel/admin/ventas',
               label: 'Ventas',
               icon: 'pedidos',
               count: (counts.consultas ?? 0) + (counts.pedidos ?? 0) || null,
               countLabel: 'por atender',
-              activo: ['/panel/admin/ventas', '/panel/admin/consultas', '/panel/pedidos', '/panel/admin/ingresos'],
+              activo: ['/panel/admin/ventas', '/panel/admin/consultas', '/panel/pedidos'],
             },
-            // La cartera y el calendario: qué evento está en riesgo y qué fin de semana queda libre.
-            { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos', activo: ['/panel/admin/eventos'] },
             // La persona entera: sus consultas, pedidos, eventos, acceso y notas.
             { href: '/panel/admin/clientes', label: 'Clientes', icon: 'usuarios', activo: ['/panel/admin/clientes'] },
+            { href: '/panel/admin/ingresos', label: 'Ingresos', icon: 'ingresos', activo: ['/panel/admin/ingresos'] },
           ],
         },
         {
-          label: 'Negocio',
+          label: 'Organizar',
           items: [
-            // Todo lo que ve el público: modelos, planes, extras y la web.
-            {
-              href: '/panel/admin/modelos',
-              label: 'Escaparate',
-              icon: 'web',
-              activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras', '/panel/admin/web'],
-            },
+            // La cartera y su calendario: qué evento está en riesgo y qué fin de semana queda libre.
+            { href: '/panel/admin/eventos', label: 'Eventos', icon: 'todosLosEventos', activo: ['/panel/admin/eventos', '/panel/eventos'] },
+            // Lo que vende la web: modelos, planes y extras.
+            { href: '/panel/admin/modelos', label: 'Catálogo', icon: 'catalogo', activo: ['/panel/admin/modelos', '/panel/admin/planes', '/panel/admin/extras'] },
           ],
         },
         {
-          label: 'Sistema',
+          label: 'Configurar',
           items: [
-            // Equipo, datos de cobro, mensajes y agenda, y auditoría. La cuenta propia va en el
-            // menú de la tarjeta del usuario, no aquí.
             {
-              href: '/panel/admin/usuarios',
+              href: '/panel/admin/fallos',
               label: 'Ajustes',
               icon: 'configuracion',
-              activo: ['/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/mensajes', '/panel/admin/asistente', '/panel/admin/fallos', '/panel/admin/auditoria'],
+              activo: ['/panel/admin/ajustes', '/panel/admin/fallos', '/panel/admin/usuarios', '/panel/admin/pagos', '/panel/admin/asistente', '/panel/admin/web', '/panel/admin/mensajes', '/panel/admin/auditoria'],
             },
           ],
         },
@@ -171,46 +163,49 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
   // —esa es la sección que pide cada página—, pero enseñar enlaces que devuelven 404 es
   // enseñar que existe algo a lo que no se llega.
   if (esCliente) {
+    // Los grupos de la maqueta: Mi evento · Organizar · El gran día · Ajustes. «Ver mi invitación» va arriba, en la
+    // barra superior, a un toque desde cualquier pantalla.
     return [
       {
         label: 'Mi evento',
         items: [
-          // Lo primero que se hace: escribir la invitación, y justo debajo verla entera como la verá un
-          // invitado. La vista previa salió de la barra el 28 de septiembre (quedaba solo «Pantalla completa»
-          // junto al editor) y volvió el 7 de octubre: no se encontraba (pedido del usuario).
-          { href: en('/configuracion'), label: 'Mi invitación', icon: 'editar' },
-          { href: en('/vista-previa'), label: 'Ver mi invitación', icon: 'vistaPrevia' },
           { href: base, label: 'Resumen', icon: 'resumen' },
-          { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'grupos' },
-          // Quién llegó y quién falta, en vivo; y desde ahí, el modo puerta para escanear.
-          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+          { href: en('/configuracion'), label: 'Mi invitación', icon: 'editar' },
+          { href: en('/invitados'), label: 'Invitados', icon: 'invitados', count: counts.invitados ?? null, countLabel: 'personas' },
           { href: en('/mesas'), label: 'Mesas', icon: 'mesas' },
           { href: en('/regalos'), label: 'Regalos', icon: 'regalos' },
-          { href: en('/mensajes'), label: 'Mensajes', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin leer' },
-          // Co-anfitriones, planner y porteros en una sola pantalla. El anfitrión suma a todos;
-          // su planner, solo porteros. El co-anfitrión no suma a nadie.
-          { href: equipo === 'coanfitrion' ? null : en('/equipo'), label: 'Equipo', icon: 'usuarios' },
-          // Comprar es del anfitrión.
-          { href: equipo === 'anfitrion' ? en('/extras') : null, label: 'Extras', icon: 'plan' },
+          { href: en('/mensajes'), label: 'Libro de firmas', icon: 'mensajes', count: counts.sinLeer ?? null, countLabel: 'sin agradecer' },
         ],
       },
       {
-        label: 'Planner',
+        label: 'Organizar',
         items: [
-          { href: en('/planner/tareas'), label: 'Plan de tareas', icon: 'tareas' },
-          { href: equipo === 'coanfitrion' ? null : en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
+          { href: en('/planner/tareas'), label: 'Tareas', icon: 'tareas' },
           { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
           // Proveedores y cronograma los llevan el anfitrión y su planner; el cortejo, todos.
           { href: equipo === 'coanfitrion' ? null : en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
-          { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
+          { href: equipo === 'coanfitrion' ? null : en('/planner/cronograma'), label: 'Cronograma', icon: 'cronograma' },
           { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
           { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
-          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
+          // La agenda del atelier no está en la maqueta; se queda al final de Organizar para no perderla.
+          { href: equipo === 'coanfitrion' ? null : en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
         ],
       },
       {
-        label: 'Cuenta',
+        label: 'El gran día',
         items: [
+          { href: equipo === 'coanfitrion' ? null : en('/dia-d'), label: 'Día D', icon: 'diaD' },
+          { href: equipo === 'coanfitrion' ? null : en('/checkin'), label: 'Ingreso al evento', icon: 'checkin', count: counts.llegadas ?? null, countLabel: 'dentro' },
+        ],
+      },
+      {
+        label: 'Ajustes',
+        items: [
+          // El anfitrión suma a su planner y a la recepción; el co-anfitrión no suma a nadie.
+          { href: equipo === 'coanfitrion' ? null : en('/equipo'), label: 'Equipo y recepción', icon: 'equipo' },
+          // Comprar es del anfitrión.
+          { href: equipo === 'anfitrion' ? en('/extras') : null, label: 'Extras', icon: 'extras' },
+          { href: en('/ajustes'), label: 'Configuración', icon: 'configuracion' },
           { href: extra.misEventos ? '/panel' : null, label: 'Mis eventos', icon: 'eventos' },
           { href: mesa, label: 'Mesa del planner', icon: 'eventos' },
         ],
@@ -264,7 +259,7 @@ function componer(slug: string | null, counts: NavCounts, esAdmin: boolean, esPu
         { href: en('/planner/agenda'), label: 'Agenda', icon: 'agenda' },
         { href: en('/planner/presupuesto'), label: 'Presupuesto', icon: 'presupuesto' },
         { href: en('/planner/proveedores'), label: 'Proveedores', icon: 'proveedores' },
-        { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'hoy' },
+        { href: en('/planner/cronograma'), label: 'Cronograma', icon: 'cronograma' },
         { href: extra.cortejo === false ? null : en('/planner/cortejo'), label: 'Cortejo', icon: 'cortejo' },
         { href: en('/planner/documentos'), label: 'Documentos', icon: 'documentos' },
         { href: en('/dia-d'), label: 'Día D', icon: 'diaD' },

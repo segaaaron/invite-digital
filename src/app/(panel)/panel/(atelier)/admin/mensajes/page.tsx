@@ -2,6 +2,7 @@ import { admin } from '@/app/composition/container'
 import { requireAdmin } from '@/app/_acciones/sesion'
 import { MensajesForm } from '@/modules/admin/ui/MensajesForm'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
+import { PestanasDeAdmin } from '@/modules/admin'
 import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { isErr } from '@/shared/result'
 
@@ -14,16 +15,16 @@ export default async function MensajesPage() {
   const leido = await admin.mensajes()
   return (
     <>
-      <PanelHeader kicker="Ajustes" meta="Lo que le escribes a tus clientes, cuántos eventos atiendes por día y el premio de una recomendación" title="Mensajes y agenda" />
-      <PanelCard>
-        {isErr(leido) ? (
+      <PanelHeader title="Ajustes" tituloEnCelular="Mensajes y agenda" pestanas={<PestanasDeAdmin />} />
+      {isErr(leido) ? (
+        <PanelCard>
           <p className="text-[13px] text-danger" role="alert">
             No pudimos leer los ajustes. La base no responde; vuelve a intentarlo en un momento.
           </p>
-        ) : (
-          <MensajesForm capacidad={leido.value.capacidad} descuento={leido.value.descuentoReferido} mensajes={leido.value.mensajes} />
-        )}
-      </PanelCard>
+        </PanelCard>
+      ) : (
+        <MensajesForm capacidad={leido.value.capacidad} descuento={leido.value.descuentoReferido} mensajes={leido.value.mensajes} />
+      )}
     </>
   )
 }

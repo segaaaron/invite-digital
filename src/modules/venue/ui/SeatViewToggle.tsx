@@ -12,8 +12,8 @@ export function SeatViewToggle({ base, current }: { base: string; current: 'mapa
   const chip = (clave: 'mapa' | 'tarjetas', texto: string) => (
     <Link
       aria-current={current === clave ? 'page' : undefined}
-      className={`rounded-[var(--radius-pill)] border px-3.5 py-2 font-mono text-[10px] tracking-[0.25em] whitespace-nowrap uppercase transition-colors max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center ${
-        current === clave ? 'border-ink bg-ink text-white' : 'border-line-panel-strong bg-white text-ink hover:border-ink'
+      className={`inline-flex min-h-9 items-center rounded-full border px-3.5 text-[13.5px] font-medium whitespace-nowrap transition-colors max-[859px]:min-h-11 ${
+        current === clave ? 'border-shell-deep bg-shell-deep text-shell-ink' : 'border-line-panel-strong bg-bg-raised text-ink hover:border-gold'
       }`}
       href={clave === 'mapa' ? base : `${base}?vista=tarjetas`}
     >
@@ -22,7 +22,7 @@ export function SeatViewToggle({ base, current }: { base: string; current: 'mapa
   )
 
   return (
-    <div className="flex flex-wrap gap-2.5">
+    <div className="flex flex-wrap gap-2">
       {chip('mapa', 'Vista de mapa')}
       {chip('tarjetas', 'Vista de tarjetas')}
     </div>

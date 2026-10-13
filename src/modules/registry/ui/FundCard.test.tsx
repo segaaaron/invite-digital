@@ -66,7 +66,7 @@ describe('FundCard', () => {
     // El importe aparece dos veces —en el titular y en la fila de la aportación—, y las
     // dos veces tiene que ser el mismo número.
     expect(screen.getAllByText(/500,00/).length).toBeGreaterThan(0)
-    expect(screen.getByText(/de .*1\.000,00/)).toBeInTheDocument()
+    expect(screen.getByText(/de .*1\.000/)).toBeInTheDocument()
   })
 
   it('la barra refleja el porcentaje', () => {

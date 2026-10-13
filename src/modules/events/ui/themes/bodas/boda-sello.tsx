@@ -17,6 +17,7 @@ export const bodaSelloDefinition: ThemeDefinition = {
   categorySlug: 'boda',
   palette: PALETA,
   fonts: ['cormorant', 'greatVibes', 'bodoniModa', 'jetbrainsMono', 'cinzel'],
+  invitadoDeMuestra: { label: 'Ricardo Montalvo y Sra.', seats: 2 },
   rsvp: 'uniformes',
   pinta: {
     // Seis fotos de la pareja repartidas por la invitación (la fecha, la historia, la

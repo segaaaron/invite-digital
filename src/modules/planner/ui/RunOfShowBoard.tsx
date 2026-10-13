@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useActionState, useEffect, useId } from 'react'
 import { type DiaActionState, removeMomentAction, saveMomentAction } from '@/app/_acciones/planner/dia-actions'
-import { ChevronIcon, ClockIcon, EyeIcon, PenIcon } from '@/shared/design/ui/icons'
+import { ChevronIcon, ClockIcon } from '@/shared/design/ui/icons'
 import { CampoHora } from '@/shared/design/ui/panel/campos-de-fecha'
 import { PanelDialog } from '@/shared/design/ui/panel/PanelDialog'
 import { FIELD_CLASS, Field, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
@@ -82,7 +82,7 @@ export function MomentoDialog({
   const icono = e?.icono ?? momento?.icono ?? null
 
   return (
-    <PanelDialog closeHref={cerrarEn} title={momento ? 'Editar momento' : 'Nuevo momento'} width={640}>
+    <PanelDialog closeHref={cerrarEn} title={momento ? 'Editar momento' : 'Añadir un momento'} width={520}>
       <form action={enviar} className="group flex flex-col gap-5" key={e ? JSON.stringify(e) : 'form'}>
         <Ocultos {...evento} extra={{ momentId: momento?.id ?? '' }} />
 
@@ -212,7 +212,10 @@ export function CronogramaVacio({ nuevo }: { nuevo: string }) {
   )
 }
 
-/** El cronograma en orden de hora: una línea de tiempo con los avisos de solapes y márgenes cortos. */
+/**
+ * El cronograma en orden de hora (E25): la hora en grande, el icono del momento, dónde o quién se encarga, si sale en
+ * la invitación y «Editar». En el celular, unidos por una línea (M13). Los solapes y márgenes cortos, avisados.
+ */
 export function RunOfShowBoard({
   momentos,
   proveedores,
@@ -227,90 +230,86 @@ export function RunOfShowBoard({
 }) {
   const nombre = (vid: string) => proveedores.find((p) => p.id === vid)?.service
   return (
-    <ol className="relative flex flex-col">
-      {momentos.map((m, i) => (
-        <li aria-label={`${m.startsAt} ${m.title}`} className="group relative grid grid-cols-[64px_40px_1fr] gap-x-3 min-[560px]:grid-cols-[84px_48px_1fr]" key={m.id}>
-          <span className="pt-3.5 text-right font-display text-[22px] leading-none font-light text-ink [font-variant-numeric:lining-nums_tabular-nums] min-[560px]:text-[26px]">
-            {m.startsAt}
-          </span>
-          <span className="relative flex justify-center">
-            {i < momentos.length - 1 ? <span aria-hidden className="absolute top-12 bottom-0 w-px bg-line-panel" /> : null}
-            {i > 0 ? <span aria-hidden className="absolute top-0 h-3 w-px bg-line-panel" /> : null}
-            <span className={`relative mt-2.5 grid size-9 place-items-center rounded-full border bg-white ${m.enInvitacion ? 'border-gold/60' : 'border-line-panel'}`}>
-              {m.enInvitacion && m.icono ? <Dibujo clave={m.icono} iconos={iconos} tam="size-6" /> : <span aria-hidden className={`size-2 rounded-full ${m.enInvitacion ? 'bg-gold' : 'bg-line-panel-strong'}`} />}
+    <ol className="flex flex-col">
+      {momentos.map((m, i) => {
+        const responsable = m.owner ?? m.vendorIds.map(nombre).filter(Boolean).join(', ')
+        const detalle = [m.place, responsable ? `Responsable: ${responsable}` : null, m.cue ? `♪ ${m.cue}` : null].filter(Boolean).join(' · ')
+        return (
+          <li
+            aria-label={`${m.startsAt} ${m.title}`}
+            className="group relative grid grid-cols-[72px_36px_minmax(0,1fr)] items-start gap-x-3 min-[768px]:grid-cols-[96px_44px_minmax(0,1fr)_auto] min-[768px]:items-center min-[768px]:border-b min-[768px]:border-line-panel min-[768px]:py-4"
+            key={m.id}
+          >
+            <span className="font-display text-[26px] leading-none font-medium text-ink [font-variant-numeric:lining-nums_tabular-nums] max-[767px]:pt-1 min-[768px]:text-right min-[768px]:text-[32px]">
+              {m.startsAt}
             </span>
-          </span>
-          <div className="flex min-w-0 items-start justify-between gap-3 border-b border-line-panel pt-3 pb-4 group-last:border-none">
-            <div className="flex min-w-0 flex-col gap-1">
-              <span className="text-[15px] text-ink">{m.title}</span>
-              <span className="text-[12px] text-ink-mute">
-                {[`${m.durationMin} min`, m.place, m.owner ? `a cargo de ${m.owner}` : null, m.cue ? `♪ ${m.cue}` : null, ...m.vendorIds.map(nombre)].filter(Boolean).join(' · ')}
+            <span className="relative flex h-full justify-center">
+              {i < momentos.length - 1 ? <span aria-hidden className="absolute top-5 -bottom-1 w-px bg-gold/60 min-[768px]:hidden" /> : null}
+              <span
+                className={`relative grid place-items-center rounded-full max-[767px]:mt-1.5 max-[767px]:size-4 max-[767px]:border-2 max-[767px]:border-gold max-[767px]:bg-bg min-[768px]:size-10 min-[768px]:border min-[768px]:border-line-panel-strong min-[768px]:bg-tarjeta min-[768px]:text-gold-deep`}
+              >
+                <span className="max-[767px]:hidden">
+                  {m.icono && iconos.some((x) => x.clave === m.icono) ? <Dibujo clave={m.icono} iconos={iconos} tam="size-6" /> : <ClockIcon className="size-4" />}
+                </span>
               </span>
-              <span className="mt-1 flex flex-wrap gap-1.5">
-                {m.enInvitacion ? (
-                  <span className="inline-flex items-center gap-1 text-[11.5px] text-gold-deep">
-                    <EyeIcon className="size-3.5" />
-                    En la invitación
-                  </span>
-                ) : (
-                  <span className="text-[11.5px] text-ink-mute">Solo para tu equipo</span>
-                )}
+            </span>
+            <div className="flex min-w-0 flex-col gap-0.5 max-[767px]:pb-6">
+              <span className="text-[15.5px] font-medium text-ink max-[767px]:text-[17px]">{m.title}</span>
+              {detalle ? <span className="text-[13.5px] text-ink-mute max-[767px]:text-[15px]">{detalle}</span> : null}
+              <span className="mt-1.5 flex flex-wrap items-center gap-2 min-[768px]:hidden">
+                <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? 'En la invitación' : 'Solo tu equipo'}</Pill>
                 {m.aviso ? <Pill tone="no">{m.aviso}</Pill> : null}
               </span>
+              {m.aviso ? (
+                <span className="mt-1 max-[767px]:hidden">
+                  <Pill tone="no">{m.aviso}</Pill>
+                </span>
+              ) : null}
             </div>
-            <Link
-              aria-label={`Editar ${m.title}`}
-              className="grid size-9 shrink-0 place-items-center rounded-full border border-line-panel bg-white text-ink-soft transition hover:border-ink hover:text-ink"
-              href={`${editarEn}${m.id}`}
-              scroll={false}
-            >
-              <PenIcon className="size-4" />
-            </Link>
-          </div>
-        </li>
-      ))}
+            <span className="flex items-center gap-5 max-[767px]:col-span-3 max-[767px]:hidden">
+              <Pill tone={m.enInvitacion ? 'maybe' : 'neutro'}>{m.enInvitacion ? 'En la invitación' : 'Solo para tu equipo'}</Pill>
+              <Link aria-label={`Editar ${m.title}`} className="text-[14px] font-medium text-gold-deep no-underline hover:underline" href={`${editarEn}${m.id}`} scroll={false}>
+                Editar
+              </Link>
+            </span>
+            {/* En el celular, la fila entera abre su edición. */}
+            <Link aria-label={`Editar ${m.title}`} className="absolute inset-0 min-[768px]:hidden" href={`${editarEn}${m.id}`} scroll={false} />
+          </li>
+        )
+      })}
     </ol>
   )
 }
 
 /**
- * Lo que ven los invitados: el itinerario tal como lo lee la invitación. Sin momentos marcados,
- * la invitación enseña el ejemplo del diseño, y se dice.
+ * Lo que ven los invitados (E25, «Así lo leen tus invitados»): el itinerario como lo pinta la invitación, centrado.
+ * Sin momentos marcados, el ejemplo del diseño atenuado, y se dice.
  */
 export function ItinerarioEnLaInvitacion({
   filas,
   ejemplo,
-  iconos,
   vistaPrevia,
 }: {
   filas: readonly FilaDeInvitacion[]
   ejemplo: readonly FilaDeInvitacion[]
-  iconos: readonly IconoDeMomento[]
   vistaPrevia: string
 }) {
   const deEjemplo = filas.length === 0
   const lista = deEjemplo ? ejemplo : filas
   return (
-    <div className="flex flex-col gap-4">
-      <p className="text-[12.5px] leading-[1.6] text-ink-soft">
-        {deEjemplo
-          ? 'Todavía no marcaste momentos para la invitación: tus invitados ven el itinerario de ejemplo del diseño.'
-          : 'El itinerario que ven tus invitados, en el orden de la noche.'}
-      </p>
-      {lista.length === 0 ? null : (
-        <ol className={`flex flex-col divide-y divide-line-panel ${deEjemplo ? 'opacity-55' : ''}`}>
-          {lista.map((f, i) => (
-            <li className="flex items-center gap-3 py-2.5" key={`${f.time}-${f.label}-${i}`}>
-              <span className="grid size-9 shrink-0 place-items-center">
-                <Dibujo clave={f.icono} iconos={iconos} tam="size-8" />
-              </span>
-              <span className="min-w-0 flex-1 truncate text-[13.5px] text-ink">{f.label}</span>
-              <span className="font-display text-[17px] text-ink [font-variant-numeric:lining-nums_tabular-nums]">{f.time}</span>
-            </li>
-          ))}
-        </ol>
-      )}
-      <PanelButton href={vistaPrevia}>Ver en la invitación</PanelButton>
+    <div className="flex flex-col gap-3">
+      <h2 className="text-[15px] font-medium">Así lo leen tus invitados</h2>
+      {deEjemplo ? <p className="text-[13px] leading-[1.6] text-ink-mute">Todavía no marcaste momentos: tus invitados ven el itinerario de ejemplo del diseño.</p> : null}
+      <Link className={`flex flex-col items-center gap-5 rounded-[16px] border border-line-panel bg-tarjeta px-6 py-7 text-center text-ink no-underline transition-colors hover:border-gold ${deEjemplo ? 'opacity-55' : ''}`} href={vistaPrevia}>
+        <span className="text-[11px] tracking-[0.3em] text-ink-mute uppercase">Itinerario</span>
+        {lista.map((f, i) => (
+          <span className="flex flex-col" key={`${f.time}-${f.label}-${i}`}>
+            <span className="font-display text-[26px] leading-tight font-medium [font-variant-numeric:lining-nums_tabular-nums]">{f.time}</span>
+            <span className="text-[13px] text-ink-mute">{f.label}</span>
+          </span>
+        ))}
+        <span className="sr-only">Ver en la invitación</span>
+      </Link>
     </div>
   )
 }

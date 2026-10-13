@@ -1,48 +1,13 @@
 'use client'
 
-import Link from 'next/link'
-import { useActionState, useId } from 'react'
-import { type PlannerActionState, saveBudgetPlanAction } from '@/app/_acciones/planner/actions'
-import { FIELD_CLASS, Field, Pill } from '@/shared/design/ui/panel/PanelKit'
+import { useActionState, useId, type ReactNode } from 'react'
+import { type PlannerActionState, saveBudgetPlanAction, setPaymentPaidAction } from '@/app/_acciones/planner/actions'
+import { FIELD_CLASS, Field, PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { ActionFeedback, SubmitButton } from '@/shared/design/ui/panel/estados'
-import type { EstadoDeCategoria } from '../domain/presupuesto'
 import { type Evento, Ocultos } from './Accion'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 
 const INICIAL: PlannerActionState = { status: 'idle' }
-
-export type CategoriaVista = {
-  readonly clave: string
-  readonly nombre: string
-  /** Importes ya formateados. */
-  readonly asignado: string
-  readonly comprometido: string
-  readonly pagado: string
-  /** Para la barra: lo comprometido sobre lo asignado, de 0 a más de 1. */
-  readonly avance: number
-  readonly estado: EstadoDeCategoria
-  readonly partidas: number
-  /** Lo asignado en su forma de campo (`1234.50`), para ajustar el reparto. */
-  readonly campoAsignado: string
-}
-
-export type PlanVista = {
-  readonly total: string
-  readonly comprometido: string
-  readonly pagado: string
-  /** «Bs 1.200,00» que quedan, o «Bs 300,00 de más». */
-  readonly queda: string
-  readonly pasado: boolean
-  readonly avance: number
-  readonly campoTotal: string
-}
-
-const ESTADO: Record<EstadoDeCategoria, { texto: string; tono: 'ok' | 'maybe' | 'no' | 'pending' }> = {
-  libre: { texto: 'Sin gastos', tono: 'pending' },
-  en_marcha: { texto: 'En marcha', tono: 'ok' },
-  cerca: { texto: 'Casi al límite', tono: 'maybe' },
-  pasado: { texto: 'Te pasaste', tono: 'no' },
-}
 
 /** El primer paso: cuánto se quiere gastar. Con eso se reparte solo por categorías. */
 export function BudgetStart({ evento }: { evento: Evento }) {
@@ -68,79 +33,71 @@ export function BudgetStart({ evento }: { evento: Evento }) {
   )
 }
 
-/** El presupuesto de un vistazo: cuánto hay, cuánto va comprometido y qué categoría se pasa. */
-export function BudgetOverview({ evento, plan, categorias, editable }: { evento: Evento; plan: PlanVista; categorias: readonly CategoriaVista[]; editable: boolean }) {
+/** «Ajustar el reparto» (diálogo): cuánto va a cada categoría. El total pasa a ser la suma. */
+export function RepartoForm({ evento, categorias }: { evento: Evento; categorias: readonly { clave: string; nombre: string; campoAsignado: string }[] }) {
   const [estado, enviar, enviando] = useActionState(sinCaerse(saveBudgetPlanAction), INICIAL)
   const id = useId()
   return (
-    <div className="flex flex-col gap-5">
-      <div className="grid grid-cols-2 gap-4 min-[700px]:grid-cols-4 [font-variant-numeric:tabular-nums]">
-        {[
-          ['Presupuesto', plan.total],
-          ['Comprometido', plan.comprometido],
-          ['Pagado', plan.pagado],
-          [plan.pasado ? 'Te pasaste' : 'Te queda', plan.queda],
-        ].map(([k, v]) => (
-          <div key={k}>
-            <p className="font-mono text-[10.5px] tracking-[0.16em] text-ink-mute uppercase">{k}</p>
-            <p className={`font-display text-[26px] font-light [font-variant-numeric:lining-nums] ${k === 'Te pasaste' ? 'text-danger-deep' : 'text-ink'}`}>{v}</p>
-          </div>
-        ))}
-      </div>
-      <div aria-hidden className="h-2 overflow-hidden rounded-full bg-bg-top">
-        <div className={`h-full rounded-full ${plan.pasado ? 'bg-danger' : 'bg-sage'}`} style={{ width: `${Math.min(100, plan.avance * 100)}%` }} />
-      </div>
-
-      <ul className="flex flex-col divide-y divide-line-panel">
+    <form action={enviar} className="flex flex-col gap-4">
+      <Ocultos {...evento} extra={{ modo: 'reparto' }} />
+      <div className="grid gap-3 min-[560px]:grid-cols-2">
         {categorias.map((c) => (
-          <li className="flex flex-col gap-2 py-3" key={c.clave}>
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <span className="text-[14px] text-ink">{c.nombre}</span>
-              <span className="flex items-center gap-2 text-[12.5px] text-ink-soft [font-variant-numeric:tabular-nums]">
-                {`${c.comprometido} de ${c.asignado}`}
-                <Pill tone={ESTADO[c.estado].tono}>{ESTADO[c.estado].texto}</Pill>
-              </span>
-            </div>
-            <div aria-hidden className="h-1.5 overflow-hidden rounded-full bg-bg-top">
-              <div
-                className={`h-full rounded-full ${c.estado === 'pasado' ? 'bg-danger' : c.estado === 'cerca' ? 'bg-gold' : 'bg-sage'}`}
-                style={{ width: `${Math.min(100, c.avance * 100)}%` }}
-              />
-            </div>
-            <div className="flex flex-wrap gap-x-4 text-[12px] text-ink-mute">
-              <span>{c.partidas === 0 ? 'Todavía nada anotado' : `${c.partidas} gasto${c.partidas === 1 ? '' : 's'} · pagado ${c.pagado}`}</span>
-              {editable ? (
-                <Link className="text-ink underline underline-offset-2" href={`?panel=partida&categoria=${c.clave}`}>
-                  Anotar un gasto
-                </Link>
-              ) : null}
-            </div>
-          </li>
+          <Field htmlFor={`${id}-${c.clave}`} key={c.clave} label={`${c.nombre} (Bs)`}>
+            <input className={FIELD_CLASS} defaultValue={c.campoAsignado} id={`${id}-${c.clave}`} inputMode="decimal" name={`asig_${c.clave}`} />
+          </Field>
         ))}
-      </ul>
+      </div>
+      <p className="text-[13px] text-ink-mute">El presupuesto total pasa a ser la suma de lo que asignes.</p>
+      <ActionFeedback errorsOnly state={estado} />
+      <div className="flex justify-end">
+        <SubmitButton pending={enviando} pendingLabel="Guardando…" variant="primary">
+          Guardar reparto
+        </SubmitButton>
+      </div>
+    </form>
+  )
+}
 
-      {editable ? (
-        <details className="rounded-[14px] border border-line-panel bg-bg-top/50 p-4">
-          <summary className="cursor-pointer text-[13px] text-ink">Ajustar el reparto</summary>
-          <form action={enviar} className="mt-4 flex flex-col gap-3">
-            <Ocultos {...evento} extra={{ modo: 'reparto' }} />
-            <div className="grid gap-3 min-[560px]:grid-cols-2 min-[900px]:grid-cols-3">
-              {categorias.map((c) => (
-                <Field htmlFor={`${id}-${c.clave}`} key={c.clave} label={`${c.nombre} (Bs)`}>
-                  <input className={FIELD_CLASS} defaultValue={c.campoAsignado} id={`${id}-${c.clave}`} inputMode="decimal" name={`asig_${c.clave}`} />
-                </Field>
-              ))}
-            </div>
-            <p className="text-[12px] text-ink-mute">El presupuesto total pasa a ser la suma de lo que asignes.</p>
-            <ActionFeedback errorsOnly state={estado} />
-            <div>
-              <SubmitButton pending={enviando} pendingLabel="Guardando…" variant="primary">
-                Guardar reparto
-              </SubmitButton>
-            </div>
-          </form>
-        </details>
-      ) : null}
-    </div>
+export type PagoPendiente = { readonly id: string; readonly texto: string }
+
+/** «Registrar un pago» (E61): se elige cuál de los pagos anotados ya se hizo y se marca pagado. */
+export function RegistrarPagoForm({ evento, pendientes, cerrar }: { evento: Evento; pendientes: readonly PagoPendiente[]; cerrar: string }) {
+  const [estado, enviar, enviando] = useActionState(sinCaerse(setPaymentPaidAction), INICIAL)
+  const id = useId()
+  if (estado.status === 'success') return <p className="text-[15px]">Pago registrado. Ya se descuenta de lo que falta pagar.</p>
+  return (
+    <form action={enviar} className="flex flex-col gap-4">
+      <Ocultos {...evento} extra={{ paid: 'true' }} />
+      <Field hint="Los pagos se anotan en cada gasto, con su fecha; aquí se marcan hechos." htmlFor={`${id}-p`} label="A qué">
+        <select className={FIELD_CLASS} id={`${id}-p`} name="paymentId" required>
+          {pendientes.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.texto}
+            </option>
+          ))}
+        </select>
+      </Field>
+      <ActionFeedback errorsOnly state={estado} />
+      <div className="flex justify-end gap-2.5">
+        <PanelButton href={cerrar}>Cancelar</PanelButton>
+        <SubmitButton pending={enviando} pendingLabel="Registrando…" variant="primary">
+          Registrar el pago
+        </SubmitButton>
+      </div>
+    </form>
+  )
+}
+
+/** El botón de la tarjeta «Próximos pagos»: marca pagado el primero. */
+export function MarcarPagado({ evento, paymentId, children, ancho = false }: { evento: Evento; paymentId: string; children: ReactNode; ancho?: boolean }) {
+  const [estado, enviar, enviando] = useActionState(sinCaerse(setPaymentPaidAction), INICIAL)
+  return (
+    <form action={enviar} className={ancho ? 'w-full' : ''}>
+      <Ocultos {...evento} extra={{ paymentId, paid: 'true' }} />
+      <SubmitButton className={ancho ? 'w-full' : ''} pending={enviando} pendingLabel="Marcando…" variant={ancho ? 'primary' : 'default'}>
+        {children}
+      </SubmitButton>
+      <ActionFeedback errorsOnly state={estado} />
+    </form>
   )
 }

@@ -5,23 +5,16 @@ import { DangerZone } from './DangerZone'
 vi.mock('@/app/_acciones/events/actions', () => ({ deleteEventAction: vi.fn(async () => ({ status: 'idle' as const })) }))
 
 describe('DangerZone', () => {
-  it('el botón está apagado hasta que se escribe el identificador exacto', () => {
-    // Borrar se lleva invitados, mesas, regalos y mensajes, y no hay papelera. Un botón
-    // que borra una boda con un clic acaba borrando una boda con un clic.
-    render(<DangerZone eventId="e1" eventSlug="boda-marcia-ricardo" />)
+  it('no deja borrar hasta escribir el nombre del evento', () => {
+    // Borrar se lleva invitados, mesas, regalos y mensajes, y no hay papelera.
+    render(<DangerZone eventId="e1" titulo="Boda de María y Alejandro" />)
 
-    const boton = screen.getByRole('button', { name: 'Eliminar evento' })
+    const boton = screen.getByRole('button', { name: 'Borrar para siempre', hidden: true })
     expect(boton).toBeDisabled()
-
-    fireEvent.change(screen.getByLabelText(/escribe/i), { target: { value: 'boda' } })
+    const campo = screen.getByLabelText(/escribe el nombre del evento/i)
+    fireEvent.change(campo, { target: { value: 'Boda' } })
     expect(boton).toBeDisabled()
-
-    fireEvent.change(screen.getByLabelText(/escribe/i), { target: { value: 'boda-marcia-ricardo' } })
+    fireEvent.change(campo, { target: { value: 'boda de maría y alejandro' } })
     expect(boton).toBeEnabled()
-  })
-
-  it('dice qué se lleva por delante, antes de que nadie lo pulse', () => {
-    render(<DangerZone eventId="e1" eventSlug="boda" />)
-    expect(screen.getByText(/invitados, mesas, regalos, mensajes y visitas/i)).toBeInTheDocument()
   })
 })

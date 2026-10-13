@@ -9,6 +9,7 @@ export const xv_lucianaDefinition: ThemeDefinition = {
   label: 'Bosque Encantado',
   categorySlug: 'xv-anos',
   palette: PALETA,
+  invitadoDeMuestra: { label: 'Lucas Montaño', seats: 1 },
   fonts: ['greatVibes', 'italiana', 'cinzel', 'dmSans', 'cormorant', 'jetbrainsMono'],
   pinta: {
     fotos: { retrato: true, casillas: 0 },

@@ -27,6 +27,17 @@ if (typeof globalThis.IntersectionObserver === 'undefined') {
   globalThis.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver
 }
 
+// jsdom no implementa el `<dialog>` modal: abrirlo marca `open` como haría el navegador, y cerrarlo avisa con `close`.
+if (typeof HTMLDialogElement !== 'undefined' && typeof HTMLDialogElement.prototype.showModal !== 'function') {
+  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+    this.open = true
+  }
+  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+    this.open = false
+    this.dispatchEvent(new Event('close'))
+  }
+}
+
 // Load .env file for tests
 const envPath = resolve(process.cwd(), '.env')
 try {

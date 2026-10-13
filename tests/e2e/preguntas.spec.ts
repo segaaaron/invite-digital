@@ -35,7 +35,7 @@ test.describe('las preguntas al confirmar', () => {
   })
 
   test('el anfitrión elige qué preguntar', async () => {
-    await page.goto(`/panel/eventos/${SLUG}/configuracion`)
+    await page.goto(`/panel/eventos/${SLUG}/ajustes`)
     await page.getByLabel('Pedir una canción que no puede faltar').check()
     await page.getByLabel(/Menús para elegir/).fill('Carne\nPollo')
     await page.getByLabel(/Actos/).fill('Iglesia\nFiesta')

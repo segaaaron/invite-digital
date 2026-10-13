@@ -48,22 +48,23 @@ export function EmptyState({
 }) {
   return (
     <div
-      className={`relative flex flex-col items-center gap-3 overflow-hidden rounded-[18px] border border-dashed border-line-panel-strong bg-linear-to-b from-bg-top/70 to-white/40 text-center ${
+      // La maqueta (E40): marfil sobre borde de puntos latón, medallón con su aro, título en Bodoni y la salida.
+      className={`relative flex flex-col items-center gap-3 overflow-hidden rounded-[18px] border border-dashed border-gold/45 bg-bg-raised text-center ${
         compact ? 'px-5 py-7' : 'px-6 py-12 min-[560px]:py-14'
       }`}
     >
       {icon === undefined ? null : (
         <span
           aria-hidden
-          className={`relative grid place-items-center rounded-full bg-white text-gold-deep shadow-card ring-1 ring-gold/30 [&>svg]:size-1/2 ${compact ? 'size-12' : 'size-16'}`}
+          className={`relative grid place-items-center rounded-full bg-pill-pending text-gold-deep ring-1 ring-gold/35 [&>svg]:size-[42%] ${compact ? 'size-12' : 'size-[84px]'}`}
         >
-          <span className="absolute inset-[-6px] rounded-full border border-gold/15" />
+          <span className="absolute inset-[-8px] rounded-full bg-pill-pending/50" />
           {icon}
         </span>
       )}
-      <p className={`m-0 font-display font-light text-ink ${compact ? 'text-[19px]' : 'text-[24px]'} leading-tight`}>{title}</p>
-      {description ? <p className="m-0 max-w-[48ch] text-[13px] leading-[1.7] text-ink-soft">{description}</p> : null}
-      {action ? <div className="mt-2">{action}</div> : null}
+      <p className={`m-0 font-display font-medium text-ink ${compact ? 'text-[22px]' : 'mt-2 text-[34px] max-[559px]:text-[28px]'} leading-tight`}>{title}</p>
+      {description ? <p className="m-0 max-w-[48ch] text-[15px] leading-[1.65] text-ink-soft">{description}</p> : null}
+      {action ? <div className="mt-2 flex flex-wrap justify-center gap-2.5">{action}</div> : null}
     </div>
   )
 }

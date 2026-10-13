@@ -14,9 +14,10 @@ test.afterAll(async () => {
 test('el grupo sin contestar sale en la cola, se marca recordado y deja de salir', async ({ page }) => {
   await seedRecordatorioEvent(SLUG)
 
-  await page.goto(`/panel/eventos/${SLUG}/invitados`)
+  // La cola es el diálogo «Recordar» (E55), que abre el botón de cada fila.
+  await page.goto(`/panel/eventos/${SLUG}/invitados?panel=recordar`)
 
-  const cola = page.locator('section', { has: page.getByRole('heading', { name: 'Recordatorios' }) })
+  const cola = page.getByRole('dialog')
   const fila = cola.getByRole('listitem').filter({ hasText: 'Familia Rojas Peña' })
   await expect(fila).toBeVisible()
   // El motivo va en el título de su grupo, una vez (9 oct).
@@ -30,9 +31,6 @@ test('el grupo sin contestar sale en la cola, se marca recordado y deja de salir
 
   // Al anotarlo, la acción revalida y la fila desaparece sola: la espera entre
   // recordatorios lo saca de la cola. No hace falta recargar a mano.
-  // Sin nadie a quien recordar, la tarjeta **desaparece entera**: una permanente que casi
-  // siempre dice «nadie por recordar hoy» es un hueco fijo que se deja de mirar justo el
-  // día que sí trae a alguien.
   await fila.getByRole('button', { name: /ya le avisé/i }).click()
-  await expect(cola).toHaveCount(0)
+  await expect(cola.getByText(/nadie por recordar/i)).toBeVisible()
 })

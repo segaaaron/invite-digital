@@ -44,29 +44,25 @@ export default async function MensajesPage({ params, searchParams }: { params: P
         actions={
           total === 0 ? undefined : (
             // El informe del evento trae el libro entero, listo para guardar como PDF.
-            <PanelButton href={`/panel/eventos/${event.value.slug}/informe#libro`}>Descargar el libro</PanelButton>
+            <span className="max-[767px]:hidden">
+              <PanelButton href={`/panel/eventos/${event.value.slug}/informe#libro`}>Descargar el libro</PanelButton>
+            </span>
           )
         }
-        kicker="Libro de firmas"
-        meta={total === 0 ? 'Las palabras que te dejan tus invitados al confirmar' : `${total} ${total === 1 ? 'firma' : 'firmas'} · ${sinAgradecer === 0 ? 'todas agradecidas' : `${sinAgradecer} sin agradecer`}`}
-        title="Mensajes"
+        meta={total === 0 ? 'Lo que tus invitados te escriben al confirmar.' : `${total} ${total === 1 ? 'firma' : 'firmas'}. Lo que tus invitados te escriben al confirmar.`}
+        title="Libro de firmas"
       />
       <EnVivo modo="aviso" tipos={['rsvp']} url={`/panel/eventos/${event.value.slug}/en-vivo`} />
 
-      {total === 0 ? null : (
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <p className="max-w-[60ch] text-[13.5px] leading-relaxed text-ink-soft">
-            Lo que tus invitados te escriben al confirmar. Si les agradeces, lo ven al volver a abrir su invitación.
-          </p>
-          <nav aria-label="Filtrar firmas" className="flex gap-2">
-            <FilterChipLink active={!soloSinAgradecer} href={base}>
-              Todas · {total}
-            </FilterChipLink>
-            <FilterChipLink active={soloSinAgradecer} href={`${base}?filtro=sin-agradecer`}>
-              Sin agradecer · {sinAgradecer}
-            </FilterChipLink>
-          </nav>
-        </div>
+      {total === 0 || sinAgradecer === 0 ? null : (
+        <nav aria-label="Filtrar firmas" className="mb-6 flex gap-2.5">
+          <FilterChipLink active={!soloSinAgradecer} href={base}>
+            Todas · {total}
+          </FilterChipLink>
+          <FilterChipLink active={soloSinAgradecer} href={`${base}?filtro=sin-agradecer`}>
+            Sin agradecer · {sinAgradecer}
+          </FilterChipLink>
+        </nav>
       )}
 
       <LibroDeFirmas

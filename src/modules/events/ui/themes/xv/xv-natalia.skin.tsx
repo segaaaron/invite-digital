@@ -97,6 +97,7 @@ export const PIEL_NATALIA: PielXv = {
     // V3 quitó las sombras blancas del texto; el nombre conserva la suya y la bendición
     // lleva una más tenue, con el halo claro detrás.
     sombraTexto: 'none',
+    avisoTinta: P.tinta,
     sombraNombre: '0 2px 12px rgba(20,12,4,.9), 0 0 3px rgba(20,12,4,.8)',
     // V4: la bendición sobre un velo café oscuro, no sobre el halo claro.
     sombraBendicion: '0 1px 2px rgba(0,0,0,.85), 0 0 10px rgba(20,10,2,.7)',

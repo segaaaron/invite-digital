@@ -6,13 +6,14 @@ import { useRouter } from 'next/navigation'
 import { uploadMediaAction } from '@/app/_acciones/events/actions'
 import { ensureInvitationLinkAction, sendInvitationAction } from '@/app/_acciones/guests/actions'
 import { uploadDocumentAction } from '@/app/_acciones/planner/dia-actions'
+import { CloseIcon } from '@/shared/design/ui/icons'
 import { reducirFoto } from '@/shared/design/ui/reducir-foto'
 import { markReminderSentAction } from '@/app/_acciones/reminders/actions'
 import { conCanal, whatsappLink } from '@/modules/guests'
 import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
-import { RobotLuxury, TarjetaDeLuxury } from './RobotLuxury'
+import { CopaDeLuxury, SelloDeLuxury, TarjetaDeLuxury } from './RobotLuxury'
 import { despertarAudio, dictadoPropioListo, escucharPropio, soltarMicrofono, type Escucha } from './dictado-propio'
 import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, unirResultados, vocesParaElegir } from './voz'
 
@@ -498,56 +499,103 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
     <>
       {/* **Luxury en persona** (8 de octubre): el robot champán es el botón; tocarlo abre el chat. Con el chat
           cerrado, habla en su tarjeta (un saludo al día, o la respuesta si se cerró mientras contestaba). */}
-      <div className="fixed right-3 bottom-2 z-30 max-[859px]:right-auto max-[859px]:left-3 max-[767px]:bottom-[calc(84px+env(safe-area-inset-bottom))] min-[768px]:max-[859px]:left-[84px] min-[860px]:right-4 min-[860px]:bottom-3 print:hidden">
+      {/* **Luxury en la maqueta «Esmeralda y Latón»** (12 de octubre): abajo a la derecha, el micrófono esmeralda para
+          hablarle sin abrir el chat y la copa de latón que abre el chat. Con el chat cerrado, habla en su tarjeta
+          (un saludo al día, o la respuesta si se cerró mientras contestaba). */}
+      <div className="fixed right-4 bottom-[calc(16px+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden">
         {modoFuera ? (
-          // Hablándole fuera del chat: la tarjeta va diciendo en qué está, y deja abrir el chat o terminar.
-          <div aria-live="polite" className="absolute bottom-[50px] w-[min(300px,calc(100vw-110px))] max-[859px]:left-[66px] min-[860px]:right-[86px] min-[860px]:bottom-[58px]" role="status">
-            <TarjetaDeLuxury perlas={null}>
-              {fuera.texto === null ? null : <span className="block max-h-[38vh] overflow-y-auto text-[13.5px] leading-normal whitespace-pre-wrap">{fuera.texto}</span>}
-              {fuera.estado === null ? null : (
-                <span className={`flex items-center gap-2 text-[12.5px] text-ink-soft ${fuera.texto === null ? '' : 'mt-2 border-t border-gold/25 pt-2'}`}>
-                  <span aria-hidden className={`size-2 shrink-0 animate-pulse rounded-full motion-reduce:animate-none ${fuera.estado === 'Te escucho…' ? 'bg-danger' : 'bg-gold'}`} />
-                  {fuera.estado}
-                </span>
+          // Hablándole fuera del chat (maqueta E38 y E39): escuchando, una tarjeta clara con lo que va oyendo y la
+          // pantalla desenfocada detrás; con la respuesta, la tarjeta esmeralda de Luxury. Siempre se puede abrir el chat.
+          <>
+            {fuera.estado === 'Te escucho…' ? <div aria-hidden className="fixed inset-0 -z-10 bg-bg/35 backdrop-blur-[6px] motion-reduce:backdrop-blur-none" /> : null}
+            <div aria-live="polite" className="absolute right-0 bottom-[76px] w-[min(400px,calc(100vw-32px))]" role="status">
+              {fuera.texto === null ? (
+                <div className="rounded-[18px] border border-line-panel bg-bg-raised p-5.5 shadow-float">
+                  <div className="flex items-center gap-3">
+                    <SelloDeLuxury size={46} />
+                    <span className="flex flex-col">
+                      <span className="font-display text-[24px] leading-tight font-medium">{fuera.estado ?? 'Cuando quieras'}</span>
+                      <span className="text-[13px] text-ink-mute">Habla con calma. Te contesto aquí mismo.</span>
+                    </span>
+                  </div>
+                  {fuera.dicho === '' ? null : <p className="mt-3.5 text-[15.5px] leading-[1.6]">«{fuera.dicho}»</p>}
+                  {fuera.estado === 'Te escucho…' ? (
+                    <span aria-hidden className="mt-3 flex h-8 items-center gap-[5px]">
+                      {[10, 22, 30, 16, 26, 12, 24, 30, 14].map((h, i) => (
+                        <span className="w-[3px] rounded-full bg-gold motion-safe:animate-pulse" key={i} style={{ height: h, animationDelay: `${i * 90}ms` }} />
+                      ))}
+                    </span>
+                  ) : null}
+                  <span className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px] text-ink-mute">
+                    {fuera.estado === 'Te escucho…' ? 'Toca el botón rojo para terminar.' : ''}
+                    <button className="min-h-11 cursor-pointer font-medium text-gold-deep hover:underline" onClick={abrir} type="button">
+                      Abrir el chat
+                    </button>
+                  </span>
+                </div>
+              ) : (
+                <div className="rounded-[18px] bg-shell-deep p-5.5 text-shell-ink shadow-float">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-3">
+                      <SelloDeLuxury size={46} />
+                      <span className="font-display text-[24px] leading-tight font-medium">{NOMBRE_DEL_ASISTENTE}</span>
+                    </span>
+                    <button
+                      aria-label="Terminar"
+                      className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-shell-ink/25 text-shell-ink hover:border-gold"
+                      onClick={() => {
+                        lectura.callar()
+                        terminarConversacion()
+                        setModoFuera(false)
+                      }}
+                      type="button"
+                    >
+                      <CloseIcon className="size-4" />
+                    </button>
+                  </div>
+                  <span className="mt-3.5 block max-h-[38vh] overflow-y-auto text-[16px] leading-[1.6] whitespace-pre-wrap">{fuera.texto}</span>
+                  {fuera.estado === null ? null : (
+                    <span className="mt-3 flex items-center gap-2 border-t border-shell-ink/15 pt-3 text-[13px] text-shell-mute">
+                      <span aria-hidden className={`size-2 shrink-0 animate-pulse rounded-full motion-reduce:animate-none ${fuera.estado === 'Te escucho…' ? 'bg-danger' : 'bg-gold'}`} />
+                      {fuera.estado}
+                    </span>
+                  )}
+                  <span className="mt-4 flex gap-2.5">
+                    <button className="min-h-11 flex-1 cursor-pointer rounded-[10px] bg-bg-raised px-4 text-[14.5px] font-medium text-ink hover:bg-white" onClick={abrir} type="button">
+                      Abrir el chat
+                    </button>
+                  </span>
+                </div>
               )}
-              {fuera.dicho === '' ? null : <span className="mt-1 block text-[12px] text-ink-mute italic">«{fuera.dicho}»</span>}
-              <span className="mt-2.5 flex flex-wrap gap-2">
-                <button className="min-h-11 cursor-pointer rounded-full bg-ink px-3.5 text-[12.5px] text-white" onClick={abrir} type="button">
-                  Abrir el chat
-                </button>
-                <button
-                  className="min-h-11 cursor-pointer rounded-full border border-line-panel-strong bg-white px-3.5 text-[12.5px] text-ink"
-                  onClick={() => {
-                    lectura.callar()
-                    terminarConversacion()
-                    setModoFuera(false)
-                  }}
-                  type="button"
-                >
-                  Terminar
-                </button>
-              </span>
-            </TarjetaDeLuxury>
-          </div>
+            </div>
+          </>
         ) : afuera === null ? null : (
           // No intercepta toques (no tapa botones de la pantalla): el que abre el chat es el robot.
-          <div aria-live="polite" className="pointer-events-none absolute bottom-[50px] w-[min(280px,calc(100vw-110px))] max-[859px]:left-[66px] min-[860px]:right-[86px] min-[860px]:bottom-[58px]" key={afuera.id} role="status">
+          <div aria-live="polite" className="pointer-events-none absolute right-0 bottom-[76px] w-[min(300px,calc(100vw-32px))]" key={afuera.id} role="status">
             <TarjetaDeLuxury perlas={null}>
               <span className="block text-[13.5px] leading-normal">{afuera.texto}</span>
             </TarjetaDeLuxury>
           </div>
         )}
-        <button aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`} className="block h-[72px] w-[60px] cursor-pointer min-[860px]:h-[86px] min-[860px]:w-[72px] transition-transform hover:-translate-y-0.5" onClick={abrir} type="button">
-          <RobotLuxury
-            className="h-full w-full drop-shadow-[0_6px_10px_rgb(43_39_35/0.18)]"
-            hablando={(afuera !== null && afueraHablando) || (modoFuera && (lectura.hablando || (ocupado && respuestaFuera !== null)))}
-          />
-        </button>
         {/* Hablarle sin abrir el chat. Donde el dictado es el del teclado (no se puede dictar fuera del chat), abre el chat. */}
+        {modoFuera ? (
+          <button
+            aria-label="Terminar de hablar"
+            className="grid size-[50px] cursor-pointer place-items-center rounded-full bg-danger text-white shadow-[0_0_0_6px_rgb(0_0_0/0.08),0_10px_24px_rgb(12_36_32/0.28)] transition-colors hover:bg-danger-deep"
+            onClick={() => {
+              lectura.callar()
+              terminarConversacion()
+              setModoFuera(false)
+            }}
+            type="button"
+          >
+            <span aria-hidden className="size-3 rounded-[3px] border-[1.5px] border-white" />
+          </button>
+        ) : null}
         {dictado.disponible && !modoFuera ? (
           <button
             aria-label={`Hablarle a ${NOMBRE_DEL_ASISTENTE} sin abrir el chat`}
-            className="absolute -top-3 grid size-11 cursor-pointer place-items-center max-[859px]:-right-5 min-[860px]:-left-5"
+            className="grid size-[50px] cursor-pointer place-items-center rounded-full bg-shell-deep text-shell-ink shadow-[0_10px_24px_rgb(12_36_32/0.28)] transition-colors hover:bg-sage disabled:opacity-60"
             disabled={ocupado}
             onClick={() => {
               if (dictado.modo === 'teclado') {
@@ -562,11 +610,19 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             }}
             type="button"
           >
-            <span className="grid size-8 place-items-center rounded-full border border-gold/60 bg-white text-gold-deep shadow-float">
-              <Microfono className="size-4" />
-            </span>
+            <Microfono className="size-[21px]" />
           </button>
         ) : null}
+        <button
+          aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`}
+          className={`grid size-16 cursor-pointer place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo),var(--color-gold-light)_58%,var(--color-gold))] shadow-[inset_0_0_0_1.5px_var(--color-gold-deep),0_12px_28px_rgb(12_36_32/0.24)] transition-transform hover:-translate-y-0.5 motion-reduce:transition-none ${
+            (afuera !== null && afueraHablando) || (modoFuera && (lectura.hablando || (ocupado && respuestaFuera !== null))) ? 'luxury-copa-hablando' : ''
+          }`}
+          onClick={abrir}
+          type="button"
+        >
+          <CopaDeLuxury className="size-9" />
+        </button>
       </div>
 
       <dialog
@@ -580,7 +636,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-line-panel px-6 py-5">
             <div className="flex items-center gap-3">
-              <RobotLuxury className="h-12 w-10 shrink-0" />
+              <SelloDeLuxury size={44} />
               <div>
                 <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
                   {NOMBRE_DEL_ASISTENTE}
@@ -655,7 +711,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                   // Luxury responde en su tarjeta de invitación; la última, con él al lado (habla mientras escribe o lee).
                   <div className="flex max-w-[94%] items-end gap-2 self-start" key={i}>
                     {i === burbujas.length - 1 ? (
-                      <RobotLuxury className="h-[52px] w-[44px] shrink-0" hablando={(ocupado && b.texto !== '') || lectura.hablando} />
+                      <SelloDeLuxury size={36} />
                     ) : (
                       <span aria-hidden className="w-[44px] shrink-0" />
                     )}

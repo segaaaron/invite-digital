@@ -2,6 +2,7 @@ import Image from '@/shared/design/ui/ImagenQueAparece'
 import { THEME_ASSETS, themeAsset } from '../assets'
 import { AbanicoOrnamental } from './AbanicoOrnamental'
 import { ValentinaCover } from './ValentinaCover'
+import { DividerOrnamental } from './DividerOrnamental'
 import type { PielXv } from './piel-xv'
 import { colorDeAcento, PALETA as P } from './xv-valentina.palette'
 
@@ -93,6 +94,9 @@ export const PIEL: PielXv = {
     sobreAcento: P.lilaFuerte,
     sobresNota: colorDeAcento.amatista,
     sombraTexto: '0 2px 8px rgba(0,0,0,.75)',
+    avisoTinta: P.violetaHondo,
+    cierreTinta: P.violetaHondo,
+    plazo: P.violetaHondo,
     // La cita de «Mascarada» va dentro de un panel, no suelta: texto claro sobre la
     // fotografía morada, con su sombra negra y sin la opacidad de la marina.
     // V4: la cita en Cormorant itálica, sin versales.
@@ -154,6 +158,9 @@ export const PIEL: PielXv = {
   cierre: themeAsset('xv-valentina', 'mascara-sin-fondo.avif'),
   icono: (clave) => themeAsset('xv-valentina', ICONOS[clave ?? ''] ?? 'corona-icono1.avif'),
   // El ornamento de esta piel es el abanico de su maqueta, no el filete de la marina.
+  // Avisos y formulario con el filete fino de la maqueta; el ornamento grande va en la fecha y el cronograma.
+  ornamentoAviso: <DividerOrnamental color={P.lilaFuerte} />,
+  ornamentoFormulario: <DividerOrnamental color={P.lilaFuerte} />,
   ornamento: <AbanicoOrnamental color={P.lilaFuerte} />,
   // En la tarjeta de regalos la maqueta no pone el filete degradado, sino ese mismo abanico.
   separadorRegalos: <AbanicoOrnamental color={P.lilaFuerte} />,

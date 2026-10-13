@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import { FilePicker } from '@/shared/design/ui/panel/FilePicker'
+import { botonClases } from '@/shared/design/ui/panel/PanelKit'
 import { uploadProofAction, type UploadProofState } from '@/app/_acciones/orders/actions'
 import { ACCEPTED_MIMES, MAX_PROOF_BYTES } from '../domain/proof'
 import type { OrderFormDictionary } from '@/shared/i18n/dictionary'
@@ -16,7 +17,16 @@ const INICIAL: UploadProofState = { status: 'idle' }
  * herramientas del navegador en dos segundos. Quien decide qué es el fichero es el
  * servidor, mirándole los primeros bytes.
  */
-export function ProofUpload({ publicRef, textos }: { publicRef: string; textos: OrderFormDictionary }) {
+export function ProofUpload({
+  publicRef,
+  textos,
+  panel,
+}: {
+  publicRef: string
+  textos: OrderFormDictionary
+  /** Dentro del panel (el diálogo «Pedir el extra», E71): botones del panel y «Lo hago después». */
+  panel?: { readonly despuesHref: string }
+}) {
   const megas = String(Math.round(MAX_PROOF_BYTES / 1024 / 1024))
   const [estado, accion, pendiente] = useActionState<UploadProofState, FormData>(sinCaerse(uploadProofAction), INICIAL)
 
@@ -61,12 +71,23 @@ export function ProofUpload({ publicRef, textos }: { publicRef: string; textos: 
         </p>
       ) : null}
 
-      <button
-        className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
-        disabled={pendiente}
-        type="submit" aria-busy={(pendiente) || undefined}>
-        {pendiente ? textos.proofSubmitting : textos.proofSubmit}
-      </button>
+      {panel === undefined ? (
+        <button
+          className="w-fit cursor-pointer rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-6 py-3 font-mono text-[10px] tracking-[0.25em] text-ink uppercase disabled:opacity-50"
+          disabled={pendiente}
+          type="submit" aria-busy={(pendiente) || undefined}>
+          {pendiente ? textos.proofSubmitting : textos.proofSubmit}
+        </button>
+      ) : (
+        <div className="flex flex-wrap justify-end gap-2.5 max-[767px]:flex-col-reverse max-[767px]:items-stretch">
+          <a className={botonClases('default')} href={panel.despuesHref}>
+            Lo hago después
+          </a>
+          <button aria-busy={pendiente || undefined} className={botonClases('primary')} disabled={pendiente} type="submit">
+            {pendiente ? 'Enviando…' : 'Enviar comprobante'}
+          </button>
+        </div>
+      )}
     </form>
   )
 }

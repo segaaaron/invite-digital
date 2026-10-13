@@ -12,12 +12,16 @@ describe('OrderDecision', () => {
     render(<OrderDecision orderId="o1" />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Rechazar' }))
+    fireEvent.change(screen.getByLabelText(/Nota para/), { target: { value: 'Recibimos otro monto.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Rechazar y avisarle' }))
 
     await waitFor(() => expect(decidir).toHaveBeenCalled())
     const datos = decidir.mock.calls[0]![1]
     // Si esto dijera «approved», rechazar estaría aprobando el pedido.
     expect(datos.get('decision')).toBe('rejected')
     expect(datos.get('orderId')).toBe('o1')
+    // El motivo de la lista va delante de la nota.
+    expect(datos.get('note')).toBe('El monto no coincide. Recibimos otro monto.')
   })
 
   it('aprobar manda «approved»', async () => {
@@ -35,6 +39,8 @@ describe('OrderDecision', () => {
     render(<OrderDecision orderId="o1" />)
 
     fireEvent.click(screen.getByRole('button', { name: 'Rechazar' }))
+    fireEvent.change(screen.getByLabelText(/Nota para/), { target: { value: 'x' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Rechazar y avisarle' }))
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/sin motivo/i))
   })

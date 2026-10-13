@@ -5,7 +5,7 @@ import { EstiloDeLaInvitacion } from './EstiloDeLaInvitacion'
 import type { EstiloDelEvento } from '../domain/estilo'
 import { themeFor } from './themes/registry'
 import { INVITADO_DE_MUESTRA, ranurasDeVistaPrevia } from './themes/kit/preview-slots'
-import { EyeIcon } from '@/shared/design/ui/icons'
+import { EyeIcon, MusicIcon } from '@/shared/design/ui/icons'
 import { PanelButton } from '@/shared/design/ui/panel/PanelKit'
 import { themeFonts } from '@/shared/design/fonts'
 import { getDictionary } from '@/shared/i18n/dictionaries'
@@ -35,15 +35,10 @@ export function InvitacionEnVivo({ event, content, estilo }: { event: Event; con
   })()
 
   return (
-    <section aria-label="Vista previa de la invitación" className={`${variables} flex flex-col gap-3`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="flex items-center gap-2 text-[13px] text-ink">
-          <EyeIcon className="size-4 text-ink-mute" />
-          Así la verán tus invitados
-        </p>
-        <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`}>Pantalla completa</PanelButton>
-      </div>
-      <div className="con-mono mx-auto h-[min(780px,calc(100dvh-150px))] w-full max-w-[400px]">
+    // La invitación dentro de un teléfono (E08): marco oscuro, y debajo verla entera o con su canción.
+    <section aria-label="Vista previa de la invitación" className={`${variables} flex flex-col items-center gap-4`}>
+      <div className="w-full max-w-[300px] rounded-[38px] bg-shell-deep p-2.5 shadow-[0_24px_60px_-30px_rgb(12_36_32/0.6)] max-[1023px]:max-w-[400px]">
+      <div className="con-mono h-[min(620px,calc(100dvh-170px))] w-full overflow-hidden rounded-[30px] max-[1023px]:h-[min(780px,calc(100dvh-150px))]">
         <MarcoQueSigue>
           <EstiloDeLaInvitacion estilo={estilo} tema={definicion}>
           <Tema
@@ -57,7 +52,15 @@ export function InvitacionEnVivo({ event, content, estilo }: { event: Event; con
           </EstiloDeLaInvitacion>
         </MarcoQueSigue>
       </div>
-      <p className="text-center text-[11.5px] text-ink-mute">Al abrir una sección, la invitación va a ella. Se actualiza al guardar. La canción suena en pantalla completa.</p>
+      </div>
+      <div className="flex flex-wrap justify-center gap-2.5">
+        <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`} size="sm">
+          <EyeIcon className="size-4" /> Pantalla completa
+        </PanelButton>
+        <PanelButton href={`/panel/eventos/${event.slug}/vista-previa`} size="sm">
+          <MusicIcon className="size-4" /> Con sonido
+        </PanelButton>
+      </div>
     </section>
   )
 }

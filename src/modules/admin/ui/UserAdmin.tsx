@@ -1,6 +1,7 @@
 'use client'
 
 import { useActionState, useId } from 'react'
+import { COLUMNAS_DE_EQUIPO } from './columnas-de-equipo'
 import { FIELD_CLASS, LABEL_CLASS, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { MenuDeAcciones, opcionDeMenu } from '@/shared/design/ui/panel/lista'
 import { plural } from '@/shared/format/plural'
@@ -26,8 +27,6 @@ export type UserView = {
   readonly ultimoAcceso: string | null
 }
 
-/** Las columnas del equipo, las mismas en su encabezado. */
-export const COLUMNAS_DE_EQUIPO = 'min-[860px]:grid-cols-[minmax(0,1.6fr)_150px_110px_130px_40px]'
 
 const ROL: Record<Role, { etiqueta: string; tono: 'ok' | 'maybe' | 'pending' | 'no'; que: string }> = {
   admin: { etiqueta: 'Administrador', tono: 'ok', que: 'Todo el sistema' },

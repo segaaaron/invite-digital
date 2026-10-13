@@ -38,8 +38,9 @@ test('un evento de XV crea su plan con la plantilla, cierra una tarea y la ve en
   await expect(page.getByRole('listitem', { name: 'Reservar el salón' })).toBeVisible()
 
   await page.goto(`/panel/eventos/${eventSlug}`)
-  const semana = page.locator('section').filter({ hasText: 'Plan de tareas:' })
-  await expect(semana.getByText('Reservar el salón')).toBeVisible()
+  // «Esta semana» del resumen (maqueta E21) trae lo que vence, tareas incluidas (las cinco primeras).
+  const semana = page.locator('section[aria-labelledby="semana-titulo"]')
+  await expect(semana.getByRole('listitem').filter({ hasText: /Vence el/ }).first()).toBeVisible()
 
   await deleteEvent(eventSlug)
 })

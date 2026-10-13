@@ -5,6 +5,17 @@ import { ValeriaCover } from './ValeriaCover'
 import type { PielXv } from './piel-xv'
 import { alfaDe, colorDeAcento, PALETA as P } from './xv-valeria.palette'
 
+const LAMINA = (
+  <Image
+    alt=""
+    aria-hidden
+    height={40}
+    src={themeAsset('xv-valeria', 'borde.avif')}
+    style={{ width: '50%', height: 'auto', display: 'block', margin: '22px auto', filter: 'drop-shadow(0 1px 4px rgba(0,0,0,.6))' }}
+    width={300}
+  />
+)
+
 /** La piel de «Gala Real». */
 export const PIEL: PielXv = {
   voz: 'xv-valeria',
@@ -83,6 +94,13 @@ export const PIEL: PielXv = {
     // Los tres diseños de gala: sombra negra, sin halo, la cita dentro de un panel en
     // serif itálico y el reloj **debajo** del «Faltan», como en su maqueta.
     sombraTexto: '0 2px 8px rgba(0,0,0,.7)',
+    // El cuerpo en marfil (`body` de su maqueta): plazo, regalos, libro, álbum y despedida.
+    plazo: P.tinta,
+    cuerpoF3: P.tinta,
+    despedida: P.tinta,
+    avisoTinta: P.tinta,
+    // La lámina del borde arriba y abajo del titular del formulario, como `ValeriaRSVPForm`.
+    ornamentoFormularioAbajo: LAMINA,
     haloTitular: 'none',
     cita: {
       panel: true,
@@ -118,6 +136,7 @@ export const PIEL: PielXv = {
   // Los tamaños de su maqueta: el candelabro a 260, el castillo a 90, el traje a 135 y la
   // tiara vino del cierre a 200.
   arte: { coronaWidth: 260, relojWidth: 100, castilloWidth: 90, vestimentaWidth: 135, cierreWidth: 200 },
+  ornamentoFormulario: LAMINA,
   paleta: P,
   cristal: {
     background: P.vidrio,

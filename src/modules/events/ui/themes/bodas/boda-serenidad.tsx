@@ -15,7 +15,8 @@ export const bodaSerenidadDefinition: ThemeDefinition = {
   label: 'Jardín de Serenidad',
   categorySlug: 'boda',
   palette: PALETA,
-  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'playfairDisplay', 'cinzel'],
+  fonts: ['spectral', 'jetbrainsMono', 'greatVibes', 'cormorant', 'playfairDisplay', 'cinzel', 'montserrat'],
+  invitadoDeMuestra: { label: 'Ricardo Montalvo y Sra.', seats: 2 },
   rsvp: 'pildoras',
   pinta: {
     // Seis en el carrusel y el retrato grande de arriba.

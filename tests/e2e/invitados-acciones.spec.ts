@@ -44,12 +44,12 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await page.getByLabel('Nombre completo').fill('Ana Lucía Vega Rojas')
   await page.getByLabel('Restricciones').fill('Sin gluten')
   await page.getByLabel('Email').fill('ana@ejemplo.com')
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
 
   await page.waitForURL(/invitados$/)
   // Sale en la cabecera de su familia (que se renombra con ella) y en su fila: basta una.
   await expect(page.getByText('Ana Lucía Vega Rojas').first()).toBeVisible()
-  await expect(page.getByText('Sin gluten')).toBeVisible()
+  await expect(page.getByRole('cell', { name: 'Sin gluten' })).toBeVisible()
 
   // El correo se guardó de verdad: es el campo que `updatePerson` borraba en silencio.
   const [guardada] = await sql<{ email: string | null }[]>`
@@ -61,7 +61,7 @@ test('la fila del invitado edita, enseña su pase y borra', async ({ page }) => 
   await desplegarInvitacion(page, 'Ana Lucía Vega Rojas')
   await page.getByRole('row').filter({ has: page.getByRole('link', { name: 'Editar a Ana Lucía Vega Rojas' }) }).getByRole('link', { name: /^Editar a / }).click()
   await page.getByLabel('Invitado VIP').check()
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   await page.waitForURL(/invitados$/)
 
   const [trasVip] = await sql<{ email: string | null; vip: boolean }[]>`
@@ -105,7 +105,7 @@ test('mover a alguien a una invitación llena le suma el cupo, y la de origen pa
   const invitacion = page.getByRole('combobox', { name: 'Invitación', exact: true })
   const llena = await invitacion.locator('option', { hasText: 'Grupo lleno' }).getAttribute('value')
   await invitacion.selectOption(llena)
-  await page.getByRole('button', { name: 'Guardar' }).click()
+  await page.getByRole('button', { name: 'Guardar', exact: true }).click()
   await page.waitForURL(/invitados$/)
 
   const [destino] = await sql<{ seats: number }[]>`select seats from guest_groups where id = ${llena!}`

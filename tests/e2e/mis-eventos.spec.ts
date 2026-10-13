@@ -50,7 +50,7 @@ test.describe('el cliente con dos eventos', () => {
     const filas = page.locator('main li a')
     await expect(filas.nth(0)).toContainText('Boda con acceso de cliente')
     await expect(filas.nth(1)).toContainText('Boda celebrada')
-    await expect(filas.nth(1)).toContainText('Ya se celebró')
+    await expect(filas.nth(1)).toContainText('Celebrado')
   })
 
   test('desde un evento vuelve a «Mis eventos»', async () => {
