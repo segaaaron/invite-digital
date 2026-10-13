@@ -76,6 +76,7 @@ export default async function CheckinPage({ params }: { params: Promise<{ slug: 
         eventId={event.value.id}
         eventSlug={event.value.slug}
         filas={filas}
+        mesas={salon === null || isErr(salon) ? [] : salon.value.tables.map((t) => ({ id: t.id, label: t.label, libres: Math.max(0, t.capacity - t.taken), invitaciones: t.groups.map((g) => g.id) }))}
         recepcion={recepcion}
       />
     </>

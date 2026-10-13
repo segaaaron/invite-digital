@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 import { ArrowLeftIcon } from '@/shared/design/ui/icons'
 import { BuscadorRapido } from './BuscadorRapido'
-import { MenuCrear, MenuCrearMovil } from './MenuCrear'
+import { MenuCrear } from './MenuCrear'
 import { IslaDelAdmin, RutaDelAdmin } from './PestanasDeAdmin'
 
 /**
@@ -57,10 +57,6 @@ export function BarraDelAdmin({
       <div className="ml-auto flex shrink-0 items-center gap-1 min-[768px]:gap-3">
         {/* La acción de la pantalla en el celular (`AccionDeLaIsla`: el «+» de Ventas). */}
         <div className="flex items-center min-[768px]:hidden" id="accion-de-la-isla" />
-        {/* El «+» de crear en la isla del celular (M47), salvo en las pantallas que ya ponen su propia acción. */}
-        <div className="min-[768px]:hidden [#accion-de-la-isla:not(:empty)+&]:hidden">
-          <MenuCrearMovil />
-        </div>
         <BuscadorRapido />
         {campana}
         <div className="hidden min-[768px]:block">

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 import { signOutAction } from '@/app/_acciones/identity/actions'
 import { leaveSupportAction } from '@/app/_acciones/admin/support-actions'
 import { ConfirmAction } from '@/shared/design/ui/panel/ConfirmAction'
@@ -31,7 +31,7 @@ const Trazo = ({ d }: { d: string }) => (
  *
  * La isla solo por debajo de 768 px; el menú también lo abre la tablet desde las iniciales del carril.
  */
-export function MenuMovil() {
+export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
   const nav = useNavegacion()
   const ruta = usePathname()
   const hoja = useRef<HTMLDialogElement>(null)
@@ -41,6 +41,10 @@ export function MenuMovil() {
     window.addEventListener(ABRIR_MENU, abrir)
     return () => window.removeEventListener(ABRIR_MENU, abrir)
   }, [])
+  // Al llegar a otra pantalla (también desde «Crear», que abre su propia hoja), el menú se cierra.
+  useEffect(() => {
+    hoja.current?.close()
+  }, [ruta])
   if (nav === null) return null
   const { sections, user, evento } = nav
   const actual = sections.flatMap((s) => s.items).find((item) => esEntradaActiva(item, ruta))?.label ?? FUERA_DE_LA_BARRA[ruta]
@@ -183,6 +187,7 @@ export function MenuMovil() {
               </span>
             </Link>
           )}
+          {crear}
           <p className="px-2.5 pt-1 text-[13px] text-ink-mute">
             {user.nombre ?? user.email}, {user.rol}
           </p>

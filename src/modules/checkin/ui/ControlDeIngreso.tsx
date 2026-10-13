@@ -28,6 +28,8 @@ export type FilaDeIngreso = {
   readonly codigo?: string | null
 }
 
+export type MesaDelSalon = { readonly id: string; readonly label: string; readonly libres: number; readonly invitaciones: readonly string[] }
+
 type Filtro = 'por_llegar' | 'dentro' | 'no_viene' | 'todos'
 
 const FILTROS: ReadonlyArray<{ clave: Filtro; texto: string }> = [
@@ -62,7 +64,10 @@ export function ControlDeIngreso({
   eventSlug,
   escanerHref,
   recepcion,
+  mesas = [],
 }: {
+  /** Las mesas del salón, con sus lugares libres y qué invitaciones sienta: «Llegó alguien sin pase» elige una. */
+  mesas?: readonly MesaDelSalon[]
   filas: readonly FilaDeIngreso[]
   eventId: string
   eventSlug: string
@@ -301,7 +306,7 @@ export function ControlDeIngreso({
           <button className="min-h-11 w-full cursor-pointer text-center text-[14px] font-medium text-gold-deep hover:underline" onClick={() => dialogoSinPase.current?.showModal()} type="button">
             Llegó alguien sin pase
           </button>
-          <SinPase dialogo={dialogoSinPase} eventId={eventId} eventSlug={eventSlug} invitaciones={invitaciones} />
+          <SinPase dialogo={dialogoSinPase} eventId={eventId} eventSlug={eventSlug} invitaciones={invitaciones} mesas={mesas} />
         </section>
 
         <section aria-label="Últimas llegadas" className="hidden flex-col gap-2 rounded-[16px] border border-line-panel bg-tarjeta p-5 min-[1100px]:flex">
@@ -661,7 +666,9 @@ function SinPase({
   eventId,
   eventSlug,
   invitaciones,
+  mesas,
 }: {
+  mesas: readonly MesaDelSalon[]
   dialogo: RefObject<HTMLDialogElement | null>
   eventId: string
   eventSlug: string
@@ -669,7 +676,10 @@ function SinPase({
 }) {
   const [estado, registrar, registrando] = useActionState<SinPaseState, FormData>(sinCaerse(registrarSinPaseAction), { status: 'idle' })
   const [con, setCon] = useState(invitaciones[0]?.id ?? '')
-  const mesa = invitaciones.find((i) => i.id === con)?.mesa ?? null
+  const mesaDeSuInvitacion = mesas.find((m) => m.invitaciones.includes(con))?.id ?? ''
+  // La mesa elegida a mano; sin elegir, la de su invitación.
+  const [mesaElegida, setMesaElegida] = useState<string | null>(null)
+  const mesa = mesaElegida ?? mesaDeSuInvitacion
   const cerrar = () => dialogo.current?.close()
   useEffect(() => {
     if (estado.status === 'success') dialogo.current?.close()
@@ -710,7 +720,17 @@ function SinPase({
           <div className="grid gap-4 min-[480px]:grid-cols-2">
             <label className="flex flex-col gap-2" htmlFor="sin-pase-con">
               <span className={LABEL_CLASS}>Viene con</span>
-              <select className={FIELD_CLASS} id="sin-pase-con" name="groupId" onChange={(e) => setCon(e.target.value)} required value={con}>
+              <select
+                className={FIELD_CLASS}
+                id="sin-pase-con"
+                name="groupId"
+                onChange={(e) => {
+                  setCon(e.target.value)
+                  setMesaElegida(null)
+                }}
+                required
+                value={con}
+              >
                 {invitaciones.map((i) => (
                   <option key={i.id} value={i.id}>
                     {i.nombre}
@@ -718,10 +738,21 @@ function SinPase({
                 ))}
               </select>
             </label>
-            <div className="flex flex-col gap-2">
-              <span className={LABEL_CLASS}>Mesa</span>
-              <span className="flex min-h-11.5 items-center rounded-[8px] border border-line-panel bg-bg-sunken/50 px-3.5 text-[15px] text-ink-mute">{mesa ?? 'Sin mesa'}</span>
-            </div>
+            {mesas.length === 0 ? null : (
+              <label className="flex flex-col gap-2" htmlFor="sin-pase-mesa">
+                <span className={LABEL_CLASS}>Mesa</span>
+                {/* Su mesa (entra con su invitación) u otra (se le abre una invitación propia en esa mesa). */}
+                <select className={FIELD_CLASS} id="sin-pase-mesa" name="tableId" onChange={(e) => setMesaElegida(e.target.value)} value={mesa}>
+                  {mesaDeSuInvitacion === '' ? <option value="">Sin mesa</option> : null}
+                  {mesas.map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.label} ({m.libres === 1 ? '1 libre' : `${m.libres} libres`})
+                    </option>
+                  ))}
+                </select>
+                <input name="mesaDeSuInvitacion" type="hidden" value={mesaDeSuInvitacion} />
+              </label>
+            )}
           </div>
           {estado.status === 'error' ? (
             <p className="text-[13.5px] text-danger" role="alert">

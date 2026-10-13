@@ -55,14 +55,19 @@ export function MenuCrear() {
   )
 }
 
-/** «Crear» en el celular (maqueta M47): el «+» de la isla abre una hoja desde abajo con las mismas altas. */
+/** «Crear» en el celular (maqueta M47): en el menú, sobre «Cerrar sesión», abre una hoja desde abajo con las mismas altas. */
 export function MenuCrearMovil() {
   const hoja = useRef<HTMLDialogElement>(null)
   const cerrar = () => hoja.current?.close()
   return (
     <>
-      <button aria-haspopup="dialog" aria-label="Crear" className="grid size-11 cursor-pointer place-items-center rounded-xl text-ink" onClick={() => hoja.current?.showModal()} type="button">
-        <PlusIcon className="size-6" />
+      <button
+        aria-haspopup="dialog"
+        className="mt-3 flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-gold px-4.5 text-[15.5px] font-medium text-shell-deep"
+        onClick={() => hoja.current?.showModal()}
+        type="button"
+      >
+        <PlusIcon className="size-[18px]" /> Crear
       </button>
       <dialog
         aria-labelledby="crear-movil"

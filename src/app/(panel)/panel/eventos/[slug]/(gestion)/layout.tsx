@@ -13,6 +13,7 @@ import { PanelAlert } from '@/shared/design/ui/panel/PanelKit'
 import { panelNav, ROTULO_DE_ROL } from '@/modules/shell/ui/nav'
 import { PanelFrame } from '@/modules/shell/ui/PanelFrame'
 import { SupportBanner } from '@/modules/admin/ui/SupportBanner'
+import { MenuCrearMovil } from '@/modules/admin/ui/MenuCrear'
 import { MenuMovil } from '@/modules/shell/ui/MenuMovil'
 import { BarraDelAdmin } from '@/modules/admin'
 import { hasFeature, seccionesFueraDelPlan } from '@/modules/plans'
@@ -107,7 +108,7 @@ export default async function EventoLayout({
     <PanelFrame
       barra={
         isAdmin(actor) ? (
-          <BarraDelAdmin campana={campana} evento={event.value.title} hoy={diaLargo(new Date())} menu={<MenuMovil />} />
+          <BarraDelAdmin campana={campana} evento={event.value.title} hoy={diaLargo(new Date())} menu={<MenuMovil crear={<MenuCrearMovil />} />} />
         ) : actor.role === 'puerta' ? (
           <BarraSuperior>{campana}</BarraSuperior>
         ) : (

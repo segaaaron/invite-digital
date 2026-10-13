@@ -5,7 +5,7 @@
 // hereda `full`, y `full` deniega a un puerta — el olvido cae del lado seguro.
 
 import { revalidatePath } from 'next/cache'
-import { checkin, guests, plans } from '@/app/composition/container'
+import { checkin, guests, plans, venue } from '@/app/composition/container'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { isErr } from '@/shared/result'
 import type { CheckinErrorKind } from '@/modules/checkin/domain/errors'
@@ -195,16 +195,48 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
   if (nombre === '') return { status: 'error', message: 'Escribe su nombre: así lo ve el catering y la puerta.' }
   if (groupId === '') return { status: 'error', message: 'Elige con quién viene.' }
 
-  const persona = await guests.addPerson({ eventId, guestGroupId: groupId, fullName: nombre, isCompanion: true, attending: 'yes' })
-  if (isErr(persona)) {
-    registrarFallo('checkin/actions', 'alta sin pase rechazada', persona.error.kind, persona.error.detail)
-    return { status: 'error', message: persona.error.detail }
+  // La mesa: la de su invitación (entra como su acompañante) u otra (E68). Como la mesa es de la invitación, para
+  // sentarlo en otra se le abre una invitación propia, con su nombre, sentada en esa mesa.
+  const mesa = String(formData.get('tableId') ?? '')
+  const mesaDeSuInvitacion = String(formData.get('mesaDeSuInvitacion') ?? '')
+  let invitacion = groupId
+  let personIds: string[] | null = null
+  if (mesa !== '' && mesa !== mesaDeSuInvitacion) {
+    const capacidad = await plans.allowanceFor(eventId)
+    const grupos = await guests.list(eventId)
+    if (isErr(capacidad) || isErr(grupos)) return { status: 'error', message: 'No pudimos comprobar el plan del evento. Inténtalo en un momento.' }
+    const alta = await guests.addGuest({
+      eventId,
+      fullName: nombre,
+      companionNames: [],
+      attending: 'yes',
+      dietaryNote: null,
+      phone: null,
+      email: null,
+      vip: false,
+      allowance: { maxGuestGroups: capacidad.value.maxGuestGroups },
+      currentGroups: grupos.value.length,
+    })
+    if (isErr(alta)) {
+      registrarFallo('checkin/actions', 'alta sin pase en otra mesa rechazada', alta.error.kind, alta.error.detail)
+      return { status: 'error', message: alta.error.detail }
+    }
+    invitacion = alta.value.groupId
+    const sentado = await venue.assign({ eventId, groupId: invitacion, tableId: mesa })
+    if (isErr(sentado)) registrarFallo('checkin/actions', 'sin pase: no se pudo sentar', sentado.error.kind, sentado.error.detail)
+  } else {
+    const persona = await guests.addPerson({ eventId, guestGroupId: groupId, fullName: nombre, isCompanion: true, attending: 'yes' })
+    if (isErr(persona)) {
+      registrarFallo('checkin/actions', 'alta sin pase rechazada', persona.error.kind, persona.error.detail)
+      return { status: 'error', message: persona.error.detail }
+    }
+    personIds = [persona.value.id]
   }
 
   const entrada = await checkin.recordGroup({
     eventId,
     recordedBy: `user:${actor.userId}`,
-    scan: { scanId: crypto.randomUUID(), groupId, arrivedCount: null, scannedAt: new Date(), personIds: [persona.value.id] },
+    scan: { scanId: crypto.randomUUID(), groupId: invitacion, arrivedCount: null, scannedAt: new Date(), personIds },
   })
   if (isErr(entrada)) {
     registrarFallo('checkin/actions', 'ingreso sin pase rechazado', entrada.error.kind, entrada.error.detail)
@@ -213,5 +245,6 @@ export async function registrarSinPaseAction(_previo: SinPaseState, formData: Fo
 
   revalidatePath(`/panel/eventos/${eventSlug}/checkin`)
   revalidatePath(`/panel/eventos/${eventSlug}/invitados`)
-  return { status: 'success', message: `${nombre} entró como acompañante.` }
+  revalidatePath(`/panel/eventos/${eventSlug}/mesas`)
+  return { status: 'success', message: `${nombre} entró${invitacion === groupId ? ' como acompañante' : ''}.` }
 }
