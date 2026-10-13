@@ -302,36 +302,51 @@ function lugar(valor: unknown): PlaceBlock | undefined {
  */
 const escrito = (valor: string | undefined): boolean => valor !== undefined && valor.trim() !== ''
 
+/** Qué exige un diseño antes de invitar: lo calcula `requisitosParaInvitar` con el diseño y la fiesta. */
+export type RequisitosParaInvitar = {
+  readonly pideNombres: boolean
+  /** La boda pide los dos novios, si el diseño pinta el segundo nombre. */
+  readonly pideSegundoNombre: boolean
+  readonly pidePadres: boolean
+  readonly fiesta: string
+}
+
 /**
- * Lo que le falta a la invitación para poder invitar a alguien, dicho para el atelier.
+ * Lo que le falta a la invitación para poder invitar a alguien, dicho para quien la escribe.
  *
- * Quién, cuándo y dónde: los nombres de la portada, la fecha y hora, y el lugar de la
- * recepción. Sin ellos, el invitado abre una invitación que no dice de quién es, cuándo ni
- * dónde.
+ * **Solo quién celebra y sus papás** (decidido por el usuario el 13 oct): en unos XV, la quinceañera y
+ * al menos uno de sus papás; en una boda, los dos novios y al menos un papá o mamá; en otra fiesta, el
+ * nombre de quien celebra. Lo demás —fecha, lugar, frase, cierre— no frena: sale con el ejemplo del
+ * diseño. Antes se exigían fecha y lugar, y el envío llegó a quedar trabado.
  *
- * Se mira **el dato**, no el bloque: antes bastaba con un bloque cualquiera con texto, y una
- * frase escrita dejaba cargar invitados con la invitación sin fecha ni lugar.
- *
- * **Los nombres solo se exigen si el diseño los pinta.** Hay diseños cuya portada es una
- * ilustración con el nombre rotulado dentro: ahí no hay campo que rellenar —el editor no lo
- * ofrece— y pedirlo dejaría el reparto bloqueado para siempre, sin nada que se pueda hacer
- * para desbloquearlo. Quien llama lo sabe por el `pinta` del diseño.
+ * Se mira **el dato**, no el bloque. Y **solo se exige lo que el diseño pinta**: hay portadas con el
+ * nombre rotulado en la ilustración y diseños sin padres; pedirlo dejaría el reparto bloqueado para
+ * siempre, sin campo donde escribirlo.
  */
-export function loQueFaltaParaInvitar(
-  content: InvitationContent,
-  opciones: { readonly pideNombres?: boolean } = {},
-): readonly string[] {
-  const nombres = opciones.pideNombres ?? true
+export function loQueFaltaParaInvitar(content: InvitationContent, req: RequisitosParaInvitar): readonly string[] {
+  const hosts = content.hosts
+  const padres = hosts === undefined ? 0 : req.fiesta === 'boda' ? ((b) => b.novia.length + b.novio.length)(anfitrionesBoda(hosts)) : anfitrionesXv(hosts).padres.length
+  const faltanNombres = !escrito(content.hero?.nameA) || (req.pideSegundoNombre && !escrito(content.hero?.nameB))
+  const nombre = req.fiesta === 'boda' ? 'Los nombres de los novios' : req.fiesta === 'xv' ? 'El nombre de la quinceañera' : 'El nombre de quien celebra'
   return [
-    !nombres || escrito(content.hero?.nameA) ? null : 'Los nombres de la portada',
-    escrito(content.schedule?.startsAt) ? null : 'La fecha y la hora',
-    escrito(content.reception?.place) ? null : 'El lugar de la recepción',
+    req.pideNombres && faltanNombres ? nombre : null,
+    req.pidePadres && (req.fiesta === 'boda' || req.fiesta === 'xv') && padres === 0 ? 'El nombre de sus papás' : null,
   ].filter((falta): falta is string => falta !== null)
 }
 
-/** Si el diseño pide el nombre de la portada, para `loQueFaltaParaInvitar`. */
-export const pideNombres = (tema: { sections: readonly SectionKey[]; pinta: { sinCampos?: Partial<Record<SectionKey, readonly string[]>> } }): boolean =>
-  tema.sections.includes('hero') && !(tema.pinta.sinCampos?.hero ?? []).includes('nameA')
+type DisenoQuePinta = { sections: readonly SectionKey[]; pinta: { sinCampos?: Partial<Record<SectionKey, readonly string[]>> } }
+
+/** Qué pide este diseño en esta fiesta antes de invitar (ver `loQueFaltaParaInvitar`). */
+export function requisitosParaInvitar(tema: DisenoQuePinta, fiesta: string): RequisitosParaInvitar {
+  const sinCampos = tema.pinta.sinCampos ?? {}
+  const portada = tema.sections.includes('hero')
+  return {
+    pideNombres: portada && !(sinCampos.hero ?? []).includes('nameA'),
+    pideSegundoNombre: fiesta === 'boda' && portada && !(sinCampos.hero ?? []).includes('nameB'),
+    pidePadres: tema.sections.includes('hosts'),
+    fiesta,
+  }
+}
 
 export function parseInvitationContent(crudo: unknown): InvitationContent {
   if (!esObjeto(crudo)) return {}

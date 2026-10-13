@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { admin, events, guests, plans } from '@/app/composition/container'
-import { encargoSinTerminar } from './puede-invitar'
+import { faltaParaEnviar } from './puede-invitar'
 import { esquemaDePropuesta } from '@/modules/asistente'
 import { requireEventAccess, requireSession } from '@/app/_acciones/sesion'
 import { env } from '@/shared/config/env'
@@ -235,8 +235,8 @@ export async function sendInvitationAction(_previous: ResendState, formData: For
 export async function ensureInvitationLinkAction(input: { eventSlug: string; groupId: string }): Promise<{ status: 'success'; url: string } | { status: 'error'; message: string }> {
   const actor = await requireSession()
   const eventId = await requireEventAccess(actor, { eventSlug: input.eventSlug, section: 'cliente' })
-  const encargo = await encargoSinTerminar(eventId)
-  if (encargo !== null) return { status: 'error', message: encargo }
+  const falta = await faltaParaEnviar(eventId)
+  if (falta !== null) return { status: 'error', message: falta }
   const result = await guests.enlaceDe({ eventId, id: input.groupId })
   if (isErr(result)) {
     registrarFallo('guests/actions', 'enlace no disponible', result.error.kind, result.error.detail)
@@ -246,8 +246,8 @@ export async function ensureInvitationLinkAction(input: { eventSlug: string; gro
 }
 
 async function repartir(eventId: string, eventSlug: string, formData: FormData, modo: 'rotar' | 'mismo'): Promise<ResendState> {
-  const encargo = await encargoSinTerminar(eventId)
-  if (encargo !== null) return { status: 'error', message: encargo }
+  const falta = await faltaParaEnviar(eventId)
+  if (falta !== null) return { status: 'error', message: falta }
 
   // Preparar el enlace es mandar la invitación: con ella escrita no hace falta que nadie la
   // apruebe. Se publica aquí, antes del enlace, para que abra desde el primer momento.

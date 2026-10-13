@@ -1,4 +1,4 @@
-import { and, count, desc, eq, inArray, isNotNull, isNull, ne, sql } from 'drizzle-orm'
+import { and, count, desc, eq, inArray, isNotNull, ne, sql } from 'drizzle-orm'
 import { db, type DbExecutor } from '@/shared/db/client'
 import { addons, events, orderProofs, orders, planTranslations, plans } from '@/shared/db/schema'
 import { ORDER_STATUSES, parseOrigin, type Order, type OrderStatus, type QuoteExtra } from '../domain/order'
@@ -239,14 +239,6 @@ export const createDrizzleOrderRepository = (database: DbExecutor): OrderReposit
 
     async findById(id): Promise<Order | null> {
       const [fila] = await conPlan().where(eq(orders.id, id)).limit(1)
-      return fila === undefined ? null : aOrder(fila)
-    },
-
-    async planOrderOf(eventId): Promise<Order | null> {
-      const [fila] = await conPlan()
-        .where(and(eq(orders.eventId, eventId), isNull(orders.addonSlug)))
-        .orderBy(desc(orders.createdAt))
-        .limit(1)
       return fila === undefined ? null : aOrder(fila)
     },
 

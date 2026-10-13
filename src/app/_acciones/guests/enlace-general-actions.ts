@@ -14,14 +14,14 @@ import { clientIpFrom } from '@/shared/http/client-ip'
 import { createRateLimiter } from '@/shared/http/rate-limit'
 import { registrarFallo } from '@/shared/observability/fallos'
 import { isErr } from '@/shared/result'
-import { encargoSinTerminar } from './puede-invitar'
+import { faltaParaEnviar } from './puede-invitar'
 
 // ============================================================================
 // El enlace general (`0086`): uno por evento, para quien no quiere cargar invitados. Cada
 // invitado escribe su nombre y quiénes van con él, y sale con **su** invitación personal.
 //
 // Arriba, lo del anfitrión (crear y quitar). Abajo, el alta pública: sin sesión, con límite por
-// IP, y con las mismas puertas que repartir (invitación escrita, encargo aprobado y pagado, tope
+// IP, y con las mismas puertas que repartir (quién celebra y sus papás escritos, tope
 // del plan).
 // ============================================================================
 
@@ -69,7 +69,7 @@ export async function altaConEnlaceGeneralAction(_previo: AltaGeneralState, form
   if (isErr(evento) || evento.value.status === 'closed' || !acceptsResponses({ ...evento.value, status: 'live' }, fechaEnBolivia(new Date()))) {
     return { status: 'error', code: 'cerrado' }
   }
-  if ((await encargoSinTerminar(eventId)) !== null) return { status: 'error', code: 'cerrado' }
+  if ((await faltaParaEnviar(eventId)) !== null) return { status: 'error', code: 'cerrado' }
 
   const nombre = campo(formData, 'nombre').replace(/\s+/g, ' ').trim()
   if (nombre.length < 2 || nombre.length > 120) return { status: 'error', code: 'nombre' }

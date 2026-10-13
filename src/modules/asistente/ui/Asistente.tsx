@@ -88,16 +88,18 @@ const CONSULTANDO: Record<string, string> = {
 /** Los enlaces del propio evento que Luxury escribe se vuelven enlaces de verdad; nada de fuera. */
 function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNode {
   const base = `/panel/eventos/${slug}`
-  const partes = texto.split(/(\/panel\/eventos\/[a-z0-9-]+(?:\/[\w\-/?=&]*)?)/g)
+  // Si el modelo escribe markdown (13 oct): sin los «**» de las negritas, y «[texto](ruta)» enlaza con su texto.
+  const partes = texto.replace(/\*\*(.+?)\*\*/g, '$1').split(/(\[[^\]\n]+\]\(\/panel\/eventos\/[^)\s]+\)|\/panel\/eventos\/[a-z0-9-]+(?:\/[\w\-/?=&]*)?)/g)
   return partes.map((parte, i) => {
-    const limpia = parte.replace(/[.,;:)]+$/, '')
+    const md = /^\[([^\]]+)\]\((.+)\)$/.exec(parte)
+    const limpia = md?.[2] ?? parte.replace(/[.,;:)]+$/, '')
     if (i % 2 === 1 && (limpia === base || limpia.startsWith(`${base}/`) || limpia.startsWith(`${base}?`))) {
       return (
         <Fragment key={i}>
           <Link className="font-medium text-ink underline underline-offset-4 hover:text-gold-deep" href={limpia} onClick={alNavegar}>
-            {limpia.slice(base.length) || 'el resumen'}
+            {md?.[1] ?? (limpia.slice(base.length) || 'el resumen')}
           </Link>
-          {parte.slice(limpia.length)}
+          {md ? '' : parte.slice(limpia.length)}
         </Fragment>
       )
     }

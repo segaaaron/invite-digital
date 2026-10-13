@@ -42,4 +42,17 @@ describe('leerEventos (OpenAI)', () => {
       for await (const _ of leerEventos(falla)) void _
     }).rejects.toThrow('rate')
   })
+
+  it('una respuesta cortada por el tope lo dice, no se queda a medias en silencio', async () => {
+    const cuerpo = new ReadableStream<Uint8Array>({
+      start(c) {
+        c.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ type: 'response.output_text.delta', delta: 'Uno, dos' })}\n\ndata: ${JSON.stringify({ type: 'response.incomplete', response: { usage: { input_tokens: 1, output_tokens: 3000 } } })}\n\n`))
+        c.close()
+      },
+    })
+    const eventos: EventoDelModelo[] = []
+    for await (const e of leerEventos(cuerpo)) eventos.push(e)
+    expect(eventos.filter((e) => e.tipo === 'texto').map((e) => (e.tipo === 'texto' ? e.delta : '')).join('')).toContain('dime «sigue»')
+    expect(eventos.at(-1)).toEqual({ tipo: 'fin', uso: { entrada: 1, enCache: 0, salida: 3000 } })
+  })
 })

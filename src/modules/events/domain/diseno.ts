@@ -63,15 +63,6 @@ export function aprobarVersion(d: Diseno): Result<Diseno, ErrorDeDiseno> {
 export const descontarRonda = (d: Diseno): Diseno => ({ ...d, rondasUsadas: Math.max(0, d.rondasUsadas - 1) })
 
 /**
- * Si se pueden repartir los enlaces. Por encargo, solo con la versión aprobada **y el saldo
- * pagado**: «pagas el saldo y la compartes». Sin encargo (`null`), como siempre.
- */
-export function puedeRepartir(d: Diseno | null, cobro: { saldoPendiente: boolean }): boolean {
-  if (d === null) return true
-  return d.estado === 'aprobada' && !cobro.saldoPendiente
-}
-
-/**
  * Lo que el formulario de datos pide **según el plan** (documento de cambios, sección 7): en Gala,
  * qué secciones quitar, agregar u ordenar; en Imperial además la temática, el vestido, la
  * decoración y las flores, con lo que diseñamos «creado para ti». El resto de datos se escribe en

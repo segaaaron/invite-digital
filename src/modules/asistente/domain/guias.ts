@@ -56,7 +56,7 @@ export const GUIAS: Record<TemaDeAyuda, { readonly texto: string; readonly ruta:
   diseno_por_encargo: {
     ruta: '/configuracion',
     texto:
-      'Si tu plan es de diseño por encargo, arriba de «Personalizar invitación» ves los pasos: escribes tus datos y fotos y pulsas «Enviar mis datos para diseñar»; te avisamos cuando la versión esté lista; la apruebas o pides cambios (una ronda es un solo mensaje con todos tus cambios). Se reparte cuando la apruebas y pagas el saldo.',
+      'Si tu plan es de diseño por encargo, arriba de «Personalizar invitación» ves los pasos: escribes tus datos y fotos y pulsas «Enviar mis datos para diseñar»; te avisamos cuando la versión esté lista; la apruebas o pides cambios (una ronda es un solo mensaje con todos tus cambios). Puedes enviarla cuando quieras: solo hace falta el nombre de quien celebra y el de sus papás; lo demás sale con el ejemplo del diseño.',
   },
   mesas: { ruta: '/mesas', texto: 'En Mesas creas las mesas con su cupo, sientas a cada invitación y puedes repartir automáticamente lo que falta.' },
   regalos: { ruta: '/regalos', texto: 'En Regalos eliges las formas de regalar (lluvia de sobres, transferencia con el QR de tu banco) y, si tu plan la trae, la lista de regalos.' },

@@ -241,7 +241,7 @@ describe('Luxury como planner (9 oct: «que no repita» y «que sepa comportarse
   })
   it('da ideas de planner según la fiesta, y sin alcohol para menores', () => {
     expect(r).toContain('TU OFICIO DE PLANNER')
-    expect(r).toMatch(/XV años:.*sin alcohol/)
+    expect(r).toContain('nunca para menores')
   })
 })
 
@@ -261,5 +261,16 @@ describe('«muéstrame la lista» abre la pantalla (9 oct)', () => {
     expect(r).toContain('«muéstrame la lista de invitados»')
     expect(r).toContain('ir_a con pantalla "invitados"')
     expect(r).toContain('no cambias de pantalla')
+  })
+})
+
+describe('La ficha del evento (13 oct: «que genere cosas de valor, no genéricas»)', () => {
+  const base = { evento: 'Boda', fiesta: 'boda', fecha: '2027-05-15', plan: 'Gala', rol: 'anfitrión', hoy: '2026-10-13', slug: 'b', idioma: 'es', porVoz: false } as const
+  it('va en CONTEXTO, tras las reglas fijas (caché), y sin ficha no se pinta', () => {
+    const r = reglasDelSistema({ ...base, ficha: { celebran: 'Camila y Sebastián', diseno: 'Sello', lugar: 'Salón Los Cedros' } })
+    expect(r.indexOf('FICHA DEL EVENTO')).toBeGreaterThan(r.indexOf('CONTEXTO (datos'))
+    expect(r).toContain('- Celebran: Camila y Sebastián.')
+    expect(r).toContain('- Lugar: Salón Los Cedros.')
+    expect(reglasDelSistema(base)).not.toContain('FICHA DEL EVENTO')
   })
 })

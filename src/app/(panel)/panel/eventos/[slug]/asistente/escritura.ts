@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { events, planner, registry, rsvp, venue } from '@/app/composition/container'
+import { events, guests, planner, registry, rsvp, venue } from '@/app/composition/container'
 import { aplicarTextosDelAsistenteAction, ponerFotoDelAsistenteAction, removeMediaAction, renombrarEventoAction } from '@/app/_acciones/events/actions'
 import { guardarEstiloAction } from '@/app/_acciones/events/estilo-actions'
 import { crearSaveTheDateAction, quitarSaveTheDateAction } from '@/app/_acciones/events/save-the-date-actions'
@@ -92,6 +92,25 @@ function informe(pasos: readonly Paso[], enlace: string) {
 }
 
 export async function escribir(llamada: LlamadaValida, evento: Evento): Promise<unknown> {
+  const resultado = await ejecutarEscritura(llamada, evento)
+  // Lo que no se pudo, con los id que mandó el modelo (nunca nombres ni teléfonos): para cazar un id mal
+  // elegido, que no es un fallo del servicio y no va al registro de fallos (13 oct: un «la persona no existe» suelto).
+  if (typeof resultado === 'object' && resultado !== null && ('no_se_pudo' in resultado || 'error' in resultado)) {
+    console.warn('[asistente] %s no pudo del todo · %s', llamada.nombre, JSON.stringify(idsDe(llamada)))
+  }
+  return resultado
+}
+
+/** Solo los id y la acción de una llamada (claves `*_id` y `accion`), a cualquier profundidad. */
+function idsDe(valor: unknown): unknown {
+  if (Array.isArray(valor)) return valor.map(idsDe)
+  if (typeof valor !== 'object' || valor === null) return undefined
+  return Object.fromEntries(
+    Object.entries(valor).flatMap(([clave, v]) => (clave.endsWith('_id') || clave === 'accion' ? [[clave, v]] : typeof v === 'object' && v !== null ? [[clave, idsDe(v)]] : [])),
+  )
+}
+
+async function ejecutarEscritura(llamada: LlamadaValida, evento: Evento): Promise<unknown> {
   const base = { eventId: evento.id, eventSlug: evento.slug }
   const ruta = (r: string) => `/panel/eventos/${evento.slug}${r}`
 
@@ -129,7 +148,13 @@ export async function escribir(llamada: LlamadaValida, evento: Evento): Promise<
             ...(o.restriccion === null ? {} : { dietaryNote: o.restriccion.trim() === '' ? null : o.restriccion.trim() }),
           }
           if (Object.keys(parche).length > 0) pasos.push(await paso('Persona editada', () => updatePersonAction({ eventSlug: evento.slug, id: o.persona_id!, ...parche })))
-          if (o.telefono !== null && o.invitacion_id !== null) pasos.push(await paso(`WhatsApp cambiado a ${o.telefono}`, () => setGroupPhoneAction({ eventSlug: evento.slug, id: o.invitacion_id!, phone: o.telefono! })))
+          if (o.telefono !== null) {
+            // El WhatsApp es de la invitación: si el modelo solo manda la persona, se usa la suya (13 oct: el cambio se perdía en silencio).
+            const invitacion = o.invitacion_id ?? (await invitacionDe(evento.id, o.persona_id))
+            if (invitacion === null) pasos.push({ ok: false, fallo: 'WhatsApp: falta saber de qué invitación es (búscala con buscar_invitados)' })
+            else pasos.push(await paso(`WhatsApp cambiado a ${o.telefono}`, () => setGroupPhoneAction({ eventSlug: evento.slug, id: invitacion, phone: o.telefono! })))
+          }
+          if (Object.keys(parche).length === 0 && o.telefono === null) pasos.push({ ok: false, fallo: 'Editar: no venía nada que cambiar' })
         }
       }
       return informe(pasos, ruta('/invitados'))
@@ -688,4 +713,11 @@ export async function escribir(llamada: LlamadaValida, evento: Evento): Promise<
     default:
       return null
   }
+}
+
+/** La invitación de una persona del evento, o null si no es de este evento. */
+async function invitacionDe(eventId: string, personaId: string | null): Promise<string | null> {
+  if (personaId === null) return null
+  const personas = await guests.listPeople(eventId)
+  return isErr(personas) ? null : (personas.value.find((p) => p.id === personaId)?.guestGroupId ?? null)
 }

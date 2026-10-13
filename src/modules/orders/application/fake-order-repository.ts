@@ -142,10 +142,6 @@ export class FakeOrderRepository implements OrderRepository {
       .slice(0, input.limit)
   }
 
-  async planOrderOf(eventId: string): Promise<Order | null> {
-    return [...this.orders].reverse().find((o) => o.eventId === eventId && o.addonSlug === null) ?? null
-  }
-
   async listAddonOrdersOf(eventId: string): Promise<Order[]> {
     return this.orders.filter((o) => o.eventId === eventId && o.addonSlug !== null)
   }

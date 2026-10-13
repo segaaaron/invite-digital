@@ -5,11 +5,14 @@ import { CLAVE_DE_CONFIG, leerConfig, mesEnBolivia, type ConfigDelAsistente } fr
 import { GUIAS } from '@/modules/asistente/domain/guias'
 import { ESCRITURAS, HERRAMIENTAS, PANTALLAS_DEL_EVENTO, type LlamadaValida } from '@/modules/asistente/domain/herramientas'
 import type { Mensaje } from '@/modules/asistente/domain/historial'
-import { reglasDelSistema, type Idioma } from '@/modules/asistente/domain/reglas'
+import { comoSuena } from '@/modules/asistente/domain/como-suena'
+import { repartoDeMesas } from '@/modules/asistente/domain/reparto-de-mesas'
+import { reglasDelSistema, type FichaDelEvento, type Idioma } from '@/modules/asistente/domain/reglas'
 import { drizzleUsoDelAsistente } from '@/modules/asistente/infrastructure/drizzle-uso'
 import { modeloFalso } from '@/modules/asistente/infrastructure/modelo-falso'
 import { crearModeloOpenAI } from '@/modules/asistente/infrastructure/openai'
-import { fiestaDeTema, preguntasDelEncargo, topeDeTexto, yaSeCelebro, type SectionKey } from '@/modules/events'
+import { fiestaDeTema, loQueFaltaParaInvitar, preguntasDelEncargo, requisitosParaInvitar, topeDeTexto, yaSeCelebro, type SectionKey } from '@/modules/events'
+import { escrito as seccionEscrita } from '@/modules/events/ui/avance-de-invitacion'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { TIPOS_DE_CORTEJO, atrasadasDeLaAgenda, categoriasDe, diasHasta, cuentasDePartida, estadoDeTarea, NOMBRE_DE_CLASE, NOMBRE_DE_ESTADO, pagosQueVencen, totalesDelPresupuesto } from '@/modules/planner'
 import { extraDisponible, hasFeature, NOMBRE_DE_EFECTO, seccionesFueraDelPlan, type Allowance } from '@/modules/plans'
@@ -73,9 +76,10 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           dias_que_faltan: dias,
           invitaciones: activos.length,
           invitaciones_enviadas: activos.filter((g) => g.invitationSentAt !== null).length,
-          personas_en_la_lista: isErr(personas) ? null : personas.value.length,
-          lugares_invitados: t?.seatsInvited ?? null,
-          lugares_confirmados: t?.seatsConfirmed ?? null,
+          personas_en_la_lista: isErr(personas) ? null : personas.value.filter((p) => activos.some((g) => g.id === p.guestGroupId)).length,
+          // Los cupos suman los acompañantes sin nombre: decir «7 personas con 9 lugares» confundía (13 oct).
+          cupos_de_las_invitaciones: t?.seatsInvited ?? null,
+          personas_confirmadas: t?.seatsConfirmed ?? null,
           invitaciones_que_respondieron: t?.groupsResponded ?? null,
           invitaciones_sin_responder: t?.groupsPending ?? null,
           visitas_a_la_invitacion: isErr(visitas) ? null : visitas.value.total,
@@ -97,7 +101,7 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
           return respuesta === undefined || respuesta === null ? 'sin_responder' : respuesta === 0 ? 'no_vienen' : 'confirmados'
         }
         const buscado = llamada.texto === null ? '' : sinTildes(llamada.texto.trim())
-        const filas = personas.value
+        const todas = personas.value
           .filter((p) => porId.has(p.guestGroupId))
           .map((p) => {
             const g = porId.get(p.guestGroupId)!
@@ -122,11 +126,16 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
               })(),
             }
           })
-          .filter(
-            (f) =>
-              (llamada.estado === null || f.estado === llamada.estado) &&
-              (buscado === '' || sinTildes(`${f.nombre} ${f.invitacion}`).includes(buscado) || (f.codigo_pase !== null && codigo(f.codigo_pase) === codigo(llamada.texto ?? ''))),
-          )
+        const filas = todas.filter(
+          (f) =>
+            (llamada.estado === null || f.estado === llamada.estado) &&
+            (buscado === '' || sinTildes(`${f.nombre} ${f.invitacion}`).includes(buscado) || (f.codigo_pase !== null && codigo(f.codigo_pase) === codigo(llamada.texto ?? ''))),
+        )
+        // Sin nadie con esa ortografía, quien suena igual (un dictado: «Peres» por «Pérez»), avisado como parecido.
+        if (filas.length === 0 && buscado !== '') {
+          const parecidos = todas.filter((f) => (llamada.estado === null || f.estado === llamada.estado) && comoSuena(`${f.nombre} ${f.invitacion}`).includes(comoSuena(buscado)))
+          if (parecidos.length > 0) return { total: parecidos.length, personas: parecidos.slice(0, 40), nota: 'Nadie con esa ortografía exacta; estas personas suenan igual (puede ser un dictado).', enlace: ruta('/invitados') }
+        }
         return { total: filas.length, personas: filas.slice(0, 40), enlace: ruta('/invitados') }
       }
       case 'tareas': {
@@ -206,32 +215,37 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
       case 'mi_invitacion': {
         const c = await events.contenidoEscrito(evento.id)
         const lugarDe = (l: typeof c.ceremony) => (l === undefined ? null : { lugar: l.place ?? null, direccion: l.address ?? null, hora: l.time ?? null })
+        const todo = {
+          nombre_a: c.hero?.nameA ?? null,
+          nombre_b: c.hero?.nameB ?? null,
+          texto_sobre_nombres: c.hero?.eyebrow ?? null,
+          iniciales: c.hero?.monogram ?? null,
+          texto_bajo_nombres: c.hero?.serial ?? null,
+          ubicacion: c.map?.href ?? null,
+          colores_vestimenta: c.dressCode?.colors ?? [],
+          anfitriones: c.hosts === undefined ? null : { titulo: c.hosts.label ?? null, ...(c.hosts.roles ?? { nombres: c.hosts.names }) },
+          cancion: c.music?.track === undefined ? null : { titulo: c.music.track, artista: c.music.artist ?? null, archivo_subido: c.music.audioMediaId !== undefined },
+          frase: c.quote?.text ?? null,
+          fecha_hora: c.schedule?.startsAt ?? null,
+          ceremonia: lugarDe(c.ceremony),
+          recepcion: lugarDe(c.reception),
+          vestimenta: c.dressCode === undefined ? null : { titulo: c.dressCode.title ?? null, nota: c.dressCode.note ?? null },
+          cierre: c.closing?.text ?? null,
+          avisos: (c.notes ?? []).map((n) => ({ titulo: n.title ?? null, texto: n.text ?? null })),
+          itinerario: (c.itinerary ?? []).map((r) => ({ hora: r.time, momento: r.label })),
+          foto_de_retrato: c.hero?.portraitImageId === undefined ? 'sin foto' : 'con foto',
+          galeria: (c.gallery ?? []).map((g, i) => ({ casilla: i + 1, rotulo: g.label, con_foto: g.imageId !== undefined })),
+        }
+        // Solo lo que este diseño pinta (13 oct): con la ceremonia de un diseño que no la tiene, Luxury la daba por «vacía».
+        const pinta = new Set(themeFor(evento.themeKey).sections)
+        const escrito = Object.fromEntries(Object.entries(todo).filter(([campo]) => pinta.has(SECCION_DEL_CAMPO[campo as keyof typeof todo])))
         return {
-          escrito: {
-            nombre_a: c.hero?.nameA ?? null,
-            nombre_b: c.hero?.nameB ?? null,
-            texto_sobre_nombres: c.hero?.eyebrow ?? null,
-            iniciales: c.hero?.monogram ?? null,
-            texto_bajo_nombres: c.hero?.serial ?? null,
-            ubicacion: c.map?.href ?? null,
-            colores_vestimenta: c.dressCode?.colors ?? [],
-            anfitriones: c.hosts === undefined ? null : { titulo: c.hosts.label ?? null, ...(c.hosts.roles ?? { nombres: c.hosts.names }) },
-            cancion: c.music?.track === undefined ? null : { titulo: c.music.track, artista: c.music.artist ?? null, archivo_subido: c.music.audioMediaId !== undefined },
-            frase: c.quote?.text ?? null,
-            fecha_hora: c.schedule?.startsAt ?? null,
-            ceremonia: lugarDe(c.ceremony),
-            recepcion: lugarDe(c.reception),
-            vestimenta: c.dressCode === undefined ? null : { titulo: c.dressCode.title ?? null, nota: c.dressCode.note ?? null },
-            cierre: c.closing?.text ?? null,
-            avisos: (c.notes ?? []).map((n) => ({ titulo: n.title ?? null, texto: n.text ?? null })),
-            itinerario: (c.itinerary ?? []).map((r) => ({ hora: r.time, momento: r.label })),
-            fotos: {
-              retrato: c.hero?.portraitImageId === undefined ? 'sin foto' : 'con foto',
-              galeria: (c.gallery ?? []).map((g, i) => ({ casilla: i + 1, rotulo: g.label, con_foto: g.imageId !== undefined })),
-            },
-          },
+          escrito,
+          por_llenar: themeFor(evento.themeKey)
+            .sections.filter((s) => !seccionEscrita(c, s))
+            .map((s) => NOMBRE_DE_SECCION[s]),
           diseno: disenoParaRedactar(evento.themeKey),
-          nota: 'Lo que está en null no se escribió: la invitación enseña ahí el ejemplo del diseño.',
+          nota: 'Lo que está en null no se escribió: la invitación enseña ahí el ejemplo del diseño. «por_llenar» son las secciones de este diseño sin nada escrito, en su orden.',
           opciones: await opcionesDeInvitacion(evento.id),
           enlace: ruta('/configuracion'),
         }
@@ -258,11 +272,28 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
       }
       case 'mesas': {
         if (!hasFeature(capacidad, 'seating')) return { error: 'El plan de este evento no incluye mesas.' }
-        const salon = await venue.seating(evento.id)
+        const [salon, ultimas, personas] = await Promise.all([venue.seating(evento.id), rsvp.latestByEvent(evento.id), guests.listPeople(evento.id)])
         if (isErr(salon)) return { error: 'No se pudo leer el salón ahora.' }
+        // Con su respuesta (13 oct): sin ella, Luxury proponía sentar a quien ya dijo que no viene. Manda lo
+        // marcado persona por persona; sin eso, la respuesta de la invitación.
+        const invitacion = (g: { id: string; label: string; seats: number }) => {
+          const suyas = isErr(personas) ? [] : personas.value.filter((p) => p.guestGroupId === g.id)
+          const si = suyas.filter((p) => p.attending === 'yes').length
+          const asisten = si > 0 ? si : suyas.length > 0 && suyas.every((p) => p.attending === 'no') ? 0 : ultimas.get(g.id)?.attending
+          return { invitacion_id: g.id, invitacion: g.label, personas: g.seats, respuesta: asisten === undefined || asisten === null ? 'sin_responder' : asisten === 0 ? 'no_viene' : `confirmaron ${asisten}` }
+        }
+        const sinMesa = salon.value.unseated.map(invitacion)
+        const lugaresDe = (i: ReturnType<typeof invitacion>) => (i.respuesta === 'no_viene' ? 0 : i.respuesta.startsWith('confirmaron ') ? Number(i.respuesta.slice(12)) : i.personas)
         return {
-          mesas: salon.value.tables.map((t) => ({ mesa_id: t.id, mesa: t.label, lugares: t.capacity, ocupados: t.taken, libres: t.free, invitaciones: t.groups.map((g) => ({ invitacion_id: g.id, invitacion: g.label, personas: g.seats })) })),
-          sin_mesa: salon.value.unseated.map((g) => ({ invitacion_id: g.id, invitacion: g.label, personas: g.seats })),
+          mesas_creadas: salon.value.tables.length,
+          mesas: salon.value.tables.map((t) => ({ mesa_id: t.id, mesa: t.label, lugares: t.capacity, ocupados: t.taken, libres: t.free, invitaciones: t.groups.map(invitacion) })),
+          sin_mesa: sinMesa,
+          // Las cuentas hechas (13 oct): el modelo sumaba mal los lugares al proponer mesas. Con nombre y nota
+          // que no dejan dudas: la primera vez Luxury lo contó como mesas ya creadas.
+          propuesta_no_creada: {
+            nota: 'Estas mesas NO existen: es solo un reparto calculado para cuando pidan proponer cómo sentar a quienes no tienen mesa. Las que existen están en «mesas».',
+            reparto: repartoDeMesas(sinMesa.map((i) => ({ invitacion: i.invitacion, lugares: lugaresDe(i) }))),
+          },
           zonas: salon.value.zones.map((z) => ({ zona_id: z.id, zona: z.label, tipo: z.kind })),
           enlace: ruta('/mesas'),
         }
@@ -372,6 +403,9 @@ function ejecutorDe(evento: EventoDelAsistente, capacidad: Allowance, ahora: Dat
 async function prepararEnvio(evento: EventoDelAsistente, incluirEnviadas: boolean, ruta: (r: string) => string): Promise<ConTarjeta | { error: string } | { total: 0; nota: string }> {
   const [grupos, enlaces, contenido] = await Promise.all([guests.list(evento.id), guests.enlaces(evento.id), events.contenidoEscrito(evento.id)])
   if (isErr(grupos)) return { error: 'No se pudo leer la lista ahora.' }
+  // Lo mismo que frena el envío en el panel (quién celebra y sus papás): mejor decirlo que dar botones que fallan.
+  const falta = loQueFaltaParaInvitar(contenido, requisitosParaInvitar(themeFor(evento.themeKey), fiestaDeTema(evento.themeKey)))
+  if (falta.length > 0) return { error: `Antes de enviarla falta: ${falta.join(' y ')}. Escríbelo con «escribir_invitacion» o pídeselo a la persona.` }
   const elegidos = grupos.value.filter((g) => g.revokedAt === null && (incluirEnviadas || g.invitationSentAt === null))
   if (elegidos.length === 0) return { total: 0, nota: incluirEnviadas ? 'No hay invitaciones en la lista.' : 'Todas las invitaciones ya salieron. Si quieres reenviar alguna, dímelo.' }
   const fecha = new Intl.DateTimeFormat(evento.locale === 'en' ? 'en-GB' : 'es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' }).format(
@@ -402,6 +436,29 @@ async function prepararEnvio(evento: EventoDelAsistente, incluirEnviadas: boolea
 
 /** Lo que rodea a la invitación, para «mi_invitacion»: lo que hay hoy, para no pisarlo al cambiarlo. */
 /** Las secciones como las nombra el editor del panel. */
+/** A qué sección del diseño pertenece cada campo que lee «mi_invitacion». */
+const SECCION_DEL_CAMPO = {
+  nombre_a: 'hero',
+  nombre_b: 'hero',
+  texto_sobre_nombres: 'hero',
+  iniciales: 'hero',
+  texto_bajo_nombres: 'hero',
+  ubicacion: 'map',
+  colores_vestimenta: 'dressCode',
+  anfitriones: 'hosts',
+  cancion: 'music',
+  frase: 'quote',
+  fecha_hora: 'schedule',
+  ceremonia: 'ceremony',
+  recepcion: 'reception',
+  vestimenta: 'dressCode',
+  cierre: 'closing',
+  avisos: 'notes',
+  itinerario: 'itinerary',
+  foto_de_retrato: 'hero',
+  galeria: 'gallery',
+} as const satisfies Record<string, SectionKey>
+
 const NOMBRE_DE_SECCION: Record<SectionKey, string> = {
   hero: 'Portada y nombres',
   quote: 'Frase',
@@ -423,6 +480,17 @@ const NOMBRE_DE_SECCION: Record<SectionKey, string> = {
  * orden (proponer texto para una que no pinta sería trabajo perdido), su texto de ejemplo como referencia de
  * tono, y el tope de caracteres de cada campo (un texto más largo no se guarda).
  */
+/**
+ * Lo que hace única a la fiesta, en el contexto de cada mensaje (13 oct): con solo el título, Luxury daba
+ * ideas y textos que servían para cualquier evento si no se le ocurría leer la invitación antes.
+ */
+async function fichaDelEvento(evento: EventoDelAsistente): Promise<FichaDelEvento> {
+  const c = await events.contenidoEscrito(evento.id).catch(() => null)
+  const celebran = [c?.hero?.nameA, c?.hero?.nameB].filter((n): n is string => typeof n === 'string' && n.trim() !== '').join(' y ')
+  const lugar = c?.reception?.place ?? c?.ceremony?.place
+  return { diseno: themeFor(evento.themeKey).label, ...(celebran !== '' ? { celebran } : {}), ...(lugar ? { lugar } : {}) }
+}
+
 function disenoParaRedactar(themeKey: string) {
   const tema = themeFor(themeKey)
   const d = tema.defaultContent
@@ -482,10 +550,11 @@ export const asistente = {
   usoDe: (eventId: string, ahora: Date) => drizzleUsoDelAsistente.usoDe(eventId, mesEnBolivia(ahora)),
   resumenDelMes: (ahora: Date) => drizzleUsoDelAsistente.resumenDelMes(mesEnBolivia(ahora)),
   /** Una respuesta, en trozos. Quien llama ya comprobó sesión, evento, plan y cuota. */
-  responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor; destinos?: readonly string[] }): AsyncGenerator<Salida> {
+  async *responder(p: { evento: EventoDelAsistente; capacidad: Allowance; nombreDelPlan: string; rol: string; mensajes: readonly Mensaje[]; ahora: Date; idioma: Idioma; porVoz: boolean; canal?: 'panel' | 'siri'; escribir: Escritor; destinos?: readonly string[] }): AsyncGenerator<Salida> {
     if (modelo === null) throw new Error('Luxury no tiene modelo configurado')
     const mes = mesEnBolivia(p.ahora)
     const instrucciones = reglasDelSistema({
+      ficha: await fichaDelEvento(p.evento),
       evento: p.evento.title,
       fiesta: FIESTA[fiestaDeTema(p.evento.themeKey)] ?? 'evento',
       fecha: p.evento.eventDate,
@@ -497,7 +566,7 @@ export const asistente = {
       porVoz: p.porVoz,
       canal: p.canal ?? 'panel',
     })
-    return conversar({
+    yield* conversar({
       modelo,
       // Por Siri no hay pantalla que abrir.
       herramientas: p.canal === 'siri' ? HERRAMIENTAS.filter((h) => h.name !== 'ir_a') : HERRAMIENTAS,

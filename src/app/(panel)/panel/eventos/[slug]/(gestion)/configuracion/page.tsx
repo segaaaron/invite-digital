@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { portadaParaCompartir } from '@/modules/events/ui/themes/portada-para-compartir'
 import { avanceDeLaInvitacion } from '@/modules/events/ui/avance-de-invitacion'
 import { EyeIcon } from '@/shared/design/ui/icons'
-import { admin, diseno as encargos, events, guests, orders, planner, plans, rsvp } from '@/app/composition/container'
+import { admin, diseno as encargos, events, guests, planner, plans, rsvp } from '@/app/composition/container'
 import { ResponsableYPlan } from '@/modules/admin/ui/ResponsableYPlan'
 import { EntrarComoCliente } from '@/modules/admin/ui/EntrarComoCliente'
 import { DuplicarEvento } from '@/modules/admin/ui/DuplicarEvento'
@@ -377,7 +377,6 @@ export default async function ConfiguracionPage({
                   ? []
                   : preguntasDelEncargo({ estilo: hasFeature(capacidad.value, 'estilo'), creadoParaTi: hasFeature(capacidad.value, 'plannerTotal') })
               }
-              saldoPendiente={encargo.estado === 'aprobada' && (await orders.saldoPendienteDe(event.value.id))}
               vistaPrevia={`/panel/eventos/${event.value.slug}/vista-previa`}
             />
           </PanelCard>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { isErr, isOk } from '@/shared/result'
-import { aprobarVersion, descontarRonda, enviarADiseno, marcarVersionEnviada, pedirCambios, puedeRepartir, type Diseno } from './diseno'
+import { aprobarVersion, descontarRonda, enviarADiseno, marcarVersionEnviada, pedirCambios, type Diseno } from './diseno'
 
 const nuevo: Diseno = { estado: 'esperando_datos', rondasIncluidas: 2, rondasUsadas: 0, diasDeEntrega: 3, entregaHasta: null }
 
@@ -39,12 +39,5 @@ describe('el diseño por encargo', () => {
   it('un error nuestro no cuenta: devuelve la ronda, nunca por debajo de cero', () => {
     expect(descontarRonda({ ...nuevo, rondasUsadas: 1 }).rondasUsadas).toBe(0)
     expect(descontarRonda(nuevo).rondasUsadas).toBe(0)
-  })
-
-  it('se reparte con la versión aprobada y el saldo pagado; sin encargo, como siempre', () => {
-    expect(puedeRepartir(null, { saldoPendiente: false })).toBe(true)
-    expect(puedeRepartir({ ...nuevo, estado: 'aprobada' }, { saldoPendiente: false })).toBe(true)
-    expect(puedeRepartir({ ...nuevo, estado: 'aprobada' }, { saldoPendiente: true })).toBe(false)
-    expect(puedeRepartir({ ...nuevo, estado: 'version_enviada' }, { saldoPendiente: false })).toBe(false)
   })
 })

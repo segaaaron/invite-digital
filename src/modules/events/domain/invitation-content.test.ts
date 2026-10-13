@@ -225,27 +225,33 @@ describe('los avisos sueltos', () => {
   })
 })
 
-describe('loQueFaltaParaInvitar', () => {
-  const lista = {
-    hero: { nameA: 'Camila' },
-    schedule: { startsAt: '2026-10-18T20:00' },
-    reception: { place: 'Salón Los Ceibos' },
-  }
+describe('loQueFaltaParaInvitar (13 oct: solo quién celebra y sus papás; lo demás sale con el ejemplo del diseño)', () => {
+  const xv = { pideNombres: true, pideSegundoNombre: false, pidePadres: true, fiesta: 'xv' } as const
+  const boda = { pideNombres: true, pideSegundoNombre: true, pidePadres: true, fiesta: 'boda' } as const
 
-  it('con quién, cuándo y dónde escritos, no falta nada', () => {
-    expect(loQueFaltaParaInvitar(lista)).toEqual([])
+  it('XV: con la quinceañera y uno de sus papás, ya se invita; sin fecha, lugar ni frase', () => {
+    expect(loQueFaltaParaInvitar({ hero: { nameA: 'Camila' }, hosts: { names: ['Ana Ríos'], roles: { mother: 'Ana Ríos' } } }, xv)).toEqual([])
   })
 
-  it('una invitación en blanco dice las tres cosas que faltan', () => {
-    expect(loQueFaltaParaInvitar({})).toEqual(['Los nombres de la portada', 'La fecha y la hora', 'El lugar de la recepción'])
+  it('XV en blanco pide solo el nombre de la quinceañera y el de sus papás', () => {
+    expect(loQueFaltaParaInvitar({}, xv)).toEqual(['El nombre de la quinceañera', 'El nombre de sus papás'])
   })
 
-  it('un bloque con otros campos escritos no basta: se mira el dato que hace falta', () => {
-    // Antes bastaba con un bloque cualquiera con texto: una frase escrita dejaba invitar
-    // con la invitación sin fecha ni lugar.
-    expect(loQueFaltaParaInvitar({ ...lista, quote: { text: 'Hoy' }, reception: { label: 'Recepción', place: '  ' } })).toEqual([
-      'El lugar de la recepción',
-    ])
+  it('boda: los dos novios y al menos un papá o mamá', () => {
+    expect(loQueFaltaParaInvitar({ hero: { nameA: 'Camila' } }, boda)).toEqual(['Los nombres de los novios', 'El nombre de sus papás'])
+    expect(loQueFaltaParaInvitar({ hero: { nameA: 'Camila', nameB: 'Sebastián' }, hosts: { names: ['Luis Paz'], roles: { groomFather: 'Luis Paz' } } }, boda)).toEqual([])
+  })
+
+  it('los padrinos no cuentan como papás', () => {
+    expect(loQueFaltaParaInvitar({ hero: { nameA: 'Camila' }, hosts: { names: ['Tía Rosa'], roles: { godparents: ['Tía Rosa'] } } }, xv)).toEqual(['El nombre de sus papás'])
+  })
+
+  it('lo que el diseño no pinta no se exige: sin campo que llenar bloquearía para siempre', () => {
+    expect(loQueFaltaParaInvitar({}, { ...xv, pideNombres: false, pidePadres: false })).toEqual([])
+  })
+
+  it('un cumpleaños solo pide el nombre de quien celebra', () => {
+    expect(loQueFaltaParaInvitar({}, { pideNombres: true, pideSegundoNombre: false, pidePadres: false, fiesta: 'cumple' })).toEqual(['El nombre de quien celebra'])
   })
 })
 

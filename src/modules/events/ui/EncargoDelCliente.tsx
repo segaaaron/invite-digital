@@ -30,7 +30,6 @@ export function EncargoDelCliente({
   eventId,
   encargo,
   decide,
-  saldoPendiente,
   vistaPrevia,
   extras,
   preguntas = [],
@@ -39,7 +38,6 @@ export function EncargoDelCliente({
   encargo: Diseno
   /** Solo quien compró aprueba o pide cambios: su equipo ve el estado. */
   decide: boolean
-  saldoPendiente: boolean
   /** La invitación a pantalla completa, para revisarla. */
   vistaPrevia: string
   /** Donde se piden cambios fuera de las rondas. */
@@ -159,9 +157,7 @@ export function EncargoDelCliente({
 
       {encargo.estado === 'aprobada' ? (
         <p className="text-[13px] leading-relaxed text-ink-soft" role="status">
-          {saldoPendiente
-            ? 'Aprobada. En cuanto registremos el saldo de tu plan, ya puedes repartirla desde Invitados.'
-            : 'Aprobada y lista: ya puedes repartirla desde Invitados.'}
+          Aprobada y lista.
         </p>
       ) : null}
     </div>

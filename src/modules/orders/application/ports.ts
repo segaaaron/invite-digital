@@ -60,8 +60,6 @@ export interface OrderRepository {
   findByRef(publicRef: string): Promise<Order | null>
   findById(id: string): Promise<Order | null>
   /** Los pedidos de extras de un evento, del más nuevo al más viejo. */
-  /** El pedido del plan con el que nació el evento (no los extras), el más reciente. */
-  planOrderOf(eventId: string): Promise<Order | null>
   listAddonOrdersOf(eventId: string): Promise<Order[]>
   /** Cuántos pedidos hay en cada estado, en una consulta. */
   countByStatusAll(): Promise<Record<OrderStatus, number>>

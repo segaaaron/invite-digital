@@ -2,8 +2,8 @@ export type { Event, EventStatus } from './domain/event'
 export { acceptsResponses } from './domain/event'
 export { enOrdenParaElCliente, yaSeCelebro } from './domain/celebrado'
 export { fechasDeMuestra } from './domain/fechas-de-muestra'
-export { leerBrief, preguntasDelEncargo, puedeRepartir, MAX_RESPUESTA_DEL_ENCARGO, PREGUNTAS_DEL_ENCARGO, type BriefDelEncargo, type Diseno, type EstadoDeDiseno, type PreguntaDelEncargo } from './domain/diseno'
-export { loQueFaltaParaInvitar, loQueSePerderia, pideNombres, topeDeTexto, type InvitationContent, type Perdida, type SectionKey } from './domain/invitation-content'
+export { leerBrief, preguntasDelEncargo, MAX_RESPUESTA_DEL_ENCARGO, PREGUNTAS_DEL_ENCARGO, type BriefDelEncargo, type Diseno, type EstadoDeDiseno, type PreguntaDelEncargo } from './domain/diseno'
+export { loQueFaltaParaInvitar, loQueSePerderia, requisitosParaInvitar, topeDeTexto, type RequisitosParaInvitar, type InvitationContent, type Perdida, type SectionKey } from './domain/invitation-content'
 export {
   FIESTAS,
   FIESTAS_A_LA_VENTA,

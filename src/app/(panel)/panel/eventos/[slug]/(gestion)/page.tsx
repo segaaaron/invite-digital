@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { analytics, events, guestbook, guests, planner, plans, rsvp, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { fiestaDeTema, loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
+import { fiestaDeTema, loQueFaltaParaInvitar, requisitosParaInvitar } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { estadoDeTarea, pagosQueVencen, proveedoresSinConfirmar } from '@/modules/planner'
 import { buildWhatsAppLink } from '@/modules/leads'
@@ -54,7 +54,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
     planner.listTasks(id),
     planner.listBudget(id),
   ])
-  const invitacionLista = loQueFaltaParaInvitar(contenido, { pideNombres: pideNombres(themeFor(event.value.themeKey)) }).length === 0
+  const invitacionLista = loQueFaltaParaInvitar(contenido, requisitosParaInvitar(themeFor(event.value.themeKey), fiestaDeTema(event.value.themeKey))).length === 0
   const filas: GuestGroupRowView[] = isErr(groups) ? [] : groups.value.map((g) => ({ ...g, confirmed: ultimas.get(g.id)?.attending ?? null }))
   const gente = isErr(personas) ? [] : personas.value
   const vienen = gente.filter((p) => p.attending === 'yes').length
@@ -90,7 +90,7 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
   const pendientes = filas.filter((f) => f.revokedAt === null && f.confirmed === null).length
   const escribir = {
     titulo: 'Escribe tu invitación',
-    detalle: 'Los nombres, la fecha y el lugar. Lo que no escribas sale como el ejemplo del diseño.',
+    detalle: 'Para enviarla basta con quién celebra y sus papás. Lo que no escribas sale como el ejemplo del diseño.',
     accion: 'Escribirla',
     href: `${base}/configuracion`,
     secundaria: { accion: 'Verla', href: `${base}/vista-previa` },

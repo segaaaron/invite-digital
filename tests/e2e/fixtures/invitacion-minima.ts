@@ -1,11 +1,13 @@
 import postgres from 'postgres'
 
 /**
- * Lo mínimo que tiene que decir una invitación para poder invitar: quién, cuándo y dónde.
- * Sin esto el panel no deja añadir, importar ni repartir, y con razón.
+ * Lo mínimo para poder enviar: quién celebra y sus papás (13 oct; en boda y XV, si el diseño pinta
+ * padres). Los papeles de boda y de XV a la vez, para que valga en cualquier diseño. Fecha y lugar
+ * ya no se exigen, pero las suites los leen.
  */
 export const INVITACION_MINIMA = {
   hero: { nameA: 'María', nameB: 'Alejandro' },
+  hosts: { names: ['Luis Paz', 'Ana Ríos'], roles: { father: 'Luis Paz', mother: 'Ana Ríos', groomFather: 'Luis Paz', brideMother: 'Ana Ríos' } },
   schedule: { startsAt: '2027-05-15T20:00' },
   reception: { place: 'Salón Los Ceibos' },
 } as const

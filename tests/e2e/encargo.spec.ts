@@ -9,7 +9,7 @@ const CUENTA = { email: 'cliente-encargo-e2e@invitepremium.bo', password: CLIENT
 /**
  * El diseño por encargo de punta a punta: el cliente manda sus datos, el equipo le envía la
  * versión, el cliente pide cambios (una ronda), el equipo la devuelve por error suyo, el cliente
- * aprueba, y repartir espera al saldo.
+ * aprueba. Repartir ya no espera ni a la aprobación ni al saldo (13 oct: el admin crea el evento ya pagado).
  */
 const SLUG = 'xv-encargo-e2e'
 const REF = 'ENCRG2E2'
@@ -91,14 +91,10 @@ test.describe('el diseño por encargo', () => {
     await expect(equipo.getByText('Versión enviada, la está revisando')).toBeVisible()
   })
 
-  test('el cliente aprueba con la ronda devuelta, y repartir espera al saldo', async () => {
+  test('el cliente aprueba con la ronda devuelta', async () => {
     await cliente.reload()
     await expect(pasos().getByText('te queda 1 ronda de 1', { exact: false })).toBeVisible()
     await pasos().getByRole('button', { name: 'Aprobar mi invitación' }).click()
-    await expect(pasos().getByText('En cuanto registremos el saldo', { exact: false })).toBeVisible()
-
-    await sql`update orders set balance_paid_at = now() where public_ref = ${REF}`
-    await cliente.reload()
     await expect(pasos().getByText('Aprobada y lista', { exact: false })).toBeVisible()
   })
 })

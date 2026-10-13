@@ -19,9 +19,10 @@ export function crearModeloOpenAI(opciones: { clave: string; modelo: string; max
           tools: herramientas,
           stream: true,
           store: false,
-          // Razonamiento corto: el trabajo pesado lo hace nuestro código, no el modelo.
+          // Siempre 'low', decidido por el usuario el 13 oct: nunca 'medium' ni más (medido: +80 % de espera sin mejor calidad).
           reasoning: { effort: 'low' },
-          max_output_tokens: opciones.maxTokensDeSalida ?? 1200,
+          // 3000 (eran 1200, 13 oct): una invitación entera o un cronograma largo se cortaban a medias.
+          max_output_tokens: opciones.maxTokensDeSalida ?? 3000,
         }),
         signal: AbortSignal.timeout(60_000),
       })
@@ -77,6 +78,8 @@ export async function* leerEventos(cuerpo: ReadableStream<Uint8Array>): AsyncGen
           break
         case 'response.completed':
         case 'response.incomplete': {
+          // Cortada por el tope: se dice, en vez de dejar la respuesta a medias sin aviso.
+          if (evento.type === 'response.incomplete') yield { tipo: 'texto', delta: '\n\n(Se me cortó la respuesta: dime «sigue» y continúo.)' }
           const u = evento.response?.usage
           yield { tipo: 'fin', uso: { entrada: u?.input_tokens ?? 0, enCache: u?.input_tokens_details?.cached_tokens ?? 0, salida: u?.output_tokens ?? 0 } }
           terminado = true

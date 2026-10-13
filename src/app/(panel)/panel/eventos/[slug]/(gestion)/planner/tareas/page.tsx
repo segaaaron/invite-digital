@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { events, guests, planner, plans, porters, registry, venue } from '@/app/composition/container'
 import { fechaEnBolivia } from '@/modules/admin/domain/hoy'
-import { fiestaDeTema, loQueFaltaParaInvitar, pideNombres } from '@/modules/events'
+import { fiestaDeTema, loQueFaltaParaInvitar, requisitosParaInvitar } from '@/modules/events'
 import { themeFor } from '@/modules/events/ui/themes/registry'
 import { atajoDeTarea, type LoQueYaHay, resueltaEnLaApp } from '@/modules/planner/domain/atajos'
 import { gestionaElEvento } from '@/modules/identity'
@@ -69,7 +69,7 @@ export default async function TareasPage({
   const mesaDeRegalos = isOk(await plans.requireFeature(eventId, 'registry')) ? await registry.list(eventId) : null
   const ya: LoQueYaHay = {
     presupuesto: plan !== null,
-    invitacionLista: loQueFaltaParaInvitar(contenido, { pideNombres: pideNombres(themeFor(event.value.themeKey)) }).length === 0,
+    invitacionLista: loQueFaltaParaInvitar(contenido, requisitosParaInvitar(themeFor(event.value.themeKey), fiestaDeTema(event.value.themeKey))).length === 0,
     invitacionesRepartidas: !isErr(grupos) && grupos.value.some((g) => g.invitationSentAt !== null && g.invitationSentAt !== undefined),
     mesasRepartidas: salon !== null && !isErr(salon) && salon.value.tables.length > 0 && salon.value.unseated.length === 0,
     regalos: mesaDeRegalos !== null && !isErr(mesaDeRegalos) && mesaDeRegalos.value.gifts.length > 0,
