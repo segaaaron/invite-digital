@@ -24,12 +24,13 @@ const Trazo = ({ d }: { d: string }) => (
 )
 
 /**
- * **El menú del celular: la isla y su menú guiado** (maqueta «Esmeralda y Latón», M01 · M02 · M06 · M07). Arriba, a la
- * izquierda de la barra: el sello —o la portada del evento—, dónde estás y «Menú ▾» o el nombre del evento. Al tocarlo,
- * todas las secciones agrupadas, cada una con una línea que dice qué hay dentro, el buscador si quien entra es admin,
- * «Mi cuenta» y «Cerrar sesión».
+ * **El menú del celular** (v2.1 aprobada el 14 oct; antes, la isla de la maqueta M06 con «Nombre ▾»: nadie adivinaba
+ * que se tocaba ahí). Arriba a la izquierda, un botón que dice **«Menú»**; a su lado, sin tocar, de qué evento se trata
+ * (portada, nombre y cuándo) o, fuera de un evento, dónde estás. Al tocarlo, todas las secciones agrupadas, cada una con
+ * una línea que dice qué hay dentro, el buscador si quien entra es admin, «Mi cuenta» y «Cerrar sesión».
  *
- * La isla solo por debajo de 768 px; el menú también lo abre la tablet desde las iniciales del carril.
+ * Solo por debajo de 768 px; el menú también lo abre la tablet desde las iniciales del carril. Quien ya dice dónde está
+ * con su propia flecha de volver (el admin dentro de un evento o de un ajuste) esconde el `data-contexto`.
  */
 export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
   const nav = useNavegacion()
@@ -52,8 +53,21 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
   const miniatura = (alto: number) =>
     evento?.portada ? (
       // Miniatura de la portada del diseño; el nombre del evento va al lado, en texto.
+      // Si el arte no llega, la miniatura se quita: nunca el icono de imagen rota junto al nombre.
       // eslint-disable-next-line @next/next/no-img-element
-      <img alt="" className="shrink-0 rounded-[5px] object-cover" src={evento.portada} style={{ height: alto, width: (alto * 2) / 3 }} />
+      <img
+        alt=""
+        className="shrink-0 rounded-[5px] object-cover"
+        onError={(e) => {
+          e.currentTarget.hidden = true
+        }}
+        // El error puede llegar antes de hidratar (y `onError` no se entera): al montar se mira si ya falló.
+        ref={(img) => {
+          if (img !== null && img.complete && img.naturalWidth === 0) img.hidden = true
+        }}
+        src={evento.portada}
+        style={{ height: alto, width: (alto * 2) / 3 }}
+      />
     ) : (
       <SelloLA size={40} />
     )
@@ -62,36 +76,39 @@ export function MenuMovil({ crear }: { crear?: ReactNode } = {}) {
     <>
       <button
         aria-haspopup="dialog"
-        aria-label="Abrir el menú"
-        className="flex min-h-12 min-w-0 flex-1 cursor-pointer items-center gap-2.5 rounded-xl py-1 pr-2.5 pl-1 text-left min-[768px]:hidden"
+        className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-line-panel-strong bg-bg-raised px-3 text-[15px] font-medium text-ink min-[768px]:hidden"
         onClick={() => hoja.current?.showModal()}
         type="button"
       >
-        {miniatura(50)}
-        <span className="min-w-0">
-          <span className="block truncate text-[16px] leading-tight font-semibold text-ink">{actual ?? 'Panel'}</span>
-          <span className="block truncate text-[13px] text-ink-mute">{evento === null ? 'Menú' : evento.title} ▾</span>
-        </span>
+        <Trazo d="M4 7h16M4 12h16M4 17h16" />
+        Menú
       </button>
+      <span className="flex min-w-0 flex-1 items-center gap-2.5 min-[768px]:hidden" data-contexto="">
+        {evento === null ? null : miniatura(40)}
+        <span className="min-w-0">
+          <span className="block truncate text-[15.5px] leading-tight font-semibold text-ink">{evento === null ? (actual ?? 'Panel') : evento.title}</span>
+          {evento === null ? null : <span className="block truncate text-[12.5px] text-ink-mute">{evento.cuando ?? evento.planLabel}</span>}
+        </span>
+      </span>
 
       <dialog
         aria-label={evento === null ? 'Menú' : 'Menú del evento'}
         className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none overflow-y-auto bg-bg p-0 text-ink backdrop:bg-ink/40 motion-safe:animate-slide-up"
         ref={hoja}
       >
-        <div className="mx-auto flex min-h-full max-w-[640px] flex-col gap-1 px-4 pt-[max(env(safe-area-inset-top),10px)] pb-[max(env(safe-area-inset-bottom),20px)]">
-          <div className="sticky top-0 z-10 -mx-1 mb-2 flex min-h-15 items-center gap-2 rounded-[18px] border border-line-panel bg-bg-raised/95 px-2 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] backdrop-blur-md">
-            {evento === null ? (
-              <SelloLA size={40} />
-            ) : (
-              <button aria-label="Cerrar el menú y volver" className="grid size-11 cursor-pointer place-items-center rounded-xl text-ink" onClick={cerrar} type="button">
-                <Trazo d="M19 12H5m6-6-6 6 6 6" />
-              </button>
-            )}
-            <span className="min-w-0 flex-1 truncate pl-1 text-[16px] font-semibold">{evento === null ? 'Menú' : 'Menú del evento'}</span>
-            <button aria-label="Cerrar el menú" className="grid size-12 cursor-pointer place-items-center rounded-xl text-ink" onClick={cerrar} type="button">
+        <div className="mx-auto flex min-h-full max-w-[640px] flex-col gap-1 px-4 pt-[env(safe-area-inset-top)] pb-[max(env(safe-area-inset-bottom),20px)]">
+          {/* Arriba, en el mismo sitio que «Menú», «Cerrar» (v2.1): se abre y se cierra con el mismo dedo. */}
+          <div className="sticky top-0 z-10 -mx-4 mb-2 flex min-h-14 items-center gap-2.5 border-b border-line-panel bg-bg-raised/95 px-3 backdrop-blur-md">
+            <button
+              aria-label="Cerrar el menú"
+              className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-xl border border-line-panel-strong bg-bg-raised px-3 text-[15px] font-medium text-ink"
+              onClick={cerrar}
+              type="button"
+            >
               <Trazo d="M6 6l12 12M18 6 6 18" />
+              Cerrar
             </button>
+            <span className="min-w-0 flex-1 truncate pl-1 font-display text-[22px] font-medium">Menú</span>
           </div>
 
           {user.soporte ? (

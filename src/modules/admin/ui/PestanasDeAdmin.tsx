@@ -143,7 +143,7 @@ export function IslaDelAdmin({ menu }: { menu: ReactNode }) {
   if (ajuste === undefined) return <>{menu}</>
   return (
     <>
-      <span className="hidden min-[768px]:contents">{menu}</span>
+      <span className="contents [&_[data-contexto]]:hidden">{menu}</span>
       <Link className="flex min-w-0 flex-1 items-center gap-2 text-ink no-underline min-[768px]:hidden" href="/panel/admin/ajustes">
         <span aria-hidden className="grid size-11 shrink-0 place-items-center">
           <ArrowLeftIcon className="size-5" />

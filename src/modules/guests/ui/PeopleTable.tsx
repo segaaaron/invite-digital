@@ -172,7 +172,9 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
           placeholder="Buscar por nombre"
           value={query}
         />
-        <div className="flex flex-wrap gap-2.5">
+        {/* Cada filtro con cuántos trae; en el celular, una sola fila que se desliza (v2.1: en dos filas empujaban la lista
+            fuera de la primera pantalla). */}
+        <div className="flex gap-2.5 *:shrink-0 max-[767px]:-mx-4 max-[767px]:w-[calc(100%+32px)] max-[767px]:overflow-x-auto max-[767px]:px-4 max-[767px]:[scrollbar-width:none] min-[768px]:flex-wrap [&::-webkit-scrollbar]:hidden">
           {(Object.keys(CASA) as Filtro[]).map((clave) => (
             <FilterChip
               active={filtro === clave}
@@ -182,7 +184,8 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
                 setCuantas(POR_TANDA)
               }}
             >
-              {ETIQUETA[clave]}
+              {ETIQUETA[clave]}{' '}
+              <span className="ml-1.5 font-normal tabular-nums opacity-70">{rows.filter(CASA[clave]).length}</span>
             </FilterChip>
           ))}
         </div>
@@ -368,14 +371,19 @@ export function PeopleTable({ rows, eventSlug }: { rows: readonly PersonRowView[
               return (
                 <li className="border-b border-line-panel" key={primera.groupId}>
                   <button className="flex min-h-[84px] w-full cursor-pointer items-center gap-3 py-3.5 text-left text-ink" onClick={() => setEnCelular(primera.groupId)} type="button">
+                    {/* El estado en la segunda línea, junto a personas y mesa (v2.1, 14 oct): a la derecha solo queda la
+                        flecha, y el robot de Luxury, que flota ahí, nunca tapa un dato. */}
                     <span className="min-w-0 flex-1">
                       <span className="block font-display text-[22px] leading-tight font-medium">{todas.length > 1 ? primera.groupLabel : primera.fullName}</span>
-                      <span className="text-[14px] text-ink-mute">
-                        {todas.length === 1 ? '1 persona' : `${todas.length} personas`}
-                        {primera.tableLabel === null ? '' : `, ${primera.tableLabel.toLowerCase()}`}
+                      <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[14px] text-ink-mute">
+                        <Pill tone={pildora.tono}>{pildora.texto}</Pill>
+                        {todas.some((f) => f.vip) ? <Pill tone="vip">VIP</Pill> : null}
+                        <span>
+                          {todas.length === 1 ? '1 persona' : `${todas.length} personas`}
+                          {primera.tableLabel === null ? '' : ` · ${primera.tableLabel.toLowerCase()}`}
+                        </span>
                       </span>
                     </span>
-                    <Pill tone={pildora.tono}>{pildora.texto}</Pill>
                     <svg aria-hidden className="size-4.5 shrink-0 text-ink-mute" fill="none" stroke="currentColor" strokeLinecap="round" strokeWidth="1.6" viewBox="0 0 24 24">
                       <path d="m9 6 6 6-6 6" />
                     </svg>

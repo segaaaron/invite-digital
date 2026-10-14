@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { HUECO_DE_LA_ISLA } from '@/shared/design/ui/panel/AccionDeLaIsla'
 
 /**
  * La cabecera de una página del panel, dentro de la carcasa. Solo el título y sus
@@ -23,10 +24,7 @@ export function PanelHeader({
   kicker?: string
   meta?: string | undefined
   actions?: ReactNode
-  /**
-   * Las acciones de vez en cuando (exportar, importar…). En escritorio van en la fila con las demás; **en
-   * el celular, en el «⋯» junto al título** (maqueta 2 del panel móvil, 7 de octubre).
-   */
+  /** Las acciones de vez en cuando (exportar, importar…), en la fila con las demás, también en el celular. */
   menu?: ReactNode
   /** Si todas las acciones se esconden en el celular (van a la barra de abajo o flotan): ahí no se deja su fila vacía. */
   accionesSoloEnEscritorio?: boolean
@@ -57,31 +55,16 @@ export function PanelHeader({
         {/* En el celular las maquetas van sin la línea de ayuda: el título y lo que se hace. */}
         {meta ? <p className="mt-2 max-w-[640px] text-[16px] text-ink-mute max-[767px]:hidden">{meta}</p> : null}
       </div>
-      {menu ? (
-        <details className="group/menu relative shrink-0 min-[860px]:hidden">
-          <summary
-            aria-label="Más acciones"
-            className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded-full border border-line-panel bg-white/80 px-3.5 text-[14px] font-medium text-ink-soft [&::-webkit-details-marker]:hidden"
-          >
-            <svg aria-hidden className="size-5" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="5" cy="12" r="1.7" />
-              <circle cx="12" cy="12" r="1.7" />
-              <circle cx="19" cy="12" r="1.7" />
-            </svg>
-            {/* Con texto (13 oct): tres puntos solos no dicen que ahí está «Importar lista». */}
-            Más
-          </summary>
-          <div className="absolute top-full right-0 z-30 mt-2 flex w-60 flex-col items-stretch gap-2 rounded-[18px] border border-line-panel bg-bg-raised p-2.5 shadow-float *:w-full *:justify-start">
-            {menu}
-          </div>
-        </details>
-      ) : null}
+      {/* En el celular, la acción principal de la pantalla («＋ Añadir») junto al título, con su palabra (v2.1, 14 oct).
+          La pone cada página con `AccionDeLaIsla`; en tablet y escritorio va en la fila de acciones. */}
+      <div className="flex shrink-0 items-center self-center min-[768px]:hidden" id={HUECO_DE_LA_ISLA} />
       {/* En el celular, las acciones en **una sola fila que se desliza**, sin estirarse ni apilarse: cuatro
           botones a lo ancho ocupaban medio teléfono antes de la lista (6 de octubre). */}
       {actions || menu ? (
         <div className={`${accionesSoloEnEscritorio ? 'max-[859px]:hidden ' : ''}-mx-4 flex w-[calc(100%+32px)] flex-nowrap items-center gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] *:shrink-0 max-[559px]:[mask-image:linear-gradient(to_right,black_calc(100%-28px),transparent)] min-[560px]:mx-0 min-[560px]:w-auto min-[560px]:flex-wrap min-[560px]:overflow-visible min-[560px]:px-0 min-[560px]:pb-0 min-[560px]:gap-2.5 [&::-webkit-scrollbar]:hidden`}>
           {actions}
-          {menu ? <div className="contents max-[859px]:hidden">{menu}</div> : null}
+          {/* Lo de vez en cuando (importar, exportar) también a la vista y con texto: el «⋯ Más» lo escondía (v2.1). */}
+          {menu ? <div className="contents">{menu}</div> : null}
         </div>
       ) : null}
     </header>

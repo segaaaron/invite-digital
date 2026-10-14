@@ -288,14 +288,6 @@ body {
 /* **Luxury, el robot del panel** (8 de octubre). Flota sobre su sombra, parpadea, su perla de antena brilla y, al
    hablar, mueve la boca y saluda. Su tarjeta se despliega como una invitación y las perlas la unen a su boca. */
 .luxury-flota { animation: luxury-flotar 3.8s ease-in-out infinite; }
-/* La copa de latón (maqueta «Esmeralda y Latón»): mientras Luxury habla, un halo de latón respira a su alrededor. */
-@media (prefers-reduced-motion: no-preference) {
-  .luxury-copa-hablando { animation: luxury-copa-halo 1.4s ease-in-out infinite; }
-}
-@keyframes luxury-copa-halo {
-  0%, 100% { box-shadow: inset 0 0 0 1.5px var(--color-gold-deep), 0 12px 28px rgb(12 36 32 / .24), 0 0 0 0 rgb(var(--color-gold-rgb) / .45); }
-  50% { box-shadow: inset 0 0 0 1.5px var(--color-gold-deep), 0 12px 28px rgb(12 36 32 / .24), 0 0 0 10px rgb(var(--color-gold-rgb) / 0); }
-}
 .luxury-sombra { animation: luxury-sombra 3.8s ease-in-out infinite; transform-box: fill-box; transform-origin: center; opacity: .3; }
 .luxury-ojo { transform-box: fill-box; transform-origin: center; animation: luxury-parpadeo 4.6s infinite; }
 .luxury-boca, .luxury-saluda { transform-box: fill-box; }

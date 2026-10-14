@@ -86,7 +86,7 @@ test('en Chrome de iPhone se le habla sin abrir el chat y responde en la tarjeta
   })
   await page.goto(`/panel/eventos/${SLUG}/invitados`)
   await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
-  const tarjeta = page.getByRole('status').filter({ hasText: 'Abrir el chat' })
+  const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
   await expect(tarjeta).toContainText(/Faltan por responder|Ya respondieron todos/, { timeout: 60_000 })
   await expect(page.locator('dialog[open]')).toHaveCount(0)
 })

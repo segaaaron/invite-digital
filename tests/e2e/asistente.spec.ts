@@ -83,7 +83,37 @@ test('Luxury lleva a la pantalla que se le pide (9 oct)', async ({ page }) => {
   await panel.getByLabel('Escríbele a Luxury').fill('Llévame a invitados')
   await panel.getByLabel('Escríbele a Luxury').press('Enter')
   await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/invitados$`))
+  // Con pantalla ancha el chat es un panel lateral: sigue abierto con la conversación (14 oct).
+  await expect(panel).toContainText('Llévame a invitados')
+})
+
+test('la conversación no se pierde al llevarte (celular), al recargar, y «Nueva conversación» la empieza de cero', async ({ page }) => {
+  // 14 oct: «cuando le pido que me lleve a invitaciones o regalos se pierde la conversación».
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto(`/panel/eventos/${SLUG}/mensajes`)
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+  const panel = page.locator('dialog[open]')
+  await panel.getByLabel('Escríbele a Luxury').fill('¿Quién falta por responder?')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
+  await expect(panel).toContainText(/Faltan por responder/)
+  await panel.getByLabel('Escríbele a Luxury').fill('Llévame a regalos')
+  await panel.getByLabel('Escríbele a Luxury').press('Enter')
+  await expect(page).toHaveURL(new RegExp(`/panel/eventos/${SLUG}/regalos$`))
+  // En el celular el chat se cierra para ver la pantalla, y el robot ofrece seguir donde quedó.
   await expect(page.locator('dialog[open]')).toHaveCount(0)
+  await page.getByRole('button', { name: 'Seguir conversando' }).click()
+  await expect(panel).toContainText('¿Quién falta por responder?')
+  await expect(panel).toContainText(/Faltan por responder/)
+  // Recargar la pestaña no la borra.
+  await page.reload()
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+  await expect(panel).toContainText('¿Quién falta por responder?')
+  await panel.getByRole('button', { name: 'Nueva conversación' }).click()
+  await expect(panel).not.toContainText(/Faltan por responder/)
+  await page.reload()
+  await page.getByRole('button', { name: 'Abrir a Luxury, tu asistente' }).click()
+  await expect(panel.getByRole('button', { name: 'Nueva conversación' })).toHaveCount(0)
+  await expect(panel).not.toContainText(/Faltan por responder/)
 })
 
 test('Luxury crea y borra una tarea cuando se le pide, y la pantalla de detrás lo enseña', async ({ page }) => {
@@ -308,7 +338,7 @@ test.describe('hablarle', () => {
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
     await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
     // Responde en la tarjeta del robot, en voz alta, y el chat sigue cerrado.
-    const tarjeta = page.getByRole('status').filter({ hasText: 'Abrir el chat' })
+    const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
     await expect(tarjeta).toContainText(/Faltan por responder: .*Ramón Pérez/)
     await expect(page.locator('dialog[open]')).toHaveCount(0)
     await expect.poll(() => page.evaluate(() => (window as unknown as { __leido: string[] }).__leido.join(' '))).toContain('Faltan por responder')
@@ -375,7 +405,7 @@ test.describe('hablarle', () => {
     })
     await page.goto(`/panel/eventos/${SLUG}/invitados`)
     await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
-    const tarjeta = page.getByRole('status').filter({ hasText: 'Abrir el chat' })
+    const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
     await expect(tarjeta).toContainText('permite el micrófono')
     // Se queda a la vista para leerlo (antes se iba a los 6 s).
     await page.waitForTimeout(7000)
@@ -417,7 +447,10 @@ test.describe('hablarle', () => {
         onresult: ((e: unknown) => void) | null = null
         onerror: ((e: unknown) => void) | null = null
         onend: (() => void) | null = null
-        start() {}
+        onaudiostart: (() => void) | null = null
+        start() {
+          setTimeout(() => this.onaudiostart?.(), 50)
+        }
         stop() {}
         abort() {}
       }
@@ -429,6 +462,38 @@ test.describe('hablarle', () => {
     await page.goto('/panel/luxury')
     await expect(page).toHaveURL(/\/panel\/eventos\/[^/?]+$/)
     await expect(page.locator('dialog[open]').getByText('Te escucho…', { exact: true })).toBeVisible()
+  })
+
+  test('fuera del chat: «Te escucho» solo cuando el micrófono graba, y ■ con algo dicho lo envía', async ({ page }) => {
+    // 14 oct: «a veces parece que no está activado el micrófono». Antes de grabar decía ya «Te escucho», y ■ descartaba
+    // lo dicho y cerraba. Este reconocedor graba a los 1,5 s, oye y nunca avisa de que terminó (pasa en iPhone).
+    await page.addInitScript(() => {
+      class Lento {
+        lang = ''
+        interimResults = false
+        continuous = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        onaudiostart: (() => void) | null = null
+        start() {
+          setTimeout(() => this.onaudiostart?.(), 1500)
+          setTimeout(() => this.onresult?.({ results: [[{ transcript: '¿Quién falta por responder?' }]] }), 1700)
+        }
+        stop() {}
+        abort() {}
+      }
+      Object.assign(window, { webkitSpeechRecognition: Lento, SpeechRecognition: undefined })
+      window.speechSynthesis.speak = (u: SpeechSynthesisUtterance) => void setTimeout(() => u.onend?.(new Event('end') as SpeechSynthesisEvent), 20)
+    })
+    await page.goto(`/panel/eventos/${SLUG}/invitados`)
+    await page.getByRole('button', { name: 'Hablarle a Luxury sin abrir el chat' }).click()
+    const tarjeta = page.getByRole('status').filter({ has: page.getByRole('button', { name: /^(Cancelar|Callar|Cerrar)$/ }) })
+    await expect(tarjeta).toContainText('Abriendo el micrófono…')
+    await expect(tarjeta).toContainText('Te escucho…')
+    await expect(tarjeta).toContainText('«¿Quién falta por responder?»')
+    await page.getByRole('button', { name: 'Enviar ya' }).click()
+    await expect(tarjeta).toContainText(/Faltan por responder: .*Ramón Pérez/)
   })
 
   test('escribir mientras escucha corta la escucha y deja enviar', async ({ page }) => {

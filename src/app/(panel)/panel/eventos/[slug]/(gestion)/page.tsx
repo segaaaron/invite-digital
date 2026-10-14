@@ -17,6 +17,7 @@ import { PanelCard } from '@/shared/design/ui/panel/cards'
 import { PanelButton, Pill, TARJETA_DESTACADA } from '@/shared/design/ui/panel/PanelKit'
 import { isErr } from '@/shared/result'
 import { EnVivo } from '@/shared/design/ui/panel/EnVivo'
+import { NAV_ICONS } from '@/modules/shell/ui/nav-icons'
 
 const DIA_LARGO = new Intl.DateTimeFormat('es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' })
 const HORA = new Intl.DateTimeFormat('es-BO', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/La_Paz' })
@@ -191,6 +192,45 @@ export default async function EventDetailPage({ params }: { params: Promise<{ sl
           </PanelButton>
         </div>
       </article>
+
+      {/* **Tu evento** en el celular (v2.1, 14 oct): cada parte con cómo va, a un toque. Junto al botón «Menú» de arriba,
+          es la otra puerta visible a todo (sin barra fija abajo: el panel es web). */}
+      <nav aria-label="Tu evento" className="min-[768px]:hidden">
+        <p className="mb-2.5 text-[13px] font-medium text-gold-deep">Tu evento</p>
+        <ul className="grid grid-cols-2 gap-2.5">
+          {[
+            { href: `${base}/configuracion`, icono: NAV_ICONS.editar, titulo: 'Mi invitación', estado: invitacionLista ? 'Lista para enviar' : 'Por terminar', atencion: !invitacionLista },
+            {
+              href: `${base}/invitados`,
+              icono: NAV_ICONS.invitados,
+              titulo: 'Invitados',
+              estado: filas.length === 0 ? 'Sin cargar' : porEnviar > 0 ? `${porEnviar} sin enviar` : `${vienen} ${vienen === 1 ? 'viene' : 'vienen'}`,
+              atencion: filas.length === 0 || porEnviar > 0,
+            },
+            ...(mesas === null
+              ? []
+              : [{ href: `${base}/mesas`, icono: NAV_ICONS.mesas, titulo: 'Mesas', estado: mesas.unseated.length > 0 ? `${mesas.unseated.length} sin mesa` : 'Todos sentados', atencion: mesas.unseated.length > 0 }]),
+            { href: `${base}/regalos`, icono: NAV_ICONS.regalos, titulo: 'Regalos', estado: 'Cómo te regalan', atencion: false },
+            {
+              href: `${base}/mensajes`,
+              icono: NAV_ICONS.mensajes,
+              titulo: 'Libro de firmas',
+              estado: porAgradecer > 0 ? `${porAgradecer} por agradecer` : firmas.length === 0 ? 'Aún sin firmas' : `${firmas.length} ${firmas.length === 1 ? 'firma' : 'firmas'}`,
+              atencion: porAgradecer > 0,
+            },
+          ].map((t) => (
+            <li key={t.href}>
+              <Link className="flex min-h-[112px] flex-col gap-2 rounded-[16px] border border-line-panel bg-bg-raised p-3.5 text-ink no-underline" href={t.href}>
+                <span aria-hidden className="grid size-9 place-items-center rounded-full border border-line-panel text-shell-deep [&_svg]:size-[18px]">
+                  {t.icono}
+                </span>
+                <span className="text-[15.5px] font-medium">{t.titulo}</span>
+                <span className={`-mt-1.5 text-[13.5px] ${t.atencion ? 'font-medium text-pill-pending-ink' : 'text-ink-mute'}`}>{t.estado}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
 
       <div className="flex flex-wrap items-start gap-10 max-[767px]:gap-7">
         <section aria-labelledby="invitacion-titulo" className="min-w-0 flex-[1_1_360px] scroll-mt-24" id="invitacion">

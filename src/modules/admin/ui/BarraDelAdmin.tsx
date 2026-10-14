@@ -26,7 +26,10 @@ export function BarraDelAdmin({
   evento?: string
 }) {
   return (
-    <header className="sticky top-2.5 z-30 max-[767px]:[body:has([data-sin-isla])_&]:hidden mx-4 mt-2.5 mb-4 flex min-h-15 items-center gap-1.5 rounded-[18px] border border-line-panel bg-bg-raised/92 px-1.5 shadow-[0_8px_24px_-14px_rgb(12_36_32/0.28)] backdrop-blur-md backdrop-saturate-150 min-[768px]:top-0 min-[768px]:mx-0 min-[768px]:mt-0 min-[768px]:mb-0 min-[768px]:min-h-[76px] min-[768px]:gap-3 min-[768px]:rounded-none min-[768px]:border-0 min-[768px]:border-b min-[768px]:bg-bg/92 min-[768px]:px-6 min-[768px]:shadow-none min-[1280px]:min-h-[85px] min-[1280px]:px-12 print:hidden">
+    <header className="sticky top-0 z-30 max-[767px]:[body:has([data-sin-isla])_&]:hidden mb-4 flex min-h-14 items-center gap-2 border-b border-line-panel bg-bg-raised/95 px-3 backdrop-blur-md backdrop-saturate-150 min-[768px]:mb-0 min-[768px]:min-h-[76px] min-[768px]:gap-3 min-[768px]:bg-bg/92 min-[768px]:px-6 min-[1280px]:min-h-[85px] min-[1280px]:px-12 print:hidden">
+      {/* Dentro de un evento la barra vuelve a la cartera y, antes, siempre en el mismo sitio, «Menú» lleva a Invitados, Mesas… (sin repetir
+          el nombre del evento, que ya dice la flecha). */}
+      {evento === undefined ? null : <span className="contents [&_[data-contexto]]:hidden">{menu}</span>}
       {evento === undefined ? (
         <IslaDelAdmin menu={menu} />
       ) : (
@@ -41,9 +44,6 @@ export function BarraDelAdmin({
           <span className="sr-only">: volver a todos los eventos</span>
         </Link>
       )}
-      {/* Dentro de un evento la isla vuelve a la cartera, pero el menú sigue montado sin su botón: lo abre la
-          pestaña «Menú» de la barra inferior (13 oct; antes el admin no tenía cómo ir a Invitados o Mesas). */}
-      {evento === undefined ? null : <span className="contents [&>button]:hidden">{menu}</span>}
       <div className="hidden min-w-0 flex-1 truncate text-[14px] text-ink-mute min-[768px]:block">
         {evento === undefined ? (
           <RutaDelAdmin hoy={hoy} />
@@ -58,8 +58,6 @@ export function BarraDelAdmin({
         )}
       </div>
       <div className="ml-auto flex shrink-0 items-center gap-1 min-[768px]:gap-3">
-        {/* La acción de la pantalla en el celular (`AccionDeLaIsla`: el «+» de Ventas). */}
-        <div className="flex items-center min-[768px]:hidden" id="accion-de-la-isla" />
         <BuscadorRapido />
         {campana}
         <div className="hidden min-[768px]:block">

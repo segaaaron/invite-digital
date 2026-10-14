@@ -293,7 +293,7 @@ test('⌘K lleva a una pantalla con solo escribir', async ({ page }) => {
 test('en el celular, el menú guiado lleva a todo', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/panel/admin')
-  await page.getByRole('button', { name: /Abrir el menú/ }).click()
+  await page.getByRole('button', { name: 'Menú', exact: true }).click()
   const menu = page.getByRole('dialog', { name: 'Menú' })
   await expect(menu.getByRole('link', { name: /Ventas/ })).toBeVisible()
   await menu.getByRole('link', { name: /Ajustes/ }).click()

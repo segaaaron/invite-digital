@@ -375,21 +375,53 @@ export default async function InvitadosPage({
               <Cifra detalle={no > 0 ? `${no} no ${no === 1 ? 'viene' : 'vienen'}` : undefined} etiqueta="Por responder" valor={porResponder} />
               <Cifra etiqueta="Enviadas" valor={enviadas} de={vivas.length} />
             </dl>
-            <dl className="grid grid-cols-3 border-y border-line-panel min-[768px]:hidden">
-              <CifraMovil etiqueta="asisten" valor={si} />
-              <CifraMovil destacar etiqueta="sin responder" valor={porResponder} />
-              <CifraMovil etiqueta="sin enviar" valor={vivas.length - enviadas} />
-            </dl>
-            {vivas.length - enviadas > 0 ? (
-              <PanelButton className="w-full min-[768px]:hidden" href={`${base}?panel=envio`} variant="primary">
-                <SendIcon className="size-4.5" /> {vivas.length - enviadas === 1 ? 'Enviar la que falta' : `Enviar las ${vivas.length - enviadas} que faltan`}
-              </PanelButton>
-            ) : vivas.length > 0 ? (
-              // Con todas enviadas, el envío sigue a mano: reenviar o ver «Enviadas» (13 oct: en el celular no había forma).
-              <PanelButton className="w-full min-[768px]:hidden" href={`${base}?panel=envio`}>
-                <SendIcon className="size-4.5" /> Enviar o reenviar
-              </PanelButton>
-            ) : null}
+            {/* Celular (v2.1, 14 oct): un solo bloque «8 de 19 respondieron» con la barra repartida y, dentro, lo que falta
+                enviar con su botón. Antes, tres cifras sueltas, un botón negro a lo ancho y dos filas de filtros dejaban la
+                lista fuera de la primera pantalla. */}
+            <section aria-label="Cómo va" className="flex flex-col gap-3 rounded-[16px] border border-line-panel bg-bg-raised p-4 min-[768px]:hidden">
+              <p className="flex items-baseline justify-between gap-3">
+                <span>
+                  <span className="font-display text-[34px] leading-none font-medium [font-variant-numeric:lining-nums]">{si + no}</span>{' '}
+                  <span className="text-[14.5px] text-ink-mute">de {filasPersona.length} respondieron</span>
+                </span>
+                <span className="text-[13.5px] text-ink-mute tabular-nums">{Math.round(((si + no) / filasPersona.length) * 100)} %</span>
+              </p>
+              <span aria-hidden className="flex h-1.5 overflow-hidden rounded-full bg-bg-sunken">
+                <span className="bg-ok" style={{ width: `${(si / filasPersona.length) * 100}%` }} />
+                <span className="bg-danger" style={{ width: `${(no / filasPersona.length) * 100}%` }} />
+              </span>
+              <p className="flex flex-wrap gap-x-4 gap-y-1 text-[13.5px] text-ink-soft">
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden className="size-2.5 rounded-[3px] bg-ok" />
+                  {si} asisten
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden className="size-2.5 rounded-[3px] bg-danger" />
+                  {no} no vienen
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span aria-hidden className="size-2.5 rounded-[3px] bg-bg-sunken ring-1 ring-line-panel-strong ring-inset" />
+                  {porResponder} esperan
+                </span>
+              </p>
+              {vivas.length - enviadas > 0 ? (
+                <div className="flex items-center gap-3 rounded-[12px] bg-pill-pending p-3">
+                  <p className="min-w-0 flex-1 text-[14px] leading-snug text-pill-pending-ink">
+                    <b className="font-medium">{vivas.length - enviadas === 1 ? '1 invitación sin enviar.' : `${vivas.length - enviadas} invitaciones sin enviar.`}</b>
+                    <br />
+                    Por WhatsApp o con su enlace.
+                  </p>
+                  <PanelButton className="shrink-0" href={`${base}?panel=envio`} variant="primary">
+                    <SendIcon className="size-4" /> Enviar
+                  </PanelButton>
+                </div>
+              ) : vivas.length > 0 ? (
+                // Con todas enviadas, el envío sigue a mano: reenviar o ver «Enviadas» (13 oct: en el celular no había forma).
+                <PanelButton className="w-full" href={`${base}?panel=envio`}>
+                  <SendIcon className="size-4.5" /> Enviar o reenviar
+                </PanelButton>
+              ) : null}
+            </section>
           </>
         )}
 
@@ -452,11 +484,3 @@ function Cifra({ etiqueta, valor, de, detalle, primera = false }: { etiqueta: st
 }
 
 /** Las tres cifras del celular (maqueta M08), una al lado de otra. */
-function CifraMovil({ etiqueta, valor, destacar = false }: { etiqueta: string; valor: number; destacar?: boolean }) {
-  return (
-    <div className="border-l border-line-panel px-3.5 py-3 first:border-l-0 first:pl-0">
-      <dd className={`m-0 font-display text-[32px] leading-tight font-medium ${destacar && valor > 0 ? 'text-gold-deep' : ''}`}>{valor}</dd>
-      <dt className="text-[14px] text-ink-mute">{etiqueta}</dt>
-    </div>
-  )
-}

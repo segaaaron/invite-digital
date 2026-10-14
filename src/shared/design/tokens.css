@@ -136,7 +136,6 @@
   --color-fila: #fbf8f1;
   /* Las barras de los meses anteriores en la tira del mes. */
   --color-barra-suave: #cbd9d1;
-  /* La copa de Luxury: trazo de lacre y cristal claro. */
   /* El reparto del presupuesto: un color por categoría, en el orden de la maqueta (E23). */
   --color-reparto-1: #0c2420;
   --color-reparto-2: #2e5a4a;
@@ -144,8 +143,6 @@
   --color-reparto-4: #b08d57;
   --color-reparto-5: #d9c29a;
   --color-reparto-6: #8c7b62;
-  --color-copa-trazo: #3a2a12;
-  --color-copa-luz: #fff7e6;
   --color-sage: #5a705c;
   /* El verde claro de la silla ocupada y de la barra del gráfico por día. */
   --color-sage-light: #7a8c64;

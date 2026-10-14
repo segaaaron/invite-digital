@@ -9,7 +9,7 @@ import { requireSession } from '@/app/_acciones/sesion'
 import { FeatureLocked } from '@/modules/plans/ui/FeatureLocked'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PlegableEnMovil } from '@/shared/design/ui/panel/PlegableEnMovil'
-import { BarRow, PanelButton } from '@/shared/design/ui/panel/PanelKit'
+import { BarRow, PanelButton, Pill } from '@/shared/design/ui/panel/PanelKit'
 import { FloorPlan, GuardarPlano } from '@/modules/venue/ui/FloorPlan'
 import { SeatingActions } from '@/modules/venue/ui/SeatingActions'
 import { SeatSearch } from '@/modules/venue/ui/SeatSearch'
@@ -168,14 +168,18 @@ export default async function MesasPage({
                     <li className="border-b border-line-panel last:border-b-0" key={t.id}>
                       <Link className="flex min-h-15 items-center gap-3.5 py-3 text-ink no-underline" href={`${base}?vista=tarjetas#mesa-${t.id}`}>
                         <span className="grid size-10 shrink-0 place-items-center rounded-full border border-line-panel-strong font-display text-[18px] [font-variant-numeric:lining-nums]">
-                          {t.label.replace(/^mesa\s*/i, '').replace(/^0+(?=\d)/, '') || i + 1}
+                          {siglaDeMesa(t.label, i)}
                         </span>
                         <span className="flex min-w-0 flex-1 flex-col">
                           <span className="text-[15px] font-medium">{t.label}</span>
                           <span className="truncate text-[13px] text-ink-mute">{t.groups.length === 0 ? 'Vacía' : t.groups.map((g) => g.label).join(' y ')}</span>
                         </span>
-                        <span className="shrink-0 text-[14px] text-gold-deep [font-variant-numeric:tabular-nums]">
-                          {t.taken}/{t.capacity}
+                        {/* Con gente de más, se dice cuántos sobran (14 oct: «10/8» no avisaba de nada). */}
+                        <span className="flex shrink-0 flex-col items-end gap-1">
+                          <span className={`text-[14px] [font-variant-numeric:tabular-nums] ${t.taken > t.capacity ? 'text-danger' : 'text-gold-deep'}`}>
+                            {t.taken}/{t.capacity}
+                          </span>
+                          {t.taken > t.capacity ? <Pill tone="no">{t.taken - t.capacity} de más</Pill> : null}
                         </span>
                       </Link>
                     </li>
@@ -224,4 +228,15 @@ export default async function MesasPage({
       </SeatingSearchProvider>
     </>
   )
+}
+
+/**
+ * Lo que cabe en el círculo de la mesa (40 px): su número, o la inicial si tiene nombre («Mesa principal» → «P»).
+ * Antes se quitaba solo «Mesa» y «principal» entero se salía del círculo (14 oct).
+ */
+function siglaDeMesa(etiqueta: string, i: number): string {
+  const resto = etiqueta.replace(/^mesa\s*/i, '').trim()
+  const numero = /^\d+/.exec(resto)?.[0]
+  if (numero !== undefined) return numero.replace(/^0+(?=\d)/, '')
+  return resto === '' ? String(i + 1) : resto.slice(0, 1).toUpperCase()
 }

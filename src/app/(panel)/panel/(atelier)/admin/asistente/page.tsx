@@ -3,7 +3,7 @@ import { requireAdmin } from '@/app/_acciones/sesion'
 import { AjustesDelAsistente } from '@/modules/asistente/ui/AjustesDelAsistente'
 import { PanelHeader } from '@/modules/shell/ui/PanelHeader'
 import { PestanasDeAdmin } from '@/modules/admin'
-import { SelloDeLuxury } from '@/modules/asistente/ui/RobotLuxury'
+import { RobotLuxury } from '@/modules/asistente/ui/RobotLuxury'
 import { isErr } from '@/shared/result'
 import { env } from '@/shared/config/env'
 
@@ -21,9 +21,9 @@ export default async function AsistentePage() {
     <>
       <PanelHeader title="Ajustes" tituloEnCelular="Asistente Luxury" pestanas={<PestanasDeAdmin />} />
       <div className="flex flex-wrap items-start gap-6">
-        {/* Lo que lleva gastado (maqueta E45), con la copa de Luxury y la barra hasta el techo. */}
+        {/* Lo que lleva gastado (maqueta E45), con el robot de Luxury y la barra hasta el techo. */}
         <section aria-labelledby="luxury-este-mes" className="flex min-w-0 flex-[1_1_300px] flex-col gap-3 rounded-[16px] border border-grab-borde bg-bg-raised p-6 shadow-[inset_0_0_0_7px_var(--color-bg-raised),inset_0_0_0_8px_var(--color-grab-filete)]">
-          <SelloDeLuxury size={56} />
+          <RobotLuxury className="h-[68px] w-14" />
           <h2 className="mt-2 font-display text-[24px] font-medium" id="luxury-este-mes">
             Luxury este mes
           </h2>

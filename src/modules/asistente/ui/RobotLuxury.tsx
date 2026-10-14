@@ -97,31 +97,3 @@ export function TarjetaDeLuxury({ children, perlas = 'derecha', className = '' }
   )
 }
 
-/**
- * **La copa de Luxury** (maqueta «Esmeralda y Latón»): una copa de champán con dos ojos, en trazo de lacre sobre el
- * botón de latón. Es la cara del asistente en el botón, la tarjeta y la cabecera del chat.
- */
-export function CopaDeLuxury({ className }: { className?: string }) {
-  return (
-    <svg aria-hidden className={className} viewBox="0 0 32 32">
-      <path d="M16 2.5v3" stroke="var(--color-copa-trazo)" strokeLinecap="round" strokeWidth="1.5" />
-      <path d="M7 8h18c0 6.5-4 10-9 10S7 14.5 7 8z" fill="var(--color-copa-luz)" stroke="var(--color-copa-trazo)" strokeWidth="1.5" />
-      <circle className="luxury-ojo" cx="13" cy="11.5" fill="var(--color-shell-deep)" r="1.4" />
-      <circle className="luxury-ojo" cx="19" cy="11.5" fill="var(--color-shell-deep)" r="1.4" />
-      <path d="M16 18v7M11 28h10" stroke="var(--color-copa-trazo)" strokeLinecap="round" strokeWidth="1.5" />
-    </svg>
-  )
-}
-
-/** La copa en su disco de latón, a la medida que se pida (cabecera del chat, tarjeta). */
-export function SelloDeLuxury({ size = 40 }: { size?: number }) {
-  return (
-    <span
-      aria-hidden
-      className="grid shrink-0 place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo),var(--color-gold-light)_58%,var(--color-gold))] shadow-[inset_0_0_0_1.5px_var(--color-gold-deep)]"
-      style={{ width: size, height: size }}
-    >
-      <CopaDeLuxury className="size-[58%]" />
-    </span>
-  )
-}

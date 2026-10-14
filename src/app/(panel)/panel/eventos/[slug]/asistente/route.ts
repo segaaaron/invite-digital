@@ -12,7 +12,8 @@ export const runtime = 'nodejs'
 /** Veinte mensajes por minuto y persona: un bucle no vacía la cuota. */
 // 30 por minuto y persona (eran 10, luego 20): hablarle por voz son mensajes cortos y seguidos (7 de octubre). El gasto
 // lo topan la cuota del mes del evento y el techo en dólares, no esto.
-const limite = createRateLimiter({ windowMs: 60_000, max: 30 })
+// Las e2e (un solo usuario para toda la suite) lo suben con `ASISTENTE_MENSAJES_POR_MINUTO`, como `ASISTENTE_MODELO`.
+const limite = createRateLimiter({ windowMs: 60_000, max: Number(process.env.ASISTENTE_MENSAJES_POR_MINUTO) || 30 })
 
 /**
  * **Luxury responde**, en trozos: una línea JSON por evento (`application/x-ndjson`), que el panel va

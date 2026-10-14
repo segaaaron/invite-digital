@@ -2,18 +2,17 @@
 
 import Link from 'next/link'
 import { Fragment, useEffect, useId, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { uploadMediaAction } from '@/app/_acciones/events/actions'
 import { ensureInvitationLinkAction, sendInvitationAction } from '@/app/_acciones/guests/actions'
 import { uploadDocumentAction } from '@/app/_acciones/planner/dia-actions'
-import { CloseIcon } from '@/shared/design/ui/icons'
 import { reducirFoto } from '@/shared/design/ui/reducir-foto'
 import { markReminderSentAction } from '@/app/_acciones/reminders/actions'
 import { conCanal, whatsappLink } from '@/modules/guests'
 import type { FilaDeEnvio, Propuesta as Contenido } from '../domain/herramientas'
 import type { Salida } from '../application/conversar'
 import { NOMBRE_DEL_ASISTENTE } from '../domain/reglas'
-import { CopaDeLuxury, SelloDeLuxury, TarjetaDeLuxury } from './RobotLuxury'
+import { RobotLuxury, TarjetaDeLuxury } from './RobotLuxury'
 import { despertarAudio, dictadoPropioListo, escucharPropio, soltarMicrofono, type Escucha } from './dictado-propio'
 import { comoDictar, elegirVoz, esDespedida, frasesListas, idiomaDelTexto, paraLeer, unirResultados, vocesParaElegir } from './voz'
 
@@ -117,6 +116,38 @@ function conEnlaces(texto: string, slug: string, alNavegar: () => void): ReactNo
 /** `destinos`: las pantallas de la barra de quien mira (por su papel y su plan); «ir_a» solo abre esas. */
 export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: string; destinos: readonly string[] }) {
   const [burbujas, setBurbujas] = useState<Burbuja[]>([])
+  /**
+   * **La conversación sobrevive a recargar** (14 oct: «cuando le pido que me lleve a invitaciones o regalos se pierde
+   * la conversación»). Se guarda en esta pestaña (`sessionStorage`), por evento: no va a ningún servidor y se va al
+   * cerrar la pestaña. Sin las tarjetas de envío (llevan los enlaces de los invitados). Se recupera al abrir el chat o
+   * hablarle (`recuperar`): el servidor pinta el chat vacío y leerla al crear el estado desajustaría la hidratación.
+   */
+  const claveDeConversacion = `luxury.conversacion.${eventId}`
+  const cargada = useRef(false)
+  /** Trae la conversación guardada (una vez) y dice cuántos mensajes tiene. */
+  const recuperar = (): number => {
+    if (cargada.current) return burbujas.length
+    cargada.current = true
+    try {
+      const guardada = window.sessionStorage.getItem(claveDeConversacion)
+      const anteriores = guardada === null ? [] : (JSON.parse(guardada) as Burbuja[])
+      if (anteriores.length > 0) setBurbujas(anteriores)
+      return anteriores.length
+    } catch {
+      // Sin almacenamiento (privado) o algo ilegible: se empieza de cero.
+      return 0
+    }
+  }
+  useEffect(() => {
+    if (!cargada.current) return
+    try {
+      const sinEnvios = burbujas.slice(-40).map(({ envio, ...b }) => (envio === undefined ? b : { ...b, texto: b.texto || 'Te dejé los mensajes de WhatsApp listos para enviar.' }))
+      if (sinEnvios.length === 0) window.sessionStorage.removeItem(claveDeConversacion)
+      else window.sessionStorage.setItem(claveDeConversacion, JSON.stringify(sinEnvios))
+    } catch {
+      // Lleno o bloqueado: la conversación sigue en memoria igual.
+    }
+  }, [burbujas, claveDeConversacion])
   const [texto, setTexto] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [consultando, setConsultando] = useState<string | null>(null)
@@ -135,7 +166,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
   const [conversacion, setConversacion] = useState(false)
   const [verVoces, setVerVoces] = useState(false)
   /** Lo que Luxury dice **con el chat cerrado**, en su tarjeta junto al robot. */
-  const [afuera, setAfuera] = useState<{ id: number; texto: string } | null>(null)
+  const [afuera, setAfuera] = useState<{ id: number; texto: string; seguir?: boolean } | null>(null)
   const [afueraHablando, setAfueraHablando] = useState(false)
   /**
    * **Hablarle sin abrir el chat** (9 de octubre): el micrófono junto al robot abre la conversación por voz y la
@@ -150,18 +181,19 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
   useEffect(() => {
     modoFueraRef.current = modoFuera
   })
-  const decirAfuera = useRef((texto: string) => void texto)
+  const decirAfuera = useRef((texto: string, seguir?: boolean) => void [texto, seguir])
   useEffect(() => {
     // ponytail: temporizadores sin red: cuánto mueve la boca y cuándo se va la tarjeta.
     let quitar: ReturnType<typeof setTimeout> | undefined
     let callar: ReturnType<typeof setTimeout> | undefined
-    decirAfuera.current = (texto) => {
+    decirAfuera.current = (texto, seguir) => {
       clearTimeout(quitar)
       clearTimeout(callar)
-      setAfuera({ id: Date.now(), texto })
+      setAfuera({ id: Date.now(), texto, ...(seguir ? { seguir } : {}) })
       setAfueraHablando(true)
       callar = setTimeout(() => setAfueraHablando(false), Math.min(4000, texto.length * 35))
-      quitar = setTimeout(() => setAfuera(null), 5000 + texto.length * 40)
+      // «Seguir conversando» se queda más: hay que verlo y decidir.
+      quitar = setTimeout(() => setAfuera(null), (seguir ? 12_000 : 5000) + texto.length * 40)
     }
     // Un saludo al día en este aparato: así se sabe que Luxury está y que se le toca.
     let saludo: ReturnType<typeof setTimeout> | undefined
@@ -225,20 +257,22 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
         : ultima.envio !== undefined
           ? 'Te dejé los mensajes de WhatsApp listos en el chat: ábrelo y toca enviar en cada uno.'
           : null
+  const escuchando = dictado.estado === 'escuchando'
+  const escucharDe = escuchando ? (dictado.oyendo ? 'Te escucho…' : 'Abriendo el micrófono…') : null
   const fuera = {
     texto: despedidaFuera !== null && !conversacion ? despedidaFuera : respuestaFuera,
     estado:
-      dictado.aviso !== null && dictado.estado !== 'escuchando'
+      dictado.aviso !== null && !escuchando
         ? dictado.aviso
-        : dictado.estado === 'escuchando'
-          ? 'Te escucho…'
-          : ocupado && respuestaFuera === null
-            ? 'Pensando…'
-            : null,
-    dicho: dictado.estado === 'escuchando' ? texto : '',
+        : (escucharDe ?? (ocupado && respuestaFuera === null ? 'Pensando…' : null)),
+    dicho: escuchando ? texto : '',
   }
   // Terminada la conversación (dijo «listo», calló o falló), la tarjeta se queda un momento y se va.
-  const quieto = modoFuera && !conversacion && !ocupado && !lectura.hablando && dictado.estado !== 'escuchando'
+  const quieto = modoFuera && !conversacion && !ocupado && !lectura.hablando && !escuchando
+  /** En qué está Luxury fuera del chat: el punto de la tarjeta, el aro bajo el robot y su boca. */
+  const estadoFuera = !modoFuera ? null : escuchando ? 'escucha' : ocupado ? 'piensa' : lectura.hablando ? 'habla' : null
+  const apartado = useApartarAlBajar()
+  const enIngreso = usePathname().endsWith('/checkin')
   const hayAviso = dictado.aviso !== null
   useEffect(() => {
     if (!quieto) return
@@ -263,6 +297,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
   }, [burbujas, consultando])
 
   const abrir = () => {
+    recuperar()
     setAfuera(null)
     setModoFuera(false)
     dialogo.current?.showModal()
@@ -373,11 +408,15 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
       const abre = destino !== null && destinos.includes(destino.split('?')[0]!)
       if (destino !== null && !abre) enLaUltima((b) => ({ ...b, texto: `${b.texto}\n\nEsa pantalla no está en tu panel.` }))
       if (abre) {
-        // Se cierra el chat para ver la pantalla; por voz la conversación sigue con el robot, fuera del chat.
+        // **La conversación no se corta al llevarte** (14 oct). Con pantalla ancha el chat es un panel lateral y se
+        // queda abierto: la pantalla cambia al lado. En el celular tapa todo: se cierra para verla y el robot ofrece
+        // «Seguir conversando»; por voz la conversación sigue con el robot, fuera del chat.
         // `close()` y no `cerrar()`: este corta la voz y el «Te llevo a…» se quedaría a medias.
-        if (dialogo.current?.open === true) {
+        const ancha = window.matchMedia('(min-width: 640px)').matches
+        if (dialogo.current?.open === true && !ancha) {
           dialogo.current.close()
           if (conversando.current) setModoFuera(true)
+          else decirAfuera.current(`Te traje aquí. Cuando quieras, seguimos.`, true)
         }
         router.push(destino!)
       } else if (huboCambios) router.refresh()
@@ -499,133 +538,127 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
 
   return (
     <>
-      {/* **Luxury en persona** (8 de octubre): el robot champán es el botón; tocarlo abre el chat. Con el chat
-          cerrado, habla en su tarjeta (un saludo al día, o la respuesta si se cerró mientras contestaba). */}
-      {/* **Luxury en la maqueta «Esmeralda y Latón»** (12 de octubre): abajo a la derecha, el micrófono esmeralda para
-          hablarle sin abrir el chat y la copa de latón que abre el chat. Con el chat cerrado, habla en su tarjeta
-          (un saludo al día, o la respuesta si se cerró mientras contestaba). */}
-      <div className="fixed right-4 bottom-[calc(76px+env(safe-area-inset-bottom))] z-30 flex items-center gap-3 min-[768px]:right-6 min-[768px]:bottom-6 min-[1280px]:right-9 min-[1280px]:bottom-9 print:hidden">
-        {modoFuera ? (
-          // Hablándole fuera del chat (maqueta E38 y E39): escuchando, una tarjeta clara con lo que va oyendo y la
-          // pantalla desenfocada detrás; con la respuesta, la tarjeta esmeralda de Luxury. Siempre se puede abrir el chat.
-          <>
-            {fuera.estado === 'Te escucho…' ? <div aria-hidden className="fixed inset-0 -z-10 bg-bg/35 backdrop-blur-[6px] motion-reduce:backdrop-blur-none" /> : null}
-            <div aria-live="polite" className="absolute right-0 bottom-[76px] w-[min(400px,calc(100vw-32px))]" role="status">
-              {fuera.texto === null ? (
-                <div className="rounded-[18px] border border-line-panel bg-bg-raised p-5.5 shadow-float">
-                  <div className="flex items-center gap-3">
-                    <SelloDeLuxury size={46} />
-                    <span className="flex flex-col">
-                      <span className="font-display text-[24px] leading-tight font-medium">{fuera.estado ?? 'Cuando quieras'}</span>
-                      <span className="text-[13px] text-ink-mute">Habla con calma. Te contesto aquí mismo.</span>
-                    </span>
-                  </div>
-                  {fuera.dicho === '' ? null : <p className="mt-3.5 text-[15.5px] leading-[1.6]">«{fuera.dicho}»</p>}
-                  {fuera.estado === 'Te escucho…' ? (
-                    <span aria-hidden className="mt-3 flex h-8 items-center gap-[5px]">
-                      {[10, 22, 30, 16, 26, 12, 24, 30, 14].map((h, i) => (
+      {/* **Luxury flotante, como antes** (v2.1 aprobada el 14 oct): un solo elemento abajo a la derecha, el robot champán
+          que abre el chat con su micrófono pegado al hombro para hablarle sin abrirlo, y su tarjeta dorada al lado. Nada
+          fijo abajo más que él (el panel es web: la barra del navegador ya está abajo). Al bajar por la página se aparta
+          y al subir vuelve. En «Ingreso al evento» va **a la izquierda**: ahí «Registrar» está a la derecha, se trabaja
+          con prisa, y Luxury también hace de recepción (no se puede esconder). */}
+      <>
+          {modoFuera && !quieto ? <div aria-hidden className="fixed inset-0 z-30 bg-bg/60 backdrop-blur-[3px] motion-reduce:backdrop-blur-none print:hidden" /> : null}
+          <div
+            className={`fixed bottom-[calc(10px+env(safe-area-inset-bottom))] z-30 transition-[translate,opacity] duration-300 motion-reduce:transition-none min-[768px]:bottom-6 min-[1280px]:bottom-9 print:hidden ${
+              enIngreso ? 'left-3.5 min-[768px]:left-[116px] min-[1280px]:left-[304px]' : 'right-3.5 min-[768px]:right-6 min-[1280px]:right-9'
+            } ${
+              apartado && !modoFuera && afuera === null ? 'pointer-events-none translate-y-[calc(100%+24px)] opacity-0' : ''
+            }`}
+          >
+            {modoFuera ? (
+              // Hablándole fuera del chat: la tarjeta dice en qué está (escucha, piensa, habla) y lo que oye o responde,
+              // con salidas en palabras. Detrás, un velo marfil (maqueta M18).
+              <div aria-live="polite" className={`absolute bottom-[84px] w-[min(400px,calc(100vw-28px))] ${enIngreso ? 'left-0' : 'right-0'}`} role="status">
+                <TarjetaDeLuxury perlas={null}>
+                  <span className="flex items-center gap-2 text-[15px] font-medium">
+                    {estadoFuera === null ? null : (
+                      <span aria-hidden className={`size-2.5 shrink-0 rounded-full motion-safe:animate-pulse ${estadoFuera === 'escucha' ? 'bg-danger' : 'bg-gold'}`} />
+                    )}
+                    {escucharDe ?? (ocupado ? 'Pensando…' : lectura.hablando ? 'Hablando…' : 'Cuando quieras')}
+                  </span>
+                  {escuchando && !dictado.oyendo ? <span className="mt-1 block text-[13px] text-ink-mute">Un segundo: espera a «Te escucho» para hablar.</span> : null}
+                  {fuera.texto === null ? null : escuchando ? (
+                    <span className="mt-2.5 line-clamp-2 block border-l-2 border-gold/50 pl-3 text-[13px] leading-[1.5] text-ink-mute">{fuera.texto}</span>
+                  ) : (
+                    <span className="mt-2.5 block max-h-[38vh] overflow-y-auto text-[15px] leading-[1.6] whitespace-pre-wrap">{fuera.texto}</span>
+                  )}
+                  {fuera.dicho === '' ? null : <span className="mt-2.5 block text-[15px] leading-[1.55]">«{fuera.dicho}»</span>}
+                  {dictado.aviso !== null && !escuchando ? <span className="mt-2.5 block text-[14px] leading-[1.55] text-ink-soft">{dictado.aviso}</span> : null}
+                  {escuchando && dictado.oyendo ? (
+                    <span aria-hidden className="mt-2.5 flex h-6 items-center gap-1">
+                      {[8, 18, 24, 12, 20, 9, 16, 22, 11].map((h, i) => (
                         <span className="w-[3px] rounded-full bg-gold motion-safe:animate-pulse" key={i} style={{ height: h, animationDelay: `${i * 90}ms` }} />
                       ))}
                     </span>
                   ) : null}
-                  <span className="mt-3 flex flex-wrap items-center justify-between gap-2 text-[13px] text-ink-mute">
-                    {fuera.estado === 'Te escucho…' ? 'Toca el botón rojo para terminar.' : ''}
-                    <button className="min-h-11 cursor-pointer font-medium text-gold-deep hover:underline" onClick={abrir} type="button">
-                      Abrir el chat
-                    </button>
-                  </span>
-                </div>
-              ) : (
-                <div className="rounded-[18px] bg-shell-deep p-5.5 text-shell-ink shadow-float">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-3">
-                      <SelloDeLuxury size={46} />
-                      <span className="font-display text-[24px] leading-tight font-medium">{NOMBRE_DEL_ASISTENTE}</span>
-                    </span>
+                  <span className="relative z-[1] mt-3.5 flex gap-2">
                     <button
-                      aria-label="Terminar"
-                      className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-[10px] border border-shell-ink/25 text-shell-ink hover:border-gold"
+                      className="min-h-11 flex-1 cursor-pointer rounded-[10px] border border-line-panel-strong bg-bg-raised px-3 text-[14px] font-medium text-ink hover:border-ink"
                       onClick={() => {
+                        peticion.current?.abort('detenido')
                         lectura.callar()
                         terminarConversacion()
                         setModoFuera(false)
                       }}
                       type="button"
                     >
-                      <CloseIcon className="size-4" />
+                      {estadoFuera === 'habla' ? 'Callar' : quieto ? 'Cerrar' : 'Cancelar'}
                     </button>
-                  </div>
-                  <span className="mt-3.5 block max-h-[38vh] overflow-y-auto text-[16px] leading-[1.6] whitespace-pre-wrap">{fuera.texto}</span>
-                  {fuera.estado === null ? null : (
-                    <span className="mt-3 flex items-center gap-2 border-t border-shell-ink/15 pt-3 text-[13px] text-shell-mute">
-                      <span aria-hidden className={`size-2 shrink-0 animate-pulse rounded-full motion-reduce:animate-none ${fuera.estado === 'Te escucho…' ? 'bg-danger' : 'bg-gold'}`} />
-                      {fuera.estado}
-                    </span>
-                  )}
-                  <span className="mt-4 flex gap-2.5">
-                    <button className="min-h-11 flex-1 cursor-pointer rounded-[10px] bg-bg-raised px-4 text-[14.5px] font-medium text-ink hover:bg-white" onClick={abrir} type="button">
-                      Abrir el chat
-                    </button>
+                    {escuchando ? (
+                      <button
+                        className="min-h-11 flex-1 cursor-pointer rounded-[10px] bg-shell-deep px-3 text-[14px] font-medium text-shell-ink hover:bg-sage disabled:cursor-default disabled:opacity-50"
+                        disabled={texto.trim() === ''}
+                        onClick={() => dictado.terminar()}
+                        type="button"
+                      >
+                        Enviar ya
+                      </button>
+                    ) : (
+                      <button className="min-h-11 flex-1 cursor-pointer rounded-[10px] bg-shell-deep px-3 text-[14px] font-medium text-shell-ink hover:bg-sage" onClick={abrir} type="button">
+                        Abrir el chat
+                      </button>
+                    )}
                   </span>
-                </div>
-              )}
+                </TarjetaDeLuxury>
+              </div>
+            ) : afuera === null ? null : (
+              // No intercepta toques (no tapa botones de la pantalla): el que abre el chat es el robot. Tras llevarte a una
+              // pantalla, sí: trae «Seguir conversando», que abre el chat donde quedó.
+              <div
+                aria-live="polite"
+                className={`absolute bottom-1.5 w-[min(290px,calc(100vw-92px))] ${enIngreso ? 'left-[70px]' : 'right-[70px]'} ${afuera.seguir ? '' : 'pointer-events-none'}`}
+                key={afuera.id}
+                role="status"
+              >
+                <TarjetaDeLuxury perlas={enIngreso ? 'izquierda' : 'derecha'}>
+                  <span className="block text-[13.5px] leading-normal">{afuera.texto}</span>
+                  {afuera.seguir ? (
+                    <button className="relative z-[1] mt-3 min-h-11 w-full cursor-pointer rounded-[10px] bg-shell-deep px-4 text-[14px] font-medium text-shell-ink hover:bg-sage" onClick={abrir} type="button">
+                      Seguir conversando
+                    </button>
+                  ) : null}
+                </TarjetaDeLuxury>
+              </div>
+            )}
+            <div className="relative h-[72px] w-[60px] min-[1280px]:h-[86px] min-[1280px]:w-[72px]">
+              <button aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`} className="block size-full cursor-pointer transition-transform hover:-translate-y-0.5 motion-reduce:transition-none" onClick={abrir} type="button">
+                <RobotLuxury className="size-full drop-shadow-[0_6px_10px_rgb(43_39_35/0.18)]" hablando={(afuera !== null && afueraHablando) || estadoFuera === 'habla'} />
+              </button>
+              {estadoFuera === 'escucha' ? <span aria-hidden className="absolute inset-x-2 -bottom-1 h-2 rounded-full bg-danger/35 motion-safe:animate-pulse" /> : null}
+              {/* Hablarle sin abrir el chat. Donde el dictado es el del teclado (no se puede dictar fuera del chat), abre el chat. */}
+              {dictado.disponible && (!modoFuera || quieto) ? (
+                <button
+                  aria-label={`Hablarle a ${NOMBRE_DEL_ASISTENTE} sin abrir el chat`}
+                  className={`absolute -top-3 grid size-11 cursor-pointer place-items-center disabled:opacity-60 ${enIngreso ? '-right-[18px]' : '-left-[18px]'}`}
+                  disabled={ocupado}
+                  onClick={() => {
+                    if (dictado.modo === 'teclado') {
+                      abrir()
+                      return empezarConversacion()
+                    }
+                    setAfuera(null)
+                    setDespedidaFuera(null)
+                    inicioFuera.current = recuperar()
+                    setModoFuera(true)
+                    empezarConversacion()
+                  }}
+                  type="button"
+                >
+                  <span className="grid size-8 place-items-center rounded-full border border-gold/60 bg-bg-raised text-gold-deep shadow-float">
+                    <Microfono className="size-4" />
+                  </span>
+                </button>
+              ) : null}
             </div>
-          </>
-        ) : afuera === null ? null : (
-          // No intercepta toques (no tapa botones de la pantalla): el que abre el chat es el robot.
-          <div aria-live="polite" className="pointer-events-none absolute right-0 bottom-[76px] w-[min(300px,calc(100vw-32px))]" key={afuera.id} role="status">
-            <TarjetaDeLuxury perlas={null}>
-              <span className="block text-[13.5px] leading-normal">{afuera.texto}</span>
-            </TarjetaDeLuxury>
           </div>
-        )}
-        {/* Hablarle sin abrir el chat. Donde el dictado es el del teclado (no se puede dictar fuera del chat), abre el chat. */}
-        {modoFuera ? (
-          <button
-            aria-label="Terminar de hablar"
-            className="grid size-[50px] cursor-pointer place-items-center rounded-full bg-danger text-white shadow-[0_0_0_6px_rgb(0_0_0/0.08),0_10px_24px_rgb(12_36_32/0.28)] transition-colors hover:bg-danger-deep"
-            onClick={() => {
-              lectura.callar()
-              terminarConversacion()
-              setModoFuera(false)
-            }}
-            type="button"
-          >
-            <span aria-hidden className="size-3 rounded-[3px] border-[1.5px] border-white" />
-          </button>
-        ) : null}
-        {dictado.disponible && !modoFuera ? (
-          <button
-            aria-label={`Hablarle a ${NOMBRE_DEL_ASISTENTE} sin abrir el chat`}
-            className="grid size-[50px] cursor-pointer place-items-center rounded-full bg-shell-deep text-shell-ink shadow-[0_10px_24px_rgb(12_36_32/0.28)] transition-colors hover:bg-sage disabled:opacity-60"
-            disabled={ocupado}
-            onClick={() => {
-              if (dictado.modo === 'teclado') {
-                abrir()
-                return empezarConversacion()
-              }
-              setAfuera(null)
-              setDespedidaFuera(null)
-              inicioFuera.current = burbujas.length
-              setModoFuera(true)
-              empezarConversacion()
-            }}
-            type="button"
-          >
-            <Microfono className="size-[21px]" />
-          </button>
-        ) : null}
-        <button
-          aria-label={`Abrir a ${NOMBRE_DEL_ASISTENTE}, tu asistente`}
-          className={`grid size-16 cursor-pointer place-items-center rounded-full bg-[radial-gradient(circle_at_35%_30%,var(--color-laton-brillo),var(--color-gold-light)_58%,var(--color-gold))] shadow-[inset_0_0_0_1.5px_var(--color-gold-deep),0_12px_28px_rgb(12_36_32/0.24)] transition-transform hover:-translate-y-0.5 motion-reduce:transition-none ${
-            (afuera !== null && afueraHablando) || (modoFuera && (lectura.hablando || (ocupado && respuestaFuera !== null))) ? 'luxury-copa-hablando' : ''
-          }`}
-          onClick={abrir}
-          type="button"
-        >
-          <CopaDeLuxury className="size-9" />
-        </button>
-      </div>
+      </>
 
       <dialog
         aria-labelledby={titulo}
@@ -638,7 +671,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-line-panel px-6 py-5">
             <div className="flex items-center gap-3">
-              <SelloDeLuxury size={44} />
+              <RobotLuxury className="h-12 w-10 shrink-0" />
               <div>
                 <h2 className="font-display text-[26px] leading-tight font-light" id={titulo}>
                   {NOMBRE_DEL_ASISTENTE}
@@ -684,6 +717,21 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
           {verVoces ? <VocesDeLuxury elegidas={lectura.elegidas} elegir={lectura.elegir} probar={lectura.probar} voces={lectura.voces} /> : null}
 
           <div aria-busy={ocupado} aria-live="polite" className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-5">
+            {burbujas.length === 0 || ocupado ? null : (
+              <button
+                className="min-h-11 cursor-pointer self-center text-[13px] font-medium text-gold-deep hover:underline"
+                onClick={() => {
+                  terminarConversacion()
+                  lectura.callar()
+                  cargada.current = true
+                  setBurbujas([])
+                  setTexto('')
+                }}
+                type="button"
+              >
+                Nueva conversación
+              </button>
+            )}
             {burbujas.length === 0 ? (
               <div className="flex flex-col gap-4">
                 <p className="text-[14px] leading-relaxed text-ink-soft">
@@ -713,7 +761,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
                   // Luxury responde en su tarjeta de invitación; la última, con él al lado (habla mientras escribe o lee).
                   <div className="flex max-w-[94%] items-end gap-2 self-start" key={i}>
                     {i === burbujas.length - 1 ? (
-                      <SelloDeLuxury size={36} />
+                      <RobotLuxury className="h-[52px] w-[44px] shrink-0" hablando={(ocupado && b.texto !== '') || lectura.hablando} />
                     ) : (
                       <span aria-hidden className="w-[44px] shrink-0" />
                     )}
@@ -845,6 +893,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             </div>
             {conversacion ? (
               <EnConversacion
+                abriendo={!dictado.oyendo}
                 estado={dictado.estado === 'escuchando' ? 'escuchando' : lectura.hablando ? 'hablando' : 'pensando'}
                 interrumpir={() => {
                   lectura.callar()
@@ -858,7 +907,7 @@ export function Asistente({ eventId, slug, destinos }: { eventId: string; slug: 
             ) : dictado.estado === 'escuchando' ? (
               <p aria-live="polite" className="flex items-center gap-2 text-[12.5px] text-ink-soft" role="status">
                 <span aria-hidden className="size-2 animate-pulse rounded-full bg-danger" />
-                Te escucho… Al terminar de hablar, te respondo.
+                {dictado.oyendo ? 'Te escucho… Al terminar de hablar, te respondo.' : 'Abriendo el micrófono… espera a «Te escucho».'}
               </p>
             ) : lectura.hablando ? (
               <p aria-live="polite" className="flex items-center gap-2 text-[12.5px] text-ink-soft" role="status">
@@ -1000,9 +1049,20 @@ function Clip({ className }: { className?: string }) {
  * **La conversación por voz, a la vista**: un círculo que dice en qué está —te escucha (late en rojo), piensa
  * (dorado quieto) o te responde (ondas doradas)— y las dos salidas: interrumpir para hablar ya, o terminar.
  */
-function EnConversacion({ estado, interrumpir, terminar }: { estado: 'escuchando' | 'pensando' | 'hablando'; interrumpir: () => void; terminar: () => void }) {
+function EnConversacion({
+  abriendo,
+  estado,
+  interrumpir,
+  terminar,
+}: {
+  /** Escuchando, pero el micrófono aún no graba. */
+  abriendo: boolean
+  estado: 'escuchando' | 'pensando' | 'hablando'
+  interrumpir: () => void
+  terminar: () => void
+}) {
   const TEXTO = {
-    escuchando: 'Te escucho…',
+    escuchando: abriendo ? 'Abriendo el micrófono…' : 'Te escucho…',
     pensando: 'Pensando…',
     hablando: 'Te respondo. Toca para interrumpir.',
   } as const
@@ -1113,6 +1173,26 @@ function Altavoz({ className, apagado }: { className?: string; apagado: boolean 
 
 const sinCambios = () => () => {}
 
+/**
+ * **Se aparta al bajar** (como la barra del propio Safari): al desplazar hacia abajo el robot se esconde para no tapar
+ * la página; al subir, arriba del todo o al llegar al final, vuelve. Por el evento de desplazamiento, sin temporizadores.
+ */
+function useApartarAlBajar() {
+  const [apartado, setApartado] = useState(false)
+  useEffect(() => {
+    let antes = window.scrollY
+    const alDesplazar = () => {
+      const ahora = window.scrollY
+      const alFinal = window.innerHeight + ahora >= document.documentElement.scrollHeight - 4
+      setApartado(ahora > antes && ahora > 80 && !alFinal)
+      antes = ahora
+    }
+    window.addEventListener('scroll', alDesplazar, { passive: true })
+    return () => window.removeEventListener('scroll', alDesplazar)
+  }, [])
+  return apartado
+}
+
 /** Lo mínimo del reconocimiento de voz del navegador (Web Speech API), que TypeScript no trae. */
 type Reconocedor = {
   lang: string
@@ -1204,6 +1284,11 @@ function useDictado(
   const modo = useSyncExternalStore(sinCambios, modoDeDictado, () => 'ninguno')
   const disponible = modo !== 'ninguno'
   const [estado, setEstado] = useState<'quieto' | 'escuchando'>('quieto')
+  /**
+   * **El micrófono graba de verdad** (14 oct: «a veces parece que no está activado»): entre el toque y que el aparato
+   * abre el micrófono (permisos, arranque) se dice «Abriendo el micrófono…»; «Te escucho» solo cuando ya oye.
+   */
+  const [oyendo, setOyendo] = useState(false)
   const [aviso, setAviso] = useState<string | null>(null)
   const actual = useRef<{ cerrar: (enviar: boolean) => void } | null>(null)
   /** Se tocó el micrófono y se dicta con el teclado: lo que se envíe después se contesta en voz alta. */
@@ -1240,6 +1325,7 @@ function useDictado(
       hecho = true
       if (actual.current?.cerrar === cerrar) actual.current = null
       setEstado('quieto')
+      setOyendo(false)
       return true
     }
     const cerrar = (enviar: boolean) => {
@@ -1249,6 +1335,7 @@ function useDictado(
     }
     actual.current = { cerrar }
     // «Te escucho» cuando de verdad escucha: antes, el aviso de que se prepara.
+    setOyendo(false)
     if (dictadoPropioListo()) setEstado('escuchando')
     void escucharPropio({
       sigue: () => !hecho && pedido !== false,
@@ -1256,6 +1343,7 @@ function useDictado(
         if (hecho) return
         setAviso(null)
         setEstado('escuchando')
+        setOyendo(true)
       },
       alOir: (t) => {
         setAviso(null)
@@ -1319,6 +1407,7 @@ function useDictado(
       clearTimeout(respaldo)
       if (actual.current?.cerrar === cerrar) actual.current = null
       setEstado('quieto')
+      setOyendo(false)
       try {
         r.abort()
       } catch {
@@ -1348,6 +1437,7 @@ function useDictado(
       }, ms)
     }
     r.onresult = (e) => {
+      setOyendo(true)
       dicho = unirResultados(Array.from(e.results, (resultado) => resultado[0]?.transcript ?? ''))
       alOir(unido())
       esperarSilencio(2500)
@@ -1370,6 +1460,7 @@ function useDictado(
         clearTimeout(respaldo)
         actual.current = null
         setEstado('quieto')
+        setOyendo(false)
         usarTeclado(DICTA_CON_EL_TECLADO)
         return
       }
@@ -1379,10 +1470,12 @@ function useDictado(
     // Los 8 s de silencio cuentan desde que el micrófono **graba**: la primera vez el iPhone pregunta dos permisos
     // (micrófono y reconocimiento) y, contando desde el toque, se cerraba antes de poder hablar (producción, 9 oct).
     r.onaudiostart = () => {
+      setOyendo(true)
       if (dicho === '') esperarSilencio(8000)
     }
     actual.current = { cerrar }
     setEstado('escuchando')
+    setOyendo(false)
     esperarSilencio(20_000)
     try {
       r.start()
@@ -1401,6 +1494,7 @@ function useDictado(
     /** `navegador` (dictado del navegador), `teclado` (dictado del teclado del celular) o `ninguno`. */
     modo: modo.startsWith('navegador') ? ('navegador' as const) : (modo as 'propio' | 'teclado' | 'ninguno'),
     estado,
+    oyendo,
     aviso,
     avisar: (texto: string) => setAviso(texto),
     empezar,

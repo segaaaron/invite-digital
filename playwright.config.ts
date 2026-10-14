@@ -71,6 +71,8 @@ export default defineConfig({
       SITE_URL: BASE_URL,
       // Arturo con su modelo guionizado: las e2e nunca llaman a OpenAI.
       ASISTENTE_MODELO: 'falso',
+      // Toda la suite habla con Luxury con la misma cuenta: el tope de 30 por minuto la cortaría a medias.
+      ASISTENTE_MENSAJES_POR_MINUTO: '1000',
       // La suya, para no pelearse con el `pnpm dev` que ya esté abierto.
       ...(CONTRA_DEV ? { NEXT_DIST_DIR: '.next-e2e' } : {}),
     },

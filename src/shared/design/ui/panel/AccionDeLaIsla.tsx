@@ -3,13 +3,13 @@
 import { useSyncExternalStore, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
-/** El hueco de la isla del celular donde cada pantalla pone su acción (maqueta M08: el «+» de Invitados). */
+/** El hueco junto al título de la página, en el celular, donde cada pantalla pone su acción («＋ Añadir»). */
 export const HUECO_DE_LA_ISLA = 'accion-de-la-isla'
 
 /**
- * **La acción de la pantalla, en la isla del celular** (maqueta «Esmeralda y Latón», M08 · M33): «+» para añadir un
- * invitado, una mesa… Arriba a la derecha, a un toque, en vez de un botón flotante que tapaba la lista y a Luxury.
- * Se monta en el hueco que deja la barra de arriba; en tablet y escritorio la acción está en la cabecera de la página.
+ * **La acción de la pantalla en el celular** («＋ Añadir» un invitado, una mesa…): junto al título de la página, con su
+ * palabra (v2.1, 14 oct; antes iba en la isla de arriba). Se monta en el hueco que deja `PanelHeader`; en tablet y
+ * escritorio la acción está en la fila de acciones de la cabecera.
  */
 export function AccionDeLaIsla({ children }: { children: ReactNode }) {
   // El hueco ya está en la página al hidratar (lo pinta la barra del layout); en el servidor no hay documento.
