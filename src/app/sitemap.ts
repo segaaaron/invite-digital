@@ -19,7 +19,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Cada entrada con su versión en el otro idioma (9 oct): la misma regla que el `hreflang` de la página, así
   // el sitemap y la página nunca se contradicen.
   const conIdiomas = (entradas: MetadataRoute.Sitemap): MetadataRoute.Sitemap =>
-    entradas.map((e) => ({ ...e, alternates: { languages: buildAlternates(new URL(e.url).pathname).languages } }))
+    entradas.map((e) => {
+      const { canonical, languages } = buildAlternates(new URL(e.url).pathname)
+      return { ...e, url: canonical, alternates: { languages } }
+    })
 
   for (const locale of LOCALES) {
     entries.push({ url: `${env.SITE_URL}/${locale}`, changeFrequency: 'weekly', priority: 1 })

@@ -54,7 +54,7 @@ describe('ThemePicker', () => {
     // El atelier decide mirándola, no leyendo el nombre.
     render(<ThemePicker defaultValue="boda" definitions={TEMAS} locale="en" />)
     const enlaces = screen.getAllByRole('link', { name: 'Ver' })
-    expect(enlaces[0]).toHaveAttribute('href', '/modelos/en/boda')
+    expect(enlaces[0]).toHaveAttribute('href', '/en/designs/boda')
     expect(enlaces[0]).toHaveAttribute('target', '_blank')
   })
 

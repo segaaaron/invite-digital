@@ -83,7 +83,7 @@ export function ShowcaseMusicRow({
       <a
         aria-label={`Abrir el modelo ${label} en una pestaña nueva`}
         className="group relative block aspect-[9/16] overflow-hidden rounded-[12px] border border-line-panel bg-bg-sunken"
-        href={`/modelos/es/${themeKey}`}
+        href={`/es/modelos/${themeKey}`}
         rel="noopener noreferrer"
         target="_blank"
       >
@@ -108,7 +108,7 @@ export function ShowcaseMusicRow({
           </span>
           <Pill tone={publicado ? 'ok' : 'neutro'}>{publicado ? 'Publicado' : 'Sin publicar'}</Pill>
           <MenuDeAcciones etiqueta={`Más acciones de ${label}`}>
-            <a className={opcionDeMenu()} href={`/modelos/es/${themeKey}`} rel="noopener noreferrer" target="_blank">
+            <a className={opcionDeMenu()} href={`/es/modelos/${themeKey}`} rel="noopener noreferrer" target="_blank">
               Ver el modelo
             </a>
             {publicado ? (

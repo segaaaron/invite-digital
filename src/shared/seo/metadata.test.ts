@@ -8,8 +8,14 @@ describe('buildAlternates', () => {
     const alternates = buildAlternates('/es/colecciones', SITE)
     expect(alternates.canonical).toBe('https://invitepremium.bo/es/colecciones')
     expect(alternates.languages['es']).toBe('https://invitepremium.bo/es/colecciones')
-    expect(alternates.languages['en']).toBe('https://invitepremium.bo/en/colecciones')
-    expect(alternates.languages['x-default']).toBe('https://invitepremium.bo/en/colecciones')
+    expect(alternates.languages['en']).toBe('https://invitepremium.bo/en/collections')
+    expect(alternates.languages['x-default']).toBe('https://invitepremium.bo/en/collections')
+  })
+
+  it('la página inglesa se publica con su dirección inglesa', () => {
+    const a = buildAlternates('/en/bodas', SITE)
+    expect(a.canonical).toBe('https://invitepremium.bo/en/weddings')
+    expect(a.languages['es']).toBe('https://invitepremium.bo/es/bodas')
   })
 
   it('funciona en la raíz de cada idioma', () => {
@@ -66,12 +72,12 @@ describe('buildPageMetadata', () => {
 })
 
 describe('los demos de modelos (9 oct: sus hreflang apuntaban a /es/modelos/es/… y daban 404)', () => {
-  it('cada idioma lleva a la misma pieza en su idioma, con el idioma después de /modelos', () => {
+  it('cada idioma lleva a la misma pieza en su idioma, con sus direcciones (14 oct)', () => {
     const a = buildAlternates('/modelos/es/boda-bot', 'https://luxuryatelier.net')
-    expect(a.canonical).toBe('https://luxuryatelier.net/modelos/es/boda-bot')
+    expect(a.canonical).toBe('https://luxuryatelier.net/es/modelos/boda-bot')
     expect(a.languages).toMatchObject({
-      es: 'https://luxuryatelier.net/modelos/es/boda-bot',
-      en: 'https://luxuryatelier.net/modelos/en/boda-bot',
+      es: 'https://luxuryatelier.net/es/modelos/boda-bot',
+      en: 'https://luxuryatelier.net/en/designs/boda-bot',
     })
   })
 })

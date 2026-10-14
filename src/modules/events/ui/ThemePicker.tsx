@@ -4,6 +4,7 @@ import Image from '@/shared/design/ui/ImagenConCarga'
 import { useId, useState } from 'react'
 import { FIESTAS, fiestaDeCategoria, VOCABULARIO, type Fiesta } from '../domain/fiesta'
 import type { ThemeDefinition } from './themes/contract'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = {
   readonly definitions: readonly {
@@ -139,7 +140,7 @@ export function ThemePicker({ definitions, defaultValue, locale }: Props) {
                         el nombre. En pestaña nueva para no perder el formulario a medias. */}
                     <a
                       className="font-mono text-[9px] tracking-[0.18em] text-ink-mute uppercase underline-offset-2 hover:text-ink hover:underline max-[859px]:inline-flex max-[859px]:min-h-11 max-[859px]:items-center max-[859px]:px-2"
-                      href={`/modelos/${locale}/${tema.key}`}
+                      href={rutaDe(locale === 'en' ? 'en' : 'es', 'modelos', `/${tema.key}`)}
                       onClick={(evento) => evento.stopPropagation()}
                       rel="noreferrer"
                       target="_blank"

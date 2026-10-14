@@ -4,6 +4,7 @@ import { ArrowRightIcon } from '@/shared/design/ui/icons'
 import { SectionHeading } from '@/shared/design/ui/SectionHeading'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 /**
  * Las dos puertas de la portada: Bodas y XV años. Son dos fiestas y dos productos, y cada
@@ -11,8 +12,8 @@ import type { Locale } from '@/shared/i18n/locales'
  */
 export function FiestaChooser({ dictionary, locale }: { dictionary: Dictionary; locale: Locale }) {
   const tarjetas = [
-    { href: `/${locale}/bodas`, textos: dictionary.fiestas.boda, imagen: '/site/colecciones/bodas-1.avif' },
-    { href: `/${locale}/xv-anos`, textos: dictionary.fiestas.xv, imagen: '/site/colecciones/xv-1.avif' },
+    { href: rutaDe(locale, 'bodas'), textos: dictionary.fiestas.boda, imagen: '/site/colecciones/bodas-1.avif' },
+    { href: rutaDe(locale, 'xv-anos'), textos: dictionary.fiestas.xv, imagen: '/site/colecciones/xv-1.avif' },
   ]
 
   return (

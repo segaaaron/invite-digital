@@ -5,6 +5,7 @@ import { Reveal } from '@/shared/design/ui/Reveal'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 import { HeroEnvelope } from './HeroEnvelope'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = {
   dictionary: Dictionary
@@ -57,7 +58,7 @@ export function HeroSection({ dictionary, locale, encargo = false, slot, cifras,
               {hero.ctaPrimary}
               <ArrowRightIcon className="ml-1" />
             </Button>
-            <Button href={`/${locale}/colecciones`} variant="ghost">
+            <Button href={rutaDe(locale, 'colecciones')} variant="ghost">
               {hero.ctaSecondary}
             </Button>
           </div>

@@ -3,6 +3,7 @@ import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
 import { Button } from '@/shared/design/ui/Button'
 import { MenuMovil } from './MenuMovil'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = { locale: Locale; dictionary: Dictionary }
 
@@ -15,11 +16,11 @@ export function SiteHeader({ locale, dictionary }: Props) {
   const inicio = `/${locale}`
   // Las dos fiestas van primero: son dos productos, cada uno con su página.
   const izquierda = [
-    { href: `${inicio}/bodas`, label: dictionary.nav.weddings },
-    { href: `${inicio}/xv-anos`, label: dictionary.nav.quinceaneras },
+    { href: rutaDe(locale, 'bodas'), label: dictionary.nav.weddings },
+    { href: rutaDe(locale, 'xv-anos'), label: dictionary.nav.quinceaneras },
   ]
   const derecha = [
-    { href: `${inicio}/colecciones`, label: dictionary.nav.collections },
+    { href: rutaDe(locale, 'colecciones'), label: dictionary.nav.collections },
     { href: `${inicio}#precios`, label: dictionary.nav.pricing },
   ]
 

@@ -44,8 +44,8 @@ export default async function ModelPreviewLayout({
         <SinVerCodigo />
         <CapturaDeFallos />
         <ValidacionDeFormularios />
-        <PortadasQueEsperan />
         {children}
+        <PortadasQueEsperan />
       </body>
     </html>
   )

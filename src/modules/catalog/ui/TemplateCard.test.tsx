@@ -46,7 +46,7 @@ describe('TemplateCard', () => {
     // El `slug` de la plantilla es la clave del tema: enseñar uno y abrir otro sería
     // venderle al cliente un modelo distinto del que eligió.
     render(<TemplateCard dictionary={es} locale="es" template={plantilla(MUESTRA)} />)
-    expect(screen.getByRole('link')).toHaveAttribute('href', '/modelos/es/perla')
+    expect(screen.getByRole('link')).toHaveAttribute('href', '/es/modelos/perla')
   })
 
   it('sin muestra cargada enseña su portada igual', () => {

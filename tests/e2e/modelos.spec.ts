@@ -116,7 +116,7 @@ test.describe('el escaparate de modelos', () => {
 
   for (const clave of CLAVES) {
     test(`«${clave}» se abre y pinta su diseño`, async ({ page }) => {
-      const respuesta = await page.goto(`/modelos/es/${clave}`)
+      const respuesta = await page.goto(`/es/modelos/${clave}`)
       expect(respuesta?.status(), clave).toBe(200)
 
       // La invitación es un `<article>` con un solo titular: el nombre de quien celebra.
@@ -130,7 +130,7 @@ test.describe('el escaparate de modelos', () => {
       // mentira acabaría en el panel de alguien. El `submit` se dispara a mano: por el
       // botón, la validación del navegador pararía con el nombre vacío y daría verde sin
       // probar nada.
-      await page.goto(`/modelos/es/${clave}`)
+      await page.goto(`/es/modelos/${clave}`)
       await page.waitForLoadState('networkidle')
       const formularios = page.locator('article form')
       expect(await formularios.count(), clave).toBeGreaterThan(0)
@@ -152,12 +152,12 @@ test.describe('el escaparate de modelos', () => {
   test('un modelo que no existe responde 404, no el tema por defecto', async ({ page }) => {
     // `themeFor` cae al clásico con una clave desconocida, que es lo correcto para una
     // invitación de verdad y lo incorrecto aquí: sería el tema por defecto con otro nombre.
-    const respuesta = await page.goto('/modelos/es/no-existe-este-modelo')
+    const respuesta = await page.goto('/es/modelos/no-existe-este-modelo')
     expect(respuesta?.status()).toBe(404)
   })
 
   test('el clásico no se vende: no tiene ficha de escaparate', async ({ page }) => {
-    const respuesta = await page.goto('/modelos/es/clasico')
+    const respuesta = await page.goto('/es/modelos/clasico')
     expect(respuesta?.status()).toBe(404)
   })
 })
@@ -167,7 +167,7 @@ test.describe('los modelos, ancho por ancho', () => {
     for (const clave of CLAVES) {
       test(`«${clave}» cabe en ${ancho.nombre} (${ancho.width}px)`, async ({ page }) => {
         await page.setViewportSize({ width: ancho.width, height: ancho.height })
-        await page.goto(`/modelos/es/${clave}`)
+        await page.goto(`/es/modelos/${clave}`)
         await page.waitForLoadState('networkidle')
 
         expect(await page.evaluate(cortados), `${clave} · ${ancho.nombre}`).toEqual([])
@@ -198,7 +198,7 @@ test.describe('los modelos, dentro del teléfono', () => {
   for (const clave of CLAVES) {
     test(`«${clave}» se enseña dentro del marco de teléfono`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 })
-      await page.goto(`/modelos/es/${clave}`)
+      await page.goto(`/es/modelos/${clave}`)
       await page.waitForLoadState('networkidle')
       // Con la portada puesta el marco no se desplaza a propósito (`data-portada` en
       // `keyframes.css`): se mide con la invitación abierta, que es lo que se recorre.
@@ -254,7 +254,7 @@ test.describe('los modelos, en un portátil', () => {
   for (const clave of CLAVES) {
     test(`«${clave}» se queda en su columna a 1440px`, async ({ page }) => {
       await page.setViewportSize({ width: 1440, height: 900 })
-      await page.goto(`/modelos/es/${clave}`)
+      await page.goto(`/es/modelos/${clave}`)
       await page.waitForLoadState('networkidle')
 
       expect(await page.evaluate(desbordanLaColumna, COLUMNA), clave).toEqual([])
@@ -275,7 +275,7 @@ test.describe('el catálogo público', () => {
     await expect(page).toHaveURL(/fiesta=xv/)
     const enlaces = page.getByRole('link', { name: /abrir/i })
     await expect(enlaces).toHaveCount(8)
-    for (const href of await enlaces.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
+    for (const href of await enlaces.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/^\/es\/modelos\/xv/)
   })
 
   test('los cumpleaños no se venden: no están en el catálogo, ni indexados', async ({ page }) => {
@@ -288,7 +288,7 @@ test.describe('el catálogo público', () => {
     }
 
     for (const clave of ['cumple-beer', 'cumple-femme']) {
-      const respuesta = await page.goto(`/modelos/es/${clave}`)
+      const respuesta = await page.goto(`/es/modelos/${clave}`)
       expect(respuesta?.status()).toBe(200)
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
     }
@@ -300,7 +300,7 @@ test.describe('el catálogo público', () => {
     await page.goto('/es/colecciones')
 
     const primera = page.getByRole('link', { name: /abrir/i }).first()
-    await expect(primera).toHaveAttribute('href', /^\/modelos\/es\//)
+    await expect(primera).toHaveAttribute('href', /^\/es\/modelos\//)
 
     await primera.click()
     await expect(page.locator('article')).toBeVisible()
@@ -314,7 +314,7 @@ test.describe('los modelos, con movimiento reducido', () => {
   test.use({ contextOptions: { reducedMotion: 'reduce' } })
   for (const clave of CLAVES) {
     test(`${clave}: ningún bloque queda invisible`, async ({ page }) => {
-      await page.goto(`/modelos/es/${clave}`)
+      await page.goto(`/es/modelos/${clave}`)
       await page.locator('[data-portada]').first().click({ force: true, timeout: 3_000 }).catch(() => {})
       const ocultos = await page.locator('.revelar').evaluateAll((nodos) => nodos.filter((n) => getComputedStyle(n).opacity === '0').length)
       expect(ocultos).toBe(0)

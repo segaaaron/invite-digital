@@ -14,7 +14,10 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import type { Locale } from '@/shared/i18n/locales'
 import { attempt, isOk } from '@/shared/result'
-import { buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
+import { buildAlternates, buildPageMetadata, truncateDescription } from '@/shared/seo/metadata'
+import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
+import { headers } from 'next/headers'
+import { NONCE_HEADER } from '@/shared/config/headers'
 import { registrarFallo } from '@/shared/observability/fallos'
 
 /**
@@ -99,7 +102,16 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
   if (!isOk(planes)) registrarFallo('[locale]/fiesta-page', 'Página de fiesta sin planes:', planes.error.detail)
   if (!isOk(plantillas)) registrarFallo('[locale]/fiesta-page', 'Página de fiesta sin modelos:', plantillas.error.detail)
 
+  // Las migas (Inicio › Bodas) para Google, como Colecciones.
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
+  const migas = breadcrumbJsonLd([
+    { name: dictionary.seo.breadcrumbHome, url: buildAlternates(`/${locale}`).canonical },
+    { name: fiesta === 'boda' ? dictionary.nav.weddings : dictionary.nav.quinceaneras, url: buildAlternates(`/${locale}/${RUTA_DE_FIESTA[fiesta]}`).canonical },
+  ])
+
   return (
+    <>
+    <script dangerouslySetInnerHTML={{ __html: jsonLdScript(migas) }} nonce={nonce} type="application/ld+json" />
     <FiestaLanding
       dictionary={dictionary}
       fiesta={fiesta}
@@ -118,5 +130,6 @@ export async function PaginaDeFiesta({ raw, fiesta }: { raw: string; fiesta: Fie
       }
       templates={isOk(plantillas) ? plantillas.value : []}
     />
+    </>
   )
 }

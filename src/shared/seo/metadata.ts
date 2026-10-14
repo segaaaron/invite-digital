@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { BRAND } from '@/shared/config/brand'
 import { env } from '@/shared/config/env'
 import { DEFAULT_LOCALE, LOCALES, type Locale } from '@/shared/i18n/locales'
+import { rutaPublica } from '@/shared/i18n/rutas'
 
 /** Español de Latinoamérica e inglés de EE. UU. (9 oct: decía `es_BO`; la marca vende a toda América). */
 const OG_LOCALES: Record<Locale, string> = { es: 'es_LA', en: 'en_US' }
@@ -28,8 +29,9 @@ export function buildAlternates(path: string, baseUrl: string = env.SITE_URL): A
   // hreflang apuntaban a `/es/modelos/es/…`, que no existe (9 oct).
   const demo = /^\/modelos\/(es|en)(\/.*)?$/.exec(path)
   const rest = demo === null ? trimTrailingSlash(stripLocale(path)) : trimTrailingSlash(demo[2] ?? '')
-  const urlFor = (locale: Locale): string => (demo === null ? `${base}/${locale}${rest}` : `${base}/modelos/${locale}${rest}`)
-  const absolute = path.startsWith('/') ? `${base}${path}` : `${base}/${path}`
+  // Se reciben rutas internas (las carpetas: `/en/bodas`) y se publican las de cada idioma (`/en/weddings`).
+  const urlFor = (locale: Locale): string => `${base}${rutaPublica(demo === null ? `/${locale}${rest}` : `/modelos/${locale}${rest}`)}`
+  const absolute = `${base}${rutaPublica(path.startsWith('/') ? path : `/${path}`)}`
 
   return {
     canonical: trimTrailingSlash(absolute),
@@ -48,12 +50,15 @@ export function buildPageMetadata({
   path,
   title,
   description,
+  imagen,
   baseUrl = env.SITE_URL,
 }: {
   locale: Locale
   path: string
   title: string
   description: string
+  /** La imagen al compartir, si la página tiene una propia (1200×630). Sin ella, la del segmento (`opengraph-image`). */
+  imagen?: string
   baseUrl?: string
 }): Metadata {
   const alternates = buildAlternates(path, baseUrl)
@@ -71,8 +76,9 @@ export function buildPageMetadata({
       title,
       description,
       url: alternates.canonical,
+      ...(imagen === undefined ? {} : { images: [{ url: imagen, width: 1200, height: 630, alt: title }] }),
     },
-    twitter: { card: 'summary_large_image', title, description },
+    twitter: { card: 'summary_large_image', title, description, ...(imagen === undefined ? {} : { images: [imagen] }) },
     robots: { index: true, follow: true },
   }
 }

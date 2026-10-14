@@ -13,7 +13,11 @@ import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isOk } from '@/shared/result'
 import { nombreDelCatalogo, seVende } from '@/shared/design/theme-catalog'
-import { buildPageMetadata } from '@/shared/seo/metadata'
+import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
+import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
+import { headers } from 'next/headers'
+import { NONCE_HEADER } from '@/shared/config/headers'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 /**
  * La vista previa de un modelo: **el diseño entero**, no una tarjeta.
@@ -55,6 +59,7 @@ export async function generateMetadata({
   const metadatos = buildPageMetadata({
     locale,
     path: `/modelos/${locale}/${slug}`,
+    imagen: rutaDe(locale, 'modelos', `/${slug}/imagen`),
     // Título y descripción propios de cada modelo: con los del catálogo, los veinte competían entre sí en Google.
     title: diccionario.seo.modelTitle.replace('{nombre}', nombreDelCatalogo(tema.key, locale) ?? tema.label).replace('{fiesta}', fiesta),
     description: diccionario.seo.modelDescription.replace('{nombre}', nombreDelCatalogo(tema.key, locale) ?? tema.label).replace('{fiesta}', fiesta),
@@ -138,13 +143,27 @@ export default async function ModelPreviewPage({
     venue: null,
   }
 
+  // Las migas (Inicio › Bodas › Clásica - Floral) para Google: dicen de qué fiesta es el modelo.
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined
+  const fiestaDelModelo = fiestaDeTema(tema.key)
+  const migas = breadcrumbJsonLd([
+    { name: diccionario.seo.breadcrumbHome, url: buildAlternates(`/${locale}`).canonical },
+    // El cumpleaños no tiene página en la web: va directo de Inicio al modelo.
+    ...(fiestaDelModelo === 'cumple'
+      ? []
+      : [{ name: fiestaDelModelo === 'xv' ? diccionario.nav.quinceaneras : diccionario.nav.weddings, url: buildAlternates(`/${locale}/${fiestaDelModelo === 'xv' ? 'xv-anos' : 'bodas'}`).canonical }]),
+    { name: nombreDelCatalogo(tema.key, locale) ?? tema.label, url: buildAlternates(`/modelos/${locale}/${slug}`).canonical },
+  ])
+
   return (
+    <>
+    <script dangerouslySetInnerHTML={{ __html: jsonLdScript(migas) }} nonce={nonce} type="application/ld+json" />
     <PhonePreview
       // Lo que cierra el círculo: de mirar el modelo a pedirlo, llevándose la clave del
       // diseño hasta el pedido. Antes el escaparate y la compra eran dos caminos que no
       // se tocaban, y quien aprobaba no sabía qué modelo había mirado el cliente.
       action={{ href: `/${locale}?modelo=${encodeURIComponent(slug)}#precios`, label: diccionario.themes.chooseDesign }}
-      exit={{ href: `/${locale}/colecciones#modelos`, label: diccionario.themes.previewClose }}
+      exit={{ href: rutaDe(locale, 'colecciones', '#modelos'), label: diccionario.themes.previewClose }}
     >
       <EstiloDeLaInvitacion estilo={estilo} tema={tema}>
       <Tema
@@ -162,5 +181,6 @@ export default async function ModelPreviewPage({
       />
       </EstiloDeLaInvitacion>
     </PhonePreview>
+    </>
   )
 }

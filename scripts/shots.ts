@@ -37,7 +37,7 @@ const rutas = todos('url')
 const objetivos =
   rutas.length > 0
     ? rutas.map((ruta) => ({ nombre: ruta.replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '') || 'raiz', ruta }))
-    : CATALOG_LISTOS.map((entrada) => ({ nombre: entrada.key, ruta: `/modelos/es/${entrada.key}` }))
+    : CATALOG_LISTOS.map((entrada) => ({ nombre: entrada.key, ruta: `/es/modelos/${entrada.key}` }))
 
 async function main(): Promise<void> {
   await rm(SALIDA, { recursive: true, force: true })

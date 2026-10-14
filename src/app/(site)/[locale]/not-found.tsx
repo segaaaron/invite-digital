@@ -4,6 +4,7 @@ import { PATHNAME_HEADER } from '@/shared/config/headers'
 import { Button } from '@/shared/design/ui/Button'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 /**
  * El 404 de la web, dentro de su layout. Un `not-found` no recibe los parámetros de la ruta: el
@@ -25,7 +26,7 @@ export default async function NoEncontrado() {
       <p className="max-w-[460px] text-[15px] leading-relaxed text-ink-soft">{t.text}</p>
       <div className="mt-2 flex flex-wrap justify-center gap-3">
         <Button href={`/${locale}`}>{t.home}</Button>
-        <Button href={`/${locale}/colecciones`} variant="ghost">
+        <Button href={rutaDe(locale, 'colecciones')} variant="ghost">
           {t.collections}
         </Button>
       </div>

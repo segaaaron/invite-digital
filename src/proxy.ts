@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { NONCE_HEADER, PATHNAME_HEADER } from '@/shared/config/headers'
 import { LOCALE_COOKIE, isLocale } from '@/shared/i18n/locales'
 import { negotiateLocale } from '@/shared/i18n/negotiate'
+import { rutaInterna, rutaPublica } from '@/shared/i18n/rutas'
 import { buildContentSecurityPolicy, createNonce } from '@/shared/security/csp'
 
 const PUBLIC_FILE = /\.[^/]+$/
@@ -25,13 +26,16 @@ const DESCARGA_PRIVADA = /^\/panel\/(pedidos\/comprobante|eventos\/[^/]+\/docume
  * Se pone aquí, en `withCsp`, porque es por donde pasan **todas** las rutas del panel: la
  * rama de más abajo solo atiende la raíz sin idioma.
  */
-function withCsp(request: NextRequest): NextResponse {
+function withCsp(request: NextRequest, reescribirA?: string): NextResponse {
   const nonce = createNonce()
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(NONCE_HEADER, nonce)
   requestHeaders.set(PATHNAME_HEADER, request.nextUrl.pathname)
 
-  const response = NextResponse.next({ request: { headers: requestHeaders } })
+  const response =
+    reescribirA === undefined
+      ? NextResponse.next({ request: { headers: requestHeaders } })
+      : NextResponse.rewrite(new URL(reescribirA + request.nextUrl.search, request.url), { request: { headers: requestHeaders } })
   response.headers.set(
     'Content-Security-Policy',
     buildContentSecurityPolicy(nonce, { dev: process.env.NODE_ENV !== 'production' }),
@@ -53,6 +57,17 @@ export function proxy(request: NextRequest) {
     return NextResponse.next()
   }
 
+  // Cada idioma con sus direcciones (`rutas.ts`): la pública se sirve desde su carpeta, y la vieja
+  // (`/en/bodas`, `/modelos/es/x`) se muda para siempre a la pública, con lo que Google ya tenía indexado.
+  const interna = rutaInterna(pathname)
+  if (interna !== pathname) return withCsp(request, interna)
+  const publica = rutaPublica(pathname)
+  if (publica !== pathname) {
+    const url = request.nextUrl.clone()
+    url.pathname = publica
+    return NextResponse.redirect(url, 308)
+  }
+
   const segment = pathname.split('/')[1] ?? ''
   if (isLocale(segment)) return withCsp(request)
 
@@ -69,6 +84,8 @@ export function proxy(request: NextRequest) {
   const url = request.nextUrl.clone()
   url.pathname = `/${locale}`
   const response = NextResponse.redirect(url, 307)
+  // La raíz es el x-default: responde según el idioma, y las cachés lo tienen que saber.
+  response.headers.set('Vary', 'Accept-Language, Cookie')
   response.cookies.set(LOCALE_COOKIE, locale, { path: '/', maxAge: 60 * 60 * 24 * 365, sameSite: 'lax' })
   return response
 }

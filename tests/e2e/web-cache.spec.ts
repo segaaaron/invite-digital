@@ -35,7 +35,7 @@ test('un cambio por fuera del admin no se ve: la portada lee de la caché', asyn
 })
 
 test('retirar un modelo desde el admin lo quita de la colección en la siguiente carga', async ({ browser, page }) => {
-  const tarjeta = () => page.locator('a[href="/modelos/es/boda-bot"]')
+  const tarjeta = () => page.locator('a[href="/es/modelos/boda-bot"]')
   await page.goto('/es/colecciones')
   await expect(tarjeta().first()).toBeVisible()
 

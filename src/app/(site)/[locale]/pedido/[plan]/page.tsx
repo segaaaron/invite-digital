@@ -10,6 +10,7 @@ import { OrderForm, type ModeloDelPedido } from '@/modules/orders/ui/OrderForm'
 import { getDictionary } from '@/shared/i18n/dictionaries'
 import { parseLocaleParam } from '@/shared/i18n/server'
 import { isErr } from '@/shared/result'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,7 +44,7 @@ export default async function PedidoPage({
   const nombreDeHoy = NOMBRES_VIEJOS[planSlug]
   if (nombreDeHoy !== undefined) {
     const q = new URLSearchParams(Object.entries({ modelo, ref }).filter((e): e is [string, string] => e[1] !== undefined))
-    permanentRedirect(`/${locale}/pedido/${nombreDeHoy}${q.size > 0 ? `?${q.toString()}` : ''}`)
+    permanentRedirect(rutaDe(locale, 'pedido', `/${nombreDeHoy}${q.size > 0 ? `?${q.toString()}` : ''}`))
   }
 
   // El diseño que traiga la URL se valida **aquí**, contra el registro de temas: quien
@@ -93,7 +94,7 @@ export default async function PedidoPage({
         reservaPct={reservaPct}
         modelos={modelos}
         extras={extras.map((x) => ({ slug: x.slug, name: x.name, descripcion: descripciones[x.effect] ?? null, cents: x.priceCents }))}
-        terminosHref={sitio.legal.terminos.publicada ? `/${locale}/terminos` : null}
+        terminosHref={sitio.legal.terminos.publicada ? rutaDe(locale, 'terminos') : null}
         locale={locale}
         textos={dictionary.orders.form}
         planName={plan.name}
@@ -104,7 +105,7 @@ export default async function PedidoPage({
       />
       <PrivacyNotice
         enlace={dictionary.legal.noticeLink}
-        href={sitio.legal.privacidad.publicada ? `/${locale}/privacidad` : null}
+        href={sitio.legal.privacidad.publicada ? rutaDe(locale, 'privacidad') : null}
         texto={dictionary.legal.notice}
       />
     </main>

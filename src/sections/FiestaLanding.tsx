@@ -40,8 +40,12 @@ export function FiestaLanding({
     <>
       <section className="px-5 pb-16 pt-[clamp(132px,16vw,168px)]" id="hero">
         <div className="mx-auto flex max-w-[860px] flex-col items-center gap-6 text-center">
-          <span className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep">{textos.eyebrow}</span>
-          <h1 className="font-display text-[clamp(40px,7vw,76px)] font-light leading-[1.02] text-ink [text-wrap:balance]">{textos.title}</h1>
+          {/* El H1 dice lo que se busca y luego el lema (14 oct): solo con el lema, Google leía «Organiza tu boda
+              desde un solo lugar». Se ve igual que antes: la búsqueda va como antetítulo dorado. */}
+          <h1 className="flex flex-col items-center gap-6">
+            <span className="text-[11px] uppercase tracking-[var(--tracking-luxe)] text-gold-deep">{textos.busqueda}</span>
+            <span className="font-display text-[clamp(40px,7vw,76px)] font-light leading-[1.02] text-ink [text-wrap:balance]">{textos.title}</span>
+          </h1>
           <p className="max-w-[58ch] text-[16px] leading-[1.7] text-ink-soft">{textos.lede}</p>
           <div className="flex flex-wrap justify-center gap-3">
             <Button href="#modelos">{textos.modelsTitle}</Button>

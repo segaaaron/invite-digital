@@ -4,6 +4,7 @@ import { FacebookIcon, InstagramIcon, TikTokIcon, WhatsAppIcon, MailIcon } from 
 import { enlaceWhatsapp } from '@/shared/whatsapp'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Locale } from '@/shared/i18n/locales'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 /** Lo que el pie necesita de «La web», ya en el idioma de la página. */
 export type PieDelSitio = {
@@ -83,12 +84,12 @@ export function SiteFooter({ locale, dictionary, sitio }: { locale: Locale; dict
         </span>
         <span className="flex flex-wrap items-center justify-center gap-4 text-[10.5px] tracking-[var(--tracking-luxe)] text-ink-mute uppercase">
           {sitio.privacidadPublicada ? (
-            <Link className="hover:text-gold-deep" href={`/${locale}/privacidad`}>
+            <Link className="hover:text-gold-deep" href={rutaDe(locale, 'privacidad')}>
               {dictionary.footer.privacy}
             </Link>
           ) : null}
           {sitio.terminosPublicados ? (
-            <Link className="hover:text-gold-deep" href={`/${locale}/terminos`}>
+            <Link className="hover:text-gold-deep" href={rutaDe(locale, 'terminos')}>
               {dictionary.footer.terms}
             </Link>
           ) : null}

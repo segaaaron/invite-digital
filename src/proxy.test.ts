@@ -121,3 +121,37 @@ describe('las descargas privadas llevan su propia política', () => {
     expect(csp(proxy(pedir('/panel/eventos/boda-ana/planner/documentos')))).not.toBeNull()
   })
 })
+
+describe('cada idioma con sus direcciones (14 oct)', () => {
+  it('la dirección inglesa se sirve desde su carpeta, con la política puesta', () => {
+    const r = proxy(pedir('/en/weddings'))
+    expect(r.headers.get('x-middleware-rewrite')).toBe('https://ejemplo.bo/en/bodas')
+    expect(csp(r)).toContain("default-src 'self'")
+  })
+
+  it('el modelo se sirve desde /modelos/<idioma>/<clave> conservando la consulta', () => {
+    expect(proxy(pedir('/en/designs/boda-bot?x=1')).headers.get('x-middleware-rewrite')).toBe('https://ejemplo.bo/modelos/en/boda-bot?x=1')
+  })
+
+  it('la dirección vieja se muda para siempre a la nueva', () => {
+    for (const [vieja, nueva] of [
+      ['/en/bodas', '/en/weddings'],
+      ['/modelos/es/boda-bot', '/es/modelos/boda-bot'],
+      ['/en/pedido/ref/AB', '/en/order/ref/AB'],
+    ] as const) {
+      const r = proxy(pedir(vieja))
+      expect(r.status).toBe(308)
+      expect(r.headers.get('location')).toBe(`https://ejemplo.bo${nueva}`)
+    }
+  })
+
+  it('la música de los modelos y el español no se tocan', () => {
+    expect(proxy(pedir('/modelos/musica/boda-bot')).headers.get('location')).toBeNull()
+    expect(proxy(pedir('/es/bodas')).headers.get('location')).toBeNull()
+    expect(proxy(pedir('/es/bodas')).headers.get('x-middleware-rewrite')).toBeNull()
+  })
+
+  it('la raíz avisa a las cachés de que depende del idioma', () => {
+    expect(proxy(pedir('/', { acceptLanguage: 'es' })).headers.get('Vary')).toBe('Accept-Language, Cookie')
+  })
+})

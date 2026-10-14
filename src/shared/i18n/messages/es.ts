@@ -33,6 +33,7 @@ export const es = {
     chooserTitle: '¿Qué celebras?',
     chooserCta: 'Ver',
     boda: {
+      busqueda: 'Invitaciones digitales de boda y matrimonio',
       eyebrow: 'Wedding Planner',
       title: 'Organiza tu boda desde un solo lugar',
       lede: 'Elige tu invitación, repártela por WhatsApp y sigue cada confirmación en vivo. Las mesas, la mesa de regalos y la puerta del salón, en el mismo panel.',
@@ -48,6 +49,7 @@ export const es = {
       plannerBody: 'Los novios te suman a su evento y entras gratis con tu cuenta: plan de tareas, presupuesto con quién paga, recepción y tu mesa con todos tus eventos y lo que vence en cada uno.',
     },
     xv: {
+      busqueda: 'Invitaciones digitales de XV años',
       eyebrow: 'XV Planner',
       title: 'Tus XV, del primer ensayo al último vals',
       lede: 'Una invitación a la altura de tus quince, confirmaciones en vivo y la puerta del salón en manos de quien tú elijas.',

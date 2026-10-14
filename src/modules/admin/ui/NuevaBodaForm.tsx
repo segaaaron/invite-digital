@@ -212,7 +212,7 @@ export function NuevaBodaForm({
                   <a
                     aria-label={`Ver el modelo ${m.label} en una pestaña nueva`}
                     className="absolute top-1.5 right-1.5 grid size-8 place-items-center rounded-full bg-white/90 text-ink-soft opacity-0 shadow-card transition-opacity group-hover:opacity-100 focus-visible:opacity-100 max-[859px]:size-11 max-[859px]:opacity-100"
-                    href={`/modelos/es/${m.key}`}
+                    href={`/es/modelos/${m.key}`}
                     rel="noopener noreferrer"
                     target="_blank"
                   >

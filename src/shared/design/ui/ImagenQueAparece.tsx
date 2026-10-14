@@ -27,8 +27,9 @@ export default function ImagenQueAparece({ alt, style, onLoad, onError, ...props
     if (nodo !== null) setEstado((antes) => (antes !== 'inicial' ? antes : nodo.complete ? 'lista' : 'esperando'))
   }, [])
 
+  // Lo primero que se ve (`priority`) no se esconde nunca: esconderlo hasta hidratar retrasaba el LCP segundos.
   const estilo =
-    estado === 'inicial'
+    estado === 'inicial' || props.priority === true
       ? style
       : {
           ...style,
@@ -39,6 +40,8 @@ export default function ImagenQueAparece({ alt, style, onLoad, onError, ...props
   return (
     <Image
       {...props}
+      // En Next 16 `priority` solo precarga: la prioridad alta del navegador hay que pedirla (14 oct).
+      fetchPriority={props.fetchPriority ?? (props.priority === true ? 'high' : undefined)}
       unoptimized={props.unoptimized ?? esImagenPropia(props.src)}
       alt={alt}
       onError={(e) => {

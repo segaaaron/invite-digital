@@ -12,6 +12,8 @@ export interface NavDictionary {
 
 /** Una fiesta en la web: su página propia y su tarjeta en la portada. */
 export interface FiestaPageDictionary {
+  /** Lo que se busca, encima del lema y dentro del H1 (14 oct): «Invitaciones digitales de boda y matrimonio». */
+  busqueda: string
   eyebrow: string
   title: string
   lede: string

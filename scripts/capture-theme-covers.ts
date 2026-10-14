@@ -58,7 +58,7 @@ async function principal(): Promise<void> {
     const pagina = await contexto.newPage()
     // `domcontentloaded` y no `networkidle`: contra `next dev` el canal de recarga en
     // caliente deja una conexión abierta y la espera no termina nunca.
-    await pagina.goto(`${BASE}/modelos/es/${entrada.key}`, { waitUntil: 'domcontentloaded' })
+    await pagina.goto(`${BASE}/es/modelos/${entrada.key}`, { waitUntil: 'domcontentloaded' })
     await pagina
       .evaluate(async () => {
         for (const imagen of document.images) imagen.loading = 'eager'

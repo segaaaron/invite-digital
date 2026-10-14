@@ -187,7 +187,7 @@ test('cada fiesta tiene su página con solo sus modelos, y la portada lleva a la
   // La página de cada fiesta enseña todos sus modelos: nueve XV y once bodas (los demás, retirados).
   const modelos = page.locator('#modelos').getByRole('link', { name: /abrir/i })
   await expect(modelos).toHaveCount(9)
-  for (const href of await modelos.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/\/modelos\/es\/xv/)
+  for (const href of await modelos.evaluateAll((as) => as.map((a) => a.getAttribute('href')))) expect(href).toMatch(/^\/es\/modelos\/xv/)
 
   await page.goto('/es/bodas')
   await expect(page.locator('#modelos').getByRole('link', { name: /abrir/i })).toHaveCount(11)
@@ -196,4 +196,30 @@ test('cada fiesta tiene su página con solo sus modelos, y la portada lleva a la
   const mapa = await (await request.get('/sitemap.xml')).text()
   expect(mapa).toContain('/es/bodas')
   expect(mapa).toContain('/es/xv-anos')
+})
+
+test('el inglés tiene sus propias direcciones y las viejas se mudan (14 oct)', async ({ page, request }) => {
+  await page.goto('/en')
+  await expect(page.getByRole('link', { name: /Weddings/ }).first()).toHaveAttribute('href', '/en/weddings')
+
+  const vieja = await request.get('/en/bodas', { maxRedirects: 0 })
+  expect(vieja.status()).toBe(308)
+  expect(vieja.headers()['location']).toMatch(/\/en\/weddings$/)
+
+  await page.goto('/en/quinceanera')
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/en\/quinceanera$/)
+  await expect(page.locator('link[hreflang="es"]')).toHaveAttribute('href', /\/es\/xv-anos$/)
+  const modelo = page.locator('#modelos').getByRole('link', { name: /open/i }).first()
+  await expect(modelo).toHaveAttribute('href', /^\/en\/designs\/xv/)
+
+  const respuesta = await page.goto('/en/designs/boda-bot')
+  expect(respuesta?.status()).toBe(200)
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/en\/designs\/boda-bot$/)
+
+  const mapa = await (await request.get('/sitemap.xml')).text()
+  expect(mapa).toContain('/en/weddings')
+  expect(mapa).toContain('/en/designs/boda-bot')
+  expect(mapa).not.toContain('/en/bodas')
+  expect(mapa).not.toMatch(/\/modelos\/(es|en)\//)
 })

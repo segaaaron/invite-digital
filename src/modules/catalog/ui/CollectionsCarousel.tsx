@@ -125,7 +125,6 @@ export function CollectionsCarousel({ slides, dictionary }: Props) {
                     alt={slide.alt}
                     className="object-cover"
                     fill
-                    priority={i < 2}
                     // Las tarjetas miden 330 px CSS: en pantalla Retina piden 660, y con
                     // `sizes="330px"` Next servía una variante de 384 que se veía blanda.
                     quality={82}

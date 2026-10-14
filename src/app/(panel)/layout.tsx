@@ -26,7 +26,6 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
       <body>
         <CapturaDeFallos />
         <ValidacionDeFormularios />
-        <PortadasQueEsperan />
         {/* El `Suspense` envuelve solo la barra (lee `useSearchParams`), nunca las páginas: alrededor
             de ellas rompería sus `notFound()`. */}
         <Suspense fallback={null}>
@@ -36,6 +35,7 @@ export default function PanelLayout({ children }: { children: ReactNode }) {
             dejan la página con dos regiones principales, que es un error de HTML y hace
             ambiguo el salto al contenido para quien navega con lector de pantalla. */}
         <div className="panel-sin-mono min-h-dvh bg-bg-top">{children}</div>
+        <PortadasQueEsperan />
       </body>
     </html>
   )

@@ -15,6 +15,7 @@ import { attempt, isOk } from '@/shared/result'
 import { breadcrumbJsonLd, jsonLdScript } from '@/shared/seo/json-ld'
 import { buildAlternates, buildPageMetadata } from '@/shared/seo/metadata'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 // Rendered per request, not prerendered: the pages read Postgres and the image is
 // built in CI/Docker where the database is unreachable. The queries are indexed and
@@ -125,7 +126,7 @@ export default async function CollectionsPage({
               className={`rounded-[var(--radius-pill)] border px-6 py-2.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] transition-colors ${
                 f === fiesta ? 'border-gold bg-gold text-bg-raised' : 'border-[var(--color-line)] text-ink-soft hover:border-gold'
               }`}
-              href={f === 'boda' ? `/${locale}/colecciones#modelos` : `/${locale}/colecciones?fiesta=xv#modelos`}
+              href={f === 'boda' ? rutaDe(locale, 'colecciones', '#modelos') : rutaDe(locale, 'colecciones', '?fiesta=xv#modelos')}
               key={f}
               scroll={false}
             >
@@ -144,7 +145,7 @@ export default async function CollectionsPage({
           <div className="mt-16 flex flex-col items-center gap-3">
             <Link
               className="rounded-[var(--radius-pill)] border border-[var(--color-line)] px-9 py-3.5 text-[12px] uppercase tracking-[var(--tracking-luxe)] text-ink transition-colors hover:border-gold"
-              href={`/${locale}/colecciones?${fiesta === 'xv' ? 'fiesta=xv&' : ''}ver=${visibles + POR_TANDA}#modelos`}
+              href={rutaDe(locale, 'colecciones', `?${fiesta === 'xv' ? 'fiesta=xv&' : ''}ver=${visibles + POR_TANDA}#modelos`)}
               scroll={false}
             >
               {dictionary.collections.loadMore}

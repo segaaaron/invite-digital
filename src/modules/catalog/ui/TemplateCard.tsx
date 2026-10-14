@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Locale } from '@/shared/i18n/locales'
 import type { Dictionary } from '@/shared/i18n/dictionaries'
 import type { Template } from '../domain/template'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 /**
  * La versión de las portadas del catálogo.
@@ -39,7 +40,7 @@ export function TemplateCard({ template, dictionary, locale }: Props) {
     <Link
       aria-label={`${models.open} · ${template.name}`}
       className="group m-0 flex w-full max-w-[238px] flex-col items-center gap-5 outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-4"
-      href={`/modelos/${locale}/${template.slug}`}
+      href={rutaDe(locale, 'modelos', `/${template.slug}`)}
     >
       <div
         className="relative aspect-[9/16] w-full overflow-hidden rounded-[14px] [transform:rotateY(-11deg)_rotateX(3deg)] [transform-style:preserve-3d] transition-transform duration-500 ease-[cubic-bezier(.19,1,.22,1)] group-hover:[transform:rotateY(0deg)_rotateX(0deg)_translateY(-8px)] group-focus-visible:[transform:rotateY(0deg)_rotateX(0deg)_translateY(-8px)] motion-reduce:transition-none"

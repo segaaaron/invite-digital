@@ -8,6 +8,7 @@ import { EscaleraDePlanes } from './EscaleraDePlanes'
 import { conMonto, Monto } from './Monto'
 import { PlanCard } from './PlanCard'
 import { SelectorDeMoneda } from './SelectorDeMoneda'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 type Props = {
   plans: readonly Plan[]
@@ -53,7 +54,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
             return (
             <Reveal key={plan.id} delay={index * 0.08}>
               <PlanCard
-                ctaHref={`/${locale}/pedido/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`}
+                ctaHref={rutaDe(locale, 'pedido', `/${plan.slug}${consulta === '' ? '' : `?${consulta}`}`)}
                 ctaLabel={pricing.choose.replace('{plan}', plan.name)}
                 reserva={reserva === undefined ? null : conMonto(pricing.reserve, <Monto cents={reserva} locale={locale} />)}
                 dictionary={dictionary}
@@ -85,7 +86,7 @@ export function PricingSection({ plans, locale, dictionary, modelo = null, refer
             </div>
             <a
               className="shrink-0 rounded-[var(--radius-pill)] bg-linear-to-r from-gold-deep via-gold-light to-gold-deep px-7 py-3.5 text-center font-mono text-[10px] tracking-[var(--tracking-luxe)] text-ink uppercase"
-              href={`/${locale}/pedido/${destacado.slug}${consulta === '' ? '' : `?${consulta}`}`}
+              href={rutaDe(locale, 'pedido', `/${destacado.slug}${consulta === '' ? '' : `?${consulta}`}`)}
             >
               {pricing.reserveBox.cta}
             </a>

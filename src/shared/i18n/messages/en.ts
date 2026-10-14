@@ -33,6 +33,7 @@ export const en = {
     chooserTitle: 'What are you celebrating?',
     chooserCta: 'See',
     boda: {
+      busqueda: 'Digital wedding invitations',
       eyebrow: 'Wedding Planner',
       title: 'Plan your wedding from one place',
       lede: 'Choose your invitation, share it on WhatsApp and follow every RSVP live. Tables, gift registry and the venue door, in the same dashboard.',
@@ -48,6 +49,7 @@ export const en = {
       plannerBody: 'The couple adds you to their event and you join free with your own account: task plan, budget with who pays, door staff and your desk with every event and what is due.',
     },
     xv: {
+      busqueda: 'Digital quinceañera invitations',
       eyebrow: 'XV Planner',
       title: 'Your quinceañera, from the first rehearsal to the last waltz',
       lede: 'An invitation worthy of your fifteen, live RSVPs and the venue door in the hands of whoever you choose.',

@@ -55,8 +55,8 @@ export default async function InvitationLayout({
         <SinVerCodigo />
         <CapturaDeFallos />
         <ValidacionDeFormularios />
-        <PortadasQueEsperan />
         <TextosDeError textos={getDictionary(invitation.value.event.locale).invitation.error}>{children}</TextosDeError>
+        <PortadasQueEsperan />
       </body>
     </html>
   )

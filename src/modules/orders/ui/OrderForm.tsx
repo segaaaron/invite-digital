@@ -8,6 +8,7 @@ import type { Locale } from '@/shared/i18n/locales'
 import { sinCaerse } from '@/shared/design/ui/sin-caerse'
 import { formatMoney } from '@/modules/catalog'
 import { enlaceWhatsapp } from '@/shared/whatsapp'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 const INICIAL: PlaceOrderState = { status: 'idle' }
 
@@ -95,7 +96,7 @@ export function OrderForm({
         </p>
         <Link
           className="w-fit rounded-[var(--radius-pill)] border border-gold bg-gold/20 px-5 py-2.5 font-mono text-[10px] tracking-[0.25em] text-ink uppercase"
-          href={`/${locale}/pedido/ref/${estado.publicRef}`}
+          href={rutaDe(locale, 'pedido', `/ref/${estado.publicRef}`)}
         >
           {textos.goPay}
         </Link>

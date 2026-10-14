@@ -30,6 +30,7 @@ import { ContactSection } from '@/modules/leads'
 import { aLaVenta } from '@/modules/catalog'
 import { PrivacyNotice } from '@/sections/LegalPage'
 import { registrarFallo } from '@/shared/observability/fallos'
+import { rutaDe } from '@/shared/i18n/rutas'
 
 // Rendered per request, not prerendered: the pages read Postgres and the image is
 // built in CI/Docker where the database is unreachable. The queries are indexed and
@@ -230,7 +231,7 @@ export default async function LandingPage({
         privacidad={
           <PrivacyNotice
             enlace={dictionary.legal.noticeLink}
-            href={sitio.privacidadPublicada ? `/${locale}/privacidad` : null}
+            href={sitio.privacidadPublicada ? rutaDe(locale, 'privacidad') : null}
             texto={dictionary.legal.notice}
           />
         }

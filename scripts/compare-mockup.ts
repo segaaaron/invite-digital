@@ -83,7 +83,7 @@ async function main() {
     const maqueta: Pieza[] = await recoger(m, '#marco')
     const altoM = await m.evaluate(() => (document.querySelector('#marco') as HTMLElement | null)?.offsetHeight ?? 0)
 
-    await n.goto(`http://localhost:3000/modelos/es/${clave}`, { waitUntil: 'load', timeout: 60000 })
+    await n.goto(`http://localhost:3000/es/modelos/${clave}`, { waitUntil: 'load', timeout: 60000 })
     await n.waitForTimeout(1200)
     const portada = n.getByRole('button', { name: /abrir la invitaci/i })
     if (await portada.count()) { await portada.first().click(); await n.waitForTimeout(500) }

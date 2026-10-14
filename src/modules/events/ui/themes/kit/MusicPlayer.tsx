@@ -57,6 +57,17 @@ export function useCancion(audioSrc: string | undefined, soloAlAbrir: boolean) {
   const audio = useRef<HTMLAudioElement | null>(null)
   const boton = useRef<HTMLButtonElement | null>(null)
 
+  // La canción (hasta 3 MB) se baja cuando la página ya cargó, no antes: competía con la portada y en un celular la
+  // dejaba en 32 s (PageSpeed, 14 oct). Sin temporizador: el evento `load`. Un `play()` antes la pide igual.
+  useEffect(() => {
+    const bajar = () => {
+      if (audio.current !== null) audio.current.preload = 'auto'
+    }
+    if (document.readyState === 'complete') return bajar()
+    window.addEventListener('load', bajar, { once: true })
+    return () => window.removeEventListener('load', bajar)
+  }, [audioSrc])
+
   useEffect(() => {
     const elemento = audio.current
     if (elemento === null) return
@@ -112,8 +123,8 @@ export function useCancion(audioSrc: string | undefined, soloAlAbrir: boolean) {
     onPause: () => setSonando(false),
     onPlay: () => setSonando(true),
     playsInline: true,
-    // `auto`: va a sonar en cuanto se abra o se toque la invitación, así que se baja ya.
-    preload: 'auto',
+    // `none` hasta que la página cargó; entonces `auto` (arriba): va a sonar en cuanto se abra la invitación.
+    preload: 'none',
     ref: audio,
   } as const
   return { sonando, alternar, boton, audioProps }

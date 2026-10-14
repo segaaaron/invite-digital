@@ -1,6 +1,9 @@
 import localFont from 'next/font/local'
 import type { FontKey } from './font-manifest'
 
+// **Solo la letra de la web se precarga** (14 oct): las de la invitación y el panel viven en este mismo módulo,
+// y Next precargaba las 33 en cada página que lo importa —900 KB por delante de la imagen principal en la portada—.
+// Sin precarga se piden cuando el CSS las usa.
 export const display = localFont({
   variable: '--font-display-raw',
   display: 'swap',
@@ -38,6 +41,7 @@ export const sans = localFont({
 export const panelSans = localFont({
   variable: '--font-sans-raw',
   display: 'swap',
+  preload: false,
   src: [
     { path: '../../../public/fonts/jost-300.woff2', weight: '300', style: 'normal' },
     { path: '../../../public/fonts/jost-400.woff2', weight: '400', style: 'normal' },
@@ -53,6 +57,7 @@ export const panelSans = localFont({
 export const panelDisplay = localFont({
   variable: '--font-panel-display',
   display: 'swap',
+  preload: false,
   fallback: ['Didot', 'Georgia', 'serif'],
   src: [
     { path: '../../../public/fonts/bodoni-moda-variable.woff2', weight: '400 700', style: 'normal' },
@@ -63,6 +68,7 @@ export const panelDisplay = localFont({
 export const panelMono = localFont({
   variable: '--font-mono-raw',
   display: 'swap',
+  preload: false,
   src: [{ path: '../../../public/fonts/jetbrains-mono-variable.woff2', weight: '300 600', style: 'normal' }],
 })
 
@@ -84,6 +90,7 @@ export const panelMono = localFont({
 export const greatVibes = localFont({
   variable: '--font-great-vibes',
   display: 'swap',
+  preload: false,
   fallback: ['Snell Roundhand', 'Apple Chancery', 'cursive'],
   src: [
     { path: '../../../public/fonts/great-vibes-400.woff2', weight: '400', style: 'normal' },
@@ -93,6 +100,7 @@ export const greatVibes = localFont({
 export const alexBrush = localFont({
   variable: '--font-alex-brush',
   display: 'swap',
+  preload: false,
   fallback: ['Snell Roundhand', 'Apple Chancery', 'cursive'],
   src: [
     { path: '../../../public/fonts/alex-brush-400.woff2', weight: '400', style: 'normal' },
@@ -102,6 +110,7 @@ export const alexBrush = localFont({
 export const allura = localFont({
   variable: '--font-allura',
   display: 'swap',
+  preload: false,
   fallback: ['Snell Roundhand', 'Apple Chancery', 'cursive'],
   src: [
     { path: '../../../public/fonts/allura-400.woff2', weight: '400', style: 'normal' },
@@ -111,6 +120,7 @@ export const allura = localFont({
 export const italiana = localFont({
   variable: '--font-italiana',
   display: 'swap',
+  preload: false,
   fallback: ['Didot', 'Bodoni MT', 'serif'],
   src: [
     { path: '../../../public/fonts/italiana-400.woff2', weight: '400', style: 'normal' },
@@ -120,6 +130,7 @@ export const italiana = localFont({
 export const marcellus = localFont({
   variable: '--font-marcellus',
   display: 'swap',
+  preload: false,
   fallback: ['Palatino', 'Book Antiqua', 'serif'],
   src: [
     { path: '../../../public/fonts/marcellus-400.woff2', weight: '400', style: 'normal' },
@@ -130,6 +141,7 @@ export const marcellus = localFont({
 export const cinzel = localFont({
   variable: '--font-cinzel',
   display: 'swap',
+  preload: false,
   fallback: ['Optima', 'Palatino', 'serif'],
   src: [
     { path: '../../../public/fonts/cinzel-variable.woff2', weight: '400 700', style: 'normal' },
@@ -139,6 +151,7 @@ export const cinzel = localFont({
 export const dmSans = localFont({
   variable: '--font-dm-sans',
   display: 'swap',
+  preload: false,
   fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
   src: [
     { path: '../../../public/fonts/dm-sans-variable.woff2', weight: '300 700', style: 'normal' },
@@ -149,6 +162,7 @@ export const dmSans = localFont({
 export const outfit = localFont({
   variable: '--font-outfit',
   display: 'swap',
+  preload: false,
   fallback: ['Avenir Next', 'Helvetica Neue', 'Arial', 'sans-serif'],
   src: [{ path: '../../../public/fonts/outfit-variable.woff2', weight: '100 900', style: 'normal' }],
 })
@@ -160,6 +174,7 @@ export const outfit = localFont({
 export const bodoniModa = localFont({
   variable: '--font-bodoni-moda',
   display: 'swap',
+  preload: false,
   fallback: ['Didot', 'Bodoni MT', 'Georgia', 'serif'],
   src: [{ path: '../../../public/fonts/bodoni-moda-italic-variable.woff2', weight: '400 900', style: 'italic' }],
 })
@@ -167,6 +182,7 @@ export const bodoniModa = localFont({
 export const newsreader = localFont({
   variable: '--font-newsreader',
   display: 'swap',
+  preload: false,
   fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/newsreader-variable.woff2', weight: '300 500', style: 'normal' },
@@ -186,6 +202,7 @@ export const newsreader = localFont({
 export const playfairDisplay = localFont({
   variable: '--font-playfair-display',
   display: 'swap',
+  preload: false,
   fallback: ['Cormorant Garamond', 'Georgia', 'serif'],
   src: [
     { path: '../../../public/fonts/playfair-display-600-italic.woff2', weight: '600', style: 'italic' },
@@ -197,6 +214,7 @@ export const playfairDisplay = localFont({
 export const spectral = localFont({
   variable: '--font-spectral',
   display: 'swap',
+  preload: false,
   fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/spectral-200.woff2', weight: '200', style: 'normal' },
@@ -212,6 +230,7 @@ export const spectral = localFont({
 export const montserrat = localFont({
   variable: '--font-montserrat',
   display: 'swap',
+  preload: false,
   fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
   src: [{ path: '../../../public/fonts/montserrat-variable.woff2', weight: '300 600', style: 'normal' }],
 })
@@ -222,6 +241,7 @@ export const montserrat = localFont({
 export const cormorantTheme = localFont({
   variable: '--font-cormorant',
   display: 'swap',
+  preload: false,
   fallback: ['Georgia', 'Times New Roman', 'serif'],
   src: [
     { path: '../../../public/fonts/cormorant-garamond-300.woff2', weight: '300', style: 'normal' },
@@ -236,6 +256,7 @@ export const cormorantTheme = localFont({
 export const spaceGroteskTheme = localFont({
   variable: '--font-space-grotesk',
   display: 'swap',
+  preload: false,
   fallback: ['Helvetica Neue', 'Arial', 'sans-serif'],
   src: [
     { path: '../../../public/fonts/space-grotesk-variable.woff2', weight: '300 700', style: 'normal' },
@@ -245,6 +266,7 @@ export const spaceGroteskTheme = localFont({
 export const jetbrainsMonoTheme = localFont({
   variable: '--font-jetbrains-mono',
   display: 'swap',
+  preload: false,
   fallback: ['SFMono-Regular', 'Menlo', 'monospace'],
   src: [
     { path: '../../../public/fonts/jetbrains-mono-variable.woff2', weight: '300 600', style: 'normal' },
